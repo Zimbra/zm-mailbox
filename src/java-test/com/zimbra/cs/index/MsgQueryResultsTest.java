@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -34,15 +34,15 @@ public class MsgQueryResultsTest {
     @Test
     public void merge() throws Exception {
         MockQueryResults top = new MockQueryResults(SortBy.NONE);
-        top.add(new MessageHit(null, null, 1000, null, 0, null));
-        top.add(new MessagePartHit(null, null, 1000, null, 0, null));
-        top.add(new MessagePartHit(null, null, 1000, null, 0, null));
-        top.add(new MessageHit(null, null, 1001, null, 0, null));
-        top.add(new MessageHit(null, null, 1001, null, 0, null));
-        top.add(new MessagePartHit(null, null, 1001, null, 0, null));
-        top.add(new MessagePartHit(null, null, 1001, null, 0, null));
-        top.add(new MessageHit(null, null, 1002, null, 0, null));
-        top.add(new MessageHit(null, null, 1003, null, 0, null));
+        top.add(new MessageHit(null, null, 1000, null, null));
+        top.add(new MessagePartHit(null, null, 1000, null, null));
+        top.add(new MessagePartHit(null, null, 1000, null, null));
+        top.add(new MessageHit(null, null, 1001, null, null));
+        top.add(new MessageHit(null, null, 1001, null, null));
+        top.add(new MessagePartHit(null, null, 1001, null, null));
+        top.add(new MessagePartHit(null, null, 1001, null, null));
+        top.add(new MessageHit(null, null, 1002, null, null));
+        top.add(new MessageHit(null, null, 1003, null, null));
 
         ProxiedHit phit = new ProxiedHit(null, null);
         phit.itemID = new ItemId("A", 1000);
@@ -85,7 +85,7 @@ public class MsgQueryResultsTest {
     @Test
     public void proxiedHitNotMerged() throws Exception {
         MockQueryResults top = new MockQueryResults(SortBy.NONE);
-        top.add(new MessageHit(null, null, 1000, null, 0, null));
+        top.add(new MessageHit(null, null, 1000, null, null));
 
         Element el = XMLElement.create(SoapProtocol.Soap12, "hit");
         el.addAttribute(MailConstants.A_ID, 1000);

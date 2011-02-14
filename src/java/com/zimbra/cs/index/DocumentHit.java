@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2006, 2007, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -25,10 +25,9 @@ public final class DocumentHit extends ZimbraHit {
     private Document mLuceneDoc;
     private com.zimbra.cs.mailbox.Document mDocItem;
 
-    DocumentHit(ZimbraQueryResultsImpl results, Mailbox mbx, float score,
-            int mailItemId, Document luceneDoc,
+    DocumentHit(ZimbraQueryResultsImpl results, Mailbox mbx, int mailItemId, Document luceneDoc,
             com.zimbra.cs.mailbox.Document docItem) {
-        super(results, mbx, score);
+        super(results, mbx);
         mMessageId = mailItemId;
         mLuceneDoc = luceneDoc;
         mDocItem = docItem;

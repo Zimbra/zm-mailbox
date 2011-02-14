@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -44,9 +44,8 @@ public final class ConversationHit extends ZimbraHit {
     private MessageHit mLastMessageHitAdded = null;
     private int mConversationId = 0;
 
-    protected ConversationHit(ZimbraQueryResultsImpl results, Mailbox mbx,
-            int conversationId, float score) {
-        super(results, mbx, score);
+    protected ConversationHit(ZimbraQueryResultsImpl results, Mailbox mbx, int conversationId) {
+        super(results, mbx);
         mConversationId = conversationId;
     }
 

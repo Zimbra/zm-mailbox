@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -67,7 +67,7 @@ public class LocalizedSortBy extends SortBy {
         private String mName;
         private int mItemId;
         TestHit(String name, int id) {
-            super(null, null, 0);
+            super(null, null);
             mName = name;
             mItemId = id;
         }

@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -19,7 +19,6 @@ import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.zclient.event.ZModifyContactEvent;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import org.json.JSONException;
@@ -39,7 +38,6 @@ public class ZContactHit implements ZSearchHit {
     private String mFolderId;
     private String mType;
     private String mDlist;
-    private float mScore;
     private long mMetaDataDate;
     private long mDate;
     private String mFullName;
@@ -61,14 +59,13 @@ public class ZContactHit implements ZSearchHit {
         mFlags = e.getAttribute(MailConstants.A_FLAGS, null);
         mTagIds = e.getAttribute(MailConstants.A_TAGS, null);
         mSortField = e.getAttribute(MailConstants.A_SORT_FIELD, null);
-        mScore = (float) e.getAttributeDouble(MailConstants.A_SCORE, 0);
         mFileAsStr = e.getAttribute(MailConstants.A_FILE_AS_STR, null);
         mRevision = e.getAttribute(MailConstants.A_REVISION, null);
         mFolderId = e.getAttribute(MailConstants.A_FOLDER,null);
         mDate = e.getAttributeLong(MailConstants.A_DATE, 0);
         mMetaDataDate = e.getAttributeLong(MailConstants.A_MODIFIED_DATE, 0) * 1000;
         mType = e.getAttribute(MailConstants.A_CONTACT_TYPE, null);
-        
+
         HashMap<String, String> attrs = new HashMap<String, String>();
 
         for (Element attrEl : e.listElements(MailConstants.E_ATTRIBUTE)) {
@@ -99,6 +96,7 @@ public class ZContactHit implements ZSearchHit {
         mPhoneticCompany= attrs.get(ContactConstants.A_phoneticCompany);
     }
 
+    @Override
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject jo = new ZJSONObject();
         jo.put("id", mId);
@@ -106,7 +104,6 @@ public class ZContactHit implements ZSearchHit {
         jo.put("flags", mFlags);
         jo.put("sortField", mSortField);
         jo.put("type", mType);
-        jo.put("score", mScore);
         jo.put("date", mDate);
         jo.put("fileAsStr", mFileAsStr);
         jo.put("revision", mRevision);
@@ -121,7 +118,8 @@ public class ZContactHit implements ZSearchHit {
         jo.put(ContactConstants.A_fullName, mFullName);
         return jo;
     }
-    
+
+    @Override
     public String toString() {
         return String.format("[ZContactHit %s]", mId);
     }
@@ -141,11 +139,11 @@ public class ZContactHit implements ZSearchHit {
     public String getDlist() {
         return mDlist;
     }
-    
+
     public String getType() {
         return mType;
     }
-    
+
     public String getTagIds() {
         return mTagIds;
     }
@@ -186,6 +184,7 @@ public class ZContactHit implements ZSearchHit {
         return mFolderId;
     }
 
+    @Override
     public String getId() {
         return mId;
     }
@@ -206,10 +205,7 @@ public class ZContactHit implements ZSearchHit {
         return mRevision;
     }
 
-    public float getScore() {
-        return mScore;
-    }
-
+    @Override
     public String getSortField() {
         return mSortField;
     }
@@ -239,9 +235,10 @@ public class ZContactHit implements ZSearchHit {
     public String getCompany() { return mCompany; };
     public String getPhoneticCompany() { return mPhoneticCompany; }
 
+    @Override
     public void modifyNotification(ZModifyEvent event) throws ServiceException {
-		if (event instanceof ZModifyContactEvent) {
-			ZModifyContactEvent cevent = (ZModifyContactEvent) event;
+        if (event instanceof ZModifyContactEvent) {
+            ZModifyContactEvent cevent = (ZModifyContactEvent) event;
             if (cevent.getId().equals(mId)) {
                 mTagIds = cevent.getTagIds(mTagIds);
                 mFolderId = cevent.getFolderId(mFolderId);
@@ -266,7 +263,7 @@ public class ZContactHit implements ZSearchHit {
                 mPhoneticCompany = get(attrs, ContactConstants.A_phoneticCompany, mPhoneticCompany);
             }
         }
-	}
+    }
 
     private String get(Map<String,String> attrs, String key, String defaultValue) {
         String value = attrs != null ? attrs.get(key) : null;

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -38,15 +38,13 @@ public abstract class ZimbraHit {
     protected long mCachedSize = -1;
     protected String mCachedName = null;
     protected String mCachedSubj = null;
-    private float mScore = (float) 1.0;
     protected ImapMessage mCachedImapMessage = null;
     protected int mCachedModseq = -1;
     protected int mCachedParentId = 0;
 
-    public ZimbraHit(ZimbraQueryResultsImpl results, Mailbox mbx,  float score) {
+    public ZimbraHit(ZimbraQueryResultsImpl results, Mailbox mbx) {
         mMailbox = mbx;
         mResults = results;
-        mScore = score;
     }
 
     public abstract int getItemId() throws ServiceException;
@@ -169,7 +167,7 @@ public abstract class ZimbraHit {
             case SIZE_DESCENDING: /* 5K...4K...3K...*/
                 return getSize();
             case SCORE_DESCENDING:
-                return getScore();
+                return 1.0F;
             case TASK_DUE_ASCENDING:
             case TASK_DUE_DESCENDING:
             case TASK_STATUS_ASCENDING:
@@ -182,10 +180,6 @@ public abstract class ZimbraHit {
                 throw new IllegalArgumentException("Unknown sort order: "
                         + sortOrder);
         }
-    }
-
-    final public float getScore() {
-        return mScore;
     }
 
     public ItemId getParsedItemID() throws ServiceException {
@@ -210,93 +204,49 @@ public abstract class ZimbraHit {
      */
     int compareBySortField(SortBy sortOrder, ZimbraHit other) throws ServiceException {
         long retVal = 0;
-        final boolean dumpComp = false;
 
         switch (sortOrder.getType()) {
             case NONE:
                 throw new IllegalArgumentException("Illegal to use sort comparison on unsorted results");
             case DATE_ASCENDING:
-                if (dumpComp) {
-                    System.out.println("Comparing DateAsc: \"" + getDate() + "\" to \"" + other.getDate() + "\"");
-                    System.out.println("\tMySubj: \"" + getSubject() + "\" other: \"" + other.getSubject() + "\"");
-                }
                 retVal = other.getDate() - getDate();
                 break;
-            case DATE_DESCENDING: /* 5...4...3...*/
-                if (dumpComp) {
-                    System.out.println("Comparing DateDesc: \"" + getDate() + "\" to \"" + other.getDate() + "\"");
-                    System.out.println("\tMySubj: \"" + getSubject() + "\" other: \"" + other.getSubject() + "\"");
-                }
+            case DATE_DESCENDING: // 5...4...3...
                 retVal = getDate() - other.getDate();
                 break;
             case SUBJ_ASCENDING:
-                if (dumpComp) {
-                    System.out.println("Comparing SubjAsc: \"" + getSubject() + "\" to \"" + other.getSubject() + "\"");
-                }
-                /***
-                 * We to compare(toUpper()) instead of compareIgnoreCase or using a collator because that's the only
-                 * method that seems to give us the same results as the sorts from SQL server -- esp the [] characters
-                 */
+                 // We to compare(toUpper()) instead of compareIgnoreCase or using a collator because that's the only
+                 // method that seems to give us the same results as the sorts from SQL server -- esp the [] characters
                 retVal = -1 * getSubject().toUpperCase().compareTo(other.getSubject().toUpperCase());
                 break;
             case SUBJ_DESCENDING:
-                if (dumpComp) {
-                    System.out.println("Comparing SubjDesc: \"" + getSubject() + "\" to \"" + other.getSubject() + "\"");
-                }
-                /***
-                 * We to compare(toUpper()) instead of compareIgnoreCase or using a collator because that's the only
-                 * method that seems to give us the same results as the sorts from SQL server -- esp the [] characters
-                 */
+                // We to compare(toUpper()) instead of compareIgnoreCase or using a collator because that's the only
+                // method that seems to give us the same results as the sorts from SQL server -- esp the [] characters
                 retVal = getSubject().toUpperCase().compareTo(other.getSubject().toUpperCase());
                 break;
             case NAME_ASCENDING:
             case NAME_LOCALIZED_ASCENDING:
-                if (dumpComp) {
-                    System.out.println("Comparing NameAsc: \"" + getName() + "\" to \"" + other.getName() + "\"");
-                }
-                /***
-                 * We to compare(toUpper()) instead of compareIgnoreCase or using a collator because that's the only
-                 * method that seems to give us the same results as the sorts from SQL server -- esp the [] characters
-                 */
+                // We to compare(toUpper()) instead of compareIgnoreCase or using a collator because that's the only
+                // method that seems to give us the same results as the sorts from SQL server -- esp the [] characters
                 retVal = -1 * getName().toUpperCase().compareTo(other.getName().toUpperCase());
                 break;
             case NAME_DESCENDING:
             case NAME_LOCALIZED_DESCENDING:
-                if (dumpComp) {
-                    System.out.println("Comparing NameDesc: \"" + getName() + "\" to \"" + other.getName() + "\"");
-                }
-                /***
-                 * We to compare(toUpper()) instead of compareIgnoreCase or using a collator because that's the only
-                 * method that seems to give us the same results as the sorts from SQL server -- esp the [] characters
-                 */
+                 // We to compare(toUpper()) instead of compareIgnoreCase or using a collator because that's the only
+                 // method that seems to give us the same results as the sorts from SQL server -- esp the [] characters
                 retVal = getName().toUpperCase().compareTo(other.getName().toUpperCase());
                 break;
             case SIZE_ASCENDING:
-                if (dumpComp) {
-                    System.out.println("Comparing SizeAsc: \"" + getSize() + "\" to \"" + other.getSize() + "\"");
-                    System.out.println("\tMySubj: \"" + getSubject() + "\" other: \"" + other.getSubject() + "\"");
-                }
                 retVal = other.getSize() - getSize();
                 break;
             case SIZE_DESCENDING:
-                if (dumpComp) {
-                    System.out.println("Comparing SizeDesc: \"" + getSize() + "\" to \"" + other.getSize() + "\"");
-                    System.out.println("\tMySubj: \"" + getSubject() + "\" other: \"" + other.getSubject() + "\"");
-                }
                 retVal = other.getSize() - getSize();
                 break;
             case SCORE_DESCENDING:
-                if (dumpComp) {
-                    System.out.println("Comparing ScoreDesc: \"" + getScore()  +"\" to \"" + other.getScore() + "\"");
-                }
-                retVal = (long) (10000L * (getScore() - other.getScore()));
+                retVal = 0;
                 break;
             default:
                 throw new IllegalArgumentException("Unknown sort order: " + sortOrder);
-        }
-
-        if (dumpComp) {
-            System.out.print("\tReturning: " + retVal + " asint: " + (int) retVal + "\n");
         }
 
         if (retVal == 0) {
@@ -346,12 +296,6 @@ public abstract class ZimbraHit {
             return -1;
         }
         return item.getParentId();
-    }
-
-    final protected void updateScore(float score) {
-        if (score > mScore) {
-            mScore = score;
-        }
     }
 
     final void cacheSortField(SortBy sortType, Object sortKey) {

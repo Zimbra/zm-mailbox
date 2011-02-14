@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -23,8 +23,8 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 
 public final class TaskHit extends CalendarItemHit {
 
-    TaskHit(ZimbraQueryResultsImpl results, Mailbox mbx, int mailItemId, float score, Task task) {
-        super(results, mbx, mailItemId, score, task);
+    TaskHit(ZimbraQueryResultsImpl results, Mailbox mbx, int mailItemId, Task task) {
+        super(results, mbx, mailItemId, task);
     }
 
     public long getDueTime() throws ServiceException {

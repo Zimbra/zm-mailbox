@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -77,11 +77,11 @@ public class ZSearchResult implements ToZJSONObject {
                 mHits.add(new ZDocumentHit(h));
             } else if (h.getName().equals(MailConstants.E_WIKIWORD)) {
                 mHits.add(new ZWikiHit(h));
-	        } else if (h.getName().equals(VoiceConstants.E_VOICEMSG)) {
-	        	mHits.add(new ZVoiceMailItemHit(h));
-	        } else if (h.getName().equals(VoiceConstants.E_CALLLOG)) {
-	        	mHits.add(new ZCallHit(h));
-	        }
+            } else if (h.getName().equals(VoiceConstants.E_VOICEMSG)) {
+                mHits.add(new ZVoiceMailItemHit(h));
+            } else if (h.getName().equals(VoiceConstants.E_CALLLOG)) {
+                mHits.add(new ZCallHit(h));
+            }
         }
     }
 
@@ -95,14 +95,14 @@ public class ZSearchResult implements ToZJSONObject {
     public ZConversationSummary getConversationSummary() {
         return mConvSummary;
     }
-    
+
     /**
      * @return true if there are more search results on the server
      */
     public boolean hasMore() {
         return mHasMore;
     }
-    
+
     /**
      * @return the sort by value
      */
@@ -117,6 +117,7 @@ public class ZSearchResult implements ToZJSONObject {
         return mOffset;
     }
 
+    @Override
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject zjo = new ZJSONObject();
         zjo.put("more", mHasMore);
@@ -126,6 +127,7 @@ public class ZSearchResult implements ToZJSONObject {
         return zjo;
     }
 
+    @Override
     public String toString() {
        return String.format("[ZSearchResult size=%s more=%s]", mHits.size(), mHasMore);
     }
@@ -151,6 +153,7 @@ public class ZSearchResult implements ToZJSONObject {
             mMessageCount = (int) e.getAttributeLong(MailConstants.A_NUM);
         }
 
+        @Override
         public void modifyNotification(ZModifyEvent event) throws ServiceException {
             if (event instanceof ZModifyConversationEvent) {
                 ZModifyConversationEvent cevent = (ZModifyConversationEvent) event;
@@ -160,18 +163,17 @@ public class ZSearchResult implements ToZJSONObject {
             }
         }
 
+        @Override
         public String getId() {
             return mId;
         }
 
+        @Override
         public String getSortField() {
             return null;
         }
 
-        public float getScore() {
-            return 0;
-        }
-
+        @Override
         public ZJSONObject toZJSONObject() throws JSONException {
             ZJSONObject zjo = new ZJSONObject();
             zjo.put("id", mId);
@@ -181,6 +183,7 @@ public class ZSearchResult implements ToZJSONObject {
             return zjo;
         }
 
+        @Override
         public String toString() {
             return String.format("[ZConversationSummary %s]", mId);
         }
@@ -192,7 +195,7 @@ public class ZSearchResult implements ToZJSONObject {
         public String getFlags() {
             return mFlags;
         }
-        
+
         public String getTagIds() {
             return mTags;
         }

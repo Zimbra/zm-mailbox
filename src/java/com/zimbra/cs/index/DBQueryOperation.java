@@ -15,7 +15,7 @@
 package com.zimbra.cs.index;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -89,8 +89,7 @@ public class DBQueryOperation extends QueryOperation {
     private LuceneQueryOperation mLuceneOp = null;
 
     /**
-     * The current "chunk" of lucene results we are working through -- we need to keep it around
-     * so that we can look up the scores of hits that match the DB
+     * The current "chunk" of lucene results we are working through.
      */
     private LuceneQueryOperation.LuceneResultsChunk mLuceneChunk = null;
 
@@ -419,42 +418,6 @@ public class DBQueryOperation extends QueryOperation {
         topLevelAndedConstraint().addTagClause(tag, truth);
     }
 
-    private static final class ScoredDBHit implements Comparable<ScoredDBHit> {
-        public SearchResult mSr;
-        public float mScore;
-
-        ScoredDBHit(SearchResult sr, float score) {
-            mSr = sr;
-            mScore = score;
-        }
-
-        long scoreAsLong() {
-            return (long)(mScore * 10000);
-        }
-
-        @Override
-        public int compareTo(ScoredDBHit other) {
-            long mys = scoreAsLong();
-            long os = other.scoreAsLong();
-
-            if (mys == os)
-                return mSr.id - other.mSr.id;
-            else {
-                long l = os - mys;
-                if (l > 0)
-                    return 1;
-                else if (l < 0)
-                    return -1;
-                else return 0;
-            }
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            return (o == this) || (compareTo((ScoredDBHit) o) == 0);
-        }
-    }
-
     @Override
     public void doneWithSearchResults() throws ServiceException {
         if (mLuceneOp != null) {
@@ -543,40 +506,17 @@ public class DBQueryOperation extends QueryOperation {
                     getNextChunk();
                 }
 
-                //
                 // at this point, we've filled mDBHits if possible (and initialized its iterator)
-                //
                 if (mDBHitsIter != null && mDBHitsIter.hasNext()) {
                     SearchResult sr = mDBHitsIter.next();
-
-                    // Sometimes, a single search result might yield more than one Lucene
-                    // document -- e.g. an RFC822 message with separately-indexed mimeparts.
-                    // Each of these parts will turn into a separate ZimbraHit at this point,
-                    // although they might be combined together at a higher level (via a HitGrouper)
-                    List <Document> docs = null;
-                    float score = 1.0f;
-                    if (mLuceneChunk != null) {
-                        LuceneQueryOperation.ScoredLuceneHit sh = mLuceneChunk.getScoredHit(sr.indexId);
-                        if (sh != null) {
-                            docs = sh.getDocuments();
-                            score = sh.getScore();
-                        } else {
-                            // This could conceivably happen if we're doing a db-first query and we got multiple LuceneChunks
-                            // from a single MAX_DBFIRST_RESULTS set of db-IDs....In practice, this should never happen
-                            // since we only pull IDs out of the DB 200 at a time, and the max hits per LuceneChunk is 2000....
-                            // ...but I am leaving this log message here temporarily so that I can know if this edge cases
-                            // is really happening.  If it *does* somehow happen it isn't the end of the world: we don't lose hits,
-                            // we only lose separate part hits -- the net result would be that a document which had a match in multiple
-                            // parts would only be returned as a single hit for the document.
-                            ZimbraLog.search.info("Missing ScoredLuceneHit for indexId=%d,id=%d,type=%d part hits may be list",
-                                    sr.indexId, sr.id, sr.type);
-                            score = 1.0f;
-                        }
-                    }
+                    // Sometimes, a single search result might yield more than one Lucene document -- e.g. an RFC822
+                    // message with separately-indexed MIME parts. Each of these parts will turn into a separate
+                    // ZimbraHit at this point, although they might be combined together at a higher level (via a
+                    // HitGrouper).
+                    Collection<Document> docs = mLuceneChunk != null ? mLuceneChunk.getHit(sr.indexId) : null;
 
                     if (docs == null || !ZimbraQueryResultsImpl.shouldAddDuplicateHits(MailItem.Type.of(sr.type))) {
-                        ZimbraHit toAdd = context.getResults().getZimbraHit(
-                                context.getMailbox(), score, sr, null, mExtra);
+                        ZimbraHit toAdd = context.getResults().getZimbraHit(context.getMailbox(), sr, null, mExtra);
                         if (toAdd != null) {
                             // make sure we only return each hit once
                             if (!mSeenHits.containsKey(toAdd)) {
@@ -586,8 +526,7 @@ public class DBQueryOperation extends QueryOperation {
                         }
                     } else {
                         for (Document doc : docs) {
-                            ZimbraHit toAdd = context.getResults().getZimbraHit(
-                                    context.getMailbox(), score, sr, doc, mExtra);
+                            ZimbraHit toAdd = context.getResults().getZimbraHit(context.getMailbox(), sr, doc, mExtra);
                             if (toAdd != null) {
                                 // make sure we only return each hit once
                                 if (!mSeenHits.containsKey(toAdd)) {
@@ -751,12 +690,6 @@ public class DBQueryOperation extends QueryOperation {
     }
 
     private boolean shouldExecuteDbFirst() throws ServiceException {
-        if (context.getResults().getSortBy() == SortBy.SCORE_DESCENDING) {
-            // we can't sort DB-results by score-order, so we must execute SCORE queries
-            // in LUCENE-FIRST order
-            return false;
-        }
-
         // look for item-id or conv-id query parts, if those are set, then we'll execute DB-FIRST
         DbLeafNode toplevel = topLevelAndedConstraint();
         if (toplevel.convId > 0 || toplevel.itemIds.size() > 0) {
@@ -925,25 +858,6 @@ public class DBQueryOperation extends QueryOperation {
                 fetch(mDBHits, conn, sort, -1, -1);
 
                 ZimbraLog.search.debug("Fetched DB-second chunk in %d ms", System.currentTimeMillis() - dbStart);
-
-                if (getSortBy() == SortBy.SCORE_DESCENDING) {
-                    // We have to re-sort the chunk by score here b/c the DB doesn't
-                    // know about scores
-                    ScoredDBHit[] scHits = new ScoredDBHit[mDBHits.size()];
-                    int offset = 0;
-                    for (SearchResult sr : mDBHits) {
-                        LuceneQueryOperation.ScoredLuceneHit lucScore =
-                            mLuceneChunk.getScoredHit(sr.indexId);
-                        scHits[offset++] = new ScoredDBHit(sr, lucScore.getScore());
-                    }
-
-                    Arrays.sort(scHits);
-
-                    mDBHits = new ArrayList<SearchResult>(scHits.length);
-                    for (ScoredDBHit sdbHit : scHits)
-                        mDBHits.add(sdbHit.mSr);
-                }
-
             }
         } while (mDBHits.size() == 0 && !mEndOfHits);
 

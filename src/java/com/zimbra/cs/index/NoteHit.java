@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -28,9 +28,8 @@ public final class NoteHit extends ZimbraHit {
     private Note mNote = null;
     private int mMailItemId;
 
-    NoteHit(ZimbraQueryResultsImpl results, Mailbox mbx, int mailItemId,
-            float score, Note note) {
-        super(results, mbx, score);
+    NoteHit(ZimbraQueryResultsImpl results, Mailbox mbx, int mailItemId, Note note) {
+        super(results, mbx);
         mMailItemId = mailItemId;
         mNote = note;
     }

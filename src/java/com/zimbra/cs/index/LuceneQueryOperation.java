@@ -17,11 +17,8 @@ package com.zimbra.cs.index;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.lucene.document.Document;
@@ -33,6 +30,8 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Multimap;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -318,28 +317,21 @@ public final class LuceneQueryOperation extends QueryOperation {
                 start = System.currentTimeMillis();
                 int docId = mTopDocs.scoreDocs[mCurHitNo].doc;
                 Document d = mSearcher.getSearcher().doc(docId);
-
                 long now = System.currentTimeMillis();
                 fetchFromLucene1 += (now - start);
                 start = now;
-
-                float score;
-                score = mTopDocs.scoreDocs[mCurHitNo].score;
-
                 fetchFromLucene2 += (System.currentTimeMillis() - start);
-
                 mCurHitNo++;
-
                 String mbid = d.get(LuceneFields.L_MAILBOX_BLOB_ID);
                 try {
                     if (mbid != null) {
                         start = System.currentTimeMillis();
-                        toRet.addHit(Integer.parseInt(mbid), d, score);
+                        toRet.addHit(Integer.parseInt(mbid), d);
                         long end = System.currentTimeMillis();
                         timeUsed += (end-start);
                     }
                 } catch (NumberFormatException e) {
-                    e.printStackTrace();
+                    ZimbraLog.search.error("Invalid MAILBOX_BLOB_ID: " + mbid, e);
                 }
             }
 
@@ -647,56 +639,27 @@ public final class LuceneQueryOperation extends QueryOperation {
         }
     }
 
-    static final class ScoredLuceneHit {
-        private final List<Document> mDocs = new ArrayList<Document>();
-        private final float mScore; // highest score in list
-
-        ScoredLuceneHit(float score) {
-            mScore = score;
-        }
-
-        float getScore() {
-            return mScore;
-        }
-
-        List<Document> getDocuments() {
-            return mDocs;
-        }
-    }
-
     /**
-     * We use this data structure to track a "chunk" of Lucene hits which
-     * the {@link DBQueryOperation} will use to check against the DB.
+     * We use this data structure to track a "chunk" of Lucene hits which the {@link DBQueryOperation} will use to check
+     * against the DB.
      */
     static final class LuceneResultsChunk {
-        private Map<Integer, ScoredLuceneHit> mHits =
-            new LinkedHashMap<Integer, ScoredLuceneHit>();
+        private Multimap<Integer, Document> hits = LinkedHashMultimap.create();
 
         Set<Integer> getIndexIds() {
-            Set<Integer> toRet = new LinkedHashSet<Integer>(mHits.keySet().size());
-            for (Iterator<Integer> iter = mHits.keySet().iterator(); iter.hasNext();) {
-                int curId = iter.next();
-                toRet.add(curId);
-            }
-            return toRet;
+            return hits.keySet();
         }
 
         int size() {
-            return mHits.size();
+            return hits.size();
         }
 
-        void addHit(int indexId, Document doc, float score) {
-            ScoredLuceneHit sh = mHits.get(indexId);
-            if (sh == null) {
-                sh = new ScoredLuceneHit(score);
-                mHits.put(indexId, sh);
-            }
-
-            sh.mDocs.add(doc);
+        void addHit(int indexId, Document doc) {
+            hits.put(indexId, doc);
         }
 
-        ScoredLuceneHit getScoredHit(int indexId) {
-            return mHits.get(indexId);
+        Collection<Document> getHit(int indexId) {
+            return hits.get(indexId);
         }
     }
 }

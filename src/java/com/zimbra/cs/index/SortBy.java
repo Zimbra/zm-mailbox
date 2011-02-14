@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -17,7 +17,7 @@ package com.zimbra.cs.index;
 import java.util.HashMap;
 
 public class SortBy {
-    
+
     public enum Type {
         DATE_ASCENDING,
         DATE_DESCENDING,
@@ -27,7 +27,7 @@ public class SortBy {
         NAME_DESCENDING,
         SIZE_ASCENDING,
         SIZE_DESCENDING,
-        SCORE_DESCENDING,
+        @Deprecated SCORE_DESCENDING,
         NAME_NATURAL_ORDER_ASCENDING,
         NAME_NATURAL_ORDER_DESCENDING,
         TASK_DUE_ASCENDING,
@@ -40,10 +40,10 @@ public class SortBy {
         NAME_LOCALIZED_DESCENDING,
         NONE,
     }
-    
+
     static HashMap<String, SortBy> sNameMap = new HashMap<String, SortBy>();
 
-    public static final SortBy DATE_ASCENDING  = new SortBy(Type.DATE_ASCENDING, "dateAsc",  SortCriterion.DATE,    SortDirection.ASCENDING); 
+    public static final SortBy DATE_ASCENDING  = new SortBy(Type.DATE_ASCENDING, "dateAsc",  SortCriterion.DATE,    SortDirection.ASCENDING);
     public static final SortBy DATE_DESCENDING = new SortBy(Type.DATE_DESCENDING, "dateDesc", SortCriterion.DATE,    SortDirection.DESCENDING);
     public static final SortBy SUBJ_ASCENDING  = new SortBy(Type.SUBJ_ASCENDING, "subjAsc",  SortCriterion.SUBJECT, SortDirection.ASCENDING);
     public static final SortBy SUBJ_DESCENDING = new SortBy(Type.SUBJ_DESCENDING, "subjDesc", SortCriterion.SUBJECT, SortDirection.DESCENDING);
@@ -51,7 +51,8 @@ public class SortBy {
     public static final SortBy NAME_DESCENDING = new SortBy(Type.NAME_DESCENDING, "nameDesc", SortCriterion.SENDER,  SortDirection.DESCENDING);
     public static final SortBy SIZE_ASCENDING  = new SortBy(Type.SIZE_ASCENDING, "sizeAsc",  SortCriterion.SIZE,    SortDirection.ASCENDING);
     public static final SortBy SIZE_DESCENDING = new SortBy(Type.SIZE_DESCENDING, "sizeDesc", SortCriterion.SIZE,    SortDirection.DESCENDING);
-    public static final SortBy SCORE_DESCENDING= new SortBy(Type.SCORE_DESCENDING, "score",    SortCriterion.DATE,    SortDirection.DESCENDING);
+    @Deprecated
+    public static final SortBy SCORE_DESCENDING= new SortBy(Type.SCORE_DESCENDING, "score", SortCriterion.DATE, SortDirection.DESCENDING);
 
     // wiki "natural order" sorts not exposed via SOAP
     public static final SortBy NAME_NATURAL_ORDER_ASCENDING = new SortBy(Type.NAME_NATURAL_ORDER_ASCENDING, null, SortCriterion.NAME_NATURAL_ORDER, SortDirection.ASCENDING);
@@ -68,13 +69,13 @@ public class SortBy {
     //
     // the LOCALIZED sorts aren't in here, they have to be constructed at runtime with the specific Locale information in them
     //
-    
+
     public static final SortBy NONE = new SortBy(Type.NONE, "none", SortCriterion.NONE, SortDirection.ASCENDING);
 
-    
-    
+
+
     /**
-     * This is the sort that the DB/Lucene knows about 
+     * This is the sort that the DB/Lucene knows about
      */
     public static enum SortCriterion {
         DATE, SENDER, SUBJECT, ID, NONE, NAME, NAME_NATURAL_ORDER, SIZE
@@ -88,7 +89,7 @@ public class SortBy {
     private SortCriterion mCriterion;
     private SortDirection mDirection;
     private Type          mType;
-    
+
     SortBy(Type t, String str, SortCriterion criterion, SortDirection direction) {
         mType = t;
         mName = str;

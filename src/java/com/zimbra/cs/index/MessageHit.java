@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -52,9 +52,8 @@ public final class MessageHit extends ZimbraHit {
     private int mMessageId = 0;
     private ConversationHit mConversationHit = null;
 
-    MessageHit(ZimbraQueryResultsImpl results, Mailbox mbx,
-            int mailItemId, Document doc, float score, Message message) {
-        super(results, mbx, score);
+    MessageHit(ZimbraQueryResultsImpl results, Mailbox mbx, int mailItemId, Document doc, Message message) {
+        super(results, mbx);
         assert(mailItemId != 0);
         mMessageId = mailItemId;
         mDoc = doc;
@@ -231,14 +230,12 @@ public final class MessageHit extends ZimbraHit {
     }
 
     /**
-     * @return a ConversationResult corresponding to this message's
-     *         conversation
-     * @throws ServiceException
+     * @return a ConversationResult corresponding to this message's conversation
      */
     public ConversationHit getConversationResult() throws ServiceException {
         if (mConversationHit == null) {
             Integer cid = new Integer(getConversationId());
-            mConversationHit = getResults().getConversationHit(getMailbox(), cid, getScore());
+            mConversationHit = getResults().getConversationHit(getMailbox(), cid);
             mConversationHit.addMessageHit(this);
         }
         return mConversationHit;

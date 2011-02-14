@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -41,7 +41,7 @@ public class ProxiedHit extends ZimbraHit  {
     protected Element mElement;
 
     public ProxiedHit(ProxiedQueryResults results, Element elt) {
-        super(results, null, 0.0f);
+        super(results, null);
         mElement = elt;
     }
 

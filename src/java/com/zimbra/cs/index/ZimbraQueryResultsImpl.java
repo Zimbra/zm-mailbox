@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -115,86 +115,66 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
         return mMode;
     }
 
-    protected ConversationHit getConversationHit(Mailbox mbx, int convId, float score) {
+    protected ConversationHit getConversationHit(Mailbox mbx, int convId) {
         ConversationHit ch = mConversationHits.get(convId);
         if (ch == null) {
-            ch = new ConversationHit(this, mbx, convId, score);
+            ch = new ConversationHit(this, mbx, convId);
             mConversationHits.put(convId, ch);
-        } else {
-            ch.updateScore(score);
         }
         return ch;
     }
 
-    protected ContactHit getContactHit(Mailbox mbx, int mailItemId, float score,
-            Contact contact) {
+    protected ContactHit getContactHit(Mailbox mbx, int mailItemId, Contact contact) {
         ContactHit hit = mContactHits.get(mailItemId);
         if (hit == null) {
-            hit = new ContactHit(this, mbx, mailItemId, score, contact);
+            hit = new ContactHit(this, mbx, mailItemId, contact);
             mContactHits.put(mailItemId, hit);
-        } else {
-            hit.updateScore(score);
         }
         return hit;
     }
 
-    protected NoteHit getNoteHit(Mailbox mbx, int mailItemId, float score,
-            Note note) {
+    protected NoteHit getNoteHit(Mailbox mbx, int mailItemId, Note note) {
         NoteHit hit = mNoteHits.get(mailItemId);
         if (hit == null) {
-            hit = new NoteHit(this, mbx, mailItemId, score, note);
+            hit = new NoteHit(this, mbx, mailItemId, note);
             mNoteHits.put(mailItemId, hit);
-        } else {
-            hit.updateScore(score);
         }
         return hit;
     }
 
-    protected CalendarItemHit getAppointmentHit(Mailbox mbx, int mailItemId,
-            float score, CalendarItem cal) {
+    protected CalendarItemHit getAppointmentHit(Mailbox mbx, int mailItemId, CalendarItem cal) {
         CalendarItemHit hit = mCalItemHits.get(mailItemId);
         if (hit == null) {
-            hit = new CalendarItemHit(this, mbx, mailItemId, score, cal);
+            hit = new CalendarItemHit(this, mbx, mailItemId, cal);
             mCalItemHits.put(mailItemId, hit);
-        } else {
-            hit.updateScore(score);
         }
         return hit;
     }
 
-    protected CalendarItemHit getTaskHit(Mailbox mbx, int mailItemId,
-            float score, Task task) {
+    protected CalendarItemHit getTaskHit(Mailbox mbx, int mailItemId, Task task) {
         CalendarItemHit hit = mCalItemHits.get(mailItemId);
         if (hit == null) {
-            hit = new TaskHit(this, mbx, mailItemId, score, task);
+            hit = new TaskHit(this, mbx, mailItemId, task);
             mCalItemHits.put(mailItemId, hit);
-        } else {
-            hit.updateScore(score);
         }
         return hit;
     }
 
-    protected MessageHit getMessageHit(Mailbox mbx, int mailItemId,
-            Document doc, float score, Message message) {
+    protected MessageHit getMessageHit(Mailbox mbx, int mailItemId, Document doc, Message message) {
         MessageHit hit = mMessageHits.get(mailItemId);
         if (hit == null) {
-            hit = new MessageHit(this, mbx, mailItemId, doc, score, message);
+            hit = new MessageHit(this, mbx, mailItemId, doc, message);
             mMessageHits.put(mailItemId, hit);
-        } else {
-            hit.updateScore(score);
         }
         return hit;
     }
 
-    protected MessagePartHit getMessagePartHit(Mailbox mbx, int mailItemId,
-            Document doc, float score, Message message) {
+    protected MessagePartHit getMessagePartHit(Mailbox mbx, int mailItemId, Document doc, Message message) {
         String partKey = Integer.toString(mailItemId) + "-" + doc.get(LuceneFields.L_PARTNAME);
         MessagePartHit hit = mPartHits.get(partKey);
         if (hit == null) {
-            hit = new MessagePartHit(this, mbx, mailItemId, doc, score, message);
+            hit = new MessagePartHit(this, mbx, mailItemId, doc, message);
             mPartHits.put(partKey, hit);
-        } else {
-            hit.updateScore(score);
         }
         return hit;
     }
@@ -211,18 +191,12 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
     }
 
     /**
-     * We've got a mailbox, a score a DBMailItem.SearchResult and (optionally) a Lucene Doc...
+     * We've got a mailbox, a DBMailItem.SearchResult and (optionally) a Lucene Doc...
      * that's everything we need to build a real ZimbraHit.
      *
-     * @param mbox
-     * @param score
-     * @param sr
      * @param doc - Optional, only set if this search had a Lucene part
-     * @return
-     * @throws ServiceException
      */
-    ZimbraHit getZimbraHit(Mailbox mbox, float score, SearchResult sr,
-            Document doc, SearchResult.ExtraData extra) throws ServiceException {
+    ZimbraHit getZimbraHit(Mailbox mbox, SearchResult sr, Document doc, SearchResult.ExtraData extra) {
         MailItem item = null;
         ImapMessage i4msg = null;
         int modseq = -1, parentId = 0;
@@ -243,33 +217,33 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
 
         ZimbraHit toRet = null;
         switch (MailItem.Type.of(sr.type)) {
-        case CHAT:
-        case MESSAGE:
-            if (doc != null) {
-                toRet = getMessagePartHit(mbox, sr.id, doc, score, (Message) item);
-            } else {
-                toRet = getMessageHit(mbox, sr.id, null, score, (Message) item);
-            }
-            toRet.cacheSortField(getSortBy(), sr.sortkey);
-            break;
-        case CONTACT:
-            toRet = getContactHit(mbox, sr.id, score, (Contact) item);
-            break;
-        case NOTE:
-            toRet = getNoteHit(mbox, sr.id, score, (Note) item);
-            break;
-        case APPOINTMENT:
-            toRet = getAppointmentHit(mbox, sr.id, score, (CalendarItem) item);
-            break;
-        case TASK:
-            toRet = getTaskHit(mbox, sr.id, score, (Task) item);
-            break;
-        case DOCUMENT:
-        case WIKI:
-            toRet = getDocumentHit(mbox, sr.id, doc, score, (com.zimbra.cs.mailbox.Document) item);
-            break;
-        default:
-            assert(false);
+            case CHAT:
+            case MESSAGE:
+                if (doc != null) {
+                    toRet = getMessagePartHit(mbox, sr.id, doc, (Message) item);
+                } else {
+                    toRet = getMessageHit(mbox, sr.id, null, (Message) item);
+                }
+                toRet.cacheSortField(getSortBy(), sr.sortkey);
+                break;
+            case CONTACT:
+                toRet = getContactHit(mbox, sr.id, (Contact) item);
+                break;
+            case NOTE:
+                toRet = getNoteHit(mbox, sr.id, (Note) item);
+                break;
+            case APPOINTMENT:
+                toRet = getAppointmentHit(mbox, sr.id, (CalendarItem) item);
+                break;
+            case TASK:
+                toRet = getTaskHit(mbox, sr.id, (Task) item);
+                break;
+            case DOCUMENT:
+            case WIKI:
+                toRet = getDocumentHit(mbox, sr.id, doc, (com.zimbra.cs.mailbox.Document) item);
+                break;
+            default:
+                assert(false);
         }
 
         if (i4msg != null) {
@@ -285,8 +259,8 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
         return toRet;
     }
 
-    protected DocumentHit getDocumentHit(Mailbox mbx, int mailItemId,
-            Document luceneDoc, float score, com.zimbra.cs.mailbox.Document docItem) {
-        return new DocumentHit(this, mbx, score, mailItemId, luceneDoc, docItem);
+    protected DocumentHit getDocumentHit(Mailbox mbx, int mailItemId, Document luceneDoc,
+            com.zimbra.cs.mailbox.Document docItem) {
+        return new DocumentHit(this, mbx, mailItemId, luceneDoc, docItem);
     }
 }

@@ -190,12 +190,8 @@ public class SearchResponse {
         } else {
             Conversation conv = hit.getConversation();
             MessageHit mhit = hit.getFirstMessageHit();
-            Element el = ToXML.encodeConversationSummary(element, ifmt,
-                    octxt, conv, mhit == null ? null : mhit.getMessage(),
-                            params.getWantRecipients());
-            if (hit.getScore() != 0) {
-                el.addAttribute(MailConstants.A_SCORE, hit.getScore());
-            }
+            Element el = ToXML.encodeConversationSummary(element, ifmt, octxt, conv,
+                    mhit == null ? null : mhit.getMessage(), params.getWantRecipients());
 
             for (MessageHit mh : hit.getMessageHits()) {
                 Message msg = mh.getMessage();
@@ -245,10 +241,6 @@ public class SearchResponse {
                     params.getWantRecipients());
         }
 
-        if (hit.getScore() != 0) {
-            el.addAttribute(MailConstants.A_SCORE, hit.getScore());
-        }
-
         el.addAttribute(MailConstants.A_CONTENTMATCHED, true);
 
         List<MessagePartHit> parts = hit.getMatchedMimePartNames();
@@ -274,10 +266,6 @@ public class SearchResponse {
         el.addAttribute(MailConstants.A_CONTENT_TYPE, hit.getType());
         el.addAttribute(MailConstants.A_CONTENT_NAME, hit.getFilename());
         el.addAttribute(MailConstants.A_PART, hit.getPartName());
-
-        if (hit.getScore() != 0) {
-            el.addAttribute(MailConstants.A_SCORE, hit.getScore());
-        }
 
         ToXML.encodeEmail(el, msg.getSender(), EmailType.FROM);
         String subject = msg.getSubject();
@@ -330,13 +318,9 @@ public class SearchResponse {
         Element el = encoded.element;
         if (el != null) {
             element.addElement(el);
-            ToXML.setCalendarItemFields(el, ifmt, octxt, item,
-                    PendingModifications.Change.ALL_FIELDS, false,
+            ToXML.setCalendarItemFields(el, ifmt, octxt, item, PendingModifications.Change.ALL_FIELDS, false,
                     params.getNeuterImages());
             el.addAttribute(MailConstants.A_CONTENTMATCHED, true);
-            if (hit.getScore() != 0) {
-                el.addAttribute(MailConstants.A_SCORE, hit.getScore());
-            }
         }
         return el;
     }

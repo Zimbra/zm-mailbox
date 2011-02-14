@@ -81,9 +81,9 @@ public class QueryParserTest {
 
     @Test
     public void sortBy() throws Exception {
-        String src = "foo sort:score and bar";
+        String src = "foo sort:dateAsc and bar";
         Assert.assertEquals("Q(l.content,foo) && Q(l.content,bar)", Query.toString(parser.parse(src)));
-        Assert.assertEquals("score", parser.getSortBy());
+        Assert.assertEquals("dateAsc", parser.getSortBy());
     }
 
     @Test

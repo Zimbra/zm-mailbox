@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -24,9 +24,8 @@ import org.json.JSONException;
 
 public class ZVoiceMailItemHit implements ZSearchHit {
 
-	private String mId;
+    private String mId;
     private String mSortField;
-    private float mScore;
     private String mFlags;
     private String mSoundUrl;
     private long mDate;
@@ -34,9 +33,8 @@ public class ZVoiceMailItemHit implements ZSearchHit {
     private ZPhone mCaller;
 
     public ZVoiceMailItemHit(Element e) throws ServiceException {
-    	mId = e.getAttribute(MailConstants.A_ID);
+        mId = e.getAttribute(MailConstants.A_ID);
         mSortField = e.getAttribute(MailConstants.A_SORT_FIELD, null);
-        mScore = (float) e.getAttributeDouble(MailConstants.A_SCORE, 0);
         mFlags = e.getAttribute(MailConstants.A_FLAGS, null);
         Element content = e.getOptionalElement(MailConstants.E_CONTENT);
         if (content != null) {
@@ -64,31 +62,26 @@ public class ZVoiceMailItemHit implements ZSearchHit {
         result.mDate = Long.parseLong(array[3]);
         result.mDuration = Long.parseLong(array[4]);
         result.mCaller = new ZPhone(array[5], array[6]);
-        result.mScore = 0;
-        result.mSoundUrl =
-            "/service/extension/velodrome/voice/~/voicemail?phone=" +
-            phone + "&id=" + result.mId;
+        result.mSoundUrl = "/service/extension/velodrome/voice/~/voicemail?phone=" + phone + "&id=" + result.mId;
         return result;
     }
 
+    @Override
     public String getId() {
-		return mId;
-	}
+        return mId;
+    }
 
-	public float getScore() {
-		return mScore;
-	}
-
-	public String getSortField() {
-		return mSortField;
-	}
+    @Override
+    public String getSortField() {
+        return mSortField;
+    }
 
     public boolean hasFlags() {
         return mFlags != null && mFlags.length() > 0;
     }
 
     public boolean isFlagged() {
-        return hasFlags() && mFlags.indexOf(ZMessage.Flag.highPriority.getFlagChar()) != -1; 
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.highPriority.getFlagChar()) != -1;
     }
 
     public boolean isPrivate() {
@@ -96,10 +89,10 @@ public class ZVoiceMailItemHit implements ZSearchHit {
     }
 
     public boolean isUnheard() {
-		return hasFlags() && mFlags.indexOf(ZMessage.Flag.unread.getFlagChar()) != -1;
-	}
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.unread.getFlagChar()) != -1;
+    }
 
-	public ZPhone getCaller() { return mCaller; }
+    public ZPhone getCaller() { return mCaller; }
 
     public String getDisplayCaller() { return mCaller.getDisplay(); }
 
@@ -109,42 +102,42 @@ public class ZVoiceMailItemHit implements ZSearchHit {
 
     public long getDuration() { return mDuration; }
 
+    @Override
     public void modifyNotification(ZModifyEvent event) throws ServiceException {
-		if (event instanceof ZModifyVoiceMailItemEvent) {
-			ZModifyVoiceMailItemEvent voiceEvent = (ZModifyVoiceMailItemEvent) event;
-			boolean isUnheard = !voiceEvent.getIsHeard();
-			if (isUnheard != isUnheard()) {
-				setFlag(ZMessage.Flag.unread.getFlagChar(), isUnheard);
-				voiceEvent.setMadeChange();
-			}
-		}
-	}
+        if (event instanceof ZModifyVoiceMailItemEvent) {
+            ZModifyVoiceMailItemEvent voiceEvent = (ZModifyVoiceMailItemEvent) event;
+            boolean isUnheard = !voiceEvent.getIsHeard();
+            if (isUnheard != isUnheard()) {
+                setFlag(ZMessage.Flag.unread.getFlagChar(), isUnheard);
+                voiceEvent.setMadeChange();
+            }
+        }
+    }
 
     public String serialize() {
-		String flags = mFlags == null ? "" : mFlags;
-		return  mId + "/" +
+        String flags = mFlags == null ? "" : mFlags;
+        return  mId + "/" +
                 mSortField + "/" +
-				flags + "/" +
+                flags + "/" +
                 mDate + "/" +
                 mDuration + "/" +
                 mCaller.getName() + "/" +
-				mCaller.getCallerId();
+                mCaller.getCallerId();
     }
 
-	private void setFlag(char flagChar, boolean on) {
-		if (on) {
-			mFlags += flagChar;
-		} else {
-			mFlags = mFlags.replace(Character.toString(flagChar), "");
-		}
-	}
+    private void setFlag(char flagChar, boolean on) {
+        if (on) {
+            mFlags += flagChar;
+        } else {
+            mFlags = mFlags.replace(Character.toString(flagChar), "");
+        }
+    }
 
+    @Override
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject zjo = new ZJSONObject ();
-
         zjo.put("id", mId);
         zjo.put("sortField", mSortField);
-        zjo.put("score", mScore);
         zjo.put("flags", mFlags);
         zjo.put("soundUrl", mSoundUrl);
         zjo.put("date", mDate);
@@ -153,6 +146,7 @@ public class ZVoiceMailItemHit implements ZSearchHit {
         return zjo;
     }
 
+    @Override
     public String toString() {
         return String.format("[ZVoiceMailItemHit %s]", mId);
     }
