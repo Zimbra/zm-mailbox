@@ -95,6 +95,7 @@ public final class ContactConstants {
     public static final String A_otherStreet = Attr.otherStreet.name();
     public static final String A_otherURL = Attr.otherURL.name();
     public static final String A_pager = Attr.pager.name();
+    public static final String A_SMIMECertificate = Attr.SMIMECertificate.name();
     public static final String A_workCity = Attr.workCity.name();
     public static final String A_workCountry = Attr.workCountry.name();
     public static final String A_workFax = Attr.workFax.name();
@@ -195,6 +196,7 @@ public final class ContactConstants {
         otherURL,
         pager,
         tollFree,
+        SMIMECertificate,
         workCity,
         workCountry,
         workFax,
