@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -221,11 +221,13 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl {
         return getNext();
     }
 
+    @Override
     public void resetIterator() {
         mIterOffset = 0;
         mAtEndOfList = false;
     }
 
+    @Override
     public ZimbraHit getNext() throws ServiceException {
         ZimbraHit retVal = peekNext();
         if (retVal != null) {
@@ -234,6 +236,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl {
         return retVal;
     }
 
+    @Override
     public ZimbraHit peekNext() throws ServiceException {
         if (mIterOffset >= mBufferEndOffset) {
             if (!bufferNextHits()) {
@@ -262,9 +265,6 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl {
 
     /**
      * Always does a request -- caller is responsible for checking to see if this is necessary or not
-     *
-     * @return
-     * @throws ServiceException
      */
     private boolean bufferNextHits() throws ServiceException {
         if (mAtEndOfList || mSearchParams.getHopCount() > ZimbraSoapContext.MAX_HOP_COUNT) {
@@ -299,8 +299,12 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl {
                 mbxElt.addAttribute(MailConstants.A_ID, id.getString());
             } else {
                 for (ParseMailboxID id : mMailboxes) {
-                    searchElt.addElement(MailConstants.E_MAILBOX).addAttribute(
-                            MailConstants.A_NAME, id.getEmailAddress());
+                    Element mboxEl = searchElt.addElement(MailConstants.E_MAILBOX);
+                    if (id.getAccount() != null) {
+                        mboxEl.addAttribute(MailConstants.A_NAME, id.getAccount().getName());
+                    } else {
+                        mboxEl.addAttribute(MailConstants.A_ID, id.getMailboxId());
+                    }
                 }
             }
         }
@@ -396,10 +400,12 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl {
         return (mBufferEndOffset > mIterOffset);
     }
 
+    @Override
     public List<QueryInfo> getResultInfo() {
         return mInfo;
     }
 
+    @Override
     public int estimateResultSize() {
         return 0;
     }
