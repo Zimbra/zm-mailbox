@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -20,7 +20,7 @@ import com.zimbra.cs.db.Db;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.common.service.ServiceException;
@@ -121,7 +121,7 @@ public final class MailboxUpgrade {
     public static void upgradeTo1_11(Mailbox mbox) throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
-        Connection conn = DbPool.getConnection(mbox);
+        DbConnection conn = DbPool.getConnection(mbox);
         try {
             // fetch highest_indexed
             String highestIndexed = null;

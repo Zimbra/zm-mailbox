@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -32,7 +32,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.localconfig.DebugConfig;
@@ -172,7 +172,7 @@ public class MailboxManager {
     private MailboxMap mMailboxCache;
 
     public MailboxManager() throws ServiceException {
-        Connection conn = null;
+        DbConnection conn = null;
         synchronized (this) {
             try {
                 conn = DbPool.getConnection();
@@ -448,7 +448,7 @@ public class MailboxManager {
             ZimbraPerf.COUNTER_MBOX_CACHE.increment(0);
             MailboxData data;
             synchronized (DbMailbox.getSynchronizer()) {
-                Connection conn = null;
+                DbConnection conn = null;
                 try {
                     // fetch the Mailbox data from the database
                     conn = DbPool.getConnection();
@@ -735,7 +735,7 @@ public class MailboxManager {
         }
 
         synchronized (DbMailbox.getSynchronizer()) {
-            Connection conn = null;
+            DbConnection conn = null;
             try {
                 conn = DbPool.getConnection();
                 return DbMailbox.getMailboxSizes(conn, requested);
@@ -799,7 +799,7 @@ public class MailboxManager {
 
         Mailbox mbox = null;
 
-        Connection conn = null;
+        DbConnection conn = null;
         boolean success = false;
         try {
             conn = DbPool.getConnection();

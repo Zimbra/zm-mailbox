@@ -41,6 +41,8 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.db.DbSearchConstraints;
 import com.zimbra.cs.db.DbSearch.SearchResult;
@@ -691,7 +693,13 @@ public final class IndexHelper {
 
     private synchronized SetMultimap<MailItem.Type, Integer> getDeferredIds() throws ServiceException {
         if (deferredIds == null) {
-            deferredIds = DbMailItem.getIndexDeferredIds(mailbox);
+            DbConnection conn = DbPool.getConnection(mailbox);
+            try {
+                deferredIds = DbMailItem.getIndexDeferredIds(conn, mailbox);
+            } finally {
+                DbPool.quietClose(conn);
+            }
+
         }
         return deferredIds;
     }

@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -24,7 +24,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbOutOfOffice;
 import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Notification;
@@ -40,7 +40,7 @@ public class OutOfOfficeCallback extends AttributeCallback {
     }
 
     /**
-     * need to keep track in context on whether or not we have been called yet, only 
+     * need to keep track in context on whether or not we have been called yet, only
      * reset info once
      */
 
@@ -50,7 +50,7 @@ public class OutOfOfficeCallback extends AttributeCallback {
             if (done == null) {
                 context.put(KEY, KEY);
                 ZimbraLog.misc.info("need to reset vacation info");
-                if (entry instanceof Account) 
+                if (entry instanceof Account)
                     handleOutOfOffice((Account)entry);
             }
         }
@@ -59,16 +59,16 @@ public class OutOfOfficeCallback extends AttributeCallback {
     private void handleOutOfOffice(Account account) {
         try {
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-    
+
             synchronized (DbMailbox.getZimbraSynchronizer(mbox)) {
-                Connection conn = null;
+                DbConnection conn = null;
                 try {
                     // clear the OOF database for this account
                     conn = DbPool.getConnection(mbox);
                     DbOutOfOffice.clear(conn, mbox);
                     conn.commit();
                     ZimbraLog.misc.info("reset vacation info");
-        
+
                     // Convenient place to prune old data, until we determine that this
                     //  needs to be a separate scheduled process.
                     // TODO: only prune once a day?

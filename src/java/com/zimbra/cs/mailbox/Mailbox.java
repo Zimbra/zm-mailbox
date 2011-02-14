@@ -75,7 +75,7 @@ import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbMailItem.QueryParams;
-import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.fb.FreeBusyQuery;
 import com.zimbra.cs.filter.RuleManager;
@@ -244,7 +244,7 @@ public class Mailbox {
         long       timestamp = System.currentTimeMillis();
         int        depth     = 0;
         boolean    active;
-        Connection conn      = null;
+        DbConnection conn      = null;
         RedoableOp recorder  = null;
         List<IndexItemEntry> indexItems = new ArrayList<IndexItemEntry>();
         Map<Integer, MailItem> itemCache = null;
@@ -296,7 +296,7 @@ public class Mailbox {
         }
         boolean isActive()  { return active; }
 
-        Connection getConnection() throws ServiceException {
+        DbConnection getConnection() throws ServiceException {
             if (conn == null) {
                 conn = DbPool.getConnection(Mailbox.this);
                 if (ZimbraLog.mailbox.isDebugEnabled())
@@ -1027,13 +1027,13 @@ public class Mailbox {
             mCurrentChange.mOtherDirtyStuff.add(obj);
     }
 
-    public synchronized Connection getOperationConnection() throws ServiceException {
+    public synchronized DbConnection getOperationConnection() throws ServiceException {
         if (!mCurrentChange.isActive())
             throw ServiceException.FAILURE("cannot fetch Connection outside transaction", new Exception());
         return mCurrentChange.getConnection();
     }
 
-    private synchronized void setOperationConnection(Connection conn) throws ServiceException {
+    private synchronized void setOperationConnection(DbConnection conn) throws ServiceException {
         if (!mCurrentChange.isActive())
             throw ServiceException.FAILURE("cannot set Connection outside transaction", new Exception());
         else if (conn == null)
@@ -1083,11 +1083,11 @@ public class Mailbox {
         long timestamp = octxt == null ? System.currentTimeMillis() : octxt.getTimestamp();
         beginTransaction(caller, timestamp, octxt, recorder, null);
     }
-    void beginTransaction(String caller, OperationContext octxt, RedoableOp recorder, Connection conn) throws ServiceException {
+    void beginTransaction(String caller, OperationContext octxt, RedoableOp recorder, DbConnection conn) throws ServiceException {
         long timestamp = octxt == null ? System.currentTimeMillis() : octxt.getTimestamp();
         beginTransaction(caller, timestamp, octxt, recorder, conn);
     }
-    private void beginTransaction(String caller, long time, OperationContext octxt, RedoableOp recorder, Connection conn) throws ServiceException {
+    private void beginTransaction(String caller, long time, OperationContext octxt, RedoableOp recorder, DbConnection conn) throws ServiceException {
         assert(Thread.holdsLock(this));
         mCurrentChange.startChange(caller, octxt, recorder);
 
@@ -1572,7 +1572,7 @@ public class Mailbox {
 
             try {
                 // remove all the relevant entries from the database
-                Connection conn = getOperationConnection();
+                DbConnection conn = getOperationConnection();
                 DbMailbox.clearMailboxContent(this);
                 synchronized (DbMailbox.getSynchronizer()) {
                     DbMailbox.deleteMailbox(conn, this);
@@ -5853,7 +5853,7 @@ public class Mailbox {
         params.setChangeDateBefore(System.currentTimeMillis() / 1000 + 1).setRowLimit(batchSize);
         while (true) {
             Set<Integer> itemIds = null;
-            Connection conn = null;
+            DbConnection conn = null;
             synchronized (this) {
                 try {
                     conn = DbPool.getConnection();
@@ -5875,7 +5875,7 @@ public class Mailbox {
         QueryParams params = new QueryParams();
         params.setChangeDateBefore(olderThanMillis / 1000).setRowLimit(maxItems);
         Set<Integer> itemIds = null;
-        Connection conn = null;
+        DbConnection conn = null;
         try {
             conn = DbPool.getConnection();
             itemIds = DbMailItem.getIds(this, conn, params, true);
@@ -6602,7 +6602,7 @@ public class Mailbox {
 
         while (true) {
             Set<Integer> itemIds = null;
-            Connection conn = null;
+            DbConnection conn = null;
 
             // Synchronize on this mailbox to make sure that no one modifies the
             // items we're about to delete.
@@ -7126,7 +7126,7 @@ public class Mailbox {
     public void optimize(OperationContext octxt, int level) {
         synchronized (this) {
             try {
-                Connection conn = DbPool.getConnection(this);
+                DbConnection conn = DbPool.getConnection(this);
 
                 DbMailbox.optimize(conn, this, level);
                 DbPool.quietClose(conn);
@@ -7297,7 +7297,7 @@ public class Mailbox {
             }
         }
 
-        Connection conn = mCurrentChange.conn;
+        DbConnection conn = mCurrentChange.conn;
 
         // Failure case is very simple.  Just rollback the database and cache
         // and return.  We haven't logged anything to the redo log for this

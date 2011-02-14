@@ -23,7 +23,7 @@ import junit.framework.TestCase;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
@@ -41,7 +41,7 @@ import com.zimbra.common.util.ZimbraLog;
  * @author bburtin
  */
 public class TestTags extends TestCase {
-    private Connection mConn;
+    private DbConnection mConn;
     private Mailbox mMbox;
     private Account mAccount;
 

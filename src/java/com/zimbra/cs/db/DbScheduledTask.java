@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -26,7 +26,7 @@ import java.util.Set;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.ScheduledTask;
@@ -41,7 +41,7 @@ public class DbScheduledTask {
     /**
      * Saves the given task to the database.
      */
-    public static void createTask(Connection conn, ScheduledTask task)
+    public static void createTask(DbConnection conn, ScheduledTask task)
     throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
 
@@ -85,7 +85,7 @@ public class DbScheduledTask {
         List<ScheduledTask> tasks = new ArrayList<ScheduledTask>();
 
         synchronized (DbMailbox.getSynchronizer()) {
-            Connection conn = null;
+            DbConnection conn = null;
             PreparedStatement stmt = null;
             ResultSet rs = null;
             try {
@@ -162,7 +162,7 @@ public class DbScheduledTask {
         return tasks;
     }
 
-    public static void updateTask(Connection conn, ScheduledTask task)
+    public static void updateTask(DbConnection conn, ScheduledTask task)
     throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
 
@@ -200,7 +200,7 @@ public class DbScheduledTask {
     public static void deleteTask(String className, String taskName)
     throws ServiceException {
         synchronized (DbMailbox.getSynchronizer()) {
-            Connection conn = null;
+            DbConnection conn = null;
             try {
                 conn = DbPool.getConnection();
                 deleteTask(conn, className, taskName);
@@ -211,7 +211,7 @@ public class DbScheduledTask {
         }
     }
 
-    public static void deleteTask(Connection conn, String className, String taskName)
+    public static void deleteTask(DbConnection conn, String className, String taskName)
     throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
 

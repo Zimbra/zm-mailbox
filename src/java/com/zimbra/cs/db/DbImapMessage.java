@@ -27,7 +27,7 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.datasource.imap.ImapFolder;
 import com.zimbra.cs.datasource.imap.ImapMessage;
 import com.zimbra.cs.datasource.imap.ImapMessageCollection;
-import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
@@ -49,7 +49,7 @@ public class DbImapMessage {
                 "Storing IMAP message tracker: mboxId=%d, localFolderId=%d, remoteUid=%d, localItemId=%d flags=%s",
                 mbox.getId(), localFolderId, remoteUid, localItemId, Flag.toString(flags));
 
-        Connection conn = null;
+        DbConnection conn = null;
         PreparedStatement stmt = null;
         try {
             conn = DbPool.getConnection(mbox);
@@ -82,7 +82,7 @@ public class DbImapMessage {
             "Updating IMAP message tracker uid: mboxId=%d, localItemId=%d remoteUid=%x",
             mbox.getId(), itemId, uid);
 
-        Connection conn = null;
+        DbConnection conn = null;
         PreparedStatement stmt = null;
         try {
             conn = DbPool.getConnection(mbox);
@@ -118,7 +118,7 @@ public class DbImapMessage {
             "Getting %s IMAP uid: mboxId=%d, folderId=%d", minmax, mbox.getId(), folderId);
 
         synchronized (getSynchronizer(mbox)) {
-            Connection conn = null;
+            DbConnection conn = null;
             PreparedStatement stmt = null;
             ResultSet rs = null;
             try {
@@ -144,7 +144,7 @@ public class DbImapMessage {
         ZimbraLog.datasource.debug("Updating IMAP message tracker flags: mboxId=%d, localItemId=%d flags=%s",
                 mbox.getId(), itemId, Flag.toString(flags));
 
-        Connection conn = null;
+        DbConnection conn = null;
         PreparedStatement stmt = null;
         try {
             conn = DbPool.getConnection(mbox);
@@ -177,7 +177,7 @@ public class DbImapMessage {
             "Deleting IMAP message tracker: mboxId=%d, localFolderId=%d, msgId=%d",
             mbox.getId(), localFolderId, localItemId);
 
-        Connection conn = null;
+        DbConnection conn = null;
         PreparedStatement stmt = null;
         try {
             conn = DbPool.getConnection(mbox);
@@ -209,7 +209,7 @@ public class DbImapMessage {
         ZimbraLog.datasource.debug(
             "Deleting all IMAP message trackers: mboxId=%d, localFolderId=%d", mbox.getId(), localFolderId);
 
-        Connection conn = null;
+        DbConnection conn = null;
         PreparedStatement stmt = null;
         try {
             conn = DbPool.getConnection(mbox);
@@ -240,7 +240,7 @@ public class DbImapMessage {
             "Getting local message id for tracked message: mboxId=%d, localFolderId=%d, remoteUid=%d",
             mbox.getId(), localFolderId, remoteUid);
 
-        Connection conn = null;
+        DbConnection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -266,7 +266,7 @@ public class DbImapMessage {
     public static Pair<ImapMessage, Integer> getImapMessage(Mailbox mbox, DataSource ds, int itemId)
     throws ServiceException {
         synchronized (getSynchronizer(mbox)) {
-            Connection conn = null;
+            DbConnection conn = null;
             PreparedStatement stmt = null;
             ResultSet rs = null;
             try {
@@ -310,7 +310,7 @@ public class DbImapMessage {
         List<ImapMessage> msgs = new ArrayList<ImapMessage>();
 
         synchronized (getSynchronizer(mbox)) {
-            Connection conn = null;
+            DbConnection conn = null;
             PreparedStatement stmt = null;
             ResultSet rs = null;
             try {
@@ -356,7 +356,7 @@ public class DbImapMessage {
 
         ImapMessageCollection imapMessages = new ImapMessageCollection();
 
-        Connection conn = null;
+        DbConnection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -410,7 +410,7 @@ public class DbImapMessage {
 
         List<Integer> newIds = new ArrayList<Integer>();
 
-        Connection conn = null;
+        DbConnection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {

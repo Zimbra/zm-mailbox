@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -25,7 +25,7 @@ import java.util.List;
 
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -55,7 +55,7 @@ public class WikiDigestFixup {
         public String getEmail() { return mEmail; }
     }
 
-    private static List<Mbox> getMboxList(Connection conn) throws SQLException {
+    private static List<Mbox> getMboxList(DbConnection conn) throws SQLException {
         List<Mbox> list = new ArrayList<Mbox>(1000);
         String sql = "SELECT id, comment FROM mailbox ORDER BY id";
         PreparedStatement stmt = null;
@@ -141,7 +141,7 @@ public class WikiDigestFixup {
         return list;
     }
 
-    private static void fixupItems(Connection conn, int mboxId, List<WikiDigest> digests)
+    private static void fixupItems(DbConnection conn, int mboxId, List<WikiDigest> digests)
     throws SQLException, ServiceException {
         StringBuilder sql = new StringBuilder("UPDATE ");
         sql.append("mailbox" + mboxId + ".mail_item");
@@ -183,7 +183,7 @@ public class WikiDigestFixup {
         CliUtil.toolSetup("WARN");
         sStore = StoreManager.getInstance();
         DbPool.startup();
-        Connection conn = null;
+        DbConnection conn = null;
         try {
             int numFixed = 0;
             conn = DbPool.getConnection();

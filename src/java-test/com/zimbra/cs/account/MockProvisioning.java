@@ -26,6 +26,7 @@ import com.zimbra.cs.account.DataSource.Type;
 import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.account.auth.AuthContext.Protocol;
 import com.zimbra.cs.mime.MimeTypeInfo;
+import com.zimbra.cs.redolog.MockRedoLogProvider;
 
 /**
  * Mock implementation of {@link Provisioning} for testing.
@@ -39,12 +40,17 @@ public final class MockProvisioning extends Provisioning {
     private final Map<String, List<MimeTypeInfo>> mimeConfig =
         new HashMap<String, List<MimeTypeInfo>>();
     private final Config config = new Config(new HashMap<String, Object>(), this);
-    private final Server localhost = new Server("localhost", "localhost",
-            new HashMap<String, Object>(), new HashMap<String, Object>(), this);
+    private final Server localhost;
+
+    public MockProvisioning() {
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraServiceHostname, "localhost");
+        attrs.put(Provisioning.A_zimbraRedoLogProvider, MockRedoLogProvider.class.getName());
+        localhost = new Server("localhost", "localhost", attrs, Collections.<String, Object>emptyMap(), this);
+    }
 
     @Override
-    public Account createAccount(String email, String password,
-            Map<String, Object> attrs) throws ServiceException {
+    public Account createAccount(String email, String password, Map<String, Object> attrs) throws ServiceException {
         validate(ProvisioningValidator.CREATE_ACCOUNT, email, null, attrs);
 
         Account account = new Account(email, email, attrs, null, this);
@@ -102,9 +108,7 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public void modifyAttrs(Entry entry, Map<String, ? extends Object> attrs,
-            boolean checkImmutable) {
-
+    public void modifyAttrs(Entry entry, Map<String, ? extends Object> attrs, boolean checkImmutable) {
         Map<String, Object> map = entry.getAttrs(false);
         for (Map.Entry<String, ? extends Object> attr : attrs.entrySet()) {
             if (attr.getValue() != null) {
@@ -205,21 +209,18 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public void authAccount(Account acct, String password, Protocol proto,
-            Map<String, Object> authCtxt) {
+    public void authAccount(Account acct, String password, Protocol proto, Map<String, Object> authCtxt) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void preAuthAccount(Account acct, String accountName,
-            String accountBy, long timestamp, long expires, String preAuth,
-            Map<String, Object> authCtxt) {
+    public void preAuthAccount(Account acct, String accountName, String accountBy, long timestamp, long expires,
+            String preAuth, Map<String, Object> authCtxt) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void changePassword(Account acct, String currentPassword,
-            String newPassword) {
+    public void changePassword(Account acct, String currentPassword, String newPassword) {
         throw new UnsupportedOperationException();
     }
 
@@ -250,7 +251,7 @@ public final class MockProvisioning extends Provisioning {
 
     @Override
     public Domain get(DomainBy keyType, String key) {
-        throw new UnsupportedOperationException();
+        return null;
     }
 
     @Override
@@ -319,8 +320,7 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public DistributionList createDistributionList(String listAddress,
-            Map<String, Object> listAttrs) {
+    public DistributionList createDistributionList(String listAddress, Map<String, Object> listAttrs) {
         throw new UnsupportedOperationException();
     }
 
@@ -370,8 +370,7 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public CalendarResource createCalendarResource(String emailAddress,
-            String password, Map<String, Object> attrs) {
+    public CalendarResource createCalendarResource(String emailAddress, String password, Map<String, Object> attrs) {
         throw new UnsupportedOperationException();
     }
 
@@ -432,9 +431,8 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public List<NamedEntry> searchAccounts(Domain d, String query,
-            String[] returnAttrs, String sortAttr, boolean sortAscending,
-            int flags) {
+    public List<NamedEntry> searchAccounts(Domain d, String query, String[] returnAttrs, String sortAttr,
+            boolean sortAscending, int flags) {
         throw new UnsupportedOperationException();
     }
 
@@ -444,21 +442,18 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public SearchGalResult searchGal(Domain d, String query,
-            GalSearchType type, String token) {
+    public SearchGalResult searchGal(Domain d, String query, GalSearchType type, String token) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public SearchGalResult autoCompleteGal(Domain d, String query,
-            GalSearchType type, int limit) {
+    public SearchGalResult autoCompleteGal(Domain d, String query, GalSearchType type, int limit) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public List<NamedEntry> searchCalendarResources(Domain d,
-            EntrySearchFilter filter, String[] returnAttrs, String sortAttr,
-            boolean sortAscending) {
+    public List<NamedEntry> searchCalendarResources(Domain d, EntrySearchFilter filter, String[] returnAttrs,
+            String sortAttr, boolean sortAscending) {
         throw new UnsupportedOperationException();
     }
 
@@ -473,20 +468,17 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public Identity createIdentity(Account account, String identityName,
-            Map<String, Object> attrs) {
+    public Identity createIdentity(Account account, String identityName, Map<String, Object> attrs) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Identity restoreIdentity(Account account, String identityName,
-            Map<String, Object> attrs) {
+    public Identity restoreIdentity(Account account, String identityName, Map<String, Object> attrs) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void modifyIdentity(Account account, String identityName,
-            Map<String, Object> attrs) {
+    public void modifyIdentity(Account account, String identityName, Map<String, Object> attrs) {
         throw new UnsupportedOperationException();
     }
 
@@ -506,20 +498,17 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public Signature createSignature(Account account, String signatureName,
-            Map<String, Object> attrs) {
+    public Signature createSignature(Account account, String signatureName, Map<String, Object> attrs) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Signature restoreSignature(Account account, String signatureName,
-            Map<String, Object> attrs) {
+    public Signature restoreSignature(Account account, String signatureName, Map<String, Object> attrs) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void modifySignature(Account account, String signatureId,
-            Map<String, Object> attrs) {
+    public void modifySignature(Account account, String signatureId, Map<String, Object> attrs) {
         throw new UnsupportedOperationException();
     }
 
@@ -539,21 +528,18 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public DataSource createDataSource(Account account, Type type,
-            String dataSourceName, Map<String, Object> attrs) {
+    public DataSource createDataSource(Account account, Type type, String dataSourceName, Map<String, Object> attrs) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public DataSource createDataSource(Account account, Type type,
-            String dataSourceName, Map<String, Object> attrs,
+    public DataSource createDataSource(Account account, Type type, String dataSourceName, Map<String, Object> attrs,
             boolean passwdAlreadyEncrypted) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public DataSource restoreDataSource(Account account, Type type,
-            String dataSourceName, Map<String, Object> attrs) {
+    public DataSource restoreDataSource(Account account, Type type, String dataSourceName, Map<String, Object> attrs) {
         throw new UnsupportedOperationException();
     }
 
@@ -579,8 +565,7 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public XMPPComponent createXMPPComponent(String name, Domain domain,
-            Server server, Map<String, Object> attrs) {
+    public XMPPComponent createXMPPComponent(String name, Domain domain, Server server, Map<String, Object> attrs) {
         throw new UnsupportedOperationException();
     }
 

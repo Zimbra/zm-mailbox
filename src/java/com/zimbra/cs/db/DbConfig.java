@@ -1,20 +1,16 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/*
- * Created on Apr 8, 2004
  */
 package com.zimbra.cs.db;
 
@@ -26,35 +22,38 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.MailboxManager;
 
+/**
+ * @since Apr 8, 2004
+ */
 public class DbConfig {
 
     private static final String CN_NAME = "name";
     private static final String CN_VALUE = "value";
     private static final String CN_DESCRIPTION = "value";
     private static final String CN_MODIFIED = "modified";
-    
+
     // these MUST be kept in sync with the db
     private static final int CI_NAME = 1;
     private static final int CI_VALUE = 2;
     private static final int CI_DESCRIPTION = 3;
     private static final int CI_MODIFIED = 4;
-    
+
     /** database name */
     private String mDbName;
-    
+
     /** database value */
     private String mDbValue;
-    
+
     /** database description */
     private String mDbDescription;
-    
+
     /** database modified */
     private Timestamp mDbModified;
-    
-    public static DbConfig set(Connection conn, String name, String value) throws ServiceException {
+
+    public static DbConfig set(DbConnection conn, String name, String value) throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
 
         Timestamp modified = new Timestamp(System.currentTimeMillis());
@@ -67,7 +66,7 @@ public class DbConfig {
             stmt.setTimestamp(2, modified);
             stmt.setString(3, name);
             int numRows = stmt.executeUpdate();
-            
+
             // If update didn't affect any rows, do an insert
             if (numRows == 0) {
                 stmt = conn.prepareStatement("INSERT INTO config(name, value, modified) VALUES (?, ?, ?)");
@@ -80,7 +79,7 @@ public class DbConfig {
             throw ServiceException.FAILURE("writing config entry: " + name, e);
         } finally {
             DbPool.closeStatement(stmt);
-        }        
+        }
 
         DbConfig c = new DbConfig();
         c.mDbName = name;
@@ -96,7 +95,7 @@ public class DbConfig {
      * @return true if it existed and was deleted
      * @throws SQLException
      */
-    public static boolean delete(Connection conn, String name) throws ServiceException {
+    public static boolean delete(DbConnection conn, String name) throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
 
         PreparedStatement stmt = null;
@@ -106,10 +105,10 @@ public class DbConfig {
             int num = stmt.executeUpdate();
             return num == 1;
         } catch (SQLException e) {
-        	throw ServiceException.FAILURE("deleting config entry: " + name, e);
+            throw ServiceException.FAILURE("deleting config entry: " + name, e);
         } finally {
             DbPool.closeStatement(stmt);
-        }        
+        }
     }
 
     /**
@@ -119,7 +118,7 @@ public class DbConfig {
      * @return
      * @throws SQLException
      */
-    public static DbConfig get(Connection conn, String name) throws ServiceException {
+    public static DbConfig get(DbConnection conn, String name) throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
 
         PreparedStatement stmt = null;
@@ -132,23 +131,23 @@ public class DbConfig {
             if (rs.next())
                 return constructConfig(rs);
         } catch (SQLException e) {
-        	throw ServiceException.FAILURE("getting config entry: " + name, e);
+            throw ServiceException.FAILURE("getting config entry: " + name, e);
         } finally {
-        	DbPool.closeResults(rs);
+            DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
         }
         return result;
     }
 
     /**
-     * Return all config items in a map, where name is the key and a 
+     * Return all config items in a map, where name is the key and a
      * Config object is the value.
      * @param conn
      * @param ts If not null return entries great than or equal to this Timestamp
      * @return Map containing config items.
      * @throws SQLException
      */
-    public static Map<String, DbConfig> getAll(Connection conn, Timestamp ts) throws ServiceException {
+    public static Map<String, DbConfig> getAll(DbConnection conn, Timestamp ts) throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
 
         PreparedStatement stmt = null;
@@ -167,9 +166,9 @@ public class DbConfig {
                 result.put(c.mDbName, c);
             }
         } catch (SQLException e) {
-        	throw ServiceException.FAILURE("getting all config entries", e);
+            throw ServiceException.FAILURE("getting all config entries", e);
         } finally {
-        	DbPool.closeResults(rs);
+            DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
         }
         return result;
@@ -191,15 +190,15 @@ public class DbConfig {
     public String getName() {
         return mDbName;
     }
-    
+
     public String getValue() {
         return mDbValue;
     }
-    
+
     public Timestamp getModified() {
         return mDbModified;
     }
-    
+
     @Override public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("config: {");

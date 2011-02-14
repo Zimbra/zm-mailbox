@@ -1,21 +1,16 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/*
- * Created on 2005. 6. 9.
- *
  */
 package com.zimbra.cs.db;
 
@@ -26,17 +21,17 @@ import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.store.file.Volume;
 import com.zimbra.cs.store.file.VolumeServiceException;
 
 /**
- * @author jhahm
+ * volume table and current_volumes table.
  *
- * volume table and current_volumes table
+ * @since 2005. 6. 9.
+ * @author jhahm
  */
 public class DbVolume {
 
@@ -51,7 +46,7 @@ public class DbVolume {
     private static final String CN_COMPRESS_BLOBS = "compress_blobs";
     private static final String CN_COMPRESSION_THRESHOLD = "compression_threshold";
 
-    public static synchronized Volume create(Connection conn, short id,
+    public static synchronized Volume create(DbConnection conn, short id,
                                              short type, String name, String path,
                                              short mboxGroupBits, short mboxBits,
                                              short fileGroupBits, short fileBits,
@@ -97,7 +92,7 @@ public class DbVolume {
         return get(conn, nextId);
     }
 
-    public static Volume update(Connection conn, short id,
+    public static Volume update(DbConnection conn, short id,
                                 short type, String name, String path,
                                 short mboxGroupBits, short mboxBits,
                                 short fileGroupBits, short fileBits,
@@ -144,7 +139,7 @@ public class DbVolume {
      * @return true if it existed and was deleted
      * @throws SQLException
      */
-    public static boolean delete(Connection conn, short id) throws ServiceException {
+    public static boolean delete(DbConnection conn, short id) throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
 
         PreparedStatement stmt = null;
@@ -160,10 +155,10 @@ public class DbVolume {
                 throw ServiceException.FAILURE("deleting volume entry: " + id, e);
         } finally {
             DbPool.closeStatement(stmt);
-        }        
+        }
     }
 
-    private static short getNextVolumeID(Connection conn) throws ServiceException {
+    private static short getNextVolumeID(DbConnection conn) throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
 
         PreparedStatement stmt = null;
@@ -191,7 +186,7 @@ public class DbVolume {
      * @return
      * @throws SQLException
      */
-    public static Volume get(Connection conn, short id) throws ServiceException {
+    public static Volume get(DbConnection conn, short id) throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
 
         PreparedStatement stmt = null;
@@ -213,13 +208,13 @@ public class DbVolume {
     }
 
     /**
-     * Return all volume entries in a map, where id is the key and a 
+     * Return all volume entries in a map, where id is the key and a
      * Volume object is the value.
      * @param conn
      * @return Map containing volume entries
      * @throws SQLException
      */
-    public static Map<Short, Volume> getAll(Connection conn) throws ServiceException {
+    public static Map<Short, Volume> getAll(DbConnection conn) throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
 
         PreparedStatement stmt = null;
@@ -242,12 +237,12 @@ public class DbVolume {
     }
 
     public static class CurrentVolumes {
-    	public short msgVolId = Volume.ID_NONE;
+        public short msgVolId = Volume.ID_NONE;
         public short secondaryMsgVolId = Volume.ID_NONE;
         public short indexVolId = Volume.ID_NONE;
     }
 
-    public static CurrentVolumes getCurrentVolumes(Connection conn) throws ServiceException {
+    public static CurrentVolumes getCurrentVolumes(DbConnection conn) throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
 
         CurrentVolumes currVols = new CurrentVolumes();
@@ -275,7 +270,7 @@ public class DbVolume {
             return null;
     }
 
-    public static void updateCurrentVolume(Connection conn, short volType, short volumeId)
+    public static void updateCurrentVolume(DbConnection conn, short volType, short volumeId)
     throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
 

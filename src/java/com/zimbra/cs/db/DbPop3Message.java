@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -29,14 +29,14 @@ import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
-import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.Mailbox;
 
 
 public class DbPop3Message {
 
     public static final String TABLE_POP3_MESSAGE = "pop3_message";
-    
+
     /**
      * Persists <code>uid</code> so we remember not to import the message again.
      */
@@ -45,12 +45,12 @@ public class DbPop3Message {
         synchronized (DbMailItem.getSynchronizer(mbox)) {
             if (StringUtil.isNullOrEmpty(uid))
                 return;
-    
-            Connection conn = null;
+
+            DbConnection conn = null;
             PreparedStatement stmt = null;
             try {
                 conn = DbPool.getConnection(mbox);
-    
+
                 stmt = conn.prepareStatement(
                     "INSERT INTO " + getTableName(mbox) +
                     " (" + DbMailItem.MAILBOX_ID + "data_source_id, uid, item_id) " +
@@ -78,12 +78,12 @@ public class DbPop3Message {
     throws ServiceException {
         synchronized (DbMailItem.getSynchronizer(mbox)) {
             ZimbraLog.mailbox.debug("Deleting UID's for %s", dataSourceId);
-    
-            Connection conn = null;
+
+            DbConnection conn = null;
             PreparedStatement stmt = null;
             try {
                 conn = DbPool.getConnection(mbox);
-    
+
                 stmt = conn.prepareStatement(
                     "DELETE FROM " + getTableName(mbox) +
                     " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "data_source_id = ?");
@@ -109,10 +109,10 @@ public class DbPop3Message {
     throws ServiceException {
         synchronized (DbMailItem.getSynchronizer(mbox)) {
             Map<Integer, String> mappings = new HashMap<Integer, String>();
-            Connection conn = null;
+            DbConnection conn = null;
             PreparedStatement stmt = null;
             ResultSet rs = null;
-    
+
             ZimbraLog.mailbox.debug("get all POP mappings for %s", dataSourceId);
             try {
                 conn = DbPool.getConnection(mbox);
@@ -147,16 +147,16 @@ public class DbPop3Message {
     throws ServiceException {
         synchronized (DbMailItem.getSynchronizer(mbox)) {
             ZimbraLog.mailbox.debug("%s: looking for uids that match a set of size %d", ds, uids.size());
-            
+
             List<List<String>> splitIds = ListUtil.split(uids, Db.getINClauseBatchSize());
             Set<String> matchingUids = new HashSet<String>();
-    
-            Connection conn = null;
+
+            DbConnection conn = null;
             PreparedStatement stmt = null;
             ResultSet rs = null;
             try {
                 conn = DbPool.getConnection(mbox);
-    
+
                 for (List<String> curIds : splitIds) {
                     stmt = conn.prepareStatement(
                         "SELECT uid FROM " + getTableName(mbox) +
@@ -168,7 +168,7 @@ public class DbPop3Message {
                     for (String uid : curIds)
                         stmt.setString(pos++, uid);
                     rs = stmt.executeQuery();
-    
+
                     while (rs.next())
                         matchingUids.add(rs.getString(1));
                     rs.close(); rs = null;
@@ -181,7 +181,7 @@ public class DbPop3Message {
                 DbPool.closeStatement(stmt);
                 DbPool.quietClose(conn);
             }
-    
+
             ZimbraLog.mailbox.debug("Found %d matching UID's", matchingUids.size());
             return matchingUids;
         }

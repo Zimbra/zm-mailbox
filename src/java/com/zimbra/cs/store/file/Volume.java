@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -28,7 +28,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbVolume;
-import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.redolog.op.CreateVolume;
 import com.zimbra.cs.redolog.op.DeleteVolume;
 import com.zimbra.cs.redolog.op.ModifyVolume;
@@ -66,14 +66,14 @@ public class Volume {
 
     public static void reloadVolumes() throws ServiceException {
         synchronized (DbMailbox.getSynchronizer()) {
-            Connection conn = null;
+            DbConnection conn = null;
             try {
                 conn = DbPool.getConnection();
                 Map<Short, Volume> volumes = DbVolume.getAll(conn);
                 DbVolume.CurrentVolumes currVols = DbVolume.getCurrentVolumes(conn);
                 if (currVols == null)
                     throw VolumeServiceException.BAD_CURRVOL_CONFIG("Missing current volumes info from configuration");
-    
+
                 Volume currMsgVol = volumes.get(new Short(currVols.msgVolId));
                 if (currMsgVol == null)
                     throw VolumeServiceException.BAD_CURRVOL_CONFIG("Unknown current message volume " + currVols.msgVolId);
@@ -86,7 +86,7 @@ public class Volume {
                 Volume currIndexVol = volumes.get(new Short(currVols.indexVolId));
                 if (currIndexVol == null)
                     throw VolumeServiceException.BAD_CURRVOL_CONFIG("Unknown current index volume " + currVols.indexVolId);
-    
+
                 // All looks good.  Update current values.
                 synchronized (sVolumeGuard) {
                     sVolumeMap.clear();
@@ -137,7 +137,7 @@ public class Volume {
     throws VolumeServiceException {
         if (path == null || path.length() < 1)
             throw VolumeServiceException.INVALID_REQUEST("Missing volume path");
-        
+
         path = getAbsolutePath(path);
 
         // Make sure path is not a subdirectory of an existing volume.
@@ -220,7 +220,7 @@ public class Volume {
         Volume vol = null;
         synchronized (DbMailbox.getSynchronizer()) {
             boolean success = false;
-            Connection conn = null;
+            DbConnection conn = null;
             try {
                 conn = DbPool.getConnection();
                 vol = DbVolume.create(conn, id, type, name, path,
@@ -301,7 +301,7 @@ public class Volume {
 
         synchronized (DbMailbox.getSynchronizer()) {
             boolean success = false;
-            Connection conn = null;
+            DbConnection conn = null;
             try {
                 conn = DbPool.getConnection();
                 vol = DbVolume.update(conn, id, type, name, path,
@@ -332,7 +332,7 @@ public class Volume {
     /**
      * Remove the volume from the system.  Files on the volume being deleted
      * are not removed.
-     * 
+     *
      * @param id volume ID
      * @return true if actual deletion occurred
      * @throws ServiceException
@@ -366,7 +366,7 @@ public class Volume {
 
         synchronized (DbMailbox.getSynchronizer()) {
             boolean success = false;
-            Connection conn = null;
+            DbConnection conn = null;
             try {
                 conn = DbPool.getConnection();
                 boolean deleted = DbVolume.delete(conn, id);
@@ -400,7 +400,7 @@ public class Volume {
      * @throws VolumeServiceException if no such volume exists
      */
     public static Volume getById(short id) throws ServiceException {
-    	Volume v = null;
+        Volume v = null;
         Short key = new Short(id);
         synchronized (sVolumeGuard) {
             v = sVolumeMap.get(key);
@@ -410,7 +410,7 @@ public class Volume {
 
         // Look up from db.
         synchronized (DbMailbox.getSynchronizer()) {
-            Connection conn = null;
+            DbConnection conn = null;
             try {
                 conn = DbPool.getConnection();
                 v = DbVolume.get(conn, id);
@@ -444,7 +444,7 @@ public class Volume {
         }
         return volumes;
     }
-    
+
     /**
      * Returns a new <code>List</code> that contains all <code>Volume</code>s.
      */
@@ -462,8 +462,8 @@ public class Volume {
      * @return
      */
     public static Volume getCurrentMessageVolume() {
-    	synchronized (sVolumeGuard) {
-    	    return sCurrMsgVolume;
+        synchronized (sVolumeGuard) {
+            return sCurrMsgVolume;
         }
     }
 
@@ -520,11 +520,11 @@ public class Volume {
 
         synchronized (DbMailbox.getSynchronizer()) {
             boolean success = false;
-            Connection conn = null;
+            DbConnection conn = null;
             try {
                 conn = DbPool.getConnection();
                 DbVolume.updateCurrentVolume(conn, volType, id);
-    
+
                 synchronized (sVolumeGuard) {
                     if (volType == TYPE_MESSAGE)
                         sCurrMsgVolume = vol;
@@ -533,7 +533,7 @@ public class Volume {
                     else
                         sCurrIndexVolume = vol;
                 }
-    
+
                 success = true;
                 if (!noRedo)
                     redoRecorder.log();
@@ -544,7 +544,7 @@ public class Volume {
     }
 
     private static void endTransaction(boolean success,
-                                       Connection conn,
+                                       DbConnection conn,
                                        RedoableOp redoRecorder)
     throws ServiceException {
         if (success) {
@@ -563,12 +563,12 @@ public class Volume {
                 redoRecorder.abort();
         }
     }
-    
+
     public static String getAbsolutePath(String path) {
-    	return LC.zimbra_relative_volume_path.booleanValue() ?
-    		LC.zimbra_home.value() + File.separator + path : path;
+        return LC.zimbra_relative_volume_path.booleanValue() ?
+            LC.zimbra_home.value() + File.separator + path : path;
     }
-    
+
     /**
      * Make sure the path is an absolute path, and remove all "." and ".."
      * from it.  This is similar to File.getCanonicalPath() except symbolic
@@ -588,11 +588,11 @@ public class Volume {
     throws VolumeServiceException {
         if (path == null || path.length() < 1)
             throw VolumeServiceException.INVALID_REQUEST("Missing volume path");
-        
+
         // skip normalization for relative path
         if (LC.zimbra_relative_volume_path.booleanValue())
-        	return path;
-        
+            return path;
+
         StringBuffer newPath = new StringBuffer();
         if (path.matches("^[a-zA-Z]:[/\\\\].*$")) {
             // windows path with drive letter
@@ -666,10 +666,10 @@ public class Volume {
     // write blobs for id's 0-4095 to directory 0, 4096-8191 to directory
     // 1, etc.  After filling directory 255, we wrap around and write
     // 1048576-1052671 to directory 0 and so on.
-    
+
     // Number of dirs: 2 ^ groupBits (2 ^ 8 = 256 by default)
     // Number of files per dir before wraparound: 2 ^ bits (2 ^ 12 = 4096 by default)
-    
+
     private short mMboxGroupBits;
     private short mMboxBits;
     private short mFileGroupBits;
@@ -702,7 +702,7 @@ public class Volume {
         mMboxGroupBitMask = (int) mask;
         mask = (long) Math.pow(2, mFileGroupBits) - 1;
         mFileGroupBitMask = (int) mask;
-        
+
         mCompressBlobs = compressBlobs;
         mCompressionThreshold = compressionThreshold;
     }
@@ -752,7 +752,7 @@ public class Volume {
         sb.append(File.separator).append(dir);
         return sb.toString();
     }
-    
+
     public String getMessageRootDir(int mboxId) {
         return getMailboxDirStringBuffer(mboxId, null, 0).toString();
     }

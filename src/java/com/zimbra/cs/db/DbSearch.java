@@ -31,7 +31,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbSearchConstraints.NumericRange;
 import com.zimbra.cs.db.DbSearchConstraints.StringRange;
 import com.zimbra.cs.db.DbSearchConstraintsNode.NodeType;
@@ -253,7 +253,7 @@ public class DbSearch {
     }
 
 
-    public static int countResults(Connection conn, DbSearchConstraintsNode node, Mailbox mbox, boolean inDumpster)
+    public static int countResults(DbConnection conn, DbSearchConstraintsNode node, Mailbox mbox, boolean inDumpster)
     throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
@@ -397,7 +397,7 @@ public class DbSearch {
      * @throws ServiceException
      */
     private static final int encodeConstraint(Mailbox mbox, DbSearchConstraintsNode node,
-            byte[] calTypes, boolean inCalTable, StringBuilder statement, Connection conn) throws ServiceException {
+            byte[] calTypes, boolean inCalTable, StringBuilder statement, DbConnection conn) throws ServiceException {
         /*
          *( SUB-NODE AND/OR (SUB-NODE...) ) AND/OR ( SUB-NODE ) AND
          *    (
@@ -541,13 +541,13 @@ public class DbSearch {
         MailItem.Type.APPOINTMENT.toByte(), MailItem.Type.TASK.toByte()
     };
 
-    public static List<SearchResult> search(List<SearchResult> result, Connection conn, DbSearchConstraints c,
+    public static List<SearchResult> search(List<SearchResult> result, DbConnection conn, DbSearchConstraints c,
                                             Mailbox mbox, SortBy sort, SearchResult.ExtraData extra)
     throws ServiceException {
         return search(result, conn, c, mbox, sort, extra, false);
     }
 
-    public static List<SearchResult> search(List<SearchResult> result, Connection conn, DbSearchConstraints c,
+    public static List<SearchResult> search(List<SearchResult> result, DbConnection conn, DbSearchConstraints c,
             Mailbox mbox, SortBy sort, SearchResult.ExtraData extra, boolean inDumpster)
     throws ServiceException {
         return search(result, conn, c, mbox, sort, -1, -1, extra, inDumpster);
@@ -569,7 +569,7 @@ public class DbSearch {
         return toRet;
     }
 
-    public static List<SearchResult> search(List<SearchResult> result, Connection conn,
+    public static List<SearchResult> search(List<SearchResult> result, DbConnection conn,
                                             DbSearchConstraintsNode node, Mailbox mbox, SortBy sort,
                                             int offset, int limit, SearchResult.ExtraData extra, boolean inDumpster)
     throws ServiceException {
@@ -617,7 +617,7 @@ public class DbSearch {
         return result;
     }
 
-    public static List<SearchResult> searchInternal(List<SearchResult> result, Connection conn,
+    public static List<SearchResult> searchInternal(List<SearchResult> result, DbConnection conn,
                                                     DbSearchConstraintsNode node, Mailbox mbox, SortBy sort,
                                                     int offset, int limit, SearchResult.ExtraData extra,
                                                     boolean inDumpster)
@@ -1043,7 +1043,7 @@ public class DbSearch {
         Boolean unread;
         boolean noMatches;
 
-        static TagConstraints getTagConstraints(Mailbox mbox, DbSearchConstraints c, Connection conn) throws ServiceException {
+        static TagConstraints getTagConstraints(Mailbox mbox, DbSearchConstraints c, DbConnection conn) throws ServiceException {
             TagConstraints tc = c.tagConstraints = new TagConstraints();
             if (ListUtil.isEmpty(c.tags) && ListUtil.isEmpty(c.excludeTags))
                 return tc;

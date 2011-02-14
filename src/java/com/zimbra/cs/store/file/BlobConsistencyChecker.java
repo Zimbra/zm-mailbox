@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -36,7 +36,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.cs.db.DbBlobConsistency;
 import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.store.StoreManager;
@@ -50,12 +50,12 @@ public class BlobConsistencyChecker {
         public long dbSize;
         public String path;
         public short volumeId;
-        
+
         public int fileModContent;
         public Long fileDataSize;
         public Long fileSize;
     }
-    
+
     public static class Results {
         public int mboxId;
         public Collection<BlobInfo> missingBlobs = new ArrayList<BlobInfo>();
@@ -65,7 +65,7 @@ public class BlobConsistencyChecker {
 
         public Results() {
         }
-        
+
         public Results(Element mboxElement)
         throws ServiceException {
             if (!mboxElement.getName().equals(AdminConstants.E_MAILBOX)) {
@@ -87,7 +87,7 @@ public class BlobConsistencyChecker {
                 blob.modContent = (int) itemEl.getAttributeLong(AdminConstants.A_REVISION);
                 blob.dbSize = itemEl.getAttributeLong(AdminConstants.A_SIZE);
                 blob.volumeId = (short) itemEl.getAttributeLong(AdminConstants.A_VOLUME_ID);
-                
+
                 Element blobEl = itemEl.getElement(AdminConstants.E_BLOB);
                 blob.path = blobEl.getAttribute(AdminConstants.A_PATH);
                 blob.fileDataSize = blobEl.getAttributeLong(AdminConstants.A_SIZE);
@@ -107,7 +107,7 @@ public class BlobConsistencyChecker {
                 blob.modContent = (int) itemEl.getAttributeLong(AdminConstants.A_REVISION);
                 blob.dbSize = itemEl.getAttributeLong(AdminConstants.A_SIZE);
                 blob.volumeId = (short) itemEl.getAttributeLong(AdminConstants.A_VOLUME_ID);
-                
+
                 Element blobEl = itemEl.getElement(AdminConstants.E_BLOB);
                 blob.path = blobEl.getAttribute(AdminConstants.A_PATH);
                 blob.fileSize = blobEl.getAttributeLong(AdminConstants.A_FILE_SIZE);
@@ -115,18 +115,18 @@ public class BlobConsistencyChecker {
                 incorrectModContent.add(blob);
             }
         }
-        
+
         public boolean hasInconsistency() {
             return !(missingBlobs.isEmpty() && incorrectSize.isEmpty() &&
                 unexpectedBlobs.isEmpty() && incorrectModContent.isEmpty());
         }
-        
+
         public void toElement(Element parent) {
             Element missingEl = parent.addElement(AdminConstants.E_MISSING_BLOBS);
             Element incorrectSizeEl = parent.addElement(AdminConstants.E_INCORRECT_SIZE);
             Element unexpectedBlobsEl = parent.addElement(AdminConstants.E_UNEXPECTED_BLOBS);
             Element incorrectRevisionEl = parent.addElement(AdminConstants.E_INCORRECT_REVISION);
-            
+
             for (BlobInfo blob : missingBlobs) {
                 missingEl.addElement(AdminConstants.E_ITEM)
                     .addAttribute(AdminConstants.A_ID, blob.itemId)
@@ -170,10 +170,10 @@ public class BlobConsistencyChecker {
     private Results mResults;
     private int mMailboxId;
     private boolean mCheckSize = true;
-    
+
     public BlobConsistencyChecker() {
     }
-    
+
     public Results check(Collection<Short> volumeIds, int mboxId, boolean checkSize)
     throws ServiceException {
         StoreManager sm = StoreManager.getInstance();
@@ -185,11 +185,11 @@ public class BlobConsistencyChecker {
         mCheckSize = checkSize;
         mResults = new Results();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mMailboxId);
-        Connection conn = null;
+        DbConnection conn = null;
 
         try {
             conn = DbPool.getConnection();
-            
+
             for (short volumeId : volumeIds) {
                 Volume vol = Volume.getById(volumeId);
                 if (vol.getType() == Volume.TYPE_INDEX) {
@@ -205,12 +205,12 @@ public class BlobConsistencyChecker {
                 // of id's if we wrap from group 255 back to group 0.
                 int minId = 0; // Minimum id for the current block
                 int group = 0; // Current group number
-                
+
                 while (minId < mailboxMaxId && group < numGroups) {
                     Map<Integer, BlobInfo> blobsById = new HashMap<Integer, BlobInfo>();
                     int maxId = minId + filesPerGroup - 1; // Maximum id for the current block
                     String blobDir = vol.getBlobDir(mbox.getId(), minId);
-                    
+
                     while (minId < mailboxMaxId) {
                         for (BlobInfo blob : DbBlobConsistency.getBlobInfo(conn, mbox, minId, maxId, volumeId)) {
                             blobsById.put(blob.itemId, blob);
@@ -222,7 +222,7 @@ public class BlobConsistencyChecker {
                     } catch (IOException e) {
                         throw ServiceException.FAILURE("Unable to check " + blobDir, e);
                     }
-                    
+
                     group++;
                     minId = group * filesPerGroup; // Set minId to the smallest id in the next group
                 }
@@ -232,9 +232,9 @@ public class BlobConsistencyChecker {
         }
         return mResults;
     }
-    
+
     private static final Pattern PAT_BLOB_FILENAME = Pattern.compile("([0-9]+)-([0-9]+)\\.msg");
-    
+
     /**
      * Reconciles blobs against the files in the given directory and adds any inconsistencies
      * to the current result set.
@@ -256,7 +256,7 @@ public class BlobConsistencyChecker {
                 itemId = Integer.parseInt(matcher.group(1));
                 modContent = Integer.parseInt(matcher.group(2));
             }
-            
+
             BlobInfo blob = blobsById.remove(itemId);
             if (blob == null) {
                 BlobInfo unexpected = new BlobInfo();
@@ -267,7 +267,7 @@ public class BlobConsistencyChecker {
             } else {
                 blob.fileSize = file.length();
                 blob.fileModContent = modContent;
-                
+
                 if (mCheckSize) {
                     blob.fileDataSize = getDataSize(file, blob.dbSize);
                     if (blob.dbSize != blob.fileDataSize) {
@@ -281,13 +281,13 @@ public class BlobConsistencyChecker {
                 }
             }
         }
-        
+
         // Any remaining items have missing blobs.
         for (BlobInfo blob : blobsById.values()) {
             mResults.missingBlobs.add(blob);
         }
     }
-    
+
     private static long getDataSize(File file, long expected)
     throws IOException {
         long fileLen = file.length();

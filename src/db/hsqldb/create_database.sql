@@ -1,0 +1,218 @@
+--
+-- ***** BEGIN LICENSE BLOCK *****
+-- Zimbra Collaboration Suite Server
+-- Copyright (C) 2011 Zimbra, Inc.
+--
+-- The contents of this file are subject to the Zimbra Public License
+-- Version 1.3 ("License"); you may not use this file except in
+-- compliance with the License.  You may obtain a copy of the License at
+-- http://www.zimbra.com/license.
+--
+-- Software distributed under the License is distributed on an "AS IS"
+-- basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+-- ***** END LICENSE BLOCK *****
+--
+
+-- HSQLDB is for unit test. The scheme should be logically identical with MySQL except no index is needed for unit test.
+
+CREATE SCHEMA *{DATABASE_NAME};
+
+CREATE TABLE *{DATABASE_NAME}.mail_item (
+   mailbox_id    INTEGER NOT NULL,
+   id            INTEGER NOT NULL,
+   type          TINYINT NOT NULL,
+   parent_id     INTEGER,
+   folder_id     INTEGER,
+   index_id      INTEGER,
+   imap_id       INTEGER,
+   date          INTEGER NOT NULL,
+   size          BIGINT NOT NULL,
+   volume_id     TINYINT,
+   blob_digest   VARCHAR(28),
+   unread        INTEGER,
+   flags         INTEGER DEFAULT 0 NOT NULL,
+   tags          BIGINT DEFAULT 0 NOT NULL,
+   sender        VARCHAR(128),
+   subject       VARCHAR(255),
+   name          VARCHAR(128),
+   metadata      VARCHAR(255),
+   mod_metadata  INTEGER NOT NULL,
+   change_date   INTEGER,
+   mod_content   INTEGER NOT NULL,
+
+   CONSTRAINT pk_mail_item PRIMARY KEY (mailbox_id, id),
+   CONSTRAINT i_name_folder_id UNIQUE (mailbox_id, folder_id, name),
+   CONSTRAINT fk_mail_item_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id),
+   CONSTRAINT fk_mail_item_parent_id FOREIGN KEY (mailbox_id, parent_id) REFERENCES mail_item(mailbox_id, id),
+   CONSTRAINT fk_mail_item_folder_id FOREIGN KEY (mailbox_id, folder_id) REFERENCES mail_item(mailbox_id, id),
+   CONSTRAINT fk_mail_item_volume_id FOREIGN KEY (volume_id) REFERENCES zimbra.volume(id)
+);
+
+CREATE TABLE *{DATABASE_NAME}.mail_item_dumpster (
+   mailbox_id    INTEGER NOT NULL,
+   id            INTEGER NOT NULL,
+   type          TINYINT NOT NULL,
+   parent_id     INTEGER,
+   folder_id     INTEGER,
+   index_id      INTEGER,
+   imap_id       INTEGER,
+   date          INTEGER NOT NULL,
+   size          BIGINT NOT NULL,
+   volume_id     TINYINT,
+   blob_digest   VARCHAR(28),
+   unread        INTEGER,
+   flags         INTEGER DEFAULT 0 NOT NULL,
+   tags          BIGINT DEFAULT 0 NOT NULL,
+   sender        VARCHAR(128),
+   subject       VARCHAR(255),
+   name          VARCHAR(128),
+   metadata      VARCHAR(255),
+   mod_metadata  INTEGER NOT NULL,
+   change_date   INTEGER,
+   mod_content   INTEGER NOT NULL,
+
+   CONSTRAINT pk_mail_item_dumpster PRIMARY KEY (mailbox_id, id),
+   CONSTRAINT fk_mail_item_dumpster_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id),
+   CONSTRAINT fk_mail_item_dumpster_volume_id FOREIGN KEY (volume_id) REFERENCES zimbra.volume(id)
+);
+
+CREATE TABLE *{DATABASE_NAME}.revision (
+   mailbox_id    INTEGER NOT NULL,
+   item_id       INTEGER NOT NULL,
+   version       INTEGER NOT NULL,
+   date          INTEGER NOT NULL,
+   size          BIGINT NOT NULL,
+   volume_id     TINYINT,
+   blob_digest   VARCHAR(28),
+   name          VARCHAR(128),
+   metadata      VARCHAR(255),
+   mod_metadata  INTEGER NOT NULL,
+   change_date   INTEGER,
+   mod_content   INTEGER NOT NULL,
+
+   CONSTRAINT pk_revision PRIMARY KEY (mailbox_id, item_id, version),
+   CONSTRAINT fk_revision_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id),
+   CONSTRAINT fk_revision_item_id FOREIGN KEY (mailbox_id, item_id)
+      REFERENCES mail_item(mailbox_id, id) ON DELETE CASCADE
+);
+
+CREATE TABLE *{DATABASE_NAME}.revision_dumpster (
+   mailbox_id    INTEGER NOT NULL,
+   item_id       INTEGER NOT NULL,
+   version       INTEGER NOT NULL,
+   date          INTEGER NOT NULL,
+   size          BIGINT NOT NULL,
+   volume_id     TINYINT,
+   blob_digest   VARCHAR(28),
+   name          VARCHAR(128),
+   metadata      VARCHAR(255),
+   mod_metadata  INTEGER NOT NULL,
+   change_date   INTEGER,
+   mod_content   INTEGER NOT NULL,
+
+   CONSTRAINT pk_revision_dumpster PRIMARY KEY (mailbox_id, item_id, version),
+   CONSTRAINT fk_revision_dumpster_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id),
+   CONSTRAINT fk_revision_dumpster_item_id FOREIGN KEY (mailbox_id, item_id)
+      REFERENCES mail_item_dumpster(mailbox_id, id) ON DELETE CASCADE
+);
+
+CREATE TABLE *{DATABASE_NAME}.open_conversation (
+   mailbox_id  INTEGER NOT NULL,
+   hash        CHAR(28) NOT NULL,
+   conv_id     INTEGER NOT NULL,
+
+   CONSTRAINT pk_open_conversation PRIMARY KEY (mailbox_id, hash),
+   CONSTRAINT fk_open_conversation_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id),
+   CONSTRAINT fk_open_conversation_conv_id FOREIGN KEY (mailbox_id, conv_id)
+      REFERENCES mail_item(mailbox_id, id) ON DELETE CASCADE
+);
+
+CREATE TABLE *{DATABASE_NAME}.appointment (
+   mailbox_id  INTEGER NOT NULL,
+   uid         VARCHAR(255) NOT NULL,
+   item_id     INTEGER NOT NULL,
+   start_time  DATETIME NOT NULL,
+   end_time    DATETIME,
+
+   CONSTRAINT pk_appointment PRIMARY KEY (mailbox_id, uid),
+   CONSTRAINT i_appointment_item_id UNIQUE (mailbox_id, item_id),
+   CONSTRAINT fk_appointment_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id),
+   CONSTRAINT fk_appointment_item_id FOREIGN KEY (mailbox_id, item_id)
+      REFERENCES mail_item(mailbox_id, id) ON DELETE CASCADE
+);
+
+CREATE TABLE *{DATABASE_NAME}.appointment_dumpster (
+   mailbox_id  INTEGER NOT NULL,
+   uid         VARCHAR(255) NOT NULL,
+   item_id     INTEGER NOT NULL,
+   start_time  DATETIME NOT NULL,
+   end_time    DATETIME,
+
+   CONSTRAINT pk_appointment_dumpster PRIMARY KEY (mailbox_id, uid),
+   CONSTRAINT i_appointment_dumpster_item_id UNIQUE (mailbox_id, item_id),
+   CONSTRAINT fk_appointment_dumpster_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id),
+   CONSTRAINT fk_appointment_dumpster_item_id FOREIGN KEY (mailbox_id, item_id)
+      REFERENCES mail_item_dumpster(mailbox_id, id) ON DELETE CASCADE
+);
+
+CREATE TABLE *{DATABASE_NAME}.tombstone (
+   mailbox_id  INTEGER NOT NULL,
+   sequence    INTEGER NOT NULL,
+   date        INTEGER NOT NULL,
+   type        TINYINT,
+   ids         VARCHAR(255),
+
+   CONSTRAINT fk_tombstone_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id)
+);
+
+CREATE TABLE *{DATABASE_NAME}.pop3_message (
+   mailbox_id     INTEGER NOT NULL,
+   data_source_id CHAR(36) NOT NULL,
+   uid            VARCHAR(255) NOT NULL,
+   item_id        INTEGER NOT NULL,
+
+   CONSTRAINT pk_pop3_message PRIMARY KEY (mailbox_id, item_id),
+   CONSTRAINT i_uid_pop3_id UNIQUE (uid, data_source_id),
+   CONSTRAINT fk_pop3_message_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id)
+);
+
+CREATE TABLE *{DATABASE_NAME}.imap_folder (
+   mailbox_id     INTEGER NOT NULL,
+   item_id        INTEGER NOT NULL,
+   data_source_id CHAR(36) NOT NULL,
+   local_path     VARCHAR(1000) NOT NULL,
+   remote_path    VARCHAR(1000) NOT NULL,
+   uid_validity   INTEGER,
+
+   CONSTRAINT pk_imap_folder PRIMARY KEY (mailbox_id, item_id),
+   CONSTRAINT i_local_path UNIQUE (local_path, data_source_id, mailbox_id),
+   CONSTRAINT i_remote_path UNIQUE (remote_path, data_source_id, mailbox_id),
+   CONSTRAINT fk_imap_folder_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id) ON DELETE CASCADE
+);
+
+CREATE TABLE *{DATABASE_NAME}.imap_message (
+   mailbox_id     INTEGER NOT NULL,
+   imap_folder_id INTEGER NOT NULL,
+   uid            BIGINT NOT NULL,
+   item_id        INTEGER NOT NULL,
+   flags          INTEGER DEFAULT 0 NOT NULL,
+
+   CONSTRAINT pk_imap_message PRIMARY KEY (mailbox_id, item_id),
+   CONSTRAINT i_uid_imap_id UNIQUE (mailbox_id, imap_folder_id, uid),
+   CONSTRAINT fk_imap_message_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id) ON DELETE CASCADE,
+   CONSTRAINT fk_imap_message_imap_folder_id FOREIGN KEY (mailbox_id, imap_folder_id)
+      REFERENCES imap_folder(mailbox_id, item_id) ON DELETE CASCADE
+);
+
+CREATE TABLE *{DATABASE_NAME}.data_source_item (
+   mailbox_id     INTEGER NOT NULL,
+   data_source_id CHAR(36) NOT NULL,
+   item_id        INTEGER NOT NULL,
+   folder_id      INTEGER DEFAULT 0 NOT NULL,
+   remote_id      VARCHAR(255) NOT NULL,
+   metadata       VARCHAR(255),
+
+   CONSTRAINT pk_data_source_item PRIMARY KEY (mailbox_id, item_id),
+   CONSTRAINT i_remote_id UNIQUE (mailbox_id, data_source_id, remote_id),
+   CONSTRAINT fk_data_source_item_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id) ON DELETE CASCADE
+);

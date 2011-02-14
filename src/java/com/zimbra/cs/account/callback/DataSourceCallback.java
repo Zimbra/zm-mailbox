@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -36,7 +36,7 @@ import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -45,7 +45,7 @@ import com.zimbra.cs.util.Zimbra;
 public class DataSourceCallback extends AttributeCallback {
 
     private static final Set<String> INTERVAL_ATTRS = new HashSet<String>();
-    
+
     static {
         INTERVAL_ATTRS.add(Provisioning.A_zimbraDataSourcePollingInterval);
         INTERVAL_ATTRS.add(Provisioning.A_zimbraDataSourcePop3PollingInterval);
@@ -77,19 +77,19 @@ public class DataSourceCallback extends AttributeCallback {
     }
 
     /**
-     * Updates scheduled tasks for data sources whose polling interval has changed. 
+     * Updates scheduled tasks for data sources whose polling interval has changed.
      */
     @SuppressWarnings("unchecked")
     @Override public void postModify(Map context, String attrName, Entry entry, boolean isCreate) {
         // Don't do anything unless inside the server
         if (!Zimbra.started() || !LC.data_source_scheduling_enabled.booleanValue())
             return;
-        
-        // Don't do anything if this postModify is triggered by creating a COS, 
+
+        // Don't do anything if this postModify is triggered by creating a COS,
         // because no account will be on this COS yet.
         if (isCreate && (entry instanceof Cos))
-        	return;
-        
+            return;
+
         if (INTERVAL_ATTRS.contains(attrName) || Provisioning.A_zimbraDataSourceEnabled.equals(attrName)) {
             // Update schedules for any affected data sources
             try {
@@ -108,7 +108,7 @@ public class DataSourceCallback extends AttributeCallback {
             DataSourceManager.resetErrorStatus((DataSource) entry);
         }
     }
-    
+
     private void validateDataSource(DataSource ds, String newInterval)
     throws ServiceException {
         Account account = ds.getAccount();
@@ -119,7 +119,7 @@ public class DataSourceCallback extends AttributeCallback {
         validateInterval(Provisioning.A_zimbraDataSourcePollingInterval,
             newInterval, account.getAttr(Provisioning.A_zimbraDataSourceMinPollingInterval));
     }
-    
+
     private void scheduleDataSource(DataSource ds)
     throws ServiceException {
         Account account = ds.getAccount();
@@ -129,12 +129,12 @@ public class DataSourceCallback extends AttributeCallback {
         }
         DataSourceManager.updateSchedule(account, ds);
     }
-    
+
     private void validateAccount(Account account, String attrName, String newInterval)
     throws ServiceException {
         validateInterval(attrName, newInterval, account.getAttr(Provisioning.A_zimbraDataSourceMinPollingInterval));
     }
-    
+
     private void scheduleAccount(Account account)
     throws ServiceException {
         ZimbraLog.datasource.info("Updating schedule for all DataSources for account %s.", account.getName());
@@ -143,15 +143,15 @@ public class DataSourceCallback extends AttributeCallback {
             DataSourceManager.updateSchedule(account, ds);
         }
     }
-    
+
     private void validateCos(Cos cos, String attrName, String newInterval)
     throws ServiceException {
         validateInterval(newInterval, attrName, cos.getAttr(Provisioning.A_zimbraDataSourceMinPollingInterval));
     }
-    
+
     /**
      * Updates data source schedules for all accounts that are on the current server
-     * and in the given COS. 
+     * and in the given COS.
      */
     private void scheduleCos(Cos cos)
     throws ServiceException {
@@ -159,13 +159,13 @@ public class DataSourceCallback extends AttributeCallback {
 
         List<Account> accts;
         Provisioning prov = Provisioning.getInstance();
-        
+
         // Look up all account id's for this server
         if (prov instanceof LdapProvisioning)
-        	accts = lookupAccountsFromLDAP(prov, cos.getId());
+            accts = lookupAccountsFromLDAP(prov, cos.getId());
         else
-        	accts = lookupAccountsFromDB(prov);
-        
+            accts = lookupAccountsFromDB(prov);
+
         // Update schedules for all data sources on this server
         for (Account account : accts) {
             if (account != null && Provisioning.ACCOUNT_STATUS_ACTIVE.equals(account.getAccountStatus(prov))) {
@@ -174,17 +174,17 @@ public class DataSourceCallback extends AttributeCallback {
                     scheduleAccount(account);
                 }
             }
-            
+
         }
     }
-    
+
     // look up all accounts on this server
     private List<Account> lookupAccountsFromDB(Provisioning prov) throws ServiceException {
-    	Set<String> accountIds = null;
-    	List<Account> accts = new ArrayList<Account>();
-    	
+        Set<String> accountIds = null;
+        List<Account> accts = new ArrayList<Account>();
+
         synchronized (DbMailbox.getSynchronizer()) {
-            Connection conn = null;
+            DbConnection conn = null;
             try {
                 conn = DbPool.getConnection();
                 accountIds = DbMailbox.listAccountIds(conn);
@@ -192,7 +192,7 @@ public class DataSourceCallback extends AttributeCallback {
                 DbPool.quietClose(conn);
             }
         }
-        
+
         for (String accountId : accountIds) {
             Account account = null;
             try {
@@ -200,12 +200,12 @@ public class DataSourceCallback extends AttributeCallback {
             } catch (ServiceException e) {
                 ZimbraLog.datasource.debug("Unable to look up account for id %s: %s", accountId, e.toString());
             }
-            
+
             if (account != null) {
-            	accts.add(account);
+                accts.add(account);
             }
         }
-        
+
         return accts;
     }
 
@@ -214,23 +214,23 @@ public class DataSourceCallback extends AttributeCallback {
      * returns:
      *   - all accounts on this server
      *   - and with either the specified cos id, or without a cos id set on the account
-     *   - and has at least one sub-entries 
+     *   - and has at least one sub-entries
      *     (we can't tell whether those sub-entries are data sources, but this is as close as we can be searching for)
      */
-    private List<Account> lookupAccountsFromLDAP(Provisioning prov, String cosId) 
+    private List<Account> lookupAccountsFromLDAP(Provisioning prov, String cosId)
     throws ServiceException{
-    	
-    	String filter = "(&" + LdapFilter.allAccounts() + 
-    	        LdapFilter.homedOnServer(prov.getLocalServer()) +
-    			LdapFilter.hasSubordinates() +
-    			"(|(!(" + Provisioning.A_zimbraCOSId + "=*))" + "(" + Provisioning.A_zimbraCOSId + "=" + cosId + ")))";
-    	
-    	List accts = prov.searchAccounts(filter, null, null, false,
+
+        String filter = "(&" + LdapFilter.allAccounts() +
+                LdapFilter.homedOnServer(prov.getLocalServer()) +
+                LdapFilter.hasSubordinates() +
+                "(|(!(" + Provisioning.A_zimbraCOSId + "=*))" + "(" + Provisioning.A_zimbraCOSId + "=" + cosId + ")))";
+
+        List accts = prov.searchAccounts(filter, null, null, false,
                 Provisioning.SA_ACCOUNT_FLAG | Provisioning.SA_CALENDAR_RESOURCE_FLAG | Provisioning.SO_NO_FIXUP_OBJECTCLASS);
-    	
-    	return accts;
+
+        return accts;
     }
-    
+
     private void validateInterval(String attrName, String newInterval, String minInterval)
     throws ServiceException {
         long interval = DateUtil.getTimeInterval(newInterval, 0);

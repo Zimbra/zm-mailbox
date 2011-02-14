@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -25,7 +25,7 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.datasource.imap.ImapFolder;
 import com.zimbra.cs.datasource.imap.ImapFolderCollection;
-import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.Mailbox;
 
 public class DbImapFolder {
@@ -36,8 +36,8 @@ public class DbImapFolder {
     public static ImapFolder getImapFolder(Mailbox mbox, DataSource ds, int itemId)
         throws ServiceException {
         synchronized (DbMailItem.getSynchronizer(mbox)) {
-            
-            Connection conn = null;
+
+            DbConnection conn = null;
             PreparedStatement stmt = null;
             ResultSet rs = null;
             try {
@@ -66,7 +66,7 @@ public class DbImapFolder {
             }
         }
     }
-    
+
     /**
      * Returns a <tt>List</tt> of <tt>ImapFolders</tt> for the given <tt>DataSource</tt>.
      */
@@ -74,13 +74,13 @@ public class DbImapFolder {
     throws ServiceException {
         synchronized (DbMailItem.getSynchronizer(mbox)) {
             ImapFolderCollection imapFolders = new ImapFolderCollection();
-    
-            Connection conn = null;
+
+            DbConnection conn = null;
             PreparedStatement stmt = null;
             ResultSet rs = null;
             try {
                 conn = DbPool.getConnection(mbox);
-    
+
                 stmt = conn.prepareStatement(
                     "SELECT item_id, local_path, remote_path, uid_validity" +
                     " FROM " + getTableName(mbox) +
@@ -89,7 +89,7 @@ public class DbImapFolder {
                 pos = DbMailItem.setMailboxId(stmt, mbox, pos);
                 stmt.setString(pos++, ds.getId());
                 rs = stmt.executeQuery();
-    
+
                 while (rs.next()) {
                     int itemId = rs.getInt("item_id");
                     String localPath = rs.getString("local_path");
@@ -97,7 +97,7 @@ public class DbImapFolder {
                     Long uidValidity = rs.getLong("uid_validity");
                     if (rs.wasNull())
                         uidValidity = null;
-    
+
                     ImapFolder imapFolder = new ImapFolder(ds, itemId, remotePath, localPath, uidValidity);
                     imapFolders.add(imapFolder);
                 }
@@ -108,21 +108,21 @@ public class DbImapFolder {
                 DbPool.closeStatement(stmt);
                 DbPool.quietClose(conn);
             }
-    
+
             ZimbraLog.datasource.debug("Found %d folders for %s", imapFolders.size(), ds);
             return imapFolders;
         }
     }
-    
+
     public static ImapFolder createImapFolder(Mailbox mbox, DataSource ds, int itemId,
                                               String localPath, String remotePath, long uidValidity)
     throws ServiceException {
         synchronized (DbMailItem.getSynchronizer(mbox)) {
-            Connection conn = null;
+            DbConnection conn = null;
             PreparedStatement stmt = null;
             try {
                 conn = DbPool.getConnection(mbox);
-    
+
                 ZimbraLog.datasource.debug(
                     "createImapFolder: itemId = %d, localPath = %s, remotePath = %s, uidValidity = %d",
                 itemId, localPath, remotePath, uidValidity);
@@ -148,19 +148,19 @@ public class DbImapFolder {
             }
         }
     }
-    
+
     /**
-     * Updates the database with the latest values stored in this <tt>ImapFolder</tt>. 
+     * Updates the database with the latest values stored in this <tt>ImapFolder</tt>.
      */
     public static void updateImapFolder(ImapFolder imapFolder)
     throws ServiceException {
         Mailbox mbox = DataSourceManager.getInstance().getMailbox(imapFolder.getDataSource());
         synchronized (DbMailItem.getSynchronizer(mbox)) {
-            Connection conn = null;
+            DbConnection conn = null;
             PreparedStatement stmt = null;
             try {
                 conn = DbPool.getConnection(mbox);
-    
+
                 stmt = conn.prepareStatement(
                     "UPDATE " + getTableName(mbox) +
                     " SET local_path = ?, remote_path = ?, uid_validity = ?" +
@@ -187,7 +187,7 @@ public class DbImapFolder {
             }
         }
     }
-    
+
     /**
      * Deletes all IMAP message data for the given mailbox/data source.
      */
@@ -195,17 +195,17 @@ public class DbImapFolder {
     throws ServiceException {
         synchronized (DbMailItem.getSynchronizer(mbox)) {
             ZimbraLog.datasource.info("Deleting IMAP data for DataSource %s", dataSourceId);
-    
+
             if (StringUtil.isNullOrEmpty(dataSourceId))
                 return;
-    
-            Connection conn = null;
+
+            DbConnection conn = null;
             PreparedStatement stmt = null;
             try {
                 // Note: data in imap_message gets deleted implicitly by the
                 // foreign key cascading delete
                 conn = DbPool.getConnection(mbox);
-    
+
                 stmt = conn.prepareStatement(
                     "DELETE FROM " + getTableName(mbox) +
                     " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "data_source_id = ?");
@@ -230,14 +230,14 @@ public class DbImapFolder {
     throws ServiceException {
         synchronized (DbMailItem.getSynchronizer(mbox)) {
             ZimbraLog.datasource.info("Deleting IMAP data for %s in %s", folder, ds);
-            
-            Connection conn = null;
+
+            DbConnection conn = null;
             PreparedStatement stmt = null;
             try {
                 // Note: data in imap_message gets deleted implicitly by the
                 // foreign key cascading delete
                 conn = DbPool.getConnection(mbox);
-    
+
                 stmt = conn.prepareStatement(
                     "DELETE FROM " + getTableName(mbox) +
                     " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "data_source_id = ? and item_id = ?");

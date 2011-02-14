@@ -1,26 +1,20 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-
-/*
- * Created on Apr 10, 2004
- *
- * TODO To change the template for this generated file go to
- * Window - Preferences - Java - Code Generation - Code and Comments
- */
 package com.zimbra.cs.db;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -29,10 +23,11 @@ import org.apache.commons.dbcp.PoolingDataSource;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
+ * @since Apr 10, 2004
  * @author schemers
  */
 public abstract class Db {
@@ -129,15 +124,14 @@ public abstract class Db {
         // default is to do nothing
     }
 
-    /** Callback invoked immediately after a new connection is created for
-     *  the pool. */
-    void postCreate(java.sql.Connection conn) throws SQLException {
+    /** Callback invoked immediately after a new connection is created for the pool. */
+    void postCreate(Connection conn) throws SQLException {
         // default is to do nothing
     }
 
     /** Callback invoked immediately before a connection is fetched from
      *  the pool and returned to the user. */
-    void postOpen(Connection conn) throws SQLException {
+    void postOpen(DbConnection conn) throws SQLException {
         // default is to do nothing
     }
 
@@ -146,12 +140,12 @@ public abstract class Db {
      * level 1: quick file optimization and analysis
      * level 2: full file optimization and analysis
      */
-    public void optimize(Connection conn, String name, int level) throws ServiceException {}
+    public void optimize(DbConnection conn, String name, int level) throws ServiceException {}
 
     /** Indicates that the connection will be accessing the given Mailbox's
      *  database in the scope of the current transaction.  Must be called
      *  <em>before</em> any SQL commands are executed in the transaction. */
-    public static void registerDatabaseInterest(Connection conn, Mailbox mbox) throws ServiceException {
+    public static void registerDatabaseInterest(DbConnection conn, Mailbox mbox) throws ServiceException {
         try {
             getInstance().registerDatabaseInterest(conn, DbMailbox.getDatabaseName(mbox));
         } catch (SQLException e) {
@@ -159,20 +153,20 @@ public abstract class Db {
         }
     }
 
-    void registerDatabaseInterest(Connection conn, String dbname) throws SQLException, ServiceException {
+    void registerDatabaseInterest(DbConnection conn, String dbname) throws SQLException, ServiceException {
         // default is to do nothing
     }
 
     /** Callback invoked immediately before a connection is returned to the
      *  pool by the user.  Note that <tt>COMMIT</tt>/<tt>ROLLBACK</tt> must
      *  already have been called before this method is invoked. */
-    void preClose(Connection conn) throws SQLException {
+    void preClose(DbConnection conn) throws SQLException {
         // default is to do nothing
     }
 
 
     /** Returns <tt>true</tt> if the database with the given name exists. */
-    abstract public boolean databaseExists(Connection conn, String dbname)
+    abstract public boolean databaseExists(DbConnection conn, String dbname)
     throws ServiceException;
 
     /** Callback executed immediately before creating a user database. */
@@ -206,7 +200,7 @@ public abstract class Db {
     }
 
     private static final int DEFAULT_IN_CLAUSE_BATCH_SIZE = 400;
-    
+
     protected int getInClauseBatchSize() { return DEFAULT_IN_CLAUSE_BATCH_SIZE; }
 
     /** Returns the maximum number of items to include in an "IN (?, ?, ...)"
@@ -271,7 +265,7 @@ public abstract class Db {
         else
             return "MOD(" + column + " / " + bitmask + ", 2) = 1";
     }
-    
+
     public void enableStreaming(Statement stmt) throws SQLException {}
 
     /** Generates a WHERE-type clause that evaluates to <code>expr1</code> if

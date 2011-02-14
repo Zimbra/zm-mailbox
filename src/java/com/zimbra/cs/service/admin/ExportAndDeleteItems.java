@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -28,7 +28,7 @@ import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.db.DbBlobConsistency;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -63,7 +63,7 @@ public class ExportAndDeleteItems extends AdminDocumentHandler {
                     throw ServiceException.INVALID_REQUEST(dirPath + " is not a directory", null);
                 }
 
-                Connection conn = null;
+                DbConnection conn = null;
                 try {
                     conn = DbPool.getConnection();
                     String filePath = makePath(dirPath, DbMailItem.TABLE_MAIL_ITEM, prefix);
@@ -96,7 +96,7 @@ public class ExportAndDeleteItems extends AdminDocumentHandler {
         return zsc.createElement(AdminConstants.EXPORT_AND_DELETE_ITEMS_RESPONSE);
     }
 
-    private void export(Connection conn, Mailbox mbox, String tableName, String idColName,
+    private void export(DbConnection conn, Mailbox mbox, String tableName, String idColName,
                         Collection<Integer> itemIds, String filePath)
     throws ServiceException {
         if (DbBlobConsistency.getNumRows(conn, mbox, tableName, idColName, itemIds) > 0) {

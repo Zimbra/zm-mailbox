@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.db.DbPool.DbConnection;
 
 /**
  * <code>DbUtil</code> contains some database utility methods and
@@ -39,23 +39,23 @@ import com.zimbra.cs.db.DbPool.Connection;
  * wraps the JDBC <code>Connection</code>and <code>PreparedStatement</code>
  * classes and frees the caller from having to handle <code>SQLException</code>
  * and allocate and deallocate database resources.<p>
- * 
+ *
  * Query results are read entirely into memory and returned in the form of a
  * {@link com.zimbra.cs.db.DbResults} object.  This improves concurrency,
  * but potentially increases memory consumption.  Code that deals with
  * large result sets should use the JDBC API's directly.
- * 
+ *
  * @author bburtin
  */
 public class DbUtil {
 
     public static final int INTEGER_TRUE = 1;
     public static final int INTEGER_FALSE = 0;
-    
+
     public static final int getBooleanIntValue(boolean b) {
         return b ? INTEGER_TRUE : INTEGER_FALSE;
     }
-    
+
     private static final Pattern PAT_ESCAPED_QUOTES1 = Pattern.compile("\\\\'");
     private static final Pattern PAT_ESCAPED_QUOTES2 = Pattern.compile("''");
     private static final Pattern PAT_STRING_CONSTANT = Pattern.compile("'[^']+'");
@@ -111,18 +111,18 @@ public class DbUtil {
 
     /**
      * Executes the specified query using the specified connection.
-     * 
+     *
      * @throws ServiceException if the query cannot be executed or an error
      * occurs while retrieving results
      */
-    public static DbResults executeQuery(Connection conn, String query, Object[] params)
+    public static DbResults executeQuery(DbConnection conn, String query, Object[] params)
     throws ServiceException {
         PreparedStatement stmt = null;
         DbResults results = null;
-        
+
         try {
             stmt = conn.prepareStatement(query);
-            
+
             if (params != null) {
                 for (int i = 0; i < params.length; i++)
                     stmt.setObject(i + 1, params[i]);
@@ -135,42 +135,42 @@ public class DbUtil {
         } finally {
             DbPool.closeStatement(stmt);
         }
-        
+
         return results;
     }
-    
+
     /**
      * Executes the specified query using a connection from the connection pool.
-     * 
+     *
      * @throws ServiceException if the query cannot be executed or an error
      * occurs while retrieving results
      */
-    public static DbResults executeQuery(Connection conn, String query, Object param)
+    public static DbResults executeQuery(DbConnection conn, String query, Object param)
     throws ServiceException {
         Object[] params = { param };
         return executeQuery(conn, query, params);
     }
-    
+
     /**
      * Executes the specified query using the specified connection.
-     * 
+     *
      * @throws ServiceException if the query cannot be executed or an error
      * occurs while retrieving results
      */
-    public static DbResults executeQuery(Connection conn, String query)
+    public static DbResults executeQuery(DbConnection conn, String query)
     throws ServiceException {
         return executeQuery(conn, query, null);
     }
-    
+
     /**
      * Executes the specified query using a connection from the connection pool.
-     * 
+     *
      * @throws ServiceException if the query cannot be executed or an error
      * occurs while retrieving results
      */
     public static DbResults executeQuery(String query, Object[] params)
     throws ServiceException {
-        Connection conn = null;
+        DbConnection conn = null;
         try {
             conn = DbPool.getConnection();
             return executeQuery(conn, query, params);
@@ -178,10 +178,10 @@ public class DbUtil {
             DbPool.quietClose(conn);
         }
     }
-    
+
     /**
      * Executes the specified query using a connection from the connection pool.
-     * 
+     *
      * @throws ServiceException if the query cannot be executed or an error
      * occurs while retrieving results
      */
@@ -190,10 +190,10 @@ public class DbUtil {
         Object[] params = { param };
         return executeQuery(query, params);
     }
-    
+
     /**
      * Executes the specified query using a connection from the connection pool.
-     * 
+     *
      * @throws ServiceException if the query cannot be executed or an error
      * occurs while retrieving results
      */
@@ -201,21 +201,20 @@ public class DbUtil {
     throws ServiceException {
         return executeQuery(query, null);
     }
-    
+
     /**
      * Executes the specified update using the specified connection.
-     * 
+     *
      * @return the number of rows affected
      * @throws ServiceException if the update cannot be executed
      */
-    public static int executeUpdate(Connection conn, String sql, Object[] params)
-    throws ServiceException {
+    public static int executeUpdate(DbConnection conn, String sql, Object... params) throws ServiceException {
         PreparedStatement stmt = null;
         int numRows = 0;
-        
+
         try {
             stmt = conn.prepareStatement(sql);
-            
+
             if (params != null) {
                 for (int i = 0; i < params.length; i++) {
                     stmt.setObject(i + 1, params[i]);
@@ -228,42 +227,40 @@ public class DbUtil {
         } finally {
             DbPool.closeStatement(stmt);
         }
-        
+
         return numRows;
     }
-    
+
     /**
      * Executes the specified update using the specified connection.
-     * 
+     *
      * @return the number of rows affected
      * @throws ServiceException if the update cannot be executed
      */
-    public static int executeUpdate(Connection conn, String sql, Object param)
+    public static int executeUpdate(DbConnection conn, String sql, Object param)
     throws ServiceException {
         Object[] params = { param };
         return executeUpdate(conn, sql, params);
     }
-    
+
     /**
      * Executes the specified update using the specified connection.
-     * 
+     *
      * @return the number of rows affected
      * @throws ServiceException if the update cannot be executed
      */
-    public static int executeUpdate(Connection conn, String sql)
-    throws ServiceException {
-        return executeUpdate(conn, sql, null);
+    public static int executeUpdate(DbConnection conn, String sql) throws ServiceException {
+        return executeUpdate(conn, sql, (Object[]) null);
     }
-    
+
     /**
      * Executes the specified update using a connection from the connection pool.
-     * 
+     *
      * @return the number of rows affected
      * @throws ServiceException if the update cannot be executed
      */
-    public static int executeUpdate(String sql, Object[] params)
-    throws ServiceException {
-        Connection conn = DbPool.getConnection();
+    public static int executeUpdate(String sql, Object... params) throws ServiceException {
+        DbConnection conn = DbPool.getConnection();
         try {
             int numRows = executeUpdate(conn, sql, params);
             conn.commit();
@@ -272,10 +269,10 @@ public class DbUtil {
             DbPool.quietClose(conn);
         }
     }
-    
+
     /**
      * Executes the specified update using a connection from the connection pool.
-     * 
+     *
      * @return the number of rows affected
      * @throws ServiceException if the update cannot be executed
      */
@@ -284,10 +281,9 @@ public class DbUtil {
         Object[] params = { param };
         return executeUpdate(sql, params);
     }
-    
-    public static int executeUpdate(String sql)
-    throws ServiceException {
-        return executeUpdate(sql, null);
+
+    public static int executeUpdate(String sql) throws ServiceException {
+        return executeUpdate(sql, (Object[]) null);
     }
 
     /**
@@ -336,16 +332,16 @@ public class DbUtil {
             sb.append(i == 0 ? "?" : ", ?");
         return sb.append(")").toString();
     }
-    
+
     /**
      * Executes all SQL statements in the specified SQL script.  Statements are
      * separated by semicolons.
-     * 
+     *
      * @param conn the database connection to use for executing the SQL statements
      * @param scriptReader the source of the SQL script file. The reader is closed
      * when this method returns.
      */
-    public static void executeScript(DbPool.Connection conn, Reader scriptReader)
+    public static void executeScript(DbPool.DbConnection conn, Reader scriptReader)
     throws IOException, ServiceException, SQLException {
         PreparedStatement stmt = null;
         String[] statements = parseScript(scriptReader);
@@ -362,15 +358,15 @@ public class DbUtil {
         } catch (SQLException e) {
             DbPool.quietRollback(conn);
             throw e;
-        } 
+        }
     }
-    
+
     private static String[] addScript(String s1[], String s2[]) {
         if (s1 == null)
             return s2;
-        
+
         String temp[] = new String[s1.length + s2.length];
-        
+
         System.arraycopy(s1, 0, temp, 0, s1.length);
         System.arraycopy(s2, 0, temp, s1.length, s2.length);
         return temp;
@@ -385,7 +381,7 @@ public class DbUtil {
         BufferedReader br = new BufferedReader(scriptReader);
         String line;
         String ret[] = null;
-        
+
         while ((line = br.readLine()) != null) {
             line = removeComments(line);
             if (line.startsWith(".")) {
@@ -394,7 +390,7 @@ public class DbUtil {
                     line = line.substring(0, line.length() - 1);
                 if (line.startsWith(".read ")) {
                     String sql;
-                    
+
                     line = line.substring(".read".length());
                     line = line.trim();
                     line = line.replace("\"", "");
@@ -455,7 +451,7 @@ public class DbUtil {
             return column + (in ? " = ?" : " <> ?");
         } else if (size <= 3) {
             StringBuffer sb = new StringBuffer("(");
-            
+
             do {
                 sb.append(column).append((in ? " = ?" : " <> ?"));
                 if (size > 1) {
@@ -476,7 +472,7 @@ public class DbUtil {
     public static String whereIn(String column, int size) {
         return whereIn(column, true, size);
     }
-    
+
     public static String whereNotIn(String column, int size) {
         return whereIn(column, false, size);
     }

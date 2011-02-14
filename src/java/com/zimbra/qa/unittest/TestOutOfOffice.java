@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -25,7 +25,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbOutOfOffice;
 import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.zclient.ZEmailAddress;
 import com.zimbra.cs.zclient.ZMailbox;
@@ -37,8 +37,8 @@ import com.zimbra.cs.zclient.ZMessage;
  */
 public class TestOutOfOffice
 extends TestCase {
-    
-    private Connection mConn;
+
+    private DbConnection mConn;
     private Mailbox mMbox;
     private String mOriginalFromAddress;
     private String mOriginalFromDisplay;
@@ -49,19 +49,19 @@ extends TestCase {
     private String mOriginalReplyToAddress;
     private String mOriginalReplyToDisplay;
     private String mOriginalReplyToEnabled;
-    
+
     private static String NAME_PREFIX = TestOutOfOffice.class.getSimpleName();
     private static String RECIPIENT_NAME = "user1";
     private static String SENDER_NAME = "user2";
     private static String RECIPIENT1_ADDRESS = "TestOutOfOffice1@example.zimbra.com";
     private static String RECIPIENT2_ADDRESS = "TestOutOfOffice2@example.zimbra.com";
-    
+
     protected void setUp() throws Exception {
         super.setUp();
-        
+
         mMbox = TestUtil.getMailbox(RECIPIENT_NAME);
         mConn = DbPool.getConnection();
-        
+
         Account recipient = TestUtil.getAccount(RECIPIENT_NAME);
         mOriginalFromAddress = recipient.getPrefFromAddress();
         mOriginalFromDisplay = recipient.getPrefFromDisplay();
@@ -73,10 +73,10 @@ extends TestCase {
         mOriginalReplyToAddress = recipient.getPrefReplyToAddress();
         mOriginalReplyToDisplay = recipient.getPrefReplyToDisplay();
         mOriginalReplyToEnabled = TestUtil.getAccountAttr(RECIPIENT_NAME, Provisioning.A_zimbraPrefReplyToEnabled);
-        
+
         cleanUp();
 }
-    
+
     public void testRowExists() throws Exception {
         long fiveDaysAgo = System.currentTimeMillis() - (1000 * 60 * 60 * 24 * 5);
 
@@ -94,7 +94,7 @@ extends TestCase {
         assertFalse("5 days", DbOutOfOffice.alreadySent(mConn, mMbox, RECIPIENT1_ADDRESS, 5 * Constants.MILLIS_PER_DAY));
         assertFalse("100 days", DbOutOfOffice.alreadySent(mConn, mMbox, RECIPIENT1_ADDRESS, 100 * Constants.MILLIS_PER_DAY));
     }
-    
+
     public void testPrune() throws Exception {
         long fiveDaysAgo = System.currentTimeMillis() - (1000 * 60 * 60 * 24 * 5);
         long sixDaysAgo = System.currentTimeMillis() - (1000 * 60 * 60 * 24 * 6);
@@ -102,12 +102,12 @@ extends TestCase {
         DbOutOfOffice.setSentTime(mConn, mMbox, RECIPIENT1_ADDRESS, fiveDaysAgo);
         DbOutOfOffice.setSentTime(mConn, mMbox, RECIPIENT2_ADDRESS, sixDaysAgo);
         mConn.commit();
-        
+
         // Prune the entry for 6 days ago
         DbOutOfOffice.prune(mConn, 6 * Constants.MILLIS_PER_DAY);
         mConn.commit();
-        
-        // Make sure that the later entry is still there and the earlier one is gone 
+
+        // Make sure that the later entry is still there and the earlier one is gone
         assertTrue("recipient1", DbOutOfOffice.alreadySent(mConn, mMbox, RECIPIENT1_ADDRESS, 6 * Constants.MILLIS_PER_DAY));
         assertFalse("recipient2", DbOutOfOffice.alreadySent(mConn, mMbox, RECIPIENT2_ADDRESS, 7 * Constants.MILLIS_PER_DAY));
     }
@@ -130,7 +130,7 @@ extends TestCase {
         recipient.setPrefOutOfOfficeUntilDate(new Date(now + Constants.MILLIS_PER_DAY));
         recipient.setPrefOutOfOfficeReplyEnabled(true);
 
-        // Don't allow any From address, set display name pref only. 
+        // Don't allow any From address, set display name pref only.
         recipient.setAllowAnyFromAddress(false);
         recipient.setPrefFromDisplay(newFromDisplay);
         recipient.setPrefReplyToAddress(newReplyToAddress);
@@ -140,16 +140,16 @@ extends TestCase {
         ZMailbox senderMbox = TestUtil.getZMailbox(SENDER_NAME);
         TestUtil.sendMessage(senderMbox, RECIPIENT_NAME, subject);
         ZMessage reply = TestUtil.waitForMessage(senderMbox, "in:inbox subject:\"" + subject + "\"");
-        
+
         // Validate addresses.
         ZEmailAddress fromAddress = getAddress(reply, ZEmailAddress.EMAIL_TYPE_FROM);
         assertEquals(recipient.getName(), fromAddress.getAddress());
         assertEquals(newFromDisplay, fromAddress.getPersonal());
         assertNull(getAddress(reply, ZEmailAddress.EMAIL_TYPE_REPLY_TO));
-        
+
         DbOutOfOffice.clear(mConn, mMbox);
         mConn.commit();
-        
+
         // Don't allow any From address, set display name, from address, and reply-to prefs.
         recipient.setPrefFromAddress(newFromAddress);
         recipient.setAllowAnyFromAddress(false);
@@ -157,36 +157,36 @@ extends TestCase {
         subject = NAME_PREFIX + " testPrefFromAddress 2";
         TestUtil.sendMessage(senderMbox, RECIPIENT_NAME, subject);
         reply = TestUtil.waitForMessage(senderMbox, "in:inbox subject:\"" + subject + "\"");
-        
+
         // Validate addresses.
         fromAddress = getAddress(reply, ZEmailAddress.EMAIL_TYPE_FROM);
         assertEquals(recipient.getName(), fromAddress.getAddress());
         assertEquals(recipient.getDisplayName(), fromAddress.getPersonal());
-        
+
         ZEmailAddress replyToAddress = getAddress(reply, ZEmailAddress.EMAIL_TYPE_REPLY_TO);
         assertEquals(newReplyToAddress, replyToAddress.getAddress());
         assertEquals(newReplyToDisplay, replyToAddress.getPersonal());
-        
+
         DbOutOfOffice.clear(mConn, mMbox);
         mConn.commit();
-        
+
         // Allow any From address, set display name and address prefs.
         recipient.setAllowAnyFromAddress(true);
         subject = NAME_PREFIX + " testPrefFromAddress 3";
         TestUtil.sendMessage(senderMbox, RECIPIENT_NAME, subject);
         reply = TestUtil.waitForMessage(senderMbox, "in:inbox subject:\"" + subject + "\"");
         ZimbraLog.test.info("Second reply:\n" + TestUtil.getContent(senderMbox, reply.getId()));
-        
+
         // Validate addresses.
         fromAddress = getAddress(reply, ZEmailAddress.EMAIL_TYPE_FROM);
         assertEquals(newFromAddress, fromAddress.getAddress());
         assertEquals(newFromDisplay, fromAddress.getPersonal());
-        
+
         replyToAddress = getAddress(reply, ZEmailAddress.EMAIL_TYPE_REPLY_TO);
         assertEquals(newReplyToAddress, replyToAddress.getAddress());
         assertEquals(newReplyToDisplay, replyToAddress.getPersonal());
     }
-    
+
     private ZEmailAddress getAddress(ZMessage msg, String type) {
         for (ZEmailAddress address : msg.getEmailAddresses()) {
             if (address.getType().equals(type)) {
@@ -195,27 +195,27 @@ extends TestCase {
         }
         return null;
     }
-    
+
     public void tearDown()
     throws Exception {
         cleanUp();
         DbPool.quietClose(mConn);
-        
+
         Account recipient = TestUtil.getAccount(RECIPIENT_NAME);
         recipient.setPrefFromAddress(mOriginalFromAddress);
         recipient.setPrefFromDisplay(mOriginalFromDisplay);
         TestUtil.setAccountAttr(RECIPIENT_NAME, Provisioning.A_zimbraAllowAnyFromAddress, mOriginalAllowAnyFrom);
-        
+
         TestUtil.setAccountAttr(RECIPIENT_NAME, Provisioning.A_zimbraPrefOutOfOfficeReplyEnabled, mOriginalReplyEnabled);
         TestUtil.setAccountAttr(RECIPIENT_NAME, Provisioning.A_zimbraPrefOutOfOfficeFromDate, mOriginalFromDate);
         TestUtil.setAccountAttr(RECIPIENT_NAME, Provisioning.A_zimbraPrefOutOfOfficeUntilDate, mOriginalUntilDate);
         recipient.setPrefReplyToAddress(mOriginalReplyToAddress);
         recipient.setPrefReplyToDisplay(mOriginalReplyToDisplay);
         TestUtil.setAccountAttr(RECIPIENT_NAME, Provisioning.A_zimbraPrefReplyToEnabled, mOriginalReplyToEnabled);
-        
+
         super.tearDown();
     }
-    
+
     private void cleanUp()
     throws Exception {
         DbOutOfOffice.clear(mConn, mMbox);

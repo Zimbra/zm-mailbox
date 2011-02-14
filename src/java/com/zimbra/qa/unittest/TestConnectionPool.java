@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2007, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -18,10 +18,10 @@ import junit.framework.TestCase;
 
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.db.DbPool.DbConnection;
 
 
-public class TestConnectionPool 
+public class TestConnectionPool
 extends TestCase {
 
     /**
@@ -34,25 +34,25 @@ extends TestCase {
         int initialSize = DbPool.getSize();
 
         ZimbraLog.test.info("Initial connection pool size: %d", initialSize);
-        
-        Connection conn1 = DbPool.getConnection();
+
+        DbConnection conn1 = DbPool.getConnection();
         assertEquals("After first connection", initialSize + 1, DbPool.getSize());
-        
-        Connection conn2 = DbPool.getConnection();
+
+        DbConnection conn2 = DbPool.getConnection();
         assertEquals("After second connection", initialSize + 2, DbPool.getSize());
-        
-        Connection maint = DbPool.getMaintenanceConnection();
+
+        DbConnection maint = DbPool.getMaintenanceConnection();
         assertEquals("After maintenance connection", initialSize + 2, DbPool.getSize());
-        
+
         DbPool.quietClose(conn1);
         assertEquals("After first close", initialSize + 1, DbPool.getSize());
-        
+
         DbPool.quietClose(conn2);
         assertEquals("After second close", initialSize, DbPool.getSize());
-        
+
         DbPool.quietClose(maint);
         assertEquals("After closing maintenance connection", initialSize, DbPool.getSize());
-        
+
         ZimbraLog.test.info("Final connection pool size: %d", DbPool.getSize());
     }
 }

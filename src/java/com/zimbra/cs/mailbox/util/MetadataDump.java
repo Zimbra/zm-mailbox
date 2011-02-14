@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -41,7 +41,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.store.file.Volume;
 
@@ -141,7 +141,7 @@ public class MetadataDump {
         }
     }
 
-    private static int getMailboxGroup(Connection conn, int mboxId)
+    private static int getMailboxGroup(DbConnection conn, int mboxId)
     throws SQLException {
         int gid = 0;
         PreparedStatement stmt = null;
@@ -162,7 +162,7 @@ public class MetadataDump {
         return gid;
     }
 
-    private static int lookupMailboxIdFromEmail(Connection conn, String email)
+    private static int lookupMailboxIdFromEmail(DbConnection conn, String email)
     throws SQLException, ServiceException {
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -180,7 +180,7 @@ public class MetadataDump {
         }
     }
 
-    private static Row getItemRow(Connection conn, int groupId, int mboxId, int itemId)
+    private static Row getItemRow(DbConnection conn, int groupId, int mboxId, int itemId)
     throws ServiceException {
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -212,7 +212,7 @@ public class MetadataDump {
         }
     }
 
-    private static List<Row> getRevisionRows(Connection conn, int groupId, int mboxId, int itemId)
+    private static List<Row> getRevisionRows(DbConnection conn, int groupId, int mboxId, int itemId)
     throws ServiceException {
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -281,7 +281,7 @@ public class MetadataDump {
             CliUtil.toolSetup("WARN");
             int mboxId = 0;
             int itemId = 0;
-    
+
             PrintStream out = new PrintStream(System.out, true, "utf-8");
 
             CommandLine cl = parseArgs(args);
@@ -289,7 +289,7 @@ public class MetadataDump {
                 usage(null);
                 System.exit(0);
             }
-    
+
             // Get data from file.
             String infileName = cl.getOptionValue(OPT_FILE);
             if (infileName != null) {
@@ -305,11 +305,11 @@ public class MetadataDump {
                     System.exit(1);
                 }
             }
-    
+
             // Get data from db.
             DbPool.startup();
-            Connection conn = null;
-    
+            DbConnection conn = null;
+
             try {
                 String mboxIdStr = cl.getOptionValue(OPT_MAILBOX_ID);
                 String itemIdStr = cl.getOptionValue(OPT_ITEM_ID);
@@ -335,22 +335,22 @@ public class MetadataDump {
                     usage(null);
                     System.exit(1);
                 }
-    
+
                 if (conn == null)
                     conn = DbPool.getConnection();
                 int groupId = getMailboxGroup(conn, mboxId);
-    
+
                 boolean first = true;
-    
+
                 Row item = getItemRow(conn, groupId, mboxId, itemId);
                 List<Row> revs = getRevisionRows(conn, groupId, mboxId, itemId);
-    
+
                 // main item
                 if (!revs.isEmpty())
                     printBanner(out, "Current Revision");
                 item.print(out);
                 first = false;
-    
+
                 // revisions
                 for (Row rev : revs) {
                     String version = rev.get("version");

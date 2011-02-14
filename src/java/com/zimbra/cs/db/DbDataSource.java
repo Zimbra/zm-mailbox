@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -27,7 +27,7 @@ import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.datasource.DataSourceManager;
-import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -37,17 +37,17 @@ public class DbDataSource {
 
     public static class DataSourceItem {
         public int folderId;
-	public int itemId;
-	public String remoteId;
-	public Metadata md;
-	public int itemFlags = -1;
-	
-	public DataSourceItem(int f, int i, String r, Metadata m) {
-	    folderId = f;
-	    itemId = i;
-	    remoteId = r;
-	    md = m;
-	}
+    public int itemId;
+    public String remoteId;
+    public Metadata md;
+    public int itemFlags = -1;
+
+    public DataSourceItem(int f, int i, String r, Metadata m) {
+        folderId = f;
+        itemId = i;
+        remoteId = r;
+        md = m;
+    }
 
         public DataSourceItem(int f, int i, String r, Metadata m, int fl) {
             this(f, i, r, m);
@@ -60,7 +60,7 @@ public class DbDataSource {
     public static void addMapping(DataSource ds, DataSourceItem item) throws ServiceException {
         Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
 
-        Connection conn = null;
+        DbConnection conn = null;
         PreparedStatement stmt = null;
         String dataSourceId = ds.getId();
 
@@ -104,7 +104,7 @@ public class DbDataSource {
                 if (!Db.supports(Db.Capability.ON_DUPLICATE_KEY) && Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
                     DbPool.closeStatement(stmt);
                     DbPool.quietClose(conn);
-                	updateMapping(ds, item);
+                    updateMapping(ds, item);
                 } else {
                     throw ServiceException.FAILURE("Unable to add mapping for dataSource "+ds.getName(), e);
                 }
@@ -116,12 +116,12 @@ public class DbDataSource {
     }
 
     public static void updateMapping(DataSource ds, DataSourceItem item) throws ServiceException {
-    	Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
+        Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
 
         ZimbraLog.datasource.debug("Updating mapping for dataSource %s: itemId(%d), remoteId(%s)", ds.getName(), item.itemId, item.remoteId);
 
         synchronized (getSynchronizer(mbox)) {
-            Connection conn = null;
+            DbConnection conn = null;
             PreparedStatement stmt = null;
             try {
                 if (!Db.supports(Db.Capability.ON_DUPLICATE_KEY) && !hasMapping(ds, item.itemId)) {
@@ -170,12 +170,12 @@ public class DbDataSource {
     }
 
     public static void deleteMappings(DataSource ds, Collection<Integer> itemIds) throws ServiceException {
-    	Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
+        Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
 
-    	ZimbraLog.datasource.debug("Deleting %d mappings for dataSource %s", itemIds.size(), ds.getName());
+        ZimbraLog.datasource.debug("Deleting %d mappings for dataSource %s", itemIds.size(), ds.getName());
         List<List<Integer>> splitIds = ListUtil.split(itemIds, Db.getINClauseBatchSize());
         synchronized (getSynchronizer(mbox)) {
-            Connection conn = null;
+            DbConnection conn = null;
             PreparedStatement stmt = null;
             try {
                 conn = DbPool.getConnection(mbox);
@@ -189,13 +189,13 @@ public class DbDataSource {
                     sb.append(" data_source_id = ? AND ");
                     sb.append(DbUtil.whereIn("item_id", curIds.size()));
                     stmt = conn.prepareStatement(sb.toString());
-    
+
                     int i = 1;
                     i = DbMailItem.setMailboxId(stmt, mbox, i);
                     stmt.setString(i++, ds.getId());
                     for (int itemId : curIds)
                         stmt.setInt(i++, itemId);
-    
+
                     numRows += stmt.executeUpdate();
                     conn.commit();
                     stmt.close();
@@ -211,11 +211,11 @@ public class DbDataSource {
     }
 
     public static void deleteAllMappings(DataSource ds) throws ServiceException {
-    	Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
+        Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
 
         ZimbraLog.datasource.debug("Deleting all mappings for dataSource %s", ds.getName());
         synchronized (getSynchronizer(mbox)) {
-            Connection conn = null;
+            DbConnection conn = null;
             PreparedStatement stmt = null;
             try {
                 conn = DbPool.getConnection(mbox);
@@ -242,12 +242,12 @@ public class DbDataSource {
     }
 
     public static void deleteMapping(DataSource ds, int itemId) throws ServiceException {
-    	Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
+        Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
 
-    	ZimbraLog.datasource.debug("Deleting mappings for dataSource %s itemId %d", ds.getName(), itemId);
+        ZimbraLog.datasource.debug("Deleting mappings for dataSource %s itemId %d", ds.getName(), itemId);
 
         synchronized (getSynchronizer(mbox)) {
-            Connection conn = null;
+            DbConnection conn = null;
             PreparedStatement stmt = null;
             try {
                 conn = DbPool.getConnection(mbox);
@@ -272,64 +272,64 @@ public class DbDataSource {
                 DbPool.closeStatement(stmt);
                 DbPool.quietClose(conn);
             }
-    	}
+        }
     }
 
     public static Collection<DataSourceItem> deleteAllMappingsInFolder(DataSource ds, int folderId) throws ServiceException {
-    	Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
+        Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
 
-    	ArrayList<DataSourceItem> items = new ArrayList<DataSourceItem>();
+        ArrayList<DataSourceItem> items = new ArrayList<DataSourceItem>();
 
-    	ZimbraLog.datasource.debug("Deleting all mappings for dataSource %s in folder %d", ds.getName(), folderId);
+        ZimbraLog.datasource.debug("Deleting all mappings for dataSource %s in folder %d", ds.getName(), folderId);
 
-    	synchronized (mbox) {
-    	    Connection conn = null;
-    	    PreparedStatement stmt = null;
-    	    try {
-    	        conn = DbPool.getConnection(mbox);
-    	        String dataSourceTable = getTableName(mbox);
-    	        String IN_THIS_MAILBOX_AND = DebugConfig.disableMailboxGroups ? "" : dataSourceTable + ".mailbox_id = ? AND ";
-    	        StringBuilder sb = new StringBuilder();
-    	        sb.append("DELETE FROM ");
-    	        sb.append(dataSourceTable);
-    	        sb.append(" WHERE ");
-    	        sb.append(IN_THIS_MAILBOX_AND);
-    	        sb.append("  data_source_id = ? AND folder_id = ?");
-    	        stmt = conn.prepareStatement(sb.toString());
-    	        int pos = 1;
-    	        pos = DbMailItem.setMailboxId(stmt, mbox, pos);
-    	        stmt.setString(pos++, ds.getId());
-    	        stmt.setInt(pos++, folderId);
-    	        int numRows = stmt.executeUpdate();
-    	        conn.commit();
-    	        stmt.close();
-    	        ZimbraLog.datasource.debug("Deleted %d mappings for %s", numRows, ds.getName());
-    	    } catch (SQLException e) {
-    	        throw ServiceException.FAILURE("Unable to delete mapping for dataSource "+ds.getName(), e);
-    	    } finally {
-    	        DbPool.closeStatement(stmt);
-    	        DbPool.quietClose(conn);
-    	    }
-    	}
-    	return items;
+        synchronized (mbox) {
+            DbConnection conn = null;
+            PreparedStatement stmt = null;
+            try {
+                conn = DbPool.getConnection(mbox);
+                String dataSourceTable = getTableName(mbox);
+                String IN_THIS_MAILBOX_AND = DebugConfig.disableMailboxGroups ? "" : dataSourceTable + ".mailbox_id = ? AND ";
+                StringBuilder sb = new StringBuilder();
+                sb.append("DELETE FROM ");
+                sb.append(dataSourceTable);
+                sb.append(" WHERE ");
+                sb.append(IN_THIS_MAILBOX_AND);
+                sb.append("  data_source_id = ? AND folder_id = ?");
+                stmt = conn.prepareStatement(sb.toString());
+                int pos = 1;
+                pos = DbMailItem.setMailboxId(stmt, mbox, pos);
+                stmt.setString(pos++, ds.getId());
+                stmt.setInt(pos++, folderId);
+                int numRows = stmt.executeUpdate();
+                conn.commit();
+                stmt.close();
+                ZimbraLog.datasource.debug("Deleted %d mappings for %s", numRows, ds.getName());
+            } catch (SQLException e) {
+                throw ServiceException.FAILURE("Unable to delete mapping for dataSource "+ds.getName(), e);
+            } finally {
+                DbPool.closeStatement(stmt);
+                DbPool.quietClose(conn);
+            }
+        }
+        return items;
     }
 
     public static boolean hasMapping(DataSource ds, int itemId) throws ServiceException {
-    	DataSourceItem item = getMapping(ds, itemId);
-    	return item.remoteId != null;
+        DataSourceItem item = getMapping(ds, itemId);
+        return item.remoteId != null;
     }
-    
+
     public static Collection<DataSourceItem> getAllMappings(DataSource ds) throws ServiceException {
-    	Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
+        Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
 
-    	ArrayList<DataSourceItem> items = new ArrayList<DataSourceItem>();
+        ArrayList<DataSourceItem> items = new ArrayList<DataSourceItem>();
 
-    	ZimbraLog.datasource.debug("Get all mappings for %s", ds.getName());
+        ZimbraLog.datasource.debug("Get all mappings for %s", ds.getName());
 
         synchronized (getSynchronizer(mbox)) {
-            Connection conn = null;
+            DbConnection conn = null;
             PreparedStatement stmt = null;
-            ResultSet rs = null;        
+            ResultSet rs = null;
             try {
                 conn = DbPool.getConnection(mbox);
                 StringBuilder sb = new StringBuilder();
@@ -360,18 +360,18 @@ public class DbDataSource {
                 DbPool.quietClose(conn);
             }
         }
-    	return items;
+        return items;
     }
-    
-    public static Collection<DataSourceItem> getAllMappingsInFolder(DataSource ds, int folderId) throws ServiceException {
-    	Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
 
-    	ArrayList<DataSourceItem> items = new ArrayList<DataSourceItem>();
-        
+    public static Collection<DataSourceItem> getAllMappingsInFolder(DataSource ds, int folderId) throws ServiceException {
+        Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
+
+        ArrayList<DataSourceItem> items = new ArrayList<DataSourceItem>();
+
         ZimbraLog.datasource.debug("Get all mappings for %s in folder %d", ds.getName(), folderId);
 
         synchronized (getSynchronizer(mbox)) {
-            Connection conn = null;
+            DbConnection conn = null;
             PreparedStatement stmt = null;
             ResultSet rs = null;
             try {
@@ -408,7 +408,7 @@ public class DbDataSource {
                 DbPool.quietClose(conn);
             }
         }
-    	return items;
+        return items;
     }
 
     public static Collection<DataSourceItem> getAllMappingsAndFlagsInFolder(DataSource ds, int folderId) throws ServiceException {
@@ -417,9 +417,9 @@ public class DbDataSource {
         ArrayList<DataSourceItem> items = new ArrayList<DataSourceItem>();
 
         ZimbraLog.datasource.debug("Get all mappings for %s in folder %d", ds.getName(), folderId);
-        
+
         synchronized (getSynchronizer(mbox)) {
-            Connection conn = null;
+            DbConnection conn = null;
             PreparedStatement stmt = null;
             ResultSet rs = null;
             try {
@@ -469,10 +469,10 @@ public class DbDataSource {
     throws ServiceException {
         Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
 
-    	List<DataSourceItem> items = new ArrayList<DataSourceItem>();
+        List<DataSourceItem> items = new ArrayList<DataSourceItem>();
 
         synchronized (getSynchronizer(mbox)) {
-            Connection conn = null;
+            DbConnection conn = null;
             PreparedStatement stmt = null;
             ResultSet rs = null;
             try {
@@ -508,18 +508,18 @@ public class DbDataSource {
         }
         return items;
     }
-    
+
     public static DataSourceItem getMapping(DataSource ds, int itemId) throws ServiceException {
-    	Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
+        Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
 
         int folderId = 0;
         String remoteId = null;
-    	Metadata md = null;
-    	
+        Metadata md = null;
+
         ZimbraLog.datasource.debug("Get mapping for %s, itemId=%d", ds.getName(), itemId);
 
         synchronized (getSynchronizer(mbox)) {
-            Connection conn = null;
+            DbConnection conn = null;
             PreparedStatement stmt = null;
             ResultSet rs = null;
             try {
@@ -553,20 +553,20 @@ public class DbDataSource {
                 DbPool.quietClose(conn);
             }
         }
-    	return new DataSourceItem(folderId, itemId, remoteId, md);
+        return new DataSourceItem(folderId, itemId, remoteId, md);
     }
 
     public static DataSourceItem getReverseMapping(DataSource ds, String remoteId) throws ServiceException {
-    	Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
+        Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
 
         int folderId = 0;
         int itemId = 0;
         Metadata md = null;
-    	
+
         ZimbraLog.datasource.debug("Get reverse mapping for %s, remoteId=%s", ds.getName(), remoteId);
 
         synchronized (getSynchronizer(mbox)) {
-            Connection conn = null;
+            DbConnection conn = null;
             PreparedStatement stmt = null;
             ResultSet rs = null;
             try {
@@ -600,9 +600,9 @@ public class DbDataSource {
                 DbPool.quietClose(conn);
             }
         }
-    	return new DataSourceItem(folderId, itemId, remoteId, md);
+        return new DataSourceItem(folderId, itemId, remoteId, md);
     }
-    
+
     public static Collection<DataSourceItem> getMappings(DataSource ds, Collection<Integer> ids) throws ServiceException {
         Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
         int folderId = 0;
@@ -611,11 +611,11 @@ public class DbDataSource {
         Metadata md = null;
         List<List<Integer>> splitIds = ListUtil.split(ids, Db.getINClauseBatchSize());
         ArrayList<DataSourceItem> items = new ArrayList<DataSourceItem>();
-        
+
         ZimbraLog.datasource.debug("Get mappings for %s", ds.getName());
 
         synchronized (getSynchronizer(mbox)) {
-            Connection conn = null;
+            DbConnection conn = null;
             PreparedStatement stmt = null;
             ResultSet rs = null;
             try {
@@ -659,18 +659,18 @@ public class DbDataSource {
     }
 
     public static Collection<DataSourceItem> getReverseMappings(DataSource ds, Collection<String> remoteIds) throws ServiceException {
-    	Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
+        Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
         int folderId = 0;
         int itemId = 0;
         String remoteId;
         Metadata md = null;
         List<List<String>> splitIds = ListUtil.split(remoteIds, Db.getINClauseBatchSize());
         ArrayList<DataSourceItem> items = new ArrayList<DataSourceItem>();
-    	
+
         ZimbraLog.datasource.debug("Get reverse mappings for %s", ds.getName());
 
         synchronized (getSynchronizer(mbox)) {
-            Connection conn = null;
+            DbConnection conn = null;
             PreparedStatement stmt = null;
             ResultSet rs = null;
             try {
@@ -710,7 +710,7 @@ public class DbDataSource {
                 DbPool.quietClose(conn);
             }
         }
-    	return items;
+        return items;
     }
 
     public static String getTableName(Mailbox mbox) {

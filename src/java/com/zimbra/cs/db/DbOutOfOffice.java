@@ -27,7 +27,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -51,7 +51,7 @@ public class DbOutOfOffice {
      * @param cacheDurationMillis threshold for determining last sent time
      * @throws ServiceException if a database error occurs
      */
-    public static boolean alreadySent(Connection conn, Mailbox mbox, String sentTo, long cacheDurationMillis)
+    public static boolean alreadySent(DbConnection conn, Mailbox mbox, String sentTo, long cacheDurationMillis)
     throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(DbMailbox.getZimbraSynchronizer(mbox)));
 
@@ -97,7 +97,7 @@ public class DbOutOfOffice {
      * @param sentTo the email address of the recipient
      * @throws ServiceException if a database error occurred
      */
-    public static void setSentTime(Connection conn, Mailbox mbox, String sentTo)
+    public static void setSentTime(DbConnection conn, Mailbox mbox, String sentTo)
     throws ServiceException {
         setSentTime(conn, mbox, sentTo, System.currentTimeMillis());
     }
@@ -112,7 +112,7 @@ public class DbOutOfOffice {
      * @param sentOn the timestamp of the out-of-office message
      * @throws ServiceException if a database error occurred
      */
-    public static void setSentTime(Connection conn, Mailbox mbox, String sentTo, long sentOn) throws ServiceException {
+    public static void setSentTime(DbConnection conn, Mailbox mbox, String sentTo, long sentOn) throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(DbMailbox.getZimbraSynchronizer(mbox)));
 
         Timestamp ts = new Timestamp(sentOn);
@@ -171,7 +171,7 @@ public class DbOutOfOffice {
      * @param mbox mailbox
      * @throws ServiceException if a database error occurred
      */
-    public static void clear(Connection conn, Mailbox mbox) throws ServiceException {
+    public static void clear(DbConnection conn, Mailbox mbox) throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(DbMailbox.getZimbraSynchronizer(mbox)));
 
         PreparedStatement stmt = null;
@@ -191,7 +191,7 @@ public class DbOutOfOffice {
         }
     }
     
-    public static void prune(Connection conn, long cacheDurationMillis)
+    public static void prune(DbConnection conn, long cacheDurationMillis)
     throws ServiceException {
         // there's no centralized OoO table to prune in the DB-per-user case
         if (DebugConfig.disableMailboxGroups)

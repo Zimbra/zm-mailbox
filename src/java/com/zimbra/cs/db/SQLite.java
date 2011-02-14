@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -35,7 +36,7 @@ import org.apache.commons.dbcp.DelegatingConnection;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbPool.PoolConfig;
 
 public class SQLite extends Db {
@@ -57,7 +58,7 @@ public class SQLite extends Db {
         mErrorCodes.put(Db.Error.FOREIGN_KEY_NO_PARENT, "foreign key");
         mErrorCodes.put(Db.Error.TOO_MANY_SQL_PARAMS, "too many SQL variables");
     }
-    
+
     @Override boolean supportsCapability(Db.Capability capability) {
         switch (capability) {
             case AVOID_OR_IN_WHERE_CLAUSE:   return false;
@@ -120,7 +121,7 @@ public class SQLite extends Db {
         super.startup(pool, poolSize);
     }
 
-    @Override void postCreate(java.sql.Connection conn) throws SQLException {
+    @Override void postCreate(Connection conn) throws SQLException {
         try {
             conn.setAutoCommit(true);
             pragmas(conn, null);
@@ -129,9 +130,9 @@ public class SQLite extends Db {
         }
     }
 
-    private void pragma(java.sql.Connection conn, String dbname, String key, String value) throws SQLException {
+    private void pragma(Connection conn, String dbname, String key, String value) throws SQLException {
         PreparedStatement stmt = null;
-        
+
         try {
             String prefix = dbname == null || dbname.equals("zimbra") ? "" : dbname + ".";
             (stmt = conn.prepareStatement("PRAGMA " + prefix + key +
@@ -141,7 +142,7 @@ public class SQLite extends Db {
         }
     }
 
-    void pragmas(java.sql.Connection conn, String dbname) throws SQLException {
+    void pragmas(Connection conn, String dbname) throws SQLException {
         /*
          * auto_vacuum causes databases to be locked permanently
          * pragma(conn, dbname, "auto_vacuum", "2");
@@ -161,15 +162,15 @@ public class SQLite extends Db {
 
     private static final int MAX_ATTACHED_DATABASES = readConfigInt("sqlite_max_attached_databases", "max # of attached databases", 7);
 
-    private static final HashMap<java.sql.Connection, LinkedHashMap<String, String>> sAttachedDatabases =
-            new HashMap<java.sql.Connection, LinkedHashMap<String, String>>(DEFAULT_CONNECTION_POOL_SIZE);
+    private static final HashMap<Connection, LinkedHashMap<String, String>> sAttachedDatabases =
+            new HashMap<Connection, LinkedHashMap<String, String>>(DEFAULT_CONNECTION_POOL_SIZE);
 
-    private LinkedHashMap<String, String> getAttachedDatabases(Connection conn) {
+    private LinkedHashMap<String, String> getAttachedDatabases(DbConnection conn) {
         return sAttachedDatabases.get(getInnermostConnection(conn.getConnection()));
     }
 
-    private java.sql.Connection getInnermostConnection(java.sql.Connection conn) {
-        java.sql.Connection retVal = null;
+    private Connection getInnermostConnection(Connection conn) {
+        Connection retVal = null;
         if (conn instanceof DebugConnection)
             retVal = ((DebugConnection) conn).getConnection();
         if (conn instanceof DelegatingConnection)
@@ -177,7 +178,7 @@ public class SQLite extends Db {
         return retVal == null ? conn : retVal;
     }
 
-    @Override public void optimize(Connection conn, String dbname, int level)
+    @Override public void optimize(DbConnection conn, String dbname, int level)
         throws ServiceException {
         try {
             boolean autocommit = conn.getConnection().getAutoCommit();
@@ -208,8 +209,8 @@ public class SQLite extends Db {
                 (level > 0 ? "vacuum" : "analyze") + ' ' + dbname + " error", e);
         }
     }
-    
-    @Override public void registerDatabaseInterest(Connection conn, String dbname) throws SQLException, ServiceException {
+
+    @Override public void registerDatabaseInterest(DbConnection conn, String dbname) throws SQLException, ServiceException {
         LinkedHashMap<String, String> attachedDBs = getAttachedDatabases(conn);
         if (attachedDBs != null && attachedDBs.containsKey(dbname))
             return;
@@ -218,7 +219,7 @@ public class SQLite extends Db {
         if (attachedDBs != null && attachedDBs.size() >= MAX_ATTACHED_DATABASES) {
             for (Iterator<String> it = attachedDBs.keySet().iterator(); attachedDBs.size() >= MAX_ATTACHED_DATABASES && it.hasNext(); ) {
                 String name = it.next();
-                
+
                 if (!name.equals("zimbra") && detachDatabase(conn, name))
                     it.remove();
             }
@@ -226,7 +227,7 @@ public class SQLite extends Db {
         attachDatabase(conn, dbname);
     }
 
-    void attachDatabase(Connection conn, String dbname) throws SQLException, ServiceException {
+    void attachDatabase(DbConnection conn, String dbname) throws SQLException, ServiceException {
         PreparedStatement stmt = null;
 
         try {
@@ -246,7 +247,7 @@ public class SQLite extends Db {
         } finally {
             DbPool.quietCloseStatement(stmt);
         }
-        
+
         LinkedHashMap<String, String> attachedDBs = getAttachedDatabases(conn);
         if (attachedDBs != null) {
             attachedDBs.put(dbname, null);
@@ -257,7 +258,7 @@ public class SQLite extends Db {
         }
     }
 
-    private boolean detachDatabase(Connection conn, String dbname) {
+    private boolean detachDatabase(DbConnection conn, String dbname) {
         PreparedStatement stmt = null;
         try {
             boolean autocommit = conn.getConnection().getAutoCommit();
@@ -289,12 +290,12 @@ public class SQLite extends Db {
 //        }
 //    }
 
-    @Override public boolean databaseExists(Connection conn, String dbname) throws ServiceException {
+    @Override public boolean databaseExists(DbConnection conn, String dbname) throws ServiceException {
         if (!new File(getDatabaseFilename(dbname)).exists())
             return false;
 
         // since it's so easy to end up with an empty SQLite database, make
-        // sure that at least one table exists 
+        // sure that at least one table exists
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -337,7 +338,7 @@ public class SQLite extends Db {
             mDriverClassName = "org.sqlite.JDBC";
             mPoolSize = DEFAULT_CONNECTION_POOL_SIZE;
             mRootUrl = null;
-            mConnectionUrl = "jdbc:sqlite:" + getDatabaseFilename("zimbra"); 
+            mConnectionUrl = "jdbc:sqlite:" + getDatabaseFilename("zimbra");
             mLoggerUrl = null;
             mSupportsStatsCallback = false;
             mDatabaseProperties = getSQLiteProperties();
@@ -393,7 +394,7 @@ public class SQLite extends Db {
             String redoVer = com.zimbra.cs.redolog.Version.latest().toString();
             String outStr = "-- AUTO-GENERATED .SQL FILE - Generated by the SQLite versions tool\n" +
                 "INSERT INTO config(name, value, description) VALUES\n" +
-                "\t('db.version', '" + Versions.DB_VERSION + "', 'db schema version');\n" + 
+                "\t('db.version', '" + Versions.DB_VERSION + "', 'db schema version');\n" +
                 "INSERT INTO config(name, value, description) VALUES\n" +
                 "\t('index.version', '" + Versions.INDEX_VERSION + "', 'index version');\n" +
                 "INSERT INTO config(name, value, description) VALUES\n" +
