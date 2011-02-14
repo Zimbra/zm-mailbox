@@ -70,12 +70,23 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
 
     static class ImapMessageSet extends TreeSet<ImapMessage> {
         private static final long serialVersionUID = 4831178352505203361L;
-        ImapMessageSet()                              { super(new SequenceComparator()); }
-        ImapMessageSet(Collection<ImapMessage> msgs)  { this();  addAll(msgs); }
+
+        ImapMessageSet() {
+            super(new SequenceComparator());
+        }
+
+        ImapMessageSet(Collection<ImapMessage> msgs) {
+            this();
+            addAll(msgs);
+        }
     }
 
     public static final Set<MailItem.Type> SUPPORTED_TYPES = EnumSet.of(
             MailItem.Type.MESSAGE, MailItem.Type.CHAT, MailItem.Type.CONTACT);
+
+    static final int IMAP_FLAGS = Flag.BITMASK_UNREAD | Flag.BITMASK_FLAGGED | Flag.BITMASK_DELETED |
+                                  Flag.BITMASK_DRAFT  | Flag.BITMASK_REPLIED | Flag.BITMASK_FORWARDED |
+                                  Flag.BITMASK_NOTIFIED;
 
     static final short FLAG_RECENT       = 0x0001;
     static final short FLAG_SPAM         = 0x0002;
@@ -85,10 +96,8 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
     static final short FLAG_ADDED        = 0x0100;
     static final short FLAG_EXPUNGED     = 0x0200;
 
-    static final int IMAP_FLAGS = Flag.BITMASK_UNREAD | Flag.BITMASK_FLAGGED | Flag.BITMASK_DELETED |
-                                  Flag.BITMASK_DRAFT  | Flag.BITMASK_REPLIED | Flag.BITMASK_FORWARDED |
-                                  Flag.BITMASK_NOTIFIED;
     static final short MUTABLE_SESSION_FLAGS = FLAG_SPAM | FLAG_NONSPAM | FLAG_JUNKRECORDED;
+
     static final short SESSION_FLAGS = FLAG_ADDED  | FLAG_EXPUNGED | FLAG_IS_CONTACT |
                                        FLAG_RECENT | MUTABLE_SESSION_FLAGS;
 
@@ -99,12 +108,12 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
     long  tags;
     short sflags;
 
-    public ImapMessage(int id, MailItem.Type type, int imapId, int flag, long tag) {
-        msgId   = id;
-        imapUid = imapId;
-        flags   = flag;
-        tags    = tag;
-        sflags  = (type == MailItem.Type.CONTACT ? FLAG_IS_CONTACT : 0);
+    public ImapMessage(int id, MailItem.Type type, int imapId, int flags, long tags) {
+        this.msgId   = id;
+        this.imapUid = imapId;
+        this.flags   = flags & IMAP_FLAGS;
+        this.tags    = tags;
+        this.sflags  = (type == MailItem.Type.CONTACT ? FLAG_IS_CONTACT : 0);
     }
 
     public ImapMessage(MailItem item) {
@@ -112,11 +121,11 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
     }
 
     ImapMessage(ImapMessage i4msg) {
-        msgId   = i4msg.msgId;
-        imapUid = i4msg.imapUid;
-        flags   = i4msg.flags;
-        tags    = i4msg.tags;
-        sflags  = (short) (i4msg.sflags & FLAG_IS_CONTACT);
+        this.msgId   = i4msg.msgId;
+        this.imapUid = i4msg.imapUid;
+        this.flags   = i4msg.flags;
+        this.tags    = i4msg.tags;
+        this.sflags  = (short) (i4msg.sflags & FLAG_IS_CONTACT);
     }
 
     ImapMessage reset() {
@@ -128,36 +137,58 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
         return (sflags & FLAG_IS_CONTACT) == 0 ? MailItem.Type.MESSAGE : MailItem.Type.CONTACT;
     }
 
-    boolean isExpunged()  { return (sflags & FLAG_EXPUNGED) != 0; }
-    boolean isAdded()     { return (sflags & FLAG_ADDED) != 0; }
+    boolean isExpunged() {
+        return (sflags & FLAG_EXPUNGED) != 0;
+    }
 
-    void setExpunged(boolean expunged)  { sflags = (short) (expunged ? sflags | FLAG_EXPUNGED : sflags & ~FLAG_EXPUNGED); }
-    void setAdded(boolean added)        { sflags = (short) (added ? sflags | FLAG_ADDED : sflags & ~FLAG_ADDED); }
+    boolean isAdded() {
+        return (sflags & FLAG_ADDED) != 0;
+    }
+
+    ImapMessage setExpunged(boolean expunged) {
+        this.sflags = (short) (expunged ? sflags | FLAG_EXPUNGED : sflags & ~FLAG_EXPUNGED);
+        return this;
+    }
+
+    ImapMessage setAdded(boolean added) {
+        this.sflags = (short) (added ? sflags | FLAG_ADDED : sflags & ~FLAG_ADDED);
+        return this;
+    }
 
     long getSize(MailItem item) throws ServiceException {
-        if (item instanceof Message)
+        if (item instanceof Message) {
             return item.getSize();
+        }
         // FIXME: need to generate the representation of the item to do this correctly...
         return getContent(item).getFirst();
     }
 
 
     @Override public int compareTo(ImapMessage i4msg) {
-        if (imapUid == i4msg.imapUid)  return 0;
-        return (imapUid < i4msg.imapUid ? -1 : 1);
+        if (imapUid == i4msg.imapUid) {
+            return 0;
+        }
+        return imapUid < i4msg.imapUid ? -1 : 1;
     }
 
     static class SequenceComparator implements Comparator<ImapMessage> {
-        @Override public int compare(ImapMessage o1, ImapMessage o2) {
-            if (o1 == null)       return o2 == null ? 0 : -1;
-            else if (o2 == null)  return 1;
-            return (o1.sequence < o2.sequence ? -1 : (o1.sequence == o2.sequence ? 0 : 1));
+        @Override
+        public int compare(ImapMessage o1, ImapMessage o2) {
+            if (o1 == null) {
+                return o2 == null ? 0 : -1;
+            } else if (o2 == null) {
+                return 1;
+            } else {
+                return o1.sequence < o2.sequence ? -1 : (o1.sequence == o2.sequence ? 0 : 1);
+            }
         }
     }
 
 
     private static final DateFormat GMT_DATE_FORMAT = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z (z)", Locale.US);
-        static { GMT_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("GMT")); }
+    static {
+        GMT_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("GMT"));
+    }
 
     static final Pair<Long, InputStream> EMPTY_CONTENT = new Pair<Long, InputStream>(0L, new ByteArrayInputStream(new byte[0]));
 
@@ -190,14 +221,15 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
     }
 
     static MimeMessage getMimeMessage(MailItem item) throws ServiceException {
-        if (item instanceof Message)
+        if (item instanceof Message) {
             return ((Message) item).getMimeMessage(false);
+        }
 
         InputStream is = getContent(item).getSecond();
         try {
             return new Mime.FixedMimeMessage(JMSession.getSession(), is);
         } catch (MessagingException e) {
-            throw ServiceException.FAILURE("error creating MimeMessage for " +item.getType() + ' ' + item.getId(), e);
+            throw ServiceException.FAILURE("error creating MimeMessage for " + item.getType() + ' ' + item.getId(), e);
         } finally {
             ByteUtil.closeStream(is);
         }
@@ -214,8 +246,9 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
             long mask = 1L << i;
             if ((tagBuffer & mask) != 0) {
                 ImapFlag i4flag = i4cache.getByMask(mask);
-                if (i4flag != null)
+                if (i4flag != null) {
                     modseq = Math.max(modseq, i4flag.mModseq);
+                }
                 tagBuffer &= ~mask;
             }
         }
@@ -225,52 +258,69 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
     void setPermanentFlags(int f, long t, int changeId, ImapFolder parent) {
         if (t == tags && (f & IMAP_FLAGS) == (flags & IMAP_FLAGS))
             return;
-        flags = (f & IMAP_FLAGS) | (flags & ~IMAP_FLAGS);
-        tags  = t;
-        if (parent != null)
+
+        this.flags = f & IMAP_FLAGS;
+        this.tags  = t;
+        if (parent != null) {
             parent.dirtyMessage(this, changeId);
+        }
     }
 
     void setSessionFlags(short s, ImapFolder parent) {
         if ((s & MUTABLE_SESSION_FLAGS) == (sflags & MUTABLE_SESSION_FLAGS))
             return;
-        sflags = (short) ((s & MUTABLE_SESSION_FLAGS) | (sflags & ~MUTABLE_SESSION_FLAGS));
-        if (parent != null)
+
+        this.sflags = (short) ((s & MUTABLE_SESSION_FLAGS) | (sflags & ~MUTABLE_SESSION_FLAGS));
+        if (parent != null) {
             parent.dirtyMessage(this, -1);
+        }
     }
 
     private static final String NO_FLAGS = "FLAGS ()";
 
     String getFlags(ImapFolder i4folder) {
-        if ((flags & IMAP_FLAGS) == Flag.BITMASK_UNREAD && tags == 0 && sflags == 0)
+        if ((flags & IMAP_FLAGS) == Flag.BITMASK_UNREAD && tags == 0 && sflags == 0) {
             return NO_FLAGS;
+        }
+
         StringBuilder result = new StringBuilder("FLAGS (");
         int empty = result.length();
 
-        if ((flags & Flag.BITMASK_DELETED) != 0)
+        if ((flags & Flag.BITMASK_DELETED) != 0) {
             result.append(result.length() == empty ? "" : " ").append("\\Deleted");
-        if ((flags & Flag.BITMASK_DRAFT) != 0)
+        }
+        if ((flags & Flag.BITMASK_DRAFT) != 0) {
             result.append(result.length() == empty ? "" : " ").append("\\Draft");
-        if ((flags & Flag.BITMASK_FLAGGED) != 0)
+        }
+        if ((flags & Flag.BITMASK_FLAGGED) != 0) {
             result.append(result.length() == empty ? "" : " ").append("\\Flagged");
-        if ((flags & Flag.BITMASK_REPLIED) != 0)
+        }
+        if ((flags & Flag.BITMASK_REPLIED) != 0) {
             result.append(result.length() == empty ? "" : " ").append("\\Answered");
-        if ((flags & Flag.BITMASK_NOTIFIED) != 0)
+        }
+        if ((flags & Flag.BITMASK_NOTIFIED) != 0) {
             result.append(result.length() == empty ? "" : " ").append("$MDNSent");
-        if ((flags & Flag.BITMASK_FORWARDED) != 0)
+        }
+        if ((flags & Flag.BITMASK_FORWARDED) != 0) {
             result.append(result.length() == empty ? "" : " ").append("$Forwarded Forwarded");
+        }
         // note: \Seen is the IMAP flag, but we store "unread", so the test here is == not !=
-        if ((flags & Flag.BITMASK_UNREAD) == 0)
+        if ((flags & Flag.BITMASK_UNREAD) == 0) {
             result.append(result.length() == empty ? "" : " ").append("\\Seen");
+        }
 
-        if ((sflags & FLAG_RECENT) != 0)
+        if ((sflags & FLAG_RECENT) != 0) {
             result.append(result.length() == empty ? "" : " ").append("\\Recent");
-        if ((sflags & FLAG_SPAM) != 0)
+        }
+        if ((sflags & FLAG_SPAM) != 0) {
             result.append(result.length() == empty ? "" : " ").append("$Junk Junk");
-        if ((sflags & FLAG_NONSPAM) != 0)
+        }
+        if ((sflags & FLAG_NONSPAM) != 0) {
             result.append(result.length() == empty ? "" : " ").append("$NotJunk NotJunk NonJunk");
-        if ((sflags & FLAG_JUNKRECORDED) != 0)
+        }
+        if ((sflags & FLAG_JUNKRECORDED) != 0) {
             result.append(result.length() == empty ? "" : " ").append("JunkRecorded");
+        }
 
         long tagBuffer = tags;
         for (int i = 0; tagBuffer != 0 && i < 64; i++) {
@@ -280,8 +330,9 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
                 if (i4flag != null) {
                     // make sure there's no naming conflict with a system flag like "Forwarded" or "NonJunk"
                     ImapFlag other = i4folder.getFlagByName(i4flag.mImapName);
-                    if (other == null || other == i4flag)
+                    if (other == null || other == i4flag) {
                         result.append(result.length() == empty ? "" : " ").append(i4flag);
+                    }
                 }
                 tagBuffer &= ~mask;
             }
@@ -291,9 +342,30 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
 
     private static final byte[] NIL = { 'N', 'I', 'L' };
 
-    private static void nstring(PrintStream ps, String value) { if (value == null)  ps.write(NIL, 0, 3);  else astring(ps, value, false); }
-    private static void astring(PrintStream ps, String value) { if (value == null)  ps.print("\"\"");     else astring(ps, value, false); }
-    private static void aSTRING(PrintStream ps, String value) { if (value == null)  ps.print("\"\"");     else astring(ps, value, true); }
+    private static void nstring(PrintStream ps, String value) {
+        if (value == null) {
+            ps.write(NIL, 0, 3);
+        } else {
+            astring(ps, value, false);
+        }
+    }
+
+    private static void astring(PrintStream ps, String value) {
+        if (value == null) {
+            ps.print("\"\"");
+        } else {
+            astring(ps, value, false);
+        }
+    }
+
+    private static void aSTRING(PrintStream ps, String value) {
+        if (value == null) {
+            ps.print("\"\"");
+        } else {
+            astring(ps, value, true);
+        }
+    }
+
     private static void astring(PrintStream ps, String value, boolean upcase) {
         boolean literal = false;
         StringBuilder nonulls = null;
@@ -301,22 +373,28 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
         for (int length = value.length(); i < length; i++) {
             char c = value.charAt(i);
             if (c == '\0') {
-                if (nonulls == null)  nonulls = new StringBuilder();
+                if (nonulls == null) {
+                    nonulls = new StringBuilder();
+                }
                 nonulls.append(value.substring(lastNull + 1, i));
                 lastNull = i;
             } else if (c == '"' || c == '\\' || c >= 0x7f || c < 0x20) {
                 literal = true;
             }
         }
-        String content = (nonulls == null ? value : nonulls.append(value.substring(lastNull + 1, i)).toString());
-        if (upcase)
+
+        String content = nonulls == null ? value : nonulls.append(value.substring(lastNull + 1, i)).toString();
+        if (upcase) {
             content = content.toUpperCase();
+        }
+
         if (!literal) {
             ps.write('"');  ps.print(content);  ps.write('"');
         } else {
             try {
                 byte[] bytes = content.getBytes(MimeConstants.P_CHARSET_UTF8);
-                ps.write('{');  ps.print(bytes.length);  ps.write('}');  ps.write(ImapHandler.LINE_SEPARATOR_BYTES, 0, 2);
+                ps.write('{');  ps.print(bytes.length);  ps.write('}');
+                ps.write(ImapHandler.LINE_SEPARATOR_BYTES, 0, 2);
                 ps.write(bytes, 0, bytes.length);
             } catch (UnsupportedEncodingException uee) {
                 ps.write(NIL, 0, 3);
@@ -332,8 +410,9 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
         boolean encoded = false;
         for (int i = 0, length = value.length(); i < length; i++) {
             char c = value.charAt(i);
-            if (c == '"' || c == '\\' || c >= 0x7f || c < 0x20)
+            if (c == '"' || c == '\\' || c >= 0x7f || c < 0x20) {
                 encoded = true;
+            }
         }
         if (!encoded) {
             ps.write('"');  ps.print(value);  ps.write('"');
@@ -349,11 +428,14 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
 
     private static void address(PrintStream ps, InternetAddress addr) {
         String address = addr.getAddress().trim(), route = null;
-        int colon;
+
         // handle obsolete route-addr
+        int colon;
         if (address.startsWith("@") && (colon = address.indexOf(':')) != -1) {
-            route = address.substring(0, colon);  address = address.substring(colon + 1);
+            route = address.substring(0, colon);
+            address = address.substring(colon + 1);
         }
+
         String[] parts = address.split("@", 2);
         ps.write('(');  nstring2047(ps, addr.getPersonal());
         ps.write(' ');  nstring(ps, route);
@@ -378,11 +460,14 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
                         String name = colon == -1 ? serialized : serialized.substring(0, colon);
                         InternetAddress[] members = addr.getGroup(false);
 
-                        if (count++ == 0)  ps.write('(');
+                        if (count++ == 0) {
+                            ps.write('(');
+                        }
                         ps.print("(NIL NIL ");  nstring(ps, name);  ps.print(" NIL)");
                         if (members != null) {
-                            for (InternetAddress member : members)
+                            for (InternetAddress member : members) {
                                 address(ps, member);
+                            }
                         }
                         ps.print("(NIL NIL NIL NIL)");
                     } catch (ParseException e) { }
@@ -391,13 +476,19 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
                 } else {
                     // 7.4.2: "The fields of an address structure are in the following order: personal
                     //         name, [SMTP] at-domain-list (source route), mailbox name, and host name."
-                    if (count++ == 0)  ps.write('(');
+                    if (count++ == 0) {
+                        ps.write('(');
+                    }
                     address(ps, addr);
                 }
             }
         }
-        if (count == 0)  ps.write(NIL, 0, 3);
-        else             ps.write(')');
+
+        if (count == 0) {
+            ps.write(NIL, 0, 3);
+        } else {
+            ps.write(')');
+        }
     }
 
     private static void nlist(PrintStream ps, String[] list) {
@@ -408,7 +499,9 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
         } else {
             ps.write('(');
             for (int i = 0; i < list.length; i++) {
-                if (i != 0)  ps.write(' ');
+                if (i != 0) {
+                    ps.write(' ');
+                }
                 astring(ps, list[i]);
             }
             ps.write(')');
@@ -467,7 +560,9 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
         while (!queue.isEmpty()) {
             level = queue.getLast();
             if (level.isEmpty()) {
-                queue.removeLast();  pop = true;  continue;
+                queue.removeLast();
+                pop = true;
+                continue;
             }
 
             MPartInfo mpi = level.getFirst();
@@ -563,17 +658,31 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
     }
 
     private static int getLineCount(MimePart mp) {
+        // if the MimePart implementation counts lines, use its count
+        try {
+            int lines = mp.getLineCount();
+            if (lines > 0) {
+                return lines;
+            }
+        } catch (MessagingException e) {
+        }
+
         InputStream is = null;
         try {
-            if (mp instanceof MimeBodyPart)      is = ((MimeBodyPart) mp).getRawInputStream();
-            else if (mp instanceof MimeMessage)  is = ((MimeMessage) mp).getRawInputStream();
-            else                                 return 0;
+            if (mp instanceof MimeBodyPart) {
+                is = ((MimeBodyPart) mp).getRawInputStream();
+            } else if (mp instanceof MimeMessage) {
+                is = ((MimeMessage) mp).getRawInputStream();
+            } else {
+                return 0;
+            }
 
             int lines = 0, c;
             boolean complete = false;
             while ((c = is.read()) != -1) {
-                if ((complete = (c == '\n')) == true)
+                if ((complete = (c == '\n')) == true) {
                     lines++;
+                }
             }
             return complete ? lines : lines + 1;
         } catch (MessagingException e) {
@@ -597,17 +706,5 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
         for (String s : samples) {
             nstring2047(ps, s);  ps.write(' ');  nstring(ps, s);  ps.write(' ');  astring(ps, s);  ps.write(' ');  aSTRING(ps, s);  ps.write('\n');
         }
-
-//        java.io.File dir = new java.io.File("C:\\Temp\\mail");
-//        for (java.io.File file : dir.listFiles()) {
-//            MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), new java.io.FileInputStream(file));
-//            ByteArrayOutputStream baosold = new ByteArrayOutputStream(), baosnew = new ByteArrayOutputStream();
-//            serializeStructure(new PrintStream(baosold), mm, true);
-//            iterativeSerializeStructure(new PrintStream(baosnew), mm, true);
-//            if (!(new String(baosold.toByteArray())).equals(new String(baosnew.toByteArray())))
-//                System.out.println("mismatch on file: " + file.getName());
-//            else
-//                System.out.println("success on file: " + file.getName());
-//        }
     }
 }
