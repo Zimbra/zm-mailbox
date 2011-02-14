@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -17,7 +17,10 @@ package com.zimbra.common.soap;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
 
-public class MailConstants {
+public final class MailConstants {
+
+    private MailConstants() {
+    }
 
     public static final String NAMESPACE_STR = "urn:zimbraMail";
     public static final Namespace NAMESPACE = Namespace.get(NAMESPACE_STR);
@@ -479,7 +482,7 @@ public class MailConstants {
     public static final QName GET_EFFECTIVE_FOLDER_PERMS_REQUEST = QName.get(E_GET_EFFECTIVE_FOLDER_PERMS_REQUEST, NAMESPACE);
     public static final QName GET_EFFECTIVE_FOLDER_PERMS_RESPONSE = QName.get(E_GET_EFFECTIVE_FOLDER_PERMS_RESPONSE, NAMESPACE);
 
-    // Yahoo Auth 
+    // Yahoo Auth
     public static final QName GET_YAHOO_COOKIE_REQUEST = QName.get(E_GET_YAHOO_COOKIE_REQUEST, NAMESPACE);
     public static final QName GET_YAHOO_COOKIE_RESPONSE = QName.get(E_GET_YAHOO_COOKIE_RESPONSE, NAMESPACE);
     public static final QName GET_YAHOO_AUTH_TOKEN_REQUEST = QName.get(E_GET_YAHOO_AUTH_TOKEN_REQUEST, NAMESPACE);
@@ -497,7 +500,7 @@ public class MailConstants {
     public static final QName SEND_VERIFICATION_CODE_REQUEST = QName.get(E_SEND_VERIFICATION_CODE_REQUEST, NAMESPACE);
     public static final QName SEND_VERIFICATION_CODE_RESPONSE = QName.get(E_SEND_VERIFICATION_CODE_RESPONSE, NAMESPACE);
     public static final QName VERIFY_CODE_REQUEST = QName.get(E_VERIFY_CODE_REQUEST, NAMESPACE);
-    public static final QName VERIFY_CODE_RESPONSE = QName.get(E_VERIFY_CODE_RESPONSE, NAMESPACE); 
+    public static final QName VERIFY_CODE_RESPONSE = QName.get(E_VERIFY_CODE_RESPONSE, NAMESPACE);
     public static final QName INVALIDATE_REMINDER_DEVICE_REQUEST = QName.get(E_INVALIDATE_REMINDER_DEVICE_REQUEST, NAMESPACE);
     public static final QName INVALIDATE_REMINDER_DEVICE_RESPONSE = QName.get(E_INVALIDATE_REMINDER_DEVICE_REQUEST, NAMESPACE);
 
@@ -537,7 +540,7 @@ public class MailConstants {
     public static final String E_FILTER_RULES = "filterRules";
     public static final String E_FILTER_RULE = "filterRule";
     public static final String E_FILTER_TESTS = "filterTests";
-    
+
     public static final String E_HEADER_TEST = "headerTest";
     public static final String E_TRUE_TEST = "trueTest";
     public static final String E_HEADER_EXISTS_TEST = "headerExistsTest";
@@ -551,7 +554,7 @@ public class MailConstants {
     public static final String E_ADDRESS_BOOK_TEST = "addressBookTest";
     public static final String E_INVITE_TEST = "inviteTest";
     public static final String E_METHOD = "method";
-    
+
     public static final String E_FILTER_ACTIONS = "filterActions";
     public static final String E_ACTION_KEEP = "actionKeep";
     public static final String E_ACTION_DISCARD = "actionDiscard";
@@ -586,7 +589,7 @@ public class MailConstants {
     public static final String A_GRANT_TYPE = "gt";
     public static final String A_PASSWORD = "pw";
     public static final String A_ACCESSKEY = "key";
-    
+
     // account ACLs
     public static final String E_ACE = "ace";
     public static final String E_RIGHT = "right";
@@ -604,7 +607,7 @@ public class MailConstants {
     public static final String A_DISPLAY = "d";
     public static final String A_ADDRESS_TYPE = "t";
     public static final String A_ADD_TO_AB = "add";
- 
+
     // group info in addresses
     public static final String A_IS_GROUP = "isGroup";
     public static final String A_EXP = "exp";
@@ -662,7 +665,7 @@ public class MailConstants {
     public static final String A_CSVSEPARATOR = "csvsep";
     public static final String A_NEED_GRANTEE_NAME = "needGranteeName";
     public static final String A_INVALID = "invalid";
-    
+
 
     // messages
     public static final String E_MIMEPART = "mp";
@@ -718,7 +721,6 @@ public class MailConstants {
     // search
     public static final String E_QUERY = "query";
     public static final String E_HIT_MIMEPART = "hp";
-    public static final String A_SCORE = "score";
     public static final String A_QUERY = "query";
     public static final String A_GROUPBY = "groupBy";
     public static final String A_SEARCH_TYPES = "types";
@@ -975,7 +977,7 @@ public class MailConstants {
     public static final String E_DS_GAL = "gal";
     public static final String E_DS_CAL = "cal";
     public static final String E_DS_UNKNOWN = "unknown";
-    public static final String E_DS_LAST_ERROR = "lastError"; 
+    public static final String E_DS_LAST_ERROR = "lastError";
     public static final String A_DS_IS_ENABLED = "isEnabled";
     public static final String A_DS_IS_IMPORTONLY = "importOnly";
     public static final String A_DS_HOST = "host";
@@ -1025,7 +1027,7 @@ public class MailConstants {
     public static final String A_LOCKTIMESTAMP = "lt";
     public static final String E_REVISION = "revision";
     public static final String A_INCLUDE_OLDER_REVISIONS = "includeOlderRevisions";
-    
+
     // WaitSet
     public static final String E_WAITSET_ADD = "add";
     public static final String E_WAITSET_UPDATE = "update";
@@ -1040,7 +1042,7 @@ public class MailConstants {
     public static final String A_ALL_ACCOUNTS = "allAccounts";
     public static final String A_TYPES = "types";
     public static final String E_A = "a";
-    
+
     // AutoComplete
     public static final String E_MATCH = "match";
     public static final String A_LIMIT = "limit";

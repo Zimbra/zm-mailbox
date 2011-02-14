@@ -2,19 +2,15 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/*
- * Created on Mar 16, 2005
  */
 package com.zimbra.common.soap;
 
@@ -42,6 +38,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
+/**
+ * @since Mar 16, 2005
+ */
 public abstract class Element implements Cloneable {
     protected String  mName;
     protected String  mPrefix = "";
@@ -82,7 +81,7 @@ public abstract class Element implements Cloneable {
      *    <li>&lt;a b="something"/></ul><p>
      *  By setting the dispositon of an attribute to {@link #CONTENT}, you can
      *  force the attribute to be rendered in the former form.<p>
-     *  
+     *
      *  <i>Note that JSON serialization ignores all such hints and serializes
      *  all attributes as <tt>"key": "value"</tt>.</i> */
     public static enum Disposition {
@@ -154,7 +153,7 @@ public abstract class Element implements Cloneable {
     public Element addAttribute(String key, double value, Disposition disp) throws ContainerException   { return addAttribute(key, Double.toString(value), disp); }
     public Element addAttribute(String key, boolean value, Disposition disp) throws ContainerException  { return addAttribute(key, value ? "1" : "0", disp); }
     public Element addAttribute(String key, Number value, Disposition disp) throws ContainerException {
-        return addAttribute(key, value != null ? value.toString() : null, disp); 
+        return addAttribute(key, value != null ? value.toString() : null, disp);
     }
     public Element addAttribute(String key, Boolean value, Disposition disp) throws ContainerException {
         if (value != null) {
@@ -343,18 +342,18 @@ public abstract class Element implements Cloneable {
             return null;
         }
     }
-    
+
     public void output(Appendable out) throws IOException {
         toString(out);
     }
-    
+
     public abstract String prettyPrint();
 
     public abstract String prettyPrint(boolean safe);
 
     /** Serialize this <tt>Element</tt> to an <code>Appendable</code>. */
     public abstract void toString(Appendable out) throws IOException;
-    
+
     private static final String FORTY_SPACES = "                                        ";
     protected void indent(Appendable sb, int indent, boolean newline) throws IOException {
         if (indent < 0)      return;
@@ -386,7 +385,7 @@ public abstract class Element implements Cloneable {
     public org.w3c.dom.Document toW3cDom() {
         javax.xml.parsers.DocumentBuilder w3DomBuilder = w3DomBuilderTL.get();
         w3DomBuilder.reset();
-        org.w3c.dom.Document doc = w3DomBuilder.newDocument();  
+        org.w3c.dom.Document doc = w3DomBuilder.newDocument();
         doc.appendChild(toW3cDom(doc, null));
         return doc;
     }
@@ -487,18 +486,18 @@ public abstract class Element implements Cloneable {
 
     public static Element parseXML(InputStream is) throws org.dom4j.DocumentException { return parseXML(is, XMLElement.mFactory); }
     public static Element parseXML(InputStream is, ElementFactory factory) throws org.dom4j.DocumentException {
-        return convertDOM(getSAXReader(mDocumentFactory.get()).read(is).getRootElement(), factory);        
+        return convertDOM(getSAXReader(mDocumentFactory.get()).read(is).getRootElement(), factory);
     }
-    
+
     public static Element parseXML(String xml) throws org.dom4j.DocumentException { return parseXML(xml, XMLElement.mFactory); }
     public static Element parseXML(String xml, ElementFactory factory) throws org.dom4j.DocumentException {
         return convertDOM(getSAXReader(mDocumentFactory.get()).read(new StringReader(xml)).getRootElement(), factory);
     }
-    
+
     public static org.dom4j.io.SAXReader getSAXReader() {
         return getSAXReader(null);
     }
-    
+
     public static org.dom4j.io.SAXReader getSAXReader(org.dom4j.DocumentFactory fact) {
         org.dom4j.io.SAXReader saxReader;
         if (fact != null)
@@ -509,10 +508,10 @@ public abstract class Element implements Cloneable {
         EntityResolver nullEntityResolver = new EntityResolver() {
             public InputSource resolveEntity (String publicId, String systemId) {
                 return new InputSource(new StringReader(""));
-            }            
+            }
         };
         saxReader.setEntityResolver(nullEntityResolver);
-        return saxReader; 
+        return saxReader;
     }
 
     public static Element convertDOM(org.dom4j.Element d4root) { return convertDOM(d4root, XMLElement.mFactory); }
@@ -1059,7 +1058,7 @@ public abstract class Element implements Cloneable {
         }
 
         @Override public String toString() {
-            StringBuilder sb = new StringBuilder();  
+            StringBuilder sb = new StringBuilder();
             try {
                 toString(sb, -1, false);
             } catch (IOException e) {
@@ -1068,11 +1067,11 @@ public abstract class Element implements Cloneable {
             }
             return sb.toString();
         }
-        
+
         @Override public void toString(Appendable out) throws IOException {
             toString(out, -1, false);
         }
-        
+
         @Override public String prettyPrint() {
             return prettyPrint(false);
         }
@@ -1403,7 +1402,7 @@ public abstract class Element implements Cloneable {
         }
 
         @Override public String toString() {
-            StringBuilder sb = new StringBuilder();  
+            StringBuilder sb = new StringBuilder();
             try {
                 toString(sb, -1, false);
             } catch (IOException e) {
@@ -1412,7 +1411,7 @@ public abstract class Element implements Cloneable {
             }
             return sb.toString();
         }
-        
+
         @Override public void toString(Appendable out) throws IOException {
             toString(out, -1, false);
         }
@@ -1564,7 +1563,7 @@ public abstract class Element implements Cloneable {
 
     private static Element testMessage(Element env, SoapProtocol proto, QName qm) {
         env.addUniqueElement(proto.getBodyQName()).addUniqueElement(MailConstants.GET_MSG_RESPONSE)
-           .addUniqueElement(qm).addAttribute("id", 1115).addAttribute("f", "aw").addAttribute("t", "64,67").addAttribute("score", 0.953)
+           .addUniqueElement(qm).addAttribute("id", 1115).addAttribute("f", "aw").addAttribute("t", "64,67")
            .addAttribute("s", "Subject of the message has a \"\\\" in it", Disposition.CONTENT).addAttribute("mid", "<kashdfgiai67r3wtuwfg@goo.com>", Disposition.CONTENT)
            .addElement("mp").addAttribute("part", "TEXT").addAttribute("ct", "multipart/mixed").addAttribute("s", 3718);
         String orig = env.toString(), clone = env.clone().toString();
