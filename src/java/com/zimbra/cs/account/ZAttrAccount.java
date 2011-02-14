@@ -35,7 +35,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: unknown unknown unknown unknown */
+    /* build: 7.0.0_BETA1_1111 pshao 20110211-1534 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -31058,6 +31058,90 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPrefMailPollingInterval(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefMailPollingInterval, "");
+        return attrs;
+    }
+
+    /**
+     * user&#039;s S/MIME public keys (certificates)
+     *
+     * @return zimbraPrefMailSMIMECertificate, or null if unset
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1172)
+    public byte[] getPrefMailSMIMECertificate() {
+        return getBinaryAttr(Provisioning.A_zimbraPrefMailSMIMECertificate);
+    }
+
+    /**
+     * user&#039;s S/MIME public keys (certificates)
+     *
+     * @return zimbraPrefMailSMIMECertificate, or empty array if unset
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1172)
+    public String[] getPrefMailSMIMECertificateAsString() {
+        return getMultiAttr(Provisioning.A_zimbraPrefMailSMIMECertificate);
+    }
+
+    /**
+     * user&#039;s S/MIME public keys (certificates)
+     *
+     * @param zimbraPrefMailSMIMECertificate new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1172)
+    public void setPrefMailSMIMECertificate(byte[] zimbraPrefMailSMIMECertificate) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailSMIMECertificate, zimbraPrefMailSMIMECertificate==null ? "" : ByteUtil.encodeLDAPBase64(zimbraPrefMailSMIMECertificate));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * user&#039;s S/MIME public keys (certificates)
+     *
+     * @param zimbraPrefMailSMIMECertificate new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1172)
+    public Map<String,Object> setPrefMailSMIMECertificate(byte[] zimbraPrefMailSMIMECertificate, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailSMIMECertificate, zimbraPrefMailSMIMECertificate==null ? "" : ByteUtil.encodeLDAPBase64(zimbraPrefMailSMIMECertificate));
+        return attrs;
+    }
+
+    /**
+     * user&#039;s S/MIME public keys (certificates)
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1172)
+    public void unsetPrefMailSMIMECertificate() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailSMIMECertificate, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * user&#039;s S/MIME public keys (certificates)
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1172)
+    public Map<String,Object> unsetPrefMailSMIMECertificate(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailSMIMECertificate, "");
         return attrs;
     }
 

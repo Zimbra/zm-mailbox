@@ -913,6 +913,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <globalConfigValue>zimbraCalResSite=zimbraCalResSite</globalConfigValue>
   <globalConfigValue>zimbraCalResContactEmail=zimbraCalResContactEmail</globalConfigValue>
   <globalConfigValue>msExchResourceSearchProperties=zimbraAccountCalendarUserType</globalConfigValue>
+  <globalConfigValue>binary zimbraPrefMailSMIMECertificate,userCertificate,userSMIMECertificate=SMIMECertificate</globalConfigValue>
   <desc>LDAP Gal attribute to contact attr mapping</desc>
 </attr>
 
@@ -5384,6 +5385,10 @@ TODO: delete them permerntly from here
 <attr id="1171" name="zimbraIPMode" type="enum" value="ipv4,ipv6,both" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="all" since="7.1">
   <globalConfigValue>both</globalConfigValue>
   <desc>supported IP mode</desc>
+</attr>
+
+<attr id="1172" name="zimbraPrefMailSMIMECertificate" type="binary" cardinality="multi" optionalIn="account" since="7.1">
+  <desc>user's S/MIME public keys (certificates)</desc>
 </attr>
 
 <attr id="1173" name="zimbraPrefShortEmailAddress" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since ="7.0.1">

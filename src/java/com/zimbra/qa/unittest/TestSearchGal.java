@@ -17,9 +17,9 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapTransport;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.GalContact;
@@ -31,6 +31,7 @@ import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.ZAttrProvisioning.CalResType;
 import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.qa.unittest.TestLdapBinary.Content;
 
 /*
 TODO: Add this class to {@link ZimbraSuite} once it supports JUnit 4 annotations.
@@ -47,6 +48,13 @@ public class TestSearchGal {
     private static final String KEY_FOR_SEARCH_BY_NAME = "account";
     private static final String ACCOUNT_PREFIX = "account";
     private static final String DEPARTMENT_PREFIX = "engineering";
+    
+    private static final String BINARY_LDAP_ATTR = Provisioning.A_zimbraPrefMailSMIMECertificate;
+    private static final String BINARY_GALCONTACT_FIELD = ContactConstants.A_SMIMECertificate;
+    private static final int ACCOUNT_CONTAINS_BINARY_DATA = 5;
+    private static final int NUM_BYTES_IN_BINARY_DATA = 100;
+    private static final Content BINARY_CONTENT_1 = Content.generateContent(NUM_BYTES_IN_BINARY_DATA);
+    private static final Content BINARY_CONTENT_2 = Content.generateContent(NUM_BYTES_IN_BINARY_DATA);
     
     private static final int NUM_ACCOUNTS = 10; 
     
@@ -242,7 +250,6 @@ public class TestSearchGal {
         }
   
         Assert.assertEquals(NUM_ACCOUNTS, result.size());
-        
     }
     
     private void searchByFilter(boolean ldap, String domainName) throws Exception {
@@ -279,6 +286,44 @@ public class TestSearchGal {
         Assert.assertEquals(getEmail(acctToMatch, domainName), result.get(0).getSingleAttr(ContactConstants.A_email));
     }
 
+    private void binaryDataInEntry(boolean ldap, String domainName) throws Exception {
+        SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
+        TestSearchGal.authUser(transport, TestUtil.getAddress(AUTHED_USER, domainName));
+        
+        Element request = Element.create(transport.getRequestProtocol(), AccountConstants.SEARCH_GAL_REQUEST);
+        request.addElement(AccountConstants.E_NAME).setText(getEmail(ACCOUNT_CONTAINS_BINARY_DATA, domainName));
+        
+        Element response = transport.invoke(request);
+        
+        List<GalContact> result = new ArrayList<GalContact>();
+        for (Element e: response.listElements(AdminConstants.E_CN)) {
+            result.add(new GalContact(AdminConstants.A_ID, SoapProvisioning.getAttrs(e)));
+        }
+  
+        Assert.assertEquals(1, result.size());
+        GalContact galContact = result.get(0);
+        Map<String, Object> fields = galContact.getAttrs();
+        Object value = fields.get(BINARY_GALCONTACT_FIELD);
+        
+        Assert.assertTrue(value instanceof String[]);
+        String[] values = (String[])value;
+        Assert.assertEquals(2, values.length);
+        
+        boolean foundContent1 = false;
+        boolean foundContent2 = false;
+        for (String valueAsString : values) {
+            if (BINARY_CONTENT_1.equals(valueAsString)) {
+                foundContent1 = true;
+            }
+            
+            if (BINARY_CONTENT_2.equals(valueAsString)) {
+                foundContent2 = true;
+            }
+        }
+        
+        Assert.assertTrue(foundContent1);
+        Assert.assertTrue(foundContent2);
+    }
     
     private static String getEmail(int index, String domainName) {
         return TestUtil.getAddress(ACCOUNT_PREFIX + "-" + index, domainName);
@@ -305,6 +350,11 @@ public class TestSearchGal {
             if (prov.get(AccountBy.name, acctName) == null) {
                 Map<String, Object> attrs = new HashMap<String, Object>();
                 attrs.put(Provisioning.A_ou, getDepartment(i, domainName));
+                
+                if (ACCOUNT_CONTAINS_BINARY_DATA == i) {
+                    StringUtil.addToMultiMap(attrs, BINARY_LDAP_ATTR, BINARY_CONTENT_1.getString());
+                    StringUtil.addToMultiMap(attrs, BINARY_LDAP_ATTR, BINARY_CONTENT_2.getString());
+                }
                 prov.createAccount(acctName, "test123", attrs);
             }
         }
@@ -376,9 +426,15 @@ public class TestSearchGal {
     }
     
     @Test
-    public void testGalSyncAccountSerarhByFilter() throws Exception {
+    public void testGSASerarhByFilter() throws Exception {
         TestSearchGal.enableGalSyncAccount(DOMAIN_GSA);
         searchByFilter(false, DOMAIN_GSA);
+    }
+    
+    @Test
+    public void testGSASerarhEntryWithBinaryData() throws Exception {
+        TestSearchGal.enableGalSyncAccount(DOMAIN_GSA);
+        binaryDataInEntry(false, DOMAIN_GSA);
     }
 
     @Test
@@ -410,6 +466,11 @@ public class TestSearchGal {
         prov.modifyAttrs(config, attrs);
         
         searchByFilter(true, DOMAIN_LDAP);
+    }
+    
+    @Test
+    public void testLdapSerarhEntryWithBinaryData() throws Exception {
+        binaryDataInEntry(true, DOMAIN_LDAP);
     }
 
 }

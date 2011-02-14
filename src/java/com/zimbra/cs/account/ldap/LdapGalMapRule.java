@@ -37,8 +37,21 @@ class LdapGalMapRule {
     
     // parallel array with mContactAttrs
     private LdapGalValueMap[] mContactAttrsValueMaps;
-   
+    
+    private boolean mIsBinary;
+    
+    // indicating that all LDAP attributes in the rule contain binary data
+    // the LDAP value will be base64 encoded when it is stored in the GalContact 
+    private static final String BINARY_INDICATOR = "binary ";
+    private static final int BINARY_INDICATOR_LEN = BINARY_INDICATOR.length();
+        
     public LdapGalMapRule(String rule, Map<String, LdapGalValueMap> valueMaps) {
+        
+        if (rule.startsWith(BINARY_INDICATOR)) {
+            mIsBinary = true;
+            rule = rule.substring(BINARY_INDICATOR_LEN);
+        }
+        
         int p = rule.indexOf('=');
         if (p != -1) {
             String ldapAttr = rule.substring(0, p);
@@ -54,6 +67,10 @@ class LdapGalMapRule {
                 }
             }
         }
+    }
+    
+    public boolean isBinary() {
+        return mIsBinary;
     }
     
     public String[] getLdapAttrs() {
@@ -92,18 +109,13 @@ class LdapGalMapRule {
     }
     
     void apply(Attributes ldapAttrs, Map<String,Object> contactAttrs) {
-        AttributeManager attrMgr = null;
-        try {
-            attrMgr = AttributeManager.getInstance();
-        } catch (ServiceException se) {
-            ZimbraLog.account.warn("failed to get AttributeManager instance", se);
-        }
+        AttributeManager attrMgr = AttributeManager.getInst();
         
         int index = 0; // index into mContactAttrs
         for (String ldapAttr: mLdapAttrs) {
             if (index >= mContactAttrs.length) return;
             String val[];
-            try { val = LdapUtil.getMultiAttrString(ldapAttrs, ldapAttr); } 
+            try { val = LdapUtil.getMultiAttrString(ldapAttrs, ldapAttr, mIsBinary); } 
             catch (NamingException e) { return; }
             
             IDNType idnType = AttributeManager.idnType(attrMgr, ldapAttr);
