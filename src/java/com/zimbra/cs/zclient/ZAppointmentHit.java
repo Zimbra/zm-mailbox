@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -53,7 +53,7 @@ public class ZAppointmentHit implements ZSearchHit {
     public static final String STATUS_INPROGRESS = "INPR";
     public static final String STATUS_NOT_STARTED = "NEED";
     public static final String STATUS_WAITING = "WAITING";
-    
+
     public static final String PSTATUS_NEEDS_ACTION = "NE";
     public static final String PSTATUS_TENTATIVE = "TE";
     public static final String PSTATUS_ACCEPT = "AC";
@@ -123,13 +123,12 @@ public class ZAppointmentHit implements ZSearchHit {
     private long mDuration;
     private String mFragment;
     private String mSortField;
-    private float mScore;
     private long mSize;
     private String mConvId;
     private long mHitDate;
     private boolean mInstanceExpanded;
     private boolean mIsTask;
-    
+
     private long mStartTime;
     private long mEndTime;
     private long mTimeZoneOffset;
@@ -216,7 +215,6 @@ public class ZAppointmentHit implements ZSearchHit {
         String sortField = e.getAttribute(MailConstants.A_SORT_FIELD, null);
         long size = (int) e.getAttributeLong(MailConstants.A_SIZE, 0);
         String convId = e.getAttribute(MailConstants.A_CONV_ID, null);
-        float score = (float) e.getAttributeDouble(MailConstants.A_SCORE, 0);
         String folderId = e.getAttribute(MailConstants.A_FOLDER, null);
 
         String fragment = e.getAttribute(MailConstants.E_FRAG, null);
@@ -239,7 +237,6 @@ public class ZAppointmentHit implements ZSearchHit {
             appt.mInstanceExpanded = !noInstances;
             appt.mFolderId = folderId;
             appt.mId = id;
-            appt.mScore = score;
             appt.mSize = size;
             appt.mSortField = sortField;
             appt.mConvId = convId;
@@ -318,6 +315,7 @@ public class ZAppointmentHit implements ZSearchHit {
         return value == null ? def : value;
     }
 
+    @Override
     public void modifyNotification(ZModifyEvent event) throws ServiceException {
         if (event instanceof ZModifyAppointmentEvent) {
 
@@ -346,21 +344,19 @@ public class ZAppointmentHit implements ZSearchHit {
                 }
             }
         }
-	}
+    }
 
 
     public boolean getIsFromFreeBusy() { return mIsFromFreeBusy; }
-    
+
+    @Override
     public String getId() {
         return mId;
     }
 
+    @Override
     public String getSortField() {
         return mSortField;
-    }
-
-    public float getScore() {
-        return mScore;
     }
 
     public String getFolderId() {
@@ -370,7 +366,7 @@ public class ZAppointmentHit implements ZSearchHit {
     public boolean getIsTask() {
         return mIsTask;
     }
-    
+
     public long getSize() {
         return mSize;
     }
@@ -391,6 +387,7 @@ public class ZAppointmentHit implements ZSearchHit {
         return mInstanceExpanded;
     }
 
+    @Override
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject jo = new ZJSONObject();
         jo.put("id", mId);
@@ -424,7 +421,6 @@ public class ZAppointmentHit implements ZSearchHit {
         jo.put("recurrenceId", mRecurrenceIdZ);
         jo.put("fragment", mFragment);
         jo.put("sortField", mSortField);
-        jo.put("score", mScore);
         jo.put("conversationId", mConvId);
         jo.put("size", mSize);
         jo.put("isTask", mIsTask);
@@ -432,6 +428,7 @@ public class ZAppointmentHit implements ZSearchHit {
         return jo;
     }
 
+    @Override
     public String toString() {
         return String.format("[ZAppointmentHit %s]", mId);
     }
@@ -439,7 +436,7 @@ public class ZAppointmentHit implements ZSearchHit {
     public String dump() {
         return ZJSONObject.toString(this);
     }
-    
+
     // fba
     public String getFreeBusyActual() { return mFreeBusyActual; }
     public boolean isFreeBusyActualFree() { return FBA_FREE.equals(mFreeBusyActual); }
@@ -481,7 +478,7 @@ public class ZAppointmentHit implements ZSearchHit {
     public boolean isAlarm() { return mIsAlarm; }
 
     public boolean isRecurring() { return mIsRecurring; }
-    
+
     public String getFlags() { return mFlags; }
 
     public String getName() { return mName; }
@@ -530,13 +527,13 @@ public class ZAppointmentHit implements ZSearchHit {
     public String getFragment() { return mFragment; }
 
     public String getTagIds() { return mTags; }
-    
+
     public String getUid() { return mUid; }
-    
+
     public long getModifiedSeq() { return mModifiedSeq; }
-    
+
     public long getModifiedDate() { return mModifiedDate; }
-    
+
     public long getSavedSeq() { return mSavedSeq; }
 
     public boolean hasFlags() {
@@ -550,7 +547,7 @@ public class ZAppointmentHit implements ZSearchHit {
     public boolean getIsFlagged() {
         return hasFlags() && mFlags.indexOf(ZMessage.Flag.flagged.getFlagChar()) != -1;
     }
-    
+
     public boolean isInRange(long start, long end) {
         return mStartTime < end && mEndTime > start;
     }
@@ -590,12 +587,9 @@ public class ZAppointmentHit implements ZSearchHit {
     /**
      * sort two appt summaries by all day, start time, duration, folder id.
      */
-    public static class SortByTimeDurationFolder implements Comparator {
-        public int compare(Object obja, Object objb) {
-            if (!(obja instanceof ZAppointmentHit && objb instanceof ZAppointmentHit) )
-                return 0;
-            ZAppointmentHit a = (ZAppointmentHit) obja;
-            ZAppointmentHit b = (ZAppointmentHit) objb;
+    public static class SortByTimeDurationFolder implements Comparator<ZAppointmentHit> {
+        @Override
+        public int compare(ZAppointmentHit a, ZAppointmentHit b) {
             if (!a.isAllDay() && b.isAllDay()) return 1;
             if (a.isAllDay() && !b.isAllDay()) return -1;
             if (a.getStartTime() > b.getStartTime()) return 1;
@@ -603,11 +597,6 @@ public class ZAppointmentHit implements ZSearchHit {
             if (a.getDuration() < b.getDuration()) return 1;
             if (a.getDuration() > b.getDuration()) return -1;
             return a.getFolderId().compareTo(b.getFolderId());
-            /*
-            String na = a.getName() != null ? a.getName() : "";
-            String nb = b.getName() != null ? b.getName() : "";
-            return na.compareToIgnoreCase(nb);
-            */
         }
     }
 }

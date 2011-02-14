@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -17,11 +17,8 @@ package com.zimbra.cs.index;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.lucene.document.Document;
@@ -33,6 +30,8 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Multimap;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -341,32 +340,21 @@ public final class LuceneQueryOperation extends QueryOperation {
 
                 int docId = mTopDocs.scoreDocs[mCurHitNo].doc;
                 Document d = mSearcher.getSearcher().doc(docId);
-
-                if (ZimbraLog.index_search.isDebugEnabled()) {
-                    long now = System.currentTimeMillis();
-                    fetchFromLucene1 += (now - start);
-                    start = now;
-                }
-
-                float score;
-                score = mTopDocs.scoreDocs[mCurHitNo].score;
-
-                if (ZimbraLog.index_search.isDebugEnabled()) {
-                    fetchFromLucene2 += (System.currentTimeMillis() - start);
-                }
-
+                long now = System.currentTimeMillis();
+                fetchFromLucene1 += (now - start);
+                start = now;
+                fetchFromLucene2 += (System.currentTimeMillis() - start);
                 mCurHitNo++;
-
                 String mbid = d.get(LuceneFields.L_MAILBOX_BLOB_ID);
                 try {
                     if (mbid != null) {
                         start = System.currentTimeMillis();
-                        toRet.addHit(Integer.parseInt(mbid), d, score);
+                        toRet.addHit(Integer.parseInt(mbid), d);
                         long end = System.currentTimeMillis();
                         timeUsed += (end-start);
                     }
                 } catch (NumberFormatException e) {
-                    e.printStackTrace();
+                    ZimbraLog.index_search.error("Invalid MAILBOX_BLOB_ID: " + mbid, e);
                 }
             }
 
@@ -679,56 +667,27 @@ public final class LuceneQueryOperation extends QueryOperation {
         }
     }
 
-    static final class ScoredLuceneHit {
-        private final List<Document> mDocs = new ArrayList<Document>();
-        private final float mScore; // highest score in list
-
-        ScoredLuceneHit(float score) {
-            mScore = score;
-        }
-
-        float getScore() {
-            return mScore;
-        }
-
-        List<Document> getDocuments() {
-            return mDocs;
-        }
-    }
-
     /**
-     * We use this data structure to track a "chunk" of Lucene hits which
-     * the {@link DBQueryOperation} will use to check against the DB.
+     * We use this data structure to track a "chunk" of Lucene hits which the {@link DBQueryOperation} will use to check
+     * against the DB.
      */
     static final class LuceneResultsChunk {
-        private Map<Integer, ScoredLuceneHit> mHits =
-            new LinkedHashMap<Integer, ScoredLuceneHit>();
+        private Multimap<Integer, Document> hits = LinkedHashMultimap.create();
 
         Set<Integer> getIndexIds() {
-            Set<Integer> toRet = new LinkedHashSet<Integer>(mHits.keySet().size());
-            for (Iterator<Integer> iter = mHits.keySet().iterator(); iter.hasNext();) {
-                int curId = iter.next();
-                toRet.add(curId);
-            }
-            return toRet;
+            return hits.keySet();
         }
 
         int size() {
-            return mHits.size();
+            return hits.size();
         }
 
-        void addHit(int indexId, Document doc, float score) {
-            ScoredLuceneHit sh = mHits.get(indexId);
-            if (sh == null) {
-                sh = new ScoredLuceneHit(score);
-                mHits.put(indexId, sh);
-            }
-
-            sh.mDocs.add(doc);
+        void addHit(int indexId, Document doc) {
+            hits.put(indexId, doc);
         }
 
-        ScoredLuceneHit getScoredHit(int indexId) {
-            return mHits.get(indexId);
+        Collection<Document> getHit(int indexId) {
+            return hits.get(indexId);
         }
     }
 }

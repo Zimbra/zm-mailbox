@@ -565,6 +565,7 @@ effect if called in a <nosession> context.
   {life-time} = number of milliseconds until auth token expires
   {account-base-REST-url} = base REST URL for the requested account
 
+
   returned only if the command successfully executes on the target user's home mail server:
     {used} = mailbox quota used in bytes
     {last-SOAP-access} = time (in millis) of last write op from this session, or from *any* SOAP session if we don't have one
@@ -813,14 +814,14 @@ import and export of addressbook.
           "startswith" - attr starts with value (string)
           "endswith" - attr ends with value (string)
      value - value
-     
-   SearchCalendarResourcesResponse:  
-   paginationSupported: 
+
+   SearchCalendarResourcesResponse:
+   paginationSupported:
      1 - limit and offset in the request was honored
      0 - the underlying search does not support pagination
          limit and offset in the request was not honored
-        
-         
+
+
 ----------------------------
 
  <ModifyPrefsRequest>
@@ -1441,7 +1442,7 @@ message result:
 ---------------
 <SearchResponse sortBy="sort-by" offset="..." more="{more-flag}">
    [<info>...</info>]
-   <m id="{message-id}" t="{tags}" f="{flags}" s="{size}" d="{date}" cid="{conv-id}" l="{location}" score="..." [mbx="UID"] sf="SORT-FIELD-VALUE" [cm="1"]>
+   <m id="{message-id}" t="{tags}" f="{flags}" s="{size}" d="{date}" cid="{conv-id}" l="{location}" [mbx="UID"] sf="SORT-FIELD-VALUE" [cm="1"]>
      <e .../>*  <!- from only -->
      <su>{subject}</su>
      <fr>{fragment}</fr>
@@ -1467,7 +1468,7 @@ appointment result:
 
 <appt|task id="appointment_mail_item_id"
        t="{tags}" f="{flags}" s="{size}" d="{date}" cid="{conv-id}" // standard hit data
-       l="{location}" score="..." [mbx="UID"] sf="SORT-FIELD-VALUE" // standard hit data
+       l="{location}" [mbx="UID"] sf="SORT-FIELD-VALUE" // standard hit data
        [fba="F|B|T|U"]
        [transp="O|T"]
        status="TENT|CONF|CANC"
@@ -1553,7 +1554,7 @@ message-part result:
 <SearchResponse offset="..." more="{more-flag}">
    [<info>...</info>]
     <mp part="{mime-part-name}" s="{size-in-bytes} mid="{message-id}"
-        ct="{content-type}" name="{name}" filename="{filename}" score="..."/ sf="SORT-FIELD-VALUE">
+        ct="{content-type}" name="{name}" filename="{filename}" sf="SORT-FIELD-VALUE"/>
 
 </SearchResponse>
 
@@ -1581,7 +1582,7 @@ if nest="0" on the request, response looks like this:
 
 <SearchConvResponse sortBy="sort-by" offset="..." more="{more-flag}">
   [<info>...</info>]
-  <m id="{message-id}" [cm="1"] f="{flags}" s="{size}" d="{date}" cid="{conv-id}" score="..." sf="SORT-FIELD-VALUE">
+  <m id="{message-id}" [cm="1"] f="{flags}" s="{size}" d="{date}" cid="{conv-id}" sf="SORT-FIELD-VALUE">
     <e .../>  <!- from only -->
     <su>{subject}</su>
     <fr>{fragment}</fr>
@@ -1596,7 +1597,7 @@ if nest="1" on the request, response looks like this:
 <SearchConvResponse sortBy="sort-by" offset="..." more="{more-flag}">
    [<info>...</info>]
    <c id="{conv-id}" t="{tags}" n="{num-msgs}" [total="{all-msgs}"] f="{flags}">
-     <m id="{message-id}" [cm="1"] f="{flags}" s="{size}" d="{date}" cid="{conv-id}" score="..." sf="SORT-FIELD-VALUE">
+     <m id="{message-id}" [cm="1"] f="{flags}" s="{size}" d="{date}" cid="{conv-id}" sf="SORT-FIELD-VALUE">
        <e .../>  <!- from only -->
        <su>{subject}</su>
        <fr>{fragment}</fr>
@@ -1616,8 +1617,8 @@ msg ID, two additional flags will be included in <e> elements for the message:
   - isGroup: "1" if the email address is a group
   - exp: present only when isGroup="1"
          "1" if the authed user can (has permission to) expand members in this group
-         "0" if the authed user does not have permission to expand group members 
-         
+         "0" if the authed user does not have permission to expand group members
+
 ------------
 
 <BrowseRequest browseBy="{browse-by}" [regex="{regex-string}"] [maxToReturn="{max}"]/>
@@ -1766,7 +1767,7 @@ ridZ="YYYYMMDD[ThhmmssZ]" is used only when making GetMsg call to open an instan
 
 needExp="1" to return group info (isGroup and exp flags) on <e> elements in the response
        (default is 0.)
-           
+
 if <header>s are requested, any matching headers are inlined into the response
     (not available when raw="1")
 
@@ -1796,8 +1797,8 @@ If needExp is "1" in the request, two additional flags will be included in <e> e
   - isGroup: "1" if the email address is a group
   - exp: present only when isGroup="1"
          "1" if the authed user can (has permission to) expand members in this group
-         "0" if the authed user does not have permission to expand group members          
-             
+         "0" if the authed user does not have permission to expand group members
+
 ------------
 <GetMsgMetadataRequest>
   <m ids="{msg-id-list}"/>
@@ -3275,8 +3276,8 @@ Note:
 </GetShareInfoRequest>
 
 {includeSelf}  = 0 if shares owned by the requested account should not be included in the response
-                 1 (default) include shares owned by the requested account 
-                 (It might be useful to see the shares I've shared to a DL that I belong to so 
+                 1 (default) include shares owned by the requested account
+                 (It might be useful to see the shares I've shared to a DL that I belong to so
                  that I know I'm sharing it correctly.)
 
 {grantee_type} = if <owner> is not specified: grp

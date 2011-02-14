@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -35,7 +35,6 @@ public class ZMessageHit implements ZSearchHit {
     private String mTags;
     private String mConvId;
     private String mFolderId;
-    private float mScore;
     private long mDate;
     private int mSize;
     private boolean mContentMatched;
@@ -56,7 +55,6 @@ public class ZMessageHit implements ZSearchHit {
         mSortField = e.getAttribute(MailConstants.A_SORT_FIELD, null);
         mSize = (int) e.getAttributeLong(MailConstants.A_SIZE);
         mConvId = e.getAttribute(MailConstants.A_CONV_ID);
-        mScore = (float) e.getAttributeDouble(MailConstants.A_SCORE, 0);
         mContentMatched = e.getAttributeBool(MailConstants.A_CONTENTMATCHED, false);
         mMimePartHits = new ArrayList<String>();
         for (Element hp: e.listElements(MailConstants.E_HIT_MIMEPART)) {
@@ -81,6 +79,7 @@ public class ZMessageHit implements ZSearchHit {
         mIsInvite = e.getOptionalElement(MailConstants.E_INVITE) != null;
     }
 
+    @Override
     public String getId() {
         return mId;
     }
@@ -93,6 +92,7 @@ public class ZMessageHit implements ZSearchHit {
         return mIsInvite;
     }
 
+    @Override
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject zjo = new ZJSONObject();
         zjo.put("id", mId);
@@ -105,13 +105,13 @@ public class ZMessageHit implements ZSearchHit {
         zjo.put("size", mSize);
         zjo.put("sender", mSender);
         zjo.put("sortField", mSortField);
-        zjo.put("score", mScore);
         zjo.putList("mimePartHits", mMimePartHits);
         zjo.put("addresses", mAddresses);
         zjo.put("message", mMessage);
         return zjo;
     }
 
+    @Override
     public String toString() {
         return String.format("[ZMessageHit %s]", mId);
     }
@@ -132,6 +132,7 @@ public class ZMessageHit implements ZSearchHit {
         return mFragment;
     }
 
+    @Override
     public String getSortField() {
         return mSortField;
     }
@@ -143,7 +144,7 @@ public class ZMessageHit implements ZSearchHit {
     public String getTagIds() {
         return mTags;
     }
-    
+
     public String getConversationId() {
         return mConvId;
     }
@@ -154,10 +155,6 @@ public class ZMessageHit implements ZSearchHit {
 
     public ZMessage getMessage() {
         return mMessage;
-    }
-
-    public float getScore() {
-        return mScore;
     }
 
     public List<ZEmailAddress> getAddresses() {
@@ -227,9 +224,10 @@ public class ZMessageHit implements ZSearchHit {
         return mFolderId;
     }
 
-	public void modifyNotification(ZModifyEvent event) throws ServiceException {
-		if (event instanceof ZModifyMessageEvent) {
-			ZModifyMessageEvent mevent = (ZModifyMessageEvent) event;
+    @Override
+    public void modifyNotification(ZModifyEvent event) throws ServiceException {
+        if (event instanceof ZModifyMessageEvent) {
+            ZModifyMessageEvent mevent = (ZModifyMessageEvent) event;
             mFlags = mevent.getFlags(mFlags);
             mTags = mevent.getTagIds(mTags);
             mFolderId = mevent.getFolderId(mFolderId);
@@ -238,5 +236,5 @@ public class ZMessageHit implements ZSearchHit {
             if (getMessage() != null)
                 getMessage().modifyNotification(event);
         }
-	}
+    }
 }

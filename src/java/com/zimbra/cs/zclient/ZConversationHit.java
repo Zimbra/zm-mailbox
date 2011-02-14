@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -34,12 +34,11 @@ public class ZConversationHit implements ZSearchHit {
     private String mSubject;
     private String mSortField;
     private String mTags;
-    private float mScore;
     private int mMessageCount;
     private long mDate;
     private List<String> mMessageIds;
     private List<ZEmailAddress> mRecipients;
-        
+
     public ZConversationHit(Element e) throws ServiceException {
         mId = e.getAttribute(MailConstants.A_ID);
         mFlags = e.getAttribute(MailConstants.A_FLAGS, null);
@@ -49,38 +48,36 @@ public class ZConversationHit implements ZSearchHit {
         mSubject = e.getAttribute(MailConstants.E_SUBJECT, null);
         mSortField = e.getAttribute(MailConstants.A_SORT_FIELD, null);
         mMessageCount = (int) e.getAttributeLong(MailConstants.A_NUM);
-        mScore = (float) e.getAttributeDouble(MailConstants.A_SCORE, 0);
         mMessageIds = new ArrayList<String>();
         for (Element m: e.listElements(MailConstants.E_MSG)) {
             mMessageIds.add(m.getAttribute(MailConstants.A_ID));
         }
-        
+
         mRecipients = new ArrayList<ZEmailAddress>();
         for (Element emailEl: e.listElements(MailConstants.E_EMAIL)) {
             mRecipients.add(new ZEmailAddress(emailEl));
-        }        
+        }
     }
 
+    @Override
     public void modifyNotification(ZModifyEvent event) throws ServiceException {
-    	if (event instanceof ZModifyConversationEvent) {
-    		ZModifyConversationEvent cevent = (ZModifyConversationEvent) event;
-    		mFlags = cevent.getFlags(mFlags);
-    		mTags = cevent.getTagIds(mTags);
-    		mSubject = cevent.getSubject(mSubject);
-    		mFragment = cevent.getFragment(mFragment);
-    		mMessageCount = cevent.getMessageCount(mMessageCount);
-    		mRecipients = cevent.getRecipients(mRecipients);
-    	}
+        if (event instanceof ZModifyConversationEvent) {
+            ZModifyConversationEvent cevent = (ZModifyConversationEvent) event;
+            mFlags = cevent.getFlags(mFlags);
+            mTags = cevent.getTagIds(mTags);
+            mSubject = cevent.getSubject(mSubject);
+            mFragment = cevent.getFragment(mFragment);
+            mMessageCount = cevent.getMessageCount(mMessageCount);
+            mRecipients = cevent.getRecipients(mRecipients);
+        }
     }
 
+    @Override
     public String getId() {
         return mId;
     }
-    
-    public float getScore() {
-        return mScore;
-    }
 
+    @Override
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject jo = new ZJSONObject();
         jo.put("id", mId);
@@ -96,6 +93,7 @@ public class ZConversationHit implements ZSearchHit {
         return jo;
     }
 
+    @Override
     public String toString() {
         return String.format("[ZConversationHit %s]", mId);
     }
@@ -116,6 +114,7 @@ public class ZConversationHit implements ZSearchHit {
         return mFragment;
     }
 
+    @Override
     public String getSortField() {
         return mSortField;
     }
@@ -127,7 +126,7 @@ public class ZConversationHit implements ZSearchHit {
     public String getTagIds() {
         return mTags;
     }
-    
+
     public int getMessageCount() {
         return mMessageCount;
     }
@@ -145,7 +144,7 @@ public class ZConversationHit implements ZSearchHit {
     }
 
     public boolean hasTags() {
-        return mTags != null && mTags.length() > 0;        
+        return mTags != null && mTags.length() > 0;
     }
 
     public boolean hasAttachment() {
@@ -175,6 +174,6 @@ public class ZConversationHit implements ZSearchHit {
     public boolean isDraft() {
         return hasFlags() && mFlags.indexOf(ZConversation.Flag.draft.getFlagChar()) != -1;
     }
-    
- 
+
+
 }
