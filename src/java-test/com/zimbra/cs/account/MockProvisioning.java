@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -36,11 +36,15 @@ public final class MockProvisioning extends Provisioning {
 
     private final Map<String, Account> id2account = new HashMap<String, Account>();
     private final Map<String, Account> name2account = new HashMap<String, Account>();
-    private final Map<String, List<MimeTypeInfo>> mimeConfig =
-        new HashMap<String, List<MimeTypeInfo>>();
+    private final Map<String, List<MimeTypeInfo>> mimeConfig = new HashMap<String, List<MimeTypeInfo>>();
     private final Config config = new Config(new HashMap<String, Object>(), this);
-    private final Server localhost = new Server("localhost", "localhost",
-            new HashMap<String, Object>(), new HashMap<String, Object>(), this);
+    private final Server localhost;
+
+    public MockProvisioning() {
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraServiceHostname, "localhost");
+        localhost = new Server("localhost", "localhost", attrs, Collections.<String, Object>emptyMap(), this);
+    }
 
     @Override
     public Account createAccount(String email, String password,
