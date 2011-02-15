@@ -29,8 +29,7 @@ import java.util.Set;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ListUtil;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbSearchConstraints.NumericRange;
 import com.zimbra.cs.db.DbSearchConstraints.StringRange;
@@ -47,9 +46,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Tag;
 
-public class DbSearch {
-
-    private static Log sLog = LogFactory.getLog(DbSearch.class);
+public final class DbSearch {
 
     public static final class SearchResult {
         public int    id;
@@ -188,7 +185,7 @@ public class DbSearch {
                         colNameAfterPeriod.equals("name"));
     }
 
-    private static String sortField(SortBy sort, boolean useAlias, boolean includeCollation) {
+    private static String sortField(SortBy sort, boolean useAlias) {
         String str;
         boolean stringVal = false;
         switch (sort.getCriterion()) {
@@ -224,7 +221,7 @@ public class DbSearch {
      * by sortQuery() below)
      */
     static String sortKey(SortBy sort) {
-        String field = sortField(sort, false, false);
+        String field = sortField(sort, false);
         // note that there's no sort column in the result set for SORT_NONE
         if (field == null)
             return "";
@@ -245,7 +242,7 @@ public class DbSearch {
 
         String direction = sort.getDirection() == SortDirection.DESCENDING ? " DESC" : "";
         StringBuilder statement = new StringBuilder(" ORDER BY ");
-        statement.append(sortField(sort, useAlias, true)).append(direction);
+        statement.append(sortField(sort, useAlias)).append(direction);
         // when two items match in their sort field, let's use item ID as the tie breaker
         //   (commented out as a result of perf issues -- see bug 50469)
 //        statement.append(", mi.id").append(direction);
@@ -273,8 +270,7 @@ public class DbSearch {
             pos = DbMailItem.setMailboxId(stmt, mbox, pos);
             pos = setSearchVars(stmt, node, pos, null, false);
 
-            if (sLog.isDebugEnabled())
-                sLog.debug("SQL: " + statement);
+            ZimbraLog.sqltrace.debug("SQL: %s", statement);
 
             assert(pos == num + 1);
             rs = stmt.executeQuery();
@@ -569,42 +565,26 @@ public class DbSearch {
         return toRet;
     }
 
-    public static List<SearchResult> search(List<SearchResult> result, DbConnection conn,
-                                            DbSearchConstraintsNode node, Mailbox mbox, SortBy sort,
-                                            int offset, int limit, SearchResult.ExtraData extra, boolean inDumpster)
-    throws ServiceException {
+    public static List<SearchResult> search(List<SearchResult> result, DbConnection conn, DbSearchConstraintsNode node,
+            Mailbox mbox, SortBy sort, int offset, int limit, SearchResult.ExtraData extra, boolean inDumpster)
+            throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
-        // this monstrosity for bug 31343
         if (!Db.supports(Db.Capability.AVOID_OR_IN_WHERE_CLAUSE) ||
-                        (sort.getCriterion() != SortCriterion.DATE && sort.getCriterion() != SortCriterion.SIZE) ||
-                        NodeType.OR != node.getNodeType()) {
-            // do it the old way
+                (sort.getCriterion() != SortCriterion.DATE && sort.getCriterion() != SortCriterion.SIZE) ||
+                NodeType.OR != node.getNodeType()) {
             try {
                 return searchInternal(result, conn, node, mbox, sort, offset, limit, extra, inDumpster);
-            } catch (ServiceException se) {
-                boolean trySplitOr = false;
-                if (Db.supports(Db.Capability.SQL_PARAM_LIMIT)) {
-                    Throwable cause = se;
-                    while (cause != null) {
-                        if (cause instanceof SQLException) {
-                            if (Db.errorMatches((SQLException)cause, Db.Error.TOO_MANY_SQL_PARAMS)) {
-                                sLog.debug("Query %s resulted in too many sql params; attempting split OR clauses into individual queries", node);
-                                trySplitOr = true;
-                                break;
-                            }
-                        }
-                        cause = cause.getCause();
-                    }
-                }
-                if (!trySplitOr) {
-                    throw se;
+            } catch (SQLException e) {
+                if (Db.errorMatches(e, Db.Error.TOO_MANY_SQL_PARAMS)) {
+                    ZimbraLog.search.debug("Too many SQL params: %s", node, e); // fall back to splitting OR clauses
+                } else {
+                    throw ServiceException.FAILURE("Failed to search", e);
                 }
             }
-        } 
-        // if (where a or b) not supported or if we encountered too many sql params try splitting 
-        // run each toplevel ORed part as a separate SQL query, then merge
-        // the results in memory
+        }
+        // if (where a or b) not supported or if we encountered too many sql params try splitting
+        // run each toplevel ORed part as a separate SQL query, then merge the results in memory
         List<List<SearchResult>> resultLists = new ArrayList<List<SearchResult>>();
         for (DbSearchConstraintsNode subNode : node.getSubNodes()) {
             List<SearchResult> subNodeResults = new ArrayList<SearchResult>();
@@ -618,10 +598,8 @@ public class DbSearch {
     }
 
     public static List<SearchResult> searchInternal(List<SearchResult> result, DbConnection conn,
-                                                    DbSearchConstraintsNode node, Mailbox mbox, SortBy sort,
-                                                    int offset, int limit, SearchResult.ExtraData extra,
-                                                    boolean inDumpster)
-    throws ServiceException {
+            DbSearchConstraintsNode node, Mailbox mbox, SortBy sort, int offset, int limit,
+            SearchResult.ExtraData extra, boolean inDumpster) throws SQLException, ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
         boolean hasValidLIMIT = offset >= 0 && limit >= 0;
@@ -730,11 +708,8 @@ public class DbSearch {
             /* Above here: build statement, below here bind params */
             /**********************************************************/
 
-            /*
-             * Create the statement and bind all our parameters!
-             */
-            if (sLog.isDebugEnabled())
-                sLog.debug("SQL: ("+numParams+" parameters): "+statement.toString());
+            // Create the statement and bind all our parameters!
+            ZimbraLog.sqltrace.debug("SQL: %s", statement);
 
             long startTime = LC.zimbra_slow_logging_enabled.booleanValue() ? System.currentTimeMillis() : 0;
 
@@ -781,13 +756,11 @@ public class DbSearch {
 
             long fetchTime = startTime > 0 ? System.currentTimeMillis() - startTime - prepTime - execTime: 0;
             if (prepTime + execTime + fetchTime > LC.zimbra_slow_logging_threshold.longValue()) {
-                sLog.warn("Slow SQL (start=%d prep=%d exec=%d fetch=%d rows=%d):\n" + statement.toString(),
-                        startTime, prepTime, execTime, fetchTime, result.size());
+                ZimbraLog.sqltrace.warn("Slow SQL (start=%d,prep=%d,exec=%d,fetch=%d,rows=%d): %s",
+                        startTime, prepTime, execTime, fetchTime, result.size(), statement.toString());
             }
 
             return result;
-        } catch (SQLException e) {
-            throw ServiceException.FAILURE("fetching search metadata", e);
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
