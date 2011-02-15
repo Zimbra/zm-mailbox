@@ -23,7 +23,6 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 
@@ -36,10 +35,10 @@ public class DateQueryTest {
 
     @BeforeClass
     public static void init() throws Exception {
-        LC.zimbra_class_provisioning.setDefault(MockProvisioning.class.getName());
-        MockProvisioning prov = (MockProvisioning) Provisioning.getInstance();
+        MockProvisioning prov = new MockProvisioning();
         prov.createAccount("zero@zimbra.com", "secret",
                 Collections.<String, Object> singletonMap(Provisioning.A_zimbraId, "0-0-0"));
+        Provisioning.setInstance(prov);
     }
 
     @Test

@@ -42,12 +42,12 @@ public class DbMailItemTest {
 
     @BeforeClass
     public static void init() throws Exception {
-        LC.zimbra_class_provisioning.setDefault(MockProvisioning.class.getName());
-        Provisioning prov = Provisioning.getInstance();
+        Provisioning prov = new MockProvisioning();
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraId, "0-0-0");
         attrs.put(Provisioning.A_zimbraMailHost, "localhost");
         prov.createAccount("test@zimbra.com", "secret", attrs);
+        Provisioning.setInstance(prov);
 
         LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
         DbPool.startup();

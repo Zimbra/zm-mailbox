@@ -22,7 +22,6 @@ import junit.framework.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
@@ -37,12 +36,12 @@ public class ParseMailboxIDTest {
 
     @BeforeClass
     public static void init() throws Exception {
-        LC.zimbra_class_provisioning.setDefault(MockProvisioning.class.getName());
-        MockProvisioning prov = (MockProvisioning) Provisioning.getInstance();
+        MockProvisioning prov = new MockProvisioning();
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraId, "0-0-0");
         attrs.put(Provisioning.A_zimbraMailHost, "localhost");
         prov.createAccount("test@zimbra.com", "secret", attrs);
+        Provisioning.setInstance(prov);
     }
 
     @Test
