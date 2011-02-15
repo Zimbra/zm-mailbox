@@ -14,6 +14,9 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -26,6 +29,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -77,20 +83,23 @@ public final class PriorityInbox extends MailDocumentHandler {
         Account account = getRequestedAccount(zsc);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
-        List<MailItem> items = mbox.getItemList(octx, MailItem.Type.MESSAGE);
+        List<Integer> ids = getItemIds(mbox);
 
         Element resp = zsc.createElement("Response");
 
         Element train = resp.addElement("Train");
-        Map<String, Feature> model = train(items);
-        for (Feature feature : model.values()) {
+        Map<String, Feature> model = train(mbox, ids);
+
+        List<Feature> features = new ArrayList<Feature>(model.values());
+        Collections.sort(features);
+        for (Feature feature : features) {
             train.addElement("ft").addAttribute("email", feature.email)
                 .addAttribute("stat", feature.positive + "/" + feature.total)
                 .addAttribute("score", feature.score);
         }
 
         Element classify = resp.addElement("Classify");
-        List<Result> results = classify(items, model);
+        List<Result> results = classify(mbox, ids, model);
         for (Result result : results) {
             classify.addElement("msg").addAttribute("score", result.score)
                 .addAttribute("subject", result.message.getSubject())
@@ -103,19 +112,40 @@ public final class PriorityInbox extends MailDocumentHandler {
         return resp;
     }
 
-    private Map<String, Feature> train(List<MailItem> items) {
+    private List<Integer> getItemIds(Mailbox mbox) throws ServiceException {
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        DbConnection conn = DbPool.getConnection();
+        try {
+            stmt = conn.prepareStatement("SELECT id FROM " + DbMailItem.getMailItemTableName(mbox) +
+                    " WHERE mailbox_id = ? AND type = " + MailItem.Type.MESSAGE.toByte() + " AND folder_id NOT IN (" +
+                    Mailbox.ID_FOLDER_DRAFTS + "," + Mailbox.ID_FOLDER_SENT + "," + Mailbox.ID_FOLDER_SPAM + ")");
+            stmt.setInt(1, mbox.getId());
+            rs = stmt.executeQuery();
+            List<Integer> ids = new ArrayList<Integer>();
+            while (rs.next()) {
+                ids.add(rs.getInt(1));
+            }
+            return ids;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Failed to fetch item IDs", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+    }
+
+    private Map<String, Feature> train(Mailbox mbox, List<Integer> ids) {
         Map<String, Feature> model = new HashMap<String, Feature>();
 
-        for (MailItem item : items) {
-            Message msg = (Message) item;
-
-            switch (msg.getFolderId()) {
-                case Mailbox.ID_FOLDER_SPAM:
-                case Mailbox.ID_FOLDER_DRAFTS:
-                case Mailbox.ID_FOLDER_SENT:
-                    continue;
-                default:
-                    break;
+        for (int id: ids) {
+            Message msg;
+            try {
+                msg = (Message) mbox.getItemById(null, id, MailItem.Type.MESSAGE);
+            } catch (ServiceException e) {
+                ZimbraLog.misc.warn("Faild to fetch message", e);
+                continue;
             }
 
             boolean positive = ((msg.getFlagBitmask() & (Flag.BITMASK_REPLIED | Flag.BITMASK_FLAGGED)) > 0);
@@ -169,19 +199,16 @@ public final class PriorityInbox extends MailDocumentHandler {
         return model;
     }
 
-    private List<Result> classify(List<MailItem> items, Map<String, Feature> model) {
+    private List<Result> classify(Mailbox mbox, List<Integer> ids, Map<String, Feature> model) {
         int total = 0;
         List<Result> result = new ArrayList<Result>();
-        for (MailItem item : items) {
-            Message msg = (Message) item;
-
-            switch (msg.getFolderId()) {
-                case Mailbox.ID_FOLDER_SPAM:
-                case Mailbox.ID_FOLDER_DRAFTS:
-                case Mailbox.ID_FOLDER_SENT:
-                    continue;
-                default:
-                    break;
+        for (int id : ids) {
+            Message msg;
+            try {
+                msg = (Message) mbox.getItemById(null, id, MailItem.Type.MESSAGE);
+            } catch (ServiceException e) {
+                ZimbraLog.misc.warn("Faild to fetch message", e);
+                continue;
             }
 
             total++;
