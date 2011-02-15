@@ -43,7 +43,7 @@
           <Set name="port"><SystemProperty name="jetty.port" default="7070"/></Set>
           <Set name="useDirectBuffers">false</Set>
           <Set name="maxIdleTime">30000</Set>
-          <Set name="lowResourceMaxIdleTime">1000</Set>
+          <Set name="lowResourcesMaxIdleTime">1000</Set>
           <Set name="Acceptors">2</Set>
           <Set name="confidentialPort">7443</Set>
         </New>
@@ -59,7 +59,7 @@
           <Set name="Port">7443</Set>
           <Set name="useDirectBuffers">false</Set>
           <Set name="maxIdleTime">30000</Set>
-          <Set name="lowResourceMaxIdleTime">1000</Set>
+          <Set name="lowResourcesMaxIdleTime">1000</Set>
           <Set name="Acceptors">2</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">zimbra</Set>
@@ -85,7 +85,7 @@
           <Set name="Port">7071</Set>
           <Set name="useDirectBuffers">false</Set>
           <Set name="maxIdleTime">0</Set>
-          <Set name="lowResourceMaxIdleTime">0</Set>
+          <Set name="lowResourcesMaxIdleTime">0</Set>
           <Set name="Acceptors">2</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">zimbra</Set>
@@ -114,7 +114,7 @@
           <Set name="Port">7072</Set>
           <Set name="useDirectBuffers">false</Set>
           <Set name="maxIdleTime">30000</Set>
-          <Set name="lowResourceMaxIdleTime">1000</Set>
+          <Set name="lowResourcesMaxIdleTime">1000</Set>
           <Set name="Acceptors">2</Set>
         </New>
       </Arg>
