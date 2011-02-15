@@ -152,6 +152,16 @@ public class TestSpam extends TestCase {
 
     static Pattern PAT_REPORT_LINE = Pattern.compile("(.+): (.+)");
     
+    private void spamReportEntryCheck(Map<String, String> report, 
+            String rprtKey, boolean lcase, String expected) {
+        String actual = Strings.nullToEmpty(report.get(rprtKey));
+        expected = Strings.nullToEmpty(expected);
+        if (lcase)
+            expected = expected.toLowerCase();
+        assertEquals("Value for " + rprtKey,
+                expected, Strings.nullToEmpty(actual));
+    }
+
     private void validateSpamReport(String content, String classifiedBy, String classifiedAs, String action,
                                     String sourceFolder, String destFolder, String destMailbox)
     throws IOException {
@@ -168,12 +178,13 @@ public class TestSpam extends TestCase {
         }
         reader.close();
         
-        assertEquals(Strings.nullToEmpty(classifiedBy), Strings.nullToEmpty(report.get("Classified-By")));
-        assertEquals(Strings.nullToEmpty(classifiedAs), Strings.nullToEmpty(report.get("Classified-As")));
-        assertEquals(Strings.nullToEmpty(action), Strings.nullToEmpty(report.get("Action")));
-        assertEquals(Strings.nullToEmpty(sourceFolder), Strings.nullToEmpty(report.get("Source-Folder")));
-        assertEquals(Strings.nullToEmpty(destFolder), Strings.nullToEmpty(report.get("Destination-Folder")));
-        assertEquals(Strings.nullToEmpty(destMailbox), Strings.nullToEmpty(report.get("Destination-Mailbox")));
+        spamReportEntryCheck(report, "Classified-By", true, classifiedBy);
+        spamReportEntryCheck(report, "Classified-As", false, classifiedAs);
+        spamReportEntryCheck(report, "Action", false, action);
+        spamReportEntryCheck(report, "Source-Folder", false, sourceFolder);
+        spamReportEntryCheck(report, "Source-Folder", false, sourceFolder);
+        spamReportEntryCheck(report, "Destination-Folder", false, destFolder);
+        spamReportEntryCheck(report, "Destination-Mailbox", true, destMailbox);
     }
     
     public void tearDown()

@@ -225,6 +225,27 @@ public class ShareInfoData {
     }
 
 
+    public static ShareInfoData fromJaxbShareInfo(
+            com.zimbra.soap.admin.type.ShareInfo sInfo)
+    throws ServiceException {
+        ShareInfoData sid = new ShareInfoData();
+
+        sid.setOwnerAcctId(sInfo.getOwnerId());
+        sid.setOwnerAcctEmail(sInfo.getOwnerEmail());
+        sid.setOwnerAcctDisplayName(sInfo.getOwnerDisplayName());
+        sid.setFolderId(sInfo.getFolderId());
+        sid.setFolderPath(sInfo.getFolderPath());
+        sid.setFolderDefaultView(MailItem.Type.of(sInfo.getDefaultView()));
+        sid.setRights(ACL.stringToRights(sInfo.getRights()));
+        sid.setGranteeType(ACL.stringToType(sInfo.getGranteeId()));
+        sid.setGranteeId(sInfo.getGranteeId());
+        sid.setGranteeName(sInfo.getGranteeName());
+        sid.setGranteeDisplayName(sInfo.getGranteeDisplayName());
+        sid.setMountpointId_zmprov_only(sInfo.getMountpointId());
+
+        return sid;
+    }
+
     public static ShareInfoData fromXML(Element eShare) throws ServiceException {
         ShareInfoData sid = new ShareInfoData();
 

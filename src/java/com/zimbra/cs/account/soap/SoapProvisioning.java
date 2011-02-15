@@ -47,10 +47,10 @@ import com.zimbra.common.util.AccountLogger;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.NamedEntry.Visitor;
-import com.zimbra.cs.account.Provisioning.SetPasswordResult;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
@@ -60,83 +60,17 @@ import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.account.message.ChangePasswordRequest;
-import com.zimbra.soap.admin.message.AddAccountAliasRequest;
-import com.zimbra.soap.admin.message.AddDistributionListAliasRequest;
-import com.zimbra.soap.admin.message.AddDistributionListMemberRequest;
-import com.zimbra.soap.admin.message.CheckHealthRequest;
-import com.zimbra.soap.admin.message.CheckHealthResponse;
-import com.zimbra.soap.admin.message.CheckPasswordStrengthRequest;
-import com.zimbra.soap.admin.message.CopyCosRequest;
-import com.zimbra.soap.admin.message.CopyCosResponse;
-import com.zimbra.soap.admin.message.CountAccountRequest;
-import com.zimbra.soap.admin.message.CountAccountResponse;
-import com.zimbra.soap.admin.message.CreateAccountRequest;
-import com.zimbra.soap.admin.message.CreateAccountResponse;
-import com.zimbra.soap.admin.message.CreateCosRequest;
-import com.zimbra.soap.admin.message.CreateCosResponse;
-import com.zimbra.soap.admin.message.CreateDistributionListRequest;
-import com.zimbra.soap.admin.message.CreateDistributionListResponse;
-import com.zimbra.soap.admin.message.CreateDomainRequest;
-import com.zimbra.soap.admin.message.CreateDomainResponse;
-import com.zimbra.soap.admin.message.CreateServerRequest;
-import com.zimbra.soap.admin.message.CreateServerResponse;
-import com.zimbra.soap.admin.message.DeleteAccountRequest;
-import com.zimbra.soap.admin.message.DeleteCosRequest;
-import com.zimbra.soap.admin.message.DeleteDistributionListRequest;
-import com.zimbra.soap.admin.message.DeleteDomainRequest;
-import com.zimbra.soap.admin.message.DeleteMailboxRequest;
-import com.zimbra.soap.admin.message.DeleteServerRequest;
-import com.zimbra.soap.admin.message.FlushCacheRequest;
-import com.zimbra.soap.admin.message.GetAccountInfoRequest;
-import com.zimbra.soap.admin.message.GetAccountInfoResponse;
-import com.zimbra.soap.admin.message.GetAccountRequest;
-import com.zimbra.soap.admin.message.GetAccountResponse;
-import com.zimbra.soap.admin.message.GetAllAccountsRequest;
-import com.zimbra.soap.admin.message.GetAllAccountsResponse;
-import com.zimbra.soap.admin.message.GetAllAdminAccountsRequest;
-import com.zimbra.soap.admin.message.GetAllAdminAccountsResponse;
-import com.zimbra.soap.admin.message.GetAllConfigRequest;
-import com.zimbra.soap.admin.message.GetAllConfigResponse;
-import com.zimbra.soap.admin.message.GetAllCosRequest;
-import com.zimbra.soap.admin.message.GetAllCosResponse;
-import com.zimbra.soap.admin.message.GetAllDistributionListsRequest;
-import com.zimbra.soap.admin.message.GetAllDistributionListsResponse;
-import com.zimbra.soap.admin.message.GetAllDomainsRequest;
-import com.zimbra.soap.admin.message.GetAllDomainsResponse;
-import com.zimbra.soap.admin.message.GetAllServersRequest;
-import com.zimbra.soap.admin.message.GetAllServersResponse;
-import com.zimbra.soap.admin.message.GetConfigRequest;
-import com.zimbra.soap.admin.message.GetConfigResponse;
-import com.zimbra.soap.admin.message.GetCosRequest;
-import com.zimbra.soap.admin.message.GetCosResponse;
-import com.zimbra.soap.admin.message.GetDistributionListRequest;
-import com.zimbra.soap.admin.message.GetDistributionListResponse;
-import com.zimbra.soap.admin.message.GetDomainInfoRequest;
-import com.zimbra.soap.admin.message.GetDomainInfoResponse;
-import com.zimbra.soap.admin.message.GetDomainRequest;
-import com.zimbra.soap.admin.message.GetDomainResponse;
-import com.zimbra.soap.admin.message.GetMailboxRequest;
-import com.zimbra.soap.admin.message.GetMailboxResponse;
-import com.zimbra.soap.admin.message.GetServerRequest;
-import com.zimbra.soap.admin.message.GetServerResponse;
-import com.zimbra.soap.admin.message.RemoveAccountAliasRequest;
-import com.zimbra.soap.admin.message.RemoveDistributionListAliasRequest;
-import com.zimbra.soap.admin.message.RemoveDistributionListMemberRequest;
-import com.zimbra.soap.admin.message.RenameAccountRequest;
-import com.zimbra.soap.admin.message.RenameCosRequest;
-import com.zimbra.soap.admin.message.RecalculateMailboxCountsRequest;
-import com.zimbra.soap.admin.message.RecalculateMailboxCountsResponse;
-import com.zimbra.soap.admin.message.RenameDistributionListRequest;
-import com.zimbra.soap.admin.message.SearchDirectoryRequest;
-import com.zimbra.soap.admin.message.SearchDirectoryResponse;
-import com.zimbra.soap.admin.message.SetPasswordRequest;
-import com.zimbra.soap.admin.message.SetPasswordResponse;
+import com.zimbra.soap.admin.message.*;
 import com.zimbra.soap.admin.type.AccountInfo;
+import com.zimbra.soap.admin.type.AccountLoggerInfo;
+import com.zimbra.soap.admin.type.AccountQuotaInfo;
 import com.zimbra.soap.admin.type.AccountSelector;
 import com.zimbra.soap.admin.type.AliasInfo;
 import com.zimbra.soap.admin.type.Attr;
 import com.zimbra.soap.admin.type.CacheEntrySelector;
 import com.zimbra.soap.admin.type.CacheSelector;
+import com.zimbra.soap.admin.type.CalendarResourceInfo;
+import com.zimbra.soap.admin.type.CalendarResourceSelector;
 import com.zimbra.soap.admin.type.CosCountInfo;
 import com.zimbra.soap.admin.type.CosInfo;
 import com.zimbra.soap.admin.type.CosSelector;
@@ -144,10 +78,16 @@ import com.zimbra.soap.admin.type.DistributionListInfo;
 import com.zimbra.soap.admin.type.DistributionListSelector;
 import com.zimbra.soap.admin.type.DomainSelector;
 import com.zimbra.soap.admin.type.DomainInfo;
+import com.zimbra.soap.admin.type.LoggerInfo;
 import com.zimbra.soap.admin.type.MailboxByAccountIdSelector;
 import com.zimbra.soap.admin.type.MailboxWithMailboxId;
+import com.zimbra.soap.admin.type.PublishFolderInfo;
+import com.zimbra.soap.admin.type.ReindexMailboxInfo;
+import com.zimbra.soap.admin.type.ReindexProgressInfo;
+import com.zimbra.soap.admin.type.RightInfo;
 import com.zimbra.soap.admin.type.ServerInfo;
 import com.zimbra.soap.admin.type.ServerSelector;
+import com.zimbra.soap.admin.type.ShareInfoSelector;
 
 public class SoapProvisioning extends Provisioning {
 
@@ -578,11 +518,10 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public CalendarResource createCalendarResource(String emailAddress, String password,
             Map<String, Object> attrs) throws ServiceException {
-        XMLElement req = new XMLElement(AdminConstants.CREATE_CALENDAR_RESOURCE_REQUEST);
-        req.addElement(AdminConstants.E_NAME).setText(emailAddress);
-        req.addElement(AdminConstants.E_PASSWORD).setText(password);
-        addAttrElements(req, attrs);
-        return new SoapCalendarResource(invoke(req).getElement(AdminConstants.E_CALENDAR_RESOURCE), this);
+        CreateCalendarResourceResponse resp =
+            invokeJaxb(new CreateCalendarResourceRequest(emailAddress, password,
+                    Attr.mapToList(attrs)));
+        return new SoapCalendarResource(resp.getCalResource(), this);
     }
 
     @Override
@@ -640,9 +579,7 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public void deleteCalendarResource(String zimbraId) throws ServiceException {
-        XMLElement req = new XMLElement(AdminConstants.DELETE_CALENDAR_RESOURCE_REQUEST);
-        req.addElement(AdminConstants.E_ID).setText(zimbraId);
-        invoke(req);
+        invokeJaxb( new DeleteCalendarResourceRequest(zimbraId));
     }
 
     @Override
@@ -818,62 +755,64 @@ public class SoapProvisioning extends Provisioning {
         public long getUsed() { return mUsed; }
         public long getLimit() { return mLimit; }
 
-        QuotaUsage(Element e) throws ServiceException {
-            mName = e.getAttribute(AdminConstants.A_NAME);
-            mId = e.getAttribute(AdminConstants.A_ID);
-            mUsed = e.getAttributeLong(AdminConstants.A_QUOTA_USED);
-            mLimit = e.getAttributeLong(AdminConstants.A_QUOTA_LIMIT);
+        QuotaUsage(AccountQuotaInfo quotaInfo) throws ServiceException {
+            mName = quotaInfo.getName();
+            mId = quotaInfo.getId();
+            mUsed = quotaInfo.getQuotaUsed();
+            mLimit = quotaInfo.getQuotaLimit();
         }
     }
 
     public List<QuotaUsage> getQuotaUsage(String server) throws ServiceException {
         ArrayList<QuotaUsage> result = new ArrayList<QuotaUsage>();
-        XMLElement req = new XMLElement(AdminConstants.GET_QUOTA_USAGE_REQUEST);
-        Element resp = invoke(req, server);
-        for (Element a: resp.listElements(AdminConstants.E_ACCOUNT)) {
-            result.add(new QuotaUsage(a));
+        GetQuotaUsageResponse resp =
+                invokeJaxb(new GetQuotaUsageRequest(), server);
+        for (AccountQuotaInfo quotaInfo : resp.getAccountQuotas()) {
+            result.add(new QuotaUsage(quotaInfo));
         }
         return result;
     }
 
-    public List<AccountLogger> addAccountLogger(Account account, String category, String level, String server)
+    public List<AccountLogger> addAccountLogger(Account account,
+            String category, String level, String server)
     throws ServiceException {
-        XMLElement req = new XMLElement(AdminConstants.ADD_ACCOUNT_LOGGER_REQUEST);
-
-        Element eAccount = req.addElement(AdminConstants.E_ACCOUNT);
-        eAccount.addAttribute(AdminConstants.A_BY, AdminConstants.BY_ID);
-        eAccount.setText(account.getId());
-
-        Element eLogger = req.addElement(AdminConstants.E_LOGGER);
-        eLogger.addAttribute(AdminConstants.A_CATEGORY, category);
-        eLogger.addAttribute(AdminConstants.A_LEVEL, level);
-
         if (server == null) {
             server = getServer(account).getName();
         }
-        return accountLoggersFromElement(invoke(req, server), account.getName());
+        AccountSelector acctSel = AccountSelector.fromId(account.getId());
+        LoggerInfo logger = new LoggerInfo(category, level);
+        AddAccountLoggerResponse resp =
+                invokeJaxb(new AddAccountLoggerRequest(acctSel, logger),
+                        server);
+        return accountLoggersFromLoggerInfos(resp.getLoggers(),
+                account.getName());
     }
 
-    private List<AccountLogger> accountLoggersFromElement(Element parent, String accountName)
-    throws ServiceException {
+    private AccountLogger accountLoggerFromLoggerInfo(
+            LoggerInfo loggerInfo, String accountName) {
+        return new AccountLogger(loggerInfo.getCategory(),
+                    accountName, Level.valueOf(loggerInfo.getLevel()));
+    }
+
+    private List<AccountLogger> accountLoggersFromLoggerInfos(
+            List <LoggerInfo> loggerInfos, String accountName) {
         List<AccountLogger> loggers = Lists.newArrayList();
-        for (Element eLogger : parent.listElements(AdminConstants.E_LOGGER)) {
-            String category = eLogger.getAttribute(AdminConstants.A_CATEGORY);
-            Level level = Level.valueOf(eLogger.getAttribute(AdminConstants.A_LEVEL));
-            loggers.add(new AccountLogger(category, accountName, level));
+        for (LoggerInfo loggerInfo : loggerInfos) {
+            loggers.add(accountLoggerFromLoggerInfo(loggerInfo, accountName));
         }
         return loggers;
     }
 
-    public List<AccountLogger> getAccountLoggers(Account account, String server) throws ServiceException {
-        XMLElement req = new XMLElement(AdminConstants.GET_ACCOUNT_LOGGERS_REQUEST);
-        Element eAccount = req.addElement(AdminConstants.E_ACCOUNT);
-        eAccount.addAttribute(AdminConstants.A_BY, AdminConstants.BY_ID);
-        eAccount.setText(account.getId());
+    public List<AccountLogger> getAccountLoggers(Account account, String server)
+    throws ServiceException {
         if (server == null) {
             server = getServer(account).getName();
         }
-        return accountLoggersFromElement(invoke(req, server), account.getName());
+        AccountSelector acctSel = AccountSelector.fromId(account.getId());
+        GetAccountLoggersResponse resp =
+                invokeJaxb(new GetAccountLoggersRequest(acctSel), server);
+        return accountLoggersFromLoggerInfos(resp.getLoggers(),
+                account.getName());
     }
 
     /**
@@ -883,18 +822,19 @@ public class SoapProvisioning extends Provisioning {
      *
      * @server the server name, or <tt>null</tt> for the local server
      */
-    public Map<String, List<AccountLogger>> getAllAccountLoggers(String server) throws ServiceException {
+    public Map<String, List<AccountLogger>> getAllAccountLoggers(String server)
+    throws ServiceException {
         if (server == null) {
             server = getLocalServer().getName();
         }
-        XMLElement req = new XMLElement(AdminConstants.GET_ALL_ACCOUNT_LOGGERS_REQUEST);
-        Element resp = invoke(req, server);
-        Map<String, List<AccountLogger>> result = new HashMap<String, List<AccountLogger>>();
-
-        for (Element eAccountLogger : resp.listElements(AdminConstants.E_ACCOUNT_LOGGER)) {
-            String accountName = eAccountLogger.getAttribute(AdminConstants.A_NAME);
-            List<AccountLogger> loggers = accountLoggersFromElement(eAccountLogger, accountName);
-            result.put(accountName, loggers);
+        GetAllAccountLoggersResponse resp =
+                invokeJaxb(new GetAllAccountLoggersRequest(), server);
+        Map<String, List<AccountLogger>> result =
+                new HashMap<String, List<AccountLogger>>();
+        for (AccountLoggerInfo acctLogger : resp.getLoggers()) {
+            String acctName = acctLogger.getName();
+            result.put(acctName, accountLoggersFromLoggerInfos(
+                                        acctLogger.getLoggers(), acctName));
         }
         return result;
     }
@@ -906,18 +846,6 @@ public class SoapProvisioning extends Provisioning {
      * @param server the server name, or {@code null} for the local server
      */
     public void removeAccountLoggers(Account account, String category, String server) throws ServiceException {
-        XMLElement req = new XMLElement(AdminConstants.REMOVE_ACCOUNT_LOGGER_REQUEST);
-
-        if (account != null) {
-            Element eAccount = req.addElement(AdminConstants.E_ACCOUNT);
-            eAccount.addAttribute(AdminConstants.A_BY, AdminConstants.BY_ID);
-            eAccount.setText(account.getId());
-        }
-        if (category != null) {
-            Element eLogger = req.addElement(AdminConstants.E_LOGGER);
-            eLogger.addAttribute(AdminConstants.A_CATEGORY, category);
-        }
-
         if (server == null) {
             if (account == null) {
                 server = getLocalServer().getName();
@@ -925,7 +853,13 @@ public class SoapProvisioning extends Provisioning {
                 server = getServer(account).getName();
             }
         }
-        invoke(req, server);
+        AccountSelector acctSel = null;
+        if (account != null)
+            acctSel = AccountSelector.fromId(account.getId());
+        LoggerInfo logger = null;
+        if (category != null)
+            logger = new LoggerInfo(category, null);
+        invokeJaxb(new RemoveAccountLoggerRequest(acctSel, logger), server);
     }
 
     public static class MailboxInfo {
@@ -1005,30 +939,30 @@ public class SoapProvisioning extends Provisioning {
         }
     }
 
-    public ReIndexInfo reIndex(Account acct, String action, ReIndexBy by, String[] values) throws ServiceException {
-        XMLElement req = new XMLElement(AdminConstants.REINDEX_REQUEST);
-        req.addAttribute(MailConstants.E_ACTION, action);
-        Element mboxReq = req.addElement(AdminConstants.E_MAILBOX);
-        mboxReq.addAttribute(AdminConstants.A_ID, acct.getId());
+    public ReIndexInfo reIndex(Account acct, String action, ReIndexBy by,
+            String[] values)
+    throws ServiceException {
+        Server server = getServer(acct);
+        ReindexMailboxInfo mbox = new ReindexMailboxInfo(acct.getId());
         if (by != null) {
             String vals = StringUtil.join(",", values);
             if (by == ReIndexBy.types) {
-                mboxReq.addAttribute(MailConstants.A_SEARCH_TYPES, vals);
+                mbox.setTypes(vals);
             } else {
-                mboxReq.addAttribute(MailConstants.A_IDS, vals);
+                mbox.setIds(vals);
             }
         }
-
-        Server server = getServer(acct);
-        Element resp = invoke(req, server.getAttr(A_zimbraServiceHostname));
+        ReIndexRequest req = new ReIndexRequest(action, mbox);
+        ReIndexResponse resp = this.invokeJaxb(req,
+                server.getAttr(A_zimbraServiceHostname));
         ReIndexInfo.Progress progress = null;
-        Element progressElem = resp.getOptionalElement(AdminConstants.E_PROGRESS);
-        if (progressElem != null) {
-            progress = new ReIndexInfo.Progress(progressElem.getAttributeLong(AdminConstants.A_NUM_SUCCEEDED),
-                    progressElem.getAttributeLong(AdminConstants.A_NUM_FAILED),
-                    progressElem.getAttributeLong(AdminConstants.A_NUM_REMAINING));
+        ReindexProgressInfo progInfo = resp.getProgress();
+        if (progInfo != null) {
+            progress = new ReIndexInfo.Progress(progInfo.getNumSucceeded(),
+                    progInfo.getNumFailed(),
+                    progInfo.getNumRemaining());
         }
-        return new ReIndexInfo(resp.getAttribute(AdminConstants.A_STATUS), progress);
+        return new ReIndexInfo(resp.getStatus(), progress);
     }
 
     public static final class VerifyIndexResult {
@@ -1042,11 +976,11 @@ public class SoapProvisioning extends Provisioning {
     }
 
     public VerifyIndexResult verifyIndex(Account account) throws ServiceException {
-        XMLElement req = new XMLElement(AdminConstants.VERIFY_INDEX_REQUEST);
-        req.addElement(AdminConstants.E_MAILBOX).addAttribute(AdminConstants.A_ID, account.getId());
-        Element resp = invoke(req, getServer(account).getAttr(A_zimbraServiceHostname));
-        return new VerifyIndexResult(Boolean.parseBoolean(resp.getElement(AdminConstants.E_STATUS).getText()),
-                resp.getElement(AdminConstants.E_MESSAGE).getText());
+        VerifyIndexRequest req = new VerifyIndexRequest(
+                new MailboxByAccountIdSelector(account.getId()));
+        VerifyIndexResponse resp = invokeJaxb(req,
+                getServer(account).getAttr(A_zimbraServiceHostname));
+        return new VerifyIndexResult(resp.isStatus(), resp.getMessage());
     }
 
     public long recalculateMailboxCounts(Account acct) throws ServiceException {
@@ -1078,12 +1012,13 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public CalendarResource get(CalendarResourceBy keyType, String key) throws ServiceException {
-        XMLElement req = new XMLElement(AdminConstants.GET_CALENDAR_RESOURCE_REQUEST);
-        Element a = req.addElement(AdminConstants.E_CALENDAR_RESOURCE);
-        a.setText(key);
-        a.addAttribute(AdminConstants.A_BY, keyType.name());
         try {
-            return new SoapCalendarResource(invoke(req).getElement(AdminConstants.E_CALENDAR_RESOURCE), this);
+            GetCalendarResourceRequest req = 
+                new GetCalendarResourceRequest(
+                    new CalendarResourceSelector(
+                            CalendarResourceBy.toJaxb(keyType), key));
+            GetCalendarResourceResponse resp = invokeJaxb(req);
+            return new SoapCalendarResource(resp.getCalResource(), this);
         } catch (ServiceException e) {
             if (e.getCode().equals(AccountServiceException.NO_SUCH_CALENDAR_RESOURCE))
                 return null;
@@ -1311,10 +1246,7 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public void renameCalendarResource(String zimbraId, String newName)
             throws ServiceException {
-        XMLElement req = new XMLElement(AdminConstants.RENAME_CALENDAR_RESOURCE_REQUEST);
-        req.addElement(AdminConstants.E_ID).setText(zimbraId);
-        req.addElement(AdminConstants.E_NEW_NAME).setText(newName);
-        invoke(req);
+        invokeJaxb(new RenameCalendarResourceRequest(zimbraId, newName));
     }
 
     @Override
@@ -1457,12 +1389,8 @@ public class SoapProvisioning extends Provisioning {
         return result;
     }
 
-    @Override
-    public List getAllAccounts(Domain d) throws ServiceException {
-        return getAllAccounts(d, (Server)null);
-    }
-
-    public List <Account> getAllAccounts(Domain d, Server s) throws ServiceException {
+    private List <AccountInfo> getAllAccountsInfo(Domain d, Server s)
+    throws ServiceException {
         DomainSelector domSel = null;
         if (d != null)
             domSel = new DomainSelector(DomainSelector.DomainBy.id, d.getId());
@@ -1471,83 +1399,85 @@ public class SoapProvisioning extends Provisioning {
             svrSel = new ServerSelector(ServerSelector.ServerBy.id, s.getId());
         GetAllAccountsResponse resp =
                 invokeJaxb(new GetAllAccountsRequest(svrSel, domSel));
+        return resp.getAccountList();
+        
+    }
+
+    @Override
+    public List <Account> getAllAccounts(Domain d)
+    throws ServiceException {
+        return getAllAccounts(d, (Server)null);
+    }
+
+    public List <Account> getAllAccounts(Domain d, Server s)
+    throws ServiceException {
         ArrayList<Account> result = new ArrayList<Account>();
-        for (AccountInfo acct : resp.getAccountList()) {
+        for (AccountInfo acct : getAllAccountsInfo(d, s)) {
             result.add(new SoapAccount(acct, this));
         }
         return result;
     }
 
     @Override
-    public void getAllAccounts(Domain d, Visitor visitor) throws ServiceException {
+    public void getAllAccounts(Domain d, Visitor visitor)
+    throws ServiceException {
         getAllAccounts(d, (Server)null, visitor);
     }
 
     @Override
-    public void getAllAccounts(Domain d, Server s, Visitor visitor) throws ServiceException {
+    public void getAllAccounts(Domain d, Server s, Visitor visitor)
+    throws ServiceException {
+        for (AccountInfo acct : getAllAccountsInfo(d, s)) {
+            visitor.visit(new SoapAccount(acct, this));
+        }
+    }
+
+    private List <CalendarResourceInfo> getAllCalendarResourcesInfo(
+            Domain d, Server s) 
+    throws ServiceException {
         DomainSelector domSel = null;
         if (d != null)
             domSel = new DomainSelector(DomainSelector.DomainBy.id, d.getId());
         ServerSelector svrSel = null;
         if (s != null)
             svrSel = new ServerSelector(ServerSelector.ServerBy.id, s.getId());
-        GetAllAccountsResponse resp =
-                invokeJaxb(new GetAllAccountsRequest(svrSel, domSel));
-        for (AccountInfo acct : resp.getAccountList()) {
-            visitor.visit(new SoapAccount(acct, this));
-        }
+        GetAllCalendarResourcesResponse resp =
+                invokeJaxb(new GetAllCalendarResourcesRequest(svrSel, domSel));
+        return resp.getCalendarResourceList();
     }
 
     @Override
-    public List getAllCalendarResources(Domain d) throws ServiceException {
+    public List <CalendarResource> getAllCalendarResources(Domain d)
+    throws ServiceException {
+        return getAllCalendarResources(d, (Server)null);
+    }
+
+    public List <CalendarResource> getAllCalendarResources(Domain d, Server s)
+    throws ServiceException {
         ArrayList<CalendarResource> result = new ArrayList<CalendarResource>();
-        XMLElement req = new XMLElement(AdminConstants.GET_ALL_CALENDAR_RESOURCES_REQUEST);
-        Element domainEl = req.addElement(AdminConstants.E_DOMAIN);
-        domainEl.addAttribute(AdminConstants.A_BY, CalendarResourceBy.id.name());
-        domainEl.setText(d.getId());
-        Element resp = invoke(req);
-        for (Element a: resp.listElements(AdminConstants.E_CALENDAR_RESOURCE)) {
-            result.add(new SoapCalendarResource(a, this));
+        for (CalendarResourceInfo rsrc : getAllCalendarResourcesInfo(d, s)) {
+            result.add(new SoapCalendarResource(rsrc, this));
         }
         return result;
     }
 
     @Override
-    public void getAllCalendarResources(Domain d, Visitor visitor) throws ServiceException {
-        XMLElement req = new XMLElement(AdminConstants.GET_ALL_CALENDAR_RESOURCES_REQUEST);
-        Element domainEl = req.addElement(AdminConstants.E_DOMAIN);
-        domainEl.addAttribute(AdminConstants.A_BY, CalendarResourceBy.id.name());
-        domainEl.setText(d.getId());
-        Element resp = invoke(req);
-        for (Element a: resp.listElements(AdminConstants.E_CALENDAR_RESOURCE)) {
+    public void getAllCalendarResources(Domain d, Visitor visitor)
+    throws ServiceException {
+        getAllCalendarResources(d, (Server)null, visitor);
+    }
 
-            visitor.visit(new SoapCalendarResource(a, this));
+    @Override
+    public void getAllCalendarResources(Domain d, Server s, Visitor visitor)
+    throws ServiceException {
+        for (CalendarResourceInfo rsrc : getAllCalendarResourcesInfo(d, s)) {
+            visitor.visit(new SoapCalendarResource(rsrc, this));
         }
     }
 
     @Override
-    public void getAllCalendarResources(Domain d, Server s, Visitor visitor) throws ServiceException {
-        XMLElement req = new XMLElement(AdminConstants.GET_ALL_CALENDAR_RESOURCES_REQUEST);
-
-        Element domainEl = req.addElement(AdminConstants.E_DOMAIN);
-        domainEl.addAttribute(AdminConstants.A_BY, CalendarResourceBy.id.name());
-        domainEl.setText(d.getId());
-
-        if (s != null) {
-            Element serverEl = req.addElement(AdminConstants.E_SERVER);
-            serverEl.addAttribute(AdminConstants.A_BY, ServerBy.id.name());
-            serverEl.setText(s.getId());
-        }
-
-        Element resp = invoke(req);
-        for (Element a: resp.listElements(AdminConstants.E_CALENDAR_RESOURCE)) {
-
-            visitor.visit(new SoapCalendarResource(a, this));
-        }
-    }
-
-    @Override
-    public List getAllDistributionLists(Domain d) throws ServiceException {
+    public List <DistributionList> getAllDistributionLists(Domain d)
+    throws ServiceException {
         ArrayList<DistributionList> result = new ArrayList<DistributionList>();
         DomainSelector domSel = new DomainSelector(
                 DomainSelector.DomainBy.id, d.getId());
@@ -2061,7 +1991,7 @@ public class SoapProvisioning extends Provisioning {
         Map<String, List<RightsDoc>> allDocs = new TreeMap<String, List<RightsDoc>>();
 
         for (Element ePkg : resp.listElements(AdminConstants.E_PACKAGE)) {
-            List docs = new ArrayList<RightsDoc>();
+            List <RightsDoc> docs = Lists.newArrayList();
             allDocs.put(ePkg.getAttribute(AdminConstants.A_NAME), docs);
 
             for (Element eCmd : ePkg.listElements(AdminConstants.E_CMD)) {
@@ -2094,16 +2024,16 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
-    public List<Right> getAllRights(String targetType, boolean expandAllAttrs, String rightClass)  throws ServiceException {
-        XMLElement req = new XMLElement(AdminConstants.GET_ALL_RIGHTS_REQUEST);
-        req.addAttribute(AdminConstants.A_TARGET_TYPE, targetType);
-        req.addAttribute(AdminConstants.A_EXPAND_ALL_ATTRS, expandAllAttrs);
-        req.addAttribute(AdminConstants.A_RIGHT_CLASS, rightClass);
-        Element resp = invoke(req);
-
+    public List<Right> getAllRights(String targetType, boolean expandAllAttrs,
+            String rightClass)
+    throws ServiceException {
+        GetAllRightsResponse resp = invokeJaxb(new GetAllRightsRequest(
+                targetType, expandAllAttrs, rightClass));
         List<Right> rights = new ArrayList<Right>();
-        for (Element eRight : resp.listElements(AdminConstants.E_RIGHT)) {
-            rights.add(RightCommand.XMLToRight(eRight));
+        for (RightInfo rInfo : resp.getRights()) {
+            // Note: Hack which ignores rInfo details and gets right
+            //       directly from Rights manager by name
+            rights.add(RightCommand.RightNameToRight(rInfo.getName()));
         }
         return rights;
     }
@@ -2333,51 +2263,41 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
-    public void publishShareInfo(DistributionList dl, PublishShareInfoAction action,
-            Account ownerAcct, String folderIdOrPath) throws ServiceException {
-        XMLElement req = new XMLElement(AdminConstants.PUBLISH_SHARE_INFO_REQUEST);
-
-        Element eDL = req.addElement(AdminConstants.E_DL);
-        eDL.addAttribute(AdminConstants.A_BY, DistributionListBy.id.name());
-        eDL.setText(dl.getId());
-
-        Element eShare = req.addElement(AdminConstants.E_SHARE);
-        eShare.addAttribute(AdminConstants.A_ACTION, action.name());
-
-        eShare.addElement(AdminConstants.E_OWNER).addAttribute(AdminConstants.A_BY, AccountBy.id.name()).setText(ownerAcct.getId());
-        eShare.addElement(AdminConstants.E_FOLDER).addAttribute(AdminConstants.A_PATH_OR_ID, folderIdOrPath);
-
-        invoke(req);
+    public void publishShareInfo(DistributionList dl,
+            PublishShareInfoAction action, Account ownerAcct,
+            String folderIdOrPath)
+    throws ServiceException {
+        DistributionListSelector dlSel =
+                DistributionListSelector.fromId(dl.getId());
+        ShareInfoSelector shareSel = new ShareInfoSelector(
+                PublishShareInfoAction.toJaxb(action),
+                PublishFolderInfo.fromPathOrId(folderIdOrPath),
+                AccountSelector.fromId(ownerAcct.getId()));
+        invokeJaxb(new PublishShareInfoRequest(dlSel, shareSel));
     }
 
     @Override
     public void getPublishedShareInfo(DistributionList dl, Account ownerAcct,
             PublishedShareInfoVisitor visitor) throws ServiceException {
-        XMLElement req = new XMLElement(AdminConstants.GET_PUBLISHED_SHARE_INFO_REQUEST);
-
-        Element eDL = req.addElement(AdminConstants.E_DL);
-        eDL.addAttribute(AdminConstants.A_BY, DistributionListBy.id.name());
-        eDL.setText(dl.getId());
-
-        if (ownerAcct != null)
-            req.addElement(AdminConstants.E_OWNER).addAttribute(AdminConstants.A_BY, AccountBy.id.name()).setText(ownerAcct.getId());
-
-        Element resp = invoke(req);
-        for (Element eShare: resp.listElements(AdminConstants.E_SHARE)) {
-            ShareInfoData sid = ShareInfoData.fromXML(eShare);
+        GetPublishedShareInfoResponse rsp = invokeJaxb(
+                new GetPublishedShareInfoRequest(
+                        DistributionListSelector.fromId(dl.getId()),
+                        AccountSelector.fromId(ownerAcct.getId())));
+        for (com.zimbra.soap.admin.type.ShareInfo sInfo : rsp.getShareInfos()) {
+            ShareInfoData sid = ShareInfoData.fromJaxbShareInfo(sInfo);
             visitor.visit(sid);
         }
     }
 
     @Override
-    public void getShareInfo(Account ownerAcct, PublishedShareInfoVisitor visitor) throws ServiceException {
-        XMLElement req = new XMLElement(AdminConstants.GET_SHARE_INFO_REQUEST);
-
-        req.addElement(AdminConstants.E_OWNER).addAttribute(AdminConstants.A_BY, AccountBy.id.name()).setText(ownerAcct.getId());
-
-        Element resp = invoke(req);
-        for (Element eShare: resp.listElements(AdminConstants.E_SHARE)) {
-            ShareInfoData sid = ShareInfoData.fromXML(eShare);
+    public void getShareInfo(Account ownerAcct,
+            PublishedShareInfoVisitor visitor)
+    throws ServiceException {
+        GetShareInfoResponse rsp = invokeJaxb(
+                new GetShareInfoRequest(
+                        AccountSelector.fromId(ownerAcct.getId())));
+        for (com.zimbra.soap.admin.type.ShareInfo sInfo : rsp.getShareInfos()) {
+            ShareInfoData sid = ShareInfoData.fromJaxbShareInfo(sInfo);
             visitor.visit(sid);
         }
     }

@@ -45,6 +45,7 @@ import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.accesscontrol.Right.RightType;
 import com.zimbra.cs.account.accesscontrol.RightBearer.Grantee;
 import com.zimbra.cs.account.accesscontrol.SearchGrants.GrantsOnTarget;
+import com.zimbra.soap.admin.type.RightInfo;
 
 public class RightCommand {
     
@@ -1376,6 +1377,11 @@ public class RightCommand {
      */
     public static Right XMLToRight(Element eRight) throws ServiceException  {
         String rightName = eRight.getAttribute(AdminConstants.E_NAME);
+        return RightNameToRight(rightName);
+    }
+
+    public static Right RightNameToRight(String rightName)
+    throws ServiceException  {
         return RightManager.getInstance().getRight(rightName);
     }
 

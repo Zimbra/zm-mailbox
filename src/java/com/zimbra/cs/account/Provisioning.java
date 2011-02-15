@@ -30,10 +30,12 @@ import com.zimbra.common.util.L10nUtil;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.soap.admin.type.AccountSelector;
 import com.zimbra.soap.admin.type.CacheEntrySelector;
+import com.zimbra.soap.admin.type.CalendarResourceSelector;
 import com.zimbra.soap.admin.type.CosSelector;
 import com.zimbra.soap.admin.type.DistributionListSelector;
 import com.zimbra.soap.admin.type.DomainSelector;
 import com.zimbra.soap.admin.type.ServerSelector;
+import com.zimbra.soap.admin.type.ShareInfoSelector;
 
 import javax.mail.internet.InternetAddress;
 
@@ -1193,6 +1195,13 @@ public abstract class Provisioning extends ZAttrProvisioning {
             }
         }
 
+        /* Convert to equivalent JAXB object */
+        public static CalendarResourceSelector.CalendarResourceBy toJaxb(
+                CalendarResourceBy provCalendarResourceBy)
+        throws ServiceException {
+            return CalendarResourceSelector.CalendarResourceBy.fromString(
+                    provCalendarResourceBy.toString());
+        }
     }
 
     public abstract CalendarResource get(CalendarResourceBy keyType, String key) throws ServiceException;
@@ -2068,12 +2077,22 @@ public abstract class Provisioning extends ZAttrProvisioning {
         add,
         remove;
 
-        public static PublishShareInfoAction fromString(String action) throws ServiceException {
+        public static PublishShareInfoAction fromString(String action)
+        throws ServiceException {
             try {
                 return PublishShareInfoAction.valueOf(action);
             } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST("unknown ShareInfo action: " + action, e);
+                throw ServiceException.INVALID_REQUEST(
+                        "unknown ShareInfo action: " + action, e);
             }
+        }
+
+        /* Convert to equivalent JAXB object */
+        public static ShareInfoSelector.PubShareInfoAction toJaxb(
+                PublishShareInfoAction provAction)
+        throws ServiceException {
+            return ShareInfoSelector.PubShareInfoAction.fromString(
+                    provAction.toString());
         }
     }
 
