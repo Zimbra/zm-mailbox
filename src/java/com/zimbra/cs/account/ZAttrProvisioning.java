@@ -4489,6 +4489,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailboxMoveSkipSearchIndex = "zimbraMailboxMoveSkipSearchIndex";
 
     /**
+     * temp directory for mailbox move
+     *
+     * @since ZCS 7.0.1
+     */
+    @ZAttr(id=1175)
+    public static final String A_zimbraMailboxMoveTempDir = "zimbraMailboxMoveTempDir";
+
+    /**
      * RFC822 email address for senders outbound messages
      */
     @ZAttr(id=213)
