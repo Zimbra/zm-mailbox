@@ -166,8 +166,8 @@ public abstract class Formatter {
     // Caller is responsible for filtering out Appointments/Tasks marked private if the requester
     // is not the mailbox owner.
     public Iterator<? extends MailItem> getMailItems(UserServletContext context, long startTime, long endTime, long chunkSize) throws ServiceException {
-        if (context.respListItems != null) {
-            return context.respListItems.iterator();
+        if (context.requestedItems != null) {
+            return context.getRequestedItems();
         }
 
         assert(context.target != null);

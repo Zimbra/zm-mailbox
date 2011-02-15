@@ -17,12 +17,12 @@ package com.zimbra.cs.service;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
-import java.util.List;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
-import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -72,7 +72,7 @@ public final class UserServletContext {
     public ItemId itemId;
     public MailItem target;
     public int[] reqListIds;
-    public List<MailItem> respListItems;
+    public ArrayList<Item> requestedItems;
     public int imapId = -1;
     public boolean sync;
     public Account authAccount;
@@ -83,6 +83,46 @@ public final class UserServletContext {
     private long mStartTime = -2;
     private long mEndTime = -2;
 
+    public static class Item {
+        public int id;
+        public int ver;
+        public boolean versioned;
+        public MailItem mailItem;
+        public Item(String itemId) {
+            String[] vals = itemId.split("\\.");
+            id = (vals.length > 0) ? 
+                    Integer.parseInt(vals[0]) :
+                    Integer.parseInt(itemId);
+            if (vals.length == 2) {
+                versioned = true;
+                ver = Integer.parseInt(vals[1]);
+            }
+        }
+    }
+    
+    private static class ItemIterator implements Iterator<MailItem> {
+
+        private Iterator<Item> items;
+        
+        public ItemIterator(ArrayList<Item> items) {
+            this.items = items.iterator();
+        }
+        
+        @Override
+        public boolean hasNext() {
+            return items.hasNext();
+        }
+
+        @Override
+        public MailItem next() {
+            return items.next().mailItem;
+        }
+
+        @Override
+        public void remove() {
+        }
+    }
+    
     public UserServletContext(HttpServletRequest request, HttpServletResponse response, UserServlet srvlt)
     throws UserServletException, ServiceException {
         Provisioning prov = Provisioning.getInstance();
@@ -140,9 +180,12 @@ public final class UserServletContext {
         String listParam = this.params.get(UserServlet.QP_LIST);
         if (listParam != null && listParam.length() > 0) {
             String[] ids = listParam.split(",");
+            requestedItems = new ArrayList<Item>();
             reqListIds = new int[ids.length];
             for (int i = 0; i < ids.length; ++i) {
-                reqListIds[i] = Integer.parseInt(ids[i]);
+                Item item = new Item(ids[i]);
+                requestedItems.add(item);
+                reqListIds[i] = item.id;
             }
         }
 
@@ -172,6 +215,10 @@ public final class UserServletContext {
         targetAccount = prov.get(AccountBy.name, accountPath, authToken);
     }
 
+    public Iterator<MailItem> getRequestedItems() {
+        return new ItemIterator(requestedItems);
+    }
+    
     public boolean isUsingAdminPrivileges() {
         return authToken != null && AuthToken.isAnyAdmin(authToken);
     }

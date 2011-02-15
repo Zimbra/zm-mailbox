@@ -236,10 +236,10 @@ public abstract class ArchiveFormatter extends Formatter {
             }
             Charset charset = context.getCharset();
             CharsetEncoder encoder = charset.newEncoder();
-            if (context.respListItems != null) {
+            if (context.requestedItems != null) {
                 try {
-                    for (MailItem mi : context.respListItems)
-                        aos = saveItem(context, mi, fldrs, cnts, names, false,
+                    for (UserServletContext.Item item : context.requestedItems)
+                        aos = saveItem(context, item.mailItem, fldrs, cnts, names, item.versioned,
                                 aos, encoder);
                 } catch (Exception e) {
                     warn(e);
@@ -608,7 +608,13 @@ public abstract class ArchiveFormatter extends Formatter {
             name = name.substring(0, 120);
         }
         if (mi.isTagged(Flag.ID_VERSIONED)) {
-            name += String.format("-%05d", mi.getVersion());
+            // prepend the version before the extension of up to four characters
+            int dot = name.lastIndexOf('.');
+            if (dot >= name.length() - 5) {
+                name = name.substring(0, dot) + String.format("-%05d", mi.getVersion()) + name.substring(dot);
+            } else {
+                name += String.format("-%05d", mi.getVersion());
+            }
         }
         name = ILLEGAL_FILE_CHARS.matcher(name).replaceAll("_").trim();
         while (name.endsWith(".")) {

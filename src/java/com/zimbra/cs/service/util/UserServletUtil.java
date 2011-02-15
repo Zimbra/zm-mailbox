@@ -15,7 +15,6 @@
 package com.zimbra.cs.service.util;
 
 import java.io.IOException;
-import java.util.ArrayList;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
@@ -46,11 +45,12 @@ import com.zimbra.cs.servlet.util.AuthUtil;
 public class UserServletUtil {
 
     public static void resolveItems(UserServletContext context) throws ServiceException {
-        context.respListItems = new ArrayList<MailItem>();
-    
-        for (int id : context.reqListIds) {
+        for (UserServletContext.Item item : context.requestedItems) {
             try {
-                context.respListItems.add(context.targetMailbox.getItemById(context.opContext, id, MailItem.Type.UNKNOWN));
+                if (item.versioned)
+                    item.mailItem = context.targetMailbox.getItemRevision(context.opContext, item.id, MailItem.Type.UNKNOWN, item.ver);
+                else
+                    item.mailItem = context.targetMailbox.getItemById(context.opContext, item.id, MailItem.Type.UNKNOWN);
             } catch (NoSuchItemException x) {
                 ZimbraLog.misc.info(x.getMessage());
             } catch (ServiceException x) {
@@ -61,10 +61,6 @@ public class UserServletUtil {
                 }
             }
         }
-    
-        // we consider partial success OK -- let the client figure out which item is missing
-        if (context.respListItems.isEmpty())
-            throw MailServiceException.NO_SUCH_ITEM(context.reqListIds.toString());
     }
 
     /*
@@ -132,25 +128,10 @@ public class UserServletUtil {
                     throw e;
                 failure = e;
             }
-    
+
             if (context.target == null) {
-                // no joy.  if they asked for something like "calendar.csv" (where "calendar" was the folder name), try again minus the extension
-                int dot = context.itemPath.lastIndexOf('.'), slash = context.itemPath.lastIndexOf('/');
-                if (checkExtension && context.format == null && dot != -1 && dot > slash) {
-                    /* if path == /foo/bar/baz.html, then
-                     *      format -> html
-                     *      path   -> /foo/bar/baz  */
-                    String unsuffixedPath = context.itemPath.substring(0, dot);
-                    try {
-                        context.target = mbox.getItemByPath(context.opContext, unsuffixedPath);
-                        context.format = FormatType.valueOf(context.itemPath.substring(dot + 1));
-                        context.itemPath = unsuffixedPath;
-                    } catch (ServiceException e) { }
-                }
-            }
-    
-            if (context.target == null) {
-                // still no joy.  the only viable possibility at this point is that there's a mountpoint somewhere higher up in the requested path
+                // if there is a mountpoint somewhere higher up in the requested path
+                // then we need to proxy the request to the sharer's mailbox.
                 try {
                     // to search for the mountpoint we use admin rights on the user's mailbox.
                     // this is done so that MailItems in the mountpoint can be resolved
@@ -167,7 +148,23 @@ public class UserServletUtil {
                     }
                 } catch (ServiceException e) { }
             }
-    
+
+            if (context.target == null) {
+                // if they asked for something like "calendar.csv" (where "calendar" was the folder name), try again minus the extension
+                int dot = context.itemPath.lastIndexOf('.'), slash = context.itemPath.lastIndexOf('/');
+                if (checkExtension && context.format == null && dot != -1 && dot > slash) {
+                    /* if path == /foo/bar/baz.html, then
+                     *      format -> html
+                     *      path   -> /foo/bar/baz  */
+                    String unsuffixedPath = context.itemPath.substring(0, dot);
+                    try {
+                        context.target = mbox.getItemByPath(context.opContext, unsuffixedPath);
+                        context.format = FormatType.fromString(context.itemPath.substring(dot + 1));
+                        context.itemPath = unsuffixedPath;
+                    } catch (ServiceException e) { }
+                }
+            }
+
             // don't think this code can ever get called because <tt>context.target</tt> can't be null at this point
             if (context.target == null && context.getQueryString() == null)
                 throw failure;
