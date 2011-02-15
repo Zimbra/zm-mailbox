@@ -18,36 +18,35 @@ package com.zimbra.soap.admin.type;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class DistributionListMembershipInfo {
+public class ComboRightInfo {
 
-    @XmlAttribute(name=AdminConstants.A_ID, required=true)
-    private final String id;
-    @XmlAttribute(name=AdminConstants.A_NAME, required=true)
+    @XmlAttribute(name=AdminConstants.A_N, required=true)
     private final String name;
-    @XmlAttribute(name=AdminConstants.A_VIA, required=false)
-    private final String via;
+    @XmlAttribute(name=AdminConstants.A_TYPE, required=true)
+    private final RightInfo.RightType type;
+    @XmlAttribute(name=AdminConstants.A_TARGET_TYPE, required=true)
+    private final String targetType;
+
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private DistributionListMembershipInfo() {
-        this(null, null, null);
+    private ComboRightInfo() {
+        this((String)null, (RightInfo.RightType) null, (String)null);
     }
 
-    public DistributionListMembershipInfo(String id, String name) {
-        this(id, name, null);
-    }
-
-    public DistributionListMembershipInfo(String id, String name, String via) {
-        this.id = id;
+    public ComboRightInfo(String name, RightInfo.RightType type,
+            String targetType) {
         this.name = name;
-        this.via = via;
+        this.type = type;
+        this.targetType = targetType;
     }
 
-    public String getId() { return id; }
     public String getName() { return name; }
-    public String getVia() { return via; }
+    public RightInfo.RightType getType() { return type; }
+    public String getTargetType() { return targetType; }
 }

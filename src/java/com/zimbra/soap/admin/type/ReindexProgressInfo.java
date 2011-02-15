@@ -18,36 +18,35 @@ package com.zimbra.soap.admin.type;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class DistributionListMembershipInfo {
+public class ReindexProgressInfo {
 
-    @XmlAttribute(name=AdminConstants.A_ID, required=true)
-    private final String id;
-    @XmlAttribute(name=AdminConstants.A_NAME, required=true)
-    private final String name;
-    @XmlAttribute(name=AdminConstants.A_VIA, required=false)
-    private final String via;
+    @XmlAttribute(name=AdminConstants.A_NUM_SUCCEEDED, required=true)
+    private final int numSucceeded;
+    @XmlAttribute(name=AdminConstants.A_NUM_FAILED, required=true)
+    private final int numFailed;
+    @XmlAttribute(name=AdminConstants.A_NUM_REMAINING, required=true)
+    private final int numRemaining;
+
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private DistributionListMembershipInfo() {
-        this(null, null, null);
+    private ReindexProgressInfo() {
+        this(-1, -1, -1);
     }
 
-    public DistributionListMembershipInfo(String id, String name) {
-        this(id, name, null);
+    public ReindexProgressInfo(
+            int numSucceeded, int numFailed, int numRemaining) {
+        this.numSucceeded = numSucceeded;
+        this.numFailed = numFailed;
+        this.numRemaining = numRemaining;
     }
 
-    public DistributionListMembershipInfo(String id, String name, String via) {
-        this.id = id;
-        this.name = name;
-        this.via = via;
-    }
-
-    public String getId() { return id; }
-    public String getName() { return name; }
-    public String getVia() { return via; }
+    public int getNumSucceeded() { return numSucceeded; }
+    public int getNumFailed() { return numFailed; }
+    public int getNumRemaining() { return numRemaining; }
 }

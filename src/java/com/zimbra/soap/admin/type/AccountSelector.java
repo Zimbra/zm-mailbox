@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -62,4 +62,12 @@ public class AccountSelector {
     public String getKey() { return key; }
 
     public AccountBy getBy() { return accountBy; }
+
+    public static AccountSelector fromId(String id) {
+        return new AccountSelector(AccountBy.id, id);
+    }
+
+    public static AccountSelector fromName(String name) {
+        return new AccountSelector(AccountBy.name, name);
+    }
 }

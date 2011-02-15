@@ -18,36 +18,38 @@ package com.zimbra.soap.admin.type;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class DistributionListMembershipInfo {
+public class ReindexMailboxInfo {
 
-    @XmlAttribute(name=AdminConstants.A_ID, required=true)
-    private final String id;
-    @XmlAttribute(name=AdminConstants.A_NAME, required=true)
-    private final String name;
-    @XmlAttribute(name=AdminConstants.A_VIA, required=false)
-    private final String via;
+    @XmlAttribute(name=AdminConstants.A_ACCOUNTID, required=true)
+    private final String accountId;
+    @XmlAttribute(name=MailConstants.A_SEARCH_TYPES, required=false)
+    private String types;
+    @XmlAttribute(name=MailConstants.A_IDS, required=false)
+    private String ids;
+
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private DistributionListMembershipInfo() {
-        this(null, null, null);
+    private ReindexMailboxInfo() {
+        this((String) null);
     }
 
-    public DistributionListMembershipInfo(String id, String name) {
-        this(id, name, null);
+    public ReindexMailboxInfo(String accountId) {
+        this.accountId = accountId;
+        this.setTypes(null);
+        this.ids = null;
     }
 
-    public DistributionListMembershipInfo(String id, String name, String via) {
-        this.id = id;
-        this.name = name;
-        this.via = via;
-    }
+    public String getAccountId() { return accountId; }
+    public String getTypes() { return types; }
+    public String getIds() { return ids; }
 
-    public String getId() { return id; }
-    public String getName() { return name; }
-    public String getVia() { return via; }
+    public void setTypes(String types) { this.types = types; }
+    public void setIds(String ids) { this.ids = ids; }
 }

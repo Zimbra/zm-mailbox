@@ -13,41 +13,37 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
+package com.zimbra.soap.admin.message;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
+
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class DistributionListMembershipInfo {
+@XmlRootElement(name=AdminConstants.E_RENAME_CALENDAR_RESOURCE_REQUEST)
+public class RenameCalendarResourceRequest {
 
-    @XmlAttribute(name=AdminConstants.A_ID, required=true)
+    @XmlAttribute(name=AdminConstants.E_ID, required=true)
     private final String id;
-    @XmlAttribute(name=AdminConstants.A_NAME, required=true)
-    private final String name;
-    @XmlAttribute(name=AdminConstants.A_VIA, required=false)
-    private final String via;
+    @XmlAttribute(name=AdminConstants.E_NEW_NAME, required=true)
+    private final String newName;
+
     /**
      * no-argument constructor wanted by JAXB
      */
-    @SuppressWarnings("unused")
-    private DistributionListMembershipInfo() {
-        this(null, null, null);
+     @SuppressWarnings("unused")
+    private RenameCalendarResourceRequest() {
+        this((String) null, (String) null);
     }
 
-    public DistributionListMembershipInfo(String id, String name) {
-        this(id, name, null);
-    }
-
-    public DistributionListMembershipInfo(String id, String name, String via) {
+    public RenameCalendarResourceRequest(String id, String newName) {
         this.id = id;
-        this.name = name;
-        this.via = via;
+        this.newName = newName;
     }
 
     public String getId() { return id; }
-    public String getName() { return name; }
-    public String getVia() { return via; }
+    public String getNewName() { return newName; }
 }

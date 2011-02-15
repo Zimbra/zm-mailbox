@@ -18,36 +18,26 @@ package com.zimbra.soap.admin.type;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class DistributionListMembershipInfo {
+public class LicenseExpirationInfo {
 
-    @XmlAttribute(name=AdminConstants.A_ID, required=true)
-    private final String id;
-    @XmlAttribute(name=AdminConstants.A_NAME, required=true)
-    private final String name;
-    @XmlAttribute(name=AdminConstants.A_VIA, required=false)
-    private final String via;
+    @XmlAttribute(name=AdminConstants.A_LICENSE_EXPIRATION_DATE, required=false)
+    private final String date;
+
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private DistributionListMembershipInfo() {
-        this(null, null, null);
+    private LicenseExpirationInfo() {
+        this((String)null);
     }
 
-    public DistributionListMembershipInfo(String id, String name) {
-        this(id, name, null);
+    public LicenseExpirationInfo(String date) {
+        this.date = date;
     }
 
-    public DistributionListMembershipInfo(String id, String name, String via) {
-        this.id = id;
-        this.name = name;
-        this.via = via;
-    }
-
-    public String getId() { return id; }
-    public String getName() { return name; }
-    public String getVia() { return via; }
+    public String getDate() { return date; }
 }

@@ -49,8 +49,7 @@ public class ServerSelector {
      */
     @SuppressWarnings("unused")
     private ServerSelector() {
-        this.serverBy = null;
-        this.key = null;
+        this(null, null);
     }
 
     public ServerSelector(ServerBy by, String key) {
@@ -58,11 +57,14 @@ public class ServerSelector {
         this.key = key;
     }
 
-    public String getKey() {
-        return key;
+    public String getKey() { return key; }
+    public ServerBy getBy() { return serverBy; }
+
+    public static ServerSelector fromId(String id) {
+        return new ServerSelector(ServerBy.id, id);
     }
 
-    public ServerBy getBy() {
-        return serverBy;
+    public static ServerSelector fromName(String name) {
+        return new ServerSelector(ServerBy.name, name);
     }
 }

@@ -18,36 +18,38 @@ package com.zimbra.soap.admin.type;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class DistributionListMembershipInfo {
+public class AccountQuotaInfo {
 
-    @XmlAttribute(name=AdminConstants.A_ID, required=true)
-    private final String id;
     @XmlAttribute(name=AdminConstants.A_NAME, required=true)
     private final String name;
-    @XmlAttribute(name=AdminConstants.A_VIA, required=false)
-    private final String via;
+    @XmlAttribute(name=AdminConstants.A_ID, required=true)
+    private final String id;
+    @XmlAttribute(name=AdminConstants.A_QUOTA_USED, required=true)
+    private final long quotaUsed;
+    @XmlAttribute(name=AdminConstants.A_QUOTA_LIMIT, required=true)
+    private final long quotaLimit;
+
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private DistributionListMembershipInfo() {
-        this(null, null, null);
+    private AccountQuotaInfo() {
+        this((String) null, (String) null, -1L, -1L);
     }
 
-    public DistributionListMembershipInfo(String id, String name) {
-        this(id, name, null);
-    }
-
-    public DistributionListMembershipInfo(String id, String name, String via) {
-        this.id = id;
+    public AccountQuotaInfo(String name, String id, long quotaUsed, long quotaLimit) {
         this.name = name;
-        this.via = via;
+        this.id = id;
+        this.quotaUsed = quotaUsed;
+        this.quotaLimit = quotaLimit;
     }
 
-    public String getId() { return id; }
     public String getName() { return name; }
-    public String getVia() { return via; }
+    public String getId() { return id; }
+    public long getQuotaUsed() { return quotaUsed; }
+    public long getQuotaLimit() { return quotaLimit; }
 }

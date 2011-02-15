@@ -18,36 +18,31 @@ package com.zimbra.soap.admin.type;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.admin.type.LoggerInfo;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class DistributionListMembershipInfo {
+public class LoggerInfo {
 
-    @XmlAttribute(name=AdminConstants.A_ID, required=true)
-    private final String id;
-    @XmlAttribute(name=AdminConstants.A_NAME, required=true)
-    private final String name;
-    @XmlAttribute(name=AdminConstants.A_VIA, required=false)
-    private final String via;
+    @XmlAttribute(name=AdminConstants.A_CATEGORY, required=true)
+    private final String category;
+    @XmlAttribute(name=AdminConstants.A_LEVEL, required=false)
+    private final String level;
+
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private DistributionListMembershipInfo() {
-        this(null, null, null);
+    private LoggerInfo() {
+        this((String) null, (String) null);
     }
 
-    public DistributionListMembershipInfo(String id, String name) {
-        this(id, name, null);
+    public LoggerInfo(String category, String level) {
+        this.category = category;
+        this.level = level;
     }
 
-    public DistributionListMembershipInfo(String id, String name, String via) {
-        this.id = id;
-        this.name = name;
-        this.via = via;
-    }
-
-    public String getId() { return id; }
-    public String getName() { return name; }
-    public String getVia() { return via; }
+    public String getCategory() { return category; }
+    public String getLevel() { return level; }
 }

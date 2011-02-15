@@ -15,26 +15,10 @@
 
 package com.zimbra.soap.admin.type;
 
-import java.util.Collection;
+import com.zimbra.soap.admin.type.AdminAttrsImpl;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
+public class NetworkInformation extends AdminAttrsImpl {
 
-@XmlAccessorType(XmlAccessType.FIELD)
-public class CalendarResourceInfo extends AdminObjectInfo {
-
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    private CalendarResourceInfo() {
-        super(null, null, null);
-    }
-
-    public CalendarResourceInfo(String id, String name) {
-        super(id, name, null);
-    }
-
-    public CalendarResourceInfo(String id, String name, Collection <Attr> attrs) {
-        super(id, name, attrs);
+    public NetworkInformation() {
     }
 }

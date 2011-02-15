@@ -53,7 +53,8 @@ public class DistributionListInfo extends AdminObjectInfo {
             Collection <String> members, Collection <Attr> attrs) {
         super(id, name, attrs);
         this.members = Lists.newArrayList();
-        this.members.addAll(members);
+        if (members != null)
+            this.members.addAll(members);
     }
 
     public List<String> getMembers() {

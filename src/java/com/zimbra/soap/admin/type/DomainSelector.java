@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -48,8 +48,7 @@ public class DomainSelector {
      */
     @SuppressWarnings("unused")
     private DomainSelector() {
-        this.domainBy = null;
-        this.key = null;
+        this(null, null);
     }
 
     public DomainSelector(DomainBy by, String key) {
@@ -57,11 +56,14 @@ public class DomainSelector {
         this.key = key;
     }
 
-    public String getKey() {
-        return key;
+    public String getKey() { return key; }
+    public DomainBy getBy() { return domainBy; }
+
+    public static DomainSelector fromId(String id) {
+        return new DomainSelector(DomainBy.id, id);
     }
 
-    public DomainBy getBy() {
-        return domainBy;
+    public static DomainSelector fromName(String name) {
+        return new DomainSelector(DomainBy.name, name);
     }
 }

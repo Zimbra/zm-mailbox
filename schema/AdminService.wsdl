@@ -15,6 +15,13 @@
     <part name="parameters" element="tns:AddAccountAliasResponse"/>
   </message>
 
+  <message name="addAccountLoggerRequest">
+    <part name="parameters" element="tns:AddAccountLoggerRequest"/>
+  </message>
+  <message name="addAccountLoggerResponse">
+    <part name="parameters" element="tns:AddAccountLoggerResponse"/>
+  </message>
+
   <message name="addDistributionListAliasRequest">
     <part name="parameters" element="tns:AddDistributionListAliasRequest"/>
   </message>
@@ -41,6 +48,13 @@
   </message>
   <message name="checkAuthConfigResponse">
     <part name="parameters" element="tns:CheckAuthConfigResponse"/>
+  </message>
+
+  <message name="checkDirectoryRequest">
+    <part name="parameters" element="tns:CheckDirectoryRequest"/>
+  </message>
+  <message name="checkDirectoryResponse">
+    <part name="parameters" element="tns:CheckDirectoryResponse"/>
   </message>
 
   <message name="checkDomainMXRecordRequest">
@@ -99,6 +113,13 @@
     <part name="parameters" element="tns:CreateAccountResponse"/>
   </message>
 
+  <message name="createCalendarResourceRequest">
+    <part name="parameters" element="tns:CreateCalendarResourceRequest"/>
+  </message>
+  <message name="createCalendarResourceResponse">
+    <part name="parameters" element="tns:CreateCalendarResourceResponse"/>
+  </message>
+
   <message name="createCosRequest">
     <part name="parameters" element="tns:CreateCosRequest"/>
   </message>
@@ -146,6 +167,13 @@
   </message>
   <message name="deleteAccountResponse">
     <part name="parameters" element="tns:DeleteAccountResponse"/>
+  </message>
+
+  <message name="deleteCalendarResourceRequest">
+    <part name="parameters" element="tns:DeleteCalendarResourceRequest"/>
+  </message>
+  <message name="deleteCalendarResourceResponse">
+    <part name="parameters" element="tns:DeleteCalendarResourceResponse"/>
   </message>
 
   <message name="deleteCosRequest">
@@ -204,6 +232,13 @@
     <part name="parameters" element="tns:GetAccountInfoResponse"/>
   </message>
 
+  <message name="getAccountLoggersRequest">
+    <part name="parameters" element="tns:GetAccountLoggersRequest"/>
+  </message>
+  <message name="getAccountLoggersResponse">
+    <part name="parameters" element="tns:GetAccountLoggersResponse"/>
+  </message>
+
   <message name="getAccountMembershipRequest">
     <part name="parameters" element="tns:GetAccountMembershipRequest"/>
   </message>
@@ -218,6 +253,13 @@
     <part name="parameters" element="tns:GetAccountResponse"/>
   </message>
 
+  <message name="getAllAccountLoggersRequest">
+    <part name="parameters" element="tns:GetAllAccountLoggersRequest"/>
+  </message>
+  <message name="getAllAccountLoggersResponse">
+    <part name="parameters" element="tns:GetAllAccountLoggersResponse"/>
+  </message>
+
   <message name="getAllAccountsRequest">
     <part name="parameters" element="tns:GetAllAccountsRequest"/>
   </message>
@@ -230,6 +272,13 @@
   </message>
   <message name="getAllAdminAccountsResponse">
     <part name="parameters" element="tns:GetAllAdminAccountsResponse"/>
+  </message>
+
+  <message name="getAllCalendarResourcesRequest">
+    <part name="parameters" element="tns:GetAllCalendarResourcesRequest"/>
+  </message>
+  <message name="getAllCalendarResourcesResponse">
+    <part name="parameters" element="tns:GetAllCalendarResourcesResponse"/>
   </message>
 
   <message name="getAllConfigRequest">
@@ -274,6 +323,13 @@
     <part name="parameters" element="tns:GetAllMailboxesResponse"/>
   </message>
 
+  <message name="getAllRightsRequest">
+    <part name="parameters" element="tns:GetAllRightsRequest"/>
+  </message>
+  <message name="getAllRightsResponse">
+    <part name="parameters" element="tns:GetAllRightsResponse"/>
+  </message>
+
   <message name="getAllServersRequest">
     <part name="parameters" element="tns:GetAllServersRequest"/>
   </message>
@@ -286,6 +342,13 @@
   </message>
   <message name="getAllVolumesResponse">
     <part name="parameters" element="tns:GetAllVolumesResponse"/>
+  </message>
+
+  <message name="getCalendarResourceRequest">
+    <part name="parameters" element="tns:GetCalendarResourceRequest"/>
+  </message>
+  <message name="getCalendarResourceResponse">
+    <part name="parameters" element="tns:GetCalendarResourceResponse"/>
   </message>
 
   <message name="getConfigRequest">
@@ -337,6 +400,13 @@
     <part name="parameters" element="tns:GetDomainResponse"/>
   </message>
 
+  <message name="getLicenseInfoRequest">
+    <part name="parameters" element="tns:GetLicenseInfoRequest"/>
+  </message>
+  <message name="getLicenseInfoResponse">
+    <part name="parameters" element="tns:GetLicenseInfoResponse"/>
+  </message>
+
   <message name="getMailboxRequest">
     <part name="parameters" element="tns:GetMailboxRequest"/>
   </message>
@@ -349,6 +419,27 @@
   </message>
   <message name="getMailboxStatsResponse">
     <part name="parameters" element="tns:GetMailboxStatsResponse"/>
+  </message>
+
+  <message name="getPublishedShareInfoRequest">
+    <part name="parameters" element="tns:GetPublishedShareInfoRequest"/>
+  </message>
+  <message name="getPublishedShareInfoResponse">
+    <part name="parameters" element="tns:GetPublishedShareInfoResponse"/>
+  </message>
+
+  <message name="getQuotaUsageRequest">
+    <part name="parameters" element="tns:GetQuotaUsageRequest"/>
+  </message>
+  <message name="getQuotaUsageResponse">
+    <part name="parameters" element="tns:GetQuotaUsageResponse"/>
+  </message>
+
+  <message name="getServerNIfsRequest">
+    <part name="parameters" element="tns:GetServerNIfsRequest"/>
+  </message>
+  <message name="getServerNIfsResponse">
+    <part name="parameters" element="tns:GetServerNIfsResponse"/>
   </message>
 
   <message name="getServerRequest">
@@ -372,6 +463,20 @@
     <part name="parameters" element="tns:GetServiceStatusResponse"/>
   </message>
 
+  <message name="getShareInfoRequest">
+    <part name="parameters" element="tns:GetShareInfoRequest"/>
+  </message>
+  <message name="getShareInfoResponse">
+    <part name="parameters" element="tns:GetShareInfoResponse"/>
+  </message>
+
+  <message name="getVersionInfoRequest">
+    <part name="parameters" element="tns:GetVersionInfoRequest"/>
+  </message>
+  <message name="getVersionInfoResponse">
+    <part name="parameters" element="tns:GetVersionInfoResponse"/>
+  </message>
+
   <message name="getVolumeRequest">
     <part name="parameters" element="tns:GetVolumeRequest"/>
   </message>
@@ -384,6 +489,13 @@
   </message>
   <message name="modifyAccountResponse">
     <part name="parameters" element="tns:ModifyAccountResponse"/>
+  </message>
+
+  <message name="modifyCalendarResourceRequest">
+    <part name="parameters" element="tns:ModifyCalendarResourceRequest"/>
+  </message>
+  <message name="modifyCalendarResourceResponse">
+    <part name="parameters" element="tns:ModifyCalendarResourceResponse"/>
   </message>
 
   <message name="modifyConfigRequest">
@@ -442,11 +554,25 @@
     <part name="parameters" element="tns:PingResponse"/>
   </message>
 
+  <message name="publishShareInfoRequest">
+    <part name="parameters" element="tns:PublishShareInfoRequest"/>
+  </message>
+  <message name="publishShareInfoResponse">
+    <part name="parameters" element="tns:PublishShareInfoResponse"/>
+  </message>
+
   <message name="purgeMessagesRequest">
     <part name="parameters" element="tns:PurgeMessagesRequest"/>
   </message>
   <message name="purgeMessagesResponse">
     <part name="parameters" element="tns:PurgeMessagesResponse"/>
+  </message>
+
+  <message name="reIndexRequest">
+    <part name="parameters" element="tns:ReIndexRequest"/>
+  </message>
+  <message name="reIndexResponse">
+    <part name="parameters" element="tns:ReIndexResponse"/>
   </message>
 
   <message name="recalculateMailboxCountsRequest">
@@ -470,6 +596,13 @@
     <part name="parameters" element="tns:RemoveAccountAliasResponse"/>
   </message>
 
+  <message name="removeAccountLoggerRequest">
+    <part name="parameters" element="tns:RemoveAccountLoggerRequest"/>
+  </message>
+  <message name="removeAccountLoggerResponse">
+    <part name="parameters" element="tns:RemoveAccountLoggerResponse"/>
+  </message>
+
   <message name="removeDistributionListAliasRequest">
     <part name="parameters" element="tns:RemoveDistributionListAliasRequest"/>
   </message>
@@ -491,6 +624,13 @@
     <part name="parameters" element="tns:RenameAccountResponse"/>
   </message>
 
+  <message name="renameCalendarResourceRequest">
+    <part name="parameters" element="tns:RenameCalendarResourceRequest"/>
+  </message>
+  <message name="renameCalendarResourceResponse">
+    <part name="parameters" element="tns:RenameCalendarResourceResponse"/>
+  </message>
+
   <message name="renameCosRequest">
     <part name="parameters" element="tns:RenameCosRequest"/>
   </message>
@@ -503,6 +643,13 @@
   </message>
   <message name="renameDistributionListResponse">
     <part name="parameters" element="tns:RenameDistributionListResponse"/>
+  </message>
+
+  <message name="searchCalendarResourcesRequest">
+    <part name="parameters" element="tns:SearchCalendarResourcesRequest"/>
+  </message>
+  <message name="searchCalendarResourcesResponse">
+    <part name="parameters" element="tns:SearchCalendarResourcesResponse"/>
   </message>
 
   <message name="searchDirectoryRequest">
@@ -530,10 +677,21 @@
     <part name="context" element="zimbra:context"/>
   </message>
 
+  <message name="verifyIndexRequest">
+    <part name="parameters" element="tns:VerifyIndexRequest"/>
+  </message>
+  <message name="verifyIndexResponse">
+    <part name="parameters" element="tns:VerifyIndexResponse"/>
+  </message>
+
   <portType name="AdminService">
     <operation name="addAccountAliasRequest">
       <input message="tns:addAccountAliasRequest"/>
       <output message="tns:addAccountAliasResponse"/>
+    </operation>
+    <operation name="addAccountLoggerRequest">
+      <input message="tns:addAccountLoggerRequest"/>
+      <output message="tns:addAccountLoggerResponse"/>
     </operation>
     <operation name="addDistributionListAliasRequest">
       <input message="tns:addDistributionListAliasRequest"/>
@@ -550,6 +708,10 @@
     <operation name="checkAuthConfigRequest">
       <input message="tns:checkAuthConfigRequest"/>
       <output message="tns:checkAuthConfigResponse"/>
+    </operation>
+    <operation name="checkDirectoryRequest">
+      <input message="tns:checkDirectoryRequest"/>
+      <output message="tns:checkDirectoryResponse"/>
     </operation>
     <operation name="checkDomainMXRecordRequest">
       <input message="tns:checkDomainMXRecordRequest"/>
@@ -583,6 +745,10 @@
       <input message="tns:createAccountRequest"/>
       <output message="tns:createAccountResponse"/>
     </operation>
+    <operation name="createCalendarResourceRequest">
+      <input message="tns:createCalendarResourceRequest"/>
+      <output message="tns:createCalendarResourceResponse"/>
+    </operation>
     <operation name="createCosRequest">
       <input message="tns:createCosRequest"/>
       <output message="tns:createCosResponse"/>
@@ -610,6 +776,10 @@
     <operation name="deleteAccountRequest">
       <input message="tns:deleteAccountRequest"/>
       <output message="tns:deleteAccountResponse"/>
+    </operation>
+    <operation name="deleteCalendarResourceRequest">
+      <input message="tns:deleteCalendarResourceRequest"/>
+      <output message="tns:deleteCalendarResourceResponse"/>
     </operation>
     <operation name="deleteCosRequest">
       <input message="tns:deleteCosRequest"/>
@@ -643,6 +813,10 @@
       <input message="tns:getAccountInfoRequest"/>
       <output message="tns:getAccountInfoResponse"/>
     </operation>
+    <operation name="getAccountLoggersRequest">
+      <input message="tns:getAccountLoggersRequest"/>
+      <output message="tns:getAccountLoggersResponse"/>
+    </operation>
     <operation name="getAccountMembershipRequest">
       <input message="tns:getAccountMembershipRequest"/>
       <output message="tns:getAccountMembershipResponse"/>
@@ -651,6 +825,10 @@
       <input message="tns:getAccountRequest"/>
       <output message="tns:getAccountResponse"/>
     </operation>
+    <operation name="getAllAccountLoggersRequest">
+      <input message="tns:getAllAccountLoggersRequest"/>
+      <output message="tns:getAllAccountLoggersResponse"/>
+    </operation>
     <operation name="getAllAccountsRequest">
       <input message="tns:getAllAccountsRequest"/>
       <output message="tns:getAllAccountsResponse"/>
@@ -658,6 +836,10 @@
     <operation name="getAllAdminAccountsRequest">
       <input message="tns:getAllAdminAccountsRequest"/>
       <output message="tns:getAllAdminAccountsResponse"/>
+    </operation>
+    <operation name="getAllCalendarResourcesRequest">
+      <input message="tns:getAllCalendarResourcesRequest"/>
+      <output message="tns:getAllCalendarResourcesResponse"/>
     </operation>
     <operation name="getAllConfigRequest">
       <input message="tns:getAllConfigRequest"/>
@@ -683,6 +865,10 @@
       <input message="tns:getAllMailboxesRequest"/>
       <output message="tns:getAllMailboxesResponse"/>
     </operation>
+    <operation name="getAllRightsRequest">
+      <input message="tns:getAllRightsRequest"/>
+      <output message="tns:getAllRightsResponse"/>
+    </operation>
     <operation name="getAllServersRequest">
       <input message="tns:getAllServersRequest"/>
       <output message="tns:getAllServersResponse"/>
@@ -690,6 +876,10 @@
     <operation name="getAllVolumesRequest">
       <input message="tns:getAllVolumesRequest"/>
       <output message="tns:getAllVolumesResponse"/>
+    </operation>
+    <operation name="getCalendarResourceRequest">
+      <input message="tns:getCalendarResourceRequest"/>
+      <output message="tns:getCalendarResourceResponse"/>
     </operation>
     <operation name="getConfigRequest">
       <input message="tns:getConfigRequest"/>
@@ -719,6 +909,10 @@
       <input message="tns:getDomainRequest"/>
       <output message="tns:getDomainResponse"/>
     </operation>
+    <operation name="getLicenseInfoRequest">
+      <input message="tns:getLicenseInfoRequest"/>
+      <output message="tns:getLicenseInfoResponse"/>
+    </operation>
     <operation name="getMailboxRequest">
       <input message="tns:getMailboxRequest"/>
       <output message="tns:getMailboxResponse"/>
@@ -726,6 +920,18 @@
     <operation name="getMailboxStatsRequest">
       <input message="tns:getMailboxStatsRequest"/>
       <output message="tns:getMailboxStatsResponse"/>
+    </operation>
+    <operation name="getPublishedShareInfoRequest">
+      <input message="tns:getPublishedShareInfoRequest"/>
+      <output message="tns:getPublishedShareInfoResponse"/>
+    </operation>
+    <operation name="getQuotaUsageRequest">
+      <input message="tns:getQuotaUsageRequest"/>
+      <output message="tns:getQuotaUsageResponse"/>
+    </operation>
+    <operation name="getServerNIfsRequest">
+      <input message="tns:getServerNIfsRequest"/>
+      <output message="tns:getServerNIfsResponse"/>
     </operation>
     <operation name="getServerRequest">
       <input message="tns:getServerRequest"/>
@@ -739,6 +945,14 @@
       <input message="tns:getServiceStatusRequest"/>
       <output message="tns:getServiceStatusResponse"/>
     </operation>
+    <operation name="getShareInfoRequest">
+      <input message="tns:getShareInfoRequest"/>
+      <output message="tns:getShareInfoResponse"/>
+    </operation>
+    <operation name="getVersionInfoRequest">
+      <input message="tns:getVersionInfoRequest"/>
+      <output message="tns:getVersionInfoResponse"/>
+    </operation>
     <operation name="getVolumeRequest">
       <input message="tns:getVolumeRequest"/>
       <output message="tns:getVolumeResponse"/>
@@ -746,6 +960,10 @@
     <operation name="modifyAccountRequest">
       <input message="tns:modifyAccountRequest"/>
       <output message="tns:modifyAccountResponse"/>
+    </operation>
+    <operation name="modifyCalendarResourceRequest">
+      <input message="tns:modifyCalendarResourceRequest"/>
+      <output message="tns:modifyCalendarResourceResponse"/>
     </operation>
     <operation name="modifyConfigRequest">
       <input message="tns:modifyConfigRequest"/>
@@ -779,9 +997,17 @@
       <input message="tns:pingRequest"/>
       <output message="tns:pingResponse"/>
     </operation>
+    <operation name="publishShareInfoRequest">
+      <input message="tns:publishShareInfoRequest"/>
+      <output message="tns:publishShareInfoResponse"/>
+    </operation>
     <operation name="purgeMessagesRequest">
       <input message="tns:purgeMessagesRequest"/>
       <output message="tns:purgeMessagesResponse"/>
+    </operation>
+    <operation name="reIndexRequest">
+      <input message="tns:reIndexRequest"/>
+      <output message="tns:reIndexResponse"/>
     </operation>
     <operation name="recalculateMailboxCountsRequest">
       <input message="tns:recalculateMailboxCountsRequest"/>
@@ -795,6 +1021,10 @@
       <input message="tns:removeAccountAliasRequest"/>
       <output message="tns:removeAccountAliasResponse"/>
     </operation>
+    <operation name="removeAccountLoggerRequest">
+      <input message="tns:removeAccountLoggerRequest"/>
+      <output message="tns:removeAccountLoggerResponse"/>
+    </operation>
     <operation name="removeDistributionListAliasRequest">
       <input message="tns:removeDistributionListAliasRequest"/>
       <output message="tns:removeDistributionListAliasResponse"/>
@@ -807,6 +1037,10 @@
       <input message="tns:renameAccountRequest"/>
       <output message="tns:renameAccountResponse"/>
     </operation>
+    <operation name="renameCalendarResourceRequest">
+      <input message="tns:renameCalendarResourceRequest"/>
+      <output message="tns:renameCalendarResourceResponse"/>
+    </operation>
     <operation name="renameCosRequest">
       <input message="tns:renameCosRequest"/>
       <output message="tns:renameCosResponse"/>
@@ -814,6 +1048,10 @@
     <operation name="renameDistributionListRequest">
       <input message="tns:renameDistributionListRequest"/>
       <output message="tns:renameDistributionListResponse"/>
+    </operation>
+    <operation name="searchCalendarResourcesRequest">
+      <input message="tns:searchCalendarResourcesRequest"/>
+      <output message="tns:searchCalendarResourcesResponse"/>
     </operation>
     <operation name="searchDirectoryRequest">
       <input message="tns:searchDirectoryRequest"/>
@@ -827,6 +1065,10 @@
       <input message="tns:setPasswordRequest"/>
       <output message="tns:setPasswordResponse"/>
     </operation>
+    <operation name="verifyIndexRequest">
+      <input message="tns:verifyIndexRequest"/>
+      <output message="tns:verifyIndexResponse"/>
+    </operation>
   </portType>
 
   <binding name="AdminServicePortBinding" type="tns:AdminService">
@@ -834,6 +1076,17 @@
 
     <operation name="addAccountAliasRequest">
       <soap:operation soapAction="urn:zimbraAdmin/AddAccountAlias" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="addAccountLoggerRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/AddAccountLogger" style="document"/>
       <input>
         <soap:body use="literal"/>
         <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
@@ -878,6 +1131,17 @@
 
     <operation name="checkAuthConfigRequest">
       <soap:operation soapAction="urn:zimbraAdmin/CheckAuthConfig" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="checkDirectoryRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/CheckDirectory" style="document"/>
       <input>
         <soap:body use="literal"/>
         <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
@@ -975,6 +1239,17 @@
       </output>
     </operation>
 
+    <operation name="createCalendarResourceRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/CreateCalendarResource" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="createCosRequest">
       <soap:operation soapAction="urn:zimbraAdmin/CreateCos" style="document"/>
       <input>
@@ -1043,6 +1318,17 @@
 
     <operation name="deleteAccountRequest">
       <soap:operation soapAction="urn:zimbraAdmin/DeleteAccount" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="deleteCalendarResourceRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/DeleteCalendarResource" style="document"/>
       <input>
         <soap:body use="literal"/>
         <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
@@ -1140,6 +1426,17 @@
       </output>
     </operation>
 
+    <operation name="getAccountLoggersRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetAccountLoggers" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="getAccountMembershipRequest">
       <soap:operation soapAction="urn:zimbraAdmin/GetAccountMembership" style="document"/>
       <input>
@@ -1162,6 +1459,17 @@
       </output>
     </operation>
 
+    <operation name="getAllAccountLoggersRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetAllAccountLoggers" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="getAllAccountsRequest">
       <soap:operation soapAction="urn:zimbraAdmin/GetAllAccounts" style="document"/>
       <input>
@@ -1175,6 +1483,17 @@
 
     <operation name="getAllAdminAccountsRequest">
       <soap:operation soapAction="urn:zimbraAdmin/GetAllAdminAccounts" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="getAllCalendarResourcesRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetAllCalendarResources" style="document"/>
       <input>
         <soap:body use="literal"/>
         <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
@@ -1250,6 +1569,17 @@
       </output>
     </operation>
 
+    <operation name="getAllRightsRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetAllRights" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="getAllServersRequest">
       <soap:operation soapAction="urn:zimbraAdmin/GetAllServers" style="document"/>
       <input>
@@ -1263,6 +1593,17 @@
 
     <operation name="getAllVolumesRequest">
       <soap:operation soapAction="urn:zimbraAdmin/GetAllVolumes" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="getCalendarResourceRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetCalendarResource" style="document"/>
       <input>
         <soap:body use="literal"/>
         <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
@@ -1349,6 +1690,17 @@
       </output>
     </operation>
 
+    <operation name="getLicenseInfoRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetLicenseInfo" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="getMailboxRequest">
       <soap:operation soapAction="urn:zimbraAdmin/GetMailbox" style="document"/>
       <input>
@@ -1362,6 +1714,39 @@
 
     <operation name="getMailboxStatsRequest">
       <soap:operation soapAction="urn:zimbraAdmin/GetMailboxStats" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="getPublishedShareInfoRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetPublishedShareInfo" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="getQuotaUsageRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetQuotaUsage" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="getServerNIfsRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetServerNIfs" style="document"/>
       <input>
         <soap:body use="literal"/>
         <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
@@ -1404,6 +1789,28 @@
       </output>
     </operation>
 
+    <operation name="getShareInfoRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetShareInfo" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="getVersionInfoRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetVersionInfo" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="getVolumeRequest">
       <soap:operation soapAction="urn:zimbraAdmin/GetVolume" style="document"/>
       <input>
@@ -1417,6 +1824,17 @@
 
     <operation name="modifyAccountRequest">
       <soap:operation soapAction="urn:zimbraAdmin/ModifyAccount" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="modifyCalendarResourceRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/ModifyCalendarResource" style="document"/>
       <input>
         <soap:body use="literal"/>
         <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
@@ -1514,8 +1932,30 @@
       </output>
     </operation>
 
+    <operation name="publishShareInfoRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/PublishShareInfo" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="purgeMessagesRequest">
       <soap:operation soapAction="urn:zimbraAdmin/PurgeMessages" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="reIndexRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/ReIndex" style="document"/>
       <input>
         <soap:body use="literal"/>
         <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
@@ -1558,6 +1998,17 @@
       </output>
     </operation>
 
+    <operation name="removeAccountLoggerRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/RemoveAccountLogger" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="removeDistributionListAliasRequest">
       <soap:operation soapAction="urn:zimbraAdmin/RemoveDistributionListAlias" style="document"/>
       <input>
@@ -1591,6 +2042,17 @@
       </output>
     </operation>
 
+    <operation name="renameCalendarResourceRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/RenameCalendarResource" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="renameCosRequest">
       <soap:operation soapAction="urn:zimbraAdmin/RenameCos" style="document"/>
       <input>
@@ -1604,6 +2066,17 @@
 
     <operation name="renameDistributionListRequest">
       <soap:operation soapAction="urn:zimbraAdmin/RenameDistributionList" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="searchCalendarResourcesRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/SearchCalendarResources" style="document"/>
       <input>
         <soap:body use="literal"/>
         <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
@@ -1637,6 +2110,17 @@
 
     <operation name="setPasswordRequest">
       <soap:operation soapAction="urn:zimbraAdmin/SetPassword" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="verifyIndexRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/VerifyIndex" style="document"/>
       <input>
         <soap:body use="literal"/>
         <soap:header message="tns:soapHdrContext" part="context" use="literal"/>

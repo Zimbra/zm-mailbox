@@ -13,28 +13,33 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
-
-import java.util.Collection;
+package com.zimbra.soap.admin.message;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.admin.type.VersionInfo;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class CalendarResourceInfo extends AdminObjectInfo {
+@XmlRootElement(name=AdminConstants.E_GET_VERSION_INFO_RESPONSE)
+public class GetVersionInfoResponse {
+
+    @XmlElement(name=AdminConstants.A_VERSION_INFO_INFO, required=true)
+    private final VersionInfo info;
 
     /**
      * no-argument constructor wanted by JAXB
      */
-    private CalendarResourceInfo() {
-        super(null, null, null);
+     @SuppressWarnings("unused")
+    private GetVersionInfoResponse() {
+        this((VersionInfo)null);
     }
 
-    public CalendarResourceInfo(String id, String name) {
-        super(id, name, null);
+    public GetVersionInfoResponse(VersionInfo info) {
+        this.info = info;
     }
-
-    public CalendarResourceInfo(String id, String name, Collection <Attr> attrs) {
-        super(id, name, attrs);
-    }
+    public VersionInfo getInfo() { return info; }
 }

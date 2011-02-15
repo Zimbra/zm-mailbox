@@ -25,54 +25,41 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class DistributionListSelector {
-    @XmlEnum
-    public enum DistributionListBy {
-        // case must match protocol
-        id, name;
+public class CalendarResourceSelector {
 
-        public static DistributionListBy fromString(String s) throws ServiceException {
+    @XmlEnum
+    public enum CalendarResourceBy {
+        // case must match protocol
+        id, foreignPrincipal, name;
+        
+        public static CalendarResourceBy fromString(String s) throws ServiceException {
             try {
-                return DistributionListBy.valueOf(s);
+                return CalendarResourceBy.valueOf(s);
             } catch (IllegalArgumentException e) {
                 throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
             }
         }
     }
 
-    @XmlValue
-    private final String key;
-
+    @XmlValue private final String key;
     @XmlAttribute(name=AdminConstants.A_BY)
-    private final DistributionListBy dlBy;
+    private final CalendarResourceBy calResourceBy;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private DistributionListSelector() {
-        this.dlBy = null;
+    private CalendarResourceSelector() {
+        this.calResourceBy = null;
         this.key = null;
     }
 
-    public DistributionListSelector(DistributionListBy by, String key) {
-        this.dlBy = by;
+    public CalendarResourceSelector(CalendarResourceBy by, String key) {
+        this.calResourceBy = by;
         this.key = key;
     }
 
-    public String getKey() {
-        return key;
-    }
+    public String getKey() { return key; }
 
-    public DistributionListBy getBy() {
-        return dlBy;
-    }
-
-    public static DistributionListSelector fromId(String id) {
-        return new DistributionListSelector(DistributionListBy.id, id);
-    }
-
-    public static DistributionListSelector fromName(String name) {
-        return new DistributionListSelector(DistributionListBy.name, name);
-    }
+    public CalendarResourceBy getBy() { return calResourceBy; }
 }

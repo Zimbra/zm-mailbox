@@ -13,28 +13,38 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
-
-import java.util.Collection;
+package com.zimbra.soap.admin.message;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.admin.type.ServerSelector;
+
+/**
+ * Get Network Interface information for a server
+ */
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class CalendarResourceInfo extends AdminObjectInfo {
+@XmlRootElement(name=AdminConstants.E_GET_SERVER_NIFS_REQUEST)
+public class GetServerNIfsRequest {
+
+    @XmlElement(name=AdminConstants.E_SERVER, required=true)
+    private final ServerSelector server;
 
     /**
      * no-argument constructor wanted by JAXB
      */
-    private CalendarResourceInfo() {
-        super(null, null, null);
+    @SuppressWarnings("unused")
+    private GetServerNIfsRequest() {
+        this((ServerSelector) null);
     }
 
-    public CalendarResourceInfo(String id, String name) {
-        super(id, name, null);
+    public GetServerNIfsRequest(ServerSelector server) {
+        this.server = server;
     }
 
-    public CalendarResourceInfo(String id, String name, Collection <Attr> attrs) {
-        super(id, name, attrs);
-    }
+    public ServerSelector getServer() { return server; }
 }

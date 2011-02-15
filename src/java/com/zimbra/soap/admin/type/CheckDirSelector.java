@@ -18,36 +18,34 @@ package com.zimbra.soap.admin.type;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class DistributionListMembershipInfo {
+public class CheckDirSelector {
 
-    @XmlAttribute(name=AdminConstants.A_ID, required=true)
-    private final String id;
-    @XmlAttribute(name=AdminConstants.A_NAME, required=true)
-    private final String name;
-    @XmlAttribute(name=AdminConstants.A_VIA, required=false)
-    private final String via;
+    @XmlAttribute(name=AdminConstants.A_PATH, required=true)
+    private final String path;
+    @XmlAttribute(name=AdminConstants.A_CREATE, required=false)
+    private final Boolean create;
+
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private DistributionListMembershipInfo() {
-        this(null, null, null);
+    private CheckDirSelector() {
+        this((String)null, (Boolean) null);
     }
 
-    public DistributionListMembershipInfo(String id, String name) {
-        this(id, name, null);
+    public CheckDirSelector(String path) {
+        this(path, (Boolean) null);
     }
 
-    public DistributionListMembershipInfo(String id, String name, String via) {
-        this.id = id;
-        this.name = name;
-        this.via = via;
+    public CheckDirSelector(String path, Boolean create) {
+        this.path = path;
+        this.create = create;
     }
 
-    public String getId() { return id; }
-    public String getName() { return name; }
-    public String getVia() { return via; }
+    public String getPath() { return path; }
+    public Boolean isCreate() { return create; }
 }
