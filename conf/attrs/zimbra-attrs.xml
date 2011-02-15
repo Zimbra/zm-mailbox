@@ -5401,6 +5401,9 @@ TODO: delete them permerntly from here
   <desc>Can be set to either webdav for Exchange 2007 or older, or ews for 2010 and newer</desc>
 </attr>
 
+<attr id="1175" name="zimbraMailboxMoveTempDir" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="7.0.1">
+  <globalConfigValue>/opt/zimbra/backup/tmp/mboxmove</globalConfigValue>
+  <desc>temp directory for mailbox move</desc>
+</attr>
 
 </attrs>
-

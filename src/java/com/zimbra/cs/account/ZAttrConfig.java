@@ -41,7 +41,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110211-1534 */
+    /* build: unknown unknown unknown unknown */
 
     /**
      * RFC2256: descriptive information
@@ -15881,6 +15881,78 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetMailboxMoveSkipSearchIndex(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailboxMoveSkipSearchIndex, "");
+        return attrs;
+    }
+
+    /**
+     * temp directory for mailbox move
+     *
+     * @return zimbraMailboxMoveTempDir, or "/opt/zimbra/backup/tmp/mboxmove" if unset
+     *
+     * @since ZCS 7.0.1
+     */
+    @ZAttr(id=1175)
+    public String getMailboxMoveTempDir() {
+        return getAttr(Provisioning.A_zimbraMailboxMoveTempDir, "/opt/zimbra/backup/tmp/mboxmove");
+    }
+
+    /**
+     * temp directory for mailbox move
+     *
+     * @param zimbraMailboxMoveTempDir new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.1
+     */
+    @ZAttr(id=1175)
+    public void setMailboxMoveTempDir(String zimbraMailboxMoveTempDir) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxMoveTempDir, zimbraMailboxMoveTempDir);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * temp directory for mailbox move
+     *
+     * @param zimbraMailboxMoveTempDir new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.1
+     */
+    @ZAttr(id=1175)
+    public Map<String,Object> setMailboxMoveTempDir(String zimbraMailboxMoveTempDir, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxMoveTempDir, zimbraMailboxMoveTempDir);
+        return attrs;
+    }
+
+    /**
+     * temp directory for mailbox move
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.1
+     */
+    @ZAttr(id=1175)
+    public void unsetMailboxMoveTempDir() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxMoveTempDir, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * temp directory for mailbox move
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.1
+     */
+    @ZAttr(id=1175)
+    public Map<String,Object> unsetMailboxMoveTempDir(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxMoveTempDir, "");
         return attrs;
     }
 

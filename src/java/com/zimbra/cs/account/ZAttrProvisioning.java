@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110211-1534 */
+    /* build: unknown unknown unknown unknown */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -4591,6 +4591,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1006)
     public static final String A_zimbraMailboxMoveSkipSearchIndex = "zimbraMailboxMoveSkipSearchIndex";
+
+    /**
+     * temp directory for mailbox move
+     *
+     * @since ZCS 7.0.1
+     */
+    @ZAttr(id=1175)
+    public static final String A_zimbraMailboxMoveTempDir = "zimbraMailboxMoveTempDir";
 
     /**
      * RFC822 email address for senders outbound messages
