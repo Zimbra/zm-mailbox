@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -12,13 +12,9 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-
-/*
- * Created on Sep 23, 2004
- *
- */
 package com.zimbra.cs.account;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -49,8 +45,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
+ * @since Sep 23, 2004
  * @author schemers
- *
  */
 public abstract class Provisioning extends ZAttrProvisioning {
 
@@ -281,9 +277,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
         return sProvisioning;
     }
 
+    @VisibleForTesting
     public synchronized static void setInstance(Provisioning prov) {
-        if (sProvisioning != null)
-            ZimbraLog.account.warn("duplicate call to Provisioning.setInstance()");
         sProvisioning = prov;
     }
 
@@ -566,7 +561,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract boolean healthCheck() throws ServiceException;
 
     public abstract Config getConfig() throws ServiceException;
-    
+
     public Config getConfig(String attr) throws ServiceException {
         return getConfig();
     }
@@ -681,7 +676,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public Account getAccountByForeignName(String foreignName, String application, Domain domain) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
-    
+
     /**
      * Looks up an account by the specified key.
      *
@@ -814,7 +809,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public static enum GalSearchType {
         all, account, resource, group;
-        
+
         public static GalSearchType fromString(String s) throws ServiceException {
             try {
                 return GalSearchType.valueOf(s);
@@ -867,27 +862,27 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public static class SetPasswordResult {
         String msg;
-        
+
         public SetPasswordResult() {
         }
-        
+
         public SetPasswordResult(String msg) {
             setMessage(msg);
         }
-        
+
         public boolean hasMessage() {
             return msg != null;
         }
-        
+
         public void setMessage(String msg) {
             this.msg = msg;
         }
-        
+
         public String getMessage() {
             return msg;
         }
     }
-    
+
     public abstract SetPasswordResult setPassword(Account acct, String newPassword) throws ServiceException;
 
     public abstract void checkPasswordStrength(Account acct, String password) throws ServiceException;
@@ -1001,7 +996,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public Domain getDomainByVirtualHostname(String host) throws ServiceException { return get(DomainBy.virtualHostname, host); }
     public Domain getDomainByKrb5Realm(String realm) throws ServiceException { return get(DomainBy.krb5Realm, realm); }
     public Domain getDomainByForeignName(String realm) throws ServiceException { return get(DomainBy.foreignName, realm); }
-    
+
 
     public abstract List<Domain> getAllDomains()  throws ServiceException;
 
@@ -1122,7 +1117,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract void removeAlias(DistributionList dl, String alias) throws ServiceException;
 
     public abstract void renameDistributionList(String zimbraId, String newName) throws ServiceException;
-    
+
     public boolean isDistributionList(String addr) {
         return false;
     }
@@ -2125,7 +2120,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
         static final String RENAME_ACCOUNT = "renameAccount";
         static final String RENAME_ACCOUNT_CHECK_DOMAIN_COS_AND_FEATURE =
             "renameAccountCheckDomainCosAndFeature";
-        
+
         void validate(Provisioning prov, String action, Object... args) throws ServiceException;
         void refresh();
     }

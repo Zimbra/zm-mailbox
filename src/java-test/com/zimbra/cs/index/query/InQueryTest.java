@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -35,26 +35,27 @@ public class InQueryTest {
 
     @BeforeClass
     public static void init() throws Exception {
-        Provisioning.setInstance(new MockProvisioning());
-        Provisioning.getInstance().createAccount("zero@zimbra.com", "secret",
-                Collections.singletonMap(Provisioning.A_zimbraId, (Object) "0"));
+        MockProvisioning prov = new MockProvisioning();
+        prov.createAccount("zero@zimbra.com", "secret",
+                Collections.<String, Object>singletonMap(Provisioning.A_zimbraId, "0-0-0"));
+        Provisioning.setInstance(prov);
     }
 
     @Test
     public void inAnyFolder() throws Exception {
-        Mailbox mbox = new MockMailboxManager().getMailboxByAccountId("0");
+        Mailbox mbox = new MockMailboxManager().getMailboxByAccountId("0-0-0");
 
-        Query query = InQuery.create(mbox, new ItemId("0", 1), null, true);
+        Query query = InQuery.create(mbox, new ItemId("0-0-0", 1), null, true);
         Assert.assertEquals("Q(UNDER,ANY_FOLDER)", query.toString());
 
-        query = InQuery.create(mbox, new ItemId("0", 1), null, false);
+        query = InQuery.create(mbox, new ItemId("0-0-0", 1), null, false);
         Assert.assertEquals("Q(IN,1)", query.toString());
 
-        query = InQuery.create(mbox, new ItemId("1", 1), null, true);
-        Assert.assertEquals("Q(UNDER,1:1)", query.toString());
+        query = InQuery.create(mbox, new ItemId("1-1-1", 1), null, true);
+        Assert.assertEquals("Q(UNDER,1-1-1:1)", query.toString());
 
-        query = InQuery.create(mbox, new ItemId("1", 1), null, false);
-        Assert.assertEquals("Q(IN,1:1)", query.toString());
+        query = InQuery.create(mbox, new ItemId("1-1-1", 1), null, false);
+        Assert.assertEquals("Q(IN,1-1-1:1)", query.toString());
     }
 
 }
