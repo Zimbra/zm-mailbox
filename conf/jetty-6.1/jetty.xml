@@ -84,8 +84,8 @@
         <New id="admin" class="org.mortbay.jetty.security.SslSelectChannelConnector">
           <Set name="Port">7071</Set>
           <Set name="useDirectBuffers">false</Set>
-          <Set name="maxIdleTime">30000</Set>
-          <Set name="lowResourceMaxIdleTime">1000</Set>
+          <Set name="maxIdleTime">0</Set>
+          <Set name="lowResourceMaxIdleTime">0</Set>
           <Set name="Acceptors">2</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">zimbra</Set>
