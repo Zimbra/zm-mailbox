@@ -113,35 +113,36 @@ public class QueryParserTest {
     @Test
     public void date() throws Exception {
         String src = "date:-4d";
-        Assert.assertEquals("Q(DATE,DATE," + getDate(-4) + ")", Query.toString(parser.parse(src)));
+        Assert.assertEquals("Q(DATE,DATE," + getDate(-4) + "-" + getDate(-3) + ")", Query.toString(parser.parse(src)));
 
         src = "date:\"-4d\"";
-        Assert.assertEquals("Q(DATE,DATE," + getDate(-4) + ")", Query.toString(parser.parse(src)));
+        Assert.assertEquals("Q(DATE,DATE," + getDate(-4) + "-" + getDate(-3) + ")", Query.toString(parser.parse(src)));
 
         src = "(a or b) and before:1/1/2009 and -subject:\"quoted string\"";
-        Assert.assertEquals("(Q(l.content) || Q(l.content,b)) && Q(DATE,BEFORE,20090101000000) && -Q(subject,quoted,string)",
-                Query.toString(parser.parse(src)));
+        Assert.assertEquals("(Q(l.content) || Q(l.content,b)) && Q(DATE,BEFORE,196912312359-200901010000) && " +
+                "-Q(subject,quoted,string)", Query.toString(parser.parse(src)));
 
         src = "date:(01/01/2001 02/02/2002)";
-        Assert.assertEquals("(Q(DATE,DATE,20010101000000) && Q(DATE,DATE,20020202000000))",
+        Assert.assertEquals("(Q(DATE,DATE,200101010000-200101020000) && Q(DATE,DATE,200202020000-200202030000))",
                 Query.toString(parser.parse(src)));
 
         src = "date:-1d date:(01/01/2001 02/02/2002)";
-        Assert.assertEquals("Q(DATE,DATE," + getDate(-1) + ") && (Q(DATE,DATE,20010101000000) && Q(DATE,DATE,20020202000000))",
+        Assert.assertEquals("Q(DATE,DATE," + getDate(-1) + "-" + getDate(0) +
+                ") && (Q(DATE,DATE,200101010000-200101020000) && Q(DATE,DATE,200202020000-200202030000))",
                 Query.toString(parser.parse(src)));
 
         src = "date:(-1d or -2d)";
-        Assert.assertEquals("(Q(DATE,DATE," + getDate(-1) + ") || Q(DATE,DATE," + getDate(-2) +"))",
-                Query.toString(parser.parse(src)));
+        Assert.assertEquals("(Q(DATE,DATE," + getDate(-1) + "-" + getDate(0) + ") || Q(DATE,DATE," +
+                getDate(-2) + "-" + getDate(-1) +"))", Query.toString(parser.parse(src)));
 
         src = "date:\"+1d\"";
-        Assert.assertEquals("Q(DATE,DATE," + getDate(1) + ")", Query.toString(parser.parse(src)));
+        Assert.assertEquals("Q(DATE,DATE," + getDate(1) + "-" + getDate(2) + ")", Query.toString(parser.parse(src)));
 
         src = "date:+2w";
-        Assert.assertEquals("Q(DATE,DATE," + getWeek(2) + ")", Query.toString(parser.parse(src)));
+        Assert.assertEquals("Q(DATE,DATE," + getWeek(2) + "-" + getWeek(3) + ")", Query.toString(parser.parse(src)));
 
         src = "not date:(1/1/2004 or 2/1/2004)";
-        Assert.assertEquals("-(Q(DATE,DATE,20040101000000) || Q(DATE,DATE,20040201000000))",
+        Assert.assertEquals("-(Q(DATE,DATE,200401010000-200401020000) || Q(DATE,DATE,200402010000-200402020000))",
                 Query.toString(parser.parse(src)));
 
     }
@@ -151,8 +152,7 @@ public class QueryParserTest {
         cal.add(Calendar.DATE, day);
         cal.set(Calendar.HOUR_OF_DAY, 0);
         cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        return DateTools.dateToString(cal.getTime(), DateTools.Resolution.SECOND);
+        return DateTools.dateToString(cal.getTime(), DateTools.Resolution.MINUTE);
     }
 
     private String getWeek(int week) {
@@ -161,8 +161,7 @@ public class QueryParserTest {
         cal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
         cal.set(Calendar.HOUR_OF_DAY, 0);
         cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        return DateTools.dateToString(cal.getTime(), DateTools.Resolution.SECOND);
+        return DateTools.dateToString(cal.getTime(), DateTools.Resolution.MINUTE);
     }
 
     /**

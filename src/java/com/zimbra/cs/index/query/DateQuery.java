@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -103,21 +103,17 @@ import com.zimbra.cs.index.QueryOperation;
 public final class DateQuery extends Query {
 
     public enum Type {
-        APPT_START, APPT_END, CONV_START, CONV_END,
-        BEFORE, AFTER, DATE, DAY, WEEK, MONTH, YEAR
+        APPT_START, APPT_END, CONV_START, CONV_END, BEFORE, AFTER, DATE, DAY, WEEK, MONTH, YEAR
     }
 
-    private static final Pattern NUMERICDATE_PATTERN =
-        Pattern.compile("^([0-9]+)$");
-    private static final Pattern RELDATE_PATTERN =
-        Pattern.compile("([+-])([0-9]+)([mhdwy][a-z]*)?");
+    private static final Pattern NUMERIC_DATE_PATTERN = Pattern.compile("^[0-9]+$");
+    private static final Pattern RELATIVE_DATE_PATTERN = Pattern.compile(
+            "^([+-])([0-9]+)([mhdwy]|mi|minute|hour|day|week|month|year)?$");
 
-    private Date mDate = null;
-    private Date mEndDate = null;
-    private long mLowestTime;
-    private boolean mLowerEq;
-    private long mHighestTime;
-    private boolean mHigherEq;
+    private long lowestTime;
+    private boolean lowerEq;
+    private long highestTime;
+    private boolean higherEq;
     private final Type type;
 
     public DateQuery(Type type) {
@@ -125,19 +121,19 @@ public final class DateQuery extends Query {
     }
 
     public long getLowestTime() {
-        return mLowestTime;
+        return lowestTime;
     }
 
     public boolean isLowestInclusive() {
-        return mLowerEq;
+        return lowerEq;
     }
 
     public long getHighestTime() {
-        return mHighestTime;
+        return highestTime;
     }
 
     public boolean isHighestInclusive() {
-        return mHigherEq;
+        return higherEq;
     }
 
     @Override
@@ -145,16 +141,13 @@ public final class DateQuery extends Query {
         DBQueryOperation op = new DBQueryOperation();
         switch (type) {
             case APPT_START:
-                op.addCalStartDateClause(mLowestTime, mLowerEq,
-                        mHighestTime, mHigherEq, evalBool(bool));
+                op.addCalStartDateClause(lowestTime, lowerEq, highestTime, higherEq, evalBool(bool));
                 break;
             case APPT_END:
-                op.addCalEndDateClause(mLowestTime, mLowerEq,
-                        mHighestTime, mHigherEq, evalBool(bool));
+                op.addCalEndDateClause(lowestTime, lowerEq, highestTime, higherEq, evalBool(bool));
                 break;
             default:
-                op.addDateClause(mLowestTime, mLowerEq,
-                        mHighestTime, mHigherEq, evalBool(bool));
+                op.addDateClause(lowestTime, lowerEq, highestTime, higherEq, evalBool(bool));
                 break;
         }
 
@@ -165,30 +158,28 @@ public final class DateQuery extends Query {
      * DATE: {@code absolute-date = mm/dd/yyyy} (locale sensitive)
      *   OR  {@code relative-date = [+/-]nnnn{minute,hour,day,week,month,year}}
      * <p>
-     * TODO need to figure out how to represent "this week", "last week",
-     * "this month", etc.
+     * TODO need to figure out how to represent "this week", "last week", "this month", etc.
      */
     public void parseDate(String src, TimeZone tz, Locale locale) throws ParseException {
-        mDate = null; // the beginning of the user-specified range (inclusive)
-        mEndDate = null; // the end of the user-specified range (NOT-included in the range)
-        mLowestTime = -1;
-        mHighestTime = -1;
+        Date beginDate = null; // the beginning of the user-specified range (inclusive)
+        Date endDate = null; // the end of the user-specified range (NOT-included in the range)
+        lowestTime = -1;
+        highestTime = -1;
         boolean hasExplicitComparasins = false;
         boolean explicitLT = false;
         boolean explicitGT = false;
         boolean explicitEq = false;
 
-        if (src.length() <= 0) {
+        if (src.isEmpty()) {
             throw new ParseException(src, 0);
         }
 
         // remove trailing comma, for date:(12312, 123123, 123132) format
         if (src.charAt(src.length() - 1) == ',') {
             src = src.substring(0, src.length() - 1);
-        }
-
-        if (src.length() <= 0) {
-            throw new ParseException(src, 0);
+            if (src.isEmpty()) {
+                throw new ParseException(src, 0);
+            }
         }
 
         char ch = src.charAt(0);
@@ -221,11 +212,12 @@ public final class DateQuery extends Query {
             } else {
                 src = src.substring(1); // chop off the < or >
             }
+
+            if (src.isEmpty()) {
+                throw new ParseException(src, 0);
+            }
         }
 
-        if (src.length() <= 0) {
-            throw new ParseException(src, 0);
-        }
 
         if (src.equalsIgnoreCase("today")) {
             src = "-0d";
@@ -255,18 +247,17 @@ public final class DateQuery extends Query {
                 break;
         }
 
-        // Now, do the actual parsing.  There are two cases: a relative date
-        // or an absolute date.
+        // Now, do the actual parsing.  There are two cases: a relative date or an absolute date.
 
         String mod = null;
-        Matcher matcher = NUMERICDATE_PATTERN.matcher(src);
+        Matcher matcher = NUMERIC_DATE_PATTERN.matcher(src);
         if (matcher.lookingAt()) {
             long dateLong = Long.parseLong(src);
-            mDate = new Date(dateLong);
-            mEndDate = new Date(dateLong + 1000);
+            beginDate = new Date(dateLong);
+            endDate = new Date(dateLong + 1000);
             // +1000 since SQL time is sec, java in msec
         } else {
-            matcher = RELDATE_PATTERN.matcher(src);
+            matcher = RELATIVE_DATE_PATTERN.matcher(src);
             if (matcher.lookingAt()) {
                 // RELATIVE DATE!
                 String reltime;
@@ -300,7 +291,7 @@ public final class DateQuery extends Query {
                             field = Calendar.YEAR;
                             break;
                     }
-                } // (else m.start(3) == -1
+                }
 
 
                 GregorianCalendar cal = new GregorianCalendar();
@@ -342,52 +333,32 @@ public final class DateQuery extends Query {
                 }
 
                 cal.add(field,num);
-                mDate = cal.getTime();
+                beginDate = cal.getTime();
 
                 cal.add(field,1);
-                mEndDate = cal.getTime();
-            } else {
-                // ABSOLUTE dates:
-                // use Locale information to parse date correctly
-
-                char first = src.charAt(0);
-                if (first == '-' || first == '+') {
-                    src = src.substring(1);
-                }
-
-                DateFormat df;
-                if (locale != null) {
-                    df = DateFormat.getDateInstance(DateFormat.SHORT, locale);
-                } else {
-                    df = DateFormat.getDateInstance(DateFormat.SHORT);
-                }
-
-                df.setLenient(false);
-                if (tz != null) {
-                    df.setTimeZone(tz);
-                }
-
+                endDate = cal.getTime();
+            } else { // ABSOLUTE dates
                 try {
-                    mDate = df.parse(src);
-                } catch (java.text.ParseException e) {
-                    // fall back to mm/dd/yyyy
-                    df = DateFormat.getDateInstance(DateFormat.SHORT);
-                    mDate = df.parse(src);
+                    beginDate = parse(src, tz, locale);
+                } catch (ParseException e) { // fall back to mm/dd/yyyy
+                    if (locale == null || !Locale.ENGLISH.getLanguage().equals(locale.getLanguage())) {
+                        beginDate = parse(src, tz, Locale.ENGLISH);
+                    } else {
+                        throw e;
+                    }
                 }
 
                 Calendar cal = Calendar.getInstance();
                 if (tz != null) {
                     cal.setTimeZone(tz);
                 }
-
-                cal.setTime(mDate);
-
+                cal.setTime(beginDate);
                 cal.add(field,1);
-                mEndDate = cal.getTime();
-            } // else (relative/absolute check)
-        } // else (numeric check)
+                endDate = cal.getTime();
+            }
+        }
 
-        ZimbraLog.search.debug("Parsed date range to: (%s - %s)", mDate, mEndDate);
+        ZimbraLog.search.debug("Parsed date range to: (%s - %s)", beginDate, endDate);
 
         // convert BEFORE, AFTER and DATE to the right explicit params...
         if (!hasExplicitComparasins) {
@@ -410,7 +381,6 @@ public final class DateQuery extends Query {
             }
         }
 
-        //
         // At this point, we've parsed out "mDate" and calculated "mEndDate" to be the "next" date
         // in whatever unit of date measurement they're using.
         //
@@ -418,53 +388,56 @@ public final class DateQuery extends Query {
         //
         // Here's the logic table:
         //
-        // User-Specified Search  |        SQL Search       |    in our local Variables
+        // User-Specified Search | SQL Search    | in our local Variables
         //-----------------------------------------------------------------------
-        //       <=                        |   date<mEnd             |    highest=mEndDate,highestEq=false
-        //       <  (BEFORE)           |    date < mDate         |     highest=mDate, highestEq=false
-        //       >=                        |    date >= mDate       |     lowest=mDate, lowestEq=true
-        //        >  (AFTER)            |    date > mEnd          |     lowest=mEndDate, lowestEq=true
-        //       =  (DATE)              |  (date>=mDate && date<mEnd) |  lowest=mDate,lowestEq=true,highest=mEndDate,highestEq=false
-        //
-        //
+        //  <=                   | date<mEnd     | highest=mEndDate,highestEq=false
+        //  <  (BEFORE)          | date < mDate  | highest=mDate, highestEq=false
+        //  >=                   | date >= mDate | lowest=mDate, lowestEq=true
+        //  >  (AFTER)           | date > mEnd   | lowest=mEndDate, lowestEq=true
+        //  =  (DATE)            | (date>=mDate && date<mEnd) |  lowest=mDate,lowestEq=true,highest=mEndDate,highestEq=false
 
         if (explicitLT) {
-            if (explicitEq) {
-                // <=     highest=mEndDate,highestEq=false
-                mLowestTime = -1;
-                mLowerEq = false;
-                mHighestTime = mEndDate.getTime();
-                mHigherEq = false;
-            } else {
-                // <  highest=mDate, highestEq=false
-                mLowestTime = -1;
-                mLowerEq = false;
-                mHighestTime = mDate.getTime();
-                mHigherEq = false;
+            if (explicitEq) { // <= highest=mEndDate,highestEq=false
+                lowestTime = -1;
+                lowerEq = false;
+                highestTime = endDate.getTime();
+                higherEq = false;
+            } else { // <  highest=mDate, highestEq=false
+                lowestTime = -1;
+                lowerEq = false;
+                highestTime = beginDate.getTime();
+                higherEq = false;
             }
         } else if (explicitGT) {
-            if (explicitEq) {
-                // >=  lowest=mDate, lowestEq=true
-                mLowestTime = mDate.getTime();
-                mLowerEq = true;
-                mHighestTime = -1;
-                mHigherEq = false;
-            } else {
-                // > lowest=mEndDate, lowestEq=true
-                mLowestTime = mEndDate.getTime();
-                mLowerEq = true;
-                mHighestTime = -1;
-                mHigherEq = false;
+            if (explicitEq) { // >=  lowest=mDate, lowestEq=true
+                lowestTime = beginDate.getTime();
+                lowerEq = true;
+                highestTime = -1;
+                higherEq = false;
+            } else { // > lowest=mEndDate, lowestEq=true
+                lowestTime = endDate.getTime();
+                lowerEq = true;
+                highestTime = -1;
+                higherEq = false;
             }
-        } else {
-            // assert(explicitEq == true);
-            // =  lowest=mDate,lowestEq=true,highest=mEndDate,highestEq=false
-            mLowestTime = mDate.getTime();
-            mLowerEq = true;
-            mHighestTime = mEndDate.getTime();
-            mHigherEq = false;
+        } else { // = lowest=mDate,lowestEq=true,highest=mEndDate,highestEq=false
+            lowestTime = beginDate.getTime();
+            lowerEq = true;
+            highestTime = endDate.getTime();
+            higherEq = false;
         }
 
+    }
+
+    private Date parse(String src, TimeZone tz, Locale locale) throws ParseException {
+        // use Locale information to parse date correctly
+        DateFormat df = locale != null ? DateFormat.getDateInstance(DateFormat.SHORT, locale) :
+            DateFormat.getDateInstance(DateFormat.SHORT);
+        df.setLenient(false);
+        if (tz != null) {
+            df.setTimeZone(tz);
+        }
+        return df.parse(src);
     }
 
     @Override
@@ -472,6 +445,8 @@ public final class DateQuery extends Query {
         out.append("DATE,");
         out.append(type);
         out.append(',');
-        out.append(DateTools.dateToString(mDate, DateTools.Resolution.SECOND));
+        out.append(DateTools.timeToString(lowestTime, DateTools.Resolution.MINUTE));
+        out.append('-');
+        out.append(DateTools.timeToString(highestTime, DateTools.Resolution.MINUTE));
     }
 }
