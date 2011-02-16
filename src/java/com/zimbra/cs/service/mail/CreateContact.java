@@ -28,6 +28,7 @@ import javax.mail.internet.MimePartDataSource;
 
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.MimeDetect;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
@@ -254,6 +255,13 @@ public class CreateContact extends MailDocumentHandler  {
                 Message msg = mbox.getMessageById(octxt, iid.getId());
                 MimePart mp = Mime.getMimePart(msg.getMimeMessage(), part);
                 String ctype = new ContentType(mp.getContentType()).getContentType();
+                String fname = mp.getFileName();
+                if (fname != null && (MimeConstants.CT_APPLICATION_OCTET_STREAM.equals(ctype) || MimeConstants.CT_APPLICATION_TNEF.equals(ctype))) {
+                    String guess = MimeDetect.getMimeDetect().detect(fname);
+                    if (guess != null) {
+                        ctype = guess;
+                    }
+                }
                 boolean typeAcceptable;
                 if (acceptableMimeTypes != null) {
                     typeAcceptable = false;
