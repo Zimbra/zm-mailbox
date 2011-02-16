@@ -117,6 +117,8 @@ public class ZFeatures {
     public boolean getMailPriority() { return getBool(Provisioning.A_zimbraFeatureMailPriorityEnabled); }
 
     public boolean getPortalEnabled() { return getBool(Provisioning.A_zimbraFeaturePortalEnabled); }
+
+    public boolean getContactsDetailedSearch() { return getBool(Provisioning.A_zimbraFeatureContactsDetailedSearchEnabled); }
     
     // defaults to TRUE
     public boolean getWebSearchEnabled() { return get(Provisioning.A_zimbraFeatureWebSearchEnabled) == null ||
