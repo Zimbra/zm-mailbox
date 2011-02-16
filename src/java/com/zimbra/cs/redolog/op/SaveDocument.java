@@ -31,6 +31,7 @@ public class SaveDocument extends CreateMessage {
     private String mAuthor;
     private byte mItemType;
     private String mDescription;
+    private boolean mDescEnabled;
 
     public SaveDocument() {
     }
@@ -82,11 +83,21 @@ public class SaveDocument extends CreateMessage {
     public void setDescription(String d) {
         mDescription = d;
     }
+    
+    public boolean isDescriptionEnabled() {
+        return mDescEnabled;
+    }
+    
+    public void setDescriptionEnabled(boolean descEnabled) {
+        mDescEnabled = descEnabled;
+    }
 
     public void setDocument(ParsedDocument doc) {
         setFilename(doc.getFilename());
         setMimeType(doc.getContentType());
         setAuthor(doc.getCreator());
+        setDescription(doc.getDescription());
+        setDescriptionEnabled(doc.isDescriptionEnabled());
     }
 
     @Override protected void serializeData(RedoLogOutput out) throws IOException {
@@ -96,6 +107,8 @@ public class SaveDocument extends CreateMessage {
         out.writeByte(mItemType);
         if (getVersion().atLeast(1, 29))
             out.writeUTF(mDescription);
+        if (getVersion().atLeast(1, 31))
+            out.writeBoolean(mDescEnabled);
         super.serializeData(out);
     }
 
@@ -106,13 +119,17 @@ public class SaveDocument extends CreateMessage {
         mItemType = in.readByte();
         if (getVersion().atLeast(1, 29))
             mDescription = in.readUTF();
+        if (getVersion().atLeast(1, 31))
+            mDescEnabled = in.readBoolean();
+        else
+            mDescEnabled = true;
         super.deserializeData(in);
     }
 
     @Override public void redo() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         try {
-            mbox.createDocument(getOperationContext(), getFolderId(), mFilename, mMimeType, mAuthor, mDescription, getAdditionalDataStream(), mItemType);
+            mbox.createDocument(getOperationContext(), getFolderId(), mFilename, mMimeType, mAuthor, mDescription, mDescEnabled, getAdditionalDataStream(), mItemType);
         } catch (MailServiceException e) {
             if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
                 mLog.info("Document " + getMessageId() + " is already in mailbox " + mbox.getId());

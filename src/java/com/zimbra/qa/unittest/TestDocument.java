@@ -20,7 +20,6 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -58,7 +57,7 @@ public class TestDocument extends TestCase {
         // Create first revision.
         String content = "one";
         ParsedDocument pd = new ParsedDocument(
-            new ByteArrayInputStream(content.getBytes()), NAME_PREFIX + "-testDeleteRevisions.txt", "text/plain", System.currentTimeMillis(), USER_NAME, "one");
+            new ByteArrayInputStream(content.getBytes()), NAME_PREFIX + "-testDeleteRevisions.txt", "text/plain", System.currentTimeMillis(), USER_NAME, "one", true);
         Document doc = mbox.createDocument(null, Mailbox.ID_FOLDER_BRIEFCASE, pd, MailItem.TYPE_DOCUMENT);
         int docId = doc.getId();
         byte type = doc.getType();
@@ -66,14 +65,16 @@ public class TestDocument extends TestCase {
         List<Document> revisions = mbox.getAllRevisions(null, docId, type);
         assertEquals(1, revisions.size());
         assertEquals(1, getBlobCount(blobDir, docId));
+        assertEquals(true, doc.isDescriptionEnabled());
         
         // Add a second revision.
         content = "two";
         pd = new ParsedDocument(
-            new ByteArrayInputStream(content.getBytes()), NAME_PREFIX + "-testDeleteRevisions2.txt", "text/plain", System.currentTimeMillis(), USER_NAME, "two");
+            new ByteArrayInputStream(content.getBytes()), NAME_PREFIX + "-testDeleteRevisions2.txt", "text/plain", System.currentTimeMillis(), USER_NAME, "two", false);
         doc = mbox.addDocumentRevision(null, docId, pd);
         assertEquals(2, mbox.getAllRevisions(null, docId, type).size());
         assertEquals(2, getBlobCount(blobDir, docId));
+        assertEquals(false, doc.isDescriptionEnabled());
         
         // Move to trash, empty trash, and confirm that both blobs were deleted.
         mbox.move(null, doc.getId(), doc.getType(), Mailbox.ID_FOLDER_TRASH);
