@@ -99,6 +99,10 @@ public class TestGalGroupMembers extends TestCase {
             
             for (ZimbraGroupMembers member : ZimbraGroupMembers.values()) {
                 Assert.assertTrue(addrs.contains(member.getAddress()));
+                
+                // verify that addrs should do case-insensitive comparison
+                Assert.assertTrue(addrs.contains(member.getAddress().toUpperCase()));
+                Assert.assertTrue(addrs.contains(member.getAddress().toLowerCase()));
             }
         }
     }
@@ -128,6 +132,10 @@ public class TestGalGroupMembers extends TestCase {
             
             for (ExternalGroupMembers member : ExternalGroupMembers.values()) {
                 Assert.assertTrue(addrs.contains(member.getAddress()));
+                
+                // verify that addrs should do case-insensitive comparison
+                Assert.assertTrue(addrs.contains(member.getAddress().toUpperCase()));
+                Assert.assertTrue(addrs.contains(member.getAddress().toLowerCase()));
             }
         }
     }
