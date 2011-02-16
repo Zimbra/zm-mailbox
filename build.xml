@@ -175,12 +175,14 @@
   <target name="one-wsdl-test" depends="wsdl-test-compile" description="Run a single unit test">
     <delete dir="${wsdl.test.dir}-one" quiet="true"/>
     <mkdir dir="${wsdl.test.dir}-one/output"/>
-    <junit printsummary="on" haltonfailure="on" tempdir="${wsdl.test.dir}-one">
+    <junit printsummary="on" failureproperty="junit.failure" tempdir="${wsdl.test.dir}-one">
       <classpath refid="wsdl.test.class.path"/>
       <classpath path="${wsdl.test.classes.dir}"/>
+      <assertions><enable/></assertions>
       <formatter type="xml"/>
       <test name="${WSDLTEST}" todir="${wsdl.test.dir}-one/output" />
     </junit>
+    <fail if="junit.failure" message="Unit test failed"/>
   </target>
 
   <target name="test-compile" depends="compile">
@@ -197,9 +199,10 @@
     <delete dir="${test.dir}" quiet="true"/>
     <mkdir dir="${test.dir}/output"/>
     <mkdir dir="${test.dir}/report"/>
-    <junit printsummary="on" haltonfailure="on" tempdir="${test.dir}">
+    <junit printsummary="on" failureproperty="junit.failure" tempdir="${test.dir}">
       <classpath refid="test.class.path"/>
       <classpath path="${test.classes.dir}"/>
+      <assertions><enable/></assertions>
       <formatter type="xml"/>
       <batchtest todir="${test.dir}/output">
         <fileset dir="${test.src.dir}">
@@ -212,18 +215,21 @@
       <report todir="${test.dir}/report"/>
     </junitreport>
     <echo>Test Report: ${test.dir}/report/index.html</echo>
+    <fail if="junit.failure" message="Unit test failed"/>
   </target>
 
   <!-- e.g. ant -DTESTNAME=com.zimbra.soap.admin.GetServerTest one-test -->
   <target name="one-test" depends="test-compile" description="Run unit tests">
     <delete dir="${test.dir}-one" quiet="true"/>
     <mkdir dir="${test.dir}-one/output"/>
-    <junit printsummary="on" haltonfailure="on" tempdir="${test.dir}-one">
+    <junit printsummary="on" failureproperty="junit.failure" tempdir="${test.dir}-one">
       <classpath refid="test.class.path"/>
       <classpath path="${test.classes.dir}"/>
+      <assertions><enable/></assertions>
       <formatter type="xml"/>
       <test name="${TESTNAME}" todir="${test.dir}-one/output" />
     </junit>
+    <fail if="junit.failure" message="Unit test failed"/>
   </target>
 
 </project>
