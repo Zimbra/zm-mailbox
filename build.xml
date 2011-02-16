@@ -633,7 +633,7 @@
           <include name="ant-tar*.jar"/>
           <include name="icu4j-*.jar"/>
           <include name="mina-*.jar"/>
-          <include name="ews.jar"/> 
+          <include name="ews.jar"/>
         </lib>
         <lib dir="${im.jars.dir}" includes="*.jar"/>
         <classes dir="${config.dir}" includes="sieveConfig.xml"/>
@@ -1120,7 +1120,7 @@
           <antcall target="stop-webserver"/>
           <antcall target="stop-ldap"/>
           <exec failonerror="true" executable="../ZimbraServer/src/perl/install-thirdparty">
-	    <arg line="main"/>
+      <arg line="main"/>
           </exec>
         </then>
       </if>
@@ -2125,11 +2125,11 @@
       <arg line="-a genMessageProperties -i conf/rights -r conf/msgs/ZsMsgRights.properties"/>
     </java>
   </target>
-	
+
   <target name="generate-rights">
     <antcall target="generate-domainadmin-rights-xml"/>
     <antcall target="generate-rights-java"/>
-  	<antcall target="generate-rights-message-properties"/>
+    <antcall target="generate-rights-message-properties"/>
   </target>
 
   <target name="generate-rights-txt">
@@ -2246,9 +2246,10 @@
     <delete dir="${test.dir}" quiet="true"/>
     <mkdir dir="${test.dir}/output"/>
     <mkdir dir="${test.dir}/report"/>
-    <junit printsummary="on" haltonfailure="on" tempdir="${test.dir}">
+    <junit printsummary="on" failureproperty="junit.failure" tempdir="${test.dir}">
       <classpath refid="class.path"/>
       <classpath path="${test.classes.dir}"/>
+      <assertions><enable/></assertions>
       <formatter type="xml"/>
       <batchtest todir="${test.dir}/output">
         <fileset dir="${test.src.dir}">
@@ -2261,6 +2262,7 @@
       <report todir="${test.dir}/report"/>
     </junitreport>
     <echo>Test Report: ${test.dir}/report/index.html</echo>
+    <fail if="junit.failure" message="Unit test failed"/>
   </target>
 
 </project>
