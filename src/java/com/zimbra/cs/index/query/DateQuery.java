@@ -108,7 +108,7 @@ public final class DateQuery extends Query {
 
     private static final Pattern NUMERIC_DATE_PATTERN = Pattern.compile("^[0-9]+$");
     private static final Pattern RELATIVE_DATE_PATTERN = Pattern.compile(
-            "^([+-])([0-9]+)([mhdwy]|mi|minute|hour|day|week|month|year)?$");
+            "^([+-])([0-9]+)([mhdwy]|mi|minute[s]?|hour[s]?|day[s]?|week[s]?|month[s]?|year[s]?)?$");
 
     private long lowestTime;
     private boolean lowerEq;
