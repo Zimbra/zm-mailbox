@@ -68,6 +68,22 @@ public abstract class GalGroup {
         }
     }
     
+    /**
+     * returns whether addr is a GAL(internal or external) group according to the GAL 
+     * setting on the domain of the requestedAcct.
+     * 
+     * This method uses the GAL group cache, domain (of the requestedAcct) attribute 
+     * zimbraGalGroupIndicatorEnabled must be set to TRUE for this call to return meaningful answer.   
+     * If zimbraGalGroupIndicatorEnabled is FALSE, this method always returns false.
+     * 
+     * @param addr
+     * @param requestedAcct
+     * @return
+     */
+    public static boolean isGroup(String addr, Account requestedAcct) {
+        return GroupInfo.IS_GROUP == GalGroup.getGroupInfo(addr, false, requestedAcct, null);
+    }
+    
     public static GroupInfo getGroupInfo(String addr, boolean needCanExpand, Account requestedAcct, Account authedAcct) {
         Domain domain = null;
         try {

@@ -95,8 +95,18 @@ public class TestSearchGal {
         
         domain.unsetGalAccountId();
     }
+    
+    enum GSAType {
+        zimbra,
+        external,
+        both
+    }
   
     static void enableGalSyncAccount(String domainName) throws Exception {
+        enableGalSyncAccount(domainName, GSAType.zimbra);
+    }
+    
+    static void enableGalSyncAccount(String domainName, GSAType type) throws Exception {
         Provisioning prov = Provisioning.getInstance();
         
         Domain domain = prov.get(DomainBy.name, domainName);
@@ -105,25 +115,66 @@ public class TestSearchGal {
             // already enabled
             return;
         } else {
-            createAndSyncGalSyncAccount(TestUtil.getAddress(GAL_SYNC_ACCOUNT_NAME, domainName), domainName);
+            createAndSyncGalSyncAccount(TestUtil.getAddress(GAL_SYNC_ACCOUNT_NAME, domainName), domainName, type);
         }
 
     }
     
-    static void createAndSyncGalSyncAccount(String galSyncAcctName, String domainName) throws Exception {
-        String dataSourceName = "zimbra";
+    static void createAndSyncGalSyncAccount(String galSyncAcctName, String domainName, GSAType type) 
+    throws Exception {
+        String dataSourceName;
+        String dataSourceType;
+        String folderName;
+        if (type == GSAType.zimbra || type == GSAType.both) {
+            dataSourceName = "zimbra";
+            dataSourceType = "zimbra";
+            folderName = "zimbra-gal-contacts";
+        } else {
+            dataSourceName = "external";
+            dataSourceType = "ldap";
+            folderName = "external-gal-contacts";
+        }
+        
         
         SoapTransport transport = TestUtil.getAdminSoapTransport();
         
         //
-        // create gal sync account
+        // create gal sync account and data sources, then force sync
         //
+        String gsaZimbraId = createGalSyncAccountOrDataSource(transport, galSyncAcctName, domainName, dataSourceName, dataSourceType, folderName);
+        syncGASDataSource(transport, gsaZimbraId, dataSourceName);
+        
+        if (type == GSAType.both) {
+            dataSourceName = "external";
+            dataSourceType = "ldap";
+            folderName = "external-gal-contacts";
+            createGalSyncAccountOrDataSource(transport, galSyncAcctName, domainName, dataSourceName, dataSourceType, folderName);
+            syncGASDataSource(transport, gsaZimbraId, dataSourceName);
+        }
+        
+        //
+        // index the gal sync account (otherwise the first search will fail)
+        //
+        Element eReIndex = Element.create(transport.getRequestProtocol(), AdminConstants.REINDEX_REQUEST);
+        eReIndex.addAttribute(AdminConstants.A_ACTION, "start");
+        Element eMbox = eReIndex.addElement(AdminConstants.E_MAILBOX);
+        eMbox.addAttribute(AdminConstants.A_ID, gsaZimbraId);
+        transport.invoke(eReIndex);
+        
+        // wait for the reindex to finish
+        Thread.sleep(2000);
+    }
+    
+    private static String createGalSyncAccountOrDataSource(SoapTransport transport,
+            String galSyncAcctName, String domainName, 
+            String dataSourceName, String dataSourceType, String folderName) throws Exception {
+        
         Element eCreateReq = Element.create(transport.getRequestProtocol(), AdminConstants.CREATE_GAL_SYNC_ACCOUNT_REQUEST);
         
         eCreateReq.addAttribute(AdminConstants.E_NAME, dataSourceName);
         eCreateReq.addAttribute(AdminConstants.E_DOMAIN, domainName);
-        eCreateReq.addAttribute(AdminConstants.A_TYPE, "zimbra");
-        eCreateReq.addAttribute(AdminConstants.E_FOLDER, "zimbra-gal-contacts");
+        eCreateReq.addAttribute(AdminConstants.A_TYPE, dataSourceType);
+        eCreateReq.addAttribute(AdminConstants.E_FOLDER, folderName);
         
         Element eAccount = eCreateReq.addElement(AdminConstants.E_ACCOUNT);
         eAccount.addAttribute(AdminConstants.A_BY, AccountBy.name.name());
@@ -136,13 +187,15 @@ public class TestSearchGal {
         String id = eAccount.getAttribute(AccountConstants.A_ID);
         Assert.assertEquals(galSyncAcctName, name);
         
-        //
-        // sync gal sync account
-        //
+        return id;
+    }
+    
+    private static void syncGASDataSource(SoapTransport transport, String gsaZimbraId, String dataSourceName) 
+    throws Exception {
         Element eSyncReq = Element.create(transport.getRequestProtocol(), AdminConstants.SYNC_GAL_ACCOUNT_REQUEST);
         
-        eAccount = eSyncReq.addElement(AdminConstants.E_ACCOUNT);
-        eAccount.addAttribute(AccountConstants.A_ID, id);
+        Element eAccount = eSyncReq.addElement(AdminConstants.E_ACCOUNT);
+        eAccount.addAttribute(AccountConstants.A_ID, gsaZimbraId);
         
         Element eDataSource = eAccount.addElement(AdminConstants.E_DATASOURCE);
         eDataSource.addAttribute(AdminConstants.A_RESET, "TRUE");
@@ -150,18 +203,6 @@ public class TestSearchGal {
         eDataSource.setText(dataSourceName);
         
         transport.invoke(eSyncReq);
-        
-        //
-        // index the gal sync account (otherwise the first search will fail)
-        //
-        Element eReIndex = Element.create(transport.getRequestProtocol(), AdminConstants.REINDEX_REQUEST);
-        eReIndex.addAttribute(AdminConstants.A_ACTION, "start");
-        Element eMbox = eReIndex.addElement(AdminConstants.E_MAILBOX);
-        eMbox.addAttribute(AdminConstants.A_ID, id);
-        transport.invoke(eReIndex);
-        
-        // wait for the reindex to finish
-        Thread.sleep(2000);
     }
     
     // find all
