@@ -1,8 +1,8 @@
 package com.zimbra.cs.gal;
 
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -26,15 +26,21 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class GalGroupMembers {
 
     // common super interface for all the DLMembers classes
-    public static interface DLMembersResult {
-        Set<String> getAllMembers();
+    public static abstract class DLMembersResult {
+        protected Set<String> mMembersSet;
+        
+        abstract Set<String> getAllMembers();
+        
+        protected Set<String> createMembersSet() {
+            return new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+        }
     }
     
-    public interface DLMembers extends DLMembersResult {
+    public static abstract class DLMembers extends DLMembersResult {
 
-        int getTotal();
+        abstract int getTotal();
         
-        String getDLZimbraId();
+        abstract String getDLZimbraId();
         
         /**
          * 
@@ -42,13 +48,12 @@ public class GalGroupMembers {
          * @param endIndex   the ending index, exclusive. 
          * @param resp
          */
-        void encodeMembers(int beginIndex, int endIndex, Element resp);
+        abstract void encodeMembers(int beginIndex, int endIndex, Element resp);
     }
     
-    private static class ContactDLMembers implements DLMembers {
+    private static class ContactDLMembers extends DLMembers {
         private Contact mContact;
         private JSONArray mMembers;
-        private Set<String> mMembersSet;
         
         private ContactDLMembers(Contact contact) {
             mContact = contact;
@@ -98,7 +103,7 @@ public class GalGroupMembers {
             if (mMembersSet != null) {
                 return mMembersSet;
             } else {
-                mMembersSet = new HashSet<String>();
+                mMembersSet = createMembersSet();
             }
             
             if (mMembers != null) {
@@ -116,7 +121,7 @@ public class GalGroupMembers {
         
     }
     
-    private static class GalContactDLMembers implements DLMembers {
+    private static class GalContactDLMembers extends DLMembers {
         private GalContact mGalContact;
         String[] mMembers;
         Set<String> mMembersSet;
@@ -161,7 +166,7 @@ public class GalGroupMembers {
             if (mMembersSet != null) {
                 return mMembersSet;
             } else {
-                mMembersSet = new HashSet<String>();
+                mMembersSet = createMembersSet();
             }
             
             if (mMembers != null) {
@@ -173,7 +178,7 @@ public class GalGroupMembers {
 
     }
 
-    public static class ProxiedDLMembers implements DLMembersResult {
+    public static class ProxiedDLMembers extends DLMembersResult {
         private Element mResponse;
         Set<String> mMembersSet;
         
@@ -191,7 +196,7 @@ public class GalGroupMembers {
             if (mMembersSet != null) {
                 return mMembersSet;
             } else {
-                mMembersSet = new HashSet<String>();
+                mMembersSet = createMembersSet();
             }
             
             for (Element eDLM : mResponse.listElements(AccountConstants.E_DLM)) {
