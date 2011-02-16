@@ -23,6 +23,7 @@ import javax.mail.internet.MailDateFormat;
 import javax.mail.internet.MimeUtility;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
@@ -357,13 +358,24 @@ public abstract class LmtpHandler extends ProtocolHandler {
 
     protected abstract void continueDATA() throws IOException;
 
-    protected void processMessageData(LmtpMessageInputStream in) throws UnrecoverableLmtpException {
+    protected void processMessageData(LmtpMessageInputStream in) {
         // TODO cleanup: add Date if not present
         // TODO cleanup: add From header from envelope if not present
         // TODO there should be a too many recipients test (for now protected by postfix config)
 
-        mConfig.getLmtpBackend().deliver(mEnvelope, in, mEnvelope.getSize());
-        finishMessageData(in.getMessageSize());
+        try {
+            mConfig.getLmtpBackend().deliver(mEnvelope, in, mEnvelope.getSize());
+            finishMessageData(in.getMessageSize());
+        } catch (UnrecoverableLmtpException e) {
+            ZimbraLog.lmtp.error("Unrecoverable error while handling DATA command.  Dropping connection.", e);
+            try {
+                ByteUtil.countBytes(in); // Drain the stream.
+                sendReply(LmtpReply.SERVICE_DISABLED);
+            } catch (IOException e2) {
+                ZimbraLog.lmtp.warn("Unable to drain stream and send reply.", e2);
+            }
+            dropConnection();
+        }
     }
 
     private void finishMessageData(long size) {
