@@ -38,9 +38,9 @@ public class GalGroupMembers {
     
     public static abstract class DLMembers extends DLMembersResult {
 
-        abstract int getTotal();
+        abstract public int getTotal();
         
-        abstract String getDLZimbraId();
+        abstract public String getDLZimbraId();
         
         /**
          * 
@@ -48,7 +48,7 @@ public class GalGroupMembers {
          * @param endIndex   the ending index, exclusive. 
          * @param resp
          */
-        abstract void encodeMembers(int beginIndex, int endIndex, Element resp);
+        abstract public void encodeMembers(int beginIndex, int endIndex, Element resp);
     }
     
     private static class ContactDLMembers extends DLMembers {
