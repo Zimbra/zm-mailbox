@@ -45,6 +45,7 @@ public final class ParsedDocument {
     private String mFragment;
     private long mCreatedDate;
     private String mDescription;
+    private boolean mDescEnabled;
 
     /** if TRUE then there was a _temporary_ failure analyzing the message.  We should attempt
      * to re-index this message at a later time */
@@ -53,12 +54,18 @@ public final class ParsedDocument {
     private static Blob saveInputAsBlob(InputStream in) throws ServiceException, IOException {
         return StoreManager.getInstance().storeIncoming(in, null);
     }
+    
     public ParsedDocument(InputStream in, String filename, String ctype, long createdDate, String creator, String description)
         throws ServiceException, IOException {
-        this(saveInputAsBlob(in), filename, ctype, createdDate, creator, description);
+        this(saveInputAsBlob(in), filename, ctype, createdDate, creator, description, true);
     }
 
-    public ParsedDocument(Blob blob, String filename, String ctype, long createdDate, String creator, String description)
+    public ParsedDocument(InputStream in, String filename, String ctype, long createdDate, String creator, String description, boolean descEnabled)
+    throws ServiceException, IOException {
+        this(saveInputAsBlob(in), filename, ctype, createdDate, creator, description, descEnabled);
+    }
+    
+    public ParsedDocument(Blob blob, String filename, String ctype, long createdDate, String creator, String description, boolean descEnabled)
         throws ServiceException, IOException {
 
         mBlob = blob;
@@ -69,6 +76,7 @@ public final class ParsedDocument {
         mCreatedDate = createdDate;
         mCreator = creator;
         mDescription = description;
+        mDescEnabled = descEnabled;
 
         try {
             MimeHandler handler = MimeHandlerManager.getMimeHandler(ctype, filename);
@@ -188,6 +196,10 @@ public final class ParsedDocument {
 
     public String getDescription() {
         return mDescription;
+    }
+    
+    public boolean isDescriptionEnabled() {
+        return mDescEnabled;
     }
 
     public boolean hasTemporaryAnalysisFailure() {

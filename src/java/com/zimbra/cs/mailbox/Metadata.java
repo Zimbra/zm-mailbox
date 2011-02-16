@@ -58,6 +58,7 @@ public final class Metadata {
     static final String FN_MIME_TYPE       = "ct";
     static final String FN_DRAFT           = "d";
     static final String FN_DESCRIPTION     = "de";
+    static final String FN_DESC_ENABLED    = "dee";
     static final String FN_REPLY_ORIG      = "do";
     static final String FN_REPLY_TYPE      = "dt";
     static final String FN_AUTO_SEND_TIME  = "ast";

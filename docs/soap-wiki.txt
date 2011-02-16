@@ -48,7 +48,7 @@
 // The content of the document can be inlined in <content/> element.
 // The content can come from another document / revision specified in <doc/> sub element.
 <SaveDocumentRequest>
-  <doc [id="{item-id}" ver="{last-known-version}"] [name="{file-name}"] [ct="{content-type}"] [l="{folder-id}"] [desc="{description}"]>
+  <doc [id="{item-id}" ver="{last-known-version}"] [name="{file-name}"] [ct="{content-type}"] [l="{folder-id}"] [desc="{description}"] [descEnabled="true|false"]>
     [<upload id="{upload-id}"/>]
     [<m id="{msg-id}" part="{part-id}"/>]
     [<content>{inlined-document-content-string}</content>]
@@ -282,7 +282,7 @@
 </ListDocumentRevisionsRequest>
 
 <ListDocumentRevisionsResponse>
-  [<doc name="{name}" ver="{version}" cr="{creator}" id="{message-id}" s="{size}" d="{created-date}" md="{modified-date}" l="{folder}" [f="{flags}"] [t="{tags}"] [loid="{lock-owner-account-id}"] [loe="{lock-owner-email}"] [desc="{optional-description}]>
+  [<doc name="{name}" ver="{version}" cr="{creator}" id="{message-id}" s="{size}" d="{created-date}" md="{modified-date}" l="{folder}" [f="{flags}"] [t="{tags}"] [loid="{lock-owner-account-id}"] [loe="{lock-owner-email}"] [desc="{optional-description}] [descEnabled="true|false"]>
      <fr>... fragment ...</fr>
   </doc>]+
 </ListDocumentRevisionsResponse>

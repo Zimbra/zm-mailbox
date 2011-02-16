@@ -152,8 +152,9 @@ public class SaveDocument extends WikiDocumentHandler {
                 } else if (doc.contentType == null || doc.contentType.trim().equals("")) {
                     throw ServiceException.INVALID_REQUEST("missing required attribute: " + MailConstants.A_CONTENT_TYPE, null);
                 }
+                boolean descEnabled = docElem.getAttributeBool(MailConstants.A_DESC_ENABLED, true);
                 try {
-                    docItem = mbox.createDocument(octxt, fid.getId(), doc.name, doc.contentType, getAuthor(zsc), doc.description, is, MailItem.Type.DOCUMENT);
+                    docItem = mbox.createDocument(octxt, fid.getId(), doc.name, doc.contentType, getAuthor(zsc), doc.description, descEnabled, is, MailItem.Type.DOCUMENT);
                 } catch (ServiceException e) {
                     if (e.getCode().equals(MailServiceException.ALREADY_EXISTS)) {
                         MailItem item = mbox.getItemByPath(octxt, doc.name, fid.getId());
@@ -176,7 +177,8 @@ public class SaveDocument extends WikiDocumentHandler {
                 if (doc.name != null) {
                     name = doc.name;
                 }
-                docItem = mbox.addDocumentRevision(octxt, itemId, getAuthor(zsc), name, doc.description, is);
+                boolean descEnabled = docElem.getAttributeBool(MailConstants.A_DESC_ENABLED, docItem.isDescriptionEnabled());
+                docItem = mbox.addDocumentRevision(octxt, itemId, getAuthor(zsc), name, doc.description, descEnabled, is);
             }
 
             response = zsc.createElement(MailConstants.SAVE_DOCUMENT_RESPONSE);

@@ -43,6 +43,7 @@ public class Document extends MailItem {
     protected String mLockOwner;
     protected long   mLockTimestamp;
     protected String mDescription;
+    protected boolean mDescEnabled;
 
     public Document(Mailbox mbox, UnderlyingData data) throws ServiceException {
         super(mbox, data);
@@ -75,6 +76,10 @@ public class Document extends MailItem {
 
     public String getDescription() {
         return mDescription == null ? "" : mDescription;
+    }
+    
+    public boolean isDescriptionEnabled() {
+        return mDescEnabled;
     }
 
     @Override
@@ -116,7 +121,7 @@ public class Document extends MailItem {
             }
 
             synchronized (mMailbox) {
-                pd = new ParsedDocument(mblob.getLocalBlob(), getName(), getContentType(), getChangeDate(), getCreator(), getDescription());
+                pd = new ParsedDocument(mblob.getLocalBlob(), getName(), getContentType(), getChangeDate(), getCreator(), getDescription(), isDescriptionEnabled());
                 if (pd.hasTemporaryAnalysisFailure())
                     throw new MailItem.TemporaryIndexingException();
             }
@@ -161,6 +166,7 @@ public class Document extends MailItem {
         mData.name    = pd.getFilename();
         mData.subject = pd.getFilename();
         mDescription  = pd.getDescription();
+        mDescEnabled  = pd.isDescriptionEnabled();
         pd.setVersion(getVersion());
 
         if (mData.size != pd.getSize()) {
@@ -200,7 +206,7 @@ public class Document extends MailItem {
         data.name        = name;
         data.subject     = name;
         data.setBlobDigest(pd.getDigest());
-        data.metadata    = encodeMetadata(meta, DEFAULT_COLOR_RGB, 1, extended, mimeType, pd.getCreator(), pd.getFragment(), null, 0, pd.getDescription()).toString();
+        data.metadata    = encodeMetadata(meta, DEFAULT_COLOR_RGB, 1, extended, mimeType, pd.getCreator(), pd.getFragment(), null, 0, pd.getDescription(), pd.isDescriptionEnabled()).toString();
         return data;
     }
 
@@ -245,13 +251,14 @@ public class Document extends MailItem {
         mLockOwner   = meta.get(Metadata.FN_LOCK_OWNER, mLockOwner);
         mDescription = meta.get(Metadata.FN_DESCRIPTION, mDescription);
         mLockTimestamp = meta.getLong(Metadata.FN_LOCK_TIMESTAMP, 0);
+        mDescEnabled = meta.getBool(Metadata.FN_DESC_ENABLED, true);
     }
 
     @Override Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, mContentType, mCreator, mFragment, mLockOwner, mLockTimestamp, mDescription);
+        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, mContentType, mCreator, mFragment, mLockOwner, mLockTimestamp, mDescription, mDescEnabled);
     }
 
-    static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended, String mimeType, String creator, String fragment, String lockowner, long lockts, String description) {
+    static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended, String mimeType, String creator, String fragment, String lockowner, long lockts, String description, boolean descEnabled) {
         if (meta == null)
             meta = new Metadata();
         meta.put(Metadata.FN_MIME_TYPE, mimeType);
@@ -260,6 +267,7 @@ public class Document extends MailItem {
         meta.put(Metadata.FN_LOCK_OWNER, lockowner);
         meta.put(Metadata.FN_LOCK_TIMESTAMP, lockts);
         meta.put(Metadata.FN_DESCRIPTION, description);
+        meta.put(Metadata.FN_DESC_ENABLED, descEnabled);
         return MailItem.encodeMetadata(meta, color, version, extended);
     }
 

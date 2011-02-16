@@ -6870,21 +6870,20 @@ public class Mailbox {
         }
     }
 
-    public WikiItem createWiki(OperationContext octxt, int folderId, String wikiword, String author,
-            String description, InputStream data) throws ServiceException {
-        return (WikiItem) createDocument(octxt, folderId, wikiword, WikiItem.WIKI_CONTENT_TYPE, author, description,
-                data, MailItem.Type.WIKI);
+    public WikiItem createWiki(OperationContext octxt, int folderId, String wikiword, String author, String description, InputStream data)
+    throws ServiceException {
+        return (WikiItem) createDocument(octxt, folderId, wikiword, WikiItem.WIKI_CONTENT_TYPE, author, description, true, data, MailItem.Type.WIKI);
     }
 
     public Document createDocument(OperationContext octxt, int folderId, String filename, String mimeType,
             String author, String description, InputStream data) throws ServiceException {
-        return createDocument(octxt, folderId, filename, mimeType, author, description, data, MailItem.Type.DOCUMENT);
+        return createDocument(octxt, folderId, filename, mimeType, author, description, true, data, MailItem.Type.DOCUMENT);
     }
 
     public Document createDocument(OperationContext octxt, int folderId, String filename, String mimeType,
-            String author, String description, InputStream data, MailItem.Type type) throws ServiceException {
+            String author, String description, boolean descEnabled, InputStream data, MailItem.Type type) throws ServiceException {
         try {
-            ParsedDocument pd = new ParsedDocument(data, filename, mimeType, System.currentTimeMillis(), author, description);
+            ParsedDocument pd = new ParsedDocument(data, filename, mimeType, System.currentTimeMillis(), author, description, descEnabled);
             return createDocument(octxt, folderId, pd, type);
         } catch (IOException ioe) {
             throw ServiceException.FAILURE("error writing document blob", ioe);
@@ -6947,7 +6946,18 @@ public class Mailbox {
             String description, InputStream data) throws ServiceException {
         Document doc = getDocumentById(octxt, docId);
         try {
-            ParsedDocument pd = new ParsedDocument(data, name, doc.getContentType(), System.currentTimeMillis(), author, description);
+            ParsedDocument pd = new ParsedDocument(data, name, doc.getContentType(), System.currentTimeMillis(), author, description, doc.isDescriptionEnabled());
+            return addDocumentRevision(octxt, docId, pd);
+        } catch (IOException ioe) {
+            throw ServiceException.FAILURE("error writing document blob", ioe);
+        }
+    }
+
+    public Document addDocumentRevision(OperationContext octxt, int docId, String author, String name, String description, boolean descEnabled, InputStream data)
+    throws ServiceException {
+        Document doc = getDocumentById(octxt, docId);
+        try {
+            ParsedDocument pd = new ParsedDocument(data, name, doc.getContentType(), System.currentTimeMillis(), author, description, descEnabled);
             return addDocumentRevision(octxt, docId, pd);
         } catch (IOException ioe) {
             throw ServiceException.FAILURE("error writing document blob", ioe);
@@ -6972,7 +6982,6 @@ public class Mailbox {
                 redoRecorder.setDocument(pd);
                 redoRecorder.setDocId(docId);
                 redoRecorder.setItemType(doc.getType());
-                redoRecorder.setDescription(doc.getDescription());
                 // TODO: simplify the redoRecorder by not subclassing from CreateMessage
 
                 // Get the redolog data from the mailbox blob.  This is less than ideal in the
