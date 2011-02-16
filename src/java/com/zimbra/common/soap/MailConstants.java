@@ -613,6 +613,7 @@ public final class MailConstants {
     public static final String A_EXP = "exp";
     public static final String A_NEED_EXP = "needExp";
 
+    public static final String A_DESC_ENABLED = "descEnabled";
     public static final String A_PATH = "path";
     public static final String A_NAME = "name";
     public static final String A_VALUE = "value";
