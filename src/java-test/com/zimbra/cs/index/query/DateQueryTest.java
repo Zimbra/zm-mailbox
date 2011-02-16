@@ -15,10 +15,12 @@
 package com.zimbra.cs.index.query;
 
 import java.text.ParseException;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.TimeZone;
 
+import org.apache.lucene.document.DateTools;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -42,7 +44,7 @@ public class DateQueryTest {
     }
 
     @Test
-    public void parseDate() throws Exception {
+    public void parseAbsoluteDate() throws Exception {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         DateQuery query = new DateQuery(DateQuery.Type.DATE);
         TimeZone tz = TimeZone.getTimeZone("UTC");
@@ -65,6 +67,116 @@ public class DateQueryTest {
 
         query.parseDate("2010. 1. 23", tz, Locale.KOREAN);
         Assert.assertEquals(expected, query.toString());
+    }
+
+    @Test
+    public void parseRelativeDate() throws Exception {
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+        DateQuery query = new DateQuery(DateQuery.Type.DATE);
+        TimeZone tz = TimeZone.getTimeZone("UTC");
+
+        query.parseDate("+2mi", tz, Locale.ENGLISH);
+        Assert.assertEquals("Q(DATE,DATE," + getMinute(2) + "-" + getMinute(3) + ")", query.toString());
+
+        query.parseDate("+2minute", tz, Locale.ENGLISH);
+        Assert.assertEquals("Q(DATE,DATE," + getMinute(2) + "-" + getMinute(3) + ")", query.toString());
+
+        query.parseDate("+2minutes", tz, Locale.ENGLISH);
+        Assert.assertEquals("Q(DATE,DATE," + getMinute(2) + "-" + getMinute(3) + ")", query.toString());
+
+        query.parseDate("+2h", tz, Locale.ENGLISH);
+        Assert.assertEquals("Q(DATE,DATE," + getHour(2) + "-" + getHour(3) + ")", query.toString());
+
+        query.parseDate("+2hour", tz, Locale.ENGLISH);
+        Assert.assertEquals("Q(DATE,DATE," + getHour(2) + "-" + getHour(3) + ")", query.toString());
+
+        query.parseDate("+2hours", tz, Locale.ENGLISH);
+        Assert.assertEquals("Q(DATE,DATE," + getHour(2) + "-" + getHour(3) + ")", query.toString());
+
+        query.parseDate("+2d", tz, Locale.ENGLISH);
+        Assert.assertEquals("Q(DATE,DATE," + getDate(2) + "-" + getDate(3) + ")", query.toString());
+
+        query.parseDate("+2day", tz, Locale.ENGLISH);
+        Assert.assertEquals("Q(DATE,DATE," + getDate(2) + "-" + getDate(3) + ")", query.toString());
+
+        query.parseDate("+2days", tz, Locale.ENGLISH);
+        Assert.assertEquals("Q(DATE,DATE," + getDate(2) + "-" + getDate(3) + ")", query.toString());
+
+        query.parseDate("+2w", tz, Locale.ENGLISH);
+        Assert.assertEquals("Q(DATE,DATE," + getWeek(2) + "-" + getWeek(3) + ")", query.toString());
+
+        query.parseDate("+2week", tz, Locale.ENGLISH);
+        Assert.assertEquals("Q(DATE,DATE," + getWeek(2) + "-" + getWeek(3) + ")", query.toString());
+
+        query.parseDate("+2weeks", tz, Locale.ENGLISH);
+        Assert.assertEquals("Q(DATE,DATE," + getWeek(2) + "-" + getWeek(3) + ")", query.toString());
+
+        query.parseDate("+2m", tz, Locale.ENGLISH);
+        Assert.assertEquals("Q(DATE,DATE," + getMonth(2) + "-" + getMonth(3) + ")", query.toString());
+
+        query.parseDate("+2month", tz, Locale.ENGLISH);
+        Assert.assertEquals("Q(DATE,DATE," + getMonth(2) + "-" + getMonth(3) + ")", query.toString());
+
+        query.parseDate("+2months", tz, Locale.ENGLISH);
+        Assert.assertEquals("Q(DATE,DATE," + getMonth(2) + "-" + getMonth(3) + ")", query.toString());
+
+        query.parseDate("+2y", tz, Locale.ENGLISH);
+        Assert.assertEquals("Q(DATE,DATE," + getYear(2) + "-" + getYear(3) + ")", query.toString());
+
+        query.parseDate("+2year", tz, Locale.ENGLISH);
+        Assert.assertEquals("Q(DATE,DATE," + getYear(2) + "-" + getYear(3) + ")", query.toString());
+
+        query.parseDate("+2years", tz, Locale.ENGLISH);
+        Assert.assertEquals("Q(DATE,DATE," + getYear(2) + "-" + getYear(3) + ")", query.toString());
+    }
+
+    private String getMinute(int minute) {
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        cal.add(Calendar.MINUTE, minute);
+        return DateTools.dateToString(cal.getTime(), DateTools.Resolution.MINUTE);
+    }
+
+    private String getHour(int hour) {
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        cal.add(Calendar.HOUR, hour);
+        cal.set(Calendar.MINUTE, 0);
+        return DateTools.dateToString(cal.getTime(), DateTools.Resolution.MINUTE);
+    }
+
+    private String getDate(int day) {
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        cal.add(Calendar.DATE, day);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        return DateTools.dateToString(cal.getTime(), DateTools.Resolution.MINUTE);
+    }
+
+    private String getWeek(int week) {
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        cal.add(Calendar.WEEK_OF_YEAR, week);
+        cal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        return DateTools.dateToString(cal.getTime(), DateTools.Resolution.MINUTE);
+    }
+
+    private String getMonth(int month) {
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        cal.add(Calendar.MONTH, month);
+        cal.set(Calendar.DAY_OF_MONTH, 1);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        return DateTools.dateToString(cal.getTime(), DateTools.Resolution.MINUTE);
+    }
+
+    private String getYear(int year) {
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        cal.add(Calendar.YEAR, year);
+        cal.set(Calendar.MONTH, 0);
+        cal.set(Calendar.DAY_OF_MONTH, 1);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        return DateTools.dateToString(cal.getTime(), DateTools.Resolution.MINUTE);
     }
 
     @Test

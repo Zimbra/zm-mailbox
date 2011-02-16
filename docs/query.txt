@@ -67,10 +67,8 @@ DOMAIN: such as *.com
 FOLDER_LABEL: mail|trash|spam|anywhere
 TAG: tag_name
 OBJECT_TYPE: "phone" "url" "credit-card" etc...types of parsed objects
-DATE:  absolute-date = mm/dd/yyyy (locale sensitive) OR
-       relative-date = [+/-]nnnn{minute,hour,day,week,month,year}
-       (need to figure out how to represent "this week", "last
-       week", "this month", etc)
+DATE: absolute-date = mm/dd/yyyy (locale sensitive) OR
+      relative-date = {+|-}nnnn{mi|minute[s]|h|hour[s]|d|day[s]|w|week[s]|m|month[s]|y|year[s]}
 SIZE: ([<>])?n+{b,kb,mb}    // default is b
 DB_MSG_ID: ??
 NUM: ([<>])?n+
