@@ -142,17 +142,37 @@ public abstract class MilterHandler extends ProtocolHandler {
             context.put(attr, normalizeAddr(addr));
     }
 
+    private String getNullTermStr(IoBuffer buf) {
+        IoBuffer strbuf = IoBuffer.allocate(128);
+        strbuf.setAutoExpand(true);
+
+        while (buf.hasRemaining()) {
+            byte b = buf.get();
+            strbuf.put(b);
+            if (b == 0) // break on null; but null must be included in strbuf
+                break;
+        }
+        strbuf.rewind();
+    	
+        String str;
+        try {
+            str = strbuf.hasRemaining() ? strbuf.getString(asciiDecoder) : null;
+        } catch (CharacterCodingException e) {
+            str = null;
+        }
+        return str;
+    }
+    
     private Map<String, String> parseMacros(IoBuffer buf) {
         Map<String, String> macros = new HashMap<String, String>();
         while (buf.hasRemaining()) {
-            try {
-                String key = buf.getString(asciiDecoder);
-                if (buf.hasRemaining()) {
-                    String value = buf.getString(asciiDecoder);
-                    if (key != null && value != null)
-                        macros.put(key, value);
+            String key = getNullTermStr(buf);
+            if (buf.hasRemaining()) {
+                String value = getNullTermStr(buf);
+                if (key != null && value != null) {
+                    macros.put(key, value);
                 }
-            } catch (CharacterCodingException e) {}
+            }
         }
         return macros;
     }
