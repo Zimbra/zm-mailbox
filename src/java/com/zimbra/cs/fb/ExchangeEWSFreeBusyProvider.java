@@ -88,18 +88,18 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
     private static TrustManager[] trustAllCerts =
         new TrustManager[] { new X509TrustManager() {
 
-            @Override
+            //@Override
             public X509Certificate[] getAcceptedIssuers() {
                 return null;
             }
 
-            @Override
+            //@Override
             public void checkServerTrusted(X509Certificate[] chain,
                 String authType) throws CertificateException {
 
             }
 
-            @Override
+            //@Override
             public void checkClientTrusted(X509Certificate[] chain,
                 String authType) throws CertificateException {
 
@@ -109,7 +109,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
 
     private static HostnameVerifier hv = new HostnameVerifier() {
 
-        @Override
+        //@Override
         public boolean verify(String hostname, SSLSession session) {
 
             return true;// accept all
@@ -126,7 +126,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
     // }
 
     private static class BasicUserResolver implements ExchangeUserResolver {
-        @Override
+        //@Override
         public ServerInfo getServerInfo(String emailAddr) {
             String url =
                 getAttr(Provisioning.A_zimbraFreebusyExchangeURL, emailAddr);
@@ -919,7 +919,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
 
     private static final String EXCHANGE_EWS = "EXCHANGE2010";
 
-    @Override
+    //@Override
     public String getName() {
         return EXCHANGE_EWS;
     }
@@ -928,7 +928,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
 		return MailItem.typeToBitmask(MailItem.TYPE_APPOINTMENT);
 	}
 
-    @Override
+    //@Override
     public long cachedFreeBusyStartTime() {
         Calendar cal = GregorianCalendar.getInstance();
         try {
@@ -949,7 +949,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         return cal.getTimeInMillis();
     }
 
-    @Override
+    //@Override
     public long cachedFreeBusyEndTime() {
         long duration = Constants.MILLIS_PER_MONTH * 2;
         Calendar cal = GregorianCalendar.getInstance();
@@ -967,7 +967,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         return cal.getTimeInMillis();
     }
 
-    @Override
+    //@Override
     public String foreignPrincipalPrefix() {
         return Provisioning.FP_PREFIX_AD;
     }
