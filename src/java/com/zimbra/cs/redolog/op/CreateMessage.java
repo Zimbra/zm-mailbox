@@ -329,7 +329,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         if (getVersion().atLeast(1, 5)) {
             out.writeInt(mConvFirstMsgId);
         }
-        if (getVersion().atLeast(1, 31)) {
+        if (getVersion().atLeast(1, 32)) {
             out.writeInt(mMergedConvIds.size());
             for (int mergeId : mMergedConvIds) {
                 out.writeInt(mergeId);
@@ -384,7 +384,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         if (getVersion().atLeast(1, 5)) {
             mConvFirstMsgId = in.readInt();
         }
-        if (getVersion().atLeast(1, 31)) {
+        if (getVersion().atLeast(1, 32)) {
             int mergeCount = in.readInt();
             mMergedConvIds = new ArrayList<Integer>(mergeCount);
             for (int i = 0; i < mergeCount; i++) {
