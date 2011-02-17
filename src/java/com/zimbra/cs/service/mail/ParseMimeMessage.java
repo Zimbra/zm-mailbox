@@ -772,11 +772,14 @@ public class ParseMimeMessage {
     private static void attachDocument(MimeMultipart mmp, Document doc, String contentID, ParseMessageContext ctxt)
     throws MessagingException, ServiceException {
         ctxt.incrementSize("attached document", (long) (doc.getSize() * 1.33));
-        String ct = doc.getContentType();
+        ContentType ct = new ContentType(doc.getContentType());
+        if (MimeConstants.isZimbraDocument(ct.getContentType())) {
+            ct = new ContentType(MimeConstants.CT_TEXT_HTML);
+        }
 
         MimeBodyPart mbp = new JavaMailMimeBodyPart();
-        mbp.setDataHandler(new DataHandler(new MailboxBlobDataSource(doc.getBlob(), ct)));
-        mbp.setHeader("Content-Type", new ContentType(ct).cleanup().setParameter("name", doc.getName()).setCharset(ctxt.defaultCharset).toString());
+        mbp.setDataHandler(new DataHandler(new MailboxBlobDataSource(doc.getBlob(), ct.getContentType())));
+        mbp.setHeader("Content-Type", ct.cleanup().setParameter("name", doc.getName()).setCharset(ctxt.defaultCharset).toString());
         mbp.setHeader("Content-Disposition", new ContentDisposition(Part.ATTACHMENT).setParameter("filename", doc.getName()).toString());
         mbp.setContentID(contentID);
         mmp.addBodyPart(mbp);
