@@ -1,8 +1,10 @@
 package com.zimbra.cs.account.accesscontrol;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -25,6 +27,7 @@ import com.zimbra.cs.account.accesscontrol.RightCommand.AllEffectiveRights;
 import com.zimbra.cs.account.accesscontrol.RightCommand.EffectiveRights;
 import com.zimbra.cs.account.accesscontrol.SearchGrants.GrantsOnTarget;
 import com.zimbra.cs.account.ldap.LdapDIT;
+import com.zimbra.cs.account.ldap.LdapDomain;
 import com.zimbra.cs.account.ldap.LdapFilter;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
@@ -270,12 +273,14 @@ public class CollectAllEffectiveRights {
             ZimbraACL acl = grantsOnTarget.getAcl();
             TargetType targetType = TargetType.getTargetType(grantedOnEntry);
             
-            if (targetType == TargetType.global)
+            if (targetType == TargetType.global) {
                 computeRightsInheritedFromGlobalGrant();
-            else if (targetType == TargetType.domain)
+            } else if (targetType == TargetType.domain) {
                 computeRightsInheritedFromDomain((Domain)grantedOnEntry);
-            else if (targetType == TargetType.dl)
+                computeSubDomainRightsInheritedFromDomain(acl, (Domain)grantedOnEntry);
+            } else if (targetType == TargetType.dl) {
                 groupsWithGrants.add((DistributionList)grantedOnEntry);
+            }
         }
         
         //
@@ -303,7 +308,7 @@ public class CollectAllEffectiveRights {
         // if any of the entries in a shape also have grants as an individual, the effective rigths for 
         // those entries will be replaced in stage 3.
         //
-        Set entryIdsHasGrants = new HashSet<String>();
+        Set<String> entryIdsHasGrants = new HashSet<String>();
         for (GrantsOnTarget grantsOnTarget : grantsOnTargets) {
             Entry grantedOnEntry = grantsOnTarget.getTargetEntry();
             if (grantedOnEntry instanceof NamedEntry) {
@@ -453,6 +458,78 @@ public class CollectAllEffectiveRights {
         // add to the domianed scope in AllEffectiveRights
         mResult.addDomainEntry(targetType, domainName, er);
     }
+    
+    private void computeSubDomainRightsInheritedFromDomain(ZimbraACL acl, Domain grantedOnDomain) throws ServiceException {
+        
+        boolean noSubDomainGrants = acl.getSubDomainACEs().isEmpty();
+        if (noSubDomainGrants) {
+            return;
+        }
+        
+        // get all sub domains of the grantedOnDomain 
+        List<Domain> subDomains = searchSubDomains(grantedOnDomain);
+        
+        for (Domain subDomain : subDomains) {
+            String targetId = subDomain.getId();
+            String targetName = subDomain.getName();
+            
+            EffectiveRights er = new EffectiveRights(
+                    TargetType.domain.getCode(), targetId, targetName, mGrantee.getId(), mGrantee.getName());
+            
+            CollectEffectiveRights.getEffectiveRights(mGrantee, subDomain, mExpandSetAttrs, mExpandGetAttrs, er);
+            mResult.addEntry(TargetType.domain, targetName, er);
+        }
+    }
+    
+    private List<Domain> searchSubDomains(Domain domain) throws ServiceException {
+        
+        List<Domain> subDomains = new ArrayList<Domain>();
+        
+        if (!(domain instanceof LdapDomain)) {
+            ZimbraLog.acl.error("domain " + domain.getName() + " is not an LdapDomain");
+            return subDomains;
+        }
+                
+        String base = ((LdapDomain)domain).getDN();
+        String query = LdapFilter.allDomains();
+        String returnAttrs[] = new String[] {Provisioning.A_zimbraId};
+        SearchSubDomainVisitor visitor = new SearchSubDomainVisitor();
+        
+        LdapUtil.searchLdapOnMaster(base, query, returnAttrs, visitor);
+        
+        List<String> zimbraIds = visitor.getResults();
+        for (String zimbraId : zimbraIds) {
+            if (zimbraId.equalsIgnoreCase(domain.getId())) {
+                // the search returns the domain itself too, skip it
+                continue;
+            }
+            
+            try {
+                Domain subDomain = (Domain)TargetType.lookupTarget(mProv, TargetType.domain, TargetBy.id, zimbraId);
+                subDomains.add(subDomain);
+            } catch (ServiceException e) {
+                ZimbraLog.acl.warn("canot find domain by id " + zimbraId, e);
+            }
+        }
+        
+        return subDomains;
+    }
+    
+    private static class SearchSubDomainVisitor implements LdapUtil.SearchLdapVisitor {
+        List<String> mDomainIds = new ArrayList<String>();
+
+        public void visit(String dn, Map<String, Object> attrs, Attributes ldapAttrs) {
+            String zimbraId = (String)attrs.get(Provisioning.A_zimbraId);
+            if (zimbraId != null) {
+                mDomainIds.add(zimbraId);
+            }
+        }
+        
+        private List<String> getResults() {
+            return mDomainIds;
+        }
+    }
+    
     
     /*
      * We do not have a group scope in AllEffectiveRights. 
