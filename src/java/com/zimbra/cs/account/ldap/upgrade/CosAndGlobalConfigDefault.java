@@ -105,10 +105,8 @@ public class CosAndGlobalConfigDefault extends LdapUpgrade {
         if (!am.inVersion(attr, since) && !attrVersion.isFuture())
             return true;
 
-        /*
-         *  bug 38426, check out of order releases
-         */
-
+        //
+        // bug 38426
         //
         // 5.0.17_GA is after 6.0.0_BETA2
         //
@@ -125,10 +123,35 @@ public class CosAndGlobalConfigDefault extends LdapUpgrade {
         //
         if (attrVersion.compare("5.0.17") == 0) {
             boolean fromATroubledInstall = (mSince.compare("6.0.0_BETA1") == 0 || mSince.compare("6.0.0_BETA2") == 0);
-            if (fromATroubledInstall)
+            if (fromATroubledInstall) {
                 return true;
+            }
         }
-
+        
+        /*
+         * bug 56667
+         * 
+         * zimbraFreebusyExchangeServerType was added in 6.0.11, *after* 7.0.0 and before 7.0.1
+         * 
+         * [from] 7.0.0 -> [to] higher version
+         * upgrades will miss it.
+         * 
+         * [from] 7.0.1 and above -> [to] higher version
+         * upgrades will be fine because:
+         *   - if the [from] is a fresh install, it will have the default value set.
+         *   - if the [from] is from an upgrade:
+         *         - if from 7.0.0, fixed by this fix.
+         *         - if from below 7.0.0:
+         *               - if 6.0.11 and above, no problem
+         *               - if below 6.0.11, taken care by the regular logic, no problem.    
+         */
+        if (Provisioning.A_zimbraFreebusyExchangeServerType.equalsIgnoreCase(attr)) {
+            boolean fromATroubledInstall = (mSince.compare("7.0.0") == 0);
+            if (fromATroubledInstall) {
+                return true;
+            }
+        }
+        
         return false;
     }
 
