@@ -14,6 +14,8 @@
  */
 package com.zimbra.common.mime;
 
+import com.google.common.collect.ImmutableSet;
+
 public class MimeConstants {
 
     // content types
@@ -76,4 +78,12 @@ public class MimeConstants {
     public static final String P_CHARSET_WINDOWS_31J = "Windows-31J";
     public static final String P_CHARSET_SHIFT_JIS = "shift_jis";
     public static final String P_CHARSET_DEFAULT = P_CHARSET_ASCII;
+    
+    public static final ImmutableSet<String> ZIMBRA_DOC_CT_SET = 
+        new ImmutableSet.Builder<String>().add(CT_APPLICATION_ZIMBRA_DOC,
+                                               CT_APPLICATION_ZIMBRA_SLIDES,
+                                               CT_APPLICATION_ZIMBRA_SPREADSHEET).build();
+    public static boolean isZimbraDocument(String contentType) {
+        return ZIMBRA_DOC_CT_SET.contains(contentType);
+    }
 }
