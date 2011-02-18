@@ -2424,11 +2424,61 @@
     <r n="listAlias"/>
     <r n="listDomain"/>
     <r n="deleteDomain"/>
-    <r n="createSubDomain"/>
     <r n="countAccount"/>
     <r n="checkDomainMXRecord"/>
   </rights>
 </right>
+
+<right type="combo" name="adminConsoleSavedSearchRights">
+  <desc>Admin Console Extension Rights</desc>
+  <rights>
+    <r n="setAdminSavedSearch"/>
+    <r n="viewAdminSavedSearch"/>
+  </rights>
+</right>
+<right name="adminConsoleCreateGALRights" type="setAttrs" targetType="account">
+  <desc> Admin Console set attr rights for create GAL sync account </desc>
+  <attrs>
+    <a n="zimbraIsSystemResource"/>
+    <a n="zimbraContactMaxNumEntries"/>
+  </attrs>
+</right>
+
+<right name="adminConsoleConfigGALRights" type="setAttrs" targetType="domain">
+  <desc> Admin Console set attr rights for configure GAL </desc>
+  <attrs>
+    <a n="zimbraGalAccountId"/>
+    <a n="zimbraGalMode"/>
+    <a n="zimbraGalLdapURL"/>
+    <a n="zimbraGalLdapSearchBase"/>
+    <a n="zimbraGalLdapBindDn"/>
+    <a n="zimbraGalLdapBindPassword"/>
+    <a n="zimbraGalLdapFilter"/>
+    <a n="zimbraGalAutoCompleteLdapFilter"/>
+    <a n="zimbraGalSyncLdapURL"/>
+    <a n="zimbraGalSyncLdapBindPassword"/>
+    <a n="zimbraGalSyncLdapBindDn"/>
+    <a n="zimbraGalSyncLdapFilter"/>
+    <a n="zimbraGalSyncLdapSearchBase"/>
+  </attrs>
+</right>
+
+<right type="combo" name="adminConsoleCreateTopDomainRights">
+  <!-- set on the global target -->
+  <desc>Admin Console Create Top Domain Rights</desc>
+  <rights>
+      <r n="createSubDomain"/>
+      <r n="createTopDomain"/>
+      <r n="adminConsoleCreateGALRights"/>
+      <r n="adminConsoleAccountRights"></r>
+      <r n="adminConsoleDLRights"></r>
+      <r n="adminConsoleResourceRights"></r>
+      <r n="adminConsoleAliasRights"></r>
+      <r n="adminConsoleSavedSearchRights"></r>
+      <r n="adminConsoleDomainRights"></r>
+  </rights>
+</right>
+
 
 <right type="combo" name="adminConsoleServerRights">
   <desc>Admin Console Server Rights</desc>
@@ -2471,13 +2521,6 @@
   </rights>
 </right>
 
-<right type="combo" name="adminConsoleSavedSearchRights">
-  <desc>Admin Console Extension Rights</desc>
-  <rights>
-    <r n="setAdminSavedSearch"/>
-    <r n="viewAdminSavedSearch"/>
-  </rights>
-</right>
 
 <right type="combo" name="adminConsoleGlobalRights">
   <desc>Admin Console Global Rights</desc>
@@ -2610,7 +2653,7 @@
 </right>
 
 <right type="combo" name="adminConsoleSoftwareUpdatesRights">
-  <desc>Rights for configuring software updates component on a server through Admin Console</desc>
+  <desc>Rights for configuring software updates component a server through Admin Console</desc>
   <rights>
    <r n="listServer" />
    <r n="listAccount" />
