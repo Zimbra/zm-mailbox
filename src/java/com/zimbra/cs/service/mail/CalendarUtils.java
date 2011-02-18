@@ -25,6 +25,8 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.gal.GalGroup;
+import com.zimbra.cs.gal.GalGroupMembers;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Folder;
@@ -61,9 +63,11 @@ import com.zimbra.common.util.L10nUtil.MsgKey;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 public class CalendarUtils {
     /**
@@ -247,8 +251,8 @@ public class CalendarUtils {
             mod.setRecurId(oldInv.getRecurId());
         }
 
-        attendeesToCancel.addAll(getRemovedAttendees(oldInv, mod, true));
-        attendeesAdded.addAll(getRemovedAttendees(mod, oldInv, false));  // reverse of who's being canceled
+        attendeesToCancel.addAll(getRemovedAttendees(oldInv.getAttendees(), mod.getAttendees(), true, account));
+        attendeesAdded.addAll(getRemovedAttendees(mod.getAttendees(), oldInv.getAttendees(), false, account));  // reverse of who's being canceled
 
         // change tracking
         String changes = parseInviteChanges(inviteElem);
@@ -421,25 +425,23 @@ public class CalendarUtils {
         return toRet;
     }
 
-    // Compare the attendee lists in old and new invites to figure out which attendees are being removed.
-    // Distribution lists are taken into consideration.
-    public static List<ZAttendee> getRemovedAttendees(Invite oldInv, Invite newInv, boolean applyDL)
+    // Compare the old and new attendee lists to figure out which attendees are being removed.
+    // Distribution lists are taken into consideration if requested.
+    public static List<ZAttendee> getRemovedAttendees(List<ZAttendee> oldAttendees, List<ZAttendee> newAttendees,
+                                                      boolean checkListMembership, Account account)
     throws ServiceException {
         List<ZAttendee> list = new ArrayList<ZAttendee>();
         Provisioning prov = Provisioning.getInstance();
-        // compare the new attendee list with the existing one...if attendees
-        // have been removed, then
-        // we need to send them individual cancellation messages
-        List<ZAttendee> newAts = newInv.getAttendees();
-        List<ZAttendee> oldAts = oldInv.getAttendees();
-        for (ZAttendee old : oldAts) {
+        // compare the new attendee list with the existing one...
+        // if attendees have been removed, then we need to send them individual cancellation messages
+        for (ZAttendee old : oldAttendees) {
             boolean matches = false;
             String oldAddr = old.getAddress();
             if (oldAddr != null) {
                 Account oldAcct = prov.get(AccountBy.name, oldAddr);
                 if (oldAcct != null) {
                     // local user - consider aliases
-                    for (ZAttendee newAt : newAts) {
+                    for (ZAttendee newAt : newAttendees) {
                         if (AccountUtil.addressMatchesAccount(oldAcct, newAt.getAddress())) {
                             matches = true;
                             break;
@@ -447,7 +449,7 @@ public class CalendarUtils {
                     }
                 } else {
                     // external email - simple string comparison of email addresses
-                    for (ZAttendee newAt : newAts) {
+                    for (ZAttendee newAt : newAttendees) {
                         if (oldAddr.equalsIgnoreCase(newAt.getAddress())) {
                             matches = true;
                             break;
@@ -461,29 +463,77 @@ public class CalendarUtils {
         if (list.isEmpty())
             return list;
 
-        // Find out which of the new attendees are distribution lists.
-        if (applyDL) {
-            List<String /* zimbraId */> newAtsDL = new ArrayList<String>();
-            for (ZAttendee at : newAts) {
+        // Find out which of the new attendees are local distribution lists or GAL groups.
+        if (checkListMembership) {
+            List<DistributionList> newAtsDL = new ArrayList<DistributionList>();
+            List<String /* GAL group email */> newAtsGALGroup = new ArrayList<String>();
+            for (ZAttendee at : newAttendees) {
                 String addr = at.getAddress();
                 if (addr != null) {
                     DistributionList dl = prov.get(DistributionListBy.name, addr);
                     if (dl != null)
-                        newAtsDL.add(dl.getId());
+                        newAtsDL.add(dl);
+                    else if (GalGroup.isGroup(addr, account))
+                        newAtsGALGroup.add(addr);
                 }
             }
-            // Check to see if attendees to be removed are members of DLs.  Those that belong to a DL in new attendee
-            // list aren't considered removed.
+
+            // Check if attendees to be removed are members of GAL groups or local DLs.  An attendee being
+            // dropped in the new invite isn't really removed if he/she is a member of DL/GAL group.
+
+            // GAL groups: Iterate over GAL groups first because fetching member list is expensive.
+            for (String galAddr : newAtsGALGroup) {
+                if (list.isEmpty())
+                    break;
+                Set<String> galMembers = GalGroupMembers.getGroupMembers(galAddr, account);
+                for (Iterator<ZAttendee> removedIter = list.iterator(); removedIter.hasNext(); ) {
+                    ZAttendee removedAt = removedIter.next();
+                    String addr = removedAt.getAddress();
+                    if (addr != null && galMembers.contains(addr))
+                        removedIter.remove();
+                }
+            }
+
+            Set<String> remoteAddrs = new HashSet<String>();
+
+            // local DLs: Iterate over attendees first to get each attendee's DL list.  This loop only deals with
+            // attendees who are local Accounts.  This case works for indirect list membership as well as membership
+            // via alias address.
             for (Iterator<ZAttendee> removedIter = list.iterator(); removedIter.hasNext(); ) {
                 ZAttendee removedAt = removedIter.next();
-                String removedAddr = removedAt.getAddress();
-                if (removedAddr != null) {
-                    Account removedAcct = prov.get(AccountBy.name, removedAddr);
+                String addr = removedAt.getAddress();
+                if (addr != null) {
+                    Account removedAcct = prov.get(AccountBy.name, addr);
                     if (removedAcct != null) {
-                        for (String dl : newAtsDL) {
-                            if (prov.inDistributionList(removedAcct, dl)) {
+                        Set<String> acctDLs = prov.getDistributionLists(removedAcct);
+                        for (DistributionList dl : newAtsDL) {
+                            if (acctDLs.contains(dl.getId())) {
                                 removedIter.remove();
                                 break;
+                            }
+                        }
+                    } else {
+                        // Removed address is not a local account.
+                        remoteAddrs.add(addr);
+                    }
+                }
+            }
+
+            // Check non-local attendee membership in local DLs.  Only direct membership is checked.
+            if (!remoteAddrs.isEmpty()) {
+                for (DistributionList dl : newAtsDL) {
+                    // Get list members.  We won't do recursive expansion; let's keep it sane.
+                    String[] members = dl.getAllMembers();
+                    if (members != null && members.length > 0) {
+                        Set<String> membersLower = new HashSet<String>();
+                        for (String member : members) {
+                            membersLower.add(member.toLowerCase());
+                        }
+                        for (Iterator<ZAttendee> removedIter = list.iterator(); removedIter.hasNext(); ) {
+                            ZAttendee removedAt = removedIter.next();
+                            String addr = removedAt.getAddress();
+                            if (addr != null && remoteAddrs.contains(addr) && membersLower.contains(addr.toLowerCase())) {
+                                removedIter.remove();
                             }
                         }
                     }
