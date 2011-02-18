@@ -995,6 +995,7 @@ public final class MailConstants {
     public static final String A_DS_EMAIL_ADDRESS = "emailAddress";
     public static final String A_DS_USE_ADDRESS_FOR_FORWARD_REPLY ="useAddressForForwardReply";
     public static final String A_DS_DEFAULT_SIGNATURE = "defaultSignature";
+    public static final String A_DS_FORWARD_REPLY_SIGNATURE = "forwardReplySignature";
     public static final String A_DS_FROM_DISPLAY = "fromDisplay";
     public static final String A_DS_FROM_ADDRESS = "fromAddress";
     public static final String A_DS_REPLYTO_ADDRESS = "replyToAddress";
