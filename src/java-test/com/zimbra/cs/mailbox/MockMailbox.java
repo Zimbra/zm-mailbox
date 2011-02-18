@@ -102,7 +102,7 @@ public class MockMailbox extends Mailbox {
     public void addDocument(int id, String name, String contentType, String content) throws ServiceException {
         MailItem.UnderlyingData data = new MailItem.UnderlyingData();
         data.id = id;
-        data.type = MailItem.TYPE_DOCUMENT;
+        data.type = MailItem.Type.DOCUMENT.toByte();
         data.name = name;
         data.subject = name;
         data.flags = Flag.BITMASK_UNCACHED;
