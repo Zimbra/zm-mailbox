@@ -67,6 +67,16 @@ public class CreateDataSource extends MailDocumentHandler {
         dsAttrs.put(Provisioning.A_zimbraDataSourceUsername, eDataSource.getAttribute(MailConstants.A_DS_USERNAME));
         dsAttrs.put(Provisioning.A_zimbraDataSourcePassword, eDataSource.getAttribute(MailConstants.A_DS_PASSWORD));
         
+        String defaultSignature = eDataSource.getAttribute(MailConstants.A_DS_DEFAULT_SIGNATURE, null);
+        if (defaultSignature != null) {
+            dsAttrs.put(Provisioning.A_zimbraPrefDefaultSignatureId, defaultSignature);
+        }
+        
+        String forwardReplySignature = eDataSource.getAttribute(MailConstants.A_DS_FORWARD_REPLY_SIGNATURE, null);
+        if (forwardReplySignature != null) {
+            dsAttrs.put(Provisioning.A_zimbraPrefForwardReplySignatureId, forwardReplySignature);
+        }
+        
         // type
         dsAttrs.put(Provisioning.A_zimbraDataSourceType, type.toString());
         
