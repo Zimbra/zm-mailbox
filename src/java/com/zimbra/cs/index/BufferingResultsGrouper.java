@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -40,7 +40,7 @@ public abstract class BufferingResultsGrouper implements ZimbraQueryResults {
      */
     protected abstract boolean bufferHits() throws ServiceException;
 
-
+    @Override
     public SortBy getSortBy() {
         return mHits.getSortBy();
     }
@@ -49,6 +49,7 @@ public abstract class BufferingResultsGrouper implements ZimbraQueryResults {
         mHits = hits;
     }
 
+    @Override
     public void resetIterator() throws ServiceException {
         if (!atStart) {
             mBufferedHit.clear();
@@ -57,15 +58,18 @@ public abstract class BufferingResultsGrouper implements ZimbraQueryResults {
         }
     }
 
+    @Override
     public boolean hasNext() throws ServiceException {
         return bufferHits();
     }
 
+    @Override
     public ZimbraHit getFirstHit() throws ServiceException {
         resetIterator();
         return getNext();
     }
 
+    @Override
     public ZimbraHit peekNext() throws ServiceException {
         if (bufferHits()) {
             return mBufferedHit.get(0);
@@ -74,6 +78,7 @@ public abstract class BufferingResultsGrouper implements ZimbraQueryResults {
         }
     }
 
+    @Override
     public ZimbraHit skipToHit(int hitNo) throws ServiceException {
         resetIterator();
         for (int i = 0; i < hitNo; i++) {
@@ -85,6 +90,7 @@ public abstract class BufferingResultsGrouper implements ZimbraQueryResults {
         return getNext();
     }
 
+    @Override
     public ZimbraHit getNext() throws ServiceException {
         atStart = false;
         if (bufferHits()) {
@@ -94,16 +100,14 @@ public abstract class BufferingResultsGrouper implements ZimbraQueryResults {
         }
     }
 
+    @Override
     public void doneWithSearchResults() throws ServiceException {
         mHits.doneWithSearchResults();
     }
 
+    @Override
     public List<QueryInfo> getResultInfo() {
         return mHits.getResultInfo();
-    }
-
-    public int estimateResultSize() throws ServiceException {
-        return mHits.estimateResultSize();
     }
 
 }

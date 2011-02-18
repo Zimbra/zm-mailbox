@@ -2175,49 +2175,6 @@ public class Mailbox {
         return item;
     }
 
-    /**
-     * Executes the callback within a mailbox transaction.
-     * <p>
-     * This method is intented to be used by search code. The search code
-     * directly fetch item data from DB. When it converts those bare data to
-     * {@link MailItem}, it must be within a mailbox transaction because they
-     * access {@link MailItem} cache.
-     *
-     * @param cb callback
-     */
-    public synchronized void execute(TransactionCallback cb) throws ServiceException {
-        cb.mailbox = this;
-        boolean success = false;
-        try {
-            beginTransaction("callback", null);
-            cb.doInTransaction(this);
-            success = true;
-        } finally {
-            endTransaction(success);
-        }
-    }
-
-    /**
-     * @see #doInTransaction(Mailbox)
-     */
-    public static abstract class TransactionCallback {
-        private Mailbox mailbox;
-
-        protected abstract void doInTransaction(Mailbox mbox) throws ServiceException;
-
-        /**
-         * Translates the DB representation to a {@link MailItem} object.
-         *
-         * @param data DB representation of {@link MailItem}
-         * @return item
-         * @throws ServiceException if an error occurred
-         */
-        protected final MailItem toItem(MailItem.UnderlyingData data)  throws ServiceException {
-            assert(mailbox.mCurrentChange.isActive());
-            return mailbox.getItem(data);
-        }
-    }
-
     /** translate from the DB representation of an item to its Mailbox abstraction */
     MailItem getItem(MailItem.UnderlyingData data) throws ServiceException {
         if (data == null)

@@ -569,10 +569,9 @@ public final class LuceneQueryOperation extends QueryOperation {
     public List<QueryInfo> getResultInfo() {
         List<QueryInfo> toRet = new ArrayList<QueryInfo>();
         toRet.addAll(mQueryInfo);
-
-        if (mDBOp != null)
-            toRet.addAll(mDBOp.mQueryInfo);
-
+        if (mDBOp != null) {
+            toRet.addAll(mDBOp.getQueryInfo());
+        }
         return toRet;
     }
 
@@ -607,14 +606,6 @@ public final class LuceneQueryOperation extends QueryOperation {
      */
     public void addQueryInfo(QueryInfo inf) {
         mQueryInfo.add(inf);
-    }
-
-    @Override
-    public int estimateResultSize() throws ServiceException {
-        if (mDBOp == null)
-            return 0; // you need to run the query before this number is known
-        else
-            return mDBOp.estimateResultSize();
     }
 
     /**

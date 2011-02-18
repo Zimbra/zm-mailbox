@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -129,16 +129,10 @@ public class Search extends MailDocumentHandler  {
         return mbox.index.search(zsc.getResponseProtocol(), octxt, params);
     }
 
-    protected static void putInfo(Element response, SearchParams params, ZimbraQueryResults results) {
+    protected static void putInfo(Element response, ZimbraQueryResults results) {
         List<QueryInfo> qinfo = results.getResultInfo();
-        if ((qinfo.size() > 0) || params.getEstimateSize()) {
+        if (qinfo.size() > 0) {
             Element qinfoElt = response.addElement(MailConstants.E_INFO);
-            Element sizeEst = qinfoElt.addElement("sizeEstimate");
-            try {
-                sizeEst.addAttribute("value", results.estimateResultSize());
-            } catch (ServiceException ex) {
-            }
-
             for (QueryInfo inf : qinfo) {
                 inf.toXml(qinfoElt);
             }
@@ -166,7 +160,7 @@ public class Search extends MailDocumentHandler  {
         }
 
         resp.addHasMore(pager.hasNext());
-        resp.add(results.getResultInfo(), results.estimateResultSize());
+        resp.add(results.getResultInfo());
     }
 
     // Calendar summary cache stuff

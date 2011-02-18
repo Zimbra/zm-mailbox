@@ -405,8 +405,4 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl {
         return mInfo;
     }
 
-    @Override
-    public int estimateResultSize() {
-        return 0;
-    }
 }

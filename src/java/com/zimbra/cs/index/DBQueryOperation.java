@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -37,7 +36,6 @@ import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.db.DbPool.DbConnection;
-import com.zimbra.cs.db.DbSearch.SearchResult;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -47,62 +45,60 @@ import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.util.ItemId;
 
 /**
- * {@link QueryOperation} which goes to the SQL DB. It might have a "child"
- * Lucene operation attached to it.
+ * {@link QueryOperation} which goes to the SQL DB. It might have a "child" Lucene operation attached to it.
  *
  * @since Oct 29, 2004
+ * @author tim
+ * @author ysasaki
  */
 public class DBQueryOperation extends QueryOperation {
 
-    private int mSizeEstimate = -1; // will only be set if the search parameters call for it
-    private int mCountDbResults = -1; // count of DB hits
-    private IConstraints mConstraints = new DbLeafNode();
-    private int mCurHitsOffset = 0; // this is the logical offset of the end of the mDBHits buffer
-    private int mOffset = 0; // this is the offset IN THE DATABASE when we're doing a DB-FIRST iteration
+    private int countDbResults = -1; // count of DB hits
+    private IConstraints constraints = new DbLeafNode();
+    private int hitsOffset = 0; // this is the logical offset of the end of the mDBHits buffer
+    private int dbOffset = 0; // this is the offset IN THE DATABASE when we're doing a DB-FIRST iteration
 
     /**
-     * this gets set to FALSE if we have any real work to do this lets
-     * us optimize away queries that might match "everything"
+     * this gets set to FALSE if we have any real work to do this lets us optimize away queries that might match
+     * "everything".
      */
-    private boolean mAllResultsQuery = true;
-    private boolean mIncludeIsLocalFolders = false;
-    private boolean mIncludeIsRemoteFolders = false;
+    private boolean allResultsQuery = true;
+    private boolean includeIsLocalFolders = false;
+    private boolean includeIsRemoteFolders = false;
 
-    private List<SearchResult> mDBHits;
-    private List<ZimbraHit> mNextHits = new ArrayList<ZimbraHit>();
-    private Iterator<SearchResult> mDBHitsIter;
+    private List<DbSearch.Result> dbHits;
+    private List<ZimbraHit> nextHits = new ArrayList<ZimbraHit>();
+    private Iterator<DbSearch.Result> dbHitsIter;
     private boolean atStart = true; // don't re-fill buffer twice if they call hasNext() then reset() w/o actually getting next
-    private int mHitsPerChunk = 100;
+    private int hitsPerChunk = 100;
     private static final int MAX_HITS_PER_CHUNK = 2000;
 
     /**
-     * TRUE if we know there are no more hits to get for mDBHitsIter
-     *   -- ie there is no need to call getChunk() anymore
+     * TRUE if we know there are no more hits to get for mDBHitsIter, i.e. there is no need to call getChunk() anymore.
      */
-    private boolean mEndOfHits = false;
+    private boolean endOfHits = false;
     private final Set<MailItem.Type> types = EnumSet.noneOf(MailItem.Type.class);
     private final Set<MailItem.Type> excludeTypes = EnumSet.noneOf(MailItem.Type.class);
 
     /**
      * An attached Lucene constraint.
      */
-    private LuceneQueryOperation mLuceneOp = null;
+    private LuceneQueryOperation luceneOp = null;
 
     /**
      * The current "chunk" of lucene results we are working through.
      */
-    private LuceneQueryOperation.LuceneResultsChunk mLuceneChunk = null;
+    private LuceneQueryOperation.LuceneResultsChunk luceneChunk = null;
 
     /**
-     * If set, then this is the AccountId of the owner of a folder
-     * we are searching.  We track it at the toplevel here b/c we need
-     * to make sure that we handle unions (don't combine) and intersections
-     * (always empty set) correctly
+     * If set, then this is the AccountId of the owner of a folder we are searching. We track it at the toplevel here
+     * b/c we need to make sure that we handle unions (don't combine) and intersections (always empty set) correctly.
      */
-    private QueryTarget mQueryTarget = QueryTarget.UNSPECIFIED;
+    private QueryTarget queryTarget = QueryTarget.UNSPECIFIED;
+    private List<QueryInfo> queryInfo = new ArrayList<QueryInfo>();
 
-    private SearchResult.ExtraData mExtra = null;
-    private QueryExecuteMode mExecuteMode = null;
+    private DbSearch.FetchMode fetch = null;
+    private QueryExecuteMode executeMode = null;
 
     private static enum QueryExecuteMode {
         NO_RESULTS,
@@ -125,13 +121,13 @@ public class DBQueryOperation extends QueryOperation {
 
     @Override
     QueryOperation expandLocalRemotePart(Mailbox mbox) throws ServiceException {
-        if (mConstraints instanceof DbLeafNode) {
+        if (constraints instanceof DbLeafNode) {
             boolean added = false;
 
-            if (mIncludeIsLocalFolders) {
-                mIncludeIsLocalFolders = false; // expanded!
+            if (includeIsLocalFolders) {
+                includeIsLocalFolders = false; // expanded!
 
-                DbLeafNode leaf = (DbLeafNode)mConstraints;
+                DbLeafNode leaf = (DbLeafNode) constraints;
 
                 for (Folder f : mbox.getFolderById(null, Mailbox.ID_FOLDER_ROOT).getSubfolderHierarchy()) {
                     if (!(f instanceof Mountpoint) && !(f instanceof SearchFolder)) {
@@ -145,9 +141,9 @@ public class DBQueryOperation extends QueryOperation {
                 } else {
                     return this;
                 }
-            } else if (mIncludeIsRemoteFolders) {
+            } else if (includeIsRemoteFolders) {
                 UnionQueryOperation toRet = new UnionQueryOperation();
-                mIncludeIsRemoteFolders = false; // expanded
+                includeIsRemoteFolders = false; // expanded
 
                 for (Folder f : mbox.getFolderById(null, Mailbox.ID_FOLDER_ROOT).getSubfolderHierarchy()) {
                     if (f instanceof Mountpoint) {
@@ -192,43 +188,48 @@ public class DBQueryOperation extends QueryOperation {
                 }
             }
 
-            mConstraints.ensureSpamTrashSetting(mbox, exclude);
+            constraints.ensureSpamTrashSetting(mbox, exclude);
         }
         return this;
     }
 
     @Override
     boolean hasSpamTrashSetting() {
-        if (mLuceneOp != null && mLuceneOp.hasSpamTrashSetting())
+        if (luceneOp != null && luceneOp.hasSpamTrashSetting()) {
             return true;
-        else {
-            if (mIncludeIsRemoteFolders)
+        } else {
+            if (includeIsRemoteFolders) {
                 return true;
-            else
-                return mConstraints.hasSpamTrashSetting();
+            } else {
+                return constraints.hasSpamTrashSetting();
+            }
         }
     }
 
     @Override
     void forceHasSpamTrashSetting() {
-        mConstraints.forceHasSpamTrashSetting();
+        constraints.forceHasSpamTrashSetting();
     }
 
     @Override
     boolean hasNoResults() {
-        return mConstraints.hasNoResults();
+        return constraints.hasNoResults();
     }
 
     @Override
     boolean hasAllResults() {
-        return mAllResultsQuery;
+        return allResultsQuery;
     }
 
     @Override
     QueryTargetSet getQueryTargets() {
         QueryTargetSet toRet = new QueryTargetSet(1);
-        toRet.add(mQueryTarget);
+        toRet.add(queryTarget);
         return toRet;
+    }
+
+    List<QueryInfo> getQueryInfo() {
+        return queryInfo;
     }
 
     /**
@@ -239,19 +240,20 @@ public class DBQueryOperation extends QueryOperation {
      * @return
      */
     DbLeafNode topLevelAndedConstraint() {
-        switch (mConstraints.getNodeType()) {
+        switch (constraints.getNodeType()) {
             case LEAF:
-                return (DbLeafNode)mConstraints;
+                return (DbLeafNode) constraints;
             case AND:
-                DbAndNode and = (DbAndNode)mConstraints;
+                DbAndNode and = (DbAndNode) constraints;
                 return and.getLeafChild();
             case OR:
                 IConstraints top = new DbAndNode();
-                mConstraints = top.andIConstraints(mConstraints);
-                return ((DbAndNode)mConstraints).getLeafChild();
+                constraints = top.andIConstraints(constraints);
+                return ((DbAndNode) constraints).getLeafChild();
+            default:
+                assert false : constraints.getNodeType();
+                return null;
         }
-        assert(false);
-        return  null;
     }
 
     /**
@@ -263,80 +265,77 @@ public class DBQueryOperation extends QueryOperation {
      * @param op Lucene query operation
      */
     void setLuceneQueryOperation(LuceneQueryOperation op) {
-        assert(mLuceneOp == null);
-        mAllResultsQuery = false;
-        mLuceneOp = op;
+        assert(luceneOp == null);
+        allResultsQuery = false;
+        luceneOp = op;
     }
 
     public void addItemIdClause(Mailbox mbox, ItemId itemId, boolean truth) {
-        mAllResultsQuery = false;
-        if (itemId.belongsTo(mbox)) {
-            // LOCAL
-            assert mQueryTarget.isCompatibleLocal() : topLevelAndedConstraint() + "," + itemId;
-            mQueryTarget = QueryTarget.LOCAL;
+        allResultsQuery = false;
+        if (itemId.belongsTo(mbox)) { // LOCAL
+            assert queryTarget.isCompatibleLocal() : topLevelAndedConstraint() + "," + itemId;
+            queryTarget = QueryTarget.LOCAL;
             topLevelAndedConstraint().addItemIdClause(itemId.getId(), truth);
-        } else {
-            // REMOTE
-            assert mQueryTarget != QueryTarget.LOCAL : topLevelAndedConstraint() + "," + itemId;
-            mQueryTarget = new QueryTarget(itemId.getAccountId());
+        } else { // REMOTE
+            assert queryTarget != QueryTarget.LOCAL : topLevelAndedConstraint() + "," + itemId;
+            queryTarget = new QueryTarget(itemId.getAccountId());
             topLevelAndedConstraint().addRemoteItemIdClause(itemId, truth);
         }
     }
 
     public void addDateClause(long lowestDate, boolean lowestEq, long highestDate, boolean highestEq, boolean truth)  {
-        mAllResultsQuery = false;
+        allResultsQuery = false;
         topLevelAndedConstraint().addDateClause(lowestDate, lowestEq, highestDate, highestEq, truth);
     }
 
     public void addCalStartDateClause(long lowestDate, boolean lowestEq, long highestDate, boolean highestEq, boolean truth)  {
-        mAllResultsQuery = false;
+        allResultsQuery = false;
         topLevelAndedConstraint().addCalStartDateClause(lowestDate, lowestEq, highestDate, highestEq, truth);
     }
 
     public void addCalEndDateClause(long lowestDate, boolean lowestEq, long highestDate, boolean highestEq, boolean truth)  {
-        mAllResultsQuery = false;
+        allResultsQuery = false;
         topLevelAndedConstraint().addCalEndDateClause(lowestDate, lowestEq, highestDate, highestEq, truth);
     }
 
     public void addConvCountClause(long lowest, boolean lowestEq, long highest, boolean highestEq, boolean truth)  {
-        mAllResultsQuery = false;
+        allResultsQuery = false;
         topLevelAndedConstraint().addConvCountClause(lowest, lowestEq, highest, highestEq, truth);
     }
 
     public void addModSeqClause(long lowest, boolean lowestEq, long highest, boolean highestEq, boolean truth)  {
-        mAllResultsQuery = false;
+        allResultsQuery = false;
         topLevelAndedConstraint().addModSeqClause(lowest, lowestEq, highest, highestEq, truth);
     }
 
     public void addSizeClause(long lowestSize, long highestSize, boolean truth)  {
-        mAllResultsQuery = false;
+        allResultsQuery = false;
         topLevelAndedConstraint().addSizeClause(lowestSize, highestSize, truth);
     }
 
     public void addRelativeSubject(String lowestSubj, boolean lowerEqual, String highestSubj, boolean higherEqual, boolean truth)  {
-        mAllResultsQuery = false;
+        allResultsQuery = false;
         topLevelAndedConstraint().addSubjectRelClause(lowestSubj, lowerEqual, highestSubj, higherEqual, truth);
     }
 
     public void addRelativeSender(String lowestSubj, boolean lowerEqual, String highestSubj, boolean higherEqual, boolean truth)  {
-        mAllResultsQuery = false;
+        allResultsQuery = false;
         topLevelAndedConstraint().addSenderRelClause(lowestSubj, lowerEqual, highestSubj, higherEqual, truth);
     }
 
     public void addConvId(Mailbox mbox, ItemId convId, boolean truth) {
-        mAllResultsQuery = false;
-        if (convId.belongsTo(mbox)) {
-            // LOCAL!
-            if (!mQueryTarget.isCompatibleLocal())
+        allResultsQuery = false;
+        if (convId.belongsTo(mbox)) { // LOCAL
+            if (!queryTarget.isCompatibleLocal()) {
                 throw new IllegalArgumentException("Cannot addConvId w/ local target b/c DBQueryOperation already has a remote target");
-            mQueryTarget = QueryTarget.LOCAL;
+            }
+            queryTarget = QueryTarget.LOCAL;
             topLevelAndedConstraint().addConvId(convId.getId(), truth);
-        } else {
-            // REMOTE!
-            if (mQueryTarget != QueryTarget.UNSPECIFIED && !mQueryTarget.toString().equals(convId.getAccountId()))
+        } else { // REMOTE
+            if (queryTarget != QueryTarget.UNSPECIFIED && !queryTarget.toString().equals(convId.getAccountId())) {
                 throw new IllegalArgumentException("Cannot addConvId w/ remote target b/c DBQueryOperation already has an incompatible remote target");
-
-            mQueryTarget = new QueryTarget(convId.getAccountId());
+            }
+            queryTarget = new QueryTarget(convId.getAccountId());
             topLevelAndedConstraint().addRemoteConvId(convId, truth);
         }
     }
@@ -345,29 +344,29 @@ public class DBQueryOperation extends QueryOperation {
      * Handles 'is:local' clause meaning all local folders
      */
     public void addIsLocalClause() {
-        if (!mQueryTarget.isCompatibleLocal()) {
+        if (!queryTarget.isCompatibleLocal()) {
             throw new IllegalArgumentException("Cannot addIsLocalFolderClause b/c DBQueryOperation already has a remote target");
         }
-        mQueryTarget = QueryTarget.LOCAL;
-        mAllResultsQuery = false;
-
-        mIncludeIsLocalFolders = true;
+        queryTarget = QueryTarget.LOCAL;
+        allResultsQuery = false;
+        includeIsLocalFolders = true;
     }
 
     /**
      * Handles 'is:local' clause meaning all local folders
      */
     public void addIsRemoteClause() {
-        if (mQueryTarget == QueryTarget.LOCAL) {
-            throw new IllegalArgumentException("Cannot addIsRemoteFolderClause b/c DBQueryOperation already has a local target");
+        if (queryTarget == QueryTarget.LOCAL) {
+            throw new IllegalArgumentException(
+                    "Cannot addIsRemoteFolderClause b/c DBQueryOperation already has a local target");
         }
-        if (!(mQueryTarget == QueryTarget.IS_REMOTE || mQueryTarget == QueryTarget.UNSPECIFIED)) {
-            throw new IllegalArgumentException("Cannot addIsRemoteFolderClause b/c DBQueryOperation already has a remote target: "+mQueryTarget);
+        if (!(queryTarget == QueryTarget.IS_REMOTE || queryTarget == QueryTarget.UNSPECIFIED)) {
+            throw new IllegalArgumentException(
+                    "Cannot addIsRemoteFolderClause b/c DBQueryOperation already has a remote target: " + queryTarget);
         }
-        mQueryTarget = QueryTarget.IS_REMOTE;
-        mAllResultsQuery = false;
-
-        mIncludeIsRemoteFolders = true;
+        queryTarget = QueryTarget.IS_REMOTE;
+        allResultsQuery = false;
+        includeIsRemoteFolders = true;
     }
 
 
@@ -376,28 +375,29 @@ public class DBQueryOperation extends QueryOperation {
      */
     public void addInRemoteFolderClause(ItemId remoteFolderId, String subfolderPath,
             boolean includeSubfolders, boolean truth) {
-        mAllResultsQuery = false;
+        allResultsQuery = false;
 
-        if (mQueryTarget != QueryTarget.UNSPECIFIED &&
-                !mQueryTarget.toString().equals(remoteFolderId.getAccountId())) {
-            throw new IllegalArgumentException("Cannot addInClause b/c DBQueryOperation already has an incompatible remote target");
+        if (queryTarget != QueryTarget.UNSPECIFIED && !queryTarget.toString().equals(remoteFolderId.getAccountId())) {
+            throw new IllegalArgumentException(
+                    "Cannot addInClause b/c DBQueryOperation already has an incompatible remote target");
         }
 
-        mQueryTarget = new QueryTarget(remoteFolderId.getAccountId());
-        topLevelAndedConstraint().addInRemoteFolderClause(remoteFolderId,
-                subfolderPath, includeSubfolders, truth);
+        queryTarget = new QueryTarget(remoteFolderId.getAccountId());
+        topLevelAndedConstraint().addInRemoteFolderClause(remoteFolderId, subfolderPath, includeSubfolders, truth);
     }
 
     public void addInClause(Folder folder, boolean truth) {
         assert !(folder instanceof Mountpoint) || ((Mountpoint)folder).isLocal() : folder;
 
-        mAllResultsQuery = false;
+        allResultsQuery = false;
         if (truth) {
             // EG: -in:trash is not necessarily a "local" target -- we only imply
             // a target when we're positive
-            if (!mQueryTarget.isCompatibleLocal())
-                throw new IllegalArgumentException("Cannot addInClause w/ local target b/c DBQueryOperation already has a remote target");
-            mQueryTarget = QueryTarget.LOCAL;
+            if (!queryTarget.isCompatibleLocal()) {
+                throw new IllegalArgumentException(
+                        "Cannot addInClause w/ local target b/c DBQueryOperation already has a remote target");
+            }
+            queryTarget = QueryTarget.LOCAL;
         }
 
         topLevelAndedConstraint().addInClause(folder, truth);
@@ -405,101 +405,94 @@ public class DBQueryOperation extends QueryOperation {
 
     public void addAnyFolderClause(boolean truth) {
         topLevelAndedConstraint().addAnyFolderClause(truth);
-
-        if (!truth) {
-            // if they are weird enough to say "NOT is:anywhere" then we
-            // just make it a no-results-query.
-            mAllResultsQuery = false;
+        if (!truth) { // if they are weird enough to say "NOT is:anywhere" then we just make it a no-results-query.
+            allResultsQuery = false;
         }
     }
 
     public void addTagClause(Tag tag, boolean truth) {
-        mAllResultsQuery = false;
+        allResultsQuery = false;
         topLevelAndedConstraint().addTagClause(tag, truth);
     }
 
     @Override
     public void doneWithSearchResults() throws ServiceException {
-        if (mLuceneOp != null) {
-            mLuceneOp.doneWithSearchResults();
+        if (luceneOp != null) {
+            luceneOp.doneWithSearchResults();
         }
     }
 
     @Override
     public void resetIterator() {
-        if (mLuceneOp != null) {
-            mLuceneOp.resetDocNum();
+        if (luceneOp != null) {
+            luceneOp.resetDocNum();
         }
-        mNextHits.clear();
+        nextHits.clear();
         mSeenHits.clear();
         if (!atStart) {
-            mOffset = 0;
-            mDBHitsIter = null;
-            mCurHitsOffset = 0;
-            mEndOfHits = false;
+            dbOffset = 0;
+            dbHitsIter = null;
+            hitsOffset = 0;
+            endOfHits = false;
             atStart = true;
         } else {
-            if (mDBHits != null) {
-                mDBHitsIter = mDBHits.iterator();
+            if (dbHits != null) {
+                dbHitsIter = dbHits.iterator();
             }
         }
     }
 
-    /*
-     * Return the next hit in our search.  If there are no hits buffered
-     * then calculate the next hit and put it into the mNextHits list.
-     *
-     *   Step 1: Get the list of DbSearch.searchResults chunk-by-chunk
-     *           (50 or 100 or whatever at a time)
-     *
-     *   Step 2: As we need them, grab the next SearchResult and build a
-     *           real ZimbraHit out of them
+    /**
+     * Return the next hit in our search. If there are no hits buffered then calculate the next hit and put it into the
+     * mNextHits list.
+     * <ol>
+     *  <li>Get the list of DBSearchResults chunk-by-chunk (50 or 100 or whatever at a time)
+     *  <li>As we need them, grab the next SearchResult and build a real ZimbraHit out of them
+     * </ol>
      */
     @Override
     public ZimbraHit peekNext() throws ServiceException {
         ZimbraHit toRet = null;
-        if (mNextHits.size() > 0) {
+        if (nextHits.size() > 0) {
             // already have some hits, so our job is easy!
-            toRet = mNextHits.get(0);
+            toRet = nextHits.get(0);
         } else {
             // we don't have any buffered SearchResults, try to get more
             while (toRet == null) {
                 // Check to see if we need to refil mDBHits
-                if ((mDBHitsIter == null || !mDBHitsIter.hasNext()) && !mEndOfHits) {
-                    if (mExtra == null) {
-                        mExtra = SearchResult.ExtraData.NONE;
+                if ((dbHitsIter == null || !dbHitsIter.hasNext()) && !endOfHits) {
+                    if (fetch == null) {
                         switch (context.getResults().getSearchMode()) {
                             case NORMAL:
-                                if (isTopLevelQueryOp()) {
-                                    mExtra = SearchResult.ExtraData.MAIL_ITEM;
-                                } else {
-                                    mExtra = SearchResult.ExtraData.NONE;
-                                }
+                                fetch = isTopLevelQueryOp() ? DbSearch.FetchMode.MAIL_ITEM : DbSearch.FetchMode.ID;
                                 break;
                             case IMAP:
-                                mExtra = SearchResult.ExtraData.IMAP_MSG;
+                                fetch = DbSearch.FetchMode.IMAP_MSG;
                                 break;
                             case IDS:
-                                mExtra = SearchResult.ExtraData.NONE;
+                                fetch = DbSearch.FetchMode.ID;
                                 break;
                             case MODSEQ:
-                                mExtra = SearchResult.ExtraData.MODSEQ;
+                                fetch = DbSearch.FetchMode.MODSEQ;
                                 break;
                             case PARENT:
-                                mExtra = SearchResult.ExtraData.PARENT;
+                                fetch = DbSearch.FetchMode.PARENT;
+                                break;
+                            default:
+                                assert false : context.getResults().getSearchMode();
                         }
                     }
 
-                    if (mExecuteMode == null) {
+                    if (executeMode == null) {
                         if (hasNoResults() || !prepareSearchConstraints()) {
-                            mExecuteMode = QueryExecuteMode.NO_RESULTS;
-                        } else if (mLuceneOp == null) {
-                            mExecuteMode = QueryExecuteMode.NO_LUCENE;
+                            executeMode = QueryExecuteMode.NO_RESULTS;
+                        } else if (luceneOp == null) {
+                            executeMode = QueryExecuteMode.NO_LUCENE;
                         } else if (shouldExecuteDbFirst()) {
-                            mLuceneOp.clearFilterClause();
-                            mExecuteMode = QueryExecuteMode.DB_FIRST;
+                            luceneOp.clearFilterClause();
+                            executeMode = QueryExecuteMode.DB_FIRST;
                         } else {
-                            mExecuteMode = QueryExecuteMode.LUCENE_FIRST;
+                            executeMode = QueryExecuteMode.LUCENE_FIRST;
                         }
                     }
 
@@ -507,38 +500,39 @@ public class DBQueryOperation extends QueryOperation {
                 }
 
                 // at this point, we've filled mDBHits if possible (and initialized its iterator)
-                if (mDBHitsIter != null && mDBHitsIter.hasNext()) {
-                    SearchResult sr = mDBHitsIter.next();
+                if (dbHitsIter != null && dbHitsIter.hasNext()) {
+                    DbSearch.Result sr = dbHitsIter.next();
                     // Sometimes, a single search result might yield more than one Lucene document -- e.g. an RFC822
                     // message with separately-indexed MIME parts. Each of these parts will turn into a separate
                     // ZimbraHit at this point, although they might be combined together at a higher level (via a
                     // HitGrouper).
-                    Collection<Document> docs = mLuceneChunk != null ? mLuceneChunk.getHit(sr.indexId) : null;
+                    Collection<Document> docs = luceneChunk != null ? luceneChunk.getHit(sr.getIndexId()) : null;
 
-                    if (docs == null || !ZimbraQueryResultsImpl.shouldAddDuplicateHits(MailItem.Type.of(sr.type))) {
-                        ZimbraHit toAdd = context.getResults().getZimbraHit(context.getMailbox(), sr, null, mExtra);
+                    if (docs == null || !ZimbraQueryResultsImpl.shouldAddDuplicateHits(sr.getType())) {
+                        ZimbraHit toAdd = context.getResults().getZimbraHit(context.getMailbox(), sr, null, fetch);
                         if (toAdd != null) {
                             // make sure we only return each hit once
                             if (!mSeenHits.containsKey(toAdd)) {
                                 mSeenHits.put(toAdd, toAdd);
-                                mNextHits.add(toAdd);
+                                nextHits.add(toAdd);
                             }
                         }
                     } else {
                         for (Document doc : docs) {
-                            ZimbraHit toAdd = context.getResults().getZimbraHit(context.getMailbox(), sr, doc, mExtra);
+                            ZimbraHit toAdd = context.getResults().getZimbraHit(context.getMailbox(), sr, doc, fetch);
                             if (toAdd != null) {
                                 // make sure we only return each hit once
                                 if (!mSeenHits.containsKey(toAdd)) {
                                     mSeenHits.put(toAdd, toAdd);
-                                    mNextHits.add(toAdd);
+                                    nextHits.add(toAdd);
                                 }
                             }
                         }
                     }
 
-                    if (mNextHits.size() > 0)
-                        toRet = mNextHits.get(0);
+                    if (nextHits.size() > 0) {
+                        toRet = nextHits.get(0);
+                    }
                 } else {
                     return null;
                 }
@@ -583,13 +577,13 @@ public class DBQueryOperation extends QueryOperation {
     @Override
     public ZimbraHit getNext() throws ServiceException {
         atStart = false;
-        if (mNextHits.size() == 0) {
+        if (nextHits.size() == 0) {
             peekNext();
         }
-        if (mNextHits.size() == 0) {
+        if (nextHits.size() == 0) {
             return null;
         }
-        ZimbraHit toRet = mNextHits.remove(0);
+        ZimbraHit toRet = nextHits.remove(0);
         return toRet;
     }
 
@@ -655,7 +649,7 @@ public class DBQueryOperation extends QueryOperation {
             ZimbraLog.search.debug("NO RESULTS -- no known types requested");
             return false;
         } else {
-            mConstraints.setTypes(types);
+            constraints.setTypes(types);
             return true;
         }
     }
@@ -664,29 +658,8 @@ public class DBQueryOperation extends QueryOperation {
         return context.getResults().getSortBy();
     }
 
-    private void fetch(final List<SearchResult> results, final DbConnection conn,
-            final SortBy sort, final int offset, final int size) throws ServiceException {
-        final boolean inDumpster = searchInDumpster();
-        // if fetching items, do it within a mailbox transaction.
-        if (mExtra == SearchResult.ExtraData.MAIL_ITEM) {
-            context.getMailbox().execute(new Mailbox.TransactionCallback() {
-                @Override
-                protected void doInTransaction(Mailbox mbox) throws ServiceException {
-                    DbSearch.search(results, conn, mConstraints, mbox, sort,
-                            offset, size, mExtra, inDumpster);
-                    // convert to MailItem before leaving this transaction
-                    // otherwise you can poison MailItem cache with stale data
-                    for (SearchResult result : results) {
-                        //TODO refactor extraData because it's not type safe
-                        result.extraData = toItem(
-                                (MailItem.UnderlyingData) result.extraData);
-                    }
-                }
-            });
-        } else {
-            DbSearch.search(results, conn, mConstraints, context.getMailbox(),
-                    sort, offset, size, mExtra, inDumpster);
-        }
+    private void dbSearch(List<DbSearch.Result> results, SortBy sort, int offset, int size) throws ServiceException {
+        results.addAll(context.getMailbox().index.search(constraints, fetch, sort, offset, size, searchInDumpster()));
     }
 
     private boolean shouldExecuteDbFirst() throws ServiceException {
@@ -696,28 +669,23 @@ public class DBQueryOperation extends QueryOperation {
             return true;
         }
 
-        if (mLuceneOp != null && mLuceneOp.shouldExecuteDbFirst()) {
+        if (luceneOp != null && luceneOp.shouldExecuteDbFirst()) {
             return true;
         }
 
-        return mConstraints.tryDbFirst(context.getMailbox());
+        return constraints.tryDbFirst(context.getMailbox());
     }
 
-    private void noLuceneGetNextChunk(DbConnection conn, SortBy sort) throws ServiceException {
-        if (context.getParams().getEstimateSize() && mSizeEstimate == -1) {
-            mSizeEstimate = DbSearch.countResults(conn, mConstraints,
-                    context.getMailbox(), searchInDumpster());
-        }
+    private void noLuceneGetNextChunk(SortBy sort) throws ServiceException {
+        dbSearch(dbHits, sort, hitsOffset, hitsPerChunk);
 
-        fetch(mDBHits, conn, sort, mCurHitsOffset, mHitsPerChunk);
-
-        if (mDBHits.size() < mHitsPerChunk) {
-            mEndOfHits = true;
+        if (dbHits.size() < hitsPerChunk) {
+            endOfHits = true;
         }
         // exponentially expand the chunk size in case we have to go back to the DB
-        mHitsPerChunk *= 2;
-        if (mHitsPerChunk > MAX_HITS_PER_CHUNK) {
-            mHitsPerChunk = MAX_HITS_PER_CHUNK;
+        hitsPerChunk *= 2;
+        if (hitsPerChunk > MAX_HITS_PER_CHUNK) {
+            hitsPerChunk = MAX_HITS_PER_CHUNK;
         }
     }
 
@@ -725,7 +693,7 @@ public class DBQueryOperation extends QueryOperation {
         return context.getParams().inDumpster();
     }
 
-    private void dbFirstGetNextChunk(DbConnection conn, SortBy sort) throws ServiceException {
+    private void dbFirstGetNextChunk(SortBy sort) throws ServiceException {
         long begin = System.currentTimeMillis();
         ZimbraLog.search.debug("Fetching a DB-FIRST chunk");
 
@@ -735,19 +703,15 @@ public class DBQueryOperation extends QueryOperation {
 
         do {
             // (1) Get the next chunk of results from the DB
-            if (context.getParams().getEstimateSize() && mSizeEstimate == -1) {
-                mSizeEstimate = DbSearch.countResults(conn, mConstraints,
-                        context.getMailbox(), searchInDumpster());
-            }
-            List<SearchResult> dbResults = new ArrayList<SearchResult>();
-            fetch(dbResults, conn, sort, mOffset, MAX_HITS_PER_CHUNK);
+            List<DbSearch.Result> dbResults = new ArrayList<DbSearch.Result>();
+            dbSearch(dbResults, sort, dbOffset, MAX_HITS_PER_CHUNK);
 
             if (dbResults.size() < MAX_HITS_PER_CHUNK) {
-                mEndOfHits = true;
+                endOfHits = true;
             }
 
             if (dbResults.size() > 0) {
-                mOffset += dbResults.size();
+                dbOffset += dbResults.size();
 
                 // (2) for each of the results returned in (1), do a lucene search
                 //    for "ORIGINAL-LUCENE-PART AND id:(RESULTS-FROM-1-ABOVE)"
@@ -755,18 +719,18 @@ public class DBQueryOperation extends QueryOperation {
                     // For each search result, do two things:
                     //    -- remember the indexId in a hash, so we can find the SearchResult later
                     //    -- add that indexId to our new booleanquery
-                    Map<Integer, List<SearchResult>> mailItemToResultsMap = new HashMap<Integer, List<SearchResult>>();
+                    Map<Integer, List<DbSearch.Result>> mailItemToResultsMap = new HashMap<Integer, List<DbSearch.Result>>();
 
-                    for (SearchResult dbResult : dbResults) {
-                        List<SearchResult> results = mailItemToResultsMap.get(dbResult.indexId);
+                    for (DbSearch.Result sr : dbResults) {
+                        List<DbSearch.Result> results = mailItemToResultsMap.get(sr.getIndexId());
                         if (results == null) {
-                            results = new LinkedList<SearchResult>();
-                            mailItemToResultsMap.put(dbResult.indexId, results);
+                            results = new LinkedList<DbSearch.Result>();
+                            mailItemToResultsMap.put(sr.getIndexId(), results);
                         }
-                        results.add(dbResult);
+                        results.add(sr);
                         // add the new query to the mLuceneOp's query
-                        mLuceneOp.addFilterClause(new Term(LuceneFields.L_MAILBOX_BLOB_ID,
-                                String.valueOf(dbResult.indexId)));
+                        luceneOp.addFilterClause(new Term(LuceneFields.L_MAILBOX_BLOB_ID,
+                                String.valueOf(sr.getIndexId())));
                     }
 
                     boolean hasMore = true;
@@ -774,16 +738,16 @@ public class DBQueryOperation extends QueryOperation {
                     // we have to get ALL of the lucene hits for these ids.  There can very likely be more
                     // hits from Lucene then there are DB id's, so we just ask for a large number.
                     while (hasMore) {
-                        mLuceneChunk = mLuceneOp.getNextResultsChunk(MAX_HITS_PER_CHUNK);
-                        Set<Integer> indexIds = mLuceneChunk.getIndexIds();
+                        luceneChunk = luceneOp.getNextResultsChunk(MAX_HITS_PER_CHUNK);
+                        Set<Integer> indexIds = luceneChunk.getIndexIds();
                         if (indexIds.size() < MAX_HITS_PER_CHUNK) {
                             hasMore = false;
                         }
                         for (int indexId : indexIds) {
-                            List<SearchResult> results = mailItemToResultsMap.get(indexId);
+                            List<DbSearch.Result> results = mailItemToResultsMap.get(indexId);
                             if (results != null) {
-                                for (SearchResult result : results) {
-                                    mDBHits.add(result);
+                                for (DbSearch.Result sr : results) {
+                                    dbHits.add(sr);
                                 }
                             } else {
                                 ZimbraLog.search.warn("Lucene returned item ID %d but wasn't in resultMap", indexId);
@@ -794,16 +758,16 @@ public class DBQueryOperation extends QueryOperation {
                         }
                     }
                 } finally {
-                    mLuceneOp.clearFilterClause();
+                    luceneOp.clearFilterClause();
                 }
             }
 
-        } while (mDBHits.size() ==0 && !mEndOfHits);
+        } while (dbHits.size() ==0 && !endOfHits);
 
         ZimbraLog.search.debug("Done fetching DB-FIRST chunk (took %d ms)", System.currentTimeMillis() - begin);
     }
 
-    private void luceneFirstGetNextChunk(DbConnection conn, SortBy sort) throws ServiceException {
+    private void luceneFirstGetNextChunk(SortBy sort) throws ServiceException {
         long begin = System.currentTimeMillis();
         ZimbraLog.search.debug("Fetching a LUCENE-FIRST chunk");
 
@@ -815,118 +779,93 @@ public class DBQueryOperation extends QueryOperation {
             long luceneStart = System.currentTimeMillis();
 
             // limit in clause based on Db capabilities - bug 15511
-            mLuceneChunk = mLuceneOp.getNextResultsChunk(Math.min(
-                Db.getINClauseBatchSize(), mHitsPerChunk));
+            luceneChunk = luceneOp.getNextResultsChunk(Math.min(Db.getINClauseBatchSize(), hitsPerChunk));
 
-            // we need to set our index-id's here!
             DbLeafNode sc = topLevelAndedConstraint();
-
-            if (context.getParams().getEstimateSize() && mSizeEstimate==-1) {
-                // FIXME TODO should probably be a %age, this is worst-case
-                sc.indexIds = new HashSet<Integer>();
-                int dbResultCount;
-
-                dbResultCount = DbSearch.countResults(conn, mConstraints,
-                        context.getMailbox(), searchInDumpster());
-
-                int numTextHits = mLuceneOp.countHits();
-
-                if (ZimbraLog.index.isDebugEnabled())
-                    ZimbraLog.index.debug("LUCENE="+numTextHits+"  DB="+dbResultCount);
-                mSizeEstimate = Math.min(dbResultCount, numTextHits);
-            }
-
-            sc.indexIds = mLuceneChunk.getIndexIds();
+            sc.indexIds = luceneChunk.getIndexIds();
 
             ZimbraLog.search.debug("Fetched Lucene Chunk of %d hits in %d ms",
                     sc.indexIds.size(), System.currentTimeMillis() - luceneStart);
 
             // exponentially expand the chunk size in case we have to go back to the DB
-            mHitsPerChunk *= 2;
-            if (mHitsPerChunk > MAX_HITS_PER_CHUNK) {
-                mHitsPerChunk = MAX_HITS_PER_CHUNK;
+            hitsPerChunk *= 2;
+            if (hitsPerChunk > MAX_HITS_PER_CHUNK) {
+                hitsPerChunk = MAX_HITS_PER_CHUNK;
             }
 
             if (sc.indexIds.size() == 0) {
                 // we know we got all the index-id's from lucene.  since we don't have a
                 // LIMIT clause, we can be assured that this query will get all the remaining results.
-                mEndOfHits = true;
+                endOfHits = true;
             } else {
                 long dbStart = System.currentTimeMillis();
 
                 // must not ask for offset,limit here b/c of indexId constraints!,
-                fetch(mDBHits, conn, sort, -1, -1);
+                dbSearch(dbHits, sort, -1, -1);
 
                 ZimbraLog.search.debug("Fetched DB-second chunk in %d ms", System.currentTimeMillis() - dbStart);
             }
-        } while (mDBHits.size() == 0 && !mEndOfHits);
+        } while (dbHits.size() == 0 && !endOfHits);
 
         ZimbraLog.search.debug("Done fetching LUCENE-FIRST chunk (took %d ms)", System.currentTimeMillis() - begin);
     }
 
     /**
-     * Use all the search parameters (including the embedded
-     * {@link LuceneQueryOperation}) to get a chunk of search results and put
-     * them into mDBHits
+     * Use all the search parameters (including the embedded {@link LuceneQueryOperation}) to get a chunk of search
+     * results and put them into dbHits
      * <p>
      * On Exit:
      * If there are more results to be had
      * <ul>
-     *  <li>mDBHits has entries
-     *  <li>mDBHitsIter is initialized
-     *  <li>mCurHitsOffset is the absolute offset (into the result set) of the
-     *  last entry in mDBHits +1 that is, it is the offset of the next hit, when
-     *  we go to get it.
+     *  <li>dbHits has entries
+     *  <li>dbHitsIter is initialized
+     *  <li>hitsOffset is the absolute offset (into the result set) of the last entry in dbHits +1 that is, it is the
+     *  offset of the next hit, when we go to get it.
      * </ul>
      * If there are NOT any more results
      * <ul>
-     *  <li>mDBHits is empty
-     *  <li>mDBHitsIter is null
-     *  <li>mEndOfHits is set
+     *  <li>dbHits is empty
+     *  <li>dbHitsIter is null
+     *  <li>endOfHits is set
      * </ul>
      */
     private void getNextChunk() throws ServiceException {
-        assert(!mEndOfHits);
-        assert(mDBHitsIter == null || !mDBHitsIter.hasNext());
+        assert(!endOfHits);
+        assert(dbHitsIter == null || !dbHitsIter.hasNext());
 
-        if (mExecuteMode == QueryExecuteMode.NO_RESULTS) {
+        if (executeMode == QueryExecuteMode.NO_RESULTS) {
             ZimbraLog.search.debug("Returned **NO DB RESULTS (no-results-query-optimization)**");
-            mDBHitsIter = null;
-            mEndOfHits = true;
+            dbHitsIter = null;
+            endOfHits = true;
         } else {
             SortBy sort = getSortOrder();
-            mDBHits = new ArrayList<SearchResult>();
+            dbHits = new ArrayList<DbSearch.Result>();
 
             Mailbox mbox = context.getMailbox();
             synchronized (DbMailItem.getSynchronizer(mbox)) {
-                DbConnection conn = DbPool.getConnection(mbox);
-                try {
-                    switch (mExecuteMode) {
-                        case NO_RESULTS:
-                            assert(false); // notreached
-                            break;
-                        case NO_LUCENE:
-                            noLuceneGetNextChunk(conn, sort);
-                            break;
-                        case DB_FIRST:
-                            dbFirstGetNextChunk(conn, sort);
-                            break;
-                        case LUCENE_FIRST:
-                            luceneFirstGetNextChunk(conn, sort);
-                            break;
-                    }
-                } finally {
-                    DbPool.quietClose(conn);
+                switch (executeMode) {
+                    case NO_RESULTS:
+                        assert(false); // notreached
+                        break;
+                    case NO_LUCENE:
+                        noLuceneGetNextChunk(sort);
+                        break;
+                    case DB_FIRST:
+                        dbFirstGetNextChunk(sort);
+                        break;
+                    case LUCENE_FIRST:
+                        luceneFirstGetNextChunk(sort);
+                        break;
                 }
             }
 
-            if (mDBHits.size() == 0) {
-                mDBHitsIter = null;
-                mDBHits = null;
-                mEndOfHits = true;
+            if (dbHits.size() == 0) {
+                dbHitsIter = null;
+                dbHits = null;
+                endOfHits = true;
             } else {
-                mCurHitsOffset += mDBHits.size();
-                mDBHitsIter = mDBHits.iterator();
+                hitsOffset += dbHits.size();
+                dbHitsIter = dbHits.iterator();
             }
 
         }
@@ -937,17 +876,16 @@ public class DBQueryOperation extends QueryOperation {
         assert(context == null);
         context = ctx;
 
-        mHitsPerChunk = ctx.getChunkSize();
-        if (mHitsPerChunk > MAX_HITS_PER_CHUNK) {
-            mHitsPerChunk = MAX_HITS_PER_CHUNK;
+        hitsPerChunk = ctx.getChunkSize();
+        if (hitsPerChunk > MAX_HITS_PER_CHUNK) {
+            hitsPerChunk = MAX_HITS_PER_CHUNK;
         }
 
-        if (mLuceneOp != null) {
-            mHitsPerChunk *= 2; // enlarge chunk size b/c of join
-            mLuceneOp.setDBOperation(this);
+        if (luceneOp != null) {
+            hitsPerChunk *= 2; // enlarge chunk size b/c of join
+            luceneOp.setDBOperation(this);
             // this is 2nd time to call begin() of this Lucene op.
-            mLuceneOp.begin(new QueryContext(ctx.getMailbox(),
-                    ctx.getResults(), ctx.getParams(), mHitsPerChunk));
+            luceneOp.begin(new QueryContext(ctx.getMailbox(), ctx.getResults(), ctx.getParams(), hitsPerChunk));
         }
     }
 
@@ -959,9 +897,10 @@ public class DBQueryOperation extends QueryOperation {
     @Override
     String toQueryString() {
         StringBuilder ret = new StringBuilder("(");
-        if (mLuceneOp != null)
-            ret.append(mLuceneOp.toQueryString()).append(" AND ");
-        ret.append(mConstraints.toQueryString());
+        if (luceneOp != null) {
+            ret.append(luceneOp.toQueryString()).append(" AND ");
+        }
+        ret.append(constraints.toQueryString());
         ret.append(')');
         return ret.toString();
     }
@@ -970,45 +909,42 @@ public class DBQueryOperation extends QueryOperation {
     public String toString() {
         boolean atFirst = true;
         StringBuilder retVal = new StringBuilder("<");
-        if (mLuceneOp != null) {
-            retVal.append(mLuceneOp.toString());
+        if (luceneOp != null) {
+            retVal.append(luceneOp.toString());
             atFirst = false;
         }
-        if (!atFirst)
+        if (!atFirst) {
             retVal.append(" AND ");
-
+        }
         retVal.append("DB(");
-        if (mAllResultsQuery) {
+        if (allResultsQuery) {
             retVal.append("ANYWHERE");
         } else if (hasNoResults()) {
             retVal.append("--- NO RESULT ---");
         } else {
-            if (this.mIncludeIsLocalFolders) {
+            if (includeIsLocalFolders) {
                 retVal.append("IS:LOCAL ");
-            } else if (this.mIncludeIsRemoteFolders) {
+            } else if (includeIsRemoteFolders) {
                 retVal.append("IS:REMOTE ");
             }
-            retVal.append(mConstraints.toString());
+            retVal.append(constraints.toString());
         }
-        retVal.append(")");
-
-        retVal.append('>');
-
+        retVal.append(")>");
         return retVal.toString();
     }
 
     private DBQueryOperation cloneInternal() {
         try {
-            DBQueryOperation result = (DBQueryOperation)super.clone();
+            DBQueryOperation result = (DBQueryOperation) super.clone();
 
-            assert(mDBHits == null);
-            assert(mDBHitsIter == null);
-            assert(mLuceneChunk == null);
+            assert(dbHits == null);
+            assert(dbHitsIter == null);
+            assert(luceneChunk == null);
 
-            result.mConstraints = (IConstraints) mConstraints.clone();
+            result.constraints = (IConstraints) constraints.clone();
             result.types.addAll(types);
             result.excludeTypes.addAll(excludeTypes);
-            result.mNextHits = new ArrayList<ZimbraHit>();
+            result.nextHits = new ArrayList<ZimbraHit>();
             return result;
         } catch (CloneNotSupportedException e) {
             assert(false);
@@ -1020,8 +956,8 @@ public class DBQueryOperation extends QueryOperation {
     public Object clone() {
         try {
             DBQueryOperation toRet = cloneInternal();
-            if (mLuceneOp != null) {
-                toRet.mLuceneOp = (LuceneQueryOperation) mLuceneOp.clone(this);
+            if (luceneOp != null) {
+                toRet.luceneOp = (LuceneQueryOperation) luceneOp.clone(this);
             }
             return toRet;
         } catch (CloneNotSupportedException e) {
@@ -1037,7 +973,7 @@ public class DBQueryOperation extends QueryOperation {
      */
     protected Object clone(LuceneQueryOperation caller) {
         DBQueryOperation toRet = cloneInternal();
-        toRet.mLuceneOp = caller;
+        toRet.luceneOp = caller;
         return toRet;
     }
 
@@ -1055,37 +991,35 @@ public class DBQueryOperation extends QueryOperation {
             if (other instanceof DBQueryOperation) {
                 DBQueryOperation dbOther = (DBQueryOperation)other;
 
-                if (mQueryTarget != null && dbOther.mQueryTarget != null) {
-                    if (!mQueryTarget.equals(dbOther.mQueryTarget))
+                if (queryTarget != null && dbOther.queryTarget != null) {
+                    if (!queryTarget.equals(dbOther.queryTarget))
                         return null;  // can't OR entries with different targets
                 }
 
-                if (mAllResultsQuery)
+                if (allResultsQuery) {
                     return this;
-
+                }
                 dbOther = (DBQueryOperation)other;
 
-                if (dbOther.mAllResultsQuery) // (something OR ALL ) == ALL
+                if (dbOther.allResultsQuery) { // (something OR ALL ) == ALL
                     return dbOther;
-
-                if (mLuceneOp != null || dbOther.mLuceneOp != null){
+                }
+                if (luceneOp != null || dbOther.luceneOp != null){
                     // can't combine
                     return null;
                 }
 
-                if (mQueryTarget == null)
-                    mQueryTarget = dbOther.mQueryTarget;
-
-                mConstraints = mConstraints.orIConstraints(dbOther.mConstraints);
+                if (queryTarget == null) {
+                    queryTarget = dbOther.queryTarget;
+                }
+                constraints = constraints.orIConstraints(dbOther.constraints);
                 return this;
             } else {
                 return null;
             }
         } else {
-            if (mAllResultsQuery) {
-                // we match all results.  (other AND anything) == other
-
-                assert(mLuceneOp == null);
+            if (allResultsQuery) { // we match all results.  (other AND anything) == other
+                assert(luceneOp == null);
                 if (hasSpamTrashSetting()) {
                     other.forceHasSpamTrashSetting();
                 }
@@ -1100,87 +1034,82 @@ public class DBQueryOperation extends QueryOperation {
                 return null;
             }
 
-            if (dbOther.mAllResultsQuery) {
-                if (dbOther.hasSpamTrashSetting())
+            if (dbOther.allResultsQuery) {
+                if (dbOther.hasSpamTrashSetting()) {
                     this.forceHasSpamTrashSetting();
+                }
                 return this;
             }
 
-            if (mQueryTarget != QueryTarget.UNSPECIFIED && dbOther.mQueryTarget != QueryTarget.UNSPECIFIED) {
-                if (!mQueryTarget.equals(dbOther.mQueryTarget)) {
+            if (queryTarget != QueryTarget.UNSPECIFIED && dbOther.queryTarget != QueryTarget.UNSPECIFIED) {
+                if (!queryTarget.equals(dbOther.queryTarget)) {
                     ZimbraLog.search.debug("ANDing two DBOps with different targets -- this is a no results query!");
                     return new NoResultsQueryOperation();
                 }
             }
 
-            if (mQueryTarget == QueryTarget.UNSPECIFIED)
-                mQueryTarget = dbOther.mQueryTarget;
-
-            if (mLuceneOp != null) {
-                if (dbOther.mLuceneOp != null) {
-                    mLuceneOp.combineOps(dbOther.mLuceneOp, false);
+            if (queryTarget == QueryTarget.UNSPECIFIED) {
+                queryTarget = dbOther.queryTarget;
+            }
+            if (luceneOp != null) {
+                if (dbOther.luceneOp != null) {
+                    luceneOp.combineOps(dbOther.luceneOp, false);
                 }
             } else {
-                mLuceneOp = dbOther.mLuceneOp;
+                luceneOp = dbOther.luceneOp;
             }
 
-            if (mAllResultsQuery && dbOther.mAllResultsQuery) {
-                mAllResultsQuery = true;
+            if (allResultsQuery && dbOther.allResultsQuery) {
+                allResultsQuery = true;
             } else {
-                mAllResultsQuery = false;
+                allResultsQuery = false;
             }
 
-            mConstraints = mConstraints.andIConstraints(dbOther.mConstraints);
+            constraints = constraints.andIConstraints(dbOther.constraints);
 
             return this;
         }
 
     }
 
-    List<QueryInfo> mQueryInfo = new ArrayList<QueryInfo>();
-
     @Override
     public List<QueryInfo> getResultInfo() {
         List<QueryInfo> toRet = new ArrayList<QueryInfo>();
-        toRet.addAll(mQueryInfo);
-
-        if (mLuceneOp != null)
-            toRet.addAll(mLuceneOp.getQueryInfo());
-
+        toRet.addAll(queryInfo);
+        if (luceneOp != null) {
+            toRet.addAll(luceneOp.getQueryInfo());
+        }
         return toRet;
     }
 
     @Override
-    public int estimateResultSize() {
-        return mSizeEstimate;
-    }
-
-    @Override
     protected void depthFirstRecurse(RecurseCallback cb) {
-        if (mLuceneOp != null)
-            mLuceneOp.depthFirstRecurseInternal(cb);
+        if (luceneOp != null) {
+            luceneOp.depthFirstRecurseInternal(cb);
+        }
         cb.recurseCallback(this);
     }
 
     private int getDbHitCount(DbConnection conn, Mailbox mbox) throws ServiceException {
-        if (mCountDbResults == -1)
-            mCountDbResults = DbSearch.countResults(conn, mConstraints, mbox, searchInDumpster());
-        return mCountDbResults;
+        if (countDbResults == -1) {
+            countDbResults = DbSearch.countResults(conn, constraints, mbox, searchInDumpster());
+        }
+        return countDbResults;
     }
 
     int getDbHitCount() throws ServiceException {
-        if (mCountDbResults == -1) {
+        if (countDbResults == -1) {
             Mailbox mbox = context.getMailbox();
             synchronized (DbMailItem.getSynchronizer(mbox)) {
                 DbConnection conn = null;
                 try {
                     conn = DbPool.getConnection(mbox);
-                    mCountDbResults = getDbHitCount(conn, mbox);
+                    countDbResults = getDbHitCount(conn, mbox);
                 } finally {
                     DbPool.quietClose(conn);
                 }
             }
         }
-        return mCountDbResults;
+        return countDbResults;
     }
 }

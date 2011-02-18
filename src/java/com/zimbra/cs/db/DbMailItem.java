@@ -2247,7 +2247,7 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                     " FROM " + getMailItemTableName(mbox, " mi") +
-                    " WHERE " + IN_THIS_MAILBOX_AND + typeIn(type) + DbSearch.sortQuery(sort));
+                    " WHERE " + IN_THIS_MAILBOX_AND + typeIn(type) + DbSearch.orderBy(sort, false));
             if (type == MailItem.Type.MESSAGE) {
                 Db.getInstance().enableStreaming(stmt);
             }
@@ -2288,7 +2288,7 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                     " FROM " + getMailItemTableName(parent.getMailbox(), " mi") +
-                    " WHERE " + IN_THIS_MAILBOX_AND + "parent_id = ? " + DbSearch.sortQuery(sort));
+                    " WHERE " + IN_THIS_MAILBOX_AND + "parent_id = ? " + DbSearch.orderBy(sort, false));
             if (parent.getSize() > RESULTS_STREAMING_MIN_ROWS) {
                 Db.getInstance().enableStreaming(stmt);
             }
@@ -2372,16 +2372,16 @@ public class DbMailItem {
 
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
-        ArrayList<UnderlyingData> result = new ArrayList<UnderlyingData>();
+        List<UnderlyingData> result = new ArrayList<UnderlyingData>();
 
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
-                        " FROM " + getMailItemTableName(folder.getMailbox(), " mi") +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND " + typeIn(type) +
-                        DbSearch.sortQuery(sort));
+                    " FROM " + getMailItemTableName(folder.getMailbox(), " mi") +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND " + typeIn(type) +
+                    DbSearch.orderBy(sort, false));
             if (folder.getSize() > RESULTS_STREAMING_MIN_ROWS && type == MailItem.Type.MESSAGE) {
                 Db.getInstance().enableStreaming(stmt);
             }

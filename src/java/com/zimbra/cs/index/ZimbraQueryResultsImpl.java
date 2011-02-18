@@ -22,7 +22,7 @@ import java.util.Set;
 import org.apache.lucene.document.Document;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.db.DbSearch.SearchResult;
+import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Contact;
@@ -191,56 +191,56 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
     }
 
     /**
-     * We've got a mailbox, a DBMailItem.SearchResult and (optionally) a Lucene Doc...
+     * We've got a {@link Mailbox}, a {@link DbSearch.Result} and (optionally) a Lucene Doc...
      * that's everything we need to build a real ZimbraHit.
      *
      * @param doc - Optional, only set if this search had a Lucene part
      */
-    ZimbraHit getZimbraHit(Mailbox mbox, SearchResult sr, Document doc, SearchResult.ExtraData extra) {
+    ZimbraHit getZimbraHit(Mailbox mbox, DbSearch.Result sr, Document doc, DbSearch.FetchMode fetch) {
         MailItem item = null;
         ImapMessage i4msg = null;
         int modseq = -1, parentId = 0;
-        switch (extra) {
+        switch (fetch) {
             case MAIL_ITEM:
-                item = (MailItem) sr.extraData;
+                item = sr.getItem();
                 break;
             case IMAP_MSG:
-                i4msg = (ImapMessage) sr.extraData;
+                i4msg = sr.getImapMessage();
                 break;
             case MODSEQ:
-                modseq = sr.extraData != null ? (Integer) sr.extraData : -1;
+                modseq = sr.getModSeq();
                 break;
             case PARENT:
-                parentId = sr.extraData != null ? (Integer) sr.extraData : 0;
+                parentId = sr.getParentId();
                 break;
         }
 
         ZimbraHit toRet = null;
-        switch (MailItem.Type.of(sr.type)) {
+        switch (sr.getType()) {
             case CHAT:
             case MESSAGE:
                 if (doc != null) {
-                    toRet = getMessagePartHit(mbox, sr.id, doc, (Message) item);
+                    toRet = getMessagePartHit(mbox, sr.getId(), doc, (Message) item);
                 } else {
-                    toRet = getMessageHit(mbox, sr.id, null, (Message) item);
+                    toRet = getMessageHit(mbox, sr.getId(), null, (Message) item);
                 }
-                toRet.cacheSortField(getSortBy(), sr.sortkey);
+                toRet.cacheSortField(getSortBy(), sr.getSortKey());
                 break;
             case CONTACT:
-                toRet = getContactHit(mbox, sr.id, (Contact) item);
+                toRet = getContactHit(mbox, sr.getId(), (Contact) item);
                 break;
             case NOTE:
-                toRet = getNoteHit(mbox, sr.id, (Note) item);
+                toRet = getNoteHit(mbox, sr.getId(), (Note) item);
                 break;
             case APPOINTMENT:
-                toRet = getAppointmentHit(mbox, sr.id, (CalendarItem) item);
+                toRet = getAppointmentHit(mbox, sr.getId(), (CalendarItem) item);
                 break;
             case TASK:
-                toRet = getTaskHit(mbox, sr.id, (Task) item);
+                toRet = getTaskHit(mbox, sr.getId(), (Task) item);
                 break;
             case DOCUMENT:
             case WIKI:
-                toRet = getDocumentHit(mbox, sr.id, doc, (com.zimbra.cs.mailbox.Document) item);
+                toRet = getDocumentHit(mbox, sr.getId(), doc, (com.zimbra.cs.mailbox.Document) item);
                 break;
             default:
                 assert(false);

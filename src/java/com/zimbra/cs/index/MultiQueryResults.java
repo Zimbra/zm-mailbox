@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -42,7 +42,6 @@ public class MultiQueryResults implements ZimbraQueryResults {
     private final Comparator<ZimbraHit> comparator;
     private List<ZimbraHit> hits = new ArrayList<ZimbraHit>();
     private int next = 0; // for interation
-    private int estimatedResultSize = 0;
     private List<QueryInfo> queryInfo = new ArrayList<QueryInfo>();
 
     public MultiQueryResults(int limit, SortBy sort) {
@@ -107,11 +106,6 @@ public class MultiQueryResults implements ZimbraQueryResults {
         return queryInfo;
     }
 
-    @Override
-    public int estimateResultSize() {
-        return estimatedResultSize;
-    }
-
     /**
      * Add the specified {@link ZimbraQueryResults} to this result. The adding
      * result must be sorted by the same order as this result.
@@ -154,7 +148,6 @@ public class MultiQueryResults implements ZimbraQueryResults {
         }
 
         queryInfo.addAll(result.getResultInfo());
-        estimatedResultSize += result.estimateResultSize();
     }
 
     /**

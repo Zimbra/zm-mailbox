@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -217,10 +217,6 @@ public final class SearchParams implements Cloneable {
 
     public Mailbox.SearchResultMode getMode() {
         return mMode;
-    }
-
-    public boolean getEstimateSize() {
-        return mEstimateSize;
     }
 
     public String getDefaultField() {
@@ -492,17 +488,6 @@ public final class SearchParams implements Cloneable {
     }
 
     /**
-     * @param estimateSize if true, the server will attempt to calculate a size
-     *  estimate for the entire result set. Caller must fetch the first hit (via
-     *  getNext() or getFirstHit() before the estimate is made. The estimate
-     *  will be correct for a DB-only query and it may be wildly off for
-     *  a remote or join query.
-     */
-    public void setEstimateSize(boolean estimateSize) {
-        mEstimateSize = estimateSize;
-    }
-
-    /**
      * Encode the necessary parameters into a <SearchRequest> (or similar
      * element) in cases where we have to proxy a search request over to
      * a remote server.
@@ -556,7 +541,6 @@ public final class SearchParams implements Cloneable {
         }
         searchElt.addAttribute(MailConstants.A_PREFETCH, getPrefetch());
         searchElt.addAttribute(MailConstants.A_RESULT_MODE, getMode().name());
-        searchElt.addAttribute(MailConstants.A_ESTIMATE_SIZE, getEstimateSize());
         searchElt.addAttribute(MailConstants.A_FIELD, getDefaultField());
 
         searchElt.addAttribute(MailConstants.A_QUERY_LIMIT, mLimit);
@@ -929,7 +913,6 @@ public final class SearchParams implements Cloneable {
         o.types = types;
         o.mPrefetch = mPrefetch;
         o.mMode = mMode;
-        o.mEstimateSize = mEstimateSize;
         if (mAllowableTaskStatuses != null) {
             o.mAllowableTaskStatuses = new HashSet<TaskHit.Status>();
             o.mAllowableTaskStatuses.addAll(mAllowableTaskStatuses);
@@ -1022,11 +1005,5 @@ public final class SearchParams implements Cloneable {
 
     private boolean mPrefetch = true;
     private Mailbox.SearchResultMode mMode = Mailbox.SearchResultMode.NORMAL;
-
-    /**
-     * ask or a size estimate. Note that this might have a nontrivial
-     * performance impact.
-     */
-    private boolean mEstimateSize = false;
 
 }

@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
@@ -45,13 +46,14 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.db.DbSearchConstraints;
-import com.zimbra.cs.db.DbSearch.SearchResult;
+import com.zimbra.cs.db.DbSearchConstraintsNode;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
 import com.zimbra.cs.mailbox.Mailbox.SearchResultMode;
 import com.zimbra.cs.util.Zimbra;
@@ -386,15 +388,13 @@ public final class IndexHelper {
             boolean success = false;
             try {
                 mailbox.beginTransaction("indexAllDeferredFlagItems", null);
-                List<SearchResult> items = new ArrayList<SearchResult>();
                 DbSearchConstraints c = new DbSearchConstraints();
                 c.tags = new HashSet<Tag>();
                 c.tags.add(mailbox.getFlagById(Flag.ID_INDEXING_DEFERRED));
-                DbSearch.search(items, mailbox.getOperationConnection(), c, mailbox,
-                        SortBy.NONE, SearchResult.ExtraData.NONE);
-
-                for (SearchResult sr : items) {
-                    ids.add(sr.id);
+                List<DbSearch.Result> list = DbSearch.search(mailbox.getOperationConnection(), mailbox,
+                        c, SortBy.NONE, -1, -1, DbSearch.FetchMode.ID, false);
+                for (DbSearch.Result sr : list) {
+                    ids.add(sr.getId());
                 }
                 success = true;
             } finally {
@@ -410,20 +410,19 @@ public final class IndexHelper {
                         boolean success = false;
                         try {
                             mailbox.beginTransaction("indexAllDeferredFlagItems", null);
-                            List<SearchResult> items = new ArrayList<SearchResult>();
                             DbSearchConstraints c = new DbSearchConstraints();
                             c.tags = new HashSet<Tag>();
                             c.tags.add(mailbox.getFlagById(Flag.ID_INDEXING_DEFERRED));
-                            DbSearch.search(items, mailbox.getOperationConnection(), c, mailbox,
-                                            SortBy.NONE, SearchResult.ExtraData.MODCONTENT);
+                            List<DbSearch.Result> list = DbSearch.search(mailbox.getOperationConnection(),
+                                    mailbox, c, SortBy.NONE, -1, -1, DbSearch.FetchMode.MODCONTENT, false);
 
                             List<Integer> deferredTagsToClear = new ArrayList<Integer>();
 
                             Flag indexingDeferredFlag = mailbox.getFlagById(Flag.ID_INDEXING_DEFERRED);
 
-                            for (SearchResult sr : items) {
-                                MailItem item = mailbox.getItemById(sr.id, MailItem.Type.of(sr.type));
-                                deferredTagsToClear.add(sr.id);
+                            for (DbSearch.Result sr : list) {
+                                MailItem item = mailbox.getItemById(sr.getId(), sr.getType());
+                                deferredTagsToClear.add(sr.getId());
                                 item.tagChanged(indexingDeferredFlag, false);
                             }
                             mailbox.getOperationConnection(); // we must call this before DbMailItem.alterTag
@@ -661,6 +660,35 @@ public final class IndexHelper {
 
     public boolean isReIndexInProgress() {
         return reIndex != null;
+    }
+
+    /**
+     * Executes a DB search in a mailbox transaction.
+     */
+    public List<DbSearch.Result> search(DbSearchConstraintsNode constraints,
+            DbSearch.FetchMode fetch, SortBy sort, int offset, int size, boolean inDumpster) throws ServiceException {
+        List<DbSearch.Result> result;
+        boolean success = false;
+        synchronized (mailbox) {
+            mailbox.beginTransaction("search", null);
+            try {
+                result = DbSearch.search(mailbox.getOperationConnection(), mailbox,
+                        constraints, sort, offset, size, fetch, inDumpster);
+                if (fetch == DbSearch.FetchMode.MAIL_ITEM) {
+                    // Convert UnderlyingData to MailItem
+                    ListIterator<DbSearch.Result> itr = result.listIterator();
+                    while (itr.hasNext()) {
+                        DbSearch.Result sr = itr.next();
+                        MailItem item = mailbox.getItem(sr.getItemData());
+                        itr.set(new ItemSearchResult(item, sr.getSortKey()));
+                    }
+                }
+                success = true;
+            } finally {
+                mailbox.endTransaction(success);
+            }
+        }
+        return result;
     }
 
     /**
@@ -933,6 +961,35 @@ public final class IndexHelper {
             indexDeferredItems(EnumSet.noneOf(MailItem.Type.class), new BatchStatus(), false);
         }
 
+    }
+
+    private static final class ItemSearchResult extends DbSearch.Result {
+        private final MailItem item;
+
+        ItemSearchResult(MailItem item, Object sortkey) {
+            super(sortkey);
+            this.item = item;
+        }
+
+        @Override
+        public int getId() {
+            return item.getId();
+        }
+
+        @Override
+        public int getIndexId() {
+            return item.getIndexId();
+        }
+
+        @Override
+        public Type getType() {
+            return item.getType();
+        }
+
+        @Override
+        public MailItem getItem() {
+            return item;
+        }
     }
 
 }

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -348,16 +348,6 @@ public final class UnionQueryOperation extends CombiningQueryOperation {
             toRet.addAll(op.getResultInfo());
         }
         return toRet;
-    }
-
-    @Override
-    public int estimateResultSize() throws ServiceException {
-        int total = 0;
-        for (QueryOperation qop : mQueryOperations) {
-            // assume ORed terms are independent for now
-            total += qop.estimateResultSize();
-        }
-        return total;
     }
 
     @Override

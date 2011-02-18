@@ -329,13 +329,10 @@ public class SearchResponse {
      * Append the query information to this response.
      *
      * @param qinfo query information
-     * @param estimatedResultSize estimated result size
      */
-    public void add(List<QueryInfo> qinfo, int estimatedResultSize) {
-        if ((qinfo.size() > 0) || params.getEstimateSize()) {
+    public void add(List<QueryInfo> qinfo) {
+        if (qinfo.size() > 0) {
             Element el = element.addElement(MailConstants.E_INFO);
-            el.addElement("sizeEstimate").addAttribute("value",
-                    estimatedResultSize);
             for (QueryInfo inf : qinfo) {
                 inf.toXml(el);
             }
