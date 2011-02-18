@@ -29,7 +29,7 @@
 -->
 <!-- Admin Console Accounts Info Tab -->
 <right name="setDomainAdminConsoleAccountsInfoTab" type="setAttrs" targetType="account">
-  <desc> Admin Console Domain Admin set attr rights for accounts contact tab </desc>
+  <desc> Admin Console Domain Admin set attr rights for Accounts Info Tab </desc>
   <attrs>
     <a n="givenName"/>
     <a n="initials"/>
@@ -51,7 +51,7 @@
 </right>
 
 <right name="viewDomainAdminConsoleAccountsInfoTab" type="getAttrs" targetType="account">
-  <desc> Admin Console Domain Admin view attr rights for accounts contact tab </desc>
+  <desc> Admin Console Domain Admin view attr rights for Accounts Info Tab</desc>
   <attrs>
     <a n="givenName"/>
     <a n="initials"/>
@@ -76,7 +76,7 @@
 </right>
 
 <right type="combo" name="domainAdminConsoleAccountsInfoTabRights">
-  <desc> Admin Console Domain Admin rights for AccountsInfoTab </desc>
+  <desc> Admin Console Domain Admin rights for Accounts Info Tab </desc>
   <rights>
     <r n="setDomainAdminConsoleAccountsInfoTab"/>
     <r n="viewDomainAdminConsoleAccountsInfoTab"/>
@@ -116,7 +116,7 @@
 </right>
 
 <right name="domainAdminConsoleAccountsContactTabRights" type="combo">
-  <desc> Admin Console Domain Admin rights for AccountsContactTab </desc>
+  <desc> Admin Console Domain Admin rights for Accounts Contact Tab </desc>
   <rights>
     <r n="setDomainAdminConsoleAccountsContactTab"/>
     <r n="viewDomainAdminConsoleAccountsContactTab"/>
