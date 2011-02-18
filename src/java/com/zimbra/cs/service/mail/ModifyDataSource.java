@@ -147,6 +147,10 @@ public class ModifyDataSource extends MailDocumentHandler {
         if (value != null)
             dsAttrs.put(Provisioning.A_zimbraPrefDefaultSignatureId, value);
         
+        value = eDataSource.getAttribute(MailConstants.A_DS_FORWARD_REPLY_SIGNATURE, null);
+        if (value != null)
+            dsAttrs.put(Provisioning.A_zimbraPrefForwardReplySignatureId, value);
+        
         value = eDataSource.getAttribute(MailConstants.A_DS_FROM_DISPLAY, null);
         if (value != null)
             dsAttrs.put(Provisioning.A_zimbraPrefFromDisplay, value);

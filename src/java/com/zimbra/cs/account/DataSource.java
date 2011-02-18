@@ -318,6 +318,10 @@ public class DataSource extends AccountProperty {
         return getAttr(Provisioning.A_zimbraPrefDefaultSignatureId);
     }
     
+    public String getForwardReplySignature() {
+        return getAttr(Provisioning.A_zimbraPrefForwardReplySignatureId);
+    }
+    
     public String getFromDisplay() {
         return getAttr(Provisioning.A_zimbraPrefFromDisplay);
     }  
