@@ -633,7 +633,6 @@ public final class MailConstants {
     public static final String A_TAGS = "t";
     public static final String A_FOLDER = "l";
     public static final String A_VISIBLE = "visible";
-    public static final String A_ESTIMATE_SIZE = "estimateSize";
     public static final String A_URL = "url";
     public static final String A_NUM = "n";
     public static final String A_IMAP_NUM = "i4n";
