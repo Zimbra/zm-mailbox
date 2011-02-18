@@ -20,13 +20,14 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.store.MockStoreManager;
 
 /**
  * Mock implementation of {@link Mailbox} for testing.
  *
  * @author ysasaki
  */
-class MockMailbox extends Mailbox {
+public class MockMailbox extends Mailbox {
 
     private Account account;
     private Map<String, Metadata> metadata = new HashMap<String, Metadata>();
@@ -81,6 +82,37 @@ class MockMailbox extends Mailbox {
         return new Tag(this, data);
     }
 
+    @Override
+    public Document getDocumentById(OperationContext octxt, int id) throws ServiceException {
+        if (itemMap != null) {
+            return (Document)itemMap.get(Integer.valueOf(id));
+        }
+        return null;
+    }
+    
+    private HashMap<Integer,MailItem> itemMap;
+    
+    public void addMailItem(MailItem item) {
+        if (itemMap == null) {
+            itemMap = new HashMap<Integer,MailItem>();
+        }
+        itemMap.put(Integer.valueOf(item.getId()), item);
+    }
+    
+    public void addDocument(int id, String name, String contentType, String content) throws ServiceException {
+        MailItem.UnderlyingData data = new MailItem.UnderlyingData();
+        data.id = id;
+        data.type = MailItem.TYPE_DOCUMENT;
+        data.name = name;
+        data.subject = name;
+        data.flags = Flag.BITMASK_UNCACHED;
+        data.setBlobDigest("foo");
+        data.metadata = new Metadata().put(Metadata.FN_MIME_TYPE, contentType).toString();
+        Document doc = new Document(this, data);
+        MockStoreManager.setBlob(doc, content);
+        addMailItem(doc);
+    }
+    
     @Override
     public boolean dumpsterEnabled() {
         return false;
