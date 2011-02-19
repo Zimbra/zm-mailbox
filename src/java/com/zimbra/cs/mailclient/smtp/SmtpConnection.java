@@ -580,13 +580,20 @@ public final class SmtpConnection extends MailConnection {
         if (from == null) {
             from = "";
         }
-        String reply = sendCommand(MAIL, "FROM:<" + from + ">");
+        String reply = sendCommand(MAIL, "FROM:" + normalizeAddress(from));
         if (!isPositive(reply)) {
             validRecipients.clear();
             throw new CommandFailedException(MAIL, reply);
         }
     }
 
+    private String normalizeAddress(String addr) {
+        if ((!addr.startsWith("<")) && (!addr.endsWith(">")))
+            return "<" + addr + ">";
+        else
+            return addr;
+    }
+    
     /**
      * Sends {@code RSET} command to the server.
      *
@@ -605,7 +612,7 @@ public final class SmtpConnection extends MailConnection {
             if (recipient == null) {
                 recipient = "";
             }
-            String reply = sendCommand(RCPT, "TO:<" + recipient + ">");
+            String reply = sendCommand(RCPT, "TO:" + normalizeAddress(recipient));
             if (!isPositive(reply)) {
                 validRecipients.remove(recipient);
                 invalidRecipients.add(recipient);
