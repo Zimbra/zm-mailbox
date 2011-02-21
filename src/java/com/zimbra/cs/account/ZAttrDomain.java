@@ -10485,8 +10485,8 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * LDAP attribute for public key lookup for S/MIME via external LDAP.
-     * Multiple attributes can be seperated by comma. All SMIME attributes
+     * LDAP attribute(s) for public key lookup for S/MIME via external LDAP.
+     * Multiple attributes can be separated by comma. All SMIME attributes
      * are in the format of {config-name}:{value}. A &#039;SMIME config&#039;
      * is a set of SMIME attribute values with the same {config-name}.
      * Multiple SMIME configs can be configured on a domain or on
@@ -10508,8 +10508,8 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * LDAP attribute for public key lookup for S/MIME via external LDAP.
-     * Multiple attributes can be seperated by comma. All SMIME attributes
+     * LDAP attribute(s) for public key lookup for S/MIME via external LDAP.
+     * Multiple attributes can be separated by comma. All SMIME attributes
      * are in the format of {config-name}:{value}. A &#039;SMIME config&#039;
      * is a set of SMIME attribute values with the same {config-name}.
      * Multiple SMIME configs can be configured on a domain or on
@@ -10534,8 +10534,8 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * LDAP attribute for public key lookup for S/MIME via external LDAP.
-     * Multiple attributes can be seperated by comma. All SMIME attributes
+     * LDAP attribute(s) for public key lookup for S/MIME via external LDAP.
+     * Multiple attributes can be separated by comma. All SMIME attributes
      * are in the format of {config-name}:{value}. A &#039;SMIME config&#039;
      * is a set of SMIME attribute values with the same {config-name}.
      * Multiple SMIME configs can be configured on a domain or on
@@ -10561,8 +10561,8 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * LDAP attribute for public key lookup for S/MIME via external LDAP.
-     * Multiple attributes can be seperated by comma. All SMIME attributes
+     * LDAP attribute(s) for public key lookup for S/MIME via external LDAP.
+     * Multiple attributes can be separated by comma. All SMIME attributes
      * are in the format of {config-name}:{value}. A &#039;SMIME config&#039;
      * is a set of SMIME attribute values with the same {config-name}.
      * Multiple SMIME configs can be configured on a domain or on
@@ -10587,8 +10587,8 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * LDAP attribute for public key lookup for S/MIME via external LDAP.
-     * Multiple attributes can be seperated by comma. All SMIME attributes
+     * LDAP attribute(s) for public key lookup for S/MIME via external LDAP.
+     * Multiple attributes can be separated by comma. All SMIME attributes
      * are in the format of {config-name}:{value}. A &#039;SMIME config&#039;
      * is a set of SMIME attribute values with the same {config-name}.
      * Multiple SMIME configs can be configured on a domain or on
@@ -10614,8 +10614,8 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * LDAP attribute for public key lookup for S/MIME via external LDAP.
-     * Multiple attributes can be seperated by comma. All SMIME attributes
+     * LDAP attribute(s) for public key lookup for S/MIME via external LDAP.
+     * Multiple attributes can be separated by comma. All SMIME attributes
      * are in the format of {config-name}:{value}. A &#039;SMIME config&#039;
      * is a set of SMIME attribute values with the same {config-name}.
      * Multiple SMIME configs can be configured on a domain or on
@@ -10640,8 +10640,8 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * LDAP attribute for public key lookup for S/MIME via external LDAP.
-     * Multiple attributes can be seperated by comma. All SMIME attributes
+     * LDAP attribute(s) for public key lookup for S/MIME via external LDAP.
+     * Multiple attributes can be separated by comma. All SMIME attributes
      * are in the format of {config-name}:{value}. A &#039;SMIME config&#039;
      * is a set of SMIME attribute values with the same {config-name}.
      * Multiple SMIME configs can be configured on a domain or on
@@ -10667,8 +10667,8 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * LDAP attribute for public key lookup for S/MIME via external LDAP.
-     * Multiple attributes can be seperated by comma. All SMIME attributes
+     * LDAP attribute(s) for public key lookup for S/MIME via external LDAP.
+     * Multiple attributes can be separated by comma. All SMIME attributes
      * are in the format of {config-name}:{value}. A &#039;SMIME config&#039;
      * is a set of SMIME attribute values with the same {config-name}.
      * Multiple SMIME configs can be configured on a domain or on
@@ -10692,8 +10692,8 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * LDAP attribute for public key lookup for S/MIME via external LDAP.
-     * Multiple attributes can be seperated by comma. All SMIME attributes
+     * LDAP attribute(s) for public key lookup for S/MIME via external LDAP.
+     * Multiple attributes can be separated by comma. All SMIME attributes
      * are in the format of {config-name}:{value}. A &#039;SMIME config&#039;
      * is a set of SMIME attribute values with the same {config-name}.
      * Multiple SMIME configs can be configured on a domain or on
@@ -10718,18 +10718,18 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * LDAP bind dn for public key lookup for S/MIME via external LDAP. All
-     * SMIME attributes are in the format of {config-name}:{value}. A
-     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
-     * same {config-name}. Multiple SMIME configs can be configured on a
-     * domain or on globalconfig. Note: SMIME attributes on domains do not
-     * inherited values from globalconfig, they are not domain-inherited
-     * attributes. During SMIME public key lookup, if there are any SMIME
-     * config on the domain of the account, they are used. SMIME configs on
-     * globalconfig will be used only when there is no SMIME config on the
-     * domain. SMIME attributes cannot be modified directly with zmprov
-     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
-     * instead.
+     * LDAP bind DN for public key lookup for S/MIME via external LDAP. Can
+     * be empty for anonymous bind. All SMIME attributes are in the format of
+     * {config-name}:{value}. A &#039;SMIME config&#039; is a set of SMIME
+     * attribute values with the same {config-name}. Multiple SMIME configs
+     * can be configured on a domain or on globalconfig. Note: SMIME
+     * attributes on domains do not inherited values from globalconfig, they
+     * are not domain-inherited attributes. During SMIME public key lookup,
+     * if there are any SMIME config on the domain of the account, they are
+     * used. SMIME configs on globalconfig will be used only when there is no
+     * SMIME config on the domain. SMIME attributes cannot be modified
+     * directly with zmprov md/mcf commands. Use zmprov
+     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
      *
      * @return zimbraSMIMELdapBindDn, or empty array if unset
      *
@@ -10741,18 +10741,18 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * LDAP bind dn for public key lookup for S/MIME via external LDAP. All
-     * SMIME attributes are in the format of {config-name}:{value}. A
-     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
-     * same {config-name}. Multiple SMIME configs can be configured on a
-     * domain or on globalconfig. Note: SMIME attributes on domains do not
-     * inherited values from globalconfig, they are not domain-inherited
-     * attributes. During SMIME public key lookup, if there are any SMIME
-     * config on the domain of the account, they are used. SMIME configs on
-     * globalconfig will be used only when there is no SMIME config on the
-     * domain. SMIME attributes cannot be modified directly with zmprov
-     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
-     * instead.
+     * LDAP bind DN for public key lookup for S/MIME via external LDAP. Can
+     * be empty for anonymous bind. All SMIME attributes are in the format of
+     * {config-name}:{value}. A &#039;SMIME config&#039; is a set of SMIME
+     * attribute values with the same {config-name}. Multiple SMIME configs
+     * can be configured on a domain or on globalconfig. Note: SMIME
+     * attributes on domains do not inherited values from globalconfig, they
+     * are not domain-inherited attributes. During SMIME public key lookup,
+     * if there are any SMIME config on the domain of the account, they are
+     * used. SMIME configs on globalconfig will be used only when there is no
+     * SMIME config on the domain. SMIME attributes cannot be modified
+     * directly with zmprov md/mcf commands. Use zmprov
+     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
      *
      * @param zimbraSMIMELdapBindDn new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -10767,18 +10767,18 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * LDAP bind dn for public key lookup for S/MIME via external LDAP. All
-     * SMIME attributes are in the format of {config-name}:{value}. A
-     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
-     * same {config-name}. Multiple SMIME configs can be configured on a
-     * domain or on globalconfig. Note: SMIME attributes on domains do not
-     * inherited values from globalconfig, they are not domain-inherited
-     * attributes. During SMIME public key lookup, if there are any SMIME
-     * config on the domain of the account, they are used. SMIME configs on
-     * globalconfig will be used only when there is no SMIME config on the
-     * domain. SMIME attributes cannot be modified directly with zmprov
-     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
-     * instead.
+     * LDAP bind DN for public key lookup for S/MIME via external LDAP. Can
+     * be empty for anonymous bind. All SMIME attributes are in the format of
+     * {config-name}:{value}. A &#039;SMIME config&#039; is a set of SMIME
+     * attribute values with the same {config-name}. Multiple SMIME configs
+     * can be configured on a domain or on globalconfig. Note: SMIME
+     * attributes on domains do not inherited values from globalconfig, they
+     * are not domain-inherited attributes. During SMIME public key lookup,
+     * if there are any SMIME config on the domain of the account, they are
+     * used. SMIME configs on globalconfig will be used only when there is no
+     * SMIME config on the domain. SMIME attributes cannot be modified
+     * directly with zmprov md/mcf commands. Use zmprov
+     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
      *
      * @param zimbraSMIMELdapBindDn new value
      * @param attrs existing map to populate, or null to create a new map
@@ -10794,18 +10794,18 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * LDAP bind dn for public key lookup for S/MIME via external LDAP. All
-     * SMIME attributes are in the format of {config-name}:{value}. A
-     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
-     * same {config-name}. Multiple SMIME configs can be configured on a
-     * domain or on globalconfig. Note: SMIME attributes on domains do not
-     * inherited values from globalconfig, they are not domain-inherited
-     * attributes. During SMIME public key lookup, if there are any SMIME
-     * config on the domain of the account, they are used. SMIME configs on
-     * globalconfig will be used only when there is no SMIME config on the
-     * domain. SMIME attributes cannot be modified directly with zmprov
-     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
-     * instead.
+     * LDAP bind DN for public key lookup for S/MIME via external LDAP. Can
+     * be empty for anonymous bind. All SMIME attributes are in the format of
+     * {config-name}:{value}. A &#039;SMIME config&#039; is a set of SMIME
+     * attribute values with the same {config-name}. Multiple SMIME configs
+     * can be configured on a domain or on globalconfig. Note: SMIME
+     * attributes on domains do not inherited values from globalconfig, they
+     * are not domain-inherited attributes. During SMIME public key lookup,
+     * if there are any SMIME config on the domain of the account, they are
+     * used. SMIME configs on globalconfig will be used only when there is no
+     * SMIME config on the domain. SMIME attributes cannot be modified
+     * directly with zmprov md/mcf commands. Use zmprov
+     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
      *
      * @param zimbraSMIMELdapBindDn new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -10820,18 +10820,18 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * LDAP bind dn for public key lookup for S/MIME via external LDAP. All
-     * SMIME attributes are in the format of {config-name}:{value}. A
-     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
-     * same {config-name}. Multiple SMIME configs can be configured on a
-     * domain or on globalconfig. Note: SMIME attributes on domains do not
-     * inherited values from globalconfig, they are not domain-inherited
-     * attributes. During SMIME public key lookup, if there are any SMIME
-     * config on the domain of the account, they are used. SMIME configs on
-     * globalconfig will be used only when there is no SMIME config on the
-     * domain. SMIME attributes cannot be modified directly with zmprov
-     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
-     * instead.
+     * LDAP bind DN for public key lookup for S/MIME via external LDAP. Can
+     * be empty for anonymous bind. All SMIME attributes are in the format of
+     * {config-name}:{value}. A &#039;SMIME config&#039; is a set of SMIME
+     * attribute values with the same {config-name}. Multiple SMIME configs
+     * can be configured on a domain or on globalconfig. Note: SMIME
+     * attributes on domains do not inherited values from globalconfig, they
+     * are not domain-inherited attributes. During SMIME public key lookup,
+     * if there are any SMIME config on the domain of the account, they are
+     * used. SMIME configs on globalconfig will be used only when there is no
+     * SMIME config on the domain. SMIME attributes cannot be modified
+     * directly with zmprov md/mcf commands. Use zmprov
+     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
      *
      * @param zimbraSMIMELdapBindDn new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -10847,18 +10847,18 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * LDAP bind dn for public key lookup for S/MIME via external LDAP. All
-     * SMIME attributes are in the format of {config-name}:{value}. A
-     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
-     * same {config-name}. Multiple SMIME configs can be configured on a
-     * domain or on globalconfig. Note: SMIME attributes on domains do not
-     * inherited values from globalconfig, they are not domain-inherited
-     * attributes. During SMIME public key lookup, if there are any SMIME
-     * config on the domain of the account, they are used. SMIME configs on
-     * globalconfig will be used only when there is no SMIME config on the
-     * domain. SMIME attributes cannot be modified directly with zmprov
-     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
-     * instead.
+     * LDAP bind DN for public key lookup for S/MIME via external LDAP. Can
+     * be empty for anonymous bind. All SMIME attributes are in the format of
+     * {config-name}:{value}. A &#039;SMIME config&#039; is a set of SMIME
+     * attribute values with the same {config-name}. Multiple SMIME configs
+     * can be configured on a domain or on globalconfig. Note: SMIME
+     * attributes on domains do not inherited values from globalconfig, they
+     * are not domain-inherited attributes. During SMIME public key lookup,
+     * if there are any SMIME config on the domain of the account, they are
+     * used. SMIME configs on globalconfig will be used only when there is no
+     * SMIME config on the domain. SMIME attributes cannot be modified
+     * directly with zmprov md/mcf commands. Use zmprov
+     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
      *
      * @param zimbraSMIMELdapBindDn existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -10873,18 +10873,18 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * LDAP bind dn for public key lookup for S/MIME via external LDAP. All
-     * SMIME attributes are in the format of {config-name}:{value}. A
-     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
-     * same {config-name}. Multiple SMIME configs can be configured on a
-     * domain or on globalconfig. Note: SMIME attributes on domains do not
-     * inherited values from globalconfig, they are not domain-inherited
-     * attributes. During SMIME public key lookup, if there are any SMIME
-     * config on the domain of the account, they are used. SMIME configs on
-     * globalconfig will be used only when there is no SMIME config on the
-     * domain. SMIME attributes cannot be modified directly with zmprov
-     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
-     * instead.
+     * LDAP bind DN for public key lookup for S/MIME via external LDAP. Can
+     * be empty for anonymous bind. All SMIME attributes are in the format of
+     * {config-name}:{value}. A &#039;SMIME config&#039; is a set of SMIME
+     * attribute values with the same {config-name}. Multiple SMIME configs
+     * can be configured on a domain or on globalconfig. Note: SMIME
+     * attributes on domains do not inherited values from globalconfig, they
+     * are not domain-inherited attributes. During SMIME public key lookup,
+     * if there are any SMIME config on the domain of the account, they are
+     * used. SMIME configs on globalconfig will be used only when there is no
+     * SMIME config on the domain. SMIME attributes cannot be modified
+     * directly with zmprov md/mcf commands. Use zmprov
+     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
      *
      * @param zimbraSMIMELdapBindDn existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -10900,18 +10900,18 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * LDAP bind dn for public key lookup for S/MIME via external LDAP. All
-     * SMIME attributes are in the format of {config-name}:{value}. A
-     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
-     * same {config-name}. Multiple SMIME configs can be configured on a
-     * domain or on globalconfig. Note: SMIME attributes on domains do not
-     * inherited values from globalconfig, they are not domain-inherited
-     * attributes. During SMIME public key lookup, if there are any SMIME
-     * config on the domain of the account, they are used. SMIME configs on
-     * globalconfig will be used only when there is no SMIME config on the
-     * domain. SMIME attributes cannot be modified directly with zmprov
-     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
-     * instead.
+     * LDAP bind DN for public key lookup for S/MIME via external LDAP. Can
+     * be empty for anonymous bind. All SMIME attributes are in the format of
+     * {config-name}:{value}. A &#039;SMIME config&#039; is a set of SMIME
+     * attribute values with the same {config-name}. Multiple SMIME configs
+     * can be configured on a domain or on globalconfig. Note: SMIME
+     * attributes on domains do not inherited values from globalconfig, they
+     * are not domain-inherited attributes. During SMIME public key lookup,
+     * if there are any SMIME config on the domain of the account, they are
+     * used. SMIME configs on globalconfig will be used only when there is no
+     * SMIME config on the domain. SMIME attributes cannot be modified
+     * directly with zmprov md/mcf commands. Use zmprov
+     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -10925,18 +10925,18 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * LDAP bind dn for public key lookup for S/MIME via external LDAP. All
-     * SMIME attributes are in the format of {config-name}:{value}. A
-     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
-     * same {config-name}. Multiple SMIME configs can be configured on a
-     * domain or on globalconfig. Note: SMIME attributes on domains do not
-     * inherited values from globalconfig, they are not domain-inherited
-     * attributes. During SMIME public key lookup, if there are any SMIME
-     * config on the domain of the account, they are used. SMIME configs on
-     * globalconfig will be used only when there is no SMIME config on the
-     * domain. SMIME attributes cannot be modified directly with zmprov
-     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
-     * instead.
+     * LDAP bind DN for public key lookup for S/MIME via external LDAP. Can
+     * be empty for anonymous bind. All SMIME attributes are in the format of
+     * {config-name}:{value}. A &#039;SMIME config&#039; is a set of SMIME
+     * attribute values with the same {config-name}. Multiple SMIME configs
+     * can be configured on a domain or on globalconfig. Note: SMIME
+     * attributes on domains do not inherited values from globalconfig, they
+     * are not domain-inherited attributes. During SMIME public key lookup,
+     * if there are any SMIME config on the domain of the account, they are
+     * used. SMIME configs on globalconfig will be used only when there is no
+     * SMIME config on the domain. SMIME attributes cannot be modified
+     * directly with zmprov md/mcf commands. Use zmprov
+     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -10952,17 +10952,17 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * LDAP bind password for public key lookup for S/MIME via external LDAP.
-     * All SMIME attributes are in the format of {config-name}:{value}. A
-     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
-     * same {config-name}. Multiple SMIME configs can be configured on a
-     * domain or on globalconfig. Note: SMIME attributes on domains do not
-     * inherited values from globalconfig, they are not domain-inherited
-     * attributes. During SMIME public key lookup, if there are any SMIME
-     * config on the domain of the account, they are used. SMIME configs on
-     * globalconfig will be used only when there is no SMIME config on the
-     * domain. SMIME attributes cannot be modified directly with zmprov
-     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
-     * instead.
+     * Can be empty for anonymous bind. All SMIME attributes are in the
+     * format of {config-name}:{value}. A &#039;SMIME config&#039; is a set
+     * of SMIME attribute values with the same {config-name}. Multiple SMIME
+     * configs can be configured on a domain or on globalconfig. Note: SMIME
+     * attributes on domains do not inherited values from globalconfig, they
+     * are not domain-inherited attributes. During SMIME public key lookup,
+     * if there are any SMIME config on the domain of the account, they are
+     * used. SMIME configs on globalconfig will be used only when there is no
+     * SMIME config on the domain. SMIME attributes cannot be modified
+     * directly with zmprov md/mcf commands. Use zmprov
+     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
      *
      * @return zimbraSMIMELdapBindPassword, or empty array if unset
      *
@@ -10975,17 +10975,17 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * LDAP bind password for public key lookup for S/MIME via external LDAP.
-     * All SMIME attributes are in the format of {config-name}:{value}. A
-     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
-     * same {config-name}. Multiple SMIME configs can be configured on a
-     * domain or on globalconfig. Note: SMIME attributes on domains do not
-     * inherited values from globalconfig, they are not domain-inherited
-     * attributes. During SMIME public key lookup, if there are any SMIME
-     * config on the domain of the account, they are used. SMIME configs on
-     * globalconfig will be used only when there is no SMIME config on the
-     * domain. SMIME attributes cannot be modified directly with zmprov
-     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
-     * instead.
+     * Can be empty for anonymous bind. All SMIME attributes are in the
+     * format of {config-name}:{value}. A &#039;SMIME config&#039; is a set
+     * of SMIME attribute values with the same {config-name}. Multiple SMIME
+     * configs can be configured on a domain or on globalconfig. Note: SMIME
+     * attributes on domains do not inherited values from globalconfig, they
+     * are not domain-inherited attributes. During SMIME public key lookup,
+     * if there are any SMIME config on the domain of the account, they are
+     * used. SMIME configs on globalconfig will be used only when there is no
+     * SMIME config on the domain. SMIME attributes cannot be modified
+     * directly with zmprov md/mcf commands. Use zmprov
+     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
      *
      * @param zimbraSMIMELdapBindPassword new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11001,17 +11001,17 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * LDAP bind password for public key lookup for S/MIME via external LDAP.
-     * All SMIME attributes are in the format of {config-name}:{value}. A
-     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
-     * same {config-name}. Multiple SMIME configs can be configured on a
-     * domain or on globalconfig. Note: SMIME attributes on domains do not
-     * inherited values from globalconfig, they are not domain-inherited
-     * attributes. During SMIME public key lookup, if there are any SMIME
-     * config on the domain of the account, they are used. SMIME configs on
-     * globalconfig will be used only when there is no SMIME config on the
-     * domain. SMIME attributes cannot be modified directly with zmprov
-     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
-     * instead.
+     * Can be empty for anonymous bind. All SMIME attributes are in the
+     * format of {config-name}:{value}. A &#039;SMIME config&#039; is a set
+     * of SMIME attribute values with the same {config-name}. Multiple SMIME
+     * configs can be configured on a domain or on globalconfig. Note: SMIME
+     * attributes on domains do not inherited values from globalconfig, they
+     * are not domain-inherited attributes. During SMIME public key lookup,
+     * if there are any SMIME config on the domain of the account, they are
+     * used. SMIME configs on globalconfig will be used only when there is no
+     * SMIME config on the domain. SMIME attributes cannot be modified
+     * directly with zmprov md/mcf commands. Use zmprov
+     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
      *
      * @param zimbraSMIMELdapBindPassword new value
      * @param attrs existing map to populate, or null to create a new map
@@ -11028,17 +11028,17 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * LDAP bind password for public key lookup for S/MIME via external LDAP.
-     * All SMIME attributes are in the format of {config-name}:{value}. A
-     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
-     * same {config-name}. Multiple SMIME configs can be configured on a
-     * domain or on globalconfig. Note: SMIME attributes on domains do not
-     * inherited values from globalconfig, they are not domain-inherited
-     * attributes. During SMIME public key lookup, if there are any SMIME
-     * config on the domain of the account, they are used. SMIME configs on
-     * globalconfig will be used only when there is no SMIME config on the
-     * domain. SMIME attributes cannot be modified directly with zmprov
-     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
-     * instead.
+     * Can be empty for anonymous bind. All SMIME attributes are in the
+     * format of {config-name}:{value}. A &#039;SMIME config&#039; is a set
+     * of SMIME attribute values with the same {config-name}. Multiple SMIME
+     * configs can be configured on a domain or on globalconfig. Note: SMIME
+     * attributes on domains do not inherited values from globalconfig, they
+     * are not domain-inherited attributes. During SMIME public key lookup,
+     * if there are any SMIME config on the domain of the account, they are
+     * used. SMIME configs on globalconfig will be used only when there is no
+     * SMIME config on the domain. SMIME attributes cannot be modified
+     * directly with zmprov md/mcf commands. Use zmprov
+     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
      *
      * @param zimbraSMIMELdapBindPassword new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11054,17 +11054,17 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * LDAP bind password for public key lookup for S/MIME via external LDAP.
-     * All SMIME attributes are in the format of {config-name}:{value}. A
-     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
-     * same {config-name}. Multiple SMIME configs can be configured on a
-     * domain or on globalconfig. Note: SMIME attributes on domains do not
-     * inherited values from globalconfig, they are not domain-inherited
-     * attributes. During SMIME public key lookup, if there are any SMIME
-     * config on the domain of the account, they are used. SMIME configs on
-     * globalconfig will be used only when there is no SMIME config on the
-     * domain. SMIME attributes cannot be modified directly with zmprov
-     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
-     * instead.
+     * Can be empty for anonymous bind. All SMIME attributes are in the
+     * format of {config-name}:{value}. A &#039;SMIME config&#039; is a set
+     * of SMIME attribute values with the same {config-name}. Multiple SMIME
+     * configs can be configured on a domain or on globalconfig. Note: SMIME
+     * attributes on domains do not inherited values from globalconfig, they
+     * are not domain-inherited attributes. During SMIME public key lookup,
+     * if there are any SMIME config on the domain of the account, they are
+     * used. SMIME configs on globalconfig will be used only when there is no
+     * SMIME config on the domain. SMIME attributes cannot be modified
+     * directly with zmprov md/mcf commands. Use zmprov
+     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
      *
      * @param zimbraSMIMELdapBindPassword new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -11081,17 +11081,17 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * LDAP bind password for public key lookup for S/MIME via external LDAP.
-     * All SMIME attributes are in the format of {config-name}:{value}. A
-     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
-     * same {config-name}. Multiple SMIME configs can be configured on a
-     * domain or on globalconfig. Note: SMIME attributes on domains do not
-     * inherited values from globalconfig, they are not domain-inherited
-     * attributes. During SMIME public key lookup, if there are any SMIME
-     * config on the domain of the account, they are used. SMIME configs on
-     * globalconfig will be used only when there is no SMIME config on the
-     * domain. SMIME attributes cannot be modified directly with zmprov
-     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
-     * instead.
+     * Can be empty for anonymous bind. All SMIME attributes are in the
+     * format of {config-name}:{value}. A &#039;SMIME config&#039; is a set
+     * of SMIME attribute values with the same {config-name}. Multiple SMIME
+     * configs can be configured on a domain or on globalconfig. Note: SMIME
+     * attributes on domains do not inherited values from globalconfig, they
+     * are not domain-inherited attributes. During SMIME public key lookup,
+     * if there are any SMIME config on the domain of the account, they are
+     * used. SMIME configs on globalconfig will be used only when there is no
+     * SMIME config on the domain. SMIME attributes cannot be modified
+     * directly with zmprov md/mcf commands. Use zmprov
+     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
      *
      * @param zimbraSMIMELdapBindPassword existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11107,17 +11107,17 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * LDAP bind password for public key lookup for S/MIME via external LDAP.
-     * All SMIME attributes are in the format of {config-name}:{value}. A
-     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
-     * same {config-name}. Multiple SMIME configs can be configured on a
-     * domain or on globalconfig. Note: SMIME attributes on domains do not
-     * inherited values from globalconfig, they are not domain-inherited
-     * attributes. During SMIME public key lookup, if there are any SMIME
-     * config on the domain of the account, they are used. SMIME configs on
-     * globalconfig will be used only when there is no SMIME config on the
-     * domain. SMIME attributes cannot be modified directly with zmprov
-     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
-     * instead.
+     * Can be empty for anonymous bind. All SMIME attributes are in the
+     * format of {config-name}:{value}. A &#039;SMIME config&#039; is a set
+     * of SMIME attribute values with the same {config-name}. Multiple SMIME
+     * configs can be configured on a domain or on globalconfig. Note: SMIME
+     * attributes on domains do not inherited values from globalconfig, they
+     * are not domain-inherited attributes. During SMIME public key lookup,
+     * if there are any SMIME config on the domain of the account, they are
+     * used. SMIME configs on globalconfig will be used only when there is no
+     * SMIME config on the domain. SMIME attributes cannot be modified
+     * directly with zmprov md/mcf commands. Use zmprov
+     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
      *
      * @param zimbraSMIMELdapBindPassword existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -11134,17 +11134,17 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * LDAP bind password for public key lookup for S/MIME via external LDAP.
-     * All SMIME attributes are in the format of {config-name}:{value}. A
-     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
-     * same {config-name}. Multiple SMIME configs can be configured on a
-     * domain or on globalconfig. Note: SMIME attributes on domains do not
-     * inherited values from globalconfig, they are not domain-inherited
-     * attributes. During SMIME public key lookup, if there are any SMIME
-     * config on the domain of the account, they are used. SMIME configs on
-     * globalconfig will be used only when there is no SMIME config on the
-     * domain. SMIME attributes cannot be modified directly with zmprov
-     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
-     * instead.
+     * Can be empty for anonymous bind. All SMIME attributes are in the
+     * format of {config-name}:{value}. A &#039;SMIME config&#039; is a set
+     * of SMIME attribute values with the same {config-name}. Multiple SMIME
+     * configs can be configured on a domain or on globalconfig. Note: SMIME
+     * attributes on domains do not inherited values from globalconfig, they
+     * are not domain-inherited attributes. During SMIME public key lookup,
+     * if there are any SMIME config on the domain of the account, they are
+     * used. SMIME configs on globalconfig will be used only when there is no
+     * SMIME config on the domain. SMIME attributes cannot be modified
+     * directly with zmprov md/mcf commands. Use zmprov
+     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -11159,17 +11159,17 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * LDAP bind password for public key lookup for S/MIME via external LDAP.
-     * All SMIME attributes are in the format of {config-name}:{value}. A
-     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
-     * same {config-name}. Multiple SMIME configs can be configured on a
-     * domain or on globalconfig. Note: SMIME attributes on domains do not
-     * inherited values from globalconfig, they are not domain-inherited
-     * attributes. During SMIME public key lookup, if there are any SMIME
-     * config on the domain of the account, they are used. SMIME configs on
-     * globalconfig will be used only when there is no SMIME config on the
-     * domain. SMIME attributes cannot be modified directly with zmprov
-     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
-     * instead.
+     * Can be empty for anonymous bind. All SMIME attributes are in the
+     * format of {config-name}:{value}. A &#039;SMIME config&#039; is a set
+     * of SMIME attribute values with the same {config-name}. Multiple SMIME
+     * configs can be configured on a domain or on globalconfig. Note: SMIME
+     * attributes on domains do not inherited values from globalconfig, they
+     * are not domain-inherited attributes. During SMIME public key lookup,
+     * if there are any SMIME config on the domain of the account, they are
+     * used. SMIME configs on globalconfig will be used only when there is no
+     * SMIME config on the domain. SMIME attributes cannot be modified
+     * directly with zmprov md/mcf commands. Use zmprov
+     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -11185,17 +11185,19 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * LDAP search filter for public key lookup for S/MIME via external LDAP.
-     * All SMIME attributes are in the format of {config-name}:{value}. A
-     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
-     * same {config-name}. Multiple SMIME configs can be configured on a
-     * domain or on globalconfig. Note: SMIME attributes on domains do not
-     * inherited values from globalconfig, they are not domain-inherited
-     * attributes. During SMIME public key lookup, if there are any SMIME
-     * config on the domain of the account, they are used. SMIME configs on
-     * globalconfig will be used only when there is no SMIME config on the
-     * domain. SMIME attributes cannot be modified directly with zmprov
-     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
-     * instead.
+     * Can contain the following conversion variables for expansion: %n -
+     * search key with @ (or without, if no @ was specified) %u - with @
+     * removed e.g. (mail=%n) All SMIME attributes are in the format of
+     * {config-name}:{value}. A &#039;SMIME config&#039; is a set of SMIME
+     * attribute values with the same {config-name}. Multiple SMIME configs
+     * can be configured on a domain or on globalconfig. Note: SMIME
+     * attributes on domains do not inherited values from globalconfig, they
+     * are not domain-inherited attributes. During SMIME public key lookup,
+     * if there are any SMIME config on the domain of the account, they are
+     * used. SMIME configs on globalconfig will be used only when there is no
+     * SMIME config on the domain. SMIME attributes cannot be modified
+     * directly with zmprov md/mcf commands. Use zmprov
+     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
      *
      * @return zimbraSMIMELdapFilter, or empty array if unset
      *
@@ -11208,17 +11210,19 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * LDAP search filter for public key lookup for S/MIME via external LDAP.
-     * All SMIME attributes are in the format of {config-name}:{value}. A
-     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
-     * same {config-name}. Multiple SMIME configs can be configured on a
-     * domain or on globalconfig. Note: SMIME attributes on domains do not
-     * inherited values from globalconfig, they are not domain-inherited
-     * attributes. During SMIME public key lookup, if there are any SMIME
-     * config on the domain of the account, they are used. SMIME configs on
-     * globalconfig will be used only when there is no SMIME config on the
-     * domain. SMIME attributes cannot be modified directly with zmprov
-     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
-     * instead.
+     * Can contain the following conversion variables for expansion: %n -
+     * search key with @ (or without, if no @ was specified) %u - with @
+     * removed e.g. (mail=%n) All SMIME attributes are in the format of
+     * {config-name}:{value}. A &#039;SMIME config&#039; is a set of SMIME
+     * attribute values with the same {config-name}. Multiple SMIME configs
+     * can be configured on a domain or on globalconfig. Note: SMIME
+     * attributes on domains do not inherited values from globalconfig, they
+     * are not domain-inherited attributes. During SMIME public key lookup,
+     * if there are any SMIME config on the domain of the account, they are
+     * used. SMIME configs on globalconfig will be used only when there is no
+     * SMIME config on the domain. SMIME attributes cannot be modified
+     * directly with zmprov md/mcf commands. Use zmprov
+     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
      *
      * @param zimbraSMIMELdapFilter new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11234,17 +11238,19 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * LDAP search filter for public key lookup for S/MIME via external LDAP.
-     * All SMIME attributes are in the format of {config-name}:{value}. A
-     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
-     * same {config-name}. Multiple SMIME configs can be configured on a
-     * domain or on globalconfig. Note: SMIME attributes on domains do not
-     * inherited values from globalconfig, they are not domain-inherited
-     * attributes. During SMIME public key lookup, if there are any SMIME
-     * config on the domain of the account, they are used. SMIME configs on
-     * globalconfig will be used only when there is no SMIME config on the
-     * domain. SMIME attributes cannot be modified directly with zmprov
-     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
-     * instead.
+     * Can contain the following conversion variables for expansion: %n -
+     * search key with @ (or without, if no @ was specified) %u - with @
+     * removed e.g. (mail=%n) All SMIME attributes are in the format of
+     * {config-name}:{value}. A &#039;SMIME config&#039; is a set of SMIME
+     * attribute values with the same {config-name}. Multiple SMIME configs
+     * can be configured on a domain or on globalconfig. Note: SMIME
+     * attributes on domains do not inherited values from globalconfig, they
+     * are not domain-inherited attributes. During SMIME public key lookup,
+     * if there are any SMIME config on the domain of the account, they are
+     * used. SMIME configs on globalconfig will be used only when there is no
+     * SMIME config on the domain. SMIME attributes cannot be modified
+     * directly with zmprov md/mcf commands. Use zmprov
+     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
      *
      * @param zimbraSMIMELdapFilter new value
      * @param attrs existing map to populate, or null to create a new map
@@ -11261,17 +11267,19 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * LDAP search filter for public key lookup for S/MIME via external LDAP.
-     * All SMIME attributes are in the format of {config-name}:{value}. A
-     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
-     * same {config-name}. Multiple SMIME configs can be configured on a
-     * domain or on globalconfig. Note: SMIME attributes on domains do not
-     * inherited values from globalconfig, they are not domain-inherited
-     * attributes. During SMIME public key lookup, if there are any SMIME
-     * config on the domain of the account, they are used. SMIME configs on
-     * globalconfig will be used only when there is no SMIME config on the
-     * domain. SMIME attributes cannot be modified directly with zmprov
-     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
-     * instead.
+     * Can contain the following conversion variables for expansion: %n -
+     * search key with @ (or without, if no @ was specified) %u - with @
+     * removed e.g. (mail=%n) All SMIME attributes are in the format of
+     * {config-name}:{value}. A &#039;SMIME config&#039; is a set of SMIME
+     * attribute values with the same {config-name}. Multiple SMIME configs
+     * can be configured on a domain or on globalconfig. Note: SMIME
+     * attributes on domains do not inherited values from globalconfig, they
+     * are not domain-inherited attributes. During SMIME public key lookup,
+     * if there are any SMIME config on the domain of the account, they are
+     * used. SMIME configs on globalconfig will be used only when there is no
+     * SMIME config on the domain. SMIME attributes cannot be modified
+     * directly with zmprov md/mcf commands. Use zmprov
+     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
      *
      * @param zimbraSMIMELdapFilter new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11287,17 +11295,19 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * LDAP search filter for public key lookup for S/MIME via external LDAP.
-     * All SMIME attributes are in the format of {config-name}:{value}. A
-     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
-     * same {config-name}. Multiple SMIME configs can be configured on a
-     * domain or on globalconfig. Note: SMIME attributes on domains do not
-     * inherited values from globalconfig, they are not domain-inherited
-     * attributes. During SMIME public key lookup, if there are any SMIME
-     * config on the domain of the account, they are used. SMIME configs on
-     * globalconfig will be used only when there is no SMIME config on the
-     * domain. SMIME attributes cannot be modified directly with zmprov
-     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
-     * instead.
+     * Can contain the following conversion variables for expansion: %n -
+     * search key with @ (or without, if no @ was specified) %u - with @
+     * removed e.g. (mail=%n) All SMIME attributes are in the format of
+     * {config-name}:{value}. A &#039;SMIME config&#039; is a set of SMIME
+     * attribute values with the same {config-name}. Multiple SMIME configs
+     * can be configured on a domain or on globalconfig. Note: SMIME
+     * attributes on domains do not inherited values from globalconfig, they
+     * are not domain-inherited attributes. During SMIME public key lookup,
+     * if there are any SMIME config on the domain of the account, they are
+     * used. SMIME configs on globalconfig will be used only when there is no
+     * SMIME config on the domain. SMIME attributes cannot be modified
+     * directly with zmprov md/mcf commands. Use zmprov
+     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
      *
      * @param zimbraSMIMELdapFilter new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -11314,17 +11324,19 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * LDAP search filter for public key lookup for S/MIME via external LDAP.
-     * All SMIME attributes are in the format of {config-name}:{value}. A
-     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
-     * same {config-name}. Multiple SMIME configs can be configured on a
-     * domain or on globalconfig. Note: SMIME attributes on domains do not
-     * inherited values from globalconfig, they are not domain-inherited
-     * attributes. During SMIME public key lookup, if there are any SMIME
-     * config on the domain of the account, they are used. SMIME configs on
-     * globalconfig will be used only when there is no SMIME config on the
-     * domain. SMIME attributes cannot be modified directly with zmprov
-     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
-     * instead.
+     * Can contain the following conversion variables for expansion: %n -
+     * search key with @ (or without, if no @ was specified) %u - with @
+     * removed e.g. (mail=%n) All SMIME attributes are in the format of
+     * {config-name}:{value}. A &#039;SMIME config&#039; is a set of SMIME
+     * attribute values with the same {config-name}. Multiple SMIME configs
+     * can be configured on a domain or on globalconfig. Note: SMIME
+     * attributes on domains do not inherited values from globalconfig, they
+     * are not domain-inherited attributes. During SMIME public key lookup,
+     * if there are any SMIME config on the domain of the account, they are
+     * used. SMIME configs on globalconfig will be used only when there is no
+     * SMIME config on the domain. SMIME attributes cannot be modified
+     * directly with zmprov md/mcf commands. Use zmprov
+     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
      *
      * @param zimbraSMIMELdapFilter existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11340,17 +11352,19 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * LDAP search filter for public key lookup for S/MIME via external LDAP.
-     * All SMIME attributes are in the format of {config-name}:{value}. A
-     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
-     * same {config-name}. Multiple SMIME configs can be configured on a
-     * domain or on globalconfig. Note: SMIME attributes on domains do not
-     * inherited values from globalconfig, they are not domain-inherited
-     * attributes. During SMIME public key lookup, if there are any SMIME
-     * config on the domain of the account, they are used. SMIME configs on
-     * globalconfig will be used only when there is no SMIME config on the
-     * domain. SMIME attributes cannot be modified directly with zmprov
-     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
-     * instead.
+     * Can contain the following conversion variables for expansion: %n -
+     * search key with @ (or without, if no @ was specified) %u - with @
+     * removed e.g. (mail=%n) All SMIME attributes are in the format of
+     * {config-name}:{value}. A &#039;SMIME config&#039; is a set of SMIME
+     * attribute values with the same {config-name}. Multiple SMIME configs
+     * can be configured on a domain or on globalconfig. Note: SMIME
+     * attributes on domains do not inherited values from globalconfig, they
+     * are not domain-inherited attributes. During SMIME public key lookup,
+     * if there are any SMIME config on the domain of the account, they are
+     * used. SMIME configs on globalconfig will be used only when there is no
+     * SMIME config on the domain. SMIME attributes cannot be modified
+     * directly with zmprov md/mcf commands. Use zmprov
+     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
      *
      * @param zimbraSMIMELdapFilter existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -11367,17 +11381,19 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * LDAP search filter for public key lookup for S/MIME via external LDAP.
-     * All SMIME attributes are in the format of {config-name}:{value}. A
-     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
-     * same {config-name}. Multiple SMIME configs can be configured on a
-     * domain or on globalconfig. Note: SMIME attributes on domains do not
-     * inherited values from globalconfig, they are not domain-inherited
-     * attributes. During SMIME public key lookup, if there are any SMIME
-     * config on the domain of the account, they are used. SMIME configs on
-     * globalconfig will be used only when there is no SMIME config on the
-     * domain. SMIME attributes cannot be modified directly with zmprov
-     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
-     * instead.
+     * Can contain the following conversion variables for expansion: %n -
+     * search key with @ (or without, if no @ was specified) %u - with @
+     * removed e.g. (mail=%n) All SMIME attributes are in the format of
+     * {config-name}:{value}. A &#039;SMIME config&#039; is a set of SMIME
+     * attribute values with the same {config-name}. Multiple SMIME configs
+     * can be configured on a domain or on globalconfig. Note: SMIME
+     * attributes on domains do not inherited values from globalconfig, they
+     * are not domain-inherited attributes. During SMIME public key lookup,
+     * if there are any SMIME config on the domain of the account, they are
+     * used. SMIME configs on globalconfig will be used only when there is no
+     * SMIME config on the domain. SMIME attributes cannot be modified
+     * directly with zmprov md/mcf commands. Use zmprov
+     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -11392,17 +11408,19 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * LDAP search filter for public key lookup for S/MIME via external LDAP.
-     * All SMIME attributes are in the format of {config-name}:{value}. A
-     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
-     * same {config-name}. Multiple SMIME configs can be configured on a
-     * domain or on globalconfig. Note: SMIME attributes on domains do not
-     * inherited values from globalconfig, they are not domain-inherited
-     * attributes. During SMIME public key lookup, if there are any SMIME
-     * config on the domain of the account, they are used. SMIME configs on
-     * globalconfig will be used only when there is no SMIME config on the
-     * domain. SMIME attributes cannot be modified directly with zmprov
-     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
-     * instead.
+     * Can contain the following conversion variables for expansion: %n -
+     * search key with @ (or without, if no @ was specified) %u - with @
+     * removed e.g. (mail=%n) All SMIME attributes are in the format of
+     * {config-name}:{value}. A &#039;SMIME config&#039; is a set of SMIME
+     * attribute values with the same {config-name}. Multiple SMIME configs
+     * can be configured on a domain or on globalconfig. Note: SMIME
+     * attributes on domains do not inherited values from globalconfig, they
+     * are not domain-inherited attributes. During SMIME public key lookup,
+     * if there are any SMIME config on the domain of the account, they are
+     * used. SMIME configs on globalconfig will be used only when there is no
+     * SMIME config on the domain. SMIME attributes cannot be modified
+     * directly with zmprov md/mcf commands. Use zmprov
+     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -11883,18 +11901,19 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * LDAP URL for public key lookup for S/MIME via external LDAP. Multiple
-     * URLs can be seperated by space. All SMIME attributes are in the format
-     * of {config-name}:{value}. A &#039;SMIME config&#039; is a set of SMIME
-     * attribute values with the same {config-name}. Multiple SMIME configs
-     * can be configured on a domain or on globalconfig. Note: SMIME
-     * attributes on domains do not inherited values from globalconfig, they
-     * are not domain-inherited attributes. During SMIME public key lookup,
-     * if there are any SMIME config on the domain of the account, they are
-     * used. SMIME configs on globalconfig will be used only when there is no
-     * SMIME config on the domain. SMIME attributes cannot be modified
-     * directly with zmprov md/mcf commands. Use zmprov
-     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
+     * LDAP URL(s) for public key lookup for S/MIME via external LDAP.
+     * Multiple URLs for error fallback purpose can be seperated by space.
+     * All SMIME attributes are in the format of {config-name}:{value}. A
+     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
+     * same {config-name}. Multiple SMIME configs can be configured on a
+     * domain or on globalconfig. Note: SMIME attributes on domains do not
+     * inherited values from globalconfig, they are not domain-inherited
+     * attributes. During SMIME public key lookup, if there are any SMIME
+     * config on the domain of the account, they are used. SMIME configs on
+     * globalconfig will be used only when there is no SMIME config on the
+     * domain. SMIME attributes cannot be modified directly with zmprov
+     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
+     * instead.
      *
      * @return zimbraSMIMELdapURL, or empty array if unset
      *
@@ -11906,18 +11925,19 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * LDAP URL for public key lookup for S/MIME via external LDAP. Multiple
-     * URLs can be seperated by space. All SMIME attributes are in the format
-     * of {config-name}:{value}. A &#039;SMIME config&#039; is a set of SMIME
-     * attribute values with the same {config-name}. Multiple SMIME configs
-     * can be configured on a domain or on globalconfig. Note: SMIME
-     * attributes on domains do not inherited values from globalconfig, they
-     * are not domain-inherited attributes. During SMIME public key lookup,
-     * if there are any SMIME config on the domain of the account, they are
-     * used. SMIME configs on globalconfig will be used only when there is no
-     * SMIME config on the domain. SMIME attributes cannot be modified
-     * directly with zmprov md/mcf commands. Use zmprov
-     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
+     * LDAP URL(s) for public key lookup for S/MIME via external LDAP.
+     * Multiple URLs for error fallback purpose can be seperated by space.
+     * All SMIME attributes are in the format of {config-name}:{value}. A
+     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
+     * same {config-name}. Multiple SMIME configs can be configured on a
+     * domain or on globalconfig. Note: SMIME attributes on domains do not
+     * inherited values from globalconfig, they are not domain-inherited
+     * attributes. During SMIME public key lookup, if there are any SMIME
+     * config on the domain of the account, they are used. SMIME configs on
+     * globalconfig will be used only when there is no SMIME config on the
+     * domain. SMIME attributes cannot be modified directly with zmprov
+     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
+     * instead.
      *
      * @param zimbraSMIMELdapURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11932,18 +11952,19 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * LDAP URL for public key lookup for S/MIME via external LDAP. Multiple
-     * URLs can be seperated by space. All SMIME attributes are in the format
-     * of {config-name}:{value}. A &#039;SMIME config&#039; is a set of SMIME
-     * attribute values with the same {config-name}. Multiple SMIME configs
-     * can be configured on a domain or on globalconfig. Note: SMIME
-     * attributes on domains do not inherited values from globalconfig, they
-     * are not domain-inherited attributes. During SMIME public key lookup,
-     * if there are any SMIME config on the domain of the account, they are
-     * used. SMIME configs on globalconfig will be used only when there is no
-     * SMIME config on the domain. SMIME attributes cannot be modified
-     * directly with zmprov md/mcf commands. Use zmprov
-     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
+     * LDAP URL(s) for public key lookup for S/MIME via external LDAP.
+     * Multiple URLs for error fallback purpose can be seperated by space.
+     * All SMIME attributes are in the format of {config-name}:{value}. A
+     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
+     * same {config-name}. Multiple SMIME configs can be configured on a
+     * domain or on globalconfig. Note: SMIME attributes on domains do not
+     * inherited values from globalconfig, they are not domain-inherited
+     * attributes. During SMIME public key lookup, if there are any SMIME
+     * config on the domain of the account, they are used. SMIME configs on
+     * globalconfig will be used only when there is no SMIME config on the
+     * domain. SMIME attributes cannot be modified directly with zmprov
+     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
+     * instead.
      *
      * @param zimbraSMIMELdapURL new value
      * @param attrs existing map to populate, or null to create a new map
@@ -11959,18 +11980,19 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * LDAP URL for public key lookup for S/MIME via external LDAP. Multiple
-     * URLs can be seperated by space. All SMIME attributes are in the format
-     * of {config-name}:{value}. A &#039;SMIME config&#039; is a set of SMIME
-     * attribute values with the same {config-name}. Multiple SMIME configs
-     * can be configured on a domain or on globalconfig. Note: SMIME
-     * attributes on domains do not inherited values from globalconfig, they
-     * are not domain-inherited attributes. During SMIME public key lookup,
-     * if there are any SMIME config on the domain of the account, they are
-     * used. SMIME configs on globalconfig will be used only when there is no
-     * SMIME config on the domain. SMIME attributes cannot be modified
-     * directly with zmprov md/mcf commands. Use zmprov
-     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
+     * LDAP URL(s) for public key lookup for S/MIME via external LDAP.
+     * Multiple URLs for error fallback purpose can be seperated by space.
+     * All SMIME attributes are in the format of {config-name}:{value}. A
+     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
+     * same {config-name}. Multiple SMIME configs can be configured on a
+     * domain or on globalconfig. Note: SMIME attributes on domains do not
+     * inherited values from globalconfig, they are not domain-inherited
+     * attributes. During SMIME public key lookup, if there are any SMIME
+     * config on the domain of the account, they are used. SMIME configs on
+     * globalconfig will be used only when there is no SMIME config on the
+     * domain. SMIME attributes cannot be modified directly with zmprov
+     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
+     * instead.
      *
      * @param zimbraSMIMELdapURL new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11985,18 +12007,19 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * LDAP URL for public key lookup for S/MIME via external LDAP. Multiple
-     * URLs can be seperated by space. All SMIME attributes are in the format
-     * of {config-name}:{value}. A &#039;SMIME config&#039; is a set of SMIME
-     * attribute values with the same {config-name}. Multiple SMIME configs
-     * can be configured on a domain or on globalconfig. Note: SMIME
-     * attributes on domains do not inherited values from globalconfig, they
-     * are not domain-inherited attributes. During SMIME public key lookup,
-     * if there are any SMIME config on the domain of the account, they are
-     * used. SMIME configs on globalconfig will be used only when there is no
-     * SMIME config on the domain. SMIME attributes cannot be modified
-     * directly with zmprov md/mcf commands. Use zmprov
-     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
+     * LDAP URL(s) for public key lookup for S/MIME via external LDAP.
+     * Multiple URLs for error fallback purpose can be seperated by space.
+     * All SMIME attributes are in the format of {config-name}:{value}. A
+     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
+     * same {config-name}. Multiple SMIME configs can be configured on a
+     * domain or on globalconfig. Note: SMIME attributes on domains do not
+     * inherited values from globalconfig, they are not domain-inherited
+     * attributes. During SMIME public key lookup, if there are any SMIME
+     * config on the domain of the account, they are used. SMIME configs on
+     * globalconfig will be used only when there is no SMIME config on the
+     * domain. SMIME attributes cannot be modified directly with zmprov
+     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
+     * instead.
      *
      * @param zimbraSMIMELdapURL new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -12012,18 +12035,19 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * LDAP URL for public key lookup for S/MIME via external LDAP. Multiple
-     * URLs can be seperated by space. All SMIME attributes are in the format
-     * of {config-name}:{value}. A &#039;SMIME config&#039; is a set of SMIME
-     * attribute values with the same {config-name}. Multiple SMIME configs
-     * can be configured on a domain or on globalconfig. Note: SMIME
-     * attributes on domains do not inherited values from globalconfig, they
-     * are not domain-inherited attributes. During SMIME public key lookup,
-     * if there are any SMIME config on the domain of the account, they are
-     * used. SMIME configs on globalconfig will be used only when there is no
-     * SMIME config on the domain. SMIME attributes cannot be modified
-     * directly with zmprov md/mcf commands. Use zmprov
-     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
+     * LDAP URL(s) for public key lookup for S/MIME via external LDAP.
+     * Multiple URLs for error fallback purpose can be seperated by space.
+     * All SMIME attributes are in the format of {config-name}:{value}. A
+     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
+     * same {config-name}. Multiple SMIME configs can be configured on a
+     * domain or on globalconfig. Note: SMIME attributes on domains do not
+     * inherited values from globalconfig, they are not domain-inherited
+     * attributes. During SMIME public key lookup, if there are any SMIME
+     * config on the domain of the account, they are used. SMIME configs on
+     * globalconfig will be used only when there is no SMIME config on the
+     * domain. SMIME attributes cannot be modified directly with zmprov
+     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
+     * instead.
      *
      * @param zimbraSMIMELdapURL existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -12038,18 +12062,19 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * LDAP URL for public key lookup for S/MIME via external LDAP. Multiple
-     * URLs can be seperated by space. All SMIME attributes are in the format
-     * of {config-name}:{value}. A &#039;SMIME config&#039; is a set of SMIME
-     * attribute values with the same {config-name}. Multiple SMIME configs
-     * can be configured on a domain or on globalconfig. Note: SMIME
-     * attributes on domains do not inherited values from globalconfig, they
-     * are not domain-inherited attributes. During SMIME public key lookup,
-     * if there are any SMIME config on the domain of the account, they are
-     * used. SMIME configs on globalconfig will be used only when there is no
-     * SMIME config on the domain. SMIME attributes cannot be modified
-     * directly with zmprov md/mcf commands. Use zmprov
-     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
+     * LDAP URL(s) for public key lookup for S/MIME via external LDAP.
+     * Multiple URLs for error fallback purpose can be seperated by space.
+     * All SMIME attributes are in the format of {config-name}:{value}. A
+     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
+     * same {config-name}. Multiple SMIME configs can be configured on a
+     * domain or on globalconfig. Note: SMIME attributes on domains do not
+     * inherited values from globalconfig, they are not domain-inherited
+     * attributes. During SMIME public key lookup, if there are any SMIME
+     * config on the domain of the account, they are used. SMIME configs on
+     * globalconfig will be used only when there is no SMIME config on the
+     * domain. SMIME attributes cannot be modified directly with zmprov
+     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
+     * instead.
      *
      * @param zimbraSMIMELdapURL existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -12065,18 +12090,19 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * LDAP URL for public key lookup for S/MIME via external LDAP. Multiple
-     * URLs can be seperated by space. All SMIME attributes are in the format
-     * of {config-name}:{value}. A &#039;SMIME config&#039; is a set of SMIME
-     * attribute values with the same {config-name}. Multiple SMIME configs
-     * can be configured on a domain or on globalconfig. Note: SMIME
-     * attributes on domains do not inherited values from globalconfig, they
-     * are not domain-inherited attributes. During SMIME public key lookup,
-     * if there are any SMIME config on the domain of the account, they are
-     * used. SMIME configs on globalconfig will be used only when there is no
-     * SMIME config on the domain. SMIME attributes cannot be modified
-     * directly with zmprov md/mcf commands. Use zmprov
-     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
+     * LDAP URL(s) for public key lookup for S/MIME via external LDAP.
+     * Multiple URLs for error fallback purpose can be seperated by space.
+     * All SMIME attributes are in the format of {config-name}:{value}. A
+     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
+     * same {config-name}. Multiple SMIME configs can be configured on a
+     * domain or on globalconfig. Note: SMIME attributes on domains do not
+     * inherited values from globalconfig, they are not domain-inherited
+     * attributes. During SMIME public key lookup, if there are any SMIME
+     * config on the domain of the account, they are used. SMIME configs on
+     * globalconfig will be used only when there is no SMIME config on the
+     * domain. SMIME attributes cannot be modified directly with zmprov
+     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
+     * instead.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -12090,18 +12116,19 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * LDAP URL for public key lookup for S/MIME via external LDAP. Multiple
-     * URLs can be seperated by space. All SMIME attributes are in the format
-     * of {config-name}:{value}. A &#039;SMIME config&#039; is a set of SMIME
-     * attribute values with the same {config-name}. Multiple SMIME configs
-     * can be configured on a domain or on globalconfig. Note: SMIME
-     * attributes on domains do not inherited values from globalconfig, they
-     * are not domain-inherited attributes. During SMIME public key lookup,
-     * if there are any SMIME config on the domain of the account, they are
-     * used. SMIME configs on globalconfig will be used only when there is no
-     * SMIME config on the domain. SMIME attributes cannot be modified
-     * directly with zmprov md/mcf commands. Use zmprov
-     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
+     * LDAP URL(s) for public key lookup for S/MIME via external LDAP.
+     * Multiple URLs for error fallback purpose can be seperated by space.
+     * All SMIME attributes are in the format of {config-name}:{value}. A
+     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
+     * same {config-name}. Multiple SMIME configs can be configured on a
+     * domain or on globalconfig. Note: SMIME attributes on domains do not
+     * inherited values from globalconfig, they are not domain-inherited
+     * attributes. During SMIME public key lookup, if there are any SMIME
+     * config on the domain of the account, they are used. SMIME configs on
+     * globalconfig will be used only when there is no SMIME config on the
+     * domain. SMIME attributes cannot be modified directly with zmprov
+     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
+     * instead.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
