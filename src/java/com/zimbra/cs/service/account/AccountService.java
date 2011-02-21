@@ -90,6 +90,7 @@ public class AccountService implements DocumentService {
         
         // misc
         dispatcher.registerHandler(AccountConstants.GET_VERSION_INFO_REQUEST, new GetVersionInfo());
+        dispatcher.registerHandler(AccountConstants.GET_SMIME_PUBLIC_KEYS_REQUEST, new GetSMIMEPublicKeys());
 
     }
 

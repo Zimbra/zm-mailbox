@@ -474,17 +474,27 @@ public class ZimbraLdapContext {
     
     /*
      * External LDAP
-     * 
-     * Naming or IO exceptions are not caught then wrapped in a ServiceException like in the ZimbraLdapContext for Zimbra internal directory, 
-     * because callsites of this method need to check for Naming/IOExceptions and log/handle/throw accordingly.  
      */
     public ZimbraLdapContext(String urls[], boolean requireStartTLS, String authMech, 
+            String bindDn, String bindPassword, Set<String> binaryAttrs, String note)  
+    throws ServiceException, NamingException, IOException {
+        this(joinURLS(urls), requireStartTLS, authMech, bindDn, bindPassword, binaryAttrs, note); 
+    }
+    
+    /*
+     * External LDAP
+     * 
+     * Unlike what's been done in the ZimbraLdapContext for Zimbra internal directory, 
+     * naming or IO exceptions are not caught then wrapped in a ServiceException.
+     * Callsites of this method need to check Naming/IOExceptions and log/handle/throw accordingly.  
+     */
+    public ZimbraLdapContext(String urls, boolean requireStartTLS, String authMech, 
             String bindDn, String bindPassword, Set<String> binaryAttrs, String note)  
     throws ServiceException, NamingException, IOException {
         Hashtable<String, String> env = new Hashtable<String, String>();
         
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-        env.put(Context.PROVIDER_URL, joinURLS(urls));
+        env.put(Context.PROVIDER_URL, urls);
         env.put(Context.REFERRAL, "follow");
         env.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());
         env.put("com.sun.jndi.ldap.read.timeout", LC.ldap_read_timeout.value());

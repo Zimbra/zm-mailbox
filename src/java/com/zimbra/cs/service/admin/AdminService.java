@@ -252,6 +252,10 @@ public class AdminService implements DocumentService {
 
         // noop
         dispatcher.registerHandler(AdminConstants.NO_OP_REQUEST, new NoOp());
+        
+        // SMIME
+        dispatcher.registerHandler(AdminConstants.GET_SMIME_CONFIG_REQUEST, new GetSMIMEConfig());
+        dispatcher.registerHandler(AdminConstants.MODIFY_SMIME_CONFIG_REQUEST, new ModifySMIMEConfig());
     }
 
     /**

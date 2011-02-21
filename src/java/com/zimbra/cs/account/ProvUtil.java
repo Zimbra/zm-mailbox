@@ -498,6 +498,8 @@ public class ProvUtil implements HttpDebugListener {
         GET_DISTRIBUTION_LIST_MEMBERSHIP("getDistributionListMembership", "gdlm", "{name@domain|id}", Category.LIST, 1, 1),
         GET_DOMAIN("getDomain", "gd", "[-e] {domain|id} [attr1 [attr2...]]", Category.DOMAIN, 1, Integer.MAX_VALUE),
         GET_DOMAIN_INFO("getDomainInfo", "gdi", "name|id|virtualHostname {value} [attr1 [attr2...]]", Category.DOMAIN, 2, Integer.MAX_VALUE),
+        GET_CONFIG_SMIME_CONFIG("getConfigSMIMEConfig", "gcsc", "[configName]", Category.DOMAIN, 0, 1),
+        GET_DOMAIN_SMIME_CONFIG("getDomainSMIMEConfig", "gdsc", "name|id [configName]", Category.DOMAIN, 1, 2),
         GET_EFFECTIVE_RIGHTS("getEffectiveRights", "ger", "{target-type} [{target-id|target-name}] {grantee-id|grantee-name} [expandSetAttrs] [expandGetAttrs]", Category.RIGHT, 1, 5, null, new RightCommandHelp()),
 
         // for testing the provisioning interface only, comment out after testing, the soap is only used by admin console
@@ -527,6 +529,8 @@ public class ProvUtil implements HttpDebugListener {
         MODIFY_DATA_SOURCE("modifyDataSource", "mds", "{name@domain|id} {ds-name|ds-id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),
         MODIFY_DISTRIBUTION_LIST("modifyDistributionList", "mdl", "{list@domain|id} attr1 value1 [attr2 value2...]", Category.LIST, 3, Integer.MAX_VALUE),
         MODIFY_DOMAIN("modifyDomain", "md", "{domain|id} [attr1 value1 [attr2 value2...]]", Category.DOMAIN, 3, Integer.MAX_VALUE),
+        MODIFY_CONFIG_SMIME_CONFIG("modifyConfigSMIMEConfig", "mcsc", "configName", Category.DOMAIN, 1, Integer.MAX_VALUE),
+        MODIFY_DOMAIN_SMIME_CONFIG("modifyDomainSMIMEConfig", "mdsc", "name|id configName", Category.DOMAIN, 2, Integer.MAX_VALUE),
         MODIFY_IDENTITY("modifyIdentity", "mid", "{name@domain|id} {identity-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),
         MODIFY_SIGNATURE("modifySignature", "msig", "{name@domain|id} {signature-name|signature-id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),
         MODIFY_SERVER("modifyServer", "ms", "{name|id} [attr1 value1 [attr2 value2...]]", Category.SERVER, 3, Integer.MAX_VALUE),
@@ -541,6 +545,8 @@ public class ProvUtil implements HttpDebugListener {
         REMOVE_ACCOUNT_LOGGER("removeAccountLogger", "ral", "[-s/--server hostname] [{name@domain|id}] [{logging-category}]", Category.LOG, 0, 4),
         REMOVE_DISTRIBUTION_LIST_ALIAS("removeDistributionListAlias", "rdla", "{list@domain|id} {alias@domain}", Category.LIST, 2, 2),
         REMOVE_DISTRIBUTION_LIST_MEMBER("removeDistributionListMember", "rdlm", "{list@domain|id} {member@domain}", Category.LIST, 2, Integer.MAX_VALUE),
+        REMOVE_CONFIG_SMIME_CONFIG("removeConfigSMIMEConfig", "rcsc", "configName", Category.DOMAIN, 1, 1),
+        REMOVE_DOMAIN_SMIME_CONFIG("removeDomainSMIMEConfig", "rdsc", "name|id configName", Category.DOMAIN, 2, 2),
         RENAME_ACCOUNT("renameAccount", "ra", "{name@domain|id} {newName@domain}", Category.ACCOUNT, 2, 2),
         RENAME_CALENDAR_RESOURCE("renameCalendarResource",  "rcr", "{name@domain|id} {newName@domain}", Category.CALENDAR, 2, 2),
         RENAME_COS("renameCos", "rc", "{name|id} {newName}", Category.COS, 2, 2),
@@ -893,6 +899,12 @@ public class ProvUtil implements HttpDebugListener {
         case GET_DOMAIN_INFO:
             doGetDomainInfo(args);
             break;
+        case GET_CONFIG_SMIME_CONFIG:
+            doGetConfigSMIMEConfig(args);
+            break;
+        case GET_DOMAIN_SMIME_CONFIG:    
+            doGetDomainSMIMEConfig(args);
+            break;
         case GET_FREEBUSY_QUEUE_INFO:
             doGetFreeBusyQueueInfo(args);
             break;
@@ -956,6 +968,12 @@ public class ProvUtil implements HttpDebugListener {
         case MODIFY_DOMAIN:
             mProv.modifyAttrs(lookupDomain(args[1]), getMapAndCheck(args, 2), true);
             break;
+        case MODIFY_CONFIG_SMIME_CONFIG:
+            doModifyConfigSMIMEConfig(args);
+            break;
+        case MODIFY_DOMAIN_SMIME_CONFIG:
+            doModifyDomainSMIMEConfig(args);
+            break;    
         case MODIFY_SERVER:
             mProv.modifyAttrs(lookupServer(args[1]), getMapAndCheck(args, 2), true);
             break;
@@ -1012,6 +1030,12 @@ public class ProvUtil implements HttpDebugListener {
                 return true;
             }
             doRemoveAccountLogger(alo);
+            break;
+        case REMOVE_CONFIG_SMIME_CONFIG:
+            doRemoveConfigSMIMEConfig(args);
+            break;
+        case REMOVE_DOMAIN_SMIME_CONFIG:
+            doRemoveDomainSMIMEConfig(args);
             break;
         case RENAME_ACCOUNT:
             mProv.renameAccount(lookupAccount(args[1]).getId(), args[2]);
@@ -4497,6 +4521,74 @@ public class ProvUtil implements HttpDebugListener {
             provider = args[1];
         FbCli fbcli = new FbCli();
         fbcli.purgeFreeBusyQueue(provider);
+    }
+    
+    private void dumpSMIMEConfigs(Map<String, Map<String, Object>> smimeConfigs) throws ServiceException {
+        for (Map.Entry<String, Map<String, Object>> smimeConfig : smimeConfigs.entrySet()) {
+            String configName = smimeConfig.getKey();
+            Map<String, Object> configAttrs = smimeConfig.getValue();
+            
+            console.println("# name "+ configName);
+            dumpAttrs(configAttrs, null);
+            console.println();
+        }
+    }
+    
+    private void doGetConfigSMIMEConfig(String[] args) throws ServiceException {
+        String configName = null;
+        if (args.length > 1) {
+            configName = args[1];
+        }
+        
+        Map<String, Map<String, Object>> smimeConfigs = mProv.getConfigSMIMEConfig(configName);
+        dumpSMIMEConfigs(smimeConfigs);
+    }
+    
+    private void doGetDomainSMIMEConfig(String[] args) throws ServiceException {
+        String domainName = args[1];
+        Domain domain = lookupDomain(domainName);
+        
+        String configName = null;
+        if (args.length > 2) {
+            configName = args[2];
+        }
+        
+        Map<String, Map<String, Object>> smimeConfigs = mProv.getDomainSMIMEConfig(domain, configName);
+        dumpSMIMEConfigs(smimeConfigs);
+    }
+    
+    private void doModifyConfigSMIMEConfig(String[] args) throws ServiceException, ArgException {
+        String configName = args[1];
+        mProv.modifyConfigSMIMEConfig(configName, getMapAndCheck(args, 2));
+    }
+    
+    private void doModifyDomainSMIMEConfig(String[] args) throws ServiceException, ArgException {
+        String domainName = args[1];
+        Domain domain = lookupDomain(domainName);
+        
+        String configName = args[2];
+        mProv.modifyDomainSMIMEConfig(domain, configName, getMapAndCheck(args, 3));
+    }
+    
+    private void doRemoveConfigSMIMEConfig(String[] args) throws ServiceException {
+        String configName = null;
+        if (args.length > 1) {
+            configName = args[1];
+        }
+        
+        mProv.removeConfigSMIMEConfig(configName);
+    }
+    
+    private void doRemoveDomainSMIMEConfig(String[] args) throws ServiceException {
+        String domainName = args[1];
+        Domain domain = lookupDomain(domainName);
+        
+        String configName = null;
+        if (args.length > 2) {
+            configName = args[2];
+        }
+        
+        mProv.removeDomainSMIMEConfig(domain, configName);
     }
 
     private void doHelp(String[] args) {

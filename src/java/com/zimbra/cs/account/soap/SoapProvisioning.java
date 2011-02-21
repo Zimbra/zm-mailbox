@@ -2301,6 +2301,101 @@ public class SoapProvisioning extends Provisioning {
             visitor.visit(sid);
         }
     }
+    
+    
+    @Override
+    public Map<String, Map<String, Object>> getDomainSMIMEConfig(Domain domain, String configName) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.GET_SMIME_CONFIG_REQUEST);
+        
+        Element eDomain = req.addElement(AdminConstants.E_DOMAIN);
+        eDomain.addAttribute(AdminConstants.A_BY, AdminConstants.BY_ID).setText(domain.getId());
+        
+        if (configName != null) {
+            Element eConfig = req.addElement(AdminConstants.E_CONFIG);
+            eConfig.addAttribute(AdminConstants.A_NAME, configName);
+        }
+        
+        Element resp = invoke(req);
+        Map<String, Map<String, Object>> result = new HashMap<String, Map<String, Object>>();
+        for (Element eConfig : resp.listElements(AdminConstants.E_CONFIG)) {
+            result.put(eConfig.getAttribute(AdminConstants.A_NAME), getAttrs(eConfig));
+        }
+        
+        return result;
+    }
+    
+    @Override
+    public void modifyDomainSMIMEConfig(Domain domain, String configName, Map<String, Object> attrs) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.MODIFY_SMIME_CONFIG_REQUEST);
+        
+        Element eDomain = req.addElement(AdminConstants.E_DOMAIN);
+        eDomain.addAttribute(AdminConstants.A_BY, AdminConstants.BY_ID).setText(domain.getId());
+        
+        Element eConfig = req.addElement(AdminConstants.E_CONFIG);
+        eConfig.addAttribute(AdminConstants.A_NAME, configName);
+        eConfig.addAttribute(AdminConstants.A_OP, AdminConstants.OP_MODIFY);
+        
+        addAttrElements(eConfig, attrs);
+        
+        invoke(req);
+    }
+    
+    @Override
+    public void removeDomainSMIMEConfig(Domain domain, String configName) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.MODIFY_SMIME_CONFIG_REQUEST);
+        
+        Element eDomain = req.addElement(AdminConstants.E_DOMAIN);
+        eDomain.addAttribute(AdminConstants.A_BY, AdminConstants.BY_ID).setText(domain.getId());
+        
+        Element eConfig = req.addElement(AdminConstants.E_CONFIG);
+        eConfig.addAttribute(AdminConstants.A_NAME, configName);
+        eConfig.addAttribute(AdminConstants.A_OP, AdminConstants.OP_REMOVE);
+        
+        invoke(req);
+    }
+
+    @Override
+    public Map<String, Map<String, Object>> getConfigSMIMEConfig(String configName) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.GET_SMIME_CONFIG_REQUEST);
+        
+        if (configName != null) {
+            Element eConfig = req.addElement(AdminConstants.E_CONFIG);
+            eConfig.addAttribute(AdminConstants.A_NAME, configName);
+        }
+        
+        Element resp = invoke(req);
+        Map<String, Map<String, Object>> result = new HashMap<String, Map<String, Object>>();
+        for (Element eConfig : resp.listElements(AdminConstants.E_CONFIG)) {
+            result.put(eConfig.getAttribute(AdminConstants.A_NAME), getAttrs(eConfig));
+        }
+        
+        return result;
+    }
+
+    
+    @Override
+    public void modifyConfigSMIMEConfig(String configName, Map<String, Object> attrs) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.MODIFY_SMIME_CONFIG_REQUEST);
+        
+        Element eConfig = req.addElement(AdminConstants.E_CONFIG);
+        eConfig.addAttribute(AdminConstants.A_NAME, configName);
+        eConfig.addAttribute(AdminConstants.A_OP, AdminConstants.OP_MODIFY);
+        
+        addAttrElements(eConfig, attrs);
+        
+        invoke(req);
+    }
+    
+    @Override
+    public void removeConfigSMIMEConfig(String configName) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.MODIFY_SMIME_CONFIG_REQUEST);
+        
+        Element eConfig = req.addElement(AdminConstants.E_CONFIG);
+        eConfig.addAttribute(AdminConstants.A_NAME, configName);
+        eConfig.addAttribute(AdminConstants.A_OP, AdminConstants.OP_REMOVE);
+        
+        invoke(req);
+    }
 
     public static void main(String[] args) throws Exception {
         CliUtil.toolSetup();

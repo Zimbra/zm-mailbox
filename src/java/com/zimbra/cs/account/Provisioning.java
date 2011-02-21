@@ -2161,5 +2161,36 @@ public abstract class Provisioning extends ZAttrProvisioning {
             validator.refresh();
         }
     }
+    
+    //
+    //
+    // SMIME config
+    //
+    //
+    // SMIME config on domain
+    public Map<String, Map<String, Object>> getDomainSMIMEConfig(Domain domain, String configName) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
+    
+    public void modifyDomainSMIMEConfig(Domain domain, String configName, Map<String, Object> attrs) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
+    
+    public void removeDomainSMIMEConfig(Domain domain, String configName) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
+    
+    // SMIME config on globalconfig
+    public Map<String, Map<String, Object>> getConfigSMIMEConfig(String configName) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
+    
+    public void modifyConfigSMIMEConfig(String configName, Map<String, Object> attrs) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
+    
+    public void removeConfigSMIMEConfig(String configName) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
 
 }

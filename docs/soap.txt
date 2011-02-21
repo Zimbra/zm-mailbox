@@ -3518,3 +3518,15 @@ sets device email address as the value of zimbraCalendarReminderDeviceEmail acco
 <InvalidateReminderDeviceResponse/>
 
 -----------------------------
+
+Get SMIME public keys from external LDAP.
+
+<GetSMIMEPublicKeysRequest>
+  <email>...<email>
+<GetSMIMEPublicKeysRequest>
+
+<GetSMIMEPublicKeysResponse>
+  <cert>{base64-encoded-cert}</cert>+
+</GetSMIMEPublicKeysResponse>
+
+-----------------------------

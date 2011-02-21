@@ -2496,3 +2496,41 @@ Returns the memcached client configuration on a mailbox server.
 <NoOpResponse/>
 
 A request that does nothing and always returns nothing. Used to keep an admin session alive.
+
+----------------------------
+
+Modify a configuration for SMIME public key lookup via external LDAP on a domain or globalconfig.
+
+<ModifySMIMEConfigRequest>
+  [<domain by="name|id">...</domain>]
+  <config name="..." [op="{op}"]>
+    [<a n="...">...</a>+]
+  </config>
+</ModifySMIMEConfigRequest>
+
+Notes: if <domain> is present, modify the config on the domain, otherwise modify the config on globalconfig.
+
+{op} = modify(default) | remove
+       modify - modify the SMIME config. modify/add/remove specified attributes of the config.
+       remove - remove the SMIME config. remove all attributes of the config. Must not include an attr map under the <config> element.  
+
+<ModifySMIMEConfigResponse/>
+
+----------------------------
+
+Get a configuration for SMIME public key lookup via external LDAP on a domain or globalconfig.
+
+<GetSMIMEConfigRequest>
+  [<domain by="name|id">...</domain>]
+  [<config name="..."/>]
+</GetSMIMEConfigRequest>
+
+Notes: if <domain> is present, get the config on the domain, otherwise get the config on globalconfig.
+
+<GetSMIMEConfigResponse>
+  <config name="..." [op="{op}"]>
+    [<a n="...">...</a>+]
+  </config>+
+</GetSMIMEConfigResponse>
+
+----------------------------

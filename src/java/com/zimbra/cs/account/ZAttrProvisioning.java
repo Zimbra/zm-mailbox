@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 jhahm 20110215-1542 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110218-1702 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -5143,8 +5143,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMessageCacheSize = "zimbraMessageCacheSize";
 
     /**
-     * Size of cache for delivery time dedupe based on Message-Id header. Set
-     * to 0 to disable this type of deduping.
+     * Number of Message-Id header values to keep in the LMTP dedupe cache.
+     * Subsequent attempts to deliver a message with a matching Message-Id to
+     * the same mailbox will be ignored. A value of 0 disables deduping.
      */
     @ZAttr(id=334)
     public static final String A_zimbraMessageIdDedupeCacheSize = "zimbraMessageIdDedupeCacheSize";
@@ -8147,6 +8148,139 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=669)
     public static final String A_zimbraSkinSelectionColor = "zimbraSkinSelectionColor";
+
+    /**
+     * LDAP attribute for public key lookup for S/MIME via external LDAP.
+     * Multiple attributes can be seperated by comma. All SMIME attributes
+     * are in the format of {config-name}:{value}. A &#039;SMIME config&#039;
+     * is a set of SMIME attribute values with the same {config-name}.
+     * Multiple SMIME configs can be configured on a domain or on
+     * globalconfig. Note: SMIME attributes on domains do not inherited
+     * values from globalconfig, they are not domain-inherited attributes.
+     * During SMIME public key lookup, if there are any SMIME config on the
+     * domain of the account, they are used. SMIME configs on globalconfig
+     * will be used only when there is no SMIME config on the domain. SMIME
+     * attributes cannot be modified directly with zmprov md/mcf commands.
+     * Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1182)
+    public static final String A_zimbraSMIMELdapAttribute = "zimbraSMIMELdapAttribute";
+
+    /**
+     * LDAP bind dn for public key lookup for S/MIME via external LDAP. All
+     * SMIME attributes are in the format of {config-name}:{value}. A
+     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
+     * same {config-name}. Multiple SMIME configs can be configured on a
+     * domain or on globalconfig. Note: SMIME attributes on domains do not
+     * inherited values from globalconfig, they are not domain-inherited
+     * attributes. During SMIME public key lookup, if there are any SMIME
+     * config on the domain of the account, they are used. SMIME configs on
+     * globalconfig will be used only when there is no SMIME config on the
+     * domain. SMIME attributes cannot be modified directly with zmprov
+     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
+     * instead.
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1178)
+    public static final String A_zimbraSMIMELdapBindDn = "zimbraSMIMELdapBindDn";
+
+    /**
+     * LDAP bind password for public key lookup for S/MIME via external LDAP.
+     * All SMIME attributes are in the format of {config-name}:{value}. A
+     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
+     * same {config-name}. Multiple SMIME configs can be configured on a
+     * domain or on globalconfig. Note: SMIME attributes on domains do not
+     * inherited values from globalconfig, they are not domain-inherited
+     * attributes. During SMIME public key lookup, if there are any SMIME
+     * config on the domain of the account, they are used. SMIME configs on
+     * globalconfig will be used only when there is no SMIME config on the
+     * domain. SMIME attributes cannot be modified directly with zmprov
+     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
+     * instead.
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1179)
+    public static final String A_zimbraSMIMELdapBindPassword = "zimbraSMIMELdapBindPassword";
+
+    /**
+     * LDAP search filter for public key lookup for S/MIME via external LDAP.
+     * All SMIME attributes are in the format of {config-name}:{value}. A
+     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
+     * same {config-name}. Multiple SMIME configs can be configured on a
+     * domain or on globalconfig. Note: SMIME attributes on domains do not
+     * inherited values from globalconfig, they are not domain-inherited
+     * attributes. During SMIME public key lookup, if there are any SMIME
+     * config on the domain of the account, they are used. SMIME configs on
+     * globalconfig will be used only when there is no SMIME config on the
+     * domain. SMIME attributes cannot be modified directly with zmprov
+     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
+     * instead.
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1181)
+    public static final String A_zimbraSMIMELdapFilter = "zimbraSMIMELdapFilter";
+
+    /**
+     * LDAP search base for public key lookup for S/MIME via external LDAP.
+     * All SMIME attributes are in the format of {config-name}:{value}. A
+     * &#039;SMIME config&#039; is a set of SMIME attribute values with the
+     * same {config-name}. Multiple SMIME configs can be configured on a
+     * domain or on globalconfig. Note: SMIME attributes on domains do not
+     * inherited values from globalconfig, they are not domain-inherited
+     * attributes. During SMIME public key lookup, if there are any SMIME
+     * config on the domain of the account, they are used. SMIME configs on
+     * globalconfig will be used only when there is no SMIME config on the
+     * domain. SMIME attributes cannot be modified directly with zmprov
+     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
+     * instead.
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1180)
+    public static final String A_zimbraSMIMELdapSearchBase = "zimbraSMIMELdapSearchBase";
+
+    /**
+     * Whether to use startTLS for public key lookup for S/MIME via external
+     * LDAP. All SMIME attributes are in the format of {config-name}:{value}.
+     * A &#039;SMIME config&#039; is a set of SMIME attribute values with the
+     * same {config-name}. Multiple SMIME configs can be configured on a
+     * domain or on globalconfig. Note: SMIME attributes on domains do not
+     * inherited values from globalconfig, they are not domain-inherited
+     * attributes. During SMIME public key lookup, if there are any SMIME
+     * config on the domain of the account, they are used. SMIME configs on
+     * globalconfig will be used only when there is no SMIME config on the
+     * domain. SMIME attributes cannot be modified directly with zmprov
+     * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
+     * instead.
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1177)
+    public static final String A_zimbraSMIMELdapStartTlsEnabled = "zimbraSMIMELdapStartTlsEnabled";
+
+    /**
+     * LDAP URL for public key lookup for S/MIME via external LDAP. Multiple
+     * URLs can be seperated by space. All SMIME attributes are in the format
+     * of {config-name}:{value}. A &#039;SMIME config&#039; is a set of SMIME
+     * attribute values with the same {config-name}. Multiple SMIME configs
+     * can be configured on a domain or on globalconfig. Note: SMIME
+     * attributes on domains do not inherited values from globalconfig, they
+     * are not domain-inherited attributes. During SMIME public key lookup,
+     * if there are any SMIME config on the domain of the account, they are
+     * used. SMIME configs on globalconfig will be used only when there is no
+     * SMIME config on the domain. SMIME attributes cannot be modified
+     * directly with zmprov md/mcf commands. Use zmprov
+     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1176)
+    public static final String A_zimbraSMIMELdapURL = "zimbraSMIMELdapURL";
 
     /**
      * Whether to enable smtp debug trace
