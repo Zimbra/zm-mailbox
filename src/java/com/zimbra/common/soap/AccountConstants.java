@@ -91,6 +91,9 @@ public class AccountConstants {
 
     public static final String E_GET_VERSION_INFO_REQUEST = "GetVersionInfoRequest";
     public static final String E_GET_VERSION_INFO_RESPONSE = "GetVersionInfoResponse";
+    
+    public static final String E_GET_SMIME_PUBLIC_KEYS_REQUEST = "GetSMIMEPublicKeysRequest";
+    public static final String E_GET_SMIME_PUBLIC_KEYS_RESPONSE = "GetSMIMEPublicKeysResponse";
 
     // auth
     public static final QName AUTH_REQUEST = QName.get(E_AUTH_REQUEST, NAMESPACE);
@@ -161,6 +164,10 @@ public class AccountConstants {
 
     public static final QName GET_VERSION_INFO_REQUEST = QName.get(E_GET_VERSION_INFO_REQUEST, NAMESPACE);
     public static final QName GET_VERSION_INFO_RESPONSE = QName.get(E_GET_VERSION_INFO_RESPONSE, NAMESPACE);
+    
+    // SMIME
+    public static final QName GET_SMIME_PUBLIC_KEYS_REQUEST = QName.get(E_GET_SMIME_PUBLIC_KEYS_REQUEST, NAMESPACE);
+    public static final QName GET_SMIME_PUBLIC_KEYS_RESPONSE = QName.get(E_GET_SMIME_PUBLIC_KEYS_RESPONSE, NAMESPACE);
 
     public static final String E_ACTION = "action";
     public static final String E_ADMIN_DELEGATED = "adminDelegated";
@@ -170,8 +177,10 @@ public class AccountConstants {
     public static final String E_LIFETIME = "lifetime";
     public static final String E_ACCOUNT = "account";
     public static final String E_CALENDAR_RESOURCE = "calresource";
+    public static final String E_CERT = "cert";
     public static final String E_DL = "dl";
     public static final String E_DLM = "dlm";
+    public static final String E_EMAIL = "email";
     public static final String E_VERSION = "version";
     public static final String E_NAME = "name";
     public static final String E_ID = "id";

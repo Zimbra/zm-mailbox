@@ -420,7 +420,13 @@ public final class AdminConstants {
     // noop
     public static final String E_NO_OP_REQUEST = "NoOpRequest";
     public static final String E_NO_OP_RESPONSE = "NoOpResponse";
-
+    
+    // SMIME config
+    public static final String E_GET_SMIME_CONFIG_REQUEST = "GetSMIMEConfigRequest";
+    public static final String E_GET_SMIME_CONFIG_RESPONSE = "GetSMIMEConfigResponse";
+    public static final String E_MODIFY_SMIME_CONFIG_REQUEST = "ModifySMIMEConfigRequest";
+    public static final String E_MODIFY_SMIME_CONFIG_RESPONSE = "ModifySMIMEConfigResponse";
+    
     public static final QName PING_REQUEST = QName.get(E_PING_REQUEST, NAMESPACE);
     public static final QName PING_RESPONSE = QName.get(E_PING_RESPONSE, NAMESPACE);
     public static final QName CHECK_HEALTH_REQUEST = QName.get(E_CHECK_HEALTH_REQUEST, NAMESPACE);
@@ -817,6 +823,12 @@ public final class AdminConstants {
     // noop
     public static final QName NO_OP_REQUEST = QName.get(E_NO_OP_REQUEST, NAMESPACE);
     public static final QName NO_OP_RESPONSE = QName.get(E_NO_OP_RESPONSE, NAMESPACE);
+    
+    public static final QName GET_SMIME_CONFIG_REQUEST = QName.get(E_GET_SMIME_CONFIG_REQUEST, NAMESPACE);
+    public static final QName GET_SMIME_CONFIG_RESPONSE = QName.get(E_GET_SMIME_CONFIG_RESPONSE, NAMESPACE);
+    public static final QName MODIFY_SMIME_CONFIG_REQUEST = QName.get(E_MODIFY_SMIME_CONFIG_REQUEST, NAMESPACE);
+    public static final QName MODIFY_SMIME_CONFIG_RESPONSE = QName.get(E_MODIFY_SMIME_CONFIG_RESPONSE, NAMESPACE);
+    
     // DumpSessions
     public static final String E_SESSION = "session";
     public static final String A_ZIMBRA_ID = "zid";
@@ -848,6 +860,7 @@ public final class AdminConstants {
     public static final String E_BINDDN = "bindDn";
     public static final String E_CACHE = "cache";
     public static final String E_CODE = "code";
+    public static final String E_CONFIG = "config";
     public static final String E_COS = "cos";
     public static final String E_CN = "cn";
     public static final String E_DOMAIN = "domain";
@@ -1141,4 +1154,7 @@ public final class AdminConstants {
     public static final String E_MIGRATE = "migrate";
 
     public static final String A_ERROR = "error";
+    
+    public static final String OP_MODIFY = "modify";
+    public static final String OP_REMOVE = "remove";
 }
