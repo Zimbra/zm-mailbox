@@ -335,7 +335,7 @@ class ImapFolderSync {
         // Fetch new messages
         IOExceptionHandler.getInstance().resetSyncCounter(mailbox);
         maxUid = uidNext > 0 ? uidNext - 1 : 0;
-        if (maxUid <= 0 || lastFetchedUid < maxUid) {
+        if (mailboxInfo.getExists() > 0 && (maxUid <= 0 || lastFetchedUid < maxUid)) {
             List<Long> uids = remoteFolder.getUids(lastFetchedUid + 1, maxUid);
             if (uids.size() > 0) {
                 fetchMessages(uids);
