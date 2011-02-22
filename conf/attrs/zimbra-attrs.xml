@@ -906,7 +906,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <globalConfigValue>objectClass=objectClass</globalConfigValue>
   <globalConfigValue>zimbraMailForwardingAddress=member</globalConfigValue>
   <globalConfigValue>zimbraCalResType,msExchResourceSearchProperties=zimbraCalResType</globalConfigValue>
-  <globalConfigValue>zimbraCalResLocationDisplayName,displayName=zimbraCalResLocationDisplayName</globalConfigValue>
+  <globalConfigValue>zimbraCalResLocationDisplayName=zimbraCalResLocationDisplayName</globalConfigValue>
   <globalConfigValue>zimbraCalResBuilding=zimbraCalResBuilding</globalConfigValue>
   <globalConfigValue>zimbraCalResCapacity,msExchResourceCapacity=zimbraCalResCapacity</globalConfigValue>
   <globalConfigValue>zimbraCalResFloor=zimbraCalResFloor</globalConfigValue>
