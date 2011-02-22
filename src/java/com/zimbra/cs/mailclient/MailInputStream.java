@@ -194,7 +194,9 @@ public class MailInputStream extends InputStream {
         if (logbuf == null || logbuf.size() == 0) {
             return;
         }
-        log.trace("S: %s", logbuf.toString());
+        if (log.isTraceEnabled()) {
+            log.trace("S: %s", logbuf.toString().trim());
+        }
         logbuf.reset();
     }
 

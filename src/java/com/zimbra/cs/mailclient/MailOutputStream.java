@@ -130,7 +130,9 @@ public class MailOutputStream extends OutputStream {
         if (logbuf == null || logbuf.size() == 0) {
             return;
         }
-        log.trace("C: %s", logbuf.toString());
+        if (log.isTraceEnabled()) {
+            log.trace("C: %s", logbuf.toString().trim());
+        }
         logbuf.reset();
     }
 
