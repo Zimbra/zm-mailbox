@@ -1688,7 +1688,7 @@ public class ProvUtil implements HttpDebugListener {
         String key = args[1];
         Set<String> needAttr = new HashSet<String>();
         needAttr.add(key);
-        dumpAttrs(mProv.getConfig().getAttrs(), needAttr);
+        dumpAttrs(mProv.getConfig(key).getAttrs(), needAttr);
     }
 
     /*
