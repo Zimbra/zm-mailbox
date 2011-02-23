@@ -145,6 +145,14 @@ public class SieveToSoap extends SieveVisitor {
     }
 
     @Override
+    protected void visitTrueTest(Node node, VisitPhase phase, RuleProperties props)
+    throws ServiceException {
+        if (phase == VisitPhase.begin) {
+            addTest(MailConstants.E_TRUE_TEST, props);
+        }
+    }
+
+    @Override
     protected void visitHeaderExistsTest(Node node, VisitPhase phase, RuleProperties props,
                                          String header)
     throws ServiceException {
@@ -262,6 +270,30 @@ public class SieveToSoap extends SieveVisitor {
     }
 
     @Override
+    protected void visitReplyAction(Node node, VisitPhase phase, RuleProperties props, String bodyTemplate)
+            throws ServiceException {
+        if (phase == VisitPhase.begin) {
+            addAction(MailConstants.E_ACTION_REPLY).addElement(MailConstants.E_CONTENT).addText(bodyTemplate);
+        }
+    }
+
+    @Override
+    protected void visitNotifyAction(Node node, VisitPhase phase, RuleProperties props,
+                                     String emailAddr, String subjectTemplate, String bodyTemplate, int maxBodyBytes)
+            throws ServiceException {
+        if (phase == VisitPhase.begin) {
+            Element action = addAction(MailConstants.E_ACTION_NOTIFY);
+            action.addAttribute(MailConstants.A_ADDRESS, emailAddr);
+            if (!StringUtil.isNullOrEmpty(subjectTemplate))
+                action.addAttribute(MailConstants.A_SUBJECT, subjectTemplate);
+            if (!StringUtil.isNullOrEmpty(bodyTemplate))
+                action.addElement(MailConstants.E_CONTENT).addText(bodyTemplate);
+            if (maxBodyBytes != -1)
+                action.addAttribute(MailConstants.A_MAX_BODY_SIZE, maxBodyBytes);
+        }
+    }
+
+     @Override
     protected void visitStopAction(Node node, VisitPhase phase, RuleProperties props)
     throws ServiceException {
         if (phase == VisitPhase.begin) {

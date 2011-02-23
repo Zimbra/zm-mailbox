@@ -31,7 +31,9 @@ import com.zimbra.cs.service.util.ItemId;
 public abstract class FilterHandler {
 
     public abstract ParsedMessage getParsedMessage() throws ServiceException;
+
     public abstract MimeMessage getMimeMessage() throws ServiceException;
+
     public abstract int getMessageSize();
     
     /**
@@ -42,14 +44,12 @@ public abstract class FilterHandler {
     /**
      * Executed before mail filtering begins.
      */
-    @SuppressWarnings("unused")
     public void beforeFiltering() throws ServiceException { }
     
     /**
      * Discards the message.  This method will only be called when there
      * are no <tt>fileinto</tt> or <tt>keep</tt> actions.
      */
-    @SuppressWarnings("unused")
     public void discard() throws ServiceException { }
     
     /**
@@ -58,11 +58,8 @@ public abstract class FilterHandler {
      * for the same message.
      * @return the new message, or <tt>null</tt> if it was a duplicate
      */
-    @SuppressWarnings("unused")
-    public Message implicitKeep(Collection<ActionFlag> flagActions, String tags)
-    throws ServiceException {
-        return null;
-    }
+    public abstract Message implicitKeep(Collection<ActionFlag> flagActions, String tags)
+    throws ServiceException;
     
     /**
      * Files the message into the default folder without taking
@@ -70,32 +67,35 @@ public abstract class FilterHandler {
      * for the same message. 
      * @return the new message, or <tt>null</tt> if it was a duplicate
      */
-    @SuppressWarnings("unused")
-    public Message explicitKeep(Collection<ActionFlag> flagActions, String tags)
-    throws ServiceException {
-        return null;
-    }
+    public abstract Message explicitKeep(Collection<ActionFlag> flagActions, String tags)
+    throws ServiceException;
     
     /**
      * Files the message into the given folder.  May be local or remote.
      * This method will not be called multiple times for the same path.
      * @return the new message, or <tt>null</tt> if it was a duplicate
      */
-    @SuppressWarnings("unused")
-    public ItemId fileInto(String folderPath, Collection<ActionFlag> flagActions, String tags)
-    throws ServiceException {
-        return null;
-    }
-    
+    public abstract ItemId fileInto(String folderPath, Collection<ActionFlag> flagActions, String tags)
+    throws ServiceException;
+
     /**
      * Redirects the message to another address.
      */
-    @SuppressWarnings("unused")
-    public void redirect(String destinationAddress) throws ServiceException, MessagingException { }
+    public abstract void redirect(String destinationAddress) throws ServiceException;
+
+    /**
+     * Replies to the message.
+     */
+    public abstract void reply(String bodyTemplate) throws ServiceException, MessagingException;
 
     /**
      * Executed after mail filtering ends.
      */
-    @SuppressWarnings("unused")
     public void afterFiltering() throws ServiceException { }
+
+    /**
+     * Sends an email notification.
+     */
+    public abstract void notify(String emailAddr, String subjectTemplate, String bodyTemplate, int maxBodyBytes)
+    throws ServiceException, MessagingException;
 }

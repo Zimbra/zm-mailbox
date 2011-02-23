@@ -32,6 +32,8 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 
+import com.zimbra.cs.filter.jsieve.ActionNotify;
+import com.zimbra.cs.filter.jsieve.ActionReply;
 import org.apache.jsieve.SieveContext;
 import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.mail.Action;
@@ -199,7 +201,6 @@ public class ZimbraMailAdapter implements MailAdapter
                 doDefaultFiling();
             }
             
-            // Handle explicit and implicit delivery actions
             for (Action action : deliveryActions) {
                 if (action instanceof ActionKeep) {
                     if (mContext == null) {
@@ -240,6 +241,28 @@ public class ZimbraMailAdapter implements MailAdapter
                             addr, mHandler.getDefaultFolderPath(), e);
                         explicitKeep();
                     }
+                } else if (action instanceof ActionReply) {
+                    // reply to mail
+                    ActionReply reply = (ActionReply) action;
+                    try {
+                        mHandler.reply(reply.getBodyTemplate());
+                    } catch (Exception e) {
+                        ZimbraLog.filter.warn(
+                                "Unable to reply.  Filing message to %s.", mHandler.getDefaultFolderPath(), e);
+                        explicitKeep();
+                    }
+                } else if (action instanceof ActionNotify) {
+                    ActionNotify notify = (ActionNotify) action;
+                    try {
+                        mHandler.notify(notify.getEmailAddr(),
+                                        notify.getSubjectTemplate(),
+                                        notify.getBodyTemplate(),
+                                        notify.getMaxBodyBytes());
+                    } catch (Exception e) {
+                        ZimbraLog.filter.warn(
+                                "Unable to notify.  Filing message to %s.", mHandler.getDefaultFolderPath(), e);
+                        explicitKeep();
+                    }
                 } else {
                     throw new SieveException("unknown action " + action);
                 }
@@ -265,7 +288,9 @@ public class ZimbraMailAdapter implements MailAdapter
         for (Action action : mActions) {
             if (action instanceof ActionKeep ||
                 action instanceof ActionFileInto ||
-                action instanceof ActionRedirect) {
+                action instanceof ActionRedirect ||
+                action instanceof ActionReply ||
+                action instanceof ActionNotify) {
                 actions.add(action);
             }
         }
@@ -391,16 +416,16 @@ public class ZimbraMailAdapter implements MailAdapter
     private List<String> handleIDN(String headerName, String[] headers) {
 
         List<String> hdrs = new ArrayList<String>();
-        for (int i = 0; i < headers.length; i++) {
+        for (String header : headers) {
             boolean altered = false;
-            
-            if (headers[i].contains(IDNUtil.ACE_PREFIX)) {
+
+            if (header.contains(IDNUtil.ACE_PREFIX)) {
                 // handle multiple addresses in a header
-                StringTokenizer st = new StringTokenizer(headers[i], ",;", true);
+                StringTokenizer st = new StringTokenizer(header, ",;", true);
                 StringBuffer addrs = new StringBuffer();
                 while (st.hasMoreTokens()) {
                     String address = st.nextToken();
-                    String delim = st.hasMoreTokens()?st.nextToken():"";
+                    String delim = st.hasMoreTokens() ? st.nextToken() : "";
                     try {
                         InternetAddress inetAddr = new JavaMailInternetAddress(address);
                         String addr = inetAddr.getAddress();
@@ -418,7 +443,7 @@ public class ZimbraMailAdapter implements MailAdapter
                         addrs.append(address).append(delim);  // put back the orig address
                     }
                 }
-                
+
                 // if altered, add the altered value
                 if (altered) {
                     String unicodeAddrs = addrs.toString();
@@ -426,17 +451,17 @@ public class ZimbraMailAdapter implements MailAdapter
                     hdrs.add(unicodeAddrs);
                 }
             }
-            
+
             // always put back the orig value
-            hdrs.add(headers[i]);
-            
+            hdrs.add(header);
+
         }
         
         return hdrs;
     }
     
     public List<String> getHeader(String name) {
-        MimeMessage msg = null;
+        MimeMessage msg;
         try {
             msg = mHandler.getMimeMessage();
         } catch (ServiceException e) {
@@ -457,7 +482,7 @@ public class ZimbraMailAdapter implements MailAdapter
 
     public List<String> getHeaderNames() throws SieveMailException {
         Set<String> headerNames = new HashSet<String>();
-        MimeMessage msg = null;
+        MimeMessage msg;
         try {
             msg = mHandler.getMimeMessage();
         } catch (ServiceException e) {
@@ -479,8 +504,7 @@ public class ZimbraMailAdapter implements MailAdapter
 
     public List<String> getMatchingHeader(String name)
     throws SieveMailException {
-        List<String> result = MailUtils.getMatchingHeader(this, name);
-        return result;
+        return MailUtils.getMatchingHeader(this, name);
     }
     
     /**
@@ -489,16 +513,14 @@ public class ZimbraMailAdapter implements MailAdapter
      */
     public Set<String> getMatchingHeaderFromAllParts(String name)
     throws SieveMailException {
-        MimeMessage msg = null;
+        MimeMessage msg;
         Set<String> values = new HashSet<String>();
 
         try {
             msg = mHandler.getMimeMessage();
             for (MPartInfo partInfo : Mime.getParts(msg)) {
                 MimePart part = partInfo.getMimePart();
-                for (String value : Mime.getHeaders(part, name)) {
-                    values.add(value);
-                }
+                values.addAll(Arrays.asList(Mime.getHeaders(part, name)));
             }
         } catch (Exception e) {
             throw new SieveMailException("Unable to match attachment headers.", e);
@@ -532,7 +554,7 @@ public class ZimbraMailAdapter implements MailAdapter
     }
 
     public Address[] parseAddresses(String headerName) {
-        MimeMessage msg = null;
+        MimeMessage msg;
         try {
             msg = mHandler.getMimeMessage();
         } catch (ServiceException e) {

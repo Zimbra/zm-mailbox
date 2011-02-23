@@ -261,6 +261,8 @@ public class ZMailboxUtil implements DebugListener {
                         "    tag \"/tag\"\n" +
                         "    mark read|flagged\n" +
                         "    redirect \"address\"\n" +
+                        "    reply \"body-template\"\n" +
+                        "    notify \"address\" \"subject-template\" \"body-template\" [\"max-body-size(bytes)\"]\n" +
                         "    stop\n"),
         FOLDER("help on folder-related commands"),
         ITEM("help on item-related commands"),

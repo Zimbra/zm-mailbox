@@ -45,6 +45,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
     public static final String C_EXISTS = "exists";
     public static final String C_NOT_EXISTS = "not exists";
     public static final String C_HEADER = "header";
+    public static final String C_TRUE = "true";
     public static final String C_MIME_HEADER = "mime_header";
     public static final String C_NOT_ATTACHMENT = "not attachment";
     public static final String C_SIZE = "size";
@@ -256,6 +257,8 @@ public abstract class ZFilterCondition implements ToZJSONObject {
                 }
                 return new ZInviteCondition(!isNegative, methods);
             }
+        } else if (name.equals(MailConstants.E_TRUE_TEST)) {
+            return new ZTrueCondition();
         } else {
              throw ZClientException.CLIENT_ERROR("unknown filter condition: "+name, null);
         }
@@ -524,6 +527,24 @@ public abstract class ZFilterCondition implements ToZJSONObject {
             }
             test.addAttribute(MailConstants.A_TIME, timeStr);
             return test;
+        }
+    }
+
+    public static class ZTrueCondition extends ZFilterCondition {
+
+        @Override
+        Element toElement(Element parent) {
+            return parent.addElement(MailConstants.E_TRUE_TEST);
+        }
+
+        @Override
+        public String getName() {
+            return C_TRUE;
+        }
+
+        @Override
+        public String toConditionString() {
+            return "true";
         }
     }
 
