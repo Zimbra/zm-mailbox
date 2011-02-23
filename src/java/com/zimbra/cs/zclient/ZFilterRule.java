@@ -211,34 +211,7 @@ public class ZFilterRule implements ToZJSONObject {
         }
         return sb.toString();
     }
-    /**
-     * 
-     *
-     * <pre>
-  {name}  [*active|inactive] [any|*all] {conditions}+ {actions}+
 
-  {conditions}:
-
-  header "name" is|not_is|contains|not_contains|matches|not_matches "value"
-  header "name" exists|not_exists
-  date before|not_before|after|not_after "YYYYMMDD"
-  size under|not_under|over|not_over "1|1K|1M"
-  body contains|not_contains "text"
-  in_addressbook|not_in_addressbook
-  attachment exists|not_exists
-
-  {actions}:
-
-  keep
-  discard
-  fileinto "/path"
-  tag "/tag"
-  mark read|flagged
-  redirect "address"
-  stop
-</pre>
-
-     */
     public static ZFilterRule parseFilterRule(String[] args) throws ServiceException {
         String name = args[0];
         boolean all = true;
