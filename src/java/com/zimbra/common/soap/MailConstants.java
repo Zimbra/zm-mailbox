@@ -332,6 +332,8 @@ public final class MailConstants {
     public static final String E_MIME_HEADER_TEST = "mimeHeaderTest";
     public static final String E_SIZE_TEST = "sizeTest";
     public static final String E_DATE_TEST = "dateTest";
+    public static final String E_CURRENT_TIME_TEST = "currentTimeTest";
+    public static final String E_CURRENT_DAY_OF_WEEK_TEST = "currentDayOfWeekTest";
     public static final String E_BODY_TEST = "bodyTest";
     public static final String E_ATTACHMENT_TEST = "attachmentTest";
     public static final String E_ADDRESS_BOOK_TEST = "addressBookTest";
@@ -357,6 +359,7 @@ public final class MailConstants {
     public static final String A_FLAG_NAME = "flagName";
     public static final String A_TAG_NAME = "tagName";
     public static final String A_INDEX = "index";
+    public static final String A_TIME = "time";
 
     // grants and shares
     public static final String E_ACL = "acl";
