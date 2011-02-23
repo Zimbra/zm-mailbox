@@ -502,7 +502,7 @@ public final class MailConstants {
     public static final QName VERIFY_CODE_REQUEST = QName.get(E_VERIFY_CODE_REQUEST, NAMESPACE);
     public static final QName VERIFY_CODE_RESPONSE = QName.get(E_VERIFY_CODE_RESPONSE, NAMESPACE);
     public static final QName INVALIDATE_REMINDER_DEVICE_REQUEST = QName.get(E_INVALIDATE_REMINDER_DEVICE_REQUEST, NAMESPACE);
-    public static final QName INVALIDATE_REMINDER_DEVICE_RESPONSE = QName.get(E_INVALIDATE_REMINDER_DEVICE_REQUEST, NAMESPACE);
+    public static final QName INVALIDATE_REMINDER_DEVICE_RESPONSE = QName.get(E_INVALIDATE_REMINDER_DEVICE_RESPONSE, NAMESPACE);
 
     public static final String E_MAILBOX = "mbx";
     public static final String E_ITEM = "item";
