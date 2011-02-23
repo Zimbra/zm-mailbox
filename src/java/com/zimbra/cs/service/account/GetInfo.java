@@ -43,8 +43,10 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.UserServlet;
+import com.zimbra.cs.service.admin.AdminAccessControl;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.util.BuildInfo;
@@ -106,8 +108,22 @@ public class GetInfo extends AccountDocumentHandler  {
         long lifetime = zsc.getAuthToken().getExpires() - System.currentTimeMillis();
         response.addAttribute(AccountConstants.E_LIFETIME, lifetime, Element.Disposition.CONTENT);
 
+        Provisioning prov = Provisioning.getInstance();
+        
+        // bug 53770, return if the request is using a delegated authtoken issued to an admin account
+        AuthToken authToken = zsc.getAuthToken();
+        if (authToken.isDelegatedAuth()) {
+            Account admin = prov.get(AccountBy.id, authToken.getAdminAccountId());
+            if (admin != null) {
+                boolean isAdmin = AdminAccessControl.isAdequateAdminAccount(admin);
+                if (isAdmin) {
+                    response.addAttribute(AccountConstants.E_ADMIN_DELEGATED, true, Element.Disposition.CONTENT);
+                }
+            }
+        }
+        
         try {
-            Provisioning prov = Provisioning.getInstance();
+            
             Server server = prov.getLocalServer();
             if (server != null)
                 response.addAttribute(AccountConstants.A_DOCUMENT_SIZE_LIMIT, server.getFileUploadMaxSize());
