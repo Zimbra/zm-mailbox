@@ -5306,6 +5306,15 @@ TODO: delete them permerntly from here
   <desc>whether detailed contact search UI is enabled</desc>
 </attr>
 
+<attr id="1168" name="zimbraFeatureAntispamEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="7.1.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>
+    whether or not to enable rerouting spam messages to Junk folder in ZCS, 
+    exposing Junk folder and actions in the web UI, and 
+    exposing Junk folder to IMAP clients.
+  </desc>
+</attr>
+
 <attr id="1169" name="zimbraMyoneloginSamlSigningCert"  type="astring" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="7.0.1">
   <desc>certificate to be used for validating the SAML assertions received from myonelogin (tricipher)</desc>
 </attr>

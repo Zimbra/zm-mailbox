@@ -2940,6 +2940,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureAdvancedSearchEnabled = "zimbraFeatureAdvancedSearchEnabled";
 
     /**
+     * whether or not to enable rerouting spam messages to Junk folder in
+     * ZCS, exposing Junk folder and actions in the web UI, and exposing Junk
+     * folder to IMAP clients.
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1168)
+    public static final String A_zimbraFeatureAntispamEnabled = "zimbraFeatureAntispamEnabled";
+
+    /**
      * Docs features enabled in briefcase
      *
      * @since ZCS 6.0.2
