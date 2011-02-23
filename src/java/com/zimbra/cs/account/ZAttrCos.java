@@ -4871,6 +4871,78 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * whether detailed contact search UI is enabled
+     *
+     * @return zimbraFeatureContactsDetailedSearchEnabled, or false if unset
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1164)
+    public boolean isFeatureContactsDetailedSearchEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureContactsDetailedSearchEnabled, false);
+    }
+
+    /**
+     * whether detailed contact search UI is enabled
+     *
+     * @param zimbraFeatureContactsDetailedSearchEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1164)
+    public void setFeatureContactsDetailedSearchEnabled(boolean zimbraFeatureContactsDetailedSearchEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureContactsDetailedSearchEnabled, zimbraFeatureContactsDetailedSearchEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether detailed contact search UI is enabled
+     *
+     * @param zimbraFeatureContactsDetailedSearchEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1164)
+    public Map<String,Object> setFeatureContactsDetailedSearchEnabled(boolean zimbraFeatureContactsDetailedSearchEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureContactsDetailedSearchEnabled, zimbraFeatureContactsDetailedSearchEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether detailed contact search UI is enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1164)
+    public void unsetFeatureContactsDetailedSearchEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureContactsDetailedSearchEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether detailed contact search UI is enabled
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1164)
+    public Map<String,Object> unsetFeatureContactsDetailedSearchEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureContactsDetailedSearchEnabled, "");
+        return attrs;
+    }
+
+    /**
      * contact features
      *
      * @return zimbraFeatureContactsEnabled, or true if unset
