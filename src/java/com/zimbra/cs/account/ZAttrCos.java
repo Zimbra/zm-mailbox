@@ -20,6 +20,7 @@
  */
 package com.zimbra.cs.account;
 
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.StringUtil;
 
