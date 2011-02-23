@@ -493,6 +493,14 @@ public class ByteUtil {
         }
         return Base64.decodeBase64(bytes);
     }
+    
+    public static String encodeLDAPBase64(byte[] data) {
+        return new String(Base64.encodeBase64(data));
+    }
+    
+    public static byte[] decodeLDAPBase64(String str) {
+        return Base64.decodeBase64(str);
+    }
 
     /**
      * Returns the SHA1 digest of the supplied data.
