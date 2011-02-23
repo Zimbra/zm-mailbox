@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 jhahm 20110215-1542 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110223-1055 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -5018,8 +5018,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMessageCacheSize = "zimbraMessageCacheSize";
 
     /**
-     * Size of cache for delivery time dedupe based on Message-Id header. Set
-     * to 0 to disable this type of deduping.
+     * Number of Message-Id header values to keep in the LMTP dedupe cache.
+     * Subsequent attempts to deliver a message with a matching Message-Id to
+     * the same mailbox will be ignored. A value of 0 disables deduping.
      */
     @ZAttr(id=334)
     public static final String A_zimbraMessageIdDedupeCacheSize = "zimbraMessageIdDedupeCacheSize";
@@ -5565,6 +5566,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraObjectType = "zimbraObjectType";
 
     /**
+     * regex of alllowed characters in password
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1163)
+    public static final String A_zimbraPasswordAllowedChars = "zimbraPasswordAllowedChars";
+
+    /**
      * registered change password listener name
      *
      * @since ZCS 5.0.1
@@ -5656,6 +5665,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=35)
     public static final String A_zimbraPasswordMinAge = "zimbraPasswordMinAge";
+
+    /**
+     * minimum number of alphabet characters required in a password
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1162)
+    public static final String A_zimbraPasswordMinAlphaChars = "zimbraPasswordMinAlphaChars";
 
     /**
      * minimum length of a password
