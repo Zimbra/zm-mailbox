@@ -181,15 +181,17 @@ public abstract class ZFilterCondition implements ToZJSONObject {
             String s = condEl.getAttribute(MailConstants.A_STRING_COMPARISON);
             s = s.toLowerCase();
             StringComparison comparison = StringComparison.fromString(s);
+            boolean caseSensitive = condEl.getAttributeBool(MailConstants.A_CASE_SENSITIVE, false);
             String value = condEl.getAttribute(MailConstants.A_VALUE);
-            return new ZHeaderCondition(header, HeaderOp.fromStringComparison(comparison, isNegative), value);
+            return new ZHeaderCondition(header, HeaderOp.fromStringComparison(comparison, isNegative), caseSensitive, value);
         } else if (name.equals(MailConstants.E_MIME_HEADER_TEST)) {
             String header = condEl.getAttribute(MailConstants.A_HEADER);
             String s = condEl.getAttribute(MailConstants.A_STRING_COMPARISON);
             s = s.toLowerCase();
             StringComparison comparison = StringComparison.fromString(s);
+            boolean caseSensitive = condEl.getAttributeBool(MailConstants.A_CASE_SENSITIVE, false);
             String value = condEl.getAttribute(MailConstants.A_VALUE);
-            return new ZMimeHeaderCondition(header, HeaderOp.fromStringComparison(comparison, isNegative), value);
+            return new ZMimeHeaderCondition(header, HeaderOp.fromStringComparison(comparison, isNegative), caseSensitive, value);
         } else if (name.equals(MailConstants.E_HEADER_EXISTS_TEST)) {
             String header = condEl.getAttribute(MailConstants.A_HEADER);
             return new ZHeaderExistsCondition(header, !isNegative);
@@ -208,7 +210,8 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         } else if (name.equals(MailConstants.E_BODY_TEST)) {
             String value = condEl.getAttribute(MailConstants.A_VALUE);
             BodyOp op = (isNegative ? BodyOp.NOT_CONTAINS : BodyOp.CONTAINS);
-            return new ZBodyCondition(op, value);
+            boolean caseSensitive = condEl.getAttributeBool(MailConstants.A_CASE_SENSITIVE, false);
+            return new ZBodyCondition(op, caseSensitive, value);
         } else if (name.equals(MailConstants.E_ADDRESS_BOOK_TEST)) {
             String header = condEl.getAttribute(MailConstants.A_HEADER);
             // String folderPath = condEl.getAttribute(MailConstants.A_FOLDER_PATH);
