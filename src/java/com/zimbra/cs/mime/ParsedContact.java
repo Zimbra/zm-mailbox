@@ -466,9 +466,15 @@ public class ParsedContact {
         StringBuilder contentText = new StringBuilder();
 
         String emailFields[] = Contact.getEmailFields(acct);
-
+        
         FieldTokenStream fields = new FieldTokenStream();
         for (Map.Entry<String, String> entry : getFields().entrySet()) {
+            
+            // do not index SMIMECertificate
+            if (ContactConstants.A_SMIMECertificate.equalsIgnoreCase(entry.getKey())) {
+                continue;
+            }
+            
             if (!Contact.isEmailField(emailFields, entry.getKey())) { // skip email addrs, they're added to CONTENT below
                 if (!ContactConstants.A_fileAs.equalsIgnoreCase(entry.getKey()))
                     contentText.append(entry.getValue()).append(' ');

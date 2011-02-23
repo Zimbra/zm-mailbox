@@ -16,8 +16,10 @@ package com.zimbra.cs.account.ldap;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.naming.directory.Attributes;
 import javax.naming.directory.SearchResult;
@@ -37,6 +39,7 @@ public class LdapGalMapRules {
     
     private List<LdapGalMapRule> mRules;
     private List<String> mLdapAttrs;
+    private Set<String> mBinaryLdapAttrs;
     private Map<String, LdapGalValueMap> mValueMaps;
     private GalGroupHandler mGroupHandler;
     private boolean mFetchGroupMembers;
@@ -74,6 +77,7 @@ public class LdapGalMapRules {
         
         mRules = new ArrayList<LdapGalMapRule>(rules.length);
         mLdapAttrs = new ArrayList<String>();
+        mBinaryLdapAttrs = new HashSet<String>();
         for (String rule: rules)
             add(rule);
         
@@ -87,6 +91,10 @@ public class LdapGalMapRules {
     
     public String[] getLdapAttrs() {
         return mLdapAttrs.toArray(new String[mLdapAttrs.size()]);
+    }
+    
+    public Set<String> getBinaryLdapAttrs() {
+        return mBinaryLdapAttrs;
     }
     
     public Map<String, Object> apply(ZimbraLdapContext zlc, String searchBase, SearchResult sr) {
@@ -118,6 +126,10 @@ public class LdapGalMapRules {
         mRules.add(lgmr);
         for (String ldapattr: lgmr.getLdapAttrs()) {
             mLdapAttrs.add(ldapattr);
+            
+            if (lgmr.isBinary()) {
+                mBinaryLdapAttrs.add(ldapattr);
+            }
         }
     }
 }

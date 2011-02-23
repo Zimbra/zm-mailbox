@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110223-1055 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110223-1452 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -6803,6 +6803,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=156)
     public static final String A_zimbraPrefMailSignatureStyle = "zimbraPrefMailSignatureStyle";
+
+    /**
+     * user&#039;s S/MIME public keys (certificates)
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1172)
+    public static final String A_zimbraPrefMailSMIMECertificate = "zimbraPrefMailSMIMECertificate";
 
     /**
      * whether audible alert is enabled when a new email arrives
