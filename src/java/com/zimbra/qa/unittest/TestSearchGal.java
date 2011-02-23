@@ -26,10 +26,7 @@ import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.EntrySearchFilter.Operator;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.account.Provisioning.SearchGalResult;
-import com.zimbra.cs.account.ZAttrProvisioning.CalResType;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.qa.unittest.TestLdapBinary.Content;
 

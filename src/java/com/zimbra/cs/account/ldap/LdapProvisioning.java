@@ -6770,6 +6770,43 @@ public class LdapProvisioning extends Provisioning {
         }
     }
 
+    
+    @Override
+    public Map<String, Map<String, Object>> getDomainSMIMEConfig(Domain domain, String configName) throws ServiceException {
+        LdapSMIMEConfig smime = new LdapSMIMEConfig(domain);
+        return smime.get(configName);
+    }
+    
+    @Override
+    public void modifyDomainSMIMEConfig(Domain domain, String configName, Map<String, Object> attrs) throws ServiceException {
+        LdapSMIMEConfig smime = new LdapSMIMEConfig(domain);
+        smime.modify(configName, attrs);
+    }
+    
+    @Override
+    public void removeDomainSMIMEConfig(Domain domain, String configName) throws ServiceException {
+        LdapSMIMEConfig smime = new LdapSMIMEConfig(domain);
+        smime.remove(configName);
+    }
+
+    @Override
+    public Map<String, Map<String, Object>> getConfigSMIMEConfig(String configName) throws ServiceException {
+        LdapSMIMEConfig smime = new LdapSMIMEConfig(getConfig());
+        return smime.get(configName);
+    }
+    
+    @Override
+    public void modifyConfigSMIMEConfig(String configName, Map<String, Object> attrs) throws ServiceException {
+        LdapSMIMEConfig smime = new LdapSMIMEConfig(getConfig());
+        smime.modify(configName, attrs);
+    }
+    
+    @Override
+    public void removeConfigSMIMEConfig(String configName) throws ServiceException {
+        LdapSMIMEConfig smime = new LdapSMIMEConfig(getConfig());
+        smime.remove(configName);
+    }
+    
     public static void testAuthDN() {
         System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", null));
         System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", ""));
