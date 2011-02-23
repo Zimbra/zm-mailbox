@@ -396,6 +396,24 @@ public class ZAttrProvisioning {
         public boolean isYahoo() { return this == yahoo;}
     }
 
+    public static enum IPMode {
+        ipv6("ipv6"),
+        ipv4("ipv4"),
+        both("both");
+        private String mValue;
+        private IPMode(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static IPMode fromString(String s) throws ServiceException {
+            for (IPMode value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isIpv6() { return this == ipv6;}
+        public boolean isIpv4() { return this == ipv4;}
+        public boolean isBoth() { return this == both;}
+    }
+
     public static enum MailMode {
         https("https"),
         both("both"),
@@ -4272,6 +4290,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=617)
     public static final String A_zimbraInterceptSubject = "zimbraInterceptSubject";
+
+    /**
+     * supported IP mode
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1171)
+    public static final String A_zimbraIPMode = "zimbraIPMode";
 
     /**
      * set to true for admin accounts
