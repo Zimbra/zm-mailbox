@@ -35,7 +35,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110223-1515 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110223-1535 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -11205,6 +11205,83 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetFeatureMailUpsellURL(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureMailUpsellURL, "");
+        return attrs;
+    }
+
+    /**
+     * whether to allow end user to publish and remove S/MIME certificates to
+     * their GAL entry in the web UI
+     *
+     * @return zimbraFeatureManageSMIMECertificateEnabled, or false if unset
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1183)
+    public boolean isFeatureManageSMIMECertificateEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureManageSMIMECertificateEnabled, false);
+    }
+
+    /**
+     * whether to allow end user to publish and remove S/MIME certificates to
+     * their GAL entry in the web UI
+     *
+     * @param zimbraFeatureManageSMIMECertificateEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1183)
+    public void setFeatureManageSMIMECertificateEnabled(boolean zimbraFeatureManageSMIMECertificateEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureManageSMIMECertificateEnabled, zimbraFeatureManageSMIMECertificateEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to allow end user to publish and remove S/MIME certificates to
+     * their GAL entry in the web UI
+     *
+     * @param zimbraFeatureManageSMIMECertificateEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1183)
+    public Map<String,Object> setFeatureManageSMIMECertificateEnabled(boolean zimbraFeatureManageSMIMECertificateEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureManageSMIMECertificateEnabled, zimbraFeatureManageSMIMECertificateEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether to allow end user to publish and remove S/MIME certificates to
+     * their GAL entry in the web UI
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1183)
+    public void unsetFeatureManageSMIMECertificateEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureManageSMIMECertificateEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to allow end user to publish and remove S/MIME certificates to
+     * their GAL entry in the web UI
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1183)
+    public Map<String,Object> unsetFeatureManageSMIMECertificateEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureManageSMIMECertificateEnabled, "");
         return attrs;
     }
 

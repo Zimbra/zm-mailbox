@@ -5439,4 +5439,9 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
+<attr id="1183" name="zimbraFeatureManageSMIMECertificateEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited"  since="7.1.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>whether to allow end user to publish and remove S/MIME certificates to their GAL entry in the web UI</desc>
+</attr>
+
 </attrs>

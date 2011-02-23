@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110223-1515 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110223-1535 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3265,6 +3265,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=528)
     public static final String A_zimbraFeatureMailUpsellURL = "zimbraFeatureMailUpsellURL";
+
+    /**
+     * whether to allow end user to publish and remove S/MIME certificates to
+     * their GAL entry in the web UI
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1183)
+    public static final String A_zimbraFeatureManageSMIMECertificateEnabled = "zimbraFeatureManageSMIMECertificateEnabled";
 
     /**
      * enable end-user to manage zimlets
