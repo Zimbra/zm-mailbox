@@ -47,6 +47,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
     public static final String C_NOT_ATTACHMENT = "not attachment";
     public static final String C_SIZE = "size";
     public static final String C_INVITE = "invite";
+    public static final String C_CASE_SENSITIVE = "case_sensitive";
 
     public enum HeaderOp {
 
@@ -292,12 +293,18 @@ public abstract class ZFilterCondition implements ToZJSONObject {
     }
     
     public static class ZBodyCondition extends ZFilterCondition {
-        private BodyOp mBodyOp;
-        private String mText;
+        private BodyOp bodyOp;
+        private boolean caseSensitive;
+        private String text;
 
         public ZBodyCondition(BodyOp op, String text) {
-            mBodyOp = op;
-            mText = text;
+            this(op, false, text);
+        }
+
+        public ZBodyCondition(BodyOp op, boolean caseSensitive, String text) {
+            this.bodyOp = op;
+            this.caseSensitive = caseSensitive;
+            this.text = text;
         }
 
         @Override
@@ -305,20 +312,24 @@ public abstract class ZFilterCondition implements ToZJSONObject {
             return C_BODY;
         }
 
-        public BodyOp getBodyOp() { return mBodyOp; }
-        public String getText() { return mText; }
+        public BodyOp getBodyOp() { return bodyOp; }
+        public boolean isCaseSensitive() { return caseSensitive; }
+        public String getText() { return text; }
 
         public String toConditionString() {
-            return (mBodyOp == BodyOp.CONTAINS ? "body contains " : "body not_contains ") +ZFilterRule.quotedString(getText());
+            return (bodyOp == BodyOp.CONTAINS ? "body contains " : "body not_contains ") +
+                    (caseSensitive ? "case_sensitive " : "") + ZFilterRule.quotedString(getText());
         }
 
         @Override
         Element toElement(Element parent) {
             Element test = parent.addElement(MailConstants.E_BODY_TEST);
-			if (!StringUtil.isNullOrEmpty(mText)) {
-            	test.addAttribute(MailConstants.A_VALUE, mText);
+            if (caseSensitive)
+                test.addAttribute(MailConstants.A_CASE_SENSITIVE, caseSensitive);
+			if (!StringUtil.isNullOrEmpty(text)) {
+            	test.addAttribute(MailConstants.A_VALUE, text);
 			}
-            if (mBodyOp == BodyOp.NOT_CONTAINS) {
+            if (bodyOp == BodyOp.NOT_CONTAINS) {
                 test.addAttribute(MailConstants.A_NEGATIVE, true);
             }
             return test;
@@ -424,22 +435,30 @@ public abstract class ZFilterCondition implements ToZJSONObject {
     }
 
     public static class ZHeaderCondition extends ZFilterCondition {
-        private HeaderOp mHeaderOp;
-        private String mHeaderName;
-        private String mValue;
+        private HeaderOp headerOp;
+        private boolean caseSensitive;
+        private String headerName;
+        private String value;
 
         public ZHeaderCondition(String headerName, HeaderOp op, String value) {
-            mHeaderName = headerName;
-            mHeaderOp = op;
-            mValue = value;
+            this(headerName, op, false, value);
         }
 
-        public HeaderOp getHeaderOp() { return mHeaderOp; }
-        public String getHeaderName() { return mHeaderName; }
-        public String getHeaderValue()  { return mValue; }
+        public ZHeaderCondition(String headerName, HeaderOp op, boolean caseSensitive, String value) {
+            this.headerName = headerName;
+            this.headerOp = op;
+            this.caseSensitive = caseSensitive;
+            this.value = value;
+        }
+
+        public HeaderOp getHeaderOp() { return headerOp; }
+        public boolean isCaseSensitive() { return caseSensitive; }
+        public String getHeaderName() { return headerName; }
+        public String getHeaderValue()  { return value; }
 
         public String toConditionString() {
-            return "header " + ZFilterRule.quotedString(getHeaderName()) + " " + mHeaderOp.name().toLowerCase() + " " + ZFilterRule.quotedString(getHeaderValue());
+            return "header " + ZFilterRule.quotedString(getHeaderName()) + " " + headerOp.name().toLowerCase() +
+                    " " + (caseSensitive ? "case_sensitive " : "") + ZFilterRule.quotedString(getHeaderValue());
         }
 
         @Override
@@ -450,36 +469,45 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         @Override
         Element toElement(Element parent) {
             Element test = parent.addElement(MailConstants.E_HEADER_TEST);
-            test.addAttribute(MailConstants.A_HEADER, mHeaderName);
-            test.addAttribute(MailConstants.A_STRING_COMPARISON, mHeaderOp.toStringComparison().toString());
-            if (mHeaderOp.isNegative()) {
+            test.addAttribute(MailConstants.A_HEADER, headerName);
+            test.addAttribute(MailConstants.A_STRING_COMPARISON, headerOp.toStringComparison().toString());
+            if (caseSensitive)
+                test.addAttribute(MailConstants.A_CASE_SENSITIVE, caseSensitive);
+            if (headerOp.isNegative()) {
                 test.addAttribute(MailConstants.A_NEGATIVE, true);
             }
-			if (!StringUtil.isNullOrEmpty(mValue)) {
-            	test.addAttribute(MailConstants.A_VALUE, mValue);
+			if (!StringUtil.isNullOrEmpty(value)) {
+            	test.addAttribute(MailConstants.A_VALUE, value);
 			}
             return test;
         }
-        
     }
 
     public static class ZMimeHeaderCondition extends ZFilterCondition {
-        private HeaderOp mHeaderOp;
-        private String mHeaderName;
-        private String mValue;
+        private HeaderOp headerOp;
+        private boolean caseSensitive;
+        private String headerName;
+        private String value;
 
         public ZMimeHeaderCondition(String headerName, HeaderOp op, String value) {
-            mHeaderName = headerName;
-            mHeaderOp = op;
-            mValue = value;
+            this(headerName, op, false, value);
         }
 
-        public HeaderOp getHeaderOp() { return mHeaderOp; }
-        public String getHeaderName() { return mHeaderName; }
-        public String getHeaderValue()  { return mValue; }
+        public ZMimeHeaderCondition(String headerName, HeaderOp op, boolean caseSensitive, String value) {
+            this.headerName = headerName;
+            this.headerOp = op;
+            this.caseSensitive = caseSensitive;
+            this.value = value;
+        }
+
+        public HeaderOp getHeaderOp() { return headerOp; }
+        public boolean isCaseSensitive() { return caseSensitive; }
+        public String getHeaderName() { return headerName; }
+        public String getHeaderValue()  { return value; }
 
         public String toConditionString() {
-            return "mime_header " + ZFilterRule.quotedString(getHeaderName()) + " " + mHeaderOp.name().toLowerCase() + " " + ZFilterRule.quotedString(getHeaderValue());
+            return "mime_header " + ZFilterRule.quotedString(getHeaderName()) + " " + headerOp.name().toLowerCase() +
+                    " " + (caseSensitive ? "case_sensitive " : "") + ZFilterRule.quotedString(getHeaderValue());
         }
 
         @Override
@@ -490,13 +518,15 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         @Override
         Element toElement(Element parent) {
             Element test = parent.addElement(MailConstants.E_MIME_HEADER_TEST);
-            test.addAttribute(MailConstants.A_HEADER, mHeaderName);
-            test.addAttribute(MailConstants.A_STRING_COMPARISON, mHeaderOp.toStringComparison().toString());
-            if (mHeaderOp.isNegative()) {
+            test.addAttribute(MailConstants.A_HEADER, headerName);
+            test.addAttribute(MailConstants.A_STRING_COMPARISON, headerOp.toStringComparison().toString());
+            if (caseSensitive)
+                test.addAttribute(MailConstants.A_CASE_SENSITIVE, caseSensitive);
+            if (headerOp.isNegative()) {
                 test.addAttribute(MailConstants.A_NEGATIVE, true);
             }
-            if (!StringUtil.isNullOrEmpty(mValue)) {
-                test.addAttribute(MailConstants.A_VALUE, mValue);
+            if (!StringUtil.isNullOrEmpty(value)) {
+                test.addAttribute(MailConstants.A_VALUE, value);
             }
             return test;
         }

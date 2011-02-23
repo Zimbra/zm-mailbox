@@ -136,8 +136,10 @@ public class SoapToSieve {
             snippet = String.format("date :%s \"%s\"",
                 comparison, FilterUtil.SIEVE_DATE_PARSER.format(date));
         } else if (name.equals(MailConstants.E_BODY_TEST)) {
+            boolean caseSensitive = test.getAttributeBool(MailConstants.A_CASE_SENSITIVE, false);
             String value = test.getAttribute(MailConstants.A_VALUE);
-            snippet = String.format("body :contains \"%s\"", FilterUtil.escape(value));
+            String snippetFormat = caseSensitive ? "body :contains :comparator \"i;octet\" \"%s\"" : "body :contains \"%s\"";
+            snippet = String.format(snippetFormat, FilterUtil.escape(value));
         } else if (name.equals(MailConstants.E_ADDRESS_BOOK_TEST)) {
             String header = test.getAttribute(MailConstants.A_HEADER);
             String folderPath = test.getAttribute(MailConstants.A_FOLDER_PATH);
@@ -170,8 +172,10 @@ public class SoapToSieve {
         String s = test.getAttribute(MailConstants.A_STRING_COMPARISON);
         s = s.toLowerCase();
         StringComparison comparison = StringComparison.fromString(s);
+        boolean caseSensitive = test.getAttributeBool(MailConstants.A_CASE_SENSITIVE, false);
         String value = test.getAttribute(MailConstants.A_VALUE);
-        String snippet = String.format("%s :%s %s \"%s\"", testName, comparison, header, FilterUtil.escape(value));
+        String snippetFormat = caseSensitive ? "%s :%s :comparator \"i;octet\" %s \"%s\"" : "%s :%s %s \"%s\"";
+        String snippet = String.format(snippetFormat, testName, comparison, header, FilterUtil.escape(value));
         
         // Bug 35983: disallow more than four asterisks in a row.
         if (comparison == StringComparison.matches && value != null && value.contains("*****")) {
