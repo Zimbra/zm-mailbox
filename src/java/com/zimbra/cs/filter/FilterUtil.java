@@ -405,11 +405,10 @@ public class FilterUtil {
                 }
             }
             sender.setRecipients(destinationAddress);
-            sender.sendMimeMessage(null, sourceMbox, outgoingMsg);
+            sender.sendMimeMessage(octxt, sourceMbox, outgoingMsg);
         } catch (MessagingException e) {
             ZimbraLog.filter.warn("Envelope sender will be set to the default value.", e);
         }
-        sender.sendMimeMessage(octxt, sourceMbox, outgoingMsg);
     }
     
     private static boolean isDeliveryStatusNotification(MimeMessage msg)
