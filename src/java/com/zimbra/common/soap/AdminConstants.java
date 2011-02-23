@@ -417,6 +417,12 @@ public class AdminConstants {
     // noop
     public static final QName NO_OP_REQUEST = QName.get("NoOpRequest", NAMESPACE);
     public static final QName NO_OP_RESPONSE = QName.get("NoOpResponse", NAMESPACE);
+    
+    // SMIME config
+    public static final QName GET_SMIME_CONFIG_REQUEST = QName.get("GetSMIMEConfigRequest", NAMESPACE);
+    public static final QName GET_SMIME_CONFIG_RESPONSE = QName.get("GetSMIMEConfigResponse", NAMESPACE);
+    public static final QName MODIFY_SMIME_CONFIG_REQUEST = QName.get("ModifySMIMEConfigRequest", NAMESPACE);
+    public static final QName MODIFY_SMIME_CONFIG_RESPONSE = QName.get("ModifySMIMEConfigResponse", NAMESPACE);
 
     // DumpSessions
     public static final String E_SESSION = "session";
@@ -449,6 +455,7 @@ public class AdminConstants {
     public static final String E_BINDDN = "bindDn";
     public static final String E_CACHE = "cache";
     public static final String E_CODE = "code";
+    public static final String E_CONFIG = "config";
     public static final String E_COS = "cos";
     public static final String E_CN = "cn";
     public static final String E_DOMAIN = "domain";
@@ -744,4 +751,8 @@ public class AdminConstants {
     public static final String E_MIGRATE = "migrate";
     
     public static final String A_ERROR = "error";
+    
+    public static final String OP_MODIFY = "modify";
+    public static final String OP_REMOVE = "remove";
+    
 }
