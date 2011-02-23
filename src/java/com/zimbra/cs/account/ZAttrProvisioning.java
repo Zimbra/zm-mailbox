@@ -2934,6 +2934,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraExternalPop3SSLPort = "zimbraExternalPop3SSLPort";
 
     /**
+     * whether email features and tabs are enabled in the web client if
+     * accessed from the admin console
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1170)
+    public static final String A_zimbraFeatureAdminMailEnabled = "zimbraFeatureAdminMailEnabled";
+
+    /**
      * advanced search button enabled
      */
     @ZAttr(id=138)
