@@ -2094,6 +2094,7 @@ public class ToXML {
             if (description != null && !description.equals(""))
                 m.addAttribute(MailConstants.A_DESC, description);
             m.addAttribute(MailConstants.A_CONTENT_TYPE, doc.getContentType());
+            m.addAttribute(MailConstants.A_DESC_ENABLED, doc.isDescriptionEnabled());
         }
 
         if (needToOutput(fields, Change.MODIFIED_CONTENT) || needToOutput(fields, Change.MODIFIED_NAME)) {
