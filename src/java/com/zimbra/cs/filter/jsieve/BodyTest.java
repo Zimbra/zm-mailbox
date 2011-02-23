@@ -148,7 +148,7 @@ public class BodyTest extends AbstractTest {
         } catch (ServiceException e) {
             ZimbraLog.filter.warn("Error in getting account", e);
         }
-        String charset = (acct == null ? null : acct.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null));
+        String defaultCharset = acct == null ? null : acct.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null);
 
         for (MPartInfo mpi : pm.getMessageParts()) {
             String cType = mpi.getContentType();
@@ -158,7 +158,13 @@ public class BodyTest extends AbstractTest {
                     InputStream in = null;
                     try {
                         in = mpi.getMimePart().getInputStream();
-                        Reader reader = (charset == null ? new InputStreamReader(in) : new InputStreamReader(in, charset));
+                        String cthdr = mpi.getMimePart().getHeader("Content-Type", null);
+                        String charset = null;
+                        if (cthdr != null)
+                            charset = Mime.getCharset(cthdr);
+                        if (charset == null)
+                            charset = defaultCharset;
+                        Reader reader = charset == null ? new InputStreamReader(in) : new InputStreamReader(in, charset);
                         if (contains(reader, caseSensitive, substring)) {
                             return true;
                         }
@@ -173,7 +179,7 @@ public class BodyTest extends AbstractTest {
                     try {
                         // Extract up to 1MB of text and check for substring.
                         in = mpi.getMimePart().getInputStream();
-                        Reader reader = Mime.getTextReader(in, cType, charset);
+                        Reader reader = Mime.getTextReader(in, cType, defaultCharset);
                         String text = HtmlTextExtractor.extract(reader, 1024 * 1024);
                         if (contains(new StringReader(text), caseSensitive, substring)) {
                             return true;
