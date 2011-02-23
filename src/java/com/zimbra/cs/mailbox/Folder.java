@@ -237,16 +237,20 @@ public class Folder extends MailItem {
         return (mId == Mailbox.ID_FOLDER_SPAM);
     }
 
-    /** Returns whether the folder is client-visible.  Folders below
-     *  the user root folder ({@link Mailbox#ID_FOLDER_USER_ROOT}) are
-     *  visible; all others are hidden.
+    /**
+     * Returns whether the folder is client-visible. Folders below the user root folder
+     * ({@link Mailbox#ID_FOLDER_USER_ROOT}) are visible; all others are hidden.
      *
-     * @see Mailbox#initialize() */
+     * @see Mailbox#initialize()
+     */
     public boolean isHidden() {
         switch (mId) {
-            case Mailbox.ID_FOLDER_USER_ROOT:  return false;
-            case Mailbox.ID_FOLDER_ROOT:       return true;
-            default:                           return mParent.isHidden();
+            case Mailbox.ID_FOLDER_USER_ROOT:
+                return false;
+            case Mailbox.ID_FOLDER_ROOT:
+                return true;
+            default:
+                return mParent.isHidden();
         }
     }
 
@@ -628,11 +632,12 @@ public class Folder extends MailItem {
 
     @Override boolean canParent(MailItem child)  { return (child instanceof Folder); }
 
-    /** Returns whether the folder can contain the given item.  We make
-     *  the same checks as in {@link #canContain(byte)}, and we also make
-     *  sure to avoid any cycles of folders.
+    /**
+     * Returns whether the folder can contain the given item. We make the same checks as in {@link #canContain(byte)},
+     * and we also make sure to avoid any cycles of folders.
      *
-     * @param child  The {@link MailItem} object to check. */
+     * @param child the {@link MailItem} object to check
+     */
     boolean canContain(MailItem child) {
         if (!canContain(child.getType())) {
             return false;
@@ -644,11 +649,15 @@ public class Folder extends MailItem {
         }
         return true;
     }
-    /** Returns whether the folder can contain objects of the given type.
-     *  In general, any folder can contain any object.  The exceptions are
-     *  that the Tags folder can only contain {@link Tag}s (and vice versa),
-     *  the Conversations folder can only contain {@link Conversation}s
-     *  (and vice versa), and the Spam folder can't have subfolders.
+
+    /**
+     * Returns whether the folder can contain objects of the given type. In general, any folder can contain any object.
+     * The exceptions are:
+     * <ul>
+     *  <li>The Tags folder can only contain {@link Tag}s (and vice versa)
+     *  <li>The Conversations folder can only contain {@link Conversation}s (and vice versa)
+     *  <li>The Spam folder can't have subfolders.
+     * <ul>
      *
      * @param type  The type of object, e.g. {@link MailItem#TYPE_TAG}. */
     boolean canContain(byte type) {
@@ -656,11 +665,10 @@ public class Folder extends MailItem {
             return false;
         else if ((type == TYPE_CONVERSATION) != (mId == Mailbox.ID_FOLDER_CONVERSATIONS))
             return false;
-        else if (type == TYPE_FOLDER && mId == Mailbox.ID_FOLDER_SPAM)
+        else if (mId == Mailbox.ID_FOLDER_SPAM && type == TYPE_FOLDER)
             return false;
         return true;
     }
-
 
     /** Creates a new Folder and persists it to the database.  A real
      *  nonnegative item ID must be supplied from a previous call to
@@ -1275,5 +1283,16 @@ public class Folder extends MailItem {
         helper.add(CN_DELETED_UNREAD, mDeletedUnreadCount);
         helper.add(CN_ATTRIBUTES, mAttributes);
         return helper.toString();
+    }
+
+    public static Set<Integer> toId(Set<Folder> folders) {
+        if (folders == null) {
+            return null;
+        }
+        Set<Integer> result = new HashSet<Integer>(folders.size());
+        for (Folder folder : folders) {
+            result.add(folder.getId());
+        }
+        return result;
     }
 }

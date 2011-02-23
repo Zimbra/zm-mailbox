@@ -1,27 +1,22 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/*
- * Created on Nov 9, 2004
  */
 package com.zimbra.cs.session;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -71,6 +66,9 @@ import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ProxyTarget;
 import com.zimbra.soap.ZimbraSoapContext;
 
+/**
+ * @since Nov 9, 2004
+ */
 public class SoapSession extends Session {
     public class DelegateSession extends Session {
         private long mNextFolderCheck;
@@ -129,13 +127,13 @@ public class SoapSession extends Session {
 
         /**
          * Returns true if the MailItem should be excluded from notification serialization
-         * @throws ServiceException 
+         * @throws ServiceException
          */
         protected boolean skipChangeSerialization(Mailbox mbox, MailItem item) throws ServiceException {
             // don't serialize out changes on too-large delegated conversation
             return (mbox != item.getMailbox() && item instanceof Conversation && ((Conversation) item).getMessageCount() > DELEGATED_CONVERSATION_SIZE_LIMIT && !mParentHasFullAccess);
         }
-        
+
         /**
          * Fetch account level access and store it in cache to be used in skipChangeSerialization
          * We assume here that ACL will never change between this call and the call to skipChangeSerialization()
@@ -163,7 +161,8 @@ public class SoapSession extends Session {
                 if (!force && mNextFolderCheck > now)
                     return mVisibleFolderIds != null;
 
-                Set<Integer> visible = mbox.getVisibleFolderIds(new OperationContext(getAuthenticatedAccountId()));
+                Set<Integer> visible = Folder.toId(mbox.getVisibleFolders(new OperationContext(
+                        getAuthenticatedAccountId())));
                 mVisibleFolderIds = visible;
                 mNextFolderCheck = now + SOAP_SESSION_TIMEOUT_MSEC / 2;
                 return visible != null;
@@ -362,7 +361,7 @@ public class SoapSession extends Session {
         }
 
         void addNotification(IMNotification imn) {
-            if (mIMNotifications == null) 
+            if (mIMNotifications == null)
                 mIMNotifications = new LinkedList<IMNotification>();
             mIMNotifications.add(imn);
         }
@@ -370,7 +369,7 @@ public class SoapSession extends Session {
         void addNotification(PendingModifications pms) {
             if (pms == null || !pms.hasNotifications())
                 return;
-            if (mMailboxChanges == null) 
+            if (mMailboxChanges == null)
                 mMailboxChanges = new PendingModifications();
             mMailboxChanges.add(pms);
             if (!mHasLocalChanges)
@@ -387,7 +386,7 @@ public class SoapSession extends Session {
         void clearMailboxChanges() {
             mMailboxChanges = null;
             mRemoteChanges = null;
-            // note that mHasLocalChanges does *not* get reset when we trigger a <refresh> condition... 
+            // note that mHasLocalChanges does *not* get reset when we trigger a <refresh> condition...
         }
     }
 
@@ -413,7 +412,7 @@ public class SoapSession extends Session {
     private List<RemoteSessionInfo> mRemoteSessions;
 
     private boolean mAsAdmin;
-    
+
     static final long SOAP_SESSION_TIMEOUT_MSEC = Math.max(5, LC.zimbra_session_timeout_soap.intValue()) * Constants.MILLIS_PER_SECOND;
 
     // if a keepalive request to a remote session failed, how long to wait before a new ping is permitted
@@ -496,14 +495,14 @@ public class SoapSession extends Session {
     }
 
     private boolean mIsOffline = false;
-    
+
     public boolean isOfflineSoapSession()  { return mIsOffline; }
     public void setOfflineSoapSession()    { mIsOffline = true; }
 
     private boolean asAdmin() {
         return mAsAdmin;
     }
-    
+
     public Session getDelegateSession(String targetAccountId) {
         if (mUnregistered || targetAccountId == null)
             return null;
@@ -614,7 +613,7 @@ public class SoapSession extends Session {
             }
         }
     }
-    
+
     protected void addRemoteNotifications(RemoteNotifications rns) {
         mChanges.addNotification(rns);
     }
@@ -645,10 +644,10 @@ public class SoapSession extends Session {
             try {
                 Element noop = Element.create(zsc.getRequestProtocol(), MailConstants.NO_OP_REQUEST);
                 Server server = prov.getServerById(rsi.mServerId);
-    
+
                 ZimbraSoapContext zscProxy = new ZimbraSoapContext(zsc, mAuthenticatedAccountId);
                 zscProxy.setProxySession(rsi.mSessionId);
-    
+
                 ProxyTarget proxy = new ProxyTarget(server, zscProxy.getAuthToken(), URLUtil.getSoapURL(server, false));
                 proxy.disableRetries().setTimeouts(10 * Constants.MILLIS_PER_SECOND);
                 Pair<Element, Element> envelope = proxy.execute(noop.detach(), zscProxy);
@@ -671,7 +670,7 @@ public class SoapSession extends Session {
     /** Returns the time (in milliseconds) of last write op from any SOAP
      *  session <u>before</u> this session was initiated.  This value remains
      *  constant for the duration of this session. */
-    public long getPreviousSessionTime() { 
+    public long getPreviousSessionTime() {
         return mPreviousAccess;
     }
 
@@ -696,7 +695,7 @@ public class SoapSession extends Session {
         public int getLastKnownSequence();
         public ZimbraSoapContext getSoapContext();
         public boolean localChangesOnly();
-        public void notificationsReady() throws ServiceException; 
+        public void notificationsReady() throws ServiceException;
     }
 
     public static enum RegisterNotificationResult {
@@ -707,7 +706,7 @@ public class SoapSession extends Session {
 
     /** Record that a push channel has come online.
      *
-     * @param sc                The push channel. 
+     * @param sc                The push channel.
      * @param includeDelegates  Whether notifications from delegate sessions
      *                          trigger {@link RegisterNotificationResult#DATA_READY}.
      * @return the state of the channel (@see RegisterNotificationResult} */
@@ -739,7 +738,7 @@ public class SoapSession extends Session {
                 }
             }
             if (dataReady) {
-                sc.notificationsReady();  
+                sc.notificationsReady();
                 return RegisterNotificationResult.DATA_READY;
             } else {
                 mPushChannel = sc;
@@ -763,7 +762,7 @@ public class SoapSession extends Session {
             ZimbraLog.session.warn("ServiceException in notifyIM", e);
         }
     }
-    
+
     /** On the session's first write op, record the timestamp to the database. */
     public void updateLastWrite(Mailbox mbox) {
         boolean firstWrite = mLastWrite == -1;
@@ -912,7 +911,7 @@ public class SoapSession extends Session {
 
             mPushChannel.notificationsReady();
             if (clearChannel)
-            	mPushChannel = null;
+                mPushChannel = null;
         }
     }
 
@@ -932,10 +931,10 @@ public class SoapSession extends Session {
      *  This &lt;refresh> block contains the basic folder, tag, and mailbox
      *  size information needed to display and update the web UI's overview
      *  pane.  The &lt;refresh> block is sent when a new session is created.
-     *  
-     *  This API implicitly clears all cached notifications and therefore 
+     *
+     *  This API implicitly clears all cached notifications and therefore
      *  should only been used during session creation.
-     * @param ctxt  An existing SOAP header <context> element 
+     * @param ctxt  An existing SOAP header <context> element
      * @param zsc   The SOAP request's encapsulated context */
     public void putRefresh(Element ctxt, ZimbraSoapContext zsc) throws ServiceException {
         Mailbox mbox = mMailbox;
@@ -999,7 +998,7 @@ public class SoapSession extends Session {
         ItemId iidTarget = mpt.getTarget();
         if (mountpoints.containsKey(iidTarget))
             return;
-        
+
         try {
             Provisioning prov = Provisioning.getInstance();
             Account owner = prov.get(Provisioning.AccountBy.id, mpt.getOwnerId(), octxt.getAuthToken());
@@ -1014,7 +1013,7 @@ public class SoapSession extends Session {
 
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(owner);
             FolderNode remote = mbox.getFolderTree(octxt, new ItemId(mbox, mpt.getRemoteId()), false);
-            
+
             if (remote != null && remote.mFolder != null && !remote.mFolder.isHidden()) {
                 ItemIdFormatter ifmt = new ItemIdFormatter(octxt.getAuthenticatedUser(), mbox, false);
                 if (OperationContextData.getNeedGranteeName(octxt))
@@ -1075,11 +1074,11 @@ public class SoapSession extends Session {
             // garbage in, nothing out...
             return hierarchies;
         }
-        
+
         for (Map.Entry<String, Server> remote : remoteServers.entrySet()) {
             String accountId = remote.getKey();
             Server server = remote.getValue();
-            
+
             try {
                 ZimbraSoapContext zscProxy = new ZimbraSoapContext(zsc, accountId);
                 zscProxy.setProxySession(getRemoteSessionId(server));
@@ -1174,7 +1173,7 @@ public class SoapSession extends Session {
         synchronized (mSentChanges) {
             if (mSentChanges == null || mSentChanges.isEmpty())
                 return;
-    
+
             if (sequence <= 0) {
                 // if the client didn't send a valid "last sequence number", *don't* keep old changes around
                 mSentChanges.clear();
@@ -1255,7 +1254,7 @@ public class SoapSession extends Session {
                 assert(mChanges.getSequence() >= 1);
                 int newSequence = mChanges.getSequence() + 1;
                 mSentChanges.add(mChanges);
-                mChanges = new QueuedNotifications(newSequence); 
+                mChanges = new QueuedNotifications(newSequence);
             }
 
             // mChanges must be empty at this point (everything moved into the mSentChanges list)
@@ -1287,7 +1286,7 @@ public class SoapSession extends Session {
 
     protected static final String A_ID = "id";
 
-    /** Write a single instance of the PendingModifications structure into the 
+    /** Write a single instance of the PendingModifications structure into the
      *  passed-in <ctxt> block. */
     protected void putQueuedNotifications(Mailbox mbox, QueuedNotifications ntfn, Element parent, ZimbraSoapContext zsc) {
         // create the base "notify" block:  <notify seq="6"/>
@@ -1358,7 +1357,7 @@ public class SoapSession extends Session {
                 for (Change chg : pms.modified.values()) {
                     if (chg.why != 0 && chg.what instanceof MailItem) {
                         MailItem item = (MailItem) chg.what;
-    
+
                         ItemIdFormatter ifmt = new ItemIdFormatter(mAuthenticatedAccountId, item.getMailbox(), false);
                         try {
                             Element elt = ToXML.encodeItem(eModified, ifmt, octxt, item, chg.why);
@@ -1387,7 +1386,7 @@ public class SoapSession extends Session {
                     eModified.addElement(elt.clone().detach());
             }
         }
-        
+
         if (ntfn.mIMNotifications != null && ntfn.mIMNotifications.size() > 0) {
             Element eIM = eNotify.addUniqueElement(ZimbraNamespace.E_IM);
             for (IMNotification imn : ntfn.mIMNotifications) {
@@ -1428,7 +1427,7 @@ public class SoapSession extends Session {
             }
         }
     }
-    
+
     public void putQueryResults(String queryStr, String groupBy, String sortBy, ZimbraQueryResults res) throws ServiceException {
         synchronized (this) {
             clearCachedQueryResults();
@@ -1438,7 +1437,7 @@ public class SoapSession extends Session {
             mQueryResults = res;
         }
     }
-    
+
     public ZimbraQueryResults getQueryResults(String queryStr, String groupBy, String sortBy) {
         synchronized (this) {
             if (mQueryStr.equals(queryStr) && mGroupBy.equals(groupBy) && mSortBy.equals(sortBy))
@@ -1452,7 +1451,7 @@ public class SoapSession extends Session {
         try {
             clearCachedQueryResults();
         } catch (ServiceException e) {
-        	ZimbraLog.session.warn("ServiceException while cleaning up Session", e);
+            ZimbraLog.session.warn("ServiceException while cleaning up Session", e);
         }
     }
 }

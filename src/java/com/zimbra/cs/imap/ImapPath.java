@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -559,40 +559,59 @@ public class ImapPath implements Comparable<ImapPath> {
         if (mFolder instanceof Folder) {
             Folder folder = (Folder) mFolder;
             // hide all system folders and the user root folder
-            if (folder.isHidden())
+            if (folder.isHidden()) {
                 return false;
-            if (folder.getId() == Mailbox.ID_FOLDER_USER_ROOT && mScope != Scope.REFERENCE)
+            }
+            if (folder.getId() == Mailbox.ID_FOLDER_USER_ROOT && mScope != Scope.REFERENCE) {
                 return false;
+            }
+            // hide spam folder unless anti-spam feature is enabled.
+            if (folder.getId() == Mailbox.ID_FOLDER_SPAM && !getOwnerAccount().isFeatureAntispamEnabled()) {
+                return false;
+            }
             // calendars, briefcases, etc. are not surfaced in IMAP
             byte view = folder.getDefaultView();
-            if (view == MailItem.TYPE_APPOINTMENT || view == MailItem.TYPE_TASK || view == MailItem.TYPE_WIKI || view == MailItem.TYPE_DOCUMENT)
+            if (view == MailItem.TYPE_APPOINTMENT || view == MailItem.TYPE_TASK || view == MailItem.TYPE_WIKI || view == MailItem.TYPE_DOCUMENT) {
                 return false;
+            }
             // hide subfolders of trashed mountpoints
-            if (mReferent != this && folder.inTrash() && !((Mountpoint) folder).getTarget().equals(mReferent.asItemId()))
+            if (mReferent != this && folder.inTrash() && !((Mountpoint) folder).getTarget().equals(mReferent.asItemId())) {
                 return false;
+            }
             // hide other users' mountpoints and mountpoints that point to the same mailbox
-            if (folder instanceof Mountpoint && mReferent == this && mScope != Scope.UNPARSED)
+            if (folder instanceof Mountpoint && mReferent == this && mScope != Scope.UNPARSED) {
                 return false;
+            }
             // search folder visibility depends on an account setting
-            if (folder instanceof SearchFolder)
+            if (folder instanceof SearchFolder) {
                 return ((SearchFolder) folder).isImapVisible() && ImapFolder.getTypeConstraint((SearchFolder) folder).length > 0;
+            }
         } else {
             ZFolder zfolder = (ZFolder) mFolder;
+            int folderId = asItemId().getId();
             // the mailbox root folder is not visible
-            if (asItemId().getId() == Mailbox.ID_FOLDER_USER_ROOT && mScope != Scope.REFERENCE)
+            if (folderId == Mailbox.ID_FOLDER_USER_ROOT && mScope != Scope.REFERENCE) {
                 return false;
+            }
+            // hide spam folder unless anti-spam feature is enabled.
+            if (folderId == Mailbox.ID_FOLDER_SPAM && !getOwnerAccount().isFeatureAntispamEnabled()) {
+                return false;
+            }
             // calendars, briefcases, etc. are not surfaced in IMAP
             ZFolder.View view = zfolder.getDefaultView();
-            if (view == ZFolder.View.appointment || view == ZFolder.View.task || view == ZFolder.View.wiki || view == ZFolder.View.document)
+            if (view == ZFolder.View.appointment || view == ZFolder.View.task || view == ZFolder.View.wiki || view == ZFolder.View.document) {
                 return false;
+            }
             // hide other users' mountpoints and mountpoints that point to the same mailbox
-            if (zfolder instanceof ZMountpoint && mReferent == this && mScope != Scope.UNPARSED)
+            if (zfolder instanceof ZMountpoint && mReferent == this && mScope != Scope.UNPARSED) {
                 return false;
+            }
             // hide all remote searchfolders
-            if (zfolder instanceof ZSearchFolder)
+            if (zfolder instanceof ZSearchFolder) {
                 return false;
+            }
         }
-        return (mReferent == this ? true : mReferent.isVisible());
+        return mReferent == this ? true : mReferent.isVisible();
     }
 
 

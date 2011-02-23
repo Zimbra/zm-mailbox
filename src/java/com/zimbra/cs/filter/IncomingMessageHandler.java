@@ -109,9 +109,9 @@ extends FilterHandler {
     }
 
     @Override
-    public Message implicitKeep(Collection<ActionFlag> flagActions, String tags)
-    throws ServiceException {
-        int folderId = SpamHandler.isSpam(getMimeMessage()) ? Mailbox.ID_FOLDER_SPAM : defaultFolderId;
+    public Message implicitKeep(Collection<ActionFlag> flagActions, String tags) throws ServiceException {
+        int folderId = mailbox.getAccount().isFeatureAntispamEnabled() && SpamHandler.isSpam(getMimeMessage()) ?
+                Mailbox.ID_FOLDER_SPAM : defaultFolderId;
         return addMessage(folderId, flagActions, tags);
     }
 
