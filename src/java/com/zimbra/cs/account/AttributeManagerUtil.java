@@ -308,15 +308,38 @@ public class AttributeManagerUtil {
     private void buildAttrDef(StringBuilder ATTRIBUTE_DEFINITIONS, AttributeInfo ai) {
         String lengthSuffix;
 
-        ATTRIBUTE_DEFINITIONS.append("( " + ai.getName() + "\n");
-        ATTRIBUTE_DEFINITIONS.append(ML_CONT_PREFIX + "NAME ( '" + ai.getName() + "' )\n");
-        ATTRIBUTE_DEFINITIONS.append(ML_CONT_PREFIX + "DESC '" + rfc4512Dstring(ai.getDescription()) + "'\n");
-        String syntax = null, substr = null, equality = null, ordering = null;
+        String syntax = null;
+        String substr = null;
+        String equality = null;
+        String ordering = null;
+        
         switch (ai.getType()) {
         case TYPE_BOOLEAN:
             syntax = "1.3.6.1.4.1.1466.115.121.1.7";
             equality = "booleanMatch";
             break;
+        case TYPE_BINARY:
+            // cannot use the binary syntax because it cannot support multi-valued attrs
+            // when a second value is added to a multi-valued attr, will get "no equality matching rule"
+            // error from LDAP server, because there is no equality matching for 1.3.6.1.4.1.1466.115.121.1.5
+            /*
+            lengthSuffix = "";
+            if (ai.getMax() != Long.MAX_VALUE) {
+                lengthSuffix = "{" + ai.getMax() + "}";
+            }
+            syntax = "1.3.6.1.4.1.1466.115.121.1.5" + lengthSuffix;
+            break;
+            */
+            
+            // the same as octet string 
+            lengthSuffix = "";
+            if (ai.getMax() != Long.MAX_VALUE) {
+                lengthSuffix = "{" + ai.getMax() + "}";
+            }
+            syntax = "1.3.6.1.4.1.1466.115.121.1.40" + lengthSuffix;
+            equality = "octetStringMatch";
+            break;
+            
         case TYPE_EMAIL:
         case TYPE_EMAILP:
         case TYPE_CS_EMAILP:
@@ -409,9 +432,17 @@ public class AttributeManagerUtil {
         default:
             throw new RuntimeException("unknown type encountered!");
         }
+        
+        ATTRIBUTE_DEFINITIONS.append("( " + ai.getName() + "\n");
+        ATTRIBUTE_DEFINITIONS.append(ML_CONT_PREFIX + "NAME ( '" + ai.getName() + "' )\n");
+        ATTRIBUTE_DEFINITIONS.append(ML_CONT_PREFIX + "DESC '" + rfc4512Dstring(ai.getDescription()) + "'\n");
 
-        ATTRIBUTE_DEFINITIONS.append(ML_CONT_PREFIX + "SYNTAX " + syntax +  "\n");
-        ATTRIBUTE_DEFINITIONS.append(ML_CONT_PREFIX + "EQUALITY " + equality);
+        ATTRIBUTE_DEFINITIONS.append(ML_CONT_PREFIX + "SYNTAX " + syntax);
+        
+        if (equality != null) {
+            ATTRIBUTE_DEFINITIONS.append("\n" + ML_CONT_PREFIX + "EQUALITY " + equality);
+        }
+        
         if (substr != null) {
             ATTRIBUTE_DEFINITIONS.append("\n" + ML_CONT_PREFIX + "SUBSTR " + substr);
         }
@@ -885,6 +916,7 @@ public class AttributeManagerUtil {
                continue;
 
            switch (ai.getType()) {
+               case TYPE_BINARY:
                case TYPE_DURATION:
                case TYPE_GENTIME:
                case TYPE_ENUM:
@@ -984,6 +1016,12 @@ public class AttributeManagerUtil {
                javaType = "boolean";
                javaBody = String.format("return getBooleanAttr(Provisioning.A_%s, %s);", name, defaultValue);
                javaDocReturns = String.format(", or %s if unset", defaultValue);
+               break;
+           case TYPE_BINARY:
+               defaultValue = "null";
+               javaType = "byte[]";
+               javaBody = String.format("return getBinaryAttr(Provisioning.A_%s);", name);
+               javaDocReturns = String.format(", or null if unset", defaultValue);
                break;
            case TYPE_INTEGER:
                if (defaultValue == null) defaultValue = "-1";
@@ -1108,6 +1146,10 @@ public class AttributeManagerUtil {
                javaType = "boolean";
                putParam = String.format("%s ? Provisioning.TRUE : Provisioning.FALSE", name);
                break;
+           case TYPE_BINARY:
+               javaType = "byte[]";
+               putParam = String.format("%s==null ? \"\" : ByteUtil.encodeLDAPBase64(%s)", name, name);
+               break;
            case TYPE_INTEGER:
            case TYPE_PORT:
                javaType = "int";
@@ -1153,7 +1195,7 @@ public class AttributeManagerUtil {
        String paramDoc = "";
        String  body = "";
 
-        switch(setterType) {
+       switch(setterType) {
            case set:
                body = String.format("        attrs.put(Provisioning.A_%s, %s);%n", name, putParam);
                paramDoc = String.format("     * @param %s new value%n", name);

@@ -133,10 +133,21 @@ public class AttributeManager {
     private static Map<Integer,String> mGroupMap = new HashMap<Integer,String>();
 
     private static Map<Integer,String> mOCGroupMap = new HashMap<Integer,String>();
+    
+    private static Set<String> mBinaryAttrs = new HashSet<String>();
 
     // do not keep comments and descriptions when running in a server
     private static boolean mMinimize = false;
 
+    public static AttributeManager getInst() {
+        try {
+            return AttributeManager.getInstance();
+        } catch (ServiceException e) {
+            ZimbraLog.account.warn("could not get AttributeManager instance", e);
+            return null;
+        }
+    }
+    
     public static AttributeManager getInstance() throws ServiceException {
         synchronized(AttributeManager.class) {
             if (mInstance != null) {
@@ -518,6 +529,10 @@ public class AttributeManager {
                         mClassToLowerCaseAttrsMap.get(klass).add(name.toLowerCase());
                     }
                 }
+            }
+            
+            if (type == AttributeType.TYPE_BINARY) {
+                mBinaryAttrs.add(canonicalName);
             }
         }
     }
@@ -975,6 +990,14 @@ public class AttributeManager {
             return ai.getType();
         else
             throw AccountServiceException.INVALID_ATTR_NAME("unknown attribute: " + attr, null);
+    }
+    
+    public boolean isBinary(String attr) {
+        return mBinaryAttrs.contains(attr.toLowerCase());
+    }
+    
+    public Set<String> getBinaryAttrs() {
+        return mBinaryAttrs;
     }
 
     boolean hasFlag(AttributeFlag flag, String attr) {

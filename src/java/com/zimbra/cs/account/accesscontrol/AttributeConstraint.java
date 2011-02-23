@@ -48,49 +48,49 @@ public class AttributeConstraint {
         mAttrName = attrName;
     }
     
-    String getAttrName() {
+    private String getAttrName() {
         return mAttrName;
     }
     
-    void setMin(String min) throws ServiceException {
+    protected void setMin(String min) throws ServiceException {
         throw ServiceException.PARSE_ERROR("min constraint not supported for the attribute type", null);
     }
     
-    void setMax(String max) throws ServiceException {
+    protected void setMax(String max) throws ServiceException {
         throw ServiceException.PARSE_ERROR("max constraint not supported for attribute type", null);
     }
     
-    void addValue(String value) {
+    private void addValue(String value) {
         if (mValues == null)
             mValues = new HashSet<String>();
         mValues.add(value);
     }
     
-    boolean isEmpty() {
+    private boolean isEmpty() {
         return getMin() == null && getMax() == null && getValues() == null;
     }
     
-    Set<String> getValues() {
+    private Set<String> getValues() {
         return mValues;
     }
     
-    String getMin() {
+    protected String getMin() {
         return null;
     }
     
-    String getMax() {
+    protected String getMax() {
         return null;
     }
     
-    boolean violateMinMax(String value) throws ServiceException {
+    protected boolean violateMinMax(String value) throws ServiceException {
         return false;
     }
     
-    boolean violateValues(String value) {
+    private boolean violateValues(String value) {
         return (mValues != null && !mValues.contains(value));
     }
     
-    boolean violated(Object value) throws ServiceException {
+    protected boolean violated(Object value) throws ServiceException {
         if (value instanceof String) {
             if (violateValues((String)value))
                 return true;
@@ -113,6 +113,7 @@ public class AttributeConstraint {
     
     /*
     boolean.....TRUE|FALSE
+    binary......binary data
     duration....^\d+[hmsd]?$.  If [hmsd] is not specified, the default
                 is seconds.
     gentime.....time expressed as \d{14}[zZ]
@@ -140,7 +141,8 @@ public class AttributeConstraint {
             super(attrName);
         }
         
-        void setMin(String min) {
+        @Override
+        protected void setMin(String min) {
             try {
                 mMin = Integer.valueOf(min);
             } catch (NumberFormatException e) {
@@ -148,7 +150,8 @@ public class AttributeConstraint {
             }
         }
         
-        void setMax(String max) {
+        @Override
+        protected void setMax(String max) {
             try {
                 mMax = Integer.valueOf(max);
             } catch (NumberFormatException e) {
@@ -156,15 +159,18 @@ public class AttributeConstraint {
             }
         }
         
-        String getMin() {
+        @Override
+        protected String getMin() {
             return (mMin == null)? null : mMin.toString();
         }
         
-        String getMax() {
+        @Override
+        protected String getMax() {
             return (mMax == null)? null : mMax.toString();
         }
         
-        boolean violateMinMax(String valueStr) throws ServiceException {
+        @Override
+        protected boolean violateMinMax(String valueStr) throws ServiceException {
             try {
                 Integer value = Integer.valueOf(valueStr);
                 if (mMin != null && value < mMin)
@@ -187,7 +193,8 @@ public class AttributeConstraint {
             super(attrName);
         }
         
-        void setMin(String min) {
+        @Override
+        protected void setMin(String min) {
             try {
                 mMin = Long.valueOf(min);
             } catch (NumberFormatException e) {
@@ -195,7 +202,8 @@ public class AttributeConstraint {
             }
         }
         
-        void setMax(String max) {
+        @Override
+        protected void setMax(String max) {
             try {
                 mMax = Long.valueOf(max);
             } catch (NumberFormatException e) {
@@ -203,15 +211,18 @@ public class AttributeConstraint {
             }
         }
         
-        String getMin() {
+        @Override
+        protected String getMin() {
             return (mMin == null)? null : mMin.toString();
         }
         
-        String getMax() {
+        @Override
+        protected String getMax() {
             return (mMax == null)? null : mMax.toString();
         }
         
-        boolean violateMinMax(String valueStr) throws ServiceException {
+        @Override
+        protected boolean violateMinMax(String valueStr) throws ServiceException {
             try {
                 Long value = Long.valueOf(valueStr);
                 if (mMin != null && value < mMin)
@@ -234,7 +245,8 @@ public class AttributeConstraint {
             super(attrName);
         }
         
-        void setMin(String min) {
+        @Override
+        protected void setMin(String min) {
             try {
                 mMin = DateUtil.getTimeInterval(min);
             } catch (ServiceException e) {
@@ -242,7 +254,8 @@ public class AttributeConstraint {
             }
         }
         
-        void setMax(String max) {
+        @Override
+        protected void setMax(String max) {
             try {
                 mMax = DateUtil.getTimeInterval(max);
             } catch (ServiceException e) {
@@ -250,15 +263,18 @@ public class AttributeConstraint {
             }
         }
         
-        String getMin() {
+        @Override
+        protected String getMin() {
             return (mMin == null)? null : mMin.toString();
         }
         
-        String getMax() {
+        @Override
+        protected String getMax() {
             return (mMax == null)? null : mMax.toString();
         }
         
-        boolean violateMinMax(String valueStr) throws ServiceException {
+        @Override
+        protected boolean violateMinMax(String valueStr) throws ServiceException {
             try {
                 Long value = DateUtil.getTimeInterval(valueStr);
                 if (mMin != null && value < mMin)
@@ -282,29 +298,34 @@ public class AttributeConstraint {
             super(attrName);
         }
         
-        void setMin(String min) {
+        @Override
+        protected void setMin(String min) {
             // if cannot parse null will be returned, => no min constraint
             Date date = DateUtil.parseGeneralizedTime(min);
             if (date != null)
                 mMin = date.getTime();
         }
         
-        void setMax(String max) {
+        @Override
+        protected void setMax(String max) {
             // if cannot parse null will be returned, => no max constraint
             Date date = DateUtil.parseGeneralizedTime(max);
             if (date != null)
                 mMax = date.getTime();
         }
         
-        String getMin() {
+        @Override
+        protected String getMin() {
             return (mMin == null)? null : mMin.toString();
         }
         
-        String getMax() {
+        @Override
+        protected String getMax() {
             return (mMax == null)? null : mMax.toString();
         }
         
-        boolean violateMinMax(String valueStr) throws ServiceException {
+        @Override
+        protected boolean violateMinMax(String valueStr) throws ServiceException {
             Date value = DateUtil.parseGeneralizedTime(valueStr);
             if (value == null)
                 return true; // not a valid gentime, bad
@@ -440,6 +461,7 @@ public class AttributeConstraint {
         case TYPE_OSTRING:
         case TYPE_CSTRING:
         case TYPE_REGEX:
+        case TYPE_BINARY:    
             return new AttributeConstraint(attrName);
         case TYPE_LONG:
             return new LongConstraint(attrName);
