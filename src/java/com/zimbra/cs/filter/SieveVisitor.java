@@ -84,6 +84,15 @@ public abstract class SieveVisitor {
     throws ServiceException { }
     
     @SuppressWarnings("unused")
+    protected void visitCurrentTimeTest(Node node, VisitPhase phase, RuleProperties props,
+        DateComparison comparison, String timeStr)
+    throws ServiceException { }
+
+    @SuppressWarnings("unused")
+    protected void visitCurrentDayOfWeekTest(Node node, VisitPhase phase, RuleProperties props, List<String> days)
+    throws ServiceException { }
+
+    @SuppressWarnings("unused")
     protected void visitAddressBookTest(Node node, VisitPhase phase, RuleProperties props,
         String header, String folderPath)
     throws ServiceException { }
@@ -248,7 +257,7 @@ public abstract class SieveVisitor {
                 NumberComparison comparison = NumberComparison.fromString(s);
                 SieveNode sizeNode = (SieveNode) getNode(node, 0, 1);
                 String sizeString = sizeNode.getFirstToken().toString();
-                int size = 0;
+                int size;
                 try {
                     size = FilterUtil.parseSize(sizeString);
                 } catch (NumberFormatException e) {
@@ -305,6 +314,20 @@ public abstract class SieveVisitor {
                 visitInviteTest(node, VisitPhase.begin, props, methods);
                 accept(node, props);
                 visitInviteTest(node, VisitPhase.end, props, methods);
+            } else if ("current_time".equalsIgnoreCase(nodeName)) {
+                String s = stripLeadingColon(getValue(node, 0, 0));
+                DateComparison comparison = DateComparison.fromString(s);
+                String timeString = getValue(node, 0, 1, 0, 0);
+
+                visitCurrentTimeTest(node, VisitPhase.begin, props, comparison, timeString);
+                accept(node, props);
+                visitCurrentTimeTest(node, VisitPhase.end, props, comparison, timeString);
+            } else if ("current_day_of_week".equalsIgnoreCase(nodeName)) {
+                List<String> days = getMultiValue(node, 0, 1, 0);
+
+                visitCurrentDayOfWeekTest(node, VisitPhase.begin, props, days);
+                accept(node, props);
+                visitCurrentDayOfWeekTest(node, VisitPhase.end, props, days);
             } else {
                 ZimbraLog.filter.debug("Ignoring unrecognized test type '%s'.", nodeName);
                 accept(node, props);
@@ -382,18 +405,18 @@ public abstract class SieveVisitor {
     protected Node getNode(Node parent, int ... indexes)
     throws ServiceException {
         Node node = parent;
-        for (int i = 0; i < indexes.length; i++) {
+        for (int index : indexes) {
             if (node.jjtGetNumChildren() == 0) {
                 throw ServiceException.PARSE_ERROR(
-                    "Subnode " + getNodeName(node) + " of node " + getNodeName(parent) + " has no children.", null);
+                        "Subnode " + getNodeName(node) + " of node " + getNodeName(parent) + " has no children.", null);
             }
-            
-            if (indexes[i] >= node.jjtGetNumChildren()) {
+
+            if (index >= node.jjtGetNumChildren()) {
                 throw ServiceException.PARSE_ERROR(
-                    "Subnode " + getNodeName(node) + " of node " + getNodeName(parent) + " has " +
-                    node.jjtGetNumChildren() + " children.  Requested child " + indexes[i] + ".", null);
+                        "Subnode " + getNodeName(node) + " of node " + getNodeName(parent) + " has " +
+                                node.jjtGetNumChildren() + " children.  Requested child " + index + ".", null);
             }
-            node = node.jjtGetChild(indexes[i]);
+            node = node.jjtGetChild(index);
         }
         return node;
     }

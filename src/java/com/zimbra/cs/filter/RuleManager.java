@@ -15,6 +15,29 @@
 
 package com.zimbra.cs.filter;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.ElementFactory;
+import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.DeliveryContext;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.SpamHandler;
+import org.apache.jsieve.ConfigurationManager;
+import org.apache.jsieve.SieveFactory;
+import org.apache.jsieve.exception.SieveException;
+import org.apache.jsieve.parser.generated.Node;
+import org.apache.jsieve.parser.generated.ParseException;
+import org.apache.jsieve.parser.generated.TokenMgrError;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -26,30 +49,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import com.zimbra.cs.mailbox.OperationContext;
-import org.apache.jsieve.ConfigurationManager;
-import org.apache.jsieve.SieveFactory;
-import org.apache.jsieve.exception.SieveException;
-import org.apache.jsieve.parser.generated.Node;
-import org.apache.jsieve.parser.generated.ParseException;
-import org.apache.jsieve.parser.generated.TokenMgrError;
-
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.Element.ElementFactory;
-import com.zimbra.common.soap.Element.XMLElement;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.DeliveryContext;
-import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.service.util.SpamHandler;
 
 /**
  * Handles setting and getting filter rules for an <tt>Account</tt>,
@@ -66,31 +65,32 @@ public class RuleManager {
     private static final String OUTGOING_FILTER_RULES_CACHE_KEY =
         StringUtil.getSimpleClassName(RuleManager.class.getName()) + ".OUTGOING_FILTER_RULES_CACHE";
 
-    private static ConfigurationManager sConfigurationManager;
     private static SieveFactory sSieveFactory;
 
     static {
         // Initialize custom jSieve extensions
         try {
-            sConfigurationManager = new ConfigurationManager();
+            ConfigurationManager configurationManager = new ConfigurationManager();
             
             @SuppressWarnings("unchecked")
-            Map<String, String> commandMap = sConfigurationManager.getCommandMap();
+            Map<String, String> commandMap = configurationManager.getCommandMap();
             commandMap.put("disabled_if", com.zimbra.cs.filter.jsieve.DisabledIf.class.getName());
             commandMap.put("tag", com.zimbra.cs.filter.jsieve.Tag.class.getName());
             commandMap.put("flag", com.zimbra.cs.filter.jsieve.Flag.class.getName());
             commandMap.put("reply", com.zimbra.cs.filter.jsieve.Reply.class.getName());
             
             @SuppressWarnings("unchecked")
-            Map<String, String> testMap = sConfigurationManager.getTestMap();
+            Map<String, String> testMap = configurationManager.getTestMap();
             testMap.put("date", com.zimbra.cs.filter.jsieve.DateTest.class.getName());
             testMap.put("body", com.zimbra.cs.filter.jsieve.BodyTest.class.getName());
             testMap.put("attachment", com.zimbra.cs.filter.jsieve.AttachmentTest.class.getName());
             testMap.put("addressbook", com.zimbra.cs.filter.jsieve.AddressBookTest.class.getName());
             testMap.put("invite", com.zimbra.cs.filter.jsieve.InviteTest.class.getName());
             testMap.put("mime_header", com.zimbra.cs.filter.jsieve.MimeHeaderTest.class.getName());
-            
-            sSieveFactory = sConfigurationManager.build();
+            testMap.put("current_time", com.zimbra.cs.filter.jsieve.CurrentTimeTest.class.getName());
+            testMap.put("current_day_of_week", com.zimbra.cs.filter.jsieve.CurrentDayOfWeekTest.class.getName());
+
+            sSieveFactory = configurationManager.build();
         } catch (SieveException e) {
             ZimbraLog.filter.error("Unable to initialize mail filtering extensions.", e);
         }
@@ -232,7 +232,7 @@ public class RuleManager {
                                          String sieveScriptAttrName,
                                          String rulesCacheKey)
             throws ServiceException {
-        Node node = null;
+        Node node;
         try {
             node = getRulesNode(account, sieveScriptAttrName, rulesCacheKey);
         } catch (ParseException e) {
@@ -264,7 +264,7 @@ public class RuleManager {
         List<String> names = new ArrayList<String>();
         if (script != null) {
             BufferedReader reader = new BufferedReader(new StringReader(script));
-            String line = null;
+            String line;
             try {
                 while ((line = reader.readLine()) != null){
                     Matcher matcher = PAT_RULE_NAME.matcher(line);
@@ -291,7 +291,7 @@ public class RuleManager {
         StringBuilder buf = new StringBuilder();
         boolean found = false;
         BufferedReader reader = new BufferedReader(new StringReader(script));
-        String line = null;
+        String line;
         
         try {
             while ((line = reader.readLine()) != null) {
@@ -472,14 +472,13 @@ public class RuleManager {
      * Parses the sieve script and returns the root to the resulting node tree. 
      */
     public static Node parse(String script) throws ParseException {
-        ByteArrayInputStream sin = null;
+        ByteArrayInputStream sin;
         try {
             sin = new ByteArrayInputStream(script.getBytes("UTF-8"));
         } catch (UnsupportedEncodingException e) {
             throw new ParseException(e.getMessage());
         }
-        Node node = sSieveFactory.parse(sin);
-        return node;
+        return sSieveFactory.parse(sin);
     }
 
     /**
@@ -496,7 +495,7 @@ public class RuleManager {
             throws ServiceException {
         String script = getRules(account, sieveScriptAttrName);
         if (script != null) {
-            Node node = null;
+            Node node;
             try {
                 node = parse(script);
             } catch (ParseException e) {
@@ -536,7 +535,7 @@ public class RuleManager {
             throws ServiceException {
         String script = getRules(account, sieveScriptAttrName);
         if (script != null) {
-            Node node = null;
+            Node node;
             try {
                 node = parse(script);
             } catch (ParseException e) {
@@ -597,7 +596,7 @@ public class RuleManager {
             throws ServiceException {
         String script = getRules(account, sieveScriptAttrName);
         if (script != null) {
-            Node node = null;
+            Node node;
             try {
                 node = parse(script);
             } catch (ParseException e) {
