@@ -41,7 +41,7 @@ public class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110218-1702 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110223-1555 */
 
     /**
      * RFC2256: descriptive information
@@ -10500,7 +10500,7 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @return zimbraSMIMELdapAttribute, or empty array if unset
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1182)
     public String[] getSMIMELdapAttribute() {
@@ -10524,7 +10524,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraSMIMELdapAttribute new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1182)
     public void setSMIMELdapAttribute(String[] zimbraSMIMELdapAttribute) throws com.zimbra.common.service.ServiceException {
@@ -10551,7 +10551,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1182)
     public Map<String,Object> setSMIMELdapAttribute(String[] zimbraSMIMELdapAttribute, Map<String,Object> attrs) {
@@ -10577,7 +10577,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraSMIMELdapAttribute new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1182)
     public void addSMIMELdapAttribute(String zimbraSMIMELdapAttribute) throws com.zimbra.common.service.ServiceException {
@@ -10604,7 +10604,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1182)
     public Map<String,Object> addSMIMELdapAttribute(String zimbraSMIMELdapAttribute, Map<String,Object> attrs) {
@@ -10630,7 +10630,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraSMIMELdapAttribute existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1182)
     public void removeSMIMELdapAttribute(String zimbraSMIMELdapAttribute) throws com.zimbra.common.service.ServiceException {
@@ -10657,7 +10657,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1182)
     public Map<String,Object> removeSMIMELdapAttribute(String zimbraSMIMELdapAttribute, Map<String,Object> attrs) {
@@ -10682,7 +10682,7 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1182)
     public void unsetSMIMELdapAttribute() throws com.zimbra.common.service.ServiceException {
@@ -10708,7 +10708,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1182)
     public Map<String,Object> unsetSMIMELdapAttribute(Map<String,Object> attrs) {
@@ -10733,7 +10733,7 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @return zimbraSMIMELdapBindDn, or empty array if unset
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1178)
     public String[] getSMIMELdapBindDn() {
@@ -10757,7 +10757,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraSMIMELdapBindDn new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1178)
     public void setSMIMELdapBindDn(String[] zimbraSMIMELdapBindDn) throws com.zimbra.common.service.ServiceException {
@@ -10784,7 +10784,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1178)
     public Map<String,Object> setSMIMELdapBindDn(String[] zimbraSMIMELdapBindDn, Map<String,Object> attrs) {
@@ -10810,7 +10810,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraSMIMELdapBindDn new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1178)
     public void addSMIMELdapBindDn(String zimbraSMIMELdapBindDn) throws com.zimbra.common.service.ServiceException {
@@ -10837,7 +10837,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1178)
     public Map<String,Object> addSMIMELdapBindDn(String zimbraSMIMELdapBindDn, Map<String,Object> attrs) {
@@ -10863,7 +10863,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraSMIMELdapBindDn existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1178)
     public void removeSMIMELdapBindDn(String zimbraSMIMELdapBindDn) throws com.zimbra.common.service.ServiceException {
@@ -10890,7 +10890,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1178)
     public Map<String,Object> removeSMIMELdapBindDn(String zimbraSMIMELdapBindDn, Map<String,Object> attrs) {
@@ -10915,7 +10915,7 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1178)
     public void unsetSMIMELdapBindDn() throws com.zimbra.common.service.ServiceException {
@@ -10941,7 +10941,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1178)
     public Map<String,Object> unsetSMIMELdapBindDn(Map<String,Object> attrs) {
@@ -10966,7 +10966,7 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @return zimbraSMIMELdapBindPassword, or empty array if unset
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1179)
     public String[] getSMIMELdapBindPassword() {
@@ -10990,7 +10990,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraSMIMELdapBindPassword new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1179)
     public void setSMIMELdapBindPassword(String[] zimbraSMIMELdapBindPassword) throws com.zimbra.common.service.ServiceException {
@@ -11017,7 +11017,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1179)
     public Map<String,Object> setSMIMELdapBindPassword(String[] zimbraSMIMELdapBindPassword, Map<String,Object> attrs) {
@@ -11043,7 +11043,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraSMIMELdapBindPassword new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1179)
     public void addSMIMELdapBindPassword(String zimbraSMIMELdapBindPassword) throws com.zimbra.common.service.ServiceException {
@@ -11070,7 +11070,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1179)
     public Map<String,Object> addSMIMELdapBindPassword(String zimbraSMIMELdapBindPassword, Map<String,Object> attrs) {
@@ -11096,7 +11096,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraSMIMELdapBindPassword existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1179)
     public void removeSMIMELdapBindPassword(String zimbraSMIMELdapBindPassword) throws com.zimbra.common.service.ServiceException {
@@ -11123,7 +11123,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1179)
     public Map<String,Object> removeSMIMELdapBindPassword(String zimbraSMIMELdapBindPassword, Map<String,Object> attrs) {
@@ -11148,7 +11148,7 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1179)
     public void unsetSMIMELdapBindPassword() throws com.zimbra.common.service.ServiceException {
@@ -11174,7 +11174,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1179)
     public Map<String,Object> unsetSMIMELdapBindPassword(Map<String,Object> attrs) {
@@ -11201,7 +11201,7 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @return zimbraSMIMELdapFilter, or empty array if unset
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1181)
     public String[] getSMIMELdapFilter() {
@@ -11227,7 +11227,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraSMIMELdapFilter new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1181)
     public void setSMIMELdapFilter(String[] zimbraSMIMELdapFilter) throws com.zimbra.common.service.ServiceException {
@@ -11256,7 +11256,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1181)
     public Map<String,Object> setSMIMELdapFilter(String[] zimbraSMIMELdapFilter, Map<String,Object> attrs) {
@@ -11284,7 +11284,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraSMIMELdapFilter new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1181)
     public void addSMIMELdapFilter(String zimbraSMIMELdapFilter) throws com.zimbra.common.service.ServiceException {
@@ -11313,7 +11313,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1181)
     public Map<String,Object> addSMIMELdapFilter(String zimbraSMIMELdapFilter, Map<String,Object> attrs) {
@@ -11341,7 +11341,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraSMIMELdapFilter existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1181)
     public void removeSMIMELdapFilter(String zimbraSMIMELdapFilter) throws com.zimbra.common.service.ServiceException {
@@ -11370,7 +11370,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1181)
     public Map<String,Object> removeSMIMELdapFilter(String zimbraSMIMELdapFilter, Map<String,Object> attrs) {
@@ -11397,7 +11397,7 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1181)
     public void unsetSMIMELdapFilter() throws com.zimbra.common.service.ServiceException {
@@ -11425,7 +11425,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1181)
     public Map<String,Object> unsetSMIMELdapFilter(Map<String,Object> attrs) {
@@ -11450,7 +11450,7 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @return zimbraSMIMELdapSearchBase, or empty array if unset
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1180)
     public String[] getSMIMELdapSearchBase() {
@@ -11474,7 +11474,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraSMIMELdapSearchBase new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1180)
     public void setSMIMELdapSearchBase(String[] zimbraSMIMELdapSearchBase) throws com.zimbra.common.service.ServiceException {
@@ -11501,7 +11501,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1180)
     public Map<String,Object> setSMIMELdapSearchBase(String[] zimbraSMIMELdapSearchBase, Map<String,Object> attrs) {
@@ -11527,7 +11527,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraSMIMELdapSearchBase new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1180)
     public void addSMIMELdapSearchBase(String zimbraSMIMELdapSearchBase) throws com.zimbra.common.service.ServiceException {
@@ -11554,7 +11554,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1180)
     public Map<String,Object> addSMIMELdapSearchBase(String zimbraSMIMELdapSearchBase, Map<String,Object> attrs) {
@@ -11580,7 +11580,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraSMIMELdapSearchBase existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1180)
     public void removeSMIMELdapSearchBase(String zimbraSMIMELdapSearchBase) throws com.zimbra.common.service.ServiceException {
@@ -11607,7 +11607,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1180)
     public Map<String,Object> removeSMIMELdapSearchBase(String zimbraSMIMELdapSearchBase, Map<String,Object> attrs) {
@@ -11632,7 +11632,7 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1180)
     public void unsetSMIMELdapSearchBase() throws com.zimbra.common.service.ServiceException {
@@ -11658,7 +11658,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1180)
     public Map<String,Object> unsetSMIMELdapSearchBase(Map<String,Object> attrs) {
@@ -11683,7 +11683,7 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @return zimbraSMIMELdapStartTlsEnabled, or empty array if unset
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1177)
     public String[] getSMIMELdapStartTlsEnabled() {
@@ -11707,7 +11707,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraSMIMELdapStartTlsEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1177)
     public void setSMIMELdapStartTlsEnabled(String[] zimbraSMIMELdapStartTlsEnabled) throws com.zimbra.common.service.ServiceException {
@@ -11734,7 +11734,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1177)
     public Map<String,Object> setSMIMELdapStartTlsEnabled(String[] zimbraSMIMELdapStartTlsEnabled, Map<String,Object> attrs) {
@@ -11760,7 +11760,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraSMIMELdapStartTlsEnabled new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1177)
     public void addSMIMELdapStartTlsEnabled(String zimbraSMIMELdapStartTlsEnabled) throws com.zimbra.common.service.ServiceException {
@@ -11787,7 +11787,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1177)
     public Map<String,Object> addSMIMELdapStartTlsEnabled(String zimbraSMIMELdapStartTlsEnabled, Map<String,Object> attrs) {
@@ -11813,7 +11813,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraSMIMELdapStartTlsEnabled existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1177)
     public void removeSMIMELdapStartTlsEnabled(String zimbraSMIMELdapStartTlsEnabled) throws com.zimbra.common.service.ServiceException {
@@ -11840,7 +11840,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1177)
     public Map<String,Object> removeSMIMELdapStartTlsEnabled(String zimbraSMIMELdapStartTlsEnabled, Map<String,Object> attrs) {
@@ -11865,7 +11865,7 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1177)
     public void unsetSMIMELdapStartTlsEnabled() throws com.zimbra.common.service.ServiceException {
@@ -11891,7 +11891,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1177)
     public Map<String,Object> unsetSMIMELdapStartTlsEnabled(Map<String,Object> attrs) {
@@ -11917,7 +11917,7 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @return zimbraSMIMELdapURL, or empty array if unset
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1176)
     public String[] getSMIMELdapURL() {
@@ -11942,7 +11942,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraSMIMELdapURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1176)
     public void setSMIMELdapURL(String[] zimbraSMIMELdapURL) throws com.zimbra.common.service.ServiceException {
@@ -11970,7 +11970,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1176)
     public Map<String,Object> setSMIMELdapURL(String[] zimbraSMIMELdapURL, Map<String,Object> attrs) {
@@ -11997,7 +11997,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraSMIMELdapURL new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1176)
     public void addSMIMELdapURL(String zimbraSMIMELdapURL) throws com.zimbra.common.service.ServiceException {
@@ -12025,7 +12025,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1176)
     public Map<String,Object> addSMIMELdapURL(String zimbraSMIMELdapURL, Map<String,Object> attrs) {
@@ -12052,7 +12052,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param zimbraSMIMELdapURL existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1176)
     public void removeSMIMELdapURL(String zimbraSMIMELdapURL) throws com.zimbra.common.service.ServiceException {
@@ -12080,7 +12080,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1176)
     public Map<String,Object> removeSMIMELdapURL(String zimbraSMIMELdapURL, Map<String,Object> attrs) {
@@ -12106,7 +12106,7 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1176)
     public void unsetSMIMELdapURL() throws com.zimbra.common.service.ServiceException {
@@ -12133,7 +12133,7 @@ public class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1176)
     public Map<String,Object> unsetSMIMELdapURL(Map<String,Object> attrs) {

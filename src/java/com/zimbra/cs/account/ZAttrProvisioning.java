@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110218-1702 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110223-1555 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -2994,10 +2994,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraExternalPop3SSLPort = "zimbraExternalPop3SSLPort";
 
     /**
-     * whether email featuresand tabs are enabled in the web client if it is
+     * whether email features and tabs are enabled in the web client if
      * accessed from the admin console
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1170)
     public static final String A_zimbraFeatureAdminMailEnabled = "zimbraFeatureAdminMailEnabled";
@@ -3013,7 +3013,7 @@ public class ZAttrProvisioning {
      * ZCS, exposing Junk folder and actions in the web UI, and exposing Junk
      * folder to IMAP clients.
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1168)
     public static final String A_zimbraFeatureAntispamEnabled = "zimbraFeatureAntispamEnabled";
@@ -3105,7 +3105,7 @@ public class ZAttrProvisioning {
     /**
      * whether detailed contact search UI is enabled
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1164)
     public static final String A_zimbraFeatureContactsDetailedSearchEnabled = "zimbraFeatureContactsDetailedSearchEnabled";
@@ -3153,6 +3153,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1134)
     public static final String A_zimbraFeatureDistributionListExpandMembersEnabled = "zimbraFeatureDistributionListExpandMembersEnabled";
+
+    /**
+     * whether export folder feature is enabled
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1185)
+    public static final String A_zimbraFeatureExportFolderEnabled = "zimbraFeatureExportFolderEnabled";
 
     /**
      * filter prefs enabled
@@ -3230,12 +3238,23 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureIMEnabled = "zimbraFeatureIMEnabled";
 
     /**
-     * whether import export folder feature is enabled
+     * Deprecated since: 7.1.0. deprecated in favor of
+     * zimbraFeatureImportFolderEnabled and zimbraFeatureExportFolderEnabled
+     * for bug 53745. Orig desc: whether import export folder feature is
+     * enabled
      *
      * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=750)
     public static final String A_zimbraFeatureImportExportFolderEnabled = "zimbraFeatureImportExportFolderEnabled";
+
+    /**
+     * whether import folder feature is enabled
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1184)
+    public static final String A_zimbraFeatureImportFolderEnabled = "zimbraFeatureImportFolderEnabled";
 
     /**
      * preference to set initial search
@@ -3312,7 +3331,7 @@ public class ZAttrProvisioning {
      * whether to allow end user to publish and remove S/MIME certificates to
      * their GAL entry in the web UI
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1183)
     public static final String A_zimbraFeatureManageSMIMECertificateEnabled = "zimbraFeatureManageSMIMECertificateEnabled";
@@ -4354,7 +4373,7 @@ public class ZAttrProvisioning {
     /**
      * supported IP mode
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1171)
     public static final String A_zimbraIPMode = "zimbraIPMode";
@@ -5711,7 +5730,7 @@ public class ZAttrProvisioning {
     /**
      * regex of alllowed characters in password
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1163)
     public static final String A_zimbraPasswordAllowedChars = "zimbraPasswordAllowedChars";
@@ -5812,7 +5831,7 @@ public class ZAttrProvisioning {
     /**
      * minimum number of alphabet characters required in a password
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1162)
     public static final String A_zimbraPasswordMinAlphaChars = "zimbraPasswordMinAlphaChars";
@@ -6906,7 +6925,7 @@ public class ZAttrProvisioning {
     /**
      * user&#039;s S/MIME public keys (certificates)
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1172)
     public static final String A_zimbraPrefMailSMIMECertificate = "zimbraPrefMailSMIMECertificate";
@@ -8172,7 +8191,7 @@ public class ZAttrProvisioning {
      * attributes cannot be modified directly with zmprov md/mcf commands.
      * Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1182)
     public static final String A_zimbraSMIMELdapAttribute = "zimbraSMIMELdapAttribute";
@@ -8191,7 +8210,7 @@ public class ZAttrProvisioning {
      * directly with zmprov md/mcf commands. Use zmprov
      * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1178)
     public static final String A_zimbraSMIMELdapBindDn = "zimbraSMIMELdapBindDn";
@@ -8210,7 +8229,7 @@ public class ZAttrProvisioning {
      * directly with zmprov md/mcf commands. Use zmprov
      * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1179)
     public static final String A_zimbraSMIMELdapBindPassword = "zimbraSMIMELdapBindPassword";
@@ -8231,7 +8250,7 @@ public class ZAttrProvisioning {
      * directly with zmprov md/mcf commands. Use zmprov
      * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1181)
     public static final String A_zimbraSMIMELdapFilter = "zimbraSMIMELdapFilter";
@@ -8250,7 +8269,7 @@ public class ZAttrProvisioning {
      * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
      * instead.
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1180)
     public static final String A_zimbraSMIMELdapSearchBase = "zimbraSMIMELdapSearchBase";
@@ -8269,7 +8288,7 @@ public class ZAttrProvisioning {
      * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
      * instead.
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1177)
     public static final String A_zimbraSMIMELdapStartTlsEnabled = "zimbraSMIMELdapStartTlsEnabled";
@@ -8289,7 +8308,7 @@ public class ZAttrProvisioning {
      * md/mcf commands. Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command
      * instead.
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1176)
     public static final String A_zimbraSMIMELdapURL = "zimbraSMIMELdapURL";

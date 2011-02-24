@@ -40,7 +40,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110218-1702 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110223-1555 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -3840,7 +3840,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @return zimbraIPMode, or ZAttrProvisioning.IPMode.both if unset and/or has invalid value
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1171)
     public ZAttrProvisioning.IPMode getIPMode() {
@@ -3854,7 +3854,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @return zimbraIPMode, or "both" if unset
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1171)
     public String getIPModeAsString() {
@@ -3869,7 +3869,7 @@ public class ZAttrServer extends NamedEntry {
      * @param zimbraIPMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1171)
     public void setIPMode(ZAttrProvisioning.IPMode zimbraIPMode) throws com.zimbra.common.service.ServiceException {
@@ -3887,7 +3887,7 @@ public class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1171)
     public Map<String,Object> setIPMode(ZAttrProvisioning.IPMode zimbraIPMode, Map<String,Object> attrs) {
@@ -3904,7 +3904,7 @@ public class ZAttrServer extends NamedEntry {
      * @param zimbraIPMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1171)
     public void setIPModeAsString(String zimbraIPMode) throws com.zimbra.common.service.ServiceException {
@@ -3922,7 +3922,7 @@ public class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1171)
     public Map<String,Object> setIPModeAsString(String zimbraIPMode, Map<String,Object> attrs) {
@@ -3938,7 +3938,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1171)
     public void unsetIPMode() throws com.zimbra.common.service.ServiceException {
@@ -3955,7 +3955,7 @@ public class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.1
+     * @since ZCS 7.1.0
      */
     @ZAttr(id=1171)
     public Map<String,Object> unsetIPMode(Map<String,Object> attrs) {

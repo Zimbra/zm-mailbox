@@ -3845,9 +3845,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether mandatory spell check is enabled</desc>
 </attr>
 
-<attr id="750" name="zimbraFeatureImportExportFolderEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="6.0.0_BETA1">
+<attr id="750" name="zimbraFeatureImportExportFolderEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" deprecatedSince="7.1.0" since="6.0.0_BETA1">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether import export folder feature is enabled</desc>
+  <deprecateDesc>deprecated in favor of zimbraFeatureImportFolderEnabled and zimbraFeatureExportFolderEnabled for bug 53745</deprecateDesc>
 </attr>
 
 <attr id="751" name="zimbraAdminConsoleSkinEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="5.0.11">
@@ -5330,16 +5331,16 @@ TODO: delete them permerntly from here
   <desc>When set to true, robots.txt on mailboxd will be set up to keep web crawlers out</desc>
 </attr>
 
-<attr id="1162" name="zimbraPasswordMinAlphaChars" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="7.1">
+<attr id="1162" name="zimbraPasswordMinAlphaChars" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="7.1.0">
   <defaultCOSValue>0</defaultCOSValue>
   <desc>minimum number of alphabet characters required in a password</desc>
 </attr>
 
-<attr id="1163" name="zimbraPasswordAllowedChars" type="cstring" max="1024" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="7.1">
+<attr id="1163" name="zimbraPasswordAllowedChars" type="cstring" max="1024" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="7.1.0">
   <desc>regex of alllowed characters in password</desc>
 </attr>
 
-<attr id="1164" name="zimbraFeatureContactsDetailedSearchEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="7.1">
+<attr id="1164" name="zimbraFeatureContactsDetailedSearchEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="7.1.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether detailed contact search UI is enabled</desc>
 </attr>
@@ -5368,7 +5369,7 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
-<attr id="1168" name="zimbraFeatureAntispamEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="7.1">
+<attr id="1168" name="zimbraFeatureAntispamEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="7.1.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>
     whether or not to enable rerouting spam messages to Junk folder in ZCS, 
@@ -5381,17 +5382,17 @@ TODO: delete them permerntly from here
   <desc>certificate to be used for validating the SAML assertions received from myonelogin (tricipher)</desc>
 </attr>
 
-<attr id="1170" name="zimbraFeatureAdminMailEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="7.1">
+<attr id="1170" name="zimbraFeatureAdminMailEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="7.1.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
-  <desc>whether email featuresand tabs are enabled in the web client if it is accessed from the admin console</desc>
+  <desc>whether email features and tabs are enabled in the web client if accessed from the admin console</desc>
 </attr>
 
-<attr id="1171" name="zimbraIPMode" type="enum" value="ipv4,ipv6,both" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="all" since="7.1">
+<attr id="1171" name="zimbraIPMode" type="enum" value="ipv4,ipv6,both" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="all" since="7.1.0">
   <globalConfigValue>both</globalConfigValue>
   <desc>supported IP mode</desc>
 </attr>
 
-<attr id="1172" name="zimbraPrefMailSMIMECertificate" type="binary" cardinality="multi" optionalIn="account" since="7.1">
+<attr id="1172" name="zimbraPrefMailSMIMECertificate" type="binary" cardinality="multi" optionalIn="account" since="7.1.0">
   <desc>user's S/MIME public keys (certificates)</desc>
 </attr>
 
@@ -5410,7 +5411,7 @@ TODO: delete them permerntly from here
   <desc>temp directory for mailbox move</desc>
 </attr>
 
-<attr id="1176" name="zimbraSMIMELdapURL" type="string" max="256" cardinality="multi" optionalIn="domain,globalConfig" immutable="1"  since="7.1">
+<attr id="1176" name="zimbraSMIMELdapURL" type="string" max="256" cardinality="multi" optionalIn="domain,globalConfig" immutable="1"  since="7.1.0">
   <desc>
     LDAP URL(s) for public key lookup for S/MIME via external LDAP.  Multiple URLs for error fallback purpose can be seperated by space.
     
@@ -5422,7 +5423,7 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
-<attr id="1177" name="zimbraSMIMELdapStartTlsEnabled" type="string" cardinality="multi" optionalIn="domain,globalConfig" immutable="1" since="7.1">
+<attr id="1177" name="zimbraSMIMELdapStartTlsEnabled" type="string" cardinality="multi" optionalIn="domain,globalConfig" immutable="1" since="7.1.0">
   <desc>
     Whether to use startTLS for public key lookup for S/MIME via external LDAP.
     
@@ -5434,7 +5435,7 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
-<attr id="1178" name="zimbraSMIMELdapBindDn" type="string" max="256" cardinality="multi" optionalIn="domain,globalConfig" immutable="1" since="7.1">
+<attr id="1178" name="zimbraSMIMELdapBindDn" type="string" max="256" cardinality="multi" optionalIn="domain,globalConfig" immutable="1" since="7.1.0">
   <desc>
     LDAP bind DN for public key lookup for S/MIME via external LDAP.  Can be empty for anonymous bind.
     
@@ -5446,7 +5447,7 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
-<attr id="1179" name="zimbraSMIMELdapBindPassword" type="string" max="256" cardinality="multi" optionalIn="domain,globalConfig" immutable="1" since="7.1">
+<attr id="1179" name="zimbraSMIMELdapBindPassword" type="string" max="256" cardinality="multi" optionalIn="domain,globalConfig" immutable="1" since="7.1.0">
   <desc>
     LDAP bind password for public key lookup for S/MIME via external LDAP.  Can be empty for anonymous bind.
     
@@ -5458,7 +5459,7 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
-<attr id="1180" name="zimbraSMIMELdapSearchBase"  type="string" max="256" cardinality="multi" optionalIn="domain,globalConfig" immutable="1" since="7.1">
+<attr id="1180" name="zimbraSMIMELdapSearchBase"  type="string" max="256" cardinality="multi" optionalIn="domain,globalConfig" immutable="1" since="7.1.0">
   <desc>
     LDAP search base for public key lookup for S/MIME via external LDAP.
   
@@ -5470,7 +5471,7 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
-<attr id="1181" name="zimbraSMIMELdapFilter" type="string" max="1024" cardinality="multi" optionalIn="domain,globalConfig" immutable="1" since="7.1">
+<attr id="1181" name="zimbraSMIMELdapFilter" type="string" max="1024" cardinality="multi" optionalIn="domain,globalConfig" immutable="1" since="7.1.0">
   <desc>
     LDAP search filter for public key lookup for S/MIME via external LDAP.
     Can contain the following conversion variables for expansion:
@@ -5486,7 +5487,7 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
-<attr id="1182" name="zimbraSMIMELdapAttribute" type="string" max="256" cardinality="multi" optionalIn="domain,globalConfig" immutable="1" since="7.1">
+<attr id="1182" name="zimbraSMIMELdapAttribute" type="string" max="256" cardinality="multi" optionalIn="domain,globalConfig" immutable="1" since="7.1.0">
   <desc>
     LDAP attribute(s) for public key lookup for S/MIME via external LDAP.  Multiple attributes can be separated by comma.
   
@@ -5498,11 +5499,20 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
-<attr id="1183" name="zimbraFeatureManageSMIMECertificateEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited"  since="7.1">
+<attr id="1183" name="zimbraFeatureManageSMIMECertificateEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited"  since="7.1.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether to allow end user to publish and remove S/MIME certificates to their GAL entry in the web UI</desc>
 </attr>
 
+<attr id="1184" name="zimbraFeatureImportFolderEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="7.1.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether import folder feature is enabled</desc>
+</attr>
+
+<attr id="1185" name="zimbraFeatureExportFolderEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="7.1.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether export folder feature is enabled</desc>
+</attr>
 
 
 </attrs>
