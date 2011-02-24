@@ -15,6 +15,7 @@ import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
@@ -224,6 +225,11 @@ public class TestSMIMELookup {
         for (String configName : smimeConfigs.keySet()) {
             prov.removeDomainSMIMEConfig(domain, configName);
         }
+        
+        smimeConfigs = prov.getConfigSMIMEConfig(null);
+        for (String configName : smimeConfigs.keySet()) {
+            prov.removeConfigSMIMEConfig(configName);
+        }
     }
     
     @Test
@@ -291,6 +297,21 @@ public class TestSMIMELookup {
         List<String> certs = LdapSMIMEConfig.lookupPublicKeys(account, TestUtil.getAddress(CONTACT, DOMAIN));
         smimeConfig1.assertContains(certs);
         smimeConfig2.assertContains(certs);
+    }
+    
+    @Test
+    public void testNoSMIMEConfigs() throws Exception {
+        boolean caughtException = false;
+        
+        try {
+            List<String> certs = LdapSMIMEConfig.lookupPublicKeys(account, TestUtil.getAddress(CONTACT, DOMAIN));
+        } catch (AccountServiceException e) {
+            if (AccountServiceException.NO_SMIME_CONFIG.equals(e.getCode())) {
+                caughtException = true;
+            }
+        }
+        
+        Assert.assertTrue(caughtException);
     }
     
     @BeforeClass

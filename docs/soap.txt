@@ -3529,4 +3529,7 @@ Get SMIME public keys from external LDAP.
   <cert>{base64-encoded-cert}</cert>+
 </GetSMIMEPublicKeysResponse>
 
+Throws NO_SMIME_CONFIG if ther is no SMIME config on the domain or globalconfig.
+
+
 -----------------------------
