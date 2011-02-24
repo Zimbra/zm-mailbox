@@ -2,17 +2,17 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010 Zimbra, Inc.
- *
+ * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- *
+ * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.wiki;
+package com.zimbra.cs.mailbox;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -24,21 +24,16 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.mailbox.Document;
-import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.wiki.WikiPage;
+import com.zimbra.cs.wiki.WikiTemplate;
 
 public class MigrateToDocuments {
 
     private Mailbox mbox;
     private OperationContext octxt;
-
+    
     public void handleAccount(Account account) throws ServiceException {
         handleMailbox(MailboxManager.getInstance().getMailboxByAccount(account, true));
     }
@@ -59,10 +54,10 @@ public class MigrateToDocuments {
             return;
         }
         moveToBackupFolder(root, destRoot);
-        migrateFromBackupFolder(destRoot, root);
+        migrateFromBackupFolder(octxt, destRoot, root);
         mbox.delete(octxt, destRoot.getId(), MailItem.Type.FOLDER);
     }
-
+    
     private void moveToBackupFolder(Folder from, Folder to) throws ServiceException {
         for (Folder source : from.getSubfolders(octxt)) {
             if (source.getDefaultView() != MailItem.Type.WIKI)
@@ -94,16 +89,18 @@ public class MigrateToDocuments {
             }
         }
     }
-
-    private void migrateFromBackupFolder(Folder from, Folder to) throws ServiceException {
+    
+    private void migrateFromBackupFolder(OperationContext octxt, Folder from, Folder to) throws ServiceException {
         for (Folder source : from.getSubfolders(octxt)) {
             String path = to.getPath();
             if (!path.endsWith("/"))
                 path += "/";
             path += source.getName();
             Folder sub = mbox.getFolderByPath(octxt, path);
-            migrateFromBackupFolder(source, sub);
+            migrateFromBackupFolder(octxt, source, sub);
         }
+        if (to.getDefaultView() == MailItem.Type.WIKI)
+            mbox.migrateFolderView(octxt, to, MailItem.Type.DOCUMENT);
         for (MailItem item : mbox.getItemList(octxt, MailItem.Type.WIKI, from.getId())) {
             Document doc = (Document) item;
             Document main = null;
@@ -130,7 +127,7 @@ public class MigrateToDocuments {
             addRevision(item.getName(), main, doc, to);
         }
     }
-
+    
     private Document addRevision(String name, Document main, Document revision, Folder to) {
         InputStream in = null;
         try {
@@ -154,7 +151,7 @@ public class MigrateToDocuments {
         }
         return main;
     }
-
+    
     private InputStream getContentStream(Document item) throws IOException, ServiceException {
         if (item.getType() == MailItem.Type.DOCUMENT)
             return item.getContentStream();
@@ -168,7 +165,7 @@ public class MigrateToDocuments {
         System.out.println("zmwikimigrate [accountId]+");
         System.exit(0);
     }
-
+    
     public static void main(String[] args) throws Exception {
         CliUtil.toolSetup();
         DbPool.startup();

@@ -146,7 +146,6 @@ import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.cs.wiki.MigrateToDocuments;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMailbox.Options;
 
@@ -7227,6 +7226,20 @@ public class Mailbox {
     }
 
     /**
+     * for folder view migration
+     */
+    synchronized void migrateFolderView(OperationContext octxt, Folder f, MailItem.Type newView) throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("migrateFolderView", octxt, null);
+            f.migrateDefaultView(newView);
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
+    
+    /**
      * Be very careful when changing code in this method.  The order of almost
      * every line of code is important to ensure correct redo logging and crash
      * recovery.
@@ -7690,22 +7703,11 @@ public class Mailbox {
 
     protected void migrateWikiFolders() throws ServiceException {
         MigrateToDocuments migrate = new MigrateToDocuments();
-        boolean success = false;
         try {
             migrate.handleMailbox(this);
-            OperationContext octxt = new OperationContext(this);
-            beginTransaction("migrateWikiFolders", octxt, null);
-            for (Folder f : mFolderCache.values()) {
-                if (f.getDefaultView() == MailItem.Type.WIKI) {
-                    f.migrateDefaultView(MailItem.Type.DOCUMENT);
-                }
-            }
-            success = true;
             ZimbraLog.mailbox.info("wiki folder migration finished");
         } catch (Exception e) {
             ZimbraLog.mailbox.warn("wiki folder migration failed for "+getAccount().getName(), e);
-        } finally {
-            endTransaction(success);
         }
     }
 

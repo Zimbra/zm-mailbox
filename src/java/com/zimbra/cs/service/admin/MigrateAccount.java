@@ -25,7 +25,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.cs.wiki.MigrateToDocuments;
+import com.zimbra.cs.mailbox.MigrateToDocuments;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class MigrateAccount extends AdminDocumentHandler {
