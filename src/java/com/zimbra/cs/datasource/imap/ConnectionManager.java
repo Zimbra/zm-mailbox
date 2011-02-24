@@ -102,11 +102,10 @@ final class ConnectionManager {
     public void releaseConnection(DataSource ds, ImapConnection ic) {
         LOG.debug("Releasing connection: " + ic);
         if (isReuseConnections(ds) && suspendConnection(ds, ic)) {
-            if (connections.put(ds.getId(), ic) != null) {
-                //TODO: dubious assertion; if two threads open connections then this gets thrown when final one releases
-                //(e.g. when DataSourceManager.test() and a sync occur at the same time)
-                //maybe need a 'real' pool...
-                throw new AssertionError();
+            ImapConnection conn = connections.put(ds.getId(), ic);
+            if (conn != null) {
+                LOG.debug("More than one suspended connection for: %s. closing the oldest: %s", ds, conn);
+                conn.close(); //there was another suspended connection; just close it
             }
         } else {
             LOG.debug("Closing connection: " + ic);
