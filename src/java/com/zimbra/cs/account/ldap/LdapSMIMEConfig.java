@@ -21,6 +21,7 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
@@ -294,6 +295,10 @@ public class LdapSMIMEConfig {
         LdapSMIMEConfig smime = new LdapSMIMEConfig(domain, true);
         if (!smime.hasAnyConfig()) {
             smime = new LdapSMIMEConfig(prov.getConfig(), true);
+        }
+        
+        if (!smime.hasAnyConfig()) {
+            throw AccountServiceException.NO_SMIME_CONFIG("no SMIME config on domain " + domain.getName() + " or globalconfig");
         }
         
         return smime.lookup(email);
