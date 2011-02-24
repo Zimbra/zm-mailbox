@@ -41,6 +41,7 @@ public enum UpgradeTask {
     BUG_50258(ZimbraMtaSaslAuthEnable.class),
     BUG_50465(DisableBriefcase.class),
     BUG_50458(Bug50458.class),
+    BUG_53745(Bug53745.class),
     BUG_55649(Bug55649.class),
     BUG_57039(Bug57039.class);
     
