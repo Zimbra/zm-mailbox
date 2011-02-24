@@ -132,5 +132,8 @@ public class ZFeatures {
 	// defaults to TRUE
 	public boolean getPop3Enabled() { return	get(Provisioning.A_zimbraPop3Enabled) == null ||
 												getBool(Provisioning.A_zimbraPop3Enabled); }
+	// defaults to TRUE
+	public boolean getSpam() { return	get(Provisioning.A_zimbraFeatureAntispamEnabled) == null ||
+												getBool(Provisioning.A_zimbraFeatureAntispamEnabled); }
 }
 
