@@ -3113,6 +3113,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureDistributionListExpandMembersEnabled = "zimbraFeatureDistributionListExpandMembersEnabled";
 
     /**
+     * whether export folder feature is enabled
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1185)
+    public static final String A_zimbraFeatureExportFolderEnabled = "zimbraFeatureExportFolderEnabled";
+
+    /**
      * filter prefs enabled
      */
     @ZAttr(id=143)
@@ -3188,12 +3196,23 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureIMEnabled = "zimbraFeatureIMEnabled";
 
     /**
-     * whether import export folder feature is enabled
+     * Deprecated since: 7.1.0. deprecated in favor of
+     * zimbraFeatureImportFolderEnabled and zimbraFeatureExportFolderEnabled
+     * for bug 53745. Orig desc: whether import export folder feature is
+     * enabled
      *
      * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=750)
     public static final String A_zimbraFeatureImportExportFolderEnabled = "zimbraFeatureImportExportFolderEnabled";
+
+    /**
+     * whether import folder feature is enabled
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1184)
+    public static final String A_zimbraFeatureImportFolderEnabled = "zimbraFeatureImportFolderEnabled";
 
     /**
      * preference to set initial search

@@ -9663,6 +9663,78 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * whether export folder feature is enabled
+     *
+     * @return zimbraFeatureExportFolderEnabled, or true if unset
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1185)
+    public boolean isFeatureExportFolderEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureExportFolderEnabled, true);
+    }
+
+    /**
+     * whether export folder feature is enabled
+     *
+     * @param zimbraFeatureExportFolderEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1185)
+    public void setFeatureExportFolderEnabled(boolean zimbraFeatureExportFolderEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureExportFolderEnabled, zimbraFeatureExportFolderEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether export folder feature is enabled
+     *
+     * @param zimbraFeatureExportFolderEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1185)
+    public Map<String,Object> setFeatureExportFolderEnabled(boolean zimbraFeatureExportFolderEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureExportFolderEnabled, zimbraFeatureExportFolderEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether export folder feature is enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1185)
+    public void unsetFeatureExportFolderEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureExportFolderEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether export folder feature is enabled
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1185)
+    public Map<String,Object> unsetFeatureExportFolderEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureExportFolderEnabled, "");
+        return attrs;
+    }
+
+    /**
      * filter prefs enabled
      *
      * @return zimbraFeatureFiltersEnabled, or true if unset
@@ -10390,7 +10462,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether import export folder feature is enabled
+     * Deprecated since: 7.1.0. deprecated in favor of
+     * zimbraFeatureImportFolderEnabled and zimbraFeatureExportFolderEnabled
+     * for bug 53745. Orig desc: whether import export folder feature is
+     * enabled
      *
      * @return zimbraFeatureImportExportFolderEnabled, or true if unset
      *
@@ -10402,7 +10477,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether import export folder feature is enabled
+     * Deprecated since: 7.1.0. deprecated in favor of
+     * zimbraFeatureImportFolderEnabled and zimbraFeatureExportFolderEnabled
+     * for bug 53745. Orig desc: whether import export folder feature is
+     * enabled
      *
      * @param zimbraFeatureImportExportFolderEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -10417,7 +10495,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether import export folder feature is enabled
+     * Deprecated since: 7.1.0. deprecated in favor of
+     * zimbraFeatureImportFolderEnabled and zimbraFeatureExportFolderEnabled
+     * for bug 53745. Orig desc: whether import export folder feature is
+     * enabled
      *
      * @param zimbraFeatureImportExportFolderEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -10433,7 +10514,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether import export folder feature is enabled
+     * Deprecated since: 7.1.0. deprecated in favor of
+     * zimbraFeatureImportFolderEnabled and zimbraFeatureExportFolderEnabled
+     * for bug 53745. Orig desc: whether import export folder feature is
+     * enabled
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -10447,7 +10531,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether import export folder feature is enabled
+     * Deprecated since: 7.1.0. deprecated in favor of
+     * zimbraFeatureImportFolderEnabled and zimbraFeatureExportFolderEnabled
+     * for bug 53745. Orig desc: whether import export folder feature is
+     * enabled
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -10458,6 +10545,78 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetFeatureImportExportFolderEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureImportExportFolderEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * whether import folder feature is enabled
+     *
+     * @return zimbraFeatureImportFolderEnabled, or true if unset
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1184)
+    public boolean isFeatureImportFolderEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureImportFolderEnabled, true);
+    }
+
+    /**
+     * whether import folder feature is enabled
+     *
+     * @param zimbraFeatureImportFolderEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1184)
+    public void setFeatureImportFolderEnabled(boolean zimbraFeatureImportFolderEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureImportFolderEnabled, zimbraFeatureImportFolderEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether import folder feature is enabled
+     *
+     * @param zimbraFeatureImportFolderEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1184)
+    public Map<String,Object> setFeatureImportFolderEnabled(boolean zimbraFeatureImportFolderEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureImportFolderEnabled, zimbraFeatureImportFolderEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether import folder feature is enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1184)
+    public void unsetFeatureImportFolderEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureImportFolderEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether import folder feature is enabled
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1184)
+    public Map<String,Object> unsetFeatureImportFolderEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureImportFolderEnabled, "");
         return attrs;
     }
 
