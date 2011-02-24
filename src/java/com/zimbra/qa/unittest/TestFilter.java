@@ -1041,6 +1041,32 @@ extends TestCase {
     }
 
     /**
+     * Tests fix for bug 56019.
+     */
+    public void testSpecialCharInBody()
+    throws Exception {
+        List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
+        List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
+        List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
+
+        conditions.add(new ZBodyCondition(BodyOp.CONTAINS, "André"));
+        actions.add(new ZMarkAction(MarkOp.FLAGGED));
+        rules.add(new ZFilterRule("testSpecialCharInBody", true, false, conditions, actions));
+
+        ZFilterRules zRules = new ZFilterRules(rules);
+        saveIncomingRules(mMbox, zRules);
+
+        // Add a message and test the flagged state.
+        String address = TestUtil.getAddress(USER_NAME);
+        // TestFilter-testSpecialCharInBody.msg's body contains base64 encoded content (containing "André")
+        String msgContent = new String(
+            ByteUtil.getContent(new File("/opt/zimbra/unittest/TestFilter-testSpecialCharInBody.msg")));
+        TestUtil.addMessageLmtp(new String[] { address }, address, msgContent);
+        ZMessage msg = TestUtil.getMessage(mMbox, "in:inbox subject:testSpecialCharInBody");
+        assertTrue("Unexpected message flag state", msg.isFlagged());
+    }
+
+    /**
      * Tests the redirect filter action and confirms that the X-ZimbraForwarded
      * header is set on the redirected message.
      */
