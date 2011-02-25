@@ -40,7 +40,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110223-1555 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110224-1118 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -8179,6 +8179,78 @@ public class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetFeatureReadReceiptsEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureReadReceiptsEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * whether S/MIME feature is enabled
+     *
+     * @return zimbraFeatureSMIMEEnabled, or false if unset
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1186)
+    public boolean isFeatureSMIMEEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureSMIMEEnabled, false);
+    }
+
+    /**
+     * whether S/MIME feature is enabled
+     *
+     * @param zimbraFeatureSMIMEEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1186)
+    public void setFeatureSMIMEEnabled(boolean zimbraFeatureSMIMEEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSMIMEEnabled, zimbraFeatureSMIMEEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether S/MIME feature is enabled
+     *
+     * @param zimbraFeatureSMIMEEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1186)
+    public Map<String,Object> setFeatureSMIMEEnabled(boolean zimbraFeatureSMIMEEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSMIMEEnabled, zimbraFeatureSMIMEEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether S/MIME feature is enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1186)
+    public void unsetFeatureSMIMEEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSMIMEEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether S/MIME feature is enabled
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1186)
+    public Map<String,Object> unsetFeatureSMIMEEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSMIMEEnabled, "");
         return attrs;
     }
 

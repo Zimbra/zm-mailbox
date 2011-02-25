@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110223-1555 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110224-1118 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3468,6 +3468,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=354)
     public static final String A_zimbraFeatureSkinChangeEnabled = "zimbraFeatureSkinChangeEnabled";
+
+    /**
+     * whether S/MIME feature is enabled
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1186)
+    public static final String A_zimbraFeatureSMIMEEnabled = "zimbraFeatureSMIMEEnabled";
 
     /**
      * tagging feature

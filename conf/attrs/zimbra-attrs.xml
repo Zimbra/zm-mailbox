@@ -5514,5 +5514,9 @@ TODO: delete them permerntly from here
   <desc>whether export folder feature is enabled</desc>
 </attr>
 
+<attr id="1186" name="zimbraFeatureSMIMEEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited"  since="7.1.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>whether S/MIME feature is enabled</desc>
+</attr>
 
 </attrs>
