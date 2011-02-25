@@ -436,6 +436,10 @@ public class FilterUtil {
             String error = String.format("Detected a mail loop for message %s.", Mime.getMessageID(mimeMessage));
             throw ServiceException.FAILURE(error, null);
         }
+        if (isDeliveryStatusNotification(mimeMessage)) {
+            ZimbraLog.filter.debug("Not auto-relying to a DSN message");
+            return;
+        }
 
         MimeMessage replyMsg = new Mime.FixedMimeMessage(JMSession.getSession());
         replyMsg.setHeader(HEADER_FORWARDED, mailbox.getAccount().getName());
@@ -500,7 +504,11 @@ public class FilterUtil {
         notification.setSentDate(new Date());
         notification.saveChanges();
 
-        MailSender mailSender = mailbox.getMailSender();
+        MailSender mailSender = mailbox.getMailSender().setSaveToSent(false).setSkipSendAsCheck(true);
+        if (isDeliveryStatusNotification(mimeMessage))
+            mailSender.setEnvelopeFrom("<>");
+        else
+            mailSender.setEnvelopeFrom(mailbox.getAccount().getName());
         mailSender.sendMimeMessage(octxt, mailbox, notification);
     }
 
