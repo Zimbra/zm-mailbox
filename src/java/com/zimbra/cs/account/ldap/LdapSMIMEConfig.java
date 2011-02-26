@@ -87,18 +87,21 @@ public class LdapSMIMEConfig {
                 throw ServiceException.INVALID_REQUEST(attrName + " is not a SMIME attribute", null);
             }
             
-            if (value.isEmpty()) {
-                if (config != null) {
-                    String curValue = config.getConfigured(Field.fromAttrName(attrName));
-                    if (curValue != null) {
-                        String attrValue = encodeAttrValue(configName, curValue);
-                        StringUtil.addToMultiMap(toModify, "-" + attrName, attrValue);
-                    }
+            // remove cur value if any
+            if (config != null) {
+                String curValue = config.getConfigured(Field.fromAttrName(attrName));
+                if (curValue != null) {
+                    String curAttrValue = encodeAttrValue(configName, curValue);
+                    StringUtil.addToMultiMap(toModify, "-" + attrName, curAttrValue);
                 }
-            } else {
+            }
+
+            // add the new value if not empty
+            if (!value.isEmpty()) {
                 String attrValue = encodeAttrValue(configName, value);
                 StringUtil.addToMultiMap(toModify, "+" + attrName, attrValue);
             }
+
         }
         
         Provisioning.getInstance().modifyAttrs(entry, toModify, false);
