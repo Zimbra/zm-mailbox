@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -21,18 +21,17 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
 /**
- * Take {@link ZimbraHit}s which are already sorted by sort-order and
- * additionally sort them by mail-item-id
+ * Take {@link ZimbraHit}s which are already sorted by sort-order and additionally sort them by mail-item-id.
  * <p>
  * This Grouper has no effect if the current sort mode is "none"
  *
  * @since Mar 15, 2005
  * @author tim
  */
-public class HitIdGrouper extends BufferingResultsGrouper {
-    private SortBy mSortOrder;
+public final class HitIdGrouper extends BufferingResultsGrouper {
+    private final SortBy sortOrder;
 
-    public static ZimbraQueryResults Create(ZimbraQueryResults hits, SortBy sortOrder) {
+    public static ZimbraQueryResults create(ZimbraQueryResults hits, SortBy sortOrder) {
         if (sortOrder == SortBy.NONE) {
             return hits;
         } else {
@@ -40,38 +39,37 @@ public class HitIdGrouper extends BufferingResultsGrouper {
         }
     }
 
-    private HitIdGrouper(ZimbraQueryResults hits, SortBy sortOrder) {
+    private HitIdGrouper(ZimbraQueryResults hits, SortBy sort) {
         super(hits);
-        mSortOrder = sortOrder;
+        sortOrder = sort;
     }
 
     @Override
     public boolean hasNext() throws ServiceException {
-        return (mBufferedHit.size() > 0 || mHits.hasNext());
+        return (bufferedHit.size() > 0 || hits.hasNext());
     }
 
     @Override
     protected boolean bufferHits() throws ServiceException {
-        if (mBufferedHit.size() > 0){
+        if (bufferedHit.size() > 0){
             return true;
         }
 
-        if (!mHits.hasNext()) {
+        if (!hits.hasNext()) {
             return false;
         }
 
-        ZimbraHit curGroupHit = mHits.getNext();
-        mBufferedHit.add(curGroupHit);
+        ZimbraHit curGroupHit = hits.getNext();
+        bufferedHit.add(curGroupHit);
 
         // buffer all the hits with the same sort field
-        while (mHits.hasNext() && curGroupHit.compareBySortField(mSortOrder, mHits.peekNext()) == 0) {
-            ZimbraLog.search.debug("HitIdGrouper buffering %s", mHits.peekNext());
-            mBufferedHit.add(mHits.getNext());
+        while (hits.hasNext() && curGroupHit.compareBySortField(sortOrder, hits.peekNext()) == 0) {
+            ZimbraLog.search.debug("HitIdGrouper buffering %s", hits.peekNext());
+            bufferedHit.add(hits.getNext());
         }
 
         // sort them by mail-item-id
-        Collections.sort(mBufferedHit,
-                ZimbraHit.getSortAndIdComparator(mSortOrder));
+        Collections.sort(bufferedHit, ZimbraHit.getSortAndIdComparator(sortOrder));
 
         // we're done
         return true;

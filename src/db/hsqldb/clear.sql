@@ -27,6 +27,7 @@ DELETE FROM *{DATABASE_NAME}.imap_message;
 DELETE FROM *{DATABASE_NAME}.data_source_item;
 
 DELETE FROM ZIMBRA.mailbox;
+DELETE FROM ZIMBRA.current_volumes;
 DELETE FROM ZIMBRA.deleted_account;
 DELETE FROM ZIMBRA.mailbox_metadata;
 DELETE FROM ZIMBRA.out_of_office;
@@ -35,3 +36,5 @@ DELETE FROM ZIMBRA.table_maintenance;
 DELETE FROM ZIMBRA.service_status;
 DELETE FROM ZIMBRA.scheduled_task;
 DELETE FROM ZIMBRA.mobile_devices;
+
+INSERT INTO current_volumes (message_volume_id, index_volume_id, next_mailbox_id) VALUES (1, 2, 1);

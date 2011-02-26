@@ -67,10 +67,8 @@ import com.zimbra.common.soap.SoapProtocol;
 public final class ZimbraQuery {
 
     private List<Query> clauses;
-    private ParseTree.Node parseTree;
     private QueryOperation operation;
     private final Mailbox mailbox;
-    private ZimbraQueryResults results;
     private final SearchParams params;
     private int chunkSize;
 
@@ -410,24 +408,13 @@ public final class ZimbraQuery {
             throw ServiceException.PARSE_ERROR("PARSER_ERROR", e);
         }
 
-        if (ZimbraLog.search.isDebugEnabled()) {
-            StringBuilder buf = new StringBuilder(toString());
-            buf.append(" search([");
-            buf.append(params.getTypes());
-            buf.append("],");
-            buf.append(params.getSortBy());
-            buf.append(')');
-            ZimbraLog.search.debug(buf.toString());
-        }
+        ZimbraLog.search.debug("%s,types=%s,sort=%s", this, params.getTypes(), params.getSortBy());
 
-        // Step 2: build a parse tree and push all the "NOT's" down to the
-        // bottom level -- this is because we cannot invert result sets
-        ParseTree.Node pt = ParseTree.build(clauses);
-        pt = pt.simplify();
-        pt.pushNotsDown();
-
-        // Store some variables that we'll need later
-        parseTree = pt;
+        // Step 2: build a parse tree and push all the "NOT's" down to the bottom level.
+        // This is because we cannot invert result sets
+        ParseTree.Node parseTree = ParseTree.build(clauses);
+        parseTree = parseTree.simplify();
+        parseTree.pushNotsDown();
 
         // Step 3: Convert list of BaseQueries into list of QueryOperations, then Optimize the Ops
         if (clauses.size() > 0) {
@@ -678,15 +665,6 @@ public final class ZimbraQuery {
         return params;
     }
 
-    public void doneWithQuery() throws ServiceException {
-        if (results != null) {
-            results.doneWithSearchResults();
-        }
-        if (operation != null) {
-            operation.doneWithSearchResults();
-        }
-    }
-
     /**
      * Runs the search and gets an open result set.
      *
@@ -697,34 +675,38 @@ public final class ZimbraQuery {
      * @return Open ZimbraQueryResults -- YOU MUST CALL doneWithSearchResults() to release the results set!
      * @throws ServiceException
      */
-    final public ZimbraQueryResults execute() throws ServiceException {
-
+    public ZimbraQueryResults execute() throws ServiceException {
         if (operation != null) {
             QueryTargetSet targets = operation.getQueryTargets();
             assert(operation instanceof UnionQueryOperation || targets.countExplicitTargets() <= 1);
             assert(targets.size() >1 || !targets.hasExternalTargets() || operation instanceof RemoteQueryOperation);
-            assert(results == null);
 
             ZimbraLog.search.debug("OPERATION: %s", operation);
 
-            results = operation.run(mailbox, params, chunkSize);
-            results = HitIdGrouper.Create(results, params.getSortBy());
+            ZimbraQueryResults results = null;
+            try {
+                results = HitIdGrouper.create(operation.run(mailbox, params, chunkSize), params.getSortBy());
+                if ((!params.getIncludeTagDeleted() && params.getMode() != SearchResultMode.IDS)
+                        || params.getAllowableTaskStatuses() != null) {
+                    // we have to do some filtering of the result set
+                    FilteredQueryResults filtered = new FilteredQueryResults(results);
 
-            if ((!params.getIncludeTagDeleted() && params.getMode() != SearchResultMode.IDS)
-                    || params.getAllowableTaskStatuses()!=null) {
-                // we have to do some filtering of the result set
-                FilteredQueryResults filtered = new FilteredQueryResults(results);
-
-                if (!params.getIncludeTagDeleted()) {
-                    filtered.setFilterTagDeleted(true);
+                    if (!params.getIncludeTagDeleted()) {
+                        filtered.setFilterTagDeleted(true);
+                    }
+                    if (params.getAllowableTaskStatuses() != null) {
+                        filtered.setAllowedTaskStatuses(params.getAllowableTaskStatuses());
+                    }
+                    results = filtered;
                 }
-                if (params.getAllowableTaskStatuses() != null) {
-                    filtered.setAllowedTaskStatuses(params.getAllowableTaskStatuses());
+                return results;
+            } catch (RuntimeException e) {
+                if (results != null) {
+                    results.doneWithSearchResults();
                 }
-                results = filtered;
+                operation.doneWithSearchResults();
+                throw e;
             }
-
-            return results;
         } else {
             ZimbraLog.search.debug("Operation optimized to nothing.  Returning no results");
             return new EmptyQueryResults(params.getTypes(), params.getSortBy(), params.getMode());

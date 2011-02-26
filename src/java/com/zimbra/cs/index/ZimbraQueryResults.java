@@ -47,12 +47,6 @@ public interface ZimbraQueryResults {
     ZimbraHit peekNext() throws ServiceException;
 
     /**
-     * @deprecated call {@link #resetIterator()} then {@link #getNext()}.
-     */
-    @Deprecated
-    ZimbraHit getFirstHit() throws ServiceException;
-
-    /**
      * Slightly more efficient in a few cases (DB-only queries), skip to
      * a specific hit offset.
      *
@@ -96,4 +90,11 @@ public interface ZimbraQueryResults {
      */
     List<QueryInfo> getResultInfo();
 
+
+    /**
+     * Returns the number of total hits, or -1 if undetermined.
+     *
+     * @return number of total hits
+     */
+    long getTotalHitCount() throws ServiceException;
 }

@@ -25,10 +25,15 @@ import com.zimbra.cs.mailbox.Mailbox;
  * @since Oct 22, 2004
  * @author tim
  */
-class EmptyQueryResults extends ZimbraQueryResultsImpl {
+final class EmptyQueryResults extends ZimbraQueryResultsImpl {
 
     EmptyQueryResults(Set<MailItem.Type> types, SortBy searchOrder, Mailbox.SearchResultMode mode) {
         super(types, searchOrder, mode);
+    }
+
+    @Override
+    public long getTotalHitCount() {
+        return 0;
     }
 
     @Override

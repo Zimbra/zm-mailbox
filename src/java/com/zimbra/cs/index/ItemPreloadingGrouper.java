@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -22,35 +22,34 @@ import com.zimbra.cs.mailbox.MailItem;
 import java.util.*;
 
 /**
+ * This Grouper buffers a "chunk" of hits, pre-loading their MailItem objects from the DB.
+ *
+ * This is done so that we can lower the number of SELECT calls to the DB by batch-fetching the Message objects from the
+ * store.
+ *
  * @author tim
- *
- * This Grouper buffers a "chunk" of hits, pre-loading their
- * MailItem objects from the DB.
- *
- * This is done so that we can lower the number of SELECT calls to the DB
- * by batch-fetching the Message objects from the store
  */
-class ItemPreloadingGrouper extends BufferingResultsGrouper {
+final class ItemPreloadingGrouper extends BufferingResultsGrouper {
 
-    private int mChunkSize;
-    private boolean mInDumpster;
-    private OperationContext mOpContext;
+    private final int chunkSize;
+    private final boolean inDumpster;
+    private final OperationContext opContext;
 
     ItemPreloadingGrouper(ZimbraQueryResults results, int chunkSize, Mailbox mbox, boolean inDumpster) {
         super(results);
-        mChunkSize = chunkSize;
-        mOpContext = mbox.getOperationContext();
-        mInDumpster = inDumpster;
-        assert(mChunkSize > 0);
+        assert(chunkSize > 0);
+        this.chunkSize = chunkSize;
+        opContext = mbox.getOperationContext();
+        this.inDumpster = inDumpster;
     }
 
     @Override
     protected boolean bufferHits() throws ServiceException {
-        if (mBufferedHit.size() > 0){
+        if (bufferedHit.size() > 0){
             return true;
         }
 
-        if (!mHits.hasNext()) {
+        if (!hits.hasNext()) {
             return false;
         }
 
@@ -60,20 +59,20 @@ class ItemPreloadingGrouper extends BufferingResultsGrouper {
         // ...if this were a cross-mailbox-search, we'd be more efficient
         // if we broke things up into a hash of one load-list-per-mailbox and
         // then did preloading there...but for now we won't worry about it
-        ZimbraHit firstHit = mHits.peekNext();
+        ZimbraHit firstHit = hits.peekNext();
         Mailbox mbx = firstHit.getMailbox();
 
         int numLoaded = 0;
         do {
-            ZimbraHit nextHit = mHits.getNext();
-            mBufferedHit.add(nextHit);
+            ZimbraHit nextHit = hits.getNext();
+            bufferedHit.add(nextHit);
 
             if (nextHit.getMailbox() == mbx && mbx != null) {
                 toLoad.add(nextHit);
             }
 
             numLoaded++;
-        } while (numLoaded < mChunkSize && mHits.hasNext());
+        } while (numLoaded < chunkSize && hits.hasNext());
 
         preload(mbx, toLoad);
 
@@ -94,8 +93,7 @@ class ItemPreloadingGrouper extends BufferingResultsGrouper {
         }
 
         if (numToLoad > 0) {
-            MailItem[] items;
-            items = mbox.getItemById(mOpContext, unloadedIds, MailItem.Type.UNKNOWN, mInDumpster);
+            MailItem[] items = mbox.getItemById(opContext, unloadedIds, MailItem.Type.UNKNOWN, inDumpster);
             for (int i = 0; i < hits.size(); ++i) {
                 if (items[i] != null) {
                     hits.get(i).setItem(items[i]);

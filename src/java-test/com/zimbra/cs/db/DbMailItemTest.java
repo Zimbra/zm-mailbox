@@ -29,6 +29,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool.DbConnection;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -57,6 +58,7 @@ public class DbMailItemTest {
     @Before
     public void setUp() throws Exception {
         HSQLDB.clearDatabase();
+        MailboxManager.getInstance().clearCache();
     }
 
     @Test
@@ -91,6 +93,54 @@ public class DbMailItemTest {
         Assert.assertEquals(5, result.size());
         Assert.assertEquals(ImmutableSet.of(100, 101, 102), result.get(MailItem.Type.MESSAGE));
         Assert.assertEquals(ImmutableSet.of(200, 201), result.get(MailItem.Type.CONTACT));
+
+        DbPool.quietClose(conn);
+    }
+
+    @Test
+    public void getConversationCount() throws Exception {
+        Account account = Provisioning.getInstance().getAccount("test@zimbra.com");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        Folder folder = mbox.getFolderById(Mailbox.ID_FOLDER_INBOX);
+
+        DbConnection conn = DbPool.getConnection(mbox);
+        Assert.assertEquals(0, DbMailItem.getConversationCount(conn, folder));
+
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, 0, 0, 0, 0, 0, 0, 0)", mbox.getId(), 200, MailItem.Type.CONVERSATION.toByte());
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, 0, 0, 0, 0, 0, 0, 0)", mbox.getId(), 201, MailItem.Type.CONVERSATION.toByte());
+
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, folder_id, parent_id, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, NULL, 0, 0, 0, 0, 0, 0, 0)", mbox.getId(), 100,
+                MailItem.Type.MESSAGE.toByte(), Mailbox.ID_FOLDER_INBOX);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, folder_id, parent_id, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 200, 0, 0, 0, 0, 0, 0, 0)", mbox.getId(), 101,
+                MailItem.Type.MESSAGE.toByte(), Mailbox.ID_FOLDER_INBOX);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, folder_id, parent_id, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 200, 0, 0, 0, 0, 0, 0, 0)", mbox.getId(), 102,
+                MailItem.Type.MESSAGE.toByte(), Mailbox.ID_FOLDER_INBOX);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, folder_id, parent_id, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, NULL, 0, 0, 0, 0, 0, 0, 0)", mbox.getId(), 103,
+                MailItem.Type.MESSAGE.toByte(), Mailbox.ID_FOLDER_INBOX);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, folder_id, parent_id, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, NULL, 0, 0, 0, 0, 0, 0, 0)", mbox.getId(), 104,
+                MailItem.Type.MESSAGE.toByte(), Mailbox.ID_FOLDER_INBOX);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, folder_id, parent_id, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 201, 0, 0, 0, 0, 0, 0, 0)", mbox.getId(), 105,
+                MailItem.Type.MESSAGE.toByte(), Mailbox.ID_FOLDER_INBOX);
+
+        folder.getUnderlyingData().size = 6;
+        // 100, [101, 102], 103, 104, [105]
+        Assert.assertEquals(5, DbMailItem.getConversationCount(conn, folder));
 
         DbPool.quietClose(conn);
     }

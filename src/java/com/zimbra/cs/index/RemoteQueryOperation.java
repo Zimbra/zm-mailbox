@@ -32,12 +32,17 @@ import com.zimbra.common.soap.SoapProtocol;
  */
 final class RemoteQueryOperation extends FilterQueryOperation {
 
-    private ProxiedQueryResults mResults = null;
-    private QueryTarget mTarget = null;
+    private ProxiedQueryResults results = null;
+    private QueryTarget queryTarget = null;
+
+
+    @Override
+    public long getTotalHitCount() {
+        return -1;
+    }
 
     /**
-     * Try to OR an operation into this one.  Return FALSE if that isn't
-     * possible (incompatible query targets)
+     * Try to OR an operation into this one.  Return FALSE if that isn't possible (incompatible query targets).
      *
      * @return FALSE
      */
@@ -49,17 +54,17 @@ final class RemoteQueryOperation extends FilterQueryOperation {
         for (QueryTarget target : targets) {
             assert(target != QueryTarget.LOCAL);
             if (target != QueryTarget.UNSPECIFIED) {
-                if (mTarget == null) {
-                    mTarget = target;
+                if (target == null) {
+                    queryTarget = target;
                 } else {
-                    if (!mTarget.equals(target)) {
+                    if (!queryTarget.equals(target)) {
                         return false;
                     }
                 }
             }
         }
 
-        assert(mTarget != null);
+        assert(queryTarget != null);
 
         if (mOp == null) {
             mOp = new UnionQueryOperation();
@@ -70,59 +75,59 @@ final class RemoteQueryOperation extends FilterQueryOperation {
 
     @Override
     public String toString() {
-        return "REMOTE[" + mTarget + "]:" + mOp;
+        return "REMOTE[" + queryTarget + "]:" + mOp;
     }
 
     protected void setup(SoapProtocol proto, AuthToken authToken, SearchParams params)
         throws ServiceException {
 
         Provisioning prov  = Provisioning.getInstance();
-        Account acct = prov.get(AccountBy.id, mTarget.toString(), authToken);
+        Account acct = prov.get(AccountBy.id, queryTarget.toString(), authToken);
         if (acct == null) {
-            throw AccountServiceException.NO_SUCH_ACCOUNT(mTarget.toString());
+            throw AccountServiceException.NO_SUCH_ACCOUNT(queryTarget.toString());
         }
 
         Server remoteServer = prov.getServer(acct);
 
         if (ZimbraLog.search.isDebugEnabled()) {
             ZimbraLog.search.debug("RemoteQuery=\"%s\" target=%s server=%s",
-                    mOp.toQueryString(), mTarget, remoteServer.getName());
+                    mOp.toQueryString(), queryTarget, remoteServer.getName());
         }
 
         String queryString = mOp.toQueryString();
-        mResults = new ProxiedQueryResults(proto, authToken, mTarget.toString(),
+        results = new ProxiedQueryResults(proto, authToken, queryTarget.toString(),
                 remoteServer.getName(), params, queryString, params.getMode());
     }
 
     @Override
     public void resetIterator() throws ServiceException {
-        if (mResults != null) {
-            mResults.resetIterator();
+        if (results != null) {
+            results.resetIterator();
         }
     }
 
     @Override
     public ZimbraHit getNext() throws ServiceException {
-        return mResults != null ? mResults.getNext() : null;
+        return results != null ? results.getNext() : null;
     }
 
     @Override
     public ZimbraHit peekNext() throws ServiceException {
-        return mResults != null ? mResults.peekNext() : null;
+        return results != null ? results.peekNext() : null;
     }
 
     @Override
     public void doneWithSearchResults() throws ServiceException {
-        if (mResults != null) {
-            mResults.doneWithSearchResults();
+        if (results != null) {
+            results.doneWithSearchResults();
         }
         super.doneWithSearchResults();
     }
 
     @Override
     public List<QueryInfo> getResultInfo() {
-        if (mResults != null) {
-            return mResults.getResultInfo();
+        if (results != null) {
+            return results.getResultInfo();
         } else {
             return Collections.emptyList();
         }

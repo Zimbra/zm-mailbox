@@ -90,8 +90,7 @@ public final class MailboxIndex {
 
     public static ZimbraQueryResults search(ZimbraQuery zq) throws ServiceException {
         SearchParams params = zq.getParams();
-        String qs = params.getQueryStr();
-        ZimbraLog.search.debug("query: %s",  qs);
+        ZimbraLog.search.debug("query: %s", params.getQueryStr());
 
         // handle special-case Task-only sorts: convert them to a "normal sort"
         //     and then re-sort them at the end
@@ -139,26 +138,14 @@ public final class MailboxIndex {
             ZimbraLog.searchstats.debug("Executing search with [" + textCount + "] text parts");
         }
 
-        try {
-            ZimbraQueryResults results = zq.execute();
-
-            if (isTaskSort) {
-                results = new ReSortingQueryResults(results, originalSort, null);
-            }
-            if (isLocalizedSort) {
-                results = new ReSortingQueryResults(results, originalSort, params);
-            }
-            return results;
-        } catch (ServiceException e) {
-            zq.doneWithQuery();
-            throw e;
-        } catch (OutOfMemoryError e) {
-            // DON'T try to cleanup here, we're going to hard shutdown!!
-            throw e;
-        } catch (Throwable t) { // OOME handled by above
-            zq.doneWithQuery();
-            throw ServiceException.FAILURE("Caught " + t.getMessage(), t);
+        ZimbraQueryResults results = zq.execute();
+        if (isTaskSort) {
+            results = new ReSortingQueryResults(results, originalSort, null);
         }
+        if (isLocalizedSort) {
+            results = new ReSortingQueryResults(results, originalSort, params);
+        }
+        return results;
     }
 
     /**

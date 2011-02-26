@@ -154,11 +154,11 @@ public final class DbSearch {
     }
 
     public static int countResults(DbConnection conn, DbSearchConstraintsNode node, Mailbox mbox, boolean inDumpster)
-    throws ServiceException {
+            throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
         // Assemble the search query
-        StringBuilder statement = new StringBuilder("SELECT count(*) ");
+        StringBuilder statement = new StringBuilder("SELECT COUNT(*) ");
         statement.append(" FROM " + DbMailItem.getMailItemTableName(mbox, "mi", inDumpster));
         statement.append(" WHERE ").append(DbMailItem.IN_THIS_MAILBOX_AND);
         int num = DebugConfig.disableMailboxGroups ? 0 : 1;
@@ -172,8 +172,6 @@ public final class DbSearch {
             int pos = 1;
             pos = DbMailItem.setMailboxId(stmt, mbox, pos);
             pos = setSearchVars(stmt, node, pos, null, false);
-
-            ZimbraLog.sqltrace.debug("SQL: %s", statement);
 
             assert(pos == num + 1);
             rs = stmt.executeQuery();
@@ -207,7 +205,7 @@ public final class DbSearch {
                 index = MI_I_MBOX_INDEX;
             } else if (sort.getCriterion() == SortCriterion.DATE && hasLimit) {
                 // Whenever we learn a new case of mysql choosing wrong index, add a case here.
-                if (constraints.isSimpleSingleFolderMessageQuery()) {
+                if (constraints.getOnlyFolder() != null) {
                     // Optimization for folder query
                     //
                     // If looking at a single folder and sorting by date with a limit,
@@ -428,7 +426,7 @@ public final class DbSearch {
                 return searchInternal(conn, mbox, node, sort, offset, limit, fetch, inDumpster);
             } catch (SQLException e) {
                 if (Db.errorMatches(e, Db.Error.TOO_MANY_SQL_PARAMS)) {
-                    ZimbraLog.search.debug("Too many SQL params: %s", node, e); // fall back to splitting OR clauses
+                    ZimbraLog.sqltrace.debug("Too many SQL params: %s", node, e); // fall back to splitting OR clauses
                 } else {
                     throw ServiceException.FAILURE("Failed to search", e);
                 }
@@ -514,7 +512,6 @@ public final class DbSearch {
             }
 
             // TODO FIXME: include COLLATION for sender/subject sort
-
             sql.append(orderBy(sort, true));
 
             // LIMIT ?, ?
@@ -523,10 +520,6 @@ public final class DbSearch {
             }
 
             // Create the statement and bind all our parameters!
-            ZimbraLog.sqltrace.debug("SQL: %s", sql);
-
-            long startTime = System.currentTimeMillis();
-
             stmt = conn.prepareStatement(sql.toString());
             int param = 1;
 
@@ -544,12 +537,8 @@ public final class DbSearch {
                 stmt.setMaxRows(offset + limit + 1);
             }
 
-            long prepTime = System.currentTimeMillis() - startTime;
-
             assert(param == numParams + 1);
             rs = stmt.executeQuery();
-
-            long execTime = System.currentTimeMillis() - startTime - prepTime;
 
             List<Result> result = new ArrayList<Result>();
             while (rs.next()) {
@@ -585,12 +574,6 @@ public final class DbSearch {
                     default:
                         assert false : fetch;
                 }
-            }
-
-            long fetchTime = System.currentTimeMillis() - startTime - prepTime - execTime;
-            if (prepTime + execTime + fetchTime > LC.zimbra_slow_logging_threshold.longValue()) {
-                ZimbraLog.sqltrace.warn("Slow SQL (start=%d,prep=%d,exec=%d,fetch=%d,rows=%d): %s",
-                        startTime, prepTime, execTime, fetchTime, result.size(), sql);
             }
 
             return result;

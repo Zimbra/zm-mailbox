@@ -40,6 +40,11 @@ import com.zimbra.cs.mailbox.Mailbox;
 public final class NoTermQueryOperation extends QueryOperation {
 
     @Override
+    public long getTotalHitCount() {
+        return -1;
+    }
+
+    @Override
     protected void begin(QueryContext ctx) {
         assert(context == null);
         context = ctx;

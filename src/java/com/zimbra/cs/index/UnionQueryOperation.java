@@ -22,8 +22,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.SetUtil;
 
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * A list of query operations which are unioned together.
@@ -31,10 +30,14 @@ import com.zimbra.common.util.LogFactory;
  * @since Oct 29, 2004
  */
 public final class UnionQueryOperation extends CombiningQueryOperation {
-    private static Log mLog = LogFactory.getLog(UnionQueryOperation.class);
 
     private boolean atStart = true; // don't re-fill buffer twice if they call hasNext() then reset() w/o actually getting next
-    private ZimbraHit mCachedNextHit = null;
+    private ZimbraHit cachedNextHit = null;
+
+    @Override
+    public long getTotalHitCount() throws ServiceException {
+        return -1;
+    }
 
     @Override
     QueryTargetSet getQueryTargets() {
@@ -53,7 +56,7 @@ public final class UnionQueryOperation extends CombiningQueryOperation {
                 QueryOperation q = iter.next();
                 q.resetIterator();
             }
-            mCachedNextHit = null;
+            cachedNextHit = null;
             internalGetNext();
         }
     }
@@ -61,9 +64,9 @@ public final class UnionQueryOperation extends CombiningQueryOperation {
     @Override
     public ZimbraHit getNext() throws ServiceException {
         atStart = false;
-        ZimbraHit toRet = mCachedNextHit;
-        if (mCachedNextHit != null) { // this "if" is here so we don't keep calling internalGetNext when we've reached the end of the results...
-            mCachedNextHit = null;
+        ZimbraHit toRet = cachedNextHit;
+        if (cachedNextHit != null) { // this "if" is here so we don't keep calling internalGetNext when we've reached the end of the results...
+            cachedNextHit = null;
             internalGetNext();
         }
 
@@ -72,16 +75,17 @@ public final class UnionQueryOperation extends CombiningQueryOperation {
 
     @Override
     public ZimbraHit peekNext() {
-        return mCachedNextHit;
+        return cachedNextHit;
     }
 
     private void internalGetNext() throws ServiceException {
-        if (mCachedNextHit == null) {
+        if (cachedNextHit == null) {
             if (context.getResults().getSortBy() == SortBy.NONE) {
                 for (QueryOperation op : mQueryOperations) {
-                    mCachedNextHit = op.getNext();
-                    if (mCachedNextHit != null)
+                    cachedNextHit = op.getNext();
+                    if (cachedNextHit != null) {
                         return;
+                    }
                 }
                 // no more results!
 
@@ -107,8 +111,8 @@ public final class UnionQueryOperation extends CombiningQueryOperation {
                     }
                 }
                 if (currentBestHitOffset > -1) {
-                    mCachedNextHit = mQueryOperations.get(currentBestHitOffset).getNext();
-                    assert(mCachedNextHit == currentBestHit);
+                    cachedNextHit = mQueryOperations.get(currentBestHitOffset).getNext();
+                    assert(cachedNextHit == currentBestHit);
                 }
             }
         }
@@ -302,15 +306,13 @@ public final class UnionQueryOperation extends CombiningQueryOperation {
 
     @Override
     public Object clone() {
+        assert(cachedNextHit == null);
         UnionQueryOperation toRet = null;
         toRet = (UnionQueryOperation)super.clone();
-
-        assert(mCachedNextHit == null);
-
         toRet.mQueryOperations = new ArrayList<QueryOperation>(mQueryOperations.size());
-        for (QueryOperation q : mQueryOperations)
+        for (QueryOperation q : mQueryOperations) {
             toRet.mQueryOperations.add((QueryOperation)(q.clone()));
-
+        }
         return toRet;
     }
 
@@ -330,12 +332,9 @@ public final class UnionQueryOperation extends CombiningQueryOperation {
 
         for (int i = 0; i < mQueryOperations.size(); i++) {
             QueryOperation qop = mQueryOperations.get(i);
-            if (mLog.isDebugEnabled()) {
-                mLog.debug("Executing: " + qop.toString());
-            }
+            ZimbraLog.search.debug("Executing: %s", qop);
             // add 1 to chunk size b/c we buffer
-            qop.begin(new QueryContext(ctx.getMailbox(), ctx.getResults(),
-                    ctx.getParams(), ctx.getChunkSize() + 1));
+            qop.begin(new QueryContext(ctx.getMailbox(), ctx.getResults(), ctx.getParams(), ctx.getChunkSize() + 1));
         }
 
         internalGetNext();
@@ -358,4 +357,5 @@ public final class UnionQueryOperation extends CombiningQueryOperation {
         }
         cb.recurseCallback(this);
     }
+
 }

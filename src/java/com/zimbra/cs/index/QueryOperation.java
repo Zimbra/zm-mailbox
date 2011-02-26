@@ -184,12 +184,6 @@ public abstract class QueryOperation implements Cloneable, ZimbraQueryResults {
     protected abstract void begin(QueryContext ctx) throws ServiceException;
 
     @Override
-    public ZimbraHit getFirstHit() throws ServiceException {
-        resetIterator();
-        return getNext();
-    }
-
-    @Override
     public ZimbraHit skipToHit(int hitNo) throws ServiceException {
         resetIterator();
         for (int i = 0; i < hitNo; i++) {

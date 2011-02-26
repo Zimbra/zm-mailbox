@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import com.google.common.collect.Iterables;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mountpoint;
@@ -248,19 +249,21 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
     }
 
     /**
-     * Returns true if query is for a single folder, item type list
-     * includes <code>MaliItem.TYPE_MESSAGE</code>, and no other conditions
-     * are specified.
-     * @return
+     * Returns the only folder if query is for a single folder, item type list includes {@link MailItem.Type#MESSAGE},
+     * and no other conditions are specified. Otherwise returns null.
      */
-    boolean isSimpleSingleFolderMessageQuery() {
-        return folders.size() == 1 && excludeFolders.isEmpty() &&
+    public Folder getOnlyFolder() {
+        if (folders.size() == 1 && excludeFolders.isEmpty() &&
                 types.contains(MailItem.Type.MESSAGE) && !excludeTypes.contains(MailItem.Type.MESSAGE) &&
                 hasTags == null && (excludeTags == null || excludeTags.isEmpty()) &&
                 (tags == null || tags.isEmpty()) && convId == 0 && prohibitedConvIds.isEmpty() &&
                 itemIds.isEmpty() && prohibitedItemIds.isEmpty() && indexIds.isEmpty() && dates.isEmpty() &&
                 calStartDates.isEmpty() && calEndDates.isEmpty() && modified.isEmpty() && modifiedContent.isEmpty() &&
-                sizes.isEmpty() && convCounts.isEmpty() && subjectRanges.isEmpty() && senderRanges.isEmpty();
+                sizes.isEmpty() && convCounts.isEmpty() && subjectRanges.isEmpty() && senderRanges.isEmpty()) {
+            return Iterables.getOnlyElement(folders);
+        } else {
+            return null;
+        }
     }
 
     /**

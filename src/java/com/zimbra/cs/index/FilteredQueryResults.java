@@ -24,61 +24,55 @@ import com.zimbra.cs.mailbox.MailItem;
 /**
  * Result set that does filtering.of the results.
  * <ul>
- *   <li>Supports filtering by the \DELETED tag
- *       (enable it by calling setFilterTagDeleted API)</li>
- *   <li>Supports filtering by allowable Task-status
- *        (e.g. only show Completed tasks) see
- *        setAllowableTaskStatus(Set<TaskHit.Status>) API)</li>
+ *  <li>Supports filtering by the \DELETED tag (enable it by calling setFilterTagDeleted API)
+ *  <li>Supports filtering by allowable Task-status
+ *      (e.g. only show Completed tasks) see setAllowableTaskStatus(Set<TaskHit.Status>) API)
  * </ul>
  */
-public class FilteredQueryResults implements ZimbraQueryResults {
-    ZimbraQueryResults mResults;
-
-    private boolean mFilterTagDeleted = false;
-    private Set<TaskHit.Status> mAllowedTaskStatuses = null;
+public final class FilteredQueryResults implements ZimbraQueryResults {
+    private final ZimbraQueryResults results;
+    private boolean filterTagDeleted = false;
+    private Set<TaskHit.Status> allowedTaskStatuses = null;
 
     FilteredQueryResults(ZimbraQueryResults other) {
-        mResults = other;
+        results = other;
     }
 
     /**
-     * If set, then this class will filter out all messages with the
-     * \DELETED tag set
-     *
-     * @param truthiness
+     * If set, then this class will filter out all messages with the \DELETED tag set
      */
-    void setFilterTagDeleted(boolean truthiness) {
-        mFilterTagDeleted = truthiness;
+    void setFilterTagDeleted(boolean value) {
+        filterTagDeleted = value;
     }
 
     void setAllowedTaskStatuses(Set<TaskHit.Status> allowed) {
-        mAllowedTaskStatuses = allowed;
+        allowedTaskStatuses = allowed;
+    }
+
+    //TODO The filtered count is not subtracted, yet we can't simply subtract it from the total conversation count.
+    @Override
+    public long getTotalHitCount() throws ServiceException {
+        return results.getTotalHitCount();
     }
 
     @Override
     public void doneWithSearchResults() throws ServiceException {
-        mResults.doneWithSearchResults();
-    }
-
-    @Override
-    public ZimbraHit getFirstHit() throws ServiceException {
-        resetIterator();
-        return getNext();
+        results.doneWithSearchResults();
     }
 
     @Override
     public List<QueryInfo> getResultInfo() {
-        return mResults.getResultInfo();
+        return results.getResultInfo();
     }
 
     @Override
     public SortBy getSortBy() {
-        return mResults.getSortBy();
+        return results.getSortBy();
     }
 
     @Override
     public void resetIterator() throws ServiceException {
-        mResults.resetIterator();
+        results.resetIterator();
     }
 
     @Override
@@ -96,8 +90,9 @@ public class FilteredQueryResults implements ZimbraQueryResults {
     @Override
     public ZimbraHit getNext() throws ServiceException {
         ZimbraHit toRet = peekNext();
-        if (toRet != null)
-            mResults.getNext(); // skip the current hit
+        if (toRet != null) {
+            results.getNext(); // skip the current hit
+        }
         return toRet;
     }
 
@@ -111,21 +106,20 @@ public class FilteredQueryResults implements ZimbraQueryResults {
      * the result set
      */
     private boolean shouldFilter(ZimbraHit hit) throws ServiceException {
-        if (mAllowedTaskStatuses != null) {
+        if (allowedTaskStatuses != null) {
             if (hit instanceof TaskHit) {
-                if (!mAllowedTaskStatuses.contains(((TaskHit)hit).getStatus()))
+                if (!allowedTaskStatuses.contains(((TaskHit)hit).getStatus())) {
                     return true;
+                }
             }
         }
 
-        if (mFilterTagDeleted) {
+        if (filterTagDeleted) {
             if (hit.isLocal()) {
                 MailItem item = hit.getMailItem();
-                if (item == null) {
-                    System.out.println("NULL!");
-                }
-                if ((item.getFlagBitmask() & Flag.BITMASK_DELETED) != 0)
+                if ((item.getFlagBitmask() & Flag.BITMASK_DELETED) != 0) {
                     return true; // filter it
+                }
             }
         }
 
@@ -134,7 +128,7 @@ public class FilteredQueryResults implements ZimbraQueryResults {
 
     @Override
     public ZimbraHit peekNext() throws ServiceException {
-        ZimbraHit cur = mResults.peekNext();
+        ZimbraHit cur = results.peekNext();
         while (cur != null) {
             boolean filterThisHit = false;
             if (cur instanceof ConversationHit) {
@@ -148,14 +142,13 @@ public class FilteredQueryResults implements ZimbraQueryResults {
                 filterThisHit = shouldFilter(cur);
             }
 
-            if (!filterThisHit)
+            if (!filterThisHit) {
                 return cur;
-
-            mResults.getNext(); // skip next hit
-            cur = mResults.peekNext();
+            }
+            results.getNext(); // skip next hit
+            cur = results.peekNext();
         }
         return null;
     }
-
 
 }

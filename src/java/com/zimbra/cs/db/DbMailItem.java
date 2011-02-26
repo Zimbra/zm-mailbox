@@ -4256,4 +4256,35 @@ public class DbMailItem {
         }
         return idList.toString();
     }
+
+    public static long getConversationCount(DbConnection conn, Folder folder) throws ServiceException {
+        int collapsed;
+        int distinct;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+             stmt = conn.prepareStatement("SELECT COUNT(*), COUNT(DISTINCT parent_id) FROM " +
+                     DbMailItem.getMailItemTableName(folder.getMailbox()) + " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND +
+                     "folder_id = ? AND type = ? AND parent_id IS NOT NULL");
+             int pos = DbMailItem.setMailboxId(stmt, folder.getMailbox(), 1);
+             stmt.setInt(pos++, folder.getId());
+             stmt.setByte(pos, MailItem.Type.MESSAGE.toByte());
+             rs = stmt.executeQuery();
+             rs.next();
+             collapsed = rs.getInt(1);
+             distinct = rs.getInt(2);
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Failed to get counversation count", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+
+        long total = folder.getItemCount();
+        long conv = total - collapsed + distinct;
+        ZimbraLog.mailbox.debug("ConversationCount folder=%d,conv=%d(%d-%d+%d)",
+                folder.getId(), conv, total, collapsed, distinct);
+        return conv;
+    }
+
 }

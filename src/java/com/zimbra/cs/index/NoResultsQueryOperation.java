@@ -31,10 +31,14 @@ import com.zimbra.cs.mailbox.Mailbox;
 public final class NoResultsQueryOperation extends QueryOperation {
 
     @Override
+    public long getTotalHitCount() {
+        return 0;
+    }
+
+    @Override
     public SortBy getSortBy() {
         return context.getParams().getSortBy();
     }
-
 
     @Override
     QueryOperation expandLocalRemotePart(Mailbox mbox) {

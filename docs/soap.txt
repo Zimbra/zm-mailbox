@@ -1432,7 +1432,7 @@ For the optional <cursor> element:
 conversation result:
 --------------------
 
-<SearchResponse sortBy="sort-by" offset="..." more="{more-flag}">
+<SearchResponse sortBy="sort-by" offset="..." more="{more-flag}" [total="{total hit count}"]>
   [ <info>
       [ <wildcard str="foo*" expanded="1|0"/> ]
    </info> ]
@@ -1454,10 +1454,12 @@ Info block:
        wildcard was not specific enough and therefore no wildcard
        matches are included (exact-match *is* included in results).
 
+total hit count:
+  The total hit count is only available for simple queries (e.g. in:inbox).
 
 message result:
 ---------------
-<SearchResponse sortBy="sort-by" offset="..." more="{more-flag}">
+<SearchResponse sortBy="sort-by" offset="..." more="{more-flag}" [total="{total hit count}"]>
    [<info>...</info>]
    <m id="{message-id}" t="{tags}" f="{flags}" s="{size}" d="{date}" cid="{conv-id}" l="{location}" [mbx="UID"] sf="SORT-FIELD-VALUE" [cm="1"]>
      <e .../>*  <!- from only -->
@@ -1469,6 +1471,8 @@ message result:
    </m>
 </SearchResponse>
 
+total hit count:
+  The total hit count is only available for simple queries (e.g. in:inbox).
 
 contact result:
 ---------------

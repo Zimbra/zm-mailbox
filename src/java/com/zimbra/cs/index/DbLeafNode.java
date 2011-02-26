@@ -116,6 +116,9 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
     @Override
     public void setTypes(Set<MailItem.Type> types) {
         this.types = types;
+        if (types.isEmpty()) {
+            noResults = true;
+        }
     }
 
     @Override

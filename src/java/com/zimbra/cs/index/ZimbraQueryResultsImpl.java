@@ -97,12 +97,6 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
     }
 
     @Override
-    public ZimbraHit getFirstHit() throws ServiceException {
-        resetIterator();
-        return getNext();
-    }
-
-    @Override
     public SortBy getSortBy() {
         return mSearchOrder;
     }

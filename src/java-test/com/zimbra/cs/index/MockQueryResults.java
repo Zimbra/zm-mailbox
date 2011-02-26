@@ -41,6 +41,11 @@ public class MockQueryResults implements ZimbraQueryResults {
     }
 
     @Override
+    public long getTotalHitCount() {
+        return -1;
+    }
+
+    @Override
     public void resetIterator() {
         next = 0;
     }
@@ -53,12 +58,6 @@ public class MockQueryResults implements ZimbraQueryResults {
     @Override
     public ZimbraHit peekNext() {
         return hits.get(next);
-    }
-
-    @Override
-    public ZimbraHit getFirstHit() throws ServiceException {
-        resetIterator();
-        return getNext();
     }
 
     @Override

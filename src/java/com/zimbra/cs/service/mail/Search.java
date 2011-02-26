@@ -106,22 +106,22 @@ public class Search extends MailDocumentHandler  {
             }
         }
 
-        ZimbraQueryResults results = null;
+        ZimbraQueryResults results = doSearch(zsc, octxt, mbox, params);
         try {
-            results = doSearch(zsc, octxt, mbox, params);
-
             // create the XML response Element
             Element response = zsc.createElement(MailConstants.SEARCH_RESPONSE);
-
             // must use results.getSortBy() because the results might have ignored our sortBy
             // request and used something else...
             response.addAttribute(MailConstants.A_SORTBY, results.getSortBy().toString());
             response.addAttribute(MailConstants.A_QUERY_OFFSET, params.getOffset());
+            long total = results.getTotalHitCount();
+            if (total >= 0) {
+                response.addAttribute(MailConstants.A_TOTAL_SIZE, total);
+            }
             putHits(zsc, octxt, response, results, params);
             return response;
         } finally {
-            if (results != null)
-                results.doneWithSearchResults();
+            results.doneWithSearchResults();
         }
     }
 

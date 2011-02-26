@@ -33,6 +33,8 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.imap.ImapSession;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.session.Session;
@@ -84,6 +86,7 @@ public class Folder extends MailItem {
     private int       mImapRECENTCutoff;
     private int       mDeletedCount;
     private int       mDeletedUnreadCount;
+    private long conversationCount = -1;
 
     Folder(Mailbox mbox, UnderlyingData ud) throws ServiceException {
         super(mbox, ud);
@@ -145,10 +148,27 @@ public class Folder extends MailItem {
         return mDeletedUnreadCount;
     }
 
+    /**
+     * Returns the number of conversations in the folder. A conversation consists of either a single message or a group
+     * of messages that share a same {@code parent_id}.
+     */
+    public long getConversationCount() throws ServiceException {
+        if (conversationCount < 0) {
+            DbConnection conn = DbPool.getConnection(getMailbox());
+            try {
+                conversationCount = DbMailItem.getConversationCount(conn, this);
+            } finally {
+                DbPool.quietClose(conn);
+            }
+        }
+        return conversationCount;
+    }
+
     /** Returns the sum of the sizes of all items in the folder.  <i>(Note
      *  that this is not recursive and thus does not include the items in the
      *  folder's subfolders.)</i> */
-    @Override public long getTotalSize() {
+    @Override
+    public long getTotalSize() {
         return mTotalSize;
     }
 
@@ -518,18 +538,21 @@ public class Folder extends MailItem {
      * @param deletedDelta  The change in number of IMAP \Deleted items.
      * @param sizeDelta     The change in total size, negative or positive.*/
     void updateSize(int countDelta, int deletedDelta, long sizeDelta) throws ServiceException {
-        if (!trackSize())
+        if (!trackSize()) {
             return;
-
+        }
         markItemModified(Change.MODIFIED_SIZE);
-        if (countDelta > 0)
+        if (countDelta > 0) {
             updateUIDNEXT();
-        if (countDelta != 0)
+        }
+        if (countDelta != 0) {
             updateHighestMODSEQ();
+            conversationCount = -1; // invalidate the cache
+        }
         // reset the RECENT count unless it's just a change of \Deleted flags
-        if (countDelta != 0 || sizeDelta != 0 || deletedDelta == 0)
+        if (countDelta != 0 || sizeDelta != 0 || deletedDelta == 0) {
             mImapRECENT = -1;
-
+        }
         // if we go negative, that's OK!  just pretend we're at 0.
         mData.size = Math.max(0, mData.size + countDelta);
         mTotalSize = Math.max(0, mTotalSize + sizeDelta);
@@ -542,15 +565,17 @@ public class Folder extends MailItem {
      * @param totalSize      The folder's new total size.
      * @param deletedUnread  The folder's number of unread \Deleted items. */
     void setSize(long count, int deletedCount, long totalSize, int deletedUnread) throws ServiceException {
-        if (!trackSize())
+        if (!trackSize()) {
             return;
-
+        }
         markItemModified(Change.MODIFIED_SIZE);
-        if (count > mData.size)
+        if (count > mData.size) {
             updateUIDNEXT();
+        }
         if (count != mData.size) {
             updateHighestMODSEQ();
             mImapRECENT = -1;
+            conversationCount = -1; // invalidate the cache
         }
 
         mData.size = count;

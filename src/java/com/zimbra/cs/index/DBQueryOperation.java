@@ -53,7 +53,6 @@ import com.zimbra.cs.service.util.ItemId;
  */
 public class DBQueryOperation extends QueryOperation {
 
-    private int countDbResults = -1; // count of DB hits
     private IConstraints constraints = new DbLeafNode();
     private int hitsOffset = 0; // this is the logical offset of the end of the mDBHits buffer
     private int dbOffset = 0; // this is the offset IN THE DATABASE when we're doing a DB-FIRST iteration
@@ -66,6 +65,7 @@ public class DBQueryOperation extends QueryOperation {
     private boolean includeIsLocalFolders = false;
     private boolean includeIsRemoteFolders = false;
 
+    private int dbHitCount = -1; // count of DB hits
     private List<DbSearch.Result> dbHits;
     private List<ZimbraHit> nextHits = new ArrayList<ZimbraHit>();
     private Iterator<DbSearch.Result> dbHitsIter;
@@ -77,7 +77,6 @@ public class DBQueryOperation extends QueryOperation {
      * TRUE if we know there are no more hits to get for mDBHitsIter, i.e. there is no need to call getChunk() anymore.
      */
     private boolean endOfHits = false;
-    private final Set<MailItem.Type> types = EnumSet.noneOf(MailItem.Type.class);
     private final Set<MailItem.Type> excludeTypes = EnumSet.noneOf(MailItem.Type.class);
 
     /**
@@ -484,7 +483,7 @@ public class DBQueryOperation extends QueryOperation {
                     }
 
                     if (executeMode == null) {
-                        if (hasNoResults() || !prepareSearchConstraints()) {
+                        if (hasNoResults()) {
                             executeMode = QueryExecuteMode.NO_RESULTS;
                         } else if (luceneOp == null) {
                             executeMode = QueryExecuteMode.NO_LUCENE;
@@ -587,71 +586,49 @@ public class DBQueryOperation extends QueryOperation {
         return toRet;
     }
 
-    private Set<MailItem.Type> convertTypesToDbQueryTypes(Set<MailItem.Type> types) {
+    private Set<MailItem.Type> toDbQueryTypes(Set<MailItem.Type> types) {
         Set<MailItem.Type> result = EnumSet.noneOf(MailItem.Type.class);
 
         for (MailItem.Type type : types) {
             switch (type) {
-            case FOLDER:
-            case SEARCHFOLDER:
-            case TAG:
-                result.add(MailItem.Type.UNKNOWN);
-                break;
-            case CONVERSATION:
-                result.add(MailItem.Type.MESSAGE);
-                result.add(MailItem.Type.CHAT);
-                break;
-            case MESSAGE:
-                result.add(MailItem.Type.MESSAGE);
-                result.add(MailItem.Type.CHAT);
-                break;
-            case CONTACT:
-                result.add(MailItem.Type.CONTACT);
-                break;
-            case APPOINTMENT:
-                result.add(MailItem.Type.APPOINTMENT);
-                break;
-            case TASK:
-                result.add(MailItem.Type.TASK);
-                break;
-            case DOCUMENT:
-                result.add(MailItem.Type.DOCUMENT);
-                break;
-            case NOTE:
-                result.add(MailItem.Type.NOTE);
-                break;
-            case FLAG:
-                result.add(MailItem.Type.FLAG);
-                break;
-            case WIKI:
-                result.add(MailItem.Type.WIKI);
-                break;
+                case FOLDER:
+                case SEARCHFOLDER:
+                case TAG:
+                    result.add(MailItem.Type.UNKNOWN);
+                    break;
+                case CONVERSATION:
+                    result.add(MailItem.Type.MESSAGE);
+                    result.add(MailItem.Type.CHAT);
+                    break;
+                case MESSAGE:
+                    result.add(MailItem.Type.MESSAGE);
+                    result.add(MailItem.Type.CHAT);
+                    break;
+                case CONTACT:
+                    result.add(MailItem.Type.CONTACT);
+                    break;
+                case APPOINTMENT:
+                    result.add(MailItem.Type.APPOINTMENT);
+                    break;
+                case TASK:
+                    result.add(MailItem.Type.TASK);
+                    break;
+                case DOCUMENT:
+                    result.add(MailItem.Type.DOCUMENT);
+                    break;
+                case NOTE:
+                    result.add(MailItem.Type.NOTE);
+                    break;
+                case FLAG:
+                    result.add(MailItem.Type.FLAG);
+                    break;
+                case WIKI:
+                    result.add(MailItem.Type.WIKI);
+                    break;
             }
         }
 
         return result;
-    }
-
-    private Set<MailItem.Type> getDbQueryTypes() {
-        Set<MailItem.Type> result = convertTypesToDbQueryTypes(context.getResults().getTypes());
-        result.addAll(types);
-        return result;
-    }
-
-    /**
-     * Build a DbMailIte.SearchConstraints given all of the constraint parameters we have.
-     *
-     * @return FALSE if the search cannot be run (no results)
-     */
-    private boolean prepareSearchConstraints() {
-        Set<MailItem.Type> types = getDbQueryTypes();
-        if (types.size() == 0)  {
-            ZimbraLog.search.debug("NO RESULTS -- no known types requested");
-            return false;
-        } else {
-            constraints.setTypes(types);
-            return true;
-        }
     }
 
     private SortBy getSortOrder() {
@@ -881,6 +858,8 @@ public class DBQueryOperation extends QueryOperation {
             hitsPerChunk = MAX_HITS_PER_CHUNK;
         }
 
+        constraints.setTypes(toDbQueryTypes(context.getResults().getTypes()));
+
         if (luceneOp != null) {
             hitsPerChunk *= 2; // enlarge chunk size b/c of join
             luceneOp.setDBOperation(this);
@@ -942,7 +921,6 @@ public class DBQueryOperation extends QueryOperation {
             assert(luceneChunk == null);
 
             result.constraints = (IConstraints) constraints.clone();
-            result.types.addAll(types);
             result.excludeTypes.addAll(excludeTypes);
             result.nextHits = new ArrayList<ZimbraHit>();
             return result;
@@ -954,16 +932,11 @@ public class DBQueryOperation extends QueryOperation {
 
     @Override
     public Object clone() {
-        try {
-            DBQueryOperation toRet = cloneInternal();
-            if (luceneOp != null) {
-                toRet.luceneOp = (LuceneQueryOperation) luceneOp.clone(this);
-            }
-            return toRet;
-        } catch (CloneNotSupportedException e) {
-            assert(false);
-            return null;
+        DBQueryOperation toRet = cloneInternal();
+        if (luceneOp != null) {
+            toRet.luceneOp = (LuceneQueryOperation) luceneOp.clone(this);
         }
+        return toRet;
     }
 
     /**
@@ -1090,26 +1063,33 @@ public class DBQueryOperation extends QueryOperation {
         cb.recurseCallback(this);
     }
 
-    private int getDbHitCount(DbConnection conn, Mailbox mbox) throws ServiceException {
-        if (countDbResults == -1) {
-            countDbResults = DbSearch.countResults(conn, constraints, mbox, searchInDumpster());
-        }
-        return countDbResults;
-    }
-
     int getDbHitCount() throws ServiceException {
-        if (countDbResults == -1) {
+        if (dbHitCount < 0) {
             Mailbox mbox = context.getMailbox();
             synchronized (DbMailItem.getSynchronizer(mbox)) {
-                DbConnection conn = null;
+                DbConnection conn = DbPool.getConnection(mbox);
                 try {
-                    conn = DbPool.getConnection(mbox);
-                    countDbResults = getDbHitCount(conn, mbox);
+                    dbHitCount = DbSearch.countResults(conn, constraints, mbox, searchInDumpster());
                 } finally {
                     DbPool.quietClose(conn);
                 }
             }
         }
-        return countDbResults;
+        return dbHitCount;
     }
+
+    @Override
+    public long getTotalHitCount() throws ServiceException {
+        Folder folder = topLevelAndedConstraint().getOnlyFolder();
+        if (folder != null) {
+            if (context.getResults().getTypes().contains(MailItem.Type.CONVERSATION)) {
+                return folder.getConversationCount();
+            } else {
+                return folder.getItemCount();
+            }
+        } else {
+            return -1;
+        }
+    }
+
 }

@@ -25,35 +25,37 @@ import com.zimbra.common.service.ServiceException;
  */
 public abstract class BufferingResultsGrouper implements ZimbraQueryResults {
 
-    protected ZimbraQueryResults mHits;
-    protected List<ZimbraHit> mBufferedHit = new LinkedList<ZimbraHit>();
+    protected final ZimbraQueryResults hits;
+    protected List<ZimbraHit> bufferedHit = new LinkedList<ZimbraHit>();
     protected boolean atStart = true;
-
 
     /**
      * Fills the hit buffer if necessary.  May be called even if the buffer has entries in it,
      * implementation may ignore it (but must return true) in those cases.
      *
      * @return TRUE if there some hits in the buffer, FALSE if not.
-     * @throws ServiceException
-     *
      */
     protected abstract boolean bufferHits() throws ServiceException;
 
     @Override
     public SortBy getSortBy() {
-        return mHits.getSortBy();
+        return hits.getSortBy();
     }
 
     public BufferingResultsGrouper(ZimbraQueryResults hits) {
-        mHits = hits;
+        this.hits = hits;
+    }
+
+    @Override
+    public long getTotalHitCount() throws ServiceException {
+        return hits.getTotalHitCount();
     }
 
     @Override
     public void resetIterator() throws ServiceException {
         if (!atStart) {
-            mBufferedHit.clear();
-            mHits.resetIterator();
+            bufferedHit.clear();
+            hits.resetIterator();
             atStart = true;
         }
     }
@@ -64,15 +66,9 @@ public abstract class BufferingResultsGrouper implements ZimbraQueryResults {
     }
 
     @Override
-    public ZimbraHit getFirstHit() throws ServiceException {
-        resetIterator();
-        return getNext();
-    }
-
-    @Override
     public ZimbraHit peekNext() throws ServiceException {
         if (bufferHits()) {
-            return mBufferedHit.get(0);
+            return bufferedHit.get(0);
         } else {
             return null;
         }
@@ -94,7 +90,7 @@ public abstract class BufferingResultsGrouper implements ZimbraQueryResults {
     public ZimbraHit getNext() throws ServiceException {
         atStart = false;
         if (bufferHits()) {
-            return mBufferedHit.remove(0);
+            return bufferedHit.remove(0);
         } else {
             return null;
         }
@@ -102,12 +98,12 @@ public abstract class BufferingResultsGrouper implements ZimbraQueryResults {
 
     @Override
     public void doneWithSearchResults() throws ServiceException {
-        mHits.doneWithSearchResults();
+        hits.doneWithSearchResults();
     }
 
     @Override
     public List<QueryInfo> getResultInfo() {
-        return mHits.getResultInfo();
+        return hits.getResultInfo();
     }
 
 }

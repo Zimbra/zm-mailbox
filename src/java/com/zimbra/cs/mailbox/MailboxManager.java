@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.NamedEntry;
@@ -158,7 +159,7 @@ public class MailboxManager {
     /** Maps account IDs (<code>String</code>s) to mailbox IDs
      *  (<code>Integer</code>s).  <i>Every</i> mailbox in existence on the
      *  server appears in this mapping. */
-    private Map<String, Integer> mMailboxIds;
+    private Map<String, Integer> mailboxIds;
 
     /** Maps mailbox IDs (<code>Integer</code>s) to either <ul>
      *     <li>a loaded <code>Mailbox</code>, or
@@ -169,15 +170,15 @@ public class MailboxManager {
      *  lack of outstanding references to the <code>Mailbox</code>.  Only one
      *  <code>Mailbox</code> per user is cached, and only that
      *  <code>Mailbox</code> can process user requests. */
-    private MailboxMap mMailboxCache;
+    private MailboxMap cache;
 
     public MailboxManager() throws ServiceException {
         DbConnection conn = null;
         synchronized (this) {
             try {
                 conn = DbPool.getConnection();
-                mMailboxIds = DbMailbox.listMailboxes(conn, this);
-                mMailboxCache = new MailboxMap(LC.zimbra_mailbox_manager_hardref_cache.intValue());
+                mailboxIds = DbMailbox.listMailboxes(conn, this);
+                cache = new MailboxMap(LC.zimbra_mailbox_manager_hardref_cache.intValue());
             } finally {
                 DbPool.quietClose(conn);
             }
@@ -215,8 +216,15 @@ public class MailboxManager {
         return sInstance;
     }
 
+    @VisibleForTesting
     public static void setInstance(MailboxManager mmgr) {
         sInstance = mmgr;
+    }
+
+    @VisibleForTesting
+    public void clearCache() {
+        cache.clear();
+        mailboxIds.clear();
     }
 
     public void startup() {
@@ -337,7 +345,7 @@ public class MailboxManager {
 
         Integer mailboxKey;
         synchronized (this) {
-            mailboxKey = mMailboxIds.get(accountId.toLowerCase());
+            mailboxKey = mailboxIds.get(accountId.toLowerCase());
         }
         if (mailboxKey != null) {
             if (DebugConfig.mockMultiserverInstall)
@@ -350,7 +358,7 @@ public class MailboxManager {
         // auto-create the mailbox if this is the right host...
         Account account = verifyCorrectHost(accountId);
         synchronized (this) {
-            mailboxKey = mMailboxIds.get(accountId.toLowerCase());
+            mailboxKey = mailboxIds.get(accountId.toLowerCase());
         }
         if (mailboxKey != null)
             return getMailboxById(mailboxKey, fetchMode, false);
@@ -505,8 +513,8 @@ public class MailboxManager {
      *     .   in MAINTENANCE mode.  Caller must be careful to not hang onto this list for
      *         very long or else mailboxes will not be purged. */
     public synchronized List<Mailbox> getAllLoadedMailboxes() {
-        List<Mailbox> mboxes = new ArrayList<Mailbox>(mMailboxCache.size());
-        for (Object o : mMailboxCache.values()) {
+        List<Mailbox> mboxes = new ArrayList<Mailbox>(cache.size());
+        for (Object o : cache.values()) {
             if (o instanceof Mailbox) {
                 mboxes.add((Mailbox) o);
             } else if (o instanceof MailboxLock) {
@@ -524,7 +532,7 @@ public class MailboxManager {
      */
     public synchronized int getCacheSize() {
         int count = 0;
-        for (Object o : mMailboxCache.values()) {
+        for (Object o : cache.values()) {
             if (o instanceof Mailbox || o instanceof MailboxLock) {
                 count++;
             }
@@ -540,7 +548,7 @@ public class MailboxManager {
      *         is ever accessed
      */
     public synchronized boolean isMailboxLoadedAndAvailable(int mailboxId) {
-        Object cached = mMailboxCache.get(mailboxId);
+        Object cached = cache.get(mailboxId);
         if (cached == null)
             return false;
 
@@ -552,7 +560,7 @@ public class MailboxManager {
 
     private Object retrieveFromCache(int mailboxId, boolean trackGC) throws MailServiceException {
         synchronized (this) {
-            Object cached = mMailboxCache.get(mailboxId, trackGC);
+            Object cached = cache.get(mailboxId, trackGC);
             if (cached instanceof MailboxLock) {
                 MailboxLock lock = (MailboxLock) cached;
                 if (!lock.canAccess())
@@ -571,11 +579,11 @@ public class MailboxManager {
     }
 
     protected synchronized void cacheAccount(String accountId, int mailboxId) {
-        mMailboxIds.put(accountId.toLowerCase(), new Integer(mailboxId));
+        mailboxIds.put(accountId.toLowerCase(), new Integer(mailboxId));
     }
 
     private Mailbox cacheMailbox(Mailbox mailbox) {
-        mMailboxCache.put(mailbox.getId(), mailbox);
+        cache.put(mailbox.getId(), mailbox);
         return mailbox;
     }
 
@@ -584,9 +592,9 @@ public class MailboxManager {
         Mailbox mbox = getMailboxByAccountId(accountId, false);
         if (mbox == null) {
             synchronized (this) {
-                if (mMailboxIds.get(accountId.toLowerCase()) == null) {
+                if (mailboxIds.get(accountId.toLowerCase()) == null) {
                     MailboxLock lock = new MailboxLock(accountId, mailboxId);
-                    mMailboxCache.put(mailboxId, lock);
+                    cache.put(mailboxId, lock);
                     return lock;
                 }
             }
@@ -597,7 +605,7 @@ public class MailboxManager {
         synchronized (mbox) {
             MailboxLock lock = mbox.beginMaintenance();
             synchronized (this) {
-                mMailboxCache.put(mailboxId, lock);
+                cache.put(mailboxId, lock);
             }
             return lock;
         }
@@ -610,12 +618,12 @@ public class MailboxManager {
         Mailbox availableMailbox = null;
 
         synchronized (this) {
-            Object obj = mMailboxCache.get(lock.getMailboxId());
+            Object obj = cache.get(lock.getMailboxId());
             if (obj != lock)
                 throw MailServiceException.MAINTENANCE(lock.getMailboxId());
 
             // start by removing the lock from the Mailbox object cache
-            mMailboxCache.remove(lock.getMailboxId());
+            cache.remove(lock.getMailboxId());
 
             Mailbox mbox = lock.getMailbox();
             if (success) {
@@ -660,7 +668,7 @@ public class MailboxManager {
      */
     public int getMailboxCount() {
         synchronized (this) {
-            return mMailboxIds.size();
+            return mailboxIds.size();
         }
     }
 
@@ -672,7 +680,7 @@ public class MailboxManager {
     public int[] getMailboxIds() {
         int i = 0;
         synchronized (this) {
-            Collection<Integer> col = mMailboxIds.values();
+            Collection<Integer> col = mailboxIds.values();
             int[] mailboxIds = new int[col.size()];
             for (int id : col)
                 mailboxIds[i++] = id;
@@ -688,7 +696,7 @@ public class MailboxManager {
     public String[] getAccountIds() {
         int i = 0;
         synchronized (this) {
-            Set<String> set = mMailboxIds.keySet();
+            Set<String> set = mailboxIds.keySet();
             String[] accountIds = new String[set.size()];
             for (String o : set)
                 accountIds[i++] = o;
@@ -705,7 +713,7 @@ public class MailboxManager {
     public int lookupMailboxId(String accountId) {
         Integer v;
         synchronized (this) {
-            v = mMailboxIds.get(accountId);
+            v = mailboxIds.get(accountId);
         }
         return v != null ? v.intValue() : -1;
     }
@@ -723,11 +731,11 @@ public class MailboxManager {
         List<Integer> requested;
         synchronized (this) {
             if (accounts == null) {
-                requested = new ArrayList<Integer>(mMailboxIds.values());
+                requested = new ArrayList<Integer>(mailboxIds.values());
             } else {
                 requested = new ArrayList<Integer>(accounts.size());
                 for (NamedEntry account : accounts) {
-                    Integer mailboxId = mMailboxIds.get(account.getId());
+                    Integer mailboxId = mailboxIds.get(account.getId());
                     if (mailboxId != null)
                         requested.add(mailboxId);
                 }
@@ -777,7 +785,7 @@ public class MailboxManager {
 
             synchronized (this) {
                 // check to make sure the mailbox doesn't already exist
-                mailboxKey = mMailboxIds.get(account.getId().toLowerCase());
+                mailboxKey = mailboxIds.get(account.getId().toLowerCase());
                 if (mailboxKey != null)
                     continue;
 
@@ -860,8 +868,8 @@ public class MailboxManager {
     protected void markMailboxDeleted(Mailbox mailbox) {
         String accountId = mailbox.getAccountId().toLowerCase();
         synchronized (this) {
-            mMailboxIds.remove(accountId);
-            mMailboxCache.remove(mailbox.getId());
+            mailboxIds.remove(accountId);
+            cache.remove(mailbox.getId());
         }
         notifyMailboxDeleted(accountId);
     }
@@ -871,9 +879,9 @@ public class MailboxManager {
         sb.append("MAILBOX CACHE DUMPS\n");
         sb.append("----------------------------------------------------------------------\n");
         synchronized (this) {
-            for (Map.Entry<String, Integer> entry : mMailboxIds.entrySet())
+            for (Map.Entry<String, Integer> entry : mailboxIds.entrySet())
                 sb.append("1) key=" + entry.getKey() + " (hash=" + entry.getKey().hashCode() + "); val=" + entry.getValue() + "\n");
-            for (Map.Entry<Integer, Object> entry : mMailboxCache.entrySet())
+            for (Map.Entry<Integer, Object> entry : cache.entrySet())
                 sb.append("2) key=" + entry.getKey() + "; val=" + entry.getValue() + "(class= " + entry.getValue().getClass().getName() + ",hash=" + entry.getValue().hashCode() + ")");
         }
         sb.append("----------------------------------------------------------------------\n");

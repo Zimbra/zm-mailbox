@@ -31,36 +31,38 @@ import com.zimbra.cs.mailbox.Mailbox;
  */
 final class ConvQueryResults extends ZimbraQueryResultsImpl {
 
-    private ZimbraQueryResults mResults;
-    private ZimbraHit mNextHit;
-    private int mNextHitNo = 0;
-    private List<ZimbraHit> mCachedResults = new ArrayList<ZimbraHit>();
-    private Set<Integer> mSeenConvIDs = new HashSet<Integer>();
+    private final ZimbraQueryResults results;
+    private ZimbraHit nextHit;
+    private int nextHitNo = 0;
+    private List<ZimbraHit> cachedResults = new ArrayList<ZimbraHit>();
+    private Set<Integer> seenConvIDs = new HashSet<Integer>();
 
     ConvQueryResults(ZimbraQueryResults results, Set<MailItem.Type> types, SortBy searchOrder,
             Mailbox.SearchResultMode mode) {
         super(types, searchOrder, mode);
-        mResults = results;
+        this.results = results;
+    }
+
+    @Override
+    public long getTotalHitCount() throws ServiceException {
+        return results.getTotalHitCount();
     }
 
     /**
      * Get the next Conversation Hit from our subOp
      *
      * Side-Effect: always advances the SubOp pointer!
-     *
-     * @return
-     * @throws ServiceException
      */
     private ZimbraHit internalGetNextHit() throws ServiceException {
-        while (mResults.hasNext()) {
-            ZimbraHit opNext = mResults.getNext();
+        while (results.hasNext()) {
+            ZimbraHit opNext = results.getNext();
 
             if (!isConversation(opNext)) {
                 return opNext;
             }
 
             int convId = opNext.getConversationId();
-            if (mSeenConvIDs.contains(convId)) {
+            if (seenConvIDs.contains(convId)) {
                 // we've seen this conv before (and therefore reported it),
                 // so just do nothing right now...
             } else {
@@ -74,12 +76,12 @@ final class ConvQueryResults extends ZimbraQueryResultsImpl {
                 } else {
                     assert(false);
                 }
-                mSeenConvIDs.add(convId);
+                seenConvIDs.add(convId);
 
                 // iterate further: try to get all the hits for this result
                 // Conversation if they happen to be right here with the first one
-                while (mResults.hasNext()) {
-                    ZimbraHit nextHit = mResults.peekNext();
+                while (results.hasNext()) {
+                    ZimbraHit nextHit = results.peekNext();
                     if (!isConversation(nextHit)) {
                         return curHit;
                     } else {
@@ -87,7 +89,7 @@ final class ConvQueryResults extends ZimbraQueryResultsImpl {
                             return curHit; // no more, all done!
                         } else {
                             // same conv.  Consume this hit!
-                            mResults.getNext();
+                            results.getNext();
 
                             //  Now add this hit to the conv we're gonna return
                             if (nextHit instanceof MessageHit) {
@@ -105,51 +107,50 @@ final class ConvQueryResults extends ZimbraQueryResultsImpl {
     }
 
     private boolean isConversation(ZimbraHit hit) {
-        return (hit instanceof MessageHit || hit instanceof MessagePartHit ||
-                hit instanceof ConversationHit);
+        return (hit instanceof MessageHit || hit instanceof MessagePartHit || hit instanceof ConversationHit);
     }
 
     private boolean bufferNextHit() throws ServiceException {
-        if (mNextHit == null) {
-            mNextHit = internalGetNextHit();
+        if (nextHit == null) {
+            nextHit = internalGetNextHit();
         }
-        return (mNextHit != null);
+        return (nextHit != null);
     }
 
     @Override
     public ZimbraHit peekNext() throws ServiceException {
         bufferNextHit();
-        return mNextHit;
+        return nextHit;
     }
 
     @Override
     public void resetIterator() throws ServiceException {
-        mSeenConvIDs.clear();
-        mResults.resetIterator();
-        mNextHitNo = 0;
-        mCachedResults.clear(); // must clear since we clear mSeenConvIDs
-        mNextHit = null;
+        seenConvIDs.clear();
+        results.resetIterator();
+        nextHitNo = 0;
+        cachedResults.clear(); // must clear since we clear mSeenConvIDs
+        nextHit = null;
     }
 
     @Override
     public ZimbraHit getNext() throws ServiceException {
         ZimbraHit hit = null;
-        if (mCachedResults.size() > mNextHitNo) {
-            hit = mCachedResults.get(mNextHitNo);
+        if (cachedResults.size() > nextHitNo) {
+            hit = cachedResults.get(nextHitNo);
         } else if (bufferNextHit()) {
-            hit = mNextHit;
-            mCachedResults.add(mNextHitNo, mNextHit);
-            mNextHit = null;
+            hit = nextHit;
+            cachedResults.add(nextHitNo, nextHit);
+            nextHit = null;
         }
         if (hit != null) {
-            mNextHitNo++;
+            nextHitNo++;
         }
         return hit;
     }
 
     @Override
     public void doneWithSearchResults() throws ServiceException {
-        mResults.doneWithSearchResults();
+        results.doneWithSearchResults();
     }
 
     @Override
@@ -159,12 +160,12 @@ final class ConvQueryResults extends ZimbraQueryResultsImpl {
             return getNext();
         } else {
             ZimbraHit hit = null;
-            if (hitNo < mCachedResults.size()) {
-                mNextHitNo = hitNo;
+            if (hitNo < cachedResults.size()) {
+                nextHitNo = hitNo;
             } else {
-                mNextHitNo = mCachedResults.size();
+                nextHitNo = cachedResults.size();
             }
-            while(mNextHitNo <= hitNo) {
+            while (nextHitNo <= hitNo) {
                 hit = getNext();
                 if (hit == null) {
                     break;
@@ -176,7 +177,7 @@ final class ConvQueryResults extends ZimbraQueryResultsImpl {
 
     @Override
     public List<QueryInfo> getResultInfo() {
-        return mResults.getResultInfo();
+        return results.getResultInfo();
     }
 
 }

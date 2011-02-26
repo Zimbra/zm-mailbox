@@ -51,6 +51,11 @@ public class MultiQueryResults implements ZimbraQueryResults {
     }
 
     @Override
+    public long getTotalHitCount() {
+        return -1;
+    }
+
+    @Override
     public SortBy getSortBy() {
         return sortOrder;
     }
@@ -78,12 +83,6 @@ public class MultiQueryResults implements ZimbraQueryResults {
     @Override
     public void resetIterator() {
         next = 0;
-    }
-
-    @Override
-    public ZimbraHit getFirstHit() {
-        resetIterator();
-        return getNext();
     }
 
     @Override

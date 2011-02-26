@@ -109,9 +109,6 @@ public class IndexEditor {
         }
     }
 
-    public void checkIndex(int mailboxId, boolean repair) {
-    }
-
     public interface QueryRunner {
         ZimbraQueryResults runQuery(String qstr, Set<MailItem.Type> types, SortBy sortBy)
             throws IOException, MailServiceException, ServiceException;
@@ -181,7 +178,7 @@ public class IndexEditor {
                     result.doneWithSearchResults();
                 }
             }
-            return HitIdGrouper.Create(all, sortBy);
+            return HitIdGrouper.create(all, sortBy);
         }
     }
 
@@ -684,10 +681,6 @@ public class IndexEditor {
                     }
                 } else if (command.equals("dumpall")) {
                     dumpAll(mailboxId);
-                } else if (command.equals("verify")) {
-                    checkIndex(mailboxId, false);
-                } else if (command.equals("repair")) {
-                    checkIndex(mailboxId, true);
                 } else if (command.equals("size")) {
                     getSize(mailboxId);
                 } else if (command.equals("loglevel")) {

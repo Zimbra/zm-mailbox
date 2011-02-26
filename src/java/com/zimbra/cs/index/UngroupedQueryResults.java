@@ -28,42 +28,47 @@ import com.zimbra.cs.mailbox.Mailbox;
  * @since Nov 3, 2004
  */
 class UngroupedQueryResults extends ZimbraQueryResultsImpl {
-    ZimbraQueryResults mResults;
+    private final ZimbraQueryResults results;
 
     UngroupedQueryResults(ZimbraQueryResults results, Set<MailItem.Type> types,
-            SortBy searchOrder, Mailbox.SearchResultMode mode) {
-        super(types, searchOrder, mode);
-        mResults = results;
+            SortBy sort, Mailbox.SearchResultMode mode) {
+        super(types, sort, mode);
+        this.results = results;
+    }
+
+    @Override
+    public long getTotalHitCount() throws ServiceException {
+        return results.getTotalHitCount();
     }
 
     @Override
     public void resetIterator() throws ServiceException {
-        mResults.resetIterator();
+        results.resetIterator();
     }
 
     @Override
     public ZimbraHit getNext() throws ServiceException {
-        return mResults.getNext();
+        return results.getNext();
     }
 
     @Override
     public ZimbraHit peekNext() throws ServiceException {
-        return mResults.peekNext();
+        return results.peekNext();
     }
 
     @Override
     public void doneWithSearchResults() throws ServiceException {
-        mResults.doneWithSearchResults();
+        results.doneWithSearchResults();
     }
 
     @Override
     public ZimbraHit skipToHit(int hitNo) throws ServiceException {
-        return mResults.skipToHit(hitNo);
+        return results.skipToHit(hitNo);
     }
 
     @Override
     public List<QueryInfo> getResultInfo() {
-        return mResults.getResultInfo();
+        return results.getResultInfo();
     }
 
 }
