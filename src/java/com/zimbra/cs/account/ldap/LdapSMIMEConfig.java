@@ -87,21 +87,32 @@ public class LdapSMIMEConfig {
                 throw ServiceException.INVALID_REQUEST(attrName + " is not a SMIME attribute", null);
             }
             
-            // remove cur value if any
+            String curValue = null;
             if (config != null) {
-                String curValue = config.getConfigured(Field.fromAttrName(attrName));
+                curValue = config.getConfigured(Field.fromAttrName(attrName));
+            }
+            
+            if (value.isEmpty()) {
+                // new value is empty
+                // remove the cur value if it is present
                 if (curValue != null) {
                     String curAttrValue = encodeAttrValue(configName, curValue);
                     StringUtil.addToMultiMap(toModify, "-" + attrName, curAttrValue);
                 }
+            } else {
+                // new value is not empty
+                // remove the cur value if it is present and is not the same as the new value
+                if (curValue != null && !value.equals(curValue)) {
+                    String curAttrValue = encodeAttrValue(configName, curValue);
+                    StringUtil.addToMultiMap(toModify, "-" + attrName, curAttrValue);   
+                }
+                
+                // add the new value if there is no cur value or if the cur value is not the same as the new value
+                if (curValue == null || !value.equals(curValue)) {
+                    String newAttrValue = encodeAttrValue(configName, value);
+                    StringUtil.addToMultiMap(toModify, "+" + attrName, newAttrValue);
+                }
             }
-
-            // add the new value if not empty
-            if (!value.isEmpty()) {
-                String attrValue = encodeAttrValue(configName, value);
-                StringUtil.addToMultiMap(toModify, "+" + attrName, attrValue);
-            }
-
         }
         
         Provisioning.getInstance().modifyAttrs(entry, toModify, false);
