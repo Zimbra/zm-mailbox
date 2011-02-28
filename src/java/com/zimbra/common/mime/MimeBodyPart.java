@@ -33,6 +33,10 @@ public class MimeBodyPart extends MimePart {
 
     private ContentTransferEncoding encoding, targetEncoding;
 
+    /** Maximum number of octets in a line before we force a content transfer
+     *  encoding.  Many MTAs will wrap lines over 998 octets. */
+    private static final int MAX_LINE_OCTETS = 900;
+
     public MimeBodyPart(ContentType ctype) {
         super(ctype != null ? ctype : new ContentType(ContentType.TEXT_PLAIN));
         encoding = targetEncoding = ContentTransferEncoding.BINARY;
@@ -244,19 +248,19 @@ public class MimeBodyPart extends MimePart {
     }
 
     ContentTransferEncoding pickEncoding() throws IOException {
-        int encodeable = 0, toolong = 0, length = 0;
+        int encodeable = 0, toolong = 0, length = 0, column = 0;
 
         InputStream is = getRawContentStream();
         if (is != null) {
             try {
                 is = is instanceof ByteArrayInputStream || is instanceof BufferedInputStream ? is : new BufferedInputStream(is);
-                for (int octet = is.read(), column = 0; octet != -1; octet = is.read()) {
+                for (int octet = is.read(); octet != -1; octet = is.read()) {
                     // FIXME: bytes under 0x20 (except NUL) are actually OK to transmit via "7bit"
                     if (octet >= 0x7F || (octet < 0x20 && octet != '\t' && octet != '\r' && octet != '\n')) {
                         encodeable++;
                     }
                     if (octet == '\n') {
-                        if (column > 998) {
+                        if (column > MAX_LINE_OCTETS) {
                             toolong++;
                         }
                         column = 0;
@@ -268,6 +272,9 @@ public class MimeBodyPart extends MimePart {
             } finally {
                 ByteUtil.closeStream(is);
             }
+        }
+        if (column > MAX_LINE_OCTETS) {
+            toolong++;
         }
 
         if (encodeable == 0 && toolong == 0) {
