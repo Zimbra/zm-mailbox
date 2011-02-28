@@ -113,6 +113,8 @@ public class AccountConstants {
     public static final String E_DL = "dl";
     public static final String E_DLM = "dlm";
     public static final String E_EMAIL = "email";
+    public static final String E_EMAIL2 = "email2";
+    public static final String E_EMAIL3 = "email3";
     public static final String E_VERSION = "version";
     public static final String E_NAME = "name";
     public static final String E_ID = "id";
@@ -215,6 +217,9 @@ public class AccountConstants {
     public static final String A_RIGHTS = "rights";
     public static final String A_MOUNTPOINT_ID = "mid";
     
+    // contact search
+    public static final String A_DEPARTMENT = "department";
+
 
     // calendar resource search
     public static final String A_ENTRY_SEARCH_FILTER_OR = "or";
