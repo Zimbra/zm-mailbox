@@ -40,7 +40,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110224-1118 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110227-1737 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -1739,6 +1739,112 @@ public class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetCalendarCalDavSyncStart(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalendarCalDavSyncStart, "");
+        return attrs;
+    }
+
+    /**
+     * default appointment duration Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * <p>Use getCalendarDefaultApptDurationAsString to access value as a string.
+     *
+     * @see #getCalendarDefaultApptDurationAsString()
+     *
+     * @return zimbraCalendarDefaultApptDuration in millseconds, or 3600000 (60m)  if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1187)
+    public long getCalendarDefaultApptDuration() {
+        return getTimeInterval(Provisioning.A_zimbraCalendarDefaultApptDuration, 3600000L);
+    }
+
+    /**
+     * default appointment duration Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @return zimbraCalendarDefaultApptDuration, or "60m" if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1187)
+    public String getCalendarDefaultApptDurationAsString() {
+        return getAttr(Provisioning.A_zimbraCalendarDefaultApptDuration, "60m");
+    }
+
+    /**
+     * default appointment duration Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraCalendarDefaultApptDuration new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1187)
+    public void setCalendarDefaultApptDuration(String zimbraCalendarDefaultApptDuration) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarDefaultApptDuration, zimbraCalendarDefaultApptDuration);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * default appointment duration Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraCalendarDefaultApptDuration new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1187)
+    public Map<String,Object> setCalendarDefaultApptDuration(String zimbraCalendarDefaultApptDuration, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarDefaultApptDuration, zimbraCalendarDefaultApptDuration);
+        return attrs;
+    }
+
+    /**
+     * default appointment duration Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1187)
+    public void unsetCalendarDefaultApptDuration() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarDefaultApptDuration, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * default appointment duration Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1187)
+    public Map<String,Object> unsetCalendarDefaultApptDuration(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarDefaultApptDuration, "");
         return attrs;
     }
 
