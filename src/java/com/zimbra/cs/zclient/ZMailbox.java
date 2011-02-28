@@ -3881,11 +3881,43 @@ public class ZMailbox implements ToZJSONObject {
         public GalEntryType getGalEntryType() { return mType; }
     }
 
-    public ZSearchGalResult searchGal(String query, GalEntryType type) throws ServiceException {
+      public void applyConditions(ArrayList<Object> conditions, Element parentCondition)
+      {
+        for(Object condition: conditions)
+        {
+            if(condition instanceof ArrayList)
+            {
+                // Conditions
+                Element element = parentCondition.addElement(AccountConstants.E_ENTRY_SEARCH_FILTER_MULTICOND);
+                element.addAttribute(AccountConstants.A_ENTRY_SEARCH_FILTER_OR, true);
+                applyConditions((ArrayList<Object>)condition, element);
+            }
+            if(condition instanceof String[])
+            {
+                String conditionAttr[] = (String [])condition;
+                Element conditionElem = parentCondition.addElement(AccountConstants.E_ENTRY_SEARCH_FILTER_SINGLECOND);
+                conditionElem.addAttribute(AccountConstants.A_ENTRY_SEARCH_FILTER_ATTR, conditionAttr[0]);
+                conditionElem.addAttribute(AccountConstants.A_ENTRY_SEARCH_FILTER_OP, conditionAttr[1]);
+                conditionElem.addAttribute(AccountConstants.A_ENTRY_SEARCH_FILTER_VALUE, conditionAttr[2]);
+            }
+        }
+      }
+
+      public ZSearchGalResult searchGal(String query, ArrayList<Object> conditions, GalEntryType type) throws ServiceException {
         Element req = newRequestElement(AccountConstants.SEARCH_GAL_REQUEST);
         if (type != null)
         req.addAttribute(AccountConstants.A_TYPE, type.name());
         req.addElement(AccountConstants.E_NAME).setText(query);
+
+        if(conditions.size() > 0)
+        {
+            Element searchFilterElem = req.addElement(AccountConstants.E_ENTRY_SEARCH_FILTER);
+            Element condsElement = searchFilterElem.addElement(AccountConstants.E_ENTRY_SEARCH_FILTER_MULTICOND);
+            condsElement.addAttribute(AccountConstants.A_ENTRY_SEARCH_FILTER_OR, false);
+
+            applyConditions(conditions, condsElement);
+        }
+
         Element resp = invoke(req);
         List<ZContact> contacts = new ArrayList<ZContact>();
         for (Element contact : resp.listElements(MailConstants.E_CONTACT)) {
