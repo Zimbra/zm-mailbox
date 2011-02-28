@@ -25,7 +25,6 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HtmlTextExtractor;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.filter.FilterUtil.Comparator;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 import com.zimbra.cs.mime.MPartInfo;
@@ -179,7 +178,8 @@ public class BodyTest extends AbstractTest {
                     try {
                         // Extract up to 1MB of text and check for substring.
                         in = mpi.getMimePart().getInputStream();
-                        Reader reader = Mime.getTextReader(in, cType, defaultCharset);
+                        String cthdr = mpi.getMimePart().getHeader("Content-Type", null);
+                        Reader reader = Mime.getTextReader(in, cthdr, defaultCharset);
                         String text = HtmlTextExtractor.extract(reader, 1024 * 1024);
                         if (contains(new StringReader(text), caseSensitive, substring)) {
                             return true;
