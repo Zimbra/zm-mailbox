@@ -148,7 +148,7 @@ public class BodyTest extends AbstractTest {
         } catch (ServiceException e) {
             ZimbraLog.filter.warn("Error in getting account", e);
         }
-        String defaultCharset = acct == null ? null : acct.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null);
+        String defaultCharset = acct == null ? null : acct.getPrefMailDefaultCharset();
 
         for (MPartInfo mpi : pm.getMessageParts()) {
             String cType = mpi.getContentType();
