@@ -2010,6 +2010,100 @@ type attribute:
         <column name="Web Sayfası" field="workURL"/>
     </format>
 
+    <format name="outlook-2003-csv" type="csv" locale="ja">
+        <column name="肩書き" field="namePrefix"/>
+        <column name="名" field="firstName"/>
+        <column name="ミドル" field="middleName"/>
+        <column name="ネーム" field="fullName"/>
+        <column name="姓" field="lastName"/>
+        <column name="敬称" field="nickname"/>
+        <column name="会社名" field="company"/>
+        <column name="部署" field="department"/>
+        <column name="役職" field="jobTitle"/>
+        <column name="番地 (会社),住所 2 (会社),住所 3 (会社)" field="workStreet" type="multivalue"/>
+        <column name="市町村 (会社)" field="workCity"/>
+        <column name="都道府県 (会社)" field="workState"/>
+        <column name="郵便番号 (会社)" field="workPostalCode"/>
+        <column name="国 (会社)/地域" field="workCountry"/>
+        <column name="番地 (自宅),住所 2 (自宅),住所 3 (自宅)" field="homeStreet" type="multivalue"/>
+        <column name="市町村 (自宅)" field="homeCity"/>
+        <column name="都道府県 (自宅)" field="homeState"/>
+        <column name="郵便番号 (自宅)" field="homePostalCode"/>
+        <column name="国 (自宅)/地域" field="homeCountry"/>
+        <column name="番地 (その他),住所 2 (その他),住所 3 (その他)" field="otherStreet" type="multivalue"/>
+        <column name="市町村 (その他)" field="otherCity"/>
+        <column name="都道府県 (その他)" field="otherState"/>
+        <column name="郵便番号 (その他)" field="otherPostalCode"/>
+        <column name="国 (その他)/地域" field="otherCountry"/>
+        <column name="秘書の電話" field="assistant"/>
+        <column name="会社 FAX" field="workFax"/>
+        <column name="会社電話" field="workPhone"/>
+        <column name="会社電話 2" field="workPhone2"/>
+        <column name="コールバック" field="callbackPhone"/>
+        <column name="自動車電話" field="carPhone"/>
+        <column name="会社代表電話" field="companyPhone"/>
+        <column name="自宅 FAX" field="homeFax"/>
+        <column name="自宅電話" field="homePhone"/>
+        <column name="自宅電話 2" field="homePhone2"/>
+        <column name="ISDN" field="isdn"/>
+        <column name="携帯電話" field="mobilePhone"/>
+        <column name="その他の FAX" field="otherFax"/>
+        <column name="その他の電話" field="otherPhone"/>
+        <column name="ポケットベル" field="pager"/>
+        <column name="通常の電話"/>
+        <column name="無線電話" field="radioPhone"/>
+        <column name="TTY/TDD" field="ttyTDDPhone"/>
+        <column name="テレックス" field="telex"/>
+        <column name="ID 番号" field="governmentId"/>
+        <column name="Web ページ" field="workURL"/>
+        <column name="アカウント" field="account"/>
+        <column name="イニシャル" field="initials"/>
+        <column name="インターネット空き時間情報"/>
+        <column name="キーワード" field="keywords"/>
+        <column name="その他住所私書箱" field="otherPOBox"/>
+        <column name="ディレクトリ"/>
+        <column name="サーバー"/>
+        <column name="プライベート"/>
+        <column name="マネージャー" field="managerName"/>
+        <column name="メモ" field="notes"/>
+        <column name="ユーザー 1" field="custom1"/>
+        <column name="ユーザー 2" field="custom2"/>
+        <column name="ユーザー 3" field="custom3"/>
+        <column name="ユーザー 4" field="custom4"/>
+        <column name="会社 ID" field="organizationId"/>
+        <column name="会社住所私書箱" field="poBox"/>
+        <column name="会社名フリガナ" field="phoneticCompany"/>
+        <column name="記念日" field="anniversary" type="date"/>
+        <column name="経費情報"/>
+        <column name="言語" field="billingInfo"/>
+        <column name="参照事項" field="referredBy"/>
+        <column name="子供" field="children"/>
+        <column name="支払い条件"/>
+        <column name="事業所" field="office"/>
+        <column name="自宅住所私書箱" field="homePOBox"/>
+        <column name="趣味" field="hobby"/>
+        <column name="場所" field="location"/>
+        <column name="職業" field="profession"/>
+        <column name="姓フリガナ" field="phoneticLastName"/>
+        <column name="性別" field="gender"/>
+        <column name="誕生日" field="birthday" type="date"/>
+        <column name="電子メール アドレス" field="email"/>
+        <column name="電子メールの種類"/>
+        <column name="電子メール表示名"/>
+        <column name="電子メール 2 アドレス" field="email2"/>
+        <column name="電子メール 2 の種類"/>
+        <column name="電子メール 2 表示名"/>
+        <column name="電子メール 3 アドレス" field="email3"/>
+        <column name="電子メール 3 の種類"/>
+        <column name="電子メール 3 表示名"/>
+        <column name="配偶者" field="spouse"/>
+        <column name="秘書の氏名" field="assistantName"/>
+        <column name="秘密度" field="sensitivity"/>
+        <column name="分類" field="tag"/>
+        <column name="名前フリガナ" field="phoneticFirstName"/>
+        <column name="優先度" field="priority"/>
+    </format>
+
     <format name="outlook-unknown-csv" type="csv">
         <column name="Title" field="namePrefix"/>
         <column name="FirstName" field="firstName"/>
