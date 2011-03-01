@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- 
+<!--
 
 supported flags:
 
@@ -21,7 +21,7 @@ type attribute:
     name :
 
         if the CSV has single name field instead of parsed firstName and lastName,
-        declare the column to 
+        declare the column to
 
             <column name="Name" field="firstName,middleName,lastName" type="name"/>
 
@@ -93,6 +93,9 @@ type attribute:
         <field name="otherState"/>
         <field name="otherStreet"/>
         <field name="otherURL"/>
+        <field name="phoneticCompany"/>
+        <field name="phoneticFirstName"/>
+        <field name="phoneticLastName"/>
         <field name="pager"/>
         <field name="workCity"/>
         <field name="workCountry"/>
@@ -110,8 +113,8 @@ type attribute:
          to use for exports in particular formats if "csvsep" is not specified.
       -->
 
-    <delimiters default=","> 
-        <delimiter locale="fr" format="outlook-2003-csv" char=";"/> 
+    <delimiters default=",">
+        <delimiter locale="fr" format="outlook-2003-csv" char=";"/>
     </delimiters>
 
     <!--
@@ -130,8 +133,8 @@ type attribute:
          will be achieved by not specifying a dateformat
       -->
 
-    <dateformats> 
-        <dateformat format="yahoo-csv" order="mdy"/> 
+    <dateformats>
+        <dateformat format="yahoo-csv" order="mdy"/>
     </dateformats>
 
     <format name="zimbra-csv" type="csv" flag="allfields,default">
@@ -145,7 +148,7 @@ type attribute:
         <column name="Email" field="email"/>
         <column name="Category" type="tag"/>
         <column name="Distribution Lists"/>
-	    <!-- TODO: map "screenname" to "yahoo://screenname" -->
+      <!-- TODO: map "screenname" to "yahoo://screenname" -->
         <column name="Messenger ID" field="imAddress1"/>
         <column name="Home" field="homePhone"/>
         <column name="Work" field="workPhone"/>
@@ -179,7 +182,7 @@ type attribute:
         <column name="Custom 3" field="custom3"/>
         <column name="Custom 4" field="custom4"/>
         <column name="Comments" field="notes"/>
-	    <!-- TODO: map "screenname" to "yahoo://screenname" -->
+      <!-- TODO: map "screenname" to "yahoo://screenname" -->
         <column name="Messenger ID1" field="imAddress2"/>
         <column name="Messenger ID2" field="imAddress3"/>
         <column name="Messenger ID3" field="imAddress4"/>
@@ -189,7 +192,7 @@ type attribute:
         <column name="Messenger ID7" field="imAddress8"/>
         <column name="Messenger ID8" field="imAddress9"/>
         <column name="Messenger ID9" field="imAddress10"/>
-	    <!-- TODO: [Q] can we merge these into imAddress#, collapsing empty ones? -->
+      <!-- TODO: [Q] can we merge these into imAddress#, collapsing empty ones? -->
         <column name="Skype ID" field="skypeId" /> <!-- custom -->
         <column name="IRC ID" field="ircId" /> <!-- custom -->
         <column name="ICQ ID" field="icqId" /> <!-- custom -->
