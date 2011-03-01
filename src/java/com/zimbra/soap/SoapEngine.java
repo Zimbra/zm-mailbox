@@ -206,6 +206,7 @@ public final class SoapEngine {
         SoapProtocol responseProto = zsc.getResponseProtocol();
 
         String rid = zsc.getRequestedAccountId();
+        String proxyAuthToken = null;
         if (rid != null) {
             Provisioning prov = Provisioning.getInstance();
             AccountUtil.addAccountToLogContext(prov, rid, ZimbraLog.C_NAME, ZimbraLog.C_ID, zsc.getAuthToken());
@@ -225,8 +226,10 @@ public final class SoapEngine {
 
             try {
                 AuthToken at = zsc.getAuthToken();
-                if (at != null)
-                    at.setProxyAuthToken(prov.getProxyAuthToken(rid));
+                if (at != null) {
+                    proxyAuthToken = prov.getProxyAuthToken(rid);
+                    at.setProxyAuthToken(proxyAuthToken);
+                }
             } catch (ServiceException e) {
                 mLog.warn("failed to set proxy auth token: " + e.getMessage());
             }
@@ -273,6 +276,9 @@ public final class SoapEngine {
                     responseBody.addElement(br);
                     if (!contOnError && responseProto.isFault(br))
                         break;
+                    if (proxyAuthToken != null) {
+                        zsc.getAuthToken().setProxyAuthToken(proxyAuthToken); //requests will invalidate it when proxying locally; make sure it's set for each sub-request in batch
+                    }
                 }
             } else {
                 String id = doc.getAttribute(A_REQUEST_CORRELATOR, null);
