@@ -40,7 +40,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110227-1737 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110301-1115 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -26179,6 +26179,140 @@ public class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetPrefSkin(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefSkin, "");
+        return attrs;
+    }
+
+    /**
+     * sort order for list view in the WEB UI
+     *
+     * @return zimbraPrefSortOrder, or empty array if unset
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1188)
+    public String[] getPrefSortOrder() {
+        return getMultiAttr(Provisioning.A_zimbraPrefSortOrder);
+    }
+
+    /**
+     * sort order for list view in the WEB UI
+     *
+     * @param zimbraPrefSortOrder new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1188)
+    public void setPrefSortOrder(String[] zimbraPrefSortOrder) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefSortOrder, zimbraPrefSortOrder);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * sort order for list view in the WEB UI
+     *
+     * @param zimbraPrefSortOrder new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1188)
+    public Map<String,Object> setPrefSortOrder(String[] zimbraPrefSortOrder, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefSortOrder, zimbraPrefSortOrder);
+        return attrs;
+    }
+
+    /**
+     * sort order for list view in the WEB UI
+     *
+     * @param zimbraPrefSortOrder new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1188)
+    public void addPrefSortOrder(String zimbraPrefSortOrder) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraPrefSortOrder, zimbraPrefSortOrder);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * sort order for list view in the WEB UI
+     *
+     * @param zimbraPrefSortOrder new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1188)
+    public Map<String,Object> addPrefSortOrder(String zimbraPrefSortOrder, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraPrefSortOrder, zimbraPrefSortOrder);
+        return attrs;
+    }
+
+    /**
+     * sort order for list view in the WEB UI
+     *
+     * @param zimbraPrefSortOrder existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1188)
+    public void removePrefSortOrder(String zimbraPrefSortOrder) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraPrefSortOrder, zimbraPrefSortOrder);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * sort order for list view in the WEB UI
+     *
+     * @param zimbraPrefSortOrder existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1188)
+    public Map<String,Object> removePrefSortOrder(String zimbraPrefSortOrder, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraPrefSortOrder, zimbraPrefSortOrder);
+        return attrs;
+    }
+
+    /**
+     * sort order for list view in the WEB UI
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1188)
+    public void unsetPrefSortOrder() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefSortOrder, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * sort order for list view in the WEB UI
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1188)
+    public Map<String,Object> unsetPrefSortOrder(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefSortOrder, "");
         return attrs;
     }
 

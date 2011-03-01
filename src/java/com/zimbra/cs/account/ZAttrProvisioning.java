@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110227-1737 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110301-1115 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -7234,6 +7234,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=355)
     public static final String A_zimbraPrefSkin = "zimbraPrefSkin";
+
+    /**
+     * sort order for list view in the WEB UI
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1188)
+    public static final String A_zimbraPrefSortOrder = "zimbraPrefSortOrder";
 
     /**
      * The name of the dictionary used for spell checking. If not set, the
