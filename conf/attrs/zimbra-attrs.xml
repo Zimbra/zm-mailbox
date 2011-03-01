@@ -5460,7 +5460,7 @@ TODO: delete them permerntly from here
   <desc>whether S/MIME feature is enabled</desc>
 </attr>
 
-<attr id="1188" name="zimbraPrefSortOrder" type="string" cardinality="multi" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="7.1.0">
+<attr id="1188" name="zimbraPrefSortOrder" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="7.1.0">
   <desc>sort order for list view in the WEB UI</desc>
 </attr>
 
