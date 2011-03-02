@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -18,10 +18,7 @@ import java.io.IOException;
 import java.io.Reader;
 
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.CharFilter;
 import org.apache.lucene.analysis.CharReader;
-import org.apache.lucene.analysis.CharStream;
-import org.apache.lucene.analysis.LowerCaseFilter;
 import org.apache.lucene.analysis.StopAnalyzer;
 import org.apache.lucene.analysis.StopFilter;
 import org.apache.lucene.analysis.TokenFilter;
@@ -56,7 +53,7 @@ public final class UniversalAnalyzer extends Analyzer {
         throws IOException {
 
         if (savedTokenizer != null && savedTokenStream != null) {
-            savedTokenizer.reset(new UniversalCharFilter(CharReader.get(in)));
+            savedTokenizer.reset(new NormalizeTokenFilter(CharReader.get(in)));
         } else {
             savedTokenizer = createTokenizer(in);
             savedTokenStream = createTokenStream(savedTokenizer);
@@ -65,48 +62,14 @@ public final class UniversalAnalyzer extends Analyzer {
     }
 
     private Tokenizer createTokenizer(Reader in) {
-        return new UniversalTokenizer(
-                new UniversalCharFilter(CharReader.get(in)));
+        return new UniversalTokenizer(new NormalizeTokenFilter(CharReader.get(in)));
     }
 
     private TokenStream createTokenStream(Tokenizer tokenizer) {
-        TokenStream result = new LowerCaseFilter(tokenizer);
-        result = new UniversalTokenFilter(result);
+        TokenStream result = new UniversalTokenFilter(tokenizer);
         // disable position increment for backward compatibility
-        result = new StopFilter(false, result,
-                StopAnalyzer.ENGLISH_STOP_WORDS_SET);
+        result = new StopFilter(false, result, StopAnalyzer.ENGLISH_STOP_WORDS_SET);
         return result;
-    }
-
-    /**
-     * Normalize full-width form to half-width form.
-     */
-    private static class UniversalCharFilter extends CharFilter {
-
-        UniversalCharFilter(CharStream in) {
-            super(in);
-        }
-
-        @Override
-        public int read() throws IOException {
-            return toHalfWidth(super.read());
-        }
-
-        @Override
-        public int read(char[] buf, int offset, int len) throws IOException {
-            int result = super.read(buf, offset, len);
-            for (int i = 0; i < result; i++) {
-                buf[offset + i] = (char) toHalfWidth(buf[offset + i]);
-            }
-            return result;
-        }
-
-        private int toHalfWidth(int c) {
-            if (0xFF01 <= c && c <= 0xFF5E) {
-                return c - 0xFEE0;
-            }
-            return c;
-        }
     }
 
     private static class UniversalTokenFilter extends TokenFilter {
