@@ -5528,4 +5528,9 @@ TODO: delete them permerntly from here
   <desc>sort order for list view in the WEB UI</desc>
 </attr>
 
+<attr id="1189" name="zimbraOpenidConsumerStatelessModeEnabled" type="boolean" cardinality="single" optionalIn="server,globalConfig" flags="serverInherited" since="7.1.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>whether stateless mode (not establishing an association with the OpenID Provider) in OpenID Consumer is enabled</desc>
+</attr>
+
 </attrs>

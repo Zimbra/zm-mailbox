@@ -41,7 +41,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110301-1346 */
+    /* build: 7.0.0_BETA1_1111 administrator 20110222-1328 */
 
     /**
      * RFC2256: descriptive information
@@ -20237,6 +20237,83 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetOAuthConsumerCredentials(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraOAuthConsumerCredentials, "");
+        return attrs;
+    }
+
+    /**
+     * whether stateless mode (not establishing an association with the
+     * OpenID Provider) in OpenID Consumer is enabled
+     *
+     * @return zimbraOpenidConsumerStatelessModeEnabled, or true if unset
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1189)
+    public boolean isOpenidConsumerStatelessModeEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraOpenidConsumerStatelessModeEnabled, true);
+    }
+
+    /**
+     * whether stateless mode (not establishing an association with the
+     * OpenID Provider) in OpenID Consumer is enabled
+     *
+     * @param zimbraOpenidConsumerStatelessModeEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1189)
+    public void setOpenidConsumerStatelessModeEnabled(boolean zimbraOpenidConsumerStatelessModeEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOpenidConsumerStatelessModeEnabled, zimbraOpenidConsumerStatelessModeEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether stateless mode (not establishing an association with the
+     * OpenID Provider) in OpenID Consumer is enabled
+     *
+     * @param zimbraOpenidConsumerStatelessModeEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1189)
+    public Map<String,Object> setOpenidConsumerStatelessModeEnabled(boolean zimbraOpenidConsumerStatelessModeEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOpenidConsumerStatelessModeEnabled, zimbraOpenidConsumerStatelessModeEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether stateless mode (not establishing an association with the
+     * OpenID Provider) in OpenID Consumer is enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1189)
+    public void unsetOpenidConsumerStatelessModeEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOpenidConsumerStatelessModeEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether stateless mode (not establishing an association with the
+     * OpenID Provider) in OpenID Consumer is enabled
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1189)
+    public Map<String,Object> unsetOpenidConsumerStatelessModeEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOpenidConsumerStatelessModeEnabled, "");
         return attrs;
     }
 
