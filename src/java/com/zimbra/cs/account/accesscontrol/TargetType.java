@@ -53,6 +53,7 @@ import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
+import com.zimbra.soap.admin.type.EffectiveRightsTarget;
 
 
 public enum TargetType {
@@ -110,7 +111,12 @@ public enum TargetType {
         mAttrClass = attrClass;
         mPrettyName = prettyName;
     }
-    
+
+    /* Convert to equivalent JAXB object */
+    public EffectiveRightsTarget.TargetType toJaxb() throws ServiceException {
+        return EffectiveRightsTarget.TargetType.fromString(this.name());
+    }
+
     private void setInheritedByTargetTypes(TargetType[] targetTypes) {
         mInheritedByTargetTypes = new HashSet<TargetType>(Arrays.asList(targetTypes));
     }

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -13,6 +13,8 @@
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.qa.unittest;
+
+import com.google.common.base.Strings;
 
 import com.zimbra.common.mime.MimeMessage;
 import com.zimbra.common.service.ServiceException;
@@ -1118,8 +1120,9 @@ extends TestCase {
         server.setMailRedirectSetEnvelopeSender(true);
         subject = NAME_PREFIX + " testRedirect 2";
         TestUtil.addMessageLmtp(subject, USER_NAME, from);
-        String userAddress = TestUtil.getAddress(USER_NAME); 
-        assertEquals(userAddress, smtp.getMailFrom());
+        String userAddress = Strings.nullToEmpty(
+                TestUtil.getAddress(USER_NAME)).toLowerCase();
+        assertEquals("testRedirect 2 mail from", userAddress, smtp.getMailFrom());
         
         // Check empty envelope sender.
         smtp = startSmtpServer(port);
@@ -1141,7 +1144,7 @@ extends TestCase {
         subject = NAME_PREFIX + " testRedirect 5";
         msgContent = "Auto-Submitted: no\r\n" + TestUtil.getTestMessage(subject, USER_NAME, USER_NAME, null);
         TestUtil.addMessageLmtp(recipients, USER_NAME, msgContent);
-        assertEquals(userAddress, smtp.getMailFrom());
+        assertEquals("testRedirect 5 mail from", userAddress, smtp.getMailFrom());
         
         // Check Content-Type=multipart/report.
         smtp = startSmtpServer(port);

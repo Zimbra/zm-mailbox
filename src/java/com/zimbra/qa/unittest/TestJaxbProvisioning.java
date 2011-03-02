@@ -18,7 +18,9 @@ package com.zimbra.qa.unittest;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import com.google.common.collect.Maps;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -35,12 +37,18 @@ import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.CountAccountResult;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.PublishShareInfoAction;
 import com.zimbra.cs.account.Provisioning.PublishedShareInfoVisitor;
+import com.zimbra.cs.account.Provisioning.RightsDoc;
 import com.zimbra.cs.account.Provisioning.ServerBy;
+import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ShareInfoData;
 import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.account.accesscontrol.RightClass;
+import com.zimbra.cs.account.accesscontrol.RightCommand.AllEffectiveRights;
+import com.zimbra.cs.account.accesscontrol.RightCommand.EffectiveRights;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.soap.SoapAccountInfo;
 import com.zimbra.cs.account.soap.SoapProvisioning;
@@ -81,6 +89,7 @@ public class TestJaxbProvisioning extends TestCase {
     private final static String testCalResDisplayName = "JAXB Test CalResource";
     private final static String testDlDomain = "jaxb.dl.domain.example.test";
     private final static String testDl = "jaxb_dl1@" + testDlDomain;
+    private final static String parentDl = "jaxb_parentdl@" + testDlDomain;
     private final static String testDlAlias = "alias_4_jaxb_dl1@" + testDlDomain;
     private final static String testDlNewName = "new_jaxb_dl1@" + testDlDomain;
     private final static String testCosDomain = "jaxb.cos.domain.example.test";
@@ -110,6 +119,7 @@ public class TestJaxbProvisioning extends TestCase {
         TestUtil.deleteAccount(testNewAcctEmail);
         deleteCalendarResourceIfExists(testCalRes);
         deleteDlIfExists(testDl);
+        deleteDlIfExists(parentDl);
         deleteDlIfExists(testDlNewName);
         deleteCosIfExists(testCos);
         deleteCosIfExists(testNewCos);
@@ -330,6 +340,7 @@ public class TestJaxbProvisioning extends TestCase {
         Domain dom = ensureDomainExists(testDlDomain);
         assertNotNull("Domain for " + testDlDomain, dom);
         deleteDlIfExists(testDl);
+        deleteDlIfExists(parentDl);
         DistributionList dl = prov.createDistributionList(testDl, null);
         assertNotNull("DistributionList for " + testDl, dl);
         prov.renameDistributionList(dl.getId(), testDlNewName);
@@ -341,10 +352,32 @@ public class TestJaxbProvisioning extends TestCase {
         String[] rmMembers = { "two@example.test", "three@example.net" };
         prov.addMembers(dl, members);
         prov.removeMembers(dl, rmMembers);
+
+        // DL Membership test
+        DistributionList dadDl = prov.createDistributionList(parentDl, null);
+        assertNotNull("DistributionList for " + parentDl, dadDl);
+        String[] dlMembers = { "one@example.com", testDlNewName };
+        prov.addMembers(dadDl, dlMembers);
+        Map <String, String> via = Maps.newHashMap();
+        List <DistributionList> containingDls =
+            prov.getDistributionLists(dl, false, via);
+        assertEquals("Number of DLs a DL is a member of", 1,
+                containingDls.size());
+
+        // Account Membership test
+        Account acct = ensureMailboxExists(testAcctEmail);
+        String[] dlAcctMembers = { testAcctEmail };
+        prov.addMembers(dadDl, dlAcctMembers);
+        containingDls =
+            prov.getDistributionLists(acct, false, via);
+        assertEquals("Number of DLs an acct is a member of", 1,
+                containingDls.size());
+        
         List <DistributionList> dls = prov.getAllDistributionLists(dom);
         assertNotNull("All DLs" , dls);
         assertTrue("Number of DL objects=" + dls.size() +
-                " should be >=1", dls.size() >= 1);
+                " should be >=2", dls.size() >= 2);
+        prov.deleteDistributionList(dadDl.getId());
         prov.deleteDistributionList(dl.getId());
    }
 
@@ -475,6 +508,54 @@ public class TestJaxbProvisioning extends TestCase {
         assertNotNull("getAllRight returned list", rights);
         assertTrue("Number of rights objects=" + rights.size() +
                 " should be > 3", rights.size() > 3);
+    }
+
+    public void testGetAllEffectiveRights() throws Exception {
+        ZimbraLog.test.debug("Starting testGetAllEffectiveRights");
+        AllEffectiveRights aer = prov.getAllEffectiveRights(null, null, null,
+                false /* expandSetAttrs */, true /* expandGetAttrs */);
+        assertNotNull("AllEffectiveRights", aer);
+    }
+
+    public void testGetEffectiveRights() throws Exception {
+        ZimbraLog.test.debug("Starting testGetEffectiveRights");
+        EffectiveRights er = prov.getEffectiveRights("account" /* targetType */,
+                TargetBy.name /* targetBy */, "admin" /* target */,
+                GranteeBy.name /* granteeBy */, "admin" /* grantee */,
+                true /* expandSetAttrs */, true /* expandGetAttrs */);
+        assertNotNull("EffectiveRights", er);
+    }
+
+    public void testGetRightsDoc() throws Exception {
+        ZimbraLog.test.debug("Starting testGetRightsDoc");
+        Map<String, List<RightsDoc>> map = prov.getRightsDoc(null);
+        assertTrue("Map size=" + map.size() +
+                " should be >= 1", map.size() >= 1);
+        String[] pkgs = { "com.zimbra.cs.service.admin" };
+        map = prov.getRightsDoc(pkgs);
+        assertEquals("Map for specified set of pkgs", 1, map.size());
+        boolean seenTstRight = false;
+        for (String key : map.keySet()) {
+            assertEquals("key to map", pkgs[0], key);
+            for (RightsDoc rightsDoc : map.get(key)) {
+                assertNotNull("rightsDoc cmd name", rightsDoc.getCmd());
+                if (rightsDoc.getCmd().equals("AddAccountAliasRequest")) {
+                    seenTstRight = true;
+                    assertEquals("Notes number", 3, rightsDoc.getNotes().size());
+                    assertEquals("Rights number", 3, rightsDoc.getRights().size());
+                }
+            }
+        }
+        assertTrue("AddAccountAliasRequest right in report", seenTstRight);
+    }
+
+    public void testGetRight() throws Exception {
+        ZimbraLog.test.debug("Starting testGetRight");
+        Right right = prov.getRight("adminConsoleAccountRights", true);
+        assertNotNull("Right", right);
+        RightClass rightClass = right.getRightClass();
+        assertEquals("right RightClass", rightClass, RightClass.ADMIN);
+        assertEquals("right Name", "adminConsoleAccountRights", right.getName());
     }
 
     public void testHealth() throws Exception {

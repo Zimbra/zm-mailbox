@@ -25,6 +25,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
+import com.zimbra.soap.admin.type.GranteeInfo;
 
 public enum GranteeType {
 
@@ -56,7 +57,12 @@ public enum GranteeType {
         
         return gt;
     }
-    
+
+    /* Convert to equivalent JAXB object */
+    public GranteeInfo.GranteeType toJaxb() throws ServiceException {
+        return GranteeInfo.GranteeType.fromString(this.getCode());
+    }
+
     /**
      * - code stored in the ACE.
      * - code appear in XML

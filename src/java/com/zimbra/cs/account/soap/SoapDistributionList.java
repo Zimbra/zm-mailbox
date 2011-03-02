@@ -16,6 +16,7 @@
 package com.zimbra.cs.account.soap;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -27,7 +28,9 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.soap.admin.type.Attr;
+import com.zimbra.soap.admin.type.DLInfo;
 import com.zimbra.soap.admin.type.DistributionListInfo;
+import com.zimbra.soap.admin.type.DistributionListMembershipInfo;
 
 class SoapDistributionList extends DistributionList implements SoapEntry {
 
@@ -35,11 +38,34 @@ class SoapDistributionList extends DistributionList implements SoapEntry {
         super(name, id, attrs, prov);
     }
 
+    /**
+     * @param dlInfo contains information about a DL that another DL is
+     *        a member of.
+     * @throws ServiceException
+     */
+    SoapDistributionList(DistributionListMembershipInfo dlInfo,
+            Provisioning prov)
+    throws ServiceException {
+        // DistributionListMembershipInfo does not supply attributes
+        super(dlInfo.getName(), dlInfo.getId(),
+                new HashMap<String,Object>(), prov);
+        // DistributionListMembershipInfo does not supply membership info
+        addDlm(new ArrayList<String>(), getRawAttrs());
+    }
+
     SoapDistributionList(DistributionListInfo dlInfo, Provisioning prov)
     throws ServiceException {
         super(dlInfo.getName(), dlInfo.getId(), 
                 Attr.collectionToMap(dlInfo.getAttrList()), prov);
         addDlm(dlInfo.getMembers(), getRawAttrs());
+    }
+
+    SoapDistributionList(DLInfo dlInfo, Provisioning prov)
+    throws ServiceException {
+        super(dlInfo.getName(), dlInfo.getId(), 
+                Attr.collectionToMap(dlInfo.getAttrList()), prov);
+        // DLInfo does not supply membership info
+        addDlm(new ArrayList<String>(), getRawAttrs());
     }
 
     SoapDistributionList(Element e, Provisioning prov) throws ServiceException {

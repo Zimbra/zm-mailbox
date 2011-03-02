@@ -71,16 +71,26 @@ import com.zimbra.soap.admin.type.CacheEntrySelector;
 import com.zimbra.soap.admin.type.CacheSelector;
 import com.zimbra.soap.admin.type.CalendarResourceInfo;
 import com.zimbra.soap.admin.type.CalendarResourceSelector;
+import com.zimbra.soap.admin.type.CmdRightsInfo;
 import com.zimbra.soap.admin.type.CosCountInfo;
 import com.zimbra.soap.admin.type.CosInfo;
 import com.zimbra.soap.admin.type.CosSelector;
+import com.zimbra.soap.admin.type.DLInfo;
 import com.zimbra.soap.admin.type.DistributionListInfo;
+import com.zimbra.soap.admin.type.DistributionListMembershipInfo;
 import com.zimbra.soap.admin.type.DistributionListSelector;
 import com.zimbra.soap.admin.type.DomainSelector;
 import com.zimbra.soap.admin.type.DomainInfo;
+import com.zimbra.soap.admin.type.EffectiveRightsTarget;
+import com.zimbra.soap.admin.type.EffectiveRightsTargetSelector;
+import com.zimbra.soap.admin.type.GranteeInfo;
+import com.zimbra.soap.admin.type.GranteeSelector;
 import com.zimbra.soap.admin.type.LoggerInfo;
 import com.zimbra.soap.admin.type.MailboxByAccountIdSelector;
 import com.zimbra.soap.admin.type.MailboxWithMailboxId;
+import com.zimbra.soap.admin.type.NamedElement;
+import com.zimbra.soap.admin.type.PackageRightsInfo;
+import com.zimbra.soap.admin.type.PackageSelector;
 import com.zimbra.soap.admin.type.PublishFolderInfo;
 import com.zimbra.soap.admin.type.ReindexMailboxInfo;
 import com.zimbra.soap.admin.type.ReindexProgressInfo;
@@ -1066,7 +1076,7 @@ public class SoapProvisioning extends Provisioning {
     public DistributionList get(DistributionListBy keyType, String key) throws ServiceException {
         try {
             GetDistributionListResponse resp = invokeJaxb(new GetDistributionListRequest(
-                            new DistributionListSelector(DistributionListBy.toJaxb(keyType), key)));
+                            new DistributionListSelector(keyType.toJaxb(), key)));
             return new SoapDistributionList(resp.getDl(), this);
         } catch (ServiceException e) {
             if (e.getCode().equals(AccountServiceException.NO_SUCH_DISTRIBUTION_LIST))
@@ -1345,20 +1355,19 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
-    public List<DistributionList> getDistributionLists(Account acct, boolean directOnly, Map<String, String> via) throws ServiceException {
+    public List<DistributionList> getDistributionLists(Account acct,
+                boolean directOnly, Map<String, String> via)
+    throws ServiceException {
         ArrayList<DistributionList> result = new ArrayList<DistributionList>();
-        XMLElement req = new XMLElement(AdminConstants.GET_ACCOUNT_MEMBERSHIP_REQUEST);
-        Element acctEl = req.addElement(AdminConstants.E_ACCOUNT);
-        acctEl.addAttribute(AdminConstants.A_BY, AccountBy.id.name());
-        acctEl.setText(acct.getId());
-        Element resp = invoke(req);
-        for (Element a: resp.listElements(AdminConstants.E_DL)) {
-            String viaList = a.getAttribute(AdminConstants.A_VIA, null);
+        GetAccountMembershipResponse resp = invokeJaxb(
+            new GetAccountMembershipRequest(
+                    AccountSelector.fromId(acct.getId())));
+        for (DLInfo dlInfo : resp.getDlList()) {
+            String viaList = dlInfo.getVia();
             if (directOnly && viaList != null) continue;
-            DistributionList dl = new SoapDistributionList(a, this);
-            if (via != null && viaList != null) {
+            DistributionList dl = new SoapDistributionList(dlInfo, this);
+            if (via != null && viaList != null)
                 via.put(dl.getName(), viaList);
-            }
             result.add(dl);
         }
         return result;
@@ -1370,17 +1379,19 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
-    public List<DistributionList> getDistributionLists(DistributionList list, boolean directOnly, Map<String, String> via) throws ServiceException {
+    public List<DistributionList> getDistributionLists(DistributionList list,
+            boolean directOnly, Map<String, String> via)
+    throws ServiceException {
         ArrayList<DistributionList> result = new ArrayList<DistributionList>();
-        XMLElement req = new XMLElement(AdminConstants.GET_DISTRIBUTION_LIST_MEMBERSHIP_REQUEST);
-        Element acctEl = req.addElement(AdminConstants.E_DL);
-        acctEl.addAttribute(AdminConstants.A_BY, DistributionListBy.id.name());
-        acctEl.setText(list.getId());
-        Element resp = invoke(req);
-        for (Element a: resp.listElements(AdminConstants.E_DL)) {
-            String viaList = a.getAttribute(AdminConstants.A_VIA, null);
-            if (directOnly && viaList != null) continue;
-            DistributionList dl = new SoapDistributionList(a, this);
+        GetDistributionListMembershipRequest req =
+            new GetDistributionListMembershipRequest(
+                    DistributionListSelector.fromId(list.getId()), null, null);
+        GetDistributionListMembershipResponse resp = invokeJaxb(req);
+        for (DistributionListMembershipInfo dlMemInfo : resp.getDls()) {
+            String viaList = dlMemInfo.getVia();
+            if (directOnly && viaList != null)
+                continue;
+            DistributionList dl = new SoapDistributionList(dlMemInfo, this);
             if (via != null && viaList != null) {
                 via.put(dl.getName(), viaList);
             }
@@ -1979,48 +1990,34 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
-    public Map<String, List<RightsDoc>> getRightsDoc(String[] pkgs) throws ServiceException {
-        XMLElement req = new XMLElement(AdminConstants.GET_RIGHTS_DOC_REQUEST);
-
+    public Map<String, List<RightsDoc>> getRightsDoc(String[] pkgs)
+    throws ServiceException {
+        GetRightsDocRequest req = new GetRightsDocRequest();
         if (pkgs != null) {
-            for (String pkg : pkgs)
-                req.addElement(AdminConstants.E_PACKAGE).addAttribute(AdminConstants.A_NAME, pkg);
+            for (String pkg: pkgs)
+                req.addPkg(new PackageSelector(pkg));
         }
-        Element resp = invoke(req);
+        GetRightsDocResponse resp = invokeJaxb(req);
 
-        Map<String, List<RightsDoc>> allDocs = new TreeMap<String, List<RightsDoc>>();
-
-        for (Element ePkg : resp.listElements(AdminConstants.E_PACKAGE)) {
+        Map<String, List<RightsDoc>> allDocs =
+                new TreeMap<String, List<RightsDoc>>();
+        for (PackageRightsInfo ePkg : resp.getPackages()) {
             List <RightsDoc> docs = Lists.newArrayList();
-            allDocs.put(ePkg.getAttribute(AdminConstants.A_NAME), docs);
-
-            for (Element eCmd : ePkg.listElements(AdminConstants.E_CMD)) {
-                RightsDoc doc = new RightsDoc(eCmd.getAttribute(AdminConstants.A_NAME));
-
-                Element eRights = eCmd.getElement(AdminConstants.E_RIGHTS);
-                for (Element eRight : eRights.listElements(AdminConstants.E_RIGHT))
-                    doc.addRight(eRight.getAttribute(AdminConstants.A_NAME));
-
-                Element eDesc = eCmd.getElement(AdminConstants.E_DESC);
-                for (Element eNote : eDesc.listElements(AdminConstants.E_NOTE))
-                    doc.addNote(eNote.getText());
-
-                docs.add(doc);
-            }
+            allDocs.put(ePkg.getName(), docs);
+            for (CmdRightsInfo eCmd : ePkg.getCmds())
+                docs.add(new RightsDoc(eCmd));
         }
         return allDocs;
     }
 
     @Override
-    public Right getRight(String rightName, boolean expandAllAttrs) throws ServiceException {
-        XMLElement req = new XMLElement(AdminConstants.GET_RIGHT_REQUEST);
-        req.addAttribute(AdminConstants.A_EXPAND_ALL_ATTRS, expandAllAttrs);
-        req.addElement(AdminConstants.E_RIGHT).setText(rightName);
-
-        Element resp = invoke(req);
-        Element eRight = resp.getElement(AdminConstants.E_RIGHT);
-        Right right = RightCommand.XMLToRight(eRight);
-        return right;
+    public Right getRight(String rightName, boolean expandAllAttrs)
+    throws ServiceException {
+        GetRightResponse resp = invokeJaxb(
+                new GetRightRequest(rightName, expandAllAttrs));
+        // Note: Hack which ignores response details and gets right
+        //       directly from Rights manager by name
+        return RightCommand.RightNameToRight(resp.getRight().getName());
     }
 
     @Override
@@ -2072,51 +2069,39 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public RightCommand.AllEffectiveRights getAllEffectiveRights(
             String granteeType, GranteeBy granteeBy, String grantee,
-            boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
-        XMLElement req = new XMLElement(AdminConstants.GET_ALL_EFFECTIVE_RIGHTS_REQUEST);
-
-        String expandAttrs = null;
-        if (expandSetAttrs && expandGetAttrs)
-            expandAttrs = "setAttrs,getAttrs";
-        else if (expandSetAttrs)
-            expandAttrs = "setAttrs";
-        else if (expandGetAttrs)
-            expandAttrs = "getAttrs";
-
-        if (expandAttrs != null)
-            req.addAttribute(AdminConstants.A_EXPAND_ALL_ATTRS, expandAttrs);
-
-        if (granteeType != null && granteeBy != null && grantee != null)
-            toXML(req, granteeType, granteeBy, grantee);
-
-        Element resp = invoke(req);
-        return RightCommand.AllEffectiveRights.fromXML(resp);
+            boolean expandSetAttrs, boolean expandGetAttrs)
+    throws ServiceException {
+        GranteeSelector granteeSel = null;
+        if (granteeType != null && granteeBy != null && grantee != null) {
+            granteeSel = new GranteeSelector(
+                    GranteeInfo.GranteeType.fromString(granteeType),
+                    granteeBy.toJaxb(), grantee);
+        }
+        GetAllEffectiveRightsResponse resp =
+            invokeJaxb(new GetAllEffectiveRightsRequest(granteeSel,
+                    expandSetAttrs, expandGetAttrs));
+        return RightCommand.AllEffectiveRights.fromJaxb(resp);
     }
 
     @Override
     public RightCommand.EffectiveRights getEffectiveRights(
             String targetType, TargetBy targetBy, String target,
             GranteeBy granteeBy, String grantee,
-            boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
-        XMLElement req = new XMLElement(AdminConstants.GET_EFFECTIVE_RIGHTS_REQUEST);
-
-        String expandAttrs = null;
-        if (expandSetAttrs && expandGetAttrs)
-            expandAttrs = "setAttrs,getAttrs";
-        else if (expandSetAttrs)
-            expandAttrs = "setAttrs";
-        else if (expandGetAttrs)
-            expandAttrs = "getAttrs";
-
-        if (expandAttrs != null)
-            req.addAttribute(AdminConstants.A_EXPAND_ALL_ATTRS, expandAttrs);
-
-        toXML(req, targetType, targetBy, target);
-        if (granteeBy != null && grantee != null)
-            toXML(req, null, granteeBy, grantee);
-
-        Element resp = invoke(req);
-        return RightCommand.EffectiveRights.fromXML_EffectiveRights(resp);
+            boolean expandSetAttrs, boolean expandGetAttrs)
+    throws ServiceException {
+        GranteeSelector granteeSel = null;
+        if (granteeBy != null && grantee != null) {
+            granteeSel = new GranteeSelector(
+                    granteeBy.toJaxb(), grantee);
+        }
+        EffectiveRightsTargetSelector targetSel =
+            new EffectiveRightsTargetSelector(
+                    EffectiveRightsTarget.TargetType.fromString(targetType),
+                    targetBy.toJaxb(), target);
+        GetEffectiveRightsResponse resp =
+            invokeJaxb(new GetEffectiveRightsRequest(targetSel, granteeSel,
+                    expandSetAttrs, expandGetAttrs));
+        return RightCommand.EffectiveRights.fromJaxb_EffectiveRights(resp);
     }
 
     @Override

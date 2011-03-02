@@ -35,6 +35,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.soap.admin.type.ConstraintInfo;
 
 public class AttributeConstraint {
     private static final String CONSTRAINT_CACHE_KEY = "CONSTRAINT_CACHE";
@@ -394,7 +395,27 @@ public class AttributeConstraint {
         
         return constraint;
     }
-    
+
+    /**
+     * Returns an {@code AttributeConstraint} corresponding to the supplied
+     * {@code attrName) and {@code eConstraint}
+     * Note: returns null if {@code eConstraint} is null
+     */
+    public static AttributeConstraint fromJaxb(AttributeManager am,
+            String attrName, ConstraintInfo eConstraint)
+    throws ServiceException {
+        
+        if (eConstraint == null)
+            return null;
+        AttributeConstraint constraint =
+            AttributeConstraint.newConstratint(am, attrName);
+        constraint.setMin(eConstraint.getMin());
+        constraint.setMax(eConstraint.getMax());
+        for (String value : eConstraint.getValues())
+            constraint.addValue(value);
+        return constraint;
+    }
+
     public static AttributeConstraint fromXML(AttributeManager am, String attrName, Element eConstraint) throws ServiceException {
         
         AttributeConstraint constraint = AttributeConstraint.newConstratint(am, attrName);

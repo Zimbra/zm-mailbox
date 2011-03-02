@@ -117,7 +117,7 @@ public abstract class RightBearer {
     }
 
     /**
-     * returns true if grantee is an admin account or admin group
+     * returns true if grantee {@code gt} can be granted Admin Rights
      * 
      * Note: 
      *     - system admins cannot receive grants - they don't need any

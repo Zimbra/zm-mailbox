@@ -15,6 +15,7 @@
 package com.zimbra.cs.account;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -31,9 +32,13 @@ import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.soap.admin.type.AccountSelector;
 import com.zimbra.soap.admin.type.CacheEntrySelector;
 import com.zimbra.soap.admin.type.CalendarResourceSelector;
+import com.zimbra.soap.admin.type.CmdRightsInfo;
 import com.zimbra.soap.admin.type.CosSelector;
 import com.zimbra.soap.admin.type.DistributionListSelector;
 import com.zimbra.soap.admin.type.DomainSelector;
+import com.zimbra.soap.admin.type.EffectiveRightsTargetSelector;
+import com.zimbra.soap.admin.type.GranteeSelector;
+import com.zimbra.soap.admin.type.NamedElement;
 import com.zimbra.soap.admin.type.ServerSelector;
 import com.zimbra.soap.admin.type.ShareInfoSelector;
 
@@ -1099,11 +1104,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
         }
 
         /* Convert to equivalent JAXB object */
-        public static DistributionListSelector.DistributionListBy toJaxb(
-                DistributionListBy provDistributionListBy)
+        public DistributionListSelector.DistributionListBy toJaxb()
         throws ServiceException {
             return DistributionListSelector.DistributionListBy.fromString(
-                    provDistributionListBy.toString());
+                    this.toString());
         }
     }
 
@@ -1792,6 +1796,12 @@ public abstract class Provisioning extends ZAttrProvisioning {
                 throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
             }
         }
+
+        /* Convert to equivalent JAXB object */
+        public EffectiveRightsTargetSelector.TargetBy toJaxb()
+        throws ServiceException {
+            return EffectiveRightsTargetSelector.TargetBy.fromString(this.name());
+        }
     }
 
     public static enum GranteeBy {
@@ -1806,6 +1816,12 @@ public abstract class Provisioning extends ZAttrProvisioning {
                 throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
             }
         }
+
+        /* Convert to equivalent JAXB object */
+        public GranteeSelector.GranteeBy toJaxb()
+        throws ServiceException {
+            return GranteeSelector.GranteeBy.fromString(this.name());
+        }
     }
 
     public static class RightsDoc {
@@ -1815,8 +1831,16 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
         public RightsDoc(String cmd) {
             mCmd = cmd;
-            mRights = new ArrayList<String>();
-            mNotes = new ArrayList<String>();
+            mRights = Lists.newArrayList();
+            mNotes = Lists.newArrayList();
+        }
+
+        public RightsDoc(CmdRightsInfo cmd) {
+            this(cmd.getName());
+            for (NamedElement right : cmd.getRights())
+                addRight(right.getName());
+            for (String note : cmd.getNotes())
+                addNote(note);
         }
 
         public void addRight(String right) {
