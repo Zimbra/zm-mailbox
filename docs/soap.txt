@@ -558,7 +558,6 @@ effect if called in a <nosession> context.
          </attrs>
      </childAccount>*
    </childAccounts>
-   [<license status="inGracePeriod|bad"/>]
 </GetInfoResponse>
 
   {version} = server version: <major>[.<minor>[.<maintenance>]][build] <release> <date>[ <type>]
@@ -587,9 +586,6 @@ effect if called in a <nosession> context.
        the only one URL will be returned.
 
   {account-base-public-url} = base public URL for the requested account
-
-  license attribute is pertinent to the Network edition only.  this attribute is
-  present only when the installed license is NOT ok.
 
   attrs under <childAccount>: including the following attrs of the child account:
         - displayName
