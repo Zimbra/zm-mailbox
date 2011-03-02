@@ -18,35 +18,81 @@ package com.zimbra.soap.admin.type;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlEnum;
+import javax.xml.bind.annotation.XmlValue;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class GranteeSelector {
 
-    //See ACL.stringToType for valid (case insensitive) grantee types
-    @XmlAttribute(name=AdminConstants.A_TYPE)
-    private final String type;
-    @XmlAttribute(name=AdminConstants.A_ID)
-    private final String id;
-    @XmlAttribute(name=AdminConstants.A_NAME)
-    private final String name;
+    @XmlEnum
+    public static enum GranteeBy {
+        // case must match protocol
+        id, name;
+
+        public static GranteeBy fromString(String s) throws ServiceException {
+            try {
+                return GranteeBy.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
+            }
+        }
+    }
+
+    @XmlAttribute(name=AdminConstants.A_TYPE, required=false)
+    private final GranteeInfo.GranteeType type;
+    @XmlAttribute(name=AdminConstants.A_BY, required=false)
+    private final GranteeBy by;
+    @XmlAttribute(name=AdminConstants.A_SECRET, required=false)
+    private final String secret;
+    @XmlAttribute(name=AdminConstants.A_ALL, required=false)
+    private final Boolean all;
+    @XmlValue
+    private final String key;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
     private GranteeSelector() {
-        this(null, null, null);
+        this((GranteeInfo.GranteeType) null, (GranteeBy) null, (String) null,
+                (Boolean) null, (String) null);
     }
 
-    public GranteeSelector(String type, String id, String name) {
+    public GranteeSelector(GranteeBy by, String key) {
+        this((GranteeInfo.GranteeType) null, by, key,
+                (Boolean) null, (String) null);
+    }
+
+    public GranteeSelector(GranteeInfo.GranteeType type,
+            GranteeBy by, String key) {
+        this(type, by, key, (Boolean) null, (String) null);
+    }
+
+    public GranteeSelector(GranteeInfo.GranteeType type,
+            GranteeBy by, String key, String secret) {
+        this(type, by, key, (Boolean) null, secret);
+    }
+
+    public GranteeSelector(GranteeInfo.GranteeType type,
+            GranteeBy by, String key, Boolean all) {
+        this(type, by, key, all, (String) null);
+    }
+
+    public GranteeSelector(GranteeInfo.GranteeType type,
+            GranteeBy by, String key, Boolean all, String secret) {
         this.type = type;
-        this.id = id;
-        this.name = name;
+        this.by = by;
+        this.key = key;
+        this.all = all;
+        this.secret = secret;
     }
 
-    public String getType() { return type; }
-    public String getId() { return id; }
-    public String getName() { return name; }
+    public GranteeInfo.GranteeType getType() { return type; }
+    public GranteeBy getBy() { return by; }
+    public String getKey() { return key; }
+    public String getSecret() { return secret; }
+    public Boolean getAll() { return all; }
 }

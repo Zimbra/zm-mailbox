@@ -23,8 +23,9 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlAnyElement;
-import javax.xml.bind.annotation.XmlElementRef;
-import javax.xml.bind.annotation.XmlElementRefs;
+import javax.xml.bind.annotation.XmlElement;
+
+import org.w3c.dom.Element;
 
 import com.google.common.collect.Lists;
 
@@ -40,35 +41,51 @@ public class RightsAttrs {
     //  Need to support 2 forms:
     //  1.    <a n="attributeName"/>
     //  2.    <attributeName/>
-    //  TODO: Could we use @XmlAdapter to make it easier to use this class?
+    //  Should all be one or the other.
+    @XmlElement(name=AdminConstants.E_A, required=false)
+    private List <Attr> attrs = Lists.newArrayList();
+
     @XmlAnyElement
-    @XmlElementRefs({
-        @XmlElementRef(name=AdminConstants.E_A, type=Attr.class)
-    })
-    private List <Object> objects = Lists.newArrayList();
+    private List <Element> elements = Lists.newArrayList();
 
     public RightsAttrs () {
     }
 
-    public RightsAttrs (Collection <Object> objects) {
-        this.setObjects(objects);
+    public RightsAttrs (Collection <Attr> attrs) {
+        this.setAttrs(attrs);
     }
 
-    public RightsAttrs setObjects(Collection<Object> objects) {
-        this.objects.clear();
-        if (objects != null) {
-            this.objects.addAll(objects);
+    public RightsAttrs setAttrs(Collection<Attr> attrs) {
+        this.attrs.clear();
+        if (attrs != null) {
+            this.attrs.addAll(attrs);
         }
         return this;
     }
 
-    public RightsAttrs addObject(Object object) {
-        objects.add(object);
+    public RightsAttrs addAttr(Attr attr) {
+        attrs.add(attr);
         return this;
     }
 
-    public List <Object> getObjects() {
-        return Collections.unmodifiableList(objects);
+    public List <Attr> getAttrs() {
+        return Collections.unmodifiableList(attrs);
+    }
+    public RightsAttrs setElements(Collection <Element> elements) {
+        this.elements.clear();
+        if (elements != null) {
+            this.elements.addAll(elements);
+        }
+        return this;
+    }
+
+    public RightsAttrs addElement(Element element) {
+        elements.add(element);
+        return this;
+    }
+
+    public List <Element> getElements() {
+        return Collections.unmodifiableList(elements);
     }
 
     public void setAll(Boolean all) { this.all = all; }

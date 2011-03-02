@@ -20,6 +20,9 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import com.zimbra.common.soap.AdminConstants;
 
+/**
+ * Information about a DL that another particular DL is a member of
+ */
 @XmlAccessorType(XmlAccessType.FIELD)
 public class DistributionListMembershipInfo {
 

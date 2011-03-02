@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -22,10 +22,10 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlType;
 
 import com.google.common.collect.Iterables;
 
+import com.zimbra.common.soap.AccountConstants;
 
 /*
      <childAccount name="{child-account-name}" visible="0|1" id="{child-account-id}">
@@ -35,41 +35,43 @@ import com.google.common.collect.Iterables;
      </childAccount>*
 
  */
-@XmlType (propOrder = {})
 public class ChildAccount {
 
-    @XmlAttribute private String name;
-    @XmlAttribute(name="visible") private boolean isVisible;
-    @XmlAttribute private String id;
-    
-    @XmlElementWrapper(name="attrs")
-    @XmlElement(name="attr")
+    @XmlAttribute(name=AccountConstants.A_ID, required=true)
+    private final String id;
+    @XmlAttribute(name=AccountConstants.A_NAME, required=true)
+    private final String name;
+    @XmlAttribute(name=AccountConstants.A_VISIBLE, required=true)
+    private final boolean isVisible;
+    @XmlAttribute(name=AccountConstants.A_ACTIVE, required=true)
+    private final boolean isActive;
+
+    @XmlElementWrapper(name=AccountConstants.E_ATTRS, required=false)
+    @XmlElement(name=AccountConstants.E_ATTR, required=false)
     private List<Attr> attrs = new ArrayList<Attr>();
 
-    public String getName() {
-        return name;
-    }
-    
-    public void setName(String name) {
-        this.name = name;
-    }
-    
-    public boolean isVisible() {
-        return isVisible;
+    /**
+     * no-argument constructor wanted by JAXB
+     */
+     @SuppressWarnings("unused")
+    private ChildAccount () {
+        this((String) null, (String) null, false, false);
     }
 
-    public void setVisible(boolean isVisible) {
-        this.isVisible = isVisible;
+    public ChildAccount(String id, String name,
+            boolean isVisible, boolean isActive) {
+        this(id, name, isVisible, isActive, (Iterable<Attr>) null);
     }
-    
-    public String getId() {
-        return id;
-    }
-    
-    public void setId(String id) {
+
+    public ChildAccount(String id, String name,
+            boolean isVisible, boolean isActive, Iterable<Attr> attrs) {
         this.id = id;
+        this.name = name;
+        this.isVisible = isVisible;
+        this.isActive = isActive;
+        setAttrs(attrs);
     }
-    
+
     public List<Attr> getAttrs() {
         return Collections.unmodifiableList(attrs);
     }
@@ -80,4 +82,9 @@ public class ChildAccount {
             Iterables.addAll(this.attrs, attrs);
         }
     }
+
+    public String getId() { return id; }
+    public String getName() { return name; }
+    public boolean isVisible() { return isVisible; }
+    public boolean isActive() { return isActive; }
 }

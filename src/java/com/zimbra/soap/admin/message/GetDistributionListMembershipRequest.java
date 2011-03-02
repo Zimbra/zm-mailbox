@@ -24,6 +24,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.DistributionListSelector;
 
+/**
+ * Request a list of DLs that a particular DL is a member of
+ */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_GET_DISTRIBUTION_LIST_MEMBERSHIP_REQUEST)
 public class GetDistributionListMembershipRequest {

@@ -17,28 +17,25 @@ package com.zimbra.soap.admin.message;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.CosInfo;
+import com.zimbra.soap.admin.type.AnnotatedCosInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_GET_COS_RESPONSE)
-@XmlType(propOrder = {})
 public class GetCosResponse {
 
     @XmlElement(name=AdminConstants.E_COS)
-    private CosInfo cos;
+    private AnnotatedCosInfo cos;
 
     public GetCosResponse() {
     }
 
-    public void setCos(CosInfo cos) {
+    public void setCos(AnnotatedCosInfo cos) {
         this.cos = cos;
     }
 
-    public CosInfo getCos() { return cos; }
+    public AnnotatedCosInfo getCos() { return cos; }
 }

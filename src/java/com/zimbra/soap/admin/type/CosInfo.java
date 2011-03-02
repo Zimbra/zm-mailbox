@@ -19,26 +19,25 @@ import java.util.Collection;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-// For some bizarre reason, this causes problems for wsimport based clients
-// @XmlRootElement(name=AdminConstants.E_COS)
-@XmlType(propOrder = {})
 public class CosInfo extends AdminObjectInfo {
 
     /**
      * no-argument constructor wanted by JAXB
      */
+    @SuppressWarnings("unused")
     private CosInfo() {
-        super(null, null, null);
+        this((String) null,(String) null,
+                (Collection <Attr>) null);
     }
 
     public CosInfo(String id, String name) {
-        super(id, name, null);
+        this(id, name, (Collection <Attr>) null);
     }
 
-    public CosInfo(String id, String name, Collection <Attr> attrs) {
+    public CosInfo(String id, String name,
+            Collection <Attr> attrs) {
         super(id, name, attrs);
     }
 }

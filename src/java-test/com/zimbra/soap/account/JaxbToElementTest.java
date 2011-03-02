@@ -14,9 +14,15 @@
  */
 package com.zimbra.soap.account;
 
+import com.google.common.base.Charsets;
 import java.io.BufferedReader;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.nio.charset.Charset;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
@@ -59,15 +65,21 @@ public class JaxbToElementTest {
         LOG.setLevel(Level.INFO);
     }
 
-    public static String convertStreamToString(InputStream is) throws Exception {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is, "utf-8"));
-        StringBuilder sb = new StringBuilder();
-        String line = null;
-        while ((line = reader.readLine()) != null) {
-            sb.append(line + "\n");
+    public static String streamToString(InputStream stream, Charset cs)
+    throws IOException {
+        try {
+            Reader reader = new BufferedReader(
+                    new InputStreamReader(stream, cs));
+            StringBuilder builder = new StringBuilder();
+            char[] buffer = new char[8192];
+            int read;
+            while ((read = reader.read(buffer, 0, buffer.length)) > 0) {
+                builder.append(buffer, 0, read);
+            }
+            return builder.toString();
+        } finally {
+            stream.close();
         }
-        is.close();
-        return sb.toString();
     }
 
     @BeforeClass
@@ -78,10 +90,10 @@ public class JaxbToElementTest {
             JaxbToElementTest.class.getResourceAsStream("GetInfoResponse.xml"));
         InputStream is = JaxbToElementTest.class.getResourceAsStream(
                 "GetInfoResponse.xml");
-        getInfoResponseXml = convertStreamToString(is);
+        getInfoResponseXml = streamToString(is, Charsets.UTF_8);
         is = JaxbToElementTest.class.getResourceAsStream(
                 "GetInfoResponse.json");
-        getInfoResponseJSON = convertStreamToString(is);
+        getInfoResponseJSON = streamToString(is, Charsets.UTF_8);
         StringBuffer sb = new StringBuffer();
         sb.append("{\n\"GetInfoResponse\": ").append(getInfoResponseJSON).append("\n}");
         getInfoResponseJSONwithEnv = sb.toString();
@@ -93,10 +105,31 @@ public class JaxbToElementTest {
         for (int cnt = 1; cnt <= iterationNum;cnt++) {
             Element el = JaxbUtil.jaxbToElement(getInfoResp);
             String actual = el.prettyPrint();
-            // TODO: At present the order varies a little and zimlets plus
-            //       other things are missing - so just check the first part.
-            Assert.assertEquals(getInfoResponseXml.substring(0, 100),
-                    actual.substring(0, 100));
+            // TODO: At present some stuff is wrong/missing 
+            // so just check the first part.
+            Assert.assertEquals(getInfoResponseXml.substring(0, 1000),
+                    actual.substring(0, 1000));
+            // validateLongString("XML response differs from expected\n",
+            //     getInfoResponseXml, actual,
+            //             "GetInfoResponse.xml", "/tmp/GetInfoResponse.xml");
+        }
+    }
+
+    private void validateLongString(String message,
+                String expected, String actual,
+                String expectedFile, String actualFile) {
+        if (!actual.equals(expected)) {
+            try{
+                OutputStreamWriter out = new OutputStreamWriter(
+                        new FileOutputStream(actualFile),"UTF-8");
+                out.write(actual);
+                out.close();
+            }catch (Exception e){//Catch exception if any
+              System.err.println("validateLongString:Error writing to " +
+                      actualFile + " : " + e.getMessage());
+            }
+            Assert.fail(message + "\nexpected=" + expectedFile +
+                    "\nactual=" + actualFile);
         }
     }
 
@@ -108,10 +141,11 @@ public class JaxbToElementTest {
             // name of the element - that only happens when it is a
             // child of other elements (the "soap" envelop)
             String actual = el.prettyPrint();
-            Assert.assertEquals("Top level Element name", "GetInfoResponse", el.getName());
-            // The test file has one extra line ending. 
-            Assert.assertEquals(getInfoResponseJSON.substring(0, 27390),
-                    actual);
+            Assert.assertEquals("Top level Element name",
+                    "GetInfoResponse", el.getName());
+            validateLongString("JSON response differs from expected\n",
+                getInfoResponseJSON, actual,
+                        "GetInfoResponse.json", "/tmp/GetInfoResponse.json");
     }
 
     @Test
@@ -126,6 +160,7 @@ public class JaxbToElementTest {
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void elementToJaxbUsingDom4jTest() throws Exception {
         for (int cnt = 1; cnt <= iterationNum;cnt++) {
@@ -133,6 +168,7 @@ public class JaxbToElementTest {
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void elementToJaxbUsingByteArrayTest() throws Exception {
         for (int cnt = 1; cnt <= iterationNum;cnt++) {
@@ -157,6 +193,7 @@ public class JaxbToElementTest {
     // ExportContacts server-side does not - get:
     // javax.xml.bind.UnmarshalException: Namespace URIs and local names
     //      to the unmarshaller needs to be interned.
+    @SuppressWarnings("deprecation")
     @Test
     public void JSONelementToJaxbUsingDom4jTest() throws Exception {
         for (int cnt = 1; cnt <= 4;cnt++) {

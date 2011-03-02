@@ -57,7 +57,7 @@ public class RightInfo {
     private String name;
     @XmlAttribute(name=AdminConstants.A_TYPE, required=true)
     private RightType type;
-    @XmlAttribute(name=AdminConstants.A_TARGET_TYPE, required=true)
+    @XmlAttribute(name=AdminConstants.A_TARGET_TYPE, required=false)
     private String targetType;
     @XmlAttribute(name=AdminConstants.A_RIGHT_CLASS, required=true)
     private RightClass rightClass;

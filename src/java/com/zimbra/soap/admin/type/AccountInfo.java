@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -18,28 +18,38 @@ package com.zimbra.soap.admin.type;
 import java.util.Collection;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.XmlAttribute;
+
 import com.zimbra.common.soap.AccountConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AccountConstants.E_ACCOUNT)
-@XmlType(propOrder = {})
 public class AccountInfo extends AdminObjectInfo {
+
+    @XmlAttribute(name=AccountConstants.A_isExternal, required=false)
+    private final Boolean isExternal;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
     private AccountInfo() {
-        this(null, null, null);
+        this((String)null, (String)null, (Boolean)null, (Collection <Attr>)null);
     }
 
     public AccountInfo(String id, String name) {
-        this(id, name, null);
+        this(id, name, (Boolean)null, (Collection <Attr>)null);
     }
 
-    public AccountInfo(String id, String name, Collection <Attr> attrs) {
-        super(id, name, attrs);
+    public AccountInfo(String id, String name, Boolean isExternal) {
+        this(id, name, isExternal, (Collection <Attr>)null);
+        
     }
+
+    public AccountInfo(String id, String name, Boolean isExternal,
+            Collection <Attr> attrs) {
+        super(id, name, attrs);
+        this.isExternal = isExternal;
+    }
+
+    public Boolean getIsExternal() { return isExternal; }
 }

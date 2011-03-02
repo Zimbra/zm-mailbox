@@ -993,12 +993,246 @@
           "_content": "TRUE"
         }]
     }],
-  "soapURL": [{
-      "_content": "http://ysasaki.local:7070/service/soap/"
+  "zimlets": [{
+      "zimlet": [
+        {
+          "zimletContext": [{
+              "presence": "enabled",
+              "priority": "0",
+              "baseUrl": "/service/zimlet/com_zimbra_phone/"
+            }],
+          "zimlet": [{
+              "description": "Highlights phone numbers to enable Skype call numbers and add to Address Book.",
+              "version": "2.0.1_6.0.0.20101007.032107",
+              "name": "com_zimbra_phone",
+              "include": [{
+                  "_content": "templates/Phone.template.js"
+                }],
+              "handlerObject": [{
+                  "_content": "Com_Zimbra_Phone"
+                }]
+            }],
+          "zimletConfig": [{
+              "version": "1.0",
+              "name": "com_zimbra_phone"
+            }]
+        },
+        {
+          "zimletContext": [{
+              "presence": "enabled",
+              "priority": "1",
+              "baseUrl": "/service/zimlet/com_zimbra_url/"
+            }],
+          "zimlet": [{
+              "description": "Highlights and links URLs.",
+              "version": "2.0.1_6.0.0.20101007.032107",
+              "name": "com_zimbra_url",
+              "include": [{
+                  "_content": "url.js"
+                }],
+              "handlerObject": [{
+                  "_content": "Com_Zimbra_Url"
+                }]
+            }],
+          "zimletConfig": [{
+              "version": "1.0",
+              "name": "com_zimbra_url"
+            }]
+        },
+        {
+          "zimletContext": [{
+              "presence": "enabled",
+              "priority": "2",
+              "baseUrl": "/service/zimlet/com_zimbra_email/"
+            }],
+          "zimlet": [{
+              "description": "Highlights and previews associated contact for an email address.",
+              "version": "11.0.1_6.0.0.20101007.032107",
+              "name": "com_zimbra_email",
+              "include": [{
+                  "_content": "UnknownPersonSlide.js"
+                }],
+              "includeCSS": [{
+                  "_content": "email.css"
+                }],
+              "handlerObject": [{
+                  "_content": "com_zimbra_email_handlerObject"
+                }]
+            }]
+        },
+        {
+          "zimletContext": [{
+              "presence": "enabled",
+              "priority": "3",
+              "baseUrl": "/service/zimlet/com_zimbra_date/"
+            }],
+          "zimlet": [{
+              "description": "Highlights dates, previews associated appointments and creates a link to the calendar.",
+              "version": "2.0.1_6.0.0.20101007.032107",
+              "name": "com_zimbra_date",
+              "include": [{
+                  "_content": "formats.js"
+                }],
+              "handlerObject": [{
+                  "_content": "Com_Zimbra_Date"
+                }]
+            }]
+        },
+        {
+          "zimletContext": [{
+              "presence": "enabled",
+              "priority": "4",
+              "baseUrl": "/service/zimlet/com_zimbra_ymemoticons/"
+            }],
+          "zimlet": [{
+              "description": "Displays Yahoo! Emoticons in email messages.",
+              "version": "2.7.1_6.0.0.20101007.032107",
+              "name": "com_zimbra_ymemoticons",
+              "include": [{
+                  "_content": "ymemoticonspicker.js"
+                }],
+              "includeCSS": [{
+                  "_content": "yemoticons.css"
+                }],
+              "handlerObject": [{
+                  "_content": "Com_Zimbra_YMEmoticons"
+                }]
+            }]
+        },
+        {
+          "zimletContext": [{
+              "presence": "enabled",
+              "priority": "5",
+              "baseUrl": "/service/zimlet/com_zimbra_dnd/"
+            }],
+          "zimlet": [{
+              "description": "Illustrates drag-and-drop functionality.",
+              "version": "1.0.1_6.0.0.20101007.032107",
+              "name": "com_zimbra_dnd",
+              "include": [{
+                  "_content": "dnd.js"
+                }],
+              "handlerObject": [{
+                  "_content": "Com_Zimbra_DnD"
+                }]
+            }],
+          "zimletConfig": [{
+              "version": "1.0.1",
+              "name": "com_zimbra_dnd"
+            }]
+        },
+        {
+          "zimletContext": [{
+              "presence": "enabled",
+              "priority": "6",
+              "baseUrl": "/service/zimlet/com_zimbra_attachmail/"
+            }],
+          "zimlet": [{
+              "description": "Attach email messages when composing a new message.",
+              "version": "0.7_6.0.0.20101007.032107",
+              "name": "com_zimbra_attachmail",
+              "include": [{
+                  "_content": "AMZimletNavToolBar.js"
+                }],
+              "includeCSS": [{
+                  "_content": "attachmail.css"
+                }],
+              "handlerObject": [{
+                  "_content": "com_zimbra_attachmail_HandlerObject"
+                }]
+            }]
+        },
+        {
+          "zimletContext": [{
+              "presence": "enabled",
+              "priority": "7",
+              "baseUrl": "/service/zimlet/com_zimbra_attachcontacts/"
+            }],
+          "zimlet": [{
+              "description": "Allows Attaching contacts when composing a new message.",
+              "version": "0.5_6.0.0.20101007.032107",
+              "name": "com_zimbra_attachcontacts",
+              "include": [{
+                  "_content": "AttachContactsTabView.js"
+                }],
+              "includeCSS": [{
+                  "_content": "attachcontacts.css"
+                }],
+              "handlerObject": [{
+                  "_content": "com_zimbra_attachcontacts_HandlerObject"
+                }]
+            }]
+        },
+        {
+          "zimletContext": [{
+              "presence": "enabled",
+              "priority": "8",
+              "baseUrl": "/service/zimlet/com_zimbra_srchhighlighter/"
+            }],
+          "zimlet": [{
+              "description": "After a mail search, this Zimlet highlights Search terms with yellow color",
+              "version": "0.6_6.0.0.20101007.032107",
+              "name": "com_zimbra_srchhighlighter",
+              "include": [{
+                  "_content": "searchhighlighter.js"
+                }],
+              "handlerObject": [{
+                  "_content": "com_zimbra_srchhltr_HandlerObject"
+                }]
+            }]
+        },
+        {
+          "zimletContext": [{
+              "presence": "enabled",
+              "priority": "9",
+              "baseUrl": "/service/zimlet/com_zimbra_webex/"
+            }],
+          "zimlet": [{
+              "description": "Easily schedule, start or join WebEx meetings.",
+              "version": "2.1.1_6.0.0.20101007.032107",
+              "name": "com_zimbra_webex",
+              "include": [{
+                  "_content": "webex.js"
+                }],
+              "includeCSS": [{
+                  "_content": "webex.css"
+                }],
+              "handlerObject": [{
+                  "_content": "com_zimbra_webex_HandlerObject"
+                }]
+            }],
+          "zimletConfig": [{
+              "version": "2.1.1",
+              "name": "com_zimbra_webex"
+            }]
+        },
+        {
+          "zimletContext": [{
+              "presence": "enabled",
+              "priority": "10",
+              "baseUrl": "/service/zimlet/com_zimbra_social/"
+            }],
+          "zimlet": [{
+              "description": "Social Zimlet: Access social services like Twitter, Facebook, Digg and TweetMeme from Zimbra.",
+              "version": "2.1.7.8_6.0.0.20101007.032107",
+              "name": "com_zimbra_social",
+              "include": [{
+                  "_content": "templates/Social.template.js"
+                }],
+              "includeCSS": [{
+                  "_content": "social.css"
+                }],
+              "handlerObject": [{
+                  "_content": "com_zimbra_social_handlerObject"
+                }]
+            }],
+          "zimletConfig": [{
+              "version": "2.1.7.8",
+              "name": "com_zimbra_social"
+            }]
+        }]
     }],
-  "publicURL": [{
-      "_content": "http://ysasaki.local:7070"
-    }],
+  "props": [{}],
   "identities": [{
       "identity": [{
           "id": "add0c6cd-7d8a-467b-ae6e-67b9644d9c2a",
@@ -1056,6 +1290,12 @@
     }],
   "signatures": [{}],
   "dataSources": [{}],
-  "props": [{}],
+  "childAccounts": [{}],
+  "soapURL": [{
+      "_content": "http://ysasaki.local:7070/service/soap/"
+    }],
+  "publicURL": [{
+      "_content": "http://ysasaki.local:7070"
+    }],
   "_jsns": "urn:zimbraAccount"
 }

@@ -15,9 +15,9 @@
 
 package com.zimbra.soap.admin.message;
 
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -29,6 +29,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.DistributionListMembershipInfo;
 
+/**
+ * Response which provides a list of DLs that a particular DL is a member of
+ */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_GET_DISTRIBUTION_LIST_MEMBERSHIP_RESPONSE)
 public class GetDistributionListMembershipResponse {
@@ -37,22 +40,25 @@ public class GetDistributionListMembershipResponse {
     private List <DistributionListMembershipInfo> dls = Lists.newArrayList();
 
     public GetDistributionListMembershipResponse() {
-        this((Collection<DistributionListMembershipInfo>) null);
+        this((Iterable<DistributionListMembershipInfo>) null);
     }
 
-    public GetDistributionListMembershipResponse(Collection<DistributionListMembershipInfo> dls) {
+    public GetDistributionListMembershipResponse(
+            Iterable<DistributionListMembershipInfo> dls) {
         setDls(dls);
     }
 
-    public GetDistributionListMembershipResponse setDls(Collection<DistributionListMembershipInfo> dls) {
+    public GetDistributionListMembershipResponse setDls(
+            Iterable<DistributionListMembershipInfo> dls) {
         this.dls.clear();
         if (dls != null) {
-            this.dls.addAll(dls);
+            Iterables.addAll(this.dls,dls);
         }
         return this;
     }
 
-    public GetDistributionListMembershipResponse addDl(DistributionListMembershipInfo dl) {
+    public GetDistributionListMembershipResponse addDl(
+            DistributionListMembershipInfo dl) {
         dls.add(dl);
         return this;
     }

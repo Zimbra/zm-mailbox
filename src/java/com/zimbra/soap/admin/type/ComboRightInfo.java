@@ -28,7 +28,7 @@ public class ComboRightInfo {
     private final String name;
     @XmlAttribute(name=AdminConstants.A_TYPE, required=true)
     private final RightInfo.RightType type;
-    @XmlAttribute(name=AdminConstants.A_TARGET_TYPE, required=true)
+    @XmlAttribute(name=AdminConstants.A_TARGET_TYPE, required=false)
     private final String targetType;
 
     /**

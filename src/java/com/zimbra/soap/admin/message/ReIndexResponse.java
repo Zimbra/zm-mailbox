@@ -31,7 +31,7 @@ public class ReIndexResponse {
     @XmlAttribute(name=AdminConstants.A_STATUS, required=true)
     private final String status;
 
-    @XmlElement(name=AdminConstants.E_PROGRESS, required=true)
+    @XmlElement(name=AdminConstants.E_PROGRESS, required=false)
     private final ReindexProgressInfo progress;
 
     /**

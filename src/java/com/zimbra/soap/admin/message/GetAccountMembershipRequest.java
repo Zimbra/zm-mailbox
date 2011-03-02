@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -19,26 +19,28 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.AccountSelector;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_GET_ACCOUNT_MEMBERSHIP_REQUEST)
-@XmlType(propOrder = {})
 public class GetAccountMembershipRequest {
 
     @XmlElement(name=AdminConstants.E_ACCOUNT, required=true)
-    private AccountSelector account;
+    private final AccountSelector account;
 
-    public GetAccountMembershipRequest() {
+    /**
+     * no-argument constructor wanted by JAXB
+     */
+    @SuppressWarnings("unused")
+    private GetAccountMembershipRequest() {
+        this((AccountSelector) null);
     }
 
-    public void setAccount(AccountSelector account) {
+    public GetAccountMembershipRequest(AccountSelector account) {
         this.account = account;
     }
-    public AccountSelector getAccount() {
-        return account;
-    }
+
+    public AccountSelector getAccount() { return account; }
 }

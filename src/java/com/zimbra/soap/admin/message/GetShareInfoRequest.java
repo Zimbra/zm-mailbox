@@ -22,14 +22,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.AccountSelector;
-import com.zimbra.soap.admin.type.GranteeSelector;
+import com.zimbra.soap.admin.type.GranteeChooser;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_GET_SHARE_INFO_REQUEST)
 public class GetShareInfoRequest {
 
     @XmlElement(name=AdminConstants.E_GRANTEE, required=false)
-    private final GranteeSelector grantee;
+    private final GranteeChooser grantee;
     @XmlElement(name=AdminConstants.E_OWNER, required=true)
     private final AccountSelector owner;
 
@@ -38,18 +38,18 @@ public class GetShareInfoRequest {
      */
     @SuppressWarnings("unused")
     private GetShareInfoRequest() {
-        this((GranteeSelector) null, (AccountSelector) null);
+        this((GranteeChooser) null, (AccountSelector) null);
     }
 
     public GetShareInfoRequest(AccountSelector owner) {
         this(null, owner);
     }
 
-    public GetShareInfoRequest(GranteeSelector grantee, AccountSelector owner) {
+    public GetShareInfoRequest(GranteeChooser grantee, AccountSelector owner) {
         this.grantee = grantee;
         this.owner = owner;
     }
 
-    public GranteeSelector getGrantee() { return grantee; }
+    public GranteeChooser getGrantee() { return grantee; }
     public AccountSelector getOwner() { return owner; }
 }

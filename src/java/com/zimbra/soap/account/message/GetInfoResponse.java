@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -15,7 +15,6 @@
 
 package com.zimbra.soap.account.message;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -27,6 +26,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
@@ -34,13 +34,15 @@ import com.zimbra.soap.account.type.AccountCalDataSource;
 import com.zimbra.soap.account.type.AccountDataSource;
 import com.zimbra.soap.account.type.AccountImapDataSource;
 import com.zimbra.soap.account.type.AccountPop3DataSource;
-import com.zimbra.soap.account.type.Prop;
 import com.zimbra.soap.account.type.AccountRssDataSource;
 import com.zimbra.soap.account.type.Attr;
+import com.zimbra.soap.account.type.ChildAccount;
 import com.zimbra.soap.account.type.Cos;
 import com.zimbra.soap.account.type.Identity;
 import com.zimbra.soap.account.type.Pref;
+import com.zimbra.soap.account.type.Prop;
 import com.zimbra.soap.account.type.Signature;
+import com.zimbra.soap.account.type.ZimletInfo;
 
 
 /**
@@ -112,41 +114,69 @@ import com.zimbra.soap.account.type.Signature;
 </GetInfoResponse>
  */
 @XmlRootElement(name=AccountConstants.E_GET_INFO_RESPONSE)
-@XmlType(propOrder = {})
+@XmlType(propOrder = {"version", "accountId", "accountName", "crumb",
+        "lifetime", "adminDelegated", "restUrl", "quotaUsed",
+        "previousSessionTime", "lastWriteAccessTime", "recentMessageCount",
+        "cos", "prefs", "attrs", "zimlets", "props", "identities",
+        "signatures", "dataSources", "childAccounts", "changePasswordURL",
+        "soapURLs", "publicURL"})
 public class GetInfoResponse {
-    @XmlAttribute(name=AccountConstants.A_ATTACHMENT_SIZE_LIMIT) private Long attachmentSizeLimit;
-    @XmlAttribute(name=AccountConstants.A_DOCUMENT_SIZE_LIMIT) private Long documentSizeLimit;
+    // TODO: "zimlets" are not yet fully handled.
+    @XmlAttribute(name=AccountConstants.A_ATTACHMENT_SIZE_LIMIT, required=false)
+    private Long attachmentSizeLimit;
+    @XmlAttribute(name=AccountConstants.A_DOCUMENT_SIZE_LIMIT, required=false)
+    private Long documentSizeLimit;
     
-    @XmlElement(name=AccountConstants.E_VERSION, required=true) private String version;
-    @XmlElement(name=AccountConstants.E_ID, required=true) private String accountId;
-    @XmlElement(name=AccountConstants.E_NAME, required=true) private String accountName;
-    @XmlElement(name=AccountConstants.E_CRUMB) private String crumb;
-    @XmlElement(name=AccountConstants.E_LIFETIME, required=true) private long lifetime;
-    @XmlElement(name=AccountConstants.E_REST) private String restUrl;
-    @XmlElement(name=AccountConstants.E_QUOTA_USED) private Long quotaUsed;
-    @XmlElement(name=AccountConstants.E_PREVIOUS_SESSION) private Long previousSessionTime;
-    @XmlElement(name=AccountConstants.E_LAST_ACCESS) private Long lastWriteAccessTime;
-    @XmlElement(name=AccountConstants.E_RECENT_MSGS) private Integer recentMessageCount;
-    @XmlElement(name=AccountConstants.E_COS) private Cos cos;
+    @XmlElement(name=AccountConstants.E_VERSION, required=true)
+    private String version;
+    @XmlElement(name=AccountConstants.E_ID, required=true)
+    private String accountId;
+    @XmlElement(name=AccountConstants.E_NAME, required=true)
+    private String accountName;
+    @XmlElement(name=AccountConstants.E_CRUMB, required=false)
+    private String crumb;
+    @XmlElement(name=AccountConstants.E_LIFETIME, required=true)
+    private long lifetime;
+    @XmlElement(name=AccountConstants.E_ADMIN_DELEGATED, required=false)
+    private Boolean adminDelegated;
+    @XmlElement(name=AccountConstants.E_REST, required=false)
+    private String restUrl;
+    @XmlElement(name=AccountConstants.E_QUOTA_USED, required=false)
+    private Long quotaUsed;
+    @XmlElement(name=AccountConstants.E_PREVIOUS_SESSION, required=false)
+    private Long previousSessionTime;
+    @XmlElement(name=AccountConstants.E_LAST_ACCESS, required=false)
+    private Long lastWriteAccessTime;
+    @XmlElement(name=AccountConstants.E_RECENT_MSGS, required=false)
+    private Integer recentMessageCount;
+    @XmlElement(name=AccountConstants.E_COS, required=false)
+    private Cos cos;
 
-    @XmlElementWrapper(name=AccountConstants.E_PREFS)
-    @XmlElement(name=AccountConstants.E_PREF)
-    private List<Pref> prefs = new ArrayList<Pref>();
+    @XmlElementWrapper(name=AccountConstants.E_PREFS, required=false)
+    @XmlElement(name=AccountConstants.E_PREF, required=false)
+    private List<Pref> prefs = Lists.newArrayList();
 
-    @XmlElementWrapper(name=AccountConstants.E_ATTRS)
-    @XmlElement(name=AccountConstants.E_ATTR)
-    private List<Attr> attrs = new ArrayList<Attr>();
+    @XmlElementWrapper(name=AccountConstants.E_ATTRS, required=false)
+    @XmlElement(name=AccountConstants.E_ATTR, required=false)
+    private List<Attr> attrs = Lists.newArrayList();
     
-    @XmlElement(name=AccountConstants.E_SOAP_URL) private List<String> soapURLs = new ArrayList<String>();
-    @XmlElement private String publicURL;
+    @XmlElementWrapper(name=AccountConstants.E_ZIMLETS, required=false)
+    @XmlElement(name=AccountConstants.E_ZIMLET, required=false)
+    private List<ZimletInfo> zimlets = Lists.newArrayList();
     
+    @XmlElementWrapper(name=AccountConstants.E_PROPERTIES)
+    @XmlElements({
+        @XmlElement(name=AccountConstants.E_PROPERTY, type=Prop.class)
+    })
+    private List<Prop> props = Lists.newArrayList();
+
     @XmlElementWrapper(name=AccountConstants.E_IDENTITIES)
     @XmlElement(name=AccountConstants.E_IDENTITY)
-    private List<Identity> identities = new ArrayList<Identity>();
+    private List<Identity> identities = Lists.newArrayList();
     
     @XmlElementWrapper(name=AccountConstants.E_SIGNATURES)
     @XmlElement(name=AccountConstants.E_SIGNATURE)
-    private List<Signature> signatures = new ArrayList<Signature>();
+    private List<Signature> signatures = Lists.newArrayList();
 
     @XmlElementWrapper(name=AccountConstants.E_DATA_SOURCES)
     @XmlElements({
@@ -155,16 +185,20 @@ public class GetInfoResponse {
         @XmlElement(name=MailConstants.E_DS_RSS, type=AccountRssDataSource.class),
         @XmlElement(name=MailConstants.E_DS_CAL, type=AccountCalDataSource.class)
     })
-    private List<AccountDataSource> dataSources = new ArrayList<AccountDataSource>();
+    private List<AccountDataSource> dataSources = Lists.newArrayList();
     
-    @XmlElement(name=AccountConstants.E_CHANGE_PASSWORD_URL) private String changePasswordURL;
-    
-    @XmlElementWrapper(name=AccountConstants.E_PROPERTIES)
-    @XmlElements({
-        @XmlElement(name=AccountConstants.E_PROPERTY, type=Prop.class)
-    })
-    private List<Prop> props = new ArrayList<Prop>();
+    @XmlElementWrapper(name=AccountConstants.E_CHILD_ACCOUNTS)
+    @XmlElement(name=AccountConstants.E_CHILD_ACCOUNT)
+    private List<ChildAccount> childAccounts = Lists.newArrayList();
 
+    @XmlElement(name=AccountConstants.E_CHANGE_PASSWORD_URL)
+    private String changePasswordURL;
+
+    @XmlElement(name=AccountConstants.E_SOAP_URL)
+    private List<String> soapURLs = Lists.newArrayList();
+    @XmlElement
+    private String publicURL;
+    
     public Long getAttachmentSizeLimit() { return attachmentSizeLimit; }
     public Long getDocumentSizeLimit() { return documentSizeLimit; }
     public String getVersion() { return version; }
@@ -172,6 +206,7 @@ public class GetInfoResponse {
     public String getAccountName() { return accountName; }
     public String getCrumb() { return crumb; }
     public long getLifetime() { return lifetime; }
+    public Boolean getAdminDelegated() { return adminDelegated; }
     public String getRestUrl() { return restUrl; }
     public Long getQuotaUsed() { return quotaUsed; }
     public Long getPreviousSessionTime() { return previousSessionTime; }
@@ -255,23 +290,59 @@ public class GetInfoResponse {
         }
         return this;
     }
-    
+
+    public GetInfoResponse setChildAccounts(Iterable<ChildAccount> childAccounts) {
+        this.childAccounts.clear();
+        if (childAccounts != null) {
+            Iterables.addAll(this.childAccounts, childAccounts);
+        }
+        return this;
+    }
+
+    public GetInfoResponse addChildAccount(ChildAccount childAccount) {
+        childAccounts.add(childAccount);
+        return this;
+    }
+
+    public List<ChildAccount> getChildAccounts() {
+        return Collections.unmodifiableList(childAccounts);
+    }
+
+    public GetInfoResponse setZimlets(Iterable <ZimletInfo> zimlets) {
+        this.zimlets.clear();
+        if (zimlets != null) {
+            Iterables.addAll(this.zimlets,zimlets);
+        }
+        return this;
+    }
+
+    public GetInfoResponse addZimlet(ZimletInfo zimlet) {
+        zimlets.add(zimlet);
+        return this;
+    }
+
+    public List <ZimletInfo> getZimlets() {
+        return Collections.unmodifiableList(zimlets);
+    }
+
     public GetInfoResponse addAttr(Attr attr) {
         attrs.add(attr);
         return this;
     }
-    
+
     public Multimap<String, String> getPrefsMultimap() {
         return Pref.toMultimap(prefs);
     }
-    
+
     public Multimap<String, String> getAttrsMultimap() {
         return Attr.toMultimap(attrs);
     }
-    
+
     public Multimap<String, String> getPropsMultimap(String userPropKey) {
         return Prop.toMultimap(props, userPropKey); 
     }
-    
-    // TODO: zimlets, etc.
+
+    public void setAdminDelegated(Boolean adminDelegated) {
+        this.adminDelegated = adminDelegated;
+    }
 }
