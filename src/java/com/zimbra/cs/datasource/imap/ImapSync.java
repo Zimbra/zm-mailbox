@@ -219,14 +219,6 @@ public class ImapSync extends MailItemImport {
         return syncedFolders.get(folderId);
     }
 
-
-    public void checkIsEnabled() throws ServiceException {
-        if (!getDataSource().isManaged()) {
-            throw ServiceException.FAILURE(
-                "Import aborted because data source has been deleted or disabled", null);
-        }
-    }
-
     private void syncFolders(Set<Integer> folderIds) throws ServiceException, IOException {
         // For offline full sync automatically re-enable sync on INBOX
         if (dataSource.isImportOnly() || (dataSource.isOffline() && fullSync)) {

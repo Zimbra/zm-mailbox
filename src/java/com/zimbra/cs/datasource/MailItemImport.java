@@ -119,4 +119,11 @@ public abstract class MailItemImport implements DataSource.DataImport {
         }
         return null;
     }
+
+    public void checkIsEnabled() throws ServiceException {
+        if (!getDataSource().isManaged()) {
+            throw ServiceException.FAILURE(
+                "Import aborted because data source has been deleted or disabled", null);
+        }
+    }
 }
