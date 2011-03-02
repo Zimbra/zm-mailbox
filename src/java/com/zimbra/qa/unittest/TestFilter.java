@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -100,7 +100,7 @@ extends TestCase {
     private static String MOUNTPOINT_FOLDER_NAME = NAME_PREFIX + " mountpoint";
     private static String MOUNTPOINT_SUBFOLDER_NAME = NAME_PREFIX + " mountpoint subfolder";
     private static String MOUNTPOINT_SUBFOLDER_PATH = "/" + MOUNTPOINT_FOLDER_NAME + "/" + MOUNTPOINT_SUBFOLDER_NAME;
-    
+
     private ZMailbox mMbox;
     private ZFilterRules mOriginalIncomingRules;
     private ZFilterRules mOriginalOutgoingRules;
@@ -110,19 +110,19 @@ extends TestCase {
     private ZTag mTag1;
     private ZTag mTag2;
 
-    public void setUp()
-    throws Exception {
+    @Override
+    public void setUp() throws Exception {
         cleanUp();
 
         mMbox = TestUtil.getZMailbox(USER_NAME);
         mTag1 = mMbox.createTag(TAG1_NAME, null);
         mTag2 = mMbox.createTag(TAG2_NAME, null);
-        
+
         // Create mountpoint for testMountpoint()
         ZMailbox remoteMbox = TestUtil.getZMailbox(REMOTE_USER_NAME);
         TestUtil.createMountpoint(remoteMbox, "/" + MOUNTPOINT_FOLDER_NAME, mMbox, MOUNTPOINT_FOLDER_NAME);
         TestUtil.createFolder(remoteMbox, MOUNTPOINT_SUBFOLDER_PATH);
-        
+
         mOriginalIncomingRules = mMbox.getIncomingFilterRules();
         saveIncomingRules(mMbox, getTestIncomingRules());
         mOriginalOutgoingRules = mMbox.getOutgoingFilterRules();
@@ -131,9 +131,9 @@ extends TestCase {
         Account account = TestUtil.getAccount(USER_NAME);
         mOriginalSpamApplyUserFilters = account.getAttr(Provisioning.A_zimbraSpamApplyUserFilters);
         mOriginalSmtpPort = Provisioning.getInstance().getLocalServer().getSmtpPortAsString();
-        mOriginalSetEnvelopeSender = TestUtil.getServerAttr(Provisioning.A_zimbraMailRedirectSetEnvelopeSender); 
+        mOriginalSetEnvelopeSender = TestUtil.getServerAttr(Provisioning.A_zimbraMailRedirectSetEnvelopeSender);
     }
-    
+
     /**
      * Confirms that outgoing filters are applied as expected when a message is sent via SendMsgRequest.
      */
@@ -157,7 +157,7 @@ extends TestCase {
         TestUtil.verifyTag(mMbox, msg, TAG1_NAME);
 
         //make sure that sent message has not been filed into the (default) Sent folder
-        List msgs = TestUtil.search(mMbox, "in:Sent" + " " + subject);
+        List<ZMessage> msgs = TestUtil.search(mMbox, "in:Sent" + " " + subject);
         assertTrue(msgs.isEmpty());
     }
 
@@ -179,7 +179,7 @@ extends TestCase {
         TestUtil.verifyTag(mMbox, msg, TAG1_NAME);
 
         // make sure that the message has not been filed into the (default) Sent folder
-        List msgs = TestUtil.search(mMbox, "in:Sent" + " " + subject);
+        List<ZMessage> msgs = TestUtil.search(mMbox, "in:Sent" + " " + subject);
         assertTrue(msgs.isEmpty());
 
         // add another msg flagged as sent; this time filterSent=FALSE
@@ -194,7 +194,7 @@ extends TestCase {
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
         List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
-        
+
         String folderName = NAME_PREFIX + " testQuoteEscape";
         TestUtil.createFolder(mMbox, folderName);
 
@@ -204,24 +204,24 @@ extends TestCase {
         conditions.add(condition);
         actions.add(action);
         rules.add(new ZFilterRule(folderName, true, false, conditions, actions));
-        
+
         ZFilterRules zRules = new ZFilterRules(rules);
         saveIncomingRules(mMbox, zRules);
 
         // Add a message and confirm it gets filed into the correct folder
         String address = TestUtil.getAddress(USER_NAME);
         String subject = NAME_PREFIX + " a \" b y z";
-        String searchSubject = NAME_PREFIX + " a b y z"; // Search barfs on unmatched quote 
+        String searchSubject = NAME_PREFIX + " a b y z"; // Search barfs on unmatched quote
         TestUtil.addMessageLmtp(subject, address, address);
         TestUtil.getMessage(mMbox, "in:\"" + folderName + "\" subject:\"" + searchSubject + "\"");
     }
-    
+
     public void testBackslashEscape()
     throws Exception {
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
         List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
-        
+
         String folderName = NAME_PREFIX + " testBackslashEscape";
         TestUtil.createFolder(mMbox, folderName);
 
@@ -231,7 +231,7 @@ extends TestCase {
         conditions.add(condition);
         actions.add(action);
         rules.add(new ZFilterRule(folderName, true, false, conditions, actions));
-        
+
         ZFilterRules zRules = new ZFilterRules(rules);
         saveIncomingRules(mMbox, zRules);
 
@@ -241,7 +241,7 @@ extends TestCase {
         TestUtil.addMessageLmtp(subject, address, address);
         TestUtil.getMessage(mMbox, "in:\"" + folderName + "\" subject:\"" + subject + "\"");
     }
-    
+
     /**
      * Confirms that a message with a base64-encoded subject can be filtered correctly
      * (bug 11219).
@@ -271,76 +271,76 @@ extends TestCase {
         String recipient = TestUtil.getAddress(USER_NAME);
         String subject = NAME_PREFIX + " This goes into folder1 and folder2";
         TestUtil.addMessageLmtp(subject, recipient, sender);
-        
+
         ZMessage msg = TestUtil.getMessage(mMbox, "in:" + FOLDER1_PATH + " " + subject);
         TestUtil.verifyTag(mMbox, msg, TAG1_NAME);
         TestUtil.verifyTag(mMbox, msg, TAG2_NAME);
         TestUtil.verifyFlag(mMbox, msg, Flag.flagged);
-        
+
         msg = TestUtil.getMessage(mMbox, "in:" + FOLDER2_PATH + " " + subject);
         TestUtil.verifyTag(mMbox, msg, TAG1_NAME);
         TestUtil.verifyTag(mMbox, msg, TAG2_NAME);
         TestUtil.verifyFlag(mMbox, msg, Flag.flagged);
     }
-    
+
     /**
-     * Confirms that spam filtering takes a higher precedence than 
+     * Confirms that spam filtering takes a higher precedence than
      * custom user filtering (bug 23886).
      */
     public void testSpam()
     throws Exception {
-    	ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-    	String sender = TestUtil.getAddress(USER_NAME);
-    	String[] recipients = new String[] { sender };
-    	String message = TestUtil.getTestMessage(NAME_PREFIX + " testSpam", USER_NAME, USER_NAME, null);
-    	Config config = Provisioning.getInstance().getConfig();
-    	message = config.getAttr(Provisioning.A_zimbraSpamHeader) + ": " +
-    		config.getAttr(Provisioning.A_zimbraSpamHeaderValue) + "\r\n" + message;
-    	
-    	// Make sure spam message doesn't already exist
-    	assertEquals(0, TestUtil.search(mbox, "in:junk subject:testSpam").size());
-    	
-    	// Deliver spam message without matching rule, make sure it gets delivered
-    	// to the junk folder, and delete.
-    	TestUtil.addMessageLmtp(recipients, sender, message);
-    	ZMessage msg = TestUtil.getMessage(mbox, "in:junk subject:testSpam");
-    	mbox.deleteMessage(msg.getId());
-    	
-    	// Add matching filter rule: if subject contains "testSpam", file into folder1
-    	ZFilterRules rules = getTestIncomingRules();
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        String sender = TestUtil.getAddress(USER_NAME);
+        String[] recipients = new String[] { sender };
+        String message = TestUtil.getTestMessage(NAME_PREFIX + " testSpam", USER_NAME, USER_NAME, null);
+        Config config = Provisioning.getInstance().getConfig();
+        message = config.getAttr(Provisioning.A_zimbraSpamHeader) + ": " +
+            config.getAttr(Provisioning.A_zimbraSpamHeaderValue) + "\r\n" + message;
+
+        // Make sure spam message doesn't already exist
+        assertEquals(0, TestUtil.search(mbox, "in:junk subject:testSpam").size());
+
+        // Deliver spam message without matching rule, make sure it gets delivered
+        // to the junk folder, and delete.
+        TestUtil.addMessageLmtp(recipients, sender, message);
+        ZMessage msg = TestUtil.getMessage(mbox, "in:junk subject:testSpam");
+        mbox.deleteMessage(msg.getId());
+
+        // Add matching filter rule: if subject contains "testSpam", file into folder1
+        ZFilterRules rules = getTestIncomingRules();
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
         conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "testSpam"));
         actions.add(new ZFileIntoAction(FOLDER1_PATH));
         rules.getRules().add(new ZFilterRule("testBug5455", true, false, conditions, actions));
         saveIncomingRules(mMbox, rules);
-        
+
         // Set "apply user rules" attribute to TRUE and make sure the message gets filed into folder1
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraSpamApplyUserFilters, LdapUtil.LDAP_TRUE);
-    	TestUtil.addMessageLmtp(recipients, sender, message);
-    	msg = TestUtil.waitForMessage(mbox, "in:" + FOLDER1_PATH + " subject:testSpam");
-    	mbox.deleteMessage(msg.getId());
-        
-    	// Set "apply user rules" attribute to FALSE and make sure the message gets filed into junk
-    	TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraSpamApplyUserFilters, LdapUtil.LDAP_FALSE);
-    	TestUtil.addMessageLmtp(recipients, sender, message);
-    	TestUtil.waitForMessage(mbox, "in:junk subject:testSpam");
+        TestUtil.addMessageLmtp(recipients, sender, message);
+        msg = TestUtil.waitForMessage(mbox, "in:" + FOLDER1_PATH + " subject:testSpam");
+        mbox.deleteMessage(msg.getId());
+
+        // Set "apply user rules" attribute to FALSE and make sure the message gets filed into junk
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraSpamApplyUserFilters, LdapUtil.LDAP_FALSE);
+        TestUtil.addMessageLmtp(recipients, sender, message);
+        TestUtil.waitForMessage(mbox, "in:junk subject:testSpam");
     }
-    
+
     /**
      * Verifies the fix to bug 5455.  Tests sending a message that matches
-     * two filter rules, each of which has a tag action and a flag action.   
+     * two filter rules, each of which has a tag action and a flag action.
      */
     public void testBug5455()
     throws Exception {
         String recipient = TestUtil.getAddress(USER_NAME);
         String subject = NAME_PREFIX + " Testing bug5455";
         TestUtil.addMessageLmtp(subject, recipient, recipient);
-        
+
         ZMessage msg = TestUtil.getMessage(mMbox, "in:" + FOLDER1_PATH + " " + subject);
         TestUtil.verifyFlag(mMbox, msg, Flag.flagged);
         TestUtil.verifyTag(mMbox, msg, TAG1_NAME);
-        
+
         msg = TestUtil.getMessage(mMbox, "in:" + FOLDER2_PATH + " " + subject);
         TestUtil.verifyFlag(mMbox, msg, Flag.flagged);
         TestUtil.verifyTag(mMbox, msg, TAG1_NAME);
@@ -359,29 +359,26 @@ extends TestCase {
         TestUtil.waitForMessage(mMbox, "in:inbox dontDiscard");
         assertEquals(0, TestUtil.search(mMbox, "in:inbox doDiscard").size());
     }
-    
+
     /**
      * Tests filing into a mountpoint folder.
-     * @throws Exception
      */
-    // Disabled until Bug 57380 is fixed
-    public void disabledTestMountpoint()
-    throws Exception {
+    public void testMountpoint() throws Exception {
         // Send message.
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String address = TestUtil.getAddress(USER_NAME);
         String subject = NAME_PREFIX + " mountpointRoot1";
         TestUtil.addMessageLmtp(subject, address, address);
-        
+
         // Confirm that it gets filed into the mountpoint folder and not in inbox.
         TestUtil.waitForMessage(mbox, "in:\"/" + MOUNTPOINT_FOLDER_NAME + "\" subject:\"" + subject + "\"");
         assertEquals(0, TestUtil.search(mbox, "in:inbox subject:\"" + subject + "\"").size());
-        
+
         // Delete the remote folder.
         ZMailbox remote = TestUtil.getZMailbox(REMOTE_USER_NAME);
         ZFolder remoteFolder = remote.getFolderByPath("/" + MOUNTPOINT_FOLDER_NAME);
         remote.deleteFolder(remoteFolder.getId());
-        
+
         // Send another message, confirm that it gets filed into inbox and not in the mountpoint folder.
         subject = NAME_PREFIX + " mountpointRoot2";
         TestUtil.addMessageLmtp(subject, address, address);
@@ -389,25 +386,23 @@ extends TestCase {
         assertEquals(0, TestUtil.search(mbox,
             "in:\"/" + MOUNTPOINT_FOLDER_NAME + "\" subject:\"" + subject + "\"").size());
     }
-    
-    // Disabled until Bug 57380 is fixed
-    public void disabledTestMountpointSubfolder()
-    throws Exception {
+
+    public void testMountpointSubfolder() throws Exception {
         // Send message.
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String address = TestUtil.getAddress(USER_NAME);
         String subject = NAME_PREFIX + " mountpointSub1";
         TestUtil.addMessageLmtp(subject, address, address);
-        
+
         // Confirm that it gets filed into the mountpoint subfolder and not in inbox.
         TestUtil.waitForMessage(mbox, "in:\"" + MOUNTPOINT_SUBFOLDER_PATH + "\" subject:\"" + subject + "\"");
         assertEquals(0, TestUtil.search(mbox, "in:inbox subject:\"" + subject + "\"").size());
-        
+
         // Delete the remote subfolder.
         ZMailbox remote = TestUtil.getZMailbox(REMOTE_USER_NAME);
         ZFolder remoteFolder = remote.getFolderByPath(MOUNTPOINT_SUBFOLDER_PATH);
         remote.deleteFolder(remoteFolder.getId());
-        
+
         // Send another message, confirm that it gets filed into inbox and not in the mountpoint subfolder.
         subject = NAME_PREFIX + " mountpointSub2";
         TestUtil.addMessageLmtp(subject, address, address);
@@ -424,7 +419,7 @@ extends TestCase {
         doTestEscape("\\/\\/", "\\\\/\\\\/");
         doTestEscape("\"\\\"", "\\\"\\\\\\\"");
     }
-    
+
     private void doTestEscape(String original, String escaped) {
         assertEquals(escaped, FilterUtil.escape(original));
         assertEquals(original, FilterUtil.unescape(escaped));
@@ -445,14 +440,14 @@ extends TestCase {
         // Compare result.
         script = normalizeWhiteSpace(script);
         convertedScript = normalizeWhiteSpace(convertedScript);
-        
+
         // Change "fileInto" to "fileinto".  We have both in the test script
         // to test case insensitivity, but the converted script will only have
         // the lower case version.
         script = script.replace("fileInto", "fileinto");
         assertEquals(script, convertedScript);
     }
-    
+
     public void testMimeHeader()
     throws Exception {
         // Create a text/plain message with a text/html attachment.
@@ -460,24 +455,24 @@ extends TestCase {
         String attachmentData = "<html><body>I'm so attached to you.</body></html>";
         String content = new MessageBuilder().withSubject(subject).withToRecipient(USER_NAME)
             .withAttachment(attachmentData, "attachment.html", "text/html").create();
-        
+
         // Create filter rules.
         List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
-        
+
         conditions.add(new ZMimeHeaderCondition("Content-Type", HeaderOp.CONTAINS, "text/plain"));
         actions.add(new ZTagAction(mTag1.getName()));
         rules.add(new ZFilterRule("testMarkRead 1", true, false, conditions, actions));
-        
+
         conditions = new ArrayList<ZFilterCondition>();
         actions = new ArrayList<ZFilterAction>();
         conditions.add(new ZMimeHeaderCondition("Content-Type", HeaderOp.CONTAINS, "text/html"));
         actions.add(new ZTagAction(mTag2.getName()));
         rules.add(new ZFilterRule("testMarkRead 2", true, false, conditions, actions));
-        
+
         saveIncomingRules(mMbox, new ZFilterRules(rules));
-        
+
         // Deliver message and make sure that tag 2 was applied, but not tag 1.
         TestUtil.addMessageLmtp(new String[] { USER_NAME }, USER_NAME, content);
         ZMessage msg = TestUtil.getMessage(mMbox, "in:inbox subject:\"" + subject + "\"");
@@ -487,7 +482,7 @@ extends TestCase {
         assertTrue(tagIds.contains(mTag1.getId()));
         assertTrue(tagIds.contains(mTag2.getId()));
     }
-    
+
     public void testToOrCc()
     throws Exception {
 
@@ -700,7 +695,7 @@ extends TestCase {
     public void testMarkRead()
     throws Exception {
         String folderName = NAME_PREFIX + " testMarkRead";
-        
+
         // if the subject contains "testMarkRead", file into a folder and mark read
         List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
@@ -710,19 +705,19 @@ extends TestCase {
         actions.add(new ZMarkAction(MarkOp.READ));
         rules.add(new ZFilterRule("testMarkRead", true, false, conditions, actions));
         saveIncomingRules(mMbox, new ZFilterRules(rules));
-        
+
         // Deliver message.
         String address = TestUtil.getAddress(USER_NAME);
         String subject = NAME_PREFIX + " testMarkRead";
         TestUtil.addMessageLmtp(subject, address, address);
-        
+
         // Check folder and unread state.
         ZMessage msg = TestUtil.getMessage(mMbox, "in:\"" + folderName + "\" subject:\"" + subject + "\"");
         String flags = msg.getFlags();
         assertTrue("Unexpected flags: " + flags,
             flags == null || flags.indexOf(ZMessage.Flag.unread.getFlagChar()) < 0);
     }
-    
+
     /**
      * Confirms that the header test works with headers that are folded.
      * See section 2.2.3 of RFC 2822 and bug 14942.
@@ -732,12 +727,12 @@ extends TestCase {
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
         List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
-        
+
         // if subject contains "a b c", mark as flagged
         conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "a b c"));
         actions.add(new ZMarkAction(MarkOp.FLAGGED));
         rules.add(new ZFilterRule("testHeaderFolding", true, false, conditions, actions));
-        
+
         ZFilterRules zRules = new ZFilterRules(rules);
         saveIncomingRules(mMbox, zRules);
 
@@ -748,42 +743,42 @@ extends TestCase {
         ZMessage msg = TestUtil.getMessage(mMbox, "in:inbox subject:\"a b c\"");
         assertTrue("Message was not flagged", msg.isFlagged());
     }
-    
+
     public void testInvite()
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        
+
         // Create tags.
         String prefix = NAME_PREFIX + " testInvite ";
-        
+
         ZTag tagNoMethod = mbox.createTag(prefix + "no method", null);
         ZTag tagAnyReply = mbox.createTag(prefix + "any reply", null);
         ZTag tagAnyRequest = mbox.createTag(prefix + "any request", null);
         ZTag tagRequestOrCancel = mbox.createTag(prefix + "request or cancel", null);
         ZTag tagReply = mbox.createTag(prefix + "reply", null);
-        
+
         // Create filter rules that set tags based on conditions.
         List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
         ZFilterCondition condition = new ZInviteCondition(true);
         ZFilterAction action = new ZTagAction(tagNoMethod.getName());
         rules.add(createRule("testInvite - no method", condition, action));
-        
+
         condition = new ZInviteCondition(true, ZInviteCondition.METHOD_ANYREPLY);
         action = new ZTagAction(tagAnyReply.getName());
         rules.add(createRule("testInvite - any reply", condition, action));
-        
+
         condition = new ZInviteCondition(true, ZInviteCondition.METHOD_ANYREQUEST);
         action = new ZTagAction(tagAnyRequest.getName());
         rules.add(createRule("testInvite - any request", condition, action));
-        
+
         condition = new ZInviteCondition(true, Arrays.asList(ZInviteCondition.METHOD_REQUEST, ZInviteCondition.METHOD_CANCEL));
         action = new ZTagAction(tagRequestOrCancel.getName());
         rules.add(createRule("testInvite - request or cancel", condition, action));
-        
+
         condition = new ZInviteCondition(true, ZInviteCondition.METHOD_REPLY);
         action = new ZTagAction(tagReply.getName());
         rules.add(createRule("testInvite - reply", condition, action));
-        
+
         ZFilterRules zRules = new ZFilterRules(rules);
         saveIncomingRules(mMbox, zRules);
 
@@ -793,7 +788,7 @@ extends TestCase {
         Date startDate = new Date(System.currentTimeMillis() + Constants.MILLIS_PER_DAY);
         Date endDate = new Date(startDate.getTime() + Constants.MILLIS_PER_HOUR);
         TestUtil.createAppointment(organizer, subject, mbox.getName(), startDate, endDate);
-        
+
         // Get message and check tags.
         ZMessage msg = TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");
         Set<String> tagIds = getTagIds(msg);
@@ -802,7 +797,7 @@ extends TestCase {
         assertTrue(tagIds.contains(tagAnyRequest.getId()));
         assertTrue(tagIds.contains(tagRequestOrCancel.getId()));
         assertFalse(tagIds.contains(tagReply.getId()));
-        
+
         // Now test filtering a reply to an invite.  Send an invite to user2,
         // and have user2 accept the appointment.
         organizer = TestUtil.getZMailbox(USER_NAME);
@@ -811,13 +806,13 @@ extends TestCase {
         startDate = new Date(startDate.getTime() + Constants.MILLIS_PER_DAY);
         endDate = new Date(endDate.getTime() + Constants.MILLIS_PER_DAY);
         TestUtil.createAppointment(organizer, subject, mbox.getName(), startDate, endDate);
-        
+
         // Receive the invite and accept the appointment.
         msg = TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");
         subject = NAME_PREFIX + " testInvite reply";
         TestUtil.sendInviteReply(mbox, msg.getId(), organizer.getName(), subject, ZMailbox.ReplyVerb.ACCEPT);
         msg = TestUtil.waitForMessage(organizer, "in:inbox subject:\"" + subject + "\"");
-        
+
         // Check tags on the invite reply.
         tagIds = getTagIds(msg);
         assertTrue(tagIds.contains(tagNoMethod.getId()));
@@ -826,11 +821,11 @@ extends TestCase {
         assertFalse(tagIds.contains(tagRequestOrCancel.getId()));
         assertTrue(tagIds.contains(tagReply.getId()));
     }
-    
+
     private ZFilterRule createRule(String name, ZFilterCondition condition, ZFilterAction action) {
         return new ZFilterRule(name, true, false, Arrays.asList(condition), Arrays.asList(action));
     }
-    
+
     /**
      * Make sure we disallow more than four asterisks in a :matches condition (bug 35983).
      */
@@ -846,7 +841,7 @@ extends TestCase {
         conditions.add(condition);
         actions.add(action);
         rules.add(new ZFilterRule("test many asterisks", true, false, conditions, actions));
-        
+
         ZFilterRules zRules = new ZFilterRules(rules);
         try {
             mMbox.saveIncomingFilterRules(zRules);
@@ -855,7 +850,7 @@ extends TestCase {
             assertTrue("Unexpected exception: " + e, e.getMessage().contains("four asterisks"));
         }
     }
-    
+
     public void testDateFiltering()
     throws Exception {
         // Before tomorrow.
@@ -874,11 +869,11 @@ extends TestCase {
         conditions.add(new ZDateCondition(DateOp.AFTER, new Date(System.currentTimeMillis() - Constants.MILLIS_PER_DAY)));
         actions.add(new ZTagAction(tagAfterYesterday.getName()));
         rules.add(new ZFilterRule("after yesterday", true, false, conditions, actions));
-        
+
         // Save rules.
         ZFilterRules zRules = new ZFilterRules(rules);
         mMbox.saveIncomingFilterRules(zRules);
-        
+
         // Old message.
         String[] recipients = new String[] { USER_NAME };
         String subject = NAME_PREFIX + " testDateFiltering old";
@@ -890,7 +885,7 @@ extends TestCase {
         Set<String> tagIds = getTagIds(msg);
         assertEquals(1, tagIds.size());
         assertTrue(tagIds.contains(tagBeforeTomorrow.getId()));
-        
+
         // Current message.
         subject = NAME_PREFIX + " testDateFiltering current";
         content = TestUtil.getTestMessage(subject, USER_NAME, USER_NAME, null);
@@ -900,7 +895,7 @@ extends TestCase {
         assertEquals(2, tagIds.size());
         assertTrue(tagIds.contains(tagAfterYesterday.getId()));
         assertTrue(tagIds.contains(tagBeforeTomorrow.getId()));
-        
+
         // Future message.
         subject = NAME_PREFIX + " testDateFiltering future";
         content = TestUtil.getTestMessage(subject, USER_NAME, USER_NAME,
@@ -910,7 +905,7 @@ extends TestCase {
         tagIds = getTagIds(msg);
         assertEquals(1, tagIds.size());
         assertTrue(tagIds.contains(tagAfterYesterday.getId()));
-        
+
         // No date header (bug 44079).
         subject = NAME_PREFIX + " testDateFiltering no date header";
         content = removeHeader(TestUtil.getTestMessage(subject, USER_NAME, USER_NAME, null), "Date");
@@ -921,7 +916,7 @@ extends TestCase {
         assertTrue(tagIds.contains(tagAfterYesterday.getId()));
         assertTrue(tagIds.contains(tagBeforeTomorrow.getId()));
     }
-    
+
     private Set<String> getTagIds(ZMessage msg) {
         Set<String> tagIds = new HashSet<String>();
         String tagIdString = msg.getTagIds();
@@ -930,7 +925,7 @@ extends TestCase {
         }
         return tagIds;
     }
-    
+
     private String removeHeader(String content, String headerName)
     throws IOException {
         StringBuilder buf = new StringBuilder();
@@ -944,7 +939,7 @@ extends TestCase {
         }
         return buf.toString();
     }
-    
+
     /**
      * Tests matching a header against a wildcard expression.  See bug 21701.
      */
@@ -953,13 +948,13 @@ extends TestCase {
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
         List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
-        
+
         // If subject matches the first for characters + *, mark as flagged.
         String pattern = NAME_PREFIX.substring(0, 4) + "*";
         conditions.add(new ZHeaderCondition("subject", HeaderOp.MATCHES, pattern));
         actions.add(new ZMarkAction(MarkOp.FLAGGED));
         rules.add(new ZFilterRule("testHeaderMatches", true, false, conditions, actions));
-        
+
         ZFilterRules zRules = new ZFilterRules(rules);
         saveIncomingRules(mMbox, zRules);
 
@@ -970,7 +965,7 @@ extends TestCase {
         ZMessage msg = TestUtil.getMessage(mMbox, "in:inbox subject:testHeaderMatches");
         assertTrue("Message was not flagged", msg.isFlagged());
     }
-    
+
     /**
      * Confirms that the body test looks for text in the main message
      * body and attached message bodies, but not in attachments.
@@ -984,29 +979,29 @@ extends TestCase {
         doBodyContainsTest("text version of the attached message body", true);
         doBodyContainsTest("HTML version the attached message body", true);
         doBodyContainsTest("body of a plain attached message", true);
-        
+
         // Make sure test is case-insensitive (bug 36905).
         doBodyContainsTest("TeXt VeRsIoN", true);
         doBodyContainsTest("hTmL vErSiOn", true);
-        
+
         // Check the case where the entire line matches (bug 33793).
         doBodyContainsTest("This is the text version of the main body of the message.", true);
-        
+
         // Check the case where the substring spans multiple lines.
         doBodyContainsTest("This is the text version of the main body of the message. This is the second line.", true);
     }
-    
+
     private void doBodyContainsTest(String substring, boolean contains)
     throws Exception {
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
         List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
-        
+
         // If subject matches the first for characters + *, mark as flagged.
         conditions.add(new ZBodyCondition(BodyOp.CONTAINS, substring));
         actions.add(new ZMarkAction(MarkOp.FLAGGED));
         rules.add(new ZFilterRule("testBodyContains", true, false, conditions, actions));
-        
+
         ZFilterRules zRules = new ZFilterRules(rules);
         saveIncomingRules(mMbox, zRules);
 
@@ -1079,25 +1074,25 @@ extends TestCase {
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
         List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
-        
+
         // if subject contains "testRedirect", redirect to user2
         conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "testRedirect"));
         actions.add(new ZRedirectAction(TestUtil.getAddress(REMOTE_USER_NAME)));
         rules.add(new ZFilterRule("testRedirect", true, false, conditions, actions));
-        
+
         ZFilterRules zRules = new ZFilterRules(rules);
         saveIncomingRules(mMbox, zRules);
-        
+
         // Add a message.  Set the From header to something bogus to make
         // sure we're not rewriting it
         String from = "joebob@mycompany.com";
         String subject = NAME_PREFIX + " testRedirect 1";
         TestUtil.addMessageLmtp(subject, USER_NAME, from);
-        
+
         // Confirm that user1 did not receive it.
         List<ZMessage> messages = TestUtil.search(mMbox, "subject:\"" + subject + "\"");
         assertEquals(0, messages.size());
-        
+
         // Confirm that user2 received it, and make sure X-ZimbraForwarded is set.
         ZMailbox remoteMbox = TestUtil.getZMailbox(REMOTE_USER_NAME);
         ZMessage msg = TestUtil.waitForMessage(remoteMbox, "in:inbox subject:\"" + subject + "\"");
@@ -1106,18 +1101,18 @@ extends TestCase {
         Account user1 = TestUtil.getAccount(USER_NAME);
         assertEquals(user1.getName(), mimeMsg.getHeader(FilterUtil.HEADER_FORWARDED));
         assertEquals(from, mimeMsg.getHeader("From"));
-        
-        // Check zimbraMailRedirectSetEnvelopeSender=FALSE. 
+
+        // Check zimbraMailRedirectSetEnvelopeSender=FALSE.
         int port = 6025;
         DummySmtpServer smtp = startSmtpServer(port);
         Server server = Provisioning.getInstance().getLocalServer();
         server.setSmtpPort(port);
         server.setMailRedirectSetEnvelopeSender(false);
-        
+
         TestUtil.addMessageLmtp(subject, USER_NAME, from);
         assertEquals(from, smtp.getMailFrom());
 
-        // Check zimbraMailRedirectSetEnvelopeSender=TRUE. 
+        // Check zimbraMailRedirectSetEnvelopeSender=TRUE.
         smtp = startSmtpServer(port);
         server.setMailRedirectSetEnvelopeSender(true);
         subject = NAME_PREFIX + " testRedirect 2";
@@ -1125,7 +1120,7 @@ extends TestCase {
         String userAddress = Strings.nullToEmpty(
                 TestUtil.getAddress(USER_NAME)).toLowerCase();
         assertEquals("testRedirect 2 mail from", userAddress, smtp.getMailFrom());
-        
+
         // Check empty envelope sender.
         smtp = startSmtpServer(port);
         subject = NAME_PREFIX + " testRedirect 3";
@@ -1133,21 +1128,21 @@ extends TestCase {
         String[] recipients = new String[] { USER_NAME };
         TestUtil.addMessageLmtp(recipients, null, msgContent);
         assertTrue(smtp.getMailFrom(), StringUtil.isNullOrEmpty(smtp.getMailFrom()));
-        
+
         // Check Auto-Submitted=yes.
         smtp = startSmtpServer(port);
         subject = NAME_PREFIX + " testRedirect 4";
         msgContent = "Auto-Submitted: yes\r\n" + TestUtil.getTestMessage(subject, USER_NAME, USER_NAME, null);
         TestUtil.addMessageLmtp(recipients, USER_NAME, msgContent);
         assertTrue(smtp.getMailFrom(), StringUtil.isNullOrEmpty(smtp.getMailFrom()));
-        
+
         // Check Auto-Submitted=no.
         smtp = startSmtpServer(port);
         subject = NAME_PREFIX + " testRedirect 5";
         msgContent = "Auto-Submitted: no\r\n" + TestUtil.getTestMessage(subject, USER_NAME, USER_NAME, null);
         TestUtil.addMessageLmtp(recipients, USER_NAME, msgContent);
         assertEquals("testRedirect 5 mail from", userAddress, smtp.getMailFrom());
-        
+
         // Check Content-Type=multipart/report.
         smtp = startSmtpServer(port);
         subject = NAME_PREFIX + " testRedirect 6";
@@ -1156,14 +1151,14 @@ extends TestCase {
         TestUtil.addMessageLmtp(recipients, USER_NAME, msgContent);
         assertTrue(smtp.getMailFrom(), StringUtil.isNullOrEmpty(smtp.getMailFrom()));
     }
-    
+
     private DummySmtpServer startSmtpServer(int port) {
         DummySmtpServer smtp = new DummySmtpServer(port);
         Thread smtpServerThread = new Thread(smtp);
         smtpServerThread.start();
         return smtp;
     }
-    
+
     /**
      * Confirms that the message gets delivered even when a mail loop occurs.
      */
@@ -1172,19 +1167,19 @@ extends TestCase {
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
         List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
-        
+
         // if subject contains "testRedirectMailLoop", redirect to user1
         conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "testRedirectMailLoop"));
         actions.add(new ZRedirectAction(TestUtil.getAddress(USER_NAME)));
         rules.add(new ZFilterRule("testRedirectMailLoop", true, false, conditions, actions));
-        
+
         ZFilterRules zRules = new ZFilterRules(rules);
         saveIncomingRules(mMbox, zRules);
 
         // Add a message.
         String subject = NAME_PREFIX + " testRedirectMailLoop";
         TestUtil.addMessageLmtp(subject, USER_NAME, USER_NAME);
-        
+
         // Confirm that user1 received it.
         ZMessage msg = TestUtil.waitForMessage(mMbox, "subject:\"" + subject + "\"");
         byte[] content = TestUtil.getContent(mMbox, msg.getId()).getBytes();
@@ -1192,37 +1187,37 @@ extends TestCase {
         Account user1 = TestUtil.getAccount(USER_NAME);
         assertEquals(user1.getName(), mimeMsg.getHeader(FilterUtil.HEADER_FORWARDED));
     }
-    
+
     public void testAttachment()
     throws Exception {
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
         List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
-        
+
         // If attachment exists, set tag1.  If attachment doesn't exist, set tag2.
         ZTag tag1 = mMbox.createTag(NAME_PREFIX + " testAttachment1", null);
         ZTag tag2 = mMbox.createTag(NAME_PREFIX + " testAttachment2", null);
-        
+
         conditions.add(new ZAttachmentExistsCondition(true));
         actions.add(new ZTagAction(tag1.getName()));
         rules.add(new ZFilterRule("testAttachment1", true, false, conditions, actions));
-        
+
         conditions = new ArrayList<ZFilterCondition>();
         actions = new ArrayList<ZFilterAction>();
         conditions.add(new ZAttachmentExistsCondition(false));
         actions.add(new ZTagAction(tag2.getName()));
         rules.add(new ZFilterRule("testAttachment2", true, false, conditions, actions));
-        
+
         ZFilterRules zRules = new ZFilterRules(rules);
         saveIncomingRules(mMbox, zRules);
-        
+
         // Add a message with an attachment.
         String address = TestUtil.getAddress(USER_NAME);
         String subject = NAME_PREFIX + " testAttachment1";
         String msgContent =  new MessageBuilder().withSubject(subject).withAttachment("attach this", "attach.txt", "text/plain").create();
         TestUtil.addMessageLmtp(new String[] { address }, address, msgContent);
         ZMessage msg = TestUtil.getMessage(mMbox, "in:inbox subject:\"" + subject + "\"");
-        
+
         // Check the tag states.
         Set<String> tagIds = getTagIds(msg);
         assertEquals(1, tagIds.size());
@@ -1233,13 +1228,13 @@ extends TestCase {
         msgContent =  new MessageBuilder().withSubject(subject).create();
         TestUtil.addMessageLmtp(new String[] { address }, address, msgContent);
         msg = TestUtil.getMessage(mMbox, "in:inbox subject:\"" + subject + "\"");
-        
+
         // Check the tag states.
         tagIds = getTagIds(msg);
         assertEquals(1, tagIds.size());
         assertTrue(tagIds.contains(tag2.getId()));
     }
-    
+
     /**
      * Tests {@link FilterUtil#parseSize}.
      */
@@ -1256,7 +1251,7 @@ extends TestCase {
         } catch (NumberFormatException e) {
         }
     }
-    
+
     /**
      * Tests the old <tt>GetRulesRequest</tt> and <tt>SaveRulesRequest</tt>
      * SOAP API's (bug 42320).
@@ -1266,7 +1261,7 @@ extends TestCase {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         Account account = TestUtil.getAccount(USER_NAME);
         String oldRules = account.getMailSieveScript();
-        
+
         // Get rules and save the same rules.
         Element response = mbox.invoke(new XMLElement(MailConstants.GET_RULES_REQUEST));
         Element rulesEl = response.getElement(MailConstants.E_RULES).detach();
@@ -1274,14 +1269,14 @@ extends TestCase {
         Element request = rulesEl.getFactory().createElement(MailConstants.SAVE_RULES_REQUEST);
         request.addElement(rulesEl);
         mbox.invoke(request);
-        
+
         // Make sure the rules haven't changed.
         account = TestUtil.getAccount(USER_NAME);
         oldRules = normalize(oldRules);
         String newRules = normalize(account.getMailSieveScript());
         assertEquals(oldRules, newRules);
     }
-    
+
     /**
      * Converts the script to XML and back again.
      */
@@ -1289,15 +1284,15 @@ extends TestCase {
     throws ParseException, ServiceException {
         List<String> ruleNames = RuleManager.getRuleNames(script);
         Node node = RuleManager.getSieveFactory().parse(new ByteArrayInputStream(script.getBytes()));
-        
-        // Convert from Sieve to SOAP and back again. 
+
+        // Convert from Sieve to SOAP and back again.
         SieveToSoap sieveToSoap = new SieveToSoap(XMLElement.mFactory, ruleNames);
         sieveToSoap.accept(node);
         SoapToSieve soapToSieve = new SoapToSieve(sieveToSoap.getRootElement());
-        
+
         return soapToSieve.getSieveScript();
     }
-    
+
     public void testStripBracketsAndQuotes()
     throws Exception {
         assertEquals(null, RuleRewriter.stripBracketsAndQuotes(null));
@@ -1308,7 +1303,7 @@ extends TestCase {
         assertEquals("x\"", RuleRewriter.stripBracketsAndQuotes("x\""));
         assertEquals("[\"x\"", RuleRewriter.stripBracketsAndQuotes("[\"x\""));
     }
-    
+
     /**
      * Confirms that we handle the negative test flag properly with multiple
      * tests (bug 46007).
@@ -1319,7 +1314,7 @@ extends TestCase {
         String normalized = normalize(script); // Convert to XML and back again.
         assertEquals(normalizeWhiteSpace(script), normalizeWhiteSpace(normalized));
     }
-    
+
     private String normalizeWhiteSpace(String script) {
         StringBuilder buf = new StringBuilder(script.length());
         boolean inWhiteSpace = false;
@@ -1337,7 +1332,8 @@ extends TestCase {
         }
         return buf.toString();
     }
-    
+
+    @Override
     protected void tearDown() throws Exception {
         mMbox.saveIncomingFilterRules(mOriginalIncomingRules);
         mMbox.saveOutgoingFilterRules(mOriginalOutgoingRules);
@@ -1351,7 +1347,7 @@ extends TestCase {
     throws Exception {
         TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
         TestUtil.deleteTestData(REMOTE_USER_NAME, NAME_PREFIX);
-        
+
         // Clean up messages created by testBase64Subject()
         // bug 36705 for (ZMessage msg : TestUtil.search(mMbox, "villanueva")) {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -1359,7 +1355,7 @@ extends TestCase {
             mbox.deleteMessage(msg.getId());
         }
     }
-    
+
     private ZFilterRules getTestOutgoingRules()
     throws Exception {
         List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
@@ -1404,7 +1400,7 @@ extends TestCase {
         actions.add(new ZTagAction(TAG2_NAME));
         actions.add(new ZMarkAction(MarkOp.FLAGGED));
         rules.add(new ZFilterRule("testMatchMultipleFilters2", true, false, conditions, actions));
-        
+
         // if subject contains bug5455, flag, file into folder1, tag with tag1, file into folder2
         conditions = new ArrayList<ZFilterCondition>();
         actions = new ArrayList<ZFilterAction>();
@@ -1421,14 +1417,14 @@ extends TestCase {
         conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "doDiscard"));
         actions.add(new ZDiscardAction());
         rules.add(new ZFilterRule("testDiscard", true, false, conditions, actions));
-        
+
         // if subject contains "mountpointRoot", file into the mountpoint root folder
         conditions = new ArrayList<ZFilterCondition>();
         actions = new ArrayList<ZFilterAction>();
         conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "mountpointRoot"));
         actions.add(new ZFileIntoAction("/" + MOUNTPOINT_FOLDER_NAME));
         rules.add(new ZFilterRule("testMountpoint", true, false, conditions, actions));
-        
+
         // if subject contains "mountpointSub", file into the mountpoint subfolder
         conditions = new ArrayList<ZFilterCondition>();
         actions = new ArrayList<ZFilterAction>();
@@ -1438,7 +1434,7 @@ extends TestCase {
 
         return new ZFilterRules(rules);
     }
-    
+
     /**
      * Saves the given incoming filter rules.  Then gets them from the server and confirms that
      * the element tree matches.
@@ -1448,13 +1444,13 @@ extends TestCase {
         Element root = new XMLElement("test");
         Element expected = rules.toElement(root);
         mbox.saveIncomingFilterRules(rules);
-        
+
         rules = mbox.getIncomingFilterRules(true);
         Element actual = rules.toElement(root);
-        
+
         TestUtil.assertEquals(expected, actual);
     }
-    
+
     /**
      * Saves the given outgoing filter rules.  Then gets them from the server and confirms that
      * the element tree matches.

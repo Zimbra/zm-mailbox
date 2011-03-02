@@ -54,12 +54,10 @@ final class RemoteQueryOperation extends FilterQueryOperation {
         for (QueryTarget target : targets) {
             assert(target != QueryTarget.LOCAL);
             if (target != QueryTarget.UNSPECIFIED) {
-                if (target == null) {
+                if (queryTarget == null) {
                     queryTarget = target;
-                } else {
-                    if (!queryTarget.equals(target)) {
-                        return false;
-                    }
+                } else if (!queryTarget.equals(target)) {
+                    return false;
                 }
             }
         }
