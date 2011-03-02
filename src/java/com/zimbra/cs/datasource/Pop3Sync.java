@@ -196,6 +196,7 @@ public class Pop3Sync extends MailItemImport {
                 }
                 throw e;
             }
+            checkIsEnabled();
             connection.deleteMessage(msgno);
         }
         IOExceptionHandler.getInstance().checkpointIOExceptionRate(mbox);
@@ -243,6 +244,7 @@ public class Pop3Sync extends MailItemImport {
         throws ServiceException, IOException {
         ContentInputStream cis = null;
         MessageContent mc = null;
+        checkIsEnabled();
         try {
             cis = connection.getMessage(msgno);
             mc = MessageContent.read(cis, size);
