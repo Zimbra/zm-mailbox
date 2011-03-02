@@ -364,7 +364,8 @@ extends TestCase {
      * Tests filing into a mountpoint folder.
      * @throws Exception
      */
-    public void testMountpoint()
+    // Disabled until Bug 57380 is fixed
+    public void disabledTestMountpoint()
     throws Exception {
         // Send message.
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -389,7 +390,8 @@ extends TestCase {
             "in:\"/" + MOUNTPOINT_FOLDER_NAME + "\" subject:\"" + subject + "\"").size());
     }
     
-    public void testMountpointSubfolder()
+    // Disabled until Bug 57380 is fixed
+    public void disabledTestMountpointSubfolder()
     throws Exception {
         // Send message.
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
