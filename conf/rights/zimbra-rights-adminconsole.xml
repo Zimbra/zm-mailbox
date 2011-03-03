@@ -2480,6 +2480,31 @@
 </right>
 
 
+<right type="combo" name="adminConsoleCreateSubDomainModifierRights">
+   <!-- set on the domain target with subDomain modifier * to allow da
+   have the same right on the subdomain -->
+  <desc>Admin Console Create Sub Domain Rights</desc>
+  <rights>
+       <r n="adminConsoleDomainRights"/>
+  </rights>
+</right>
+
+<right type="combo" name="adminConsoleCreateSubDomainRights">
+  <desc>Admin Console Create Sub Domain Account Rights</desc>
+  <rights>
+    <!-- View Accounts Button ?-->
+    <r n="adminConsoleAccountRights"></r>
+    <r n="adminConsoleDLRights"></r>
+    <r n="adminConsoleResourceRights"></r>
+    <r n="adminConsoleAliasRights"></r>
+    <r n="adminConsoleSavedSearchRights"></r>
+    <r n="adminConsoleDomainRights"></r>
+    <r n="adminConsoleCreateGALRights"></r>
+    <r n="createSubDomain"/>
+  </rights>
+</right>
+
+
 <right type="combo" name="adminConsoleServerRights">
   <desc>Admin Console Server Rights</desc>
   <rights>
