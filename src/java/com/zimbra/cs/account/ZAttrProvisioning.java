@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110301-1442 */
+    /* build: 7.0.0_BETA1_1111 administrator 20110301-1455 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -5653,6 +5653,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=161)
     public static final String A_zimbraObjectType = "zimbraObjectType";
+
+    /**
+     * whether stateless mode (not establishing an association with the
+     * OpenID Provider) in OpenID Consumer is enabled
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1189)
+    public static final String A_zimbraOpenidConsumerStatelessModeEnabled = "zimbraOpenidConsumerStatelessModeEnabled";
 
     /**
      * regex of alllowed characters in password
