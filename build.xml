@@ -1274,6 +1274,8 @@
                 <param name="CN" value="localhost"/>
                 <param name="OU" value="Engineering"/>
                 <param name="O" value="Zimbra Systems"/>
+            	<param name="L" value="Palo Alto"/>
+            	<param name="S" value="California"/>
                 <param name="C" value="US"/>
             </dname>
         </genkey>
@@ -1282,6 +1284,8 @@
                 <param name="CN" value="localhost"/>
                 <param name="OU" value="Engineering"/>
                 <param name="O" value="Zimbra Systems"/>
+                <param name="L" value="Palo Alto"/>
+                <param name="S" value="California"/>
                 <param name="C" value="US"/>
             </dname>
         </genkey>
@@ -1534,7 +1538,8 @@
             zimbraSmtpHostname ${zimbra.smtp.host} \
             zimbraSmtpPort 7024 \
             zimbraMailPort 7070 \
-            zimbraMailMode http \
+        	zimbraMailSSLPort 7443 \
+        	zimbraMailMode http \
             zimbraImapCleartextLoginEnabled TRUE \
             zimbraPop3CleartextLoginEnabled TRUE
             ModifyServer ${zimbra.server.hostname} \
