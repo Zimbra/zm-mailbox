@@ -41,7 +41,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110303-0146 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110303-1534 */
 
     /**
      * RFC2256: descriptive information
@@ -14914,119 +14914,195 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * SSL port for end-user UI. Requests come to this port must present a
-     * cleint certificate.
+     * enable authentication via X.509 Client Certificate. Disabled: client
+     * authentication is disabled. NeedClientAuth: client authentication is
+     * required during SSL handshake. The SSL handshake will fail if the
+     * client does not send a certificate to autenticate. WantClientAuth:
+     * client authentication is requested during SSL handshake. The SSL
+     * handshake will still proceed if the client does not send a certificate
+     * to autenticate. In the case when client does not send a certificate:
+     * if the requested resource does not require a client certificate, the
+     * request will proceed as usual; if the requested resource requires a
+     * client certificate, server will return 403 Forbidden.
      *
-     * <p>Use getMailSSLClientCertPortAsString to access value as a string.
+     * <p>Valid values: [Disabled|NeedClientAuth|WantClientAuth]
      *
-     * @see #getMailSSLClientCertPortAsString()
-     *
-     * @return zimbraMailSSLClientCertPort, or 0 if unset
-     *
-     * @since ZCS 7.1.0
-     */
-    @ZAttr(id=1190)
-    public int getMailSSLClientCertPort() {
-        return getIntAttr(Provisioning.A_zimbraMailSSLClientCertPort, 0);
-    }
-
-    /**
-     * SSL port for end-user UI. Requests come to this port must present a
-     * cleint certificate.
-     *
-     * @return zimbraMailSSLClientCertPort, or "0" if unset
+     * @return zimbraMailSSLClientCertMode, or ZAttrProvisioning.MailSSLClientCertMode.Disabled if unset and/or has invalid value
      *
      * @since ZCS 7.1.0
      */
     @ZAttr(id=1190)
-    public String getMailSSLClientCertPortAsString() {
-        return getAttr(Provisioning.A_zimbraMailSSLClientCertPort, "0");
+    public ZAttrProvisioning.MailSSLClientCertMode getMailSSLClientCertMode() {
+        try { String v = getAttr(Provisioning.A_zimbraMailSSLClientCertMode); return v == null ? ZAttrProvisioning.MailSSLClientCertMode.Disabled : ZAttrProvisioning.MailSSLClientCertMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.MailSSLClientCertMode.Disabled; }
     }
 
     /**
-     * SSL port for end-user UI. Requests come to this port must present a
-     * cleint certificate.
+     * enable authentication via X.509 Client Certificate. Disabled: client
+     * authentication is disabled. NeedClientAuth: client authentication is
+     * required during SSL handshake. The SSL handshake will fail if the
+     * client does not send a certificate to autenticate. WantClientAuth:
+     * client authentication is requested during SSL handshake. The SSL
+     * handshake will still proceed if the client does not send a certificate
+     * to autenticate. In the case when client does not send a certificate:
+     * if the requested resource does not require a client certificate, the
+     * request will proceed as usual; if the requested resource requires a
+     * client certificate, server will return 403 Forbidden.
      *
-     * @param zimbraMailSSLClientCertPort new value
+     * <p>Valid values: [Disabled|NeedClientAuth|WantClientAuth]
+     *
+     * @return zimbraMailSSLClientCertMode, or "Disabled" if unset
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1190)
+    public String getMailSSLClientCertModeAsString() {
+        return getAttr(Provisioning.A_zimbraMailSSLClientCertMode, "Disabled");
+    }
+
+    /**
+     * enable authentication via X.509 Client Certificate. Disabled: client
+     * authentication is disabled. NeedClientAuth: client authentication is
+     * required during SSL handshake. The SSL handshake will fail if the
+     * client does not send a certificate to autenticate. WantClientAuth:
+     * client authentication is requested during SSL handshake. The SSL
+     * handshake will still proceed if the client does not send a certificate
+     * to autenticate. In the case when client does not send a certificate:
+     * if the requested resource does not require a client certificate, the
+     * request will proceed as usual; if the requested resource requires a
+     * client certificate, server will return 403 Forbidden.
+     *
+     * <p>Valid values: [Disabled|NeedClientAuth|WantClientAuth]
+     *
+     * @param zimbraMailSSLClientCertMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 7.1.0
      */
     @ZAttr(id=1190)
-    public void setMailSSLClientCertPort(int zimbraMailSSLClientCertPort) throws com.zimbra.common.service.ServiceException {
+    public void setMailSSLClientCertMode(ZAttrProvisioning.MailSSLClientCertMode zimbraMailSSLClientCertMode) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailSSLClientCertPort, Integer.toString(zimbraMailSSLClientCertPort));
+        attrs.put(Provisioning.A_zimbraMailSSLClientCertMode, zimbraMailSSLClientCertMode.toString());
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * SSL port for end-user UI. Requests come to this port must present a
-     * cleint certificate.
+     * enable authentication via X.509 Client Certificate. Disabled: client
+     * authentication is disabled. NeedClientAuth: client authentication is
+     * required during SSL handshake. The SSL handshake will fail if the
+     * client does not send a certificate to autenticate. WantClientAuth:
+     * client authentication is requested during SSL handshake. The SSL
+     * handshake will still proceed if the client does not send a certificate
+     * to autenticate. In the case when client does not send a certificate:
+     * if the requested resource does not require a client certificate, the
+     * request will proceed as usual; if the requested resource requires a
+     * client certificate, server will return 403 Forbidden.
      *
-     * @param zimbraMailSSLClientCertPort new value
+     * <p>Valid values: [Disabled|NeedClientAuth|WantClientAuth]
+     *
+     * @param zimbraMailSSLClientCertMode new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 7.1.0
      */
     @ZAttr(id=1190)
-    public Map<String,Object> setMailSSLClientCertPort(int zimbraMailSSLClientCertPort, Map<String,Object> attrs) {
+    public Map<String,Object> setMailSSLClientCertMode(ZAttrProvisioning.MailSSLClientCertMode zimbraMailSSLClientCertMode, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailSSLClientCertPort, Integer.toString(zimbraMailSSLClientCertPort));
+        attrs.put(Provisioning.A_zimbraMailSSLClientCertMode, zimbraMailSSLClientCertMode.toString());
         return attrs;
     }
 
     /**
-     * SSL port for end-user UI. Requests come to this port must present a
-     * cleint certificate.
+     * enable authentication via X.509 Client Certificate. Disabled: client
+     * authentication is disabled. NeedClientAuth: client authentication is
+     * required during SSL handshake. The SSL handshake will fail if the
+     * client does not send a certificate to autenticate. WantClientAuth:
+     * client authentication is requested during SSL handshake. The SSL
+     * handshake will still proceed if the client does not send a certificate
+     * to autenticate. In the case when client does not send a certificate:
+     * if the requested resource does not require a client certificate, the
+     * request will proceed as usual; if the requested resource requires a
+     * client certificate, server will return 403 Forbidden.
      *
-     * @param zimbraMailSSLClientCertPort new value
+     * <p>Valid values: [Disabled|NeedClientAuth|WantClientAuth]
+     *
+     * @param zimbraMailSSLClientCertMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 7.1.0
      */
     @ZAttr(id=1190)
-    public void setMailSSLClientCertPortAsString(String zimbraMailSSLClientCertPort) throws com.zimbra.common.service.ServiceException {
+    public void setMailSSLClientCertModeAsString(String zimbraMailSSLClientCertMode) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailSSLClientCertPort, zimbraMailSSLClientCertPort);
+        attrs.put(Provisioning.A_zimbraMailSSLClientCertMode, zimbraMailSSLClientCertMode);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * SSL port for end-user UI. Requests come to this port must present a
-     * cleint certificate.
+     * enable authentication via X.509 Client Certificate. Disabled: client
+     * authentication is disabled. NeedClientAuth: client authentication is
+     * required during SSL handshake. The SSL handshake will fail if the
+     * client does not send a certificate to autenticate. WantClientAuth:
+     * client authentication is requested during SSL handshake. The SSL
+     * handshake will still proceed if the client does not send a certificate
+     * to autenticate. In the case when client does not send a certificate:
+     * if the requested resource does not require a client certificate, the
+     * request will proceed as usual; if the requested resource requires a
+     * client certificate, server will return 403 Forbidden.
      *
-     * @param zimbraMailSSLClientCertPort new value
+     * <p>Valid values: [Disabled|NeedClientAuth|WantClientAuth]
+     *
+     * @param zimbraMailSSLClientCertMode new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 7.1.0
      */
     @ZAttr(id=1190)
-    public Map<String,Object> setMailSSLClientCertPortAsString(String zimbraMailSSLClientCertPort, Map<String,Object> attrs) {
+    public Map<String,Object> setMailSSLClientCertModeAsString(String zimbraMailSSLClientCertMode, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailSSLClientCertPort, zimbraMailSSLClientCertPort);
+        attrs.put(Provisioning.A_zimbraMailSSLClientCertMode, zimbraMailSSLClientCertMode);
         return attrs;
     }
 
     /**
-     * SSL port for end-user UI. Requests come to this port must present a
-     * cleint certificate.
+     * enable authentication via X.509 Client Certificate. Disabled: client
+     * authentication is disabled. NeedClientAuth: client authentication is
+     * required during SSL handshake. The SSL handshake will fail if the
+     * client does not send a certificate to autenticate. WantClientAuth:
+     * client authentication is requested during SSL handshake. The SSL
+     * handshake will still proceed if the client does not send a certificate
+     * to autenticate. In the case when client does not send a certificate:
+     * if the requested resource does not require a client certificate, the
+     * request will proceed as usual; if the requested resource requires a
+     * client certificate, server will return 403 Forbidden.
+     *
+     * <p>Valid values: [Disabled|NeedClientAuth|WantClientAuth]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 7.1.0
      */
     @ZAttr(id=1190)
-    public void unsetMailSSLClientCertPort() throws com.zimbra.common.service.ServiceException {
+    public void unsetMailSSLClientCertMode() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailSSLClientCertPort, "");
+        attrs.put(Provisioning.A_zimbraMailSSLClientCertMode, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * SSL port for end-user UI. Requests come to this port must present a
-     * cleint certificate.
+     * enable authentication via X.509 Client Certificate. Disabled: client
+     * authentication is disabled. NeedClientAuth: client authentication is
+     * required during SSL handshake. The SSL handshake will fail if the
+     * client does not send a certificate to autenticate. WantClientAuth:
+     * client authentication is requested during SSL handshake. The SSL
+     * handshake will still proceed if the client does not send a certificate
+     * to autenticate. In the case when client does not send a certificate:
+     * if the requested resource does not require a client certificate, the
+     * request will proceed as usual; if the requested resource requires a
+     * client certificate, server will return 403 Forbidden.
+     *
+     * <p>Valid values: [Disabled|NeedClientAuth|WantClientAuth]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -15034,9 +15110,9 @@ public class ZAttrConfig extends Entry {
      * @since ZCS 7.1.0
      */
     @ZAttr(id=1190)
-    public Map<String,Object> unsetMailSSLClientCertPort(Map<String,Object> attrs) {
+    public Map<String,Object> unsetMailSSLClientCertMode(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailSSLClientCertPort, "");
+        attrs.put(Provisioning.A_zimbraMailSSLClientCertMode, "");
         return attrs;
     }
 

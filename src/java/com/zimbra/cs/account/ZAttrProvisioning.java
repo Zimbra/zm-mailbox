@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110303-0146 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110303-1534 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -452,6 +452,20 @@ public class ZAttrProvisioning {
         public boolean isReverse_proxied() { return this == reverse_proxied;}
         public boolean isWronghost() { return this == wronghost;}
         public boolean isAlways() { return this == always;}
+    }
+
+    public static enum MailSSLClientCertMode {
+        Disabled_NeedClientAuth_WantClientAuth("Disabled|NeedClientAuth|WantClientAuth");
+        private String mValue;
+        private MailSSLClientCertMode(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MailSSLClientCertMode fromString(String s) throws ServiceException {
+            for (MailSSLClientCertMode value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isDisabled_NeedClientAuth_WantClientAuth() { return this == Disabled_NeedClientAuth_WantClientAuth;}
     }
 
     public static enum MailStatus {
@@ -4957,13 +4971,21 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailSpamLifetime = "zimbraMailSpamLifetime";
 
     /**
-     * SSL port for end-user UI. Requests come to this port must present a
-     * cleint certificate.
+     * enable authentication via X.509 Client Certificate. Disabled: client
+     * authentication is disabled. NeedClientAuth: client authentication is
+     * required during SSL handshake. The SSL handshake will fail if the
+     * client does not send a certificate to autenticate. WantClientAuth:
+     * client authentication is requested during SSL handshake. The SSL
+     * handshake will still proceed if the client does not send a certificate
+     * to autenticate. In the case when client does not send a certificate:
+     * if the requested resource does not require a client certificate, the
+     * request will proceed as usual; if the requested resource requires a
+     * client certificate, server will return 403 Forbidden.
      *
      * @since ZCS 7.1.0
      */
     @ZAttr(id=1190)
-    public static final String A_zimbraMailSSLClientCertPort = "zimbraMailSSLClientCertPort";
+    public static final String A_zimbraMailSSLClientCertMode = "zimbraMailSSLClientCertMode";
 
     /**
      * SSL port for end-user UI
