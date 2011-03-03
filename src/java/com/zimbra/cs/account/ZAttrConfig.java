@@ -41,7 +41,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 administrator 20110222-1328 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110303-0146 */
 
     /**
      * RFC2256: descriptive information
@@ -14910,6 +14910,133 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetMailReferMode(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailReferMode, "");
+        return attrs;
+    }
+
+    /**
+     * SSL port for end-user UI. Requests come to this port must present a
+     * cleint certificate.
+     *
+     * <p>Use getMailSSLClientCertPortAsString to access value as a string.
+     *
+     * @see #getMailSSLClientCertPortAsString()
+     *
+     * @return zimbraMailSSLClientCertPort, or 0 if unset
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1190)
+    public int getMailSSLClientCertPort() {
+        return getIntAttr(Provisioning.A_zimbraMailSSLClientCertPort, 0);
+    }
+
+    /**
+     * SSL port for end-user UI. Requests come to this port must present a
+     * cleint certificate.
+     *
+     * @return zimbraMailSSLClientCertPort, or "0" if unset
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1190)
+    public String getMailSSLClientCertPortAsString() {
+        return getAttr(Provisioning.A_zimbraMailSSLClientCertPort, "0");
+    }
+
+    /**
+     * SSL port for end-user UI. Requests come to this port must present a
+     * cleint certificate.
+     *
+     * @param zimbraMailSSLClientCertPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1190)
+    public void setMailSSLClientCertPort(int zimbraMailSSLClientCertPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSSLClientCertPort, Integer.toString(zimbraMailSSLClientCertPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SSL port for end-user UI. Requests come to this port must present a
+     * cleint certificate.
+     *
+     * @param zimbraMailSSLClientCertPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1190)
+    public Map<String,Object> setMailSSLClientCertPort(int zimbraMailSSLClientCertPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSSLClientCertPort, Integer.toString(zimbraMailSSLClientCertPort));
+        return attrs;
+    }
+
+    /**
+     * SSL port for end-user UI. Requests come to this port must present a
+     * cleint certificate.
+     *
+     * @param zimbraMailSSLClientCertPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1190)
+    public void setMailSSLClientCertPortAsString(String zimbraMailSSLClientCertPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSSLClientCertPort, zimbraMailSSLClientCertPort);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SSL port for end-user UI. Requests come to this port must present a
+     * cleint certificate.
+     *
+     * @param zimbraMailSSLClientCertPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1190)
+    public Map<String,Object> setMailSSLClientCertPortAsString(String zimbraMailSSLClientCertPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSSLClientCertPort, zimbraMailSSLClientCertPort);
+        return attrs;
+    }
+
+    /**
+     * SSL port for end-user UI. Requests come to this port must present a
+     * cleint certificate.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1190)
+    public void unsetMailSSLClientCertPort() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSSLClientCertPort, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SSL port for end-user UI. Requests come to this port must present a
+     * cleint certificate.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1190)
+    public Map<String,Object> unsetMailSSLClientCertPort(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSSLClientCertPort, "");
         return attrs;
     }
 

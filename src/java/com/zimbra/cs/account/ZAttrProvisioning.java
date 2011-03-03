@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 administrator 20110222-1328 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110303-0146 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -4955,6 +4955,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=105)
     public static final String A_zimbraMailSpamLifetime = "zimbraMailSpamLifetime";
+
+    /**
+     * SSL port for end-user UI. Requests come to this port must present a
+     * cleint certificate.
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1190)
+    public static final String A_zimbraMailSSLClientCertPort = "zimbraMailSSLClientCertPort";
 
     /**
      * SSL port for end-user UI

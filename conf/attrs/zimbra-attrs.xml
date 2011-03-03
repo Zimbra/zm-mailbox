@@ -5533,4 +5533,19 @@ TODO: delete them permerntly from here
   <desc>whether stateless mode (not establishing an association with the OpenID Provider) in OpenID Consumer is enabled</desc>
 </attr>
 
+<attr id="1190" name="zimbraMailSSLClientCertMode" type="enum" cardinality="single" value="Disabled|NeedClientAuth|WantClientAuth" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="7.1.0">
+  <globalConfigValue>Disabled</globalConfigValue>
+  <desc>
+    enable authentication via X.509 Client Certificate.
+    Disabled: client authentication is disabled.
+    NeedClientAuth: client authentication is required during SSL handshake.  
+        The SSL handshake will fail if the client does not send a certificate to autenticate.
+    WantClientAuth: client authentication is requested during SSL handshake.  
+        The SSL handshake will still proceed if the client does not send a certificate to autenticate.
+        In the case when client does not send a certificate: 
+        if the requested resource does not require a client certificate, the request will proceed as usual;
+        if the requested resource requires a client certificate, server will return 403 Forbidden.
+  </desc>
+</attr>
+
 </attrs>
