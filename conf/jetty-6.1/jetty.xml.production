@@ -57,11 +57,13 @@
           <Set name="Port">%%zimbraMailSSLPort%%</Set>
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
           <Set name="maxIdleTime">30000</Set> 
-	  <Set name="lowResourcesMaxIdleTime">1000</Set>
+	      <Set name="lowResourcesMaxIdleTime">1000</Set>
           <Set name="Acceptors">2</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">@@mailboxd_keystore_password@@</Set>
           <Set name="KeyPassword">@@mailboxd_keystore_password@@</Set>
+          <Set name="NeedClientAuth">%%contains VAR:zimbraMailSSLClientCertMode NeedClientAuth, true%%</Set>
+          <Set name="WantClientAuth">%%contains VAR:zimbraMailSSLClientCertMode WantClientAuth, true%%</Set>
           <Set name="ExcludeCipherSuites">
             <Array type="java.lang.String">
               %%zimbraSSLExcludeCipherSuitesXML%%
@@ -86,6 +88,8 @@
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">@@mailboxd_keystore_password@@</Set>
           <Set name="KeyPassword">@@mailboxd_keystore_password@@</Set>
+          <Set name="NeedClientAuth">%%contains VAR:zimbraMailSSLClientCertMode NeedClientAuth, true%%</Set>
+          <Set name="WantClientAuth">%%contains VAR:zimbraMailSSLClientCertMode WantClientAuth, true%%</Set>
           <Set name="ExcludeCipherSuites">
             <Array type="java.lang.String">
               %%zimbraSSLExcludeCipherSuitesXML%%
@@ -125,6 +129,7 @@
         <Call name="addRewriteRule"><Arg>/dav/*</Arg><Arg>/service/dav/home</Arg></Call>
         <Call name="addRewriteRule"><Arg>/home/*</Arg><Arg>/service/home/</Arg></Call>
         <Call name="addRewriteRule"><Arg>/user/*</Arg><Arg>/service/user/</Arg></Call>
+        <Call name="addRewriteRule"><Arg>/certauth/*</Arg><Arg>/service/certauth</Arg></Call> 
         <Call name="addRewriteRule"><Arg>%%zimbraMailURL%%/home/*</Arg><Arg>/service/home</Arg></Call>
         <Call name="addRewriteRule"><Arg>%%zimbraMailURL%%/user/*</Arg><Arg>/service/user</Arg></Call>
         <!-- stop if we've hit the proper webapps -->
