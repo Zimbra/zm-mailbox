@@ -182,6 +182,16 @@
     </init-param>
     <load-on-startup>5</load-on-startup>
   </servlet>
+  
+  <servlet>
+    <servlet-name>CertAuthServlet</servlet-name>
+    <servlet-class>com.zimbra.cs.service.CertAuthServlet</servlet-class>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>%%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7443, 7071</param-value>
+    </init-param>
+    <load-on-startup>5</load-on-startup>
+  </servlet>
 
   <servlet>
     <servlet-name>PublicICalServlet</servlet-name>
@@ -337,6 +347,16 @@
   <servlet-mapping>
     <servlet-name>PreAuthServlet</servlet-name>
     <url-pattern>/preauth</url-pattern>
+  </servlet-mapping>
+  
+  <servlet-mapping>
+    <servlet-name>CertAuthServlet</servlet-name>
+    <url-pattern>/certauth/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>CertAuthServlet</servlet-name>
+    <url-pattern>/certauth</url-pattern>
   </servlet-mapping>
 
   <servlet-mapping>
