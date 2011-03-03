@@ -331,12 +331,12 @@ public class CalendarMailSender {
         Invite defaultInv = calItem.getDefaultInviteOrNull();
 
         boolean hidePrivate = !calItem.isPublic() && !calItem.allowPrivateAccess(senderAccount, asAdmin);
-        String defaultSubject;
+        String invSubject;
         if (hidePrivate)
-            defaultSubject = L10nUtil.getMessage(MsgKey.calendarSubjectWithheld, locale);
+            invSubject = L10nUtil.getMessage(MsgKey.calendarSubjectWithheld, locale);
         else
-            defaultSubject = defaultInv != null ? defaultInv.getName() : "";
-        String sbj = getCancelSubject(defaultSubject, locale);
+            invSubject = inv != null ? inv.getName() : "";
+        String sbj = getCancelSubject(invSubject, locale);
         StringBuilder sb = new StringBuilder(text);
         sb.append("\r\n\r\n");
 

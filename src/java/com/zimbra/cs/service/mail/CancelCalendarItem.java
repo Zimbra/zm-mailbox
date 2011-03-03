@@ -40,6 +40,7 @@ import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
+import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.util.ItemId;
@@ -100,7 +101,8 @@ public class CancelCalendarItem extends CalendarRequest {
                         calItem.getId(), calItem.getFolderId(), inv.isPublic() ? inv.getName() : "(private)",
                         calItem.getUid(), recurId.getDtZ());
 
-                cancelInstance(zsc, octxt, request, acct, mbox, calItem, inv, recurId);
+                Element msgElem = request.getOptionalElement(MailConstants.E_MSG);
+                cancelInstance(zsc, octxt, msgElem, acct, mbox, calItem, inv, recurId, inv.getAttendees());
             } else {
                 // if recur is not set, then we're canceling the entire calendar item...
 
@@ -112,8 +114,32 @@ public class CancelCalendarItem extends CalendarRequest {
                 Invite seriesInv = calItem.getDefaultInviteOrNull();
                 if (seriesInv != null) {
                     if (seriesInv.getMethod().equals(ICalTok.REQUEST.toString()) ||
-                        seriesInv.getMethod().equals(ICalTok.PUBLISH.toString()))
-                        cancelInvite(zsc, octxt, request, acct, mbox, calItem, seriesInv);
+                        seriesInv.getMethod().equals(ICalTok.PUBLISH.toString())) {
+
+                        // Send cancel notice to attendees who were invited to exception instances only.
+                        // These attendees need to be notified separately because they aren't included in the series
+                        // cancel notice.
+                        List<ZAttendee> atsSeries = seriesInv.getAttendees();
+                        Invite[] invs = calItem.getInvites();
+                        for (Invite exceptInv : invs) {
+                            if (exceptInv != seriesInv) {
+                                String mthd = exceptInv.getMethod();
+                                if (mthd.equals(ICalTok.REQUEST.toString()) || mthd.equals(ICalTok.PUBLISH.toString())) {
+                                    List<ZAttendee> atsExcept = exceptInv.getAttendees();
+                                    // Find exception instance attendees who aren't series attendees.
+                                    List<ZAttendee> ats = CalendarUtils.getRemovedAttendees(atsExcept, atsSeries, false, acct);
+                                    if (!ats.isEmpty()) {
+                                        // notify ats
+                                        cancelInstance(zsc, octxt, null, acct, mbox, calItem, exceptInv, exceptInv.getRecurId(), ats);
+                                    }
+                                }
+                            }
+                        }
+
+                        // Finally, cancel the series.
+                        Element msgElem = request.getOptionalElement(MailConstants.E_MSG);
+                        cancelInvite(zsc, octxt, msgElem, acct, mbox, calItem, seriesInv);
+                    }
                     // disable change constraint checking since we've just successfully done a modify
                     octxt = new OperationContext(octxt).unsetChangeConstraint();
                 }
@@ -122,33 +148,32 @@ public class CancelCalendarItem extends CalendarRequest {
         
         Element response = getResponseElement(zsc);
         return response;
-    }        
-    
-    void cancelInstance(ZimbraSoapContext zsc, OperationContext octxt, Element request, Account acct, Mailbox mbox, CalendarItem calItem, Invite defaultInv, RecurId recurId) 
+    }
+
+    void cancelInstance(ZimbraSoapContext zsc, OperationContext octxt, Element msgElem, Account acct, Mailbox mbox,
+            CalendarItem calItem, Invite inv, RecurId recurId, List<ZAttendee> toNotify) 
     throws ServiceException {
         boolean onBehalfOf = isOnBehalfOfRequest(zsc);
         Account authAcct = getAuthenticatedAccount(zsc);
         Locale locale = !onBehalfOf ? acct.getLocale() : authAcct.getLocale();
         String text = L10nUtil.getMessage(MsgKey.calendarCancelAppointmentInstance, locale);
 
-        Invite cancelInvite = CalendarUtils.buildCancelInstanceCalendar(acct, authAcct, zsc.isUsingAdminPrivileges(), onBehalfOf, calItem, defaultInv, text, recurId);
+        Invite cancelInvite = CalendarUtils.buildCancelInstanceCalendar(acct, authAcct, zsc.isUsingAdminPrivileges(), onBehalfOf, calItem, inv, text, recurId);
         CalSendData dat = new CalSendData();
-        dat.mOrigId = new ItemId(mbox, defaultInv.getMailItemId());
+        dat.mOrigId = new ItemId(mbox, inv.getMailItemId());
         dat.mReplyType = MailSender.MSGTYPE_REPLY;
         dat.mInvite = cancelInvite;
 
         ZVCalendar iCal = dat.mInvite.newToICalendar(true);
 
         // did they specify a custom <m> message?  If so, then we don't have to build one...
-        Element msgElem = request.getOptionalElement(MailConstants.E_MSG);
-
         if (msgElem != null) {
             String desc = ParseMimeMessage.getTextPlainContent(msgElem);
             String html = ParseMimeMessage.getTextHtmlContent(msgElem);
             iCal.addDescription(desc, html);
 
             MimeBodyPart[] mbps = new MimeBodyPart[1];
-            mbps[0] = CalendarMailSender.makeICalIntoMimePart(defaultInv.getUid(), iCal);
+            mbps[0] = CalendarMailSender.makeICalIntoMimePart(inv.getUid(), iCal);
 
             // the <inv> element is *NOT* allowed -- we always build it manually
             // based on the params to the <CancelCalendarItem> and stick it in the 
@@ -157,13 +182,13 @@ public class CancelCalendarItem extends CalendarRequest {
                     mbps, ParseMimeMessage.NO_INV_ALLOWED_PARSER, dat);
             
         } else {
-            List<Address> rcpts = CalendarMailSender.toListFromAttendees(defaultInv.getAttendees());
+            List<Address> rcpts = CalendarMailSender.toListFromAttendees(toNotify);
             dat.mMm = CalendarMailSender.createCancelMessage(
                     acct, authAcct, zsc.isUsingAdminPrivileges(), onBehalfOf, rcpts,
                     calItem, cancelInvite, text, iCal);
         }
         
-        if (!defaultInv.isOrganizer()) {
+        if (!inv.isOrganizer()) {
             try {
                 Address[] rcpts = dat.mMm.getAllRecipients();
                 if (rcpts != null && rcpts.length > 0) {
@@ -177,7 +202,7 @@ public class CancelCalendarItem extends CalendarRequest {
         sendCalendarCancelMessage(zsc, octxt, calItem.getFolderId(), acct, mbox, dat, true);
     }
 
-    protected void cancelInvite(ZimbraSoapContext zsc, OperationContext octxt, Element request, Account acct, Mailbox mbox, CalendarItem calItem, Invite inv)
+    protected void cancelInvite(ZimbraSoapContext zsc, OperationContext octxt, Element msgElem, Account acct, Mailbox mbox, CalendarItem calItem, Invite inv)
     throws ServiceException {
         boolean onBehalfOf = isOnBehalfOfRequest(zsc);
         Account authAcct = getAuthenticatedAccount(zsc);
@@ -191,9 +216,7 @@ public class CancelCalendarItem extends CalendarRequest {
         
         ZVCalendar iCal = csd.mInvite.newToICalendar(true);
 
-        // did they specify a custom <m> message?  If so, then we don't have to build one...
-        Element msgElem = request.getOptionalElement(MailConstants.E_MSG);
-        
+        // did they specify a custom <m> message?  If so, then we don't have to build one...        
         if (msgElem != null) {
             String desc = ParseMimeMessage.getTextPlainContent(msgElem);
             String html = ParseMimeMessage.getTextHtmlContent(msgElem);
