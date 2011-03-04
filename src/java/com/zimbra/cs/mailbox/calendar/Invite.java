@@ -828,6 +828,8 @@ public class Invite {
                     String str = getDescription(part, mimeType);
                     if (str != null)
                         return str;
+                } else if (mmObj instanceof InputStream) {
+                    ByteUtil.closeStream((InputStream) mmObj);
                 }
             }
         } catch (IOException e) {
