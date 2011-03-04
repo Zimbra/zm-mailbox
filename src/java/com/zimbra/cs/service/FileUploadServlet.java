@@ -237,7 +237,10 @@ public class FileUploadServlet extends ZimbraServlet {
 
     private static Upload fetchRemoteUpload(String accountId, String uploadId, AuthToken authtoken) throws ServiceException {
         // check if we have fetched the Upload from the remote server previously
-        String localUploadId = mProxiedUploadIds.get(uploadId);
+        String localUploadId = null;
+        synchronized(mProxiedUploadIds) {
+            localUploadId = mProxiedUploadIds.get(uploadId);
+        }
         if (localUploadId != null) {
             synchronized (mPending) {
                 Upload up = mPending.get(localUploadId);
@@ -273,7 +276,9 @@ public class FileUploadServlet extends ZimbraServlet {
 
             // store the fetched upload along with original uploadId
             Upload up = saveUpload(get.getResponseBodyAsStream(), filename, contentType, accountId);
-            mProxiedUploadIds.put(uploadId, up.uuid);
+            synchronized (mProxiedUploadIds) {
+                mProxiedUploadIds.put(uploadId, up.uuid);
+            }
             return up;
         } catch (HttpException e) {
             throw ServiceException.PROXY_ERROR(e, url);
