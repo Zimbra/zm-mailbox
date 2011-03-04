@@ -45,6 +45,12 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 import javax.servlet.http.HttpServletResponse;
 
+import org.mortbay.io.Connection;
+import org.mortbay.io.EndPoint;
+import org.mortbay.io.nio.SelectChannelEndPoint;
+import org.mortbay.jetty.HttpConnection;
+import org.mortbay.thread.Timeout;
+
 import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ContactConstants;
@@ -173,6 +179,9 @@ public abstract class ArchiveFormatter extends Formatter {
     @Override
     public void formatCallback(UserServletContext context) throws IOException,
             ServiceException, UserServletException {
+        // Disable the jetty timeout
+        disableJettyTimeout();
+        
         HashMap<Integer, Integer> cnts = new HashMap<Integer, Integer>();
         boolean conversations = false;
         int dot;
@@ -323,6 +332,37 @@ public abstract class ArchiveFormatter extends Formatter {
                 try {
                     aos.close();
                 } catch (Exception e) {
+                }
+            }
+        }
+    }
+
+
+    /**
+     * Implemented for bug 56458..
+     * 
+     * Disable the Jetty timeout for the SelectChannelConnector and the SSLSelectChannelConnector
+     * for this request.
+     * 
+     * By default (and our normal configuration) Jetty has a 30 second idle timeout (10 if the server is busy) for 
+     * connection endpoints. There's another task that keeps track of what connections have timeouts and periodically
+     * works over a queue and closes endpoints that have been timed out. This plays havoc with downloads to slow connections
+     * and whenever we have a long pause while working to create an archive.
+     * 
+     * This method removes this request from the queue to check timeout via the mechanisms that are normally used
+     * after jetty completes a request. Given that we don't send a content-length down to the browser for
+     * archive responses, we have to close the socket to tell the browser its done. Since we have to do that.. leaving this 
+     * endpoint without a timeout is safe. If the connection was being reused (ie keep-alive) this could have issues, but its not 
+     * in this case.
+     */
+    private void disableJettyTimeout() {
+        if (LC.zimbra_archive_formatter_disable_timeout.booleanValue()) {
+            EndPoint endPoint = HttpConnection.getCurrentConnection().getEndPoint();
+            if (endPoint instanceof SelectChannelEndPoint) {
+                SelectChannelEndPoint scEndPoint = (SelectChannelEndPoint) endPoint;
+                Timeout.Task task = scEndPoint.getTimeoutTask();
+                if (task != null) {
+                    task.cancel();
                 }
             }
         }
