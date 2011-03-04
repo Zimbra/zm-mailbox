@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110303-1534 */
+    /* build: 7.0.0_BETA1_1111 administrator 20110303-1026 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -5780,6 +5780,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=161)
     public static final String A_zimbraObjectType = "zimbraObjectType";
+
+    /**
+     * allowed OpenID Provider Endpoint URLs for authentication
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1191)
+    public static final String A_zimbraOpenidConsumerAllowedOPEndpointURL = "zimbraOpenidConsumerAllowedOPEndpointURL";
 
     /**
      * whether stateless mode (not establishing an association with the

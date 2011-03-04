@@ -41,7 +41,7 @@ public class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110303-1534 */
+    /* build: 7.0.0_BETA1_1111 administrator 20110303-1026 */
 
     /**
      * RFC2256: descriptive information
@@ -9304,6 +9304,140 @@ public class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetOAuthConsumerCredentials(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraOAuthConsumerCredentials, "");
+        return attrs;
+    }
+
+    /**
+     * allowed OpenID Provider Endpoint URLs for authentication
+     *
+     * @return zimbraOpenidConsumerAllowedOPEndpointURL, or empty array if unset
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1191)
+    public String[] getOpenidConsumerAllowedOPEndpointURL() {
+        return getMultiAttr(Provisioning.A_zimbraOpenidConsumerAllowedOPEndpointURL);
+    }
+
+    /**
+     * allowed OpenID Provider Endpoint URLs for authentication
+     *
+     * @param zimbraOpenidConsumerAllowedOPEndpointURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1191)
+    public void setOpenidConsumerAllowedOPEndpointURL(String[] zimbraOpenidConsumerAllowedOPEndpointURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOpenidConsumerAllowedOPEndpointURL, zimbraOpenidConsumerAllowedOPEndpointURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * allowed OpenID Provider Endpoint URLs for authentication
+     *
+     * @param zimbraOpenidConsumerAllowedOPEndpointURL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1191)
+    public Map<String,Object> setOpenidConsumerAllowedOPEndpointURL(String[] zimbraOpenidConsumerAllowedOPEndpointURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOpenidConsumerAllowedOPEndpointURL, zimbraOpenidConsumerAllowedOPEndpointURL);
+        return attrs;
+    }
+
+    /**
+     * allowed OpenID Provider Endpoint URLs for authentication
+     *
+     * @param zimbraOpenidConsumerAllowedOPEndpointURL new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1191)
+    public void addOpenidConsumerAllowedOPEndpointURL(String zimbraOpenidConsumerAllowedOPEndpointURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraOpenidConsumerAllowedOPEndpointURL, zimbraOpenidConsumerAllowedOPEndpointURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * allowed OpenID Provider Endpoint URLs for authentication
+     *
+     * @param zimbraOpenidConsumerAllowedOPEndpointURL new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1191)
+    public Map<String,Object> addOpenidConsumerAllowedOPEndpointURL(String zimbraOpenidConsumerAllowedOPEndpointURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraOpenidConsumerAllowedOPEndpointURL, zimbraOpenidConsumerAllowedOPEndpointURL);
+        return attrs;
+    }
+
+    /**
+     * allowed OpenID Provider Endpoint URLs for authentication
+     *
+     * @param zimbraOpenidConsumerAllowedOPEndpointURL existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1191)
+    public void removeOpenidConsumerAllowedOPEndpointURL(String zimbraOpenidConsumerAllowedOPEndpointURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraOpenidConsumerAllowedOPEndpointURL, zimbraOpenidConsumerAllowedOPEndpointURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * allowed OpenID Provider Endpoint URLs for authentication
+     *
+     * @param zimbraOpenidConsumerAllowedOPEndpointURL existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1191)
+    public Map<String,Object> removeOpenidConsumerAllowedOPEndpointURL(String zimbraOpenidConsumerAllowedOPEndpointURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraOpenidConsumerAllowedOPEndpointURL, zimbraOpenidConsumerAllowedOPEndpointURL);
+        return attrs;
+    }
+
+    /**
+     * allowed OpenID Provider Endpoint URLs for authentication
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1191)
+    public void unsetOpenidConsumerAllowedOPEndpointURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOpenidConsumerAllowedOPEndpointURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * allowed OpenID Provider Endpoint URLs for authentication
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1191)
+    public Map<String,Object> unsetOpenidConsumerAllowedOPEndpointURL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOpenidConsumerAllowedOPEndpointURL, "");
         return attrs;
     }
 

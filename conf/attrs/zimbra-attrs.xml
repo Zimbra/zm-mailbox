@@ -5548,4 +5548,8 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
+<attr id="1191" name="zimbraOpenidConsumerAllowedOPEndpointURL" type="string" max="256" cardinality="multi" optionalIn="domain,globalConfig" flags="domainInherited" since="7.1.0">
+  <desc>allowed OpenID Provider Endpoint URLs for authentication</desc>
+</attr>
+
 </attrs>
