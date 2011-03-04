@@ -24,6 +24,7 @@ import java.util.regex.Pattern;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
@@ -279,6 +280,10 @@ public class AttributeInfo {
             String[] values = (String[]) value;
             for (int i=0; i < values.length; i++)
                 checkValue(values[i], checkImmutable, attrsToModify);
+        }
+        
+        if (!DebugConfig.allowModifyingDeprecatedAttributes) {
+            throw ServiceException.FAILURE("modifying deprecated attribute is not allowed: " + mName, null);
         }
     }
 

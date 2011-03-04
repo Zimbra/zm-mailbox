@@ -166,6 +166,9 @@ public class DebugConfig {
     public static int imapNoninteractiveSessionLimit;
     public static boolean imapTerminateSessionOnClose;
     public static boolean imapSerializeSessionOnClose;
+    
+    // For QA only. bug 57279
+    public static boolean allowModifyingDeprecatedAttributes;
 
     static {
         calendarAllowProcedureAlarms = booleanValue("debug_calendar_allow_procedure_alarms", false);
@@ -234,6 +237,8 @@ public class DebugConfig {
         imapSerializeSessionOnClose = booleanValue("imap_serialize_session_on_close", true);
 
         disableCalendarReminderEmail = booleanValue("debug_disable_calendar_reminder_email", false);
+        
+        allowModifyingDeprecatedAttributes = booleanValue("allow_modifying_deprecated_attributes", true);
     }
 
     protected static boolean booleanValue(String key, boolean defaultValue) {
