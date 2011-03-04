@@ -19,6 +19,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -42,6 +43,10 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.httpclient.HttpProxyUtil;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.soap.DocumentHandler;
@@ -49,46 +54,51 @@ import com.zimbra.soap.ProxyTarget;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class RemoteFreeBusyProvider extends FreeBusyProvider {
-	
-	public RemoteFreeBusyProvider(HttpServletRequest httpReq, ZimbraSoapContext zsc,
-	                              long start, long end, String exApptUid) {
-		mRemoteAccountMap = new HashMap<String,StringBuilder>();
-		mRequestList = new ArrayList<Request>();
-		mHttpReq = httpReq;
-		mSoapCtxt = zsc;
-		mStart = start;
-		mEnd = end;
-		mExApptUid = exApptUid;
-	}
-	
-	public FreeBusyProvider getInstance() {
-		// special case this class as it's used to get free/busy of zimbra accounts
-		// on a remote mailbox host, and we can perform some shortcuts i.e.
-		// returning the proxied response straight to the main response.
-		// plus it requires additional resources such as original
-		// HttpServletRequest and ZimbraSoapContext.
-		return null;
-	}
-	public void addFreeBusyRequest(Request req) {
-		Account account = (Account) req.data;
-		if (account == null)
-			return;
-		String hostname = account.getAttr(Provisioning.A_zimbraMailHost);
-		StringBuilder buf = mRemoteAccountMap.get(hostname);
-		if (buf == null)
-			buf = new StringBuilder(req.email);
-		else
-			buf.append(",").append(req.email);
-		mRemoteAccountMap.put(hostname, buf);
-		mRequestList.add(req);
-	}
-	public void addFreeBusyRequest(Account requestor, Account acct, String id, long start, long end, int folder) {
-		Request req = new Request(requestor, id, start, end, folder);
-		req.data = acct;
-		addFreeBusyRequest(req);
-	}
-	public List<FreeBusy> getResults() {
-		ArrayList<FreeBusy> fb = new ArrayList<FreeBusy>();
+
+    public RemoteFreeBusyProvider(HttpServletRequest httpReq, ZimbraSoapContext zsc,
+                                  long start, long end, String exApptUid) {
+        mRemoteAccountMap = new HashMap<String,StringBuilder>();
+        mRequestList = new ArrayList<Request>();
+        mHttpReq = httpReq;
+        mSoapCtxt = zsc;
+        mStart = start;
+        mEnd = end;
+        mExApptUid = exApptUid;
+    }
+
+    @Override
+    public FreeBusyProvider getInstance() {
+        // special case this class as it's used to get free/busy of zimbra accounts
+        // on a remote mailbox host, and we can perform some shortcuts i.e.
+        // returning the proxied response straight to the main response.
+        // plus it requires additional resources such as original
+        // HttpServletRequest and ZimbraSoapContext.
+        return null;
+    }
+
+    @Override
+    public void addFreeBusyRequest(Request req) {
+        Account account = (Account) req.data;
+        if (account == null)
+            return;
+        String hostname = account.getAttr(Provisioning.A_zimbraMailHost);
+        StringBuilder buf = mRemoteAccountMap.get(hostname);
+        if (buf == null)
+            buf = new StringBuilder(req.email);
+        else
+            buf.append(",").append(req.email);
+        mRemoteAccountMap.put(hostname, buf);
+        mRequestList.add(req);
+    }
+    public void addFreeBusyRequest(Account requestor, Account acct, String id, long start, long end, int folder) {
+        Request req = new Request(requestor, id, start, end, folder);
+        req.data = acct;
+        addFreeBusyRequest(req);
+    }
+
+    @Override
+    public List<FreeBusy> getResults() {
+        ArrayList<FreeBusy> fbList = new ArrayList<FreeBusy>();
         for (Request req : mRequestList) {
             HttpMethod method = null;
             Account acct = (Account)req.data;
@@ -127,8 +137,16 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
                     // ignore this recipient and go on
                     fbMsg = null;
                 }
-                if (fbMsg != null)
-                	fb.add(new FreeBusyString(req.email, mStart, mEnd, fbMsg));
+                if (fbMsg != null) {
+                    ZVCalendar cal = ZCalendarBuilder.build(fbMsg);
+                    for (Iterator<ZComponent> compIter = cal.getComponentIterator(); compIter.hasNext(); ) {
+                        ZComponent comp = compIter.next();
+                        if (ICalTok.VFREEBUSY.equals(comp.getTok())) {
+                            FreeBusy fb = FreeBusy.parse(comp);
+                            fbList.add(fb);
+                        }
+                    }
+                }
             } catch (ServiceException e) {
             	ZimbraLog.fb.warn("can't get free/busy information for "+req.email, e);
             } finally {
@@ -136,15 +154,20 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
                     method.releaseConnection();
             }
         }
-		return fb;
-	}
-	
-	public int registerForItemTypes() {
-		return 0;
-	}
-	public boolean registerForMailboxChanges() {
-		return false;
-	}
+        return fbList;
+    }
+
+    @Override
+    public int registerForItemTypes() {
+        return 0;
+    }
+
+    @Override
+    public boolean registerForMailboxChanges() {
+        return false;
+    }
+
+    @Override
     public boolean registerForMailboxChanges(String accountId) {
         return false;
     }
@@ -226,32 +249,5 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
         ProxyTarget proxy = new ProxyTarget(server.getId(), zsc.getAuthToken(), mHttpReq);
         Element response = DocumentHandler.proxyWithNotification(request.detach(), proxy, zscTarget, zsc);
         return response;
-    }
-    
-    private static class FreeBusyString extends FreeBusy {
-    	private String mFbStr;
-    	public FreeBusyString(String name, long start, long end, String fbStr) {
-    		super(name, start, end);
-    		mFbStr = fbStr;
-    	}
-        public String toVCalendar(Method m, String organizer, String attendee, String url) {
-        	String ret = mFbStr;
-        	String org = "ORGANIZER:"+organizer;
-        	if (attendee != null) {
-        		if (ret.indexOf("ATTENDEE") > 0)
-                    ret = ret.replaceAll("ATTENDEE:.*", "ATTENDEE:"+attendee);
-        		else
-        			org += "\nATTENDEE:"+attendee;
-        	}
-        	if (url != null && ret.indexOf("URL") < 0) {
-        		if (ret.indexOf("URL") > 0)
-                    ret = ret.replaceAll("URL:.*", "URL:"+url);
-        		else
-        			org += "\nURL:"+url;
-        	}
-            ret = ret.replaceAll("METHOD:PUBLISH", "METHOD:"+m.toString());
-            ret = ret.replaceAll("ORGANIZER:.*", org);
-        	return ret;
-        }
     }
 }

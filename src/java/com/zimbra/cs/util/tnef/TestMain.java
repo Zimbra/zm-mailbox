@@ -51,6 +51,7 @@ import com.zimbra.cs.util.tnef.TNEFtoIcalendarServiceException;
 import com.zimbra.cs.util.tnef.TNEFtoIcalendarServiceException.UnsupportedTnefCalendaringMsgException;
 import com.zimbra.cs.util.tnef.mapi.RecurrenceDefinition;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
@@ -514,7 +515,8 @@ public class TestMain {
 
             String propName = mCurProperty.getName();
             if ((propName.equalsIgnoreCase(Property.CATEGORIES)) ||
-                (propName.equalsIgnoreCase(Property.RESOURCES))) {
+                (propName.equalsIgnoreCase(Property.RESOURCES)) ||
+                (propName.equalsIgnoreCase(Property.FREEBUSY))) {
                 mCurProperty.setValueList(ZCalendar.parseCommaSepText(value));
             } else {
                 mCurProperty.setValue(value);

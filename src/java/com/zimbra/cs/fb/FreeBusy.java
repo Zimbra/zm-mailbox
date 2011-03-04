@@ -15,12 +15,22 @@
 
 package com.zimbra.cs.fb;
 
+import java.text.ParseException;
 import java.util.*;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
+import com.zimbra.cs.mailbox.calendar.Period;
+import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
+import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 
 /**
  * @author tim
@@ -532,5 +542,73 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
                    (mApptId == other.mApptId) && (mRecurIdDt == other.mRecurIdDt) &&
                    (mFreeBusy.equals(other.mFreeBusy));
         }
+    }
+
+    /**
+     * Create a FreeBusy object from VFREEBUSY ZComponent.
+     * @param comp
+     * @return
+     * @throws ServiceException
+     */
+    public static FreeBusy parse(ZComponent comp) throws ServiceException {
+        String name = null;
+        ParsedDateTime dtStart = null;
+        ParsedDateTime dtEnd = null;
+        List<Interval> intervals = new ArrayList<Interval>();
+        TimeZoneMap tzmap = new TimeZoneMap(ICalTimeZone.getUTC());
+        Iterator<ZProperty> propIter = comp.getPropertyIterator();
+        while (propIter.hasNext()) {
+            ZProperty prop = propIter.next();
+            ICalTok tok = prop.getToken();
+            if (tok == null)
+                continue;
+            switch (tok) {
+            case DTSTART:
+                try {
+                    dtStart = ParsedDateTime.parse(prop, tzmap);
+                } catch (ParseException e) {
+                    throw ServiceException.INVALID_REQUEST("bad DTSTART: " + prop.toString(), e);
+                }
+                break;
+            case DTEND:
+                try {
+                    dtEnd = ParsedDateTime.parse(prop, tzmap);
+                } catch (ParseException e) {
+                    throw ServiceException.INVALID_REQUEST("bad DTEND: " + prop.toString(), e);
+                }
+                break;
+            case ORGANIZER:
+                ZOrganizer att = new ZOrganizer(prop);
+                name = att.getAddress();
+                break;
+            case FREEBUSY:
+                String fbStatus = IcalXmlStrMap.FBTYPE_FREE;
+                ZParameter fbType = prop.getParameter(ICalTok.FBTYPE);
+                if (fbType != null)
+                    fbStatus = IcalXmlStrMap.sFreeBusyMap.toXml(fbType.getValue());
+                List<String> vals = prop.getValueList();
+                for (String fbVal : vals) {
+                    Period period;
+                    try {
+                        period = Period.parse(fbVal, ICalTimeZone.getUTC(), tzmap);
+                    } catch (ParseException e) {
+                        throw ServiceException.INVALID_REQUEST("bad period value: " + fbVal, e);
+                    }
+                    intervals.add(new Interval(period.getStart().getUtcTime(), period.getEnd().getUtcTime(), fbStatus));
+                }
+                break;
+            }
+        }
+
+        if (name == null)
+            throw ServiceException.INVALID_REQUEST("VFREEBUSY missing ORGANIZER", null);
+        if (dtStart == null || dtEnd == null)
+            throw ServiceException.INVALID_REQUEST("VFREEBUSY missing DTSTART/DTEND", null);
+
+        IntervalList ivalList = new IntervalList(dtStart.getUtcTime(), dtEnd.getUtcTime());
+        for (Interval ival : intervals) {
+            ivalList.addInterval(ival);
+        }
+        return new FreeBusy(name, ivalList, dtStart.getUtcTime(), dtEnd.getUtcTime());
     }
 }
