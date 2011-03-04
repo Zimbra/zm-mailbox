@@ -59,8 +59,17 @@ public class LdapSMIMEConfig {
             String[] attrValues = entry.getMultiAttr(attrName, false);
             
             for (String attrValue : attrValues) {
-                if (attrValue.startsWith(configName)) {
-                    StringUtil.addToMultiMap(toModify, "-" + attrName, attrValue);
+                try {
+                    Pair<String, String> nameValue = parseAttrValue(attrName, attrValue);
+                    String cfgName = nameValue.getFirst();
+                    if (configName.equals(cfgName)) {
+                        StringUtil.addToMultiMap(toModify, "-" + attrName, attrValue);
+                    }
+                    
+                } catch (ServiceException e) {
+                    // encountered a bad valud in LDAP, ignore it
+                    ZimbraLog.account.info("encountered and ignored invalid value: [" + attrValue +
+                            "] in attribute " + attrName);
                 }
             }
         }
@@ -135,7 +144,7 @@ public class LdapSMIMEConfig {
         return result;
     }
 
-    Map<String, Object> get(SMIMEConfig config) {
+    private Map<String, Object> get(SMIMEConfig config) {
         Map<String, Object> result = new HashMap<String, Object>();
         for (Field field : Field.values()) {
             String value = config.getConfigured(field);
@@ -383,19 +392,6 @@ public class LdapSMIMEConfig {
             } catch (NamingException e) {
                 ZimbraLog.account.warn("caught NamingException", e);
             }
-            
-            /*
-            for (Map.Entry<String, Object> attr : attrs.entrySet()) {
-                Object value = attr.getValue();
-                if (value instanceof String) {
-                    result.add((String)value);
-                } else if (value instanceof String[]) {
-                    for (String v : (String[])value) {
-                        result.add(v);
-                    }
-                }
-            }
-            */
         }
     }
     
