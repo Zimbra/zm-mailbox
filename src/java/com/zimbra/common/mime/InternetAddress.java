@@ -440,7 +440,7 @@ public class InternetAddress implements Cloneable {
                 address = builder.appendTo(address);
                 slop = true;  builder.reset();
             } else {
-                if (c == '@') {
+                if (c == '@' && !atsign) {
                     boolean startRoute = angle && builder.isEmpty() && address == null;
                     if (angle && !startRoute) {
                         address = builder.appendTo(address);
