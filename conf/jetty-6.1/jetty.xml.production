@@ -57,13 +57,13 @@
           <Set name="Port">%%zimbraMailSSLPort%%</Set>
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
           <Set name="maxIdleTime">30000</Set> 
-	      <Set name="lowResourcesMaxIdleTime">10000</Set>
+          <Set name="lowResourcesMaxIdleTime">10000</Set>
           <Set name="Acceptors">2</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">@@mailboxd_keystore_password@@</Set>
           <Set name="KeyPassword">@@mailboxd_keystore_password@@</Set>
-          <Set name="NeedClientAuth">%%contains VAR:zimbraMailSSLClientCertMode NeedClientAuth, true%%</Set>
-          <Set name="WantClientAuth">%%contains VAR:zimbraMailSSLClientCertMode WantClientAuth, true%%</Set>
+          <Set name="NeedClientAuth">%%contains VAR:zimbraMailSSLClientCertMode NeedClientAuth, true, false%%</Set>
+          <Set name="WantClientAuth">%%contains VAR:zimbraMailSSLClientCertMode WantClientAuth, true, false%%</Set>
           <Set name="ExcludeCipherSuites">
             <Array type="java.lang.String">
               %%zimbraSSLExcludeCipherSuitesXML%%
@@ -83,13 +83,13 @@
           <Set name="Port">%%zimbraAdminPort%%</Set>
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
           <Set name="maxIdleTime">0</Set>
-	  <Set name="lowResourcesMaxIdleTime">0</Set>
+          <Set name="lowResourcesMaxIdleTime">0</Set>
           <Set name="Acceptors">2</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">@@mailboxd_keystore_password@@</Set>
           <Set name="KeyPassword">@@mailboxd_keystore_password@@</Set>
-          <Set name="NeedClientAuth">%%contains VAR:zimbraMailSSLClientCertMode NeedClientAuth, true%%</Set>
-          <Set name="WantClientAuth">%%contains VAR:zimbraMailSSLClientCertMode WantClientAuth, true%%</Set>
+          <Set name="NeedClientAuth">%%contains VAR:zimbraMailSSLClientCertMode NeedClientAuth, true, false%%</Set>
+          <Set name="WantClientAuth">%%contains VAR:zimbraMailSSLClientCertMode WantClientAuth, true, false%%</Set>
           <Set name="ExcludeCipherSuites">
             <Array type="java.lang.String">
               %%zimbraSSLExcludeCipherSuitesXML%%
