@@ -24,6 +24,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
 
 import java.util.Collections;
@@ -50,6 +51,9 @@ public class DeleteGalSyncAccount extends AdminDocumentHandler {
         Account account = prov.get(AccountBy.fromString(acctKey), acctValue);
 		if (account == null)
 			throw AccountServiceException.NO_SUCH_ACCOUNT(acctValue);
+		
+		checkAccountRight(zsc, account, Admin.R_deleteAccount); 
+		
 		String id = account.getId();
 		HashSet<String> acctIds = new HashSet<String>();
 		Domain domain = prov.getDomain(account);
@@ -71,7 +75,6 @@ public class DeleteGalSyncAccount extends AdminDocumentHandler {
 	
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
-    	// XXX revisit
-        notes.add(AdminRightCheckPoint.Notes.TODO);
+        relatedRights.add(Admin.R_deleteAccount);
     }
 }
