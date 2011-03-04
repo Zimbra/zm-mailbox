@@ -41,7 +41,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110303-1516 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110303-1639 */
 
     /**
      * RFC2256: descriptive information
@@ -14848,7 +14848,7 @@ public class ZAttrConfig extends Entry {
      * request will proceed as usual; if the requested resource requires a
      * client certificate, server will return 403 Forbidden.
      *
-     * <p>Valid values: [Disabled|NeedClientAuth|WantClientAuth]
+     * <p>Valid values: [NeedClientAuth, WantClientAuth, Disabled]
      *
      * @return zimbraMailSSLClientCertMode, or ZAttrProvisioning.MailSSLClientCertMode.Disabled if unset and/or has invalid value
      *
@@ -14871,7 +14871,7 @@ public class ZAttrConfig extends Entry {
      * request will proceed as usual; if the requested resource requires a
      * client certificate, server will return 403 Forbidden.
      *
-     * <p>Valid values: [Disabled|NeedClientAuth|WantClientAuth]
+     * <p>Valid values: [NeedClientAuth, WantClientAuth, Disabled]
      *
      * @return zimbraMailSSLClientCertMode, or "Disabled" if unset
      *
@@ -14894,7 +14894,7 @@ public class ZAttrConfig extends Entry {
      * request will proceed as usual; if the requested resource requires a
      * client certificate, server will return 403 Forbidden.
      *
-     * <p>Valid values: [Disabled|NeedClientAuth|WantClientAuth]
+     * <p>Valid values: [NeedClientAuth, WantClientAuth, Disabled]
      *
      * @param zimbraMailSSLClientCertMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -14920,7 +14920,7 @@ public class ZAttrConfig extends Entry {
      * request will proceed as usual; if the requested resource requires a
      * client certificate, server will return 403 Forbidden.
      *
-     * <p>Valid values: [Disabled|NeedClientAuth|WantClientAuth]
+     * <p>Valid values: [NeedClientAuth, WantClientAuth, Disabled]
      *
      * @param zimbraMailSSLClientCertMode new value
      * @param attrs existing map to populate, or null to create a new map
@@ -14947,7 +14947,7 @@ public class ZAttrConfig extends Entry {
      * request will proceed as usual; if the requested resource requires a
      * client certificate, server will return 403 Forbidden.
      *
-     * <p>Valid values: [Disabled|NeedClientAuth|WantClientAuth]
+     * <p>Valid values: [NeedClientAuth, WantClientAuth, Disabled]
      *
      * @param zimbraMailSSLClientCertMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -14973,7 +14973,7 @@ public class ZAttrConfig extends Entry {
      * request will proceed as usual; if the requested resource requires a
      * client certificate, server will return 403 Forbidden.
      *
-     * <p>Valid values: [Disabled|NeedClientAuth|WantClientAuth]
+     * <p>Valid values: [NeedClientAuth, WantClientAuth, Disabled]
      *
      * @param zimbraMailSSLClientCertMode new value
      * @param attrs existing map to populate, or null to create a new map
@@ -15000,7 +15000,7 @@ public class ZAttrConfig extends Entry {
      * request will proceed as usual; if the requested resource requires a
      * client certificate, server will return 403 Forbidden.
      *
-     * <p>Valid values: [Disabled|NeedClientAuth|WantClientAuth]
+     * <p>Valid values: [NeedClientAuth, WantClientAuth, Disabled]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -15025,7 +15025,7 @@ public class ZAttrConfig extends Entry {
      * request will proceed as usual; if the requested resource requires a
      * client certificate, server will return 403 Forbidden.
      *
-     * <p>Valid values: [Disabled|NeedClientAuth|WantClientAuth]
+     * <p>Valid values: [NeedClientAuth, WantClientAuth, Disabled]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
