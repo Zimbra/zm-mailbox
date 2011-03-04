@@ -65,6 +65,8 @@
     <property name="common.jarfile" location="${common.dir}/build/zimbracommon.jar"/>
     <property name="common.jars.dir" location="${common.dir}/jars"/>
 
+	<property name="third.party.jars.dir" location="../ThirdPartyBuilds/jars"/>
+	
     <property name="soap.dir" location="../ZimbraSoap"/>
     <property name="soap.classes.dir" location="${soap.dir}/build/classes"/>
     <property name="soap.jarfile" location="${soap.dir}/build/zimbrasoap.jar"/>
@@ -244,9 +246,22 @@
         </classpath>
     </taskdef>
 
+    <fileset id="junit.jar" dir="${third.party.jars.dir}/junit-4.4">
+        <include name="junit*.jar"/>
+        <exclude name="*src*"/>
+    </fileset>
+    <!-- JUnit jar file is not deployed in production -->
+    <fileset id="junit.jar.deployed" dir="${third.party.jars.dir}" excludes="**"/>
+    <if>
+        <not><isset property="is-production"/></not>
+        <then>
+            <fileset id="junit.jar.deployed" refid="junit.jar"/>
+        </then>
+    </if>
+
     <path id="class.path">
         <pathelement location="${common.classes.dir}"/>
-      <pathelement location="${soap.classes.dir}"/>
+        <pathelement location="${soap.classes.dir}"/>
         <pathelement location="${im.classes.dir}"/>
         <pathelement location="${build.classes.dir}"/>
         <fileset dir="${jars.dir}">
@@ -261,6 +276,7 @@
         <fileset dir="${tools.lib.dir}">
             <include name="**/*.jar"/>
         </fileset>
+        <fileset refid="junit.jar"/>
     </path>
 
     <taskdef name="deploy" classname="org.apache.catalina.ant.DeployTask" classpathref="class.path"/>
@@ -952,15 +968,17 @@
         <!-- lib: ignore absence of DLL for windows -->
         <copy todir="${dist.dir}/lib/jars" overwrite="true">
             <fileset dir="${common.jars.dir}" includes="*.jar"/>
+            <fileset refid="junit.jar.deployed"/>
         </copy>
         <copy todir="${dist.dir}/lib/jars" overwrite="true">
             <fileset dir="${im.jars.dir}" includes="*.jar"/>
         </copy>
+
         <copy todir="${dist.dir}/lib/jars" file="${common.jarfile}" overwrite="true"/>
         <copy todir="${dist.dir}/lib/jars" file="${soap.jarfile}" overwrite="true"/>
         <copy todir="${dist.dir}/lib/jars" file="${im.jarfile}" overwrite="true"/>
         <copy todir="${dist.dir}/lib/jars" file="${jarfile}" overwrite="true"/>
-
+    	
         <!-- jetty windows service wrapper -->
         <if>
             <isset property="is-windows"/>
@@ -1078,7 +1096,6 @@
         <include name="jaxen*.jar"/>
         <include name="jcommon*.jar"/>
         <include name="jfreechart*.jar"/>
-        <include name="junit*.jar"/>
         <include name="jzlib.jar"/>
         <include name="nekohtml.jar"/>
         <include name="tnef*.jar"/>
@@ -1090,8 +1107,9 @@
         <include name="testng*.jar"/>
         <include name="guava*.jar"/>
       </fileset>
+      <fileset refid="junit.jar.deployed"/>
     </copy>
-    <copy todir="${dist.jetty.dir}/common/endorsed" overwrite="true">
+  	<copy todir="${dist.jetty.dir}/common/endorsed" overwrite="true">
       <fileset dir="${common.jars.dir}" includes="zimbra-charset.jar"/>
     </copy>
     <copy todir="${dist.jetty.dir}/common/lib" file="${common.jarfile}" overwrite="true"/>
