@@ -20,6 +20,7 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,6 +46,10 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.httpclient.HttpProxyUtil;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.soap.DocumentHandler;
@@ -96,7 +101,7 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
 
     @Override
     public List<FreeBusy> getResults() {
-        ArrayList<FreeBusy> fb = new ArrayList<FreeBusy>();
+        ArrayList<FreeBusy> fbList = new ArrayList<FreeBusy>();
         for (Request req : mRequestList) {
             HttpMethod method = null;
             Account acct = (Account)req.data;
@@ -135,8 +140,16 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
                     // ignore this recipient and go on
                     fbMsg = null;
                 }
-                if (fbMsg != null)
-                    fb.add(new FreeBusyString(req.email, mStart, mEnd, fbMsg));
+                if (fbMsg != null) {
+                    ZVCalendar cal = ZCalendarBuilder.build(fbMsg);
+                    for (Iterator<ZComponent> compIter = cal.getComponentIterator(); compIter.hasNext(); ) {
+                        ZComponent comp = compIter.next();
+                        if (ICalTok.VFREEBUSY.equals(comp.getTok())) {
+                            FreeBusy fb = FreeBusy.parse(comp);
+                            fbList.add(fb);
+                        }
+                    }
+                }
             } catch (ServiceException e) {
                 ZimbraLog.fb.warn("can't get free/busy information for "+req.email, e);
             } finally {
@@ -144,7 +157,7 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
                     method.releaseConnection();
             }
         }
-        return fb;
+        return fbList;
     }
 
     @Override
@@ -248,34 +261,5 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
         ProxyTarget proxy = new ProxyTarget(server.getId(), zsc.getAuthToken(), mHttpReq);
         Element response = DocumentHandler.proxyWithNotification(request.detach(), proxy, zscTarget, zsc);
         return response;
-    }
-
-    private static class FreeBusyString extends FreeBusy {
-        private String mFbStr;
-        public FreeBusyString(String name, long start, long end, String fbStr) {
-            super(name, start, end);
-            mFbStr = fbStr;
-        }
-
-        @Override
-        public String toVCalendar(Method m, String organizer, String attendee, String url) {
-            String ret = mFbStr;
-            String org = "ORGANIZER:"+organizer;
-            if (attendee != null) {
-                if (ret.indexOf("ATTENDEE") > 0)
-                    ret = ret.replaceAll("ATTENDEE:.*", "ATTENDEE:"+attendee);
-                else
-                    org += "\nATTENDEE:"+attendee;
-            }
-            if (url != null && ret.indexOf("URL") < 0) {
-                if (ret.indexOf("URL") > 0)
-                    ret = ret.replaceAll("URL:.*", "URL:"+url);
-                else
-                    org += "\nURL:"+url;
-            }
-            ret = ret.replaceAll("METHOD:PUBLISH", "METHOD:"+m.toString());
-            ret = ret.replaceAll("ORGANIZER:.*", org);
-            return ret;
-        }
     }
 }

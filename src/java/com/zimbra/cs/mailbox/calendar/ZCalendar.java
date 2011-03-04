@@ -834,7 +834,7 @@ public class ZCalendar {
 
         public void propertyValue(String value) throws ParserException {
             ICalTok token = mCurProperty.getToken();
-            if (ICalTok.CATEGORIES.equals(token) || ICalTok.RESOURCES.equals(token))
+            if (ICalTok.CATEGORIES.equals(token) || ICalTok.RESOURCES.equals(token) || ICalTok.FREEBUSY.equals(token))
                 mCurProperty.setValueList(parseCommaSepText(value));
             else
                 mCurProperty.setValue(unescape(value));

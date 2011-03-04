@@ -137,7 +137,7 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
 
     public void propertyValue(String value) throws ParserException { 
         ICalTok token = mCurProperty.getToken();
-        if (ICalTok.CATEGORIES.equals(token) || ICalTok.RESOURCES.equals(token))
+        if (ICalTok.CATEGORIES.equals(token) || ICalTok.RESOURCES.equals(token) || ICalTok.FREEBUSY.equals(token))
             mCurProperty.setValueList(ZCalendar.parseCommaSepText(value));
         else
             mCurProperty.setValue(ZCalendar.unescape(value));
