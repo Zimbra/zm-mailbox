@@ -21,6 +21,8 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintStream;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
@@ -127,6 +129,26 @@ class ProxyConfVar
     {
         return mValue;
     }
+    
+    private static String zimbraIPMode;
+    
+    private static String zimbraReverseProxyMailMode;
+    
+    private String getZimbraIPMode() {
+    	if (ProxyConfVar.zimbraIPMode == null) {
+    		ProxyConfVar.zimbraIPMode = 
+    			serverSource.getAttr(Provisioning.A_zimbraIPMode, "both");
+    	}
+    	return ProxyConfVar.zimbraIPMode;
+    }
+    
+    private String getZimbraReverseProxyMailMode() {
+    	if (ProxyConfVar.zimbraReverseProxyMailMode == null) {
+    		ProxyConfVar.zimbraReverseProxyMailMode = 
+    			serverSource.getAttr(Provisioning.A_zimbraReverseProxyMailMode, "both");
+    	}
+    	return ProxyConfVar.zimbraReverseProxyMailMode;
+    }
 
     public void write (PrintStream ps) throws ProxyConfException
     {
@@ -162,7 +184,7 @@ class ProxyConfVar
             {
                 /* if mailmode is https (only), then http needs to be disabled */
                 
-                String mailmode = serverSource.getAttr(Provisioning.A_zimbraReverseProxyMailMode,"both");
+                String mailmode = getZimbraReverseProxyMailMode();
                 if ("https".equalsIgnoreCase(mailmode)) {
                      mValue = false;
                 } else {
@@ -172,12 +194,27 @@ class ProxyConfVar
             else if ("web.https.enabled".equalsIgnoreCase(mKeyword))
             {
                  /* if mailmode is http (only), then https needs to be disabled */
-                 String mailmode = serverSource.getAttr(Provisioning.A_zimbraReverseProxyMailMode,"both");
+                 String mailmode = getZimbraReverseProxyMailMode();
                  if ("http".equalsIgnoreCase(mailmode)) {
                      mValue = false;
                  } else {
                      mValue = true;
                  }
+            }
+            else if ("core.ipboth.enabled".equalsIgnoreCase(mKeyword)) 
+            {
+            	String ipmode = getZimbraIPMode();
+            	mValue="both".equalsIgnoreCase(ipmode)?true:false;
+            }
+            else if ("core.ipv4only.enabled".equalsIgnoreCase(mKeyword))
+            {
+            	String ipmode = getZimbraIPMode();
+            	mValue="ipv4".equalsIgnoreCase(ipmode)?true:false;
+            }
+            else if ("core.ipv6only.enabled".equalsIgnoreCase(mKeyword))
+            {
+            	String ipmode = getZimbraIPMode();
+            	mValue="ipv6".equalsIgnoreCase(ipmode)?true:false;
             }
         } else if (mValueType == ProxyConfValueType.TIME) {
             updateTime();
@@ -566,6 +603,31 @@ public class ProxyConfGen
     private static Map<String, ProxyConfVar> mConfVars = new HashMap<String, ProxyConfVar>();
     private static Map<String, String> mVars = new HashMap<String, String>();
     private static List<DnVhnVIPItem> mQualifiedVhnsAndVIPs;
+    
+    private static enum IPMode {
+    	UNKNOWN,
+    	BOTH,
+    	IPV4_ONLY,
+    	IPV6_ONLY
+    }
+    
+    private static IPMode ipmode = IPMode.UNKNOWN;
+    
+    private static IPMode getZimbraIPMode()
+    {
+    	if (ipmode == IPMode.UNKNOWN) {
+    		String res = ProxyConfVar.serverSource.getAttr(Provisioning.A_zimbraIPMode, "both");
+    		if (res.equalsIgnoreCase("both")) {
+    			ipmode = IPMode.BOTH;
+    		} else if (res.equalsIgnoreCase("ipv4")) {
+    			ipmode = IPMode.IPV4_ONLY;
+    		} else {
+    			ipmode = IPMode.IPV6_ONLY;
+    		}
+    	}
+    	
+    	return ipmode;
+    }
 
     /** the pattern for custom header cmd, such as "!{explode domain} */
     private static Pattern cmdPattern = Pattern.compile("(.*)\\!\\{([^\\}]+)\\}(.*)", Pattern.DOTALL);
@@ -801,27 +863,84 @@ public class ProxyConfGen
      * Enumerate all virtual host names and virtual ip addresses and 
      * apply them into the var replacement.
      * @author Jiankuan
+     * @throws ProxyConfException 
      */
     private static void expandTemplateExplodeSSLConfigsForAllVhnsAndVIPs(
-        BufferedReader temp, BufferedWriter conf) throws IOException {
+        BufferedReader temp, BufferedWriter conf) throws IOException, ProxyConfException {
         int size = mQualifiedVhnsAndVIPs.size();
+        InetAddress addr = null;
         List<String> cache = null;
+        
         if (size > 0) {
-
             Iterator<DnVhnVIPItem> it = mQualifiedVhnsAndVIPs.iterator();
             DnVhnVIPItem item = it.next();
             mVars.put("vhn", item.virtualHostname);
-            mVars.put("vip", item.virtualIPAddress);
+            addr = InetAddress.getByName(item.virtualIPAddress);
+            if (getZimbraIPMode() != IPMode.BOTH) {
+            	if (getZimbraIPMode() == IPMode.IPV4_ONLY &&
+            			addr.getClass().equals(Inet6Address.class)) {
+            		String msg = item.virtualIPAddress + 
+    				" is an IPv6 address but zimbraIPMode is 'ipv4'";
+            		mLog.error(msg);
+            		throw new ProxyConfException(msg);
+            	}
+            	
+            	if (getZimbraIPMode() == IPMode.IPV6_ONLY &&
+            			addr.getClass().equals(Inet4Address.class)) {
+            		String msg = item.virtualIPAddress + 
+    				" is an IPv4 address but zimbraIPMode is 'ipv6'";
+            		mLog.error(msg);
+            		throw new ProxyConfException(msg);
+            	}
+            }
+            
+            if (addr.getClass().equals(Inet6Address.class) &&
+            		!item.virtualIPAddress.startsWith("[")) {
+            	//ipv6 address has to be enclosed with [ ]
+            	mVars.put("vip", "[" + item.virtualIPAddress + "]");
+            	
+            } else {
+            	mVars.put("vip", item.virtualIPAddress);
+            }
             mVars.put("ssl.crt", mDomainSSLDir + File.separator +
                 item.domainName + mSSLCrtExt);
             mVars.put("ssl.key", mDomainSSLDir + File.separator +
                 item.domainName + mSSLKeyExt);
             cache = expandTemplateAndCache(temp, conf);
             conf.newLine();
+            
             while (it.hasNext()) {
                 item = it.next();
                 mVars.put("vhn", item.virtualHostname);
-                mVars.put("vip", item.virtualIPAddress);
+                
+                addr = InetAddress.getByName(item.virtualIPAddress);
+                if (getZimbraIPMode() != IPMode.BOTH) {
+                	if (getZimbraIPMode() == IPMode.IPV4_ONLY &&
+                			addr.getClass().equals(Inet6Address.class)) {
+                		String msg = item.virtualIPAddress + 
+        				" is an IPv6 address but zimbraIPMode is 'ipv4'";
+                		mLog.error(msg);
+                		throw new ProxyConfException(msg);
+                	}
+                	
+                	if (getZimbraIPMode() == IPMode.IPV6_ONLY &&
+                			addr.getClass().equals(Inet4Address.class)) {
+                		String msg = item.virtualIPAddress + 
+        				" is an IPv4 address but zimbraIPMode is 'ipv6'";
+                		mLog.error(msg);
+                		throw new ProxyConfException(msg);
+                	}
+                }
+                
+                if (addr.getClass().equals(Inet6Address.class) &&
+                		!item.virtualIPAddress.startsWith("[")) {
+                	//ipv6 address has to be enclosed with [ ]
+                	mVars.put("vip", "[" + item.virtualIPAddress + "]");
+                	
+                } else {
+                	mVars.put("vip", item.virtualIPAddress);
+                }
+                
                 mVars.put("ssl.crt", mDomainSSLDir + File.separator +
                     item.domainName + mSSLCrtExt);
                 mVars.put("ssl.key", mDomainSSLDir + File.separator +
@@ -914,6 +1033,9 @@ public class ProxyConfGen
         mConfVars.put("core.includes", new ProxyConfVar("core.includes", null, mConfIncludesDir, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "Include directory (relative to ${core.workdir}/conf)"));
         mConfVars.put("core.cprefix", new ProxyConfVar("core.cprefix", null, mConfPrefix, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "Common config file prefix"));
         mConfVars.put("core.tprefix", new ProxyConfVar("core.tprefix", null, mTemplatePrefix, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "Common template file prefix"));
+        mConfVars.put("core.ipv4only.enabled", new ProxyConfVar("core.ipv4only.enabled", null, false, ProxyConfValueType.ENABLER, ProxyConfOverride.CUSTOM, "IPv4 Only"));
+        mConfVars.put("core.ipv6only.enabled", new ProxyConfVar("core.ipv6only.enabled", null, false, ProxyConfValueType.ENABLER, ProxyConfOverride.CUSTOM, "IPv6 Only"));
+        mConfVars.put("core.ipboth.enabled", new ProxyConfVar("core.ipboth.enabled", null, true, ProxyConfValueType.ENABLER, ProxyConfOverride.CUSTOM, "Both IPv4 and IPv6"));
         mConfVars.put("ssl.crt.default", new ProxyConfVar("ssl.crt.default", null, mDefaultSSLCrt, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "default nginx certificate file path"));
         mConfVars.put("ssl.key.default", new ProxyConfVar("ssl.key.default", null, mDefaultSSLKey, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "default nginx private key file path"));
         mConfVars.put("main.user", new ProxyConfVar("main.user", null, "zimbra", ProxyConfValueType.STRING, ProxyConfOverride.NONE, "The user as which the worker processes will run"));
