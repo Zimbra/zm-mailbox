@@ -777,6 +777,8 @@ public final class LC {
     public static final KnownKey zimbra_waitset_max_request_timeout = KnownKey.newKey(1200);
     public static final KnownKey zimbra_waitset_max_per_account = KnownKey.newKey(5);
 
+    public static final KnownKey zimbra_archive_formatter_disable_timeout = KnownKey.newKey(true);
+    
     public static final KnownKey zimbra_admin_waitset_default_request_timeout = KnownKey.newKey(300);
     public static final KnownKey zimbra_admin_waitset_min_request_timeout = KnownKey.newKey(0);
     public static final KnownKey zimbra_admin_waitset_max_request_timeout = KnownKey.newKey(3600);
