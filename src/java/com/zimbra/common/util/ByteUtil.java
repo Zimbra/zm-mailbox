@@ -174,10 +174,10 @@ public class ByteUtil {
     }
 
     private static byte[] getContent(InputStream is, int length, int sizeHint, long sizeLimit, boolean close) throws IOException {
-        if (length == 0)
-            return new byte[0];
-
         try {
+            if (length == 0)
+                return new byte[0];
+
             BufferStream bs = sizeLimit == -1 ?
                     new BufferStream(sizeHint, Integer.MAX_VALUE, Integer.MAX_VALUE) :
                     new BufferStream(sizeHint, (int) sizeLimit, sizeLimit);
@@ -187,8 +187,9 @@ public class ByteUtil {
                 throw new IOException("stream too large");
             return bs.toByteArray();
         } finally {
-            if (close)
+            if (close) {
                 closeStream(is);
+            }
         }
     }
 
