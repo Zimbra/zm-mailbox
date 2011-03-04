@@ -5533,7 +5533,7 @@ TODO: delete them permerntly from here
   <desc>whether stateless mode (not establishing an association with the OpenID Provider) in OpenID Consumer is enabled</desc>
 </attr>
 
-<attr id="1190" name="zimbraMailSSLClientCertMode" type="enum" cardinality="single" value="Disabled|NeedClientAuth|WantClientAuth" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="7.1.0">
+<attr id="1190" name="zimbraMailSSLClientCertMode" type="enum" cardinality="single" value="Disabled,NeedClientAuth,WantClientAuth" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="7.1.0">
   <globalConfigValue>Disabled</globalConfigValue>
   <desc>
     enable authentication via X.509 Client Certificate.

@@ -455,7 +455,9 @@ public class ZAttrProvisioning {
     }
 
     public static enum MailSSLClientCertMode {
-        Disabled_NeedClientAuth_WantClientAuth("Disabled|NeedClientAuth|WantClientAuth");
+        Disabled("Disabled"),
+        NeedClientAuth("NeedClientAuth"),
+        WantClientAuth("WantClientAuth");
         private String mValue;
         private MailSSLClientCertMode(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -465,7 +467,9 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isDisabled_NeedClientAuth_WantClientAuth() { return this == Disabled_NeedClientAuth_WantClientAuth;}
+        public boolean isDisabled() { return this == Disabled;}
+        public boolean isNeedClientAuth() { return this == NeedClientAuth;}
+        public boolean isWantClientAuth() { return this == WantClientAuth;}
     }
 
     public static enum MailStatus {
