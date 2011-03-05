@@ -53,6 +53,8 @@ import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.SignatureBy;
+import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -176,23 +178,54 @@ public class CalendarMailSender {
         return createCalendarMessage(from, sender, rcpts, subject, sb.toString(), null, inv.getUid(), iCal);
     }
 
-    public static MimeMessage createDefaultReply(Account fromAccount, Account authAccount, boolean asAdmin,
-                                                 boolean onBehalfOf,
+    public static MimeMessage createDefaultReply(Account fromAccount, String fromIdentityId,
+                                                 Account authAccount, String authIdentityId,
+                                                 boolean asAdmin, boolean onBehalfOf,
                                                  CalendarItem calItem, Invite inv,
                                                  MimeMessage mmInv, String replySubject, Verb verb,
                                                  String additionalMsgBody, ZVCalendar iCal)
     throws ServiceException {
-        return createDefaultReply(fromAccount, authAccount, asAdmin, onBehalfOf, calItem, inv, mmInv,
-                                  replySubject, verb, false, additionalMsgBody, iCal);
+        return createDefaultReply(fromAccount, fromIdentityId, authAccount, authIdentityId,
+                                  asAdmin, onBehalfOf, calItem, inv, mmInv,
+                                  replySubject, verb, false, additionalMsgBody, iCal, false);
     }
 
-    public static MimeMessage createDefaultReply(Account fromAccount, Account authAccount, boolean asAdmin,
-                                                 boolean onBehalfOf,
-                                                 CalendarItem calItem, Invite inv,
-                                                 MimeMessage mmInv, String replySubject, Verb verb,
-                                                 boolean partialAccept,
-                                                 String additionalMsgBody, ZVCalendar iCal)
+    private static MimeMessage createDefaultReply(Account fromAccount, String fromIdentityId,
+                                                  Account authAccount, String authIdentityId,
+                                                  boolean asAdmin, boolean onBehalfOf,
+                                                  CalendarItem calItem, Invite inv,
+                                                  MimeMessage mmInv, String replySubject, Verb verb,
+                                                  boolean partialAccept,
+                                                  String additionalMsgBody, ZVCalendar iCal,
+                                                  boolean addSignature)
     throws ServiceException {
+        Identity fromIdentity = null;
+        if (fromIdentityId != null) {
+            fromIdentity = fromAccount.getIdentityById(fromIdentityId);
+            if (fromIdentity == null) {
+                ZimbraLog.calendar.warn("No such identity " + fromIdentityId + " for account " + fromAccount.getName());
+                fromIdentity = getTargetedIdentity(fromAccount, inv);
+            }
+        } else {
+            fromIdentity = getTargetedIdentity(fromAccount, inv);
+        }
+        Identity authIdentity = null;
+        if (authIdentityId != null) {
+            authIdentity = authAccount.getIdentityById(authIdentityId);
+            if (authIdentity == null) {
+                ZimbraLog.calendar.warn("No such identity " + authIdentityId + " for account " + authAccount.getName());
+                if (authAccount.equals(fromAccount))
+                    authIdentity = fromIdentity;
+                else
+                    authIdentity = getTargetedIdentity(authAccount, inv);
+            }
+        } else {
+            if (authAccount.equals(fromAccount))
+                authIdentity = fromIdentity;
+            else
+                authIdentity = getTargetedIdentity(authAccount, inv);
+        }
+
         Locale lc;
         InternetAddress organizerAddress;
         if (inv.hasOrganizer()) {
@@ -205,7 +238,7 @@ public class CalendarMailSender {
             lc = authAccount.getLocale();
         }
 
-        String fromDisplayName = fromAccount.getAttr(Provisioning.A_displayName, fromAccount.getName());
+        String fromDisplayName = fromIdentity.getAttr(Provisioning.A_zimbraPrefFromDisplay);
         StringBuilder replyText = new StringBuilder();
         boolean isResourceAccount = fromAccount instanceof CalendarResource;
 
@@ -248,9 +281,31 @@ public class CalendarMailSender {
             replyText.append(additionalMsgBody).append("\r\n");
         }
 
+        // signature can come above or below original invite text
+        boolean sigAboveOriginal = true;
+        String sigText = null;
+        if (addSignature) {
+            String sigStyle = fromAccount.getAttr(Provisioning.A_zimbraPrefMailSignatureStyle, "outlook");
+            sigAboveOriginal = sigStyle.equalsIgnoreCase("outlook");
+            String sigKey;
+            if (VERB_DECLINE.equals(verb))
+                sigKey = Provisioning.A_zimbraPrefCalendarAutoDeclineSignatureId;
+            else
+                sigKey = Provisioning.A_zimbraPrefCalendarAutoAcceptSignatureId;
+            sigText = getSignatureText(fromAccount, fromIdentity, sigKey);
+            if (sigAboveOriginal && sigText != null && sigText.length() > 0) {
+                replyText.append(sigText).append("\r\n");
+            }
+        }
+
         boolean allowPrivateAccess = calItem != null ? calItem.allowPrivateAccess(authAccount, asAdmin) : true;
         if (inv.isPublic() || allowPrivateAccess) {
             attachInviteSummary(replyText, inv, mmInv, lc);
+        }
+
+        if (addSignature && !sigAboveOriginal && sigText != null && sigText.length() > 0) {
+            replyText.append("\r\n-------------------------\r\n\r\n");
+            replyText.append(sigText).append("\r\n");
         }
 
         List<Address> toList = new ArrayList<Address>(1);
@@ -258,8 +313,8 @@ public class CalendarMailSender {
             toList.add(organizerAddress);
         Address senderAddr = null;
         if (onBehalfOf)
-            senderAddr = AccountUtil.getFriendlyEmailAddress(authAccount);
-        return createCalendarMessage(AccountUtil.getFriendlyEmailAddress(fromAccount),
+            senderAddr = authIdentity.getFriendlyEmailAddress();
+        return createCalendarMessage(fromIdentity.getFriendlyEmailAddress(),
                 senderAddr, toList, replySubject, replyText.toString(), null, inv.getUid(), iCal);
     }
 
@@ -279,6 +334,7 @@ public class CalendarMailSender {
                     MsgKey.calendarResourceReplyOriginalInviteSeparatorLabel, lc));
             sb.append("-----\r\n\r\n");
             sb.append(notes);
+            sb.append("\r\n\r\n");
         }
     }
 
@@ -708,21 +764,31 @@ public class CalendarMailSender {
             Address toAddr, Invite inv, MsgKey bodyTextKey)
     throws ServiceException {
         Locale locale = !onBehalfOf ? fromAccount.getLocale() : senderAccount.getLocale();
+
+        Identity fromIdentity = getTargetedIdentity(fromAccount, inv);
+        StringBuilder replyText = new StringBuilder();
+
+        String sigText = getSignatureText(fromAccount, fromIdentity, Provisioning.A_zimbraPrefCalendarAutoDenySignatureId);
+        if (sigText == null || sigText.length() < 1)
+            sigText = L10nUtil.getMessage(bodyTextKey, locale);        
+        if (sigText != null && sigText.length() > 0)
+            replyText.append(sigText).append("\r\n");
+        attachInviteSummary(replyText, inv, null, locale);
+
         String subject = L10nUtil.getMessage(MsgKey.calendarReplySubjectDecline, locale) + ": " + inv.getName();
-        String text = L10nUtil.getMessage(bodyTextKey, locale);
         String uid = inv.getUid();
         ParsedDateTime exceptDt = null;
         if (inv.hasRecurId())
             exceptDt = inv.getRecurId().getDt();
         Invite replyInv = replyToInvite(fromAccount, senderAccount, onBehalfOf, allowPrivateAccess, inv, VERB_DECLINE, subject, exceptDt);
         ZVCalendar iCal = replyInv.newToICalendar(true);
-        Address fromAddr = AccountUtil.getFriendlyEmailAddress(fromAccount);
+        Address fromAddr = fromIdentity.getFriendlyEmailAddress();
         Address senderAddr = null;
         if (onBehalfOf)
             senderAddr = AccountUtil.getFriendlyEmailAddress(senderAccount);
         List<Address> toAddrs = new ArrayList<Address>(1);
         toAddrs.add(toAddr);
-        return createCalendarMessage(fromAddr, senderAddr, toAddrs, subject, text, null, uid, iCal);
+        return createCalendarMessage(fromAddr, senderAddr, toAddrs, subject, replyText.toString(), null, uid, iCal);
     }
 
     public static void sendInviteDeniedMessage(
@@ -858,10 +924,10 @@ public class CalendarMailSender {
             identity = acct.getIdentityById(identityId);
             if (identity == null) {
                 ZimbraLog.calendar.warn("No such identity " + identityId + " for account " + acct.getName());
-                identity = acct.getDefaultIdentity();
+                identity = getTargetedIdentity(acct, oldInv);
             }
         } else {
-            identity = acct.getDefaultIdentity();
+            identity = getTargetedIdentity(acct, oldInv);
         }
         String identityAddr = identity.getAttr(Provisioning.A_zimbraPrefFromAddress);
         String identityCn = identity.getAttr(Provisioning.A_zimbraPrefFromDisplay);
@@ -962,10 +1028,11 @@ public class CalendarMailSender {
         }
     }
 
-    public static MimeMessage createResourceAutoReply(OperationContext octxt, Mailbox mbox,
-                                                      Verb verb, boolean partialAccept,
+    public static MimeMessage createResourceAutoReply(OperationContext octxt, String fromIdentityId, String authIdentityId,
+                                                      Mailbox mbox, Verb verb, boolean partialAccept,
                                                       String additionalMsgBody, CalendarItem calItem,
-                                                      Invite inv, Invite[] replies, MimeMessage mmInv)
+                                                      Invite inv, Invite[] replies, MimeMessage mmInv,
+                                                      boolean addSignature)
     throws ServiceException {
         boolean onBehalfOf = false;
         Account acct = mbox.getAccount();
@@ -1004,17 +1071,18 @@ public class CalendarMailSender {
                 iCal.addComponent(cancelComp);
             }
         }
-        return createDefaultReply(acct, authAcct, asAdmin, onBehalfOf, calItem, inv, mmInv,
-                                  replySubject, verb, partialAccept, additionalMsgBody, iCal);
+        return createDefaultReply(acct, fromIdentityId, authAcct, authIdentityId, asAdmin, onBehalfOf, calItem, inv, mmInv,
+                                  replySubject, verb, partialAccept, additionalMsgBody, iCal, addSignature);
     }
 
     public static void sendResourceAutoReply(final OperationContext octxt, final Mailbox mbox,
-                                             final boolean saveToSent,
-                                             Verb verb, boolean partialAccept,
+                                             final boolean saveToSent, Verb verb, boolean partialAccept,
                                              String additionalMsgBody, CalendarItem calItem,
                                              Invite inv, Invite[] replies, MimeMessage mmInv)
     throws ServiceException {
-        final MimeMessage mm = createResourceAutoReply(octxt, mbox, verb, partialAccept, additionalMsgBody, calItem, inv, replies, mmInv);
+        Identity iden = getTargetedIdentity(mbox.getAccount(), inv);
+        final MimeMessage mm = createResourceAutoReply(octxt, iden.getId(), iden.getId(), mbox, verb, partialAccept,
+                additionalMsgBody, calItem, inv, replies, mmInv, true);
         final String replyType = MailSender.MSGTYPE_REPLY;
         final int invId = inv.getMailItemId();
 
@@ -1034,6 +1102,36 @@ public class CalendarMailSender {
         Thread senderThread = new Thread(r, "CalendarAutoAcceptDeclineReplySender");
         senderThread.setDaemon(true);
         senderThread.start();
+    }
+
+    // Returns the Identity of the account that matches the attendee address in the invite.
+    // Default identity is returned if no attendee matches any identity.
+    private static Identity getTargetedIdentity(Account acct, Invite invite) throws ServiceException {
+        ZAttendee addressedAtt = invite.getMatchingAttendee(acct);
+        if (addressedAtt != null && addressedAtt.getAddress() != null) {
+            String addr = addressedAtt.getAddress();
+            List<Identity> idens = Provisioning.getInstance().getAllIdentities(acct);
+            for (Identity iden : idens) {
+                String idenAddr = iden.getAttr(Provisioning.A_zimbraPrefFromAddress);
+                if (addr.equalsIgnoreCase(idenAddr)) {
+                    return iden;
+                }
+            }
+        }
+        return acct.getDefaultIdentity();
+    }
+
+    private static String getSignatureText(Account acct, Identity identity, String signatureKey) throws ServiceException {
+        String sigId = identity.getAttr(signatureKey);
+        if (sigId == null)
+            return null;
+        Signature sig = Provisioning.getInstance().get(acct, SignatureBy.id, sigId);
+        if (sig == null) {
+            ZimbraLog.calendar.warn("No such signature " + sigId + " for account " + acct.getName());
+            return null;
+        }
+        String attr = Signature.mimeTypeToAttrName(MimeConstants.CT_TEXT_PLAIN);
+        return sig.getAttr(attr, null);
     }
 
     private static class HtmlPartDataSource implements DataSource {

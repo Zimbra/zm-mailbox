@@ -5552,4 +5552,16 @@ TODO: delete them permerntly from here
   <desc>allowed OpenID Provider Endpoint URLs for authentication</desc>
 </attr>
 
+<attr id="1192" name="zimbraPrefCalendarAutoAcceptSignatureId" type="string" cardinality="single" optionalIn="account,identity,dataSource" flags="domainAdminModifiable" since="8.0.0">
+  <desc>calendar auto accept reply signature for account/identity/dataSource</desc>
+</attr>
+
+<attr id="1193" name="zimbraPrefCalendarAutoDeclineSignatureId" type="id" cardinality="single" optionalIn="account,identity,dataSource" flags="domainAdminModifiable" since="8.0.0">
+  <desc>calendar auto decline reply signature id for account/identity/dataSource</desc>
+</attr>
+
+<attr id="1194" name="zimbraPrefCalendarAutoDenySignatureId" type="id" cardinality="single" optionalIn="account,identity,dataSource" flags="domainAdminModifiable" since="8.0.0">
+  <desc>calendar auto deny reply signature id for account/identity/dataSource</desc>
+</attr>
+
 </attrs>

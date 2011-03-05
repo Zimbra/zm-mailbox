@@ -357,7 +357,7 @@ public class SendInviteReply extends CalendarRequest {
                         // build a default "Accepted" response
                         if (!(acct instanceof CalendarResource)) {
                             csd.mMm = CalendarMailSender.createDefaultReply(
-                                    acct, authAcct, isAdmin, onBehalfOf, calItem, oldInv, null, replySubject,
+                                    acct, identityId, authAcct, identityId, isAdmin, onBehalfOf, calItem, oldInv, null, replySubject,
                                     verb, null, iCal);
                         } else {
                             // different template for calendar resources
@@ -368,8 +368,8 @@ public class SendInviteReply extends CalendarRequest {
                                     verb, replySubject, ridDt);
                             MimeMessage mmInv = calItem.getSubpartMessage(oldInv.getMailItemId());
                             csd.mMm = CalendarMailSender.createResourceAutoReply(
-                                    octxt, mbox, verb, false, null,
-                                    calItem, oldInv, new Invite[] { replyInv }, mmInv);
+                                    octxt, identityId, identityId, mbox, verb, false, null,
+                                    calItem, oldInv, new Invite[] { replyInv }, mmInv, true);
                         }
                     }
 

@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 administrator 20110303-1026 */
+    /* build: 7.0.0_BETA1_1111 jhahm 20110304-2321 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -6250,12 +6250,37 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefCalendarApptVisibility = "zimbraPrefCalendarApptVisibility";
 
     /**
+     * calendar auto accept reply signature for account/identity/dataSource
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1192)
+    public static final String A_zimbraPrefCalendarAutoAcceptSignatureId = "zimbraPrefCalendarAutoAcceptSignatureId";
+
+    /**
      * automatically add appointments when invited
      *
      * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=848)
     public static final String A_zimbraPrefCalendarAutoAddInvites = "zimbraPrefCalendarAutoAddInvites";
+
+    /**
+     * calendar auto decline reply signature id for
+     * account/identity/dataSource
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1193)
+    public static final String A_zimbraPrefCalendarAutoDeclineSignatureId = "zimbraPrefCalendarAutoDeclineSignatureId";
+
+    /**
+     * calendar auto deny reply signature id for account/identity/dataSource
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1194)
+    public static final String A_zimbraPrefCalendarAutoDenySignatureId = "zimbraPrefCalendarAutoDenySignatureId";
 
     /**
      * hour of day that the day view should end at, non-inclusive (16=4pm, 24

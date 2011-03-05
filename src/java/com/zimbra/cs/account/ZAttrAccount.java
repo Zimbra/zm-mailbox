@@ -35,7 +35,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 administrator 20110303-1026 */
+    /* build: 7.0.0_BETA1_1111 jhahm 20110304-2321 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -24119,6 +24119,78 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * calendar auto accept reply signature for account/identity/dataSource
+     *
+     * @return zimbraPrefCalendarAutoAcceptSignatureId, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1192)
+    public String getPrefCalendarAutoAcceptSignatureId() {
+        return getAttr(Provisioning.A_zimbraPrefCalendarAutoAcceptSignatureId, null);
+    }
+
+    /**
+     * calendar auto accept reply signature for account/identity/dataSource
+     *
+     * @param zimbraPrefCalendarAutoAcceptSignatureId new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1192)
+    public void setPrefCalendarAutoAcceptSignatureId(String zimbraPrefCalendarAutoAcceptSignatureId) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarAutoAcceptSignatureId, zimbraPrefCalendarAutoAcceptSignatureId);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * calendar auto accept reply signature for account/identity/dataSource
+     *
+     * @param zimbraPrefCalendarAutoAcceptSignatureId new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1192)
+    public Map<String,Object> setPrefCalendarAutoAcceptSignatureId(String zimbraPrefCalendarAutoAcceptSignatureId, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarAutoAcceptSignatureId, zimbraPrefCalendarAutoAcceptSignatureId);
+        return attrs;
+    }
+
+    /**
+     * calendar auto accept reply signature for account/identity/dataSource
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1192)
+    public void unsetPrefCalendarAutoAcceptSignatureId() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarAutoAcceptSignatureId, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * calendar auto accept reply signature for account/identity/dataSource
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1192)
+    public Map<String,Object> unsetPrefCalendarAutoAcceptSignatureId(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarAutoAcceptSignatureId, "");
+        return attrs;
+    }
+
+    /**
      * automatically add appointments when invited
      *
      * @return zimbraPrefCalendarAutoAddInvites, or true if unset
@@ -24187,6 +24259,155 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPrefCalendarAutoAddInvites(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarAutoAddInvites, "");
+        return attrs;
+    }
+
+    /**
+     * calendar auto decline reply signature id for
+     * account/identity/dataSource
+     *
+     * @return zimbraPrefCalendarAutoDeclineSignatureId, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1193)
+    public String getPrefCalendarAutoDeclineSignatureId() {
+        return getAttr(Provisioning.A_zimbraPrefCalendarAutoDeclineSignatureId, null);
+    }
+
+    /**
+     * calendar auto decline reply signature id for
+     * account/identity/dataSource
+     *
+     * @param zimbraPrefCalendarAutoDeclineSignatureId new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1193)
+    public void setPrefCalendarAutoDeclineSignatureId(String zimbraPrefCalendarAutoDeclineSignatureId) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarAutoDeclineSignatureId, zimbraPrefCalendarAutoDeclineSignatureId);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * calendar auto decline reply signature id for
+     * account/identity/dataSource
+     *
+     * @param zimbraPrefCalendarAutoDeclineSignatureId new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1193)
+    public Map<String,Object> setPrefCalendarAutoDeclineSignatureId(String zimbraPrefCalendarAutoDeclineSignatureId, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarAutoDeclineSignatureId, zimbraPrefCalendarAutoDeclineSignatureId);
+        return attrs;
+    }
+
+    /**
+     * calendar auto decline reply signature id for
+     * account/identity/dataSource
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1193)
+    public void unsetPrefCalendarAutoDeclineSignatureId() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarAutoDeclineSignatureId, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * calendar auto decline reply signature id for
+     * account/identity/dataSource
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1193)
+    public Map<String,Object> unsetPrefCalendarAutoDeclineSignatureId(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarAutoDeclineSignatureId, "");
+        return attrs;
+    }
+
+    /**
+     * calendar auto deny reply signature id for account/identity/dataSource
+     *
+     * @return zimbraPrefCalendarAutoDenySignatureId, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1194)
+    public String getPrefCalendarAutoDenySignatureId() {
+        return getAttr(Provisioning.A_zimbraPrefCalendarAutoDenySignatureId, null);
+    }
+
+    /**
+     * calendar auto deny reply signature id for account/identity/dataSource
+     *
+     * @param zimbraPrefCalendarAutoDenySignatureId new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1194)
+    public void setPrefCalendarAutoDenySignatureId(String zimbraPrefCalendarAutoDenySignatureId) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarAutoDenySignatureId, zimbraPrefCalendarAutoDenySignatureId);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * calendar auto deny reply signature id for account/identity/dataSource
+     *
+     * @param zimbraPrefCalendarAutoDenySignatureId new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1194)
+    public Map<String,Object> setPrefCalendarAutoDenySignatureId(String zimbraPrefCalendarAutoDenySignatureId, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarAutoDenySignatureId, zimbraPrefCalendarAutoDenySignatureId);
+        return attrs;
+    }
+
+    /**
+     * calendar auto deny reply signature id for account/identity/dataSource
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1194)
+    public void unsetPrefCalendarAutoDenySignatureId() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarAutoDenySignatureId, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * calendar auto deny reply signature id for account/identity/dataSource
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1194)
+    public Map<String,Object> unsetPrefCalendarAutoDenySignatureId(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarAutoDenySignatureId, "");
         return attrs;
     }
 
