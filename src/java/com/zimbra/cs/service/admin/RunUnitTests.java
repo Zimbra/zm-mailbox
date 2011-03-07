@@ -36,6 +36,12 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class RunUnitTests extends AdminDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+        try {
+            Class.forName("org.junit.Test");
+        } catch (ClassNotFoundException e) {
+            throw ServiceException.FAILURE("JUnit is not installed.  Unable to run unit tests.", e);
+        }
+        
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Element response = lc.createElement(AdminConstants.RUN_UNIT_TESTS_RESPONSE);
         
