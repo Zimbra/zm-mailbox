@@ -27,10 +27,6 @@ public class MimeCompoundHeaderTest {
         for (int i = 0; i < params.length; i += 2) {
             Assert.assertEquals(description, params[i + 1], mch.getParameter(params[i]));
         }
-
-        //        System.out.println("was:  " + mch);
-        //        System.out.println("is:   " + mch.setCharset("iso-8859-1").cleanup());
-        //        System.out.println("2231: " + mch.setUse2231Encoding(true).cleanup() + '\n');
     }
 
     @Test public void testContentType() {
@@ -109,6 +105,12 @@ public class MimeCompoundHeaderTest {
         test(false, "bare 8-bit chars in filename",
                 "attachment; filename=\"About \u00E5 \u00E4 \u00F6 Downloads.pdf\"",
                 "attachment", new String[] { "filename", "About \u00E5 \u00E4 \u00F6 Downloads.pdf" });
+        test(false, "missing 2231 charset/language",
+                "Content-Disposition: attachment; \r\nfilename*=Jarrod_Stiles%7a_resume_5579615_10344909272010946044.pdf",
+                "attachment", new String[] { "filename", "Jarrod_Stilesz_resume_5579615_10344909272010946044.pdf" });
+        test(false, "missing 2231 charset/language with subsequent param",
+                "Content-Disposition: attachment; \r\nfilename*=Jarrod_Stiles%7a_resume_5579615_10344909272010946044.pdf; foo=bar",
+                "attachment", new String[] { "filename", "Jarrod_Stilesz_resume_5579615_10344909272010946044.pdf", "foo", "bar" });
     }
 
     // FIXME: add tests for serialization (2231 or not, various charsets, quoting, folding, etc.)

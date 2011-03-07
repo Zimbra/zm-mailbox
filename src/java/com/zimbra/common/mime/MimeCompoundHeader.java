@@ -168,6 +168,9 @@ public class MimeCompoundHeader extends MimeHeader {
                 case CHARSET:
                     if (b == '\'') {
                         rfc2231.setState(RFC2231State.LANG);
+                    } else if (b == ';') {
+                        rfc2231.saveParameter(params);
+                        rfc2231.setState(RFC2231State.PARAM);
                     } else {
                         rfc2231.addCharsetByte(b);
                     }
@@ -176,6 +179,9 @@ public class MimeCompoundHeader extends MimeHeader {
                 case LANG:
                     if (b == '\'') {
                         rfc2231.setState(RFC2231State.VALUE);
+                    } else if (b == ';') {
+                        rfc2231.saveParameter(params);
+                        rfc2231.setState(RFC2231State.PARAM);
                     }
                     break;
 
@@ -479,6 +485,11 @@ public class MimeCompoundHeader extends MimeHeader {
                     attrs.put(pname, null);
                 } else {
                     if (encoded) {
+                        if (state == RFC2231State.CHARSET) {
+                            // handle case where MUA left off charset/language in encoded param
+                            pvalue = value.append(charset).toString();
+                            charset.reset();
+                        }
                         try {
                             URLCodec codec = new URLCodec(charset.isEmpty() ? "us-ascii" : charset.toString());
                             pvalue = codec.decode(pvalue);
