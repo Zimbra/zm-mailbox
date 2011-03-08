@@ -171,51 +171,14 @@ public class GalExtraSearchFilter {
         }
     }
 
-    public static abstract class FilteredGalSearchResultCallback extends GalSearchResultCallback {
-        private Element mProxiedResponse;
+    public static abstract class FilteredGalSearchResultCallback extends GalSearchResultCallback.PassThruGalSearchResultCallback {
         private Set<String> mAttrs;
         private EntrySearchFilter mFilter;
-        
-        boolean mPagingSupported; // default to false
         
         public FilteredGalSearchResultCallback(GalSearchParams params, EntrySearchFilter filter, Set<String> attrs) {
             super(params);
             mAttrs = attrs;
             mFilter = filter;
-        }
-    
-        @Override
-        public boolean passThruProxiedGalAcctResponse() {
-            return true;
-        }
-        
-        @Override
-        public void handleProxiedResponse(Element resp) {
-            mProxiedResponse = resp;
-            mProxiedResponse.detach();
-        }
-        
-        @Override
-        public Element getResponse() {
-            if (mProxiedResponse != null)
-                return mProxiedResponse;
-            else {
-                Element resp = super.getResponse();
-                resp.addAttribute(AccountConstants.A_PAGINATION_SUPPORTED, mPagingSupported);
-                return super.getResponse();
-            }
-        }
-        
-        @Override
-        public void handleElement(Element e) throws ServiceException {
-            // should never be called
-            throw ServiceException.FAILURE("internal error, method should not be called", null);
-        }
-        
-        @Override
-        public void setQueryOffset(int offset) {
-            super.setQueryOffset(offset);
-            mPagingSupported = true;
         }
         
         protected Set<String> neededAttrs() {

@@ -162,4 +162,48 @@ public class GalSearchResultCallback implements GalContact.Visitor {
     public void setHasMoreResult(boolean more) {
         mResponse.addAttribute(MailConstants.A_QUERY_MORE, more);
     }
+    
+    public static abstract class PassThruGalSearchResultCallback extends GalSearchResultCallback {
+        protected Element mProxiedResponse;
+        protected boolean mPagingSupported; // default to false
+        
+        public PassThruGalSearchResultCallback(GalSearchParams params) {
+            super(params);
+        }
+    
+        @Override
+        public boolean passThruProxiedGalAcctResponse() {
+            return true;
+        }
+        
+        @Override
+        public void handleProxiedResponse(Element resp) {
+            mProxiedResponse = resp;
+            mProxiedResponse.detach();
+        }
+        
+        @Override
+        public Element getResponse() {
+            if (mProxiedResponse != null)
+                return mProxiedResponse;
+            else {
+                Element resp = super.getResponse();
+                resp.addAttribute(AccountConstants.A_PAGINATION_SUPPORTED, mPagingSupported);
+                return super.getResponse();
+            }
+        }
+        
+        @Override
+        public void handleElement(Element e) throws ServiceException {
+            // should never be called
+            throw ServiceException.FAILURE("internal error, method should not be called", null);
+        }
+        
+        @Override
+        public void setQueryOffset(int offset) {
+            super.setQueryOffset(offset);
+            mPagingSupported = true;
+        }
+
+    }
 }
