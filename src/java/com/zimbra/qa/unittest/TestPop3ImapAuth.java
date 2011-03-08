@@ -53,7 +53,7 @@ extends TestCase {
     private static final String IMAP_LOGIN_RESPONSE = "1 OK.*LOGIN completed";
     private static final String IMAP_CLEARTEXT_FAILED_RESPONSE = "1 NO cleartext logins disabled";
     private static final String IMAP_STARTTLS = "2 STARTTLS" + CRLF;
-    private static final String IMAP_STARTTLS_RESPONSE = "2 OK Begin TLS negotiation now";
+    private static final String IMAP_STARTTLS_RESPONSE = "2 OK begin TLS negotiation now";
     private static final String IMAP_LOGOUT = "3 LOGOUT" + CRLF;
     private static final String IMAP_LOGOUT_RESPONSE1 = "\\* BYE.*IMAP4rev1 server closing connection";
     private static final String IMAP_LOGOUT_RESPONSE2 = "3 OK LOGOUT completed";

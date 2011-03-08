@@ -64,7 +64,7 @@ extends TestCase {
         waitForValue(connStatName, numConnections);
         
         int numThreads = getStatValue(threadStatName);
-        assertTrue("Unexpected thread count: " + numThreads, numThreads >= numConnections);
+        assertTrue("Unexpected thread count: " + numThreads, numThreads > 0);
         
         socket1.close();
         socket2.close();
