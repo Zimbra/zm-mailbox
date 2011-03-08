@@ -55,6 +55,7 @@ public class GalSearchParams {
     private DataSource mDataSource;
     private boolean mIdOnly;
     private boolean mNeedCanExpand;
+    private boolean mNeedSMIMECerts;
     private boolean mFetchGroupMembers;
     private GalOp mOp;
 	
@@ -196,6 +197,10 @@ public class GalSearchParams {
         return mNeedCanExpand;
     }
     
+    public boolean getNeedSMIMECerts() {
+        return mNeedSMIMECerts;
+    }
+    
 	public void setSearchConfig(GalSearchConfig config) {
 		mConfig = config;
 	}
@@ -270,6 +275,7 @@ public class GalSearchParams {
 	public void createSearchConfig(GalSearchConfig.GalType type) throws ServiceException {
 		mConfig = GalSearchConfig.create(getDomain(), mOp, type, mType);
 		mConfig.getRules().setFetchGroupMembers(mFetchGroupMembers);
+		mConfig.getRules().setNeedSMIMECerts(mNeedSMIMECerts);
 	}
 	
 	public String generateLdapQuery() throws ServiceException {
@@ -294,10 +300,15 @@ public class GalSearchParams {
     public void setNeedCanExpand(boolean needCanExpand) {
         mNeedCanExpand = needCanExpand;
     }
+        
+    public void setNeedSMIMECerts(boolean needSMIMECerts) {
+        mNeedSMIMECerts = needSMIMECerts;
+    }
     
     public void setFetchGroupMembers(boolean fetchGroupMembers) {
         mFetchGroupMembers = fetchGroupMembers;
     }
+
 	
 	public void setOp(GalOp op) {
 	    mOp = op;

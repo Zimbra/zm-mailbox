@@ -2346,6 +2346,7 @@ public class ToXML {
             }
         }
     }
+    
     public static Element encodeGalContact(Element response, GalContact contact) {
         Element cn = response.addElement(MailConstants.E_CONTACT);
         cn.addAttribute(MailConstants.A_ID, contact.getId());
