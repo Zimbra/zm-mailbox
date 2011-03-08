@@ -158,7 +158,7 @@ public class FileUploadServlet extends ZimbraServlet {
         public String getId()           { return uuid; }
         public String getContentType()  { return contentType; }
         public long getSize()           { return file == null ? 0 : file.getSize(); }
-
+        
         public InputStream getInputStream() throws IOException {
             if (file == null)
                 return new ByteArrayInputStream(new byte[0]);
@@ -174,11 +174,16 @@ public class FileUploadServlet extends ZimbraServlet {
 
         boolean accessedAfter(long checkpoint)  { return time > checkpoint; }
 
-        void purge()  { if (file != null)  file.delete(); }
+        void purge() {
+            if (file != null) {
+                mLog.debug("Deleting from disk: id=%s, %s", uuid, file);
+                file.delete();
+            }
+        }
 
         @Override public String toString() {
             return "Upload: { accountId=" + accountId + ", time=" + new Date(time) +
-                   ", uploadId=" + uuid + ", " + (file == null ? "no file" : name) + "}";
+                   ", size=" + getSize() + ", uploadId=" + uuid + ", name=" + name + ", path=" + getStoreLocation(file) + " }";
         }
     }
 
@@ -211,6 +216,7 @@ public class FileUploadServlet extends ZimbraServlet {
     }
 
     public static Upload fetchUpload(String accountId, String uploadId, AuthToken authtoken) throws ServiceException {
+        mLog.debug("Fetching upload %s for account %s", uploadId, accountId);
         String context = "accountId=" + accountId + ", uploadId=" + uploadId;
         if (accountId == null || uploadId == null)
             throw ServiceException.FAILURE("fetchUploads(): missing parameter: " + context, null);
@@ -231,6 +237,7 @@ public class FileUploadServlet extends ZimbraServlet {
                 throw MailServiceException.NO_SUCH_UPLOAD(uploadId);
             }
             up.time = System.currentTimeMillis();
+            mLog.debug("fetchUpload() returning %s", up);
             return up;
         }
     }
@@ -301,16 +308,25 @@ public class FileUploadServlet extends ZimbraServlet {
                 throw MailServiceException.UPLOAD_REJECTED(filename, "upload too large");
 
             Upload up = new Upload(accountId, fi);
-            mLog.info("Received file: name=%s, size=%d, id=%s", up.getName(), up.getSize(), up.getId());
+            mLog.info("saveUpload(): received %s", up);
             synchronized (mPending) {
                 mPending.put(up.uuid, up);
             }
             success = true;
             return up;
         } finally {
-            if (!success && fi != null)
+            if (!success && fi != null) {
+                mLog.debug("saveUpload(): unsuccessful attempt.  Deleting %s", fi);
                 fi.delete();
+            }
         }
+    }
+    
+    private static File getStoreLocation(FileItem fi) {
+        if (fi.isInMemory() || !(fi instanceof DiskFileItem)) {
+            return null;
+        }
+        return ((DiskFileItem) fi).getStoreLocation();
     }
 
     public static void deleteUploads(Collection<Upload> uploads) {
@@ -325,6 +341,7 @@ public class FileUploadServlet extends ZimbraServlet {
             return;
         Upload up = null;
         synchronized (mPending) {
+            mLog.debug("deleteUpload(): removing %s", upload);
             up = mPending.remove(upload.uuid);
         }
         if (up == upload)
@@ -497,7 +514,7 @@ public class FileUploadServlet extends ZimbraServlet {
         		name = fi.getName();
         	Upload up = new Upload(accountId, fi, name);
 
-        	ZimbraLog.mailbox.info("FileUploadServlet received %s", up);
+        	mLog.info("Received multipart: %s", up);
         	synchronized (mPending) {
         		mPending.put(up.uuid, up);
         	}
@@ -528,6 +545,7 @@ public class FileUploadServlet extends ZimbraServlet {
             // write the upload to disk, but make sure not to exceed the permitted max upload size
             long size = ByteUtil.copy(req.getInputStream(), false, fi.getOutputStream(), true, upload.getSizeMax() * 3);
             if (size > upload.getSizeMax()) {
+                mLog.debug("handlePlainUpload(): deleting %s", fi);
                 fi.delete();
                 mLog.info("Exceeded maximum upload size of " + upload.getSizeMax() + " bytes: " + accountId);
                 drainRequestStream(req);
@@ -535,6 +553,7 @@ public class FileUploadServlet extends ZimbraServlet {
                 return;
             }
         } catch (IOException ioe) {
+            mLog.warn("Unable to store upload.  Deleting %s", fi, ioe);
             fi.delete();
             drainRequestStream(req);
             sendResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, fmt, null, null, null);
@@ -544,7 +563,7 @@ public class FileUploadServlet extends ZimbraServlet {
         items.add(fi);
 
         Upload up = new Upload(accountId, fi, filename);
-        ZimbraLog.mailbox.info("FileUploadServlet received " + up);
+        mLog.info("Received plain: %s", up);
         synchronized (mPending) {
         	mPending.put(up.uuid, up);
         }
@@ -605,8 +624,10 @@ public class FileUploadServlet extends ZimbraServlet {
 
         // handle failure by cleaning up the failed upload
         if (status != HttpServletResponse.SC_OK && items != null && items.size() > 0) {
-            for (FileItem fi : items)
+            for (FileItem fi : items) {
+                mLog.debug("sendResponse(): deleting %s", fi);
                 fi.delete();
+            }
         }
     }
     
@@ -697,7 +718,7 @@ public class FileUploadServlet extends ZimbraServlet {
                     for (Iterator<Upload> it = mPending.values().iterator(); it.hasNext(); ) {
                         Upload up = it.next();
                         if (!up.accessedAfter(cutoffTime)) {
-                            mLog.debug("Purging cached upload: " + up);
+                            mLog.debug("Purging cached upload: %s", up);
                             it.remove();
                             reaped.add(up);
                             assert(mPending.get(up.uuid) == null);
