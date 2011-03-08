@@ -76,6 +76,7 @@ import com.zimbra.cs.account.gal.GalUtil;
 import com.zimbra.cs.account.krb5.Krb5Principal;
 import com.zimbra.cs.account.ldap.LdapUtil.SearchLdapVisitor;
 import com.zimbra.cs.account.names.NameUtil;
+import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.localconfig.DebugConfig;
@@ -83,6 +84,7 @@ import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletUtil;
+import com.zimbra.soap.ZimbraSoapContext;
 
 import javax.naming.AuthenticationException;
 import javax.naming.AuthenticationNotSupportedException;
@@ -104,6 +106,7 @@ import javax.naming.directory.SchemaViolationException;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -6769,41 +6772,40 @@ public class LdapProvisioning extends Provisioning {
             LdapUtil.searchLdapOnReplica(base, query.toString(), returnAttrs, visitor);
         }
     }
-
     
     @Override
     public Map<String, Map<String, Object>> getDomainSMIMEConfig(Domain domain, String configName) throws ServiceException {
-        LdapSMIMEConfig smime = new LdapSMIMEConfig(domain);
+        LdapSMIMEConfig smime = LdapSMIMEConfig.getInstance(domain);
         return smime.get(configName);
     }
     
     @Override
     public void modifyDomainSMIMEConfig(Domain domain, String configName, Map<String, Object> attrs) throws ServiceException {
-        LdapSMIMEConfig smime = new LdapSMIMEConfig(domain);
+        LdapSMIMEConfig smime = LdapSMIMEConfig.getInstance(domain);
         smime.modify(configName, attrs);
     }
     
     @Override
     public void removeDomainSMIMEConfig(Domain domain, String configName) throws ServiceException {
-        LdapSMIMEConfig smime = new LdapSMIMEConfig(domain);
+        LdapSMIMEConfig smime = LdapSMIMEConfig.getInstance(domain);
         smime.remove(configName);
     }
 
     @Override
     public Map<String, Map<String, Object>> getConfigSMIMEConfig(String configName) throws ServiceException {
-        LdapSMIMEConfig smime = new LdapSMIMEConfig(getConfig());
+        LdapSMIMEConfig smime = LdapSMIMEConfig.getInstance(getConfig());
         return smime.get(configName);
     }
     
     @Override
     public void modifyConfigSMIMEConfig(String configName, Map<String, Object> attrs) throws ServiceException {
-        LdapSMIMEConfig smime = new LdapSMIMEConfig(getConfig());
+        LdapSMIMEConfig smime = LdapSMIMEConfig.getInstance(getConfig());
         smime.modify(configName, attrs);
     }
     
     @Override
     public void removeConfigSMIMEConfig(String configName) throws ServiceException {
-        LdapSMIMEConfig smime = new LdapSMIMEConfig(getConfig());
+        LdapSMIMEConfig smime = LdapSMIMEConfig.getInstance(getConfig());
         smime.remove(configName);
     }
     

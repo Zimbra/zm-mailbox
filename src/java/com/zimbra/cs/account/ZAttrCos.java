@@ -40,7 +40,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 administrator 20110303-1245 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110307-2104 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -8183,7 +8183,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether S/MIME feature is enabled
+     * whether S/MIME feature is enabled. Note: SMIME is a Network feature,
+     * this attribute is effective only if SMIME is permited by license.
      *
      * @return zimbraFeatureSMIMEEnabled, or false if unset
      *
@@ -8195,7 +8196,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether S/MIME feature is enabled
+     * whether S/MIME feature is enabled. Note: SMIME is a Network feature,
+     * this attribute is effective only if SMIME is permited by license.
      *
      * @param zimbraFeatureSMIMEEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -8210,7 +8212,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether S/MIME feature is enabled
+     * whether S/MIME feature is enabled. Note: SMIME is a Network feature,
+     * this attribute is effective only if SMIME is permited by license.
      *
      * @param zimbraFeatureSMIMEEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -8226,7 +8229,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether S/MIME feature is enabled
+     * whether S/MIME feature is enabled. Note: SMIME is a Network feature,
+     * this attribute is effective only if SMIME is permited by license.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -8240,7 +8244,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether S/MIME feature is enabled
+     * whether S/MIME feature is enabled. Note: SMIME is a Network feature,
+     * this attribute is effective only if SMIME is permited by license.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

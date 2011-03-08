@@ -62,40 +62,40 @@ public class TestLdapBinary extends TestCase {
     
     // private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
     
-    static class Content {
+    public static class Content {
         private String string;
         private byte[] binary;
         
-        private Content(byte[] content) {
+        public Content(byte[] content) {
             this.binary = content;
             this.string = ByteUtil.encodeLDAPBase64(content);
         }
         
-        String getString() {
+        public String getString() {
             return string;
         }
         
-        byte[] getBinary() {
+        public byte[] getBinary() {
             return binary;
         }
         
-        static Content getContentByFileName(String contentFileName) throws IOException {
+        public static Content getContentByFileName(String contentFileName) throws IOException {
             File inFile = new File(contentFileName);
             return new Content(ByteUtil.getContent(inFile));
         }
         
-        static Content generateContent(int numBytes) {
+        public static Content generateContent(int numBytes) {
             byte[] content = new byte[numBytes];
             Random random = new Random();
             random.nextBytes(content);
             return new Content(content);
         }
         
-        boolean equals(String str) {
+        public boolean equals(String str) {
             return string.equals(str);
         }
         
-        boolean equals(byte[] bin) {
+        public boolean equals(byte[] bin) {
             if (bin == null) {
                 return false;
             }

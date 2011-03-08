@@ -35,7 +35,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 administrator 20110303-1245 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110307-2104 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -12331,7 +12331,8 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether S/MIME feature is enabled
+     * whether S/MIME feature is enabled. Note: SMIME is a Network feature,
+     * this attribute is effective only if SMIME is permited by license.
      *
      * @return zimbraFeatureSMIMEEnabled, or false if unset
      *
@@ -12343,7 +12344,8 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether S/MIME feature is enabled
+     * whether S/MIME feature is enabled. Note: SMIME is a Network feature,
+     * this attribute is effective only if SMIME is permited by license.
      *
      * @param zimbraFeatureSMIMEEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -12358,7 +12360,8 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether S/MIME feature is enabled
+     * whether S/MIME feature is enabled. Note: SMIME is a Network feature,
+     * this attribute is effective only if SMIME is permited by license.
      *
      * @param zimbraFeatureSMIMEEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -12374,7 +12377,8 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether S/MIME feature is enabled
+     * whether S/MIME feature is enabled. Note: SMIME is a Network feature,
+     * this attribute is effective only if SMIME is permited by license.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -12388,7 +12392,8 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether S/MIME feature is enabled
+     * whether S/MIME feature is enabled. Note: SMIME is a Network feature,
+     * this attribute is effective only if SMIME is permited by license.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
