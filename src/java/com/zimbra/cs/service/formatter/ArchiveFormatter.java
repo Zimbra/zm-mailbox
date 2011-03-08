@@ -663,7 +663,7 @@ public abstract class ArchiveFormatter extends Formatter {
         if (mi.isTagged(Flag.ID_FLAG_VERSIONED)) {
             // prepend the version before the extension of up to four characters
             int dot = name.lastIndexOf('.');
-            if (dot >= name.length() - 5) {
+            if (dot >= 0 && dot >= name.length() - 5) {
                 name = name.substring(0, dot) + String.format("-%05d", mi.getVersion()) + name.substring(dot);
             } else {
                 name += String.format("-%05d", mi.getVersion());
@@ -886,7 +886,7 @@ public abstract class ArchiveFormatter extends Formatter {
             for (ServiceException.Argument arg : ex.getArgs())
                 s.append(' ').append(arg.mName).append('=').append(arg.mValue);
         }
-        ZimbraLog.misc.warn(s);
+        ZimbraLog.misc.warn(s, ex);
     }
 
     private Folder createParent(UserServletContext context, Map<Object, Folder> fmap,
@@ -976,10 +976,10 @@ public abstract class ArchiveFormatter extends Formatter {
 
     private void warn(Exception e) {
         if (e.getCause() == null)
-            ZimbraLog.misc.warn("Archive Formatter warning: %s", e);
+            ZimbraLog.misc.warn("Archive Formatter warning: %s", e, e);
         else
             ZimbraLog.misc.warn("Archive Formatter warning: %s: %s", e,
-                e.getCause().toString());
+                e.getCause().toString(), e.getCause());
     }
 
     private void addItem(UserServletContext context, Folder fldr,
