@@ -92,8 +92,8 @@ public class AccountConstants {
     public static final String E_GET_VERSION_INFO_REQUEST = "GetVersionInfoRequest";
     public static final String E_GET_VERSION_INFO_RESPONSE = "GetVersionInfoResponse";
     
-    public static final String E_GET_SMIME_PUBLIC_KEYS_REQUEST = "GetSMIMEPublicKeysRequest";
-    public static final String E_GET_SMIME_PUBLIC_KEYS_RESPONSE = "GetSMIMEPublicKeysResponse";
+    public static final String E_GET_SMIME_PUBLIC_CERTS_REQUEST = "GetSMIMEPublicCertsRequest";
+    public static final String E_GET_SMIME_PUBLIC_CERTS_RESPONSE = "GetSMIMEPublicCertsResponse";
 
     // auth
     public static final QName AUTH_REQUEST = QName.get(E_AUTH_REQUEST, NAMESPACE);
@@ -166,8 +166,8 @@ public class AccountConstants {
     public static final QName GET_VERSION_INFO_RESPONSE = QName.get(E_GET_VERSION_INFO_RESPONSE, NAMESPACE);
     
     // SMIME
-    public static final QName GET_SMIME_PUBLIC_KEYS_REQUEST = QName.get(E_GET_SMIME_PUBLIC_KEYS_REQUEST, NAMESPACE);
-    public static final QName GET_SMIME_PUBLIC_KEYS_RESPONSE = QName.get(E_GET_SMIME_PUBLIC_KEYS_RESPONSE, NAMESPACE);
+    public static final QName GET_SMIME_PUBLIC_CERTS_REQUEST = QName.get(E_GET_SMIME_PUBLIC_CERTS_REQUEST, NAMESPACE);
+    public static final QName GET_SMIME_PUBLIC_CERTS_RESPONSE = QName.get(E_GET_SMIME_PUBLIC_CERTS_RESPONSE, NAMESPACE);
 
     public static final String E_ACTION = "action";
     public static final String E_ADMIN_DELEGATED = "adminDelegated";
@@ -178,6 +178,7 @@ public class AccountConstants {
     public static final String E_ACCOUNT = "account";
     public static final String E_CALENDAR_RESOURCE = "calresource";
     public static final String E_CERT = "cert";
+    public static final String E_CERTS = "certs";
     public static final String E_DL = "dl";
     public static final String E_DLM = "dlm";
     public static final String E_EMAIL = "email";
@@ -234,6 +235,7 @@ public class AccountConstants {
     public static final String E_OWNER = "owner";
     public static final String E_SHARE = "share";
     public static final String E_CONTACT_ID = "cid";
+    public static final String E_STORE = "store";
     
     public static final String A_ACTIVE = "active";
     public static final String A_ATTRS = "attrs";
@@ -262,6 +264,8 @@ public class AccountConstants {
     public static final String A_UTF8 = "utf8";
     public static final String A_VISIBLE = "visible";
     public static final String A_PERM_DENIED = "pd";
+    public static final String A_EMAIL = "email";
+    public static final String A_STORE = "store";
     
     // gal
     public static final String A_IS_GROUP = "isGroup";
