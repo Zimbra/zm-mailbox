@@ -654,7 +654,7 @@ public class LdapUtil {
           searchLdap(zlc, base, query, returnAttrs, visitor);
       }
               
-      static void searchLdap(ZimbraLdapContext zlc, String base, String query, String[] returnAttrs, SearchLdapVisitor visitor) 
+      public static void searchLdap(ZimbraLdapContext zlc, String base, String query, String[] returnAttrs, SearchLdapVisitor visitor) 
       throws ServiceException {
           
           int maxResults = 0; // no limit

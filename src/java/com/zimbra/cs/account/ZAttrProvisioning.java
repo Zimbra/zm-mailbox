@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 jhahm 20110304-2321 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110307-1520 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3499,7 +3499,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureSkinChangeEnabled = "zimbraFeatureSkinChangeEnabled";
 
     /**
-     * whether S/MIME feature is enabled
+     * whether S/MIME feature is enabled. Note: SMIME is a Network feature,
+     * this attribute is effective only if SMIME is permited by license.
      *
      * @since ZCS 7.1.0
      */
