@@ -17,7 +17,9 @@ package com.zimbra.cs.gal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
@@ -41,6 +43,7 @@ public class GalSearchResultCallback implements GalContact.Visitor {
 	private GalOp mOp;
 	private Account mAuthAcct;
 	private boolean mNeedsCanExpandInfo;
+	private boolean mNeedsSMIMECerts;
     
     public GalSearchResultCallback(GalSearchParams params) {
     	reset(params);
@@ -64,6 +67,7 @@ public class GalSearchResultCallback implements GalContact.Visitor {
             ZimbraLog.gal.warn("unable to get authed account", e);
         }
         mNeedsCanExpandInfo = params.getNeedCanExpand();
+        mNeedsSMIMECerts = params.getNeedSMIMECerts();
     }
     
     public void visit(GalContact c) throws ServiceException {
@@ -84,12 +88,18 @@ public class GalSearchResultCallback implements GalContact.Visitor {
     
     public Element handleContact(Contact c) throws ServiceException {
         Element eContact;
-    	if (mIdOnly)
+    	if (mIdOnly) {
     	    eContact = mResponse.addElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, mFormatter.formatItemId(c));
-    	else if (mOp == GalOp.sync)
+    	} else if (mOp == GalOp.sync) {
     	    eContact = ToXML.encodeContact(mResponse, mFormatter, c, true, c.getAllFields().keySet());
-    	else
+    	} else if (mNeedsSMIMECerts) {
+    		// this is the case when proxying SearcgGalRequest for the call from GetSMIMEPublicCerts (in ZimbraNetwork)
+    		Set<String> fieldSet = new HashSet<String>(c.getFields().keySet());
+    		fieldSet.add(ContactConstants.A_SMIMECertificate);
+    	    eContact = ToXML.encodeContact(mResponse, mFormatter, c, true, fieldSet);
+    	} else {
     	    eContact = ToXML.encodeContact(mResponse, mFormatter, c, true, null);
+    	}
     	
     	if (mNeedsCanExpandInfo && c.isGroup()) {
     	    boolean canExpand = GalSearchControl.canExpandGalGroup(c.get(ContactConstants.A_email), 

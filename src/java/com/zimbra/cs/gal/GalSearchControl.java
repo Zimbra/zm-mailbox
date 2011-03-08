@@ -202,6 +202,7 @@ public class GalSearchControl {
         mParams.setQuery("");
         mParams.setOp(GalOp.sync);
         mParams.setFetchGroupMembers(true);
+        mParams.setNeedSMIMECerts(true);
         Account galAcct = mParams.getGalSyncAccount();
         try {
             if (galAcct != null) {

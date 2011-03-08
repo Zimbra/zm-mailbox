@@ -63,30 +63,6 @@ public class SearchGal extends GalDocumentHandler {
         return searchGal(zsc, account, request);
     }
     
-    // Search AGL code pre bug 56016, not used any more
-    // TODO delete
-    private static Element searchGalOld(ZimbraSoapContext zsc, Account account, Element request) throws ServiceException {
-        String name = request.getAttribute(AccountConstants.E_NAME);
-        String typeStr = request.getAttribute(AccountConstants.A_TYPE, "all");
-        Provisioning.GalSearchType type = Provisioning.GalSearchType.fromString(typeStr);
-
-        boolean needCanExpand = request.getAttributeBool(AccountConstants.A_NEED_EXP, false);
-
-        String galAcctId = request.getAttribute(AccountConstants.A_GAL_ACCOUNT_ID, null);
-
-        GalSearchParams params = new GalSearchParams(account, zsc);
-        params.setType(type);
-        params.setRequest(request);
-        params.setQuery(name);
-        params.setNeedCanExpand(needCanExpand);
-        params.setResponseName(AccountConstants.SEARCH_GAL_RESPONSE);
-        if (galAcctId != null)
-            params.setGalSyncAccount(Provisioning.getInstance().getAccountById(galAcctId));
-        GalSearchControl gal = new GalSearchControl(params);
-        gal.search();
-        return params.getResultCallback().getResponse();
-    }
-    
     private static Element searchGal(ZimbraSoapContext zsc, Account account, Element request) throws ServiceException {
         
         String name = request.getAttribute(AccountConstants.E_NAME);
@@ -96,6 +72,10 @@ public class SearchGal extends GalDocumentHandler {
         String typeStr = request.getAttribute(AccountConstants.A_TYPE, "all");
         Provisioning.GalSearchType type = Provisioning.GalSearchType.fromString(typeStr);
         boolean needCanExpand = request.getAttributeBool(AccountConstants.A_NEED_EXP, false);
+        
+        // internal attr, for proxied GSA search from GetSMIMEPublicCerts only
+        boolean needSMIMECerts = request.getAttributeBool(AccountConstants.A_NEED_SMIME_CERTS, false);
+        
         String galAcctId = request.getAttribute(AccountConstants.A_GAL_ACCOUNT_ID, null);
         
         GalSearchParams params = new GalSearchParams(account, zsc);
@@ -104,6 +84,7 @@ public class SearchGal extends GalDocumentHandler {
         params.setType(type);
         params.setRequest(request);
         params.setNeedCanExpand(needCanExpand);
+        params.setNeedSMIMECerts(needSMIMECerts);
         params.setResponseName(AccountConstants.SEARCH_GAL_RESPONSE);
         
         if (galAcctId != null) {

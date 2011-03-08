@@ -147,6 +147,7 @@ public class GalImport extends MailItemImport {
         for (String attr : ZIMBRA_ATTRS)
             params.getConfig().getRules().add(attr+"="+attr);
         params.getConfig().getRules().setFetchGroupMembers(fetchGroupMembers);
+        params.getConfig().getRules().setNeedSMIMECerts(true);
         LdapUtil.galSearch(params);
     }
     private static String[] ZIMBRA_ATTRS = {

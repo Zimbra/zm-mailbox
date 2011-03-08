@@ -21,6 +21,7 @@ import java.util.Map;
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeManager;
@@ -39,6 +40,7 @@ class LdapGalMapRule {
     private LdapGalValueMap[] mContactAttrsValueMaps;
     
     private boolean mIsBinary;
+    private boolean mIsSMIMECertificate;
     
     // indicating that all LDAP attributes in the rule contain binary data
     // the LDAP value will be base64 encoded when it is stored in the GalContact 
@@ -67,10 +69,22 @@ class LdapGalMapRule {
                 }
             }
         }
+        
+        for (String contactAttr : mContactAttrs) {
+        	if (ContactConstants.A_SMIMECertificate.equals(contactAttr)) {
+        		mIsSMIMECertificate = true;
+        		break;
+        	}
+        }
     }
     
     public boolean isBinary() {
         return mIsBinary;
+    }
+    
+    // return if this rule is the SMIME certificate rule
+    public boolean isSMIMECertificate() {
+        return mIsSMIMECertificate;
     }
     
     public String[] getLdapAttrs() {

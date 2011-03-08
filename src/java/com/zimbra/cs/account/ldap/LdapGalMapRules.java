@@ -43,6 +43,7 @@ public class LdapGalMapRules {
     private Map<String, LdapGalValueMap> mValueMaps;
     private GalGroupHandler mGroupHandler;
     private boolean mFetchGroupMembers;
+    private boolean mNeedSMIMECerts;
 
     public LdapGalMapRules(String[] rules, String[] valueMaps, String groupHandlerClass) {
         init(rules, valueMaps, groupHandlerClass);
@@ -89,6 +90,10 @@ public class LdapGalMapRules {
         mFetchGroupMembers = fetchGroupMembers;
     }
     
+    public void setNeedSMIMECerts(boolean needSMIMECerts) {
+        mNeedSMIMECerts = needSMIMECerts;
+    }
+    
     public String[] getLdapAttrs() {
         return mLdapAttrs.toArray(new String[mLdapAttrs.size()]);
     }
@@ -103,6 +108,9 @@ public class LdapGalMapRules {
         
         HashMap<String,Object> contactAttrs = new HashMap<String, Object>();        
         for (LdapGalMapRule rule: mRules) {
+        	if (!mNeedSMIMECerts && rule.isSMIMECertificate()) {
+        		continue;
+        	}
             rule.apply(ldapAttrs, contactAttrs);
         }
         
