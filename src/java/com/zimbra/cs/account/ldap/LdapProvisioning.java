@@ -1510,12 +1510,11 @@ public class LdapProvisioning extends Provisioning {
 
     @Override
     public void removeAlias(DistributionList dl, String alias) throws ServiceException {
-        // make a copy of all addrs of this DL, after the delete all aliases on this dl
-        // object will be gone, but we need to remove them from the allgroups cache after the DL is deleted
-        Set<String> addrs = new HashSet<String>(dl.getMultiAttrSet(Provisioning.A_mail));
-        
         removeAliasInternal(dl, alias);
-        mAllDLs.removeGroup(addrs);
+        
+        Set<String> toRemove = new HashSet<String>();
+        toRemove.add(alias);
+        mAllDLs.removeGroup(toRemove);
     }
 
     private boolean isEntryAlias(Attributes attrs) throws NamingException {
