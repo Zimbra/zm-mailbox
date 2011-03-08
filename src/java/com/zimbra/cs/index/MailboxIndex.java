@@ -162,26 +162,16 @@ public final class MailboxIndex {
         return luceneIndex.getBytesRead();
     }
 
-    /**
-     * @see LuceneIndex#getDomainsForField(String, String, Collection)
-     */
-    public void getDomainsForField(String fieldName, String regex, Collection<BrowseTerm> collection)
-            throws IOException {
-        luceneIndex.getDomainsForField(fieldName, regex, collection);
+    public List<BrowseTerm> getDomains(String field, String regex) throws IOException {
+        return luceneIndex.getDomains(field, regex);
     }
 
-    /**
-     * @see LuceneIndex#getAttachments(String, Collection)
-     */
-    public void getAttachments(String regex, Collection<BrowseTerm> collection) throws IOException {
-        luceneIndex.getAttachments(regex, collection);
+    public List<BrowseTerm> getAttachmentTypes(String regex) throws IOException {
+        return luceneIndex.getAttachmentTypes(regex);
     }
 
-    /**
-     * @see LuceneIndex#getObjects(String, Collection)
-     */
-    public void getObjects(String regex, Collection<BrowseTerm> collection) throws IOException {
-        luceneIndex.getObjects(regex, collection);
+    public List<BrowseTerm> getObjects(String regex) throws IOException {
+        return luceneIndex.getObjects(regex);
     }
 
     /**

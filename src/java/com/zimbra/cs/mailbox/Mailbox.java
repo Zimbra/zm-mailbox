@@ -83,6 +83,7 @@ import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.index.BrowseTerm;
+import com.zimbra.cs.index.DomainBrowseTerm;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.MailboxIndex;
@@ -90,7 +91,6 @@ import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.localconfig.DebugConfig;
-import com.zimbra.cs.mailbox.BrowseResult.DomainItem;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
 import com.zimbra.cs.mailbox.CalendarItem.Callback;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
@@ -3585,15 +3585,6 @@ public class Mailbox {
         return com.zimbra.cs.fb.LocalFreeBusyProvider.getFreeBusyList(authAcct, asAdmin, this, name, start, end, folder, exAppt);
     }
 
-    private void addDomains(HashMap<String, DomainItem> domainItems, HashSet<BrowseTerm> newDomains, int flag) {
-        for (BrowseTerm domain : newDomains) {
-            DomainItem di = domainItems.get(domain.term);
-            if (di == null)
-                domainItems.put(domain.term, di = new DomainItem(domain));
-            di.addFlag(flag);
-        }
-    }
-
     public static enum BrowseBy {
         attachments, domains, objects;
     }
@@ -3602,78 +3593,76 @@ public class Mailbox {
      * Return a list of all the {attachments} or {doamins} or {objects} in this Mailbox, optionally with a prefix string
      * or limited by maximum number.
      *
-     * @param octxt
-     * @param browseBy
-     * @param regex
-     * @param max Maximum number of results to return.  0 means "return all results"  If more than max entries exist, only the first max are returned, sorted by frequency.
-     * @return
-     * @throws IOException
-     * @throws ServiceException
+     * @param max Maximum number of results to return.  0 means "return all results"  If more than max entries exist,
+     * only the first max are returned, sorted by frequency.
      */
-    public synchronized BrowseResult browse(OperationContext octxt, BrowseBy browseBy, String regex, int max) throws IOException, ServiceException {
+    public synchronized List<BrowseTerm> browse(OperationContext octxt, BrowseBy browseBy, String regex, int max)
+            throws IOException, ServiceException {
         boolean success = false;
         try {
             beginTransaction("browse", octxt);
             if (!hasFullAccess())
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions on this mailbox");
 
-            BrowseResult browseResult = new BrowseResult();
-
+            List<BrowseTerm> result = null;
             MailboxIndex idx = index.getMailboxIndex();
             if (idx != null) {
-                switch(browseBy) {
+                switch (browseBy) {
                     case attachments:
-                        idx.getAttachments(regex, browseResult.getResult());
+                        result = idx.getAttachmentTypes(regex);
                         break;
                     case domains:
-                        HashMap<String, DomainItem> domainItems = new HashMap<String, DomainItem>();
-                        HashSet<BrowseTerm> set = new HashSet<BrowseTerm>();
-
-                        idx.getDomainsForField(LuceneFields.L_H_CC, regex, set);
-                        addDomains(domainItems, set, DomainItem.F_CC);
-
-                        set.clear();
-                        idx.getDomainsForField(LuceneFields.L_H_FROM, regex, set);
-                        addDomains(domainItems, set, DomainItem.F_FROM);
-
-                        set.clear();
-                        idx.getDomainsForField(LuceneFields.L_H_TO, regex, set);
-                        addDomains(domainItems, set, DomainItem.F_TO);
-
-                        browseResult.getResult().addAll(domainItems.values());
+                        Map<String, DomainBrowseTerm> domains = new HashMap<String, DomainBrowseTerm>();
+                        for (BrowseTerm term : idx.getDomains(LuceneFields.L_H_FROM, regex)) {
+                            DomainBrowseTerm domain = domains.get(term.term);
+                            if (domain == null) {
+                                domain = new DomainBrowseTerm(term);
+                                domains.put(term.term, domain);
+                            }
+                            domain.addField(DomainBrowseTerm.Field.FROM);
+                        }
+                        for (BrowseTerm term : idx.getDomains(LuceneFields.L_H_TO, regex)) {
+                            DomainBrowseTerm domain = domains.get(term.term);
+                            if (domain == null) {
+                                domain = new DomainBrowseTerm(term);
+                                domains.put(term.term, domain);
+                            }
+                            domain.addField(DomainBrowseTerm.Field.TO);
+                        }
+                        for (BrowseTerm term : idx.getDomains(LuceneFields.L_H_CC, regex)) {
+                            DomainBrowseTerm domain = domains.get(term.term);
+                            if (domain == null) {
+                                domain = new DomainBrowseTerm(term);
+                                domains.put(term.term, domain);
+                            }
+                            domain.addField(DomainBrowseTerm.Field.CC);
+                        }
+                        result = new ArrayList<BrowseTerm>(domains.values());
                         break;
                     case objects:
-                        idx.getObjects(regex, browseResult.getResult());
+                        result = idx.getObjects(regex);
                         break;
                     default:
-                        throw new IllegalArgumentException("Unknown browseBy: "+browseBy);
+                        assert false : browseBy;
                 }
             }
 
-            if (max > 0) {
-                if (browseResult.getResult().size() > max) {
-                    Comparator<BrowseTerm> reverseComp= new Comparator<BrowseTerm>() {
-                        @Override public int compare(BrowseTerm o1, BrowseTerm o2) {
-                            int retVal = o2.freq - o1.freq;
-                            if (retVal == 0) {
-                                retVal = o1.term.compareTo(o2.term);
-                            }
-                            return retVal;
+            if (max > 0 && result.size() > max) {
+                Collections.sort(result, new Comparator<BrowseTerm>() {
+                    @Override
+                    public int compare(BrowseTerm o1, BrowseTerm o2) {
+                        int retVal = o2.freq - o1.freq;
+                        if (retVal == 0) {
+                            retVal = o1.term.compareTo(o2.term);
                         }
-                    };
-                    Collections.sort(browseResult.getResult(), reverseComp);
-
-                    int num = 0;
-                    for (Iterator<BrowseTerm> iter = browseResult.getResult().iterator(); iter.hasNext(); ) {
-                        iter.next();
-                        if (++num > max)
-                            iter.remove();
+                        return retVal;
                     }
-                }
+                });
+                result = result.subList(0, max);
             }
 
             success = true;
-            return browseResult;
+            return result;
         } finally {
             endTransaction(success);
         }
@@ -7238,7 +7227,7 @@ public class Mailbox {
             endTransaction(success);
         }
     }
-    
+
     /**
      * Be very careful when changing code in this method.  The order of almost
      * every line of code is important to ensure correct redo logging and crash

@@ -17,6 +17,7 @@ package com.zimbra.cs.index;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.RejectedExecutionException;
@@ -239,21 +240,11 @@ public final class LuceneIndex {
         }
     }
 
-    private void enumerateTermsForField(String regex, Term firstTerm, TermEnumInterface callback) throws IOException {
+    private void enumerateTerms(Term firstTerm, TermEnumCallback callback) throws IOException {
         IndexReaderRef ref = getIndexReaderRef();
         try {
             TermEnum terms = ref.get().terms(firstTerm);
             boolean hasDeletions = ref.get().hasDeletions();
-
-            // HACK!
-            boolean stripAtBeforeRegex = false;
-            if (callback instanceof DomainEnumCallback)
-                stripAtBeforeRegex = true;
-
-            Pattern p = null;
-            if (regex != null && regex.length() > 0) {
-                p = Pattern.compile(regex);
-            }
 
             do {
                 Term cur = terms.term();
@@ -261,26 +252,11 @@ public final class LuceneIndex {
                     if (!cur.field().equals(firstTerm.field())) {
                         break;
                     }
-
-                    boolean skipIt = false;
-                    if (p != null) {
-                        String compareTo = cur.text();
-                        if (stripAtBeforeRegex)
-                            if (compareTo.length() > 1 && compareTo.charAt(0) == '@') {
-                                compareTo = compareTo.substring(1);
-                            }
-                        if (!p.matcher(compareTo).matches()) {
-                            skipIt = true;
-                        }
-                    }
-
-                    if (!skipIt) {
-                        // NOTE: the term could exist in docs, but they might all be deleted. Unfortunately this means
-                        // that we need to actually walk the TermDocs enumeration for this document to see if it is
-                        // non-empty
-                        if (!hasDeletions || ref.get().termDocs(cur).next()) {
-                            callback.onTerm(cur, terms.docFreq());
-                        }
+                    // NOTE: the term could exist in docs, but they might all be deleted. Unfortunately this means
+                    // that we need to actually walk the TermDocs enumeration for this document to see if it is
+                    // non-empty
+                    if (!hasDeletions || ref.get().termDocs(cur).next()) {
+                        callback.onTerm(cur, terms.docFreq());
                     }
                 }
             } while (terms.next());
@@ -340,28 +316,43 @@ public final class LuceneIndex {
     }
 
     /**
-     * @param fieldName Lucene field (e.g. LuceneFields.L_H_CC)
-     * @param collection Strings which correspond to all of the domain terms stored in a given field
+     * Returns all domain names from the index.
+     *
+     * @param field Lucene field name (e.g. LuceneFields.L_H_CC)
+     * @param regex matching pattern or null to match everything
+     * @return {@link BrowseTerm}s which correspond to all of the domain terms stored in a given field
      */
-    void getDomainsForField(String fieldName, String regex, Collection<BrowseTerm> collection) throws IOException {
-        regex = Strings.nullToEmpty(regex);
-        enumerateTermsForField(regex, new Term(fieldName,""), new DomainEnumCallback(collection));
+    List<BrowseTerm> getDomains(String field, String regex) throws IOException {
+        TermEnumCallback callback = new DomainEnumCallback(
+                !Strings.isNullOrEmpty(regex) ? Pattern.compile(regex.startsWith("@") ? regex : "@" + regex) : null);
+        enumerateTerms(new Term(field, ""), callback);
+        return callback.result;
     }
 
     /**
-     * @param collection Strings which correspond to all of the attachment types in the index
+     * Returns all attachment types from the index.
+     *
+     * @param regex matching pattern or null to match everything
+     * @return {@link BrowseTerm}s which correspond to all of the attachment types in the index
      */
-    void getAttachments(String regex, Collection<BrowseTerm> collection) throws IOException {
-        regex = Strings.nullToEmpty(regex);
-        enumerateTermsForField(regex, new Term(LuceneFields.L_ATTACHMENTS, ""), new TermEnumCallback(collection));
+    List<BrowseTerm> getAttachmentTypes(String regex) throws IOException {
+        TermEnumCallback callback = new SimpleTermEnumCallback(
+                !Strings.isNullOrEmpty(regex) ? Pattern.compile(regex) : null);
+        enumerateTerms(new Term(LuceneFields.L_ATTACHMENTS, ""), callback);
+        return callback.result;
     }
 
     /**
-     * Return the list of objects (e.g. PO, etc) from the index, for SearchBuilder browsing.
+     * Returns all objects (e.g. PO, etc) from the index.
+     *
+     * @param regex matching pattern or null to match everything
+     * @return {@link BrowseTerm}s which correspond to all of the objects in the index
      */
-    void getObjects(String regex, Collection<BrowseTerm> collection) throws IOException {
-        regex = Strings.nullToEmpty(regex);
-        enumerateTermsForField(regex, new Term(LuceneFields.L_OBJECTS, ""), new TermEnumCallback(collection));
+    List<BrowseTerm> getObjects(String regex) throws IOException {
+        TermEnumCallback callback = new SimpleTermEnumCallback(
+                !Strings.isNullOrEmpty(regex) ? Pattern.compile(regex) : null);
+        enumerateTerms(new Term(LuceneFields.L_OBJECTS, ""), callback);
+        return callback.result;
     }
 
     /**
@@ -726,38 +717,44 @@ public final class LuceneIndex {
         return status.clean;
     }
 
-    interface TermEnumInterface {
-        void onTerm(Term term, int docFreq);
+    private static abstract class TermEnumCallback {
+        final List<BrowseTerm> result = new ArrayList<BrowseTerm>();
+        abstract void onTerm(Term term, int docFreq);
     }
 
-    static class DomainEnumCallback implements TermEnumInterface {
-        private Collection<BrowseTerm> mCollection;
+    private static final class DomainEnumCallback extends TermEnumCallback {
+        private final Pattern pattern;
 
-        DomainEnumCallback(Collection<BrowseTerm> collection) {
-            mCollection = collection;
+        DomainEnumCallback(Pattern pattern) {
+            this.pattern = pattern;
         }
 
         @Override
         public void onTerm(Term term, int docFreq) {
             String text = term.text();
-            if (text.length() > 1 && text.charAt(0) == '@') {
-                mCollection.add(new BrowseTerm(text.substring(1), docFreq));
+            // Domains are tokenized with '@' prefix. Exclude partial domain tokens.
+            if (text.startsWith("@") && text.contains(".")) {
+                if (pattern == null || pattern.matcher(text).matches()) {
+                    result.add(new BrowseTerm(text.substring(1), docFreq));
+                }
             }
         }
     }
 
-    static class TermEnumCallback implements TermEnumInterface {
-        private Collection<BrowseTerm> mCollection;
+    private static final class SimpleTermEnumCallback extends TermEnumCallback {
+        private final Pattern pattern;
 
-        TermEnumCallback(Collection<BrowseTerm> collection) {
-            mCollection = collection;
+        SimpleTermEnumCallback(Pattern pattern) {
+            this.pattern = pattern;
         }
 
         @Override
         public void onTerm(Term term, int docFreq) {
             String text = term.text();
             if (text.length() > 1) {
-                mCollection.add(new BrowseTerm(text, docFreq));
+                if (pattern == null || pattern.matcher(text).matches()) {
+                    result.add(new BrowseTerm(text, docFreq));
+                }
             }
         }
     }
