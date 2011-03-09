@@ -73,6 +73,7 @@ public class MailboxListenerTest {
     @After
     public void cleanup() throws Exception {
         Assert.assertTrue(listenerWasCalled);
+        MailboxListener.reset();
     }
     
     public static class TestListener extends MailboxListener {

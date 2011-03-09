@@ -73,6 +73,11 @@ public abstract class MailboxListener {
 
     static {
         sListeners = new HashSet<MailboxListener>();
+        reset();
+    }
+
+    static void reset() {
+        sListeners.clear();
         if (ZimbraApplication.getInstance().supports(CalItemReminderService.class) && !DebugConfig.disableCalendarReminderEmail) {
             register(new CalItemReminderService());
         }
@@ -80,7 +85,6 @@ public abstract class MailboxListener {
         register(new MemcachedCacheManager());
         register(new FreeBusyProvider.Listener());
     }
-
 
     public static void register(MailboxListener listener) {
         synchronized (sListeners) {
