@@ -5564,4 +5564,9 @@ TODO: delete them permerntly from here
   <desc>calendar auto deny reply signature id for account/identity/dataSource</desc>
 </attr>
 
+<attr id="1195" name="zimbraPrefCalendarViewTimeInterval" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>1h</defaultCOSValue>
+  <desc>time interval to display on calendar views</desc>
+</attr>
+
 </attrs>

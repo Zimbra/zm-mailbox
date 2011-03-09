@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110308-1102 */
+    /* build: 7.0.0_BETA1_1111 administrator 20110308-1729 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -6432,6 +6432,17 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=274)
     public static final String A_zimbraPrefCalendarUseQuickAdd = "zimbraPrefCalendarUseQuickAdd";
+
+    /**
+     * time interval to display on calendar views Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1195)
+    public static final String A_zimbraPrefCalendarViewTimeInterval = "zimbraPrefCalendarViewTimeInterval";
 
     /**
      * working hours for each day of the week
