@@ -471,6 +471,10 @@
   <desc>create, volumes</desc>
 </right>  
 
+<right name="applianceAll" type="preset" targetType="server">
+  <desc>catchall, appliance</desc>
+</right>
+
 <right name="deployZimlet" type="preset" targetType="server">
   <desc>deploy and undeploy zimlets on a server</desc>
 </right>
