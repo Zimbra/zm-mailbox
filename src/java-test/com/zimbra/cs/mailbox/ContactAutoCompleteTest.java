@@ -15,29 +15,45 @@
 
 package com.zimbra.cs.mailbox;
 
-import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.testng.Assert;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.HSQLDB;
 
 /**
  * Unit test for {@link ContactAutoComplete}.
  *
  * @author ysasaki
  */
-public class ContactAutoCompleteTest {
+public final class ContactAutoCompleteTest {
 
     @BeforeClass
     public static void init() throws Exception {
         MockProvisioning prov = new MockProvisioning();
-        prov.createAccount("test@zimbra.com", "secret",
-                Collections.<String, Object>singletonMap(Provisioning.A_zimbraId, "0-0-0"));
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraId, "0-0-0");
+        attrs.put(Provisioning.A_zimbraMailHost, "localhost");
+        prov.createAccount("test@zimbra.com", "secret", attrs);
         Provisioning.setInstance(prov);
-        MailboxManager.setInstance(new MockMailboxManager());
+
+        LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
+        DbPool.startup();
+        HSQLDB.createDatabase();
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        HSQLDB.clearDatabase();
+        MailboxManager.getInstance().clearCache();
     }
 
     @Test

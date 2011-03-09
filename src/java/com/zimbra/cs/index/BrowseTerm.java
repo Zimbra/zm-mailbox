@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -15,35 +15,45 @@
 package com.zimbra.cs.index;
 
 public class BrowseTerm {
-    public final String term;
-    public final int freq;
-    
-    public BrowseTerm(String term, int freq) {
-        this.term = term;
+    private final String text;
+    private final int freq;
+
+    public BrowseTerm(String text, int freq) {
+        this.text = text;
         this.freq = freq;
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    public int getFreq() {
+        return freq;
     }
 
     @Override
     public int hashCode() {
-        return term.hashCode();
+        return text.hashCode();
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (obj instanceof BrowseTerm) {
+            BrowseTerm other = (BrowseTerm) obj;
+            if (text != null) {
+                return text.equals(other.text);
+            } else { // both null
+                return other.text == null;
+            }
+        } else {
             return false;
-        final BrowseTerm other = (BrowseTerm) obj;
-        if (term == null) {
-            if (other.term != null)
-                return false;
-        } else if (!term.equals(other.term))
-            return false;
-        return true;
+        }
     }
-    
-    
+
 }

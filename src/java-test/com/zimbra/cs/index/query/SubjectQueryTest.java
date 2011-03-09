@@ -14,38 +14,54 @@
  */
 package com.zimbra.cs.index.query;
 
-import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.HSQLDB;
 import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MockMailboxManager;
+import com.zimbra.cs.mailbox.MailboxManager;
 
 /**
  * Unit test for {@link SubjectQuery}.
  *
  * @author ysasaki
  */
-public class SubjectQueryTest {
+public final class SubjectQueryTest {
 
     @BeforeClass
     public static void init() throws Exception {
         MockProvisioning prov = new MockProvisioning();
-        prov.createAccount("zero@zimbra.com", "secret",
-                Collections.<String, Object>singletonMap(Provisioning.A_zimbraId, "0-0-0"));
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraId, "0-0-0");
+        attrs.put(Provisioning.A_zimbraMailHost, "localhost");
+        prov.createAccount("test@zimbra.com", "secret", attrs);
         Provisioning.setInstance(prov);
+
+        LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
+        DbPool.startup();
+        HSQLDB.createDatabase();
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        HSQLDB.clearDatabase();
+        MailboxManager.getInstance().clearCache();
     }
 
     @Test
     public void emptySubject() throws Exception {
-        Mailbox mbox = new MockMailboxManager().getMailboxByAccountId("0");
-        Query query = SubjectQuery.create(mbox,
-                ZimbraAnalyzer.getInstance(), "");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId("0-0-0");
+        Query query = SubjectQuery.create(mbox, ZimbraAnalyzer.getInstance(), "");
         Assert.assertEquals(TextQuery.class, query.getClass());
         Assert.assertEquals("Q(subject)", query.toString());
     }

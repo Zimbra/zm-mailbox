@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -31,6 +31,7 @@ public class MockMimeTypeInfo implements MimeTypeInfo {
     private String handlerClass;
     private int priority;
 
+    @Override
     public String[] getMimeTypes() {
         return mimeTypes;
     }
@@ -39,6 +40,7 @@ public class MockMimeTypeInfo implements MimeTypeInfo {
         mimeTypes = value;
     }
 
+    @Override
     public String getExtension() {
         return extension;
     }
@@ -47,6 +49,7 @@ public class MockMimeTypeInfo implements MimeTypeInfo {
         extension = value;
     }
 
+    @Override
     public String getHandlerClass() {
         return handlerClass;
     }
@@ -55,6 +58,7 @@ public class MockMimeTypeInfo implements MimeTypeInfo {
         handlerClass = value;
     }
 
+    @Override
     public boolean isIndexingEnabled() {
         return indexingEnabled;
     }
@@ -63,6 +67,7 @@ public class MockMimeTypeInfo implements MimeTypeInfo {
         indexingEnabled = value;
     }
 
+    @Override
     public String getDescription() {
         return description;
     }
@@ -71,6 +76,7 @@ public class MockMimeTypeInfo implements MimeTypeInfo {
         description = value;
     }
 
+    @Override
     public Set<String> getFileExtensions() {
         return fileExtensions;
     }
@@ -82,6 +88,7 @@ public class MockMimeTypeInfo implements MimeTypeInfo {
         }
     }
 
+    @Override
     public int getPriority() {
         return priority;
     }

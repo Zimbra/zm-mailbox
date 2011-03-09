@@ -33,6 +33,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.SetMultimap;
@@ -243,6 +244,11 @@ public final class IndexHelper {
         } finally {
             indexLock.release();
         }
+    }
+
+    @VisibleForTesting
+    void indexDeferredItems() throws ServiceException {
+        indexDeferredItems(EnumSet.noneOf(MailItem.Type.class), new BatchStatus(), true);
     }
 
     /**

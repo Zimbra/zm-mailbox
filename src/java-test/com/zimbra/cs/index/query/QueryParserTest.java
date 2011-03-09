@@ -15,44 +15,61 @@
 package com.zimbra.cs.index.query;
 
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 
 import org.apache.lucene.document.DateTools;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.HSQLDB;
 import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.index.query.parser.QueryParser;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.MockMailboxManager;
 
 /**
  * Unit test for {@link QueryParser}.
  *
  * @author ysasaki
  */
-public class QueryParserTest {
+public final class QueryParserTest {
     private static QueryParser parser;
 
     @BeforeClass
     public static void init() throws Exception {
         MockProvisioning prov = new MockProvisioning();
-        prov.createAccount("test@zimbra.com", "secret",
-                Collections.singletonMap(Provisioning.A_zimbraId, (Object) "0"));
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraId, "0-0-0");
+        attrs.put(Provisioning.A_zimbraMailHost, "localhost");
+        prov.createAccount("test@zimbra.com", "secret", attrs);
         Provisioning.setInstance(prov);
-        MailboxManager mgr = new MockMailboxManager();
-        Mailbox mbox = mgr.getMailboxByAccountId("test@zimbra.com");
+
+        LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
+        DbPool.startup();
+        HSQLDB.createDatabase();
+
+        MailboxManager mgr = MailboxManager.getInstance();
+        Mailbox mbox = mgr.getMailboxByAccountId("0-0-0");
         parser = new QueryParser(mbox, ZimbraAnalyzer.getInstance());
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        HSQLDB.clearDatabase();
+        MailboxManager.getInstance().clearCache();
     }
 
     @Test
@@ -95,7 +112,7 @@ public class QueryParserTest {
         Assert.assertEquals("(Q(l.content,x) || Q(l.content,y))", Query.toString(parser.parse(src)));
 
         src = "(x or y) and in:inbox";
-        Assert.assertEquals("(Q(l.content,x) || Q(l.content,y)) && Q(IN,2)", Query.toString(parser.parse(src)));
+        Assert.assertEquals("(Q(l.content,x) || Q(l.content,y)) && Q(IN,Inbox)", Query.toString(parser.parse(src)));
 
         src = "\"This is a \\\"phrase\\\" query\"";
         Assert.assertEquals("Q(l.content,phrase,query)", Query.toString(parser.parse(src)));
@@ -104,10 +121,10 @@ public class QueryParserTest {
     @Test
     public void folder() throws ServiceException {
         String src = "in:inbox";
-        Assert.assertEquals("Q(IN,2)", Query.toString(parser.parse(src)));
+        Assert.assertEquals("Q(IN,Inbox)", Query.toString(parser.parse(src)));
 
         src = "in:(trash -junk)";
-        Assert.assertEquals("(Q(IN,3) && -Q(IN,4))", Query.toString(parser.parse(src)));
+        Assert.assertEquals("(Q(IN,Trash) && -Q(IN,Junk))", Query.toString(parser.parse(src)));
     }
 
     @Test
@@ -276,10 +293,11 @@ public class QueryParserTest {
     @Test
     public void braced() throws Exception {
         String src = "item:{1,2,3}";
-        Assert.assertEquals("Q(ITEMID,0:1,0:2,0:3)", Query.toString(parser.parse(src)));
+        Assert.assertEquals("Q(ITEMID,0-0-0:1,0-0-0:2,0-0-0:3)", Query.toString(parser.parse(src)));
 
         src = "item:({1,2,3} or {4,5,6})";
-        Assert.assertEquals("(Q(ITEMID,0:1,0:2,0:3) || Q(ITEMID,0:4,0:5,0:6))", Query.toString(parser.parse(src)));
+        Assert.assertEquals("(Q(ITEMID,0-0-0:1,0-0-0:2,0-0-0:3) || Q(ITEMID,0-0-0:4,0-0-0:5,0-0-0:6))",
+                Query.toString(parser.parse(src)));
     }
 
     @Test

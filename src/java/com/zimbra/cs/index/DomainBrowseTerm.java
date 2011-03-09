@@ -30,12 +30,8 @@ public final class DomainBrowseTerm extends BrowseTerm {
 
     private Set<Field> fields = EnumSet.noneOf(Field.class);
 
-    public DomainBrowseTerm(BrowseTerm domain) {
-        super(domain.term, domain.freq);
-    }
-
-    public String getDomain() {
-        return term;
+    public DomainBrowseTerm(BrowseTerm term) {
+        super(term.getText(), term.getFreq());
     }
 
     public void addField(Field field) {

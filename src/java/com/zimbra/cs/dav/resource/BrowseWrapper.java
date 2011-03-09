@@ -129,7 +129,7 @@ public class BrowseWrapper extends PhantomResource {
             if (term instanceof DomainBrowseTerm) {
                 DomainBrowseTerm domain = (DomainBrowseTerm) term;
                 if (domain.contains(DomainBrowseTerm.Field.FROM)) {
-                    res.add(new BrowseWrapper(generateUri(domain.getDomain()), getOwner()));
+                    res.add(new BrowseWrapper(generateUri(domain.getText()), getOwner()));
                 }
             }
         }
@@ -144,7 +144,7 @@ public class BrowseWrapper extends PhantomResource {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         List<BrowseTerm> terms = mbox.browse(ctxt.getOperationContext(), Mailbox.BrowseBy.attachments, "", 0);
         for (BrowseTerm term : terms) {
-            String ctype = term.term;
+            String ctype = term.getText();
             int index = ctype.indexOf('/');
             if (index != -1 || ctype.equals("message") || ctype.equals("none")) {
                 continue;

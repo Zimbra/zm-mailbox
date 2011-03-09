@@ -3614,26 +3614,26 @@ public class Mailbox {
                     case domains:
                         Map<String, DomainBrowseTerm> domains = new HashMap<String, DomainBrowseTerm>();
                         for (BrowseTerm term : idx.getDomains(LuceneFields.L_H_FROM, regex)) {
-                            DomainBrowseTerm domain = domains.get(term.term);
+                            DomainBrowseTerm domain = domains.get(term.getText());
                             if (domain == null) {
                                 domain = new DomainBrowseTerm(term);
-                                domains.put(term.term, domain);
+                                domains.put(term.getText(), domain);
                             }
                             domain.addField(DomainBrowseTerm.Field.FROM);
                         }
                         for (BrowseTerm term : idx.getDomains(LuceneFields.L_H_TO, regex)) {
-                            DomainBrowseTerm domain = domains.get(term.term);
+                            DomainBrowseTerm domain = domains.get(term.getText());
                             if (domain == null) {
                                 domain = new DomainBrowseTerm(term);
-                                domains.put(term.term, domain);
+                                domains.put(term.getText(), domain);
                             }
                             domain.addField(DomainBrowseTerm.Field.TO);
                         }
                         for (BrowseTerm term : idx.getDomains(LuceneFields.L_H_CC, regex)) {
-                            DomainBrowseTerm domain = domains.get(term.term);
+                            DomainBrowseTerm domain = domains.get(term.getText());
                             if (domain == null) {
                                 domain = new DomainBrowseTerm(term);
-                                domains.put(term.term, domain);
+                                domains.put(term.getText(), domain);
                             }
                             domain.addField(DomainBrowseTerm.Field.CC);
                         }
@@ -3647,17 +3647,18 @@ public class Mailbox {
                 }
             }
 
-            if (max > 0 && result.size() > max) {
-                Collections.sort(result, new Comparator<BrowseTerm>() {
-                    @Override
-                    public int compare(BrowseTerm o1, BrowseTerm o2) {
-                        int retVal = o2.freq - o1.freq;
-                        if (retVal == 0) {
-                            retVal = o1.term.compareTo(o2.term);
-                        }
-                        return retVal;
+            Collections.sort(result, new Comparator<BrowseTerm>() {
+                @Override
+                public int compare(BrowseTerm o1, BrowseTerm o2) {
+                    int retVal = o2.getFreq() - o1.getFreq();
+                    if (retVal == 0) {
+                        retVal = o1.getText().compareTo(o2.getText());
                     }
-                });
+                    return retVal;
+                }
+            });
+
+            if (max > 0 && result.size() > max) {
                 result = result.subList(0, max);
             }
 

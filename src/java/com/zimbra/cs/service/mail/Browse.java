@@ -55,15 +55,15 @@ public class Browse extends MailDocumentHandler  {
         for (BrowseTerm term : terms) {
             if (term instanceof DomainBrowseTerm) {
                 DomainBrowseTerm domain = (DomainBrowseTerm) term;
-                Element e = response.addElement(MailConstants.E_BROWSE_DATA).setText(domain.term);
+                Element e = response.addElement(MailConstants.E_BROWSE_DATA).setText(domain.getText());
                 String flags = domain.getHeaderFlags();
                 if (!flags.isEmpty()) {
                     e.addAttribute(MailConstants.A_BROWSE_DOMAIN_HEADER, flags);
                 }
-                e.addAttribute(MailConstants.A_FREQUENCY, domain.freq);
+                e.addAttribute(MailConstants.A_FREQUENCY, domain.getFreq());
             } else {
-                Element e = response.addElement(MailConstants.E_BROWSE_DATA).setText(term.term);
-                e.addAttribute(MailConstants.A_FREQUENCY, term.freq);
+                Element e = response.addElement(MailConstants.E_BROWSE_DATA).setText(term.getText());
+                e.addAttribute(MailConstants.A_FREQUENCY, term.getFreq());
             }
         }
         return response;

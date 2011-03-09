@@ -35,9 +35,9 @@ import com.zimbra.cs.db.DbPool.PoolConfig;
 public final class HSQLDB extends Db {
 
     /**
-     * Populates ZIMBRA and MBOXGROUP1 scheme.
+     * Populates ZIMBRA and MBOXGROUP1 schema.
      */
-    static void createDatabase() throws Exception {
+    public static void createDatabase() throws Exception {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         DbConnection conn = DbPool.getConnection();
@@ -60,7 +60,7 @@ public final class HSQLDB extends Db {
     /**
      * Deletes all records from all tables.
      */
-    static void clearDatabase() throws Exception {
+    public static void clearDatabase() throws Exception {
         DbConnection conn = DbPool.getConnection();
         try {
             execute(conn, "src/db/hsqldb/clear.sql");
@@ -83,20 +83,24 @@ public final class HSQLDB extends Db {
         return new Config();
     }
 
-    /**
-     * TODO
-     */
     @Override
     boolean supportsCapability(Capability capability) {
-        return true;
+        switch (capability) {
+            case REPLACE_INTO:
+                return false;
+            default:
+                return true;
+        }
     }
 
-    /**
-     * TODO
-     */
     @Override
     boolean compareError(SQLException e, Error error) {
-        return false;
+        switch (error) {
+            case DUPLICATE_ROW:
+                return e.getErrorCode() == -104;
+            default:
+                return false;
+        }
     }
 
     /**
