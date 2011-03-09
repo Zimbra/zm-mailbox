@@ -7509,18 +7509,16 @@ public class Mailbox {
 
             // committed changes, so notify any listeners
             if (dirty != null && dirty.hasNotifications()) {
-                if (!mListeners.isEmpty()) {
-                    try {
-                        // try to get a copy of the changeset that *isn't* live
-                        dirty = snapshotModifications(dirty);
-                    } catch (ServiceException e) {
-                        ZimbraLog.mailbox.warn("error copying notifications; will notify with live set", e);
-                    }
-                    try {
-                        notification = new MailboxListener.ChangeNotification(getAccount(), dirty, change.octxt, mData.lastChangeId, getOperationTimestampMillis());
-                    } catch (ServiceException e) {
-                        ZimbraLog.mailbox.warn("error getting account for the mailbox", e);
-                    }
+                try {
+                    // try to get a copy of the changeset that *isn't* live
+                    dirty = snapshotModifications(dirty);
+                } catch (ServiceException e) {
+                    ZimbraLog.mailbox.warn("error copying notifications; will notify with live set", e);
+                }
+                try {
+                    notification = new MailboxListener.ChangeNotification(getAccount(), dirty, change.octxt, mData.lastChangeId, getOperationTimestampMillis());
+                } catch (ServiceException e) {
+                    ZimbraLog.mailbox.warn("error getting account for the mailbox", e);
                 }
             }
         } catch (RuntimeException e) {

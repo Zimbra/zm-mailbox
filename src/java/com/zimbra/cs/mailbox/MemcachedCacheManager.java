@@ -15,11 +15,7 @@
 
 package com.zimbra.cs.mailbox;
 
-import java.util.EnumSet;
-import java.util.Set;
-
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.acl.EffectiveACLCache;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
 import com.zimbra.cs.memcached.MemcachedConnector;
@@ -44,12 +40,5 @@ public class MemcachedCacheManager extends MailboxListener {
             EffectiveACLCache.getInstance().notifyCommittedChanges(mods, changeId);
             FoldersTagsCache.getInstance().notifyCommittedChanges(mods, changeId);
         }
-    }
-
-    private static final EnumSet<Type> TYPES = EnumSet.allOf(Type.class);
-    
-    @Override
-    public Set<Type> registerForItemTypes() {
-        return TYPES;
     }
 }
