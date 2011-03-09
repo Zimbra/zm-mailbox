@@ -35,6 +35,7 @@ import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.GalSearchType;
 import com.zimbra.cs.gal.GalGroup;
+import com.zimbra.cs.gal.GalGroupInfoProvider;
 import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.gal.GalSearchResultCallback;
@@ -363,7 +364,7 @@ public class ContactAutoComplete {
      * @return true if the address is a group, false otherwise
      */
     private void resolveGroupInfo(ContactEntry entry, String email) {
-        GalGroup.GroupInfo groupInfo = GalGroup.getGroupInfo(email, mNeedCanExpand, mRequestedAcct, mAuthedAcct);
+        GalGroup.GroupInfo groupInfo = GalGroupInfoProvider.getInstance().getGroupInfo(email, mNeedCanExpand, mRequestedAcct, mAuthedAcct);
         if (groupInfo != null) {
             boolean canExpand = (GalGroup.GroupInfo.CAN_EXPAND == groupInfo);
             entry.setIsGalGroup(canExpand);
