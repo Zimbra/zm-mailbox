@@ -1094,7 +1094,7 @@ public class Mailbox {
         if (conn != null)
             setOperationConnection(conn);
 
-        boolean needRedo = octxt == null || octxt.needRedo();
+        boolean needRedo = needRedo(octxt);
         // have a single, consistent timestamp for anything affected by this operation
         mCurrentChange.setTimestamp(time);
         if (recorder != null && needRedo)
@@ -1561,7 +1561,7 @@ public class Mailbox {
                 throw e;
         }
 
-        boolean needRedo = octxt == null || octxt.needRedo();
+        boolean needRedo = needRedo(octxt);
         DeleteMailbox redoRecorder = new DeleteMailbox(mId);
         boolean success = false;
         try {
@@ -4516,7 +4516,7 @@ public class Mailbox {
             conversationId = ID_AUTO_INCREMENT;
         }
 
-        boolean needRedo = octxt == null || octxt.needRedo();
+        boolean needRedo = needRedo(octxt);
         CreateMessage redoPlayer = (octxt == null ? null : (CreateMessage) octxt.getPlayer());
         boolean isRedo = redoPlayer != null;
 
@@ -7229,6 +7229,13 @@ public class Mailbox {
         }
     }
 
+    private boolean needRedo(OperationContext octxt) {
+        // Don't generate redo data for changes made during mailbox version migrations.
+        if (!open)
+            return false;
+        return octxt == null || octxt.needRedo();
+    }
+
     /**
      * Be very careful when changing code in this method.  The order of almost
      * every line of code is important to ensure correct redo logging and crash
@@ -7280,9 +7287,7 @@ public class Mailbox {
             return;
         }
 
-        boolean needRedo = true;
-        if (mCurrentChange.octxt != null)
-            needRedo = mCurrentChange.octxt.needRedo();
+        boolean needRedo = needRedo(mCurrentChange.octxt);
         RedoableOp redoRecorder = mCurrentChange.recorder;
         // Log the change redo record for main transaction.
         if (redoRecorder != null && needRedo)
