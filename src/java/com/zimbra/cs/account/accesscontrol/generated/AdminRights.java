@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2009, 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -30,7 +30,7 @@ public class AdminRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110128-1139 */
+    /* build: 7.0.0_BETA1_1111 pjoseph 20110308-2155 */
 
 
     public static AdminRight R_accessGAL;
@@ -63,6 +63,9 @@ public class AdminRights {
     public static AdminRight R_adminConsoleCOSThemesTabRights;
     public static AdminRight R_adminConsoleCOSZimletsTabRights;
     public static AdminRight R_adminConsoleCertificateRights;
+    public static AdminRight R_adminConsoleConfigGALRights;
+    public static AdminRight R_adminConsoleCreateGALRights;
+    public static AdminRight R_adminConsoleCreateTopDomainRights;
     public static AdminRight R_adminConsoleCrossMailboxSearchRights;
     public static AdminRight R_adminConsoleDLACLTabRights;
     public static AdminRight R_adminConsoleDLAliasesTabRights;
@@ -120,6 +123,7 @@ public class AdminRights {
     public static AdminRight R_adminConsoleZimletRights;
     public static AdminRight R_adminLoginAs;
     public static AdminRight R_adminLoginCalendarResourceAs;
+    public static AdminRight R_applianceAll;
     public static AdminRight R_assignCos;
     public static AdminRight R_backupAccount;
     public static AdminRight R_checkDirectoryOnFileSystem;
@@ -457,6 +461,9 @@ public class AdminRights {
         R_adminConsoleCOSThemesTabRights       = rm.getAdminRight(Right.RT_adminConsoleCOSThemesTabRights);
         R_adminConsoleCOSZimletsTabRights      = rm.getAdminRight(Right.RT_adminConsoleCOSZimletsTabRights);
         R_adminConsoleCertificateRights        = rm.getAdminRight(Right.RT_adminConsoleCertificateRights);
+        R_adminConsoleConfigGALRights          = rm.getAdminRight(Right.RT_adminConsoleConfigGALRights);
+        R_adminConsoleCreateGALRights          = rm.getAdminRight(Right.RT_adminConsoleCreateGALRights);
+        R_adminConsoleCreateTopDomainRights    = rm.getAdminRight(Right.RT_adminConsoleCreateTopDomainRights);
         R_adminConsoleCrossMailboxSearchRights = rm.getAdminRight(Right.RT_adminConsoleCrossMailboxSearchRights);
         R_adminConsoleDLACLTabRights           = rm.getAdminRight(Right.RT_adminConsoleDLACLTabRights);
         R_adminConsoleDLAliasesTabRights       = rm.getAdminRight(Right.RT_adminConsoleDLAliasesTabRights);
@@ -514,6 +521,7 @@ public class AdminRights {
         R_adminConsoleZimletRights             = rm.getAdminRight(Right.RT_adminConsoleZimletRights);
         R_adminLoginAs                         = rm.getAdminRight(Right.RT_adminLoginAs);
         R_adminLoginCalendarResourceAs         = rm.getAdminRight(Right.RT_adminLoginCalendarResourceAs);
+        R_applianceAll                         = rm.getAdminRight(Right.RT_applianceAll);
         R_assignCos                            = rm.getAdminRight(Right.RT_assignCos);
         R_backupAccount                        = rm.getAdminRight(Right.RT_backupAccount);
         R_checkDirectoryOnFileSystem           = rm.getAdminRight(Right.RT_checkDirectoryOnFileSystem);

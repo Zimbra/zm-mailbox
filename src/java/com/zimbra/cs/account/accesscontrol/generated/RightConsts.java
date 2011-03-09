@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2009, 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -24,7 +24,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110128-1139 */
+    /* build: 7.0.0_BETA1_1111 pjoseph 20110308-2155 */
 
 
     /*
@@ -75,7 +75,7 @@ public class RightConsts {
 
 
     /**
-     * access GAL by doing AutoCompleteGal/SearchGal/SyncGal requests
+     * access GAL(global address list)
      */
     public static final String RT_accessGAL = "accessGAL";
 
@@ -115,7 +115,7 @@ public class RightConsts {
     public static final String RT_adminConsoleAccountsAliasesTabRights = "adminConsoleAccountsAliasesTabRights";
 
     /**
-     * Admin Console rights for AccountsContactTab
+     * Admin Console rights for Accounts Contact Tab
      */
     public static final String RT_adminConsoleAccountsContactTabRights = "adminConsoleAccountsContactTabRights";
 
@@ -135,7 +135,7 @@ public class RightConsts {
     public static final String RT_adminConsoleAccountsFreeBusyInteropTabRights = "adminConsoleAccountsFreeBusyInteropTabRights";
 
     /**
-     * Admin Console rights for AccountsInfoTab
+     * Admin Console rights for Accounts Info Tab
      */
     public static final String RT_adminConsoleAccountsInfoTabRights = "adminConsoleAccountsInfoTabRights";
 
@@ -224,6 +224,21 @@ public class RightConsts {
      * Console
      */
     public static final String RT_adminConsoleCertificateRights = "adminConsoleCertificateRights";
+
+    /**
+     * Admin Console set attr rights for configure GAL
+     */
+    public static final String RT_adminConsoleConfigGALRights = "adminConsoleConfigGALRights";
+
+    /**
+     * Admin Console set attr rights for create GAL sync account
+     */
+    public static final String RT_adminConsoleCreateGALRights = "adminConsoleCreateGALRights";
+
+    /**
+     * Admin Console Create Top Domain Rights
+     */
+    public static final String RT_adminConsoleCreateTopDomainRights = "adminConsoleCreateTopDomainRights";
 
     /**
      * Admin Console Cross Mailbox Search Rights
@@ -436,27 +451,27 @@ public class RightConsts {
     public static final String RT_adminConsoleServerACLTabRights = "adminConsoleServerACLTabRights";
 
     /**
-     * Admin Console rights for Server ACL Tab
+     * Admin Console rights for Server BackupRestore Tab
      */
     public static final String RT_adminConsoleServerBackupRestoreTabRights = "adminConsoleServerBackupRestoreTabRights";
 
     /**
-     * Admin Console rights for Server ACL Tab
+     * Admin Console rights for Server IMAP Tab
      */
     public static final String RT_adminConsoleServerIMAPTabRights = "adminConsoleServerIMAPTabRights";
 
     /**
-     * Admin Console rights for Server ACL Tab
+     * Admin Console rights for Server Info Tab
      */
     public static final String RT_adminConsoleServerInfoTabRights = "adminConsoleServerInfoTabRights";
 
     /**
-     * Admin Console rights for Server ACL Tab
+     * Admin Console rights for Server MTA Tab
      */
     public static final String RT_adminConsoleServerMTATabRights = "adminConsoleServerMTATabRights";
 
     /**
-     * Admin Console rights for Server ACL Tab
+     * Admin Console rights for Server POP Tab
      */
     public static final String RT_adminConsoleServerPOPTabRights = "adminConsoleServerPOPTabRights";
 
@@ -466,7 +481,7 @@ public class RightConsts {
     public static final String RT_adminConsoleServerRights = "adminConsoleServerRights";
 
     /**
-     * Admin Console rights for Server ACL Tab
+     * Admin Console rights for Server Services Tab
      */
     public static final String RT_adminConsoleServerServicesTabRights = "adminConsoleServerServicesTabRights";
 
@@ -481,7 +496,7 @@ public class RightConsts {
     public static final String RT_adminConsoleServerStatusRights = "adminConsoleServerStatusRights";
 
     /**
-     * Admin Console rights for Server ACL Tab
+     * Admin Console rights for Server Volumes Tab
      */
     public static final String RT_adminConsoleServerVolumesTabRights = "adminConsoleServerVolumesTabRights";
 
@@ -502,16 +517,7 @@ public class RightConsts {
     public static final String RT_adminConsoleZimletRights = "adminConsoleZimletRights";
 
     /**
-     * login as the user as an admin. This is different from the loginAs user
-     * right: - loginAs is effective only when authenticated as an user -
-     * adminLoginAs is effective only when authenticated as an admin (i.e.
-     * has an admin auth token) For example: If an admin account has the
-     * adminLoginAs right on user1, the adminLoginAs is effective only when
-     * the admin account login as an admin. It is not effective when the
-     * admin account login as a regular user. Likewise if an user granted the
-     * loginAs right to an admin account, the right is effective when the
-     * account account login as a regular user, it is not effective when the
-     * admin account login as an admin.
+     * login to the user&#039;s account as an administrator
      */
     public static final String RT_adminLoginAs = "adminLoginAs";
 
@@ -519,6 +525,11 @@ public class RightConsts {
      * login to the calendar resource as an admin.
      */
     public static final String RT_adminLoginCalendarResourceAs = "adminLoginCalendarResourceAs";
+
+    /**
+     * catchall, appliance
+     */
+    public static final String RT_applianceAll = "applianceAll";
 
     /**
      * assign the cos (to domains or accounts)
@@ -536,7 +547,7 @@ public class RightConsts {
     public static final String RT_checkDirectoryOnFileSystem = "checkDirectoryOnFileSystem";
 
     /**
-     * check doamin MX record
+     * check domain MX record
      */
     public static final String RT_checkDomainMXRecord = "checkDomainMXRecord";
 
@@ -741,7 +752,7 @@ public class RightConsts {
     public static final String RT_domainAdminConsoleAccountsAliasesTabRights = "domainAdminConsoleAccountsAliasesTabRights";
 
     /**
-     * Admin Console Domain Admin rights for AccountsContactTab
+     * Admin Console Domain Admin rights for Accounts Contact Tab
      */
     public static final String RT_domainAdminConsoleAccountsContactTabRights = "domainAdminConsoleAccountsContactTabRights";
 
@@ -761,7 +772,7 @@ public class RightConsts {
     public static final String RT_domainAdminConsoleAccountsFreeBusyInteropTabRights = "domainAdminConsoleAccountsFreeBusyInteropTabRights";
 
     /**
-     * Admin Console Domain Admin rights for AccountsInfoTab
+     * Admin Console Domain Admin rights for Accounts Info Tab
      */
     public static final String RT_domainAdminConsoleAccountsInfoTabRights = "domainAdminConsoleAccountsInfoTabRights";
 
@@ -1595,7 +1606,7 @@ public class RightConsts {
     public static final String RT_setDomainAdminConsoleAccountsFreeBusyInteropTab = "setDomainAdminConsoleAccountsFreeBusyInteropTab";
 
     /**
-     * Admin Console Domain Admin set attr rights for accounts contact tab
+     * Admin Console Domain Admin set attr rights for Accounts Info Tab
      */
     public static final String RT_setDomainAdminConsoleAccountsInfoTab = "setDomainAdminConsoleAccountsInfoTab";
 
@@ -2001,7 +2012,7 @@ public class RightConsts {
     public static final String RT_viewDomainAdminConsoleAccountsFreeBusyInteropTab = "viewDomainAdminConsoleAccountsFreeBusyInteropTab";
 
     /**
-     * Admin Console Domain Admin view attr rights for accounts contact tab
+     * Admin Console Domain Admin view attr rights for Accounts Info Tab
      */
     public static final String RT_viewDomainAdminConsoleAccountsInfoTab = "viewDomainAdminConsoleAccountsInfoTab";
 
