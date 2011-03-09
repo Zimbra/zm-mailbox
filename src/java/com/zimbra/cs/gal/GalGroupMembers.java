@@ -29,7 +29,7 @@ public class GalGroupMembers {
     public static abstract class DLMembersResult {
         protected Set<String> mMembersSet;
         
-        abstract Set<String> getAllMembers();
+        protected abstract Set<String> getAllMembers();
         
         protected Set<String> createMembersSet() {
             return new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
@@ -51,11 +51,11 @@ public class GalGroupMembers {
         abstract public void encodeMembers(int beginIndex, int endIndex, Element resp);
     }
     
-    private static class ContactDLMembers extends DLMembers {
+    public static class ContactDLMembers extends DLMembers {
         private Contact mContact;
         private JSONArray mMembers;
         
-        private ContactDLMembers(Contact contact) {
+        public ContactDLMembers(Contact contact) {
             mContact = contact;
             
             String members = mContact.get(ContactConstants.A_member);

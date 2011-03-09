@@ -51,7 +51,7 @@ public class GetDistributionListMembers extends GalDocumentHandler {
         }
     }
     
-    private Element processDLMembers(ZimbraSoapContext zsc, String dlName, Account account, 
+    protected Element processDLMembers(ZimbraSoapContext zsc, String dlName, Account account, 
             int limit, int offset, DLMembers dlMembers) throws ServiceException {
           
         if (!GalSearchControl.canExpandGalGroup(dlName, dlMembers.getDLZimbraId(), account))

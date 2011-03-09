@@ -81,7 +81,7 @@ public abstract class GalGroup {
      * @return
      */
     public static boolean isGroup(String addr, Account requestedAcct) {
-        return GroupInfo.IS_GROUP == GalGroup.getGroupInfo(addr, false, requestedAcct, null);
+        return GroupInfo.IS_GROUP == GalGroupInfoProvider.getInstance().getGroupInfo(addr, false, requestedAcct, null);
     }
     
     public static GroupInfo getGroupInfo(String addr, boolean needCanExpand, Account requestedAcct, Account authedAcct) {
