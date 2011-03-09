@@ -20,6 +20,7 @@ package com.zimbra.cs.redolog.op;
 
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -31,14 +32,12 @@ import com.zimbra.cs.redolog.RedoLogOutput;
 public class PurgeOldMessages extends RedoableOp {
 
     public PurgeOldMessages() {
+        super(MailboxOperation.PurgeOldMessages);
     }
 
     public PurgeOldMessages(int mailboxId) {
+        this();
         setMailboxId(mailboxId);
-    }
-
-    @Override public int getOpCode() {
-        return OP_PURGE_OLD_MESSAGES;
     }
 
     @Override protected String getPrintableData() {

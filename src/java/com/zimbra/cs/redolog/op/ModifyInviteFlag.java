@@ -18,6 +18,7 @@ package com.zimbra.cs.redolog.op;
 import java.io.IOException;
 
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -32,9 +33,11 @@ public class ModifyInviteFlag extends RedoableOp {
     private boolean mAdd; // true to OR the bit in, false to AND it out
 
     public ModifyInviteFlag() {
+        super(MailboxOperation.ModifyInviteFlag);
     }
 
     public ModifyInviteFlag(int mailboxId, int id, int compNum, int flag, boolean add) {
+        this();
         setMailboxId(mailboxId);
         mId = id;
         mCompNum = compNum;
@@ -42,10 +45,6 @@ public class ModifyInviteFlag extends RedoableOp {
         mAdd = add;
     }
     
-    @Override public int getOpCode() {
-        return OP_MODIFY_INVITE_FLAG;
-    }
-
     @Override public void redo() throws Exception {
         MailboxManager.getInstance().getMailboxById(getMailboxId());
 //        mbox.modifyInviteFlag(getOperationContext(), mId, mCompNum, mFlag, mAdd);

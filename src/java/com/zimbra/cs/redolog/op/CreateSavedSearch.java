@@ -24,6 +24,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -39,10 +40,12 @@ public class CreateSavedSearch extends RedoableOp {
     private long mColor;
 
     public CreateSavedSearch() {
+        super(MailboxOperation.CreateSavedSearch);
         mSearchId = UNKNOWN_ID;
     }
 
     public CreateSavedSearch(int mailboxId, int folderId, String name, String query, String types, String sort, int flags, MailItem.Color color) {
+        this();
         setMailboxId(mailboxId);
         mSearchId = UNKNOWN_ID;
         mName = name != null ? name : "";
@@ -60,10 +63,6 @@ public class CreateSavedSearch extends RedoableOp {
 
     public void setSearchId(int searchId) {
         mSearchId = searchId;
-    }
-
-    @Override public int getOpCode() {
-        return OP_CREATE_SAVED_SEARCH;
     }
 
     @Override protected String getPrintableData() {

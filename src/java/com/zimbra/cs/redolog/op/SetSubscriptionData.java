@@ -21,6 +21,7 @@ import java.io.IOException;
 
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -31,19 +32,17 @@ public class SetSubscriptionData extends RedoableOp {
     private String mLastItemGuid;
 
     public SetSubscriptionData() {
+        super(MailboxOperation.SetSubscriptionData);
         mFolderId = Mailbox.ID_AUTO_INCREMENT;
         mLastItemGuid = "";
     }
 
     public SetSubscriptionData(int mailboxId, int folderId, long date, String guid) {
+        this();
         setMailboxId(mailboxId);
         mFolderId = folderId;
         mLastItemDate = date;
         mLastItemGuid = guid == null ? "" : guid;
-    }
-
-    @Override public int getOpCode() {
-        return OP_SET_SUBSCRIPTION_DATA;
     }
 
     @Override protected String getPrintableData() {

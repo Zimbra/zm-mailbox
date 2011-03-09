@@ -22,6 +22,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -37,22 +38,19 @@ public class SetItemTags extends RedoableOp {
     private String mConstraint;
 
     public SetItemTags() {
+        super(MailboxOperation.SetItemTags);
         type = MailItem.Type.UNKNOWN;
         mConstraint = null;
     }
 
     public SetItemTags(int mailboxId, int[] itemIds, MailItem.Type type, int flags, long tags, TargetConstraint tcon) {
+        this();
         setMailboxId(mailboxId);
         mIds = itemIds;
         this.type = type;
         mFlags = flags;
         mTags = tags;
         mConstraint = (tcon == null ? null : tcon.toString());
-    }
-
-    @Override
-    public int getOpCode() {
-        return OP_SET_ITEM_TAGS;
     }
 
     @Override

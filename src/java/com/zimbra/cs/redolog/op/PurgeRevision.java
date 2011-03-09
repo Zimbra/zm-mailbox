@@ -18,6 +18,7 @@ import java.io.IOException;
 
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -27,17 +28,16 @@ public class PurgeRevision extends RedoableOp {
     protected int mRev;
     protected boolean mIncludeOlderRevisions;
 
-    public PurgeRevision() { }
+    public PurgeRevision() {
+        super(MailboxOperation.PurgeRevision);
+    }
 
     public PurgeRevision(int mailboxId, int id, int rev, boolean includeOlderRevisions) {
+        this();
         setMailboxId(mailboxId);
         mId = id;
         mRev = rev;
         mIncludeOlderRevisions = includeOlderRevisions;
-    }
-
-    @Override public int getOpCode() {
-        return OP_PURGE_REVISION;
     }
 
     @Override protected String getPrintableData() {

@@ -264,6 +264,26 @@ public class Mailbox {
         List<Object> mOtherDirtyStuff = new LinkedList<Object>();
         PendingDelete deletes = null;
 
+        MailboxOperation getOperation() {
+            if (recorder != null)
+                return recorder.getOperation();
+            return null;
+        }
+        
+        void addPremodifyItem(MailItem item) {
+            if (mDirty != null) {
+                if (mDirty.preModifyItems == null)
+                    mDirty.preModifyItems = new HashMap<Integer,MailItem>();
+                
+                if (!mDirty.preModifyItems.containsKey(item.mId)) {
+                    try {
+                        mDirty.preModifyItems.put(item.mId, snapshotItem(item));
+                    } catch (ServiceException e) {
+                    }
+                }
+            }
+        }
+        
         void setTimestamp(long millis) {
             if (depth == 1)
                 timestamp = millis;
@@ -867,7 +887,7 @@ public class Mailbox {
         if (delta > 0 && checkQuota)
             checkSizeChange(size);
 
-        mCurrentChange.mDirty.recordModified(this, Change.MODIFIED_SIZE);
+        mCurrentChange.mDirty.recordModified(mCurrentChange.getOperation(), this, Change.MODIFIED_SIZE);
         mCurrentChange.size = size;
     }
 
@@ -1004,7 +1024,7 @@ public class Mailbox {
      * @param reason  The bitmask describing the modified item properties.
      * @see com.zimbra.cs.session.PendingModifications.Change */
     void markItemModified(MailItem item, int reason) {
-        mCurrentChange.mDirty.recordModified(item, reason);
+        mCurrentChange.mDirty.recordModified(mCurrentChange.getOperation(), item, reason);
     }
 
     /** Adds the object to the current change's list of non-{@link MailItem}
@@ -1202,7 +1222,7 @@ public class Mailbox {
             if (!hasFullAccess())
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
 
-            mCurrentChange.mDirty.recordModified(this, Change.MODIFIED_CONFIG);
+            mCurrentChange.mDirty.recordModified(mCurrentChange.getOperation(), this, Change.MODIFIED_CONFIG);
             mCurrentChange.config = new Pair<String,Metadata>(section, config);
             DbMailbox.updateConfig(this, section, config);
             success = true;
@@ -1453,7 +1473,7 @@ public class Mailbox {
             boolean persist = stats != null;
             if (stats != null) {
                 if (mData.size != stats.size) {
-                    mCurrentChange.mDirty.recordModified(this, Change.MODIFIED_SIZE);
+                    mCurrentChange.mDirty.recordModified(mCurrentChange.getOperation(), this, Change.MODIFIED_SIZE);
                     ZimbraLog.mailbox.debug("setting mailbox size to " + stats.size + " (was " + mData.size + ") for mailbox " + mId);
                     mData.size = stats.size;
                 }
@@ -1913,15 +1933,17 @@ public class Mailbox {
                         ZimbraLog.mailbox.warn("folder missing from snapshotted folder set: %d", item.getId());
                         folder = (Folder) item;
                     }
-                    snapshot.recordModified(folder, chg.why);
+                    snapshot.recordModified(chg.op, folder, chg.why);
                 } else {
                     // NOTE: if the folder cache is null, folders fall down here and should always get copy == false
                     boolean copy = item instanceof Tag || (cache != null && cache.containsKey(item.getId()));
-                    snapshot.recordModified(copy ? snapshotItem(item) : item, chg.why);
+                    snapshot.recordModified(chg.op, copy ? snapshotItem(item) : item, chg.why);
                 }
             }
         }
 
+        snapshot.preModifyItems = pms.preModifyItems;
+        
         return snapshot;
     }
 
@@ -1952,30 +1974,37 @@ public class Mailbox {
 
         // try the cache first
         MailItem item = getCachedItem(new Integer(id), type);
-        if (item != null)
-            return item;
+        try {
+            if (item != null)
+                return item;
 
-        // the tag and folder caches contain ALL tags and folders, so cache miss == doesn't exist
-        if (isCachedType(type))
-            throw MailItem.noSuchItem(id, type);
-
-        if (id <= -FIRST_USER_ID) {
-            // special-case virtual conversations
-            if (type != MailItem.Type.CONVERSATION && type != MailItem.Type.UNKNOWN) {
+            // the tag and folder caches contain ALL tags and folders, so cache miss == doesn't exist
+            if (isCachedType(type))
                 throw MailItem.noSuchItem(id, type);
+
+            if (id <= -FIRST_USER_ID) {
+                // special-case virtual conversations
+                if (type != MailItem.Type.CONVERSATION && type != MailItem.Type.UNKNOWN) {
+                    throw MailItem.noSuchItem(id, type);
+                }
+                Message msg = getCachedMessage(new Integer(-id));
+                if (msg == null)
+                    msg = getMessageById(-id);
+                if (msg.getConversationId() != id)
+                    return msg.getParent();
+                else
+                    item = new VirtualConversation(this, msg);
+            } else {
+                // cache miss, so fetch from the database
+                item = MailItem.getById(this, id, type);
             }
-            Message msg = getCachedMessage(new Integer(-id));
-            if (msg == null)
-                msg = getMessageById(-id);
-            if (msg.getConversationId() != id)
-                return msg.getParent();
-            else
-                item = new VirtualConversation(this, msg);
-        } else {
-            // cache miss, so fetch from the database
-            item = MailItem.getById(this, id, type);
+            return item;
+            
+        } finally {
+            if (item != null) {
+                mCurrentChange.addPremodifyItem(item);
+            }
         }
-        return item;
     }
 
     /**
@@ -2021,105 +2050,114 @@ public class Mailbox {
         return getItemById(ids, type, false);
     }
 
-    MailItem[] getItemById(int[] ids, MailItem.Type type, boolean fromDumpster) throws ServiceException {
+    private MailItem[] getItemById(int[] ids, MailItem.Type type, boolean fromDumpster) throws ServiceException {
         if (!mCurrentChange.active)
             throw ServiceException.FAILURE("must be in transaction", null);
         if (ids == null)
             return null;
 
         MailItem items[] = new MailItem[ids.length];
-        if (fromDumpster) {
-            for (int i = 0; i < items.length; ++i) {
-                int id = ids[i];
-                if (id > 0) {
-                    items[i] = getItemById(id, type, true);
-                }
-            }
-            return items;
-        }
-
-        Set<Integer> uncached = new HashSet<Integer>();
-
-        // try the cache first
-        Integer miss = null;
-        boolean relaxType = false;
-        for (int i = 0; i < ids.length; i++) {
-            // special-case -1 as a signal to return null...
-            if (ids[i] == ID_AUTO_INCREMENT) {
-                items[i] = null;
-            } else {
-                Integer key = ids[i];
-                MailItem item = getCachedItem(key, type);
-                // special-case virtual conversations
-                if (item == null && ids[i] <= -FIRST_USER_ID) {
-                    if (!MailItem.isAcceptableType(type, MailItem.Type.CONVERSATION)) {
-                        throw MailItem.noSuchItem(ids[i], type);
-                    }
-                    Message msg = getCachedMessage(-ids[i]);
-                    if (msg != null) {
-                        if (msg.getConversationId() == ids[i])
-                            item = new VirtualConversation(this, msg);
-                        else
-                            item = getCachedConversation(key = msg.getConversationId());
-                    } else {
-                        // need to fetch the message in order to get its conv...
-                        key = -ids[i];
-                        relaxType = true;
+        try {
+            
+            if (fromDumpster) {
+                for (int i = 0; i < items.length; ++i) {
+                    int id = ids[i];
+                    if (id > 0) {
+                        items[i] = getItemById(id, type, true);
                     }
                 }
-                items[i] = item;
-                if (item == null)
-                    uncached.add(miss = key);
+                return items;
             }
-        }
-        if (uncached.isEmpty())
-            return items;
-
-        // the tag and folder caches contain ALL tags and folders, so cache miss == doesn't exist
-        if (isCachedType(type))
-            throw MailItem.noSuchItem(miss.intValue(), type);
-
-        // cache miss, so fetch from the database
-        MailItem.getById(this, uncached, relaxType ? MailItem.Type.UNKNOWN : type);
-
-        uncached.clear();
-        for (int i = 0; i < ids.length; i++) {
-            if (ids[i] != ID_AUTO_INCREMENT && items[i] == null) {
-                if (ids[i] <= -FIRST_USER_ID) {
+    
+            Set<Integer> uncached = new HashSet<Integer>();
+    
+            // try the cache first
+            Integer miss = null;
+            boolean relaxType = false;
+            for (int i = 0; i < ids.length; i++) {
+                // special-case -1 as a signal to return null...
+                if (ids[i] == ID_AUTO_INCREMENT) {
+                    items[i] = null;
+                } else {
+                    Integer key = ids[i];
+                    MailItem item = getCachedItem(key, type);
                     // special-case virtual conversations
-                    MailItem item = getCachedItem(-ids[i]);
-                    if (!(item instanceof Message)) {
-                        throw MailItem.noSuchItem(ids[i], type);
-                    } else if (item.getParentId() == ids[i]) {
-                        items[i] = new VirtualConversation(this, (Message) item);
+                    if (item == null && ids[i] <= -FIRST_USER_ID) {
+                        if (!MailItem.isAcceptableType(type, MailItem.Type.CONVERSATION)) {
+                            throw MailItem.noSuchItem(ids[i], type);
+                        }
+                        Message msg = getCachedMessage(-ids[i]);
+                        if (msg != null) {
+                            if (msg.getConversationId() == ids[i])
+                                item = new VirtualConversation(this, msg);
+                            else
+                                item = getCachedConversation(key = msg.getConversationId());
+                        } else {
+                            // need to fetch the message in order to get its conv...
+                            key = -ids[i];
+                            relaxType = true;
+                        }
+                    }
+                    items[i] = item;
+                    if (item == null)
+                        uncached.add(miss = key);
+                }
+            }
+            if (uncached.isEmpty())
+                return items;
+    
+            // the tag and folder caches contain ALL tags and folders, so cache miss == doesn't exist
+            if (isCachedType(type))
+                throw MailItem.noSuchItem(miss.intValue(), type);
+    
+            // cache miss, so fetch from the database
+            MailItem.getById(this, uncached, relaxType ? MailItem.Type.UNKNOWN : type);
+    
+            uncached.clear();
+            for (int i = 0; i < ids.length; i++) {
+                if (ids[i] != ID_AUTO_INCREMENT && items[i] == null) {
+                    if (ids[i] <= -FIRST_USER_ID) {
+                        // special-case virtual conversations
+                        MailItem item = getCachedItem(-ids[i]);
+                        if (!(item instanceof Message)) {
+                            throw MailItem.noSuchItem(ids[i], type);
+                        } else if (item.getParentId() == ids[i]) {
+                            items[i] = new VirtualConversation(this, (Message) item);
+                        } else {
+                            items[i] = getCachedItem(item.getParentId());
+                            if (items[i] == null)
+                                uncached.add(item.getParentId());
+                        }
                     } else {
+                        if ((items[i] = getCachedItem(ids[i])) == null)
+                            throw MailItem.noSuchItem(ids[i], type);
+                    }
+                }
+            }
+    
+            // special case asking for VirtualConversation but having it be a real Conversation
+            if (!uncached.isEmpty()) {
+                MailItem.getById(this, uncached, MailItem.Type.CONVERSATION);
+                for (int i = 0; i < ids.length; i++) {
+                    if (ids[i] <= -FIRST_USER_ID && items[i] == null) {
+                        MailItem item = getCachedItem(-ids[i]);
+                        if (!(item instanceof Message) || item.getParentId() == ids[i])
+                            throw ServiceException.FAILURE("item should be cached but is not: " + -ids[i], null);
                         items[i] = getCachedItem(item.getParentId());
                         if (items[i] == null)
-                            uncached.add(item.getParentId());
+                            throw MailItem.noSuchItem(ids[i], type);
                     }
-                } else {
-                    if ((items[i] = getCachedItem(ids[i])) == null)
-                        throw MailItem.noSuchItem(ids[i], type);
+                }
+            }
+    
+            return items;
+        } finally {
+            if (items != null) {
+                for (MailItem item : items) {
+                    mCurrentChange.addPremodifyItem(item);
                 }
             }
         }
-
-        // special case asking for VirtualConversation but having it be a real Conversation
-        if (!uncached.isEmpty()) {
-            MailItem.getById(this, uncached, MailItem.Type.CONVERSATION);
-            for (int i = 0; i < ids.length; i++) {
-                if (ids[i] <= -FIRST_USER_ID && items[i] == null) {
-                    MailItem item = getCachedItem(-ids[i]);
-                    if (!(item instanceof Message) || item.getParentId() == ids[i])
-                        throw ServiceException.FAILURE("item should be cached but is not: " + -ids[i], null);
-                    items[i] = getCachedItem(item.getParentId());
-                    if (items[i] == null)
-                        throw MailItem.noSuchItem(ids[i], type);
-                }
-            }
-        }
-
-        return items;
     }
 
     /** retrieve an item from the Mailbox's caches; return null if no item found */
@@ -5472,7 +5510,6 @@ public class Mailbox {
     private synchronized void moveInternal(OperationContext octxt, int[] itemIds, MailItem.Type type, int targetId,
             TargetConstraint tcon) throws ServiceException {
         MoveItem redoRecorder = new MoveItem(mId, itemIds, type, targetId, tcon);
-        Map<Integer, String> oldFolderPaths = new HashMap<Integer, String>();
 
         boolean success = false;
         try {
@@ -5489,8 +5526,6 @@ public class Mailbox {
             boolean resetUIDNEXT = false;
 
             for (MailItem item : items) {
-                if (item instanceof Folder && !oldFolderPaths.containsKey(item.getId()))
-                    oldFolderPaths.put(item.getId(), ((Folder) item).getPath());
 
                 // train the spam filter if necessary...
                 trainSpamFilter(octxt, item, target, "move");
@@ -5513,11 +5548,6 @@ public class Mailbox {
         } finally {
             endTransaction(success);
         }
-
-        if (success) {
-            for (int id : oldFolderPaths.keySet())
-                updateFilterRules(id, oldFolderPaths.get(id));
-        }
     }
 
     public synchronized void rename(OperationContext octxt, int id, MailItem.Type type, String name, int folderId)
@@ -5535,14 +5565,10 @@ public class Mailbox {
         RenameItem redoRecorder = new RenameItem(mId, id, type, name, folderId);
 
         boolean success = false;
-        String oldFolderPath = null;
         try {
             beginTransaction("rename", octxt, redoRecorder);
 
             MailItem item = getItemById(id, type);
-            if (item instanceof Folder) {
-                oldFolderPath = ((Folder) item).getPath();
-            }
             checkItemChangeID(item);
             if (folderId <= 0)
                 folderId = item.getFolderId();
@@ -5561,10 +5587,6 @@ public class Mailbox {
         } finally {
             endTransaction(success);
         }
-
-        if (success && oldFolderPath != null) {
-            updateFilterRules(id, oldFolderPath);
-        }
     }
 
     public synchronized void rename(OperationContext octxt, int id, MailItem.Type type, String path)
@@ -5577,7 +5599,6 @@ public class Mailbox {
         RenameItemPath redoRecorder = new RenameItemPath(mId, id, type, path);
 
         boolean success = false;
-        Map<Integer, String> oldFolderPaths = new HashMap<Integer, String>();
         try {
             beginTransaction("renameFolderPath", octxt, redoRecorder);
             RenameItemPath redoPlayer = (RenameItemPath) mCurrentChange.getRedoPlayer();
@@ -5605,9 +5626,6 @@ public class Mailbox {
                     throw ServiceException.FAILURE("parent folder id changed since operation was recorded", null);
                 else if (!subfolder.getName().equals(name) && subfolder.isMutable()) {
                     // Same folder name, different case.
-                    if (!oldFolderPaths.containsKey(subfolder.getId())) {
-                        oldFolderPaths.put(subfolder.getId(), subfolder.getPath());
-                    }
                     subfolder.rename(name, parent);
                 }
                 recorderParentIds[i] = subfolder.getId();
@@ -5618,39 +5636,11 @@ public class Mailbox {
             trainSpamFilter(octxt, item, parent, "rename");
 
             String name = parts[parts.length - 1];
-            if (item instanceof Folder && !oldFolderPaths.containsKey(item.getId())) {
-                oldFolderPaths.put(item.getId(), ((Folder) item).getPath());
-            }
             item.rename(name, parent);
 
             success = true;
         } finally {
             endTransaction(success);
-        }
-
-        if (success) {
-            for (int folderId : oldFolderPaths.keySet()) {
-                updateFilterRules(folderId, oldFolderPaths.get(folderId));
-            }
-        }
-    }
-
-    protected void updateFilterRules(int folderId, String oldPath) {
-        try {
-            Folder folder = null;
-            try {
-                folder = getFolderById(folderId);
-            } catch (NoSuchItemException e) {
-            }
-            if (folder == null || folder.inTrash() || folder.isHidden()) {
-                ZimbraLog.filter.info("Disabling filter rules that reference %s.", oldPath);
-                RuleManager.folderDeleted(getAccount(), oldPath);
-            } else if (!folder.getPath().equals(oldPath)) {
-                ZimbraLog.filter.info("Updating filter rules that reference %s.", oldPath);
-                RuleManager.folderRenamed(getAccount(), oldPath, folder.getPath());
-            }
-        } catch (ServiceException e) {
-            ZimbraLog.filter.warn("Unable to update filter rules with new folder path.", e);
         }
     }
 
@@ -5697,7 +5687,6 @@ public class Mailbox {
     public synchronized void delete(OperationContext octxt, int[] itemIds, MailItem.Type type, TargetConstraint tcon)
             throws ServiceException {
         DeleteItem redoRecorder = new DeleteItem(mId, itemIds, type, tcon);
-        Map<Integer, String> deletedFolderPaths = new HashMap<Integer, String>();
         Map<Integer, String> deletedTags = new HashMap<Integer, String>();
 
         boolean success = false;
@@ -5717,9 +5706,6 @@ public class Mailbox {
                     continue;
                 }
 
-                if (item.getType() == MailItem.Type.FOLDER) {
-                    deletedFolderPaths.put(item.getId(), ((Folder) item).getPath());
-                }
                 if (item.getType() == MailItem.Type.TAG) {
                     deletedTags.put(item.getId(), item.getName());
                 }
@@ -5742,13 +5728,6 @@ public class Mailbox {
             success = true;
         } finally {
             endTransaction(success);
-        }
-
-        for (int id : deletedFolderPaths.keySet()) {
-            updateFilterRules(id, deletedFolderPaths.get(id));
-        }
-        for (int id: deletedTags.keySet()) {
-            RuleManager.tagDeleted(getAccount(), deletedTags.get(id));
         }
     }
 
@@ -7368,7 +7347,7 @@ public class Mailbox {
         RedoableOp recorder = mCurrentChange.recorder;
 
         if (recorder != null && (player == null || (octxt != null && !octxt.isRedo()))) {
-            boolean isNewMessage = recorder.getOpCode() == RedoableOp.OP_CREATE_MESSAGE;
+            boolean isNewMessage = recorder.getOperation() == MailboxOperation.CreateMessage;
             if (isNewMessage) {
                 CreateMessage cm = (CreateMessage) recorder;
                 if (cm.getFolderId() == ID_FOLDER_SPAM || cm.getFolderId() == ID_FOLDER_TRASH)
@@ -7451,6 +7430,8 @@ public class Mailbox {
         if (change == null)
             return;
 
+        MailboxListener.ChangeNotification notification = null;
+        
         // save for notifications (below)
         PendingModifications dirty = null;
         if (change.mDirty != null && change.mDirty.hasNotifications()) {
@@ -7525,6 +7506,23 @@ public class Mailbox {
                     }
                 }
             }
+
+            // committed changes, so notify any listeners
+            if (dirty != null && dirty.hasNotifications()) {
+                if (!mListeners.isEmpty()) {
+                    try {
+                        // try to get a copy of the changeset that *isn't* live
+                        dirty = snapshotModifications(dirty);
+                    } catch (ServiceException e) {
+                        ZimbraLog.mailbox.warn("error copying notifications; will notify with live set", e);
+                    }
+                    try {
+                        notification = new MailboxListener.ChangeNotification(getAccount(), dirty, change.octxt, mData.lastChangeId, getOperationTimestampMillis());
+                    } catch (ServiceException e) {
+                        ZimbraLog.mailbox.warn("error getting account for the mailbox", e);
+                    }
+                }
+            }
         } catch (RuntimeException e) {
             ZimbraLog.mailbox.error("ignoring error during cache commit", e);
         } finally {
@@ -7533,26 +7531,17 @@ public class Mailbox {
             // make sure we're ready for the next change
             change.reset();
         }
-
-        // committed changes, so notify any listeners
-        if (dirty != null && dirty.hasNotifications()) {
-            if (!mListeners.isEmpty()) {
+        
+        if (notification != null) {
+            for (Session session : mListeners) {
                 try {
-                    // try to get a copy of the changeset that *isn't* live
-                    dirty = snapshotModifications(dirty);
-                } catch (ServiceException e) {
-                    ZimbraLog.mailbox.warn("error copying notifications; will notify with live set", e);
-                }
-                for (Session session : mListeners) {
-                    try {
-                        session.notifyPendingChanges(dirty, mData.lastChangeId, source);
-                    } catch (RuntimeException e) {
-                        ZimbraLog.mailbox.error("ignoring error during notification", e);
-                    }
+                    session.notifyPendingChanges(notification.mods, notification.lastChangeId, source);
+                } catch (RuntimeException e) {
+                    ZimbraLog.mailbox.error("ignoring error during notification", e);
                 }
             }
 
-            MailboxListener.mailboxChanged(getAccountId(), dirty, change.octxt, mData.lastChangeId);
+            MailboxListener.notifyListeners(notification);
         }
     }
 

@@ -20,6 +20,7 @@ import java.util.Arrays;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -32,18 +33,16 @@ public class ColorItem extends RedoableOp {
     private MailItem.Type type;
     private long mColor;
 
-    public ColorItem() { }
+    public ColorItem() {
+        super(MailboxOperation.ColorItem);
+    }
 
     public ColorItem(int mailboxId, int[] ids, MailItem.Type type, MailItem.Color color) {
+        this();
         setMailboxId(mailboxId);
         mIds = ids;
         this.type = type;
         mColor = color.getValue();
-    }
-
-    @Override
-    public int getOpCode() {
-        return OP_COLOR_ITEM;
     }
 
     @Override

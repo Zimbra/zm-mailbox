@@ -22,6 +22,7 @@ import java.util.Set;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
@@ -36,20 +37,18 @@ public class ReindexMailbox extends RedoableOp {
     private int mCompletionId = 0;
     @Deprecated private boolean mSkipDelete = false;
 
-    public ReindexMailbox() { }
+    public ReindexMailbox() {
+        super(MailboxOperation.ReindexMailbox);
+    }
 
     public ReindexMailbox(int mailboxId, Set<MailItem.Type> types, Set<Integer> itemIds, int completionId, boolean skipDelete) {
+        this();
         setMailboxId(mailboxId);
         assert(types == null || itemIds == null);
         this.types = types;
         mItemIds = itemIds;
         mCompletionId = completionId;
         mSkipDelete = skipDelete;
-    }
-
-    @Override
-    public int getOpCode() {
-        return OP_REINDEX_MAILBOX;
     }
 
     @Override

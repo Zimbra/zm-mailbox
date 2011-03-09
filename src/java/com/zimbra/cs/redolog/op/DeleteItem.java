@@ -23,6 +23,7 @@ import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -36,20 +37,17 @@ public class DeleteItem extends RedoableOp {
     private String mConstraint;
 
     public DeleteItem() {
+        super(MailboxOperation.DeleteItem);
         type = MailItem.Type.UNKNOWN;
         mConstraint = null;
     }
 
     public DeleteItem(int mailboxId, int[] ids, MailItem.Type type, TargetConstraint tcon) {
+        this();
         setMailboxId(mailboxId);
         mIds = ids;
         this.type = type;
         mConstraint = (tcon == null ? null : tcon.toString());
-    }
-
-    @Override
-    public int getOpCode() {
-        return OP_DELETE_ITEM;
     }
 
     @Override

@@ -18,6 +18,7 @@ import java.io.IOException;
 
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -28,17 +29,14 @@ public class RenameTag extends RenameItem {
 
     public RenameTag() {
         super();
+        mOperation = MailboxOperation.RenameTag;
         type = MailItem.Type.TAG;
         mFolderId = Mailbox.ID_FOLDER_TAGS;
     }
 
     public RenameTag(int mailboxId, int tagId, String name) {
         super(mailboxId, tagId, MailItem.Type.TAG, name, Mailbox.ID_FOLDER_TAGS);
-    }
-
-    @Override
-    public int getOpCode() {
-        return OP_RENAME_TAG;
+        mOperation = MailboxOperation.RenameTag;
     }
 
     @Override

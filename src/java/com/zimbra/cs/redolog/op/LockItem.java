@@ -19,6 +19,7 @@ import java.io.IOException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -29,18 +30,15 @@ public class LockItem extends RedoableOp {
     protected String accountId;
 
     public LockItem() {
+        super(MailboxOperation.LockItem);
     }
 
     public LockItem(int mailboxId, int id, MailItem.Type type, String accountId) {
+        this();
         setMailboxId(mailboxId);
         this.id = id;
         this.type = type;
         this.accountId = accountId;
-    }
-
-    @Override
-    public int getOpCode() {
-        return OP_LOCK_ITEM;
     }
 
     @Override

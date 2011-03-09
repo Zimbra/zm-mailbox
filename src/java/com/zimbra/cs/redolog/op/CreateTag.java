@@ -24,6 +24,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -34,11 +35,13 @@ public class CreateTag extends RedoableOp {
     private long mColor;
 
     public CreateTag() {
+        super(MailboxOperation.CreateTag);
         mTagId = UNKNOWN_ID;
         mColor = 0;
     }
 
     public CreateTag(int mailboxId, String name, MailItem.Color color) {
+        this();
         setMailboxId(mailboxId);
         mTagId = UNKNOWN_ID;
         mName = name != null ? name : "";
@@ -51,10 +54,6 @@ public class CreateTag extends RedoableOp {
 
     public void setTagId(int tagId) {
         mTagId = tagId;
-    }
-
-    @Override public int getOpCode() {
-        return OP_CREATE_TAG;
     }
 
     @Override protected String getPrintableData() {

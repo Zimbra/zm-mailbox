@@ -23,6 +23,7 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -45,18 +46,16 @@ public class BackupMailbox extends RedoableOp {
     private String mLabel;          // any random label/description for this backup
 
     public BackupMailbox() {
+        super(MailboxOperation.BackupMailbox);
     }
 
     public BackupMailbox(int mailboxId, long backupSetTstamp, long startTime, long endTime, String label) {
+        this();
         setMailboxId(mailboxId);
         mBackupSetTstamp = backupSetTstamp;
         mStartTime = startTime;
         mEndTime = endTime;
         mLabel = label;
-    }
-
-    @Override public int getOpCode() {
-        return OP_DEPRECATED_BACKUP_MAILBOX;
     }
 
     @Override public void redo() throws Exception {

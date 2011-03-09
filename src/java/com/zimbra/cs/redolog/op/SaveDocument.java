@@ -21,6 +21,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
@@ -35,15 +36,12 @@ public class SaveDocument extends CreateMessage {
     private boolean mDescEnabled;
 
     public SaveDocument() {
+        mOperation = MailboxOperation.SaveDocument;
     }
 
     public SaveDocument(int mailboxId, String digest, int msgSize, int folderId) {
         super(mailboxId, ":API:", false, digest, msgSize, folderId, true, 0, null);
-    }
-
-    @Override
-    public int getOpCode() {
-        return OP_SAVE_DOCUMENT;
+        mOperation = MailboxOperation.SaveDocument;
     }
 
     public String getFilename() {

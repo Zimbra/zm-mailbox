@@ -17,23 +17,21 @@ package com.zimbra.cs.redolog.op;
 import java.io.IOException;
 
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 
 public class RecoverItem extends CopyItem {
 
     public RecoverItem() {
         super();
+        mOperation = MailboxOperation.RecoverItem;
         setFromDumpster(true);
     }
 
     public RecoverItem(int mailboxId, MailItem.Type type, int folderId) {
         super(mailboxId, type, folderId);
+        mOperation = MailboxOperation.RecoverItem;
         setFromDumpster(true);
-    }
-
-    @Override
-    public int getOpCode() {
-        return OP_RECOVER_ITEM;
     }
 
     @Override

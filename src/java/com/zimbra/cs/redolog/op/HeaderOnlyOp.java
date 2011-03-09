@@ -38,7 +38,7 @@ public class HeaderOnlyOp extends RedoableOp {
 	private static final String sPrintable = "(detail skipped)";
 
 	public HeaderOnlyOp(int code) {
-		super();
+		super(null);
 		mOpCode = code;
 	}
 

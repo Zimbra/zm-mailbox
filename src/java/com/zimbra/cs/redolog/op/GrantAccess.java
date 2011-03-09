@@ -23,6 +23,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -35,21 +36,19 @@ public class GrantAccess extends RedoableOp {
     private String mPassword;
 
     public GrantAccess() {
+        super(MailboxOperation.GrantAccess);
         mFolderId = UNKNOWN_ID;
         mGrantee = "";
     }
 
     public GrantAccess(int mailboxId, int folderId, String grantee, byte granteeType, short rights, String password) {
+        this();
         setMailboxId(mailboxId);
         mFolderId = folderId;
         mGrantee = grantee == null ? "" : grantee;
         mGranteeType = granteeType;
         mRights = rights;
         mPassword = password == null ? "" : password;
-    }
-
-    @Override public int getOpCode() {
-        return OP_GRANT_ACCESS;
     }
 
     @Override protected String getPrintableData() {

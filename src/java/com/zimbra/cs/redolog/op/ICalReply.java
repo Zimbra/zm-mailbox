@@ -19,6 +19,7 @@ import java.io.IOException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -29,15 +30,14 @@ public class ICalReply extends RedoableOp {
 
     private Invite mInvite;
     
-    public ICalReply()  {}
-
-    public ICalReply(int mailboxId, Invite inv) {
-        setMailboxId(mailboxId);
-        mInvite = inv;
+    public ICalReply()  {
+        super(MailboxOperation.ICalReply);
     }
 
-    @Override public int getOpCode() {
-        return OP_ICAL_REPLY;
+    public ICalReply(int mailboxId, Invite inv) {
+        this();
+        setMailboxId(mailboxId);
+        mInvite = inv;
     }
 
     @Override protected String getPrintableData() {

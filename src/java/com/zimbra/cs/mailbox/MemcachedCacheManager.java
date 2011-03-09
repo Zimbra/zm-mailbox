@@ -15,13 +15,17 @@
 
 package com.zimbra.cs.mailbox;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.acl.EffectiveACLCache;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
 import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.session.PendingModifications;
 
-public class MemcachedCacheManager {
+public class MemcachedCacheManager extends MailboxListener {
 
     public static void purgeMailbox(Mailbox mbox) throws ServiceException {
         CalendarCacheManager.getInstance().purgeMailbox(mbox);
@@ -29,7 +33,10 @@ public class MemcachedCacheManager {
         FoldersTagsCache.getInstance().purgeMailbox(mbox);
     }
 
-    public static void notifyCommittedChanges(PendingModifications mods, int changeId) {
+    @Override
+    public void notify(ChangeNotification notification) {
+        PendingModifications mods = notification.mods;
+        int changeId = notification.lastChangeId;
         // We have to notify calendar cache before checking memcached connectedness
         // because a portion of calendar cache is not memcached-based.
         CalendarCacheManager.getInstance().notifyCommittedChanges(mods, changeId);
@@ -37,5 +44,12 @@ public class MemcachedCacheManager {
             EffectiveACLCache.getInstance().notifyCommittedChanges(mods, changeId);
             FoldersTagsCache.getInstance().notifyCommittedChanges(mods, changeId);
         }
+    }
+
+    private static final EnumSet<Type> TYPES = EnumSet.allOf(Type.class);
+    
+    @Override
+    public Set<Type> registerForItemTypes() {
+        return TYPES;
     }
 }

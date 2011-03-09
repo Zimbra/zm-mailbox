@@ -17,6 +17,7 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.store.file.Volume;
@@ -27,14 +28,12 @@ public class DeleteVolume extends RedoableOp {
     private short mId;
 
     public DeleteVolume() {
+        super(MailboxOperation.DeleteVolume);
     }
 
     public DeleteVolume(short id) {
+        this();
         mId = id;
-    }
-
-    public int getOpCode() {
-        return OP_DELETE_VOLUME;
     }
 
     protected String getPrintableData() {

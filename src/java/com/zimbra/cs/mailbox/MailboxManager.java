@@ -252,7 +252,7 @@ public class MailboxManager {
      *  if one doesn't already exist and <code>autocreate</code> is
      *  <tt>true</tt>.
      *
-     * @param accountId   The id of the account whose mailbox we want.
+     * @param mailboxAccountId   The id of the account whose mailbox we want.
      * @param autocreate  <tt>true</tt> to create the mailbox if needed,
      *                    <tt>false</tt> to just return <code>null</code>
      * @return The requested <code>Mailbox</code> object, or <code>null</code>.
@@ -270,7 +270,7 @@ public class MailboxManager {
      *  mailbox if one doesn't already exist and <code>fetchMode</code>
      *  is <code>FetchMode.AUTOCREATE</code>.
      *
-     * @param accountId   The id of the account whose mailbox we want.
+     * @param mailboxAccountId   The id of the account whose mailbox we want.
      * @param fetchMode <code>FetchMode.ONLY_IF_CACHED</code> will return the mailbox only
      *                     if it is already cached in memory
      *                  <code>FetchMode.DO_NOT_AUTOCREATE</code>Will fetch the mailbox from

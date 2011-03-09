@@ -19,6 +19,7 @@ import java.io.IOException;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
@@ -29,18 +30,16 @@ public class SetPermissions extends RedoableOp {
     private String mACL;
 
     public SetPermissions() {
+        super(MailboxOperation.SetPermissions);
         mFolderId = UNKNOWN_ID;
         mACL = "";
     }
 
     public SetPermissions(int mailboxId, int folderId, ACL acl) {
+        this();
         setMailboxId(mailboxId);
         mFolderId = folderId;
         mACL = acl == null ? "" : acl.toString();
-    }
-
-    @Override public int getOpCode() {
-        return OP_SET_PERMISSIONS;
     }
 
     @Override protected String getPrintableData() {

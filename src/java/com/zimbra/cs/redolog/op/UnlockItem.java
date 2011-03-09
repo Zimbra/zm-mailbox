@@ -17,20 +17,18 @@ package com.zimbra.cs.redolog.op;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxOperation;
 
 public class UnlockItem extends LockItem {
 
     public UnlockItem() {
         super();
+        mOperation = MailboxOperation.UnlockItem;
     }
 
     public UnlockItem(int mailboxId, int id, MailItem.Type type, String accountId) {
         super(mailboxId, id, type, accountId);
-    }
-
-    @Override
-    public int getOpCode() {
-        return OP_UNLOCK_ITEM;
+        mOperation = MailboxOperation.UnlockItem;
     }
 
     @Override

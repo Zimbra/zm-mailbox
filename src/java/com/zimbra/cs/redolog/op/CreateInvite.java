@@ -20,6 +20,7 @@ import java.io.IOException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
@@ -40,10 +41,13 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
     private boolean mDiscardExistingInvites;
     private boolean mAddRevision;
     
-    public CreateInvite() { }
+    public CreateInvite() {
+        super(MailboxOperation.CreateInvite);
+    }
 
     public CreateInvite(int mailboxId, Invite inv, int folderId, byte[] data,
                         boolean preserveExistingAlarms, boolean discardExistingInvites, boolean addRevision) {
+        this();
         setMailboxId(mailboxId);
         mInvite = inv;
         mFolderId = folderId;
@@ -51,10 +55,6 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
         mPreserveExistingAlarms = preserveExistingAlarms;
         mDiscardExistingInvites = discardExistingInvites;
         mAddRevision = addRevision;
-    }
-
-    @Override public int getOpCode() {
-        return OP_CREATE_INVITE;
     }
 
     @Override protected String getPrintableData() {

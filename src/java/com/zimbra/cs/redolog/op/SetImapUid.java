@@ -26,6 +26,7 @@ import java.util.Map;
 
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -34,9 +35,11 @@ public class SetImapUid extends RedoableOp {
     private Map<Integer, Integer> mImapUids = new HashMap<Integer, Integer>();
 
     public SetImapUid() {
+        super(MailboxOperation.SetImapUid);
     }
 
     public SetImapUid(int mailboxId, List<Integer> msgIds) {
+        this();
         setMailboxId(mailboxId);
         for (int id : msgIds)
             mImapUids.put(id, UNKNOWN_ID);
@@ -50,10 +53,6 @@ public class SetImapUid extends RedoableOp {
 
     public void setImapUid(int msgId, int imapId) {
         mImapUids.put(msgId, imapId);
-    }
-
-    @Override public int getOpCode() {
-        return OP_SET_IMAP_UID;
     }
 
     @Override protected String getPrintableData() {

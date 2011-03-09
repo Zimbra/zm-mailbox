@@ -20,6 +20,7 @@ import java.io.IOException;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
@@ -28,14 +29,12 @@ public class AddDocumentRevision extends SaveDocument {
     private int mDocId;
 
     public AddDocumentRevision() {
+        mOperation = MailboxOperation.AddDocumentRevision;
     }
 
     public AddDocumentRevision(int mailboxId, String digest, int msgSize, int folderId) {
         super(mailboxId, digest, msgSize, folderId);
-    }
-
-    @Override public int getOpCode() {
-        return OP_ADD_DOCUMENT_REVISION;
+        mOperation = MailboxOperation.AddDocumentRevision;
     }
 
     public void setDocId(int docId) {

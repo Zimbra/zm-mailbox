@@ -19,6 +19,7 @@ import java.io.IOException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -33,11 +34,13 @@ public class RenameItemPath extends RedoableOp {
     protected int mParentIds[];
 
     public RenameItemPath() {
+        super(MailboxOperation.RenameItemPath);
         mId = UNKNOWN_ID;
         type = MailItem.Type.UNKNOWN;
     }
 
     public RenameItemPath(int mailboxId, int id, MailItem.Type type, String path) {
+        this();
         setMailboxId(mailboxId);
         mId = id;
         this.type = type;
@@ -50,11 +53,6 @@ public class RenameItemPath extends RedoableOp {
 
     public void setParentIds(int parentIds[]) {
         mParentIds = parentIds;
-    }
-
-    @Override
-    public int getOpCode() {
-        return OP_RENAME_ITEM_PATH;
     }
 
     @Override

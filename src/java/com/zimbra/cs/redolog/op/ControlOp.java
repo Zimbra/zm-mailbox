@@ -23,6 +23,7 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.redolog.TransactionId;
@@ -35,10 +36,12 @@ import com.zimbra.cs.redolog.TransactionId;
  */
 public abstract class ControlOp extends RedoableOp {
 
-	public ControlOp() {
+	public ControlOp(MailboxOperation op) {
+	    super(op);
 	}
 
-	public ControlOp(TransactionId txnId) {
+	public ControlOp(MailboxOperation op, TransactionId txnId) {
+	    this(op);
 		setTransactionId(txnId);
         setTimestamp(System.currentTimeMillis());
 	}

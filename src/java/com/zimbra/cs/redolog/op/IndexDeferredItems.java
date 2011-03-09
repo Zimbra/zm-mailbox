@@ -16,6 +16,7 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -28,6 +29,7 @@ public class IndexDeferredItems extends RedoableOp {
     private byte[] mItemTypes = null;
 
     public IndexDeferredItems() {
+        super(MailboxOperation.IndexDeferredItems);
     }
     
     public void setIds(int[] itemIds, byte[] itemTypes) {
@@ -55,11 +57,6 @@ public class IndexDeferredItems extends RedoableOp {
             mItemIds[i] = in.readInt();
         for (int i = 0; i < count; i++)
             mItemTypes[i] = in.readByte();
-    }
-
-    @Override
-    public int getOpCode() {
-        return OP_INDEX_DEFERRED_ITEMS;
     }
     
     public boolean deferCrashRecovery() {

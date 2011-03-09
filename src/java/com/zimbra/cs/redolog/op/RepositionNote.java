@@ -22,6 +22,7 @@ import java.io.IOException;
 
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.Note;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
@@ -32,17 +33,15 @@ public class RepositionNote extends RedoableOp {
     private Note.Rectangle mBounds;
 
     public RepositionNote() {
+        super(MailboxOperation.RepositionNote);
         mId = UNKNOWN_ID;
     }
 
     public RepositionNote(int mailboxId, int id, Note.Rectangle bounds) {
+        this();
         setMailboxId(mailboxId);
         mId = id;
         mBounds = bounds;
-    }
-
-    @Override public int getOpCode() {
-        return OP_REPOSITION_NOTE;
     }
 
     @Override protected String getPrintableData() {

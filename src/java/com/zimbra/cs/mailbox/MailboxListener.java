@@ -14,7 +14,9 @@
  */
 package com.zimbra.cs.mailbox;
 
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.fb.FreeBusyProvider;
+import com.zimbra.cs.filter.FilterListener;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.alerts.CalItemReminderService;
 import com.zimbra.cs.session.PendingModifications;
@@ -26,8 +28,24 @@ import java.util.Set;
 
 
 public abstract class MailboxListener {
+    
+    public static class ChangeNotification {
+        public Account mailboxAccount;
+        public OperationContext ctxt;
+        public int lastChangeId;
+        public PendingModifications mods;
+        public long timestamp;
+        
+        public ChangeNotification(Account account, PendingModifications mods, OperationContext ctxt, int lastChangeId, long timestamp) {
+            this.mailboxAccount = account;
+            this.mods = mods;
+            this.ctxt = ctxt;
+            this.lastChangeId = lastChangeId;
+            this.timestamp = timestamp;
+        }
+    }
 
-    public abstract void handleMailboxChange(String accountId, PendingModifications mods, OperationContext octxt, int lastChangeId);
+    public abstract void notify(ChangeNotification notification);
     public abstract Set<MailItem.Type> registerForItemTypes();
 
     private static final HashSet<MailboxListener> sListeners;
@@ -37,6 +55,9 @@ public abstract class MailboxListener {
         if (ZimbraApplication.getInstance().supports(CalItemReminderService.class) && !DebugConfig.disableCalendarReminderEmail) {
             register(new CalItemReminderService());
         }
+        register(new FilterListener());
+        register(new MemcachedCacheManager());
+        register(new FreeBusyProvider.Listener());
     }
 
 
@@ -46,17 +67,10 @@ public abstract class MailboxListener {
         }
     }
 
-    public static void mailboxChanged(String accountId, PendingModifications mods, OperationContext octxt, int lastChangeId) {
-        // if the calendar items has changed in the mailbox,
-        // recalculate the free/busy for the user and propogate to
-        // other system.
-        FreeBusyProvider.mailboxChanged(accountId, mods.changedTypes);
-
-        MemcachedCacheManager.notifyCommittedChanges(mods, lastChangeId);
-
+    public static void notifyListeners(ChangeNotification notification) {
         for (MailboxListener l : sListeners) {
-            if (!Collections.disjoint(mods.changedTypes, l.registerForItemTypes())) {
-                l.handleMailboxChange(accountId, mods, octxt, lastChangeId);
+            if (!Collections.disjoint(notification.mods.changedTypes, l.registerForItemTypes())) {
+                l.notify(notification);
             }
         }
     }

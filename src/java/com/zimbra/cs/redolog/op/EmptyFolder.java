@@ -22,6 +22,7 @@ import java.io.IOException;
 
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -32,18 +33,16 @@ public class EmptyFolder extends RedoableOp {
 
 
     public EmptyFolder() {
+        super(MailboxOperation.EmptyFolder);
         mId = UNKNOWN_ID;
         mSubfolders = false;
     }
 
     public EmptyFolder(int mailboxId, int id, boolean subfolders) {
+        this();
         setMailboxId(mailboxId);
         mId = id;
         mSubfolders = subfolders;
-    }
-
-    @Override public int getOpCode() {
-        return OP_EMPTY_FOLDER;
     }
 
     @Override protected String getPrintableData() {

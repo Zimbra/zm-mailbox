@@ -17,6 +17,7 @@ package com.zimbra.cs.redolog.op;
 import java.io.IOException;
 
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -27,16 +28,13 @@ public class RenameFolder extends RenameItem {
 
     public RenameFolder() {
         super();
+        mOperation = MailboxOperation.RenameFolder;
         type = MailItem.Type.FOLDER;
     }
 
     public RenameFolder(int mailboxId, int id, String name, int parentId) {
         super(mailboxId, id, MailItem.Type.FOLDER, name, parentId);
-    }
-
-    @Override
-    public int getOpCode() {
-        return OP_RENAME_FOLDER;
+        mOperation = MailboxOperation.RenameFolder;
     }
 
     @Override

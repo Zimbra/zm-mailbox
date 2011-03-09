@@ -22,6 +22,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -32,11 +33,13 @@ public class ImapCopyItem extends RedoableOp {
     private int mDestFolderId;
 
     public ImapCopyItem() {
+        super(MailboxOperation.ImapCopyItem);
         type = MailItem.Type.UNKNOWN;
         mDestFolderId = 0;
     }
 
     public ImapCopyItem(int mailboxId, MailItem.Type type, int folderId) {
+        this();
         setMailboxId(mailboxId);
         this.type = type;
         mDestFolderId = folderId;
@@ -53,11 +56,6 @@ public class ImapCopyItem extends RedoableOp {
     public int getDestId(int srcId) {
         Integer destId = mDestIds.get(srcId);
         return destId == null ? -1 : destId;
-    }
-
-    @Override
-    public int getOpCode() {
-        return OP_IMAP_COPY_ITEM;
     }
 
     @Override

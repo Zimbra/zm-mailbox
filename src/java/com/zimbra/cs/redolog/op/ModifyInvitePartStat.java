@@ -23,6 +23,7 @@ import java.io.IOException;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.redolog.RedoLogInput;
@@ -43,12 +44,14 @@ public class ModifyInvitePartStat extends RedoableOp
     private long mDtStamp;
 
     public ModifyInvitePartStat() {
+        super(MailboxOperation.ModifyInvitePartStat);
     }
 
     public ModifyInvitePartStat(int mailboxId, int calItemId, RecurId recurId, 
             String cnStr, String addressStr, String cutypeStr, String roleStr, String partStatStr, Boolean rsvp, 
             int seqNo, long dtStamp)
     {
+        this();
         setMailboxId(mailboxId);
         mCalItemId = calItemId;
         if (recurId != null) {
@@ -63,10 +66,6 @@ public class ModifyInvitePartStat extends RedoableOp
         mRsvp = rsvp;
         mSeqNo = seqNo;
         mDtStamp = dtStamp;
-    }
-
-    @Override public int getOpCode() {
-        return OP_MODIFY_INVITE_PARTSTAT;
     }
 
     @Override public void redo() throws Exception {

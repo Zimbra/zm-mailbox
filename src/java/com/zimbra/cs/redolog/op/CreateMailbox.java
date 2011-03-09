@@ -25,6 +25,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.MailboxIdConflictException;
 import com.zimbra.cs.redolog.RedoException;
 import com.zimbra.cs.redolog.RedoLogInput;
@@ -35,14 +36,12 @@ public class CreateMailbox extends RedoableOp {
     private String mAccountId;
 
     public CreateMailbox() {
+        super(MailboxOperation.CreateMailbox);
     }
 
     public CreateMailbox(String accountId) {
+        this();
         mAccountId = accountId;
-    }
-
-    @Override public int getOpCode() {
-        return OP_CREATE_MAILBOX;
     }
 
     @Override protected String getPrintableData() {

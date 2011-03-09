@@ -23,6 +23,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -38,6 +39,7 @@ public class IndexItem extends RedoableOp {
     private boolean mCommitAbortDone;
 
     public IndexItem() {
+        super(MailboxOperation.IndexItem);
         mId = UNKNOWN_ID;
         type = MailItem.Type.UNKNOWN;
         mCommitAllowed = false;
@@ -45,17 +47,13 @@ public class IndexItem extends RedoableOp {
     }
 
     public IndexItem(int mailboxId, int id, MailItem.Type type, boolean deleteFirst) {
+        this();
         setMailboxId(mailboxId);
         mId = id;
         this.type = type;
         mDeleteFirst = deleteFirst;
         mCommitAllowed = false;
         mCommitAbortDone = false;
-    }
-
-    @Override
-    public int getOpCode() {
-        return OP_INDEX_ITEM;
     }
 
     @Override

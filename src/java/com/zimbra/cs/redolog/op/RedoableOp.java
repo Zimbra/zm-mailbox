@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.io.SequenceInputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -35,6 +36,7 @@ import java.util.Map;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.redolog.RedoCommitCallback;
 import com.zimbra.cs.redolog.RedoLogInput;
@@ -59,219 +61,7 @@ public abstract class RedoableOp {
     // but is needed by all mailboxes
     public static final int MAILBOX_ID_ALL = -1;
 
-
-    // List of supported operations
-    // The integer values keep changing during development in order to
-    // keep related operations next to each other.  Once we ship, there
-    // should not be any more rearranging.  New operations should only
-    // get added at the end, and deprecated operations should result in
-    // holes.
-
-    public static final int OP_UNKNOWN                  = 0;
-    public static final int OP_CHECKPOINT               = 1;
-    public static final int OP_START_TXN                = 2;
-    public static final int OP_COMMIT_TXN               = 3;
-    public static final int OP_ABORT_TXN                = 4;
-    public static final int OP_LAST_CONTROL_OP          = 5;
-
-    public static final int OP_ROLLOVER                 = 6;
-
-    public static final int OP_CREATE_MAILBOX           = 7;
-    public static final int OP_DELETE_MAILBOX           = 8;
-    public static final int OP_DEPRECATED_BACKUP_MAILBOX = 9;
-    public static final int OP_REINDEX_MAILBOX          = 10;
-    public static final int OP_PURGE_OLD_MESSAGES       = 11;
-
-    public static final int OP_CREATE_SAVED_SEARCH      = 12;
-    public static final int OP_MODIFY_SAVED_SEARCH      = 13;
-    public static final int OP_CREATE_TAG               = 14;
-    public static final int OP_RENAME_TAG               = 15;
-
-    public static final int OP_COLOR_ITEM               = 16;
-    public static final int OP_INDEX_ITEM               = 17;
-    public static final int OP_ALTER_ITEM_TAG           = 18;
-    public static final int OP_SET_ITEM_TAGS            = 19;
-    public static final int OP_MOVE_ITEM                = 20;
-    public static final int OP_DELETE_ITEM              = 21;
-    public static final int OP_COPY_ITEM                = 22;
-
-    public static final int OP_CREATE_FOLDER_PATH       = 23;
-    public static final int OP_RENAME_FOLDER_PATH       = 24;
-    public static final int OP_EMPTY_FOLDER             = 25;
-    public static final int OP_STORE_INCOMING_BLOB      = 26;
-    public static final int OP_CREATE_MESSAGE           = 27;
-    public static final int OP_SAVE_DRAFT               = 28;
-    public static final int OP_SET_IMAP_UID             = 29;
-    public static final int OP_CREATE_CONTACT           = 30;
-    public static final int OP_MODIFY_CONTACT           = 31;
-    public static final int OP_CREATE_NOTE              = 32;
-    public static final int OP_EDIT_NOTE                = 33;
-    public static final int OP_REPOSITION_NOTE          = 34;
-    public static final int OP_CREATE_LINK              = 35;
-
-    public static final int OP_MODIFY_INVITE_FLAG       = 36;
-    public static final int OP_MODIFY_INVITE_PARTSTAT   = 37;
-
-    public static final int OP_CREATE_VOLUME            = 38;
-    public static final int OP_MODIFY_VOLUME            = 39;
-    public static final int OP_DELETE_VOLUME            = 40;
-    public static final int OP_SET_CURRENT_VOLUME       = 41;
-    public static final int OP_MOVE_BLOBS               = 42;
-
-    public static final int OP_CREATE_INVITE            = 43;
-    public static final int OP_SET_CALENDAR_ITEM        = 44;    
-    public static final int OP_TRACK_SYNC               = 45;    
-    public static final int OP_SET_CONFIG               = 46;    
-    public static final int OP_GRANT_ACCESS             = 47;    
-    public static final int OP_REVOKE_ACCESS            = 48;    
-    public static final int OP_SET_URL                  = 49;    
-    public static final int OP_SET_SUBSCRIPTION_DATA    = 50;    
-    public static final int OP_SET_PERMISSIONS          = 51;    
-
-    public static final int OP_SAVE_WIKI                = 52;
-    public static final int OP_SAVE_DOCUMENT            = 53;
-    public static final int OP_ADD_DOCUMENT_REVISION    = 54;
-
-    public static final int OP_TRACK_IMAP               = 55;
-    public static final int OP_IMAP_COPY_ITEM           = 56;
-
-    public static final int OP_ICAL_REPLY               = 57;
-
-    public static final int OP_CREATE_FOLDER            = 58;
-    public static final int OP_RENAME_FOLDER            = 59;
-
-    public static final int OP_FIX_CALENDAR_ITEM_TIME_ZONE = 60;
-
-    public static final int OP_RENAME_ITEM              = 61;
-    public static final int OP_RENAME_ITEM_PATH         = 62;
-
-    public static final int OP_CREATE_CHAT              = 63;
-    public static final int OP_SAVE_CHAT                = 64;
-
-    public static final int OP_PURGE_IMAP_DELETED       = 65;
-
-    public static final int OP_DISMISS_CALENDAR_ITEM_ALARM = 66;
-
-    public static final int OP_FIX_CALENDAR_ITEM_END_TIME = 67;
-
-    public static final int OP_INDEX_DEFERRED_ITEMS     = 68;
-
-    public static final int OP_RENAME_MAILBOX           = 69;
-
-    public static final int OP_FIX_CALENDAR_ITEM_TZ     = 70;
-
-    public static final int OP_DATE_ITEM                = 71;
-
-    public static final int OP_SET_DEFAULT_VIEW         = 72;
-
-    public static final int OP_SET_CUSTOM_DATA          = 73;
-
-    public static final int OP_LOCK_ITEM                = 74;
-    public static final int OP_UNLOCK_ITEM              = 75;
-
-    public static final int OP_PURGE_REVISION           = 76;
-
-    public static final int OP_DELETE_ITEM_FROM_DUMPSTER = 77;
-
-    public static final int OP_FIX_CALENDAR_ITEM_PRIORITY = 78;
-
-    public static final int OP_RECOVER_ITEM             = 79;
-    public static final int OP_LAST                     = 80;
-
-
-    // Element index is same as Redoable.OP_* constants.
-    // The strings must match the class names.
-    public static final String[] sOpClassNameArray = {
-        "UNKNOWN",                      // 0
-        "Checkpoint",
-        "UNKNOWN",
-        "CommitTxn",
-        "AbortTxn",
-        "UNKNOWN",                      // separator between control ops and data ops
-        "Rollover",
-        "CreateMailbox",
-        "DeleteMailbox",
-        "BackupMailbox",
-        "ReindexMailbox",               // 10
-        "PurgeOldMessages",
-        "CreateSavedSearch",
-        "ModifySavedSearch",
-        "CreateTag",
-        "RenameTag",
-        "ColorItem",
-        "IndexItem",
-        "AlterItemTag",
-        "SetItemTags",
-        "MoveItem",                     // 20
-        "DeleteItem",
-        "CopyItem",
-        "CreateFolderPath",
-        "RenameFolderPath",
-        "EmptyFolder",
-        "StoreIncomingBlob",
-        "CreateMessage",
-        "SaveDraft",
-        "SetImapUid",
-        "CreateContact",                // 30
-        "ModifyContact",
-        "CreateNote",
-        "EditNote",
-        "RepositionNote",
-        "CreateMountpoint",
-        "ModifyInviteFlag",
-        "ModifyInvitePartStat",
-        "CreateVolume",
-        "ModifyVolume",
-        "DeleteVolume",                 // 40
-        "SetCurrentVolume",
-        "MoveBlobs",
-        "CreateInvite",
-        "SetCalendarItem",
-        "TrackSync",
-        "SetConfig",
-        "GrantAccess",
-        "RevokeAccess",
-        "SetFolderUrl",
-        "SetSubscriptionData",          // 50
-        "SetPermissions",
-        "SaveWiki",
-        "SaveDocument",
-        "AddDocumentRevision",
-        "TrackImap",
-        "ImapCopyItem",
-        "ICalReply",
-        "CreateFolder",
-        "RenameFolder",
-        "FixCalendarItemTimeZone",      // 60
-        "RenameItem",
-        "RenameItemPath",
-        "CreateChat",
-        "SaveChat",
-        "PurgeImapDeleted",
-        "DismissCalendarItemAlarm",
-        "FixCalendarItemEndTime",
-        "IndexDeferredItems",
-        "RenameMailbox",
-        "FixCalendarItemTZ",            // 70
-        "DateItem",
-        "SetFolderDefaultView",
-        "SetCustomData",
-        "LockItem",
-        "UnlockItem",
-        "PurgeRevision",
-        "DeleteItemFromDumpster",
-        "FixCalendarItemPriority",
-        "RecoverItem"
-    };
-
-    public static String getOpClassName(int opcode) {
-        if (opcode > OP_UNKNOWN && opcode < OP_LAST)
-            return sOpClassNameArray[opcode];
-        else
-            return null;
-    }
-
-
+    protected MailboxOperation mOperation;
     private Version mVersion;
     private TransactionId mTxnId;
     private boolean mActive;
@@ -283,7 +73,8 @@ public abstract class RedoableOp {
     private boolean mUnloggedReplay;  // true if redo of this op is not redo-logged
     RedoCommitCallback mCommitCallback;
 
-    public RedoableOp() {
+    protected RedoableOp(MailboxOperation op) {
+        mOperation = op;
         mRedoLogMgr = RedoLogProvider.getInstance().getRedoLogManager();
         mVersion = new Version();
         mTxnId = null;
@@ -381,14 +172,26 @@ public abstract class RedoableOp {
 
     // whether this is a record that marks the beginning of a transaction
     public boolean isStartMarker() {
-        return getOpCode() > OP_LAST_CONTROL_OP;
+        switch (mOperation) {
+        case Checkpoint:
+        case CommitTxn:
+        case AbortTxn:
+            return false;
+        default:
+            return true;
+        }
     }
 
     // whether this is a recod that marks the end of a transaction
     // (true for CommitTxn and AbortTxn, false for all others)
     public boolean isEndMarker() {
-        int opCode = getOpCode();
-        return opCode == OP_COMMIT_TXN || opCode == OP_ABORT_TXN;
+        switch (mOperation) {
+        case CommitTxn:
+        case AbortTxn:
+            return true;
+        default:
+            return false;
+        }
     }
 
     /**
@@ -440,7 +243,7 @@ public abstract class RedoableOp {
     protected void serializeHeader(RedoLogOutput out) throws IOException {
         out.write(REDO_MAGIC.getBytes());
         mVersion.serialize(out);
-        out.writeInt(getOpCode());
+        out.writeInt(getOperation().getCode());
 
         out.writeLong(mTimestamp);
         out.writeInt(mChangeId);
@@ -472,7 +275,7 @@ public abstract class RedoableOp {
 
     @Override public String toString() {
         StringBuffer sb = new StringBuffer("txn ");
-        sb.append(mTxnId).append(" [").append(getOpClassName(getOpCode()));
+        sb.append(mTxnId).append(" [").append(getOperation().name());
         sb.append("] ver=").append(mVersion);
         sb.append(", tstamp=").append(mTimestamp);
         if (mChangeId != -1)
@@ -491,22 +294,23 @@ public abstract class RedoableOp {
 
     /**
      * Returns the operation code of the transaction.  Returns the
-     * same value as getEntryOpCode(), except CommitTxn and AbortTxn
-     * return the getEntryOpCode() value from their corresponding
+     * same value as getOperation(), except CommitTxn and AbortTxn
+     * return the getOperation() value from their corresponding
      * change entry.
      * @return
      */
-    public int getTxnOpCode() {
-        return getOpCode();
+    public MailboxOperation getTxnOpCode() {
+        return getOperation();
     }
 
     /**
-     * Returns the operation code of the log entry.
+     * Returns the operation being performed
      * @return
      */
-    // Should return one of the OP_xyz constants defined above.
-    public abstract int getOpCode();
-
+    public MailboxOperation getOperation() {
+        return mOperation;
+    }
+    
     /**
      * Repeat the operation.
      */
@@ -537,11 +341,6 @@ public abstract class RedoableOp {
      */
     public static RedoableOp deserializeOp(RedoLogInput in)
     throws EOFException, IOException {
-        return deserializeOp(in, false);
-    }
-
-    public static RedoableOp deserializeOp(RedoLogInput in, boolean skipDetail)
-    throws EOFException, IOException {
         RedoableOp op = null;
         byte[] magicBuf = new byte[REDO_MAGIC.length()];
         in.readFully(magicBuf, 0, magicBuf.length);
@@ -556,32 +355,28 @@ public abstract class RedoableOp {
                     " is higher than the highest known version " +
                     Version.latest());
 
-        int opcode = in.readInt();
-        if (!skipDetail) {
-            String className = RedoableOp.getOpClassName(opcode);
-            if (className != null) {
-                Class clz = null;
-                try {
-                    clz = loadOpClass(sPackageName + "." + className);
-                } catch (ClassNotFoundException e) {
-                    throw new IOException("ClassNotFoundException for redo operation " + className);
-                }
-                try {
-                    op = (RedoableOp) clz.newInstance();
-                } catch (InstantiationException e) {
-                    String msg = "Unable to instantiate " + className;
-                    mLog.error(msg, e);
-                    throw new IOException("Unable to instantiate " + className);
-                } catch (IllegalAccessException e) {
-                    String msg = "IllegalAccessException while instantiating " + className;
-                    mLog.error(msg, e);
-                    throw new IOException(msg);
-                }
-            } else {
-                throw new IOException("Invalid redo operation code " + opcode);
+        MailboxOperation opcode = MailboxOperation.fromInt(in.readInt());
+        String className = opcode.name();
+        if (className != null) {
+            Class clz = null;
+            try {
+                clz = loadOpClass(sPackageName + "." + className);
+            } catch (ClassNotFoundException e) {
+                throw new IOException("ClassNotFoundException for redo operation " + className);
+            }
+            try {
+                op = (RedoableOp) clz.newInstance();
+            } catch (InstantiationException e) {
+                String msg = "Unable to instantiate " + className;
+                mLog.error(msg, e);
+                throw new IOException("Unable to instantiate " + className);
+            } catch (IllegalAccessException e) {
+                String msg = "IllegalAccessException while instantiating " + className;
+                mLog.error(msg, e);
+                throw new IOException(msg);
             }
         } else {
-            op = new HeaderOnlyOp(opcode);
+            throw new IOException("Invalid redo operation code " + opcode);
         }
         op.setVersion(ver);
         op.deserialize(in);
@@ -657,8 +452,8 @@ public abstract class RedoableOp {
 
     private static boolean checkSubclasses() {
         boolean allGood = true;
-        for (int opcode = OP_UNKNOWN + 1; opcode < OP_LAST; opcode++) {
-            String className = RedoableOp.getOpClassName(opcode);
+        for (MailboxOperation opcode : EnumSet.allOf(MailboxOperation.class)) {
+            String className = opcode.name();
             if (className == null) {
                 System.err.println("Invalid redo operation code: " + opcode);
                 allGood = false;

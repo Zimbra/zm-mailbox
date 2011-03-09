@@ -24,6 +24,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.Note;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
@@ -37,12 +38,14 @@ public class CreateNote extends RedoableOp {
     private Note.Rectangle mBounds;
 
     public CreateNote() {
+        super(MailboxOperation.CreateNote);
         mId = UNKNOWN_ID;
         mFolderId = UNKNOWN_ID;
     }
 
     public CreateNote(int mailboxId, int folderId,
                       String content, MailItem.Color color, Note.Rectangle bounds) {
+        this();
         setMailboxId(mailboxId);
         mId = UNKNOWN_ID;
         mFolderId = folderId;
@@ -57,10 +60,6 @@ public class CreateNote extends RedoableOp {
 
     public void setNoteId(int id) {
         mId = id;
-    }
-
-    @Override public int getOpCode() {
-        return OP_CREATE_NOTE;
     }
 
     @Override protected String getPrintableData() {

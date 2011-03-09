@@ -17,21 +17,19 @@ package com.zimbra.cs.redolog.op;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
 public class PurgeImapDeleted extends RedoableOp {
 
     public PurgeImapDeleted() {
+        super(MailboxOperation.PurgeImapDeleted);
     }
 
     public PurgeImapDeleted(int mailboxId) {
+        this();
         setMailboxId(mailboxId);
-    }
-
-    @Override
-    public int getOpCode() {
-        return OP_PURGE_IMAP_DELETED;
     }
 
     @Override

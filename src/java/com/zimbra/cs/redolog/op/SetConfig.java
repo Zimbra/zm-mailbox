@@ -21,6 +21,7 @@ import java.io.IOException;
 
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
@@ -31,18 +32,16 @@ public class SetConfig extends RedoableOp {
     private String mConfig;
 
     public SetConfig() {
+        super(MailboxOperation.SetConfig);
         mSection = "";
         mConfig = "";
     }
 
     public SetConfig(int mailboxId, String section, Metadata config) {
+        this();
         setMailboxId(mailboxId);
         mSection = section == null ? "" : section;
         mConfig = config == null ? "" : config.toString();
-    }
-
-    @Override public int getOpCode() {
-        return OP_SET_CONFIG;
     }
 
     @Override protected String getPrintableData() {

@@ -20,6 +20,7 @@ import java.util.Arrays;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.redolog.RedoLogInput;
@@ -37,12 +38,14 @@ public class MoveItem extends RedoableOp {
     private int mUIDNEXT = Mailbox.ID_AUTO_INCREMENT;
 
     public MoveItem() {
+        super(MailboxOperation.MoveItem);
         type = MailItem.Type.UNKNOWN;
         mDestId = 0;
         mConstraint = null;
     }
 
     public MoveItem(int mailboxId, int[] ids, MailItem.Type type, int destId, TargetConstraint tcon) {
+        this();
         setMailboxId(mailboxId);
         mIds = ids;
         this.type = type;
@@ -56,11 +59,6 @@ public class MoveItem extends RedoableOp {
 
     public int getUIDNEXT() {
         return mUIDNEXT;
-    }
-
-    @Override
-    public int getOpCode() {
-        return OP_MOVE_ITEM;
     }
 
     @Override

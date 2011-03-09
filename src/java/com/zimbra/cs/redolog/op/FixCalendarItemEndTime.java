@@ -20,6 +20,7 @@ import java.io.IOException;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
@@ -28,15 +29,14 @@ public class FixCalendarItemEndTime extends RedoableOp {
 
     private int mId;
 
-    public FixCalendarItemEndTime()  {}
-
-    public FixCalendarItemEndTime(int mailboxId, int itemId) {
-        setMailboxId(mailboxId);
-        mId = itemId;
+    public FixCalendarItemEndTime()  {
+        super(MailboxOperation.FixCalendarItemEndTime);
     }
 
-    @Override public int getOpCode() {
-        return OP_FIX_CALENDAR_ITEM_END_TIME;
+    public FixCalendarItemEndTime(int mailboxId, int itemId) {
+        this();
+        setMailboxId(mailboxId);
+        mId = itemId;
     }
 
     @Override protected String getPrintableData() {

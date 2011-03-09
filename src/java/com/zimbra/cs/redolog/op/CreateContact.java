@@ -29,6 +29,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
@@ -48,11 +49,13 @@ public class CreateContact extends RedoableOp {
     private String mTags;
 
     public CreateContact() {
+        super(MailboxOperation.CreateContact);
         mId = UNKNOWN_ID;
         mFolderId = UNKNOWN_ID;
     }
 
     public CreateContact(int mailboxId, int folderId, ParsedContact pc, String tags) {
+        this();
         setMailboxId(mailboxId);
         mId = UNKNOWN_ID;
         mFolderId = folderId;
@@ -67,10 +70,6 @@ public class CreateContact extends RedoableOp {
 
     public int getContactId() {
         return mId;
-    }
-
-    @Override public int getOpCode() {
-        return OP_CREATE_CONTACT;
     }
 
     @Override protected String getPrintableData() {

@@ -17,6 +17,7 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.store.file.Volume;
@@ -27,15 +28,13 @@ public class SetCurrentVolume extends RedoableOp {
     private short mId;
 
     public SetCurrentVolume() {
+        super(MailboxOperation.SetCurrentVolume);
     }
 
     public SetCurrentVolume(short type, short id) {
+        this();
         mType = type;
         mId = id;
-    }
-
-    public int getOpCode() {
-        return OP_SET_CURRENT_VOLUME;
     }
 
     protected String getPrintableData() {

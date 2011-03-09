@@ -37,11 +37,29 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxListener;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.mail.ToXML;
 
 public abstract class FreeBusyProvider {
+    
+    public static class Listener extends MailboxListener {
+
+        @Override
+        public void notify(ChangeNotification notification) {
+            FreeBusyProvider.mailboxChanged(notification.mailboxAccount.getId(), notification.mods.changedTypes);
+        }
+
+        private static final Set<Type> TYPES = EnumSet.of(MailItem.Type.APPOINTMENT);
+        
+        @Override
+        public Set<Type> registerForItemTypes() {
+            return TYPES;
+        }
+    }
+    
     protected static class Request {
         public Request(Account req, String em, long s, long e, int f) {
             requestor = req; email = em;
@@ -102,7 +120,7 @@ public abstract class FreeBusyProvider {
     public static void mailboxChanged(String accountId) {
         mailboxChanged(accountId, EnumSet.of(MailItem.Type.APPOINTMENT));
     }
-
+    
     public static void mailboxChanged(String accountId, Set<MailItem.Type> changedType) {
         for (FreeBusyProvider prov : sPROVIDERS)
             if (prov.registerForMailboxChanges(accountId) && !Collections.disjoint(changedType, prov.registerForItemTypes())) {

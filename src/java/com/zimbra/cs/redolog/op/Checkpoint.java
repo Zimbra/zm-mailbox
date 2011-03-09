@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.redolog.TransactionId;
@@ -40,10 +41,12 @@ public class Checkpoint extends ControlOp {
 	LinkedHashSet<TransactionId> mTxnSet;
 
 	public Checkpoint() {
+	    super(MailboxOperation.Checkpoint);
 		mTxnSet = new LinkedHashSet<TransactionId>();
 	}
 
 	public Checkpoint(LinkedHashSet<TransactionId> txns) {
+        super(MailboxOperation.Checkpoint);
 		mTxnSet = txns;
 		setTransactionId(new TransactionId());  // don't need a real txnid for checkpoint record
 	}
@@ -58,13 +61,6 @@ public class Checkpoint extends ControlOp {
 
 	public void log() {
 		// this method should not be called
-	}
-
-	/* (non-Javadoc)
-	 * @see com.zimbra.cs.redolog.op.RedoableOp#getOperationCode()
-	 */
-	public int getOpCode() {
-		return OP_CHECKPOINT;
 	}
 
 	protected String getPrintableData() {

@@ -21,6 +21,7 @@ import java.io.IOException;
 
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -30,18 +31,16 @@ public class SetFolderUrl extends RedoableOp {
     private String mURL;
 
     public SetFolderUrl() {
+        super(MailboxOperation.SetFolderUrl);
         mFolderId = Mailbox.ID_AUTO_INCREMENT;
         mURL = "";
     }
 
     public SetFolderUrl(int mailboxId, int folderId, String url) {
+        this();
         setMailboxId(mailboxId);
         mFolderId = folderId;
         mURL = url == null ? "" : url;
-    }
-
-    @Override public int getOpCode() {
-        return OP_SET_URL;
     }
 
     @Override protected String getPrintableData() {

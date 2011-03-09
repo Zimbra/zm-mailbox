@@ -24,6 +24,7 @@ package com.zimbra.cs.redolog.op;
 import java.io.File;
 import java.io.IOException;
 
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -39,10 +40,12 @@ public class Rollover extends RedoableOp {
     String mFilename;
 
     public Rollover() {
+        super(MailboxOperation.Rollover);
         mSeq = 0;
     }
 
     public Rollover(File logfile, long seq) {
+        this();
         mSeq = seq;
     	mFilename = logfile.getName();
     }
@@ -54,10 +57,6 @@ public class Rollover extends RedoableOp {
     public String getFilename() {
     	return mFilename;
     }
-
-	public int getOpCode() {
-		return OP_ROLLOVER;
-	}
 
 	/* (non-Javadoc)
 	 * @see com.zimbra.cs.redolog.op.RedoableOp#redo()

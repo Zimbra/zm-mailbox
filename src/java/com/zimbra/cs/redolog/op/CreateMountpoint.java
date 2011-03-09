@@ -20,6 +20,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -38,11 +39,13 @@ public class CreateMountpoint extends RedoableOp {
     private long mColor;
 
     public CreateMountpoint() {
+        super(MailboxOperation.CreateMountpoint);
         mId = UNKNOWN_ID;
     }
 
     public CreateMountpoint(int mailboxId, int folderId, String name, String ownerId, int remoteId, MailItem.Type view,
             int flags, MailItem.Color color) {
+        this();
         setMailboxId(mailboxId);
         mId = UNKNOWN_ID;
         mFolderId = folderId;
@@ -60,11 +63,6 @@ public class CreateMountpoint extends RedoableOp {
 
     public void setId(int id) {
         mId = id;
-    }
-
-    @Override
-    public int getOpCode() {
-        return OP_CREATE_LINK;
     }
 
     @Override

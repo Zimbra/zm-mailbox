@@ -28,6 +28,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
@@ -44,19 +45,16 @@ public class ModifyContact extends RedoableOp {
     private RedoableOpData mRedoLogContent;
 
     public ModifyContact() {
+        super(MailboxOperation.ModifyContact);
         mId = UNKNOWN_ID;
     }
 
     public ModifyContact(int mailboxId, int id, ParsedContact pc) {
+        this();
         setMailboxId(mailboxId);
         mId = id;
         mFields = pc.getFields();
         mParsedContact = pc;
-    }
-
-    @Override
-    public int getOpCode() {
-        return OP_MODIFY_CONTACT;
     }
 
     @Override

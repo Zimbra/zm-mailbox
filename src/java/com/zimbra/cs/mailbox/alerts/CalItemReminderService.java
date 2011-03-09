@@ -27,19 +27,10 @@ import java.util.Set;
 public class CalItemReminderService extends MailboxListener {
 
     @Override
-    public void handleMailboxChange(String accountId, PendingModifications mods, OperationContext octxt, int lastChangeId) {
-        Account account = null;
-        try {
-            account = Provisioning.getInstance().getAccountById(accountId);
-        } catch (ServiceException e) {
-            ZimbraLog.scheduler.error("Error in getting account", e);
-        }
-        if (account == null) {
-            ZimbraLog.scheduler.error("Account not found for id %s", accountId);
-            return;
-        }
-        if (mods.created != null) {
-            for (Map.Entry<PendingModifications.ModificationKey, MailItem> entry : mods.created.entrySet()) {
+    public void notify(ChangeNotification notification) {
+        Account account = notification.mailboxAccount;
+        if (notification.mods.created != null) {
+            for (Map.Entry<PendingModifications.ModificationKey, MailItem> entry : notification.mods.created.entrySet()) {
                 MailItem item = entry.getValue();
                 if (item instanceof CalendarItem) {
                     if (ZimbraLog.scheduler.isDebugEnabled())
@@ -48,8 +39,8 @@ public class CalItemReminderService extends MailboxListener {
                 }
             }
         }
-        if (mods.modified != null) {
-            for (Map.Entry<PendingModifications.ModificationKey, PendingModifications.Change> entry : mods.modified.entrySet()) {
+        if (notification.mods.modified != null) {
+            for (Map.Entry<PendingModifications.ModificationKey, PendingModifications.Change> entry : notification.mods.modified.entrySet()) {
                 PendingModifications.Change change = entry.getValue();
                 if (change.what instanceof CalendarItem) {
                     CalendarItem calItem = (CalendarItem) change.what;
@@ -69,8 +60,8 @@ public class CalItemReminderService extends MailboxListener {
                 }
             }
         }
-        if (mods.deleted != null) {
-            for (Map.Entry<PendingModifications.ModificationKey, Object> entry : mods.deleted.entrySet()) {
+        if (notification.mods.deleted != null) {
+            for (Map.Entry<PendingModifications.ModificationKey, Object> entry : notification.mods.deleted.entrySet()) {
                 Object deletedObj = entry.getValue();
                 if (deletedObj instanceof CalendarItem) {
                     CalendarItem calItem = (CalendarItem) deletedObj;
@@ -81,9 +72,9 @@ public class CalItemReminderService extends MailboxListener {
                     // We only have item id
                     Mailbox mbox = null;
                     try {
-                        mbox = MailboxManager.getInstance().getMailboxByAccountId(accountId, MailboxManager.FetchMode.DO_NOT_AUTOCREATE);
+                        mbox = MailboxManager.getInstance().getMailboxByAccount(account, MailboxManager.FetchMode.DO_NOT_AUTOCREATE);
                     } catch (ServiceException e) {
-                        ZimbraLog.scheduler.error("Error looking up the mailbox of account %s", accountId, e);
+                        ZimbraLog.scheduler.error("Error looking up the mailbox of account %s", account.getId(), e);
                     }
                     if (mbox != null) {
                         cancelExistingReminders((Integer) deletedObj, mbox.getId());

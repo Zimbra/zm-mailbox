@@ -23,6 +23,7 @@ import java.util.Map.Entry;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.tzfixup.TimeZoneFixupRules;
@@ -34,20 +35,18 @@ public class FixCalendarItemTZ extends RedoableOp {
     private int mId;
     private Map<String, ICalTimeZone> mReplacementMap;
 
-    public FixCalendarItemTZ() {}
+    public FixCalendarItemTZ() {
+        super(MailboxOperation.FixCalendarItemTZ);
+    }
 
     public FixCalendarItemTZ(int mailboxId, int itemId) {
+        this();
         setMailboxId(mailboxId);
         mId = itemId;
     }
 
     public void setReplacementMap(Map<String, ICalTimeZone> replacementMap) {
         mReplacementMap = replacementMap;
-    }
-
-    @Override
-    public int getOpCode() {
-        return OP_FIX_CALENDAR_ITEM_TZ;
     }
 
     @Override

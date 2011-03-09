@@ -20,6 +20,7 @@ import java.io.IOException;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -28,14 +29,12 @@ public class SaveWiki extends SaveDocument {
     private String mWikiword;
 
     public SaveWiki() {
+        mOperation = MailboxOperation.SaveWiki;
     }
 
     public SaveWiki(int mailboxId, String digest, int msgSize, int folderId) {
         super(mailboxId, digest, msgSize, folderId);
-    }
-
-    @Override public int getOpCode() {
-        return OP_SAVE_WIKI;
+        mOperation = MailboxOperation.SaveWiki;
     }
 
     public String getWikiword() {

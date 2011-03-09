@@ -19,6 +19,7 @@ import java.io.IOException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
@@ -29,18 +30,16 @@ public class SetCustomData extends RedoableOp {
     private MailItem.Type type;
     private CustomMetadata mExtendedData;
 
-    public SetCustomData() { }
+    public SetCustomData() {
+        super(MailboxOperation.SetCustomData);
+    }
 
     public SetCustomData(int mailboxId, int id, MailItem.Type type, CustomMetadata custom) {
+        this();
         setMailboxId(mailboxId);
         mId = id;
         this.type = type;
         mExtendedData = custom;
-    }
-
-    @Override
-    public int getOpCode() {
-        return OP_SET_CUSTOM_DATA;
     }
 
     @Override

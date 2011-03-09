@@ -17,6 +17,7 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -26,17 +27,16 @@ public class FixCalendarItemTimeZone extends RedoableOp {
     private long mAfter;
     private String mCountry;  // ISO-3166 two-letter country code, or null for world
 
-    public FixCalendarItemTimeZone() {}
+    public FixCalendarItemTimeZone() {
+        super(MailboxOperation.FixCalendarItemTimeZone);
+    }
 
     public FixCalendarItemTimeZone(int mailboxId, int itemId, long after, String country) {
+        this();
         setMailboxId(mailboxId);
         mId = itemId;
         mAfter = after;
         mCountry = country;
-    }
-
-    @Override public int getOpCode() {
-        return OP_FIX_CALENDAR_ITEM_TIME_ZONE;
     }
 
     @Override protected String getPrintableData() {

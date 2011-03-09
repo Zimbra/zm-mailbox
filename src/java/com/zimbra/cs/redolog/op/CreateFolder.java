@@ -20,6 +20,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -35,6 +36,7 @@ public class CreateFolder extends RedoableOp {
     private int mFolderId;
 
     public CreateFolder() {
+        super(MailboxOperation.CreateFolder);
     }
 
     public CreateFolder(int mailboxId, String name, int parentId, MailItem.Type view, int flags,
@@ -44,6 +46,7 @@ public class CreateFolder extends RedoableOp {
 
     public CreateFolder(int mailboxId, String name, int parentId, byte attrs, MailItem.Type view, int flags,
             MailItem.Color color, String url) {
+        this();
         setMailboxId(mailboxId);
         mName = name == null ? "" : name;
         mParentId = parentId;
@@ -60,11 +63,6 @@ public class CreateFolder extends RedoableOp {
 
     public void setFolderId(int folderId) {
         mFolderId = folderId;
-    }
-
-    @Override
-    public int getOpCode() {
-        return OP_CREATE_FOLDER;
     }
 
     @Override

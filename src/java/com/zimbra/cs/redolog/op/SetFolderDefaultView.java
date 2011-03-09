@@ -19,6 +19,7 @@ import java.io.IOException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -28,19 +29,16 @@ public class SetFolderDefaultView extends RedoableOp {
     private MailItem.Type defaultView;
 
     public SetFolderDefaultView() {
+        super(MailboxOperation.SetFolderDefaultView);
         mFolderId = Mailbox.ID_AUTO_INCREMENT;
         defaultView = MailItem.Type.UNKNOWN;
     }
 
     public SetFolderDefaultView(int mailboxId, int folderId, MailItem.Type view) {
+        this();
         setMailboxId(mailboxId);
         mFolderId = folderId;
         defaultView = view;
-    }
-
-    @Override
-    public int getOpCode() {
-        return OP_SET_DEFAULT_VIEW;
     }
 
     @Override

@@ -23,6 +23,7 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -34,37 +35,33 @@ import com.zimbra.cs.redolog.RedoLogOutput;
  */
 public class AbortTxn extends ControlOp {
 
-    int mTxnOpCode;
+    MailboxOperation mTxnOpCode;
 
 	public AbortTxn() {
-        mTxnOpCode = OP_UNKNOWN;
+	    super(MailboxOperation.AbortTxn);
 	}
 
     public AbortTxn(RedoableOp changeEntry) {
-        super(changeEntry.getTransactionId());
+        super(MailboxOperation.AbortTxn, changeEntry.getTransactionId());
         setMailboxId(changeEntry.getMailboxId());
-        mTxnOpCode = changeEntry.getOpCode();
+        mTxnOpCode = changeEntry.getOperation();
     }
 
-	public int getOpCode() {
-		return OP_ABORT_TXN;
-	}
-
-    public int getTxnOpCode() {
+    public MailboxOperation getTxnOpCode() {
         return mTxnOpCode;
     }
 
     protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("txnType=");
-        sb.append(getOpClassName(mTxnOpCode));
+        sb.append(mTxnOpCode.name());
         return sb.toString();
     }
 
     protected void serializeData(RedoLogOutput out) throws IOException {
-        out.writeInt(mTxnOpCode);
+        out.writeInt(mTxnOpCode.getCode());
     }
 
     protected void deserializeData(RedoLogInput in) throws IOException {
-        mTxnOpCode = in.readInt();
+        mTxnOpCode = MailboxOperation.fromInt(in.readInt());
     }
 }

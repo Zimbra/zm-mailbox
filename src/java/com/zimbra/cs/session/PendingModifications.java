@@ -27,6 +27,7 @@ import java.util.Set;
 import com.zimbra.common.util.Pair;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxOperation;
 
 public final class PendingModifications {
     public static final class Change {
@@ -58,11 +59,13 @@ public final class PendingModifications {
         public static final int INTERNAL_ONLY      = 0x10000000;
         public static final int ALL_FIELDS         = ~0;
 
+        public MailboxOperation op;
+        
         public Object what;
         public int    why;
 
-        Change(Object thing, int reason) {
-            what = thing;  why = reason;
+        Change(MailboxOperation op, Object thing, int reason) {
+            this.op = op;  what = thing;  why = reason;
         }
 
         @Override
@@ -137,6 +140,7 @@ public final class PendingModifications {
     public LinkedHashMap<ModificationKey, MailItem> created;
     public HashMap<ModificationKey, Change> modified;
     public HashMap<ModificationKey, Object> deleted;
+    public HashMap<Integer, MailItem> preModifyItems;
 
     public PendingModifications() { }
 
@@ -226,19 +230,19 @@ public final class PendingModifications {
     }
 
     public void recordModified(ModificationKey mkey, Change chg) {
-        recordModified(mkey, chg.what, chg.why);
+        recordModified(mkey, chg.op, chg.what, chg.why);
     }
 
-    public void recordModified(Mailbox mbox, int reason) {
-        recordModified(new ModificationKey(mbox.getAccountId(), 0), mbox, reason);
+    public void recordModified(MailboxOperation op, Mailbox mbox, int reason) {
+        recordModified(new ModificationKey(mbox.getAccountId(), 0), op, mbox, reason);
     }
 
-    public void recordModified(MailItem item, int reason) {
+    public void recordModified(MailboxOperation op, MailItem item, int reason) {
         changedTypes.add(item.getType());
-        recordModified(new ModificationKey(item), item, reason);
+        recordModified(new ModificationKey(item), op, item, reason);
     }
 
-    private void recordModified(ModificationKey key, Object item, int reason) {
+    private void recordModified(ModificationKey key, MailboxOperation op, Object item, int reason) {
         Change chg = null;
         if (created != null && created.containsKey(key)) {
             if (item instanceof MailItem) {
@@ -257,7 +261,7 @@ public final class PendingModifications {
             }
         }
         if (chg == null) {
-            chg = new Change(item, reason);
+            chg = new Change(op, item, reason);
         }
         modified.put(key, chg);
     }
@@ -280,9 +284,9 @@ public final class PendingModifications {
         if (other.modified != null) {
             for (Change chg : other.modified.values()) {
                 if (chg.what instanceof MailItem) {
-                    recordModified((MailItem) chg.what, chg.why);
+                    recordModified(chg.op, (MailItem) chg.what, chg.why);
                 } else if (chg.what instanceof Mailbox) {
-                    recordModified((Mailbox) chg.what, chg.why);
+                    recordModified(chg.op, (Mailbox) chg.what, chg.why);
                 }
             }
         }

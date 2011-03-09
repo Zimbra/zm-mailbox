@@ -31,6 +31,7 @@ import java.util.Map;
 
 import javax.activation.DataSource;
 
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.store.Blob;
@@ -47,17 +48,16 @@ public class StoreIncomingBlob extends RedoableOp {
     private RedoableOpData mData;
     private List<Integer> mMailboxIdList;
 
-    public StoreIncomingBlob()  {}
+    public StoreIncomingBlob()  {
+        super(MailboxOperation.StoreIncomingBlob);
+    }
 
     public StoreIncomingBlob(String digest, int msgSize, List<Integer> mboxIdList) {
+        this();
         setMailboxId(MAILBOX_ID_ALL);
         mDigest = digest != null ? digest : "";
         mMsgSize = msgSize;
         mMailboxIdList = mboxIdList;
-    }
-
-    @Override public int getOpCode() {
-        return OP_STORE_INCOMING_BLOB;
     }
 
     public List<Integer> getMailboxIdList() {

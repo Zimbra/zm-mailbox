@@ -18,6 +18,7 @@ import java.io.IOException;
 
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
@@ -26,11 +27,14 @@ public class SaveChat extends CreateChat {
     
     private int mImapId;           // new IMAP id for this message
     
-    public SaveChat() {}
+    public SaveChat() {
+        mOperation = MailboxOperation.SaveChat;
+    }
     
     public SaveChat(int mailboxId, int chatId, String digest, int msgSize,
                     int folderId, int flags, String tags) {
         super(mailboxId, digest, msgSize, folderId, flags, tags);
+        mOperation = MailboxOperation.SaveChat;
         setMessageId(chatId);
     }
 
@@ -44,10 +48,6 @@ public class SaveChat extends CreateChat {
 
     @Override protected String getPrintableData() {
         return super.getPrintableData() + ",imap=" + mImapId;
-    }
-    
-    @Override public int getOpCode() {
-        return OP_SAVE_DRAFT;
     }
     
     @Override protected void serializeData(RedoLogOutput out) throws IOException {

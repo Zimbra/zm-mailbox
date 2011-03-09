@@ -18,23 +18,19 @@
  */
 package com.zimbra.cs.redolog.op;
 
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
 public class DeleteMailbox extends RedoableOp {
 
     public DeleteMailbox() {
+        super(MailboxOperation.DeleteMailbox);
     }
 
     public DeleteMailbox(int mailboxId) {
+        this();
         setMailboxId(mailboxId);
-    }
-
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.redolog.op.RedoableOp#getOpCode()
-     */
-    @Override public int getOpCode() {
-        return OP_DELETE_MAILBOX;
     }
 
     /* (non-Javadoc)

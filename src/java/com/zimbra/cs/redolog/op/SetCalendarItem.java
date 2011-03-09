@@ -29,6 +29,7 @@ import javax.mail.internet.MimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
@@ -55,7 +56,9 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
     private List<ReplyInfo> mReplies;
     private long mNextAlarm;
 
-    public SetCalendarItem() {}
+    public SetCalendarItem() {
+        super(MailboxOperation.SetCalendarItem);
+    }
     
     private void serializeSetCalendarItemData(RedoLogOutput out, Mailbox.SetCalendarItemData data)
     throws IOException {
@@ -248,7 +251,7 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
 
     public SetCalendarItem(int mailboxId, boolean attachmentIndexingEnabled,
                            int flags, long tags) {
-        super(); 
+        this(); 
         setMailboxId(mailboxId);
         mAttachmentIndexingEnabled = attachmentIndexingEnabled;
         mFlags = flags;
@@ -298,10 +301,6 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
 
     public int getFolderId() {
         return mFolderId;
-    }
-
-    @Override public int getOpCode() {
-        return OP_SET_CALENDAR_ITEM;
     }
 
     @Override protected String getPrintableData() {

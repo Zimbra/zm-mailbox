@@ -22,6 +22,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -36,11 +37,13 @@ public class CopyItem extends RedoableOp {
     private boolean mFromDumpster;  // false in this class, true in subclass RecoverItem
 
     public CopyItem() {
+        super(MailboxOperation.CopyItem);
         type = MailItem.Type.UNKNOWN;
         mDestFolderId = 0;
     }
 
     public CopyItem(int mailboxId, MailItem.Type type, int folderId) {
+        this();
         setMailboxId(mailboxId);
         this.type = type;
         mDestFolderId = folderId;
@@ -57,11 +60,6 @@ public class CopyItem extends RedoableOp {
     public int getDestId(int srcId) {
         Integer destId = mDestIds.get(srcId);
         return destId == null ? -1 : destId;
-    }
-
-    @Override
-    public int getOpCode() {
-        return OP_COPY_ITEM;
     }
 
     protected void setFromDumpster(boolean fromDumpster) {

@@ -19,6 +19,7 @@ import java.io.IOException;
 
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -27,15 +28,14 @@ public class RenameMailbox extends RedoableOp {
     private String mNewName;
     private String mOldName;
 
-    public RenameMailbox() {}
-
-    public RenameMailbox(int mailboxId, String oldName, String newName) {
-        setMailboxId(mailboxId);
-        mNewName = newName;
+    public RenameMailbox() {
+        super(MailboxOperation.RenameMailbox);
     }
 
-    @Override public int getOpCode() {
-        return OP_RENAME_MAILBOX;
+    public RenameMailbox(int mailboxId, String oldName, String newName) {
+        this();
+        setMailboxId(mailboxId);
+        mNewName = newName;
     }
 
     @Override protected void serializeData(RedoLogOutput out) throws IOException {

@@ -19,6 +19,7 @@ import java.io.IOException;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
@@ -26,14 +27,12 @@ import com.zimbra.cs.redolog.RedoLogOutput;
 public class CreateChat extends CreateMessage {
     
     public CreateChat() {
+        mOperation = MailboxOperation.CreateChat;
     }
 
     public CreateChat(int mailboxId, String digest, int msgSize, int folderId, int flags, String tags) {
         super(mailboxId, ":API:", false, digest, msgSize, folderId, true, flags, tags);
-    }
-    
-    @Override public int getOpCode() {
-        return OP_CREATE_CHAT;
+        mOperation = MailboxOperation.CreateChat;
     }
     
     @Override protected void serializeData(RedoLogOutput out) throws IOException {

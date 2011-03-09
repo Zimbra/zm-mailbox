@@ -19,6 +19,7 @@ import java.io.IOException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -31,18 +32,16 @@ public class DateItem extends RedoableOp {
     private MailItem.Type type;
     private long mDate;
 
-    public DateItem() { }
+    public DateItem() {
+        super(MailboxOperation.DateItem);
+    }
 
     public DateItem(int mailboxId, int itemId, MailItem.Type type, long date) {
+        this();
         setMailboxId(mailboxId);
         mId = itemId;
         this.type = type;
         mDate = date;
-    }
-
-    @Override
-    public int getOpCode() {
-        return OP_DATE_ITEM;
     }
 
     @Override

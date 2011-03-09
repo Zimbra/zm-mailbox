@@ -22,6 +22,7 @@ import java.io.IOException;
 
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -31,17 +32,15 @@ public class EditNote extends RedoableOp {
     private String mContent;
 
     public EditNote() {
+        super(MailboxOperation.EditNote);
         mId = UNKNOWN_ID;
     }
 
     public EditNote(int mailboxId, int id, String content) {
+        this();
         setMailboxId(mailboxId);
         mId = id;
         mContent = content != null ? content : "";
-    }
-
-    @Override public int getOpCode() {
-        return OP_EDIT_NOTE;
     }
 
     @Override protected String getPrintableData() {

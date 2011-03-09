@@ -38,6 +38,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.ParsedMessageOptions;
@@ -80,6 +81,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
     // if mMsgBodyType == MSGBODY_INLINE, path of saved blob file 
 
     public CreateMessage() {
+        super(MailboxOperation.CreateMessage);
         mShared = false;
         mMsgId = UNKNOWN_ID;
         mFolderId = UNKNOWN_ID;
@@ -100,6 +102,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
     public CreateMessage(int mailboxId, String rcptEmail, long receivedDate,
                          boolean shared, String digest, int msgSize, int folderId,
                          boolean noICal, int flags, String tags, CustomMetadata extended) {
+        super(MailboxOperation.CreateMessage);
         setMailboxId(mailboxId);
         mRcptEmail = rcptEmail;
         mReceivedDate = receivedDate;
@@ -231,10 +234,6 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
     public String getTags() {
         return mTags;
     }        
-
-    @Override public int getOpCode() {
-        return OP_CREATE_MESSAGE;
-    }
 
     public byte[] getMessageBody() throws IOException {
         if (mMsgBodyType == MSGBODY_LINK)

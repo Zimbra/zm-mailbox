@@ -17,6 +17,7 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.store.file.Volume;
@@ -37,12 +38,14 @@ public class ModifyVolume extends RedoableOp {
     private long mCompressionThreshold;
 
     public ModifyVolume() {
+        super(MailboxOperation.ModifyVolume);
     }
 
     public ModifyVolume(short id, short type, String name, String rootPath,
                         short mboxGroupBits, short mboxBits,
                         short fileGroupBits, short fileBits,
                         boolean compressBlobs, long compressionThreshold) {
+        this();
         mId = id;
         mType = type;
         mName = name;
@@ -55,10 +58,6 @@ public class ModifyVolume extends RedoableOp {
         
         mCompressBlobs = compressBlobs;
         mCompressionThreshold = compressionThreshold;
-    }
-
-    public int getOpCode() {
-        return OP_MODIFY_VOLUME;
     }
 
     protected String getPrintableData() {

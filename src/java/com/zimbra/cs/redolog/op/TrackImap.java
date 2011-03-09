@@ -20,20 +20,19 @@ package com.zimbra.cs.redolog.op;
 
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
 public class TrackImap extends RedoableOp {
 
     public TrackImap() {
+        super(MailboxOperation.TrackImap);
     }
 
     public TrackImap(int mailboxId) {
+        this();
         setMailboxId(mailboxId);
-    }
-
-    @Override public int getOpCode() {
-        return OP_TRACK_IMAP;
     }
 
     @Override protected String getPrintableData() {

@@ -22,6 +22,7 @@ import java.io.IOException;
 
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -33,19 +34,17 @@ public class ModifySavedSearch extends RedoableOp {
     private String mSort;
 
     public ModifySavedSearch() {
+        super(MailboxOperation.ModifySavedSearch);
         mSearchId = UNKNOWN_ID;
     }
 
     public ModifySavedSearch(int mailboxId, int searchId, String query, String types, String sort) {
+        this();
         setMailboxId(mailboxId);
         mSearchId = searchId;
         mQuery = query != null ? query : "";
         mTypes = types != null ? types : "";
         mSort = sort != null ? sort : "";
-    }
-
-    @Override public int getOpCode() {
-        return OP_MODIFY_SAVED_SEARCH;
     }
 
     @Override protected String getPrintableData() {
