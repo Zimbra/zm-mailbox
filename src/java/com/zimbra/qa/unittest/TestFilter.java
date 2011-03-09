@@ -1048,7 +1048,7 @@ extends TestCase {
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
         List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
 
-        conditions.add(new ZBodyCondition(BodyOp.CONTAINS, "André"));
+        conditions.add(new ZBodyCondition(BodyOp.CONTAINS, "Andr\u00e9"));
         actions.add(new ZMarkAction(MarkOp.FLAGGED));
         rules.add(new ZFilterRule("testSpecialCharInBody", true, false, conditions, actions));
 
@@ -1057,7 +1057,7 @@ extends TestCase {
 
         // Add a message and test the flagged state.
         String address = TestUtil.getAddress(USER_NAME);
-        // TestFilter-testSpecialCharInBody.msg's body contains base64 encoded content (containing "André")
+        // TestFilter-testSpecialCharInBody.msg's body contains base64 encoded content (containing "Andr\u00e9")
         String msgContent = new String(
             ByteUtil.getContent(new File("/opt/zimbra/unittest/TestFilter-testSpecialCharInBody.msg")));
         TestUtil.addMessageLmtp(new String[] { address }, address, msgContent);
