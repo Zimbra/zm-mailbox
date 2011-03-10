@@ -142,18 +142,24 @@ public class JavaMailMimeMessage extends MimeMessage implements JavaMailShim {
     }
 
     public JavaMailMimeMessage setProperty(String key, String value) {
-        if (value != null) {
-            Properties props = session == null ? null : session.getProperties();
-            if (props != null) {
-                session.getProperties().setProperty(key, value);
+        Properties props = session == null ? null : session.getProperties();
+        if (props != null) {
+            if (value != null) {
+                props.setProperty(key, value);
+            } else {
+                props.remove(key);
             }
-            if (ZPARSER) {
-                Properties zprops = zmessage.getProperties();
-                if (zprops == null && value != null) {
-                    zmessage.setProperties(zprops = new Properties());
-                }
-                if (zprops != props) {
+        }
+        if (ZPARSER) {
+            Properties zprops = zmessage.getProperties();
+            if (zprops == null && value != null) {
+                zmessage.setProperties(zprops = new Properties());
+            }
+            if (zprops != props) {
+                if (value != null) {
                     zprops.setProperty(key, value);
+                } else if (zprops != null) {
+                    zprops.remove(key);
                 }
             }
         }
