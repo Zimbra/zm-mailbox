@@ -26,6 +26,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import com.google.common.base.Objects;
+import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
@@ -53,6 +54,7 @@ import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedAddress;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.ParsedMessageOptions;
@@ -388,7 +390,15 @@ public class Message extends MailItem {
      * @see TnefConverter
      * @see UUEncodeConverter */
     public MimeMessage getMimeMessage(boolean runConverters) throws ServiceException {
-        return MessageCache.getMimeMessage(this, runConverters);
+        MimeMessage mm = MessageCache.getMimeMessage(this, runConverters);
+        if (mm instanceof JavaMailMimeMessage && JavaMailMimeMessage.usingZimbraParser()) {
+            try {
+                mm = new Mime.FixedMimeMessage(mm, mMailbox.getAccount());
+            } catch (MessagingException e) {
+                ZimbraLog.mailbox.info("could not copy MimeMessage; using original", e);
+            }
+        }
+        return mm;
     }
 
     @Override

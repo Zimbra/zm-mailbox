@@ -4545,8 +4545,9 @@ public class Mailbox {
                                                     Message.DraftInfo dinfo, CustomMetadata customData,
                                                     DeliveryContext dctxt, StagedBlob staged)
     throws IOException, ServiceException {
-        if (pm == null)
+        if (pm == null) {
             throw ServiceException.INVALID_REQUEST("null ParsedMessage when adding message to mailbox " + mId, null);
+        }
 
         boolean debug = ZimbraLog.mailbox.isDebugEnabled();
 
@@ -4559,8 +4560,12 @@ public class Mailbox {
         boolean isRedo = redoPlayer != null;
 
         Blob blob = dctxt.getIncomingBlob();
-        if (blob == null)
+        if (blob == null) {
             throw ServiceException.FAILURE("Incoming blob not found.", null);
+        }
+
+        // make sure we're parsing headers using the target account's charset
+        pm.setDefaultCharset(getAccount().getPrefMailDefaultCharset());
 
         // quick check to make sure we don't deliver 5 copies of the same message
         String msgidHeader = pm.getMessageID();

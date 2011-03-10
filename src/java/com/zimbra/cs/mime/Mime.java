@@ -77,6 +77,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.Zimbra;
 
@@ -128,12 +129,14 @@ public class Mime {
         }
 
         public FixedMimeMessage(MimeMessage source) throws MessagingException  {
-            super(source);
+            this(source, null);
         }
 
-        public FixedMimeMessage setSession(Session session) {
-            this.session = session;
-            return this;
+        public FixedMimeMessage(MimeMessage source, Account acct) throws MessagingException  {
+            super(source);
+            if (acct != null) {
+                setProperty(com.zimbra.common.mime.MimePart.PROP_CHARSET_DEFAULT, acct.getPrefMailDefaultCharset());
+            }
         }
 
         /**
