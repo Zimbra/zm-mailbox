@@ -202,11 +202,12 @@ public class MimeMessage extends MimePart {
 
     @Override
     public Properties getProperties() {
-        return properties != null ? properties : super.getProperties();
+        // the operative Properties object is the one on the topmost enclosing MimeMessage
+        return getParent() != null ? super.getProperties() : properties;
     }
 
-    private void setProperties(Properties props) {
-        properties = props == null ? new Properties() : props;
+    public void setProperties(Properties props) {
+        properties = props;
     }
 
 
