@@ -41,7 +41,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 administrator 20110308-1729 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110309-2103 */
 
     /**
      * RFC2256: descriptive information
@@ -10781,13 +10781,13 @@ public class ZAttrConfig extends Entry {
      *
      * <p>Valid values: [both, ipv6, ipv4]
      *
-     * @return zimbraIPMode, or ZAttrProvisioning.IPMode.both if unset and/or has invalid value
+     * @return zimbraIPMode, or ZAttrProvisioning.IPMode.ipv4 if unset and/or has invalid value
      *
      * @since ZCS 7.1.0
      */
     @ZAttr(id=1171)
     public ZAttrProvisioning.IPMode getIPMode() {
-        try { String v = getAttr(Provisioning.A_zimbraIPMode); return v == null ? ZAttrProvisioning.IPMode.both : ZAttrProvisioning.IPMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.IPMode.both; }
+        try { String v = getAttr(Provisioning.A_zimbraIPMode); return v == null ? ZAttrProvisioning.IPMode.ipv4 : ZAttrProvisioning.IPMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.IPMode.ipv4; }
     }
 
     /**
@@ -10795,13 +10795,13 @@ public class ZAttrConfig extends Entry {
      *
      * <p>Valid values: [both, ipv6, ipv4]
      *
-     * @return zimbraIPMode, or "both" if unset
+     * @return zimbraIPMode, or "ipv4" if unset
      *
      * @since ZCS 7.1.0
      */
     @ZAttr(id=1171)
     public String getIPModeAsString() {
-        return getAttr(Provisioning.A_zimbraIPMode, "both");
+        return getAttr(Provisioning.A_zimbraIPMode, "ipv4");
     }
 
     /**

@@ -5388,7 +5388,7 @@ TODO: delete them permerntly from here
 </attr>
 
 <attr id="1171" name="zimbraIPMode" type="enum" value="ipv4,ipv6,both" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="all" since="7.1.0">
-  <globalConfigValue>both</globalConfigValue>
+  <globalConfigValue>ipv4</globalConfigValue>
   <desc>supported IP mode</desc>
 </attr>
 
