@@ -47,7 +47,9 @@ import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.MimePart;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
+import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.EmailUtil;
@@ -291,6 +293,17 @@ public class ParsedMessage {
 
     public boolean wasMutated() {
         return mWasMutated;
+    }
+
+    public ParsedMessage setDefaultCharset(String charset) {
+        if (mMimeMessage instanceof JavaMailMimeMessage) {
+            ((JavaMailMimeMessage) mMimeMessage).setProperty(MimePart.PROP_CHARSET_DEFAULT, charset);
+        }
+        if (mExpandedMessage instanceof JavaMailMimeMessage) {
+            ((JavaMailMimeMessage) mExpandedMessage).setProperty(MimePart.PROP_CHARSET_DEFAULT, charset);
+        }
+        mSubject = mNormalizedSubject = null;
+        return this;
     }
 
     /** Applies all registered on-the-fly MIME converters to a copy of the
@@ -595,7 +608,7 @@ public class ParsedMessage {
         try {
             analyzeBodyParts();
         } catch (ServiceException e) {
-            sLog.warn("Message analysis failed when getting fragment; fragment is: " + mFragment, e);
+            sLog.warn("Message analysis failed when getting fragment; fragment is: %s", mFragment, e);
         }
         return mFragment;
     }
