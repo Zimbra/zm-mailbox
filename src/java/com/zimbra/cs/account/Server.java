@@ -56,7 +56,7 @@ public class Server extends ZAttrServer {
         
         String[] parts = mailTransport.split(":");
         if (serviceName != null && parts.length == 3) {
-            if (parts[0].equals("lmtp") && parts[1].equals(serviceName))
+            if (parts[0].equalsIgnoreCase("lmtp") && parts[1].equals(serviceName))
                 return true;
         }
         
