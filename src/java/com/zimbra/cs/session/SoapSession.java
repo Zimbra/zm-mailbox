@@ -158,11 +158,11 @@ public class SoapSession extends Session {
             }
 
             synchronized (mbox) {
-                if (!force && mNextFolderCheck > now)
+                if (!force && mNextFolderCheck > now) {
                     return mVisibleFolderIds != null;
+                }
 
-                Set<Integer> visible = Folder.toId(mbox.getVisibleFolders(new OperationContext(
-                        getAuthenticatedAccountId())));
+                Set<Integer> visible = MailItem.toId(mbox.getVisibleFolders(new OperationContext(getAuthenticatedAccountId())));
                 mVisibleFolderIds = visible;
                 mNextFolderCheck = now + SOAP_SESSION_TIMEOUT_MSEC / 2;
                 return visible != null;

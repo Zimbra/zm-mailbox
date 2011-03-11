@@ -938,6 +938,10 @@ public abstract class MailItem implements Comparable<MailItem> {
         return (mData.folderId == Mailbox.ID_FOLDER_SPAM);
     }
 
+    public boolean inDumpster() {
+        return (mData.flags & Flag.BITMASK_IN_DUMPSTER) != 0;
+    }
+
 
     /** Returns whether the caller has the requested access rights on this
      *  item.  The owner of the {@link Mailbox} has all rights on all items
@@ -3034,7 +3038,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     protected void saveData(String sender, String metadata) throws ServiceException {
         mData.metadataChanged(mMailbox);
         if (ZimbraLog.mailop.isDebugEnabled())
-            ZimbraLog.mailop.debug("saving data for " + getMailopContext(this));
+            ZimbraLog.mailop.debug("saving data for %s", getMailopContext(this));
         DbMailItem.saveData(this, mData.subject, sender, metadata);
     }
 
@@ -3060,6 +3064,15 @@ public abstract class MailItem implements Comparable<MailItem> {
      */
     void unlock(Account authuser) throws ServiceException {
         throw MailServiceException.CANNOT_UNLOCK(mId);
+    }
+
+    Metadata serializeUnderlyingData() {
+        Metadata meta = mData.serialize();
+        // metadata
+        Metadata metaMeta = new Metadata();
+        encodeMetadata(metaMeta);
+        meta.put(UnderlyingData.FN_METADATA, metaMeta.toString());
+        return meta;
     }
 
     private static final String CN_ID           = "id";
@@ -3117,16 +3130,25 @@ public abstract class MailItem implements Comparable<MailItem> {
         return helper;
     }
 
-    Metadata serializeUnderlyingData() {
-        Metadata meta = mData.serialize();
-        // metadata
-        Metadata metaMeta = new Metadata();
-        encodeMetadata(metaMeta);
-        meta.put(UnderlyingData.FN_METADATA, metaMeta.toString());
-        return meta;
+    public static Set<Integer> toId(Set<? extends MailItem> items) {
+        if (items == null)
+            return null;
+
+        Set<Integer> result = new HashSet<Integer>(items.size());
+        for (MailItem item : items) {
+            result.add(item.getId());
+        }
+        return result;
     }
 
-    public boolean inDumpster() {
-        return (mData.flags & Flag.BITMASK_IN_DUMPSTER) != 0;
+    public static List<Integer> toId(List<? extends MailItem> items) {
+        if (items == null)
+            return null;
+
+        List<Integer> result = new ArrayList<Integer>(items.size());
+        for (MailItem item : items) {
+            result.add(item.getId());
+        }
+        return result;
     }
 }

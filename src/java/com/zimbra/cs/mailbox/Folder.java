@@ -1385,15 +1385,4 @@ public class Folder extends MailItem {
         helper.add(CN_ATTRIBUTES, mAttributes);
         return helper.toString();
     }
-
-    public static Set<Integer> toId(Set<Folder> folders) {
-        if (folders == null) {
-            return null;
-        }
-        Set<Integer> result = new HashSet<Integer>(folders.size());
-        for (Folder folder : folders) {
-            result.add(folder.getId());
-        }
-        return result;
-    }
 }
