@@ -282,7 +282,7 @@ public class AttributeInfo {
                 checkValue(values[i], checkImmutable, attrsToModify);
         }
         
-        if (!DebugConfig.allowModifyingDeprecatedAttributes) {
+        if (isDeprecated() && !DebugConfig.allowModifyingDeprecatedAttributes) {
             throw ServiceException.FAILURE("modifying deprecated attribute is not allowed: " + mName, null);
         }
     }
