@@ -15,7 +15,6 @@
 package com.zimbra.cs.db;
 
 import java.util.HashMap;
-import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -44,10 +43,7 @@ public class DbMailItemTest {
     @BeforeClass
     public static void init() throws Exception {
         Provisioning prov = new MockProvisioning();
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraId, "0-0-0");
-        attrs.put(Provisioning.A_zimbraMailHost, "localhost");
-        prov.createAccount("test@zimbra.com", "secret", attrs);
+        prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
         Provisioning.setInstance(prov);
 
         LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
@@ -63,7 +59,7 @@ public class DbMailItemTest {
 
     @Test
     public void getIndexDeferredIds() throws Exception {
-        Account account = Provisioning.getInstance().getAccount("test@zimbra.com");
+        Account account = Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
         DbConnection conn = DbPool.getConnection(mbox);
@@ -99,7 +95,7 @@ public class DbMailItemTest {
 
     @Test
     public void getConversationCount() throws Exception {
-        Account account = Provisioning.getInstance().getAccount("test@zimbra.com");
+        Account account = Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         Folder folder = mbox.getFolderById(Mailbox.ID_FOLDER_INBOX);
 

@@ -14,15 +14,16 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.io.Files;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
@@ -44,10 +45,7 @@ public final class MailboxTest {
     @BeforeClass
     public static void init() throws Exception {
         Provisioning prov = new MockProvisioning();
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraId, "0-0-0");
-        attrs.put(Provisioning.A_zimbraMailHost, "localhost");
-        prov.createAccount("test@zimbra.com", "secret", attrs);
+        prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
         Provisioning.setInstance(prov);
 
         LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
@@ -65,12 +63,13 @@ public final class MailboxTest {
     public void setUp() throws Exception {
         HSQLDB.clearDatabase();
         MailboxManager.getInstance().clearCache();
-        MailboxManager.getInstance().getMailboxByAccountId("0-0-0").index.deleteIndex();
+        Files.deleteDirectoryContents(new File("build/test/index"));
     }
 
     @Test
     public void browse() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId("0-0-0");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
         DeliveryOptions opt = new DeliveryOptions();
         opt.setFolderId(Mailbox.ID_FOLDER_INBOX);
         mbox.addMessage(null, new ParsedMessage("From: test1-1@sub1.zimbra.com".getBytes(), false), opt);

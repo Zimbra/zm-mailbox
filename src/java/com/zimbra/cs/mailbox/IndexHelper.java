@@ -174,7 +174,7 @@ public final class IndexHelper {
      */
     public int getBatchThreshold() {
         try {
-            return mailbox.getAccount().getIntAttr(Provisioning.A_zimbraBatchedIndexingSize, 0);
+            return mailbox.getAccount().getBatchedIndexingSize();
         } catch (ServiceException e) {
             ZimbraLog.index.warn("Failed to get " + Provisioning.A_zimbraBatchedIndexingSize, e);
             return 0;

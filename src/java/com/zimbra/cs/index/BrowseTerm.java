@@ -56,4 +56,9 @@ public class BrowseTerm {
         }
     }
 
+    @Override
+    public String toString() {
+        return text;
+    }
+
 }

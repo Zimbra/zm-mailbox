@@ -16,7 +16,6 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.HashMap;
-import java.util.Map;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -39,10 +38,7 @@ public final class ContactAutoCompleteTest {
     @BeforeClass
     public static void init() throws Exception {
         MockProvisioning prov = new MockProvisioning();
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraId, "0-0-0");
-        attrs.put(Provisioning.A_zimbraMailHost, "localhost");
-        prov.createAccount("test@zimbra.com", "secret", attrs);
+        prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
         Provisioning.setInstance(prov);
 
         LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
@@ -59,7 +55,7 @@ public final class ContactAutoCompleteTest {
     @Test
     public void hitContact() throws Exception {
         ContactAutoComplete.AutoCompleteResult result = new ContactAutoComplete.AutoCompleteResult(10);
-        result.rankings = new ContactRankings("0-0-0");
+        result.rankings = new ContactRankings(MockProvisioning.DEFAULT_ACCOUNT_ID);
         ContactAutoComplete.ContactEntry contact = new ContactAutoComplete.ContactEntry();
         contact.mDisplayName = "C1";
         contact.mEmail = "c1@zimbra.com";
@@ -76,7 +72,7 @@ public final class ContactAutoCompleteTest {
     @Test
     public void hitGroup() throws Exception {
         ContactAutoComplete.AutoCompleteResult result = new ContactAutoComplete.AutoCompleteResult(10);
-        result.rankings = new ContactRankings("0-0-0");
+        result.rankings = new ContactRankings(MockProvisioning.DEFAULT_ACCOUNT_ID);
         ContactAutoComplete.ContactEntry group = new ContactAutoComplete.ContactEntry();
         group.mDisplayName = "G1";
         group.mDlist = "DL1";

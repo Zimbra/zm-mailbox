@@ -14,10 +14,11 @@
  */
 package com.zimbra.cs.account;
 
+import java.util.HashMap;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableMap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 
@@ -31,8 +32,7 @@ public class ZimbraAuthTokenTest {
     @BeforeClass
     public static void init() throws ServiceException {
         MockProvisioning prov = new MockProvisioning();
-        prov.createAccount("user1@example.zimbra.com", "secret",
-                ImmutableMap.<String, Object>of(Provisioning.A_zimbraId, "0"));
+        prov.createAccount("user1@example.zimbra.com", "secret", new HashMap<String, Object>());
         Provisioning.setInstance(prov);
     }
 

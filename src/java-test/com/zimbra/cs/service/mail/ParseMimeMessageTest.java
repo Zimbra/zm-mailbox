@@ -17,7 +17,6 @@ package com.zimbra.cs.service.mail;
 import java.io.ByteArrayInputStream;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Map;
 
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
@@ -67,10 +66,7 @@ public final class ParseMimeMessageTest {
         mime.setHandlerClass(UnknownTypeHandler.class.getName());
         prov.addMimeType("all", mime);
 
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraId, "0-0-0");
-        attrs.put(Provisioning.A_zimbraMailHost, "localhost");
-        prov.createAccount("test@zimbra.com", "secret", attrs);
+        prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
         Provisioning.setInstance(prov);
 
         LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
@@ -99,8 +95,9 @@ public final class ParseMimeMessageTest {
             .addAttribute(MailConstants.A_ADDRESS, "rcpt@zimbra.com");
 
         Account acct = Provisioning.getInstance().get(Provisioning.AccountBy.name, "test@zimbra.com");
-        ZimbraSoapContext zsc = new ZimbraSoapContext(new ZimbraSoapContext(null,
-                Collections.<String, Object>emptyMap(), SoapProtocol.SoapJS), "0-0-0", null);
+        ZimbraSoapContext zsc = new ZimbraSoapContext(
+                new ZimbraSoapContext(null, Collections.<String, Object>emptyMap(), SoapProtocol.SoapJS),
+                MockProvisioning.DEFAULT_ACCOUNT_ID, null);
         OperationContext octxt = new OperationContext(acct);
 
         MimeMessage mm = ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, null, el, null,
@@ -136,8 +133,9 @@ public final class ParseMimeMessageTest {
                     "This is the inner message.");
 
         Account acct = Provisioning.getInstance().get(Provisioning.AccountBy.name, "test@zimbra.com");
-        ZimbraSoapContext zsc = new ZimbraSoapContext(new ZimbraSoapContext(null,
-                Collections.<String, Object>emptyMap(), SoapProtocol.SoapJS), "0-0-0", null);
+        ZimbraSoapContext zsc = new ZimbraSoapContext(
+                new ZimbraSoapContext(null, Collections.<String, Object>emptyMap(), SoapProtocol.SoapJS),
+                MockProvisioning.DEFAULT_ACCOUNT_ID, null);
         OperationContext octxt = new OperationContext(acct);
 
         MimeMessage mm = ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, null, el, null,
@@ -165,9 +163,10 @@ public final class ParseMimeMessageTest {
     @Test
     public void attachPdfDocument() throws Exception {
         Account acct = Provisioning.getInstance().get(Provisioning.AccountBy.name, "test@zimbra.com");
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId("0-0-0");
-        ZimbraSoapContext zsc = new ZimbraSoapContext(new ZimbraSoapContext(null,
-                Collections.<String, Object>emptyMap(), SoapProtocol.SoapJS), "0-0-0", null);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        ZimbraSoapContext zsc = new ZimbraSoapContext(
+                new ZimbraSoapContext(null, Collections.<String, Object>emptyMap(), SoapProtocol.SoapJS),
+                MockProvisioning.DEFAULT_ACCOUNT_ID, null);
         OperationContext octxt = new OperationContext(acct);
         Document doc = mbox.createDocument(octxt, Mailbox.ID_FOLDER_BRIEFCASE, "testdoc",
                 MimeConstants.CT_APPLICATION_PDF, "author", "description",
@@ -195,9 +194,10 @@ public final class ParseMimeMessageTest {
     @Test
     public void attachZimbraDocument() throws Exception {
         Account acct = Provisioning.getInstance().get(Provisioning.AccountBy.name, "test@zimbra.com");
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId("0-0-0");
-        ZimbraSoapContext zsc = new ZimbraSoapContext(new ZimbraSoapContext(null,
-                Collections.<String, Object>emptyMap(), SoapProtocol.SoapJS), "0-0-0", null);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        ZimbraSoapContext zsc = new ZimbraSoapContext(
+                new ZimbraSoapContext(null, Collections.<String, Object>emptyMap(), SoapProtocol.SoapJS),
+                MockProvisioning.DEFAULT_ACCOUNT_ID, null);
         OperationContext octxt = new OperationContext(acct);
         Document doc = mbox.createDocument(octxt, Mailbox.ID_FOLDER_BRIEFCASE, "testdoc",
                 MimeConstants.CT_APPLICATION_ZIMBRA_DOC, "author", "description",

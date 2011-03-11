@@ -16,7 +16,7 @@ package com.zimbra.cs.index.query;
 
 import java.text.ParseException;
 import java.util.Calendar;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.TimeZone;
 
@@ -38,8 +38,7 @@ public class DateQueryTest {
     @BeforeClass
     public static void init() throws Exception {
         MockProvisioning prov = new MockProvisioning();
-        prov.createAccount("zero@zimbra.com", "secret",
-                Collections.<String, Object> singletonMap(Provisioning.A_zimbraId, "0-0-0"));
+        prov.createAccount("zero@zimbra.com", "secret", new HashMap<String, Object>());
         Provisioning.setInstance(prov);
     }
 

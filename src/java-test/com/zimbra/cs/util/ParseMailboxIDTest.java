@@ -15,7 +15,6 @@
 package com.zimbra.cs.util;
 
 import java.util.HashMap;
-import java.util.Map;
 
 import junit.framework.Assert;
 
@@ -37,10 +36,7 @@ public class ParseMailboxIDTest {
     @BeforeClass
     public static void init() throws Exception {
         MockProvisioning prov = new MockProvisioning();
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraId, "0-0-0");
-        attrs.put(Provisioning.A_zimbraMailHost, "localhost");
-        prov.createAccount("test@zimbra.com", "secret", attrs);
+        prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
         Provisioning.setInstance(prov);
     }
 
@@ -68,7 +64,7 @@ public class ParseMailboxIDTest {
 
     @Test
     public void parseAccountId() throws Exception {
-        ParseMailboxID id = ParseMailboxID.parse("0-0-0");
+        ParseMailboxID id = ParseMailboxID.parse(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Assert.assertTrue(id.isLocal());
         Assert.assertEquals("localhost", id.getServer());
         Assert.assertEquals(0, id.getMailboxId());

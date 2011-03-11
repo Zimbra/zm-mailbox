@@ -34,6 +34,7 @@ import com.zimbra.cs.redolog.MockRedoLogProvider;
  * @author ysasaki
  */
 public final class MockProvisioning extends Provisioning {
+    public static final String DEFAULT_ACCOUNT_ID = "0-0-0";
 
     private final Map<String, Account> id2account = new HashMap<String, Account>();
     private final Map<String, Account> name2account = new HashMap<String, Account>();
@@ -52,7 +53,13 @@ public final class MockProvisioning extends Provisioning {
     @Override
     public Account createAccount(String email, String password, Map<String, Object> attrs) throws ServiceException {
         validate(ProvisioningValidator.CREATE_ACCOUNT, email, null, attrs);
-
+        if (!attrs.containsKey(Provisioning.A_zimbraId)) {
+            attrs.put(Provisioning.A_zimbraId, DEFAULT_ACCOUNT_ID);
+        }
+        if (!attrs.containsKey(Provisioning.A_zimbraMailHost)) {
+            attrs.put(Provisioning.A_zimbraMailHost, "localhost");
+        }
+        attrs.put(Provisioning.A_zimbraBatchedIndexingSize, Integer.MAX_VALUE); // suppress indexing
         Account account = new Account(email, email, attrs, null, this);
         try {
             name2account.put(email, account);
