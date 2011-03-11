@@ -24,6 +24,7 @@ import com.zimbra.cs.account.ldap.LdapDomain;
 import com.zimbra.cs.account.ldap.LdapGalCredential;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.gal.GalSearchConfig;
 
 public abstract class GalParams {
     
@@ -202,7 +203,7 @@ public abstract class GalParams {
                 if (mUrl == null || mUrl.length == 0)
                     mUrl = getMultiAttr(attrs, Provisioning.A_zimbraGalLdapURL, true);
                 if (mSearchBase == null)
-                    mSearchBase = getRequiredAttr(attrs, Provisioning.A_zimbraGalLdapSearchBase);
+                    mSearchBase = (String)attrs.get(Provisioning.A_zimbraGalLdapSearchBase);
                 if (mFilter == null)
                     mFilter = getRequiredAttr(attrs, Provisioning.A_zimbraGalLdapFilter);
                 
@@ -221,7 +222,7 @@ public abstract class GalParams {
                 
             } else {
                 mUrl = getMultiAttr(attrs, Provisioning.A_zimbraGalLdapURL, true);
-                mSearchBase = getRequiredAttr(attrs, Provisioning.A_zimbraGalLdapSearchBase);
+                mSearchBase = (String)attrs.get(Provisioning.A_zimbraGalLdapSearchBase);
                 
                 if (galOp == GalOp.autocomplete)
                     mFilter = getRequiredAttr(attrs, Provisioning.A_zimbraGalAutoCompleteLdapFilter);
@@ -264,7 +265,7 @@ public abstract class GalParams {
         
         public String[] url() { return mUrl; }
         public boolean requireStartTLS() { return mRequireStartTLS; }
-        public String searchBase() { return mSearchBase; }
+        public String searchBase() { return GalSearchConfig.fixupExternalGalSearchBase(mSearchBase); }
         public String filter() { return mFilter; }
         public LdapGalCredential credential() { return mCredential; }
 

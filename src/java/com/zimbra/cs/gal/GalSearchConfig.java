@@ -52,6 +52,14 @@ public class GalSearchConfig {
 		return null;
 	}
 	
+	public static String fixupExternalGalSearchBase(String searchBase) {
+	    if (searchBase == null || "ROOT".equals(searchBase)) {
+	        return "";
+	    } else {
+	        return searchBase;
+	    }
+	}
+	   
 	public static GalSearchConfig create(DataSource ds) throws ServiceException {
 		return new DataSourceConfig(ds);
 	}
@@ -247,7 +255,7 @@ public class GalSearchConfig {
 		return mFilter;
 	}
 	public String getSearchBase() {
-		return mSearchBase;
+		return fixupExternalGalSearchBase(mSearchBase);
 	}
 	public String getAuthMech() {
 		return mAuthMech;
