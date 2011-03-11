@@ -5569,4 +5569,9 @@ TODO: delete them permerntly from here
   <desc>time interval to display on calendar views</desc>
 </attr>
 
+<attr id="1196" name="zimbraPrefCalendarShowDeclinedMeetings" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether to show declined meetings in calendar</desc>
+</attr>
+
 </attrs>

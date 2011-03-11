@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110309-2103 */
+    /* build: 7.0.0_BETA1_1111 administrator 20110309-1047 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -6410,6 +6410,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=849)
     public static final String A_zimbraPrefCalendarSendInviteDeniedAutoReply = "zimbraPrefCalendarSendInviteDeniedAutoReply";
+
+    /**
+     * whether to show declined meetings in calendar
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1196)
+    public static final String A_zimbraPrefCalendarShowDeclinedMeetings = "zimbraPrefCalendarShowDeclinedMeetings";
 
     /**
      * whether to pop-up reminder for past due appointments in the UI
