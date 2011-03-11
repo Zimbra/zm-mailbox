@@ -765,15 +765,22 @@ public class LdapProvisioning extends Provisioning {
         return emailAddress;
     }
 
-    private Account getAccountByName(String emailAddress, boolean loadFromMaster) throws ServiceException {
+    Account getAccountByName(String emailAddress, boolean loadFromMaster) throws ServiceException {
+
+        return getAccountByName(emailAddress, loadFromMaster, true);
+    }
+    
+    Account getAccountByName(String emailAddress, boolean loadFromMaster, boolean checkAliasDomain) throws ServiceException {
 
         Account account = getAccountByNameInternal(emailAddress, loadFromMaster);
 
         // if not found, see if the domain is an alias domain and if so try to get account by the alias domain target
         if (account == null) {
-            String addrByDomainAlias = getEmailAddrByDomainAlias(emailAddress);
-            if (addrByDomainAlias != null)
-                account = getAccountByNameInternal(addrByDomainAlias, loadFromMaster);
+            if (checkAliasDomain) {
+                String addrByDomainAlias = getEmailAddrByDomainAlias(emailAddress);
+                if (addrByDomainAlias != null)
+                    account = getAccountByNameInternal(addrByDomainAlias, loadFromMaster);
+            }
         }
 
         return account;

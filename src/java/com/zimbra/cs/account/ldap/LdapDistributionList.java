@@ -254,7 +254,9 @@ class LdapDistributionList extends DistributionList implements LdapEntry {
         AddrsOfEntry addrs = new AddrsOfEntry();
         
         try {
-            Account acct = prov.get(Provisioning.AccountBy.name, name);
+            // bug 56621.  Do not count implicit aliases (aliases resolved by alias domain) 
+            // when dealing with distribution list members.
+            Account acct = prov.getAccountByName(name, false, false);
             if (acct != null) {
                 addrs.setIsAccount(true);
                 primary = acct.getName();
