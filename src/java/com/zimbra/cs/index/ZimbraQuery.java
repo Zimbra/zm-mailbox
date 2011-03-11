@@ -656,7 +656,6 @@ public final class ZimbraQuery {
             union.add(remoteOps);
             ZimbraLog.search.debug("BEFORE_FINAL_OPT=%s", union);
             operation = union.optimize(mbox);
-            assert(union.mQueryOperations.size() > 0);
         }
         ZimbraLog.search.debug("END_ZIMBRAQUERY_CONSTRUCTOR=%s", operation);
     }
