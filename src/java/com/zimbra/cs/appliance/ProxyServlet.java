@@ -38,7 +38,8 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.HttpException;
-import com.zimbra.cs.httpclient.HttpProxyUtil;
+import com.zimbra.cs.appliancehttpclient.HttpProxyUtil;
+import com.zimbra.cs.applianceutils;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
@@ -98,7 +99,7 @@ public class ProxyServlet extends HttpServlet {
             }
             return baos.toByteArray();
         } finally {
-            com.zimbraappliance.cs.util.ByteUtil.closeStream(baos);
+            com.zimbra.cs.applianceutils.ByteUtil.closeStream(baos);
         }
     }
 
@@ -142,7 +143,7 @@ public class ProxyServlet extends HttpServlet {
         HttpMethod method = null;
         try {
             HttpClient client = new HttpClient();
-            com.zimbraappliance.cs.httpclient.HttpProxyUtil.configureProxy(client,url.toString());
+            com.zimbra.cs.appliancehttpclient.HttpProxyUtil.configureProxy(client,url.toString());
             String reqMethod = req.getMethod();
             if (reqMethod.equalsIgnoreCase("GET"))
                 method = new GetMethod(target);
@@ -225,7 +226,7 @@ public class ProxyServlet extends HttpServlet {
                 }
             }
             if (targetResponseBody != null) {
-            	com.zimbraappliance.cs.util.ByteUtil.copy(targetResponseBody, true, resp.getOutputStream(), true);
+            	com.zimbra.cs.applianceutils.ByteUtil.copy(targetResponseBody, true, resp.getOutputStream(), true);
             }
         } finally {
             if (method != null)
