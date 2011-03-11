@@ -1,0 +1,87 @@
+Implementation Notes for JAXB classes
+=====================================
+
+Manual steps
+------------
+*   WSDL Schema files
+Currently, the files under schema/ need to be updated manually.
+For example, when adding GetLoggerStatsRequest, the following represents
+the diff update :
+
+diff /tmp/wsdl/AdminService.wsdl ZimbraSoap/schema/AdminService.wsdl
+606,612d605
+<   <message name="getLoggerStatsRequest">
+<     <part name="parameters" element="tns:GetLoggerStatsRequest"/>
+<   </message>
+<   <message name="getLoggerStatsResponse">
+<     <part name="parameters" element="tns:GetLoggerStatsResponse"/>
+<   </message>
+< 
+1392,1395d1384
+<     <operation name="getLoggerStatsRequest">
+<       <input message="tns:getLoggerStatsRequest"/>
+<       <output message="tns:getLoggerStatsResponse"/>
+<     </operation>
+2584,2594d2572
+<     <operation name="getLoggerStatsRequest">
+<       <soap:operation soapAction="urn:zimbraAdmin/GetLoggerStats" style="document"/>
+<       <input>
+<         <soap:body use="literal"/>
+<         <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+<       </input>
+<       <output>
+<         <soap:body use="literal"/>
+<       </output>
+<     </operation>
+< 
+
+Hopefully this will be automated soon.
+
+*    Marshalling / Unmarshalling support.
+The code that is responsible for marshalling and unmarshalling JAXB classes
+needs to know about the top level requests and response classes - see the
+MESSAGE_CLASSES array in :
+src/java/com/zimbra/soap/JaxbUtil.java 
+
+
+Ordering of elements.
+---------------------
+For pre-existing requests, best not to force an ordering of elements in case
+this breaks clients.
+For responses, because the server controls the order, it is reasonable to
+enforce an order.
+For new requests and responses, probably reasonable to require an order.
+
+Enforcing an order is achieved via the @XmlType annotation.  For example :
+@XmlType(propOrder = {"hostNames", "stats", "note"})
+
+The strings in the list are the names of fields which map to elements (NOT
+the @XmlElement names).
+Attributes cannot be ordered, so their field names are excluded.
+
+
+@XmlRootElement
+---------------
+SOAP Request and Response classes must have this.
+In a lot of JAXB, the root element associated with a field is chosen
+by the @XmlElement annotation associated with the field - so there is no
+need for an @XmlRootElement.  This has the added advantage that classes can
+represent types independant of the element name used with them.
+Problems were encountered in some of the COS related classes when an
+un-necessary @XmlRootElement was used.  On the other hand, see the gotchas.
+Sometimes an @XmlRootElement is required...
+
+@XmlAccessorType
+----------------
+Tend to prefer XmlAccessType.NONE and explicitly label everything that needs
+to be annotated rather than letting JAXB do some defaults.
+
+
+Gotchas
+-------
+.   Target objects for @XmlElementRef etc must have an @XmlRootElement
+    annotation
+.   For structured fields, e.g. comma separated strings, there is a temptation
+    to use non-JAXB fields for the real data.
+.   Elements which have both sub-elements AND a value.  End up having to used
+    @XmlMixed which is horrible.

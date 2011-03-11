@@ -21,7 +21,6 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.account.type.Prop;
@@ -34,8 +33,7 @@ import com.zimbra.soap.account.type.Prop;
     <prop zimlet="{zimlet-name}" name="{name}">{value}</prop>
 </ModifyPropertiesRequest>
  */
-@XmlRootElement(name="ModifyPropertiesRequest")
-@XmlType(propOrder = {})
+@XmlRootElement(name=AccountConstants.E_MODIFY_PROPERTIES_REQUEST)
 public class ModifyPropertiesRequest {
     @XmlElements({
         @XmlElement(name=AccountConstants.E_PROPERTY, type=Prop.class)

@@ -16,14 +16,13 @@
 package com.zimbra.soap.account.message;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
+import com.zimbra.common.soap.AccountConstants;
 
 /**
 <ModifyPropertiesResponse>
 </ModifyPropertiesResponse>
  */
-@XmlRootElement(name="ModifyPropertiesResponse")
-@XmlType(propOrder = {})
+@XmlRootElement(name=AccountConstants.E_MODIFY_PROPERTIES_RESPONSE)
 public class ModifyPropertiesResponse {
 }

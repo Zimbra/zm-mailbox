@@ -36,6 +36,27 @@
     <part name="parameters" element="tns:AddDistributionListMemberResponse"/>
   </message>
 
+  <message name="adminCreateWaitSetRequest">
+    <part name="parameters" element="tns:AdminCreateWaitSetRequest"/>
+  </message>
+  <message name="adminCreateWaitSetResponse">
+    <part name="parameters" element="tns:AdminCreateWaitSetResponse"/>
+  </message>
+
+  <message name="adminDestroyWaitSetRequest">
+    <part name="parameters" element="tns:AdminDestroyWaitSetRequest"/>
+  </message>
+  <message name="adminDestroyWaitSetResponse">
+    <part name="parameters" element="tns:AdminDestroyWaitSetResponse"/>
+  </message>
+
+  <message name="adminWaitSetRequest">
+    <part name="parameters" element="tns:AdminWaitSetRequest"/>
+  </message>
+  <message name="adminWaitSetResponse">
+    <part name="parameters" element="tns:AdminWaitSetResponse"/>
+  </message>
+
   <message name="authRequest">
     <part name="parameters" element="tns:AuthRequest"/>
   </message>
@@ -97,6 +118,13 @@
   </message>
   <message name="checkRightResponse">
     <part name="parameters" element="tns:CheckRightResponse"/>
+  </message>
+
+  <message name="configureZimletRequest">
+    <part name="parameters" element="tns:ConfigureZimletRequest"/>
+  </message>
+  <message name="configureZimletResponse">
+    <part name="parameters" element="tns:ConfigureZimletResponse"/>
   </message>
 
   <message name="copyCosRequest">
@@ -176,6 +204,20 @@
     <part name="parameters" element="tns:CreateVolumeResponse"/>
   </message>
 
+  <message name="createXMPPComponentRequest">
+    <part name="parameters" element="tns:CreateXMPPComponentRequest"/>
+  </message>
+  <message name="createXMPPComponentResponse">
+    <part name="parameters" element="tns:CreateXMPPComponentResponse"/>
+  </message>
+
+  <message name="createZimletRequest">
+    <part name="parameters" element="tns:CreateZimletRequest"/>
+  </message>
+  <message name="createZimletResponse">
+    <part name="parameters" element="tns:CreateZimletResponse"/>
+  </message>
+
   <message name="delegateAuthRequest">
     <part name="parameters" element="tns:DelegateAuthRequest"/>
   </message>
@@ -253,11 +295,46 @@
     <part name="parameters" element="tns:DeleteVolumeResponse"/>
   </message>
 
+  <message name="deleteXMPPComponentRequest">
+    <part name="parameters" element="tns:DeleteXMPPComponentRequest"/>
+  </message>
+  <message name="deleteXMPPComponentResponse">
+    <part name="parameters" element="tns:DeleteXMPPComponentResponse"/>
+  </message>
+
+  <message name="deleteZimletRequest">
+    <part name="parameters" element="tns:DeleteZimletRequest"/>
+  </message>
+  <message name="deleteZimletResponse">
+    <part name="parameters" element="tns:DeleteZimletResponse"/>
+  </message>
+
+  <message name="deployZimletRequest">
+    <part name="parameters" element="tns:DeployZimletRequest"/>
+  </message>
+  <message name="deployZimletResponse">
+    <part name="parameters" element="tns:DeployZimletResponse"/>
+  </message>
+
   <message name="exportMailboxRequest">
     <part name="parameters" element="tns:ExportMailboxRequest"/>
   </message>
   <message name="exportMailboxResponse">
     <part name="parameters" element="tns:ExportMailboxResponse"/>
+  </message>
+
+  <message name="fixCalendarEndTimeRequest">
+    <part name="parameters" element="tns:FixCalendarEndTimeRequest"/>
+  </message>
+  <message name="fixCalendarEndTimeResponse">
+    <part name="parameters" element="tns:FixCalendarEndTimeResponse"/>
+  </message>
+
+  <message name="fixCalendarPriorityRequest">
+    <part name="parameters" element="tns:FixCalendarPriorityRequest"/>
+  </message>
+  <message name="fixCalendarPriorityResponse">
+    <part name="parameters" element="tns:FixCalendarPriorityResponse"/>
   </message>
 
   <message name="flushCacheRequest">
@@ -365,6 +442,13 @@
     <part name="parameters" element="tns:GetAllEffectiveRightsResponse"/>
   </message>
 
+  <message name="getAllFreeBusyProvidersRequest">
+    <part name="parameters" element="tns:GetAllFreeBusyProvidersRequest"/>
+  </message>
+  <message name="getAllFreeBusyProvidersResponse">
+    <part name="parameters" element="tns:GetAllFreeBusyProvidersResponse"/>
+  </message>
+
   <message name="getAllLocalesRequest">
     <part name="parameters" element="tns:GetAllLocalesRequest"/>
   </message>
@@ -398,6 +482,20 @@
   </message>
   <message name="getAllVolumesResponse">
     <part name="parameters" element="tns:GetAllVolumesResponse"/>
+  </message>
+
+  <message name="getAllXMPPComponentsRequest">
+    <part name="parameters" element="tns:GetAllXMPPComponentsRequest"/>
+  </message>
+  <message name="getAllXMPPComponentsResponse">
+    <part name="parameters" element="tns:GetAllXMPPComponentsResponse"/>
+  </message>
+
+  <message name="getAllZimletsRequest">
+    <part name="parameters" element="tns:GetAllZimletsRequest"/>
+  </message>
+  <message name="getAllZimletsResponse">
+    <part name="parameters" element="tns:GetAllZimletsResponse"/>
   </message>
 
   <message name="getCalendarResourceRequest">
@@ -484,6 +582,13 @@
     <part name="parameters" element="tns:GetEffectiveRightsResponse"/>
   </message>
 
+  <message name="getFreeBusyQueueInfoRequest">
+    <part name="parameters" element="tns:GetFreeBusyQueueInfoRequest"/>
+  </message>
+  <message name="getFreeBusyQueueInfoResponse">
+    <part name="parameters" element="tns:GetFreeBusyQueueInfoResponse"/>
+  </message>
+
   <message name="getGrantsRequest">
     <part name="parameters" element="tns:GetGrantsRequest"/>
   </message>
@@ -498,6 +603,27 @@
     <part name="parameters" element="tns:GetLicenseInfoResponse"/>
   </message>
 
+  <message name="getLoggerStatsRequest">
+    <part name="parameters" element="tns:GetLoggerStatsRequest"/>
+  </message>
+  <message name="getLoggerStatsResponse">
+    <part name="parameters" element="tns:GetLoggerStatsResponse"/>
+  </message>
+
+  <message name="getMailQueueInfoRequest">
+    <part name="parameters" element="tns:GetMailQueueInfoRequest"/>
+  </message>
+  <message name="getMailQueueInfoResponse">
+    <part name="parameters" element="tns:GetMailQueueInfoResponse"/>
+  </message>
+
+  <message name="getMailQueueRequest">
+    <part name="parameters" element="tns:GetMailQueueRequest"/>
+  </message>
+  <message name="getMailQueueResponse">
+    <part name="parameters" element="tns:GetMailQueueResponse"/>
+  </message>
+
   <message name="getMailboxRequest">
     <part name="parameters" element="tns:GetMailboxRequest"/>
   </message>
@@ -510,6 +636,13 @@
   </message>
   <message name="getMailboxStatsResponse">
     <part name="parameters" element="tns:GetMailboxStatsResponse"/>
+  </message>
+
+  <message name="getMemcachedClientConfigRequest">
+    <part name="parameters" element="tns:GetMemcachedClientConfigRequest"/>
+  </message>
+  <message name="getMemcachedClientConfigResponse">
+    <part name="parameters" element="tns:GetMemcachedClientConfigResponse"/>
   </message>
 
   <message name="getPublishedShareInfoRequest">
@@ -568,6 +701,13 @@
     <part name="parameters" element="tns:GetServiceStatusResponse"/>
   </message>
 
+  <message name="getSessionsRequest">
+    <part name="parameters" element="tns:GetSessionsRequest"/>
+  </message>
+  <message name="getSessionsResponse">
+    <part name="parameters" element="tns:GetSessionsResponse"/>
+  </message>
+
   <message name="getShareInfoRequest">
     <part name="parameters" element="tns:GetShareInfoRequest"/>
   </message>
@@ -589,11 +729,46 @@
     <part name="parameters" element="tns:GetVolumeResponse"/>
   </message>
 
+  <message name="getXMPPComponentRequest">
+    <part name="parameters" element="tns:GetXMPPComponentRequest"/>
+  </message>
+  <message name="getXMPPComponentResponse">
+    <part name="parameters" element="tns:GetXMPPComponentResponse"/>
+  </message>
+
+  <message name="getZimletRequest">
+    <part name="parameters" element="tns:GetZimletRequest"/>
+  </message>
+  <message name="getZimletResponse">
+    <part name="parameters" element="tns:GetZimletResponse"/>
+  </message>
+
+  <message name="getZimletStatusRequest">
+    <part name="parameters" element="tns:GetZimletStatusRequest"/>
+  </message>
+  <message name="getZimletStatusResponse">
+    <part name="parameters" element="tns:GetZimletStatusResponse"/>
+  </message>
+
   <message name="grantRightRequest">
     <part name="parameters" element="tns:GrantRightRequest"/>
   </message>
   <message name="grantRightResponse">
     <part name="parameters" element="tns:GrantRightResponse"/>
+  </message>
+
+  <message name="mailQueueActionRequest">
+    <part name="parameters" element="tns:MailQueueActionRequest"/>
+  </message>
+  <message name="mailQueueActionResponse">
+    <part name="parameters" element="tns:MailQueueActionResponse"/>
+  </message>
+
+  <message name="mailQueueFlushRequest">
+    <part name="parameters" element="tns:MailQueueFlushRequest"/>
+  </message>
+  <message name="mailQueueFlushResponse">
+    <part name="parameters" element="tns:MailQueueFlushResponse"/>
   </message>
 
   <message name="modifyAccountRequest">
@@ -666,6 +841,13 @@
     <part name="parameters" element="tns:ModifyVolumeResponse"/>
   </message>
 
+  <message name="modifyZimletRequest">
+    <part name="parameters" element="tns:ModifyZimletRequest"/>
+  </message>
+  <message name="modifyZimletResponse">
+    <part name="parameters" element="tns:ModifyZimletResponse"/>
+  </message>
+
   <message name="noOpRequest">
     <part name="parameters" element="tns:NoOpRequest"/>
   </message>
@@ -687,11 +869,39 @@
     <part name="parameters" element="tns:PublishShareInfoResponse"/>
   </message>
 
+  <message name="purgeAccountCalendarCacheRequest">
+    <part name="parameters" element="tns:PurgeAccountCalendarCacheRequest"/>
+  </message>
+  <message name="purgeAccountCalendarCacheResponse">
+    <part name="parameters" element="tns:PurgeAccountCalendarCacheResponse"/>
+  </message>
+
+  <message name="purgeFreeBusyQueueRequest">
+    <part name="parameters" element="tns:PurgeFreeBusyQueueRequest"/>
+  </message>
+  <message name="purgeFreeBusyQueueResponse">
+    <part name="parameters" element="tns:PurgeFreeBusyQueueResponse"/>
+  </message>
+
   <message name="purgeMessagesRequest">
     <part name="parameters" element="tns:PurgeMessagesRequest"/>
   </message>
   <message name="purgeMessagesResponse">
     <part name="parameters" element="tns:PurgeMessagesResponse"/>
+  </message>
+
+  <message name="pushFreeBusyRequest">
+    <part name="parameters" element="tns:PushFreeBusyRequest"/>
+  </message>
+  <message name="pushFreeBusyResponse">
+    <part name="parameters" element="tns:PushFreeBusyResponse"/>
+  </message>
+
+  <message name="queryWaitSetRequest">
+    <part name="parameters" element="tns:QueryWaitSetRequest"/>
+  </message>
+  <message name="queryWaitSetResponse">
+    <part name="parameters" element="tns:QueryWaitSetResponse"/>
   </message>
 
   <message name="reIndexRequest">
@@ -713,6 +923,13 @@
   </message>
   <message name="reloadLocalConfigResponse">
     <part name="parameters" element="tns:ReloadLocalConfigResponse"/>
+  </message>
+
+  <message name="reloadMemcachedClientConfigRequest">
+    <part name="parameters" element="tns:ReloadMemcachedClientConfigRequest"/>
+  </message>
+  <message name="reloadMemcachedClientConfigResponse">
+    <part name="parameters" element="tns:ReloadMemcachedClientConfigResponse"/>
   </message>
 
   <message name="removeAccountAliasRequest">
@@ -817,6 +1034,13 @@
     <part name="context" element="zimbra:context"/>
   </message>
 
+  <message name="undeployZimletRequest">
+    <part name="parameters" element="tns:UndeployZimletRequest"/>
+  </message>
+  <message name="undeployZimletResponse">
+    <part name="parameters" element="tns:UndeployZimletResponse"/>
+  </message>
+
   <message name="verifyIndexRequest">
     <part name="parameters" element="tns:VerifyIndexRequest"/>
   </message>
@@ -840,6 +1064,18 @@
     <operation name="addDistributionListMemberRequest">
       <input message="tns:addDistributionListMemberRequest"/>
       <output message="tns:addDistributionListMemberResponse"/>
+    </operation>
+    <operation name="adminCreateWaitSetRequest">
+      <input message="tns:adminCreateWaitSetRequest"/>
+      <output message="tns:adminCreateWaitSetResponse"/>
+    </operation>
+    <operation name="adminDestroyWaitSetRequest">
+      <input message="tns:adminDestroyWaitSetRequest"/>
+      <output message="tns:adminDestroyWaitSetResponse"/>
+    </operation>
+    <operation name="adminWaitSetRequest">
+      <input message="tns:adminWaitSetRequest"/>
+      <output message="tns:adminWaitSetResponse"/>
     </operation>
     <operation name="authRequest">
       <input message="tns:authRequest"/>
@@ -876,6 +1112,10 @@
     <operation name="checkRightRequest">
       <input message="tns:checkRightRequest"/>
       <output message="tns:checkRightResponse"/>
+    </operation>
+    <operation name="configureZimletRequest">
+      <input message="tns:configureZimletRequest"/>
+      <output message="tns:configureZimletResponse"/>
     </operation>
     <operation name="copyCosRequest">
       <input message="tns:copyCosRequest"/>
@@ -921,6 +1161,14 @@
       <input message="tns:createVolumeRequest"/>
       <output message="tns:createVolumeResponse"/>
     </operation>
+    <operation name="createXMPPComponentRequest">
+      <input message="tns:createXMPPComponentRequest"/>
+      <output message="tns:createXMPPComponentResponse"/>
+    </operation>
+    <operation name="createZimletRequest">
+      <input message="tns:createZimletRequest"/>
+      <output message="tns:createZimletResponse"/>
+    </operation>
     <operation name="delegateAuthRequest">
       <input message="tns:delegateAuthRequest"/>
       <output message="tns:delegateAuthResponse"/>
@@ -965,9 +1213,29 @@
       <input message="tns:deleteVolumeRequest"/>
       <output message="tns:deleteVolumeResponse"/>
     </operation>
+    <operation name="deleteXMPPComponentRequest">
+      <input message="tns:deleteXMPPComponentRequest"/>
+      <output message="tns:deleteXMPPComponentResponse"/>
+    </operation>
+    <operation name="deleteZimletRequest">
+      <input message="tns:deleteZimletRequest"/>
+      <output message="tns:deleteZimletResponse"/>
+    </operation>
+    <operation name="deployZimletRequest">
+      <input message="tns:deployZimletRequest"/>
+      <output message="tns:deployZimletResponse"/>
+    </operation>
     <operation name="exportMailboxRequest">
       <input message="tns:exportMailboxRequest"/>
       <output message="tns:exportMailboxResponse"/>
+    </operation>
+    <operation name="fixCalendarEndTimeRequest">
+      <input message="tns:fixCalendarEndTimeRequest"/>
+      <output message="tns:fixCalendarEndTimeResponse"/>
+    </operation>
+    <operation name="fixCalendarPriorityRequest">
+      <input message="tns:fixCalendarPriorityRequest"/>
+      <output message="tns:fixCalendarPriorityResponse"/>
     </operation>
     <operation name="flushCacheRequest">
       <input message="tns:flushCacheRequest"/>
@@ -1029,6 +1297,10 @@
       <input message="tns:getAllEffectiveRightsRequest"/>
       <output message="tns:getAllEffectiveRightsResponse"/>
     </operation>
+    <operation name="getAllFreeBusyProvidersRequest">
+      <input message="tns:getAllFreeBusyProvidersRequest"/>
+      <output message="tns:getAllFreeBusyProvidersResponse"/>
+    </operation>
     <operation name="getAllLocalesRequest">
       <input message="tns:getAllLocalesRequest"/>
       <output message="tns:getAllLocalesResponse"/>
@@ -1048,6 +1320,14 @@
     <operation name="getAllVolumesRequest">
       <input message="tns:getAllVolumesRequest"/>
       <output message="tns:getAllVolumesResponse"/>
+    </operation>
+    <operation name="getAllXMPPComponentsRequest">
+      <input message="tns:getAllXMPPComponentsRequest"/>
+      <output message="tns:getAllXMPPComponentsResponse"/>
+    </operation>
+    <operation name="getAllZimletsRequest">
+      <input message="tns:getAllZimletsRequest"/>
+      <output message="tns:getAllZimletsResponse"/>
     </operation>
     <operation name="getCalendarResourceRequest">
       <input message="tns:getCalendarResourceRequest"/>
@@ -1097,6 +1377,10 @@
       <input message="tns:getEffectiveRightsRequest"/>
       <output message="tns:getEffectiveRightsResponse"/>
     </operation>
+    <operation name="getFreeBusyQueueInfoRequest">
+      <input message="tns:getFreeBusyQueueInfoRequest"/>
+      <output message="tns:getFreeBusyQueueInfoResponse"/>
+    </operation>
     <operation name="getGrantsRequest">
       <input message="tns:getGrantsRequest"/>
       <output message="tns:getGrantsResponse"/>
@@ -1105,6 +1389,18 @@
       <input message="tns:getLicenseInfoRequest"/>
       <output message="tns:getLicenseInfoResponse"/>
     </operation>
+    <operation name="getLoggerStatsRequest">
+      <input message="tns:getLoggerStatsRequest"/>
+      <output message="tns:getLoggerStatsResponse"/>
+    </operation>
+    <operation name="getMailQueueInfoRequest">
+      <input message="tns:getMailQueueInfoRequest"/>
+      <output message="tns:getMailQueueInfoResponse"/>
+    </operation>
+    <operation name="getMailQueueRequest">
+      <input message="tns:getMailQueueRequest"/>
+      <output message="tns:getMailQueueResponse"/>
+    </operation>
     <operation name="getMailboxRequest">
       <input message="tns:getMailboxRequest"/>
       <output message="tns:getMailboxResponse"/>
@@ -1112,6 +1408,10 @@
     <operation name="getMailboxStatsRequest">
       <input message="tns:getMailboxStatsRequest"/>
       <output message="tns:getMailboxStatsResponse"/>
+    </operation>
+    <operation name="getMemcachedClientConfigRequest">
+      <input message="tns:getMemcachedClientConfigRequest"/>
+      <output message="tns:getMemcachedClientConfigResponse"/>
     </operation>
     <operation name="getPublishedShareInfoRequest">
       <input message="tns:getPublishedShareInfoRequest"/>
@@ -1145,6 +1445,10 @@
       <input message="tns:getServiceStatusRequest"/>
       <output message="tns:getServiceStatusResponse"/>
     </operation>
+    <operation name="getSessionsRequest">
+      <input message="tns:getSessionsRequest"/>
+      <output message="tns:getSessionsResponse"/>
+    </operation>
     <operation name="getShareInfoRequest">
       <input message="tns:getShareInfoRequest"/>
       <output message="tns:getShareInfoResponse"/>
@@ -1157,9 +1461,29 @@
       <input message="tns:getVolumeRequest"/>
       <output message="tns:getVolumeResponse"/>
     </operation>
+    <operation name="getXMPPComponentRequest">
+      <input message="tns:getXMPPComponentRequest"/>
+      <output message="tns:getXMPPComponentResponse"/>
+    </operation>
+    <operation name="getZimletRequest">
+      <input message="tns:getZimletRequest"/>
+      <output message="tns:getZimletResponse"/>
+    </operation>
+    <operation name="getZimletStatusRequest">
+      <input message="tns:getZimletStatusRequest"/>
+      <output message="tns:getZimletStatusResponse"/>
+    </operation>
     <operation name="grantRightRequest">
       <input message="tns:grantRightRequest"/>
       <output message="tns:grantRightResponse"/>
+    </operation>
+    <operation name="mailQueueActionRequest">
+      <input message="tns:mailQueueActionRequest"/>
+      <output message="tns:mailQueueActionResponse"/>
+    </operation>
+    <operation name="mailQueueFlushRequest">
+      <input message="tns:mailQueueFlushRequest"/>
+      <output message="tns:mailQueueFlushResponse"/>
     </operation>
     <operation name="modifyAccountRequest">
       <input message="tns:modifyAccountRequest"/>
@@ -1201,6 +1525,10 @@
       <input message="tns:modifyVolumeRequest"/>
       <output message="tns:modifyVolumeResponse"/>
     </operation>
+    <operation name="modifyZimletRequest">
+      <input message="tns:modifyZimletRequest"/>
+      <output message="tns:modifyZimletResponse"/>
+    </operation>
     <operation name="noOpRequest">
       <input message="tns:noOpRequest"/>
       <output message="tns:noOpResponse"/>
@@ -1213,9 +1541,25 @@
       <input message="tns:publishShareInfoRequest"/>
       <output message="tns:publishShareInfoResponse"/>
     </operation>
+    <operation name="purgeAccountCalendarCacheRequest">
+      <input message="tns:purgeAccountCalendarCacheRequest"/>
+      <output message="tns:purgeAccountCalendarCacheResponse"/>
+    </operation>
+    <operation name="purgeFreeBusyQueueRequest">
+      <input message="tns:purgeFreeBusyQueueRequest"/>
+      <output message="tns:purgeFreeBusyQueueResponse"/>
+    </operation>
     <operation name="purgeMessagesRequest">
       <input message="tns:purgeMessagesRequest"/>
       <output message="tns:purgeMessagesResponse"/>
+    </operation>
+    <operation name="pushFreeBusyRequest">
+      <input message="tns:pushFreeBusyRequest"/>
+      <output message="tns:pushFreeBusyResponse"/>
+    </operation>
+    <operation name="queryWaitSetRequest">
+      <input message="tns:queryWaitSetRequest"/>
+      <output message="tns:queryWaitSetResponse"/>
     </operation>
     <operation name="reIndexRequest">
       <input message="tns:reIndexRequest"/>
@@ -1228,6 +1572,10 @@
     <operation name="reloadLocalConfigRequest">
       <input message="tns:reloadLocalConfigRequest"/>
       <output message="tns:reloadLocalConfigResponse"/>
+    </operation>
+    <operation name="reloadMemcachedClientConfigRequest">
+      <input message="tns:reloadMemcachedClientConfigRequest"/>
+      <output message="tns:reloadMemcachedClientConfigResponse"/>
     </operation>
     <operation name="removeAccountAliasRequest">
       <input message="tns:removeAccountAliasRequest"/>
@@ -1285,6 +1633,10 @@
       <input message="tns:setPasswordRequest"/>
       <output message="tns:setPasswordResponse"/>
     </operation>
+    <operation name="undeployZimletRequest">
+      <input message="tns:undeployZimletRequest"/>
+      <output message="tns:undeployZimletResponse"/>
+    </operation>
     <operation name="verifyIndexRequest">
       <input message="tns:verifyIndexRequest"/>
       <output message="tns:verifyIndexResponse"/>
@@ -1329,6 +1681,39 @@
 
     <operation name="addDistributionListMemberRequest">
       <soap:operation soapAction="urn:zimbraAdmin/AddDistributionListMember" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="adminCreateWaitSetRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/AdminCreateWaitSet" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="adminDestroyWaitSetRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/AdminDestroyWaitSet" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="adminWaitSetRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/AdminWaitSet" style="document"/>
       <input>
         <soap:body use="literal"/>
         <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
@@ -1428,6 +1813,17 @@
 
     <operation name="checkRightRequest">
       <soap:operation soapAction="urn:zimbraAdmin/CheckRight" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="configureZimletRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/ConfigureZimlet" style="document"/>
       <input>
         <soap:body use="literal"/>
         <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
@@ -1558,6 +1954,28 @@
       </output>
     </operation>
 
+    <operation name="createXMPPComponentRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/CreateXMPPComponent" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="createZimletRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/CreateZimlet" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="delegateAuthRequest">
       <soap:operation soapAction="urn:zimbraAdmin/DelegateAuth" style="document"/>
       <input>
@@ -1679,8 +2097,63 @@
       </output>
     </operation>
 
+    <operation name="deleteXMPPComponentRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/DeleteXMPPComponent" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="deleteZimletRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/DeleteZimlet" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="deployZimletRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/DeployZimlet" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="exportMailboxRequest">
       <soap:operation soapAction="urn:zimbraAdmin/ExportMailbox" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="fixCalendarEndTimeRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/FixCalendarEndTime" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="fixCalendarPriorityRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/FixCalendarPriority" style="document"/>
       <input>
         <soap:body use="literal"/>
         <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
@@ -1855,6 +2328,17 @@
       </output>
     </operation>
 
+    <operation name="getAllFreeBusyProvidersRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetAllFreeBusyProviders" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="getAllLocalesRequest">
       <soap:operation soapAction="urn:zimbraAdmin/GetAllLocales" style="document"/>
       <input>
@@ -1901,6 +2385,28 @@
 
     <operation name="getAllVolumesRequest">
       <soap:operation soapAction="urn:zimbraAdmin/GetAllVolumes" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="getAllXMPPComponentsRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetAllXMPPComponents" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="getAllZimletsRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetAllZimlets" style="document"/>
       <input>
         <soap:body use="literal"/>
         <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
@@ -2042,6 +2548,17 @@
       </output>
     </operation>
 
+    <operation name="getFreeBusyQueueInfoRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetFreeBusyQueueInfo" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="getGrantsRequest">
       <soap:operation soapAction="urn:zimbraAdmin/GetGrants" style="document"/>
       <input>
@@ -2064,6 +2581,39 @@
       </output>
     </operation>
 
+    <operation name="getLoggerStatsRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetLoggerStats" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="getMailQueueInfoRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetMailQueueInfo" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="getMailQueueRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetMailQueue" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="getMailboxRequest">
       <soap:operation soapAction="urn:zimbraAdmin/GetMailbox" style="document"/>
       <input>
@@ -2077,6 +2627,17 @@
 
     <operation name="getMailboxStatsRequest">
       <soap:operation soapAction="urn:zimbraAdmin/GetMailboxStats" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="getMemcachedClientConfigRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetMemcachedClientConfig" style="document"/>
       <input>
         <soap:body use="literal"/>
         <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
@@ -2174,6 +2735,17 @@
       </output>
     </operation>
 
+    <operation name="getSessionsRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetSessions" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="getShareInfoRequest">
       <soap:operation soapAction="urn:zimbraAdmin/GetShareInfo" style="document"/>
       <input>
@@ -2207,8 +2779,63 @@
       </output>
     </operation>
 
+    <operation name="getXMPPComponentRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetXMPPComponent" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="getZimletRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetZimlet" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="getZimletStatusRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetZimletStatus" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="grantRightRequest">
       <soap:operation soapAction="urn:zimbraAdmin/GrantRight" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="mailQueueActionRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/MailQueueAction" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="mailQueueFlushRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/MailQueueFlush" style="document"/>
       <input>
         <soap:body use="literal"/>
         <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
@@ -2328,6 +2955,17 @@
       </output>
     </operation>
 
+    <operation name="modifyZimletRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/ModifyZimlet" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="noOpRequest">
       <soap:operation soapAction="urn:zimbraAdmin/NoOp" style="document"/>
       <input>
@@ -2361,8 +2999,52 @@
       </output>
     </operation>
 
+    <operation name="purgeAccountCalendarCacheRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/PurgeAccountCalendarCache" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="purgeFreeBusyQueueRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/PurgeFreeBusyQueue" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="purgeMessagesRequest">
       <soap:operation soapAction="urn:zimbraAdmin/PurgeMessages" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="pushFreeBusyRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/PushFreeBusy" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="queryWaitSetRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/QueryWaitSet" style="document"/>
       <input>
         <soap:body use="literal"/>
         <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
@@ -2396,6 +3078,17 @@
 
     <operation name="reloadLocalConfigRequest">
       <soap:operation soapAction="urn:zimbraAdmin/ReloadLocalConfig" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="reloadMemcachedClientConfigRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/ReloadMemcachedClientConfig" style="document"/>
       <input>
         <soap:body use="literal"/>
         <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
@@ -2550,6 +3243,17 @@
 
     <operation name="setPasswordRequest">
       <soap:operation soapAction="urn:zimbraAdmin/SetPassword" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="undeployZimletRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/UndeployZimlet" style="document"/>
       <input>
         <soap:body use="literal"/>
         <soap:header message="tns:soapHdrContext" part="context" use="literal"/>

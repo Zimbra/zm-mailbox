@@ -1,0 +1,13 @@
+<MailQueueActionRequest xmlns="urn:zimbraAdmin">
+    <server name="fun.example.test">
+        <queue name="queueName">
+            <action op="requeue" by="query">
+                <query>
+                    <field name="fieldName">
+                        <match value="matchValue"/>
+                    </field>
+                </query>
+            </action>
+        </queue>
+    </server>
+</MailQueueActionRequest>
