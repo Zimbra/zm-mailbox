@@ -765,7 +765,6 @@ public final class ZimbraQuery {
                 ZimbraLog.index_search.debug("BEFORE_FINAL_OPT=%s", union);
             }
             mOp = union.optimize(mbox);
-            assert(union.mQueryOperations.size() > 0);
         }
         if (ZimbraLog.index_search.isDebugEnabled()) {
             ZimbraLog.index_search.debug("END_ZIMBRAQUERY_CONSTRUCTOR=%s", mOp);
