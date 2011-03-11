@@ -778,7 +778,11 @@ public final class LC {
     public static final KnownKey zimbra_waitset_max_request_timeout = KnownKey.newKey(1200);
     public static final KnownKey zimbra_waitset_max_per_account = KnownKey.newKey(5);
 
+    // *_disable_tiemout settings are here for bug 56458
+    // This is a workaround for an issue in Jetty 6.1.22.zc6m when we upgrade
+    // we should re-evaluate/remove these settings and the code that uses them
     public static final KnownKey zimbra_archive_formatter_disable_timeout = KnownKey.newKey(true);
+    public static final KnownKey zimbra_gal_sync_disable_timeout = KnownKey.newKey(true);
     
     public static final KnownKey zimbra_admin_waitset_default_request_timeout = KnownKey.newKey(300);
     public static final KnownKey zimbra_admin_waitset_min_request_timeout = KnownKey.newKey(0);
