@@ -1058,4 +1058,9 @@ public final class MailConstants {
     // device verification for reminders
     public static final String A_VERIFICATION_CODE = "code";
     public static final String A_VERIFICATION_SUCCESS = "success";
+    
+    public static final String A_USER = "user";
+    public static final String A_TS = "ts";
+    public static final String A_ITEMID = "itemId";
+    public static final String A_ITEM_NAME = "itemName";
 }
