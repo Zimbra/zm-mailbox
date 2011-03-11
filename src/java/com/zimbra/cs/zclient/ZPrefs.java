@@ -183,6 +183,12 @@ public class ZPrefs {
 
     public String getDefaultPrintFontSize() {return get(Provisioning.A_zimbraPrefDefaultPrintFontSize);}
 
+    public String getFolderTreeOpen() {return get(Provisioning.A_zimbraPrefFolderTreeOpen);}
+
+    public String getSearchTreeOpen() {return get(Provisioning.A_zimbraPrefSearchTreeOpen);}
+
+    public String getTagTreeOpen() {return get(Provisioning.A_zimbraPrefTagTreeOpen);}
+
     private TimeZone mCachedTimeZone;
     private String mCachedTimeZoneId;
 
