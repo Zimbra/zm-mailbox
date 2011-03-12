@@ -26,6 +26,7 @@ import javax.mail.internet.MimeUtility;
 
 import org.apache.lucene.document.Document;
 
+import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.convert.AttachmentInfo;
@@ -52,14 +53,13 @@ public abstract class MimeHandler {
     public static final String ARCHIVE_SEQUENCE = "archseq";
     public static final String CATCH_ALL_TYPE = "all";
 
-    protected MimeTypeInfo mMimeTypeInfo;
-    private String mFilename;
-    private DataSource mDataSource;
-    private String mContentType;
-    private int mSize = -1;
-
-    /** dotted-number part name */
-    private String mPartName;
+    private MimeTypeInfo mimeTypeInfo;
+    private String filename;
+    private DataSource dataSource;
+    private String contentType;
+    private int size = -1;
+    private String defaultCharset;
+    private String partName; // dotted-number part name
 
     /** Returns <tt>true</tt> if a request for the handler to perform text
      *  extraction or HTML conversion will result in an RPC to an external
@@ -67,20 +67,36 @@ public abstract class MimeHandler {
      *  in-process. */
     protected abstract boolean runsExternally();
 
-    protected String getContentType() {
-        return mContentType != null ? mContentType : "";
+    MimeTypeInfo getMimeTypeInfo() {
+        return mimeTypeInfo;
     }
 
-    protected void setContentType(String contentType) {
-        mContentType = contentType;
+    void setMimeTypeInfo(MimeTypeInfo value) {
+        mimeTypeInfo = value;
+    }
+
+    protected String getContentType() {
+        return Strings.nullToEmpty(contentType);
+    }
+
+    protected void setContentType(String value) {
+        contentType = value;
+    }
+
+    protected String getDefaultCharset() {
+        return defaultCharset;
+    }
+
+    public void setDefaultCharset(String value) {
+        defaultCharset = value;
     }
 
     public String getDescription() {
-        return mMimeTypeInfo.getDescription();
+        return mimeTypeInfo.getDescription();
     }
 
     public boolean isIndexingEnabled() {
-        return mMimeTypeInfo.isIndexingEnabled();
+        return mimeTypeInfo.isIndexingEnabled();
     }
 
     /**
@@ -90,35 +106,35 @@ public abstract class MimeHandler {
      * @see #addFields(Document)
      */
     public void init(DataSource source) {
-        mDataSource = source;
+        dataSource = source;
     }
 
-    void setPartName(String partName) {
-        mPartName = partName;
+    void setPartName(String value) {
+        partName = value;
     }
 
     public String getPartName() {
-        return mPartName;
+        return partName;
     }
 
-    void setFilename(String filename) {
-        mFilename = filename;
+    void setFilename(String value) {
+        filename = value;
     }
 
     public String getFilename() {
-        return mFilename;
+        return filename;
     }
 
     public DataSource getDataSource() {
-        return mDataSource;
+        return dataSource;
     }
 
     public int getSize() {
-        return mSize;
+        return size;
     }
 
-    public void setSize(int size) {
-        mSize = size;
+    public void setSize(int value) {
+        size = value;
     }
 
     /**
@@ -231,9 +247,9 @@ public abstract class MimeHandler {
         doc.addContent(content);
         getObjects(content, doc);
 
-        doc.addPartName(mPartName);
+        doc.addPartName(partName);
 
-        String name = mDataSource.getName();
+        String name = dataSource.getName();
         if (name != null) {
             try {
                 name = MimeUtility.decodeText(name);
