@@ -16,9 +16,9 @@ package com.zimbra.common.mime;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PushbackInputStream;
 
 import com.zimbra.common.util.ByteUtil;
 
@@ -51,17 +51,17 @@ public enum ContentTransferEncoding {
         private int column, buf[] = new int[4];
         private boolean fold = true;
 
-        Base64EncoderStream(InputStream is) {
-            super(is);
-        }
+        Base64EncoderStream(ByteArrayInputStream bais)  { super(bais); }
+        Base64EncoderStream(BufferedInputStream is)     { super(is); }
+        Base64EncoderStream(InputStream is)             { super(new BufferedInputStream(is, 4096)); }
 
         void disableFolding()  { fold = false; }
 
         @Override public int read() throws IOException {
-            if (column < CHUNK_SIZE || !fold) {
-                int index = column % 4;
-                if (index == 0) {
-                    int c1 = nextByte(), c2 = nextByte(), c3 = nextByte();
+            if (column < CHUNK_SIZE) {
+                int position = column % 4;
+                if (position == 0) {
+                    int c1 = super.read(), c2 = super.read(), c3 = super.read();
                     if (c1 == -1) {
                         if (!fold || column == 0)
                             return -1;
@@ -73,8 +73,13 @@ public enum ContentTransferEncoding {
                     buf[2] = c2 == -1 ? (byte) '=' : BASE64_TABLE[(accumulator >> 6) & 0x3F];
                     buf[3] = c3 == -1 ? (byte) '=' : BASE64_TABLE[accumulator & 0x3F];
                 }
+                int c = buf[position];
+                if (position == 3 && c == '=')
+                    column = CHUNK_SIZE - 1;
                 column++;
-                return buf[index];
+                if (!fold)
+                    column %= 4;
+                return c;
             } else if (column == CHUNK_SIZE) {
                 column++;  return '\r';
             } else {
@@ -95,9 +100,9 @@ public enum ContentTransferEncoding {
         private boolean closed;
         private int position = 3, valid = 3, buf[] = new int[3];
 
-        Base64DecoderStream(InputStream is) {
-            super(is);
-        }
+        Base64DecoderStream(ByteArrayInputStream bais)  { super(bais); }
+        Base64DecoderStream(BufferedInputStream is)     { super(is); }
+        Base64DecoderStream(InputStream is)             { super(new BufferedInputStream(is, 4096)); }
 
         @Override public int read() throws IOException {
             if (position >= valid) {
@@ -106,7 +111,7 @@ public enum ContentTransferEncoding {
 
                 int accumulator = 0, bytes = 0, c, decoded;
                 do {
-                    if ((c = nextByte()) >= 0 && c < 128 && (decoded = BASE64_DECODE[c]) != -1) {
+                    if ((c = super.read()) >= 0 && c < 128 && (decoded = BASE64_DECODE[c]) != -1) {
                         accumulator = (accumulator << 6) | decoded;  bytes++;
                     }
                 } while (c != -1 && c != '=' && bytes < 4);
@@ -129,30 +134,20 @@ public enum ContentTransferEncoding {
         }
     }
 
-    static class QuotedPrintableDecoderStream extends TransferEncodingStream {
+    static class QuotedPrintableDecoderStream extends QuotedPrintableStream {
         private static final int[] QP_DECODE = new int[128];
-        static {
-            for (int i = 0; i < 128; i++) {
-                QP_DECODE[i] = -1;
+            static {
+                for (int i = 0; i < 128; i++)
+                    QP_DECODE[i] = -1;
+                for (int i = 0; i < QuotedPrintableEncoderStream.QP_TABLE.length; i++) {
+                    QP_DECODE[QuotedPrintableEncoderStream.QP_TABLE[i]] = i;
+                    QP_DECODE[Character.toLowerCase(QuotedPrintableEncoderStream.QP_TABLE[i])] = i;
+                }
             }
-            for (int i = 0; i < QuotedPrintableEncoderStream.QP_TABLE.length; i++) {
-                QP_DECODE[QuotedPrintableEncoderStream.QP_TABLE[i]] = i;
-                QP_DECODE[Character.toLowerCase(QuotedPrintableEncoderStream.QP_TABLE[i])] = i;
-            }
-        }
 
-        private boolean trim = true;
-        private int wsp = 0;
-        private byte[] wspbuf = new byte[1000];
-
-        QuotedPrintableDecoderStream(InputStream is) {
-            super(is, 1000);
-        }
-
-        QuotedPrintableDecoderStream disableTrimming() {
-            trim = false;
-            return this;
-        }
+        QuotedPrintableDecoderStream(ByteArrayInputStream bais)  { super(bais); }
+        QuotedPrintableDecoderStream(BufferedInputStream is)     { super(is); }
+        QuotedPrintableDecoderStream(InputStream is)             { super(new BufferedInputStream(is, 4096)); }
 
         @Override public int read() throws IOException {
             int c = nextByte();
@@ -168,53 +163,32 @@ public enum ContentTransferEncoding {
                     unread(p2);  return read();
                 }
                 unread(p2);  unread(p1);
-            } else if ((c == ' ' || c == '\t') && trim) {
-                if (wsp > 0) {
-                    wsp--;
-                } else {
-                    // wsp+ EOL drops the wsp, wsp+ non-wsp preserves it
-                    final byte[] peekahead = wspbuf;
-                    int p1, p2 = -1;
-                    do {
-                        peekahead[wsp++] = (byte) (p1 = nextByte());
-                    } while ((p1 == ' ' || p1 == '\t') && wsp <= 998);
-
-                    if (p1 == -1 || p1 == '\n' || (p1 == '\r' && (p2 = nextByte()) == '\n')) {
-                        unread(p2);  c = p1;  wsp = 0;
-                    } else {
-                        unread(p2);  unread(peekahead, 0, wsp--);
-                    }
-                }
             }
             return c;
         }
     }
 
-    static class QuotedPrintableEncoderStream extends TransferEncodingStream {
+    static class QuotedPrintableEncoderStream extends QuotedPrintableStream {
         static final byte[] QP_TABLE = "0123456789ABCDEF".getBytes();
 
         private int column, valid, out1, out2;
         private boolean fold = true, text, force[];
 
-        QuotedPrintableEncoderStream(InputStream is, ContentType ctype) {
-            super(is, 2);  setContentType(ctype);
-        }
+        QuotedPrintableEncoderStream(ByteArrayInputStream bais, ContentType ctype)  { super(bais);  setContentType(ctype); }
+        QuotedPrintableEncoderStream(BufferedInputStream is, ContentType ctype)     { super(is);    setContentType(ctype); }
+        QuotedPrintableEncoderStream(InputStream is, ContentType ctype)             { super(new BufferedInputStream(is, 4096));  setContentType(ctype); }
 
         QuotedPrintableEncoderStream setContentType(ContentType ctype) {
             text = ctype == null || ctype.getPrimaryType().equals("text");  return this;
         }
 
-        QuotedPrintableEncoderStream setForceEncode(boolean[] characters) {
+        void setForceEncode(boolean[] characters) {
             if (characters == null || characters.length != 128)
                 throw new IllegalArgumentException("invalid force-encode array length");
             force = characters;
-            return this;
         }
 
-        QuotedPrintableEncoderStream disableFolding() {
-            fold = false;
-            return this;
-        }
+        void disableFolding()  { fold = false; }
 
         @Override public int read() throws IOException {
             if (valid == 0) {
@@ -250,48 +224,48 @@ public enum ContentTransferEncoding {
         }
     }
 
-    private static class TransferEncodingStream extends PushbackInputStream {
+    private static class QuotedPrintableStream extends TransferEncodingStream {
+        private int peek1 = -1, peek2 = -1;
+
+        QuotedPrintableStream(InputStream is)  { super(is); }
+
+        protected int nextByte() throws IOException {
+            if (peek1 == -1)  { return super.read(); }
+            else              { int c = peek1;  peek1 = peek2;  peek2 = -1;  return c; }
+        }
+
+        protected void unread(int c)  { peek2 = peek1;  peek1 = c; }
+}
+
+    private static class TransferEncodingStream extends FilterInputStream {
         static final int CHUNK_SIZE = 76;
 
-        private static InputStream ensureBuffering(InputStream is) {
-            return is instanceof ByteArrayInputStream || is instanceof BufferedInputStream ? is : new BufferedInputStream(is, 4096);
-        }
-
-        TransferEncodingStream(InputStream is) {
-            super(ensureBuffering(is));
-        }
-
-        TransferEncodingStream(InputStream is, int pushBuffer) {
-            super(ensureBuffering(is), pushBuffer);
-        }
-
-        int nextByte() throws IOException {
-            return super.read();
-        }
-
-        boolean canUnread() {
-            return pos > 0;
-        }
-
-        @Override public void unread(int b) throws IOException {
-            if (b != -1) {
-                super.unread(b);
-            }
-        }
+        TransferEncodingStream(InputStream is)  { super(is); }
 
         @Override public int read(byte[] b, int off, int len) throws IOException {
-            if (b == null || in == null)
+            if (b == null)
                 throw new NullPointerException();
-            if (off < 0 || off > b.length || len < 0 || off + len > b.length || off + len < 0)
+            else if (off < 0 || off > b.length || len < 0 || off + len > b.length || off + len < 0)
                 throw new IndexOutOfBoundsException();
-            if (len == 0)
+            else if (len == 0)
                 return 0;
 
             int i = 0, c;
-            do {
-                b[off + i] = (byte) (c = read());
-            } while (c != -1 && ++i < len);
+            try {
+                do {
+                    b[off + i] = (byte) (c = read());
+                } while (c != -1 && ++i < len);
+            } catch (IOException ioe) {
+                if (i == 0)
+                    throw ioe;
+            }
             return i == 0 ? -1 : i;
+        }
+
+        @Override public boolean markSupported()                { return false; }
+        @Override public synchronized void mark(int readlimit)  { }
+        @Override public synchronized void reset() throws IOException {
+            throw new IOException("mark/reset not supported");
         }
 
         @Override public long skip(long n) throws IOException {

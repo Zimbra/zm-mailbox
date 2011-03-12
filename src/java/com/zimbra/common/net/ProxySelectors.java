@@ -1,18 +1,21 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- *
+ * Copyright (C) 2010 Zimbra, Inc.
+ * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- *
+ * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.net;
+
+import com.zimbra.znative.ProxyInfo;
+import com.zimbra.znative.Util;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -25,18 +28,13 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.znative.ProxyInfo;
-import com.zimbra.znative.Util;
-
 /**
  * Factory class for various ProxySelector types.
  */
 public final class ProxySelectors {
     private static final ProxySelector systemProxySelector;
     private static final ProxySelector nativeProxySelector;
-    private static ProxySelector defaultProxySelector;
+    private static final ProxySelector defaultProxySelector;
 
     static {
         systemProxySelector = ProxySelector.getDefault();
@@ -46,16 +44,6 @@ public final class ProxySelectors {
         } else {
             nativeProxySelector = null;
             defaultProxySelector = new CustomProxySelector(systemProxySelector);
-        }
-        String className = LC.zimbra_class_customproxyselector.value();
-        if (className != null && !className.equals("")) {
-            try {
-                CustomProxySelector selector = (CustomProxySelector) Class.forName(className).newInstance();
-                selector.setDefaultProxySelector(defaultProxySelector);
-                defaultProxySelector = selector;
-            } catch (Exception e) {
-                ZimbraLog.net.error("could not instantiate ConditionalProxySelector interface of class '" + className + "'; defaulting to system proxy settings", e);
-            }
         }
     }
 
@@ -157,14 +145,10 @@ public final class ProxySelectors {
      * invalid proxy results (i.e. invalid port) which works around issues
      * on Linux hosts with incorrect settings.
      */
-    public static class CustomProxySelector extends ProxySelector {
-        protected ProxySelector ps;
+    private static class CustomProxySelector extends ProxySelector {
+        private final ProxySelector ps;
 
-        protected CustomProxySelector(ProxySelector ps) {
-            this.ps = ps;
-        }
-        
-        protected void setDefaultProxySelector(ProxySelector ps) {
+        CustomProxySelector(ProxySelector ps) {
             this.ps = ps;
         }
 

@@ -15,121 +15,49 @@
 package com.zimbra.common.mime;
 
 public class ContentType extends MimeCompoundHeader {
-    private String primaryType, subType;
-    private final String defaultType;
+    private String mPrimaryType, mSubType;
+    private final String mDefault;
 
     public static final String TEXT_PLAIN = "text/plain";
     public static final String APPLICATION_OCTET_STREAM = "application/octet-stream";
     public static final String MESSAGE_RFC822 = "message/rfc822";
     public static final String DEFAULT = TEXT_PLAIN;
 
-    public ContentType(String value) {
-        this(value, DEFAULT);
-    }
+    public ContentType(String header)                   { super(header);  mDefault = DEFAULT;  normalizeValue(); }
+    public ContentType(String header, String def)       { super(header);  mDefault = def;  normalizeValue(); }
+    public ContentType(String header, boolean use2231)  { super(header, use2231);  mDefault = DEFAULT;  normalizeValue(); }
+    public ContentType(ContentType ctype)               { super(ctype);  mDefault = ctype == null ? DEFAULT : ctype.mDefault;  normalizeValue(); }
 
-    public ContentType(String value, String defaultType) {
-        super("Content-Type", value);
-        this.defaultType = defaultType == null || defaultType.isEmpty() ? DEFAULT : defaultType;
-        normalizeType();
-    }
+    public ContentType setSubType(String subtype)                         { super.setValue(mPrimaryType + '/' + subtype);  normalizeValue();  return this; }
+    @Override public ContentType setValue(String value)                   { super.setValue(value);  normalizeValue();  return this; }
+    @Override public ContentType setParameter(String name, String value)  { super.setParameter(name, value);  return this; }
 
-    public ContentType(String value, boolean use2231) {
-        super("Content-Type", value, use2231);
-        this.defaultType = DEFAULT;
-        normalizeType();
-    }
+    public String getPrimaryType()  { return mPrimaryType; }
+    public String getSubType()      { return mSubType; }
 
-    ContentType(String name, byte[] content, int start, String defaultType) {
-        super(name, content, start);
-        this.defaultType = defaultType == null || defaultType.isEmpty() ? DEFAULT : defaultType;
-        normalizeType();
-    }
-
-    public ContentType(ContentType ctype) {
-        super(ctype);
-        this.defaultType = ctype == null ? DEFAULT : ctype.defaultType;
-        normalizeType();
-    }
-
-    ContentType(MimeHeader header, String defaultType) {
-        super(header);
-        this.defaultType = defaultType == null || defaultType.isEmpty() ? DEFAULT : defaultType;
-        normalizeType();
-    }
-
-    @Override protected ContentType clone() {
-        return new ContentType(this);
-    }
-
-
-    public ContentType setContentType(String contentType) {
-        return setPrimaryValue(contentType);
-    }
-
-    @Override public ContentType setPrimaryValue(String value) {
-        super.setPrimaryValue(value);
-        normalizeType();
-        return this;
-    }
-
-    public ContentType setSubType(String subtype) {
-        if (!subType.equals(subtype)) {
-            super.setPrimaryValue(primaryType + '/' + subtype);
-            normalizeType();
-        }
-        return this;
-    }
-
-    @Override public ContentType setParameter(String name, String value) {
-        super.setParameter(name, value);
-        return this;
-    }
-
-    public String getContentType() {
-        return primaryType + '/' + subType;
-    }
-
-    public String getPrimaryType() {
-        return primaryType;
-    }
-
-    public String getSubType() {
-        return subType;
-    }
-
-    private void normalizeType() {
-        String primary = getPrimaryValue();
-        String value = primary == null || primary.isEmpty() ? defaultType : primary.trim().toLowerCase();
-
-        this.primaryType = subType = "";
-        int slash = value.indexOf('/');
-        if (slash != -1) {
-            this.primaryType = value.substring(0, slash).trim();
-            this.subType = value.substring(slash + 1).trim();
-        }
-
-        if (primaryType.isEmpty() || subType.isEmpty()) {
-            // malformed content-type; default as best we can
-            if ("text".equals(slash == -1 ? value : primaryType)) {
-                this.primaryType = "text";
-                this.subType     = "plain";
+    private void normalizeValue() {
+        String value = getValue();
+        if (value == null || value.trim().equals("")) {
+            // default to "text/plain" if no content-type specified
+            setValue(mDefault);
+        } else {
+            if (!value.equals(value.trim().toLowerCase())) {
+                // downcase the content-type if necessary
+                setValue(value.trim().toLowerCase());
             } else {
-                this.primaryType = "application";
-                this.subType     = "octet-stream";
+                int slash = value.indexOf('/');
+                if (slash <= 0 || slash >= value.length() - 1) {
+                    // malformed content-type; default as best we can
+                    setValue(value.equals("text") ? TEXT_PLAIN : APPLICATION_OCTET_STREAM);
+                } else {
+                    mPrimaryType = value.substring(0, slash).trim();
+                    mSubType = value.substring(slash + 1).trim();
+                    if (mPrimaryType.equals("") || mSubType.equals(""))
+                        setValue(mPrimaryType.equals("text") ? TEXT_PLAIN : APPLICATION_OCTET_STREAM);
+                }
             }
         }
     }
 
-    @Override protected void reserialize() {
-        if (content == null) {
-            super.setPrimaryValue(getContentType());
-            super.reserialize();
-        }
-    }
-
-    @Override public ContentType cleanup() {
-        super.setPrimaryValue(getContentType());
-        super.cleanup();
-        return this;
-    }
+    public String toString()  { return toString(14); }
 }

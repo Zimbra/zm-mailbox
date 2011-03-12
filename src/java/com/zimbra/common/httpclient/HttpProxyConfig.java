@@ -1,3 +1,19 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * 
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2010 Zimbra, Inc.
+ * 
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.common.httpclient;
 
 import java.net.InetSocketAddress;
@@ -9,15 +25,13 @@ import java.util.List;
 import org.apache.commons.httpclient.HostConfiguration;
 
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.net.AuthProxy;
-import com.zimbra.common.net.ProxyHostConfiguration;
 import com.zimbra.common.net.ProxySelectors;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 public class HttpProxyConfig {
     
-    public static ProxyHostConfiguration getProxyConfig(HostConfiguration hc, String uriStr) {
+    public static HostConfiguration getProxyConfig(HostConfiguration hc, String uriStr) {
         if (!LC.client_use_system_proxy.booleanValue())
             return null;
         
@@ -41,12 +55,8 @@ public class HttpProxyConfig {
                 if (ZimbraLog.net.isDebugEnabled()) {
                     ZimbraLog.net.debug("URI %s to use HTTP proxy %s", safePrint(uri), addr.toString());
                 }
-                ProxyHostConfiguration nhc = new ProxyHostConfiguration(hc);
+                HostConfiguration nhc = new HostConfiguration(hc);
                 nhc.setProxy(addr.getHostName(), addr.getPort());
-                if (proxy instanceof AuthProxy) {
-                    nhc.setUsername(((AuthProxy) proxy).getUsername());
-                    nhc.setPassword(((AuthProxy) proxy).getPassword());
-                }
                 return nhc;
             case SOCKS: //socks proxy can be handled at socket factory level
             default:

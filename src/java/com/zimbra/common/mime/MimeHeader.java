@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- *
+ * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- *
+ * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -17,21 +17,20 @@ package com.zimbra.common.mime;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
-import com.zimbra.common.mime.HeaderUtils.ByteBuilder;
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.CharsetUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
-public class MimeHeader implements Cloneable {
-    final HeaderInfo hinfo;
-    protected final String name;
-    protected byte[] content;
-    protected int valueStart;
+public class MimeHeader {
+    protected final String mName;
+    protected byte[] mContent;
+    protected int mValueStart;
+    protected String mCharset = "utf-8";
 
     /** Constructor for pre-analyzed header line read from message source.
      * @param name    Header field name.
@@ -40,259 +39,114 @@ public class MimeHeader implements Cloneable {
      *                encoding intact.
      * @param start   The position within <code>content</code> where the header
      *                field value begins (after the ":"/": "). */
-    MimeHeader(final String name, final byte[] content, final int start) {
-        this.hinfo = HeaderInfo.of(name);
-        this.name = name;
-        this.content = content;
-        this.valueStart = start;
+    MimeHeader(String name, byte[] content, int start) {
+        mName = name;  mContent = content;  mValueStart = start;
     }
 
-    /** Creates a {@code MimeHeader} from another {@code MimeHeader}. */
-    MimeHeader(final MimeHeader header) {
-        this.hinfo = header.hinfo;
-        this.name = header.name;
-        this.content = header.getRawHeader();
-        this.valueStart = header.valueStart;
-    }
-
-    /** Creates a new {@code MimeHeader} with {@code value} as the field value.
-     *  Header will be serialized as <tt>{name}: {encoded-value}CRLF</tt> after
-     *  appropriate RFC 2047 encoded-word encoding and RFC 5322 line folding
-     *  has been performed.  When generating encoded-words, <tt>utf-8</tt> will
-     *  be used as the encoding charset.  <i>Note: No line folding is done at
+    /** Constructor for new header lines.  Header will be serialized as
+     *  <tt>{name}: {value}CRLF</tt>.  <i>Note: No folding is done at
      *  present.</i> */
-    public MimeHeader(final String name, final String value) {
+    MimeHeader(String name, String value) {
         this(name, value, null);
     }
 
-    /** Creates a new {@code MimeHeader} with {@code value} as the field value.
-     *  Header will be serialized as <tt>{name}: {encoded-value}CRLF</tt> after
-     *  appropriate RFC 2047 encoded-word encoding and RFC 5322 line folding
-     *  has been performed.  When generating encoded-words, {@code charset}
-     *  will be used as the encoding charset if possible, defaulting back to
-     *  <tt>utf-8</tt>.  <i>Note: No line folding is done at present.</i> */
-    MimeHeader(final String name, final String value, final String charset) {
-        this.hinfo = HeaderInfo.of(name);
-        this.name = hinfo.name == null ? name : hinfo.name;
-        updateContent(escape(value, CharsetUtil.toCharset(charset), false).getBytes());
+    MimeHeader(String name, String value, String charset) {
+        mName = name;
+        if (charset != null && !charset.equals(""))
+            mCharset = charset;
+        updateContent(escape(value, mCharset, false).getBytes());
     }
 
-    /** Creates a new {@code MimeHeader} serialized as "<tt>{name}:
-     *  {bvalue}CRLF</tt>".  {@code bvalue} is copied verbatim; no charset
-     *  transforms, encoded-word handling, or folding is performed. */
-    public MimeHeader(final String name, final byte[] bvalue) {
-        this.hinfo = HeaderInfo.of(name);
-        this.name = hinfo.name == null ? name : hinfo.name;
+    MimeHeader(String name, byte[] bvalue) {
+        mName = name;
         updateContent(bvalue);
     }
 
-    @Override
-    protected MimeHeader clone() {
-        return new MimeHeader(this);
-    }
-
-
-    enum HeaderInfo {
-        RETURN_PATH("Return-Path", 1, false, true),
-        RECEIVED("Received", 2, false, true),
-        RESENT_DATE("Resent-Date", 3, false, false, true),
-        RESENT_FROM("Resent-From", 3, false, false, true),
-        RESENT_SENDER("Resent-Sender", 3, false, false, true),
-        RESENT_TO("Resent-To", 3, false, false, true),
-        RESENT_CC("Resent-Cc", 3, false, false, true),
-        RESENT_BCC("Resent-Bcc", 3, false, false, true),
-        RESENT_MESSAGE_ID("Resent-Message-ID", 3, false, false, true),
-        DATE("Date", 4, true),
-        FROM("From", 5),
-        SENDER("Sender", 6, true),
-        REPLY_TO("Reply-To", 7, true),
-        TO("To", 8),
-        CC("Cc", 9),
-        BCC("Bcc", 10),
-        SUBJECT("Subject", 11, true),
-        MESSAGE_ID("Message-ID", 12, true),
-        IN_REPLY_TO("In-Reply-To", 13, true),
-        REFERENCES("References", 14, true),
-        THREAD_TOPIC("Thread-Topic", 15, true),
-        THREAD_INDEX("Thread-Index", 16, true),
-        CONTENT_TYPE("Content-Type", 17, true),
-        CONTENT_DISPOSITION("Content-Disposition", 18, true),
-        CONTENT_TRANSFER_ENCODING("Content-Transfer-Encoding", 19, true),
-        MIME_VERSION("MIME-Version", 20, true),
-        DEFAULT(null, 35),
-        CONTENT_LENGTH("Content-Length", 49, true),
-        STATUS("Status", 50, true);
-
-        final String name;
-        final int position;
-        final boolean unique, prepend, first;
-
-        HeaderInfo(String name, int position) {
-            this(name, position, false, false, false);
-        }
-
-        HeaderInfo(String name, int position, boolean unique) {
-            this(name, position, unique, false, false);
-        }
-
-        HeaderInfo(String name, int position, boolean unique, boolean prepend) {
-            this(name, position, unique, prepend, false);
-        }
-
-        HeaderInfo(String name, int position, boolean unique, boolean prepend, boolean first) {
-            this.name = name;  this.position = position;
-            this.unique = unique;  this.prepend = prepend;  this.first = first;
-        }
-
-        private static final Map<String, HeaderInfo> lookup = new HashMap<String, HeaderInfo>(40);
-        static {
-            for (HeaderInfo hinfo : EnumSet.allOf(HeaderInfo.class)) {
-                if (hinfo.name != null) {
-                    lookup.put(hinfo.name.toLowerCase(), hinfo);
-                }
-            }
-        }
-
-        static HeaderInfo of(String name) {
-            HeaderInfo hinfo = name == null ? null : lookup.get(name.toLowerCase());
-            return hinfo == null ? DEFAULT : hinfo;
-        }
-
-        @Override
-        public String toString() {
-            return name;
-        }
-    }
-
-
-    /** Reserializes the {@code MimeHeader}, using {@code bvalue} as the
-     *  field value (the bit after the '<tt>:</tt>').  {@code bvalue} is
-     *  copied verbatim; no charset transforms, encoded-word handling, or
-     *  folding is performed.*/ 
-    MimeHeader updateContent(final byte[] bvalue) {
-        byte[] bname = name.getBytes();
+    MimeHeader updateContent(byte[] bvalue) {
+        byte[] bname = mName.getBytes();
         int nlen = bname.length, vlen = bvalue == null ? 0 : bvalue.length;
         int csize = nlen + vlen + 4;
 
-        byte[] buf = new byte[csize];
-        System.arraycopy(bname, 0, buf, 0, nlen);
-        buf[nlen] = ':';  buf[nlen + 1] = ' ';
-        if (bvalue != null) {
-            System.arraycopy(bvalue, 0, buf, nlen + 2, vlen);
-        }
-        buf[csize - 2] = '\r';  buf[csize - 1] = '\n';
+        byte[] content = new byte[csize];
+        System.arraycopy(bname, 0, content, 0, nlen);
+        content[nlen] = ':';  content[nlen + 1]= ' ';
+        if (bvalue != null)
+            System.arraycopy(bvalue, 0, content, nlen + 2, vlen);
+        content[csize - 2] = '\r';  content[csize - 1] = '\n';
 
-        this.content = buf;  this.valueStart = nlen + 2;
+        mContent = content;  mValueStart = nlen + 2;
         return this;
     }
 
-    /** Returns this header's field name (the bit before the '<tt>:</tt>' in
-     *  the header line). */
-    public String getName() {
-        return name;
+    MimeHeader(String name, MimeCompoundHeader mch) {
+        mName = name;
+        mContent = (mch.toString(name) + "\r\n").getBytes();
+        mValueStart = mName.length() + 2;
     }
 
-    /** Returns the entire header line (including the field name and the
-     *  '<tt>:</tt>') as a raw byte array. */
+    public String getName() {
+        return mName;
+    }
+
     public byte[] getRawHeader() {
         reserialize();
-        return content;
+        return mContent;
     }
 
-    /** Returns the header's value (the bit after the '<tt>:</tt>') after all
-     *  unfolding and decoding of RFC 2047 encoded-words has been performed. */
-    public String getValue(final String charset) {
+    public String getValue(String charset) {
         reserialize();
-        int end = content.length, c;
-        while (end > valueStart && ((c = content[end-1]) == '\n' || c == '\r')) {
+        int end = mContent.length, c;
+        while (end > mValueStart && ((c = mContent[end-1]) == '\n' || c == '\r'))
             end--;
-        }
-        return decode(content, valueStart, end - valueStart, CharsetUtil.toCharset(charset));
+        return decode(mContent, mValueStart, end - mValueStart, charset);
     }
 
-    /** Returns the header's value (the bit after the '<tt>:</tt>') as a
-     *  {@code String}.  No decoding is performed other than removing the
-     *  trailing CRLF. */
-    @Override
-    public String toString() {
-        return getEncodedValue(null);
-    }
-
-    /** Returns the header's value (the bit after the '<tt>:</tt>') as a
-     *  {@code String}.  No decoding is performed other than removing the
-     *  trailing CRLF. */
-    public String getEncodedValue() {
-        return getEncodedValue(null);
-    }
-
-    /** Returns the header's value (the bit after the '<tt>:</tt>') as a
-     *  {@code String}.  If non-{@code null}, the {@code charset} is used when
-     *  converting the header bytes to a {@code String}.  No decoding is
-     *  performed other than removing the trailing CRLF. */
-    public String getEncodedValue(String charset) {
+    public String getEncoded() {
         reserialize();
-        int end = content.length, c;
-        while (end > valueStart && ((c = content[end-1]) == '\n' || c == '\r')) {
-            end--;
+        return unfold(new String(mContent, mValueStart, mContent.length - mValueStart));
+    }
+
+    public String getEncoded(String charset) {
+        if (charset == null || charset.equals(""))
+            return getEncoded();
+
+        reserialize();
+        try {
+            return unfold(new String(mContent, mValueStart, mContent.length - mValueStart, charset));
+        } catch (UnsupportedEncodingException e) {
+            return getEncoded();
         }
-        return createString(content, valueStart, end - valueStart, CharsetUtil.toCharset(charset));
     }
 
-    private static String createString(byte[] bytes, int offset, int length, Charset charset) {
-        return new String(bytes, offset, length, decodingCharset(charset));
-    }
 
-    /** Marks the header as "dirty" and requiring reserialization.  To enforce
-     *  this reserialization requirement, unsets {@link #content}. */
-    protected void markDirty() {
-        this.content = null;
-        this.valueStart = -1;
-        // XXX: if header is in a header block, should mark that block as dirty?
-    }
-
-    /** Returns whether the header has been marked as needing reserialization.
-     * @see #markDirty() */
-    protected boolean isDirty() {
-        return content == null;
-    }
-
-    /** Permits a subclass to regenerate the {@code byte[]} content of the
-     *  header as a result of changes.  Implementations of this method should
-     *  first call {@link #isDirty()} and perform a no-op if it returns
-     *  {@code false}. */
-    protected void reserialize() {
-    }
-
-    static final Charset DEFAULT_CHARSET = CharsetUtil.normalizeCharset(CharsetUtil.ISO_8859_1);
-
-    static Charset decodingCharset(Charset charset) {
-        return charset != null ? CharsetUtil.normalizeCharset(charset) : DEFAULT_CHARSET;
-    }
+    private static final String DEFAULT_CHARSET = Charset.defaultCharset().name();
 
     public static String decode(final String content) {
-        return decode(content.getBytes(CharsetUtil.UTF_8), CharsetUtil.UTF_8);
+        return decode(content.getBytes(), DEFAULT_CHARSET);
     }
 
-    static String decode(final byte[] content, final Charset charset) {
+    static String decode(final byte[] content, final String charset) {
         return decode(content, 0, content.length, charset);
     }
 
-    @SuppressWarnings("null")
-    static String decode(final byte[] content, final int start, final int length, final Charset charset) {
+    static String decode(final byte[] content, final int start, final int length, final String charset) {
         // short-circuit if there are only ASCII characters and no "=?"
         final int end = start + length;
         boolean complicated = false;
         for (int pos = start; pos < end && !complicated; pos++) {
             byte c = content[pos];
-            if (c <= 0 || c >= 0x7F || (c == '=' && pos < end - 1 && content[pos + 1] == '?')) {
+            if (c < 0 || c > 0x7E || (c == '=' && pos < end - 1 && content[pos + 1] == '?'))
                 complicated = true;
-            }
         }
         if (!complicated) {
-            return unfold(createString(content, start, length, charset));
+            try {
+                if (charset != null && !charset.trim().equals(""))
+                    return unfold(new String(content, start, length, charset));
+            } catch (Exception e) { }
+            return unfold(new String(content, start, length));
         }
 
-        ByteBuilder builder = new ByteBuilder(length, decodingCharset(charset));
+        HeaderUtils.ByteBuilder builder = new HeaderUtils.ByteBuilder(length, charset);
         String value = null;
         boolean encoded = false;
         Boolean encwspenc = Boolean.FALSE;
@@ -304,9 +158,8 @@ public class MimeHeader implements Cloneable {
                 // ignore folding
             } else if (c == '=' && pos < end - 2 && content[pos + 1] == '?' && (!encoded || content[pos + 2] != '=')) {
                 // "=?" marks the beginning of an encoded-word
-                if (!builder.isEmpty()) {
+                if (!builder.isEmpty())
                     value = builder.appendTo(value);
-                }
                 builder.reset();  builder.write('=');
                 encoded = true;  questions = 0;
             } else if (c == '?' && encoded && ++questions > 3 && pos < end - 1 && content[pos + 1] == '=') {
@@ -314,15 +167,13 @@ public class MimeHeader implements Cloneable {
                 builder.write('?');  builder.write('=');
                 String decoded = HeaderUtils.decodeWord(builder.toByteArray());
                 boolean valid = decoded != null;
-                if (valid) {
+                if (valid)
                     pos++;
-                } else {
+                else
                     decoded = builder.pop().toString();
-                }
                 // drop all whitespace between encoded-words
-                if (valid && encwspenc == Boolean.TRUE) {
+                if (valid && encwspenc == Boolean.TRUE)
                     value = value.substring(0, value.length() - wsplength);
-                }
                 value = value == null ? decoded : value + decoded;
                 encwspenc = valid ? null : Boolean.FALSE;  wsplength = 0;
                 encoded = false;  builder.reset();
@@ -337,43 +188,39 @@ public class MimeHeader implements Cloneable {
             }
         }
 
-        if (!builder.isEmpty()) {
+        if (!builder.isEmpty())
             value = builder.appendTo(value);
-        }
         return value == null ? "" : value;
     }
 
-    static String unfold(final String folded) {
+    private static String unfold(final String folded) {
         int length = folded.length(), i;
         for (i = 0; i < length; i++) {
             char c = folded.charAt(i);
-            if (c == '\r' || c == '\n') {
+            if (c == '\r' || c == '\n')
                 break;
-            }
         }
-        if (i == length) {
+        if (i == length)
             return folded;
-        }
 
         StringBuilder unfolded = new StringBuilder(length);
-        if (i > 0) {
+        if (i > 0)
             unfolded.append(folded, 0, i);
-        }
         while (++i < length) {
             char c = folded.charAt(i);
-            if (c != '\r' && c != '\n') {
+            if (c != '\r' && c != '\n')
                 unfolded.append(c);
-            }
         }
         return unfolded.toString();
     }
 
+
     static class EncodedWord {
-        static String encode(final String value, final Charset requestedCharset) {
+        static String encode(String value, String charset) {
             StringBuilder sb = new StringBuilder();
 
             // FIXME: need to limit encoded-words to 75 bytes
-            Charset charset = CharsetUtil.checkCharset(value, requestedCharset);
+            charset = StringUtil.checkCharset(value, charset);
             byte[] content = null;
             try {
                 content = value.getBytes(charset);
@@ -382,19 +229,17 @@ public class MimeHeader implements Cloneable {
                     ZimbraLog.system.fatal("out of memory", e);
                 } finally {
                     Runtime.getRuntime().halt(1);
-                    content = new byte[0];  // never reachable, but averts compiler warnings
                 }
             } catch (Throwable t) {
-                content = value.getBytes(CharsetUtil.ISO_8859_1);
-                charset = CharsetUtil.ISO_8859_1;
+                content = value.getBytes();
+                charset = Charset.defaultCharset().displayName();
             }
-            sb.append("=?").append(charset.name().toLowerCase());
+            sb.append("=?").append(charset);
 
             int invalidQ = 0;
-            for (byte b : content) {
-                if (b < 0 || Q2047Encoder.FORCE_ENCODE[b]) {
+            for (int i = 0; i < content.length; i++) {
+                if (content[i] < 0 || Q2047Encoder.FORCE_ENCODE[content[i]])
                     invalidQ++;
-                }
             }
 
             InputStream encoder;
@@ -406,8 +251,7 @@ public class MimeHeader implements Cloneable {
 
             try {
                 sb.append(new String(ByteUtil.readInput(encoder, 0, Integer.MAX_VALUE)));
-            } catch (IOException ioe) {
-            }
+            } catch (IOException ioe) {}
             sb.append("?=");
 
             return sb.toString();
@@ -415,45 +259,37 @@ public class MimeHeader implements Cloneable {
 
         private static class Q2047Encoder extends ContentTransferEncoding.QuotedPrintableEncoderStream {
             static final boolean[] FORCE_ENCODE = new boolean[128];
-            static {
-                for (int i = 0; i < FORCE_ENCODE.length; i++) {
-                    FORCE_ENCODE[i] = true;
+                static {
+                    for (int i = 0; i < FORCE_ENCODE.length; i++)
+                        FORCE_ENCODE[i] = true;
+                    for (int c : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!*+-/ ".getBytes())
+                        FORCE_ENCODE[c] = false;
                 }
-                for (int c : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!*+-/ ".getBytes()) {
-                    FORCE_ENCODE[c] = false;
-                }
+
+            Q2047Encoder(byte[] content) {
+                super(new ByteArrayInputStream(content), null);  disableFolding();  setForceEncode(FORCE_ENCODE);
             }
 
-            Q2047Encoder(final byte[] content) {
-                super(new ByteArrayInputStream(content), null);
-                disableFolding();
-                setForceEncode(FORCE_ENCODE);
-            }
-
-            @Override
-            public int read() throws IOException {
-                int c = super.read();
-                return c == ' ' ? '_' : c;
+            @Override public int read() throws IOException {
+                int c = super.read();  return c == ' ' ? '_' : c;
             }
         }
 
         private static class B2047Encoder extends ContentTransferEncoding.Base64EncoderStream {
             B2047Encoder(byte[] content) {
-                super(new ByteArrayInputStream(content));
-                disableFolding();
+                super(new ByteArrayInputStream(content));  disableFolding();
             }
         }
     }
 
-    /** Characters that can form part of an RFC 5322 atom. */
+    /** Characters that can form part of an RFC 2822 atom. */
     static final boolean[] ATEXT_VALID = new boolean[128];
-    static {
-        for (int c : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&'*+-/=?^_`{|}~".getBytes()) {
-            ATEXT_VALID[c] = true;
+        static {
+            for (int c : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&'*+-/=?^_`{|}~".getBytes())
+                ATEXT_VALID[c] = true;
         }
-    }
 
-    public static String escape(final String value, final Charset charset, final boolean phrase) {
+    static String escape(String value, String charset, boolean phrase) {
         boolean needsQuote = false, wsp = true;
         int needs2047 = 0, needsEscape = 0, cleanTo = 0, cleanFrom = value.length();
         for (int i = 0, len = value.length(); i < len; i++) {
@@ -461,7 +297,7 @@ public class MimeHeader implements Cloneable {
             if (c > 0x7F || c == '\0' || c == '\r' || c == '\n') {
                 needs2047++;  cleanFrom = len;
             } else if (!phrase) {
-                // if we're not in an RFC 5322 phrase, there is no such thing as "quoting"
+                // if we're not in an RFC 2822 phrase, there is no such thing as "quoting" 
             } else if (c == '"' || c == '\\') {
                 needsQuote = true;  needsEscape++;  cleanFrom = len;
             } else if ((c != ' ' && !ATEXT_VALID[c]) || (c == ' ' && wsp)) {
@@ -469,19 +305,16 @@ public class MimeHeader implements Cloneable {
             }
             wsp = c == ' ';
             if (wsp) {
-                if (!needsQuote && needs2047 == 0 && i != len - 1) {
+                if (!needsQuote && needs2047 == 0 && i != len - 1)
                     cleanTo = i + 1;
-                } else if (cleanFrom == len && i > cleanTo + 1) {
+                else if (cleanFrom == len && i > cleanTo + 1)
                     cleanFrom = i;
-                }
             }
         }
-        if (phrase) {
+        if (phrase)
             needsQuote |= wsp;
-        }
-        if (wsp) {
+        if (wsp)
             cleanFrom = value.length();
-        }
 
         if (needs2047 > 0) {
             String prefix = value.substring(0, cleanTo), suffix = value.substring(cleanFrom);
@@ -495,19 +328,165 @@ public class MimeHeader implements Cloneable {
         }
     }
 
-    static String quote(final String value) {
+    static String quote(String value) {
         return quote(value, 0);
     }
 
-    private static String quote(final String value, final int escapeHint) {
+    private static String quote(String value, int escapeHint) {
         StringBuilder sb = new StringBuilder(value.length() + escapeHint + 2).append('"');
         for (int i = 0, len = value.length(); i < len; i++) {
             char c = value.charAt(i);
-            if (c == '"' || c == '\\') {
+            if (c == '"' || c == '\\')
                 sb.append('\\');
-            }
             sb.append(c);
         }
         return sb.append('"').toString();
+    }
+
+    protected void reserialize() { }
+
+    @Override public String toString() {
+        String header = new String(mContent);
+        return header.endsWith("\r\n") ? header.substring(0, header.length() - 2) : header;
+    }
+
+
+    public static class MimeAddressHeader extends MimeHeader {
+        private List<InternetAddress> mAddresses = new ArrayList<InternetAddress>(3);
+
+        public MimeAddressHeader(final String name, final List<InternetAddress> iaddrs) {
+            super(name, null, -1);
+            mAddresses.addAll(iaddrs);
+        }
+
+        public MimeAddressHeader(final String name, final String value) {
+            super(name, value);
+            if (mValueStart > 0)
+                parse(mContent, mValueStart, mContent.length - mValueStart);
+        }
+
+        public MimeAddressHeader(final String name, final byte[] bvalue) {
+            super(name, bvalue);
+            if (mValueStart > 0)
+                parse(mContent, mValueStart, mContent.length - mValueStart);
+        }
+
+        private void parse(final byte[] content, final int start, final int length) {
+            // FIXME: will split the header incorrectly if there's a ',' in the middle of a domain literal ("@[...]")
+            boolean quoted = false, escaped = false, group = false, empty = true;
+            int pos = start, astart = pos, end = start + length, clevel = 0;
+
+            while (pos < end) {
+                byte c = content[pos++];
+                if (c == '\r' || c == '\n') {
+                    // ignore folding, even where it's not actually permitted
+                    escaped = false;
+                } else if (quoted) {
+                    quoted = !escaped && c == '"';
+                    escaped = !escaped && c == '\\';
+                } else if (c == '(' || clevel > 0) {
+                    // handle comments outside of quoted strings, even where they're not actually permitted
+                    if (!escaped && (c == '(' || c == ')'))
+                        clevel += c == '(' ? 1 : -1;
+                    escaped = !escaped && c == '\\';
+                    empty = false;
+                } else if (c == '"') {
+                    quoted = true;
+                    empty = false;
+                } else if (c == ',' || (c == ';' && group)) {
+                    // this concludes the address portion of our program
+                    if (!empty)
+                        mAddresses.add(new InternetAddress(content, astart, pos - astart, mCharset));
+                    group = c == ';';
+                    empty = true;
+                    astart = pos;
+                } else if (c == ':' && !group) {
+                    // ignore the group name that we've just passed
+                    group = empty = true;
+                    astart = pos;
+                } else if (c != ' ' && c != '\t' && empty) {
+                    empty = false;
+                }
+            }
+            // don't forget the last address in the list
+            if (!empty)
+                mAddresses.add(new InternetAddress(content, astart, pos - astart, mCharset));
+        }
+
+        public List<InternetAddress> getAddresses() {
+            return new ArrayList<InternetAddress>(mAddresses);
+        }
+
+        public MimeAddressHeader addAddress(InternetAddress iaddr) {
+            mAddresses.add(iaddr);  mContent = null;  mValueStart = -1;  return this;
+        }
+
+        protected void reserialize() {
+            if (mContent == null) {
+                StringBuilder value = new StringBuilder();
+                for (int i = 0; i < mAddresses.size(); i++)
+                    value.append(i == 0 ? "" : ", ").append(mAddresses.get(i));
+                // FIXME: need to fold every 75 bytes
+                updateContent(value.toString().getBytes());
+            }
+        }
+    }
+
+
+    private static void dumpAddresses(MimeAddressHeader ahdr) {
+        for (InternetAddress iaddr : ahdr.getAddresses())
+            System.out.println("  addr: " + iaddr);
+    }
+
+    private static void dumpContent(String name, String value) {
+        dumpContent(name, value, null);
+    }
+
+    private static void dumpContent(String name, String value, String charset) {
+        System.out.println('"' + value + "\"\t=> " + escape(value, charset, false));
+        System.out.println('"' + value + "\"\t=> " + escape(value, charset, true));
+    }
+
+    public static void main(String[] args) {
+        dumpAddresses(new MimeAddressHeader("To", "mine:=?us-ascii?Q?Bob_?=\t=?us-ascii?Q?the_Builder_1?= <bob@example.com>;,=?us-ascii?Q?Bob the Builder 2?= <bob@example.com>"));
+
+        dumpContent("Subject", "Re: Pru\u00ee Loo");
+        dumpContent("Subject", "Re: Pru\u00ee Loo ");
+        dumpContent("Subject", "Fwd:   Pru\u00ee Loo");
+        dumpContent("Subject", "Prue Loo  ");
+        dumpContent("Subject", "Fwd:  Pru\u00ee Loo ");
+        dumpContent("Subject", "Prue  Loo");
+        dumpContent("Subject", "Prue   Loo");
+        dumpContent("Subject", " Prue  Loo ");
+
+        dumpContent("Subject", "Pru\u00ee");
+        dumpContent("Subject", "Pru\u00ee", "iso-8859-1");
+        dumpContent("Subject", "Pru\u00ee", "iso-8859-7");
+
+        dumpContent("Subject", "lskdhf lkshfl aksjhlfi ahslkfu Pru\u00ee uey liufhlasuifh haskjhf lkajshf lkajshflkajhslkfj hals\u00e4kjhf laskjhdflaksjh ksjfh ka");
+
+        dumpContent("Subject", "\u00eb\u00ec\u00ed\u00ee");
+        dumpContent("Subject", "\u00eb\u00ec\u00ed\u00ee", "iso-8859-1");
+
+        String encoded = "RE: [Bug 30944]=?UTF-8?Q?=20Meeting=20invitation=20that=E2=80=99s=20created=20within=20exchange=20containing=20=C3=A5=C3=A4=C3=B6=20will=20show=20within=20the=20calendar=20and=20acceptance=20notification=20as=20?=?????";
+        System.out.println(decode(encoded));
+        try {
+            System.setProperty("mail.mime.decodetext.strict", "false");
+            System.out.println(javax.mail.internet.MimeUtility.decodeText(encoded));
+        } catch (UnsupportedEncodingException uee) { }
+
+        System.out.println(decode("=?utf-8?Q?Hambone_x?="));
+        System.out.println(decode("=?utf-8?Q?Ha?==?utf-8?Q?mbone?= x"));
+        System.out.println(decode("=?utf-8?Q?Ha?=    =?utf-8?Q?mbone x?="));
+        System.out.println(decode("=?utf-8?Q?Ha?=  m =?utf-8?Q?bone?="));
+        System.out.println(decode("=?utf-8?Q?Ha?= \r\n m =?utf-8?Q?bone?="));
+        System.out.println(decode("=?utf-8?Q?Ha?=    =?utf-8??mbone?="));
+        System.out.println(decode("=?utf-8??Broken?="));
+        System.out.println(decode("test\r\n one"));
+
+        System.out.println(unfold("dog"));
+        System.out.println(unfold("dog\n"));
+        System.out.println(unfold("\ndog"));
+        System.out.println(unfold("dog\n cat"));
     }
 }
