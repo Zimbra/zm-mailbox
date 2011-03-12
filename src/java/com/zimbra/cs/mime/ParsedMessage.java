@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -102,6 +102,7 @@ public class ParsedMessage {
     private List<String> mFilenames = new ArrayList<String>();
     private boolean mIndexAttachments;
     private int mNumParseErrors = 0;
+    private String defaultCharset;
 
     /** if TRUE then there was a _temporary_ failure analyzing the message.  We should attempt
      * to re-index this message at a later time */
@@ -296,6 +297,7 @@ public class ParsedMessage {
     }
 
     public ParsedMessage setDefaultCharset(String charset) {
+        defaultCharset = charset;
         if (mMimeMessage instanceof JavaMailMimeMessage) {
             ((JavaMailMimeMessage) mMimeMessage).setProperty(MimePart.PROP_CHARSET_DEFAULT, charset);
         }
@@ -1043,6 +1045,7 @@ public class ParsedMessage {
             String ctype = mpi.getContentType();
             MimeHandler handler = MimeHandlerManager.getMimeHandler(ctype, mpi.getFilename());
             assert(handler != null);
+            handler.setDefaultCharset(defaultCharset);
 
             Mime.repairTransferEncoding(mpi.getMimePart());
 

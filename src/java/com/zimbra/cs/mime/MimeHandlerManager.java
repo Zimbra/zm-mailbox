@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -39,21 +39,21 @@ public class MimeHandlerManager {
     private static Log sLog = LogFactory.getLog(MimeHandlerManager.class);
 
     private static class HandlerInfo {
-        MimeTypeInfo mMimeType;
-        Class<? extends MimeHandler> mClass;
-        String mRealMimeType;
+        MimeTypeInfo mimeType;
+        Class<? extends MimeHandler> clazz;
+        String realMimeType;
 
         public MimeHandler getInstance() throws MimeHandlerException {
             MimeHandler handler;
             try {
-                handler = mClass.newInstance();
+                handler = clazz.newInstance();
             } catch (InstantiationException e) {
                 throw new MimeHandlerException(e);
             } catch (IllegalAccessException e) {
                 throw new MimeHandlerException(e);
             }
-            handler.setContentType(mRealMimeType);
-            handler.mMimeTypeInfo = mMimeType;
+            handler.setContentType(realMimeType);
+            handler.setMimeTypeInfo(mimeType);
             return handler;
         }
     }
@@ -172,23 +172,19 @@ public class MimeHandlerManager {
             if (className.indexOf('.') == -1) {
                 className = "com.zimbra.cs.mime.handler." + className;
             }
-            handlerInfo.mMimeType = mt;
-            handlerInfo.mRealMimeType = mimeType;
+            handlerInfo.mimeType = mt;
+            handlerInfo.realMimeType = mimeType;
             try {
-                handlerInfo.mClass = ExtensionUtil.loadClass(mt.getExtension(),
-                        className).asSubclass(MimeHandler.class);
+                handlerInfo.clazz = ExtensionUtil.loadClass(mt.getExtension(), className).asSubclass(MimeHandler.class);
             } catch (ClassNotFoundException e) {
                 // miss configuration or the extension is disabled
-                sLog.warn("MIME handler %s for %s (%s) not found",
-                        className, extension, mimeType);
+                sLog.warn("MIME handler %s for %s (%s) not found", className, extension, mimeType);
                 // Fall back to UnknownTypeHandler
-                handlerInfo.mClass = UnknownTypeHandler.class;
+                handlerInfo.clazz = UnknownTypeHandler.class;
             }
             return handlerInfo;
         } catch (ServiceException e) {
-            String msg = String.format(
-                    "Unable to load MIME handler for type %s, extension %s.",
-                    mimeType, extension);
+            String msg = String.format("Unable to load MIME handler for type %s, extension %s.", mimeType, extension);
             throw new MimeHandlerException(msg, e);
         }
     }

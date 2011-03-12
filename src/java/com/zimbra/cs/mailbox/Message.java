@@ -17,6 +17,7 @@ package com.zimbra.cs.mailbox;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -1082,7 +1083,8 @@ public class Message extends MailItem {
         return moved;
     }
 
-    @Override public List<IndexDocument> generateIndexData(boolean doConsistencyCheck) throws MailItem.TemporaryIndexingException {
+    @Override
+    public List<IndexDocument> generateIndexData(boolean doConsistencyCheck) throws TemporaryIndexingException {
         try {
             ParsedMessage pm = null;
             synchronized (getMailbox()) {
@@ -1094,6 +1096,7 @@ public class Message extends MailItem {
                     .setDigest(getDigest());
                 pm = new ParsedMessage(opt);
             }
+            pm.setDefaultCharset(getAccount().getPrefMailDefaultCharset());
 
             if (doConsistencyCheck) {
                 // because of bug 8263, we sometimes have fragments that are incorrect;
@@ -1106,20 +1109,21 @@ public class Message extends MailItem {
                 String subject = pm.getNormalizedSubject();
                 boolean subjectChanged = !getNormalizedSubject().equals(subject == null ? "" : subject);
 
-                if (fragmentChanged || subjectChanged)
+                if (fragmentChanged || subjectChanged) {
                     getMailbox().reanalyze(getId(), getType(), pm, getSize());
+                }
             }
 
             // don't hold the lock while extracting text!
             pm.analyzeFully();
 
-            if (pm.hasTemporaryAnalysisFailure())
-                throw new MailItem.TemporaryIndexingException();
-
+            if (pm.hasTemporaryAnalysisFailure()) {
+                throw new TemporaryIndexingException();
+            }
             return pm.getLuceneDocuments();
         } catch (ServiceException e) {
-            ZimbraLog.index.warn("Unable to generate index data for Message "+getId()+". Item will not be indexed", e);
-            return new ArrayList<IndexDocument>(0);
+            ZimbraLog.index.warn("Unable to generate index data for Message %d. Item will not be indexed.", getId(), e);
+            return Collections.emptyList();
         }
     }
 
