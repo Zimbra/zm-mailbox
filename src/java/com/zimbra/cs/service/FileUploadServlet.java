@@ -102,12 +102,15 @@ public class FileUploadServlet extends ZimbraServlet {
         final String   name;
         final FileItem file;
         long time;
+        boolean deleted = false;
         
         Upload(String acctId, FileItem attachment) throws ServiceException {
             this(acctId, attachment, attachment.getName());
         }
 
         Upload(String acctId, FileItem attachment, String filename) throws ServiceException {
+            assert(attachment != null); // TODO: Remove null checks in mainline.
+            
             String localServer = Provisioning.getInstance().getLocalServer().getId();
             accountId = acctId;
             time      = System.currentTimeMillis();
@@ -160,6 +163,9 @@ public class FileUploadServlet extends ZimbraServlet {
         public long getSize()           { return file == null ? 0 : file.getSize(); }
         
         public InputStream getInputStream() throws IOException {
+            if (wasDeleted()) {
+                throw new IOException("Cannot get content for upload " + uuid + " because it was deleted.");
+            }
             if (file == null)
                 return new ByteArrayInputStream(new byte[0]);
             if (!file.isInMemory() && (file instanceof DiskFileItem)) {
@@ -179,6 +185,14 @@ public class FileUploadServlet extends ZimbraServlet {
                 mLog.debug("Deleting from disk: id=%s, %s", uuid, file);
                 file.delete();
             }
+        }
+        
+        private synchronized void markDeleted() {
+            deleted = true;
+        }
+        
+        public synchronized boolean wasDeleted() {
+            return deleted;
         }
 
         @Override public String toString() {
@@ -343,6 +357,7 @@ public class FileUploadServlet extends ZimbraServlet {
         synchronized (mPending) {
             mLog.debug("deleteUpload(): removing %s", upload);
             up = mPending.remove(upload.uuid);
+            up.markDeleted();
         }
         if (up == upload)
             up.purge();
@@ -721,6 +736,7 @@ public class FileUploadServlet extends ZimbraServlet {
                             mLog.debug("Purging cached upload: %s", up);
                             it.remove();
                             reaped.add(up);
+                            up.markDeleted();
                             assert(mPending.get(up.uuid) == null);
                         }
                     }

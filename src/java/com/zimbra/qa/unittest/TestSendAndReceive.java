@@ -27,27 +27,28 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.zclient.ZSearchParams;
 import junit.framework.TestCase;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.zclient.ZEmailAddress;
 import com.zimbra.cs.zclient.ZGetMessageParams;
 import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZMessage;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.AttachedMessagePart;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.MessagePart;
+import com.zimbra.cs.zclient.ZMessage;
 import com.zimbra.cs.zclient.ZMessage.ZMimePart;
+import com.zimbra.cs.zclient.ZSearchParams;
 
 public class TestSendAndReceive extends TestCase {
 
@@ -307,6 +308,69 @@ public class TestSendAndReceive extends TestCase {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         verifyTextAttachmentLineEnding(mbox, content, MimeConstants.CT_TEXT_PLAIN);
         verifyTextAttachmentLineEnding(mbox, content, "application/x-shellscript");
+    }
+
+    private class SenderThread
+    extends Thread {
+        private String subject;
+        private String attachId;
+        private Throwable error;
+        
+        SenderThread(String subject, String attachId) {
+            this.subject = subject;
+            this.attachId = attachId;
+        }
+        
+        @Override
+        public void run() {
+            try {
+                ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+                TestUtil.sendMessage(mbox, USER_NAME, subject, "", attachId);
+            } catch (Throwable e) {
+                this.error = e;
+            }
+        }
+    }
+    
+    /**
+     * Confirms that the server gracefully handles the case where multiple threads
+     * simultaneously send a message, using the same attachment upload id (bug 57222).
+     */
+    public void testReuseUploadId()
+    throws Exception {
+        // Upload attachment.
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        String attachContent = "The leaves that are green turn to brown.";
+        String attachId = mbox.uploadAttachment("lyrics.txt", attachContent.getBytes(), "text/plain", 0);
+        
+        // Run 5 threads that all send with the same upload id.
+        SenderThread[] threads = new SenderThread[5];
+        String subject = NAME_PREFIX + " testReuseUploadId";
+        for (int i = 0; i < threads.length; i++) {
+            threads[i] = new SenderThread(subject + " " + i, attachId);
+            threads[i].start();
+        }
+        for (int i = 0; i < threads.length; i++) {
+            threads[i].join();
+        }
+        
+        // Make sure only 1 succeeded.
+        int numFailures = 0;
+        for (SenderThread sender : threads) {
+            if (sender.error != null) {
+                numFailures++;
+                // If the upload was deleted before the outgoing message was assembled,
+                // we get NO_SUCH_UPLOAD.  If the outgoing message already references
+                // an UploadDataSource, we'll get an IOException that the file was deleted.
+                SoapFaultException fault = (SoapFaultException) sender.error;
+                if (!fault.getCode().equals(MailServiceException.NO_SUCH_UPLOAD)) {
+                    String stackTrace = SystemUtil.getStackTrace(sender.error);
+                    assertTrue(stackTrace,
+                        stackTrace.contains("upload " + attachId + " because it was deleted"));
+                }
+            }
+        }
+        assertEquals(threads.length - 1, numFailures);
     }
     
     private void verifyTextAttachmentLineEnding(ZMailbox mbox, String content, String contentType)
