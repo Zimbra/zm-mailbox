@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 administrator 20110309-1047 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110314-1429 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -698,6 +698,22 @@ public class ZAttrProvisioning {
         public boolean isSecondCopyifOnToOrCC() { return this == secondCopyifOnToOrCC;}
         public boolean isDedupeNone() { return this == dedupeNone;}
         public boolean isDedupeAll() { return this == dedupeAll;}
+    }
+
+    public static enum PrefFileSharingApplication {
+        briefcase("briefcase"),
+        octopus("octopus");
+        private String mValue;
+        private PrefFileSharingApplication(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefFileSharingApplication fromString(String s) throws ServiceException {
+            for (PrefFileSharingApplication value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isBriefcase() { return this == briefcase;}
+        public boolean isOctopus() { return this == octopus;}
     }
 
     public static enum PrefForwardIncludeOriginalText {
@@ -6572,6 +6588,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=511)
     public static final String A_zimbraPrefDisplayExternalImages = "zimbraPrefDisplayExternalImages";
+
+    /**
+     * indicates which application to use for file sharing
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1197)
+    public static final String A_zimbraPrefFileSharingApplication = "zimbraPrefFileSharingApplication";
 
     /**
      * whether folder color is enabled

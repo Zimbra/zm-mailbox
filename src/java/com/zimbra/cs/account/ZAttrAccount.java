@@ -35,7 +35,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 administrator 20110309-1047 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110314-1429 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -27670,6 +27670,137 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPrefDisplayExternalImages(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefDisplayExternalImages, "");
+        return attrs;
+    }
+
+    /**
+     * indicates which application to use for file sharing
+     *
+     * <p>Valid values: [octopus, briefcase]
+     *
+     * @return zimbraPrefFileSharingApplication, or ZAttrProvisioning.PrefFileSharingApplication.briefcase if unset and/or has invalid value
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1197)
+    public ZAttrProvisioning.PrefFileSharingApplication getPrefFileSharingApplication() {
+        try { String v = getAttr(Provisioning.A_zimbraPrefFileSharingApplication); return v == null ? ZAttrProvisioning.PrefFileSharingApplication.briefcase : ZAttrProvisioning.PrefFileSharingApplication.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefFileSharingApplication.briefcase; }
+    }
+
+    /**
+     * indicates which application to use for file sharing
+     *
+     * <p>Valid values: [octopus, briefcase]
+     *
+     * @return zimbraPrefFileSharingApplication, or "briefcase" if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1197)
+    public String getPrefFileSharingApplicationAsString() {
+        return getAttr(Provisioning.A_zimbraPrefFileSharingApplication, "briefcase");
+    }
+
+    /**
+     * indicates which application to use for file sharing
+     *
+     * <p>Valid values: [octopus, briefcase]
+     *
+     * @param zimbraPrefFileSharingApplication new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1197)
+    public void setPrefFileSharingApplication(ZAttrProvisioning.PrefFileSharingApplication zimbraPrefFileSharingApplication) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefFileSharingApplication, zimbraPrefFileSharingApplication.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * indicates which application to use for file sharing
+     *
+     * <p>Valid values: [octopus, briefcase]
+     *
+     * @param zimbraPrefFileSharingApplication new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1197)
+    public Map<String,Object> setPrefFileSharingApplication(ZAttrProvisioning.PrefFileSharingApplication zimbraPrefFileSharingApplication, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefFileSharingApplication, zimbraPrefFileSharingApplication.toString());
+        return attrs;
+    }
+
+    /**
+     * indicates which application to use for file sharing
+     *
+     * <p>Valid values: [octopus, briefcase]
+     *
+     * @param zimbraPrefFileSharingApplication new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1197)
+    public void setPrefFileSharingApplicationAsString(String zimbraPrefFileSharingApplication) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefFileSharingApplication, zimbraPrefFileSharingApplication);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * indicates which application to use for file sharing
+     *
+     * <p>Valid values: [octopus, briefcase]
+     *
+     * @param zimbraPrefFileSharingApplication new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1197)
+    public Map<String,Object> setPrefFileSharingApplicationAsString(String zimbraPrefFileSharingApplication, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefFileSharingApplication, zimbraPrefFileSharingApplication);
+        return attrs;
+    }
+
+    /**
+     * indicates which application to use for file sharing
+     *
+     * <p>Valid values: [octopus, briefcase]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1197)
+    public void unsetPrefFileSharingApplication() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefFileSharingApplication, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * indicates which application to use for file sharing
+     *
+     * <p>Valid values: [octopus, briefcase]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1197)
+    public Map<String,Object> unsetPrefFileSharingApplication(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefFileSharingApplication, "");
         return attrs;
     }
 
