@@ -234,11 +234,11 @@ public class ThreaderTest {
         mm.setHeader("References", ROOT_MESSAGE_ID);
         ParsedMessage pm = new ParsedMessage(mm, false);
 
-        threadMessage("matching subject", MailThreadingAlgorithm.none, pm, mbox, null);
-        threadMessage("matching subject", MailThreadingAlgorithm.subject, pm, mbox, null);
-        threadMessage("matching subject", MailThreadingAlgorithm.references, pm, mbox, match);
-        threadMessage("matching subject", MailThreadingAlgorithm.subjrefs, pm, mbox, null);
-        threadMessage("matching subject", MailThreadingAlgorithm.strict, pm, mbox, match);
+        threadMessage("changed subject", MailThreadingAlgorithm.none, pm, mbox, null);
+        threadMessage("changed subject", MailThreadingAlgorithm.subject, pm, mbox, null);
+        threadMessage("changed subject", MailThreadingAlgorithm.references, pm, mbox, match);
+        threadMessage("changed subject", MailThreadingAlgorithm.subjrefs, pm, mbox, null);
+        threadMessage("changed subject", MailThreadingAlgorithm.strict, pm, mbox, match);
     }
 
     @Test
@@ -254,11 +254,11 @@ public class ThreaderTest {
         mm.setHeader("References", THIRD_MESSAGE_ID);
         ParsedMessage pm = new ParsedMessage(mm, false);
 
-        threadMessage("matching subject", MailThreadingAlgorithm.none, pm, mbox, null);
-        threadMessage("matching subject", MailThreadingAlgorithm.subject, pm, mbox, match);
-        threadMessage("matching subject", MailThreadingAlgorithm.references, pm, mbox, null);
-        threadMessage("matching subject", MailThreadingAlgorithm.subjrefs, pm, mbox, null);
-        threadMessage("matching subject", MailThreadingAlgorithm.strict, pm, mbox, null);
+        threadMessage("crossed threads", MailThreadingAlgorithm.none, pm, mbox, null);
+        threadMessage("crossed threads", MailThreadingAlgorithm.subject, pm, mbox, match);
+        threadMessage("crossed threads", MailThreadingAlgorithm.references, pm, mbox, null);
+        threadMessage("crossed threads", MailThreadingAlgorithm.subjrefs, pm, mbox, null);
+        threadMessage("crossed threads", MailThreadingAlgorithm.strict, pm, mbox, null);
     }
 
     @Test
@@ -274,11 +274,11 @@ public class ThreaderTest {
         mm.setHeader("Thread-Index", Threader.ThreadIndex.addChild(Threader.ThreadIndex.parseHeader(ROOT_THREAD_INDEX)));
         ParsedMessage pm = new ParsedMessage(mm, false);
 
-        threadMessage("matching subject", MailThreadingAlgorithm.none, pm, mbox, null);
-        threadMessage("matching subject", MailThreadingAlgorithm.subject, pm, mbox, match);
-        threadMessage("matching subject", MailThreadingAlgorithm.references, pm, mbox, match);
-        threadMessage("matching subject", MailThreadingAlgorithm.subjrefs, pm, mbox, match);
-        threadMessage("matching subject", MailThreadingAlgorithm.strict, pm, mbox, null);
+        threadMessage("outlook", MailThreadingAlgorithm.none, pm, mbox, null);
+        threadMessage("outlook", MailThreadingAlgorithm.subject, pm, mbox, match);
+        threadMessage("outlook", MailThreadingAlgorithm.references, pm, mbox, match);
+        threadMessage("outlook", MailThreadingAlgorithm.subjrefs, pm, mbox, match);
+        threadMessage("outlook", MailThreadingAlgorithm.strict, pm, mbox, null);
     }
 
 }
