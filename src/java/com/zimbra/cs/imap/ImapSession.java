@@ -526,7 +526,7 @@ public class ImapSession extends Session {
         }
 
         private synchronized void queueModify(int changeId, Change chg) {
-            getQueuedNotifications(changeId).recordModified(null, (MailItem) chg.what, chg.why);
+            getQueuedNotifications(changeId).recordModified(chg.op, (MailItem) chg.what, chg.why, chg.when);
         }
 
         synchronized void replay() {

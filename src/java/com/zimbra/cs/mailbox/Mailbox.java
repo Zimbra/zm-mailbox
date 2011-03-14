@@ -887,7 +887,7 @@ public class Mailbox {
         if (delta > 0 && checkQuota)
             checkSizeChange(size);
 
-        mCurrentChange.mDirty.recordModified(mCurrentChange.getOperation(), this, Change.MODIFIED_SIZE);
+        mCurrentChange.mDirty.recordModified(mCurrentChange.getOperation(), this, Change.MODIFIED_SIZE, mCurrentChange.timestamp);
         mCurrentChange.size = size;
     }
 
@@ -1024,7 +1024,7 @@ public class Mailbox {
      * @param reason  The bitmask describing the modified item properties.
      * @see com.zimbra.cs.session.PendingModifications.Change */
     void markItemModified(MailItem item, int reason) {
-        mCurrentChange.mDirty.recordModified(mCurrentChange.getOperation(), item, reason);
+        mCurrentChange.mDirty.recordModified(mCurrentChange.getOperation(), item, reason, mCurrentChange.timestamp);
     }
 
     /** Adds the object to the current change's list of non-{@link MailItem}
@@ -1222,7 +1222,7 @@ public class Mailbox {
             if (!hasFullAccess())
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
 
-            mCurrentChange.mDirty.recordModified(mCurrentChange.getOperation(), this, Change.MODIFIED_CONFIG);
+            mCurrentChange.mDirty.recordModified(mCurrentChange.getOperation(), this, Change.MODIFIED_CONFIG, mCurrentChange.timestamp);
             mCurrentChange.config = new Pair<String,Metadata>(section, config);
             DbMailbox.updateConfig(this, section, config);
             success = true;
@@ -1473,7 +1473,7 @@ public class Mailbox {
             boolean persist = stats != null;
             if (stats != null) {
                 if (mData.size != stats.size) {
-                    mCurrentChange.mDirty.recordModified(mCurrentChange.getOperation(), this, Change.MODIFIED_SIZE);
+                    mCurrentChange.mDirty.recordModified(mCurrentChange.getOperation(), this, Change.MODIFIED_SIZE, mCurrentChange.timestamp);
                     ZimbraLog.mailbox.debug("setting mailbox size to " + stats.size + " (was " + mData.size + ") for mailbox " + mId);
                     mData.size = stats.size;
                 }
@@ -1933,11 +1933,11 @@ public class Mailbox {
                         ZimbraLog.mailbox.warn("folder missing from snapshotted folder set: %d", item.getId());
                         folder = (Folder) item;
                     }
-                    snapshot.recordModified(chg.op, folder, chg.why);
+                    snapshot.recordModified(chg.op, folder, chg.why, chg.when);
                 } else {
                     // NOTE: if the folder cache is null, folders fall down here and should always get copy == false
                     boolean copy = item instanceof Tag || (cache != null && cache.containsKey(item.getId()));
-                    snapshot.recordModified(chg.op, copy ? snapshotItem(item) : item, chg.why);
+                    snapshot.recordModified(chg.op, copy ? snapshotItem(item) : item, chg.why, chg.when);
                 }
             }
         }

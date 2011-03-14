@@ -63,9 +63,10 @@ public final class PendingModifications {
         
         public Object what;
         public int    why;
+        public long   when;
 
-        Change(MailboxOperation op, Object thing, int reason) {
-            this.op = op;  what = thing;  why = reason;
+        Change(MailboxOperation op, Object thing, int reason, long timestamp) {
+            this.op = op;  what = thing;  why = reason;  when = timestamp;
         }
 
         @Override
@@ -230,19 +231,19 @@ public final class PendingModifications {
     }
 
     public void recordModified(ModificationKey mkey, Change chg) {
-        recordModified(mkey, chg.op, chg.what, chg.why);
+        recordModified(mkey, chg.op, chg.what, chg.why, chg.when);
     }
 
-    public void recordModified(MailboxOperation op, Mailbox mbox, int reason) {
-        recordModified(new ModificationKey(mbox.getAccountId(), 0), op, mbox, reason);
+    public void recordModified(MailboxOperation op, Mailbox mbox, int reason, long timestamp) {
+        recordModified(new ModificationKey(mbox.getAccountId(), 0), op, mbox, reason, timestamp);
     }
 
-    public void recordModified(MailboxOperation op, MailItem item, int reason) {
+    public void recordModified(MailboxOperation op, MailItem item, int reason, long timestamp) {
         changedTypes.add(item.getType());
-        recordModified(new ModificationKey(item), op, item, reason);
+        recordModified(new ModificationKey(item), op, item, reason, timestamp);
     }
 
-    private void recordModified(ModificationKey key, MailboxOperation op, Object item, int reason) {
+    private void recordModified(ModificationKey key, MailboxOperation op, Object item, int reason, long timestamp) {
         Change chg = null;
         if (created != null && created.containsKey(key)) {
             if (item instanceof MailItem) {
@@ -261,7 +262,7 @@ public final class PendingModifications {
             }
         }
         if (chg == null) {
-            chg = new Change(op, item, reason);
+            chg = new Change(op, item, reason, timestamp);
         }
         modified.put(key, chg);
     }
@@ -284,9 +285,9 @@ public final class PendingModifications {
         if (other.modified != null) {
             for (Change chg : other.modified.values()) {
                 if (chg.what instanceof MailItem) {
-                    recordModified(chg.op, (MailItem) chg.what, chg.why);
+                    recordModified(chg.op, (MailItem) chg.what, chg.why, chg.when);
                 } else if (chg.what instanceof Mailbox) {
-                    recordModified(chg.op, (Mailbox) chg.what, chg.why);
+                    recordModified(chg.op, (Mailbox) chg.what, chg.why, chg.when);
                 }
             }
         }

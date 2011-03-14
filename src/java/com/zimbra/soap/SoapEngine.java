@@ -516,7 +516,7 @@ public final class SoapEngine {
                     // put <notify> blocks back for any SoapSession objects
                     soap.putNotifications(ctxt, zsc, sinfo.sequence);
                     // add any extension headers
-                    SoapContextExtension.addExtensionHeaders(ctxt, zsc, requestedAccountId != null ? requestedAccountId : session.getTargetAccountId());
+                    SoapContextExtension.addExtensionHeaders(ctxt, zsc, soap);
                 }
             }
 

@@ -15,6 +15,7 @@
 package com.zimbra.cs.session;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -221,9 +222,9 @@ public class SoapSession extends Session {
                         boolean isVisible = visible.contains(item instanceof Folder ? item.getId() : item.getFolderId());
                         boolean moved = (chg.why & Change.MODIFIED_FOLDER) != 0;
                         if (item instanceof Conversation) {
-                            filtered.recordModified(chg.op, item, chg.why | MODIFIED_CONVERSATION_FLAGS);
+                            filtered.recordModified(chg.op, item, chg.why | MODIFIED_CONVERSATION_FLAGS, chg.when);
                         } else if (isVisible) {
-                            filtered.recordModified(chg.op, item, chg.why);
+                            filtered.recordModified(chg.op, item, chg.why, chg.when);
                             // if it's an unmoved visible message and it had a tag/flag/unread change, make sure the conv shows up in the modified or created list
                             if (item instanceof Message && (moved || (chg.why & BASIC_CONVERSATION_FLAGS) != 0))
                                 forceConversationModification((Message) item, pms, filtered, moved ? MODIFIED_CONVERSATION_FLAGS : BASIC_CONVERSATION_FLAGS);
@@ -235,7 +236,7 @@ public class SoapSession extends Session {
                         }
                     } else if (chg.what instanceof Mailbox) {
                         if (((Mailbox) chg.what).hasFullAccess(new OperationContext(getAuthenticatedAccountId()))) {
-                            filtered.recordModified(chg.op, (Mailbox) chg.what, chg.why);
+                            filtered.recordModified(chg.op, (Mailbox) chg.what, chg.why, chg.when);
                         }
                     }
                 }
@@ -252,10 +253,10 @@ public class SoapSession extends Session {
             if (pms.created != null && pms.created.containsKey(mkey)) {
                 ;
             } else if (pms.modified != null && (existing = pms.modified.get(mkey)) != null) {
-                filtered.recordModified(existing.op, (MailItem) existing.what, existing.why | changeMask);
+                filtered.recordModified(existing.op, (MailItem) existing.what, existing.why | changeMask, existing.when);
             } else {
                 try {
-                    filtered.recordModified(null, mbox.getConversationById(null, convId), changeMask);
+                    filtered.recordModified(null, mbox.getConversationById(null, convId), changeMask, System.currentTimeMillis());
                 } catch (OutOfMemoryError e) {
                     Zimbra.halt("out of memory", e);
                 } catch (Throwable t) { }
@@ -1189,6 +1190,17 @@ public class SoapSession extends Session {
         }
     }
 
+    public Collection<PendingModifications> getNotifications() {
+        ArrayList<PendingModifications> ret = new ArrayList<PendingModifications>();
+        synchronized (mSentChanges) {
+            for (QueuedNotifications notification : mSentChanges) {
+                if (notification.hasNotifications())
+                    ret.add(notification.mMailboxChanges);
+            }
+        }
+        return ret;
+    }
+    
     /** Serializes cached notifications to a SOAP response header.
      *  <p>
      *  Adds a <tt>&lt;notify></tt> block to an existing <tt>&lt;context></tt>
