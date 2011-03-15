@@ -68,6 +68,11 @@ public final class FieldTokenStream extends TokenStream {
             }
         }
 
+        if (value.equals("*")) { // wildcard alone
+            tokens.add(name + ":*");
+            return;
+        }
+
         StringBuilder word = new StringBuilder();
         for (int i = 0; i < value.length(); i++) {
             char c = value.charAt(i);

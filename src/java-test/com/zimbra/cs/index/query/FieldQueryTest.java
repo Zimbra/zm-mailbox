@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.index.query;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,11 +23,13 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.io.Files;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.HSQLDB;
+import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 
@@ -52,12 +55,14 @@ public final class FieldQueryTest {
         HSQLDB.createDatabase();
 
         mailbox = MailboxManager.getInstance().getMailboxByAccountId("0-0-0");
+        MailboxIndex.startup();
     }
 
     @Before
     public void setUp() throws Exception {
         HSQLDB.clearDatabase();
         MailboxManager.getInstance().clearCache();
+        Files.deleteDirectoryContents(new File("build/test/index"));
     }
 
     @Test
@@ -82,6 +87,12 @@ public final class FieldQueryTest {
 
         query = FieldQuery.newQuery(mailbox, "capacity", "<=-3");
         Assert.assertEquals("Q(#capacity#:<=-3)", query.toString());
+    }
+
+    @Test
+    public void wildcard() throws Exception {
+        Query query = FieldQuery.newQuery(mailbox, "firstname", "*");
+        Assert.assertEquals("Q(l.field,firstname: *=firstname: [0 terms])", query.toString());
     }
 
 }
