@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -78,21 +78,22 @@ public class HtmlFormatter extends Formatter {
     }
 
     static void dispatchJspRest(Servlet servlet, UserServletContext context)
-    throws ServiceException, ServletException, IOException {
+            throws ServiceException, ServletException, IOException {
         AuthToken auth = null;
         long expiration = System.currentTimeMillis() + AUTH_EXPIRATION;
         if (context.basicAuthHappened) {
-            Account acc = context.authAccount;
-            if (acc instanceof GuestAccount)
+            Account acc = context.getAuthAccount();
+            if (acc instanceof GuestAccount) {
                 auth = AuthToken.getAuthToken(acc.getId(), acc.getName(), null, ((GuestAccount)acc).getDigest(), expiration);
-            else
-                auth = AuthProvider.getAuthToken(context.authAccount, expiration);
+            } else {
+                auth = AuthProvider.getAuthToken(context.getAuthAccount(), expiration);
+            }
         } else if (context.cookieAuthHappened) {
             auth = UserServlet.getAuthTokenFromCookie(context.req, context.resp, true);
         } else {
             auth = AuthToken.getAuthToken(GuestAccount.GUID_PUBLIC, null, null, null, expiration);
         }
-        if (auth != null && context.targetAccount != null && context.targetAccount != context.authAccount) {
+        if (auth != null && context.targetAccount != null && context.targetAccount != context.getAuthAccount()) {
             auth.setProxyAuthToken(Provisioning.getInstance().getProxyAuthToken(context.targetAccount.getId()));
         }
         String authString = null;

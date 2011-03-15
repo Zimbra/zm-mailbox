@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -32,6 +32,7 @@ import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Objects;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
@@ -75,11 +76,11 @@ public final class UserServletContext {
     public ArrayList<Item> requestedItems;
     public int imapId = -1;
     public boolean sync;
-    public Account authAccount;
+    private Account authAccount;
     public Account targetAccount;
     public Mailbox targetMailbox;
     public OperationContext opContext;
-    public Locale locale;
+    private Locale locale;
     private long mStartTime = -2;
     private long mEndTime = -2;
 
@@ -90,7 +91,7 @@ public final class UserServletContext {
         public MailItem mailItem;
         public Item(String itemId) {
             String[] vals = itemId.split("\\.");
-            id = (vals.length > 0) ? 
+            id = (vals.length > 0) ?
                     Integer.parseInt(vals[0]) :
                     Integer.parseInt(itemId);
             if (vals.length == 2) {
@@ -99,15 +100,15 @@ public final class UserServletContext {
             }
         }
     }
-    
+
     private static class ItemIterator implements Iterator<MailItem> {
 
         private Iterator<Item> items;
-        
+
         public ItemIterator(ArrayList<Item> items) {
             this.items = items.iterator();
         }
-        
+
         @Override
         public boolean hasNext() {
             return items.hasNext();
@@ -122,7 +123,7 @@ public final class UserServletContext {
         public void remove() {
         }
     }
-    
+
     public UserServletContext(HttpServletRequest request, HttpServletResponse response, UserServlet srvlt)
     throws UserServletException, ServiceException {
         Provisioning prov = Provisioning.getInstance();
@@ -146,8 +147,6 @@ public final class UserServletContext {
             } else {
                 this.locale = new Locale(language);
             }
-        } else {
-            this.locale = req.getLocale();
         }
 
         String pathInfo = request.getPathInfo();
@@ -215,16 +214,31 @@ public final class UserServletContext {
         targetAccount = prov.get(AccountBy.name, accountPath, authToken);
     }
 
+    public Locale getLocale() {
+        return locale != null ? locale : req.getLocale();
+    }
+
+    public void setAuthAccount(Account value) throws ServiceException {
+        authAccount = value;
+        if (locale == null && authAccount.getLocale() != null) {
+            locale = authAccount.getLocale();
+        }
+    }
+
+    public Account getAuthAccount() {
+        return authAccount;
+    }
+
     public Iterator<MailItem> getRequestedItems() {
         return new ItemIterator(requestedItems);
     }
-    
+
     public boolean isUsingAdminPrivileges() {
         return authToken != null && AuthToken.isAnyAdmin(authToken);
     }
 
-    public UserServlet getServlet() { 
-        return servlet; 
+    public UserServlet getServlet() {
+        return servlet;
     }
 
     public long getStartTime() {
@@ -537,11 +551,13 @@ public final class UserServletContext {
         return is;
     }
 
-    @Override public String toString() {
-        StringBuffer sb = new StringBuffer();
-        sb.append("account(" + accountPath + ")\n");
-        sb.append("itemPath(" + itemPath + ")\n");
-        sb.append("foramt(" + format + ")\n");
-        return sb.toString();
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this)
+            .add("account", accountPath)
+            .add("item", itemPath)
+            .add("format", format)
+            .add("locale", locale)
+            .toString();
     }
 }

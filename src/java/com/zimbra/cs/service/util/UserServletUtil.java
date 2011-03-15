@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -79,23 +79,23 @@ public class UserServletUtil {
     public static MailItem resolveItem(UserServletContext context, boolean checkExtension) throws ServiceException {
         if (context.formatter != null && !context.formatter.requiresAuth())
             return null;
-    
+
         Mailbox mbox = context.targetMailbox;
-    
+
         // special-case the fetch-by-IMAP-id option
         if (context.imapId > 0) {
             // fetch the folder from the path
             Folder folder = mbox.getFolderByPath(context.opContext, context.itemPath);
-    
+
             // and then fetch the item from the "imap_id" query parameter
             return mbox.getItemByImapId(context.opContext, context.imapId, folder.getId());
         }
-    
+
         if (context.itemId != null) {
-            context.target = mbox.getItemById(context.opContext, 
-                                              context.itemId.getId(), 
+            context.target = mbox.getItemById(context.opContext,
+                                              context.itemId.getId(),
                                               MailItem.Type.UNKNOWN);
-    
+
             context.itemPath = context.target.getPath();
             if (context.target instanceof Mountpoint || context.extraPath == null || context.extraPath.equals(""))
                 return context.target;
@@ -104,12 +104,12 @@ public class UserServletUtil {
             context.target = null;
             context.itemId = null;
         }
-    
+
         if (context.extraPath != null && !context.extraPath.equals("")) {
             context.itemPath = (context.itemPath + '/' + context.extraPath).replaceAll("//+", "/");
             context.extraPath = null;
         }
-    
+
         if (FormatType.FREE_BUSY.equals(context.format) || FormatType.IFB.equals(context.format)) {
             try {
                 // Do the get as mailbox owner to circumvent ACL system.
@@ -169,7 +169,7 @@ public class UserServletUtil {
             if (context.target == null && context.getQueryString() == null)
                 throw failure;
         }
-    
+
         return context.target;
     }
 
@@ -219,17 +219,20 @@ public class UserServletUtil {
 
                         if (at.isZimbraUser()) {
                             try {
-                                context.authAccount = AuthProvider.validateAuthToken(Provisioning.getInstance(), at, false);
+                                context.setAuthAccount(AuthProvider.validateAuthToken(Provisioning.getInstance(), at, false));
                             } catch (ServiceException e) {
-                                throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
+                                throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED,
+                                        L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
                             }
                             context.cookieAuthHappened = true;
                             context.authToken = at;
                             return;
                         } else {
-                            if (at.isExpired())
-                                throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
-                            context.authAccount = new GuestAccount(at);
+                            if (at.isExpired()) {
+                                throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED,
+                                        L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
+                            }
+                            context.setAuthAccount(new GuestAccount(at));
                             context.basicAuthHappened = true; // pretend that we basic authed
                             context.authToken = at;
                             return;
@@ -237,7 +240,8 @@ public class UserServletUtil {
                     }
                 } catch (AuthTokenException e) {
                     // bug 35917: malformed auth token means auth failure
-                    throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
+                    throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED,
+                            L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
                 }
             }
 
@@ -252,17 +256,19 @@ public class UserServletUtil {
                         AuthToken at = AuthProvider.getAuthToken(auth);
 
                         try {
-                            context.authAccount = AuthProvider.validateAuthToken(Provisioning.getInstance(), at, false);
+                            context.setAuthAccount(AuthProvider.validateAuthToken(Provisioning.getInstance(), at, false));
                             context.qpAuthHappened = true;
                             context.authToken = at;
                             return;
                         } catch (ServiceException e) {
-                            throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
+                            throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED,
+                                    L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
                         }
 
                     } catch (AuthTokenException e) {
                         // bug 35917: malformed auth token means auth failure
-                        throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
+                        throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED,
+                                L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
                     }
                 }
             }
@@ -274,10 +280,10 @@ public class UserServletUtil {
              */
             // fallback to basic auth
             if (context.basicAuthAllowed()) {
-                context.authAccount = AuthUtil.basicAuthRequest(context.req, context.resp, context.servlet,false);
-                if (context.authAccount != null) {
+                context.setAuthAccount(AuthUtil.basicAuthRequest(context.req, context.resp, context.servlet,false));
+                if (context.getAuthAccount() != null) {
                     context.basicAuthHappened = true;
-                    context.authToken = AuthProvider.getAuthToken(context.authAccount, isAdminRequest);
+                    context.authToken = AuthProvider.getAuthToken(context.getAuthAccount(), isAdminRequest);
 
                     // send cookie back if need be.
                     if (context.setCookie()) {

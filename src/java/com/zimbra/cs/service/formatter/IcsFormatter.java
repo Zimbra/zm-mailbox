@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -120,7 +120,7 @@ public class IcsFormatter extends Formatter {
         context.resp.setCharacterEncoding(MimeConstants.P_CHARSET_UTF8);
         context.resp.setContentType(htmlFormat ? MimeConstants.CT_TEXT_HTML : getContentType(context, MimeConstants.CT_TEXT_CALENDAR));
 
-        OperationContext octxt = new OperationContext(context.authAccount, context.isUsingAdminPrivileges());
+        OperationContext octxt = new OperationContext(context.getAuthAccount(), context.isUsingAdminPrivileges());
         FileBufferedWriter fileBufferedWriter = new FileBufferedWriter(
                 context.resp.getWriter(),
                 LC.calendar_ics_export_buffer_size.intValueWithinRange(0, FileBufferedWriter.MAX_BUFFER_SIZE));
@@ -137,7 +137,7 @@ public class IcsFormatter extends Formatter {
         }
     }
 
-    
+
     @Override
     public boolean supportsSave() {
         return true;

@@ -45,7 +45,6 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 import javax.servlet.http.HttpServletResponse;
 
-import org.mortbay.io.Connection;
 import org.mortbay.io.EndPoint;
 import org.mortbay.io.nio.SelectChannelEndPoint;
 import org.mortbay.jetty.HttpConnection;
@@ -181,7 +180,7 @@ public abstract class ArchiveFormatter extends Formatter {
             ServiceException, UserServletException {
         // Disable the jetty timeout
         disableJettyTimeout();
-        
+
         HashMap<Integer, Integer> cnts = new HashMap<Integer, Integer>();
         boolean conversations = false;
         int dot;
@@ -340,19 +339,19 @@ public abstract class ArchiveFormatter extends Formatter {
 
     /**
      * Implemented for bug 56458..
-     * 
+     *
      * Disable the Jetty timeout for the SelectChannelConnector and the SSLSelectChannelConnector
      * for this request.
-     * 
-     * By default (and our normal configuration) Jetty has a 30 second idle timeout (10 if the server is busy) for 
+     *
+     * By default (and our normal configuration) Jetty has a 30 second idle timeout (10 if the server is busy) for
      * connection endpoints. There's another task that keeps track of what connections have timeouts and periodically
      * works over a queue and closes endpoints that have been timed out. This plays havoc with downloads to slow connections
      * and whenever we have a long pause while working to create an archive.
-     * 
+     *
      * This method removes this request from the queue to check timeout via the mechanisms that are normally used
      * after jetty completes a request. Given that we don't send a content-length down to the browser for
-     * archive responses, we have to close the socket to tell the browser its done. Since we have to do that.. leaving this 
-     * endpoint without a timeout is safe. If the connection was being reused (ie keep-alive) this could have issues, but its not 
+     * archive responses, we have to close the socket to tell the browser its done. Since we have to do that.. leaving this
+     * endpoint without a timeout is safe. If the connection was being reused (ie keep-alive) this could have issues, but its not
      * in this case.
      */
     private void disableJettyTimeout() {
@@ -392,9 +391,10 @@ public abstract class ArchiveFormatter extends Formatter {
             case APPOINTMENT:
                 Appointment appt = (Appointment)mi;
 
-                if (!appt.isPublic() && !appt.allowPrivateAccess(context.authAccount,
-                    context.isUsingAdminPrivileges()))
+                if (!appt.isPublic() && !appt.allowPrivateAccess(
+                        context.getAuthAccount(), context.isUsingAdminPrivileges())) {
                     return aos;
+                }
                 if (meta) {
                     name = appt.getSubject();
                     ext = "appt";
@@ -447,11 +447,11 @@ public abstract class ArchiveFormatter extends Formatter {
                 ext = "note";
                 break;
             case TASK:
-                Task task = (Task)mi;
-
-                if (!task.isPublic() && !task.allowPrivateAccess(context.authAccount,
-                    context.isUsingAdminPrivileges()))
+                Task task = (Task) mi;
+                if (!task.isPublic() && !task.allowPrivateAccess(
+                        context.getAuthAccount(), context.isUsingAdminPrivileges())) {
                     return aos;
+                }
                 ext = "task";
                 break;
             case VIRTUAL_CONVERSATION:
@@ -520,8 +520,8 @@ public abstract class ArchiveFormatter extends Formatter {
                     context.getStartTime(), context.getEndTime(), false);
                 boolean needAppleICalHacks = Browser.APPLE_ICAL.equals(browser);
                 boolean useOutlookCompatMode = Browser.IE.equals(browser);
-                OperationContext octxt = new OperationContext(context.authAccount,
-                    context.isUsingAdminPrivileges());
+                OperationContext octxt = new OperationContext(
+                        context.getAuthAccount(), context.isUsingAdminPrivileges());
                 StringWriter writer = new StringWriter();
 
                 if (!instances.isEmpty()) {
@@ -1516,8 +1516,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 break;
             case DOCUMENT:
             case WIKI:
-                String creator = (context.authAccount == null ? null :
-                    context.authAccount.getName());
+                String creator = context.getAuthAccount() == null ? null : context.getAuthAccount().getName();
 
                 try {
                     oldItem = mbox.getItemByPath(oc, file, fldr.getId());

@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -34,9 +34,10 @@ import com.zimbra.cs.service.UserServletContext;
 import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
 
 public class RssFormatter extends Formatter {
-    
+
     private SimpleDateFormat mDateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
-        
+
+    @Override
     public void formatCallback(UserServletContext context) throws IOException, ServiceException {
         //ZimbraLog.mailbox.info("start = "+new Date(context.getStartTime()));
         //ZimbraLog.mailbox.info("end = "+new Date(context.getEndTime()));
@@ -45,15 +46,15 @@ public class RssFormatter extends Formatter {
         Element.XMLElement rss = new Element.XMLElement("rss");
         int offset = context.getOffset();
         int limit = context.getLimit();
-        
+
         try {
             iterator = getMailItems(context, context.getStartTime(), context.getEndTime(), limit-offset);
-        
+
             context.resp.setCharacterEncoding("UTF-8");
             context.resp.setContentType("application/rss+xml");
 
             sb.append("<?xml version=\"1.0\"?>\n");
-                
+
             rss.addAttribute("version", "2.0");
             Element channel = rss.addElement("channel");
             channel.addElement("title").setText("Zimbra " + context.itemPath);
@@ -61,11 +62,11 @@ public class RssFormatter extends Formatter {
             channel.addElement("description").setText("Zimbra item " + context.itemPath + " in RSS format.");
             channel.addElement("generator").setText("Zimbra RSS Feed Servlet");
             //channel.addElement("description").setText(query);
-            
+
 //            MailDateFormat mdf = new MailDateFormat();
-            
+
             int curHit = 0;
-            
+
             while (iterator.hasNext()) {
                 MailItem itItem = iterator.next();
                 curHit++;
@@ -75,10 +76,12 @@ public class RssFormatter extends Formatter {
                     if (itItem instanceof CalendarItem) {
                         // Don't return private appointments/tasks if the requester is not the mailbox owner.
                         CalendarItem calItem = (CalendarItem) itItem;
-                        if (calItem.isPublic() || calItem.allowPrivateAccess(context.authAccount, context.isUsingAdminPrivileges()))
+                        if (calItem.isPublic() || calItem.allowPrivateAccess(
+                                context.getAuthAccount(), context.isUsingAdminPrivileges())) {
                             addCalendarItem(calItem, channel, context);
+                        }
                     } else if (itItem instanceof Message) {
-                        addMessage((Message) itItem, channel, context);
+                        addMessage((Message) itItem, channel);
                     } else if (itItem instanceof Document) {
                         addDocument((Document) itItem, channel, context);
                     }
@@ -92,15 +95,17 @@ public class RssFormatter extends Formatter {
         context.resp.getOutputStream().write(sb.toString().getBytes("UTF-8"));
     }
 
-    public long getDefaultStartTime() {    
+    @Override
+    public long getDefaultStartTime() {
         return System.currentTimeMillis() - (7*Constants.MILLIS_PER_DAY);
     }
 
     // eventually get this from query param ?end=long|YYYYMMMDDHHMMSS
+    @Override
     public long getDefaultEndTime() {
         return System.currentTimeMillis() + (7*Constants.MILLIS_PER_DAY);
     }
-    
+
     private void addCalendarItem(CalendarItem calItem, Element channel, UserServletContext context) throws ServiceException {
         Collection<Instance> instances = calItem.expandInstances(context.getStartTime(), context.getEndTime(), false);
         for (Iterator<Instance> instIt = instances.iterator(); instIt.hasNext(); ) {
@@ -110,7 +115,7 @@ public class RssFormatter extends Formatter {
             Element rssItem = channel.addElement("item");
             rssItem.addElement("title").setText(inv.getName());
             rssItem.addElement("pubDate").setText(mDateFormat.format(new Date(inst.getStart())));
-            /*                
+            /*
             StringBuffer desc = new StringBuffer();
             sb.append("Start: ").append(sdf.format(new Date(inst.getStart()))).append("\n");
             sb.append("End: ").append(sdf.format(new Date(inst.getEnd()))).append("\n");
@@ -121,11 +126,11 @@ public class RssFormatter extends Formatter {
             rssItem.addElement("description").setText(inv.getFragment());
             if (inv.hasOrganizer())
                 rssItem.addElement("author").setText(inv.getOrganizer().getAddress());
-        }                    
-        
+        }
+
     }
-     
-    private void addMessage(Message m, Element channel, UserServletContext context) {
+
+    private void addMessage(Message m, Element channel) {
         Element item = channel.addElement("item");
         item.addElement("title").setText(m.getSubject());
         item.addElement("description").setText(m.getFragment());
@@ -146,7 +151,7 @@ public class RssFormatter extends Formatter {
         item.addElement("link").setText(context.req.getRequestURL().append("?id=" + doc.getId()).toString());
     }
 
-    @Override   
+    @Override
     public FormatType getType() {
         return FormatType.RSS;
     }

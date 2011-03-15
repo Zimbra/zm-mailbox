@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -86,10 +86,12 @@ public class NativeFormatter extends Formatter {
             } else if (context.target instanceof CalendarItem) {
                 // Don't return private appointments/tasks if the requester is not the mailbox owner.
                 CalendarItem calItem = (CalendarItem) context.target;
-                if (calItem.isPublic() || calItem.allowPrivateAccess(context.authAccount, context.isUsingAdminPrivileges()))
+                if (calItem.isPublic() || calItem.allowPrivateAccess(
+                        context.getAuthAccount(), context.isUsingAdminPrivileges())) {
                     handleCalendarItem(context, calItem);
-                else
+                } else {
                     context.resp.sendError(HttpServletResponse.SC_FORBIDDEN, "permission denied");
+                }
             } else if (context.target instanceof Document) {
                 handleDocument(context, (Document) context.target);
             } else if (context.target instanceof Contact) {
@@ -180,8 +182,8 @@ public class NativeFormatter extends Formatter {
             if (ua != null && ua.indexOf("MSIE") != -1 && contentType.length() > 80)
                 contentType = shortContentType;
 
-            boolean html = checkGlobalOverride(Provisioning.A_zimbraAttachmentsViewInHtmlOnly, context.authAccount) ||
-                            (context.hasView() && context.getView().equals(HTML_VIEW));
+            boolean html = checkGlobalOverride(Provisioning.A_zimbraAttachmentsViewInHtmlOnly,
+                    context.getAuthAccount()) || (context.hasView() && context.getView().equals(HTML_VIEW));
             if (!html) {
                 String defaultCharset = context.targetAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null);
                 sendbackOriginalDoc(mp, contentType, defaultCharset, context.req, context.resp);
@@ -283,7 +285,7 @@ public class NativeFormatter extends Formatter {
         }
     }
 
-    
+
     @Override
     public boolean supportsSave() {
         return true;
@@ -304,7 +306,7 @@ public class NativeFormatter extends Formatter {
             }
         }
 
-        String creator = (context.authAccount == null ? null : context.authAccount.getName());
+        String creator = context.getAuthAccount() == null ? null : context.getAuthAccount().getName();
         InputStream is = context.getRequestInputStream();
         ParsedDocument pd = null;
 

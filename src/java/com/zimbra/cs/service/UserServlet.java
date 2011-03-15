@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -25,7 +25,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -55,8 +54,6 @@ import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.AuthTokenException;
-import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ZimbraAuthTokenEncoded;
@@ -66,7 +63,6 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
@@ -221,7 +217,6 @@ public class UserServlet extends ZimbraServlet {
     public static final String HTTP_STATUS_CODE = "http_code";
 
     protected static final String MSGPAGE_BLOCK = "errorpage.attachment.blocked";
-    private String mBlockPage = null;
 
     /** Returns the REST URL for the account. */
     public static String getRestUrl(Account acct) throws ServiceException {
@@ -247,8 +242,8 @@ public class UserServlet extends ZimbraServlet {
         }
     }
 
-    @Override public void doGet(HttpServletRequest req, HttpServletResponse resp)
-    throws ServletException, IOException {
+    @Override
+    public void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         UserServletContext context = null;
         ZimbraLog.clearContext();
         addRemoteIpToLoggingContext(req);
@@ -258,19 +253,17 @@ public class UserServlet extends ZimbraServlet {
                 sendError(context, req, resp, L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
                 return;
             }
-            
+
             checkTargetAccountStatus(context);
 
-            if (proxyIfNecessary(req, resp, context))
+            if (proxyIfNecessary(req, resp, context)) {
                 return;
-
+            }
             // at this point context.authAccount is set either from the Cookie,
             // or from basic auth.  if there was no credential in either the Cookie
             // or basic auth, authAccount is set to anonymous account.
-            if (context.authAccount != null) {
-                ZimbraLog.addAccountNameToContext(context.authAccount.getName());
-                if (context.authAccount.getLocale() != null && context.locale == null)
-                    context.locale = context.authAccount.getLocale();
+            if (context.getAuthAccount() != null) {
+                ZimbraLog.addAccountNameToContext(context.getAuthAccount().getName());
             }
 
             doAuthGet(req, resp, context);
@@ -298,32 +291,34 @@ public class UserServlet extends ZimbraServlet {
         // if they specify /~/, we must auth
         if (context.targetAccount == null && context.accountPath.equals("~")) {
             UserServletUtil.getAccount(context);
-            if (context.authAccount == null)
+            if (context.getAuthAccount() == null) {
                 return false;
-            context.targetAccount = context.authAccount;
+            }
+            context.targetAccount = context.getAuthAccount();
         }
 
         // need this before proxy if we want to support sending cookie from a basic-auth
         UserServletUtil.getAccount(context);
-        if (context.authAccount == null)
+        if (context.getAuthAccount() == null) {
             context.setAnonymousRequest();
-
+        }
         return true;
     }
-    
+
     private void checkTargetAccountStatus(UserServletContext context) throws ServiceException {
         if (context.targetAccount != null) {
             String acctStatus = context.targetAccount.getAccountStatus(Provisioning.getInstance());
-            
+
             // no one can touch an account if it in maintenance mode
             if (Provisioning.ACCOUNT_STATUS_MAINTENANCE.equals(acctStatus))
                 throw AccountServiceException.MAINTENANCE_MODE();
-            
+
             // allow only admin access if the account is not active
-            if (!Provisioning.ACCOUNT_STATUS_ACTIVE.equals(acctStatus) && 
-                !(context.authToken != null && 
-                  (context.authToken.isDelegatedAuth() || AdminAccessControl.isAdequateAdminAccount(context.authAccount))))
+            if (!Provisioning.ACCOUNT_STATUS_ACTIVE.equals(acctStatus) && !(context.authToken != null &&
+                    (context.authToken.isDelegatedAuth() ||
+                            AdminAccessControl.isAdequateAdminAccount(context.getAuthAccount())))) {
                 throw AccountServiceException.ACCOUNT_INACTIVE(context.targetAccount.getName());
+            }
         }
     }
 
@@ -359,7 +354,7 @@ public class UserServlet extends ZimbraServlet {
             ZimbraLog.mailbox.debug("UserServlet: " + reqURL.toString());
         }
 
-        context.opContext = new OperationContext(context.authAccount, isAdminRequest(req));
+        context.opContext = new OperationContext(context.getAuthAccount(), isAdminRequest(req));
         Mailbox mbox = UserServletUtil.getTargetMailbox(context);
         if (mbox != null) {
             ZimbraLog.addMboxToContext(mbox.getId());
@@ -385,18 +380,19 @@ public class UserServlet extends ZimbraServlet {
         context.formatter.format(context);
     }
 
-    /** Adds an item to a folder specified in the URI.  The item content is
-     *  provided in the PUT request's body.
-     * @see #doPost(HttpServletRequest, HttpServletResponse) */
-    @Override public void doPut(HttpServletRequest req, HttpServletResponse resp)
-    throws ServletException, IOException {
+    /**
+     * Adds an item to a folder specified in the URI.  The item content is provided in the PUT request's body.
+     */
+    @Override
+    public void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         doPost(req, resp);
     }
 
-    /** Adds an item to a folder specified in the URI.  The item content is
-     *  provided in the POST request's body. */
-    @Override public void doPost(HttpServletRequest req, HttpServletResponse resp)
-    throws ServletException, IOException {
+    /**
+     * Adds an item to a folder specified in the URI.  The item content is provided in the POST request's body.
+     */
+    @Override
+    public void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         UserServletContext context = null;
         ZimbraLog.clearContext();
         addRemoteIpToLoggingContext(req);
@@ -408,13 +404,13 @@ public class UserServlet extends ZimbraServlet {
             }
 
             checkTargetAccountStatus(context);
-            
+
             if (proxyIfNecessary(req, resp, context))
                 return;
 
-            if (context.authAccount != null)
-                ZimbraLog.addAccountNameToContext(context.authAccount.getName());
-
+            if (context.getAuthAccount() != null) {
+                ZimbraLog.addAccountNameToContext(context.getAuthAccount().getName());
+            }
             Folder folder = null;
             String filename = null;
             Mailbox mbox = UserServletUtil.getTargetMailbox(context);
@@ -423,7 +419,7 @@ public class UserServlet extends ZimbraServlet {
 
                 ZimbraLog.mailbox.info("UserServlet (POST): " + context.req.getRequestURL().toString());
 
-                context.opContext = new OperationContext(context.authAccount, isAdminRequest(req));
+                context.opContext = new OperationContext(context.getAuthAccount(), isAdminRequest(req));
 
                 try {
                     context.target = UserServletUtil.resolveItem(context, false);
@@ -548,13 +544,13 @@ public class UserServlet extends ZimbraServlet {
         ZIMBRA_DOC_CONTENT_TYPE.add("application/x-zimbra-slides");
         ZIMBRA_DOC_CONTENT_TYPE.add("application/x-zimbra-xls");
     }
-    
+
     private FormatType defaultFormat(UserServletContext context) {
         if (context.hasPart()) {
             return FormatType.HTML_CONVERTED;
         }
         MailItem.Type type = MailItem.Type.UNKNOWN;
-        if (context.target instanceof Folder) 
+        if (context.target instanceof Folder)
             type = ((Folder) context.target).getDefaultView();
         else if (context.target != null)
             type = context.target.getType();
@@ -580,29 +576,15 @@ public class UserServlet extends ZimbraServlet {
         }
     }
 
-    /**
-     * @param req
-     * @param resp
-     * @throws IOException
-     * @throws ServletException
-     */
-    private void sendbackBlockMessage(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        RequestDispatcher dispatcher = getServletContext().getRequestDispatcher(mBlockPage);
-        if (dispatcher != null) {
-            dispatcher.forward(req, resp);
-            return;
-        }
-        resp.sendError(HttpServletResponse.SC_FORBIDDEN, L10nUtil.getMessage(MsgKey.errAttachmentDownloadDisabled, req));
-    }
-
-    @Override public void init() throws ServletException {
+    @Override
+    public void init() throws ServletException {
         String name = getServletName();
         ZimbraLog.mailbox.info("Servlet " + name + " starting up");
         super.init();
-        mBlockPage = getInitParameter(MSGPAGE_BLOCK);
     }
 
-    @Override public void destroy() {
+    @Override
+    public void destroy() {
         String name = getServletName();
         ZimbraLog.mailbox.info("Servlet " + name + " shutting down");
         super.destroy();

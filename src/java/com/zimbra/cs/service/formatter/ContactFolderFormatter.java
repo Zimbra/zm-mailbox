@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -41,7 +41,7 @@ public class ContactFolderFormatter extends Formatter {
 
     private enum Delimiter { Field, Contact };
 
-    
+
 
     @Override
     public void formatCallback(UserServletContext context) throws UserServletException,
@@ -62,7 +62,7 @@ public class ContactFolderFormatter extends Formatter {
         if (v != null)
             allContacts = true;
 
-        ItemIdFormatter ifmt = new ItemIdFormatter(context.authAccount, context.targetAccount, false);
+        ItemIdFormatter ifmt = new ItemIdFormatter(context.getAuthAccount(), context.targetAccount, false);
         context.resp.setContentType(CONTENT_TYPE);
         OutputStream out = new BufferedOutputStream(context.resp.getOutputStream());
 
@@ -135,12 +135,12 @@ public class ContactFolderFormatter extends Formatter {
         }
     }
 
-	
-	@Override
-	public FormatType getType() {
-		return FormatType.CONTACT_FOLDER;
-	}
 
-    
+    @Override
+    public FormatType getType() {
+        return FormatType.CONTACT_FOLDER;
+    }
+
+
 
 }

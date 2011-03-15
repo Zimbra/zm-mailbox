@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -69,8 +69,9 @@ public class CsvFormatter extends Formatter {
             Character sepChar = null;
             if ((separator != null) && (separator.length() > 0))
                     sepChar = separator.charAt(0);
-            if (locale == null)
-                locale = context.locale.toString();
+            if (locale == null) {
+                locale = context.getLocale().toString();
+            }
             ContactCSV contactCSV = new ContactCSV();
             contactCSV.toCSV(format, locale, sepChar, iterator, sb);
         } catch (ContactCSV.ParseException e) {
@@ -106,8 +107,9 @@ public class CsvFormatter extends Formatter {
         try {
             String format = context.params.get(UserServlet.QP_CSVFORMAT);
             String locale = context.req.getParameter(UserServlet.QP_CSVLOCALE);
-            if (locale == null)
-                locale = context.locale.toString();
+            if (locale == null) {
+                locale = context.getLocale().toString();
+            }
             List<Map<String, String>> contacts = ContactCSV.getContacts(reader, format, locale);
             ItemId iidFolder = new ItemId(folder);
 
