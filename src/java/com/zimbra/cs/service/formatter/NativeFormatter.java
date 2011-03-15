@@ -84,10 +84,12 @@ public class NativeFormatter extends Formatter {
             } else if (context.target instanceof CalendarItem) {
                 // Don't return private appointments/tasks if the requester is not the mailbox owner.
                 CalendarItem calItem = (CalendarItem) context.target;
-                if (calItem.isPublic() || calItem.allowPrivateAccess(context.authAccount, context.isUsingAdminPrivileges()))
+                if (calItem.isPublic() || calItem.allowPrivateAccess(
+                        context.getAuthAccount(), context.isUsingAdminPrivileges())) {
                     handleCalendarItem(context, calItem);
-                else
+                } else {
                     context.resp.sendError(HttpServletResponse.SC_FORBIDDEN, "permission denied");
+                }
             } else if (context.target instanceof Document) {
                 handleDocument(context, (Document) context.target);
             } else if (context.target instanceof Contact) {
@@ -178,8 +180,8 @@ public class NativeFormatter extends Formatter {
             if (ua != null && ua.indexOf("MSIE") != -1 && contentType.length() > 80)
                 contentType = shortContentType;
             
-            boolean html = checkGlobalOverride(Provisioning.A_zimbraAttachmentsViewInHtmlOnly, context.authAccount) ||
-                            (context.hasView() && context.getView().equals(HTML_VIEW));
+            boolean html = checkGlobalOverride(Provisioning.A_zimbraAttachmentsViewInHtmlOnly,
+                    context.getAuthAccount()) || (context.hasView() && context.getView().equals(HTML_VIEW));
             if (!html) {
                 String defaultCharset = context.targetAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null);
             	sendbackOriginalDoc(mp, contentType, defaultCharset, context.req, context.resp);
@@ -298,7 +300,7 @@ public class NativeFormatter extends Formatter {
             }
         }
 
-        String creator = (context.authAccount == null ? null : context.authAccount.getName());
+        String creator = context.getAuthAccount() == null ? null : context.getAuthAccount().getName();
         InputStream is = context.getRequestInputStream();
         ParsedDocument pd = null;
 

@@ -68,8 +68,9 @@ public class CsvFormatter extends Formatter {
             Character sepChar = null;
             if ((separator != null) && (separator.length() > 0))
                     sepChar = separator.charAt(0);
-            if (locale == null)
-                locale = context.locale.toString();
+            if (locale == null) {
+                locale = context.getLocale().toString();
+            }
             ContactCSV contactCSV = new ContactCSV();
             contactCSV.toCSV(format, locale, sepChar, iterator, sb);
         } catch (ContactCSV.ParseException e) {
@@ -105,8 +106,9 @@ public class CsvFormatter extends Formatter {
         try {
             String format = context.params.get(UserServlet.QP_CSVFORMAT);
             String locale = context.req.getParameter(UserServlet.QP_CSVLOCALE);
-            if (locale == null)
-                locale = context.locale.toString();
+            if (locale == null) {
+                locale = context.getLocale().toString();
+            }
             List<Map<String, String>> contacts = ContactCSV.getContacts(reader, format, locale);
             ItemId iidFolder = new ItemId(folder);
 

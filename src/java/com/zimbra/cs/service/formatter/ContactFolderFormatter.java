@@ -61,7 +61,7 @@ public class ContactFolderFormatter extends Formatter {
         if (v != null)
             allContacts = true;
         
-        ItemIdFormatter ifmt = new ItemIdFormatter(context.authAccount, context.targetAccount, false);
+        ItemIdFormatter ifmt = new ItemIdFormatter(context.getAuthAccount(), context.targetAccount, false);
         context.resp.setContentType(CONTENT_TYPE);
         OutputStream out = new BufferedOutputStream(context.resp.getOutputStream());
 		
@@ -132,10 +132,11 @@ public class ContactFolderFormatter extends Formatter {
             break;
         }
     }
-	
-	@Override
-	public FormatType getType() {
-		return FormatType.CONTACT_FOLDER;
-	}
+
+    @Override
+    public FormatType getType() {
+        return FormatType.CONTACT_FOLDER;
+    }
+
 
 }

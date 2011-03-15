@@ -116,7 +116,7 @@ public class IcsFormatter extends Formatter {
         context.resp.setCharacterEncoding(MimeConstants.P_CHARSET_UTF8);
         context.resp.setContentType(htmlFormat ? MimeConstants.CT_TEXT_HTML : getContentType(context, MimeConstants.CT_TEXT_CALENDAR));
         
-        OperationContext octxt = new OperationContext(context.authAccount, context.isUsingAdminPrivileges());
+        OperationContext octxt = new OperationContext(context.getAuthAccount(), context.isUsingAdminPrivileges());
         FileBufferedWriter fileBufferedWriter = new FileBufferedWriter(
                 context.resp.getWriter(),
                 LC.calendar_ics_export_buffer_size.intValueWithinRange(0, FileBufferedWriter.MAX_BUFFER_SIZE));

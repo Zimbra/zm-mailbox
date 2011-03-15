@@ -78,21 +78,22 @@ public class HtmlFormatter extends Formatter {
     }
 
     static void dispatchJspRest(Servlet servlet, UserServletContext context)
-    throws ServiceException, ServletException, IOException {
+            throws ServiceException, ServletException, IOException {
         AuthToken auth = null;
         long expiration = System.currentTimeMillis() + AUTH_EXPIRATION;
         if (context.basicAuthHappened) {
-            Account acc = context.authAccount;
-            if (acc instanceof GuestAccount)
+            Account acc = context.getAuthAccount();
+            if (acc instanceof GuestAccount) {
                 auth = AuthToken.getAuthToken(acc.getId(), acc.getName(), null, ((GuestAccount)acc).getDigest(), expiration);
-            else
-                auth = AuthProvider.getAuthToken(context.authAccount, expiration);
+            } else {
+                auth = AuthProvider.getAuthToken(context.getAuthAccount(), expiration);
+            }
         } else if (context.cookieAuthHappened) {
             auth = UserServlet.getAuthTokenFromCookie(context.req, context.resp, true);
         } else {
             auth = AuthToken.getAuthToken(GuestAccount.GUID_PUBLIC, null, null, null, expiration);
         }
-        if (auth != null && context.targetAccount != null && context.targetAccount != context.authAccount) {
+        if (auth != null && context.targetAccount != null && context.targetAccount != context.getAuthAccount()) {
             auth.setProxyAuthToken(Provisioning.getInstance().getProxyAuthToken(context.targetAccount.getId()));
         }
         String authString = null;

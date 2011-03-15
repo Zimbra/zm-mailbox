@@ -115,10 +115,12 @@ public class SyncFormatter extends Formatter {
             } else if (context.target instanceof CalendarItem) {
                 // Don't return private appointments/tasks if the requester is not the mailbox owner.
                 CalendarItem calItem = (CalendarItem) context.target;
-                if (calItem.isPublic() || calItem.allowPrivateAccess(context.authAccount, context.isUsingAdminPrivileges()))
+                if (calItem.isPublic() || calItem.allowPrivateAccess(
+                        context.getAuthAccount(), context.isUsingAdminPrivileges())) {
                     handleCalendarItem(context, calItem);
-                else
+                } else {
                     context.resp.sendError(HttpServletResponse.SC_FORBIDDEN, "permission denied");
+                }
             }
         } catch (MessagingException me) {
             throw ServiceException.FAILURE(me.getMessage(), me);
