@@ -3,40 +3,6 @@ Implementation Notes for JAXB classes
 
 Manual steps
 ------------
-*   WSDL Schema files
-Currently, the files under schema/ need to be updated manually.
-For example, when adding GetLoggerStatsRequest, the following represents
-the diff update :
-
-diff /tmp/wsdl/AdminService.wsdl ZimbraSoap/schema/AdminService.wsdl
-606,612d605
-<   <message name="getLoggerStatsRequest">
-<     <part name="parameters" element="tns:GetLoggerStatsRequest"/>
-<   </message>
-<   <message name="getLoggerStatsResponse">
-<     <part name="parameters" element="tns:GetLoggerStatsResponse"/>
-<   </message>
-< 
-1392,1395d1384
-<     <operation name="getLoggerStatsRequest">
-<       <input message="tns:getLoggerStatsRequest"/>
-<       <output message="tns:getLoggerStatsResponse"/>
-<     </operation>
-2584,2594d2572
-<     <operation name="getLoggerStatsRequest">
-<       <soap:operation soapAction="urn:zimbraAdmin/GetLoggerStats" style="document"/>
-<       <input>
-<         <soap:body use="literal"/>
-<         <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
-<       </input>
-<       <output>
-<         <soap:body use="literal"/>
-<       </output>
-<     </operation>
-< 
-
-Hopefully this will be automated soon.
-
 *    Marshalling / Unmarshalling support.
 The code that is responsible for marshalling and unmarshalling JAXB classes
 needs to know about the top level requests and response classes - see the

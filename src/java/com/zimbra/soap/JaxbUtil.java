@@ -383,6 +383,10 @@ public final class JaxbUtil {
     private JaxbUtil() {
     }
 
+    public static Class<?>[] getJaxbRequestAndResponseClasses() {
+        return MESSAGE_CLASSES;
+    }
+
     /**
      * @param o
      * @param factory - e.g. XmlElement.mFactory or JSONElement.mFactory 
