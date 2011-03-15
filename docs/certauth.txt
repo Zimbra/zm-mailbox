@@ -1,0 +1,285 @@
+2-way SSL (mutual authentication) using X.509 certificates.
+
+=================
+I. Introduction
+=================
+Two-way authentication, also commonly referred to as mutual authentication, 
+is the combination of server and client authentication.  The authentication 
+that is occurring is mutual, or two-way, because the server is authenticating 
+itself to the client, and the client is authenticating itself to the server.
+
+For a server authenticating itself to the client, the client must trust the 
+CA who signed the server's certificate.
+
+For a client authenticating itself to the server, the server must trust the 
+CA who signed the client's certificate.
+
+
+==========
+II. Setup
+==========
+Note: Steps and examples used below are mainly for QA and dev environment.
+      We use openssl to generate client client certificate and a self-signed 
+      UA certificate, then use the UA certificate to sigh the client certificate.
+      
+      We then import the UA certificate into jetty's keystore using keytool.  
+      In production environment, admin console and/or zmcertmgr should be used 
+      for importing the UA certificate.
+      
+      The client certificate needs to be imported to the WEB browser.  In examples 
+      below, we use Firefox UI as an example. 
+      In production environment, the client certificate could be, for example,
+      from a CAC card and made available the browser by some middleware.
+    
+
+----------------
+0. Preparation
+----------------
+   Create a temporary directory and cd to the temporary directory, 
+   all certificates will be generated in the temporary directory.
+   
+   mkdir /mycerts
+   cd /mycerts
+   
+
+----------------
+1. Create a Certificate Authority (CA) Certificate
+----------------
+
+(A) Create a private key
+$ /opt/zimbra/openssl/bin/openssl genrsa -out ca.key 2048
+Generating RSA private key, 2048 bit long modulus
+....+++
+...............................+++
+e is 65537 (0x10001)
+
+
+(B) Create a certificate request
+$ /opt/zimbra/openssl/bin/openssl req -new -key ca.key -out ca.csr
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [AU]:US
+State or Province Name (full name) [Some-State]:California
+Locality Name (eg, city) []:Palo Alto
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:VMWare
+Organizational Unit Name (eg, section) []:Zimbra
+Common Name (eg, YOUR name) []:MyCA
+Email Address []:
+
+Please enter the following 'extra' attributes
+to be sent with your certificate request
+A challenge password []:
+An optional company name []:
+
+
+(C) Create and sign(self-sign) a certificate from the certificate request
+$ /opt/zimbra/openssl/bin/openssl x509 -req -days 365 -in ca.csr -out ca.crt -signkey ca.key
+Signature ok
+subject=/C=US/ST=California/L=Palo Alto/O=VMWare/OU=Zimbra/CN=MyCA
+Getting Private key
+
+
+----------------
+2. Create a Client Certificate
+----------------
+
+(A) Create a private key
+$ /opt/zimbra/openssl/bin/openssl genrsa -out user1.key 2048
+Generating RSA private key, 2048 bit long modulus
+........................................................................................................+++
+....+++
+e is 65537 (0x10001)
+
+
+(B) Create a certificate request
+Note: the most important information is the Email Address.  It must be the email address of the Zimbra user.
+
+$ /opt/zimbra/openssl/bin/openssl req -new -key user1.key -out user1.csr
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [AU]:US
+State or Province Name (full name) [Some-State]:California
+Locality Name (eg, city) []:Saratoga
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:Example Company
+Organizational Unit Name (eg, section) []:Engineering
+Common Name (eg, YOUR name) []:user one
+Email Address []:user1@phoebe.mbp
+
+Please enter the following 'extra' attributes
+to be sent with your certificate request
+A challenge password []:
+An optional company name []:
+
+
+(C) Sign the user certificate request using the CA created in 1 and create the user certificate
+$ /opt/zimbra/openssl/bin/openssl ca -in user1.csr -cert ca.crt -keyfile ca.key -out user1.crt
+
+If you see:
+Using configuration from /opt/zimbra/openssl-1.0.0d/ssl/openssl.cnf
+I am unable to access the ./demoCA/newcerts directory
+./demoCA/newcerts: No such file or directory
+
+This is because the default OpenSSL configuration file uses the ./demoCA/newcerts directory for 
+generating new certificates.  OpenSSL also uses certain files to keep track of the last unique 
+serial number assigned to a generated certificate and an index of valid and revoked certificates. 
+
+Issue the following commands to setup default contents for these files:
+$ mkdir -p cd -r ./demoCA/newcerts
+$ cd demoCA
+$ echo "01" > serial
+$ cd ..  (so we are back in out temp directory)
+
+Now issue the command to sign the user certificate again.
+$ /opt/zimbra/openssl/bin/openssl ca -in user1.csr -cert ca.crt -keyfile ca.key -out user1.crt -policy policy_anything
+Using configuration from /opt/zimbra/openssl-1.0.0d/ssl/openssl.cnf
+Check that the request matches the signature
+Signature ok
+Certificate Details:
+        Serial Number: 1 (0x1)
+        Validity
+            Not Before: Mar 15 05:48:15 2011 GMT
+            Not After : Mar 14 05:48:15 2012 GMT
+        Subject:
+            countryName               = US
+            stateOrProvinceName       = California
+            localityName              = Saratoga
+            organizationName          = Example Company
+            organizationalUnitName    = Engineering
+            commonName                = user one
+            emailAddress              = user1@phoebe.mbp
+        X509v3 extensions:
+            X509v3 Basic Constraints: 
+                CA:FALSE
+            Netscape Comment: 
+                OpenSSL Generated Certificate
+            X509v3 Subject Key Identifier: 
+                57:A8:C2:64:51:7C:C1:3C:5E:01:31:CA:6E:85:A1:11:C2:2D:48:5B
+            X509v3 Authority Key Identifier: 
+                DirName:/C=US/ST=California/L=Palo Alto/O=VMWare/OU=Zimbra/CN=MyCA
+                serial:C2:8A:A1:C3:86:E6:A9:58
+
+Certificate is to be certified until Mar 14 05:48:15 2012 GMT (365 days)
+Sign the certificate? [y/n]:y
+
+
+1 out of 1 certificate requests certified, commit? [y/n]y
+Write out database with 1 new entries
+Data Base Updated
+
+
+----------------
+3. Import the Client Certificate into Web Browsers
+----------------
+
+Web browsers like Firefox and IE canÕt use the certificates in the PEM format that is generated by OpenSSL. 
+Consequently, weÕll need to export the user certificate to file formats that can be imported by web browsers.
+
+(A) Importing the client certificate in PKCS#12 format
+Firefox and Internet Explorer 6.0 support the PKCS#12 certificate format. 
+Use the following command to convert the user certificate to this format.
+
+$ /opt/zimbra/openssl/bin/openssl pkcs12 -export -clcerts -in user1.crt -inkey user1.key -out user1.p12
+Enter Export Password:
+Verifying - Enter Export Password:
+ 
+Copy the user1.p12 file to a location where you can access it from your web browser via the file system.
+
+(B) To import a certificate in Firefox (Firefox 3.6 Mac):
+- Firefox -> preferences
+- Click on the Advanced tab
+- Under Certficates, select "Ask me everytime" for "When a server requests my personal certificate".
+- Click on "View Certificates"
+- Click on the "Your Certificates" tab
+- Click on "import"
+- Use the browse button to select the user1.p12 file.  You will be prompted for the password entered 
+  in 3. (A).
+  
+  
+----------------
+4. Import the CA certificate that signed the client certificate in ZCS's keystore or truststore.
+----------------
+We are using keystore as example here.
+
+$ keytool -import -keystore /opt/zimbra/jetty/etc/keystore -alias myca -file ca.crt
+Enter keystore password:  
+Owner: CN=MyCA, OU=Zimbra, O=VMWare, L=Palo Alto, ST=California, C=US
+Issuer: CN=MyCA, OU=Zimbra, O=VMWare, L=Palo Alto, ST=California, C=US
+Serial number: c28aa1c386e6a958
+Valid from: Mon Mar 14 22:17:43 PDT 2011 until: Tue Mar 13 22:17:43 PDT 2012
+Certificate fingerprints:
+         MD5:  F2:D4:1A:39:0F:1A:72:40:53:03:93:D6:3C:A8:D8:21
+         SHA1: 71:A7:96:8D:66:97:10:4D:CF:6F:D8:52:44:BB:5A:E8:38:E5:BA:86
+         Signature algorithm name: SHA1withRSA
+         Version: 1
+Trust this certificate? [no]:  yes
+Certificate was added to keystore
+
+
+----------------
+5. Configire Zimbra server to request client certificate
+----------------
+zmprov ms {server} zimbraMailSSLClientCertMode WantClientAuth
+   
+
+----------------
+6. zmmailboxdctl restart 
+----------------
+   
+   
+==============
+III. Testing
+==============
+   In Firefox, browse to https://localhost:7443/certauth
+   
+   SSL mutual authentication will start.
+   - In the handshake the server first proves to the client who it is by signing a
+     random challenge sent by the client and returning the corresponding public
+     certificate so that the client can check the signature.
+     In dev/QA environment, the server certificate is a self-signed certificate, if 
+     you have not accepted it before, just accept it (follow the usual 
+     "I understand the risks -> add exception, ...").
+     If the server certificate is signed by a well known CA, and the CA that signed 
+     the server certificate is already in the known Authorities in the browser, 
+     you should not be prompted to accept the server certificate.
+     
+   - Then, client certification is requested by the server.  The server sends out 
+     descriptions of all the client-issuing-authorities which it has in its key/trust store.
+   
+   - The client now inspects the client certificates which are in the browser and
+     attempts to find a match.  A 'match' is a client certificate which was signed by
+     one of the authorities which the server says it is already aware of.
+  
+   - At this point, Firefox should display a dialog for you to select a client cert.  
+     Select the user1.p12 one imported in step 3. (B).
+     Firefox now signs the server's random challenge, and returns it and the 
+     client's public certificate. 
+     
+   - The server checks that the client certificate was indeed issued by an
+     authority it trusts, and checks the signing of the random challenge, dates etc..  
+  
+   - Now the handshake and the "authentication" of user is complete.  
+     ZCS will do the "authorization" by looking up the user in ZCS's directory.
+     Currently ZCS uses the EMAILADDRESS field of the subject in the client certificate 
+     as the only lookup key.  If the value of EMAILADDRESS matches a Zimbra user's 
+     primary email address or one of the aliases, the user will be let in.
+     
+     If the request came to the mail SSL port(7443), user will be redirected to the 
+     Inbox of mail app.
+     If the request came to the admin port (7071) and the user is an admin account, 
+     user will be redirected into the admin console.  
+     
+
+     
+
+
+- 
