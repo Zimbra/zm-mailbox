@@ -2154,7 +2154,9 @@ public class Mailbox {
         } finally {
             if (items != null) {
                 for (MailItem item : items) {
-                    mCurrentChange.addPremodifyItem(item);
+                    if (item != null) {
+                        mCurrentChange.addPremodifyItem(item);
+                    }
                 }
             }
         }
