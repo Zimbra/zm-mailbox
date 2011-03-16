@@ -228,6 +228,9 @@ public class CalendarUtils {
         // UID
         mod.setUid(oldInv.getUid());
 
+        attendeesToCancel.addAll(getRemovedAttendees(oldInv.getAttendees(), mod.getAttendees(), true, account));
+        attendeesAdded.addAll(getRemovedAttendees(mod.getAttendees(), oldInv.getAttendees(), false, account));  // reverse of who's being canceled
+
         // SEQUENCE and DTSTAMP
         if (mod.isOrganizer()) {
             // Set sequence to the max of 1) what the modifying client specified (if any),
@@ -237,6 +240,11 @@ public class CalendarUtils {
             // (bug 19111)
             int seriesSeq = seriesInv != null ? seriesInv.getSeqNo() : 0;
             int newSeq = Math.max(Math.max(mod.getSeqNo(), oldInv.getSeqNo() + 1), seriesSeq);
+            // Increment sequence by one more if there are attendees to whom to send cancel notice.  If old sequence
+            // is N, cancel notice will have sequence N+1 and the new invite will have sequence N+2.  This ensures
+            // the update takes precedence over cancel in case someone receives both, regardless of delivery order. (bug 56642)
+            if (!attendeesToCancel.isEmpty())
+                ++newSeq;
             mod.setSeqNo(newSeq);
             mod.setDtStamp(new Date().getTime());
         } else {
@@ -250,9 +258,6 @@ public class CalendarUtils {
         if (oldInv.hasRecurId()) {
             mod.setRecurId(oldInv.getRecurId());
         }
-
-        attendeesToCancel.addAll(getRemovedAttendees(oldInv.getAttendees(), mod.getAttendees(), true, account));
-        attendeesAdded.addAll(getRemovedAttendees(mod.getAttendees(), oldInv.getAttendees(), false, account));  // reverse of who's being canceled
 
         // change tracking
         String changes = parseInviteChanges(inviteElem);
