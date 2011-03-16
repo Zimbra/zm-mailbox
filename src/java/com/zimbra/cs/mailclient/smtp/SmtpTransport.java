@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -34,6 +34,7 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
+import javax.security.auth.login.LoginException;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -100,8 +101,7 @@ import com.zimbra.cs.util.BuildInfo;
 public class SmtpTransport extends Transport {
 
     public static final Provider PROVIDER = new Provider(
-            Provider.Type.TRANSPORT, "smtp", SmtpTransport.class.getName(),
-            "Zimbra", BuildInfo.VERSION);
+            Provider.Type.TRANSPORT, "smtp", SmtpTransport.class.getName(), "Zimbra", BuildInfo.VERSION);
 
     private SmtpConnection connection;
     private final boolean ssl;
@@ -131,18 +131,15 @@ public class SmtpTransport extends Transport {
     }
 
     @Override
-    protected boolean protocolConnect(String host, int port, String user,
-            String passwd) throws MessagingException {
+    protected boolean protocolConnect(String host, int port, String user, String passwd) throws MessagingException {
 
-        boolean auth = PropUtil.getBooleanSessionProperty(session,
-                "mail." + protocol + ".auth", false);
+        boolean auth = PropUtil.getBooleanSessionProperty(session, "mail." + protocol + ".auth", false);
         if (auth && (user == null || passwd == null)) {
             return false;
         }
 
         if (port < 0) {
-            port =  PropUtil.getIntSessionProperty(session,
-                    "mail." + protocol + ".port",
+            port =  PropUtil.getIntSessionProperty(session, "mail." + protocol + ".port",
                     ssl ? SmtpConfig.DEFAULT_SSL_PORT : SmtpConfig.DEFAULT_PORT);
         }
 
@@ -186,7 +183,9 @@ public class SmtpTransport extends Transport {
         }
         if (auth || (user != null && passwd != null)) {
             try {
-                connection.login(passwd);
+                connection.authenticate(passwd);
+            } catch (LoginException e) {
+                throw new AuthenticationFailedException(e.getMessage());
             } catch (IOException e) {
                 throw new AuthenticationFailedException(e.getMessage());
             }
@@ -282,17 +281,14 @@ public class SmtpTransport extends Transport {
         Address[] invalid = Iterables.toArray(invalidAddrs, Address.class);
 
         int notify = ex != null ? TransportEvent.MESSAGE_NOT_DELIVERED :
-            invalid.length > 0 ? TransportEvent.MESSAGE_PARTIALLY_DELIVERED :
-                TransportEvent.MESSAGE_DELIVERED;
+            invalid.length > 0 ? TransportEvent.MESSAGE_PARTIALLY_DELIVERED : TransportEvent.MESSAGE_DELIVERED;
 
         notifyTransportListeners(notify, validSent, validUnsent, invalid, msg);
         switch (notify) {
             case TransportEvent.MESSAGE_NOT_DELIVERED:
-                throw new SendFailedException("MESSAGE_NOT_DELIVERED", ex,
-                        validSent, validUnsent, invalid);
+                throw new SendFailedException("MESSAGE_NOT_DELIVERED", ex, validSent, validUnsent, invalid);
             case TransportEvent.MESSAGE_PARTIALLY_DELIVERED:
-                throw new SendFailedException("MESSAGE_PARTIALLY_DELIVERED", ex,
-                        validSent, validUnsent, invalid);
+                throw new SendFailedException("MESSAGE_PARTIALLY_DELIVERED", ex, validSent, validUnsent, invalid);
         }
     }
 

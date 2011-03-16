@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -56,7 +56,6 @@ public abstract class MailConfig {
      */
     protected MailConfig(Log log) {
         logger = Preconditions.checkNotNull(log);
-        authenticationId = System.getProperty("user.name");
         security = Security.NONE;
     }
 
@@ -159,8 +158,7 @@ public abstract class MailConfig {
     }
 
     /**
-     * Returns the authentication id. The default authentication id is the
-     * the value of the system property <tt>user.name</tt>.
+     * Returns the authentication id.
      *
      * @return the authentication id
      */

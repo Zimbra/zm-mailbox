@@ -20,6 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.util.Properties;
 
 import javax.mail.Address;
+import javax.mail.MessagingException;
 import javax.mail.SendFailedException;
 import javax.mail.Session;
 import javax.mail.Transport;
@@ -41,7 +42,7 @@ import com.zimbra.cs.util.JMSession;
  *
  * @author ysasaki
  */
-public class SmtpTransportTest {
+public final class SmtpTransportTest {
     private static final int PORT = 9025;
     private MockTcpServer server;
 
@@ -77,8 +78,7 @@ public class SmtpTransportTest {
         Session session = JMSession.getSession();
         Transport transport = session.getTransport("smtp");
         transport.connect("localhost", PORT, null, null);
-        String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\n" +
-            "Subject: test\n\ntest";
+        String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\nSubject: test\n\ntest";
         MimeMessage msg = new JavaMailMimeMessage(session, new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         transport.sendMessage(msg, msg.getAllRecipients());
         transport.close();
@@ -119,8 +119,7 @@ public class SmtpTransportTest {
         Transport transport = session.getTransport("smtp");
         transport.connect("localhost", PORT, null, null);
         String raw = "From: sender@zimbra.com\n" +
-            "To: rcpt1@zimbra.com, rcpt2@zimbra.com, rcpt3@zimbra.com\n" +
-            "Subject: test\n\ntest";
+            "To: rcpt1@zimbra.com, rcpt2@zimbra.com, rcpt3@zimbra.com\nSubject: test\n\ntest";
         MimeMessage msg = new JavaMailMimeMessage(session, new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         try {
             transport.sendMessage(msg, msg.getAllRecipients());
@@ -198,8 +197,7 @@ public class SmtpTransportTest {
         session.getProperties().setProperty("mail.smtp.from", "from@zimbra.com");
         Transport transport = session.getTransport("smtp");
         transport.connect("localhost", PORT, null, null);
-        String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\n" +
-            "Subject: test\n\ntest";
+        String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\nSubject: test\n\ntest";
         MimeMessage msg = new JavaMailMimeMessage(session, new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         transport.sendMessage(msg, msg.getAllRecipients());
         transport.close();
@@ -235,8 +233,7 @@ public class SmtpTransportTest {
         session.getProperties().setProperty("mail.smtp.from", "<>");
         Transport transport = session.getTransport("smtp");
         transport.connect("localhost", PORT, null, null);
-        String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\n" +
-            "Subject: test\n\ntest";
+        String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\nSubject: test\n\ntest";
         MimeMessage msg = new JavaMailMimeMessage(session, new ByteArrayInputStream(raw.getBytes(ISO_8859_1)));
         transport.sendMessage(msg, new Address[] { new InternetAddress("<rcpt@zimbra.com>") });
         transport.close();
@@ -255,7 +252,8 @@ public class SmtpTransportTest {
         server = MockTcpServer.scenario()
         .sendLine("220 test ready")
         .recvLine() // EHLO
-        .sendLine("250 OK")
+        .sendLine("250-smtp.zimbra.com")
+        .sendLine("250 AUTH LOGIN")
         .recvLine() // AUTH
         .sendLine("334 OK")
         .recvLine() // USER
@@ -277,8 +275,7 @@ public class SmtpTransportTest {
         Session session = JMSession.getSession();
         Transport transport = session.getTransport("smtp");
         transport.connect("localhost", PORT, "zimbra", "secret");
-        String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\n" +
-            "Subject: test\n\ntest";
+        String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\nSubject: test\n\ntest";
         MimeMessage msg = new JavaMailMimeMessage(session, new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         transport.sendMessage(msg, msg.getAllRecipients());
         transport.close();
@@ -286,7 +283,6 @@ public class SmtpTransportTest {
         server.shutdown(1000);
         Assert.assertEquals("EHLO localhost\r\n", server.replay());
         Assert.assertEquals("AUTH LOGIN\r\n", server.replay());
-
         Assert.assertEquals(base64("zimbra") + "\r\n", server.replay());
         Assert.assertEquals(base64("secret") + "\r\n", server.replay());
         Assert.assertEquals("MAIL FROM:<sender@zimbra.com>\r\n", server.replay());
@@ -294,6 +290,45 @@ public class SmtpTransportTest {
         Assert.assertEquals("DATA\r\n", server.replay());
         Assert.assertEquals("QUIT\r\n", server.replay());
         Assert.assertNull(server.replay());
+    }
+
+    @Test(timeout = 3000)
+    public void noAuth() throws Exception {
+        server = MockTcpServer.scenario()
+        .sendLine("220 test ready")
+        .recvLine() // EHLO
+        .sendLine("250 OK")
+        .build().start(PORT);
+
+        Session session = JMSession.getSession();
+        Transport transport = session.getTransport("smtp");
+        try {
+            transport.connect("localhost", PORT, "zimbra", "secret");
+            Assert.fail();
+        } catch (MessagingException e) {
+            Assert.assertEquals("The server doesn't support authentication.", e.getMessage());
+        }
+        server.shutdown(1000);
+    }
+
+    @Test(timeout = 3000)
+    public void noAuthMechansims() throws Exception {
+        server = MockTcpServer.scenario()
+        .sendLine("220 test ready")
+        .recvLine() // EHLO
+        .sendLine("250-OK")
+        .sendLine("250 AUTH PLAIN NTLM")
+        .build().start(PORT);
+
+        Session session = JMSession.getSession();
+        Transport transport = session.getTransport("smtp");
+        try {
+            transport.connect("localhost", PORT, "zimbra", "secret");
+            Assert.fail();
+        } catch (MessagingException e) {
+            Assert.assertEquals("No authentication mechansims supported: [NTLM, PLAIN]", e.getMessage());
+        }
+        server.shutdown(1000);
     }
 
     private String base64(String src) {
@@ -316,8 +351,7 @@ public class SmtpTransportTest {
         session.getProperties().setProperty("mail.smtp.sendpartial", "true");
         Transport transport = session.getTransport("smtp");
         transport.connect("localhost", PORT, null, null);
-        String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\n" +
-            "Subject: test\n\ntest";
+        String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\nSubject: test\n\ntest";
         MimeMessage msg = new JavaMailMimeMessage(session, new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         try {
             transport.sendMessage(msg, msg.getAllRecipients());
@@ -358,8 +392,7 @@ public class SmtpTransportTest {
         Session session = JMSession.getSession();
         Transport transport = session.getTransport("smtp");
         transport.connect("localhost", PORT, null, null);
-        String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\n" +
-            "Subject: test\n\n" +
+        String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\nSubject: test\n\n" +
             ".\n" +
             "..\n" +
             ".\n";
@@ -372,9 +405,7 @@ public class SmtpTransportTest {
         Assert.assertEquals("MAIL FROM:<sender@zimbra.com>\r\n", server.replay());
         Assert.assertEquals("RCPT TO:<rcpt@zimbra.com>\r\n", server.replay());
         Assert.assertEquals("DATA\r\n", server.replay());
-        Assert.assertEquals("From: sender@zimbra.com\r\n" +
-                "To: rcpt@zimbra.com\r\n" +
-                "Subject: test\r\n\r\n" +
+        Assert.assertEquals("From: sender@zimbra.com\r\nTo: rcpt@zimbra.com\r\nSubject: test\r\n\r\n" +
                 "..\r\n" +
                 "...\r\n" +
                 "..\r\n" +
@@ -401,8 +432,7 @@ public class SmtpTransportTest {
         Session session = JMSession.getSession();
         Transport transport = session.getTransport("smtp");
         transport.connect("localhost", PORT, null, null);
-        String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\n" +
-            "Subject: test\n\ntest";
+        String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\nSubject: test\n\ntest";
         MimeMessage msg = new JavaMailMimeMessage(session, new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         try {
             transport.sendMessage(msg, msg.getAllRecipients());
@@ -472,8 +502,7 @@ public class SmtpTransportTest {
         Session session = JMSession.getSession();
         Transport transport = session.getTransport("smtp");
         transport.connect("localhost", PORT, null, null);
-        String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\n" +
-            "Subject: test\n\ntest";
+        String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\nSubject: test\n\ntest";
         MimeMessage msg = new JavaMailMimeMessage(session, new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         transport.sendMessage(msg, msg.getAllRecipients());
         transport.close();

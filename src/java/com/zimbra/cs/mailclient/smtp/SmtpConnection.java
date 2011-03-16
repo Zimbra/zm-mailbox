@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -33,7 +34,9 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.codec.binary.Base64;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.sun.mail.smtp.SMTPMessage;
@@ -61,8 +64,8 @@ public final class SmtpConnection extends MailConnection {
 
     private Set<String> invalidRecipients = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
     private Set<String> validRecipients = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
-    private Set<String> serverAuthMechanisms = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
-    private Set<String> serverExtensions = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+    private Set<String> serverAuthMechanisms = new HashSet<String>();
+    private Set<String> serverExtensions = new HashSet<String>();
 
     public SmtpConnection(SmtpConfig config) {
         super(config);
@@ -208,29 +211,18 @@ public final class SmtpConnection extends MailConnection {
             helo();
         }
 
-        /*
-         // Negotiate auth mechanism.  May not be needed with SASL?
         SmtpConfig config = getSmtpConfig();
-        if (config.needAuth() && config.getMechanism() == null) {
-            // Determine which auth mechanism we'll use.
-            if (serverAuthMechanisms.contains(SaslAuthenticator.MECHANISM_PLAIN)) {
-                config.setMechanism(SaslAuthenticator.MECHANISM_PLAIN);
-            } else if (serverAuthMechanisms.contains("LOGIN")) {
+        if (config.needAuth()) {
+            if (!serverExtensions.contains(AUTH)) {
+                throw new MailException("The server doesn't support authentication.");
+            }
+            //TODO Only LOGIN is supported so far.
+            if (serverAuthMechanisms.contains("LOGIN")) {
                 config.setMechanism("LOGIN");
             } else {
-                for (String mechanism : config.getAuthenticatorFactory().getAllMechanisms()) {
-                    if (serverAuthMechanisms.contains(mechanism)) {
-                        config.setMechanism(mechanism);
-                        break;
-                    }
-                }
-            }
-            if (config.getMechanism() == null) {
-                throw new MailException("Unable to determine auth mechanism.  Server supports: " +
-                    serverAuthMechanisms);
+                throw new MailException("No authentication mechansims supported: " + serverAuthMechanisms);
             }
         }
-        */
 
         setState(State.NOT_AUTHENTICATED);
     }
@@ -249,8 +241,7 @@ public final class SmtpConnection extends MailConnection {
     /**
      * Sends the {@code HELO} command and processes the reply.
      *
-     * @throws IOException if the server did not respond with reply code
-     * {@code 250}
+     * @throws IOException if the server did not respond with reply code {@code 250}
      */
     private void helo() throws IOException {
         String reply = sendCommand(HELO, getSmtpConfig().getDomain());
@@ -261,7 +252,6 @@ public final class SmtpConnection extends MailConnection {
     }
 
     private static final Pattern PAT_EXTENSION = Pattern.compile("250[ -]([^\\s]+)(.*)");
-    private static final Pattern PAT_WHITESPACE = Pattern.compile("\\s*");
 
     /**
      * Reads replies to {@code EHLO} or {@code HELO}.
@@ -269,11 +259,9 @@ public final class SmtpConnection extends MailConnection {
      * Returns the reply code.  Handles multiple {@code 250} responses.
      *
      * @param command the command name
-     * @param firstReply the first reply line returned from sending
-     * {@code EHLO} or {@code HELO}
+     * @param firstReply the first reply line returned from sending {@code EHLO} or {@code HELO}
      */
-    private int readHelloReplies(String command, String firstReply)
-        throws IOException {
+    private int readHelloReplies(String command, String firstReply) throws IOException {
 
         String reply = firstReply;
         int replyCode;
@@ -283,8 +271,7 @@ public final class SmtpConnection extends MailConnection {
 
         while (true) {
             if (reply.length() < 4) {
-                throw new CommandFailedException(command,
-                        "Invalid server response at line " + line + ": " + reply);
+                throw new CommandFailedException(command, "Invalid server response at line " + line + ": " + reply);
             }
             replyCode = getReplyCode(reply);
             if (replyCode != 250) {
@@ -293,13 +280,14 @@ public final class SmtpConnection extends MailConnection {
 
             if (line > 1) {
                 // Parse server extensions.
-                Matcher m = PAT_EXTENSION.matcher(reply);
-                if (m.matches()) {
-                    String extName = m.group(1).toUpperCase();
+                Matcher matcher = PAT_EXTENSION.matcher(reply);
+                if (matcher.matches()) {
+                    String extName = matcher.group(1).toUpperCase();
                     serverExtensions.add(extName);
                     if (extName.equals(AUTH)) {
                         // Parse auth mechanisms.
-                        for (String mechanism : PAT_WHITESPACE.split(m.group(2))) {
+                        Splitter splitter = Splitter.on(CharMatcher.WHITESPACE).trimResults().omitEmptyStrings();
+                        for (String mechanism : splitter.split(matcher.group(2))) {
                             serverAuthMechanisms.add(mechanism.toUpperCase());
                         }
                     }
@@ -315,8 +303,7 @@ public final class SmtpConnection extends MailConnection {
                 // Last 250 response.
                 return 250;
             } else {
-                throw new CommandFailedException(command,
-                        "Invalid server response at line " + line + ": " + reply);
+                throw new CommandFailedException(command, "Invalid server response at line " + line + ": " + reply);
             }
             line++;
         }
@@ -336,24 +323,23 @@ public final class SmtpConnection extends MailConnection {
             if (isPositive(reply)) {
                 return;
             } else {
-                throw new CommandFailedException(AUTH, "LOGIN failed: " + reply);
+                throw new CommandFailedException(AUTH, "AUTH LOGIN failed: " + reply);
             }
         }
 
         // Send password.
         reply = sendCommand(Base64.encodeBase64(pass.getBytes()), null);
         if (!isPositive(reply)) {
-            throw new CommandFailedException(AUTH, "LOGIN failed: " + reply);
+            throw new CommandFailedException(AUTH, "AUTH LOGIN failed: " + reply);
         }
     }
 
     @Override
     protected void sendAuthenticate(boolean ir) throws IOException {
-        StringBuffer sb = new StringBuffer(authenticator.getMechanism());
+        StringBuilder sb = new StringBuilder(authenticator.getMechanism());
         if (ir) {
-            byte[] response = authenticator.getInitialResponse();
             sb.append(' ');
-            sb.append(Ascii.toString(Base64.encodeBase64(response)));
+            sb.append(Ascii.toString(Base64.encodeBase64(authenticator.getInitialResponse())));
         }
         String reply = sendCommand(AUTH, sb.toString());
         if (isNegative(reply)) {
@@ -364,7 +350,6 @@ public final class SmtpConnection extends MailConnection {
     @Override
     public void logout() {
     }
-
 
     /**
      * Overrides the superclass implementation, in order to send {@code EHLO}
@@ -428,9 +413,7 @@ public final class SmtpConnection extends MailConnection {
      *
      * @see #sendMessage(String, String[], MimeMessage)
      */
-    public void sendMessage(MimeMessage msg)
-        throws IOException, MessagingException {
-
+    public void sendMessage(MimeMessage msg) throws IOException, MessagingException {
         sendMessage(getSender(msg), toString(msg.getAllRecipients()), msg);
     }
 
@@ -441,9 +424,7 @@ public final class SmtpConnection extends MailConnection {
      *
      * @see #sendMessage(String, String[], MimeMessage)
      */
-    void sendMessage(Address[] rcpts, MimeMessage msg)
-        throws IOException, MessagingException {
-
+    void sendMessage(Address[] rcpts, MimeMessage msg) throws IOException, MessagingException {
         sendMessage(getSender(msg), toString(rcpts), msg);
     }
 
@@ -452,9 +433,7 @@ public final class SmtpConnection extends MailConnection {
      *
      * @see #sendMessage(String, String[], MimeMessage)
      */
-    void sendMessage(String sender, Address[] rcpts, MimeMessage msg)
-        throws IOException, MessagingException {
-
+    void sendMessage(String sender, Address[] rcpts, MimeMessage msg) throws IOException, MessagingException {
         sendMessage(sender, toString(rcpts), msg);
     }
 
@@ -469,9 +448,7 @@ public final class SmtpConnection extends MailConnection {
      * @throws IOException SMTP error
      * @throws MessagingException MIME serialization error
      */
-    public void sendMessage(String sender, String[] rcpts, MimeMessage msg)
-        throws IOException, MessagingException {
-
+    public void sendMessage(String sender, String[] rcpts, MimeMessage msg) throws IOException, MessagingException {
         connect();
         try {
             sendInternal(sender, rcpts, msg, null);
@@ -491,9 +468,7 @@ public final class SmtpConnection extends MailConnection {
      * @throws IOException SMTP error
      * @throws MessagingException MIME serialization error
      */
-    public void sendMessage(String sender, String[] rcpts, String msg)
-        throws IOException, MessagingException {
-
+    public void sendMessage(String sender, String[] rcpts, String msg) throws IOException, MessagingException {
         connect();
         try {
             sendInternal(sender, rcpts, null, msg);
@@ -502,9 +477,8 @@ public final class SmtpConnection extends MailConnection {
         }
     }
 
-    private void sendInternal(String sender, String[] recipients,
-            MimeMessage javaMailMessage, String messageString)
-        throws IOException, MessagingException {
+    private void sendInternal(String sender, String[] recipients, MimeMessage javaMailMessage, String messageString)
+            throws IOException, MessagingException {
 
         invalidRecipients.clear();
         validRecipients.clear();
@@ -593,7 +567,7 @@ public final class SmtpConnection extends MailConnection {
         else
             return addr;
     }
-    
+
     /**
      * Sends {@code RSET} command to the server.
      *
@@ -627,8 +601,7 @@ public final class SmtpConnection extends MailConnection {
     }
 
     /**
-     * Returns {@code true} if the code from the given reply is between
-     * {@code 200} and {@code 299}.
+     * Returns {@code true} if the code from the given reply is between {@code 200} and {@code 299}.
      */
     private boolean isPositive(String reply) throws IOException {
         int replyCode = getReplyCode(reply);
