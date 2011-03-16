@@ -18,6 +18,8 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.mail.internet.MimeMessage;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -25,15 +27,19 @@ import org.junit.Test;
 
 import com.google.common.io.Files;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ZAttrProvisioning.MailThreadingAlgorithm;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.HSQLDB;
 import com.zimbra.cs.index.BrowseTerm;
 import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.store.MockStoreManager;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.util.JMSession;
 
 /**
  * Unit test for {@link Mailbox}.
@@ -63,25 +69,27 @@ public final class MailboxTest {
     public void setUp() throws Exception {
         HSQLDB.clearDatabase();
         MailboxManager.getInstance().clearCache();
-        Files.deleteDirectoryContents(new File("build/test/index"));
+        File index = new File("build/test/index");
+        if (index.isDirectory()) {
+            Files.deleteDirectoryContents(index);
+        }
     }
 
     @Test
     public void browse() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 
-        DeliveryOptions opt = new DeliveryOptions();
-        opt.setFolderId(Mailbox.ID_FOLDER_INBOX);
-        mbox.addMessage(null, new ParsedMessage("From: test1-1@sub1.zimbra.com".getBytes(), false), opt);
-        mbox.addMessage(null, new ParsedMessage("From: test1-2@sub1.zimbra.com".getBytes(), false), opt);
-        mbox.addMessage(null, new ParsedMessage("From: test1-3@sub1.zimbra.com".getBytes(), false), opt);
-        mbox.addMessage(null, new ParsedMessage("From: test1-4@sub1.zimbra.com".getBytes(), false), opt);
-        mbox.addMessage(null, new ParsedMessage("From: test2-1@sub2.zimbra.com".getBytes(), false), opt);
-        mbox.addMessage(null, new ParsedMessage("From: test2-2@sub2.zimbra.com".getBytes(), false), opt);
-        mbox.addMessage(null, new ParsedMessage("From: test2-3@sub2.zimbra.com".getBytes(), false), opt);
-        mbox.addMessage(null, new ParsedMessage("From: test3-1@sub3.zimbra.com".getBytes(), false), opt);
-        mbox.addMessage(null, new ParsedMessage("From: test3-2@sub3.zimbra.com".getBytes(), false), opt);
-        mbox.addMessage(null, new ParsedMessage("From: test4-1@sub4.zimbra.com".getBytes(), false), opt);
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
+        mbox.addMessage(null, new ParsedMessage("From: test1-1@sub1.zimbra.com".getBytes(), false), dopt);
+        mbox.addMessage(null, new ParsedMessage("From: test1-2@sub1.zimbra.com".getBytes(), false), dopt);
+        mbox.addMessage(null, new ParsedMessage("From: test1-3@sub1.zimbra.com".getBytes(), false), dopt);
+        mbox.addMessage(null, new ParsedMessage("From: test1-4@sub1.zimbra.com".getBytes(), false), dopt);
+        mbox.addMessage(null, new ParsedMessage("From: test2-1@sub2.zimbra.com".getBytes(), false), dopt);
+        mbox.addMessage(null, new ParsedMessage("From: test2-2@sub2.zimbra.com".getBytes(), false), dopt);
+        mbox.addMessage(null, new ParsedMessage("From: test2-3@sub2.zimbra.com".getBytes(), false), dopt);
+        mbox.addMessage(null, new ParsedMessage("From: test3-1@sub3.zimbra.com".getBytes(), false), dopt);
+        mbox.addMessage(null, new ParsedMessage("From: test3-2@sub3.zimbra.com".getBytes(), false), dopt);
+        mbox.addMessage(null, new ParsedMessage("From: test4-1@sub4.zimbra.com".getBytes(), false), dopt);
         mbox.index.indexDeferredItems();
 
         List<BrowseTerm> terms = mbox.browse(null, Mailbox.BrowseBy.domains, null, 100);
@@ -94,6 +102,65 @@ public final class MailboxTest {
         Assert.assertEquals(3, terms.get(1).getFreq());
         Assert.assertEquals(2, terms.get(2).getFreq());
         Assert.assertEquals(1, terms.get(3).getFreq());
+    }
+
+    private ParsedMessage generateMessage(String subject) throws Exception {
+        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
+        mm.setHeader("From", "Bob Evans <bob@example.com>");
+        mm.setHeader("To", "Jimmy Dean <jdean@example.com>");
+        mm.setHeader("Subject", subject);
+        mm.setText("nothing to see here");
+        return new ParsedMessage(mm, false);
+    }
+
+    @Test
+    public void threadDraft() throws Exception {
+        Account acct = Provisioning.getInstance().getAccount("test@zimbra.com");
+        acct.setMailThreadingAlgorithm(MailThreadingAlgorithm.subject);
+
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+
+        // setup: add the root message
+        ParsedMessage pm = generateMessage("test subject");
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
+        int rootId = mbox.addMessage(null, pm, dopt).getId();
+
+        // first draft explicitly references the parent by item ID (how ZWC does it)
+        pm = generateMessage("Re: test subject");
+        Message draft = mbox.saveDraft(null, pm, Mailbox.ID_AUTO_INCREMENT, rootId + "", MailSender.MSGTYPE_REPLY, null, null, 0);
+        Message parent = mbox.getMessageById(null, rootId);
+        Assert.assertEquals("threaded explicitly", parent.getConversationId(), draft.getConversationId());
+
+        // second draft implicitly references the parent by default threading rules
+        pm = generateMessage("Re: test subject");
+        draft = mbox.saveDraft(null, pm, Mailbox.ID_AUTO_INCREMENT);
+        parent = mbox.getMessageById(null, rootId);
+        Assert.assertEquals("threaded implicitly [saveDraft]", parent.getConversationId(), draft.getConversationId());
+
+        // threading is set up at first save time, so modifying the second draft should *not* affect threading
+        pm = generateMessage("Re: changed the subject");
+        draft = mbox.saveDraft(null, pm, draft.getId());
+        parent = mbox.getMessageById(null, rootId);
+        Assert.assertEquals("threaded implicitly [resaved]", parent.getConversationId(), draft.getConversationId());
+
+        // third draft is like second draft, but goes via Mailbox.addMessage (how IMAP does it)
+        pm = generateMessage("Re: test subject");
+        dopt = new DeliveryOptions().setFlags(Flag.BITMASK_DRAFT).setFolderId(Mailbox.ID_FOLDER_DRAFTS);
+        draft = mbox.addMessage(null, pm, dopt);
+        parent = mbox.getMessageById(null, rootId);
+        Assert.assertEquals("threaded implicitly [addMessage]", parent.getConversationId(), draft.getConversationId());
+
+        // fourth draft explicitly references the parent by item ID, even though it wouldn't get threaded using the default threader
+        pm = generateMessage("changed the subject");
+        draft = mbox.saveDraft(null, pm, Mailbox.ID_AUTO_INCREMENT, rootId + "", MailSender.MSGTYPE_REPLY, null, null, 0);
+        parent = mbox.getMessageById(null, rootId);
+        Assert.assertEquals("threaded explicitly (changed subject)", parent.getConversationId(), draft.getConversationId());
+
+        // fifth draft is not related to the parent and should not be threaded
+        pm = generateMessage("Re: unrelated subject");
+        draft = mbox.saveDraft(null, pm, Mailbox.ID_AUTO_INCREMENT);
+        parent = mbox.getMessageById(null, rootId);
+        Assert.assertEquals("unrelated", -draft.getId(), draft.getConversationId());
     }
 
 }

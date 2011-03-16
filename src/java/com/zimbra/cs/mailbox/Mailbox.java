@@ -78,7 +78,6 @@ import com.zimbra.cs.db.DbMailItem.QueryParams;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.fb.FreeBusyQuery;
-import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.imap.ImapMessage;
@@ -742,25 +741,30 @@ public class Mailbox {
      *  items that were created or had their "content" modified, and as
      *  <tt>TOMBSTONE.SEQUENCE</tt> for hard deletes. */
     public int getOperationChangeID() throws ServiceException {
-        if (mCurrentChange.changeId == MailboxChange.NO_CHANGE)
+        if (mCurrentChange.changeId == MailboxChange.NO_CHANGE) {
             setOperationChangeID(ID_AUTO_INCREMENT);
+        }
         return mCurrentChange.changeId;
     }
 
     /** @return whether the object has changed more recently than the client knows about */
     boolean checkItemChangeID(MailItem item) throws ServiceException {
-        if (item == null)
+        if (item == null) {
             return true;
+        }
         return checkItemChangeID(item.getModifiedSequence(), item.getSavedSequence());
     }
+
     public boolean checkItemChangeID(int modMetadata, int modContent) throws ServiceException {
-        if (mCurrentChange.octxt == null || mCurrentChange.octxt.change < 0)
+        if (mCurrentChange.octxt == null || mCurrentChange.octxt.change < 0) {
             return true;
+        }
         OperationContext octxt = mCurrentChange.octxt;
-        if (octxt.changetype == OperationContext.CHECK_CREATED && modContent > octxt.change)
+        if (octxt.changetype == OperationContext.CHECK_CREATED && modContent > octxt.change) {
             return false;
-        else if (octxt.changetype == OperationContext.CHECK_MODIFIED && modMetadata > octxt.change)
+        } else if (octxt.changetype == OperationContext.CHECK_MODIFIED && modMetadata > octxt.change) {
             throw MailServiceException.MODIFY_CONFLICT();
+        }
         return true;
     }
 
@@ -771,17 +775,18 @@ public class Mailbox {
      * @see MailItem#getId()
      * @see DbMailbox#ITEM_CHECKPOINT_INCREMENT */
     public int getLastItemId() {
-        return (mCurrentChange.itemId == MailboxChange.NO_CHANGE ? mData.lastItemId : mCurrentChange.itemId);
+        return mCurrentChange.itemId == MailboxChange.NO_CHANGE ? mData.lastItemId : mCurrentChange.itemId;
     }
 
     // Don't make this method package-visible.  Keep it private.
     //   idFromRedo: specific ID value to use during redo execution, or ID_AUTO_INCREMENT
     private int getNextItemId(int idFromRedo) {
         int lastId = getLastItemId();
-        int nextId = (idFromRedo == ID_AUTO_INCREMENT ? lastId + 1 : idFromRedo);
+        int nextId = idFromRedo == ID_AUTO_INCREMENT ? lastId + 1 : idFromRedo;
 
-        if (nextId > lastId)
+        if (nextId > lastId) {
             mCurrentChange.itemId = nextId;
+        }
         return nextId;
     }
 
@@ -795,7 +800,7 @@ public class Mailbox {
     }
 
     public OperationContext getOperationContext() {
-        return (mCurrentChange.active ? mCurrentChange.octxt : null);
+        return mCurrentChange.active ? mCurrentChange.octxt : null;
     }
 
     RedoableOp getRedoPlayer() {
@@ -817,13 +822,15 @@ public class Mailbox {
      *  user is the same as the <tt>Mailbox</tt>'s owner. */
     Account getAuthenticatedAccount() {
         Account authuser = null;
-        if (mCurrentChange.active && mCurrentChange.octxt != null)
+        if (mCurrentChange.active && mCurrentChange.octxt != null) {
             authuser = mCurrentChange.octxt.getAuthenticatedUser();
+        }
         // XXX if the current authenticated user is the owner, it will return null.
         // later on in Folder.checkRights(), the same assumption is used to validate
         // the access.
-        if (authuser != null && authuser.getId().equals(getAccountId()))
+        if (authuser != null && authuser.getId().equals(getAccountId())) {
             authuser = null;
+        }
         return authuser;
     }
 
@@ -848,10 +855,12 @@ public class Mailbox {
     boolean hasFullAccess() throws ServiceException {
         Account authuser = getAuthenticatedAccount();
         // XXX: in Mailbox, authuser is set to null if authuser == owner.
-        if (authuser == null || getAccountId().equals(authuser.getId()))
+        if (authuser == null || getAccountId().equals(authuser.getId())) {
             return true;
-        if (mCurrentChange.active && mCurrentChange.octxt != null)
+        }
+        if (mCurrentChange.active && mCurrentChange.octxt != null) {
             return AccessManager.getInstance().canAccessAccount(authuser, getAccount(), isUsingAdminPrivileges());
+        }
         return false;
     }
 
@@ -863,8 +872,9 @@ public class Mailbox {
     public boolean hasFullAccess(OperationContext octxt) throws ServiceException {
         Account authuser = octxt != null ? octxt.getAuthenticatedUser() : null;
         // XXX: in Mailbox, authuser is set to null if authuser == owner.
-        if (authuser == null || getAccountId().equals(authuser.getId()))
+        if (authuser == null || getAccountId().equals(authuser.getId())) {
             return true;
+        }
         return AccessManager.getInstance().canAccessAccount(authuser, getAccount(), octxt.isUsingAdminPrivileges());
     }
 
@@ -884,8 +894,9 @@ public class Mailbox {
 
         // if we go negative, that's OK!  just pretend we're at 0.
         long size = Math.max(0, (mCurrentChange.size == MailboxChange.NO_CHANGE ? mData.size : mCurrentChange.size) + delta);
-        if (delta > 0 && checkQuota)
+        if (delta > 0 && checkQuota) {
             checkSizeChange(size);
+        }
 
         mCurrentChange.mDirty.recordModified(mCurrentChange.getOperation(), this, Change.MODIFIED_SIZE, mCurrentChange.timestamp);
         mCurrentChange.size = size;
@@ -893,8 +904,9 @@ public class Mailbox {
 
     void checkSizeChange(long newSize) throws ServiceException {
         long quota = getAccount().getMailQuota();
-        if (quota != 0 && newSize > quota)
+        if (quota != 0 && newSize > quota) {
             throw MailServiceException.QUOTA_EXCEEDED(quota);
+        }
     }
 
     /** Returns the last time that the mailbox had a write op caused by a SOAP
@@ -905,8 +917,9 @@ public class Mailbox {
     public synchronized long getLastSoapAccessTime() {
         long lastAccess = (mCurrentChange.accessed == MailboxChange.NO_CHANGE ? mData.lastWriteDate : mCurrentChange.accessed) * 1000L;
         for (Session s : mListeners) {
-            if (s instanceof SoapSession)
+            if (s instanceof SoapSession) {
                 lastAccess = Math.max(lastAccess, ((SoapSession) s).getLastWriteAccessTime());
+            }
         }
         return lastAccess;
     }
@@ -935,7 +948,7 @@ public class Mailbox {
      *  (b) it was added since the last write operation associated with any
      *  SOAP session. */
     public int getRecentMessageCount() {
-        return (mCurrentChange.recent == MailboxChange.NO_CHANGE ? mData.recentMessages : mCurrentChange.recent);
+        return mCurrentChange.recent == MailboxChange.NO_CHANGE ? mData.recentMessages : mCurrentChange.recent;
     }
 
     /** Resets the mailbox's "recent message count" to 0.  A message is
@@ -946,8 +959,9 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("resetRecentMessageCount", octxt);
-            if (getRecentMessageCount() != 0)
+            if (getRecentMessageCount() != 0) {
                 mCurrentChange.recent = 0;
+            }
             success = true;
         } finally {
             endTransaction(success);
@@ -958,7 +972,7 @@ public class Mailbox {
      *
      * @see #updateContactCount(int) */
     public int getContactCount() {
-        return (mCurrentChange.contacts == MailboxChange.NO_CHANGE ? mData.contacts : mCurrentChange.contacts);
+        return mCurrentChange.contacts == MailboxChange.NO_CHANGE ? mData.contacts : mCurrentChange.contacts;
     }
 
     /** Updates the count of contacts currently in the mailbox.  The
@@ -1098,14 +1112,17 @@ public class Mailbox {
     protected void beginTransaction(String caller, OperationContext octxt) throws ServiceException {
         beginTransaction(caller, System.currentTimeMillis(), octxt, null, null);
     }
+
     protected void beginTransaction(String caller, OperationContext octxt, RedoableOp recorder) throws ServiceException {
         long timestamp = octxt == null ? System.currentTimeMillis() : octxt.getTimestamp();
         beginTransaction(caller, timestamp, octxt, recorder, null);
     }
+
     void beginTransaction(String caller, OperationContext octxt, RedoableOp recorder, DbConnection conn) throws ServiceException {
         long timestamp = octxt == null ? System.currentTimeMillis() : octxt.getTimestamp();
         beginTransaction(caller, timestamp, octxt, recorder, conn);
     }
+
     private void beginTransaction(String caller, long time, OperationContext octxt, RedoableOp recorder, DbConnection conn) throws ServiceException {
         assert(Thread.holdsLock(this));
         mCurrentChange.startChange(caller, octxt, recorder);
@@ -4281,11 +4298,13 @@ public class Mailbox {
         try {
             // file into same conversation as parent message as long as subject hasn't really changed
             Message parentMsg = getMessageById(null, parentID);
-            if (parentMsg.getNormalizedSubject().equals(ParsedMessage.normalize(Mime.getSubject(newMsg))))
+            if (parentMsg.getNormalizedSubject().equals(ParsedMessage.normalize(Mime.getSubject(newMsg)))) {
                 return parentMsg.getConversationId();
+            }
         } catch (Exception e) {
-            if (!(e instanceof MailServiceException.NoSuchItemException))
-                ZimbraLog.mailbox.warn("ignoring error while checking conversation: " + parentID, e);
+            if (!(e instanceof MailServiceException.NoSuchItemException)) {
+                ZimbraLog.mailbox.warn("ignoring error while checking conversation: %d", parentID, e);
+            }
         }
         return ID_AUTO_INCREMENT;
     }
@@ -4310,8 +4329,8 @@ public class Mailbox {
                 return;
             }
             calItem.snapshotRevision();
-            /*boolean added = */calItem.processNewInviteReply(inv);
-// Do we _really_ need to reindex the CalendarItem when we receive a reply?  Not sure we do -tim
+            /*boolean added =*/ calItem.processNewInviteReply(inv);
+//          Do we _really_ need to reindex the CalendarItem when we receive a reply?  Not sure we do -tim
 //            if (added)
 //                queueForIndexing(calItem, true, null);
             success = true;
@@ -4361,7 +4380,7 @@ public class Mailbox {
                     // Organizer's mailbox is on a remote server.
                     String uri = AccountUtil.getSoapUri(orgAccount);
                     if (uri == null) {
-                        ZimbraLog.calendar.warn("Unable to determine URI for organizer account " + orgAddress);
+                        ZimbraLog.calendar.warn("Unable to determine URI for organizer account %s", orgAddress);
                         continue;
                     }
                     try {
@@ -4476,7 +4495,8 @@ public class Mailbox {
 
     private Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags,
             String tagStr, int conversationId, String rcptEmail, Message.DraftInfo dinfo, CustomMetadata customData,
-            DeliveryContext dctxt) throws IOException, ServiceException {
+            DeliveryContext dctxt)
+    throws IOException, ServiceException {
 
         // and then actually add the message
         long start = ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.start();
@@ -4508,8 +4528,9 @@ public class Mailbox {
         }
 
         // Store the incoming blob if necessary.
-        if (dctxt == null)
+        if (dctxt == null) {
             dctxt = new DeliveryContext();
+        }
 
         StoreManager sm = StoreManager.getInstance();
         Blob blob = dctxt.getIncomingBlob();
@@ -4551,8 +4572,6 @@ public class Mailbox {
             throw ServiceException.INVALID_REQUEST("null ParsedMessage when adding message to mailbox " + mId, null);
         }
 
-        boolean debug = ZimbraLog.mailbox.isDebugEnabled();
-
         if (Math.abs(conversationId) <= HIGHEST_SYSTEM_ID) {
             conversationId = ID_AUTO_INCREMENT;
         }
@@ -4580,17 +4599,16 @@ public class Mailbox {
             CalendarPartInfo cpi = pm.getCalendarPartInfo();
             if (cpi == null || !CalendarItem.isAcceptableInvite(getAccount(), cpi)) {
                 if (dedupe(pm.getMimeMessage(), sentMsgID)) {
-                    ZimbraLog.mailbox.info(
-                        "Not delivering message with Message-ID %s because it is a duplicate of sent message %d.",
-                        msgidHeader, sentMsgID);
+                    ZimbraLog.mailbox.info("not delivering message with Message-ID %s because it is a duplicate of sent message %d",
+                            msgidHeader, sentMsgID);
                     return null;
                 }
             }
             // if we're not dropping the new message, see if it goes in the same conversation as the old sent message
             if (conversationId == ID_AUTO_INCREMENT) {
                 conversationId = getConversationIdFromReferent(pm.getMimeMessage(), sentMsgID.intValue());
-                if (debug)  ZimbraLog.mailbox.debug("  duplicate detected but not deduped (" + msgidHeader + "); " +
-                                                    "will try to slot into conversation " + conversationId);
+                ZimbraLog.mailbox.debug("  duplicate detected but not deduped (%s); will try to slot into conversation %d",
+                                        msgidHeader, conversationId);
             }
         }
 
@@ -4629,6 +4647,17 @@ public class Mailbox {
 
         boolean isSpam = folderId == ID_FOLDER_SPAM;
         boolean isDraft = (flags & Flag.BITMASK_DRAFT) != 0;
+
+        // draft replies get slotted in the same conversation as their parent, if possible
+        if (isDraft && !isRedo && conversationId == ID_AUTO_INCREMENT && dinfo != null && !StringUtil.isNullOrEmpty(dinfo.origId)) {
+            try {
+                ItemId iid = new ItemId(dinfo.origId, getAccountId());
+                if (iid.getId() > 0 && iid.belongsTo(this)) {
+                    conversationId = getMessageById(octxt, iid.getId()).getConversationId();
+                }
+            } catch (ServiceException e) {
+            }
+        }
 
         Message msg = null;
         boolean success = false;
@@ -4673,7 +4702,7 @@ public class Mailbox {
                     try {
                         mergeConvs.add(getConversationById(mergeId));
                     } catch (NoSuchItemException nsie) {
-                        if (debug)  ZimbraLog.mailbox.debug("  could not find merge conversation %d", mergeId);
+                        ZimbraLog.mailbox.debug("  could not find merge conversation %d", mergeId);
                     }
                 }
             }
@@ -4687,14 +4716,14 @@ public class Mailbox {
                         // fetch the requested conversation
                         //   (we'll ensure that it's receiving new mail after the new message is added to it)
                         conv = getConversationById(conversationId);
-                        if (debug)  ZimbraLog.mailbox.debug("  fetched explicitly-specified conversation %d", conv.getId());
+                        ZimbraLog.mailbox.debug("  fetched explicitly-specified conversation %d", conv.getId());
                     } catch (NoSuchItemException nsie) {
                         if (!isRedo) {
-                            if (debug)  ZimbraLog.mailbox.debug("  could not find explicitly-specified conversation %d", conversationId);
+                            ZimbraLog.mailbox.debug("  could not find explicitly-specified conversation %d", conversationId);
                             conversationId = ID_AUTO_INCREMENT;
                         }
                     }
-                } else if (!isRedo && !isSpam && !isDraft && (isReply || (!isSent && !subject.isEmpty()))) {
+                } else if (!isRedo && !isSpam && (isReply || (!isSent && !subject.isEmpty()))) {
                     List<Conversation> matches = threading.lookupConversation();
                     if (matches != null && !matches.isEmpty()) {
                         // file the message into the largest conversation, then later merge any other matching convs
@@ -4707,9 +4736,9 @@ public class Mailbox {
 
             // step 3: create the message and update the cache
             //         and if the message is also an invite, deal with the calendar item
-            Conversation convTarget = (conv instanceof VirtualConversation ? null : conv);
-            if (convTarget != null && debug) {
-                ZimbraLog.mailbox.debug("  placing message in existing conversation " + convTarget.getId());
+            Conversation convTarget = conv instanceof VirtualConversation ? null : conv;
+            if (convTarget != null) {
+                ZimbraLog.mailbox.debug("  placing message in existing conversation %d", convTarget.getId());
             }
 
             CalendarPartInfo cpi = pm.getCalendarPartInfo();
@@ -4725,7 +4754,7 @@ public class Mailbox {
             if (threading.isEnabled() && convTarget == null) {
                 if (conv == null && conversationId == ID_AUTO_INCREMENT) {
                     conv = VirtualConversation.create(this, msg);
-                    if (debug)  ZimbraLog.mailbox.debug("  placed message " + msg.getId() + " in vconv " + conv.getId());
+                    ZimbraLog.mailbox.debug("  placed message %d in vconv %d", msg.getId(), conv.getId());
                     redoRecorder.setConvFirstMsgId(-1);
                 } else {
                     Message[] contents = null;
@@ -4765,7 +4794,7 @@ public class Mailbox {
                     redoRecorder.setConvFirstMsgId(vconv != null ? vconv.getMessageId() : -1);
                     conv = createConversation(conversationId, contents);
                     if (vconv != null) {
-                        if (debug)  ZimbraLog.mailbox.debug("  removed vconv " + vconv.getId());
+                        ZimbraLog.mailbox.debug("  removed vconv %d", vconv.getId());
                         vconv.removeChild(vconv.getMessage());
                     }
                     // if we're threading by references and promoting a virtual conversation to a real one,
@@ -4830,12 +4859,15 @@ public class Mailbox {
             try {
                 Notification.getInstance().interceptIfNecessary(this, pm.getMimeMessage(), "add message", folder);
             } catch (ServiceException e) {
-                ZimbraLog.mailbox.error("Unable to send legal intercept message.", e);
+                ZimbraLog.mailbox.error("unable to send legal intercept message", e);
             }
         } finally {
             if (storeRedoRecorder != null) {
-                if (success)  storeRedoRecorder.commit();
-                else          storeRedoRecorder.abort();
+                if (success) {
+                    storeRedoRecorder.commit();
+                } else {
+                    storeRedoRecorder.abort();
+                }
             }
 
             endTransaction(success);
@@ -4905,11 +4937,14 @@ public class Mailbox {
      * @see com.zimbra.cs.service.mail.SaveDraft#handle(com.zimbra.common.soap.Element, java.util.Map)
      */
     public Message saveDraft(OperationContext octxt, ParsedMessage pm, int id, String origId, String replyType,
-            String identityId, String accountId, long autoSendTime) throws IOException, ServiceException {
+            String identityId, String accountId, long autoSendTime)
+    throws IOException, ServiceException {
         Message.DraftInfo dinfo = null;
         if ((replyType != null && origId != null) || !StringUtil.isNullOrEmpty(identityId) ||
-            !StringUtil.isNullOrEmpty(accountId) || autoSendTime != 0)
+                !StringUtil.isNullOrEmpty(accountId) || autoSendTime != 0) {
             dinfo = new Message.DraftInfo(replyType, origId, identityId, accountId, autoSendTime);
+        }
+
         if (id == ID_AUTO_INCREMENT) {
             // special-case saving a new draft
             return addMessage(octxt, pm, ID_FOLDER_DRAFTS, true, Flag.BITMASK_DRAFT | Flag.BITMASK_FROM_ME,
