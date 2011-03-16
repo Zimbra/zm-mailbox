@@ -24,6 +24,7 @@ import javax.mail.internet.MimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.CalendarItem;
@@ -131,6 +132,31 @@ public class SetCalendarItem extends CalendarRequest {
             }
             String itemId = ifmt.formatItemId(calItem == null ? 0 : calItem.getId());
             response.addAttribute(MailConstants.A_CAL_ID, itemId);
+            try {
+                Element inv = request.getElement(MailConstants.A_DEFAULT).getElement(MailConstants.E_MSG).getElement(MailConstants.E_INVITE);
+                Element comp = inv.getOptionalElement(MailConstants.E_INVITE_COMPONENT);
+                if (comp != null) {
+                    inv = comp;
+                }
+                String reqCalItemId = inv.getAttribute(MailConstants.A_CAL_ID);
+                String uid = inv.getAttribute(MailConstants.A_UID);
+                boolean uidSame = (calItem == null || (calItem.getUid() == null && uid == null) || (calItem.getUid() != null && calItem.getUid().equals(uid))); //new or same as requested
+                if (ZimbraLog.calendar.isInfoEnabled()) {
+                    StringBuilder logBuf = new StringBuilder();
+                    if (!reqCalItemId.equals(itemId)) {
+                        logBuf.append("Mapped requested id ").append(reqCalItemId).append(" -> ").append(itemId);
+                    }
+                    if (!uidSame) {
+                        logBuf.append(" ?? requested UID ").append(uid).append(" differs from mapped ").append(calItem.getUid());
+                        ZimbraLog.calendar.warn(logBuf.toString());
+                    } else if (logBuf.length() > 0) {
+                        ZimbraLog.calendar.info(logBuf.toString());
+                    }
+                }
+                assert(uidSame);
+            } catch (ServiceException se) {
+                //one of the elements we wanted to use doesn't exist; ignore; no log/assertion possible
+            }
             if (!parsed.isTodo)
                 response.addAttribute(MailConstants.A_APPT_ID_DEPRECATE_ME, itemId);  // for backward compat
 
