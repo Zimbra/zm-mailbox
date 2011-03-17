@@ -1229,6 +1229,12 @@ public class SoapProvisioning extends Provisioning {
         p.setText(preAuth);
         invoke(req);
     }
+    
+    @Override
+    public void certAuthAccount(Account acct, AuthContext.Protocol proto, Map<String, Object> authCtxt) 
+    throws ServiceException {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public void removeAlias(Account acct, String alias) throws ServiceException {

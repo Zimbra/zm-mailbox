@@ -134,10 +134,11 @@ generating new certificates.  OpenSSL also uses certain files to keep track of t
 serial number assigned to a generated certificate and an index of valid and revoked certificates. 
 
 Issue the following commands to setup default contents for these files:
-$ mkdir -p cd -r ./demoCA/newcerts
+$ mkdir -p ./demoCA/newcerts
 $ cd demoCA
 $ echo "01" > serial
-$ cd ..  (so we are back in out temp directory)
+$ touch index.txt (create an empty index.txt file)
+$ cd ..  (so we are back in our temporary directory)
 
 Now issue the command to sign the user certificate again.
 $ /opt/zimbra/openssl/bin/openssl ca -in user1.csr -cert ca.crt -keyfile ca.key -out user1.crt -policy policy_anything
@@ -239,44 +240,64 @@ zmprov ms {server} zimbraMailSSLClientCertMode WantClientAuth
 ==============
 III. Testing
 ==============
-   In Firefox, browse to https://localhost:7443/certauth
+You can use either one of the following URLs for testing.
+
+(1) https://{your-server}:7443/certauth
+
+The /certauth servlet is where "authrozation" happens.  It validates that the subject 
+in the client certificate is an active user provisionined on the system, then 
+generate a Zimbra auth token for it and redirect the request to the proper web app.
    
-   SSL mutual authentication will start.
-   - In the handshake the server first proves to the client who it is by signing a
-     random challenge sent by the client and returning the corresponding public
-     certificate so that the client can check the signature.
-     In dev/QA environment, the server certificate is a self-signed certificate, if 
-     you have not accepted it before, just accept it (follow the usual 
-     "I understand the risks -> add exception, ...").
-     If the server certificate is signed by a well known CA, and the CA that signed 
-     the server certificate is already in the known Authorities in the browser, 
-     you should not be prompted to accept the server certificate.
-     
-   - Then, client certification is requested by the server.  The server sends out 
-     descriptions of all the client-issuing-authorities which it has in its key/trust store.
+Note, do not confuse "authrozation" with "authentication".  "Authentication" is the 
+process of validating the client certificate, it happens during SSL handshake,
+before the request gets to the /certauth servlet.
    
-   - The client now inspects the client certificates which are in the browser and
-     attempts to find a match.  A 'match' is a client certificate which was signed by
-     one of the authorities which the server says it is already aware of.
-  
-   - At this point, Firefox should display a dialog for you to select a client cert.  
-     Select the user1.p12 one imported in step 3. (B).
-     Firefox now signs the server's random challenge, and returns it and the 
-     client's public certificate. 
+or 
+
+(2) https://{host}:7443/
+To use this URL, you need to setup virtual host and web client login url on the domain:
+
+zmprov md {domain} zimbraVirtualHostname {your-server}
+zmprov md {domain} zimbraWebClientLoginURL 'https://{your-server}:7443/certauth'
+zmprov md {domain} zimbraWebClientLogoutURL '../?sso=1'
+
+
+Now, SSL mutual authentication will start.
+- In the handshake the server first proves to the client who it is by signing a
+  random challenge sent by the client and returning the corresponding public
+  certificate so that the client can check the signature.
+  In dev/QA environment, the server certificate is a self-signed certificate, if 
+  you have not accepted it before, just accept it (follow the usual 
+  "I understand the risks -> add exception, ...").
+  If the server certificate is signed by a well known CA, and the CA that signed 
+  the server certificate is already in the known Authorities in the browser, 
+  you should not be prompted to accept the server certificate.
      
-   - The server checks that the client certificate was indeed issued by an
-     authority it trusts, and checks the signing of the random challenge, dates etc..  
+- Then, client certification is requested by the server.  The server sends out 
+  descriptions of all the client-issuing-authorities which it has in its key/trust store.
+   
+- The client now inspects the client certificates which are in the browser and
+  attempts to find a match.  A 'match' is a client certificate which was signed by
+  one of the authorities which the server says it is already aware of.
   
-   - Now the handshake and the "authentication" of user is complete.  
-     ZCS will do the "authorization" by looking up the user in ZCS's directory.
-     Currently ZCS uses the EMAILADDRESS field of the subject in the client certificate 
-     as the only lookup key.  If the value of EMAILADDRESS matches a Zimbra user's 
-     primary email address or one of the aliases, the user will be let in.
+- At this point, Firefox should display a dialog for you to select a client cert.  
+  Select the user1.p12 one imported in step 3. (B).
+  Firefox now signs the server's random challenge, and returns it and the 
+  client's public certificate. 
      
-     If the request came to the mail SSL port(7443), user will be redirected to the 
-     Inbox of mail app.
-     If the request came to the admin port (7071) and the user is an admin account, 
-     user will be redirected into the admin console.  
+- The server checks that the client certificate was indeed issued by an
+  authority it trusts, and checks the signing of the random challenge, dates etc..  
+  
+- Now the handshake and the "authentication" of user is complete.  
+  ZCS will do the "authorization" by looking up the user in ZCS's directory.
+  Currently ZCS uses the EMAILADDRESS field of the subject in the client certificate 
+  as the only lookup key.  If the value of EMAILADDRESS matches a Zimbra user's 
+  primary email address or one of the aliases, the user will be let in.
+     
+  If the request came to the mail SSL port(7443), user will be redirected to the 
+  Inbox of mail app.
+  If the request came to the admin port (7071) and the user is an admin account, 
+  user will be redirected into the admin console.  
      
 
      
