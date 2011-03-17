@@ -178,8 +178,15 @@ public abstract class Right extends RightConsts {
     final String reportGrantableTargetTypes() {
         Set<TargetType> targetTypes = getGrantableTargetTypes();
         StringBuilder sb = new StringBuilder();
-        for (TargetType tt : targetTypes)
-            sb.append(tt.getCode() + " ");
+        boolean first = true;
+        for (TargetType tt : targetTypes) {
+            if (!first) {
+                sb.append(" or ");
+            } else {
+                first = false;
+            }
+            sb.append(tt.getCode());
+        }
         return sb.toString();
     }
     
