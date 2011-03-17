@@ -16,7 +16,9 @@ package com.zimbra.cs.service;
 
 import java.io.IOException;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import java.security.Principal;
 import java.security.cert.CertificateExpiredException;
@@ -38,18 +40,36 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.soap.SoapEngine;
 
 public class CertAuthServlet extends ZimbraServlet {
 
     private static final String DEFAULT_MAIL_URL = "/zimbra";
     private static final String DEFAULT_ADMIN_URL = "/zimbraAdmin";
     
+    @Override
     public void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        ZimbraLog.clearContext();
+        addRemoteIpToLoggingContext(req);
+        ZimbraLog.addUserAgentToContext(req.getHeader("User-Agent"));
         
         try {
-            Account acct = getAccountByX509Subject(req);
+            String x509Subject = getX509Subject(req);
+            Account acct = getAccountByX509Subject(x509Subject);
+            
+            Map<String, Object> authCtxt = new HashMap<String, Object>();
+            authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, ZimbraServlet.getOrigIp(req));
+            authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, x509Subject);
+            authCtxt.put(AuthContext.AC_USER_AGENT, req.getHeader("User-Agent"));
+            
+            Provisioning prov = Provisioning.getInstance();
+            
+            // use soap for the protocol for now. should we use a new protocol "cert"?  
+            prov.certAuthAccount(acct, AuthContext.Protocol.soap, authCtxt); 
             
             boolean admin = onAdminPort(req);
             if (admin) {
@@ -65,22 +85,28 @@ public class CertAuthServlet extends ZimbraServlet {
             
             setCookieAndRedirect(req, resp, authToken);
         } catch (ServiceException e) {
-            ZimbraLog.account.warn("failed to authenticate by client certificate: " + e.getMessage());
+            if (e instanceof AuthFailedServiceException) {
+                AuthFailedServiceException afe = (AuthFailedServiceException)e;
+                ZimbraLog.account.info("failed to authenticate by client certificate: " + afe.getMessage() + afe.getReason(", %s"));
+            } else {
+                ZimbraLog.account.info("failed to authenticate by client certificate: " + e.getMessage());
+            }
             ZimbraLog.account.debug("failed to authenticate by client certificate", e);
             resp.sendError(HttpServletResponse.SC_FORBIDDEN, e.getMessage());
         }
     }
     
+    @Override
+    public void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        doGet(req, resp);
+    }
     
     private boolean onAdminPort(HttpServletRequest req) throws ServiceException {
         int adminPort = Provisioning.getInstance().getLocalServer().getAdminPort();
         return req.getLocalPort() == adminPort;
     }
     
-    private Account getAccountByX509Subject(HttpServletRequest request) throws ServiceException {
-        
-        String x509Subject = getX509Subject(request);
-        
+    private Account getAccountByX509Subject(String x509Subject) throws ServiceException {
         try {
             LdapName dn = new LdapName(x509Subject);
             List<Rdn> rdns = dn.getRdns();

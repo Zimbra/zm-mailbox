@@ -3400,9 +3400,10 @@ public class LdapProvisioning extends Provisioning {
          *              server, so bug 46767 should not happen and the reload should never
          *              be triggered(good for bug 18981).
          */
-        if (!onLocalServer(acct))
+        if (!onLocalServer(acct)) {
             reload(acct, false);  // reload from the replica
-
+        }
+        
         String accountStatus = acct.getAccountStatus(Provisioning.getInstance());
         if (accountStatus == null)
             throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), AuthMechanism.namePassedIn(authCtxt), "missing account status");
@@ -3563,6 +3564,23 @@ public class LdapProvisioning extends Provisioning {
     @Override
     public void accountAuthed(Account acct) throws ServiceException {
         updateLastLogon(acct);
+    }
+    
+    @Override
+    public void certAuthAccount(Account acct, AuthContext.Protocol proto, Map<String, Object> authCtxt) throws ServiceException {
+        try {
+            checkAccountStatus(acct, authCtxt);
+            ZimbraLog.security.info(ZimbraLog.encodeAttrs(
+                    new String[] {"cmd", "Auth","account", acct.getName(), "protocol", proto.toString()}));
+        } catch (AuthFailedServiceException e) {
+            ZimbraLog.security.warn(ZimbraLog.encodeAttrs(
+                    new String[] {"cmd", "Auth","account", acct.getName(), "protocol", proto.toString(), "error", e.getMessage() + e.getReason(", %s")}));
+            throw e;
+        } catch (ServiceException e) {
+            ZimbraLog.security.warn(ZimbraLog.encodeAttrs(
+                    new String[] {"cmd", "Auth","account", acct.getName(), "protocol", proto.toString(), "error", e.getMessage()}));
+            throw e;
+        }
     }
 
     private void updateLastLogon(Account acct) throws ServiceException {

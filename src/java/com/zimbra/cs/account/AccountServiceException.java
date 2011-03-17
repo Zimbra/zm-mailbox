@@ -102,7 +102,7 @@ public class AccountServiceException extends ServiceException {
         private String mAcctName;  // real account name
 
         private AuthFailedServiceException(String acctName, String namePassedIn, String reason, String code, boolean isReceiversFault, Throwable cause) {
-            super("authentication failed for " + namePassedIn, code, isReceiversFault, cause);
+            super("authentication failed for [" + namePassedIn + "]", code, isReceiversFault, cause);
             mReason = reason;
             mAcctName = acctName;
         }
