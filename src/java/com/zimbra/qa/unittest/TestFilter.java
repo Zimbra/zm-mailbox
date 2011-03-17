@@ -528,7 +528,7 @@ extends TestCase {
         conditions.add(new ZHeaderCondition("Subject", HeaderOp.CONTAINS, true, "CHECK THIS"));
         conditions.add(new ZBodyCondition(BodyOp.CONTAINS, true, "CHECK THIS"));
         actions.add(new ZTagAction(mTag1.getName()));
-        rules.add(new ZFilterRule("header rule case sensitive", true, false, conditions, actions));
+        rules.add(new ZFilterRule("testCaseSensitiveComparison", true, false, conditions, actions));
         saveIncomingRules(mMbox, new ZFilterRules(rules));
 
         // Deliver message having lower case subject substring and make sure that tag1 was not applied
@@ -581,7 +581,7 @@ extends TestCase {
         // Condition true if msg received after timeStr
         conditions.add(new ZFilterCondition.ZCurrentTimeCondition(DateOp.AFTER, timeStr));
         actions.add(new ZTagAction(mTag1.getName()));
-        rules.add(new ZFilterRule("current time after", true, false, conditions, actions));
+        rules.add(new ZFilterRule("testCurrentTimeTest after", true, false, conditions, actions));
         saveIncomingRules(mMbox, new ZFilterRules(rules));
 
         String subject = NAME_PREFIX + " testCurrentTimeTest1";
@@ -593,7 +593,7 @@ extends TestCase {
         conditions = new ArrayList<ZFilterCondition>();
         // Condition true if msg received before timeStr
         conditions.add(new ZFilterCondition.ZCurrentTimeCondition(DateOp.BEFORE, timeStr));
-        rules.add(new ZFilterRule("current time before", true, false, conditions, actions));
+        rules.add(new ZFilterRule("testCurrentTimeTest before", true, false, conditions, actions));
         saveIncomingRules(mMbox, new ZFilterRules(rules));
 
         subject = NAME_PREFIX + " testCurrentTimeTest2";
@@ -619,7 +619,7 @@ extends TestCase {
         // Condition true if msg received on the day yesterday or tomorrow
         conditions.add(new ZFilterCondition.ZCurrentDayOfWeekCondition(SimpleOp.IS, dayYesterday + "," + dayTomorrow));
         actions.add(new ZTagAction(mTag1.getName()));
-        rules.add(new ZFilterRule("current day is not day today", true, false, conditions, actions));
+        rules.add(new ZFilterRule("testCurrentDayOfWeekTest day not today", true, false, conditions, actions));
         saveIncomingRules(mMbox, new ZFilterRules(rules));
 
         String subject = NAME_PREFIX + " testCurrentDayOfWeekTest1";
@@ -631,7 +631,7 @@ extends TestCase {
         conditions = new ArrayList<ZFilterCondition>();
         // Condition true if msg received on the day today
         conditions.add(new ZFilterCondition.ZCurrentDayOfWeekCondition(SimpleOp.IS, Integer.toString(dayToday)));
-        rules.add(new ZFilterRule("current day is day today", true, false, conditions, actions));
+        rules.add(new ZFilterRule("testCurrentDayOfWeekTest today", true, false, conditions, actions));
         saveIncomingRules(mMbox, new ZFilterRules(rules));
 
         subject = NAME_PREFIX + " testCurrentDayOfWeekTest2";
@@ -650,7 +650,7 @@ extends TestCase {
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
         conditions.add(new ZFilterCondition.ZTrueCondition());
         actions.add(new ZFilterAction.ZReplyAction("Hi ${FROM}, Your message was: '${BODY}'. Thanks!"));
-        rules.add(new ZFilterRule("reply action", true, false, conditions, actions));
+        rules.add(new ZFilterRule("testReplyAction", true, false, conditions, actions));
         saveIncomingRules(mMbox, new ZFilterRules(rules));
 
         String subject = NAME_PREFIX + " testReplyAction";
@@ -675,7 +675,7 @@ extends TestCase {
         conditions.add(new ZFilterCondition.ZTrueCondition());
         actions.add(new ZFilterAction.ZNotifyAction(
                 TestUtil.getAddress(REMOTE_USER_NAME), "${SUBJECT}", "From: ${FROM}, Message: ${BODY}"));
-        rules.add(new ZFilterRule("notify action", true, false, conditions, actions));
+        rules.add(new ZFilterRule("testNotifyAction", true, false, conditions, actions));
         saveIncomingRules(mMbox, new ZFilterRules(rules));
 
         String subject = NAME_PREFIX + " testNotifyAction";
@@ -690,6 +690,44 @@ extends TestCase {
         String content = zMessage.getMimeStructure().getContent();
         assertTrue("template vars should be replaced", !content.contains("${FROM}") && !content.contains("${BODY}"));
         assertTrue(content.contains(TestUtil.getAddress(REMOTE_USER_NAME)) && content.contains(body));
+    }
+
+    /**
+     * Tests fix for bug 57890 (https://issues.apache.org/jira/browse/JSIEVE-75).
+     */
+    public void testMultipleMultilineText()
+    throws Exception {
+        List<ZFilterRule> rules;
+        List<ZFilterCondition> conditions;
+        List<ZFilterAction> actions;
+
+        rules = new ArrayList<ZFilterRule>();
+
+        conditions = new ArrayList<ZFilterCondition>();
+        actions = new ArrayList<ZFilterAction>();
+        conditions.add(new ZFilterCondition.ZTrueCondition());
+        String notifyMsg1 = "From: ${FROM}\nMessage: ${BODY}\n";
+        actions.add(new ZFilterAction.ZNotifyAction("abc@xyz.com", "${SUBJECT}", notifyMsg1));
+        String notifyMsg2 = "you've got mail";
+        actions.add(new ZFilterAction.ZNotifyAction("abc@xyz.com", "subject", notifyMsg2));
+        rules.add(new ZFilterRule("testMultipleMultilineText 1", true, false, conditions, actions));
+
+        conditions = new ArrayList<ZFilterCondition>();
+        actions = new ArrayList<ZFilterAction>();
+        conditions.add(new ZFilterCondition.ZTrueCondition());
+        String replyMsg = "Replying to:\n${BODY}";
+        actions.add(new ZFilterAction.ZReplyAction(replyMsg));
+        rules.add(new ZFilterRule("testMultipleMultilineText 2", true, false, conditions, actions));
+
+        saveIncomingRules(mMbox, new ZFilterRules(rules));
+
+        rules = mMbox.getIncomingFilterRules().getRules();
+        assertEquals("There should be 2 rules", rules.size(), 2);
+        assertEquals("Rule 1 should have 2 actions", rules.get(0).getActions().size(), 2);
+        assertEquals(((ZFilterAction.ZNotifyAction) rules.get(0).getActions().get(0)).getBodyTemplate(), notifyMsg1);
+        assertEquals(((ZFilterAction.ZNotifyAction) rules.get(0).getActions().get(1)).getBodyTemplate(), notifyMsg2);
+        assertEquals("Rule 2 should have 1 action", rules.get(1).getActions().size(), 1);
+        assertEquals(((ZFilterAction.ZReplyAction) rules.get(1).getActions().get(0)).getBodyTemplate(), replyMsg);
     }
 
     public void testMarkRead()
