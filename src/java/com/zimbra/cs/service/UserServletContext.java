@@ -220,7 +220,7 @@ public final class UserServletContext {
 
     public void setAuthAccount(Account value) throws ServiceException {
         authAccount = value;
-        if (locale == null && authAccount.getLocale() != null) {
+        if (locale == null && authAccount != null && authAccount.getLocale() != null) {
             locale = authAccount.getLocale();
         }
     }
