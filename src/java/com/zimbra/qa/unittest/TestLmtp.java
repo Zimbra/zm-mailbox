@@ -61,6 +61,7 @@ extends TestCase {
     private String originalQuota;
     private String originalAllowReceiveButNotSendWhenOverQuota;
     private String originalDedupeCacheSize;
+    private String originalDedupingEnabled;
     
     private class LmtpClientThread
     implements Runnable {
@@ -96,6 +97,7 @@ extends TestCase {
         originalAllowReceiveButNotSendWhenOverQuota =
             TestUtil.getAccountAttr(USER_NAME, Provisioning.A_zimbraMailAllowReceiveButNotSendWhenOverQuota);
         originalDedupeCacheSize = TestUtil.getConfigAttr(Provisioning.A_zimbraMessageIdDedupeCacheSize);
+        originalDedupingEnabled = TestUtil.getAccountAttr(USER_NAME, Provisioning.A_zimbraPrefMessageIdDedupingEnabled);
         cleanUp();
     }
     
@@ -103,7 +105,7 @@ extends TestCase {
      * Tests {@link ZimbraLmtpBackend#readData} with various valid/invalid
      * values for the size hint and disk threshold.
      */
-    public void testReadLmtpData()
+    public void xtestReadLmtpData()
     throws Exception {
         // Entire string
         assertEquals("123", read("123", 3, 3));
@@ -141,7 +143,7 @@ extends TestCase {
         return new String(bytesRead);
     }
     
-    public void testQuotaWarning()
+    public void xtestQuotaWarning()
     throws Exception {
         // Initialize
         Account account = TestUtil.getAccount(USER_NAME);
@@ -211,7 +213,7 @@ extends TestCase {
         Provisioning.getInstance().modifyAttrs(account, attrs);
     }
     
-    public void testLmtpMessageInputStream()
+    public void xtestLmtpMessageInputStream()
     throws Exception {
         String prefix = "12345678\r\n";
         
@@ -278,7 +280,7 @@ extends TestCase {
     /**
      * Confirms that mail can successfully be delivered to one user when streaming to disk.
      */
-    public void testDiskStreamingOneRecipient()
+    public void xtestDiskStreamingOneRecipient()
     throws Exception {
         TestUtil.setServerAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, "0");
         String recipient = TestUtil.getAddress(USER_NAME);
@@ -290,7 +292,7 @@ extends TestCase {
     /**
      * Confirms that mail can successfully be delivered to multiple users when streaming to disk.
      */
-    public void testDiskStreamingMultipleRecipients()
+    public void xtestDiskStreamingMultipleRecipients()
     throws Exception {
         TestUtil.setServerAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, "0");
         String[] recipients = {
@@ -317,7 +319,7 @@ extends TestCase {
      * Another test for bug 25484.  Delivers a message to user1 and user2, then confirms that
      * user1 can still read the message after user2 empties the folder that contains the message. 
      */
-    public void testDiskStreamingEmptyFolder()
+    public void xtestDiskStreamingEmptyFolder()
     throws Exception {
         TestUtil.setServerAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, "0");
         String[] recipients = {
@@ -349,7 +351,7 @@ extends TestCase {
     /**
      * Confirms that a message gets delivered regardless of what the size hint is set to.
      */
-    public void testSizeHint()
+    public void xtestSizeHint()
     throws Exception {
         // Send the same message 5 times with different size hints
         String address = TestUtil.getAddress(USER_NAME);
@@ -384,7 +386,7 @@ extends TestCase {
      * of the attached message is indexed.
      * @see MessageRFC822Handler
      */
-    public void testAttachedMessage()
+    public void xtestAttachedMessage()
     throws Exception {
         String outerSubject = NAME_PREFIX + " testAttachedMessage outer";
         String innerSubject = NAME_PREFIX + " testAttachedMessage inner";
@@ -426,7 +428,7 @@ extends TestCase {
      * Confirms that delivery succeeds when <tt>zimbraMailDiskStreamingThreshold</tt>
      * isn't set (bug 22536).
      */
-    public void testMissingDiskThreshold()
+    public void xtestMissingDiskThreshold()
     throws Exception {
         TestUtil.setServerAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, "");
         TestUtil.setConfigAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, "");
@@ -441,7 +443,7 @@ extends TestCase {
      * same message to the same message to the same mailbox simultaneously.  Confirms
      * that only one copy got delivered.  Bug 38898.
      */
-    public void testConcurrentDedupe()
+    public void xtestConcurrentDedupe()
     throws Exception {
         String subject = NAME_PREFIX + " testConcurrentDedupe";
         String content = TestUtil.getTestMessage(subject, USER_NAME, USER_NAME, null);
@@ -468,7 +470,7 @@ extends TestCase {
      * failure occurs.  Bug 38898.
      * @throws Exception
      */
-    public void testDeliveryAfterFailure()
+    public void xtestDeliveryAfterFailure()
     throws Exception {
         String subject = NAME_PREFIX + " testDeliveryAfterFailure";
         String content = TestUtil.getTestMessage(subject, USER_NAME, USER_NAME, null);
@@ -487,11 +489,38 @@ extends TestCase {
     }
     
     /**
+     * Verifies the behavior of {@code zimbraPrefMessageIdDedupingEnabled}.
+     */
+    public void testDedupePref()
+    throws Exception {
+        String subject = NAME_PREFIX + " testDedupePref";
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        Account account = TestUtil.getAccount(USER_NAME);
+        String[] recipients = new String[] { USER_NAME };
+        
+        // Deliver initial message.
+        TestUtil.addMessageLmtp(subject, USER_NAME, USER_NAME);
+        String query = "in:inbox subject:\"" + subject + "\"";
+        ZMessage msg = TestUtil.getMessage(mbox, query);
+        String content = TestUtil.getContent(mbox, msg.getId());
+        
+        // Redeliver with deduping enabled.
+        account.setPrefMessageIdDedupingEnabled(true);
+        TestUtil.addMessageLmtp(recipients, USER_NAME, content);
+        assertEquals(1, TestUtil.search(mbox, query).size());
+        
+        // Redeliver with deduping disabled;
+        account.setPrefMessageIdDedupingEnabled(false);
+        TestUtil.addMessageLmtp(recipients, USER_NAME, content);
+        assertEquals(2, TestUtil.search(mbox, query).size());
+    }
+    
+    /**
      * Confirms that we reject messages that have a line that's longer
      * than the limit specified by {@link LC#zimbra_lmtp_max_line_length}.
      * Bug 42214.
      */
-    public void testValidation()
+    public void xtestValidation()
     throws Exception {
         StringBuilder buf = new StringBuilder();
         for (int i = 0; i <= LC.zimbra_lmtp_max_line_length.longValue(); i++) {
@@ -503,7 +532,7 @@ extends TestCase {
     /**
      * Verifies send/receive behavior for {@code zimbraMailAllowReceiveButNotSendWhenOverQuota}.
      */
-    public void testAllowReceiveButNotSendWhenOverQuota()
+    public void xtestAllowReceiveButNotSendWhenOverQuota()
     throws Exception {
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailAllowReceiveButNotSendWhenOverQuota, LdapUtil.LDAP_TRUE);
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailQuota, "1");
@@ -544,7 +573,7 @@ extends TestCase {
      * Verifies that duplicate suppression recognizes the {@code Resent-Message-ID} header
      * (bug 36297).
      */
-    public void testResentMessageId()
+    public void xtestResentMessageId()
     throws Exception {
         Provisioning.getInstance().getConfig().setMessageIdDedupeCacheSize(1000);
         
@@ -574,7 +603,7 @@ extends TestCase {
     }
 
     // bug 53058
-    public void testFinalDotNotSent() throws Exception {
+    public void xtestFinalDotNotSent() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         LmtpClient lmtpClient =
                 new LmtpClient("localhost",
@@ -606,6 +635,7 @@ extends TestCase {
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailAllowReceiveButNotSendWhenOverQuota,
             originalAllowReceiveButNotSendWhenOverQuota);
         TestUtil.setConfigAttr(Provisioning.A_zimbraMessageIdDedupeCacheSize, originalDedupeCacheSize);
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraPrefMessageIdDedupingEnabled, originalDedupingEnabled);
         cleanUp();
     }
     
