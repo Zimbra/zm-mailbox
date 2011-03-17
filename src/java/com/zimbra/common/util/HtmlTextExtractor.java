@@ -22,8 +22,6 @@ import org.xml.sax.SAXException;
 
 public class HtmlTextExtractor extends org.xml.sax.helpers.DefaultHandler {
     private StringBuilder sb = new StringBuilder(1024);
-    private String title = null;
-    boolean inTitle = false;
     boolean inCharacters = false;
     int skipping = 0;
     int maxLength;
@@ -39,9 +37,7 @@ public class HtmlTextExtractor extends org.xml.sax.helpers.DefaultHandler {
         }
         
         String element = localName.toUpperCase();
-        if ("TITLE".equals(element)) {
-            inTitle = true;
-        } else if ("STYLE".equals(element) || "SCRIPT".equals(element)) {
+        if ("STYLE".equals(element) || "SCRIPT".equals(element)) {
             skipping++;
         } else if ("IMG".equals(element) && attributes != null) {
             String altText = attributes.getValue("alt");
@@ -53,17 +49,10 @@ public class HtmlTextExtractor extends org.xml.sax.helpers.DefaultHandler {
         }
         inCharacters = false;
     }
+    
     @Override public void characters(char[] ch, int offset, int length) {
         if (skipping > 0 || length == 0 || sb.length() >= maxLength) {
             return;
-        } else if (inTitle) {
-            String content = new String(ch, offset, length);
-            if (length > 0) {
-                if (title == null)
-                    title = content;
-                else
-                    title = title + (inCharacters ? "" : " ") + content;
-            }
         } else {
             int original = offset;
             // trim leading spaces (don't bother with trailers; the output isn't for public viewing)
@@ -86,21 +75,19 @@ public class HtmlTextExtractor extends org.xml.sax.helpers.DefaultHandler {
         }
         inCharacters = (length > 0);
     }
+    
     @Override public void endElement(String uri, String localName, String qName) {
         if (sb.length() > maxLength) {
             return;
         }
         
         String element = localName.toUpperCase();
-        if ("TITLE".equals(element))
-            inTitle = false;
-        else if ("STYLE".equals(element) || "SCRIPT".equals(element))
+        if ("STYLE".equals(element) || "SCRIPT".equals(element))
             skipping--;
         inCharacters = false;
     }
 
     @Override public String toString()  { return sb.toString(); }
-    public String getTitle()  { return title == null ? "" : title; }
     
     /**
      * Extracts text from the HTML returned by the given <tt>Reader</tt>. 
