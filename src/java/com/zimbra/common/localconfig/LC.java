@@ -624,6 +624,9 @@ public final class LC {
 
     @Supported
     public static final KnownKey mailboxd_truststore_password = KnownKey.newKey("changeit");
+    
+    public static final KnownKey mailboxd_enable_key_manager = KnownKey.newKey("true");
+        
     public static final KnownKey mailboxd_output_filename = KnownKey.newKey("zmmailboxd.out");
 
     @Supported
