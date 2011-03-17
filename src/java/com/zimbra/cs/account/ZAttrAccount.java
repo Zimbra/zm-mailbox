@@ -35,7 +35,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110314-1429 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110316-2218 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -33170,6 +33170,83 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPrefMarkMsgRead(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefMarkMsgRead, "");
+        return attrs;
+    }
+
+    /**
+     * Account-level switch that enables message deduping. See
+     * zimbraMessageIdDedupeCacheSize for more details.
+     *
+     * @return zimbraPrefMessageIdDedupingEnabled, or true if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1998)
+    public boolean isPrefMessageIdDedupingEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefMessageIdDedupingEnabled, true);
+    }
+
+    /**
+     * Account-level switch that enables message deduping. See
+     * zimbraMessageIdDedupeCacheSize for more details.
+     *
+     * @param zimbraPrefMessageIdDedupingEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1998)
+    public void setPrefMessageIdDedupingEnabled(boolean zimbraPrefMessageIdDedupingEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMessageIdDedupingEnabled, zimbraPrefMessageIdDedupingEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Account-level switch that enables message deduping. See
+     * zimbraMessageIdDedupeCacheSize for more details.
+     *
+     * @param zimbraPrefMessageIdDedupingEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1998)
+    public Map<String,Object> setPrefMessageIdDedupingEnabled(boolean zimbraPrefMessageIdDedupingEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMessageIdDedupingEnabled, zimbraPrefMessageIdDedupingEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Account-level switch that enables message deduping. See
+     * zimbraMessageIdDedupeCacheSize for more details.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1998)
+    public void unsetPrefMessageIdDedupingEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMessageIdDedupingEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Account-level switch that enables message deduping. See
+     * zimbraMessageIdDedupeCacheSize for more details.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1998)
+    public Map<String,Object> unsetPrefMessageIdDedupingEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMessageIdDedupingEnabled, "");
         return attrs;
     }
 

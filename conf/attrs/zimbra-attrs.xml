@@ -5579,5 +5579,12 @@ TODO: delete them permerntly from here
   <desc>indicates which application to use for file sharing</desc>
 </attr>
 
+<attr id="1998" name="zimbraPrefMessageIdDedupingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>
+    Account-level switch that enables message deduping.  See zimbraMessageIdDedupeCacheSize for more details.
+  </desc>
+</attr>
+
 
 </attrs>

@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110314-1429 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110316-2218 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -7111,6 +7111,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=650)
     public static final String A_zimbraPrefMarkMsgRead = "zimbraPrefMarkMsgRead";
+
+    /**
+     * Account-level switch that enables message deduping. See
+     * zimbraMessageIdDedupeCacheSize for more details.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1998)
+    public static final String A_zimbraPrefMessageIdDedupingEnabled = "zimbraPrefMessageIdDedupingEnabled";
 
     /**
      * whether client prefers text/html or text/plain
