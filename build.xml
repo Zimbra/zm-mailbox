@@ -48,9 +48,14 @@
     <path refid="class.path"/>
   </path>
 
+  <!-- WSDL client side tests should be Zimbra code independant -->
   <path id="wsdl.test.class.path">
     <path refid="jaxws.classpath"/>
-    <path refid="class.path"/>
+    <pathelement location="${build.classes.dir}" />
+    <fileset dir="${common.jars.dir}">
+        <include name="**/junit*.jar"/>
+        <include name="**/guava*.jar"/>
+    </fileset>
   </path>
 
   <taskdef name="schemagen" classname="com.sun.tools.jxc.SchemaGenTask">
