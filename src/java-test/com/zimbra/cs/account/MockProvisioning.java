@@ -24,6 +24,7 @@ import java.util.Set;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.DataSource.Type;
 import com.zimbra.cs.account.NamedEntry.Visitor;
+import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.AuthContext.Protocol;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.redolog.MockRedoLogProvider;
@@ -225,6 +226,13 @@ public final class MockProvisioning extends Provisioning {
             String preAuth, Map<String, Object> authCtxt) {
         throw new UnsupportedOperationException();
     }
+    
+    @Override
+    public void certAuthAccount(Account acct, AuthContext.Protocol proto, Map<String, Object> authCtxt) 
+    throws ServiceException {
+        throw new UnsupportedOperationException();
+    }
+    
 
     @Override
     public void changePassword(Account acct, String currentPassword, String newPassword) {
