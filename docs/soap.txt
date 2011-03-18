@@ -966,7 +966,7 @@ Allowed attributes (see objectclass zimbraIdentity in zimbra.schema)
 <GetSignaturesRequest/>
 
 <GetSignaturesResponse>
-  <signature name="{signature-name}" id="{identity-id}"
+  <signature name="{signature-name}" id="{signature-id}"
     <content type="{text/plain | text/html}">{signature-value}</content>+
     [<cid>{contact-id}</cid>]
   </signature>+
