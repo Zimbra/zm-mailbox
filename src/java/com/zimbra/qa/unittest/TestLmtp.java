@@ -105,7 +105,7 @@ extends TestCase {
      * Tests {@link ZimbraLmtpBackend#readData} with various valid/invalid
      * values for the size hint and disk threshold.
      */
-    public void xtestReadLmtpData()
+    public void testReadLmtpData()
     throws Exception {
         // Entire string
         assertEquals("123", read("123", 3, 3));
@@ -143,7 +143,7 @@ extends TestCase {
         return new String(bytesRead);
     }
     
-    public void xtestQuotaWarning()
+    public void testQuotaWarning()
     throws Exception {
         // Initialize
         Account account = TestUtil.getAccount(USER_NAME);
@@ -213,7 +213,7 @@ extends TestCase {
         Provisioning.getInstance().modifyAttrs(account, attrs);
     }
     
-    public void xtestLmtpMessageInputStream()
+    public void testLmtpMessageInputStream()
     throws Exception {
         String prefix = "12345678\r\n";
         
@@ -280,7 +280,7 @@ extends TestCase {
     /**
      * Confirms that mail can successfully be delivered to one user when streaming to disk.
      */
-    public void xtestDiskStreamingOneRecipient()
+    public void testDiskStreamingOneRecipient()
     throws Exception {
         TestUtil.setServerAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, "0");
         String recipient = TestUtil.getAddress(USER_NAME);
@@ -292,7 +292,7 @@ extends TestCase {
     /**
      * Confirms that mail can successfully be delivered to multiple users when streaming to disk.
      */
-    public void xtestDiskStreamingMultipleRecipients()
+    public void testDiskStreamingMultipleRecipients()
     throws Exception {
         TestUtil.setServerAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, "0");
         String[] recipients = {
@@ -319,7 +319,7 @@ extends TestCase {
      * Another test for bug 25484.  Delivers a message to user1 and user2, then confirms that
      * user1 can still read the message after user2 empties the folder that contains the message. 
      */
-    public void xtestDiskStreamingEmptyFolder()
+    public void testDiskStreamingEmptyFolder()
     throws Exception {
         TestUtil.setServerAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, "0");
         String[] recipients = {
@@ -351,7 +351,7 @@ extends TestCase {
     /**
      * Confirms that a message gets delivered regardless of what the size hint is set to.
      */
-    public void xtestSizeHint()
+    public void testSizeHint()
     throws Exception {
         // Send the same message 5 times with different size hints
         String address = TestUtil.getAddress(USER_NAME);
@@ -386,7 +386,7 @@ extends TestCase {
      * of the attached message is indexed.
      * @see MessageRFC822Handler
      */
-    public void xtestAttachedMessage()
+    public void testAttachedMessage()
     throws Exception {
         String outerSubject = NAME_PREFIX + " testAttachedMessage outer";
         String innerSubject = NAME_PREFIX + " testAttachedMessage inner";
@@ -428,7 +428,7 @@ extends TestCase {
      * Confirms that delivery succeeds when <tt>zimbraMailDiskStreamingThreshold</tt>
      * isn't set (bug 22536).
      */
-    public void xtestMissingDiskThreshold()
+    public void testMissingDiskThreshold()
     throws Exception {
         TestUtil.setServerAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, "");
         TestUtil.setConfigAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, "");
@@ -443,7 +443,7 @@ extends TestCase {
      * same message to the same message to the same mailbox simultaneously.  Confirms
      * that only one copy got delivered.  Bug 38898.
      */
-    public void xtestConcurrentDedupe()
+    public void testConcurrentDedupe()
     throws Exception {
         String subject = NAME_PREFIX + " testConcurrentDedupe";
         String content = TestUtil.getTestMessage(subject, USER_NAME, USER_NAME, null);
@@ -470,7 +470,7 @@ extends TestCase {
      * failure occurs.  Bug 38898.
      * @throws Exception
      */
-    public void xtestDeliveryAfterFailure()
+    public void testDeliveryAfterFailure()
     throws Exception {
         String subject = NAME_PREFIX + " testDeliveryAfterFailure";
         String content = TestUtil.getTestMessage(subject, USER_NAME, USER_NAME, null);
@@ -520,7 +520,7 @@ extends TestCase {
      * than the limit specified by {@link LC#zimbra_lmtp_max_line_length}.
      * Bug 42214.
      */
-    public void xtestValidation()
+    public void testValidation()
     throws Exception {
         StringBuilder buf = new StringBuilder();
         for (int i = 0; i <= LC.zimbra_lmtp_max_line_length.longValue(); i++) {
@@ -532,7 +532,7 @@ extends TestCase {
     /**
      * Verifies send/receive behavior for {@code zimbraMailAllowReceiveButNotSendWhenOverQuota}.
      */
-    public void xtestAllowReceiveButNotSendWhenOverQuota()
+    public void testAllowReceiveButNotSendWhenOverQuota()
     throws Exception {
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailAllowReceiveButNotSendWhenOverQuota, LdapUtil.LDAP_TRUE);
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailQuota, "1");
@@ -573,7 +573,7 @@ extends TestCase {
      * Verifies that duplicate suppression recognizes the {@code Resent-Message-ID} header
      * (bug 36297).
      */
-    public void xtestResentMessageId()
+    public void testResentMessageId()
     throws Exception {
         Provisioning.getInstance().getConfig().setMessageIdDedupeCacheSize(1000);
         
@@ -603,7 +603,7 @@ extends TestCase {
     }
 
     // bug 53058
-    public void xtestFinalDotNotSent() throws Exception {
+    public void testFinalDotNotSent() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         LmtpClient lmtpClient =
                 new LmtpClient("localhost",
