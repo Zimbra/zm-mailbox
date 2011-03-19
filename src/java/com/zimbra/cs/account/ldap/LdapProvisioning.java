@@ -3567,7 +3567,7 @@ public class LdapProvisioning extends Provisioning {
     }
     
     @Override
-    public void certAuthAccount(Account acct, AuthContext.Protocol proto, Map<String, Object> authCtxt) throws ServiceException {
+    public void ssoAuthAccount(Account acct, AuthContext.Protocol proto, Map<String, Object> authCtxt) throws ServiceException {
         try {
             checkAccountStatus(acct, authCtxt);
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(

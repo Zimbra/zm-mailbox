@@ -230,12 +230,19 @@ Certificate was added to keystore
 5. Configire Zimbra server to request client certificate
 ----------------
 zmprov ms {server} zimbraMailSSLClientCertMode WantClientAuth
+or
+zmprov ms {server} zimbraMailSSLClientCertMode NeedClientAuth
    
+Do a "zmprov desc -a zimbraMailSSLClientCertMode" to see description 
+of this attribute and the difference between WantClientAuth and 
+NeedClientAuth.
+
 
 ----------------
-6. zmmailboxdctl restart 
+6. Restart mailbox server
 ----------------
-   
+zmmailboxdctl restart 
+
    
 ==============
 III. Testing
@@ -244,11 +251,11 @@ You can use either one of the following URLs for testing.
 
 (1) https://{your-server}:7443/certauth
 
-The /certauth servlet is where "authrozation" happens.  It validates that the subject 
+The /certauth servlet is where "authorization" happens.  It validates that the subject 
 in the client certificate is an active user provisionined on the system, then 
-generate a Zimbra auth token for it and redirect the request to the proper web app.
+generates a Zimbra auth token for it and redirect the request to the proper web app.
    
-Note, do not confuse "authrozation" with "authentication".  "Authentication" is the 
+Note, do not confuse "authorization" with "authentication".  "Authentication" is the 
 process of validating the client certificate, it happens during SSL handshake,
 before the request gets to the /certauth servlet.
    
