@@ -865,7 +865,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public abstract void preAuthAccount(Account acct, String accountName, String accountBy, long timestamp, long expires, String preAuth, Map<String, Object> authCtxt) throws ServiceException;
 
-    public abstract void certAuthAccount(Account acct, AuthContext.Protocol proto, Map<String, Object> authCtxt) throws ServiceException;
+    public abstract void ssoAuthAccount(Account acct, AuthContext.Protocol proto, Map<String, Object> authCtxt) throws ServiceException;
     
     public abstract void changePassword(Account acct, String currentPassword, String newPassword) throws ServiceException;
 

@@ -228,11 +228,10 @@ public final class MockProvisioning extends Provisioning {
     }
     
     @Override
-    public void certAuthAccount(Account acct, AuthContext.Protocol proto, Map<String, Object> authCtxt) 
+    public void ssoAuthAccount(Account acct, AuthContext.Protocol proto, Map<String, Object> authCtxt) 
     throws ServiceException {
         throw new UnsupportedOperationException();
     }
-    
 
     @Override
     public void changePassword(Account acct, String currentPassword, String newPassword) {

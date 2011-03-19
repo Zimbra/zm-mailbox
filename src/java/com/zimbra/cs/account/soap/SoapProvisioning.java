@@ -1231,7 +1231,7 @@ public class SoapProvisioning extends Provisioning {
     }
     
     @Override
-    public void certAuthAccount(Account acct, AuthContext.Protocol proto, Map<String, Object> authCtxt) 
+    public void ssoAuthAccount(Account acct, AuthContext.Protocol proto, Map<String, Object> authCtxt) 
     throws ServiceException {
         throw new UnsupportedOperationException();
     }
