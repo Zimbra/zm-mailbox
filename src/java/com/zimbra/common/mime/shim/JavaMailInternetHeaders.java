@@ -287,23 +287,25 @@ public class JavaMailInternetHeaders extends InternetHeaders implements JavaMail
     }
 
 
-    static class IteratorEnumeration<T> implements Enumeration<T> {
-        private final Iterator<? extends T> mIterator;
+    public static class IteratorEnumeration<T> implements Enumeration<T> {
+        private final Iterator<? extends T> iterator;
 
-        IteratorEnumeration(Iterator<? extends T> iterator) {
-            mIterator = iterator;
+        public IteratorEnumeration(Iterator<? extends T> iterator) {
+            this.iterator = iterator;
         }
 
-        IteratorEnumeration(Iterable<? extends T> iterable) {
-            mIterator = iterable.iterator();
+        public IteratorEnumeration(Iterable<? extends T> iterable) {
+            this.iterator = iterable.iterator();
         }
 
-        @Override public boolean hasMoreElements() {
-            return mIterator.hasNext();
+        @Override
+        public boolean hasMoreElements() {
+            return iterator.hasNext();
         }
 
-        @Override public T nextElement() {
-            return mIterator.next();
+        @Override
+        public T nextElement() {
+            return iterator.next();
         }
     }
 
