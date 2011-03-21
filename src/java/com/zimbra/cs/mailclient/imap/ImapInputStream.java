@@ -297,6 +297,13 @@ public final class ImapInputStream extends MailInputStream {
         return sbuf.toString();
     }
 
+    public void skipOptionalChar(char expectedChar) throws IOException {
+        char c = peekChar();
+        if (c == expectedChar) {
+            readChar();
+        } 
+    }
+
     public void skipChar(char expectedChar) throws ParseException, IOException {
         char c = readChar();
         if (c != expectedChar) {

@@ -108,7 +108,8 @@ public final class ImapResponse {
         case EXISTS: case RECENT: case EXPUNGE:
             break;
         case ID:
-            is.skipChar(' ');
+            //bug 57859; at least one IMAP server incorrectly excludes space here
+            is.skipOptionalChar(' ');
             data = IDInfo.read(is);
             break;
         default:

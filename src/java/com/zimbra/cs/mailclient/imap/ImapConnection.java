@@ -649,6 +649,7 @@ public final class ImapConnection extends MailConnection {
         } catch (ParseException pe) {
             //read rest of the line so TraceInputStream dumps it for debugging
             mailIn.readLine();
+            mailIn.trace();
             throw pe;
         }
     }
