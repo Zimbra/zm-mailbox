@@ -707,6 +707,7 @@ public class FileUploadServlet extends ZimbraServlet {
         dfif.setRepository(new File(getUploadDir()));
         upload = new ServletFileUpload(dfif);
         upload.setSizeMax(maxSize);
+        upload.setHeaderEncoding("utf-8");
         return upload;
     }
 
