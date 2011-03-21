@@ -891,4 +891,27 @@ public class StringUtil {
     public static String lfToCrlf(CharSequence s) {
         return replaceAll(s, "\r?\n", "\r\n");
     }
+
+    /** Replaces all non-printable-ASCII characters with their Java Unicode escape sequences. */
+    public static String escapeString(String string) {
+        if (Strings.isNullOrEmpty(string))
+            return string;
+
+        StringBuilder sb = new StringBuilder(string.length());
+        for (int index = 0, len = string.length(); index < len; index++) {
+            char c = string.charAt(index);
+            if (c >= 0x20 && c < 0x7F) {
+                sb.append(c);
+            } else if (c == '\t') {
+                sb.append("\\t");
+            } else if (c == '\r') {
+                sb.append("\\r");
+            } else if (c == '\n') {
+                sb.append("\\n");
+            } else {
+                sb.append(String.format("\\u%04x", (int) c));
+            }
+        }
+        return sb.toString();
+    }
 }

@@ -89,60 +89,60 @@ public class HeaderUtils {
     }
 
 
-    static class ByteBuilder extends ByteArrayOutputStream {
+    public static class ByteBuilder extends ByteArrayOutputStream {
         private Charset charset;
 
-        ByteBuilder() {
+        public ByteBuilder() {
             super();
         }
 
-        ByteBuilder(int size) {
+        public ByteBuilder(int size) {
             super(size);
         }
 
-        ByteBuilder(String charset) throws UnsupportedEncodingException {
+        public ByteBuilder(String charset) throws UnsupportedEncodingException {
             this();
             setCharset(charset);
         }
 
-        ByteBuilder(int size, String charset) throws UnsupportedEncodingException {
+        public ByteBuilder(int size, String charset) throws UnsupportedEncodingException {
             this(size);
             setCharset(charset);
         }
 
-        ByteBuilder(Charset charset) {
+        public ByteBuilder(Charset charset) {
             this();
             setCharset(charset);
         }
 
-        ByteBuilder(int size, Charset charset) {
+        public ByteBuilder(int size, Charset charset) {
             this(size);
             setCharset(charset);
         }
 
-        ByteBuilder(byte[] b) {
+        public ByteBuilder(byte[] b) {
             super((int) (b.length * 1.5 + 1));
             append(b);
         }
 
-        ByteBuilder setCharset(String enc) throws UnsupportedEncodingException {
+        public ByteBuilder setCharset(String enc) throws UnsupportedEncodingException {
             this.charset = CharsetUtil.normalizeCharset(enc);
             return this;
         }
 
-        ByteBuilder setCharset(Charset charset) {
+        public ByteBuilder setCharset(Charset charset) {
             this.charset = CharsetUtil.normalizeCharset(charset);
             return this;
         }
 
-        ByteBuilder pop() {
+        public ByteBuilder pop() {
             if (count > 0) {
                 count--;
             }
             return this;
         }
 
-        boolean isEmpty() {
+        public boolean isEmpty() {
             return count == 0;
         }
 
@@ -150,34 +150,34 @@ public class HeaderUtils {
             return count;
         }
 
-        ByteBuilder append(ByteBuilder bb) {
+        public ByteBuilder append(ByteBuilder bb) {
             write(bb.buf, 0, bb.count);
             return this;
         }
 
-        ByteBuilder append(byte b) {
+        public ByteBuilder append(byte b) {
             write(b);
             return this;
         }
 
-        ByteBuilder append(byte[] b) {
+        public ByteBuilder append(byte[] b) {
             write(b, 0, b.length);
             return this;
         }
 
-        ByteBuilder append(char c) {
+        public ByteBuilder append(char c) {
             return append((byte) c);
         }
 
-        ByteBuilder append(String s) {
-            return append(s.getBytes());
+        public ByteBuilder append(String s) {
+            return append(charset == null ? s.getBytes() : s.getBytes(charset));
         }
 
-        byte byteAt(int index) {
+        public byte byteAt(int index) {
             return buf[index];
         }
 
-        int indexOf(byte b) {
+        public int indexOf(byte b) {
             for (int i = 0; i < count; i++) {
                 if (buf[i] == b)
                     return i;
@@ -185,11 +185,11 @@ public class HeaderUtils {
             return -1;
         }
 
-        boolean startsWith(byte b) {
+        public boolean startsWith(byte b) {
             return count > 0 && buf[0] == b;
         }
 
-        boolean endsWith(byte b) {
+        public boolean endsWith(byte b) {
             return count > 0 && buf[count - 1] == b;
         }
 
@@ -198,7 +198,7 @@ public class HeaderUtils {
             return charset == null ? super.toString() : new String(buf, 0, count, charset);
         }
 
-        String appendTo(String prefix) {
+        public String appendTo(String prefix) {
             return prefix == null ? toString() : prefix + this;
         }
     }
