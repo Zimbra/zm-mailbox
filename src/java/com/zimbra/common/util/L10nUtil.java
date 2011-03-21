@@ -190,6 +190,7 @@ public class L10nUtil {
         errPartNotFound,
         errPermissionDenied,
         errUnsupportedFormat,
+        errResourceNotAllowedOnPort,
 
         passwordViolation
         

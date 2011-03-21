@@ -51,13 +51,14 @@ class CustomSSLSocketFactory extends SSLSocketFactory {
         throws GeneralSecurityException, IOException {
         
         SSLContext context = SSLContext.getInstance("TLS");
-        context.init(getKeyManagers(), tm != null ? new TrustManager[] { tm } : null, null);
+        context.init(null, tm != null ? new TrustManager[] { tm } : null, null);
         sslFactory = context.getSocketFactory();
         sampleSSLSocket = (SSLSocket) sslFactory.createSocket();
         factory = sf;
         this.verifyHostname = verifyHostname && tm instanceof CustomTrustManager;
     }
     
+    /*
     private KeyManager[] getKeyManagers() {
         
         // safety gate to skip the code in case it cases trouble
@@ -88,7 +89,7 @@ class CustomSSLSocketFactory extends SSLSocketFactory {
         
         return null;
     }
-   
+    */ 
     
     boolean isVerifyHostname() {
         return verifyHostname;
