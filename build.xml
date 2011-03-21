@@ -55,6 +55,7 @@
     <fileset dir="${common.jars.dir}">
         <include name="**/junit*.jar"/>
         <include name="**/guava*.jar"/>
+        <include name="**/log4j*.jar"/>
     </fileset>
   </path>
 
@@ -114,6 +115,15 @@
                 keep="false"
                 package="com.zimbra.soap.account.wsimport.generated">
     </wsimport>
+    <!-- Bug 58024 java.util.logging implicated in changing process default charset. -->
+    <replace file="${wsdl.test.src.dir}/com/zimbra/soap/account/wsimport/generated/AccountService_Service.java">
+        <replacefilter token="java.util.logging.Logger"
+                       value="org.apache.log4j.Logger"/>
+        <replacefilter token="logger.warning"
+                       value="logger.warn"/>
+    </replace>
+    <!-- force re-compile with modified source. -->
+    <delete file="${wsdl.test.classes.dir}/com/zimbra/soap/account/wsimport/generated/AccountService_Service.class"/>
   </target>
 
   <target name="admin-service-client-support" depends="wsdl-files,generate-schema">
@@ -126,6 +136,15 @@
                 keep="false"
                 package="com.zimbra.soap.admin.wsimport.generated">
     </wsimport>
+    <!-- Bug 58024 java.util.logging implicated in changing process default charset. -->
+    <replace file="${wsdl.test.src.dir}/com/zimbra/soap/admin/wsimport/generated/AdminService_Service.java">
+        <replacefilter token="java.util.logging.Logger"
+                       value="org.apache.log4j.Logger"/>
+        <replacefilter token="logger.warning"
+                       value="logger.warn"/>
+    </replace>
+    <!-- force re-compile with modified source. -->
+    <delete file="${wsdl.test.classes.dir}/com/zimbra/soap/admin/wsimport/generated/AdminService_Service.class"/>
   </target>
 
   <target name="mail-service-client-support" depends="wsdl-files,generate-schema">
@@ -138,6 +157,15 @@
                 keep="false"
                 package="com.zimbra.soap.mail.wsimport.generated">
     </wsimport>
+    <!-- Bug 58024 java.util.logging implicated in changing process default charset. -->
+    <replace file="${wsdl.test.src.dir}/com/zimbra/soap/mail/wsimport/generated/MailService_Service.java">
+        <replacefilter token="java.util.logging.Logger"
+                       value="org.apache.log4j.Logger"/>
+        <replacefilter token="logger.warning"
+                       value="logger.warn"/>
+    </replace>
+    <!-- force re-compile with modified source. -->
+    <delete file="${wsdl.test.classes.dir}/com/zimbra/soap/mail/wsimport/generated/MailService_Service.class"/>
   </target>
 
   <target name="wsdl-client-support"
