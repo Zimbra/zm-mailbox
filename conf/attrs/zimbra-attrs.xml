@@ -5538,13 +5538,11 @@ TODO: delete them permerntly from here
   <desc>
     enable authentication via X.509 Client Certificate.
     Disabled: client authentication is disabled.
-    NeedClientAuth: client authentication is required during SSL handshake.  
-        The SSL handshake will fail if the client does not send a certificate to autenticate.
-    WantClientAuth: client authentication is requested during SSL handshake.  
-        The SSL handshake will still proceed if the client does not send a certificate to autenticate.
-        In the case when client does not send a certificate: 
-        if the requested resource does not require a client certificate, the request will proceed as usual;
-        if the requested resource requires a client certificate, server will return 403 Forbidden.
+    NeedClientAuth: client authentication is required during SSL handshake on the SSL mutual authentication port(see zimbraMailSSLClientCertPort). 
+        The SSL handshake will fail if the client does not present a certificate to autenticate.
+    WantClientAuth: client authentication is requested during SSL handshake on the SSL mutual authentication port(see zimbraMailSSLClientCertPort).  
+        The SSL handshake will still proceed if the client does not present a certificate to autenticate.  In the case when client does not send a 
+        certificate, user will be redirected to the usual entry page of the requested webapp, where username/password is ptompted.
   </desc>
 </attr>
 
@@ -5584,6 +5582,11 @@ TODO: delete them permerntly from here
   <desc>
     Account-level switch that enables message deduping.  See zimbraMessageIdDedupeCacheSize for more details.
   </desc>
+</attr>
+
+<attr id="1999" name="zimbraMailSSLClientCertPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" requiresRestart="mailbox" since="7.1.0">
+  <globalConfigValue>0</globalConfigValue>
+  <desc>SSL port requesting client certificate for end-user UI</desc>
 </attr>
 
 

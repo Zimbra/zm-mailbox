@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110317-1820 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110320-0341 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -4994,19 +4994,29 @@ public class ZAttrProvisioning {
     /**
      * enable authentication via X.509 Client Certificate. Disabled: client
      * authentication is disabled. NeedClientAuth: client authentication is
-     * required during SSL handshake. The SSL handshake will fail if the
-     * client does not send a certificate to autenticate. WantClientAuth:
-     * client authentication is requested during SSL handshake. The SSL
-     * handshake will still proceed if the client does not send a certificate
-     * to autenticate. In the case when client does not send a certificate:
-     * if the requested resource does not require a client certificate, the
-     * request will proceed as usual; if the requested resource requires a
-     * client certificate, server will return 403 Forbidden.
+     * required during SSL handshake on the SSL mutual authentication
+     * port(see zimbraMailSSLClientCertPort). The SSL handshake will fail if
+     * the client does not present a certificate to autenticate.
+     * WantClientAuth: client authentication is requested during SSL
+     * handshake on the SSL mutual authentication port(see
+     * zimbraMailSSLClientCertPort). The SSL handshake will still proceed if
+     * the client does not present a certificate to autenticate. In the case
+     * when client does not send a certificate, user will be redirected to
+     * the usual entry page of the requested webapp, where username/password
+     * is ptompted.
      *
      * @since ZCS 7.1.0
      */
     @ZAttr(id=1190)
     public static final String A_zimbraMailSSLClientCertMode = "zimbraMailSSLClientCertMode";
+
+    /**
+     * SSL port requesting client certificate for end-user UI
+     *
+     * @since ZCS 7.1.0
+     */
+    @ZAttr(id=1999)
+    public static final String A_zimbraMailSSLClientCertPort = "zimbraMailSSLClientCertPort";
 
     /**
      * SSL port for end-user UI

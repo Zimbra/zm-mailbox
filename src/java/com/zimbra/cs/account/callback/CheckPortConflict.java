@@ -38,7 +38,7 @@ public class CheckPortConflict extends AttributeCallback {
     private static final Set<String> sPortAttrs = new HashSet<String>();
         
     static {
-        // TODO: use a flag in imbra-attrs.xml and generate this map automatically
+        // TODO: use a flag in zimbra-attrs.xml and generate this map automatically
         sPortAttrs.add(Provisioning.A_zimbraAdminPort);
             
         sPortAttrs.add(Provisioning.A_zimbraImapBindPort);
@@ -50,6 +50,7 @@ public class CheckPortConflict extends AttributeCallback {
             
         sPortAttrs.add(Provisioning.A_zimbraMailPort);
         sPortAttrs.add(Provisioning.A_zimbraMailSSLPort);
+        sPortAttrs.add(Provisioning.A_zimbraMailSSLClientCertPort);
             
         sPortAttrs.add(Provisioning.A_zimbraPop3BindPort);
         sPortAttrs.add(Provisioning.A_zimbraPop3SSLBindPort);

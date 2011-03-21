@@ -64,6 +64,35 @@
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">zimbra</Set>
           <Set name="KeyPassword">zimbra</Set>
+          <Set name="ExcludeCipherSuites">
+            <Array type="java.lang.String">
+              <Item>SSL_RSA_WITH_DES_CBC_SHA</Item>
+              <Item>SSL_DHE_RSA_WITH_DES_CBC_SHA</Item>
+              <Item>SSL_DHE_DSS_WITH_DES_CBC_SHA</Item>
+              <Item>SSL_RSA_EXPORT_WITH_RC4_40_MD5</Item>
+              <Item>SSL_RSA_EXPORT_WITH_DES40_CBC_SHA</Item>
+              <Item>SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA</Item>
+              <Item>SSL_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA</Item>
+            </Array>
+          </Set>
+        </New>
+      </Arg>
+    </Call>
+    
+    <!-- =============================================================== -->
+    <!-- Configure SSL with Client Certificate for the Jetty Server      -->
+    <!-- =============================================================== -->
+    <Call name="addConnector">
+      <Arg>
+        <New id="ssl-clientcert" class="org.mortbay.jetty.security.SslSelectChannelConnector">
+          <Set name="Port">8443</Set>
+          <Set name="useDirectBuffers">false</Set>
+          <Set name="maxIdleTime">30000</Set>
+          <Set name="lowResourcesMaxIdleTime">1000</Set>
+          <Set name="Acceptors">2</Set>
+          <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
+          <Set name="password">zimbra</Set>
+          <Set name="KeyPassword">zimbra</Set>
           <Set name="NeedClientAuth">false</Set>
           <Set name="WantClientAuth">true</Set>
           <Set name="ExcludeCipherSuites">
@@ -92,8 +121,6 @@
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">zimbra</Set>
           <Set name="KeyPassword">zimbra</Set>
-          <Set name="NeedClientAuth">false</Set>
-          <Set name="WantClientAuth">true</Set>
           <Set name="ExcludeCipherSuites">
             <Array type="java.lang.String">
               <Item>SSL_RSA_WITH_DES_CBC_SHA</Item>
@@ -132,7 +159,7 @@
         <Set name="rewriteRequestURI">true</Set>
         <Set name="rewritePathInfo">false</Set>
         <Set name="originalPathAttribute">requestedPath</Set>
-	<Call name="addRule"><Arg><New class="org.mortbay.jetty.handler.rewrite.MsieSslRule"/></Arg></Call>
+	    <Call name="addRule"><Arg><New class="org.mortbay.jetty.handler.rewrite.MsieSslRule"/></Arg></Call>
         <!-- map convenience URLs to the webapp that handles them -->
         <Call name="addRewriteRule"><Arg>/Microsoft-Server-ActiveSync/*</Arg><Arg>/service/extension/zimbrasync</Arg></Call>
         <Call name="addRewriteRule"><Arg>/principals/*</Arg><Arg>/service/dav/principals</Arg></Call>
@@ -150,6 +177,24 @@
         <Call name="addRewriteRule"><Arg>/zimbra/*</Arg><Arg></Arg></Call>
         <!-- assume all other requests handled by zimbra webapp -->
         <Call name="addRewriteRule"><Arg>/*</Arg><Arg>/zimbra</Arg></Call>
+                
+        <!-- 
+          Allow only certauth URL on the SSL client cert port.
+          If the URl does not match the regex, return http 403.
+          Put this rule after the legacy rules (addRewriteRule) so this rule
+          is evaluated after the certauth rule mapping is applied.
+        -->
+        <Call name="addRule">
+          <Arg>
+            <New id="clientCertPortRule" class="com.zimbra.common.jetty.PortRule">
+              <Set name="Port">8443</Set>
+              <Set name="Regex">^(/service/certauth)(/|/(.*))?$</Set>
+              <Set name="HttpErrorStatusRegexNotMatched">403</Set>
+              <Set name="HttpErrorReasonRegexNotMatched">errResourceNotAllowedOnPort</Set>
+            </New>
+          </Arg>
+        </Call> 
+        
         <Set name="handler">
           <New id="Handlers" class="org.mortbay.jetty.handler.HandlerCollection">
             <Set name="handlers">
@@ -364,6 +409,9 @@
       <Call name="open"/>
     </Ref>
     <Ref id="ssl">
+      <Call name="open"/>
+    </Ref>
+    <Ref id="ssl-clientcert">
       <Call name="open"/>
     </Ref>
     <Ref id="admin">

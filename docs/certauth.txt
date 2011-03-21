@@ -229,14 +229,39 @@ Certificate was added to keystore
 ----------------
 5. Configire Zimbra server to request client certificate
 ----------------
-zmprov ms {server} zimbraMailSSLClientCertMode WantClientAuth
-or
-zmprov ms {server} zimbraMailSSLClientCertMode NeedClientAuth
-   
-Do a "zmprov desc -a zimbraMailSSLClientCertMode" to see description 
-of this attribute and the difference between WantClientAuth and 
-NeedClientAuth.
+(A) Make sure zimbraMailMode on server is *not* http
+$ zmprov gs {server} zimbraMailMode
 
+It is OK as long as zimbraMailMode is not "http".
+
+
+(B) Configure SSL port for client certificate 
+
+Client certificate authentication happens during SSL handshake and is 
+a configuration on the SSL connector(port).  The regular SSL(zimbraMailSSLPort) 
+and admin(zimbraAdminPort) port should *not* be configured to request 
+client certificate, because SSL mutual authentication will interfere with 
+other authentication options on the same port.
+
+SSL mutual authentication must be configured on its own port (e.g. 8443).
+
+To configure the SSL mutual authentication port:
+
+$ zmprov ms {server} zimbraMailSSLClientCertPort {port}
+
+
+(C) Two modes are supported for client certificate: 
+WantClientAuth and WantClientAuth.
+    
+Do a "zmprov desc -a zimbraMailSSLClientCertMode" for description 
+of this attribute and difference between the two modes.
+
+To configure the client certification mode:
+    
+$ zmprov ms {server} zimbraMailSSLClientCertMode WantClientAuth
+or
+$ zmprov ms {server} zimbraMailSSLClientCertMode NeedClientAuth
+   
 
 ----------------
 6. Restart mailbox server
@@ -247,9 +272,16 @@ zmmailboxdctl restart
 ==============
 III. Testing
 ==============
-You can use either one of the following URLs for testing.
+SSL mutual authentication is supported for the Zimbra WEB Client(ZWC) and admin console.
+You can use either one of the following two ways for testing.
 
-(1) https://{your-server}:7443/certauth
+(1) Browse directly to the certauth servlet
+
+ZWC:
+    https://{server}:{zimbraMailSSLClientCertPort}/certauth
+
+Admin console:
+    https://{server}:{zimbraMailSSLClientCertPort}/certauth/admin
 
 The /certauth servlet is where "authorization" happens.  It validates that the subject 
 in the client certificate is an active user provisionined on the system, then 
@@ -261,12 +293,39 @@ before the request gets to the /certauth servlet.
    
 or 
 
-(2) https://{host}:7443/
-To use this URL, you need to setup virtual host and web client login url on the domain:
+(2) Configure login URL + virtual host on domain, and browse to the default 
+URl for the webapp. 
 
-zmprov md {domain} zimbraVirtualHostname {your-server}
-zmprov md {domain} zimbraWebClientLoginURL 'https://{your-server}:7443/certauth'
-zmprov md {domain} zimbraWebClientLogoutURL '../?sso=1'
+ZWC:
+    zmprov md {domain} zimbraVirtualHostname {server}
+    zmprov md {domain} zimbraWebClientLoginURL 'https://{server}:{zimbraMailSSLClientCertPort}/certauth'
+    zmprov md {domain} zimbraWebClientLogoutURL '../?sso=1'
+
+    browse to: 
+    http://{host}:{zimbraMailPort}
+    or
+    https://{host}:{zimbraMailSSLPort}
+
+
+Admin console:
+    zmprov md {domain} zimbraVirtualHostname {server}
+    zmprov md {domain} zimbraAdminConsoleLoginURL 'https://{server}:{zimbraMailSSLClientCertPort}/certauth/admin'
+    zmprov md {domain} zimbraAdminConsoleLogoutURL '../?sso=1'
+    
+    browse to: 
+    https://{host}:{zimbraAdminPort}
+    
+    Note: This is not yet fully supported for admin console.
+    
+    Known bug: 
+      1. Admin console does not support the "/?ignoreLoginURL=1" query.  
+         If zimbraMailSSLClientCertMode is WantClientAuth and user choose to
+         not send a client certificate (or there isn't one), we redirect to 
+         the admon console entry page.  But if zimbraAdminConsoleLoginURL is 
+         set to the certauth URL, it will get a redirect loop.
+         
+      2. Admin console does not "../?sso=1" for zimbraAdminConsoleLogoutURL
+
 
 
 Now, SSL mutual authentication will start.
@@ -300,14 +359,5 @@ Now, SSL mutual authentication will start.
   Currently ZCS uses the EMAILADDRESS field of the subject in the client certificate 
   as the only lookup key.  If the value of EMAILADDRESS matches a Zimbra user's 
   primary email address or one of the aliases, the user will be let in.
-     
-  If the request came to the mail SSL port(7443), user will be redirected to the 
-  Inbox of mail app.
-  If the request came to the admin port (7071) and the user is an admin account, 
-  user will be redirected into the admin console.  
-     
 
      
-
-
-- 

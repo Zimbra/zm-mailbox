@@ -48,7 +48,7 @@ public class ClientCertAuthenticator extends SSOAuthenticator {
         X509Certificate[] certs = (X509Certificate[])req.getAttribute("javax.servlet.request.X509Certificate");
             
         if (certs==null || certs.length==0 || certs[0]==null) {
-            throw AuthFailedServiceException.AUTH_FAILED("no client certificate", (Throwable)null);
+            throw SSOAuthenticatorServiceException.NO_CLIENT_CERTIFICATE();
         }
         
         validateClientCert(certs);

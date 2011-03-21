@@ -79,7 +79,7 @@ public class AccountServiceException extends ServiceException {
         super(message, code, isReceiversFault);
     }
 
-    private AccountServiceException(String message, String code, boolean isReceiversFault, Throwable cause) {
+    protected AccountServiceException(String message, String code, boolean isReceiversFault, Throwable cause) {
         super(message, code, isReceiversFault, cause);
     }
 
