@@ -58,39 +58,6 @@ class CustomSSLSocketFactory extends SSLSocketFactory {
         this.verifyHostname = verifyHostname && tm instanceof CustomTrustManager;
     }
     
-    /*
-    private KeyManager[] getKeyManagers() {
-        
-        // safety gate to skip the code in case it cases trouble
-        // TODO: remove in the next major release if everything works well.
-        if (!LC.mailboxd_enable_key_manager.booleanValue()) {
-            return null;
-        }
-        
-        KeyManagerFactory kmf = null;
-        try {
-            KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
-            char[] pass = LC.mailboxd_keystore_password.value().toCharArray();
-            ks.load(new FileInputStream(LC.mailboxd_keystore.value()), pass);
-            kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-            kmf.init(ks, pass);
-            return kmf.getKeyManagers();
-        } catch (UnrecoverableKeyException e) {
-            ZimbraLog.net.warn("unable to get KeyManagerFactory", e);
-        } catch (KeyStoreException e) {
-            ZimbraLog.net.warn("unable to get KeyManagerFactory", e);
-        } catch (CertificateException e) {
-            ZimbraLog.net.warn("unable to get KeyManagerFactory", e);
-        } catch (NoSuchAlgorithmException e) {
-            ZimbraLog.net.warn("unable to get KeyManagerFactory", e);
-        } catch (IOException e) {
-            ZimbraLog.net.warn("unable to get KeyManagerFactory", e);
-        }
-        
-        return null;
-    }
-    */ 
-    
     boolean isVerifyHostname() {
         return verifyHostname;
     }
