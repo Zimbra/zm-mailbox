@@ -184,6 +184,7 @@ final class ConnectionManager {
                 }
             } catch (CommandFailedException e) {
                 // Skip check if ID command fails
+                LOG.warn("ID command failed, assuming not importing self",e);
             }
         }
         return false;
