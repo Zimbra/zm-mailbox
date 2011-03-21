@@ -14,6 +14,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -51,6 +52,18 @@ public abstract class SSOAuthenticator {
             return account;
         }
         
+    }
+    
+    public static class SSOAuthenticatorServiceException extends AccountServiceException {
+        public static final String NO_CLIENT_CERTIFICATE        = "account.NO_CLIENT_CERTIFICATE";
+        
+        protected SSOAuthenticatorServiceException(String message, String code, boolean isReceiversFault, Throwable cause) {
+            super(message, code, isReceiversFault, cause);
+        }
+        
+        public static SSOAuthenticatorServiceException NO_CLIENT_CERTIFICATE() {
+            return new SSOAuthenticatorServiceException("no client certificate", NO_CLIENT_CERTIFICATE, SENDERS_FAULT, null);
+        }
     }
     
     protected HttpServletRequest req;

@@ -38,6 +38,12 @@ import com.zimbra.common.soap.AdminConstants;
  */
 public class URLUtil {
 
+    public static final String PROTO_HTTP  = "http";
+    public static final String PROTO_HTTPS = "https";
+    
+    private static int DEFAULT_HTTP_PORT = 80;
+    private static int DEFAULT_HTTPS_PORT = 443;
+    
     /**
      * Return the URL where SOAP service is available for given store server.
      * 
@@ -124,13 +130,7 @@ public class URLUtil {
         }
         throw ServiceException.INVALID_REQUEST("specified " + Provisioning.A_zimbraMtaAuthHost + " does not correspond to a valid service hostname: " + authHost, null);
     }
-    
-    private static final String PROTO_HTTP  = "http";
-    private static final String PROTO_HTTPS = "https";
-    
-    private static int DEFAULT_HTTP_PORT = 80;
-    private static int DEFAULT_HTTPS_PORT = 443;
-    
+   
     /**
      * Returns absolute public URL with scheme, host, and port for mail app on server.
      * 

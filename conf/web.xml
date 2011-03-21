@@ -10,7 +10,7 @@
 
   <display-name>Zimbra Service</display-name>
   <description>SOAP Service</description>
-
+  
   <filter>
     <filter-name>ThrottlingFilter</filter-name>
     <filter-class>com.zimbra.cs.servlet.ThrottlingFilter</filter-class>
@@ -76,7 +76,7 @@
     <filter-name>ZimletFilter</filter-name>
     <url-pattern>/zimlet/*</url-pattern>
   </filter-mapping>
-
+  
   <servlet>
     <servlet-name>FirstServlet</servlet-name>
     <servlet-class>com.zimbra.cs.servlet.FirstServlet</servlet-class>
@@ -186,7 +186,7 @@
     <servlet-class>com.zimbra.cs.service.CertAuthServlet</servlet-class>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>443, 7443, 7071</param-value>
+      <param-value>8443</param-value>
     </init-param>
     <load-on-startup>5</load-on-startup>
   </servlet>
