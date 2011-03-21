@@ -12,9 +12,9 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-
 package com.zimbra.cs.service;
 
+import com.google.common.base.Strings;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentDisposition;
@@ -72,9 +72,11 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TimerTask;
@@ -187,7 +189,7 @@ public class FileUploadServlet extends ZimbraServlet {
             }
         }
         
-        private synchronized void markDeleted() {
+        synchronized void markDeleted() {
             deleted = true;
         }
         
@@ -274,7 +276,7 @@ public class FileUploadServlet extends ZimbraServlet {
         String url = AccountUtil.getBaseUri(server);
         if (url == null)
             return null;
-        String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
+        String hostname = server.getServiceHostname();
         url += ContentServlet.SERVLET_PATH + ContentServlet.PREFIX_PROXY + '?' +
                ContentServlet.PARAM_UPLOAD_ID + '=' + uploadId + '&' +
                ContentServlet.PARAM_EXPUNGE + "=true";
@@ -336,7 +338,7 @@ public class FileUploadServlet extends ZimbraServlet {
         }
     }
     
-    private static File getStoreLocation(FileItem fi) {
+    static File getStoreLocation(FileItem fi) {
         if (fi.isInMemory() || !(fi instanceof DiskFileItem)) {
             return null;
         }
@@ -359,8 +361,9 @@ public class FileUploadServlet extends ZimbraServlet {
             up = mPending.remove(upload.uuid);
             up.markDeleted();
         }
-        if (up == upload)
+        if (up == upload) {
             up.purge();
+        }
     }
 
     private static String getUploadDir() {
@@ -379,28 +382,30 @@ public class FileUploadServlet extends ZimbraServlet {
          *  follows the {@link DefaultFileItem} naming convention
          *  (<code>upload_*.tmp</code>) and is older than
          *  {@link FileUploadServlet#UPLOAD_TIMEOUT_MSEC}. */
-    	public boolean accept(File pathname) {
+    	@Override
+        public boolean accept(File pathname) {
             // upload_ XYZ .tmp
             if (pathname == null)
                 return false;
             String name = pathname.getName();
             // file naming convention used by DefaultFileItem class
-            return name.startsWith("upload_") && name.endsWith(".tmp") &&
-                   (mNow - pathname.lastModified() > UPLOAD_TIMEOUT_MSEC);
+            return name.startsWith("upload_") && name.endsWith(".tmp") && mNow - pathname.lastModified() > UPLOAD_TIMEOUT_MSEC;
         }
     }
 
     private static void cleanupLeftoverTempFiles() {
         File files[] = new File(getUploadDir()).listFiles(new TempFileFilter());
-        if (files == null || files.length < 1) return;
+        if (files == null || files.length < 1)
+            return;
 
-        mLog.info("deleting " + files.length + " temporary upload files left over from last time");
+        mLog.info("deleting %d temporary upload files left over from last time", files.length);
         for (int i = 0; i < files.length; i++) {
             String path = files[i].getAbsolutePath();
-            if (files[i].delete())
-                mLog.info("deleted leftover upload file " + path);
-            else
-                mLog.error("unable to delete leftover upload file " + path);
+            if (files[i].delete()) {
+                mLog.info("deleted leftover upload file %s", path);
+            } else {
+                mLog.error("unable to delete leftover upload file %s", path);
+            }
         }
     }
 
@@ -437,18 +442,20 @@ public class FileUploadServlet extends ZimbraServlet {
                 // fetching the mailbox will except if it's in maintenance mode
                 if (Provisioning.onLocalServer(acct)) {
                     Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct, false);
-                    if (mbox != null)
+                    if (mbox != null) {
                         ZimbraLog.addMboxToContext(mbox.getId());
+                    }
                 }
             }
 
-            boolean limitByFileUploadMaxSize = (req.getParameter(FileUploadServlet.PARAM_LIMIT_BY_FILE_UPLOAD_MAX_SIZE) != null);
+            boolean limitByFileUploadMaxSize = req.getParameter(PARAM_LIMIT_BY_FILE_UPLOAD_MAX_SIZE) != null;
 
             // file upload requires multipart enctype
-            if (ServletFileUpload.isMultipartContent(req))
+            if (ServletFileUpload.isMultipartContent(req)) {
                 handleMultipartUpload(req, resp, fmt, at.getAccountId(), limitByFileUploadMaxSize);
-            else
+            } else {
                 handlePlainUpload(req, resp, fmt, at.getAccountId(), limitByFileUploadMaxSize);
+            }
         } catch (ServiceException e) {
             mLog.info("File upload failed", e);
             drainRequestStream(req);
@@ -457,7 +464,7 @@ public class FileUploadServlet extends ZimbraServlet {
     }
 
     @SuppressWarnings("unchecked")
-    private void handleMultipartUpload(HttpServletRequest req, HttpServletResponse resp, String fmt, String accountId, boolean limitByFileUploadMaxSize)
+    List<Upload> handleMultipartUpload(HttpServletRequest req, HttpServletResponse resp, String fmt, String accountId, boolean limitByFileUploadMaxSize)
     throws IOException, ServiceException {
         List<FileItem> items = null;
         String reqId = null;
@@ -470,46 +477,54 @@ public class FileUploadServlet extends ZimbraServlet {
             mLog.info("Exceeded maximum upload size of " + upload.getSizeMax() + " bytes: " + e);
             drainRequestStream(req);
             sendResponse(resp, HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE, fmt, reqId, null, items);
-            return;
+            return Collections.emptyList();
         } catch (FileUploadBase.InvalidContentTypeException e) {
             // at least one file was of a type not allowed
             mLog.info("File upload failed", e);
             drainRequestStream(req);
             sendResponse(resp, HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE, fmt, reqId, null, items);
-            return;
+            return Collections.emptyList();
         } catch (FileUploadException e) {
             // parse of request failed for some other reason
             mLog.info("File upload failed", e);
             drainRequestStream(req);
             sendResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, fmt, reqId, null, items);
-            return;
+            return Collections.emptyList();
         }
 
-        String lastName = null, charset = "utf-8";
+        String charset = "utf-8";
+        LinkedList<String> names = new LinkedList<String>();
         HashMap<FileItem, String> filenames = new HashMap<FileItem, String>();
         if (items != null) {
             for (Iterator<FileItem> it = items.iterator(); it.hasNext(); ) {
                 FileItem fi = it.next();
                 if (fi == null)
                     continue;
+
                 if (fi.isFormField()) {
-                    // correlate this file upload session's request and response
-                    if (fi.getFieldName().equals("requestId"))
+                    if (fi.getFieldName().equals("requestId")) {
+                        // correlate this file upload session's request and response
                         reqId = fi.getString();
-                    // get the form value charset, if specified
-                    if (fi.getFieldName().equals("_charset_") && !fi.getString().equals(""))
+                    } else if (fi.getFieldName().equals("_charset_") && !fi.getString().equals("")) {
+                        // get the form value charset, if specified
                         charset = fi.getString();
-                    // allow a client to explicitly provide filenames for the uploads
-                    if (fi.getFieldName().startsWith("filename"))
-                        lastName = fi.getString(charset);
+                    } else if (fi.getFieldName().startsWith("filename")) {
+                        // allow a client to explicitly provide filenames for the uploads
+                        names.clear();
+                        String value = fi.getString(charset);
+                        if (!Strings.isNullOrEmpty(value)) {
+                            for (String name : value.split("\n")) {
+                                names.add(name.trim());
+                            }
+                        }
+                    }
                     // strip form fields out of the list of uploads
                     it.remove();
                 } else {
                     if (fi.getName() == null || fi.getName().trim().equals("")) {
                         it.remove();
                     } else {
-                        filenames.put(fi, lastName);
-                        lastName = null;
+                        filenames.put(fi, names.isEmpty() ? null : names.remove());
                     }
                 }
             }
@@ -518,39 +533,42 @@ public class FileUploadServlet extends ZimbraServlet {
         // empty upload is not a "success"
         if (items == null || items.isEmpty()) {
             sendResponse(resp, HttpServletResponse.SC_NO_CONTENT, fmt, reqId, null, items);
-            return;
+            return Collections.emptyList();
         }
 
         // cache the uploaded files in the hash and construct the list of upload IDs
         List<Upload> uploads = new ArrayList<Upload>(items.size());
         for (FileItem fi : items) {
-        	String name = filenames.get(fi);
-        	if (name == null || name.trim().equals(""))
-        		name = fi.getName();
-        	Upload up = new Upload(accountId, fi, name);
+            String name = filenames.get(fi);
+            if (name == null || name.trim().equals(""))
+                name = fi.getName();
+            Upload up = new Upload(accountId, fi, name);
 
-        	mLog.info("Received multipart: %s", up);
-        	synchronized (mPending) {
-        		mPending.put(up.uuid, up);
-        	}
-        	uploads.add(up);
+            mLog.info("Received multipart: %s", up);
+            synchronized (mPending) {
+                mPending.put(up.uuid, up);
+            }
+            uploads.add(up);
         }
 
         sendResponse(resp, HttpServletResponse.SC_OK, fmt, reqId, uploads, items);
+        return uploads;
     }
 
-    private void handlePlainUpload(HttpServletRequest req, HttpServletResponse resp, String fmt, String accountId, boolean limitByFileUploadMaxSize) throws IOException, ServiceException {
+    List<Upload> handlePlainUpload(HttpServletRequest req, HttpServletResponse resp, String fmt, String accountId, boolean limitByFileUploadMaxSize)
+    throws IOException, ServiceException {
         // metadata is encoded in the response's HTTP headers
         ContentType ctype = new ContentType(req.getContentType());
         String contentType = ctype.getContentType(), filename = ctype.getParameter("name");
-        if (filename == null)
+        if (filename == null) {
             filename = new ContentDisposition(req.getHeader("Content-Disposition")).getParameter("filename");
+        }
 
         if (filename == null || filename.trim().equals("")) {
             mLog.info("Rejecting upload with no name.");
             drainRequestStream(req);
             sendResponse(resp, HttpServletResponse.SC_NO_CONTENT, fmt, null, null, null);
-            return;
+            return Collections.emptyList();
         }
 
         // store the fetched file as a normal upload
@@ -565,14 +583,14 @@ public class FileUploadServlet extends ZimbraServlet {
                 mLog.info("Exceeded maximum upload size of " + upload.getSizeMax() + " bytes: " + accountId);
                 drainRequestStream(req);
                 sendResponse(resp, HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE, fmt, null, null, null);
-                return;
+                return Collections.emptyList();
             }
         } catch (IOException ioe) {
             mLog.warn("Unable to store upload.  Deleting %s", fi, ioe);
             fi.delete();
             drainRequestStream(req);
             sendResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, fmt, null, null, null);
-            return;
+            return Collections.emptyList();
         }
         List<FileItem> items = new ArrayList<FileItem>(1);
         items.add(fi);
@@ -580,10 +598,12 @@ public class FileUploadServlet extends ZimbraServlet {
         Upload up = new Upload(accountId, fi, filename);
         mLog.info("Received plain: %s", up);
         synchronized (mPending) {
-        	mPending.put(up.uuid, up);
+            mPending.put(up.uuid, up);
         }
 
-        sendResponse(resp, HttpServletResponse.SC_OK, fmt, null, Arrays.asList(up), items);
+        List<Upload> uploads = Arrays.asList(up);
+        sendResponse(resp, HttpServletResponse.SC_OK, fmt, null, uploads, items);
+        return uploads;
     }
 
     public static void sendResponse(HttpServletResponse resp, int status, String fmt, String reqId, List<Upload> uploads, List<FileItem> items)
@@ -680,7 +700,7 @@ public class FileUploadServlet extends ZimbraServlet {
             }
         } catch (ServiceException e) {
             mLog.error("Unable to read " + 
-                      ((limitByFileUploadMaxSize)?Provisioning.A_zimbraFileUploadMaxSize:Provisioning.A_zimbraMtaMaxMessageSize) + 
+                      ((limitByFileUploadMaxSize) ? Provisioning.A_zimbraFileUploadMaxSize : Provisioning.A_zimbraMtaMaxMessageSize) + 
                       " attribute", e);
         }
         dfif.setSizeThreshold(32 * 1024);
@@ -695,14 +715,15 @@ public class FileUploadServlet extends ZimbraServlet {
     /** Purge uploads once every minute. */
     private static final long REAPER_INTERVAL_MSEC = 1 * Constants.MILLIS_PER_MINUTE;
 
+    @Override
     public void init() throws ServletException {
         String name = getServletName();
-        mLog.info("Servlet " + name + " starting up");
+        mLog.info("Servlet %s starting up", name);
         super.init();
 
         File tempDir = new File(getUploadDir());
         if (!tempDir.exists()) {
-        	if (!tempDir.mkdirs()) {
+            if (!tempDir.mkdirs()) {
                 String msg = "Unable to create temporary upload directory " + tempDir;
                 mLog.error(msg);
                 throw new ServletException(msg);
@@ -713,15 +734,17 @@ public class FileUploadServlet extends ZimbraServlet {
         Zimbra.sTimer.schedule(new MapReaperTask(), REAPER_INTERVAL_MSEC, REAPER_INTERVAL_MSEC);
     }
 
+    @Override
     public void destroy() {
         String name = getServletName();
-        mLog.info("Servlet " + name + " shutting down");
+        mLog.info("Servlet %s shutting down", name);
         super.destroy();
     }
 
     private final class MapReaperTask extends TimerTask {
         MapReaperTask()  { }
 
+        @Override
         public void run() {
             try {
                 ArrayList<Upload> reaped = new ArrayList<Upload>();
@@ -742,19 +765,21 @@ public class FileUploadServlet extends ZimbraServlet {
                     }
                     sizeAfter = mPending.size();
                 }
-                if (mLog.isInfoEnabled()) {
-                    int removed = sizeBefore - sizeAfter;
-                    if (removed > 0)
-                        mLog.info("Removed " + removed + " expired file uploads; " +
-                            sizeAfter + " pending file uploads");
-                    else if (sizeAfter > 0)
-                        mLog.info(sizeAfter + " pending file uploads");
+
+                int removed = sizeBefore - sizeAfter;
+                if (removed > 0) {
+                    mLog.info("Removed %d expired file uploads; %d pending file uploads", removed, sizeAfter);
+                } else if (sizeAfter > 0) {
+                    mLog.info("%d pending file uploads", sizeAfter);
                 }
-                for (Upload up : reaped)
+
+                for (Upload up : reaped) {
                     up.purge();
+                }
             } catch (Throwable e) { //don't let exceptions kill the timer
-                if (e instanceof OutOfMemoryError)
+                if (e instanceof OutOfMemoryError) {
                     Zimbra.halt("Caught out of memory error", e);
+                }
                 ZimbraLog.system.warn("Caught exception in FileUploadServlet timer", e);
             }
         }
