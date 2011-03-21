@@ -138,6 +138,8 @@ public class RightManager {
         if (!fdir.isDirectory()) {
             throw ServiceException.FAILURE("rights directory is not a directory: " + dir, null);
         }
+        
+        ZimbraLog.acl.debug("Loading rights from " + fdir.getAbsolutePath());
                 
         File[] files = fdir.listFiles();
         List<File> yetToProcess = new ArrayList<File>(Arrays.asList(files));
@@ -396,7 +398,7 @@ public class RightManager {
 
             if (!seenRight) {
                 seenRight = true;
-                ZimbraLog.acl.debug("Loading " + file.getName());
+                ZimbraLog.acl.debug("Loading " + file.getAbsolutePath());
             }
             
             String name = eRight.attributeValue(A_NAME);
