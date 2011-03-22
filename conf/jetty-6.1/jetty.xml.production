@@ -73,7 +73,7 @@
     %%comment VAR:zimbraMailMode,<!--,https,redirect,mixed,both%% HTTPSEND -->
 
     <!-- user services connector, SSL with client certificate -->
-    <!-- HTTPSCLIENTCERTBEGIN %%comment VAR:zimbraMailSSLClientCertMode,-->,NeedClientAuth,WantClientAuth%%
+    <!-- HTTPSCLIENTCERTBEGIN %%uncomment VAR:zimbraMailSSLClientCertPort,-->,0%%
     <Call name="addConnector">
       <Arg>
         <New id="ssl-clientcert" class="org.mortbay.jetty.security.SslSelectChannelConnector">
@@ -95,7 +95,7 @@
         </New>
       </Arg>
     </Call>
-    %%comment VAR:zimbraMailSSLClientCertMode,<!--,NeedClientAuth,WantClientAuth%% HTTPSCLIENTCERTEND -->
+    %%uncomment VAR:zimbraMailSSLClientCertPort,<!--,0%% HTTPSCLIENTCERTEND -->
     
     <!-- =============================================================== -->
     <!-- Admin services connector; requires SSL -->
@@ -168,7 +168,7 @@
           Put this rule after the legacy rules (addRewriteRule) so this rule
           is evaluated after the certauth rule mapping is applied.
         -->
-        <!-- HTTPSCLIENTCERTBEGIN %%comment VAR:zimbraMailSSLClientCertMode,-->,NeedClientAuth,WantClientAuth%%
+        <!-- HTTPSCLIENTCERTBEGIN %%uncomment VAR:zimbraMailSSLClientCertPort,-->,0%%
         <Call name="addRule">
           <Arg>
             <New id="clientCertPortRule" class="com.zimbra.common.jetty.PortRule">
@@ -179,7 +179,7 @@
             </New>
           </Arg>
         </Call> 
-        %%comment VAR:zimbraMailSSLClientCertMode,<!--,NeedClientAuth,WantClientAuth%% HTTPSCLIENTCERTEND -->
+        %%uncomment VAR:zimbraMailSSLClientCertPort,<!--,0%% HTTPSCLIENTCERTEND -->
         
         <Set name="handler">
           <New id="Handlers" class="org.mortbay.jetty.handler.HandlerCollection">
