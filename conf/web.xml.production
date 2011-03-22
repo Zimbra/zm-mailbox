@@ -351,6 +351,7 @@
     <url-pattern>/preauth</url-pattern>
   </servlet-mapping>
   
+  <!-- HTTPSCLIENTCERTBEGIN %%uncomment VAR:zimbraMailSSLClientCertPort,-->,0%%
   <servlet-mapping>
     <servlet-name>CertAuthServlet</servlet-name>
     <url-pattern>/certauth/*</url-pattern>
@@ -360,6 +361,7 @@
     <servlet-name>CertAuthServlet</servlet-name>
     <url-pattern>/certauth</url-pattern>
   </servlet-mapping>
+  %%uncomment VAR:zimbraMailSSLClientCertPort,<!--,0%% HTTPSCLIENTCERTEND -->
 
   <servlet-mapping>
     <servlet-name>FileUploadServlet</servlet-name>
