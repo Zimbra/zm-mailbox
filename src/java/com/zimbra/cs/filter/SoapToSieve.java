@@ -25,6 +25,8 @@ import com.zimbra.cs.filter.FilterUtil.Flag;
 import com.zimbra.cs.filter.FilterUtil.NumberComparison;
 import com.zimbra.cs.filter.FilterUtil.StringComparison;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -153,12 +155,30 @@ public class SoapToSieve {
             String s = test.getAttribute(MailConstants.A_DATE_COMPARISON);
             s = s.toLowerCase();
             DateComparison comparison = DateComparison.fromString(s);
-            snippet = String.format("current_time :%s \"%s\"", comparison, test.getAttribute(MailConstants.A_TIME));
+            String time = test.getAttribute(MailConstants.A_TIME);
+            // validate time value
+            try {
+                new SimpleDateFormat("HHmm").parse(time);
+            } catch (ParseException e) {
+                throw ServiceException.INVALID_REQUEST("Invalid time: " + time, e);
+            }
+            snippet = String.format("current_time :%s \"%s\"", comparison, time);
         } else if (name.equals(MailConstants.E_CURRENT_DAY_OF_WEEK_TEST)) {
             String value = test.getAttribute(MailConstants.A_VALUE);
             String[] daysOfWeek = value.split(",");
-            for (int i = 0; i < daysOfWeek.length; i ++)
+            for (int i = 0; i < daysOfWeek.length; i ++) {
+                // first validate value
+                try {
+                    int day = Integer.valueOf(daysOfWeek[i]);
+                    if (day < 0 || day > 6)
+                        throw ServiceException.INVALID_REQUEST(
+                                "Day of week index must be from 0 (Sunday) to 6 (Saturday)", null);
+                } catch (NumberFormatException e) {
+                    throw ServiceException.INVALID_REQUEST("Invalid day of week index: " + daysOfWeek[i], e);
+                }
+
                 daysOfWeek[i] = StringUtil.enclose(daysOfWeek[i], '"');
+            }
             snippet = String.format("current_day_of_week :is %s",
                                     new StringBuilder().append('[').
                                             append(StringUtil.join(",", daysOfWeek)).
