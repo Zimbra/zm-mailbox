@@ -121,6 +121,16 @@ public final class DbMailbox {
         }
     }
 
+    public interface CreateDatabaseCallback {
+        public void create(DbConnection conn, int mailboxId, int groupId) throws ServiceException;
+    }
+    
+    public static void addCreateDatabaseCallback(CreateDatabaseCallback callback) {
+        callbacks.add(callback);
+    }
+    
+    private static final HashSet<CreateDatabaseCallback> callbacks = new HashSet<CreateDatabaseCallback>();
+    
     /**
      * Gets the next mailbox id.  If <tt>mailboxId</tt> is {@link Mailbox#ID_AUTO_INCREMENT} or
      * greater than the current <tt>next_mailbox_id</tt> value in the <tt>current_volumes</tt>
@@ -270,6 +280,7 @@ public final class DbMailbox {
 
         File file = new File(LC.mailboxd_directory.value() + "/../db/create_database.sql");
 
+        boolean succeeded = false;
         PreparedStatement stmt = null;
         try {
             String dbname = getDatabaseName(groupId);
@@ -293,12 +304,18 @@ public final class DbMailbox {
             String script = StringUtil.fillTemplate(template, vars);
             // note that DbUtil.executeScript ends with a COMMIT
             DbUtil.executeScript(conn, new StringReader(script));
+            succeeded = true;
         } catch (IOException e) {
             throw ServiceException.FAILURE("unable to read SQL statements from " + file.getPath(), e);
         } catch (SQLException e) {
             throw ServiceException.FAILURE("createMailboxDatabase(" + mailboxId + ")", e);
         } finally {
             DbPool.closeStatement(stmt);
+            if (succeeded) {
+                for (CreateDatabaseCallback callback : callbacks) {
+                    callback.create(conn, mailboxId, groupId);
+                }
+            }
         }
     }
 
