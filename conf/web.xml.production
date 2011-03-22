@@ -183,15 +183,17 @@
     <load-on-startup>5</load-on-startup>
   </servlet>
   
+  <!-- HTTPSCLIENTCERTBEGIN %%uncomment VAR:zimbraMailSSLClientCertPort,-->,0%%
   <servlet>
     <servlet-name>CertAuthServlet</servlet-name>
     <servlet-class>com.zimbra.cs.service.CertAuthServlet</servlet-class>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraMailSSLClientCertPort%%, 8443</param-value>
+      <param-value>%%zimbraMailSSLClientCertPort%%, 9443</param-value>
     </init-param>
     <load-on-startup>5</load-on-startup>
   </servlet>
+  %%uncomment VAR:zimbraMailSSLClientCertPort,<!--,0%% HTTPSCLIENTCERTEND -->
 
   <servlet>
     <servlet-name>PublicICalServlet</servlet-name>
