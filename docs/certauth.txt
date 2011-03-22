@@ -227,7 +227,7 @@ Certificate was added to keystore
 
 
 ----------------
-5. Configire Zimbra server to request client certificate
+5. Configure Zimbra server to request client certificate
 ----------------
 (A) Make sure zimbraMailMode on server is *not* http
 $ zmprov gs {server} zimbraMailMode
@@ -251,7 +251,7 @@ $ zmprov ms {server} zimbraMailSSLClientCertPort {port}
 
 
 (C) Two modes are supported for client certificate: 
-WantClientAuth and WantClientAuth.
+WantClientAuth and NeedClientAuth.
     
 Do a "zmprov desc -a zimbraMailSSLClientCertMode" for description 
 of this attribute and difference between the two modes.
