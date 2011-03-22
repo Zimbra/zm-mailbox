@@ -414,11 +414,11 @@
     </Ref>
     %%comment VAR:zimbraMailMode,<!--,https,redirect,mixed,both%% HTTPSEND -->
     
-    <!-- HTTPSCLIENTCERTBEGIN %%comment VAR:zimbraMailSSLClientCertMode,-->,NeedClientAuth,WantClientAuth%%
+    <!-- HTTPSCLIENTCERTBEGIN %%uncomment VAR:zimbraMailSSLClientCertPort,-->,0%%
     <Ref id="ssl-clientcert">
       <Call name="open"/>
     </Ref>
-    %%comment VAR:zimbraMailSSLClientCertMode,<!--,NeedClientAuth,WantClientAuth%% HTTPSCLIENTCERTEND -->
+    %%uncomment VAR:zimbraMailSSLClientCertPort,<!--,0%% HTTPSCLIENTCERTEND -->
     
     <Ref id="admin">
       <Call name="open"/>
