@@ -1153,12 +1153,13 @@
              3. start web server
              4. run the target "reset-the-world-stage2" -->
     <target name="reset-the-world" description="Reset the world">
+    	<!-- do not add any other ant calls in between reset-the-world-stage1 and stage2.
+    	     instead add them as a dependency of stage1 and stage2 targets. -->
         <antcall target="reset-the-world-stage1"/>
-      <antcall target="upgrade-domain-admin"/>
         <antcall target="reset-the-world-stage2"/>
     </target>
 
-    <target name="reset-the-world-stage1" depends="clean-opt-zimbra,clean,init"
+    <target name="reset-the-world-stage1" depends="clean-opt-zimbra,clean,init,upgrade-domain-admin"
       description="Cleans deployed files, compiles, and initializes /opt/zimbra."/>
 
     <target name="reset-the-world-stage2" depends="deploy-war,init-unittest"
