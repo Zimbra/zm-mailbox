@@ -122,7 +122,7 @@ An optional company name []:
 
 
 (C) Sign the user certificate request using the CA created in 1 and create the user certificate
-$ /opt/zimbra/openssl/bin/openssl ca -in user1.csr -cert ca.crt -keyfile ca.key -out user1.crt
+$ /opt/zimbra/openssl/bin/openssl ca -in user1.csr -cert ca.crt -keyfile ca.key -out user1.crt -policy policy_anything
 
 If you see:
 Using configuration from /opt/zimbra/openssl-1.0.0d/ssl/openssl.cnf
@@ -198,7 +198,7 @@ Copy the user1.p12 file to a location where you can access it from your web brow
 (B) To import a certificate in Firefox (Firefox 3.6 Mac):
 - Firefox -> preferences
 - Click on the Advanced tab
-- Under Certficates, select "Ask me everytime" for "When a server requests my personal certificate".
+- Under Certificates, select "Ask me every time" for "When a server requests my personal certificate".
 - Click on "View Certificates"
 - Click on the "Your Certificates" tab
 - Click on "import"
@@ -243,7 +243,7 @@ and admin(zimbraAdminPort) port should *not* be configured to request
 client certificate, because SSL mutual authentication will interfere with 
 other authentication options on the same port.
 
-SSL mutual authentication must be configured on its own port (e.g. 8443).
+SSL mutual authentication must be configured on its own port (e.g. 9443).
 
 To configure the SSL mutual authentication port:
 
@@ -272,66 +272,138 @@ zmmailboxdctl restart
 ==============
 III. Testing
 ==============
-SSL mutual authentication is supported for the Zimbra WEB Client(ZWC) and admin console.
+SSL mutual authentication is supported for Zimbra WEB Client(ZWC) and admin console.
 You can use either one of the following two ways for testing.
 
 (1) Browse directly to the certauth servlet
+    (without the virtual host and login/logout redirect settings)
 
+-----------
+Request URL
+-----------
 ZWC:
     https://{server}:{zimbraMailSSLClientCertPort}/certauth
 
 Admin console:
     https://{server}:{zimbraMailSSLClientCertPort}/certauth/admin
+    
+    
+--------------
+Login Behavior
+--------------
+- If a good client certificate is presented, user will be redirected to the 
+  requested webapp with a Zimbra auth token.  The webapp will adapt the Zimbra 
+  auth token and let user in.
+  
+- If client failed to present a client certificate, or if the system cannot 
+  authenticate/authorize the user by the client certificate:
+      - if zimbraMailSSLClientCertMode is WantClientAuth:
+        User will be redirected to the requested webapp, without a Zimbra auth token.
+        The webapp will show the regular username/password screen so user can login with 
+        his username/password if he has a Zimbra password.
+     
+      - if zimbraMailSSLClientCertMode is NeedClientAuth:
+            - if the client certificate is not present or cannot be authenticated 
+              by the CA chain, user will get a SSL handshake error (connection reset 
+              by peer).
+            - if the client certificate can be authenticated by the CA chain but the 
+              user cannot be authorized by Zimbra(e.g. no such user or zimbraAccountStatus 
+              of the user is not active), user will get a http 403 FORBIDDEN error.
 
-The /certauth servlet is where "authorization" happens.  It validates that the subject 
-in the client certificate is an active user provisionined on the system, then 
-generates a Zimbra auth token for it and redirect the request to the proper web app.
-   
-Note, do not confuse "authorization" with "authentication".  "Authentication" is the 
-process of validating the client certificate, it happens during SSL handshake,
-before the request gets to the /certauth servlet.
-   
-or 
 
-(2) Configure login URL + virtual host on domain, and browse to the default 
-URl for the webapp. 
+---------------
+Logout Behavior
+---------------
+When the "logout" button is clicked, user will be redirect to the regular entry 
+page of the webapp, which is usually the username/password screen.  User can login as 
+another user using Zimbra username/password.  
 
+
+(2) Configure virtual host and login/logout redirect URL on domain, and browse to the 
+    default URL for the webapp. 
+
+---------------------
+Setup and Request URL
+---------------------
 ZWC:
-    zmprov md {domain} zimbraVirtualHostname {server}
+    zmprov md {domain} +zimbraVirtualHostname +zimbraVirtualHostname {server}
     zmprov md {domain} zimbraWebClientLoginURL 'https://{server}:{zimbraMailSSLClientCertPort}/certauth'
     zmprov md {domain} zimbraWebClientLogoutURL '../?sso=1'
 
     browse to: 
-    http://{host}:{zimbraMailPort}
+    http://{server}:{zimbraMailPort}
     or
-    https://{host}:{zimbraMailSSLPort}
+    https://{server}:{zimbraMailSSLPort}
 
 
 Admin console:
-    zmprov md {domain} zimbraVirtualHostname {server}
+    zmprov md {domain} +zimbraVirtualHostname +zimbraVirtualHostname {server}
     zmprov md {domain} zimbraAdminConsoleLoginURL 'https://{server}:{zimbraMailSSLClientCertPort}/certauth/admin'
     zmprov md {domain} zimbraAdminConsoleLogoutURL '../?sso=1'
     
     browse to: 
-    https://{host}:{zimbraAdminPort}
+    https://{server}:{zimbraAdminPort}
     
     Note: This is not yet fully supported for admin console.
     
     Known bug: 
-      1. Admin console does not support the "/?ignoreLoginURL=1" query.  
-         If zimbraMailSSLClientCertMode is WantClientAuth and user choose to
-         not send a client certificate (or there isn't one), we redirect to 
+      1. Admin console does not support the "?ignoreLoginURL=1" query.  
+         If zimbraMailSSLClientCertMode is WantClientAuth and user choose not 
+         to send a client certificate (or there isn't one), we redirect to 
          the admon console entry page.  But if zimbraAdminConsoleLoginURL is 
-         set to the certauth URL, it will get a redirect loop.
+         set to the certauth URL, it will get into a redirect loop.
          
-      2. Admin console does not "../?sso=1" for zimbraAdminConsoleLogoutURL
+      2. Admin console does not support "?sso=1" for zimbraAdminConsoleLogoutURL
 
 
+Notes on zimbraVirtualHostname:
+  You can add virtual host names on domain that are different from the actual Zimbra server name and 
+  browse to the virtual hostname.
+  e.g. zmprov md {domain} +zimbraVirtualHostname virtual1.company.com +zimbraVirtualHostname virtual2.company.com
 
-Now, SSL mutual authentication will start.
+
+--------------
+Login Behavior
+--------------
+- User will be redirected to the certauth servlet.
+
+- If a good client certificate is presented, user will be redirected back to the 
+  requested webapp with a Zimbra auth token.  The webapp will adapt the Zimbra 
+  auth token and let user in.
+  
+- If client failed to present a client certificate, or if the system cannot 
+  authenticate/authorize the user by the client certificate:
+      - if zimbraMailSSLClientCertMode is WantClientAuth:
+        User will be redirected to the requested webapp, without a Zimbra auth token.
+        The webapp will ignore zimbraXXXLoginURL setting and will show the regular 
+        username/password screen so user can login with his username/password if 
+        he has a Zimbra password.
+     
+      - if zimbraMailSSLClientCertMode is NeedClientAuth:
+            - if the client certificate is not present or cannot be authenticated 
+              by the CA chain, user will get a SSL handshake error (connection reset 
+              by peer).
+            - if the client certificate can be authenticated by the CA chain but the 
+              user cannot be authorized by Zimbra(e.g. no such user or zimbraAccountStatus 
+              of the user is not active), user will get a http 403 FORBIDDEN error.
+    
+          
+---------------
+Logout Behavior
+---------------
+When the "logout" button is clicked, user will be redirect to the page set on the 
+zimbraXXXLogoutURL.  The way we set it (i.e.  /?sso=1), the webapp will display a 
+page with a "Launch" button.  When the "Launch" is clicked, user will be let into 
+the webapp again using the client certificate.
+
+            
+================================    
+SSL mutual authentication flow
+================================
 - In the handshake the server first proves to the client who it is by signing a
   random challenge sent by the client and returning the corresponding public
   certificate so that the client can check the signature.
+  
   In dev/QA environment, the server certificate is a self-signed certificate, if 
   you have not accepted it before, just accept it (follow the usual 
   "I understand the risks -> add exception, ...").

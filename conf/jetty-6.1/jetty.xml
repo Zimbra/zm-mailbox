@@ -85,7 +85,7 @@
     <Call name="addConnector">
       <Arg>
         <New id="ssl-clientcert" class="org.mortbay.jetty.security.SslSelectChannelConnector">
-          <Set name="Port">8443</Set>
+          <Set name="Port">9443</Set>
           <Set name="useDirectBuffers">false</Set>
           <Set name="maxIdleTime">30000</Set>
           <Set name="lowResourcesMaxIdleTime">1000</Set>
@@ -187,7 +187,7 @@
         <Call name="addRule">
           <Arg>
             <New id="clientCertPortRule" class="com.zimbra.common.jetty.PortRule">
-              <Set name="Port">8443</Set>
+              <Set name="Port">9443</Set>
               <Set name="Regex">^(/service/certauth)(/|/(.*))?$</Set>
               <Set name="HttpErrorStatusRegexNotMatched">403</Set>
               <Set name="HttpErrorReasonRegexNotMatched">errResourceNotAllowedOnPort</Set>
