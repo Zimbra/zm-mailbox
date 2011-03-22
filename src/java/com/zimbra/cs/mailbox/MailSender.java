@@ -105,7 +105,6 @@ public class MailSender {
     private int mCurrentHostIndex = 0;
     private List<String> mRecipients = new ArrayList<String>();
     private String mEnvelopeFrom;
-    private ItemId savedDraftId;
 
     public MailSender()  { }
 
@@ -311,18 +310,6 @@ public class MailSender {
      */
     protected Identity getIdentity() {
         return mIdentity;
-    }
-
-    /**
-     * Set the draftId associated with the message we are sending
-     */
-    public MailSender setSavedDraftId(ItemId draftId) {
-        this.savedDraftId = draftId;
-        return this;
-    }
-
-    protected ItemId getSavedDraftId() {
-        return savedDraftId;
     }
 
     /**

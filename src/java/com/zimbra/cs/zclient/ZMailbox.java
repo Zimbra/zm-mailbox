@@ -242,85 +242,88 @@ public class ZMailbox implements ToZJSONObject {
         }
 
         public String getClientIp() { return mClientIp; }
-        public void setClientIp(String clientIp) { mClientIp = clientIp; }
+        public Options setClientIp(String clientIp) { mClientIp = clientIp;  return this; }
 
         public String getAccount() { return mAccount; }
-        public void setAccount(String account) { mAccount = account; }
+        public Options setAccount(String account) { mAccount = account;  return this; }
 
         public AccountBy getAccountBy() { return mAccountBy; }
-        public void setAccountBy(AccountBy accountBy) { mAccountBy = accountBy; }
+        public Options setAccountBy(AccountBy accountBy) { mAccountBy = accountBy;  return this; }
 
         public String getTargetAccount() { return mTargetAccount; }
-        public void setTargetAccount(String targetAccount) { mTargetAccount = targetAccount; }
+        public Options setTargetAccount(String targetAccount) { mTargetAccount = targetAccount;  return this; }
 
         public AccountBy getTargetAccountBy() { return mTargetAccountBy; }
-        public void setTargetAccountBy(AccountBy targetAccountBy) { mTargetAccountBy = targetAccountBy; }
+        public Options setTargetAccountBy(AccountBy targetAccountBy) { mTargetAccountBy = targetAccountBy;  return this; }
 
         public String getPassword() { return mPassword; }
-        public void setPassword(String password) { mPassword = password; }
+        public Options setPassword(String password) { mPassword = password;  return this; }
 
         public String getNewPassword() { return mNewPassword; }
-        public void setNewPassword(String newPassword) { mNewPassword = newPassword; }
+        public Options setNewPassword(String newPassword) { mNewPassword = newPassword;  return this; }
 
         public String getVirtualHost() { return mVirtualHost; }
-        public void setVirtualHost(String virtualHost) { mVirtualHost = virtualHost; }
+        public Options setVirtualHost(String virtualHost) { mVirtualHost = virtualHost;  return this; }
 
         public ZAuthToken getAuthToken() { return mAuthToken; }
-        public void setAuthToken(ZAuthToken authToken) { mAuthToken = authToken; }
+        public Options setAuthToken(ZAuthToken authToken) { mAuthToken = authToken;  return this; }
         
         // AP-TODO-8: retire
-        public void setAuthToken(String authToken) { mAuthToken = new ZAuthToken(null, authToken, null); } 
+        public Options setAuthToken(String authToken) { mAuthToken = new ZAuthToken(null, authToken, null);  return this; } 
 
         public String getUri() { return mUri; }
-        public void setUri(String uri) {
+        public Options setUri(String uri) {
             setUri(uri, false);
+            return this;
         }
 
-        public void setUri(String uri, boolean isAdmin) {
+        public Options setUri(String uri, boolean isAdmin) {
             try {
                 mUri = resolveUrl(uri, isAdmin);
             } catch (ZClientException e) {
                 mUri = uri;
             }
+            return this;
         }
 
         public String getUserAgentName() { return mUserAgentName; }
         public String getUserAgentVersion() { return mUserAgentVersion; }
-        public void setUserAgent(String name, String version) {
+        public Options setUserAgent(String name, String version) {
             mUserAgentName = name;
             mUserAgentVersion = version;
+            return this;
         }
 
         public int getTimeout() { return mTimeout; }
-        public void setTimeout(int timeout) { mTimeout = timeout; }
+        public Options setTimeout(int timeout) { mTimeout = timeout;  return this; }
 
         public int getRetryCount() { return mRetryCount; }
-        public void setRetryCount(int retryCount) { mRetryCount = retryCount; }
+        public Options setRetryCount(int retryCount) { mRetryCount = retryCount;  return this; }
 
         public SoapTransport.DebugListener getDebugListener() { return mDebugListener; }
-        public void setDebugListener(SoapTransport.DebugListener listener) { mDebugListener = listener; }
+        public Options setDebugListener(SoapTransport.DebugListener listener) { mDebugListener = listener;  return this; }
 
         public SoapHttpTransport.HttpDebugListener getHttpDebugListener() { return mHttpDebugListener; }
-        public void setHttpDebugListener(SoapHttpTransport.HttpDebugListener listener) { mHttpDebugListener = listener; }
+        public Options setHttpDebugListener(SoapHttpTransport.HttpDebugListener listener) { mHttpDebugListener = listener;  return this; }
         
         public boolean getNoSession() { return mNoSession; }
-        public void setNoSession(boolean noSession) { mNoSession = noSession; }
+        public Options setNoSession(boolean noSession) { mNoSession = noSession;  return this; }
 
         public boolean getAuthAuthToken() { return mAuthAuthToken; }
         /** @param authAuthToken set to true if you want to send an AuthRequest to valid the auth token */
-        public void setAuthAuthToken(boolean authAuthToken) { mAuthAuthToken = authAuthToken; }
+        public Options setAuthAuthToken(boolean authAuthToken) { mAuthAuthToken = authAuthToken;  return this; }
 
         public ZEventHandler getEventHandler() { return mHandler; }
-        public void setEventHandler(ZEventHandler handler) { mHandler = handler; }
+        public Options setEventHandler(ZEventHandler handler) { mHandler = handler;  return this; }
 
         public List<String> getPrefs() { return mPrefs; }
-        public void setPrefs(List<String> prefs) { mPrefs = prefs; }
+        public Options setPrefs(List<String> prefs) { mPrefs = prefs;  return this; }
 
         public List<String> getAttrs() { return mAttrs; }
-        public void setAttrs(List<String> attrs) { mAttrs = attrs; }
+        public Options setAttrs(List<String> attrs) { mAttrs = attrs;  return this; }
 
         public String getRequestedSkin() { return mRequestedSkin; }
-        public void setRequestedSkin(String skin) { mRequestedSkin = skin; }
+        public Options setRequestedSkin(String skin) { mRequestedSkin = skin;  return this; }
     }
 
     private ZAuthToken mAuthToken;
@@ -3336,16 +3339,17 @@ public class ZMailbox implements ToZJSONObject {
         public List<String> getMessageIdsToAttach() { return mMessageIdsToAttach; }
         public void setMessageIdsToAttach(List<String> messageIdsToAttach) { mMessageIdsToAttach = messageIdsToAttach; }
 
-    public List<String> getDocIdsToAttach() { return mDocIdsToAttach; }
+        public List<String> getDocIdsToAttach() { return mDocIdsToAttach; }
         public void setDocIdsToAttach(List<String> docIdsToAttach) { mDocIdsToAttach = docIdsToAttach; }
 
 
         public List<AttachedMessagePart> getInlineMessagePartsToAttach() {
             List<AttachedMessagePart> attachments = new ArrayList<AttachedMessagePart>();
-            if(mMessagePartsToAttach == null || mMessagePartsToAttach.size() <= 0) return attachments;
-            for (AttachedMessagePart part: mMessagePartsToAttach){
-                if(part.getContentId() != null && !part.getContentId().equals("")){
-                    attachments.add(part);
+            if (!ListUtil.isEmpty(mMessagePartsToAttach)) {
+                for (AttachedMessagePart part: mMessagePartsToAttach) {
+                    if (part.getContentId() != null && !part.getContentId().equals("")) {
+                        attachments.add(part);
+                    }
                 }
             }
             return attachments;

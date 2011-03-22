@@ -35,6 +35,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.service.ServiceException;
@@ -47,10 +48,14 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.CalendarItem;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.CalendarDataSource;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -69,7 +74,9 @@ import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.mail.ParseMimeMessage.MimeMessageData;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -124,7 +131,8 @@ public class SendMsg extends MailDocumentHandler {
             do {
                 if (state == SendState.PENDING) {
                     try {
-                        delay -= RETRY_CHECK_PERIOD_MSECS;  Thread.sleep(RETRY_CHECK_PERIOD_MSECS);
+                        delay -= RETRY_CHECK_PERIOD_MSECS;
+                        Thread.sleep(RETRY_CHECK_PERIOD_MSECS);
                     } catch (InterruptedException ie) { }
                 }
 
@@ -152,16 +160,18 @@ public class SendMsg extends MailDocumentHandler {
                 }
 
                 savedMsgId = doSendMessage(octxt, mbox, mm, mimeData.newContacts, mimeData.uploads, iidOrigId,
-                    replyType, identityId, noSaveToSent, needCalendarSentByFixup, iidDraft);
+                                           replyType, identityId, noSaveToSent, needCalendarSentByFixup, iidDraft);
 
                 // (need to make sure that *something* gets recorded, because caching
                 //   a null ItemId makes the send appear to still be PENDING)
-                if (savedMsgId == null)
+                if (savedMsgId == null) {
                     savedMsgId = NO_MESSAGE_SAVED_TO_SENT;
+                }
 
                 // and record it in the table in case the client retries the send
-                if (sendRecord != null)
+                if (sendRecord != null) {
                     sendRecord.setSecond(savedMsgId);
+                }
             } catch (ServiceException e) {
                 clearPendingSend(mbox.getId(), sendRecord);
                 throw e;
@@ -171,10 +181,15 @@ public class SendMsg extends MailDocumentHandler {
             }
         }
 
+        if (iidDraft != null) {
+            deleteDraft(iidDraft, octxt, mbox, zsc);
+        }
+
         Element response = zsc.createElement(MailConstants.SEND_MSG_RESPONSE);
         Element respElement = response.addElement(MailConstants.E_MSG);
-        if (savedMsgId != null && savedMsgId != NO_MESSAGE_SAVED_TO_SENT && savedMsgId.getId() > 0)
+        if (savedMsgId != null && savedMsgId != NO_MESSAGE_SAVED_TO_SENT && savedMsgId.getId() > 0) {
             respElement.addAttribute(MailConstants.A_ID, ifmt.formatItemId(savedMsgId));
+        }
         return response;
     }
 
@@ -183,15 +198,16 @@ public class SendMsg extends MailDocumentHandler {
                                        boolean noSaveToSent, boolean needCalendarSentByFixup, ItemId draftId)
     throws ServiceException {
         
-        if (needCalendarSentByFixup)
+        if (needCalendarSentByFixup) {
             fixupICalendarFromOutlook(mbox, mm);
-        MailSender sender = mbox.getMailSender().setSavedDraftId(draftId);
-        if (noSaveToSent)
-            return sender.sendMimeMessage(oc, mbox, false, mm, newContacts, uploads,
-                                                        origMsgId, replyType, null, false);
-        else
-            return sender.sendMimeMessage(oc, mbox, mm, newContacts, uploads,
-                                                        origMsgId, replyType, identityId, false);
+        }
+
+        MailSender sender = mbox.getMailSender();
+        if (noSaveToSent) {
+            return sender.sendMimeMessage(oc, mbox, false, mm, newContacts, uploads, origMsgId, replyType, null, false);
+        } else {
+            return sender.sendMimeMessage(oc, mbox, mm, newContacts, uploads, origMsgId, replyType, identityId, false);
+        }
     }
 
     static MimeMessage parseUploadedMessage(ZimbraSoapContext zsc, String attachId, MimeMessageData mimeData) throws ServiceException {
@@ -248,23 +264,22 @@ public class SendMsg extends MailDocumentHandler {
 
         synchronized (sSentTokens) {
             List<Pair<String, ItemId>> sendData = sSentTokens.get(mailboxId);
-            if (sendData == null)
+            if (sendData == null) {
                 sSentTokens.put(mailboxId, sendData = new ArrayList<Pair<String, ItemId>>(MAX_SEND_UID_CACHE));
+            }
 
             for (Pair<String, ItemId> record : sendData) {
                 if (record.getFirst().equals(sendUid)) {
-                    if (record.getSecond() == null)
-                        state = SendState.PENDING;
-                    else
-                        state = SendState.SENT;
+                    state = record.getSecond() == null ? SendState.PENDING : SendState.SENT;
                     sendRecord = record;
                     break;
                 }
             }
 
             if (state == SendState.NEW) {
-                if (sendData.size() >= MAX_SEND_UID_CACHE)
+                if (sendData.size() >= MAX_SEND_UID_CACHE) {
                     sendData.remove(0);
+                }
                 sendRecord = new Pair<String, ItemId>(sendUid, null);
                 sendData.add(sendRecord);
             }
@@ -280,7 +295,31 @@ public class SendMsg extends MailDocumentHandler {
             }
         }
     }
-    
+
+
+    private void deleteDraft(ItemId iidDraft, OperationContext octxt, Mailbox localMbox, ZimbraSoapContext zsc) {
+        try {
+            if (iidDraft.belongsTo(localMbox)) {
+                localMbox.delete(octxt, iidDraft.getId(), MailItem.Type.MESSAGE);
+            } else if (iidDraft.isLocal()) {
+                Mailbox ownerMbox = MailboxManager.getInstance().getMailboxByAccountId(iidDraft.getAccountId());
+                ownerMbox.delete(octxt, iidDraft.getId(), MailItem.Type.MESSAGE);
+            } else {
+                Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, iidDraft.getAccountId());
+                AuthToken at = zsc.getAuthToken();
+                ZAuthToken zat = at.getProxyAuthToken() == null ? at.toZAuthToken() : new ZAuthToken(at.getProxyAuthToken());
+                ZMailbox.Options zoptions = new ZMailbox.Options(zat, AccountUtil.getSoapUri(target));
+                zoptions.setNoSession(true);
+                zoptions.setTargetAccount(target.getId()).setTargetAccountBy(Provisioning.AccountBy.id);
+                ZMailbox.getMailbox(zoptions).deleteMessage(iidDraft.toString());
+            }
+        } catch (ServiceException e) {
+            // draft delete failure mustn't affect response to SendMsg request
+            ZimbraLog.soap.info("failed to delete draft after message send: %s", iidDraft);
+        }
+    }
+
+
     private static void fixupICalendarFromOutlook(Mailbox ownerMbox, MimeMessage mm)
     throws ServiceException {
         MimeVisitor mv = new OutlookICalendarFixupMimeVisitor(ownerMbox.getAccount(), ownerMbox);
