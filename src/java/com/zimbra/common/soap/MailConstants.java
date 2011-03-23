@@ -1063,4 +1063,9 @@ public final class MailConstants {
     public static final String A_TS = "ts";
     public static final String A_ITEMID = "itemId";
     public static final String A_ITEM_NAME = "itemName";
+    
+     public static final String E_DEVICE = "device";
+     public static final String A_CREATED = "created";
+     public static final String A_ACCESSED = "accessed";
+
 }
