@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- *
+ * Copyright (C) 2008, 2009, 2010, 2011 Zimbra, Inc.
+ * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- *
+ * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -113,13 +113,10 @@ public class MimeHeader implements Cloneable {
         MESSAGE_ID("Message-ID", 12, true),
         IN_REPLY_TO("In-Reply-To", 13, true),
         REFERENCES("References", 14, true),
-        THREAD_TOPIC("Thread-Topic", 15, true),
-        THREAD_INDEX("Thread-Index", 16, true),
-        CONTENT_TYPE("Content-Type", 17, true),
-        CONTENT_DISPOSITION("Content-Disposition", 18, true),
-        CONTENT_TRANSFER_ENCODING("Content-Transfer-Encoding", 19, true),
-        MIME_VERSION("MIME-Version", 20, true),
-        DEFAULT(null, 35),
+        CONTENT_TYPE("Content-Type", 15, true),
+        CONTENT_DISPOSITION("Content-Disposition", 16, true),
+        CONTENT_TRANSFER_ENCODING("Content-Transfer-Encoding", 17, true),
+        DEFAULT(null, 30),
         CONTENT_LENGTH("Content-Length", 49, true),
         STATUS("Status", 50, true);
 
