@@ -190,17 +190,25 @@ final class RemoteFolder {
         if (mi.getUidValidity() <= 0) {
             mi.setUidValidity(1);
         }
+        if (mi.getExists() == -1) {
+            debug("Server did not provide EXISTS");
+            mi.setExists(1);
+        }
         return mi;
     }
 
     public MailboxInfo status() throws IOException {
-        MailboxInfo mi = connection.status(path, "UIDVALIDITY", "UIDNEXT");
+        MailboxInfo mi = connection.status(path, "UIDVALIDITY", "UIDNEXT", "MESSAGES");
         // Bug 35554: If server does not provide UIDVALIDITY, then assume a value of 1
         if (mi.getUidValidity() <= 0) {
             mi.setUidValidity(1);
         }
         if (!path.equals(mi.getName())) {
             path = mi.getName();
+        }
+        if (mi.getExists() == -1) {
+            debug("Server did not provide MESSAGES");
+            mi.setExists(1);
         }
         return mi;
     }
