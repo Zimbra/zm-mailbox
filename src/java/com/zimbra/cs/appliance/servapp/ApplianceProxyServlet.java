@@ -44,6 +44,7 @@ import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
+import com.zimbra.common.localconfig.LC;
 
 /**
  * @author pjoseph
@@ -57,8 +58,9 @@ public class ApplianceProxyServlet extends HttpServlet {
     private static final String FILENAME_PARAM = "filename";
     private static final String AUTH_PARAM = "cimauth";
     private static final String AUTH_BASIC = "basic";
-   
-
+    private static final int MAX_PROXY_HOPCOUNT = 3;
+    public static final String COOKIE_ZCA_VAMI_AUTH_TOKEN       = "ZCA_VAMI_AUTH_TOKEN";	  
+	
     
     private boolean canProxyHeader(String header) {
         if (header == null) return false;
@@ -101,6 +103,23 @@ public class ApplianceProxyServlet extends HttpServlet {
         }
     }
 
+
+    private static boolean hasZCAAuthCookie(HttpState state) {
+        Cookie[] cookies = state.getCookies();
+        if (cookies == null)
+            return false;
+
+        for (Cookie c: cookies) {
+            if (c.getName().equals(COOKIE_ZCA_VAMI_AUTH_TOKEN))
+                return true;
+        }
+        return false;
+    }
+
+    protected boolean isAdminRequest(HttpServletRequest req) {
+        return req.getServerPort() == LC.zimbra_admin_service_port.intValue();
+    }
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         doProxy(req, resp);
@@ -114,6 +133,23 @@ public class ApplianceProxyServlet extends HttpServlet {
     private static final String DEFAULT_CTYPE = "text/xml";
 
     private void doProxy(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+	boolean isAdmin = isAdminRequest(req);
+        if (!isAdmin)
+            return;
+	boolean hasZCAAuth = false;
+        javax.servlet.http.Cookie cookies[] = req.getCookies();
+        //String hostname = method.getURI().getHost();
+        if (cookies != null) {
+            for (int i = 0; i < cookies.length; i++) {
+                if (cookies[i].getName().equals(COOKIE_ZCA_VAMI_AUTH_TOKEN)){
+                    hasZCAAuth = true;
+                    continue;
+		}
+                //state.addCookie(new Cookie(hostname, cookies[i].getName(), cookies[i].getValue(), "/", null, false));
+            }
+        }
+	if (!hasZCAAuth) 
+		return;
 
         // get the posted body before the server read and parse them.
         byte[] body = copyPostedData(req);
@@ -126,8 +162,7 @@ public class ApplianceProxyServlet extends HttpServlet {
         }
 
         URL url = new URL(target);
-
-
+ 
         HttpMethod method = null;
         try {
             HttpClient client = new HttpClient();
