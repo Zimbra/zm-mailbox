@@ -140,7 +140,7 @@ public class SetCalendarItem extends CalendarRequest {
                 }
                 String reqCalItemId = inv.getAttribute(MailConstants.A_CAL_ID);
                 String uid = inv.getAttribute(MailConstants.A_UID);
-                boolean uidSame = (calItem == null || (calItem.getUid() == null && uid == null) || (calItem.getUid() != null && calItem.getUid().equals(uid))); //new or same as requested
+                boolean uidSame = (calItem == null || (calItem.getUid() == null && uid == null) || (calItem.getUid() != null && (calItem.getUid().equals(uid) || (Invite.isOutlookUid(calItem.getUid()) && calItem.getUid().equalsIgnoreCase(uid))))); //new or same as requested, or Outlook and case-insensitive equal
                 if (ZimbraLog.calendar.isInfoEnabled()) {
                     StringBuilder logBuf = new StringBuilder();
                     if (!reqCalItemId.equals(itemId)) {

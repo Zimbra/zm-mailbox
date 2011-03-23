@@ -2701,17 +2701,19 @@ public class Invite {
 
     private static final String OUTLOOK_GLOBAL_ID_PREFIX = "040000008200E00074C5B7101A82E008";
 
-    // Outlook-generated UIDs are supposed to be uppercase.  (bug 57727)
-    public static String fixupIfOutlookUid(String uid) {
+    public static boolean isOutlookUid(String uid) {
         if (uid == null)
-            return null;
+            return false;
         int len = uid.length();
         if (len >= 82 && len % 2 == 0 && isHexDigits(uid)) {
             String upper = uid.toUpperCase();
-            if (upper.startsWith(OUTLOOK_GLOBAL_ID_PREFIX)) {
-                return upper;
-            }
+            return upper.startsWith(OUTLOOK_GLOBAL_ID_PREFIX);
         }
-        return uid;
+        return false;
+    }
+    
+    // Outlook-generated UIDs are supposed to be uppercase.  (bug 57727)
+    public static String fixupIfOutlookUid(String uid) {
+        return isOutlookUid(uid) ? uid.toUpperCase() : uid;
     }
 }
