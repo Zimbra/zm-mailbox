@@ -2493,6 +2493,7 @@ public class Invite {
             else
                 ZimbraLog.calendar.warn("UID missing; subject=" + mName);
         }
+        mUid = fixupIfOutlookUid(mUid);
 
         // Don't let a task have DTSTART without DUE.
         if (isTodo() && mStart != null && mEnd == null)
@@ -2685,5 +2686,32 @@ public class Invite {
             return prio >= 6 && prio <= 9;
         }
         return false;
+    }
+
+    private static boolean isHexDigits(String str) {
+        int len = str.length();
+        for (int i = 0; i < len; ++i) {
+            char ch = str.charAt(i);
+            if ((ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'F') || (ch >= 'a' &&  ch <= 'f'))
+                continue;
+            return false;
+        }
+        return true;
+    }
+
+    private static final String OUTLOOK_GLOBAL_ID_PREFIX = "040000008200E00074C5B7101A82E008";
+
+    // Outlook-generated UIDs are supposed to be uppercase.  (bug 57727)
+    public static String fixupIfOutlookUid(String uid) {
+        if (uid == null)
+            return null;
+        int len = uid.length();
+        if (len >= 82 && len % 2 == 0 && isHexDigits(uid)) {
+            String upper = uid.toUpperCase();
+            if (upper.startsWith(OUTLOOK_GLOBAL_ID_PREFIX)) {
+                return upper;
+            }
+        }
+        return uid;
     }
 }

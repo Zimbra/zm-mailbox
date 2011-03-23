@@ -689,7 +689,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
 
         int mdVersion = meta.getVersion();
 
-        mUid = meta.get(Metadata.FN_UID, null);
+        mUid = Invite.fixupIfOutlookUid(meta.get(Metadata.FN_UID, null));
         mInvites = new ArrayList<Invite>();
 
         ICalTimeZone accountTZ = ICalTimeZone.getAccountTimeZone(getMailbox().getAccount());
