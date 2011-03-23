@@ -101,6 +101,7 @@
     <a n="zimbraExternalPop3Port"/>
     <a n="zimbraExternalPop3SSLHostname"/>
     <a n="zimbraExternalPop3SSLPort"/>
+    <a n="zimbraFeatureAntispamEnabled"/>
     <a n="zimbraFeatureCalendarUpsellURL"/>
     <a n="zimbraFeatureContactsUpsellURL"/>
     <a n="zimbraFeatureDiscardInFiltersEnabled"/>
@@ -137,6 +138,7 @@
     <a n="zimbraMailQuota"/>
     <a n="zimbraMailSpamLifetime"/>
     <a n="zimbraMailStatus"/>
+    <a n="zimbraMailThreadingAlgorithm"/>
     <a n="zimbraMailTrashLifetime"/>
     <a n="zimbraMailTrustedSenderListMaxNumEntries"/>
     <a n="zimbraMaxContactsPerPage"/>
@@ -146,6 +148,7 @@
     <a n="zimbraNewMailNotificationFrom"/>
     <a n="zimbraNewMailNotificationSubject"/>
     <a n="zimbraNotes"/>
+    <a n="zimbraPasswordAllowedChars"/>
     <a n="zimbraPasswordEnforceHistory"/>
     <a n="zimbraPasswordLocked"/>
     <a n="zimbraPasswordLockoutDuration"/>
@@ -157,6 +160,7 @@
     <a n="zimbraPasswordMaxAge"/>
     <a n="zimbraPasswordMaxLength"/>
     <a n="zimbraPasswordMinAge"/>
+    <a n="zimbraPasswordMinAlphaChars"/>
     <a n="zimbraPasswordMinLength"/>
     <a n="zimbraPasswordMinLowerCaseChars"/>
     <a n="zimbraPasswordMinNumericChars"/>
@@ -298,7 +302,9 @@
     <a n="zimbraPrefOutOfOfficeReply"/>
     <a n="zimbraPrefOutOfOfficeReplyEnabled"/>
     <a n="zimbraPrefOutOfOfficeUntilDate"/>
+    <a n="zimbraPrefPop3DeleteOption"/>
     <a n="zimbraPrefPop3DownloadSince"/>
+    <a n="zimbraPrefPop3IncludeSpam"/>
     <a n="zimbraPrefReadReceiptsToAddress"/>
     <a n="zimbraPrefReadingPaneEnabled"/>
     <a n="zimbraPrefReadingPaneLocation"/>
