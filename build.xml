@@ -646,7 +646,87 @@
         </war>
     </target>
 
-    <target name="spnego-dev-deploy" depends="spnego-war">
+    <target name="spnego-service-name">
+        <!--
+            Setup the service principal name registered with setspn and ktpass
+            it has to be a real routable name to reach the jetty server.
+            
+            This name is also used to create a zimbra server and provisioning a 
+            user on the server.
+            Note: such server and user is not needed if the test client box can 
+                  DNS resolve the home server of the user.
+                  But in dev env the server name is usually not a resolvble real 
+                  hostanme, but a simple name like myserver.local, which cannot 
+                  be resolved from the test client. (Windows 7 VM on jj-esx.spnego.local)
+        -->
+        
+        <!-- <property name="SERVICE_PRINCIPAL_NAME"     value="jj-server.spnego.local"/> -->
+        <!-- <property name="SERVICE_PRINCIPAL_NAME"     value="prome-2s-dhcp141.eng.vmware.com"/> -->
+        <exec executable="hostname" outputproperty="hostname-FQDN">
+            <arg value="-f"/>
+        </exec>
+        <property name="SERVICE_PRINCIPAL_NAME"     value="${hostname-FQDN}"/>
+        
+        <!-- 
+            Again, could've used just ${zimbra.server.hostname} for spnego.server.name if the 
+            test client box can DNS resolve the home server for the user.
+        -->
+        <property name="spnego.server.name"         value="${SERVICE_PRINCIPAL_NAME}"/>  
+    </target>
+
+    <target name="spnego-inject" depends="spnego-service-name">
+        <!-- 
+            Create a server with real hostname so it can be resolved from the test client box.
+            Create a user homed on this server.
+            (Calling this target is not required if the dev server hostname can be resolved on the test client box)
+        -->
+        <antcall target="zmprov">
+            <param name="args" value="-l cs ${spnego.server.name} 
+                                            zimbraSmtpHostname ${zimbra.smtp.host} 
+                                            zimbraSmtpPort 7024 
+                                            zimbraMailPort 7070 
+                                            zimbraMailSSLPort 7443 
+                                            zimbraMailMode http 
+                                            zimbraImapCleartextLoginEnabled TRUE 
+                                            zimbraPop3CleartextLoginEnabled TRUE 
+                                            zimbraServiceInstalled ldap 
+                                            zimbraServiceInstalled mta 
+                                            zimbraServiceInstalled mailbox 
+                                            zimbraServiceEnabled ldap 
+                                            zimbraServiceEnabled mta 
+                                            zimbraServiceEnabled mailbox 
+                                            zimbraMailPurgeSleepInterval 0"/>
+      </antcall>
+        
+      <antcall target="zmprov">
+          <param name="args" value="-l ca spnego@${defaultdomain.name} test123 
+                                            zimbraMailHost ${spnego.server.name} 
+                                            cn 'Spnego Demo User' 
+                                            displayName 'Spnego Demo User' 
+                                            zimbraForeignPrincipal kerberos5:spnego@${zimbra.kerberos.realm}"/>
+      </antcall>
+        
+      <!-- 
+          note: after done with spnego testing, remember to set the LC key zimbra_server_hostname 
+                back to your default server
+      -->     
+      <antcall target="zmlocalconfig">
+          <param name="localconfig-args" value="-e zimbra_server_hostname=${spnego.server.name}"/>
+      </antcall>
+        
+    </target>	
+
+    <!--
+        To test spnego:
+        - ant reset-all
+        - [ant spnego-inject]
+        - ant spnego-dev-deploy
+        
+        If you run service-deploy after this point, you need to retun spnego-dev-deploy,
+        but not spnego-inject.  spnego-inject only needs to be run once after reset-all.
+        
+    -->
+    <target name="spnego-dev-deploy" depends="spnego-war, spnego-service-name">
       <antcall target="stop-webserver"/>
 
       <delete file="${jetty.home.dir}/webapps/spnego.war"/>
@@ -664,16 +744,6 @@
       -->
 
       <!-- global config -->
-      <!--
-          this is the service principal name registered with setspn and ktpass
-          it has to be a real routable name to reach the jetty server
-      -->
-      <!-- <property name="SERVICE_PRINCIPAL_NAME"     value="jj-server.spnego.local"/> -->
-      <!-- <property name="SERVICE_PRINCIPAL_NAME"     value="prome-2s-dhcp141.eng.vmware.com"/> -->
-      <exec executable="hostname" outputproperty="hostname-FQDN">
-        <arg value="-f"/>
-        </exec>
-      <property name="SERVICE_PRINCIPAL_NAME"     value="${hostname-FQDN}"/>
       <echo>===== hostname for spnego: ${SERVICE_PRINCIPAL_NAME} =====</echo>
 
       <property name="zimbraSpnegoAuthEnabled"     value="TRUE"/>
@@ -686,11 +756,12 @@
 
       <!-- domain -->
       <property name="zimbraPreAuthKey"            value="4e2816f16c44fab20ecdee39fb850c3b0bb54d03f1d8e073aaea376a4f407f0c"/>
-      <property name="zimbraVirtualHostname"       value="${SERVICE_PRINCIPAL_NAME}"/>
+      <property name="zimbraVirtualHostname"       value="${spnego.server.name}"/>
       <property name="zimbraWebClientLoginURL"     value="../../spnego/spnego_preauth.jsp"/>
       <property name="zimbraWebClientLogoutURL"    value="../?sso=1"/>
       <property name="zimbraAuthKerberos5Realm"    value="${zimbraSpnegoAuthRealm}"/>
 
+      
       <!-- modify ldap -->
       <antcall target="zmprov">
         <param name="args" value="-l mcf zimbraSpnegoAuthEnabled ${zimbraSpnegoAuthEnabled}"/>
@@ -703,10 +774,10 @@
       </antcall>
 
       <antcall target="zmprov">
-        <param name="args" value="-l ms ${zimbra.server.hostname} zimbraSpnegoAuthPrincipal ${zimbraSpnegoAuthPrincipal}"/>
+        <param name="args" value="-l ms ${spnego.server.name} zimbraSpnegoAuthPrincipal ${zimbraSpnegoAuthPrincipal}"/>
       </antcall>
       <antcall target="zmprov">
-        <param name="args" value="-l ms ${zimbra.server.hostname} zimbraSpnegoAuthTargetName ${zimbraSpnegoAuthTargetName}"/>
+        <param name="args" value="-l ms ${spnego.server.name} zimbraSpnegoAuthTargetName ${zimbraSpnegoAuthTargetName}"/>
       </antcall>
 
       <antcall target="zmprov">
