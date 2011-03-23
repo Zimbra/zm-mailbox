@@ -1,3 +1,17 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2011 Zimbra, Inc.
+ * 
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.cs.service.authenticator;
 
 import java.io.IOException;
@@ -55,7 +69,8 @@ public abstract class SSOAuthenticator {
     }
     
     public static class SSOAuthenticatorServiceException extends AccountServiceException {
-        public static final String NO_CLIENT_CERTIFICATE        = "account.NO_CLIENT_CERTIFICATE";
+        public static final String NO_CLIENT_CERTIFICATE     = "account.NO_CLIENT_CERTIFICATE";
+        public static final String SENT_CHALLENGE            = "account.SENT_CHALLENGE";
         
         protected SSOAuthenticatorServiceException(String message, String code, boolean isReceiversFault, Throwable cause) {
             super(message, code, isReceiversFault, cause);
@@ -63,6 +78,10 @@ public abstract class SSOAuthenticator {
         
         public static SSOAuthenticatorServiceException NO_CLIENT_CERTIFICATE() {
             return new SSOAuthenticatorServiceException("no client certificate", NO_CLIENT_CERTIFICATE, SENDERS_FAULT, null);
+        }
+        
+        public static SSOAuthenticatorServiceException SENT_CHALLENGE() {
+            return new SSOAuthenticatorServiceException("sent challenge", SENT_CHALLENGE, SENDERS_FAULT, null);
         }
     }
     
@@ -78,7 +97,5 @@ public abstract class SSOAuthenticator {
     
     // should never return a null ZimbraPrincipal
     public abstract ZimbraPrincipal authenticate() throws ServiceException;
-    
-    public abstract boolean sentResponse();
 
 }
