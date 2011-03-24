@@ -226,7 +226,7 @@ public class ShareInfoData {
 
 
     public static ShareInfoData fromJaxbShareInfo(
-            com.zimbra.soap.admin.type.ShareInfo sInfo)
+            com.zimbra.soap.type.ShareInfo sInfo)
     throws ServiceException {
         ShareInfoData sid = new ShareInfoData();
 

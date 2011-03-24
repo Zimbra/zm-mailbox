@@ -29,7 +29,6 @@ import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.cs.extension.ExtensionUtil;
-import com.zimbra.soap.admin.type.AccountSelector;
 import com.zimbra.soap.admin.type.CacheEntrySelector;
 import com.zimbra.soap.admin.type.CalendarResourceSelector;
 import com.zimbra.soap.admin.type.CmdRightsInfo;
@@ -660,8 +659,11 @@ public abstract class Provisioning extends ZAttrProvisioning {
         }
 
         /* Convert to equivalent JAXB object */
-        public static AccountSelector.AccountBy toJaxb(AccountBy provAccountBy) throws ServiceException {
-            return AccountSelector.AccountBy.fromString(provAccountBy.toString());
+        public static com.zimbra.soap.type.AccountBy toJaxb(
+                AccountBy provAccountBy)
+        throws ServiceException {
+            return com.zimbra.soap.type.AccountBy.fromString(
+                    provAccountBy.toString());
         }
     }
 

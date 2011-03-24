@@ -47,7 +47,6 @@ import com.zimbra.common.util.AccountLogger;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.NamedEntry.Visitor;
@@ -64,7 +63,7 @@ import com.zimbra.soap.admin.message.*;
 import com.zimbra.soap.admin.type.AccountInfo;
 import com.zimbra.soap.admin.type.AccountLoggerInfo;
 import com.zimbra.soap.admin.type.AccountQuotaInfo;
-import com.zimbra.soap.admin.type.AccountSelector;
+import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.admin.type.AliasInfo;
 import com.zimbra.soap.admin.type.Attr;
 import com.zimbra.soap.admin.type.CacheEntrySelector;
@@ -88,7 +87,6 @@ import com.zimbra.soap.admin.type.GranteeSelector;
 import com.zimbra.soap.admin.type.LoggerInfo;
 import com.zimbra.soap.admin.type.MailboxByAccountIdSelector;
 import com.zimbra.soap.admin.type.MailboxWithMailboxId;
-import com.zimbra.soap.admin.type.NamedElement;
 import com.zimbra.soap.admin.type.PackageRightsInfo;
 import com.zimbra.soap.admin.type.PackageSelector;
 import com.zimbra.soap.admin.type.PublishFolderInfo;
@@ -630,6 +628,7 @@ public class SoapProvisioning extends Provisioning {
             mAuthToken = new ZAuthToken(e.getElement(AccountConstants.E_AUTH_TOKEN), false);
             mLifetime = e.getAttributeLong(AccountConstants.E_LIFETIME);
             mExpires = System.currentTimeMillis() + mLifetime;
+            @SuppressWarnings("unused")
             Element re = e.getOptionalElement(AccountConstants.E_REFERRAL);
         }
 
@@ -1658,7 +1657,7 @@ public class SoapProvisioning extends Provisioning {
     static void addAttrElementsMailService(Element req, Map<String, ? extends Object> attrs) throws ServiceException {
         if (attrs == null) return;
 
-        for (Entry entry : attrs.entrySet()) {
+        for (Entry<String, ? extends Object> entry : attrs.entrySet()) {
             String key = (String) entry.getKey();
             Object value = entry.getValue();
             if (value instanceof String) {
@@ -2170,7 +2169,7 @@ public class SoapProvisioning extends Provisioning {
         toXML(req, granteeType, granteeBy, grantee, secret);
         toXML(req, right, rightModifier);
 
-        Element resp = invoke(req);
+        invoke(req);
     }
 
     @Override
@@ -2182,7 +2181,7 @@ public class SoapProvisioning extends Provisioning {
         toXML(req, granteeType, granteeBy, grantee);
         toXML(req, right, rightModifier);
 
-        Element resp = invoke(req);
+        invoke(req);
     }
 
     @Override
@@ -2274,7 +2273,7 @@ public class SoapProvisioning extends Provisioning {
                 new GetPublishedShareInfoRequest(
                         DistributionListSelector.fromId(dl.getId()),
                         AccountSelector.fromId(ownerAcct.getId())));
-        for (com.zimbra.soap.admin.type.ShareInfo sInfo : rsp.getShareInfos()) {
+        for (com.zimbra.soap.type.ShareInfo sInfo : rsp.getShareInfos()) {
             ShareInfoData sid = ShareInfoData.fromJaxbShareInfo(sInfo);
             visitor.visit(sid);
         }
@@ -2287,7 +2286,7 @@ public class SoapProvisioning extends Provisioning {
         GetShareInfoResponse rsp = invokeJaxb(
                 new GetShareInfoRequest(
                         AccountSelector.fromId(ownerAcct.getId())));
-        for (com.zimbra.soap.admin.type.ShareInfo sInfo : rsp.getShareInfos()) {
+        for (com.zimbra.soap.type.ShareInfo sInfo : rsp.getShareInfos()) {
             ShareInfoData sid = ShareInfoData.fromJaxbShareInfo(sInfo);
             visitor.visit(sid);
         }
