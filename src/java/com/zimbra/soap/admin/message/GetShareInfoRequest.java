@@ -21,8 +21,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.AccountSelector;
-import com.zimbra.soap.admin.type.GranteeChooser;
+import com.zimbra.soap.type.AccountSelector;
+import com.zimbra.soap.type.GranteeChooser;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_GET_SHARE_INFO_REQUEST)

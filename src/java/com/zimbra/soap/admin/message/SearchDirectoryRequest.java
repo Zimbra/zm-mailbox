@@ -19,14 +19,12 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.AttributeSelectorImpl;
+import com.zimbra.soap.type.AttributeSelectorImpl;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_SEARCH_DIRECTORY_REQUEST)
-@XmlType(propOrder = {})
 public class SearchDirectoryRequest extends AttributeSelectorImpl {
 
     @XmlAttribute(name=AdminConstants.E_QUERY, required=false)

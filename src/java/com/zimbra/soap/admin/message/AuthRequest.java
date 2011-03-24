@@ -24,7 +24,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.AccountSelector;
+import com.zimbra.soap.type.AccountSelector;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_AUTH_REQUEST)

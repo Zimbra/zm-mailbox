@@ -23,7 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.admin.type.DistributionListSelector;
-import com.zimbra.soap.admin.type.AccountSelector;
+import com.zimbra.soap.type.AccountSelector;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_GET_PUBLISHED_SHARE_INFO_REQUEST)

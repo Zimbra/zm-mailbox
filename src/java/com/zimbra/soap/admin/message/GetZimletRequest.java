@@ -21,7 +21,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.AttributeSelectorImpl;
+import com.zimbra.soap.type.AttributeSelectorImpl;
 import com.zimbra.soap.admin.type.NamedElement;
 
 @XmlAccessorType(XmlAccessType.FIELD)

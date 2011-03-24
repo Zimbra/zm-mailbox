@@ -19,15 +19,13 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.AttributeSelectorImpl;
+import com.zimbra.soap.type.AttributeSelectorImpl;
 import com.zimbra.soap.admin.type.CosSelector;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_GET_COS_REQUEST)
-@XmlType(propOrder = {})
 public class GetCosRequest extends AttributeSelectorImpl {
 
     @XmlElement(name=AdminConstants.E_COS)

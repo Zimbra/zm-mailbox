@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -13,12 +13,12 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
+package com.zimbra.soap.account.message;
 
-public interface AttributeSelector {
-    public String getAttrs();
-    public AttributeSelector setAttrs(String attrs);
-    public AttributeSelector addAttrs(String attr);
-    public AttributeSelector addAttrs(String ... attrNames);
-    public AttributeSelector addAttrs(Iterable<String> attrs);
+import javax.xml.bind.annotation.XmlRootElement;
+
+import com.zimbra.common.soap.AccountConstants;
+
+@XmlRootElement(name=AccountConstants.E_GET_ALL_LOCALES_REQUEST)
+public class GetAllLocalesRequest {
 }

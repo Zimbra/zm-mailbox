@@ -21,7 +21,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.AccountSelector;
+import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.admin.type.DistributionListSelector;
 
 @XmlAccessorType(XmlAccessType.FIELD)

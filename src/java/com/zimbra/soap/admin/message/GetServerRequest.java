@@ -20,7 +20,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.ServerSelector;
-import com.zimbra.soap.admin.type.AttributeSelectorImpl;
+import com.zimbra.soap.type.AttributeSelectorImpl;
 
 @XmlRootElement(name=AdminConstants.E_GET_SERVER_REQUEST)
 public class GetServerRequest extends AttributeSelectorImpl {

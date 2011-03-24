@@ -13,14 +13,13 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
+package com.zimbra.soap.type;
 
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlRootElement;
 
 import com.google.common.collect.Lists;
 import com.google.common.base.Joiner;
@@ -28,12 +27,11 @@ import com.google.common.base.Joiner;
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement
 abstract public class AttributeSelectorImpl implements AttributeSelector {
 
     private static Joiner COMMA_JOINER = Joiner.on(",");
     private List<String> attrs = Lists.newArrayList();
-    
+
     public AttributeSelectorImpl() {
     }
 
@@ -56,13 +54,13 @@ abstract public class AttributeSelectorImpl implements AttributeSelector {
         }
         return this;
     }
-    
+
     public AttributeSelector addAttrs(String attr) {
         if (attr != null)
             attrs.add(attr);
         return this;
     }
-    
+
     public AttributeSelector addAttrs(String ... attrNames) {
         for (String attrName : attrNames) {
             addAttrs(attrName);
@@ -79,7 +77,8 @@ abstract public class AttributeSelectorImpl implements AttributeSelector {
         return this;
     }
 
-    @XmlAttribute(name=AdminConstants.A_ATTRS, required=false) public String getAttrs() {
+    @XmlAttribute(name=AdminConstants.A_ATTRS, required=false)
+    public String getAttrs() {
         if (attrs.size() == 0)
             return null;
         return COMMA_JOINER.join(attrs);

@@ -1,0 +1,7 @@
+<DumpSessionsResponse activeSessions="1" xmlns="urn:zimbraAdmin">
+  <imap activeAccounts="1" activeSessions="1">
+    <s sid="223" ld="1300295279212" zid="006584ae-cba0-400a-8414-f764ba3c7418" name="user1@gren-elliots-macbook-pro.local" cd="1300295279211">
+      <imap folder="INBOX" expunged="0" writable="1" dirty="0" size="222"/>
+    </s>
+  </imap>
+</DumpSessionsResponse>

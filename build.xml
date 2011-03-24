@@ -98,6 +98,8 @@
     <mkdir dir="${xml.schema.dir}"/>
     <schemagen srcdir="${src.java.dir}" destdir="${xml.schema.dir}">
       <classpath refid="class.path"/>
+      <exclude name="com/zimbra/soap/*.java"/>
+      <exclude name="com/zimbra/soap/util/*.java"/>
       <schema namespace="urn:zimbra" file="zimbra.xsd" />
       <schema namespace="urn:zimbraAccount" file="zimbraAccount.xsd" />
       <schema namespace="urn:zimbraAdmin" file="zimbraAdmin.xsd" />
@@ -182,13 +184,14 @@
   </target>
 
   <!-- WSDL client tests that require ZimbraServer installed and some setup in place -->
-  <target name="wsdl-test" depends="wsdl-test-compile" description="Run unit tests">
+  <target name="wsdl-test" depends="wsdl-test-compile" description="Run WSDL client unit tests">
     <delete dir="${wsdl.test.dir}" quiet="true"/>
     <mkdir dir="${wsdl.test.dir}/output"/>
     <mkdir dir="${wsdl.test.dir}/report"/>
-    <junit printsummary="on" haltonfailure="on" tempdir="${wsdl.test.dir}">
+    <junit printsummary="on" failureproperty="wsdl.junit.failure" tempdir="${wsdl.test.dir}">
       <classpath refid="wsdl.test.class.path"/>
       <classpath path="${wsdl.test.classes.dir}"/>
+      <assertions><enable/></assertions>
       <formatter type="xml"/>
       <batchtest todir="${wsdl.test.dir}/output">
         <fileset dir="${wsdl.test.src.dir}">
@@ -201,6 +204,7 @@
       <report todir="${wsdl.test.dir}/report"/>
     </junitreport>
     <echo>WSDL Test Report: ${wsdl.test.dir}/report/index.html</echo>
+    <fail if="wsdl.junit.failure" message="WSDL Unit test failed"/>
   </target>
 
   <!-- e.g. ant -DWSDLTEST=com.zimbra.soap.account.WSDLAuthRequestTest one-wsdl-test -->

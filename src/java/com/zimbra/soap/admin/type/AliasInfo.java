@@ -21,18 +21,16 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_ALIAS)
-@XmlType(propOrder = {})
 public class AliasInfo extends AdminObjectInfo {
 
     @XmlAttribute(name=AdminConstants.A_TARGETNAME, required=true)
     private final String targetName;
-    @XmlAttribute(name=AdminConstants.A_TYPE, required=true)
+    @XmlAttribute(name=AdminConstants.A_TYPE, required=false)
     private final String targetType;
 
     /**
@@ -50,9 +48,12 @@ public class AliasInfo extends AdminObjectInfo {
     public AliasInfo(String id, String name, Collection <Attr> attrs) {
         this(id, name, null, null, attrs);
     }
-    public AliasInfo(String id, String name, String targetName, Collection <Attr> attrs) {
+
+    public AliasInfo(String id, String name, String targetName,
+                    Collection <Attr> attrs) {
         this(id, name, targetName, null, attrs);
     }
+
     public AliasInfo(String id, String name, String targetName,
             String targetType, Collection <Attr> attrs) {
         super(id, name, attrs);

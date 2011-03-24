@@ -18,6 +18,7 @@ package com.zimbra.soap.account.type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlValue;
@@ -25,8 +26,11 @@ import javax.xml.bind.annotation.XmlValue;
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.zclient.ZClientException;
 
 /*
 <attr name="{name}">{value}</attr>
@@ -92,5 +96,36 @@ public class Attr {
             }
         }
         return attrs;
+    }
+
+    public static List <Attr> fromMap(Map<String, ? extends Object> attrs)
+    throws ServiceException {
+        List<Attr> newAttrs = Lists.newArrayList();
+        if (attrs == null) return newAttrs;
+
+        for (Entry<String, ? extends Object> entry : attrs.entrySet()) {
+            String key = (String) entry.getKey();
+            Object value = entry.getValue();
+            if (value == null) {
+                newAttrs.add(new Attr(key, (String) null));
+            } else if (value instanceof String) {
+                newAttrs.add(new Attr(key, (String) value));
+            } else if (value instanceof String[]) {
+                String[] values = (String[]) value;
+                if (values.length == 0) {
+                    // an empty array == removing the attr
+                    newAttrs.add(new Attr(key, (String) null));
+                } else {
+                    for (String v: values) {
+                        newAttrs.add(new Attr(key, v));
+                    }
+                }
+            } else {
+                throw ZClientException.CLIENT_ERROR(
+                        "invalid attr type: " + key + " "
+                        + value.getClass().getName(), null);
+            }
+        }
+        return newAttrs;
     }
 }

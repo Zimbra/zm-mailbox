@@ -18,7 +18,7 @@ package com.zimbra.soap.admin.message;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.AccountSelector;
+import com.zimbra.soap.type.AccountSelector;
 
 @XmlRootElement(name=AdminConstants.E_GET_ACCOUNT_INFO_REQUEST)
 public class GetAccountInfoRequest {

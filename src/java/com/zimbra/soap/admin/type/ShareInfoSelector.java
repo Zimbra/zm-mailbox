@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlEnum;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.type.AccountSelector;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ShareInfoSelector {
@@ -31,7 +32,7 @@ public class ShareInfoSelector {
     public enum PubShareInfoAction {
         // case must match protocol
         add, remove;
-        
+
         public static PubShareInfoAction fromString(String s)
         throws ServiceException {
             try {
@@ -57,15 +58,17 @@ public class ShareInfoSelector {
      */
     @SuppressWarnings("unused")
     private ShareInfoSelector() {
-        this((PubShareInfoAction)null, (PublishFolderInfo) null, (AccountSelector) null);
+        this((PubShareInfoAction)null, (PublishFolderInfo) null,
+                (AccountSelector) null);
     }
 
-    public ShareInfoSelector(PubShareInfoAction action, PublishFolderInfo folder) {
+    public ShareInfoSelector(PubShareInfoAction action,
+                PublishFolderInfo folder) {
         this(action, folder, (AccountSelector) null);
     }
 
-    public ShareInfoSelector(PubShareInfoAction action, PublishFolderInfo folder,
-            AccountSelector owner) {
+    public ShareInfoSelector(PubShareInfoAction action,
+                PublishFolderInfo folder, AccountSelector owner) {
         this.action = action;
         this.folder = folder;
         this.owner = owner;

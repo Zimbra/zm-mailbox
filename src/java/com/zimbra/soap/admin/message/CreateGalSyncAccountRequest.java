@@ -23,7 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.AdminAttrsImpl;
-import com.zimbra.soap.admin.type.AccountSelector;
+import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.admin.type.GalMode;
 
 @XmlAccessorType(XmlAccessType.FIELD)

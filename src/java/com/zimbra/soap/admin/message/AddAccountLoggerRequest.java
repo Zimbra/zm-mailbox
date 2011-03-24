@@ -22,7 +22,7 @@ import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.AccountSelector;
+import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.admin.type.LoggerInfo;
 
 @XmlAccessorType(XmlAccessType.NONE)

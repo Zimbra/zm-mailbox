@@ -13,37 +13,24 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
-
+package com.zimbra.soap.type;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlValue;
 
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.type.AccountBy;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class AccountSelector {
 
-    @XmlEnum
-    public enum AccountBy {
-        // case must match protocol
-        name, id, foreignPrincipal, adminName, appAdminName, krb5Principal;
-        
-        public static AccountBy fromString(String s) throws ServiceException {
-            try {
-                return AccountBy.valueOf(s);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
-            }
-        }
-    }
+    @XmlAttribute(name=AdminConstants.A_BY, required=true)
+    private final AccountBy accountBy;
 
-    @XmlValue private final String key;
-    @XmlAttribute(name=AdminConstants.A_BY) private final AccountBy accountBy;
+    @XmlValue
+    private final String key;
 
     /**
      * no-argument constructor wanted by JAXB

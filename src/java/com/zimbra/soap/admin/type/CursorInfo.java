@@ -19,34 +19,35 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
-import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class GranteeChooser {
+public class CursorInfo {
 
-    //See ACL.stringToType for valid (case insensitive) grantee types
-    @XmlAttribute(name=AdminConstants.A_TYPE, required=false)
-    private final String type;
-    @XmlAttribute(name=AdminConstants.A_ID, required=false)
+    @XmlAttribute(name=MailConstants.A_ID, required=false)
     private final String id;
-    @XmlAttribute(name=AdminConstants.A_NAME, required=false)
-    private final String name;
+
+    @XmlAttribute(name=MailConstants.A_SORTVAL, required=false)
+    private final String sortVal;
+
+    @XmlAttribute(name=MailConstants.A_ENDSORTVAL, required=false)
+    private final String endSortVal;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private GranteeChooser() {
-        this(null, null, null);
+    private CursorInfo() {
+        this((String) null, (String) null, (String) null);
     }
 
-    public GranteeChooser(String type, String id, String name) {
-        this.type = type;
+    public CursorInfo(String id, String sortVal, String endSortVal) {
         this.id = id;
-        this.name = name;
+        this.sortVal = sortVal;
+        this.endSortVal = endSortVal;
     }
 
-    public String getType() { return type; }
     public String getId() { return id; }
-    public String getName() { return name; }
+    public String getSortVal() { return sortVal; }
+    public String getEndSortVal() { return endSortVal; }
 }
