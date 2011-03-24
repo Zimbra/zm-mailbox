@@ -150,6 +150,19 @@ public class Alarm {
         mAttendees = attendees;
     }
 
+    public Alarm newCopy() throws ServiceException {
+        List<ZAttendee> attendees = null;
+        if (mAttendees != null) {
+            attendees = new ArrayList<ZAttendee>(mAttendees.size());
+            for (ZAttendee at : mAttendees) {
+                attendees.add(new ZAttendee(at));  // add a copy of attendee
+            }
+        }
+        // Assume mAttach is immutable.  No need to create a copy object.
+        return new Alarm(mAction, mTriggerType, mTriggerRelated, mTriggerRelative, mTriggerAbsolute,
+                         mRepeatDuration, mRepeatCount, mDescription, mSummary, mAttach, attendees);
+    }
+
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("action=").append(mAction.toString());
