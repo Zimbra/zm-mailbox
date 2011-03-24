@@ -226,9 +226,9 @@ public final class MockProvisioning extends Provisioning {
             String preAuth, Map<String, Object> authCtxt) {
         throw new UnsupportedOperationException();
     }
-    
+
     @Override
-    public void ssoAuthAccount(Account acct, AuthContext.Protocol proto, Map<String, Object> authCtxt) 
+    public void ssoAuthAccount(Account acct, AuthContext.Protocol proto, Map<String, Object> authCtxt)
     throws ServiceException {
         throw new UnsupportedOperationException();
     }
@@ -479,6 +479,14 @@ public final class MockProvisioning extends Provisioning {
     @Override
     public void removeMembers(DistributionList list, String[] member) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Identity getDefaultIdentity(Account account) throws ServiceException {
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(A_zimbraPrefIdentityName, DEFAULT_IDENTITY_NAME);
+        attrs.put(A_zimbraPrefIdentityId, account.getId());
+        return new Identity(account, DEFAULT_IDENTITY_NAME, account.getId(), attrs, this);
     }
 
     @Override
