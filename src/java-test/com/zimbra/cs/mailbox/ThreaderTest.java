@@ -77,7 +77,7 @@ public class ThreaderTest {
         return Provisioning.getInstance().getAccount("test@zimbra.com");
     }
 
-    private ParsedMessage getRootMessage() throws Exception {
+    static ParsedMessage getRootMessage() throws Exception {
         MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
         mm.setHeader("From", "Bob Evans <bob@example.com>");
         mm.setHeader("To", "Jimmy Dean <jdean@example.com>");
@@ -90,7 +90,7 @@ public class ThreaderTest {
         return new ParsedMessage(mm, false);
     }
 
-    private MimeMessage getSecondMessage() throws Exception {
+    static MimeMessage getSecondMessage() throws Exception {
         MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
         mm.setHeader("From", "Bob Evans <bob@example.com>");
         mm.setHeader("To", "Jimmy Dean <jdean@example.com>");

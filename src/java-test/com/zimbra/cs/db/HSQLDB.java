@@ -87,6 +87,8 @@ public final class HSQLDB extends Db {
     boolean supportsCapability(Capability capability) {
         switch (capability) {
             case REPLACE_INTO:
+            case LIMIT_CLAUSE:
+            case BITWISE_OPERATIONS:
                 return false;
             default:
                 return true;
