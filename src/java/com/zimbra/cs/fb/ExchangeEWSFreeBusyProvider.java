@@ -14,8 +14,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 
-import javax.activation.CommandInfo;
-import javax.activation.MailcapCommandMap;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
@@ -69,7 +67,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
 	public static final String TYPE_EWS = "ews";
     static ExchangeServicePortType service = null;
 
-    boolean Initialize(ServerInfo info) throws MalformedURLException {      
+    boolean Initialize(ServerInfo info) throws MalformedURLException {
         URL wsdlUrl = ExchangeWebService.class.getResource("/Services.wsdl");
         ExchangeWebService factory =
             new ExchangeWebService(wsdlUrl,
@@ -84,28 +82,6 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         ((BindingProvider)service).getRequestContext()
             .put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY, info.url);
 
-        MailcapCommandMap mailcapCommandMap = new MailcapCommandMap();
-        String hndlrStr = ";;x-java-content-handler=";
-        String mailcap = "text/plain" + hndlrStr + "com.sun.mail.handlers.text_plain;";
-        mailcapCommandMap.addMailcap(mailcap);
-        mailcap = "text/xml" + hndlrStr + "com.sun.mail.handlers.text_xml;";
-        mailcapCommandMap.addMailcap(mailcap);
-        mailcap = "application/xml" + hndlrStr + "com.sun.mail.handlers.text_xml;";
-        mailcapCommandMap.addMailcap(mailcap);
-        
-//        String[] mimeTypes = mailcapCommandMap.getMimeTypes();
-//        for (String mimeType : mimeTypes) {
-//          System.out.println(mimeType);
-//          ZimbraLog.fb.error(mimeType);
-//          CommandInfo[] commandInfos = mailcapCommandMap.getAllCommands(mimeType);
-//          for (CommandInfo inf : commandInfos) {
-//            System.out.println(" " + inf.getCommandName() + " : "
-//                + inf.getCommandClass());
-//            ZimbraLog.fb.error(" " + inf.getCommandName() + " : "
-//                + inf.getCommandClass());
-//          }
-//        }      
-        
         // TODO: make sure we're passing authentication
         return true;
     }
