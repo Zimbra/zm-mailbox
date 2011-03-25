@@ -46,11 +46,13 @@ public class AuthContext {
     public static final String AC_PROTOCOL = "proto";
 
     public enum Protocol {
+        client_certificate,
         http_basic,
         im,
         imap,
         pop3,
         soap,
+        spnego,
         zsync,
         
         //for internal use only

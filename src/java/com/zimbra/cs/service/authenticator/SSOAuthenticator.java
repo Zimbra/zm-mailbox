@@ -93,7 +93,7 @@ public abstract class SSOAuthenticator {
         this.resp = resp;
     }
     
-    public abstract String getAuthMethod();
+    public abstract String getAuthType();
     
     // should never return a null ZimbraPrincipal
     public abstract ZimbraPrincipal authenticate() throws ServiceException;

@@ -138,7 +138,9 @@ public class AccountServiceException extends ServiceException {
             return new AuthFailedServiceException("N/A", "N/A", reason, AUTH_FAILED, SENDERS_FAULT, t);
         }
 
-
+        public static AuthFailedServiceException AUTH_FAILED(String reason) {
+            return new AuthFailedServiceException("N/A", "N/A", reason, AUTH_FAILED, SENDERS_FAULT, null);
+        }
     }
 
     public static AccountServiceException CHANGE_PASSWORD() {

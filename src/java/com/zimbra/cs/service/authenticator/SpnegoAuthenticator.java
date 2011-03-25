@@ -44,24 +44,27 @@ public class SpnegoAuthenticator extends SSOAuthenticator {
     }
     
     @Override
-    public String getAuthMethod() {
+    public String getAuthType() {
         return "Spnego";
     }
     
     @Override
     public ZimbraPrincipal authenticate() throws ServiceException {
-        Principal principal = getPrincipal();
-        Account acct = getAccountByPrincipal(principal);
-        return new ZimbraPrincipal(principal.getName(), acct);
-    }
-    
-    private Principal getPrincipal() throws ServiceException {
         Request request = (req instanceof Request) ? (Request)req : null;
-                    
+        
         if (request == null) {
             throw ServiceException.FAILURE("not supported", null);
         }
         
+        Principal principal = getPrincipal(request);
+        Account acct = getAccountByPrincipal(principal);
+        ZimbraPrincipal zimbraPrincipal = new ZimbraPrincipal(principal.getName(), acct);
+        request.setUserPrincipal(zimbraPrincipal);
+        
+        return zimbraPrincipal;
+    }
+    
+    private Principal getPrincipal(Request request) throws ServiceException {
         Principal principal = null;
         
         try {
@@ -117,7 +120,7 @@ public class SpnegoAuthenticator extends SSOAuthenticator {
             if (user != null) {
                 ZimbraLog.account.debug("SpengoAuthenticator: obtained principal: " + user.getName());
 
-                // request.setAuthType(Constraint.__SPNEGO_AUTH);
+                request.setAuthType(getAuthType());
                 // request.setUserPrincipal(user);
                 response.addHeader(HttpHeaders.WWW_AUTHENTICATE, HttpHeaders.NEGOTIATE + " " + ((SpnegoUser)user).getToken());
                 

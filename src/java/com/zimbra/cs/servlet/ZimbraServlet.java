@@ -516,7 +516,7 @@ public class ZimbraServlet extends HttpServlet {
         return remoteIp.getOrigIP();
     }
 
-    protected void addRemoteIpToLoggingContext(HttpServletRequest req) {
+    public static void addRemoteIpToLoggingContext(HttpServletRequest req) {
         RemoteIP remoteIp = new RemoteIP(req, getTrustedIPs());
         remoteIp.addToLoggingContext();
     }
@@ -529,5 +529,9 @@ public class ZimbraServlet extends HttpServlet {
             ZimbraLog.misc.warn("failed to get trusted IPs, only localhost will be trusted", e);
         }
         return new RemoteIP.TrustedIPs(null);
+    }
+    
+    public static void addUAToLoggingContext(HttpServletRequest req) {
+        ZimbraLog.addUserAgentToContext(req.getHeader("User-Agent"));
     }
 }

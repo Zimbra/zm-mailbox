@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -27,6 +27,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.ZAttrProvisioning.MailSSLClientCertMode;
+import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.service.authenticator.SSOAuthenticator;
@@ -45,7 +46,7 @@ public class CertAuthServlet extends SSOServlet {
     public void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         ZimbraLog.clearContext();
         addRemoteIpToLoggingContext(req);
-        ZimbraLog.addUserAgentToContext(req.getHeader("User-Agent"));
+        addUAToLoggingContext(req);
         
         try {
             String url = req.getRequestURI();
@@ -73,17 +74,17 @@ public class CertAuthServlet extends SSOServlet {
                 }
             }
             
-            AuthToken authToken = authorize(req, authenticator, principal, isAdminRequest);
+            AuthToken authToken = authorize(req, AuthContext.Protocol.client_certificate, principal, isAdminRequest);
             setAuthTokenCookieAndRedirect(req, resp, principal.getAccount(), authToken);
             
         } catch (ServiceException e) {
             if (e instanceof AuthFailedServiceException) {
                 AuthFailedServiceException afe = (AuthFailedServiceException)e;
-                ZimbraLog.account.info("failed to authenticate by client certificate: " + afe.getMessage() + afe.getReason(", %s"));
+                ZimbraLog.account.info("client certificate auth failed: " + afe.getMessage() + afe.getReason(", %s"));
             } else {
-                ZimbraLog.account.info("failed to authenticate by client certificate: " + e.getMessage());
+                ZimbraLog.account.info("client certificate auth failed: " + e.getMessage());
             }
-            ZimbraLog.account.debug("failed to authenticate by client certificate", e);
+            ZimbraLog.account.debug("client certificate auth failed", e);
             resp.sendError(HttpServletResponse.SC_FORBIDDEN, e.getMessage());
         }
     }

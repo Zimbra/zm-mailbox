@@ -22,6 +22,22 @@
   </filter-mapping>
 
   <filter>
+    <filter-name>SpnegoFilter</filter-name>
+    <filter-class>com.zimbra.cs.servlet.SpnegoFilter</filter-class>
+    
+    <init-param>
+      <param-name>passThruOnFailureUri</param-name>
+      <param-value>/service/spnego</param-value>
+    </init-param>
+    
+  </filter>
+  
+  <filter-mapping>
+    <filter-name>SpnegoFilter</filter-name>
+    <url-pattern>/spnego/*</url-pattern>
+  </filter-mapping>
+  
+  <filter>
     <filter-name>GzipFilter</filter-name>
     <filter-class>org.mortbay.servlet.jetty.IncludableGzipFilter</filter-class>
 
@@ -196,6 +212,16 @@
   %%uncomment VAR:zimbraMailSSLClientCertPort,<!--,0%% HTTPSCLIENTCERTEND -->
 
   <servlet>
+    <servlet-name>SpnegoAuthServlet</servlet-name>
+    <servlet-class>com.zimbra.cs.service.SpnegoAuthServlet</servlet-class>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7443, 7071</param-value>
+    </init-param>
+    <load-on-startup>5</load-on-startup>
+  </servlet>
+  
+  <servlet>
     <servlet-name>PublicICalServlet</servlet-name>
     <servlet-class>com.zimbra.cs.service.PublicICalServlet</servlet-class>
     <init-param>
@@ -363,6 +389,16 @@
   </servlet-mapping>
   %%uncomment VAR:zimbraMailSSLClientCertPort,<!--,0%% HTTPSCLIENTCERTEND -->
 
+  <servlet-mapping>
+    <servlet-name>SpnegoAuthServlet</servlet-name>
+    <url-pattern>/spnego/</url-pattern>
+  </servlet-mapping>
+  
+  <servlet-mapping>
+    <servlet-name>SpnegoAuthServlet</servlet-name>
+    <url-pattern>/spnego</url-pattern>
+  </servlet-mapping>
+  
   <servlet-mapping>
     <servlet-name>FileUploadServlet</servlet-name>
     <url-pattern>/upload</url-pattern>
