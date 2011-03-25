@@ -24,7 +24,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
@@ -32,13 +31,12 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.service.authenticator.SSOAuthenticator;
 import com.zimbra.cs.service.authenticator.SSOAuthenticator.ZimbraPrincipal;
 import com.zimbra.cs.servlet.ZimbraServlet;
 
 public abstract class SSOServlet extends ZimbraServlet {
     
-    protected AuthToken authorize(HttpServletRequest req, SSOAuthenticator authenticator, 
+    protected AuthToken authorize(HttpServletRequest req, AuthContext.Protocol proto, 
             ZimbraPrincipal principal, boolean isAdminRequest) 
     throws ServiceException {
         
@@ -50,8 +48,7 @@ public abstract class SSOServlet extends ZimbraServlet {
         Provisioning prov = Provisioning.getInstance();
         Account acct = principal.getAccount();
         
-        // use soap for the protocol for now. should we use a new protocol for each SSO method?
-        prov.ssoAuthAccount(acct, AuthContext.Protocol.soap, authCtxt); 
+        prov.ssoAuthAccount(acct, proto, authCtxt); 
         
         if (isAdminRequest) {
             if (!AccessManager.getInstance().isAdequateAdminAccount(acct)) {
@@ -61,8 +58,10 @@ public abstract class SSOServlet extends ZimbraServlet {
         
         AuthToken authToken = AuthProvider.getAuthToken(acct, isAdminRequest);
         
+        /*
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                new String[] {"cmd", authenticator.getAuthMethod(), "account", acct.getName(), "admin", isAdminRequest+""}));
+                new String[] {"cmd", authType, "account", acct.getName(), "admin", isAdminRequest+""}));
+        */
         
         return authToken;
     }

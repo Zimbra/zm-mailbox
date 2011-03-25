@@ -16,23 +16,17 @@
 package com.zimbra.cs.service;
 
 import java.io.IOException;
+import java.security.Principal;
 
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.mortbay.jetty.Server;
-import org.mortbay.jetty.security.SpnegoUserRealm;
-import org.mortbay.jetty.security.UserRealm;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
-import com.zimbra.cs.service.authenticator.SpnegoAuthenticator;
-import com.zimbra.cs.service.authenticator.SSOAuthenticator;
-import com.zimbra.cs.service.authenticator.SSOAuthenticator.SSOAuthenticatorServiceException;
+import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.service.authenticator.SSOAuthenticator.ZimbraPrincipal;
 
 public class SpnegoAuthServlet extends SSOServlet {
@@ -41,7 +35,7 @@ public class SpnegoAuthServlet extends SSOServlet {
     public void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         ZimbraLog.clearContext();
         addRemoteIpToLoggingContext(req);
-        ZimbraLog.addUserAgentToContext(req.getHeader("User-Agent"));
+        addUAToLoggingContext(req);
         
         boolean isAdminRequest = false;
         boolean isFromZCO = false;
@@ -50,36 +44,33 @@ public class SpnegoAuthServlet extends SSOServlet {
             isAdminRequest = isOnAdminPort(req);
             isFromZCO = isFromZCO(req);
             
-            SpnegoUserRealm userRealm = getSpnegoUserRealm();
-            SSOAuthenticator authenticator = new SpnegoAuthenticator(req, resp, userRealm);
-            ZimbraPrincipal principal = null;
+            Principal principal = req.getUserPrincipal();
             
-            try {
-                principal = authenticator.authenticate();
-            } catch (SSOAuthenticatorServiceException e) {
-                if (SSOAuthenticatorServiceException.SENT_CHALLENGE.equals(e.getCode())) {
-                    return;
-                } else {
-                    throw e;
-                }
-            }                
-                
-            AuthToken authToken = authorize(req, authenticator, principal, isAdminRequest);
+            if (principal == null) {
+                throw AuthFailedServiceException.AUTH_FAILED("no principal");
+            }
+            
+            if (!(principal instanceof ZimbraPrincipal)) {
+                throw AuthFailedServiceException.AUTH_FAILED(principal.getName(), "not ZimbraPrincipal", (Throwable)null);
+            }
+            
+            ZimbraPrincipal zimbraPrincipal = (ZimbraPrincipal)principal;   
+            AuthToken authToken = authorize(req, AuthContext.Protocol.spnego, zimbraPrincipal, isAdminRequest);
                 
             if (isFromZCO) {
                 setAuthTokenCookieAndReturn(req, resp, authToken);
             } else {
-                setAuthTokenCookieAndRedirect(req, resp, principal.getAccount(), authToken);
+                setAuthTokenCookieAndRedirect(req, resp, zimbraPrincipal.getAccount(), authToken);
             }
             
         } catch (ServiceException e) {
             if (e instanceof AuthFailedServiceException) {
                 AuthFailedServiceException afe = (AuthFailedServiceException)e;
-                ZimbraLog.account.info("failed to authenticate by spnego: " + afe.getMessage() + afe.getReason(", %s"));
+                ZimbraLog.account.info("spnego auth failed: " + afe.getMessage() + afe.getReason(", %s"));
             } else {
-                ZimbraLog.account.info("failed to authenticate by spnego: " + e.getMessage());
+                ZimbraLog.account.info("spnego auth failed: " + e.getMessage());
             }
-            ZimbraLog.account.debug("failed to authenticate by spnego", e);
+            ZimbraLog.account.debug("spnego auth failed", e);
             
             if (isFromZCO) {
                 resp.sendError(HttpServletResponse.SC_FORBIDDEN, e.getMessage());
@@ -98,27 +89,4 @@ public class SpnegoAuthServlet extends SSOServlet {
     public void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         doGet(req, resp);
     }
-    
-    private SpnegoUserRealm getSpnegoUserRealm() throws ServiceException {
-        ServletContext servletContext = getServletContext(); 
-        if (servletContext instanceof org.mortbay.jetty.handler.ContextHandler.SContext) {
-            org.mortbay.jetty.handler.ContextHandler.SContext sContext = (org.mortbay.jetty.handler.ContextHandler.SContext)servletContext;
-            
-            // get the WebAppContext
-            org.mortbay.jetty.handler.ContextHandler contextHandler = sContext.getContextHandler();
-            
-            Server server = contextHandler.getServer();
-            UserRealm[] userRealms = server.getUserRealms();
-            for (UserRealm realm : userRealms) {
-                String realmName = realm.getName();
-                if (realm instanceof SpnegoUserRealm) {
-                    ZimbraLog.account.debug("Found spnego user realm: [" + realmName + "]");
-                    return (SpnegoUserRealm)realm;
-                }
-            }
-        }
-        
-        throw ServiceException.FAILURE("no spnego user realm", null);
-    }
-
 }

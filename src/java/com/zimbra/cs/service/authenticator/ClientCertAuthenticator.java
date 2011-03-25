@@ -40,7 +40,8 @@ public class ClientCertAuthenticator extends SSOAuthenticator {
         super(req, resp);
     }
     
-    public String getAuthMethod() {
+    @Override
+    public String getAuthType() {
         return "ClientCert";
     }
     
