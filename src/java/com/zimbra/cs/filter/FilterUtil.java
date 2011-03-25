@@ -194,15 +194,6 @@ public class FilterUtil {
     }
 
     /**
-     * Removes escape characters from a Sieve string literal.
-     */
-    public static String unescape(String s) {
-        s = s.replace("\\\"", "\"");
-        s = s.replace("\\\\", "\\");
-        return s;
-    }
-
-    /**
      * Adds a value to the given <tt>Map</tt>.  If <tt>initialKey</tt> already
      * exists in the map, uses the next available index instead.  This way we
      * guarantee that we don't lose data if the client sends two elements with
