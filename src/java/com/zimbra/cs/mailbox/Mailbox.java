@@ -268,12 +268,12 @@ public class Mailbox {
                 return recorder.getOperation();
             return null;
         }
-        
+
         void addPremodifyItem(MailItem item) {
             if (mDirty != null) {
                 if (mDirty.preModifyItems == null)
                     mDirty.preModifyItems = new HashMap<Integer,MailItem>();
-                
+
                 if (!mDirty.preModifyItems.containsKey(item.mId)) {
                     try {
                         mDirty.preModifyItems.put(item.mId, snapshotItem(item));
@@ -282,7 +282,7 @@ public class Mailbox {
                 }
             }
         }
-        
+
         void setTimestamp(long millis) {
             if (depth == 1)
                 timestamp = millis;
@@ -487,10 +487,10 @@ public class Mailbox {
                     migrateWikiFolders();
                 }
 
-                if (!version.atLeast(1, 11)) {
-                    ZimbraLog.mailbox.info("Upgrade mailbox from %s to 1.11", getVersion());
-                    MailboxUpgrade.upgradeTo1_11(this);
-                    updateVersion(new MailboxVersion((short) 1, (short) 11));
+                if (!version.atLeast(2, 0)) {
+                    ZimbraLog.mailbox.info("Upgrade mailbox from %s to 2.0", getVersion());
+                    MailboxUpgrade.upgradeTo2_0(this);
+                    updateVersion(new MailboxVersion((short) 2, (short) 0));
                 }
             }
 
@@ -1960,7 +1960,7 @@ public class Mailbox {
         }
 
         snapshot.preModifyItems = pms.preModifyItems;
-        
+
         return snapshot;
     }
 
@@ -2016,7 +2016,7 @@ public class Mailbox {
                 item = MailItem.getById(this, id, type);
             }
             return item;
-            
+
         } finally {
             if (item != null) {
                 mCurrentChange.addPremodifyItem(item);
@@ -2075,7 +2075,7 @@ public class Mailbox {
 
         MailItem items[] = new MailItem[ids.length];
         try {
-            
+
             if (fromDumpster) {
                 for (int i = 0; i < items.length; ++i) {
                     int id = ids[i];
@@ -2085,9 +2085,9 @@ public class Mailbox {
                 }
                 return items;
             }
-    
+
             Set<Integer> uncached = new HashSet<Integer>();
-    
+
             // try the cache first
             Integer miss = null;
             boolean relaxType = false;
@@ -2122,14 +2122,14 @@ public class Mailbox {
             }
             if (uncached.isEmpty())
                 return items;
-    
+
             // the tag and folder caches contain ALL tags and folders, so cache miss == doesn't exist
             if (isCachedType(type))
                 throw MailItem.noSuchItem(miss.intValue(), type);
-    
+
             // cache miss, so fetch from the database
             MailItem.getById(this, uncached, relaxType ? MailItem.Type.UNKNOWN : type);
-    
+
             uncached.clear();
             for (int i = 0; i < ids.length; i++) {
                 if (ids[i] != ID_AUTO_INCREMENT && items[i] == null) {
@@ -2151,7 +2151,7 @@ public class Mailbox {
                     }
                 }
             }
-    
+
             // special case asking for VirtualConversation but having it be a real Conversation
             if (!uncached.isEmpty()) {
                 MailItem.getById(this, uncached, MailItem.Type.CONVERSATION);
@@ -2166,7 +2166,7 @@ public class Mailbox {
                     }
                 }
             }
-    
+
             return items;
         } finally {
             if (items != null) {
@@ -7473,7 +7473,7 @@ public class Mailbox {
             return;
 
         MailboxListener.ChangeNotification notification = null;
-        
+
         // save for notifications (below)
         PendingModifications dirty = null;
         if (change.mDirty != null && change.mDirty.hasNotifications()) {
@@ -7571,7 +7571,7 @@ public class Mailbox {
             // make sure we're ready for the next change
             change.reset();
         }
-        
+
         if (notification != null) {
             for (Session session : mListeners) {
                 try {

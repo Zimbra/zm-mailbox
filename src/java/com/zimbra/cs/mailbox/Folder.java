@@ -75,7 +75,7 @@ public class Folder extends MailItem {
 
     protected byte    mAttributes;
     protected MailItem.Type defaultView;
-    private List<Folder> mSubfolders;
+    private List<Folder> subfolders;
     private long      mTotalSize;
     private Folder    mParent;
     private ACL       mRights;
@@ -92,12 +92,12 @@ public class Folder extends MailItem {
         super(mbox, ud);
 
         switch (getType()) {
-        case FOLDER:
-        case SEARCHFOLDER:
-        case MOUNTPOINT:
-            break;
-        default:
-            throw new IllegalArgumentException();
+            case FOLDER:
+            case SEARCHFOLDER:
+            case MOUNTPOINT:
+                break;
+            default:
+                throw new IllegalArgumentException();
         }
     }
 
@@ -469,22 +469,25 @@ public class Folder extends MailItem {
 
     /** Returns whether the folder contains any subfolders. */
     public boolean hasSubfolders() {
-        return (mSubfolders != null && !mSubfolders.isEmpty());
+        return (subfolders != null && !subfolders.isEmpty());
     }
 
-    /** Returns the subfolder with the given name.  Name comparisons are
-     *  case-insensitive.
+    /**
+     * Returns the subfolder with the given name.  Name comparisons are case-insensitive.
      *
      * @param name  The folder name to search for.
-     * @return The matching subfolder, or <tt>null</tt> if no such folder
-     *         exists. */
+     * @return The matching subfolder, or {@code null} if no such folder exists.
+     */
     Folder findSubfolder(String name) {
-        if (name == null || mSubfolders == null)
+        if (name == null || subfolders == null) {
             return null;
+        }
         name = StringUtil.trimTrailingSpaces(name);
-        for (Folder subfolder : mSubfolders)
-            if (subfolder != null && name.equalsIgnoreCase(subfolder.getName()))
+        for (Folder subfolder : subfolders) {
+            if (subfolder != null && name.equalsIgnoreCase(subfolder.getName())) {
                 return subfolder;
+            }
+        }
         return null;
     }
 
@@ -497,21 +500,23 @@ public class Folder extends MailItem {
         }
     }
 
-    /** Returns an unmodifiable list of the folder's subfolders sorted by
-     *  name.  The sort is case-insensitive.
-     * @throws ServiceException */
+    /**
+     * Returns an unmodifiable list of the folder's subfolders sorted by name.  The sort is case-insensitive.
+     */
     public List<Folder> getSubfolders(OperationContext octxt) throws ServiceException {
-        if (mSubfolders == null)
+        if (subfolders == null) {
             return Collections.emptyList();
-
-        Collections.sort(mSubfolders, new SortByName());
-        if (octxt == null || octxt.getAuthenticatedUser() == null)
-            return Collections.unmodifiableList(mSubfolders);
-
-        ArrayList<Folder> visible = new ArrayList<Folder>();
-        for (Folder subfolder : mSubfolders)
-            if (subfolder.canAccess(ACL.RIGHT_READ, octxt.getAuthenticatedUser(), octxt.isUsingAdminPrivileges()))
+        }
+        Collections.sort(subfolders, new SortByName());
+        if (octxt == null || octxt.getAuthenticatedUser() == null) {
+            return Collections.unmodifiableList(subfolders);
+        }
+        List<Folder> visible = new ArrayList<Folder>();
+        for (Folder subfolder : subfolders) {
+            if (subfolder.canAccess(ACL.RIGHT_READ, octxt.getAuthenticatedUser(), octxt.isUsingAdminPrivileges())) {
                 visible.add(subfolder);
+            }
+        }
         return visible;
     }
 
@@ -525,9 +530,11 @@ public class Folder extends MailItem {
 
     private List<Folder> accumulateHierarchy(List<Folder> list) {
         list.add(this);
-        if (mSubfolders != null)
-            for (Folder subfolder : mSubfolders)
+        if (subfolders != null) {
+            for (Folder subfolder : subfolders) {
                 subfolder.accumulateHierarchy(list);
+            }
+        }
         return list;
     }
 
@@ -920,14 +927,6 @@ public class Folder extends MailItem {
         saveMetadata();
     }
 
-    private void recursiveAlterUnread(boolean unread) throws ServiceException {
-        alterUnread(unread);
-        if (mSubfolders != null) {
-            for (Folder subfolder : mSubfolders)
-                subfolder.recursiveAlterUnread(unread);
-        }
-    }
-
     /** Updates the unread state of all items in the folder.  Persists the
      *  change to the database and cache, and also updates the unread counts
      *  for the folder and the affected items' parents and {@link Tag}s
@@ -1065,28 +1064,39 @@ public class Folder extends MailItem {
      *
      * @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *        {@link ACL#RIGHT_DELETE} on the folder being moved */
-    @Override boolean move(Folder target) throws ServiceException {
+    @Override
+    boolean move(Folder target) throws ServiceException {
         markItemModified(Change.MODIFIED_FOLDER | Change.MODIFIED_PARENT);
-        if (mData.folderId == target.getId())
+        if (mData.folderId == target.getId()) {
             return false;
-        if (!isMovable())
+        }
+        if (!isMovable()) {
             throw MailServiceException.IMMUTABLE_OBJECT(mId);
-        if (!canAccess(ACL.RIGHT_DELETE))
+        }
+        if (!canAccess(ACL.RIGHT_DELETE)) {
             throw ServiceException.PERM_DENIED("you do not have the required permissions");
-        if (target.getId() != Mailbox.ID_FOLDER_TRASH && target.getId() != Mailbox.ID_FOLDER_SPAM && !target.canAccess(ACL.RIGHT_INSERT))
+        }
+        if (target.getId() != Mailbox.ID_FOLDER_TRASH && target.getId() != Mailbox.ID_FOLDER_SPAM &&
+                !target.canAccess(ACL.RIGHT_INSERT)) {
             throw ServiceException.PERM_DENIED("you do not have the required permissions");
-        if (!target.canContain(this))
+        }
+        if (!target.canContain(this)) {
             throw MailServiceException.CANNOT_CONTAIN();
+        }
 
-        // moving a folder to the Trash marks its contents as read
-        if (!inTrash() && target.inTrash())
-            recursiveAlterUnread(false);
+        boolean fromTrash = inTrash();
+        boolean toTrash = target.inTrash();
+        if (!fromTrash && toTrash) { // moving this folder into Trash
+            onSoftDelete();
+        } else if (fromTrash && !toTrash) { // moving this folder out of Trash
+            onSoftRecover();
+        }
 
         // tell the folder's old and new parents
         mParent.removeChild(this);
         target.addChild(this);
 
-        ZimbraLog.mailop.info("moving " + getMailopContext(this) + " to " + getMailopContext(target));
+        ZimbraLog.mailop.info("moving %s to %s", getMailopContext(this), getMailopContext(target));
 
         // and update the folder's data (in memory and DB)
         mData.folderId = target.getId();
@@ -1097,6 +1107,33 @@ public class Folder extends MailItem {
         return true;
     }
 
+    private void onSoftDelete() throws ServiceException {
+        alterUnread(false);
+        if (defaultView == Type.CONTACT) {
+            for (Contact contact : mMailbox.getContactList(null, getId())) { //TODO may cause OOME
+                contact.onSoftDelete();
+            }
+        }
+        if (subfolders != null) { // call on all sub folders recursively
+            for (Folder subfolder : subfolders) {
+                subfolder.onSoftDelete();
+            }
+        }
+    }
+
+    private void onSoftRecover() throws ServiceException {
+        if (defaultView == Type.CONTACT) {
+            for (Contact contact : mMailbox.getContactList(null, getId())) { //TODO may cause OOME
+                contact.onSoftRecover();
+            }
+        }
+        if (subfolders != null) { // call on all sub folders recursively
+            for (Folder subfolder : subfolders) {
+                subfolder.onSoftRecover();
+            }
+        }
+    }
+
     @Override void addChild(MailItem child) throws ServiceException {
         addChild(child, true);
     }
@@ -1105,8 +1142,9 @@ public class Folder extends MailItem {
         if (child == null || !canParent(child)) {
             throw MailServiceException.CANNOT_CONTAIN();
         } else if (child == this) {
-            if (mId != Mailbox.ID_FOLDER_ROOT)
+            if (mId != Mailbox.ID_FOLDER_ROOT) {
                 throw MailServiceException.CANNOT_CONTAIN();
+            }
         } else if (!(child instanceof Folder)) {
             super.addChild(child);
         } else {
@@ -1114,21 +1152,24 @@ public class Folder extends MailItem {
                 markItemModified(Change.MODIFIED_CHILDREN);
             }
             Folder subfolder = (Folder) child;
-            if (mSubfolders == null) {
-                mSubfolders = new ArrayList<Folder>();
+            if (subfolders == null) {
+                subfolders = new ArrayList<Folder>();
             } else {
                 Folder existing = findSubfolder(subfolder.getName());
-                if (existing == child)
+                if (existing == child) {
                     return;
-                if (existing != null)
+                }
+                if (existing != null) {
                     throw MailServiceException.ALREADY_EXISTS(subfolder.getName());
+                }
             }
-            mSubfolders.add(subfolder);
+            subfolders.add(subfolder);
             subfolder.mParent = this;
         }
     }
 
-    @Override void removeChild(MailItem child) throws ServiceException {
+    @Override
+    void removeChild(MailItem child) throws ServiceException {
         if (child == null) {
             throw MailServiceException.CANNOT_CONTAIN();
         } else if (!(child instanceof Folder)) {
@@ -1136,12 +1177,14 @@ public class Folder extends MailItem {
         } else {
             markItemModified(Change.MODIFIED_CHILDREN);
             Folder subfolder = (Folder) child;
-            if (mSubfolders == null)
+            if (subfolders == null) {
                 throw MailServiceException.IS_NOT_CHILD();
-            int index = mSubfolders.indexOf(subfolder);
-            if (index == -1)
+            }
+            int index = subfolders.indexOf(subfolder);
+            if (index == -1) {
                 throw MailServiceException.IS_NOT_CHILD();
-            mSubfolders.remove(index);
+            }
+            subfolders.remove(index);
             subfolder.mParent = null;
         }
     }
@@ -1176,7 +1219,7 @@ public class Folder extends MailItem {
 
     /** Deletes just this folder without affecting its subfolders. */
     void deleteSingleFolder(boolean writeTombstones) throws ServiceException {
-        ZimbraLog.mailbox.info("deleting folder " + getPath() + ", id=" + getId());
+        ZimbraLog.mailbox.info("deleting folder id=%d,path=%s", getId(), getPath());
         super.delete(hasSubfolders() ? DeleteScope.CONTENTS_ONLY : DeleteScope.ENTIRE_ITEM, writeTombstones);
     }
 
@@ -1212,6 +1255,11 @@ public class Folder extends MailItem {
         }
         if (info.cascadeIds != null) {
             info.modifiedIds.removeAll(info.cascadeIds);
+        }
+        if (info.contacts > 0 && !inTrash()) {
+            for (Contact contact : mMailbox.getContactList(null, getId())) { //TODO may cause OOME
+                contact.onHardDelete(false);
+            }
         }
         super.propagateDeletion(info);
     }

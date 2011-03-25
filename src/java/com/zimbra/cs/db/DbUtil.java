@@ -47,7 +47,7 @@ import com.zimbra.cs.db.DbPool.DbConnection;
  *
  * @author bburtin
  */
-public class DbUtil {
+public final class DbUtil {
 
     public static final int INTEGER_TRUE = 1;
     public static final int INTEGER_FALSE = 0;
@@ -65,6 +65,9 @@ public class DbUtil {
     private static final Pattern PAT_TRAILING_SPACE = Pattern.compile("\\s+$");
     private static final Pattern PAT_MULTIPLE_SPACES = Pattern.compile("\\s+");
     private static final Pattern PAT_IN_CLAUSE = Pattern.compile("IN \\([^\\)]+\\)", Pattern.DOTALL);
+
+    private DbUtil() {
+    }
 
     /**
      * Converts a <tt>java.util.Date</tt> to a <tt>java.sql.Timestamp</tt>.
@@ -112,14 +115,10 @@ public class DbUtil {
     /**
      * Executes the specified query using the specified connection.
      *
-     * @throws ServiceException if the query cannot be executed or an error
-     * occurs while retrieving results
+     * @throws ServiceException if the query cannot be executed or an error occurs while retrieving results
      */
-    public static DbResults executeQuery(DbConnection conn, String query, Object[] params)
-    throws ServiceException {
+    public static DbResults executeQuery(DbConnection conn, String query, Object... params) throws ServiceException {
         PreparedStatement stmt = null;
-        DbResults results = null;
-
         try {
             stmt = conn.prepareStatement(query);
 
@@ -128,78 +127,35 @@ public class DbUtil {
                     stmt.setObject(i + 1, params[i]);
             }
             ResultSet rs = stmt.executeQuery();
-            results = new DbResults(rs);
+            return new DbResults(rs);
         } catch (SQLException e) {
-            String message = "SQL: '" + query + "'";
-            throw ServiceException.FAILURE(message, e);
+            throw ServiceException.FAILURE("SQL: '" + query + "'", e);
         } finally {
-            DbPool.closeStatement(stmt);
+            conn.closeQuietly(stmt);
         }
-
-        return results;
-    }
-
-    /**
-     * Executes the specified query using a connection from the connection pool.
-     *
-     * @throws ServiceException if the query cannot be executed or an error
-     * occurs while retrieving results
-     */
-    public static DbResults executeQuery(DbConnection conn, String query, Object param)
-    throws ServiceException {
-        Object[] params = { param };
-        return executeQuery(conn, query, params);
     }
 
     /**
      * Executes the specified query using the specified connection.
      *
-     * @throws ServiceException if the query cannot be executed or an error
-     * occurs while retrieving results
+     * @throws ServiceException if the query cannot be executed or an error occurs while retrieving results
      */
-    public static DbResults executeQuery(DbConnection conn, String query)
-    throws ServiceException {
-        return executeQuery(conn, query, null);
+    public static DbResults executeQuery(DbConnection conn, String query) throws ServiceException {
+        return executeQuery(conn, query);
     }
 
     /**
      * Executes the specified query using a connection from the connection pool.
      *
-     * @throws ServiceException if the query cannot be executed or an error
-     * occurs while retrieving results
+     * @throws ServiceException if the query cannot be executed or an error occurs while retrieving results
      */
-    public static DbResults executeQuery(String query, Object[] params)
-    throws ServiceException {
-        DbConnection conn = null;
+    public static DbResults executeQuery(String query, Object... params) throws ServiceException {
+        DbConnection conn = DbPool.getConnection();
         try {
-            conn = DbPool.getConnection();
             return executeQuery(conn, query, params);
         } finally {
-            DbPool.quietClose(conn);
+            conn.closeQuietly();
         }
-    }
-
-    /**
-     * Executes the specified query using a connection from the connection pool.
-     *
-     * @throws ServiceException if the query cannot be executed or an error
-     * occurs while retrieving results
-     */
-    public static DbResults executeQuery(String query, Object param)
-    throws ServiceException {
-        Object[] params = { param };
-        return executeQuery(query, params);
-    }
-
-    /**
-     * Executes the specified query using a connection from the connection pool.
-     *
-     * @throws ServiceException if the query cannot be executed or an error
-     * occurs while retrieving results
-     */
-    public static DbResults executeQuery(String query)
-    throws ServiceException {
-        return executeQuery(query, null);
     }
 
     /**

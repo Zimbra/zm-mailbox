@@ -1,20 +1,16 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/*
- * Created on Jul 7, 2004
  */
 package com.zimbra.cs.db;
 
@@ -30,6 +26,7 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.cs.util.Config;
 
 /**
+ * @since Jul 7, 2004
  * @author tim
  */
 public class Versions {
@@ -37,20 +34,20 @@ public class Versions {
     private static Log mLog = LogFactory.getLog(Versions.class);
 
     /**
-     * The DB_VERSION is stored into the config table of the DB when the DB is created.  
+     * The DB_VERSION is stored into the config table of the DB when the DB is created.
      * If the DB_VERSION does not match our server's version, we will not run.
-     * 
+     *
      * UPDATE THESE TO REQUIRE RESET-WORLD TO BE RUN
-     *  
+     *
      */
-    public static final String DB_VERSION = "67";
+    public static final String DB_VERSION = "68";
 
     /**
-     * The INDEX_VERSION is stored into the config table of the DB when the DB is created.  
+     * The INDEX_VERSION is stored into the config table of the DB when the DB is created.
      * If the INDEX_VERSION does not match our server's version, we will not run.
      *
      * UPDATE THESE TO REQUIRE RESET-WORLD TO BE RUN
-     *  
+     *
      */
     public static final String INDEX_VERSION = "2";
 
@@ -89,7 +86,7 @@ public class Versions {
 
     public static void usage(Options options) {
         HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp(Versions.class.getName(), options); 
+        formatter.printHelp(Versions.class.getName(), options);
         System.exit(1);
     }
 

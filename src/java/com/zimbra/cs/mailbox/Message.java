@@ -27,6 +27,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Strings;
 import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
@@ -40,6 +41,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.ZAttrProvisioning.PrefCalendarApptVisibility;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
+import com.zimbra.cs.db.DbMailAddress;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.localconfig.DebugConfig;
@@ -450,10 +452,9 @@ public class Message extends MailItem {
                               dinfo, noICal, cal, extended, new MessageCreateFactory());
     }
 
-    protected static Message createInternal(int id, Folder folder, Conversation conv, ParsedMessage pm, StagedBlob staged,
-                                            boolean unread, int flags, long tags, DraftInfo dinfo,
-                                            boolean noICal, ZVCalendar cal, CustomMetadataList extended, MessageCreateFactory fact)
-    throws ServiceException {
+    static Message createInternal(int id, Folder folder, Conversation conv, ParsedMessage pm, StagedBlob staged,
+            boolean unread, int flags, long tags, DraftInfo dinfo, boolean noICal, ZVCalendar cal,
+            CustomMetadataList extended, MessageCreateFactory fact) throws ServiceException {
         if (folder == null || !folder.canContain(Type.MESSAGE)) {
             throw MailServiceException.CANNOT_CONTAIN(folder, Type.MESSAGE);
         }
@@ -463,6 +464,16 @@ public class Message extends MailItem {
         Mailbox mbox = folder.getMailbox();
         Account acct = mbox.getAccount();
 
+        String sender = pm.getSenderEmail();
+        int senderId = -1;
+        if (!Strings.isNullOrEmpty(sender)) {
+            String addr = sender.trim().toLowerCase();
+            senderId = DbMailAddress.getId(mbox.getOperationConnection(), mbox, addr);
+            if (senderId < 0) {
+                senderId = DbMailAddress.save(mbox.getOperationConnection(), mbox, addr, 0);
+            }
+        }
+
         List<Invite> components = null;
         String methodStr = null;
         // Skip calendar processing if message is being filed as spam or trash.
@@ -470,10 +481,9 @@ public class Message extends MailItem {
             // XXX: shouldn't we just be checking flags for Flag.FLAG_FROM_ME?
             //   boolean sentByMe = (flags & Flag.FLAG_FROM_ME) != 0;
             boolean sentByMe = false;
-            String pmSender = pm.getSenderEmail();
-            if (pmSender != null && pmSender.length() > 0)
-                sentByMe = AccountUtil.addressMatchesAccount(acct, pmSender);
-
+            if (!Strings.isNullOrEmpty(sender)) {
+                sentByMe = AccountUtil.addressMatchesAccount(acct, sender);
+            }
             try {
                 components = Invite.createFromCalendar(acct, pm.getFragment(), cal, sentByMe, mbox, id);
                 methodStr = cal.getPropVal(ICalTok.METHOD, ICalTok.PUBLISH.toString()).toUpperCase();
@@ -494,27 +504,29 @@ public class Message extends MailItem {
 
         // make sure the received date is not negative or in the future
         long date = pm.getReceivedDate(), now = System.currentTimeMillis();
-        if (date < 0 || date > now)
+        if (date < 0 || date > now) {
             date = now;
-
+        }
         UnderlyingData data = new UnderlyingData();
-        data.id          = id;
-        data.type        = fact.getType().toByte();
-        if (conv != null)
+        data.id = id;
+        data.type = fact.getType().toByte();
+        if (conv != null) {
             data.parentId = conv.getId();
-        data.folderId    = folder.getId();
+        }
+        data.folderId = folder.getId();
         if (!folder.inSpam() || acct.getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false)) {
             data.indexId = IndexStatus.DEFERRED.id();
         }
-        data.locator     = staged.getLocator();
-        data.imapId      = id;
-        data.date        = (int) (date / 1000);
-        data.size        = staged.getSize();
+        data.locator = staged.getLocator();
+        data.imapId = id;
+        data.senderId = senderId;
+        data.date = (int) (date / 1000);
+        data.size = staged.getSize();
         data.setBlobDigest(staged.getDigest());
-        data.flags       = flags & (Flag.FLAGS_MESSAGE | Flag.FLAGS_GENERIC);
-        data.tags        = tags;
-        data.subject     = pm.getNormalizedSubject();
-        data.metadata    = encodeMetadata(DEFAULT_COLOR_RGB, 1, extended, pm, flags, dinfo, null, null);
+        data.flags = flags & (Flag.FLAGS_MESSAGE | Flag.FLAGS_GENERIC);
+        data.tags = tags;
+        data.subject = pm.getNormalizedSubject();
+        data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, extended, pm, flags, dinfo, null, null);
         data.unreadCount = unread ? 1 : 0;
         data.contentChanged(mbox);
 
@@ -526,7 +538,7 @@ public class Message extends MailItem {
         // process the components in this invite (must do this last so blob is created, etc)
         if (components != null) {
             try {
-                msg.processInvitesAfterCreate(methodStr, folder.getId(), !noICal, pm, components, cal);
+                msg.processInvitesAfterCreate(methodStr, folder.getId(), !noICal, pm, components);
             } catch (Exception e) {
                 ZimbraLog.calendar.warn("Unable to process iCalendar attachment", e);
             }
@@ -536,12 +548,12 @@ public class Message extends MailItem {
         return msg;
     }
 
-    /** This has to be done as a separate step, after the MailItem has been
-     *  added, because of foreign key constraints on the CalendarItems table
-     * @param invites */
-    private void processInvitesAfterCreate(String method, int folderId, boolean applyToCalendar,
-                                           ParsedMessage pm, List<Invite> invites, ZVCalendar cal)
-    throws ServiceException {
+    /**
+     * This has to be done as a separate step, after the MailItem has been added, because of foreign key constraints on
+     * the CalendarItems table.
+     */
+    private void processInvitesAfterCreate(String method, int folderId, boolean applyToCalendar, ParsedMessage pm,
+            List<Invite> invites) throws ServiceException {
         if (pm == null)
             throw ServiceException.INVALID_REQUEST("null ParsedMessage while processing invite in message " + mId, null);
 

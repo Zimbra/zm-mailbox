@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -63,19 +63,19 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
     @Override
     public IConstraints andIConstraints(IConstraints other) {
         switch(other.getNodeType()) {
-        case AND:
-            return other.andIConstraints(this);
-        case OR:
-            return other.andIConstraints(this);
-        case LEAF:
-            if (other.hasSpamTrashSetting())
-                forceHasSpamTrashSetting();
+            case AND:
+                return other.andIConstraints(this);
+            case OR:
+                return other.andIConstraints(this);
+            case LEAF:
+                if (other.hasSpamTrashSetting())
+                    forceHasSpamTrashSetting();
 
-            if (other.hasNoResults()) {
-                noResults = true;
-            }
-            andConstraints((DbLeafNode)other);
-            return this;
+                if (other.hasNoResults()) {
+                    noResults = true;
+                }
+                andConstraints((DbLeafNode)other);
+                return this;
         }
         assert(false);
         return null;
@@ -129,10 +129,6 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
         return toString();
     }
 
-    /**
-     * @param itemId
-     * @param truth
-     */
     void addItemIdClause(Integer itemId, boolean truth) {
         if (truth) {
             if (!itemIds.contains(itemId)) {
@@ -156,10 +152,6 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
         }
     }
 
-    /**
-     * @param itemId
-     * @param truth
-     */
     void addRemoteItemIdClause(ItemId itemId, boolean truth) {
         if (truth) {
             if (!remoteItemIds.contains(itemId)) {
@@ -183,13 +175,6 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
         }
     }
 
-
-    /**
-     * @param lowest
-     * @param highest
-     * @param truth
-     * @throws ServiceException
-     */
     void addDateClause(long lowest, boolean lowestEqual, long highest, boolean highestEqual, boolean truth)  {
         DbSearchConstraints.NumericRange intv = new DbSearchConstraints.NumericRange();
         intv.lowest = lowest;
@@ -201,12 +186,6 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
         dates.add(intv);
     }
 
-    /**
-     * @param lowest
-     * @param highest
-     * @param truth
-     * @throws ServiceException
-     */
     void addCalStartDateClause(long lowest, boolean lowestEqual, long highest, boolean highestEqual, boolean truth)  {
         DbSearchConstraints.NumericRange intv = new DbSearchConstraints.NumericRange();
         intv.lowest = lowest;
@@ -218,12 +197,6 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
         calStartDates.add(intv);
     }
 
-    /**
-     * @param lowest
-     * @param highest
-     * @param truth
-     * @throws ServiceException
-     */
     void addCalEndDateClause(long lowest, boolean lowestEqual, long highest, boolean highestEqual, boolean truth)  {
         DbSearchConstraints.NumericRange intv = new DbSearchConstraints.NumericRange();
         intv.lowest = lowest;
@@ -258,13 +231,6 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
         convCounts.add(intv);
     }
 
-
-    /**
-     * @param lowest
-     * @param highest
-     * @param truth
-     * @throws ServiceException
-     */
     void addSizeClause(long lowestSize, long highestSize, boolean truth)  {
         DbSearchConstraints.NumericRange intv = new DbSearchConstraints.NumericRange();
         intv.lowest = lowestSize;
@@ -274,12 +240,6 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
         sizes.add(intv);
     }
 
-    /**
-     * @param lowest
-     * @param highest
-     * @param truth
-     * @throws ServiceException
-     */
     void addSubjectRelClause(String lowest, boolean lowestEqual, String highest, boolean highestEqual, boolean truth) {
         DbSearchConstraints.StringRange intv = new DbSearchConstraints.StringRange();
         intv.lowest = lowest;
@@ -291,12 +251,6 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
         subjectRanges.add(intv);
     }
 
-    /**
-     * @param lowest
-     * @param highest
-     * @param truth
-     * @throws ServiceException
-     */
     void addSenderRelClause(String lowest, boolean lowestEqual, String highest, boolean highestEqual, boolean truth) {
         DbSearchConstraints.StringRange intv = new DbSearchConstraints.StringRange();
         intv.lowest = lowest;
@@ -308,10 +262,10 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
         senderRanges.add(intv);
     }
 
-    /**
-     * @param convId
-     * @param prohibited
-     */
+    void setFromContact(boolean bool) {
+        fromContact = bool;
+    }
+
     void addConvId(int cid, boolean truth) {
 
         if (truth) {
@@ -334,10 +288,6 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
         }
     }
 
-    /**
-     * @param convId
-     * @param prohibited
-     */
     void addRemoteConvId(ItemId cid, boolean truth) {
 
         if (truth) {
@@ -386,12 +336,7 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
         }
     }
 
-    /**
-     * @param folder
-     * @param truth
-     */
-    void addInClause(Folder folder, boolean truth)
-    {
+    void addInClause(Folder folder, boolean truth) {
         if (truth) {
             if ((folders.size() > 0 && !folders.contains(folder)) || excludeFolders.contains(folder)) {
                 ZimbraLog.search.debug("AND of conflicting folders, no-results-query");

@@ -17,6 +17,7 @@
 
 CREATE SCHEMA zimbra;
 SET SCHEMA zimbra;
+SET INITIAL SCHEMA zimbra;
 
 CREATE TABLE volume (
    id                     IDENTITY,

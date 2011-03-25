@@ -120,11 +120,12 @@ public class DebugConfig {
      *  database and into this per-user database. */
     public static boolean disableMailboxGroups;
 
-    /** The number of MBOXGROUP<N> databases to distribute the users over.
-     *  This is a middle ground between One Huge Database (contention and
-     *  the effects of corruption are issues) and database-per-user (which
-     *  most DBMSes can't deal with). */
-    public static final int numMailboxGroups;
+    /**
+     * The number of {@code MBOXGROUP<N>} databases to distribute the users over. This is a middle ground between One
+     * Huge Database (contention and the effects of corruption are issues) and database-per-user (which most DBMSes
+     * can't deal with).
+     */
+    public static int numMailboxGroups;
 
     /** If true, more than one server may be sharing the same store and
      *  database install.  In that case, the server must perform extra checks
@@ -166,7 +167,7 @@ public class DebugConfig {
     public static int imapNoninteractiveSessionLimit;
     public static boolean imapTerminateSessionOnClose;
     public static boolean imapSerializeSessionOnClose;
-    
+
     // For QA only. bug 57279
     public static boolean allowModifyingDeprecatedAttributes;
 
@@ -237,7 +238,7 @@ public class DebugConfig {
         imapSerializeSessionOnClose = booleanValue("imap_serialize_session_on_close", true);
 
         disableCalendarReminderEmail = booleanValue("debug_disable_calendar_reminder_email", false);
-        
+
         allowModifyingDeprecatedAttributes = booleanValue("allow_modifying_deprecated_attributes", true);
     }
 

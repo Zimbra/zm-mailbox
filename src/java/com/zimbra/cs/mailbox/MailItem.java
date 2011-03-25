@@ -220,25 +220,26 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
     public static final class UnderlyingData implements Cloneable {
-        public int    id;
-        public byte   type;
-        public int    parentId = -1;
-        public int    folderId = -1;
-        public int    indexId = IndexStatus.NO.id();
-        public int    imapId   = -1;
+        public int id;
+        public byte type;
+        public int parentId = -1;
+        public int folderId = -1;
+        public int indexId = IndexStatus.NO.id();
+        public int imapId   = -1;
+        public int senderId = -1;
         public String locator;
         private String blobDigest;
-        public int    date;
-        public long   size;
-        public int    unreadCount;
-        public int    flags;
-        public long   tags;
+        public int date;
+        public long size;
+        public int unreadCount;
+        public int flags;
+        public long tags;
         public String subject;
         public String name;
         public String metadata;
-        public int    modMetadata;
-        public int    dateChanged;
-        public int    modContent;
+        public int modMetadata;
+        public int dateChanged;
+        public int modContent;
 
         /** Returns the item's blob digest, or <tt>null</tt> if the item has no blob. */
         public String getBlobDigest() {
@@ -255,24 +256,26 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         UnderlyingData duplicate(int newId, int newFolder, String newLocator) {
             UnderlyingData data = new UnderlyingData();
-            data.id          = newId;
-            data.type        = this.type;
-            data.parentId    = this.parentId;
-            data.folderId    = newFolder;
-            data.indexId     = this.indexId;
-            data.imapId      = this.imapId <= 0 ? this.imapId : newId;
-            data.locator    = newLocator;
-            data.blobDigest  = this.blobDigest;
-            data.date        = this.date;
-            data.size        = this.size;
-            data.flags       = this.flags;
-            data.tags        = this.tags;
-            data.subject     = this.subject;
+            data.id = newId;
+            data.type = this.type;
+            data.parentId = this.parentId;
+            data.folderId = newFolder;
+            data.indexId = this.indexId;
+            data.imapId = this.imapId <= 0 ? this.imapId : newId;
+            data.senderId = this.senderId;
+            data.locator = newLocator;
+            data.blobDigest = this.blobDigest;
+            data.date = this.date;
+            data.size = this.size;
+            data.flags = this.flags;
+            data.tags = this.tags;
+            data.subject = this.subject;
             data.unreadCount = this.unreadCount;
             return data;
         }
 
-        @Override protected UnderlyingData clone() {
+        @Override
+        protected UnderlyingData clone() {
             try {
                 return (UnderlyingData) super.clone();
             } catch (CloneNotSupportedException cnse) {
@@ -414,7 +417,9 @@ public abstract class MailItem implements Comparable<MailItem> {
                 inclusions ^= ALL_LOCATIONS;
             return new TargetConstraint(mbox, inclusions, query);
         }
-        @Override public String toString() {
+
+        @Override
+        public String toString() {
             if (inclusions == 0)
                 return "";
             StringBuilder sb = new StringBuilder();
@@ -429,6 +434,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         public static boolean checkItem(TargetConstraint tcon, MailItem item) throws ServiceException {
             return (tcon == null ? true : tcon.checkItem(item));
         }
+
         private boolean checkItem(MailItem item) throws ServiceException {
             // FIXME: doesn't support EXCLUDE_QUERY
             if ((inclusions & ALL_LOCATIONS) == 0)
@@ -443,6 +449,7 @@ public abstract class MailItem implements Comparable<MailItem> {
                 return true;
             return false;
         }
+
         /** Returns whether an item is in the user's sent folder.  Returns
          *  <tt>false</tt> if the user has set their sent folder to be
          *  any folder other than the default "/Sent" folder, folder 5.<p>
@@ -506,7 +513,8 @@ public abstract class MailItem implements Comparable<MailItem> {
             return new Metadata(this).toString();
         }
 
-        @Override public String toString() {
+        @Override
+        public String toString() {
             return mSectionKey + ": " + super.toString();
         }
 

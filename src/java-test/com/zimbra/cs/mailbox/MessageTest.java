@@ -27,7 +27,9 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.db.DbMailAddress;
 import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.HSQLDB;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.LuceneFields;
@@ -90,6 +92,25 @@ public final class MessageTest {
         String body = docs.get(0).toDocument().getField(LuceneFields.L_CONTENT).stringValue();
         Assert.assertEquals("\u65e5\u672c\u8a9e", subject);
         Assert.assertEquals("\u65e5\u672c\u8a9e", body.trim());
+    }
+
+    @Test
+    public void senderId() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        DeliveryOptions opt = new DeliveryOptions();
+        opt.setFolderId(Mailbox.ID_FOLDER_INBOX);
+        Message msg1 = mbox.addMessage(null, new ParsedMessage("From: test1@zimbra.com".getBytes(), false), opt);
+        Message msg2 = mbox.addMessage(null, new ParsedMessage("From: test2@zimbra.com".getBytes(), false), opt);
+        Message msg3 = mbox.addMessage(null, new ParsedMessage("From: test3@zimbra.com".getBytes(), false), opt);
+
+        DbConnection conn = DbPool.getConnection(mbox);
+        Assert.assertEquals(DbMailAddress.getId(conn, mbox, "test1@zimbra.com"), msg1.mData.senderId);
+        Assert.assertEquals(DbMailAddress.getId(conn, mbox, "test2@zimbra.com"), msg2.mData.senderId);
+        Assert.assertEquals(DbMailAddress.getId(conn, mbox, "test3@zimbra.com"), msg3.mData.senderId);
+        Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox, msg1.mData.senderId));
+        Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox, msg2.mData.senderId));
+        Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox, msg3.mData.senderId));
+        conn.closeQuietly();
     }
 
 }

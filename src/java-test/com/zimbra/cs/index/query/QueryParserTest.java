@@ -304,6 +304,9 @@ public final class QueryParserTest {
     public void builtIn() throws Exception {
         String src = "is:unread is:remote";
         Assert.assertEquals("Q(TAG,\\Unread,UNREAD) && Q(UNDER,REMOTE)", Query.toString(parser.parse(src)));
+
+        src = "is:fromcontact";
+        Assert.assertEquals("Q(FROM-CONTACT)", Query.toString(parser.parse(src)));
     }
 
     @Test

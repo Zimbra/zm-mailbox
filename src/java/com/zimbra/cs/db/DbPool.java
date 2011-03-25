@@ -54,7 +54,7 @@ public class DbPool {
     static ValueCounter<String> sConnectionStackCounter = new ValueCounter<String>();
 
     public static class DbConnection {
-        private Connection connection;
+        private final Connection connection;
         private Throwable mStackTrace;
 
         DbConnection(Connection conn) {
@@ -158,6 +158,38 @@ public class DbPool {
         /** Sets the stack trace used for detecting connection leaks. */
         void setStackTrace(Throwable t) {
             mStackTrace = t;
+        }
+
+        public void closeQuietly() {
+            try {
+                if (!connection.isClosed()) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                ZimbraLog.sqltrace.warn("SQL error ignored", e);
+            }
+        }
+
+        public void closeQuietly(Statement stmt) {
+            if (stmt == null) {
+                return;
+            }
+            try {
+                stmt.close();
+            } catch (SQLException e) {
+                ZimbraLog.sqltrace.warn("SQL error ignored", e);
+            }
+        }
+
+        public void closeQuietly(ResultSet rs) {
+            if (rs == null) {
+                return;
+            }
+            try {
+                rs.close();
+            } catch (SQLException e) {
+                ZimbraLog.sqltrace.warn("SQL error ignored", e);
+            }
         }
     }
 

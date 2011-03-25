@@ -86,6 +86,8 @@ public final class HSQLDB extends Db {
     @Override
     boolean supportsCapability(Capability capability) {
         switch (capability) {
+            case MULTITABLE_UPDATE:
+                return false;
             case REPLACE_INTO:
             case LIMIT_CLAUSE:
             case BITWISE_OPERATIONS:
@@ -132,7 +134,6 @@ public final class HSQLDB extends Db {
     @Override
     public void flushToDisk() {
     }
-
 
     private static final class Config extends PoolConfig {
         Config() {

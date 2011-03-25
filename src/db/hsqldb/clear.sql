@@ -15,6 +15,7 @@
 
 DELETE FROM *{DATABASE_NAME}.mail_item;
 DELETE FROM *{DATABASE_NAME}.mail_item_dumpster;
+DELETE FROM *{DATABASE_NAME}.mail_address;
 DELETE FROM *{DATABASE_NAME}.revision;
 DELETE FROM *{DATABASE_NAME}.revision_dumpster;
 DELETE FROM *{DATABASE_NAME}.open_conversation;

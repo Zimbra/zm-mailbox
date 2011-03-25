@@ -147,11 +147,10 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             String mailbox_id = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
-            stmt = conn.prepareStatement("INSERT INTO " + getMailItemTableName(mbox) +
-                        "(" + mailbox_id +
-                        " id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest," +
-                        " unread, flags, tags, sender, subject, name, metadata, mod_metadata, change_date, mod_content) " +
-                        "VALUES (" + MAILBOX_ID_VALUE + " ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            stmt = conn.prepareStatement("INSERT INTO " + getMailItemTableName(mbox) + "(" + mailbox_id +
+                    " id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest, unread," +
+                    " flags, tags, sender, sender_id, subject, name, metadata, mod_metadata, change_date, mod_content)" +
+                    " VALUES (" + MAILBOX_ID_VALUE + " ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, data.id);
@@ -182,18 +181,23 @@ public class DbMailItem {
             }
             stmt.setString(pos++, data.getBlobDigest());
             switch (MailItem.Type.of(data.type)) {
-            case MESSAGE:
-            case CHAT:
-            case FOLDER:
-                stmt.setInt(pos++, data.unreadCount);
-                break;
-            default:
-                stmt.setNull(pos++, Types.INTEGER);
-                break;
+                case MESSAGE:
+                case CHAT:
+                case FOLDER:
+                    stmt.setInt(pos++, data.unreadCount);
+                    break;
+                default:
+                    stmt.setNull(pos++, Types.INTEGER);
+                    break;
             }
             stmt.setInt(pos++, data.flags);
             stmt.setLong(pos++, data.tags);
             stmt.setString(pos++, checkSenderLength(sender));
+            if (data.senderId >= 0) {
+                stmt.setInt(pos++, data.senderId);
+            } else {
+                stmt.setNull(pos++, Types.INTEGER);
+            }
             stmt.setString(pos++, checkSubjectLength(data.subject));
             stmt.setString(pos++, data.name);
             stmt.setString(pos++, checkMetadataLength(data.metadata));

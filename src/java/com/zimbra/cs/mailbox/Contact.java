@@ -20,9 +20,11 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
@@ -34,7 +36,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
@@ -44,6 +48,7 @@ import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.EntryCacheDataKey;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.db.DbMailAddress;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
@@ -110,7 +115,9 @@ public class Contact extends MailItem {
             mSize = size;
         }
 
-        public void setPartName(String name)  { mPartName = name; }
+        public void setPartName(String name) {
+            mPartName = name;
+        }
 
         @Override
         public String getContentType() {
@@ -146,8 +153,7 @@ public class Contact extends MailItem {
         /**
          * Returns this attachment's content, or <tt>null</tt>.
          */
-        public byte[] getContent()
-        throws IOException {
+        public byte[] getContent() throws IOException {
             InputStream in = null;
             byte[] content = null;
             try {
@@ -174,29 +180,24 @@ public class Contact extends MailItem {
             return new Metadata().put(FN_SIZE, mSize).put(FN_NAME, getFilename()).put(FN_PART, mPartName).put(FN_CTYPE, getContentType()).put(FN_FIELD, mFieldName);
         }
 
-        @Override public String toString() {
+        @Override
+        public String toString() {
             return new StringBuilder(mFieldName).append(" [").append(getContentType()).append(", ").append(mSize).append("B]").toString();
         }
     }
 
-
-    /** Relates contact fields (<tt>"firstName"</tt>) to this contact's
-     *  values (<tt>"John"</tt>). */
-    private Map<String, String> mFields;
-    private List<Attachment> mAttachments;
+    /** Relates contact fields ({@code firstName}) to this contact's values ({@code John}). */
+    private Map<String, String> fields;
+    private List<Attachment> attachments;
 
     // The list of all *simple* "email" fields in the contact's map
-    // IMPORTANT NOTE - does not include the Contact Group 'dlist' entry, which is
-    // * a multi-value entry (comma-separated)
+    // IMPORTANT NOTE - does not include the Contact Group 'dlist' entry, which is a multi-value entry (comma-separated)
     private static final String[] EMAIL_FIELDS = new String[] {
-        ContactConstants.A_email,
-        ContactConstants.A_email2,
-        ContactConstants.A_email3,
-        ContactConstants.A_workEmail1,
-        ContactConstants.A_workEmail2,
-        ContactConstants.A_workEmail3 };
+        ContactConstants.A_email, ContactConstants.A_email2, ContactConstants.A_email3,
+        ContactConstants.A_workEmail1, ContactConstants.A_workEmail2, ContactConstants.A_workEmail3
+    };
 
-    private String[] mEmailFields;
+    private String[] emailFields;
 
     /**
      * Returns the email fields in contact for the account.
@@ -246,10 +247,11 @@ public class Contact extends MailItem {
         if (mData.type != Type.CONTACT.toByte()) {
             throw new IllegalArgumentException();
         }
-        mEmailFields = getEmailFields(getAccount());
+        emailFields = getEmailFields(getAccount());
     }
 
-    @Override public String getSender() {
+    @Override
+    public String getSender() {
         try {
             return getFileAsString();
         } catch (ServiceException e) {
@@ -259,38 +261,40 @@ public class Contact extends MailItem {
 
     /** Returns a single field from the contact's field/value pairs. */
     public String get(String fieldName) {
-        return mFields.get(fieldName);
+        return fields.get(fieldName);
     }
 
-    /** Returns a new <tt>Map</tt> containing all the contact's
-     *  field/value pairs. */
+    /** Returns a new <tt>Map</tt> containing all the contact's field/value pairs. */
     public Map<String, String> getAllFields() {
-        return new HashMap<String, String>(mFields);
+        return new HashMap<String, String>(fields);
     }
 
-    /** Returns a new <tt>Map</tt> containing all the visible
-     *  field/value pairs in the contact. */
+    /** Returns a new <tt>Map</tt> containing all the visible field/value pairs in the contact. */
     public Map<String, String> getFields() {
-        HashMap<String, String> fields = new HashMap<String, String>(mFields);
+        HashMap<String, String> result = new HashMap<String, String>(fields);
         try {
             String hiddenAttrList = Provisioning.getInstance().getLocalServer().getContactHiddenAttributes();
             if (hiddenAttrList != null) {
                 for (String attr : hiddenAttrList.split(",")) {
-                    fields.remove(attr);
+                    result.remove(attr);
                 }
             }
         } catch (ServiceException e) {
             ZimbraLog.mailop.warn("can't get A_zimbraContactHiddenAttributes", e);
         }
-        return fields;
+        return result;
     }
 
-    /** Returns a list of all the contact's attachments.  If the contact has
-     *  no attachments in its blob, an empty list is returned. */
+    /**
+     * Returns a list of all the contact's attachments.
+     * <p>
+     * If the contact has no attachments in its blob, an empty list is returned.
+     */
     public List<Attachment> getAttachments() {
-        if (mAttachments == null)
+        if (attachments == null) {
             return Collections.emptyList();
-        return new ArrayList<Attachment>(mAttachments);
+        }
+        return new ArrayList<Attachment>(attachments);
     }
 
     /**
@@ -308,7 +312,7 @@ public class Contact extends MailItem {
      * @return file-as string honoring phonetic fields
      */
     public String getSortName() throws ServiceException {
-        return getFileAsString(mFields, true);
+        return getFileAsString(fields, true);
     }
 
     /**
@@ -331,7 +335,7 @@ public class Contact extends MailItem {
      * default.
      */
     public String getFileAsString() throws ServiceException {
-        return getFileAsString(mFields, false);
+        return getFileAsString(fields, false);
     }
 
     public static String getFileAsString(Map<String, String> fields) throws ServiceException {
@@ -538,11 +542,19 @@ public class Contact extends MailItem {
         attrs.put(ContactConstants.A_fileAs, new Integer(ContactConstants.FA_EXPLICIT).toString() + ':' + fileAs);
     }
 
-    /** Returns a list of all email address fields for this contact.  This is used
-     *  by {@link com.zimbra.cs.index.Indexer#indexContact} to populate the
-     *  "To" field with the contact's email addresses. */
+    /**
+     * Returns a list of all email address fields for this contact.
+     */
     public List<String> getEmailAddresses() {
-        return getEmailAddresses(mEmailFields, mFields);
+        return getEmailAddresses(emailFields, fields);
+    }
+
+    private Set<String> getNormalizedEmailAddrs() {
+        Set<String> result = new HashSet<String>();
+        for (String addr : getEmailAddresses()) {
+            result.add(addr.trim().toLowerCase());
+        }
+        return result;
     }
 
     public static final boolean isEmailField(String[] emailFields, String fieldName) {
@@ -558,20 +570,20 @@ public class Contact extends MailItem {
         return false;
     }
 
-    public static final List<String> getEmailAddresses(String[] emailFields, Map<String, String> fields) {
-        ArrayList<String> result = new ArrayList<String>();
-        for (String field : emailFields) {
-            String value = fields.get(field);
-            if (value != null && !value.trim().equals(""))
-                result.add(value);
+    public static final List<String> getEmailAddresses(String[] fieldNames, Map<String, String> fields) {
+        List<String> result = new ArrayList<String>();
+        for (String name : fieldNames) {
+            String addr = fields.get(name);
+            if (addr != null && !addr.trim().isEmpty()) {
+                result.add(addr);
+            }
         }
 
         // if the dlist is set, return it as a single value
         String dlist = fields.get(ContactConstants.A_dlist);
-        if (dlist != null) {
-            String addrs[] = dlist.split(",");
-            for (String s : addrs) {
-                result.add(s.trim());
+        if (!Strings.isNullOrEmpty(dlist)) {
+            for (String addr : Splitter.on(',').omitEmptyStrings().trimResults().split(dlist)) {
+                result.add(addr);
             }
         }
         return result;
@@ -602,9 +614,10 @@ public class Contact extends MailItem {
         return false;
     }
 
-    /** Creates a new <tt>Contact</tt> and persists it to the database.
-     *  A real nonnegative item ID must be supplied from a previous call to
-     *  {@link Mailbox#getNextItemId(int)}.
+    /**
+     * Creates a new {@link Contact} and persists it to the database.
+     * <p>
+     * A real nonnegative item ID must be supplied from a previous call to {@link Mailbox#getNextItemId(int)}.
      *
      * @param id      The id for the new contact.
      * @param folder  The {@link Folder} to create the contact in.
@@ -621,9 +634,10 @@ public class Contact extends MailItem {
      *    <li><tt>service.FAILURE</tt> - if there's a database failure
      *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
      *        permissions</ul>
-     * @see #canContain(byte) */
-    static Contact create(int id, Folder folder, MailboxBlob mblob, ParsedContact pc, int flags, String tags, CustomMetadata custom)
-    throws ServiceException {
+     * @see #canContain(byte)
+     */
+    static Contact create(int id, Folder folder, MailboxBlob mblob, ParsedContact pc, int flags, String tags,
+            CustomMetadata custom) throws ServiceException {
         if (folder == null || !folder.canContain(Type.CONTACT)) {
             throw MailServiceException.CANNOT_CONTAIN();
         }
@@ -660,14 +674,36 @@ public class Contact extends MailItem {
 
         DbMailItem.create(mbox, data, getFileAsString(pc.getFields()));
 
-        Contact con = new Contact(mbox, data);
-        con.finishCreation(null);
-        if (con.mFields.isEmpty())
+        Contact contact = new Contact(mbox, data);
+        contact.finishCreation(null);
+        if (contact.fields.isEmpty()) {
             throw ServiceException.INVALID_REQUEST("contact must have fields", null);
-        return con;
+        }
+        contact.saveEmailAddrs(contact.getNormalizedEmailAddrs(), Collections.<String>emptySet());
+        return contact;
     }
 
-    @Override public List<IndexDocument> generateIndexData(boolean doConsistencyCheck) throws TemporaryIndexingException {
+    private void saveEmailAddrs(Set<String> add, Set<String> del) throws ServiceException {
+        assert Collections.disjoint(add, del) : "add=" + add + ",del=" + del;
+
+        for (String addr : add) {
+            addr = addr.trim().toLowerCase();
+            int id = DbMailAddress.getId(mMailbox.getOperationConnection(), mMailbox, addr);
+            if (id < 0) {
+                DbMailAddress.save(mMailbox.getOperationConnection(), mMailbox, addr, 1);
+            } else {
+                DbMailAddress.incCount(mMailbox.getOperationConnection(), mMailbox, id);
+            }
+        }
+
+        for (String addr : del) {
+            addr = addr.trim().toLowerCase();
+            DbMailAddress.decCount(mMailbox.getOperationConnection(), mMailbox, addr);
+        }
+    }
+
+    @Override
+    public List<IndexDocument> generateIndexData(boolean doConsistencyCheck) throws TemporaryIndexingException {
         synchronized (mMailbox) {
             try {
                 ParsedContact pc = new ParsedContact(this);
@@ -683,51 +719,106 @@ public class Contact extends MailItem {
         }
     }
 
-    @Override void reanalyze(Object data, long newSize) throws ServiceException {
-        if (!(data instanceof ParsedContact))
+    @Override
+    void reanalyze(Object data, long newSize) throws ServiceException {
+        if (!(data instanceof ParsedContact)) {
             throw ServiceException.FAILURE("cannot reanalyze non-ParsedContact object", null);
-
+        }
         ParsedContact pc = (ParsedContact) data;
 
         markItemModified(Change.MODIFIED_CONTENT | Change.MODIFIED_DATE | Change.MODIFIED_FLAGS);
-
-        mFields = pc.getFields();
-        if (mFields == null || mFields.isEmpty())
+        Set<String> oldAddrs = getNormalizedEmailAddrs();
+        fields = pc.getFields();
+        if (fields == null || fields.isEmpty()) {
             throw ServiceException.INVALID_REQUEST("contact must have fields", null);
-
-        mAttachments = pc.getAttachments();
+        }
+        attachments = pc.getAttachments();
 
         mData.flags &= ~Flag.BITMASK_ATTACHED;
-        if (pc.hasAttachment())
+        if (pc.hasAttachment()) {
             mData.flags |= Flag.BITMASK_ATTACHED;
+        }
+        saveData(getFileAsString(fields));
+        Set<String> newAddrs = getNormalizedEmailAddrs();
 
-        saveData(getFileAsString(mFields));
+        saveEmailAddrs(Sets.difference(newAddrs, oldAddrs), Sets.difference(oldAddrs, newAddrs));
     }
 
     /** @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *         {@link ACL#RIGHT_READ} on the original item */
-    @Override MailItem copy(Folder folder, int id, int parentId) throws IOException, ServiceException {
+    @Override
+    MailItem copy(Folder folder, int id, int parentId) throws IOException, ServiceException {
         mMailbox.updateContactCount(1);
         return super.copy(folder, id, parentId);
     }
 
     /** @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *         {@link ACL#RIGHT_READ} on the original item */
-    @Override MailItem icopy(Folder folder, int copyId) throws IOException, ServiceException {
+    @Override
+    MailItem icopy(Folder folder, int copyId) throws IOException, ServiceException {
         mMailbox.updateContactCount(1);
         return super.icopy(folder, copyId);
     }
 
+    @Override
+    boolean move(Folder target) throws ServiceException {
+        boolean fromTrash = inTrash();
+        boolean toTrash = target.inTrash();
+        if (super.move(target)) {
+            if (!fromTrash && toTrash) { // moving into Trash
+                onSoftDelete();
+            } else if (fromTrash && !toTrash) { // moving out of Trash
+                onSoftRecover();
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Called when moving this contact into Trash.
+     */
+    void onSoftDelete() throws ServiceException {
+        saveEmailAddrs(Collections.<String>emptySet(), getNormalizedEmailAddrs());
+    }
+
+    /**
+     * Called when moving this contact out of Trash.
+     */
+    void onSoftRecover() throws ServiceException {
+        saveEmailAddrs(getNormalizedEmailAddrs(), Collections.<String>emptySet());
+    }
+
+    /**
+     * Called when hard-deleting this contact.
+     *
+     * @param trash true if deleting from Trash, false from non Trash
+     */
+    void onHardDelete(boolean trash) throws ServiceException {
+        if (!trash) {
+            saveEmailAddrs(Collections.<String>emptySet(), getNormalizedEmailAddrs());
+        }
+    }
+
+    @Override
+    void delete(DeleteScope scope, boolean writeTombstones) throws ServiceException {
+        if (!inTrash()) { // hard-deleting from non Trash
+            onHardDelete(false);
+        }
+        super.delete(scope, writeTombstones);
+    }
+
     /** @perms {@link ACL#RIGHT_DELETE} on the item */
-    @Override PendingDelete getDeletionInfo() throws ServiceException {
+    @Override
+    PendingDelete getDeletionInfo() throws ServiceException {
         PendingDelete info = super.getDeletionInfo();
         info.contacts = 1;
         return info;
     }
 
-
-    @SuppressWarnings("unchecked")
-    @Override void decodeMetadata(Metadata meta) throws ServiceException {
+    @Override
+    void decodeMetadata(Metadata meta) throws ServiceException {
         Metadata metaAttrs;
         if (meta.getVersion() <= 8) {
             // old version: metadata is just the fields
@@ -739,7 +830,7 @@ public class Contact extends MailItem {
 
             MetadataList mlAttach = meta.getList(Metadata.FN_ATTACHMENTS, true);
             if (mlAttach != null) {
-                mAttachments = new ArrayList<Attachment>(mlAttach.size());
+                attachments = new ArrayList<Attachment>(mlAttach.size());
                 for (int i = 0; i < mlAttach.size(); i++) {
                     Metadata attachMeta = mlAttach.getMap(i);
                     String fieldName = attachMeta.get(Attachment.FN_FIELD);
@@ -748,20 +839,21 @@ public class Contact extends MailItem {
                     DataHandler dh = new DataHandler(new AttachmentDataSource(this, partName));
                     Attachment attachment = new Attachment(dh, fieldName, size);
                     attachment.setPartName(partName);
-                    mAttachments.add(attachment);
+                    attachments.add(attachment);
                 }
 
             }
         }
 
-        mFields = new HashMap<String, String>();
+        fields = new HashMap<String, String>();
         for (Map.Entry<String, ?> entry : metaAttrs.asMap().entrySet()) {
-            mFields.put(entry.getKey(), entry.getValue().toString());
+            fields.put(entry.getKey(), entry.getValue().toString());
         }
     }
 
-    @Override Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, mFields, mAttachments);
+    @Override
+    Metadata encodeMetadata(Metadata meta) {
+        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, fields, attachments);
     }
 
     private static String encodeMetadata(Color color, int version, CustomMetadata custom, Map<String, String> fields, List<Attachment> attachments) {
@@ -781,19 +873,18 @@ public class Contact extends MailItem {
         return MailItem.encodeMetadata(meta, color, version, extended);
     }
 
-
     @Override
     public String toString() {
         Objects.ToStringHelper helper = Objects.toStringHelper(this);
         appendCommonMembers(helper);
-        for (Map.Entry<String, String> entry : mFields.entrySet()) {
+        for (Map.Entry<String, String> entry : fields.entrySet()) {
             helper.add(entry.getKey(), entry.getValue());
         }
         return helper.toString();
     }
 
     public String getVCardUID() {
-        return mFields.get(ContactConstants.A_vCardUID);
+        return fields.get(ContactConstants.A_vCardUID);
     }
 
     public String getXProp(String xprop) {
@@ -801,7 +892,7 @@ public class Contact extends MailItem {
     }
 
     public Map<String,String> getXProps() {
-        return decodeXProps(mFields.get(ContactConstants.A_vCardXProps));
+        return decodeXProps(fields.get(ContactConstants.A_vCardXProps));
     }
 
     public boolean isGroup() {
