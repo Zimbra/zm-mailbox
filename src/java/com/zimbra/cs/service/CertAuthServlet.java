@@ -59,13 +59,10 @@ public class CertAuthServlet extends SSOServlet {
                 }
             }
             
+            SSOAuthenticator authenticator = new ClientCertAuthenticator(req, resp);
+            ZimbraPrincipal principal = null;
             try {
-                SSOAuthenticator authenticator = new ClientCertAuthenticator(req, resp);
-                ZimbraPrincipal principal = authenticator.authenticate();
-                            
-                AuthToken authToken = authorize(req, authenticator, principal, isAdminRequest);
-                setAuthTokenCookieAndRedirect(req, resp, principal.getAccount(), authToken);
-                
+                principal = authenticator.authenticate();
             } catch (SSOAuthenticatorServiceException e) {
                 if (SSOAuthenticatorServiceException.NO_CLIENT_CERTIFICATE.equals(e.getCode())) {
                     if (missingClientCertOK()) {
@@ -75,6 +72,10 @@ public class CertAuthServlet extends SSOServlet {
                     }
                 }
             }
+            
+            AuthToken authToken = authorize(req, authenticator, principal, isAdminRequest);
+            setAuthTokenCookieAndRedirect(req, resp, principal.getAccount(), authToken);
+            
         } catch (ServiceException e) {
             if (e instanceof AuthFailedServiceException) {
                 AuthFailedServiceException afe = (AuthFailedServiceException)e;

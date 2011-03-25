@@ -67,9 +67,25 @@ public abstract class SSOServlet extends ZimbraServlet {
         return authToken;
     }
     
-    protected boolean onAdminPort(HttpServletRequest req) throws ServiceException {
+    protected boolean isOnAdminPort(HttpServletRequest req) throws ServiceException {
         int adminPort = Provisioning.getInstance().getLocalServer().getAdminPort();
         return req.getLocalPort() == adminPort;
+    }
+    
+    protected boolean isFromZCO(HttpServletRequest req) throws ServiceException {
+        final String UA_ZCO = "ZimbraConnectorForOutlook";
+        String userAgent = req.getHeader("User-Agent");
+        return userAgent.contains(UA_ZCO);
+    }
+    
+    protected void setAuthTokenCookieAndReturn(HttpServletRequest req, HttpServletResponse resp, 
+            AuthToken authToken) 
+    throws IOException, ServiceException {
+        
+        boolean isAdmin = AuthToken.isAnyAdmin(authToken);
+        boolean secureCookie = isProtocolSecure(req.getScheme());
+        authToken.encode(resp, isAdmin, secureCookie);
+        resp.setContentLength(0);
     }
     
     protected void setAuthTokenCookieAndRedirect(HttpServletRequest req, HttpServletResponse resp, 
@@ -102,8 +118,8 @@ public abstract class SSOServlet extends ZimbraServlet {
     
     // redirect to the webapp's regular entry page without an auth token cookie
     // the default behavior is the login/password page
-    protected void redirectWithoutAuthTokenCookie(HttpServletRequest req, HttpServletResponse resp, boolean isAdminRequest) 
-    throws IOException, ServiceException {
+    protected void redirectWithoutAuthTokenCookie(HttpServletRequest req, HttpServletResponse resp, 
+            boolean isAdminRequest) throws IOException, ServiceException {
         
         // append the ignore loginURL query so we do not get into a redirect loop.
         final String IGNORE_LOGIN_URL = "/?ignoreLoginURL=1";
@@ -115,9 +131,6 @@ public abstract class SSOServlet extends ZimbraServlet {
         } else {
             redirectUrl = getMailUrl(server) + IGNORE_LOGIN_URL;
         }
-        
-        URL url = new URL(redirectUrl);
-        boolean isRedirectProtocolSecure = isProtocolSecure(url.getProtocol());
         
         resp.sendRedirect(redirectUrl);
     }
