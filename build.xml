@@ -1611,7 +1611,9 @@
             zimbraSmtpPort 7024 \
             zimbraMailPort 7070 \
         	zimbraMailSSLPort 7443 \
+            zimbraMailSSLClientCertPort 9443 \
         	zimbraMailMode http \
+            zimbraMailSSLClientCertMode WantClientAuth \
             zimbraImapCleartextLoginEnabled TRUE \
             zimbraPop3CleartextLoginEnabled TRUE
             ModifyServer ${zimbra.server.hostname} \
