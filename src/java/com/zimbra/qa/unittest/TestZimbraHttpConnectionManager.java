@@ -50,7 +50,7 @@ import com.zimbra.cs.account.soap.SoapProvisioning;
 public class TestZimbraHttpConnectionManager {
     
 
-    private static void dumpResponse(int respCode, HttpMethod method, String prefix) throws IOException {
+    public static void dumpResponse(int respCode, HttpMethod method, String prefix) throws IOException {
         
         prefix = prefix + " - ";
         
@@ -74,6 +74,7 @@ public class TestZimbraHttpConnectionManager {
         // body
         byte[] bytes = ByteUtil.getContent(method.getResponseBodyAsStream(), 0);
         System.out.println(prefix + bytes.length + " bytes read");
+        System.out.println(new String(bytes));
     }
     
     

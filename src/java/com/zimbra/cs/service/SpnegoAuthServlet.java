@@ -43,20 +43,35 @@ public class SpnegoAuthServlet extends SSOServlet {
         addRemoteIpToLoggingContext(req);
         ZimbraLog.addUserAgentToContext(req.getHeader("User-Agent"));
         
+        boolean isAdminRequest = false;
+        boolean isFromZCO = false;
+        
         try {
+            isAdminRequest = isOnAdminPort(req);
+            isFromZCO = isFromZCO(req);
+            
             SpnegoUserRealm userRealm = getSpnegoUserRealm();
             SSOAuthenticator authenticator = new SpnegoAuthenticator(req, resp, userRealm);
+            ZimbraPrincipal principal = null;
             
             try {
-                ZimbraPrincipal principal = authenticator.authenticate();
-                            
-                AuthToken authToken = authorize(req, authenticator, principal, false);
-                setAuthTokenCookieAndRedirect(req, resp, principal.getAccount(), authToken);
+                principal = authenticator.authenticate();
             } catch (SSOAuthenticatorServiceException e) {
                 if (SSOAuthenticatorServiceException.SENT_CHALLENGE.equals(e.getCode())) {
                     return;
+                } else {
+                    throw e;
                 }
+            }                
+                
+            AuthToken authToken = authorize(req, authenticator, principal, isAdminRequest);
+                
+            if (isFromZCO) {
+                setAuthTokenCookieAndReturn(req, resp, authToken);
+            } else {
+                setAuthTokenCookieAndRedirect(req, resp, principal.getAccount(), authToken);
             }
+            
         } catch (ServiceException e) {
             if (e instanceof AuthFailedServiceException) {
                 AuthFailedServiceException afe = (AuthFailedServiceException)e;
@@ -65,7 +80,17 @@ public class SpnegoAuthServlet extends SSOServlet {
                 ZimbraLog.account.info("failed to authenticate by spnego: " + e.getMessage());
             }
             ZimbraLog.account.debug("failed to authenticate by spnego", e);
-            resp.sendError(HttpServletResponse.SC_FORBIDDEN, e.getMessage());
+            
+            if (isFromZCO) {
+                resp.sendError(HttpServletResponse.SC_FORBIDDEN, e.getMessage());
+            } else {
+                try {
+                    redirectWithoutAuthTokenCookie(req, resp, isAdminRequest);
+                } catch (ServiceException se) {
+                    ZimbraLog.account.info("failed to redirect to error page: " + se.getMessage());
+                    resp.sendError(HttpServletResponse.SC_FORBIDDEN, e.getMessage());
+                }
+            }
         }
     }
     
