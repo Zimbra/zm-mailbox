@@ -35,6 +35,8 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.convert.ConversionUnsupportedException;
+import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
@@ -54,7 +56,7 @@ public abstract class Formatter {
     public abstract FormatType getType();
     
     private static String PROGRESS = "-progress";
-
+    
     public String[] getDefaultMimeTypes() {
         return new String[0];
     }
@@ -352,8 +354,11 @@ public abstract class Formatter {
         } else if (!"2".equals(context.params.get(PROGRESS))) {
             String result;
             if (exception != null) {
-                ZimbraLog.misc.warn(getType() + " formatter exception",
-                        exception);
+                if (exception instanceof ConversionUnsupportedException) {
+                    ZimbraLog.misc.warn(getType() + " formatter exception, " + exception.getMessage());
+                } else {
+                    ZimbraLog.misc.warn(getType() + " formatter exception", exception);
+                }
                 result = "fail";
             } else if (w == null || w.size() == 0) {
                 if (context.req.getMethod().equals("GET")) {

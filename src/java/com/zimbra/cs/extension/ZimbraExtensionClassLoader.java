@@ -17,6 +17,7 @@ package com.zimbra.cs.extension;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -61,7 +62,12 @@ public class ZimbraExtensionClassLoader extends URLClassLoader {
     private void findExtensions() {
         URL[] urls = getURLs();
         for (int i = 0; i < urls.length; i++) {
-            File entry = new File(urls[i].getFile());
+            File entry = null;
+            try {
+                entry = new File(urls[i].toURI());
+            } catch (URISyntaxException e) {
+                entry = new File(urls[i].getFile());
+            }
             String className = getExtensionClassInManifest(entry);
             if (className != null) {
                 mExtensionClassNames.add(className);
