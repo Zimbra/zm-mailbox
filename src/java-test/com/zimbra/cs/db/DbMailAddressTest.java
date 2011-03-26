@@ -23,12 +23,18 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.localconfig.DebugConfig;
+import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mime.ParsedContact;
+import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.store.MockStoreManager;
+import com.zimbra.cs.store.StoreManager;
 
 /**
  * Unit test for {@link DbMailAddress}.
@@ -52,6 +58,9 @@ public final class DbMailAddressTest {
         LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
         DbPool.startup();
         HSQLDB.createDatabase();
+
+        LC.zimbra_class_store.setDefault(MockStoreManager.class.getName());
+        StoreManager.getInstance().startup();
     }
 
     @Before
@@ -80,7 +89,7 @@ public final class DbMailAddressTest {
         Assert.assertEquals(id22, DbMailAddress.getId(conn, mbox2, "test2@zimbra.com"));
         Assert.assertEquals(-1, DbMailAddress.getId(conn, mbox2, "unknown@zimbra.com"));
 
-        DbPool.quietClose(conn);
+        conn.closeQuietly();
     }
 
     @Test
@@ -106,34 +115,57 @@ public final class DbMailAddressTest {
         Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox1, id1));
         Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox2, id2));
 
-        DbPool.quietClose(conn);
+        conn.closeQuietly();
     }
 
     @Test
     public void delete() throws Exception {
         Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccountId("0-0-1");
         Mailbox mbox2 = MailboxManager.getInstance().getMailboxByAccountId("0-0-2");
-    
+
         DbConnection conn = DbPool.getConnection();
-    
+
         int id11 = DbMailAddress.save(conn, mbox1, "test1@zimbra.com", 0);
         int id12 = DbMailAddress.save(conn, mbox1, "test2@zimbra.com", 0);
         int id21 = DbMailAddress.save(conn, mbox2, "test1@zimbra.com", 0);
         int id22 = DbMailAddress.save(conn, mbox2, "test2@zimbra.com", 0);
-    
+
         Assert.assertEquals(id11, DbMailAddress.getId(conn, mbox1, "test1@zimbra.com"));
         Assert.assertEquals(id12, DbMailAddress.getId(conn, mbox1, "test2@zimbra.com"));
         Assert.assertEquals(id21, DbMailAddress.getId(conn, mbox2, "test1@zimbra.com"));
         Assert.assertEquals(id22, DbMailAddress.getId(conn, mbox2, "test2@zimbra.com"));
-    
+
         DbMailAddress.delete(conn, mbox1);
-    
+
         Assert.assertEquals(-1, DbMailAddress.getId(conn, mbox1, "test1@zimbra.com"));
         Assert.assertEquals(-1, DbMailAddress.getId(conn, mbox1, "test2@zimbra.com"));
         Assert.assertEquals(id21, DbMailAddress.getId(conn, mbox2, "test1@zimbra.com"));
         Assert.assertEquals(id22, DbMailAddress.getId(conn, mbox2, "test2@zimbra.com"));
-    
-        DbPool.quietClose(conn);
+
+        conn.closeQuietly();
     }
 
+    @Test
+    public void rebuild() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId("0-0-1");
+        Map<String, Object> fields = new HashMap<String, Object>();
+        fields.put(ContactConstants.A_email, "test1@zimbra.com");
+        fields.put(ContactConstants.A_workEmail1, "test2@zimbra.com");
+        mbox.createContact(null, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
+
+        DeliveryOptions opt = new DeliveryOptions();
+        opt.setFolderId(Mailbox.ID_FOLDER_INBOX);
+        mbox.addMessage(null, new ParsedMessage("From: test1@zimbra.com".getBytes(), false), opt);
+        mbox.addMessage(null, new ParsedMessage("From: test2@zimbra.com".getBytes(), false), opt);
+        mbox.addMessage(null, new ParsedMessage("From: test3@zimbra.com".getBytes(), false), opt);
+
+        DbConnection conn = DbPool.getConnection();
+
+        DbMailAddress.rebuild(conn, mbox);
+        Assert.assertEquals(1, DbMailAddress.getCount(conn, mbox, "test1@zimbra.com"));
+        Assert.assertEquals(1, DbMailAddress.getCount(conn, mbox, "test2@zimbra.com"));
+        Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox, "test3@zimbra.com"));
+
+        conn.closeQuietly();
+    }
 }

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -18,7 +18,6 @@ package com.zimbra.qa.unittest;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.service.ServiceException;
@@ -62,6 +61,7 @@ import com.zimbra.soap.admin.message.GetServerNIfsRequest;
 import com.zimbra.soap.admin.message.GetServerNIfsResponse;
 import com.zimbra.soap.admin.message.GetVersionInfoRequest;
 import com.zimbra.soap.admin.message.GetVersionInfoResponse;
+import com.zimbra.soap.admin.message.RecalculateMailboxCountsRequest;
 import com.zimbra.soap.admin.type.LicenseExpirationInfo;
 import com.zimbra.soap.admin.type.NetworkInformation;
 import com.zimbra.soap.admin.type.ServerSelector;
@@ -105,12 +105,13 @@ public class TestJaxbProvisioning extends TestCase {
         ZimbraLog.test.info("in TestJaxbProvisioning oneTimeTearDown");
     }
 
-    public void setUp()
-    throws Exception {
+    @Override
+    public void setUp() throws Exception {
         prov = TestUtil.newSoapProvisioning();
         tearDown();
     }
 
+    @Override
     public void tearDown() throws Exception {
         ZimbraLog.test.debug("in TestJaxbProvisioning tearDown");
         if (prov == null)
@@ -194,7 +195,7 @@ public class TestJaxbProvisioning extends TestCase {
         }
     }
 
-    public Domain ensureDomainExists(String name) 
+    public Domain ensureDomainExists(String name)
     throws Exception {
         Domain dom = prov.get(DomainBy.name, name);
         if (dom == null)
@@ -347,7 +348,7 @@ public class TestJaxbProvisioning extends TestCase {
         prov.addAlias(dl, testDlAlias);
         dl = prov.getDistributionListByName(testDlAlias);
         prov.removeAlias(dl, testDlAlias);
-        String[] members = { "one@example.com", 
+        String[] members = { "one@example.com",
                 "two@example.test", "three@example.net" };
         String[] rmMembers = { "two@example.test", "three@example.net" };
         prov.addMembers(dl, members);
@@ -372,7 +373,7 @@ public class TestJaxbProvisioning extends TestCase {
             prov.getDistributionLists(acct, false, via);
         assertEquals("Number of DLs an acct is a member of", 1,
                 containingDls.size());
-        
+
         List <DistributionList> dls = prov.getAllDistributionLists(dom);
         assertNotNull("All DLs" , dls);
         assertTrue("Number of DL objects=" + dls.size() +
@@ -405,7 +406,7 @@ public class TestJaxbProvisioning extends TestCase {
 
     // Very simple visitor that does nothing...
     private static class SimplePublishedVisitor implements PublishedShareInfoVisitor {
-        SimplePublishedVisitor() { }
+        @Override
         public void visit(ShareInfoData sid) throws ServiceException {
         }
     }
@@ -431,7 +432,7 @@ public class TestJaxbProvisioning extends TestCase {
     }
 
     // Disabled - getting :
-    // SoapFaultException: system failure: server 
+    // SoapFaultException: system failure: server
     //    gren-elliots-macbook-pro.local zimbraRemoteManagementPrivateKeyPath
     //    (/opt/zimbra/.ssh/zimbra_identity) does not exist
     public void DISABLED_testGetServerNIfs() throws Exception {
@@ -490,9 +491,8 @@ public class TestJaxbProvisioning extends TestCase {
     public void testMboxCounts() throws Exception {
         ZimbraLog.test.debug("Starting testMboxCounts");
         Account acct = ensureMailboxExists(testAcctEmail);
-        long quotaUsed = prov.recalculateMailboxCounts(acct);
-        assertTrue("quota used=" + quotaUsed +
-                " should be >= =", quotaUsed >= 0);
+        long quotaUsed = prov.recalculateMailboxCounts(acct, RecalculateMailboxCountsRequest.Action.ALL);
+        assertTrue("quota used=" + quotaUsed + " should be >= =", quotaUsed >= 0);
     }
 
     public void testFlushCache() throws Exception {

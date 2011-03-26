@@ -17,27 +17,23 @@ package com.zimbra.cs.upgrade;
 
 import com.google.common.base.Strings;
 import com.zimbra.cs.db.Db;
-import com.zimbra.cs.db.DbMailAddress;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.index.SortBy;
-import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.util.SyncToken;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.Set;
 
 /**
- * Utility class to upgrade contacts.
+ * Utility class to upgrade mailbox.
  *
  * @author Andy Clark
  */
@@ -122,7 +118,7 @@ public final class MailboxUpgrade {
     public static void upgradeTo2_0(Mailbox mbox) throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
         migrateHighestIndexed(mbox);
-        migrateMailAddress(mbox);
+        mbox.rebuildMailAddressDirectory();
     }
 
     private static void migrateHighestIndexed(Mailbox mbox) throws ServiceException {
@@ -174,89 +170,6 @@ public final class MailboxUpgrade {
             conn.rollback();
             throw ServiceException.FAILURE("Failed to migrate highest_indexed", e);
         } finally {
-            conn.closeQuietly();
-        }
-    }
-
-    private static void migrateMailAddress(Mailbox mbox) throws ServiceException {
-        String[] emailFields = Contact.getEmailFields(mbox.getAccount());
-        DbConnection conn = DbPool.getConnection(mbox);
-        PreparedStatement stmt = null;
-        PreparedStatement inner = null;
-        ResultSet rs = null;
-        try {
-            // clear all sender_id in mail_item
-            stmt = conn.prepareStatement("UPDATE " + DbMailItem.getMailItemTableName(mbox) +
-                    " SET sender_id = NULL WHERE mailbox_id = ?");
-            stmt.setInt(1, mbox.getId());
-            stmt.executeQuery();
-            stmt.close();
-            // delete all rows in mail_address
-            DbMailAddress.delete(conn, mbox);
-
-            // extract email addresses from all contacts, and put them into mail_address
-            stmt = conn.prepareStatement("SELECT metadata FROM " + DbMailItem.getMailItemTableName(mbox) +
-                    " WHERE mailbox_id = ? AND type = ?");
-            stmt.setInt(1, mbox.getId());
-            stmt.setByte(2, MailItem.Type.CONTACT.toByte());
-            rs = stmt.executeQuery();
-            while (rs.next()) {
-                Metadata metadata = new Metadata(rs.getString(1));
-                Metadata fields = metadata.getMap("fld");
-                Set<String> emails = new HashSet<String>(); // merge duplicates
-                for (String name : emailFields) {
-                    String addr = fields.get(name);
-                    if (!Strings.isNullOrEmpty(addr)) {
-                        emails.add(addr.trim().toLowerCase());
-                    }
-                }
-                for (String addr : emails) {
-                    int senderId = DbMailAddress.getId(conn, mbox, addr);
-                    if (senderId < 0) {
-                        DbMailAddress.save(conn, mbox, addr, 1);
-                    } else {
-                        DbMailAddress.incCount(conn, mbox, senderId);
-                    }
-                }
-            }
-            rs.close();
-            stmt.close();
-
-            // extract sender addresses from all messages, put them into mail_address, and set sender_id
-            stmt = conn.prepareStatement("SELECT id, sender FROM " + DbMailItem.getMailItemTableName(mbox) +
-                    " WHERE mailbox_id = ? AND type = ? AND sender IS NOT NULL");
-            stmt.setInt(1, mbox.getId());
-            stmt.setByte(2, MailItem.Type.MESSAGE.toByte());
-            rs = stmt.executeQuery();
-            while (rs.next()) {
-                int itemId = rs.getInt(1);
-                String sender = rs.getString(2);
-                for (InternetAddress iaddr : InternetAddress.parseHeader(sender)) {
-                    String addr = iaddr.getAddress();
-                    if (Strings.isNullOrEmpty(addr)) {
-                        addr = addr.trim().toLowerCase();
-                        int senderId = DbMailAddress.getId(conn, mbox, addr);
-                        if (senderId < 0) {
-                            senderId = DbMailAddress.save(conn, mbox, addr, 0);
-                        }
-                        inner = conn.prepareStatement("UPDATE " + DbMailItem.getMailItemTableName(mbox) +
-                                " SET sender_id = ? WHERE mailbox_id = ? AND id = ?");
-                        stmt.setInt(1, senderId);
-                        stmt.setInt(2, mbox.getId());
-                        stmt.setInt(3, itemId);
-                        inner.executeUpdate();
-                        inner.close();
-                    }
-                }
-            }
-            conn.commit();
-        } catch (SQLException e) {
-            conn.rollback();
-            throw ServiceException.FAILURE("Failed to migrate mail_address", e);
-        } finally {
-            conn.closeQuietly(inner);
-            conn.closeQuietly(rs);
-            conn.closeQuietly(stmt);
             conn.closeQuietly();
         }
     }

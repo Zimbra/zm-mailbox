@@ -992,13 +992,11 @@ public class SoapProvisioning extends Provisioning {
         return new VerifyIndexResult(resp.isStatus(), resp.getMessage());
     }
 
-    public long recalculateMailboxCounts(Account acct) throws ServiceException {
-        Server server = getServer(acct);
-        String serviceHost = server.getAttr(A_zimbraServiceHostname);
-        MailboxByAccountIdSelector mbox =
-                new MailboxByAccountIdSelector(acct.getId());
-        RecalculateMailboxCountsResponse resp =
-            invokeJaxb(new RecalculateMailboxCountsRequest(mbox), serviceHost);
+    public long recalculateMailboxCounts(Account acct, RecalculateMailboxCountsRequest.Action action)
+            throws ServiceException {
+        String hostname = getServer(acct).getServiceHostname();
+        MailboxByAccountIdSelector mbox = new MailboxByAccountIdSelector(acct.getId());
+        RecalculateMailboxCountsResponse resp = invokeJaxb(new RecalculateMailboxCountsRequest(mbox, action), hostname);
         return resp.getMailbox().getQuotaUsed();
     }
 
@@ -1022,7 +1020,7 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public CalendarResource get(CalendarResourceBy keyType, String key) throws ServiceException {
         try {
-            GetCalendarResourceRequest req = 
+            GetCalendarResourceRequest req =
                 new GetCalendarResourceRequest(
                     new CalendarResourceSelector(
                             CalendarResourceBy.toJaxb(keyType), key));
@@ -1041,7 +1039,7 @@ public class SoapProvisioning extends Provisioning {
         GetAllConfigResponse resp = invokeJaxb(new GetAllConfigRequest());
         return new SoapConfig(resp, this);
     }
-    
+
     @Override
     public Config getConfig(String needAttr) throws ServiceException {
         GetConfigRequest req = new GetConfigRequest();
@@ -1228,9 +1226,9 @@ public class SoapProvisioning extends Provisioning {
         p.setText(preAuth);
         invoke(req);
     }
-    
+
     @Override
-    public void ssoAuthAccount(Account acct, AuthContext.Protocol proto, Map<String, Object> authCtxt) 
+    public void ssoAuthAccount(Account acct, AuthContext.Protocol proto, Map<String, Object> authCtxt)
     throws ServiceException {
         throw new UnsupportedOperationException();
     }
@@ -1416,7 +1414,7 @@ public class SoapProvisioning extends Provisioning {
         GetAllAccountsResponse resp =
                 invokeJaxb(new GetAllAccountsRequest(svrSel, domSel));
         return resp.getAccountList();
-        
+
     }
 
     @Override
@@ -1449,7 +1447,7 @@ public class SoapProvisioning extends Provisioning {
     }
 
     private List <CalendarResourceInfo> getAllCalendarResourcesInfo(
-            Domain d, Server s) 
+            Domain d, Server s)
     throws ServiceException {
         DomainSelector domSel = null;
         if (d != null)
@@ -2291,99 +2289,99 @@ public class SoapProvisioning extends Provisioning {
             visitor.visit(sid);
         }
     }
-    
-    
+
+
     @Override
     public Map<String, Map<String, Object>> getDomainSMIMEConfig(Domain domain, String configName) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.GET_SMIME_CONFIG_REQUEST);
-        
+
         Element eDomain = req.addElement(AdminConstants.E_DOMAIN);
         eDomain.addAttribute(AdminConstants.A_BY, AdminConstants.BY_ID).setText(domain.getId());
-        
+
         if (configName != null) {
             Element eConfig = req.addElement(AdminConstants.E_CONFIG);
             eConfig.addAttribute(AdminConstants.A_NAME, configName);
         }
-        
+
         Element resp = invoke(req);
         Map<String, Map<String, Object>> result = new HashMap<String, Map<String, Object>>();
         for (Element eConfig : resp.listElements(AdminConstants.E_CONFIG)) {
             result.put(eConfig.getAttribute(AdminConstants.A_NAME), getAttrs(eConfig));
         }
-        
+
         return result;
     }
-    
+
     @Override
     public void modifyDomainSMIMEConfig(Domain domain, String configName, Map<String, Object> attrs) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.MODIFY_SMIME_CONFIG_REQUEST);
-        
+
         Element eDomain = req.addElement(AdminConstants.E_DOMAIN);
         eDomain.addAttribute(AdminConstants.A_BY, AdminConstants.BY_ID).setText(domain.getId());
-        
+
         Element eConfig = req.addElement(AdminConstants.E_CONFIG);
         eConfig.addAttribute(AdminConstants.A_NAME, configName);
         eConfig.addAttribute(AdminConstants.A_OP, AdminConstants.OP_MODIFY);
-        
+
         addAttrElements(eConfig, attrs);
-        
+
         invoke(req);
     }
-    
+
     @Override
     public void removeDomainSMIMEConfig(Domain domain, String configName) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.MODIFY_SMIME_CONFIG_REQUEST);
-        
+
         Element eDomain = req.addElement(AdminConstants.E_DOMAIN);
         eDomain.addAttribute(AdminConstants.A_BY, AdminConstants.BY_ID).setText(domain.getId());
-        
+
         Element eConfig = req.addElement(AdminConstants.E_CONFIG);
         eConfig.addAttribute(AdminConstants.A_NAME, configName);
         eConfig.addAttribute(AdminConstants.A_OP, AdminConstants.OP_REMOVE);
-        
+
         invoke(req);
     }
 
     @Override
     public Map<String, Map<String, Object>> getConfigSMIMEConfig(String configName) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.GET_SMIME_CONFIG_REQUEST);
-        
+
         if (configName != null) {
             Element eConfig = req.addElement(AdminConstants.E_CONFIG);
             eConfig.addAttribute(AdminConstants.A_NAME, configName);
         }
-        
+
         Element resp = invoke(req);
         Map<String, Map<String, Object>> result = new HashMap<String, Map<String, Object>>();
         for (Element eConfig : resp.listElements(AdminConstants.E_CONFIG)) {
             result.put(eConfig.getAttribute(AdminConstants.A_NAME), getAttrs(eConfig));
         }
-        
+
         return result;
     }
 
-    
+
     @Override
     public void modifyConfigSMIMEConfig(String configName, Map<String, Object> attrs) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.MODIFY_SMIME_CONFIG_REQUEST);
-        
+
         Element eConfig = req.addElement(AdminConstants.E_CONFIG);
         eConfig.addAttribute(AdminConstants.A_NAME, configName);
         eConfig.addAttribute(AdminConstants.A_OP, AdminConstants.OP_MODIFY);
-        
+
         addAttrElements(eConfig, attrs);
-        
+
         invoke(req);
     }
-    
+
     @Override
     public void removeConfigSMIMEConfig(String configName) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.MODIFY_SMIME_CONFIG_REQUEST);
-        
+
         Element eConfig = req.addElement(AdminConstants.E_CONFIG);
         eConfig.addAttribute(AdminConstants.A_NAME, configName);
         eConfig.addAttribute(AdminConstants.A_OP, AdminConstants.OP_REMOVE);
-        
+
         invoke(req);
     }
 
