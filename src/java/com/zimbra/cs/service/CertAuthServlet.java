@@ -67,7 +67,7 @@ public class CertAuthServlet extends SSOServlet {
             } catch (SSOAuthenticatorServiceException e) {
                 if (SSOAuthenticatorServiceException.NO_CLIENT_CERTIFICATE.equals(e.getCode())) {
                     if (missingClientCertOK()) {
-                        redirectWithoutAuthTokenCookie(req, resp, isAdminRequest);
+                        redirectToErrorPage(req, resp, isAdminRequest, null);
                     } else {
                         throw e;
                     }
