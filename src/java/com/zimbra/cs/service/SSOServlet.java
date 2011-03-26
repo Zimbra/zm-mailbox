@@ -115,20 +115,26 @@ public abstract class SSOServlet extends ZimbraServlet {
         resp.sendRedirect(redirectUrl);
     }
     
-    // redirect to the webapp's regular entry page without an auth token cookie
-    // the default behavior is the login/password page
-    protected void redirectWithoutAuthTokenCookie(HttpServletRequest req, HttpServletResponse resp, 
-            boolean isAdminRequest) throws IOException, ServiceException {
-        
-        // append the ignore loginURL query so we do not get into a redirect loop.
-        final String IGNORE_LOGIN_URL = "/?ignoreLoginURL=1";
-        
-        Server server = Provisioning.getInstance().getLocalServer();
+    // Redirect to the specified error page without Zimbra auth token cookie.
+    // The default error page is the webapp's regular entry page where user can
+    // enter his username/password.
+    protected void redirectToErrorPage(HttpServletRequest req, HttpServletResponse resp, 
+            boolean isAdminRequest, String errorUrl) throws IOException, ServiceException {
         String redirectUrl;
-        if (isAdminRequest) {
-            redirectUrl = getAdminUrl(server) + IGNORE_LOGIN_URL; // not yet supported for admin console
+        
+        if (errorUrl == null) {
+            // append the ignore loginURL query so we do not get into a redirect loop.
+            final String IGNORE_LOGIN_URL = "/?ignoreLoginURL=1";
+            
+            Server server = Provisioning.getInstance().getLocalServer();
+            
+            if (isAdminRequest) {
+                redirectUrl = getAdminUrl(server) + IGNORE_LOGIN_URL; // not yet supported for admin console
+            } else {
+                redirectUrl = getMailUrl(server) + IGNORE_LOGIN_URL;
+            }
         } else {
-            redirectUrl = getMailUrl(server) + IGNORE_LOGIN_URL;
+            redirectUrl = errorUrl;
         }
         
         resp.sendRedirect(redirectUrl);

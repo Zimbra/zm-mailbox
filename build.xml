@@ -748,7 +748,6 @@
 
       <property name="zimbraSpnegoAuthEnabled"     value="TRUE"/>
       <property name="zimbraSpnegoAuthRealm"       value="SPNEGO.LOCAL"/>
-      <property name="zimbraSpnegoAuthErrorURL"    value="/zimbra/?ignoreLoginURL=1"/>
 
       <!-- server -->
       <property name="zimbraSpnegoAuthPrincipal"   value="HTTP/${SERVICE_PRINCIPAL_NAME}@SPNEGO.LOCAL"/>
@@ -757,7 +756,7 @@
       <!-- domain -->
       <property name="zimbraPreAuthKey"            value="4e2816f16c44fab20ecdee39fb850c3b0bb54d03f1d8e073aaea376a4f407f0c"/>
       <property name="zimbraVirtualHostname"       value="${spnego.server.name}"/>
-      <property name="zimbraWebClientLoginURL"     value="../../spnegoauth"/>
+      <property name="zimbraWebClientLoginURL"     value="../../service/spnego"/>
       <property name="zimbraWebClientLogoutURL"    value="../?sso=1"/>
       <property name="zimbraAuthKerberos5Realm"    value="${zimbraSpnegoAuthRealm}"/>
 
@@ -768,9 +767,6 @@
       </antcall>
       <antcall target="zmprov">
         <param name="args" value="-l mcf zimbraSpnegoAuthRealm ${zimbraSpnegoAuthRealm}"/>
-      </antcall>
-      <antcall target="zmprov">
-        <param name="args" value="-l mcf zimbraSpnegoAuthErrorURL ${zimbraSpnegoAuthErrorURL}"/>
       </antcall>
 
       <antcall target="zmprov">
@@ -826,23 +822,7 @@
       <echo>----- rewriting files -----</echo>
       <echo/>
 
-      <!-- replace the preauth key in spnego_preauth.jsp -->
-      <echo>rewriting ${jetty.home.dir}/webapps/spnego/spnego_preauth.jsp</echo>
-      <replace file="${jetty.home.dir}/webapps/spnego/spnego_preauth.jsp">
-        <replacefilter token="REPLACE-ME-WITH-THE-PREAUTH-KEY" value="${zimbraPreAuthKey}"/>
-      </replace>
-
       <!-- mimic zmconfigd -->
-      <echo>rewriting ${jetty.home.dir}/webapps/spnego/spnego_error.jsp</echo>
-      <replace file="${jetty.home.dir}/webapps/spnego/spnego_error.jsp">
-        <replacefilter token="%%zimbraSpnegoAuthErrorURL%%" value="${zimbraSpnegoAuthErrorURL}"/>
-      </replace>
-
-      <echo>rewriting ${jetty.home.dir}/webapps/spnego/WEB-INF/web.xml</echo>
-      <replace file="${jetty.home.dir}/webapps/spnego/WEB-INF/web.xml">
-        <replacefilter token="%%zimbraSpnegoAuthRealm%%" value="${zimbraSpnegoAuthRealm}"/>
-      </replace>
-
       <echo>rewriting ${jetty.conf.dir}/krb5.ini</echo>
       <replace file="${jetty.conf.dir}/krb5.ini">
         <replacefilter token="%%zimbraSpnegoAuthRealm%%" value="${zimbraSpnegoAuthRealm}"/>
@@ -858,18 +838,18 @@
         <replacefilter token="%%zimbraSpnegoAuthTargetName%%" value="${zimbraSpnegoAuthTargetName}"/>
       </replace>
 
+      <echo>rewriting ${jetty.conf.dir}/jetty.xml</echo>
+      <replace file="${jetty.conf.dir}/jetty.xml">
+        <replacefilter token="&lt;!-- zimbraSpnegoAuthEnabled" value=""/>
+        <replacefilter token="zimbraSpnegoAuthEnabled --&gt;" value=""/>
+      </replace>
+
       <echo>rewriting ${zimbra.home.dir}/bin/jetty</echo>
       <replace file="${zimbra.home.dir}/bin/jetty">
         <replacefilter token="zimbraSpnegoAuthEnabled: FALSE" value="zimbraSpnegoAuthEnabled: TRUE"/>
       </replace>
       <!-- executable permission was removed by the above replace, set it back -->
       <chmod file="${zimbra.home.dir}/bin/jetty" perm="+x" />
-
-      <echo>rewriting ${jetty.conf.dir}/jetty.xml</echo>
-      <replace file="${jetty.conf.dir}/jetty.xml">
-        <replacefilter token="&lt;!-- zimbraSpnegoAuthEnabled" value=""/>
-        <replacefilter token="zimbraSpnegoAuthEnabled --&gt;" value=""/>
-      </replace>
 
       <antcall target="start-webserver"/>
 

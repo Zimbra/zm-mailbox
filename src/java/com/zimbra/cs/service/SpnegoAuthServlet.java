@@ -26,6 +26,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.service.authenticator.SSOAuthenticator.ZimbraPrincipal;
 
@@ -76,7 +77,8 @@ public class SpnegoAuthServlet extends SSOServlet {
                 resp.sendError(HttpServletResponse.SC_FORBIDDEN, e.getMessage());
             } else {
                 try {
-                    redirectWithoutAuthTokenCookie(req, resp, isAdminRequest);
+                    redirectToErrorPage(req, resp, isAdminRequest, 
+                            Provisioning.getInstance().getConfig().getSpnegoAuthErrorURL());
                 } catch (ServiceException se) {
                     ZimbraLog.account.info("failed to redirect to error page: " + se.getMessage());
                     resp.sendError(HttpServletResponse.SC_FORBIDDEN, e.getMessage());
