@@ -52,6 +52,7 @@ import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteChanges;
+import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
@@ -732,14 +733,38 @@ public class Message extends MailItem {
                         dangerousSender = true;
                     }
                     if (!dangerousSender) {
-                        ZOrganizer org = new ZOrganizer(fromEmail, null);
-                        String senderEmail = pm.getSenderEmail(false);
-                        if (senderEmail != null && !senderEmail.equalsIgnoreCase(fromEmail))
-                            org.setSentBy(senderEmail);
-                        cur.setOrganizer(org);
-                        ZimbraLog.calendar.info(
-                                "Got malformed invite that lists attendees without specifying an organizer.  " +
-                                "Defaulting organizer to: " + org.toString());
+                        if (isOrganizerMethod = Invite.isOrganizerMethod(method)) {
+                            // For organizer-originated methods, use email sender as default organizer.
+                            ZOrganizer org = new ZOrganizer(fromEmail, null);
+                            String senderEmail = pm.getSenderEmail(false);
+                            if (senderEmail != null && !senderEmail.equalsIgnoreCase(fromEmail))
+                                org.setSentBy(senderEmail);
+                            cur.setOrganizer(org);
+                            ZimbraLog.calendar.info(
+                                    "Got malformed invite that lists attendees without specifying an organizer.  " +
+                                    "Defaulting organizer to: " + org.toString());
+                        } else {
+                            // For attendee-originated methods, look up organizer from appointment on calendar.
+                            // If appointment is not found, fall back to the intended-for address, then finally to self.
+                            ZOrganizer org = null;
+                            CalendarItem ci = mMailbox.getCalendarItemByUid(cur.getUid());
+                            if (ci != null) {
+                                Invite inv = ci.getInvite((RecurId) cur.getRecurId());
+                                if (inv == null)
+                                    inv = ci.getDefaultInviteOrNull();
+                                if (inv != null)
+                                    org = inv.getOrganizer();
+                            }
+                            if (org == null) {
+                                if (intendedForAddress != null)
+                                    org = new ZOrganizer(intendedForAddress, null);
+                                else
+                                    org = new ZOrganizer(acct.getName(), null);
+                            }
+                            cur.setOrganizer(org);
+                            cur.setIsOrganizer(intendedForMe);
+                            ZimbraLog.calendar.info("Got malformed reply missing organizer.  Defaulting to " + org.toString());
+                        }
                     }
                 }
             }
