@@ -149,13 +149,14 @@ public class SearchGal extends GalDocumentHandler {
     
     private static class GenLdapQueryByNamedFilterVisitor implements Visitor {
         StringBuilder mLdapFilter;
+        boolean mEncounteredError;
 
         public GenLdapQueryByNamedFilterVisitor() {
             mLdapFilter = new StringBuilder();
         }
 
         public String getFilter() {
-            return mLdapFilter.toString();
+            return mEncounteredError ? null : mLdapFilter.toString();
         }
 
         public void visitSingle(Single term) {
@@ -176,6 +177,8 @@ public class SearchGal extends GalDocumentHandler {
             }
             
             if (filter == null) {
+                // mark the filter invalid, will return null regardless what other terms are evaluated to.
+                mEncounteredError = true;
                 return;
             }
                 
