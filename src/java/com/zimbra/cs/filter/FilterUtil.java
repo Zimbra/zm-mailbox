@@ -537,6 +537,8 @@ public class FilterUtil {
             Header header = (Header) enumeration.nextElement();
             vars.put(header.getName().toLowerCase(), mimeMessage.getHeader(header.getName(), ","));
         }
+        // raw subject could be encoded, so get the parsed subject
+        vars.put("subject", parsedMessage.getSubject());
         MPartInfo bodyPart = Mime.getTextBody(parsedMessage.getMessageParts(), false);
         try {
             vars.put("body",
