@@ -74,7 +74,8 @@ public class Tag extends MailItem {
         mDeletedUnreadCount = deletedUnread;
     }
 
-    @Override protected void updateUnread(int delta, int deletedDelta) throws ServiceException {
+    @Override
+    protected void updateUnread(int delta, int deletedDelta) throws ServiceException {
         super.updateUnread(delta, deletedDelta);
 
         if (deletedDelta != 0 && trackUnread()) {
@@ -249,24 +250,36 @@ public class Tag extends MailItem {
         super.rename(name, target);
 
         if (!originalName.equals(name)) {
-            for (Folder folder : mMailbox.listAllFolders()) {
-                if (folder.getItemCount() > 0)
-                    folder.updateHighestMODSEQ();
-            }
+            // any folder that contains items might have seen some of its contents change
+            touchAllFolders();
+            // tag rename needs to cascade into filter rules
             RuleManager.tagRenamed(getAccount(), originalName, name);
         }
     }
 
     @Override
     void purgeCache(PendingDelete info, boolean purgeItem) throws ServiceException {
-        if (ZimbraLog.mailop.isDebugEnabled())
-            ZimbraLog.mailop.debug("Removing %s from all items.", getMailopContext(this));
+        ZimbraLog.mailop.debug("Removing %s from all items.", getMailopContext(this));
         // remove the tag from all items in the database
         DbMailItem.clearTag(this);
+        // any folder that contains items might have seen some of its contents change
+        touchAllFolders();
         // dump entire item cache (necessary now because we reuse tag ids)
         mMailbox.purge(Type.MESSAGE);
         // remove tag from tag cache
         super.purgeCache(info, purgeItem);
+    }
+
+    /** Updates the change highwater mark for all non-empty folders.  Renaming
+     *  or deleting a tag may or may not touch items in any or all folders.
+     *  Since we can't easily tell which folders would be affected, we just
+     *  update the highwater mark for *all* folders. */
+    void touchAllFolders() throws ServiceException {
+        for (Folder folder : mMailbox.listAllFolders()) {
+            if (folder.getItemCount() > 0) {
+                folder.updateHighestMODSEQ();
+            }
+        }
     }
 
     /** Persists the tag's current unread count to the database. */
