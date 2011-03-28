@@ -498,10 +498,6 @@ public abstract class ArchiveFormatter extends Formatter {
             String path = getEntryName(mi, fldr, name, ext, names, charsetEncoder);
             long miSize = mi.getSize();
 
-            if (miSize == 0 && mi.getDigest() != null) {
-                ZimbraLog.misc.debug("blob db size 0 for item %d", mi.getId());
-                return aos;
-            }
             try {
                 is = mi.getContentStream();
             } catch (Exception e) {
