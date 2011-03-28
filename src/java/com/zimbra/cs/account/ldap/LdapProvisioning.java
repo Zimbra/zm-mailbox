@@ -3416,12 +3416,14 @@ public class LdapProvisioning extends Provisioning {
     }
 
     @Override
-    public void preAuthAccount(Account acct, String acctValue, String acctBy, long timestamp, long expires, String preAuth, Map<String, Object> authCtxt) throws ServiceException {
+    public void preAuthAccount(Account acct, String acctValue, String acctBy, long timestamp, long expires, 
+            String preAuth, Map<String, Object> authCtxt) throws ServiceException {
         preAuthAccount(acct, acctValue, acctBy, timestamp, expires, preAuth, false, authCtxt);
     }
 
     @Override
-    public void preAuthAccount(Account acct, String acctValue, String acctBy, long timestamp, long expires, String preAuth, boolean admin, Map<String, Object> authCtxt) throws ServiceException {
+    public void preAuthAccount(Account acct, String acctValue, String acctBy, long timestamp, long expires, 
+            String preAuth, boolean admin, Map<String, Object> authCtxt) throws ServiceException {
         try {
             preAuth(acct, acctValue, acctBy, timestamp, expires, preAuth, admin, authCtxt);
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
@@ -3569,18 +3571,37 @@ public class LdapProvisioning extends Provisioning {
     @Override
     public void ssoAuthAccount(Account acct, AuthContext.Protocol proto, Map<String, Object> authCtxt) throws ServiceException {
         try {
-            checkAccountStatus(acct, authCtxt);
+            ssoAuth(acct, authCtxt);
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                    new String[] {"cmd", "Auth","account", acct.getName(), "protocol", proto.toString()}));
+                    new String[] {"cmd", "SSOAuth","account", acct.getName(), "protocol", proto.toString()}));
         } catch (AuthFailedServiceException e) {
             ZimbraLog.security.warn(ZimbraLog.encodeAttrs(
-                    new String[] {"cmd", "Auth","account", acct.getName(), "protocol", proto.toString(), "error", e.getMessage() + e.getReason(", %s")}));
+                    new String[] {"cmd", "SSOAuth","account", acct.getName(), "protocol", proto.toString(), "error", e.getMessage() + e.getReason(", %s")}));
             throw e;
         } catch (ServiceException e) {
             ZimbraLog.security.warn(ZimbraLog.encodeAttrs(
-                    new String[] {"cmd", "Auth","account", acct.getName(), "protocol", proto.toString(), "error", e.getMessage()}));
+                    new String[] {"cmd", "SSOAuth","account", acct.getName(), "protocol", proto.toString(), "error", e.getMessage()}));
             throw e;
         }
+    }
+
+    private void ssoAuth(Account acct, Map<String, Object> authCtxt) throws ServiceException {
+        
+        checkAccountStatus(acct, authCtxt);
+        
+        LdapLockoutPolicy lockoutPolicy = new LdapLockoutPolicy(this, acct);
+        try {
+            if (lockoutPolicy.isLockedOut())
+                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), AuthMechanism.namePassedIn(authCtxt), "account lockout");
+
+            // yes, SSO can unlock the acount
+            lockoutPolicy.successfulLogin();
+        } catch (AccountServiceException e) {
+            lockoutPolicy.failedLogin();
+            throw e;
+        }
+
+        updateLastLogon(acct);
     }
 
     private void updateLastLogon(Account acct) throws ServiceException {
