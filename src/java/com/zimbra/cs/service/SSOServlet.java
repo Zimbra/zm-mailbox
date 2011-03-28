@@ -20,10 +20,12 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
@@ -35,6 +37,18 @@ import com.zimbra.cs.service.authenticator.SSOAuthenticator.ZimbraPrincipal;
 import com.zimbra.cs.servlet.ZimbraServlet;
 
 public abstract class SSOServlet extends ZimbraServlet {
+    
+    public void init() throws ServletException {
+        String name = getServletName();
+        ZimbraLog.account.info("Servlet " + name + " starting up");
+        super.init();
+    }
+
+    public void destroy() {
+        String name = getServletName();
+        ZimbraLog.account.info("Servlet " + name + " shutting down");
+        super.destroy();
+    }
     
     protected AuthToken authorize(HttpServletRequest req, AuthContext.Protocol proto, 
             ZimbraPrincipal principal, boolean isAdminRequest) 

@@ -465,7 +465,7 @@ public class AttributeInfo {
 
     String getDescription() {
         if (AttributeType.TYPE_DURATION == getType())
-            return mDescription + "  " + DURATION_PATTERN_DOC;
+            return mDescription + ".  " + DURATION_PATTERN_DOC;
         else    
             return mDescription;
     }
