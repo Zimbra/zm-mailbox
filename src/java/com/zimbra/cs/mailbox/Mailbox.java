@@ -7404,12 +7404,14 @@ public class Mailbox {
             boolean isNewMessage = recorder.getOperation() == MailboxOperation.CreateMessage;
             if (isNewMessage) {
                 CreateMessage cm = (CreateMessage) recorder;
-                if (cm.getFolderId() == ID_FOLDER_SPAM || cm.getFolderId() == ID_FOLDER_TRASH)
+                if (cm.getFolderId() == ID_FOLDER_SPAM || cm.getFolderId() == ID_FOLDER_TRASH) {
                     isNewMessage = false;
-                else if ((cm.getFlags() & NON_DELIVERY_FLAGS) != 0)
+                } else if ((cm.getFlags() & NON_DELIVERY_FLAGS) != 0) {
                     isNewMessage = false;
-                else if (octxt != null && octxt.getSession() != null && !octxt.isDelegatedRequest(this))
+                } else if (octxt != null && octxt.getSession() != null && !octxt.isDelegatedRequest(this)) {
                     isNewMessage = false;
+                }
+
                 if (isNewMessage) {
                     String folderList = getAccount().getPrefMailFoldersCheckedForNewMsgIndicator();
 
@@ -7431,42 +7433,46 @@ public class Mailbox {
                 mCurrentChange.recent = mData.recentMessages + 1;
             } else if (octxt != null && mData.recentMessages != 0) {
                 Session s = octxt.getSession();
-                if (s instanceof SoapSession || (s instanceof SoapSession.DelegateSession &&
-                    ((SoapSession.DelegateSession)s).getParentSession().isOfflineSoapSession()))
+                if (s instanceof SoapSession || (s instanceof SoapSession.DelegateSession && ((SoapSession.DelegateSession) s).getParentSession().isOfflineSoapSession())) {
                     mCurrentChange.recent = 0;
+                }
             }
         }
 
         if (mCurrentChange.isMailboxRowDirty(mData)) {
-            if (mCurrentChange.recent != MailboxChange.NO_CHANGE && ZimbraLog.mailbox.isDebugEnabled())
-                ZimbraLog.mailbox.debug("setting recent count to " + mCurrentChange.recent);
+            if (mCurrentChange.recent != MailboxChange.NO_CHANGE) {
+                ZimbraLog.mailbox.debug("setting recent count to %d", mCurrentChange.recent);
+            }
             DbMailbox.updateMailboxStats(this);
         }
 
         if (mCurrentChange.mDirty != null && mCurrentChange.mDirty.hasNotifications()) {
             if (mCurrentChange.mDirty.created != null) {
                 for (MailItem item : mCurrentChange.mDirty.created.values()) {
-                    if (item instanceof Folder && item.getSize() != 0)
+                    if (item instanceof Folder && item.getSize() != 0) {
                         ((Folder) item).saveFolderCounts(false);
-                    else if (item instanceof Tag && item.isUnread())
+                    } else if (item instanceof Tag && item.isUnread()) {
                         ((Tag) item).saveTagCounts();
+                    }
                 }
             }
 
             if (mCurrentChange.mDirty.modified != null) {
                 for (Change change : mCurrentChange.mDirty.modified.values()) {
-                    if ((change.why & (Change.MODIFIED_UNREAD | Change.MODIFIED_SIZE)) != 0 && change.what instanceof Folder)
+                    if ((change.why & (Change.MODIFIED_UNREAD | Change.MODIFIED_SIZE)) != 0 && change.what instanceof Folder) {
                         ((Folder) change.what).saveFolderCounts(false);
-                    else if ((change.why & Change.MODIFIED_UNREAD) != 0 && change.what instanceof Tag)
+                    } else if ((change.why & Change.MODIFIED_UNREAD) != 0 && change.what instanceof Tag) {
                         ((Tag) change.what).saveTagCounts();
+                    }
                 }
             }
         }
 
         if (DebugConfig.checkMailboxCacheConsistency && mCurrentChange.mDirty != null && mCurrentChange.mDirty.hasNotifications()) {
             if (mCurrentChange.mDirty.created != null) {
-                for (MailItem item : mCurrentChange.mDirty.created.values())
+                for (MailItem item : mCurrentChange.mDirty.created.values()) {
                     DbMailItem.consistencyCheck(item, item.mData, item.encodeMetadata());
+                }
             }
             if (mCurrentChange.mDirty.modified != null) {
                 for (Change change : mCurrentChange.mDirty.modified.values()) {
