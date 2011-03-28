@@ -118,7 +118,7 @@ public class ShareInfoData {
     // returns the leaf folder name
     public String getFolderName() {
         String[] fn = mFolderPath.split("/");
-        return fn[fn.length - 1];
+        return fn.length > 0 ? fn[fn.length - 1] : mFolderPath;
     }
             
     public void setFolderDefaultView(byte folderDefaultView) {
