@@ -86,7 +86,7 @@ public abstract class SSOServlet extends ZimbraServlet {
     }
     
     protected boolean isFromZCO(HttpServletRequest req) throws ServiceException {
-        final String UA_ZCO = "ZimbraConnectorForOutlook";
+        final String UA_ZCO = "Zimbra-ZCO";
         String userAgent = req.getHeader("User-Agent");
         return userAgent.contains(UA_ZCO);
     }
