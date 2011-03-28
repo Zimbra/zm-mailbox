@@ -5734,14 +5734,13 @@ public class Mailbox {
      *  to an existing <tt>MailItem</tt> of an incompatible type, however,
      *  an error is thrown.
      *
-    *  @param octxt operation context or <tt>null</tt>
-    *  @param itemIds item ids
-    *  @param type item type or {@link MailItem.Type#UNKNOWN}
-    *  @param tcon target constraint or <tt>null</tt> */
+     *  @param octxt operation context or <tt>null</tt>
+     *  @param itemIds item ids
+     *  @param type item type or {@link MailItem.Type#UNKNOWN}
+     *  @param tcon target constraint or <tt>null</tt> */
     public synchronized void delete(OperationContext octxt, int[] itemIds, MailItem.Type type, TargetConstraint tcon)
-            throws ServiceException {
+    throws ServiceException {
         DeleteItem redoRecorder = new DeleteItem(mId, itemIds, type, tcon);
-        Map<Integer, String> deletedTags = new HashMap<Integer, String>();
 
         boolean success = false;
         try {
@@ -5760,15 +5759,12 @@ public class Mailbox {
                     continue;
                 }
 
-                if (item.getType() == MailItem.Type.TAG) {
-                    deletedTags.put(item.getId(), item.getName());
-                }
-
                 // however, trying to delete messages and passing in a folder ID is not OK
-                if (!MailItem.isAcceptableType(type, item.getType()))
+                if (!MailItem.isAcceptableType(type, item.getType())) {
                     throw MailItem.noSuchItem(id, type);
-                if (!checkItemChangeID(item) && item instanceof Tag)
+                } else if (!checkItemChangeID(item) && item instanceof Tag) {
                     throw MailServiceException.MODIFY_CONFLICT();
+                }
 
                 // delete the item, but don't write the tombstone until we're finished...
                 item.delete(MailItem.DeleteScope.ENTIRE_ITEM, false);
@@ -5776,8 +5772,9 @@ public class Mailbox {
 
             // deletes have already been collected, so fetch the tombstones and write once
             TypedIdList tombstones = collectPendingTombstones();
-            if (tombstones != null && !tombstones.isEmpty())
+            if (tombstones != null && !tombstones.isEmpty()) {
                 DbMailItem.writeTombstones(this, tombstones);
+            }
 
             success = true;
         } finally {
@@ -5786,15 +5783,18 @@ public class Mailbox {
     }
 
     TypedIdList collectPendingTombstones() {
-        if (!isTrackingSync() || mCurrentChange.deletes == null)
+        if (!isTrackingSync() || mCurrentChange.deletes == null) {
             return null;
+        }
         return new TypedIdList(mCurrentChange.deletes.itemIds);
     }
 
     private int deleteFromDumpster(int[] itemIds) throws ServiceException {
         Folder trash = getFolderById(ID_FOLDER_TRASH);
-        if (!trash.canAccess(ACL.RIGHT_DELETE))
+        if (!trash.canAccess(ACL.RIGHT_DELETE)) {
             throw ServiceException.PERM_DENIED("dumpster access denied");
+        }
+
         int numDeleted = 0;
         for (int id : itemIds) {
             MailItem item = null;

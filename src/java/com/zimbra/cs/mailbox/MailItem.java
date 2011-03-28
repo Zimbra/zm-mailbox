@@ -2618,8 +2618,9 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
     void delete(DeleteScope scope, boolean writeTombstones) throws ServiceException {
-        if (scope == DeleteScope.ENTIRE_ITEM && !isDeletable())
+        if (scope == DeleteScope.ENTIRE_ITEM && !isDeletable()) {
             throw MailServiceException.IMMUTABLE_OBJECT(mId);
+        }
 
         // get the full list of things that are being removed
         PendingDelete info = getDeletionInfo();
@@ -2678,10 +2679,11 @@ public abstract class MailItem implements Comparable<MailItem> {
         // Log mailop statements if necessary
         if (ZimbraLog.mailop.isInfoEnabled()) {
             if (item != null) {
-                if (item instanceof VirtualConversation)
+                if (item instanceof VirtualConversation) {
                     ZimbraLog.mailop.info("Deleting Message (id=%d).", ((VirtualConversation) item).getMessageId());
-                else
+                } else {
                     ZimbraLog.mailop.info("Deleting %s%s.", scope == DeleteScope.CONTENTS_ONLY ? "contents of " : "", getMailopContext(item));
+                }
             }
 
             // If there are any related items being deleted, log them in blocks of 200.
@@ -2689,8 +2691,9 @@ public abstract class MailItem implements Comparable<MailItem> {
             Set<Integer> idSet = new TreeSet<Integer>();
             for (int id : info.itemIds.getAll()) {
                 id = Math.abs(id); // Use abs() for VirtualConversations
-                if (id != itemId)
+                if (id != itemId) {
                     idSet.add(id);
+                }
                 if (idSet.size() >= 200) {
                     // More than 200 items.
                     ZimbraLog.mailop.info("Deleting items: %s.", StringUtil.join(",", idSet));
@@ -2715,12 +2718,12 @@ public abstract class MailItem implements Comparable<MailItem> {
         // remove the deleted item(s) from the mailbox's cache
         if (item != null) {
             item.purgeCache(info, !info.incomplete && scope == DeleteScope.ENTIRE_ITEM);
-            if (parent != null)
+            if (parent != null) {
                 parent.removeChild(item);
+            }
         } else if (!info.itemIds.isEmpty()) {
             // we're doing an old-item expunge or the like rather than a single delete/empty op
-            info.cascadeIds = DbMailItem.markDeletionTargets(mbox,
-                    info.itemIds.getIds(EnumSet.of(Type.MESSAGE, Type.CHAT)), info.modifiedIds);
+            info.cascadeIds = DbMailItem.markDeletionTargets(mbox, info.itemIds.getIds(EnumSet.of(Type.MESSAGE, Type.CHAT)), info.modifiedIds);
             if (info.cascadeIds != null) {
                 info.modifiedIds.removeAll(info.cascadeIds);
             }
@@ -2745,14 +2748,16 @@ public abstract class MailItem implements Comparable<MailItem> {
         }
 
         // deal with index sharing
-        if (info.sharedIndex != null && !info.sharedIndex.isEmpty())
+        if (info.sharedIndex != null && !info.sharedIndex.isEmpty()) {
             DbMailItem.resolveSharedIndex(mbox, info);
+        }
 
         mbox.markOtherItemDirty(info);
 
         // write a deletion record for later sync
-        if (writeTombstones && mbox.isTrackingSync() && !info.itemIds.isEmpty() && !fromDumpster)
+        if (writeTombstones && mbox.isTrackingSync() && !info.itemIds.isEmpty() && !fromDumpster) {
             DbMailItem.writeTombstones(mbox, info.itemIds);
+        }
 
         // don't actually delete the blobs or index entries here; wait until after the commit
     }
@@ -2760,8 +2765,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     static String getMailopContext(MailItem item) {
         if (item == null || !ZimbraLog.mailop.isInfoEnabled()) {
             return "<undefined>";
-        }
-        if (item instanceof Folder || item instanceof Tag || item instanceof WikiItem) {
+        } else if (item instanceof Folder || item instanceof Tag || item instanceof WikiItem) {
             return String.format("%s %s (id=%d)", item.getClass().getSimpleName(), item.getName(), item.getId());
         } else if (item instanceof Contact) {
             String email = ((Contact) item).get(ContactConstants.A_email);

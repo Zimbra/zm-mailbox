@@ -125,8 +125,25 @@ public class FolderTest {
 
         // tag message
         int tagId = mbox.createTag(null, "taggity", (byte) 3).getId();
+        modseq = mbox.getFolderById(null, folderId).getImapMODSEQ();
         mbox.alterTag(null, msgId, MailItem.Type.MESSAGE, tagId, true);
         modseq = checkMODSEQ("add tag", mbox, folderId, modseq);
+
+        // rename tag
+        mbox.rename(null, tagId, MailItem.Type.TAG, "blaggity", Mailbox.ID_AUTO_INCREMENT);
+        modseq = checkMODSEQ("rename tag", mbox, folderId, modseq);
+
+        // untag message
+        mbox.alterTag(null, msgId, MailItem.Type.MESSAGE, tagId, false);
+        modseq = checkMODSEQ("remove tag", mbox, folderId, modseq);
+
+        // retag message
+        mbox.alterTag(null, msgId, MailItem.Type.MESSAGE, tagId, true);
+        modseq = checkMODSEQ("re-add tag", mbox, folderId, modseq);
+
+        // delete tag
+        mbox.delete(null, tagId, MailItem.Type.TAG);
+        modseq = checkMODSEQ("tag delete", mbox, folderId, modseq);
 
         // hard delete message
         mbox.delete(null, msgId, MailItem.Type.MESSAGE);
