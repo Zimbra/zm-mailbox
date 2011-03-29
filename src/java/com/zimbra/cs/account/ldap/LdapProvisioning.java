@@ -906,11 +906,13 @@ public class LdapProvisioning extends Provisioning {
             zlc = new ZimbraLdapContext(true);
 
             Domain d = getDomainByAsciiName(domain, zlc);
-            if (d == null)
+            if (d == null) {
                 throw AccountServiceException.NO_SUCH_DOMAIN(domain);
-            String domainType = d.getAttr(Provisioning.A_zimbraDomainType, Provisioning.DOMAIN_TYPE_LOCAL);
-            if (!domainType.equals(Provisioning.DOMAIN_TYPE_LOCAL))
+            }
+            
+            if (!d.isLocal()) {
                 throw ServiceException.INVALID_REQUEST("domain type must be local", null);
+            }
 
             Attributes attrs = new BasicAttributes(true);
             LdapUtil.mapToAttrs(acctAttrs, attrs);
@@ -2383,6 +2385,11 @@ public class LdapProvisioning extends Provisioning {
             if (domainChanged) {
                 validate(ProvisioningValidator.RENAME_ACCOUNT, newName, acct.getMultiAttr(Provisioning.A_objectClass, false), acct.getAttrs(false));
                 validate(ProvisioningValidator.RENAME_ACCOUNT_CHECK_DOMAIN_COS_AND_FEATURE, newName, acct.getAttrs(false));
+                
+                // make sure the new domain is a local domain
+                if (!domain.isLocal()) {
+                    throw ServiceException.INVALID_REQUEST("domain type must be local", null);
+                }
             }
             
             String newDn = mDIT.accountDNRename(oldDn, newLocal, domain.getName());
@@ -2894,9 +2901,10 @@ public class LdapProvisioning extends Provisioning {
             Domain d = getDomainByAsciiName(domain, zlc);
             if (d == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(domain);
-            String domainType = d.getAttr(Provisioning.A_zimbraDomainType, Provisioning.DOMAIN_TYPE_LOCAL);
-            if (!domainType.equals(Provisioning.DOMAIN_TYPE_LOCAL))
+            
+            if (!d.isLocal()) {
                 throw ServiceException.INVALID_REQUEST("domain type must be local", null);
+            }
 
             Attributes attrs = new BasicAttributes(true);
             LdapUtil.mapToAttrs(listAttrs, attrs);
@@ -2999,8 +3007,16 @@ public class LdapProvisioning extends Provisioning {
             domainChanged = !oldDomain.equals(newDomain);
 
             Domain domain = getDomainByAsciiName(newDomain, zlc);
-            if (domain == null)
+            if (domain == null) {
                 throw AccountServiceException.NO_SUCH_DOMAIN(newDomain);
+            }
+            
+            if (domainChanged) {
+                // make sure the new domain is a local domain
+                if (!domain.isLocal()) {
+                    throw ServiceException.INVALID_REQUEST("domain type must be local", null);
+                }
+            }
 
             Map<String, Object> attrs = new HashMap<String, Object>();
 
