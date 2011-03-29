@@ -147,5 +147,10 @@ public class Domain extends ZAttrDomain {
         String renameInfo = getAttr(Provisioning.A_zimbraDomainRenameInfo);
         return (!StringUtil.isNullOrEmpty(renameInfo));
     }
+    
+    public boolean isLocal() {
+        Provisioning.DomainType domainType = getDomainType();
+        return Provisioning.DomainType.local == domainType;
+    }
 
 }
