@@ -70,7 +70,6 @@ public class IfbFormatter extends Formatter {
         if (days > maxDays)
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "Requested range is too large (Maximum " + maxDays + " days)");
 
-        String url = context.req.getRequestURL() + "?" + context.req.getQueryString();
         String acctName = null;
         FreeBusy fb = null;
         if (context.targetMailbox != null) {
@@ -88,7 +87,15 @@ public class IfbFormatter extends Formatter {
             acctName = fixupAccountName(context.accountPath);
             fb = FreeBusy.emptyFreeBusy(acctName, rangeStart, rangeEnd);
         }
-        String fbMsg = fb.toVCalendar(FreeBusy.Method.PUBLISH, acctName, null, url);
+
+        String fbFormat = context.params.get(UserServlet.QP_FBFORMAT);
+        String fbMsg;
+        if ("event".equalsIgnoreCase(fbFormat)) {
+            fbMsg = fb.toVCalendarAsVEvents();
+        } else {
+            String url = context.req.getRequestURL() + "?" + context.req.getQueryString();
+            fbMsg = fb.toVCalendar(FreeBusy.Method.PUBLISH, acctName, null, url);
+        }
         context.resp.getOutputStream().write(fbMsg.getBytes("UTF-8"));
     }
 

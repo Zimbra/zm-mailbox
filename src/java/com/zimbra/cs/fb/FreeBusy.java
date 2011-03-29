@@ -15,13 +15,17 @@
 
 package com.zimbra.cs.fb;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import java.text.ParseException;
 import java.util.*;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
+import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.Period;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
@@ -246,7 +250,7 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
         }
 
         public String toString() {
-            StringBuffer toRet = new StringBuffer("\n");
+            StringBuilder toRet = new StringBuilder("\n");
             for (Interval cur = mHead; cur != null; cur = cur.getNext()) {
                 toRet.append("\t").append(cur.toString()).append("\n");
             }
@@ -408,7 +412,7 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
     	PUBLISH, REQUEST, REPLY
     }
 
-    private static final String NL = "\n";
+    private static final String NL = "\r\n";
     private static final String MAILTO = "mailto:";
     private static final String HTTP = "http:";
 
@@ -425,10 +429,10 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
 		ParsedDateTime startTime = ParsedDateTime.fromUTCTime(mStart);
 		ParsedDateTime endTime = ParsedDateTime.fromUTCTime(mEnd);
 		
-		StringBuffer toRet = new StringBuffer("BEGIN:VCALENDAR").append(NL);
- 		toRet.append("METHOD:").append(m.name()).append(NL);
- 		toRet.append("VERSION:").append(ZCalendar.sIcalVersion).append("\n");
-		toRet.append("PRODID:").append(ZCalendar.sZimbraProdID).append("\n");
+		StringBuilder toRet = new StringBuilder("BEGIN:VCALENDAR").append(NL);
+		toRet.append("PRODID:").append(ZCalendar.sZimbraProdID).append(NL);
+        toRet.append("VERSION:").append(ZCalendar.sIcalVersion).append(NL);
+        toRet.append("METHOD:").append(m.name()).append(NL);
 		toRet.append("BEGIN:VFREEBUSY").append(NL);
 
 		toRet.append("ORGANIZER:");
@@ -488,6 +492,56 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
 		toRet.append("END:VFREEBUSY").append(NL);
 		toRet.append("END:VCALENDAR").append(NL);
 		return toRet.toString();
+    }
+
+    public String toVCalendarAsVEvents() throws ServiceException {
+        StringWriter writer = new StringWriter();
+        String publish = ICalTok.PUBLISH.toString();
+        long now = System.currentTimeMillis();
+
+        writer.append("BEGIN:VCALENDAR").append(NL);
+        writer.append("PRODID:").append(ZCalendar.sZimbraProdID).append(NL);
+        writer.append("VERSION:").append(ZCalendar.sIcalVersion).append(NL);
+        writer.append("METHOD:").append(publish).append(NL);
+
+        String uidBase = "tmp_" + LdapUtil.generateUUID() + "_";
+        int uidCount = 0;
+        TimeZoneMap tzMap = new TimeZoneMap(ICalTimeZone.getUTC());
+        for (Iterator<Interval> iter = this.iterator(); iter.hasNext(); ) {
+            FreeBusy.Interval cur = iter.next();
+            String status = cur.getStatus();
+
+            if (status.equals(IcalXmlStrMap.FBTYPE_FREE)) {
+                continue;
+            } else if (status.equals(IcalXmlStrMap.FBTYPE_NODATA)) {
+                // Treat no-data case same as free, because other apps probably won't understand a non-standard fbtype value.
+                continue;
+            }
+
+            Invite inv = new Invite(publish, tzMap, true);
+            inv.setUid(uidBase + (++uidCount));
+            inv.setSeqNo(0);
+            inv.setDtStamp(now);
+            inv.setDtStart(ParsedDateTime.fromUTCTime(cur.getStart()));
+            inv.setDtEnd(ParsedDateTime.fromUTCTime(cur.getEnd()));
+            inv.setFreeBusy(status);
+            if (status.equals(IcalXmlStrMap.FBTYPE_BUSY_TENTATIVE)) {
+                inv.setStatus(IcalXmlStrMap.STATUS_TENTATIVE);
+            } else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY_UNAVAILABLE)) {
+                inv.setStatus(IcalXmlStrMap.STATUS_CONFIRMED);
+            } else {  // busy
+                inv.setStatus(IcalXmlStrMap.STATUS_CONFIRMED);
+            }
+
+            ZComponent comp = inv.newToVComponent(false, true);
+            try {
+                comp.toICalendar(writer);
+            } catch (IOException e) {
+                throw ServiceException.FAILURE("can't write iCalendar object", e);
+            }
+        }
+        writer.append("END:VCALENDAR").append(NL);
+        return writer.toString();
     }
 
     public String toString() { return mList.toString(); };
