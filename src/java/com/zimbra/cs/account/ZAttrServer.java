@@ -40,7 +40,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110320-0341 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110328-1433 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -2478,11 +2478,11 @@ public class ZAttrServer extends NamedEntry {
     /**
      * Deprecated since: 6.0.6. Deprecated per bug 40081. Orig desc: How
      * often do we refresh contact ranking table from address book and GAL to
-     * get friendly name for the email address. Use 0 to disable the refresh.
-     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
-     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
-     * ms - milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * get friendly name for the email address. Use 0 to disable the
+     * refresh.. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * <p>Use getContactRankingTableRefreshIntervalAsString to access value as a string.
      *
@@ -2500,11 +2500,11 @@ public class ZAttrServer extends NamedEntry {
     /**
      * Deprecated since: 6.0.6. Deprecated per bug 40081. Orig desc: How
      * often do we refresh contact ranking table from address book and GAL to
-     * get friendly name for the email address. Use 0 to disable the refresh.
-     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
-     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
-     * ms - milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * get friendly name for the email address. Use 0 to disable the
+     * refresh.. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @return zimbraContactRankingTableRefreshInterval, or "7d" if unset
      *
@@ -2518,11 +2518,11 @@ public class ZAttrServer extends NamedEntry {
     /**
      * Deprecated since: 6.0.6. Deprecated per bug 40081. Orig desc: How
      * often do we refresh contact ranking table from address book and GAL to
-     * get friendly name for the email address. Use 0 to disable the refresh.
-     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
-     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
-     * ms - milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * get friendly name for the email address. Use 0 to disable the
+     * refresh.. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @param zimbraContactRankingTableRefreshInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2539,11 +2539,11 @@ public class ZAttrServer extends NamedEntry {
     /**
      * Deprecated since: 6.0.6. Deprecated per bug 40081. Orig desc: How
      * often do we refresh contact ranking table from address book and GAL to
-     * get friendly name for the email address. Use 0 to disable the refresh.
-     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
-     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
-     * ms - milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * get friendly name for the email address. Use 0 to disable the
+     * refresh.. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @param zimbraContactRankingTableRefreshInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2561,11 +2561,11 @@ public class ZAttrServer extends NamedEntry {
     /**
      * Deprecated since: 6.0.6. Deprecated per bug 40081. Orig desc: How
      * often do we refresh contact ranking table from address book and GAL to
-     * get friendly name for the email address. Use 0 to disable the refresh.
-     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
-     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
-     * ms - milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * get friendly name for the email address. Use 0 to disable the
+     * refresh.. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -2581,11 +2581,11 @@ public class ZAttrServer extends NamedEntry {
     /**
      * Deprecated since: 6.0.6. Deprecated per bug 40081. Orig desc: How
      * often do we refresh contact ranking table from address book and GAL to
-     * get friendly name for the email address. Use 0 to disable the refresh.
-     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
-     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
-     * ms - milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * get friendly name for the email address. Use 0 to disable the
+     * refresh.. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -2792,7 +2792,7 @@ public class ZAttrServer extends NamedEntry {
 
     /**
      * SQL statements that take longer than this duration to execute will be
-     * logged to the sqltrace category in mailbox.log. Must be in valid
+     * logged to the sqltrace category in mailbox.log.. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -2813,7 +2813,7 @@ public class ZAttrServer extends NamedEntry {
 
     /**
      * SQL statements that take longer than this duration to execute will be
-     * logged to the sqltrace category in mailbox.log. Must be in valid
+     * logged to the sqltrace category in mailbox.log.. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -2830,7 +2830,7 @@ public class ZAttrServer extends NamedEntry {
 
     /**
      * SQL statements that take longer than this duration to execute will be
-     * logged to the sqltrace category in mailbox.log. Must be in valid
+     * logged to the sqltrace category in mailbox.log.. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -2850,7 +2850,7 @@ public class ZAttrServer extends NamedEntry {
 
     /**
      * SQL statements that take longer than this duration to execute will be
-     * logged to the sqltrace category in mailbox.log. Must be in valid
+     * logged to the sqltrace category in mailbox.log.. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -2871,7 +2871,7 @@ public class ZAttrServer extends NamedEntry {
 
     /**
      * SQL statements that take longer than this duration to execute will be
-     * logged to the sqltrace category in mailbox.log. Must be in valid
+     * logged to the sqltrace category in mailbox.log.. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -2890,7 +2890,7 @@ public class ZAttrServer extends NamedEntry {
 
     /**
      * SQL statements that take longer than this duration to execute will be
-     * logged to the sqltrace category in mailbox.log. Must be in valid
+     * logged to the sqltrace category in mailbox.log.. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -2973,7 +2973,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * The interval to wait when the server encounters problems while
      * propagating Zimbra users free/busy information to external provider
-     * such as Exchange. Must be in valid duration format:
+     * such as Exchange. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -2994,7 +2994,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * The interval to wait when the server encounters problems while
      * propagating Zimbra users free/busy information to external provider
-     * such as Exchange. Must be in valid duration format:
+     * such as Exchange. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -3011,7 +3011,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * The interval to wait when the server encounters problems while
      * propagating Zimbra users free/busy information to external provider
-     * such as Exchange. Must be in valid duration format:
+     * such as Exchange. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -3031,7 +3031,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * The interval to wait when the server encounters problems while
      * propagating Zimbra users free/busy information to external provider
-     * such as Exchange. Must be in valid duration format:
+     * such as Exchange. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -3052,7 +3052,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * The interval to wait when the server encounters problems while
      * propagating Zimbra users free/busy information to external provider
-     * such as Exchange. Must be in valid duration format:
+     * such as Exchange. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -3071,7 +3071,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * The interval to wait when the server encounters problems while
      * propagating Zimbra users free/busy information to external provider
-     * such as Exchange. Must be in valid duration format:
+     * such as Exchange. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -3091,7 +3091,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * Deprecated since: 6.0.0_BETA2. deprecated in favor for
      * zimbraHsmPolicy. Orig desc: Minimum age of mail items whose filesystem
-     * data will be moved to secondary storage. Must be in valid duration
+     * data will be moved to secondary storage.. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -3110,7 +3110,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * Deprecated since: 6.0.0_BETA2. deprecated in favor for
      * zimbraHsmPolicy. Orig desc: Minimum age of mail items whose filesystem
-     * data will be moved to secondary storage. Must be in valid duration
+     * data will be moved to secondary storage.. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -3125,7 +3125,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * Deprecated since: 6.0.0_BETA2. deprecated in favor for
      * zimbraHsmPolicy. Orig desc: Minimum age of mail items whose filesystem
-     * data will be moved to secondary storage. Must be in valid duration
+     * data will be moved to secondary storage.. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -3143,7 +3143,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * Deprecated since: 6.0.0_BETA2. deprecated in favor for
      * zimbraHsmPolicy. Orig desc: Minimum age of mail items whose filesystem
-     * data will be moved to secondary storage. Must be in valid duration
+     * data will be moved to secondary storage.. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -3162,7 +3162,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * Deprecated since: 6.0.0_BETA2. deprecated in favor for
      * zimbraHsmPolicy. Orig desc: Minimum age of mail items whose filesystem
-     * data will be moved to secondary storage. Must be in valid duration
+     * data will be moved to secondary storage.. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -3179,7 +3179,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * Deprecated since: 6.0.0_BETA2. deprecated in favor for
      * zimbraHsmPolicy. Orig desc: Minimum age of mail items whose filesystem
-     * data will be moved to secondary storage. Must be in valid duration
+     * data will be moved to secondary storage.. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -7750,7 +7750,7 @@ public class ZAttrServer extends NamedEntry {
 
     /**
      * Sleep time between subsequent mailbox purges. 0 means that mailbox
-     * purging is disabled. Must be in valid duration format:
+     * purging is disabled. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -7770,7 +7770,7 @@ public class ZAttrServer extends NamedEntry {
 
     /**
      * Sleep time between subsequent mailbox purges. 0 means that mailbox
-     * purging is disabled. Must be in valid duration format:
+     * purging is disabled. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -7786,7 +7786,7 @@ public class ZAttrServer extends NamedEntry {
 
     /**
      * Sleep time between subsequent mailbox purges. 0 means that mailbox
-     * purging is disabled. Must be in valid duration format:
+     * purging is disabled. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -7805,7 +7805,7 @@ public class ZAttrServer extends NamedEntry {
 
     /**
      * Sleep time between subsequent mailbox purges. 0 means that mailbox
-     * purging is disabled. Must be in valid duration format:
+     * purging is disabled. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -7825,7 +7825,7 @@ public class ZAttrServer extends NamedEntry {
 
     /**
      * Sleep time between subsequent mailbox purges. 0 means that mailbox
-     * purging is disabled. Must be in valid duration format:
+     * purging is disabled. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -7843,7 +7843,7 @@ public class ZAttrServer extends NamedEntry {
 
     /**
      * Sleep time between subsequent mailbox purges. 0 means that mailbox
-     * purging is disabled. Must be in valid duration format:
+     * purging is disabled. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -15406,11 +15406,287 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * SSL certificate
+     *
+     * @return zimbraReverseProxyClientCertificate, or null if unset
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=2001)
+    public String getReverseProxyClientCertificate() {
+        return getAttr(Provisioning.A_zimbraReverseProxyClientCertificate, null);
+    }
+
+    /**
+     * SSL certificate
+     *
+     * @param zimbraReverseProxyClientCertificate new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=2001)
+    public void setReverseProxyClientCertificate(String zimbraReverseProxyClientCertificate) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyClientCertificate, zimbraReverseProxyClientCertificate);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SSL certificate
+     *
+     * @param zimbraReverseProxyClientCertificate new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=2001)
+    public Map<String,Object> setReverseProxyClientCertificate(String zimbraReverseProxyClientCertificate, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyClientCertificate, zimbraReverseProxyClientCertificate);
+        return attrs;
+    }
+
+    /**
+     * SSL certificate
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=2001)
+    public void unsetReverseProxyClientCertificate() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyClientCertificate, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SSL certificate
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=2001)
+    public Map<String,Object> unsetReverseProxyClientCertificate(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyClientCertificate, "");
+        return attrs;
+    }
+
+    /**
+     * SSL certificate
+     *
+     * @return zimbraReverseProxyClientVerifyDepth, or 1 if unset
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=2002)
+    public int getReverseProxyClientVerifyDepth() {
+        return getIntAttr(Provisioning.A_zimbraReverseProxyClientVerifyDepth, 1);
+    }
+
+    /**
+     * SSL certificate
+     *
+     * @param zimbraReverseProxyClientVerifyDepth new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=2002)
+    public void setReverseProxyClientVerifyDepth(int zimbraReverseProxyClientVerifyDepth) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyClientVerifyDepth, Integer.toString(zimbraReverseProxyClientVerifyDepth));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SSL certificate
+     *
+     * @param zimbraReverseProxyClientVerifyDepth new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=2002)
+    public Map<String,Object> setReverseProxyClientVerifyDepth(int zimbraReverseProxyClientVerifyDepth, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyClientVerifyDepth, Integer.toString(zimbraReverseProxyClientVerifyDepth));
+        return attrs;
+    }
+
+    /**
+     * SSL certificate
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=2002)
+    public void unsetReverseProxyClientVerifyDepth() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyClientVerifyDepth, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SSL certificate
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=2002)
+    public Map<String,Object> unsetReverseProxyClientVerifyDepth(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyClientVerifyDepth, "");
+        return attrs;
+    }
+
+    /**
+     * SSL certificate
+     *
+     * <p>Valid values: [off, on, optional]
+     *
+     * @return zimbraReverseProxyClientVerifyMode, or ZAttrProvisioning.ReverseProxyClientVerifyMode.off if unset and/or has invalid value
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=2000)
+    public ZAttrProvisioning.ReverseProxyClientVerifyMode getReverseProxyClientVerifyMode() {
+        try { String v = getAttr(Provisioning.A_zimbraReverseProxyClientVerifyMode); return v == null ? ZAttrProvisioning.ReverseProxyClientVerifyMode.off : ZAttrProvisioning.ReverseProxyClientVerifyMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.ReverseProxyClientVerifyMode.off; }
+    }
+
+    /**
+     * SSL certificate
+     *
+     * <p>Valid values: [off, on, optional]
+     *
+     * @return zimbraReverseProxyClientVerifyMode, or "off" if unset
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=2000)
+    public String getReverseProxyClientVerifyModeAsString() {
+        return getAttr(Provisioning.A_zimbraReverseProxyClientVerifyMode, "off");
+    }
+
+    /**
+     * SSL certificate
+     *
+     * <p>Valid values: [off, on, optional]
+     *
+     * @param zimbraReverseProxyClientVerifyMode new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=2000)
+    public void setReverseProxyClientVerifyMode(ZAttrProvisioning.ReverseProxyClientVerifyMode zimbraReverseProxyClientVerifyMode) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyClientVerifyMode, zimbraReverseProxyClientVerifyMode.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SSL certificate
+     *
+     * <p>Valid values: [off, on, optional]
+     *
+     * @param zimbraReverseProxyClientVerifyMode new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=2000)
+    public Map<String,Object> setReverseProxyClientVerifyMode(ZAttrProvisioning.ReverseProxyClientVerifyMode zimbraReverseProxyClientVerifyMode, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyClientVerifyMode, zimbraReverseProxyClientVerifyMode.toString());
+        return attrs;
+    }
+
+    /**
+     * SSL certificate
+     *
+     * <p>Valid values: [off, on, optional]
+     *
+     * @param zimbraReverseProxyClientVerifyMode new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=2000)
+    public void setReverseProxyClientVerifyModeAsString(String zimbraReverseProxyClientVerifyMode) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyClientVerifyMode, zimbraReverseProxyClientVerifyMode);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SSL certificate
+     *
+     * <p>Valid values: [off, on, optional]
+     *
+     * @param zimbraReverseProxyClientVerifyMode new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=2000)
+    public Map<String,Object> setReverseProxyClientVerifyModeAsString(String zimbraReverseProxyClientVerifyMode, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyClientVerifyMode, zimbraReverseProxyClientVerifyMode);
+        return attrs;
+    }
+
+    /**
+     * SSL certificate
+     *
+     * <p>Valid values: [off, on, optional]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=2000)
+    public void unsetReverseProxyClientVerifyMode() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyClientVerifyMode, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SSL certificate
+     *
+     * <p>Valid values: [off, on, optional]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=2000)
+    public Map<String,Object> unsetReverseProxyClientVerifyMode(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyClientVerifyMode, "");
+        return attrs;
+    }
+
+    /**
      * Time interval after which NGINX mail proxy will disconnect while
-     * establishing an upstream IMAP/POP connection Must be in valid duration
-     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
-     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
-     * unit is not specified, the default is s(seconds).
+     * establishing an upstream IMAP/POP connection. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * <p>Use getReverseProxyConnectTimeoutAsString to access value as a string.
      *
@@ -15427,10 +15703,11 @@ public class ZAttrServer extends NamedEntry {
 
     /**
      * Time interval after which NGINX mail proxy will disconnect while
-     * establishing an upstream IMAP/POP connection Must be in valid duration
-     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
-     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
-     * unit is not specified, the default is s(seconds).
+     * establishing an upstream IMAP/POP connection. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @return zimbraReverseProxyConnectTimeout, or "120000ms" if unset
      *
@@ -15443,10 +15720,11 @@ public class ZAttrServer extends NamedEntry {
 
     /**
      * Time interval after which NGINX mail proxy will disconnect while
-     * establishing an upstream IMAP/POP connection Must be in valid duration
-     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
-     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
-     * unit is not specified, the default is s(seconds).
+     * establishing an upstream IMAP/POP connection. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraReverseProxyConnectTimeout new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -15462,10 +15740,11 @@ public class ZAttrServer extends NamedEntry {
 
     /**
      * Time interval after which NGINX mail proxy will disconnect while
-     * establishing an upstream IMAP/POP connection Must be in valid duration
-     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
-     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
-     * unit is not specified, the default is s(seconds).
+     * establishing an upstream IMAP/POP connection. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraReverseProxyConnectTimeout new value
      * @param attrs existing map to populate, or null to create a new map
@@ -15482,10 +15761,11 @@ public class ZAttrServer extends NamedEntry {
 
     /**
      * Time interval after which NGINX mail proxy will disconnect while
-     * establishing an upstream IMAP/POP connection Must be in valid duration
-     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
-     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
-     * unit is not specified, the default is s(seconds).
+     * establishing an upstream IMAP/POP connection. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -15500,10 +15780,11 @@ public class ZAttrServer extends NamedEntry {
 
     /**
      * Time interval after which NGINX mail proxy will disconnect while
-     * establishing an upstream IMAP/POP connection Must be in valid duration
-     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
-     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
-     * unit is not specified, the default is s(seconds).
+     * establishing an upstream IMAP/POP connection. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -16165,7 +16446,7 @@ public class ZAttrServer extends NamedEntry {
 
     /**
      * Time interval after which NGINX mail proxy will disconnect an inactive
-     * IMAP/POP connection Must be in valid duration format:
+     * IMAP/POP connection. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -16185,7 +16466,7 @@ public class ZAttrServer extends NamedEntry {
 
     /**
      * Time interval after which NGINX mail proxy will disconnect an inactive
-     * IMAP/POP connection Must be in valid duration format:
+     * IMAP/POP connection. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -16201,7 +16482,7 @@ public class ZAttrServer extends NamedEntry {
 
     /**
      * Time interval after which NGINX mail proxy will disconnect an inactive
-     * IMAP/POP connection Must be in valid duration format:
+     * IMAP/POP connection. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -16220,7 +16501,7 @@ public class ZAttrServer extends NamedEntry {
 
     /**
      * Time interval after which NGINX mail proxy will disconnect an inactive
-     * IMAP/POP connection Must be in valid duration format:
+     * IMAP/POP connection. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -16240,7 +16521,7 @@ public class ZAttrServer extends NamedEntry {
 
     /**
      * Time interval after which NGINX mail proxy will disconnect an inactive
-     * IMAP/POP connection Must be in valid duration format:
+     * IMAP/POP connection. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -16258,7 +16539,7 @@ public class ZAttrServer extends NamedEntry {
 
     /**
      * Time interval after which NGINX mail proxy will disconnect an inactive
-     * IMAP/POP connection Must be in valid duration format:
+     * IMAP/POP connection. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -17264,7 +17545,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * Time interval after which NGINX will fail over to the next route
      * lookup handler, if a handler does not respond to the route lookup
-     * request within this time Must be in valid duration format:
+     * request within this time. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -17285,7 +17566,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * Time interval after which NGINX will fail over to the next route
      * lookup handler, if a handler does not respond to the route lookup
-     * request within this time Must be in valid duration format:
+     * request within this time. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -17302,7 +17583,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * Time interval after which NGINX will fail over to the next route
      * lookup handler, if a handler does not respond to the route lookup
-     * request within this time Must be in valid duration format:
+     * request within this time. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -17322,7 +17603,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * Time interval after which NGINX will fail over to the next route
      * lookup handler, if a handler does not respond to the route lookup
-     * request within this time Must be in valid duration format:
+     * request within this time. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -17343,7 +17624,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * Time interval after which NGINX will fail over to the next route
      * lookup handler, if a handler does not respond to the route lookup
-     * request within this time Must be in valid duration format:
+     * request within this time. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -17362,7 +17643,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * Time interval after which NGINX will fail over to the next route
      * lookup handler, if a handler does not respond to the route lookup
-     * request within this time Must be in valid duration format:
+     * request within this time. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -17382,7 +17663,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * Time interval (ms) given to mail route lookup handler to cache a
      * failed response to route a previous lookup request (after this time
-     * elapses, Proxy retries this host) Must be in valid duration format:
+     * elapses, Proxy retries this host). Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -17403,7 +17684,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * Time interval (ms) given to mail route lookup handler to cache a
      * failed response to route a previous lookup request (after this time
-     * elapses, Proxy retries this host) Must be in valid duration format:
+     * elapses, Proxy retries this host). Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -17420,7 +17701,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * Time interval (ms) given to mail route lookup handler to cache a
      * failed response to route a previous lookup request (after this time
-     * elapses, Proxy retries this host) Must be in valid duration format:
+     * elapses, Proxy retries this host). Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -17440,7 +17721,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * Time interval (ms) given to mail route lookup handler to cache a
      * failed response to route a previous lookup request (after this time
-     * elapses, Proxy retries this host) Must be in valid duration format:
+     * elapses, Proxy retries this host). Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -17461,7 +17742,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * Time interval (ms) given to mail route lookup handler to cache a
      * failed response to route a previous lookup request (after this time
-     * elapses, Proxy retries this host) Must be in valid duration format:
+     * elapses, Proxy retries this host). Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -17480,7 +17761,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * Time interval (ms) given to mail route lookup handler to cache a
      * failed response to route a previous lookup request (after this time
-     * elapses, Proxy retries this host) Must be in valid duration format:
+     * elapses, Proxy retries this host). Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -19760,7 +20041,7 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * how often the virus definitions are updated Must be in valid duration
+     * how often the virus definitions are updated. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -19777,7 +20058,7 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * how often the virus definitions are updated Must be in valid duration
+     * how often the virus definitions are updated. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -19790,7 +20071,7 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * how often the virus definitions are updated Must be in valid duration
+     * how often the virus definitions are updated. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -19806,7 +20087,7 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * how often the virus definitions are updated Must be in valid duration
+     * how often the virus definitions are updated. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -19823,7 +20104,7 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * how often the virus definitions are updated Must be in valid duration
+     * how often the virus definitions are updated. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -19838,7 +20119,7 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * how often the virus definitions are updated Must be in valid duration
+     * how often the virus definitions are updated. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
