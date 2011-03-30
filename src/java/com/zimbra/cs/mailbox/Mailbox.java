@@ -270,16 +270,11 @@ public class Mailbox {
             return null;
         }
 
-        void addPremodifyItem(MailItem item) {
+        void addPreModifyItem(MailItem item) {
             if (mDirty != null) {
-                if (mDirty.preModifyItems == null)
-                    mDirty.preModifyItems = new HashMap<Integer,MailItem>();
-
-                if (!mDirty.preModifyItems.containsKey(item.mId)) {
-                    try {
-                        mDirty.preModifyItems.put(item.mId, snapshotItem(item));
-                    } catch (ServiceException e) {
-                    }
+                try {
+                    mDirty.addPreModifyItem(snapshotItem(item));
+                } catch (ServiceException e) {
                 }
             }
         }
@@ -2031,7 +2026,7 @@ public class Mailbox {
 
         } finally {
             if (item != null) {
-                mCurrentChange.addPremodifyItem(item);
+                mCurrentChange.addPreModifyItem(item);
             }
         }
     }
@@ -2184,7 +2179,7 @@ public class Mailbox {
             if (items != null) {
                 for (MailItem item : items) {
                     if (item != null) {
-                        mCurrentChange.addPremodifyItem(item);
+                        mCurrentChange.addPreModifyItem(item);
                     }
                 }
             }

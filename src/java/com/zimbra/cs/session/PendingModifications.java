@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Set;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -267,6 +268,15 @@ public final class PendingModifications {
         modified.put(key, chg);
     }
 
+    public void addPreModifyItem(MailItem item) {
+        if (preModifyItems == null) {
+            preModifyItems = new HashMap<Integer,MailItem>();        
+        }
+        if (!preModifyItems.containsKey(item.getId())) {
+            preModifyItems.put(item.getId(), item);
+        }
+    }
+    
     PendingModifications add(PendingModifications other) {
         changedTypes.addAll(other.changedTypes);
 
@@ -292,6 +302,11 @@ public final class PendingModifications {
             }
         }
 
+        if (other.preModifyItems != null) {
+            for (MailItem item : other.preModifyItems.values()) {
+                addPreModifyItem(item);
+            }
+        }
         return this;
     }
 
@@ -299,6 +314,7 @@ public final class PendingModifications {
         created = null;
         deleted = null;
         modified = null;
+        preModifyItems = null;
         changedTypes.clear();
     }
 }
