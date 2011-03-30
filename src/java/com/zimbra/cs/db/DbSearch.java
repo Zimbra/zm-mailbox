@@ -242,7 +242,7 @@ public final class DbSearch {
         if (includeCalTable) {
             out.append(", ").append(DbMailItem.getCalendarItemTableName(mbox, "ap", inDumpster));
         }
-        if (node.getSearchConstraints().fromContact != null) {
+        if (node.getNodeType() == NodeType.LEAF && node.getSearchConstraints().fromContact != null) {
             out.append(", ").append(DbMailAddress.getTableName(mbox)).append(" AS ma");
         }
 
