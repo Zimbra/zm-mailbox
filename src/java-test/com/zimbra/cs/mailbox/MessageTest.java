@@ -23,7 +23,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.io.ByteStreams;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
@@ -34,12 +33,7 @@ import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.HSQLDB;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.LuceneFields;
-import com.zimbra.cs.index.MailboxIndex;
-import com.zimbra.cs.mime.MockMimeTypeInfo;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.mime.handler.TextPlainHandler;
-import com.zimbra.cs.store.MockStoreManager;
-import com.zimbra.cs.store.StoreManager;
 
 /**
  * Unit test for {@link Message}.
@@ -50,30 +44,15 @@ public final class MessageTest {
 
     @BeforeClass
     public static void init() throws Exception {
-        MockProvisioning prov = new MockProvisioning();
+        MailboxTestUtil.initServer();
+        
+        Provisioning prov = Provisioning.getInstance();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
-        MockMimeTypeInfo mime = new MockMimeTypeInfo();
-        mime = new MockMimeTypeInfo();
-        mime.setHandlerClass(TextPlainHandler.class.getName());
-        mime.setIndexingEnabled(true);
-        prov.addMimeType("text/plain", mime);
-        Provisioning.setInstance(prov);
-
-        LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
-        DbPool.startup();
-        HSQLDB.createDatabase();
-
-        MailboxManager.setInstance(null);
-        MailboxIndex.startup();
-
-        LC.zimbra_class_store.setDefault(MockStoreManager.class.getName());
-        StoreManager.getInstance().startup();
     }
 
     @Before
     public void setUp() throws Exception {
-        HSQLDB.clearDatabase();
-        MailboxManager.getInstance().clearCache();
+        MailboxTestUtil.clearData();
     }
 
     @Test

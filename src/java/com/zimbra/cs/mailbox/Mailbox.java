@@ -1861,7 +1861,7 @@ public class Mailbox {
         }
 
         MailItem.UnderlyingData data = item.getUnderlyingData().clone();
-        data.flags   |= Flag.BITMASK_UNCACHED;
+        data.setFlag(Flag.FlagInfo.UNCACHED);
         data.metadata = item.encodeMetadata();
         if (item instanceof VirtualConversation) {
             // VirtualConversations need to be special-cased since MailItem.constructItem() returns null for them
@@ -1891,7 +1891,7 @@ public class Mailbox {
         Map<Integer, Folder> copies = new HashMap<Integer, Folder>();
         for (Folder folder : mFolderCache.values()) {
             MailItem.UnderlyingData data = folder.getUnderlyingData().clone();
-            data.flags   |= Flag.BITMASK_UNCACHED;
+            data.setFlag(Flag.FlagInfo.UNCACHED);
             data.metadata = folder.encodeMetadata();
             copies.put(folder.getId(), (Folder) MailItem.constructItem(this, data));
         }
@@ -3794,7 +3794,7 @@ public class Mailbox {
                                                      SetCalendarItemData exceptions[],
                                                      List<ReplyInfo> replies, long nextAlarm)
     throws ServiceException {
-        flags = (flags & ~Flag.FLAG_SYSTEM);
+        flags = (flags & ~Flag.FLAGS_SYSTEM);
         SetCalendarItem redoRecorder = new SetCalendarItem(getId(), attachmentsIndexingEnabled(), flags, tags);
 
         boolean success = false;
@@ -4105,7 +4105,7 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("fixupCalendarItemPriority", octxt, redoRecorder);
-            int flags = calItem.mData.flags & ~(Flag.BITMASK_HIGH_PRIORITY | Flag.BITMASK_LOW_PRIORITY);
+            int flags = calItem.mData.getFlags() & ~(Flag.BITMASK_HIGH_PRIORITY | Flag.BITMASK_LOW_PRIORITY);
             Invite[] invs = calItem.getInvites();
             if (invs != null) {
                 for (Invite cur : invs) {
@@ -4120,9 +4120,9 @@ public class Mailbox {
                 }
             }
             int numFixed = 0;
-            if (flags != calItem.mData.flags) {
+            if (flags != calItem.mData.getFlags()) {
                 ZimbraLog.calendar.info("Fixed calendar item " + calItem.getId());
-                calItem.mData.flags = flags;
+                calItem.mData.setFlags(flags);
                 calItem.snapshotRevision();
                 calItem.saveMetadata();
                 markItemModified(calItem, Change.MODIFIED_INVITE);
@@ -4625,7 +4625,7 @@ public class Mailbox {
         }
 
         // caller can't set system flags other than \Draft and \Sent
-        flags &= ~Flag.FLAG_SYSTEM | Flag.BITMASK_DRAFT | Flag.BITMASK_FROM_ME;
+        flags &= ~Flag.FLAGS_SYSTEM | Flag.BITMASK_DRAFT | Flag.BITMASK_FROM_ME;
         // caller can't specify non-message flags
         flags &= Flag.FLAGS_GENERIC | Flag.FLAGS_MESSAGE;
 
@@ -6863,19 +6863,19 @@ public class Mailbox {
             String author, String description, boolean descEnabled, InputStream data, MailItem.Type type) throws ServiceException {
         try {
             ParsedDocument pd = new ParsedDocument(data, filename, mimeType, System.currentTimeMillis(), author, description, descEnabled);
-            return createDocument(octxt, folderId, pd, type);
+            return createDocument(octxt, folderId, pd, type, 0);
         } catch (IOException ioe) {
             throw ServiceException.FAILURE("error writing document blob", ioe);
         }
     }
 
-    public Document createDocument(OperationContext octxt, int folderId, ParsedDocument pd, MailItem.Type type)
+    public Document createDocument(OperationContext octxt, int folderId, ParsedDocument pd, MailItem.Type type, int flags)
     throws IOException, ServiceException {
         StoreManager sm = StoreManager.getInstance();
         StagedBlob staged = sm.stage(pd.getBlob(), this);
 
         synchronized (this) {
-            SaveDocument redoRecorder = new SaveDocument(mId, pd.getDigest(), pd.getSize(), folderId);
+            SaveDocument redoRecorder = new SaveDocument(mId, pd.getDigest(), pd.getSize(), folderId, flags);
 
             boolean success = false;
             try {
@@ -6887,7 +6887,7 @@ public class Mailbox {
                 Document doc;
                 switch (type) {
                     case DOCUMENT:
-                        doc = Document.create(itemId, getFolderById(folderId), pd.getFilename(), pd.getContentType(), pd, null);
+                        doc = Document.create(itemId, getFolderById(folderId), pd.getFilename(), pd.getContentType(), pd, null, flags);
                         break;
                     case WIKI:
                         doc = WikiItem.create(itemId, getFolderById(folderId), pd.getFilename(), pd, null);
@@ -6900,6 +6900,7 @@ public class Mailbox {
                 redoRecorder.setDocument(pd);
                 redoRecorder.setItemType(type);
                 redoRecorder.setDescription(pd.getDescription());
+                redoRecorder.setFlags(doc.getFlagBitmask());
 
                 // Get the redolog data from the mailbox blob.  This is less than ideal in the
                 // HTTP store case because it will result in network access, and possibly an
@@ -6955,9 +6956,8 @@ public class Mailbox {
             boolean success = false;
             try {
                 beginTransaction("addDocumentRevision", octxt, redoRecorder);
-
+                
                 Document doc = getDocumentById(docId);
-
                 redoRecorder.setDocument(pd);
                 redoRecorder.setDocId(docId);
                 redoRecorder.setItemType(doc.getType());

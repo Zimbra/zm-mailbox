@@ -137,7 +137,7 @@ public class MigrateToDocuments {
                 contentType = "application/x-zimbra-doc; charset=utf-8";
             ParsedDocument pd = new ParsedDocument(in, name, contentType, revision.getDate(), revision.getCreator(), revision.getDescription());
             if (main == null) {
-                main = mbox.createDocument(octxt, to.getId(), pd, MailItem.Type.DOCUMENT);
+                main = mbox.createDocument(octxt, to.getId(), pd, MailItem.Type.DOCUMENT, revision.getFlagBitmask());
             } else {
                 mbox.addDocumentRevision(octxt, main.getId(), pd);
             }

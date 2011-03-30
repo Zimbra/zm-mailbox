@@ -1057,8 +1057,14 @@ extends Assert {
 
     public static ZDocument createDocument(ZMailbox mbox, String folderId, String name, String contentType, byte[] content)
     throws ServiceException {
+        return createDocument(mbox, folderId, name, contentType, content, false);
+    }
+
+    public static ZDocument createDocument(ZMailbox mbox, String folderId, String name,
+                                           String contentType, byte[] content, boolean isNote)
+    throws ServiceException {
         String attachId = mbox.uploadAttachment(name, content, contentType, 0);
-        String docId = mbox.createDocument(folderId, name, attachId);
+        String docId = mbox.createDocument(folderId, name, attachId, isNote);
         return mbox.getDocument(docId);
     }
 }

@@ -257,7 +257,7 @@ public class Message extends MailItem {
      *  Note that this can only be set when the Message is created; it cannot
      *  be altered thereafter.*/
     public boolean isFromMe() {
-        return (mData.flags & Flag.BITMASK_FROM_ME) != 0;
+        return mData.isSet(Flag.FlagInfo.FROM_ME);
     }
 
     /** Returns the ID of the {@link Conversation} the Message belongs to.
@@ -332,7 +332,7 @@ public class Message extends MailItem {
 
     /** Returns whether the Message has a vCal attachment. */
     public boolean isInvite() {
-        return (mData.flags & Flag.BITMASK_INVITE) != 0;
+        return mData.isSet(Flag.FlagInfo.INVITE);
     }
 
     public boolean hasCalendarItemInfos() {
@@ -523,7 +523,7 @@ public class Message extends MailItem {
         data.date = (int) (date / 1000);
         data.size = staged.getSize();
         data.setBlobDigest(staged.getDigest());
-        data.flags = flags & (Flag.FLAGS_MESSAGE | Flag.FLAGS_GENERIC);
+        data.setFlags(flags & (Flag.FLAGS_MESSAGE | Flag.FLAGS_GENERIC));
         data.tags = tags;
         data.setSender(pm.getParsedSender().getSortString());
         data.setRecipients(ParsedAddress.getSortString(pm.getParsedRecipients()));
@@ -1191,10 +1191,10 @@ public class Message extends MailItem {
         fragment = pm.getFragment();
 
         // make sure the "attachments" FLAG is correct
-        boolean hadAttachment = (mData.flags & Flag.BITMASK_ATTACHED) != 0;
-        mData.flags &= ~Flag.BITMASK_ATTACHED;
+        boolean hadAttachment = mData.isSet(Flag.FlagInfo.ATTACHED);
+        mData.unsetFlag(Flag.FlagInfo.ATTACHED);
         if (pm.hasAttachments()) {
-            mData.flags |= Flag.BITMASK_ATTACHED;
+            mData.setFlag(Flag.FlagInfo.ATTACHED);
         }
         if (hadAttachment != pm.hasAttachments()) {
             markItemModified(Change.MODIFIED_FLAGS);
@@ -1202,10 +1202,11 @@ public class Message extends MailItem {
         }
 
         // make sure the "urgency" FLAGs are correct
-        int oldUrgency = mData.flags & (Flag.BITMASK_HIGH_PRIORITY | Flag.BITMASK_LOW_PRIORITY);
+        int oldUrgency = mData.getFlags() & (Flag.BITMASK_HIGH_PRIORITY | Flag.BITMASK_LOW_PRIORITY);
         int urgency = pm.getPriorityBitmask();
-        mData.flags &= ~(Flag.BITMASK_HIGH_PRIORITY | Flag.BITMASK_LOW_PRIORITY);
-        mData.flags |= urgency;
+        mData.unsetFlag(Flag.FlagInfo.HIGH_PRIORITY);
+        mData.unsetFlag(Flag.FlagInfo.LOW_PRIORITY);
+        mData.setFlags(mData.getFlags() | urgency);
         if (oldUrgency != urgency) {
             markItemModified(Change.MODIFIED_FLAGS);
             if (urgency == Flag.BITMASK_HIGH_PRIORITY || oldUrgency == Flag.BITMASK_HIGH_PRIORITY) {
@@ -1224,7 +1225,7 @@ public class Message extends MailItem {
             mData.size = newSize;
         }
 
-        String metadata = encodeMetadata(mRGBColor, mVersion, mExtendedData, pm, mData.flags, draftInfo,
+        String metadata = encodeMetadata(mRGBColor, mVersion, mExtendedData, pm, mData.getFlags(), draftInfo,
                 calendarItemInfos, calendarIntendedFor);
 
         // rewrite the DB row to reflect our new view

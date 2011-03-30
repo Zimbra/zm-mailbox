@@ -231,6 +231,10 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         return mFlags;
     }
     
+    public void setFlags(int flags) {
+        mFlags = flags;
+    }
+    
     public String getTags() {
         return mTags;
     }        

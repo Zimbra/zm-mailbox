@@ -23,62 +23,64 @@ import org.json.JSONException;
 
 public class ZDocument implements ZItem, ToZJSONObject {
 
-	private boolean mIsWiki;
-	private String mName;
-	private String mId;
-	private String mFolderId;
-	private String mVersion;
-	private String mEditor;
-	private String mCreator;
-	private String mRestUrl;
-	private long mCreatedDate;
-	private long mModifiedDate;
-	private long mMetaDataChangedDate;
-	private long mSize;
-    private String mContentType;
-	private String mTagIds;
+	private boolean isWiki;
+	private String name;
+	private String id;
+	private String folderId;
+	private String version;
+	private String editor;
+	private String creator;
+	private String restUrl;
+	private long createdDate;
+	private long modifiedDate;
+	private long metadataChangeDate;
+	private long size;
+	private String contentType;
+	private String tagIds;
+	private String flags;
     
     public ZDocument(Element e) throws ServiceException {
-    	mIsWiki = "w".equals(e.getName());
-    	mName = e.getAttribute(MailConstants.A_NAME);
-    	mId = e.getAttribute(MailConstants.A_ID);
-    	mFolderId = e.getAttribute(MailConstants.A_FOLDER);
-    	mVersion = e.getAttribute(MailConstants.A_VERSION);
-    	mEditor = e.getAttribute(MailConstants.A_LAST_EDITED_BY);
-    	mCreator = e.getAttribute(MailConstants.A_CREATOR);
-    	mRestUrl = e.getAttribute(MailConstants.A_REST_URL, null);
-    	mCreatedDate = e.getAttributeLong(MailConstants.A_CREATED_DATE, 0) * 1000;
-    	mModifiedDate = e.getAttributeLong(MailConstants.A_MODIFIED_DATE, 0) * 1000;
-    	mMetaDataChangedDate = e.getAttributeLong(MailConstants.A_MODIFIED_DATE, 0) * 1000;
-        mSize = e.getAttributeLong(MailConstants.A_SIZE,0);
-        if(mIsWiki){
-            mContentType = MimeConstants.CT_TEXT_HTML; //"text/html";
+    	isWiki = "w".equals(e.getName());
+    	name = e.getAttribute(MailConstants.A_NAME);
+    	id = e.getAttribute(MailConstants.A_ID);
+    	folderId = e.getAttribute(MailConstants.A_FOLDER);
+    	version = e.getAttribute(MailConstants.A_VERSION);
+    	editor = e.getAttribute(MailConstants.A_LAST_EDITED_BY);
+    	creator = e.getAttribute(MailConstants.A_CREATOR);
+    	restUrl = e.getAttribute(MailConstants.A_REST_URL, null);
+    	createdDate = e.getAttributeLong(MailConstants.A_CREATED_DATE, 0) * 1000;
+    	modifiedDate = e.getAttributeLong(MailConstants.A_MODIFIED_DATE, 0) * 1000;
+    	metadataChangeDate = e.getAttributeLong(MailConstants.A_MODIFIED_DATE, 0) * 1000;
+        size = e.getAttributeLong(MailConstants.A_SIZE,0);
+        if(isWiki){
+            contentType = MimeConstants.CT_TEXT_HTML; //"text/html";
         }else{
-            mContentType = e.getAttribute(MailConstants.A_CONTENT_TYPE);
+            contentType = e.getAttribute(MailConstants.A_CONTENT_TYPE);
         }
-        mTagIds = e.getAttribute(MailConstants.A_TAGS, null);
+        tagIds = e.getAttribute(MailConstants.A_TAGS, null);
+        flags = e.getAttribute(MailConstants.A_FLAGS, null);
     }
 
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject zjo = new ZJSONObject();
-        zjo.put("name", mName);
-        zjo.put("id", mId);
-        zjo.put("folderId", mFolderId);
-        zjo.put("version", mVersion);
-        zjo.put("editor", mEditor);
-        zjo.put("createor", mCreator);
-        zjo.put("restUrl", mRestUrl);
-        zjo.put("createdDate", mCreatedDate);
-        zjo.put("modifiedDate", mModifiedDate);
-        zjo.put("metaDataChangedDate", mMetaDataChangedDate);
-        zjo.put("size", mSize);
-        zjo.put("contentType", mContentType);
-        zjo.put("tags", mTagIds);
+        zjo.put("name", name);
+        zjo.put("id", id);
+        zjo.put("folderId", folderId);
+        zjo.put("version", version);
+        zjo.put("editor", editor);
+        zjo.put("createor", creator);
+        zjo.put("restUrl", restUrl);
+        zjo.put("createdDate", createdDate);
+        zjo.put("modifiedDate", modifiedDate);
+        zjo.put("metaDataChangedDate", metadataChangeDate);
+        zjo.put("size", size);
+        zjo.put("contentType", contentType);
+        zjo.put("tags", tagIds);
         return zjo;
     }
 
     public String toString() {
-        return String.format("[ZDocument %s]", mId);
+        return String.format("[ZDocument %s]", id);
     }
 
     public String dump() {
@@ -86,49 +88,66 @@ public class ZDocument implements ZItem, ToZJSONObject {
     }
 
     public String getId() {
-		return mId;
-	}
-	public String getName() {
-		return mName;
-	}
-	public String getFolderId() {
-		return mFolderId;
-	}
-	public String getVersion() {
-		return mVersion;
-	}
-	public String getEditor() {
-		return mEditor;
-	}
-	public String getCreator() {
-		return mCreator;
-	}
-	public String getRestUrl() {
-		return mRestUrl;
-	}
-	public long getCreatedDate() {
-		return mCreatedDate;
-	}
-	public long getModifiedDate() {
-		return mModifiedDate;
-	}
-	public long getMetaDataChangedDate() {
-		return mMetaDataChangedDate;
-	}
-	public boolean isWiki() {
-		return mIsWiki;
-    }
-    public String getContentType() {
-        return mContentType;
-    }
-    public long getSize() {
-        return mSize;
-    }
-    public String getTagIds() {
-        return mTagIds;
+        return id;
     }
     
-    public void modifyNotification(ZModifyEvent event) throws ServiceException {
-		// TODO Auto-generated method stub
-	}
+    public String getName() {
+        return name;
+    }
+    
+    public String getFolderId() {
+        return folderId;
+    }
+    
+    public String getVersion() {
+        return version;
+    }
+    
+    public String getEditor() {
+        return editor;
+    }
+    
+    public String getCreator() {
+        return creator;
+    }
+    
+    public String getRestUrl() {
+        return restUrl;
+    }
+    
+    public long getCreatedDate() {
+        return createdDate;
+    }
+    
+    public long getModifiedDate() {
+        return modifiedDate;
+    }
+    
+    public long getMetaDataChangedDate() {
+        return metadataChangeDate;
+    }
+    
+    public boolean isWiki() {
+        return isWiki;
+    }
+
+    public String getContentType() {
+        return contentType;
+    }
+    
+    public long getSize() {
+        return size;
+    }
+    
+    public String getTagIds() {
+        return tagIds;
+    }
+    
+    public String getFlags() {
+        return flags;
+    }
+
+    @Override
+    public void modifyNotification(ZModifyEvent event) {
+    }
 }

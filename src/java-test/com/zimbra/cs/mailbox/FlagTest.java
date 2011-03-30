@@ -24,6 +24,7 @@ import org.junit.Test;
  */
 public class FlagTest {
 
+    @SuppressWarnings("deprecation")
     @Test
     public void id() {
         Assert.assertEquals(-1, Flag.ID_FROM_ME);
@@ -41,6 +42,7 @@ public class FlagTest {
         Assert.assertEquals(-13, Flag.ID_VERSIONED);
         Assert.assertEquals(-14, Flag.ID_INDEXING_DEFERRED);
         Assert.assertEquals(-15, Flag.ID_POPPED);
+        Assert.assertEquals(-16, Flag.ID_NOTE);
         Assert.assertEquals(-20, Flag.ID_SUBSCRIBED);
         Assert.assertEquals(-21, Flag.ID_EXCLUDE_FREEBUSY);
         Assert.assertEquals(-22, Flag.ID_CHECKED);
@@ -55,6 +57,7 @@ public class FlagTest {
         Assert.assertEquals(-31, Flag.ID_UNCACHED);
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void bitmask() {
         Assert.assertEquals(1, Flag.BITMASK_FROM_ME);
@@ -72,6 +75,7 @@ public class FlagTest {
         Assert.assertEquals(4096, Flag.BITMASK_VERSIONED);
         Assert.assertEquals(8192, Flag.BITMASK_INDEXING_DEFERRED);
         Assert.assertEquals(16384, Flag.BITMASK_POPPED);
+        Assert.assertEquals(32768, Flag.BITMASK_NOTE);
         Assert.assertEquals(524288, Flag.BITMASK_SUBSCRIBED);
         Assert.assertEquals(1048576, Flag.BITMASK_EXCLUDE_FREEBUSY);
         Assert.assertEquals(2097152, Flag.BITMASK_CHECKED);

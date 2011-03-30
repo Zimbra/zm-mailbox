@@ -3774,10 +3774,18 @@ public class ZMailbox implements ToZJSONObject {
     }
 
     public String createDocument(String folderId, String name, String attachmentId) throws ServiceException {
+        return createDocument(folderId, name, attachmentId, false);
+    }
+    
+    public String createDocument(String folderId, String name, String attachmentId, boolean isNote)
+    throws ServiceException {
         Element req = newRequestElement(MailConstants.SAVE_DOCUMENT_REQUEST);
         Element doc = req.addUniqueElement(MailConstants.E_DOC);
         doc.addAttribute(MailConstants.A_NAME, name);
         doc.addAttribute(MailConstants.A_FOLDER, folderId);
+        if (isNote) {
+            doc.addAttribute(MailConstants.A_FLAGS, ZItem.Flag.note.toString());
+        }
         Element upload = doc.addElement(MailConstants.E_UPLOAD);
         upload.addAttribute(MailConstants.A_ID, attachmentId);
         return invoke(req).getElement(MailConstants.E_DOC).getAttribute(MailConstants.A_ID);

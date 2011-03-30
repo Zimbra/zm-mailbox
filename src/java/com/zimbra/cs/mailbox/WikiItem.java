@@ -35,7 +35,7 @@ public class WikiItem extends Document {
     static WikiItem create(int id, Folder folder, String wikiword, ParsedDocument pd, CustomMetadata custom)
     throws ServiceException {
         Metadata meta = new Metadata();
-        UnderlyingData data = prepareCreate(Type.WIKI, id, folder, wikiword, WIKI_CONTENT_TYPE, pd, meta, custom);
+        UnderlyingData data = prepareCreate(Type.WIKI, id, folder, wikiword, WIKI_CONTENT_TYPE, pd, meta, custom, 0);
 
         Mailbox mbox = folder.getMailbox();
         data.contentChanged(mbox);

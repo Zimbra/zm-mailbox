@@ -121,7 +121,8 @@ public class Document extends MailItem {
             }
 
             synchronized (mMailbox) {
-                pd = new ParsedDocument(mblob.getLocalBlob(), getName(), getContentType(), getChangeDate(), getCreator(), getDescription(), isDescriptionEnabled());
+                pd = new ParsedDocument(mblob.getLocalBlob(), getName(), getContentType(),
+                    getChangeDate(), getCreator(), getDescription(), isDescriptionEnabled());
                 if (pd.hasTemporaryAnalysisFailure())
                     throw new MailItem.TemporaryIndexingException();
             }
@@ -146,7 +147,7 @@ public class Document extends MailItem {
     @Override public void reanalyze(Object obj, long newSize) throws ServiceException {
         if (!(obj instanceof ParsedDocument))
             throw ServiceException.FAILURE("cannot reanalyze non-ParsedDocument object", null);
-        if ((mData.flags & Flag.BITMASK_UNCACHED) != 0)
+        if (mData.isSet(Flag.FlagInfo.UNCACHED))
             throw ServiceException.FAILURE("cannot reanalyze an old item revision", null);
 
         ParsedDocument pd = (ParsedDocument) obj;
@@ -180,7 +181,7 @@ public class Document extends MailItem {
     }
 
     protected static UnderlyingData prepareCreate(MailItem.Type type, int id, Folder folder, String name,
-            String mimeType, ParsedDocument pd, Metadata meta, CustomMetadata custom) throws ServiceException {
+            String mimeType, ParsedDocument pd, Metadata meta, CustomMetadata custom, int flags) throws ServiceException {
         if (folder == null || !folder.canContain(Type.DOCUMENT)) {
             throw MailServiceException.CANNOT_CONTAIN();
         }
@@ -208,15 +209,16 @@ public class Document extends MailItem {
         data.setBlobDigest(pd.getDigest());
         data.metadata = encodeMetadata(meta, DEFAULT_COLOR_RGB, 1, extended, mimeType, pd.getCreator(),
                 pd.getFragment(), null, 0, pd.getDescription(), pd.isDescriptionEnabled()).toString();
-        return data;
+        data.setFlags(flags);
+       return data;
     }
 
-    static Document create(int id, Folder folder, String filename, String type, ParsedDocument pd, CustomMetadata custom)
+    static Document create(int id, Folder folder, String filename, String type, ParsedDocument pd, CustomMetadata custom, int flags)
     throws ServiceException {
         assert(id != Mailbox.ID_AUTO_INCREMENT);
 
         Mailbox mbox = folder.getMailbox();
-        UnderlyingData data = prepareCreate(Type.DOCUMENT, id, folder, filename, type, pd, null, custom);
+        UnderlyingData data = prepareCreate(Type.DOCUMENT, id, folder, filename, type, pd, null, custom, flags);
         data.contentChanged(mbox);
 
         ZimbraLog.mailop.info("Adding Document %s: id=%d, folderId=%d, folderName=%s.", filename, data.id, folder.getId(), folder.getName());

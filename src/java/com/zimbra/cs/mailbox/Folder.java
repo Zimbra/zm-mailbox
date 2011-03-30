@@ -819,7 +819,7 @@ public class Folder extends MailItem {
         data.folderId = (id == Mailbox.ID_FOLDER_ROOT ? id : parent.getId());
         data.parentId = data.folderId;
         data.date = mbox.getOperationTimestamp();
-        data.flags = flags & Flag.FLAGS_FOLDER;
+        data.setFlags(flags & Flag.FLAGS_FOLDER);
         data.name = name;
         data.setSubject(name);
         data.metadata = encodeMetadata(color, 1, custom, attributes, view, null, new SyncData(url), id + 1, 0,

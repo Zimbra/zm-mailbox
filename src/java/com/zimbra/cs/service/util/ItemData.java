@@ -74,8 +74,8 @@ public class ItemData {
             ud.size = json.getLong(Keys.size.toString());
             ud.setBlobDigest(json.optString(Keys.blob_digest.toString()));
             ud.unreadCount = json.getInt(Keys.unread.toString());
-            ud.flags = json.getInt(Keys.flags.toString()) |
-                Flag.BITMASK_UNCACHED;
+            ud.setFlags(json.getInt(Keys.flags.toString()) |
+                Flag.BITMASK_UNCACHED);
             ud.tags = json.getLong(Keys.tags.toString());
             ud.setSubject(json.optString(Keys.subject.toString()));
             ud.name = json.optString(Keys.name.toString());
@@ -113,7 +113,7 @@ public class ItemData {
                 put(Keys.volume_id.toString(), 0).
                 putOpt(Keys.blob_digest.toString(), ud.getBlobDigest()).
                 put(Keys.unread.toString(), ud.unreadCount).
-                put(Keys.flags.toString(), ud.flags).
+                put(Keys.flags.toString(), ud.getFlags()).
                 put(Keys.tags.toString(), ud.tags).
                 putOpt(Keys.subject.toString(), ud.getSubject()).
                 putOpt(Keys.name.toString(), ud.name).

@@ -48,7 +48,8 @@
 // The content of the document can be inlined in <content/> element.
 // The content can come from another document / revision specified in <doc/> sub element.
 <SaveDocumentRequest>
-  <doc [id="{item-id}" ver="{last-known-version}"] [name="{file-name}"] [ct="{content-type}"] [l="{folder-id}"] [desc="{description}"] [descEnabled="true|false"]>
+  <doc [id="{item-id}" ver="{last-known-version}"] [name="{file-name}"] [ct="{content-type}"]
+      [l="{folder-id}"] [desc="{description}"] [descEnabled="true|false"] [f="{flags}"]>
     [<upload id="{upload-id}"/>]
     [<m id="{msg-id}" part="{part-id}"/>]
     [<content>{inlined-document-content-string}</content>]

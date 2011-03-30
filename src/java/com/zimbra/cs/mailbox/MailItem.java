@@ -232,7 +232,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         public int date;
         public long size;
         public int unreadCount;
-        public int flags;
+        private int flags;
         public long tags;
         private String sender;
         private String recipients;
@@ -279,7 +279,40 @@ public abstract class MailItem implements Comparable<MailItem> {
         public boolean isUnread() {
             return (unreadCount > 0);
         }
+        
+        public int getFlags() {
+            return flags;
+        }
+        
+        public void setFlag(Flag flag) {
+            setFlags(flags | (int) flag.getBitmask());
+        }
+        
+        public void setFlag(Flag.FlagInfo flag) {
+            setFlags(flags | flag.toBitmask());
+        }
+        
+        public void unsetFlag(Flag flag) {
+            setFlags(flags & ~((int) flag.getBitmask()));
+        }
+        
+        public void unsetFlag(Flag.FlagInfo flag) {
+            setFlags(flags & ~flag.toBitmask());
+        }
 
+        /**
+         * Sets all flags to the values specified in the given bit field.
+         */
+        public void setFlags(int bitfield) {
+            assert (bitfield & ~Flag.FLAGS_ALL) == 0 : "Invalid flag bitfield: " + bitfield;
+            bitfield &= Flag.FLAGS_ALL;
+            this.flags = bitfield;
+        }
+        
+        public boolean isSet(Flag.FlagInfo flag) {
+            return (this.flags & flag.toBitmask()) != 0;
+        }
+        
         UnderlyingData duplicate(int newId, int newFolder, String newLocator) {
             UnderlyingData data = new UnderlyingData();
             data.id = newId;
@@ -630,7 +663,6 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (data == null) {
             throw new IllegalArgumentException();
         }
-        Flag.validate(data.flags);
         mId      = data.id;
         mData    = data;
         mMailbox = mbox;
@@ -1936,7 +1968,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             return;
         }
         // don't let the user tag things as "has attachments" or "draft"
-        if (tag instanceof Flag && (tag.getBitmask() & Flag.FLAG_SYSTEM) != 0) {
+        if (tag instanceof Flag && (tag.getBitmask() & Flag.FLAGS_SYSTEM) != 0) {
             throw MailServiceException.CANNOT_TAG(tag, this);
         }
         // grab the parent *before* we make any other changes
@@ -1975,7 +2007,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     final void alterSystemFlag(Flag flag, boolean newValue) throws ServiceException {
         if (flag == null)
             throw ServiceException.FAILURE("no tag supplied when trying to tag item " + mId, null);
-        if ((flag.getBitmask() & Flag.FLAG_SYSTEM) == 0)
+        if ((flag.getBitmask() & Flag.FLAGS_SYSTEM) == 0)
             throw ServiceException.FAILURE("requested to alter a non-system tag", null);
         if (newValue && !flag.canTag(this))
             throw MailServiceException.CANNOT_TAG(flag, this);
@@ -2006,7 +2038,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         boolean isFlag = tag instanceof Flag;
         markItemModified(isFlag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
         // changing a system flag is not a syncable event
-        if (!isFlag || (tag.getBitmask() & Flag.FLAG_SYSTEM) == 0)
+        if (!isFlag || (tag.getBitmask() & Flag.FLAGS_SYSTEM) == 0)
             mData.metadataChanged(mMailbox);
 
         if (isFlag) {
@@ -2085,7 +2117,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         // FIXME: more optimal would be to do this with a single db UPDATE...
 
         // make sure the caller can't change immutable flags
-        flags = (flags & ~Flag.FLAG_SYSTEM) | (getFlagBitmask() & Flag.FLAG_SYSTEM);
+        flags = (flags & ~Flag.FLAGS_SYSTEM) | (getFlagBitmask() & Flag.FLAGS_SYSTEM);
         // handle flags first...
         if (flags != mData.flags) {
             markItemModified(Change.MODIFIED_FLAGS);

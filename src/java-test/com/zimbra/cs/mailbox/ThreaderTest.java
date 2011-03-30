@@ -27,40 +27,28 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.testng.Assert;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ZAttrProvisioning.MailThreadingAlgorithm;
-import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.HSQLDB;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.store.MockStoreManager;
 import com.zimbra.cs.util.JMSession;
 
 public class ThreaderTest {
-    @SuppressWarnings("static-access")
     @BeforeClass
     public static void init() throws Exception {
-        Provisioning prov = new MockProvisioning();
+        MailboxTestUtil.initServer();
+        
+        Provisioning prov = Provisioning.getInstance();
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
         attrs.put(Provisioning.A_zimbraMailHost, "localhost");
         prov.createAccount("test@zimbra.com", "secret", attrs);
-        Provisioning.setInstance(prov);
-
-        LC.zimbra_class_store.setDefault(MockStoreManager.class.getName());
-
-        LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
-        DbPool.startup();
-        HSQLDB.createDatabase();
     }
 
     @Before
     public void setup() throws Exception {
-        HSQLDB.clearDatabase();
-        MailboxManager.getInstance().clearCache();
+        MailboxTestUtil.clearData();
     }
 
     private static final String ROOT_SUBJECT = "sdkljfh sdjhfg kjdshkj iu 8 skfjd";

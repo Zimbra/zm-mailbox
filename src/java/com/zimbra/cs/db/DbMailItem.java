@@ -192,7 +192,7 @@ public class DbMailItem {
                     stmt.setNull(pos++, Types.INTEGER);
                     break;
             }
-            stmt.setInt(pos++, data.flags);
+            stmt.setInt(pos++, data.getFlags());
             stmt.setLong(pos++, data.tags);
             stmt.setString(pos++, data.getSender());
             if (data.senderId >= 0) {
@@ -221,7 +221,7 @@ public class DbMailItem {
                 getTagsetCache(conn, mbox).addTagset(data.tags);
             }
             if (areFlagsetsLoaded(mbox)) {
-                getFlagsetCache(conn, mbox).addTagset(data.flags);
+                getFlagsetCache(conn, mbox).addTagset(data.getFlags());
             }
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
@@ -1304,7 +1304,7 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             boolean isFlag = tag instanceof Flag;
-            boolean altersModseq = !isFlag || (tag.getBitmask() & Flag.FLAG_SYSTEM) == 0;
+            boolean altersModseq = !isFlag || (tag.getBitmask() & Flag.FLAGS_SYSTEM) == 0;
             String column = (isFlag ? "flags" : "tags");
 
             String primaryUpdate = column + " = " + column + (add ? " + ?" : " - ?");
@@ -1364,7 +1364,7 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             boolean isFlag = tag instanceof Flag;
-            boolean altersModseq = !isFlag || (tag.getBitmask() & Flag.FLAG_SYSTEM) == 0;
+            boolean altersModseq = !isFlag || (tag.getBitmask() & Flag.FLAGS_SYSTEM) == 0;
             String column = (isFlag ? "flags" : "tags");
 
             String primaryUpdate = column + " = " + column + (add ? " + ?" : " - ?");
@@ -2702,7 +2702,8 @@ public class DbMailItem {
                     stmt.setInt(pos++, data.id);
                     conversations.put(data.id, data);
                     // don't assume that the UnderlyingData structure was new...
-                    data.tags = data.flags = data.unreadCount = 0;
+                    data.tags = data.unreadCount = 0;
+                    data.setFlags(0);
                 }
                 rs = stmt.executeQuery();
 
@@ -2710,7 +2711,7 @@ public class DbMailItem {
                     UnderlyingData data = conversations.get(rs.getInt(1));
                     assert(data != null);
                     data.unreadCount += rs.getInt(2);
-                    data.flags       |= rs.getInt(3);
+                    data.setFlags(data.getFlags() | rs.getInt(3));
                     data.tags        |= rs.getLong(4);
                 }
             } catch (SQLException e) {
@@ -3398,9 +3399,9 @@ public class DbMailItem {
         data.unreadCount = rs.getInt(CI_UNREAD + offset);
         int flags = rs.getInt(CI_FLAGS + offset);
         if (!fromDumpster) {
-            data.flags = flags;
-        } else {
-            data.flags = flags | Flag.BITMASK_UNCACHED | Flag.BITMASK_IN_DUMPSTER;
+            data.setFlags(flags);
+        } else { 
+            data.setFlags(flags | Flag.BITMASK_UNCACHED | Flag.BITMASK_IN_DUMPSTER);
         }
         data.tags = rs.getLong(CI_TAGS + offset);
         data.setRecipients(rs.getString(CI_RECIPIENTS) + offset);
@@ -3436,10 +3437,11 @@ public class DbMailItem {
         data.locator    = rs.getString(3);
         data.setBlobDigest(rs.getString(4));
         data.unreadCount = item.getUnreadCount();
-        if (!fromDumpster)
-            data.flags = item.getInternalFlagBitmask() | Flag.BITMASK_UNCACHED;
-        else
-            data.flags = item.getInternalFlagBitmask() | Flag.BITMASK_UNCACHED | Flag.BITMASK_IN_DUMPSTER;
+        if (!fromDumpster) {
+            data.setFlags(item.getInternalFlagBitmask() | Flag.BITMASK_UNCACHED);
+        } else {
+            data.setFlags(item.getInternalFlagBitmask() | Flag.BITMASK_UNCACHED | Flag.BITMASK_IN_DUMPSTER);
+        }
         data.tags        = item.getTagBitmask();
         data.setSubject(item.getSubject());
         data.name        = rs.getString(5);
@@ -3948,7 +3950,7 @@ public class DbMailItem {
             if (data.size != dbdata.size)                failures += " SIZE";
             if (dbdata.type != MailItem.Type.CONVERSATION.toByte()) {
                 if (data.unreadCount != dbdata.unreadCount)  failures += " UNREAD";
-                if (data.flags != dbdata.flags)              failures += " FLAGS";
+                if (data.getFlags() != dbdata.getFlags())    failures += " FLAGS";
                 if (data.tags != dbdata.tags)                failures += " TAGS";
             }
             if (data.modMetadata != dbdata.modMetadata)  failures += " MOD_METADATA";

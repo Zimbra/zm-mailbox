@@ -34,7 +34,7 @@ public class Flag extends Tag {
     private static final FlagInfo[] CHAR2FLAG = new FlagInfo[127];
     private static final Map<String, FlagInfo> NAME2FLAG = new HashMap<String, FlagInfo>();
 
-    private enum FlagInfo {
+    public enum FlagInfo {
         FROM_ME(-1, "\\Sent", 's'),
         ATTACHED(-2, "\\Attached", 'a'),
         REPLIED(-3, "\\Answered", 'r'),
@@ -59,6 +59,7 @@ public class Flag extends Tag {
         @Deprecated
         INDEXING_DEFERRED(-14, "\\IdxDeferred", HIDDEN),
         POPPED(-15, "\\Popped", 'p'),
+        NOTE(-16, "\\Note", 't'),
         SUBSCRIBED(-20, "\\Subscribed", '*'),
         EXCLUDE_FREEBUSY(-21, "\\ExcludeFB", 'b'),
         CHECKED(-22, "\\Checked", '#'),
@@ -99,9 +100,13 @@ public class Flag extends Tag {
             data.id = id;
             data.type = MailItem.Type.FLAG.toByte();
             data.folderId = Mailbox.ID_FOLDER_TAGS;
-            data.flags = BITMASK_UNCACHED;
+            data.setFlags(BITMASK_UNCACHED);
             data.name = name;
             return new Flag(mbox, data, this);
+        }
+        
+        public int toBitmask() {
+            return bitmask;
         }
     }
 
@@ -121,6 +126,7 @@ public class Flag extends Tag {
     @Deprecated
     public static final int ID_INDEXING_DEFERRED = FlagInfo.INDEXING_DEFERRED.id;
     public static final int ID_POPPED = FlagInfo.POPPED.id;
+    public static final int ID_NOTE = FlagInfo.NOTE.id;
     public static final int ID_SUBSCRIBED = FlagInfo.SUBSCRIBED.id;
     public static final int ID_EXCLUDE_FREEBUSY = FlagInfo.EXCLUDE_FREEBUSY.id;
     public static final int ID_CHECKED = FlagInfo.CHECKED.id;
@@ -151,6 +157,7 @@ public class Flag extends Tag {
     @Deprecated
     public static final int BITMASK_INDEXING_DEFERRED = FlagInfo.INDEXING_DEFERRED.bitmask;
     public static final int BITMASK_POPPED = FlagInfo.POPPED.bitmask;
+    public static final int BITMASK_NOTE = FlagInfo.NOTE.bitmask;
     public static final int BITMASK_SUBSCRIBED = FlagInfo.SUBSCRIBED.bitmask;
     public static final int BITMASK_EXCLUDE_FREEBUSY = FlagInfo.EXCLUDE_FREEBUSY.bitmask;
     public static final int BITMASK_CHECKED = FlagInfo.CHECKED.bitmask;
@@ -167,10 +174,10 @@ public class Flag extends Tag {
 
     static final String UNREAD_FLAG_ONLY = String.valueOf(FlagInfo.UNREAD.ch);
 
-    public static final int FLAG_SYSTEM =
+    public static final int FLAGS_SYSTEM =
         BITMASK_FROM_ME | BITMASK_ATTACHED | BITMASK_COPIED | BITMASK_DRAFT | BITMASK_HIGH_PRIORITY |
         BITMASK_LOW_PRIORITY | BITMASK_VERSIONED | BITMASK_INDEXING_DEFERRED | BITMASK_INVITE | BITMASK_ARCHIVED |
-        BITMASK_GLOBAL | BITMASK_IN_DUMPSTER | BITMASK_UNCACHED;
+        BITMASK_GLOBAL | BITMASK_IN_DUMPSTER | BITMASK_UNCACHED | BITMASK_NOTE;
     public static final int FLAGS_FOLDER  =
         BITMASK_SUBSCRIBED | BITMASK_EXCLUDE_FREEBUSY | BITMASK_CHECKED | BITMASK_NO_INHERIT | BITMASK_SYNCFOLDER |
         BITMASK_SYNC | BITMASK_NO_INFERIORS | BITMASK_GLOBAL;
@@ -181,7 +188,7 @@ public class Flag extends Tag {
         BITMASK_DRAFT | BITMASK_HIGH_PRIORITY | BITMASK_LOW_PRIORITY;
     public static final int FLAGS_GENERIC =
         BITMASK_ATTACHED | BITMASK_COPIED | BITMASK_FLAGGED | BITMASK_DELETED | BITMASK_VERSIONED |
-        BITMASK_INDEXING_DEFERRED | BITMASK_ARCHIVED | BITMASK_IN_DUMPSTER | BITMASK_UNCACHED;
+        BITMASK_INDEXING_DEFERRED | BITMASK_ARCHIVED | BITMASK_IN_DUMPSTER | BITMASK_UNCACHED | BITMASK_NOTE;
 
     /**
      * Bitmask of all valid flags <b>except</b> {@link #BITMASK_UNREAD}.
@@ -213,16 +220,6 @@ public class Flag extends Tag {
         }
         FlagInfo finfo = INDEX2FLAG[index];
         return finfo == null ? HIDDEN : finfo.ch;
-    }
-
-    /**
-     * Throws an exception if the given {@code flags} bitmask contains bits for which a corresponding {@link Flag}
-     * object does not exist.
-     */
-    static void validate(int flags) throws ServiceException {
-        if ((flags & ~FLAGS_ALL) > 0) {
-            throw ServiceException.FAILURE("invalid value for flags: " + flags, null);
-        }
     }
 
     /**

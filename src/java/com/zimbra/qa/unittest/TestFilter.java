@@ -62,7 +62,7 @@ import com.zimbra.cs.zclient.ZFilterRules;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMessage;
-import com.zimbra.cs.zclient.ZMessage.Flag;
+import com.zimbra.cs.zclient.ZItem.Flag;
 import com.zimbra.cs.zclient.ZTag;
 import junit.framework.TestCase;
 import org.apache.jsieve.parser.generated.Node;

@@ -22,11 +22,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.testng.Assert;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.HSQLDB;
 
 /**
  * Unit test for {@link ContactAutoComplete}.
@@ -37,19 +34,16 @@ public final class ContactAutoCompleteTest {
 
     @BeforeClass
     public static void init() throws Exception {
-        MockProvisioning prov = new MockProvisioning();
+        MailboxTestUtil.initServer();
+        
+        Provisioning prov = Provisioning.getInstance();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
         Provisioning.setInstance(prov);
-
-        LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
-        DbPool.startup();
-        HSQLDB.createDatabase();
     }
 
     @Before
     public void setUp() throws Exception {
-        HSQLDB.clearDatabase();
-        MailboxManager.getInstance().clearCache();
+        MailboxTestUtil.clearData();
     }
 
     @Test

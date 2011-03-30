@@ -659,7 +659,7 @@ public class Contact extends MailItem {
         data.setBlobDigest(pc.getDigest());
         data.size = pc.getSize();
         data.date = mbox.getOperationTimestamp();
-        data.flags = flags | (pc.hasAttachment() ? Flag.BITMASK_ATTACHED : 0);
+        data.setFlags(flags | (pc.hasAttachment() ? Flag.BITMASK_ATTACHED : 0));
         data.tags = Tag.tagsToBitmask(tags);
         data.setSender(getFileAsString(pc.getFields()));
         data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, custom, pc.getFields(), pc.getAttachments());
@@ -736,9 +736,9 @@ public class Contact extends MailItem {
         }
         attachments = pc.getAttachments();
 
-        mData.flags &= ~Flag.BITMASK_ATTACHED;
+        mData.unsetFlag(Flag.FlagInfo.ATTACHED);
         if (pc.hasAttachment()) {
-            mData.flags |= Flag.BITMASK_ATTACHED;
+            mData.setFlag(Flag.FlagInfo.ATTACHED);
         }
         saveData(getFileAsString(fields));
         Set<String> newAddrs = getNormalizedEmailAddrs();

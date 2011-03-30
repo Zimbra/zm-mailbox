@@ -14,7 +14,6 @@
  */
 package com.zimbra.cs.mailbox;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 
@@ -25,20 +24,13 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.common.io.Files;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ZAttrProvisioning.MailThreadingAlgorithm;
-import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.HSQLDB;
 import com.zimbra.cs.index.BrowseTerm;
-import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.store.MockStoreManager;
-import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.JMSession;
 
 /**
@@ -50,29 +42,14 @@ public final class MailboxTest {
 
     @BeforeClass
     public static void init() throws Exception {
-        Provisioning prov = new MockProvisioning();
+        MailboxTestUtil.initServer();
+        Provisioning prov = Provisioning.getInstance();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
-        Provisioning.setInstance(prov);
-
-        LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
-        DbPool.startup();
-        HSQLDB.createDatabase();
-
-        MailboxManager.setInstance(null);
-        MailboxIndex.startup();
-
-        LC.zimbra_class_store.setDefault(MockStoreManager.class.getName());
-        StoreManager.getInstance().startup();
     }
 
     @Before
     public void setUp() throws Exception {
-        HSQLDB.clearDatabase();
-        MailboxManager.getInstance().clearCache();
-        File index = new File("build/test/index");
-        if (index.isDirectory()) {
-            Files.deleteDirectoryContents(index);
-        }
+        MailboxTestUtil.clearData();
     }
 
     @Test
@@ -98,10 +75,10 @@ public final class MailboxTest {
         Assert.assertEquals("sub2.zimbra.com", terms.get(1).getText());
         Assert.assertEquals("sub3.zimbra.com", terms.get(2).getText());
         Assert.assertEquals("sub4.zimbra.com", terms.get(3).getText());
-        Assert.assertEquals(4, terms.get(0).getFreq());
-        Assert.assertEquals(3, terms.get(1).getFreq());
-        Assert.assertEquals(2, terms.get(2).getFreq());
-        Assert.assertEquals(1, terms.get(3).getFreq());
+        Assert.assertEquals(8, terms.get(0).getFreq());
+        Assert.assertEquals(6, terms.get(1).getFreq());
+        Assert.assertEquals(4, terms.get(2).getFreq());
+        Assert.assertEquals(2, terms.get(3).getFreq());
     }
 
     private ParsedMessage generateMessage(String subject) throws Exception {
@@ -162,5 +139,4 @@ public final class MailboxTest {
         parent = mbox.getMessageById(null, rootId);
         Assert.assertEquals("unrelated", -draft.getId(), draft.getConversationId());
     }
-
 }

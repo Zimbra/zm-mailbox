@@ -323,7 +323,7 @@ public class NativeFormatter extends Formatter {
 
             item = mbox.addDocumentRevision(context.opContext, item.getId(), pd);
         } catch (NoSuchItemException nsie) {
-            item = mbox.createDocument(context.opContext, folder.getId(), pd, MailItem.Type.DOCUMENT);
+            item = mbox.createDocument(context.opContext, folder.getId(), pd, MailItem.Type.DOCUMENT, 0);
         } finally {
             is.close();
         }

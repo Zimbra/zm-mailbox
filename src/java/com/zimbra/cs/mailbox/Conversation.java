@@ -127,10 +127,11 @@ public class Conversation extends MailItem {
 
     void recalculateCounts(List<Message> msgs) {
         markItemModified(Change.MODIFIED_TAGS | Change.MODIFIED_FLAGS | Change.MODIFIED_UNREAD);
-        mData.tags = mData.flags = mData.unreadCount = 0;
+        mData.tags = mData.unreadCount = 0;
+        mData.setFlags(0);
         for (Message msg : msgs) {
             mData.unreadCount += msg.getUnreadCount();
-            mData.flags |= msg.getInternalFlagBitmask();
+            mData.setFlags(mData.getFlags() | msg.getInternalFlagBitmask());
             mData.tags |= msg.getTagBitmask();
         }
     }
@@ -151,13 +152,13 @@ public class Conversation extends MailItem {
         mSenderList = new SenderList(msgs);
         mData.size = msgs.size();
 
-        mData.tags = mData.flags = mData.unreadCount = 0;
+        mData.tags = mData.unreadCount = 0;
+        mData.setFlags(0);
         mExtendedData = null;
         for (Message msg : msgs) {
-            // unread count is updated via MailItem.addChild() for some reason...
             super.addChild(msg);
             mData.unreadCount += (msg.isUnread() ? 1 : 0);
-            mData.flags |= msg.getInternalFlagBitmask();
+            mData.setFlags(mData.getFlags() | msg.getInternalFlagBitmask());
             mData.tags |= msg.getTagBitmask();
             mExtendedData = MetadataCallback.duringConversationAdd(mExtendedData, msg);
         }
@@ -251,7 +252,7 @@ public class Conversation extends MailItem {
                 throw ServiceException.FAILURE("null Message in list", null);
             date = Math.max(date, msg.mData.date);
             unread += msg.mData.unreadCount;
-            flags  |= msg.mData.flags;
+            flags  |= msg.mData.getFlags();
             tags   |= msg.mData.tags;
             extended = MetadataCallback.duringConversationAdd(extended, msg);
         }
@@ -264,7 +265,7 @@ public class Conversation extends MailItem {
         data.date = date;
         data.size = msgs.length;
         data.unreadCount = unread;
-        data.flags = flags;
+        data.setFlags(flags);
         data.tags = tags;
         data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, extended, new SenderList(msgs));
         data.contentChanged(mbox);
@@ -379,7 +380,7 @@ public class Conversation extends MailItem {
             throw ServiceException.FAILURE("unread state must be set with alterUnread", null);
         }
         // don't let the user tag things as "has attachments" or "draft"
-        if (tag instanceof Flag && (tag.getBitmask() & Flag.FLAG_SYSTEM) != 0) {
+        if (tag instanceof Flag && (tag.getBitmask() & Flag.FLAGS_SYSTEM) != 0) {
             throw MailServiceException.CANNOT_TAG(tag, this);
         }
         markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
@@ -596,9 +597,9 @@ public class Conversation extends MailItem {
         super.addChild(msg);
 
         // update inherited flags
-        int oldFlags = mData.flags;
-        mData.flags |= msg.getInternalFlagBitmask();
-        if (mData.flags != oldFlags) {
+        int oldFlags = mData.getFlags();
+        mData.setFlags(mData.getFlags() | msg.getInternalFlagBitmask());
+        if (mData.getFlags() != oldFlags) {
             markItemModified(Change.MODIFIED_FLAGS);
         }
 
@@ -669,13 +670,13 @@ public class Conversation extends MailItem {
             }
 
             // update inherited tags, if applicable
-            if (child.mData.tags != 0 || child.mData.flags != 0) {
-                int oldFlags = mData.flags;
+            if (child.mData.tags != 0 || child.mData.getFlags() != 0) {
+                int oldFlags = mData.getFlags();
                 long oldTags = mData.tags;
 
                 DbMailItem.completeConversation(mMailbox, mData);
 
-                if (mData.flags != oldFlags) {
+                if (mData.getFlags() != oldFlags) {
                     markItemModified(Change.MODIFIED_FLAGS);
                 }
                 if (mData.tags != oldTags) {

@@ -33,7 +33,7 @@ public class AddDocumentRevision extends SaveDocument {
     }
 
     public AddDocumentRevision(int mailboxId, String digest, int msgSize, int folderId) {
-        super(mailboxId, digest, msgSize, folderId);
+        super(mailboxId, digest, msgSize, folderId, 0);
         mOperation = MailboxOperation.AddDocumentRevision;
     }
 

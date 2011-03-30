@@ -33,7 +33,7 @@ public class SaveWiki extends SaveDocument {
     }
 
     public SaveWiki(int mailboxId, String digest, int msgSize, int folderId) {
-        super(mailboxId, digest, msgSize, folderId);
+        super(mailboxId, digest, msgSize, folderId, 0);
         mOperation = MailboxOperation.SaveWiki;
     }
 

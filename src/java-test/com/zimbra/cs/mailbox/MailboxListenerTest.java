@@ -23,19 +23,11 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.testng.Assert;
 
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.HSQLDB;
-import com.zimbra.cs.mime.MockMimeTypeInfo;
-import com.zimbra.cs.mime.handler.UnknownTypeHandler;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.cs.store.MockStoreManager;
-import com.zimbra.cs.store.StoreManager;
 
 public class MailboxListenerTest {
 
@@ -43,26 +35,14 @@ public class MailboxListenerTest {
 
     @BeforeClass
     public static void init() throws Exception {
-        MockProvisioning prov = new MockProvisioning();
-
-        MockMimeTypeInfo mime = new MockMimeTypeInfo();
-        mime.setHandlerClass(UnknownTypeHandler.class.getName());
-        prov.addMimeType(MimeConstants.CT_DEFAULT, mime);
+        MailboxTestUtil.initServer();
+        Provisioning prov = Provisioning.getInstance();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
-        Provisioning.setInstance(prov);
-
-        LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
-        DbPool.startup();
-        HSQLDB.createDatabase();
-
-        LC.zimbra_class_store.setDefault(MockStoreManager.class.getName());
-        StoreManager.getInstance().startup();
     }
 
     @Before
     public void setup() throws Exception {
-        HSQLDB.clearDatabase();
-        MailboxManager.getInstance().clearCache();
+        MailboxTestUtil.clearData();
         listenerWasCalled = false;
     }
 

@@ -474,7 +474,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         }
         data.imapId = id;
         data.date = mbox.getOperationTimestamp();
-        data.flags = flags & (Flag.FLAGS_CALITEM | Flag.FLAGS_GENERIC);
+        data.setFlags(flags & (Flag.FLAGS_CALITEM | Flag.FLAGS_GENERIC));
         data.tags = tags;
         data.setSubject(subject);
         data.setSender(sender);
@@ -1884,8 +1884,8 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
 
         // Check if there are any surviving non-cancel invites after applying the update.
         // Also check for changes in flags.
-        int oldFlags = mData.flags;
-        int newFlags = mData.flags & ~(Flag.BITMASK_ATTACHED | Flag.BITMASK_DRAFT | Flag.BITMASK_HIGH_PRIORITY | Flag.BITMASK_LOW_PRIORITY);
+        int oldFlags = mData.getFlags();
+        int newFlags = mData.getFlags() & ~(Flag.BITMASK_ATTACHED | Flag.BITMASK_DRAFT | Flag.BITMASK_HIGH_PRIORITY | Flag.BITMASK_LOW_PRIORITY);
         boolean hasSurvivingRequests = false;
         for (Invite cur : mInvites) {
             String method = cur.getMethod();
@@ -1903,7 +1903,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             }
         }
         if (newFlags != oldFlags) {
-            mData.flags = newFlags;
+            mData.setFlags(newFlags);
             modifiedCalItem = true;
         }
 

@@ -138,7 +138,7 @@ public class Mountpoint extends Folder {
         data.folderId = parent.getId();
         data.parentId = data.folderId;
         data.date = mbox.getOperationTimestamp();
-        data.flags = flags & Flag.FLAGS_FOLDER;
+        data.setFlags(flags & Flag.FLAGS_FOLDER);
         data.name = name;
         data.setSubject(name);
         data.metadata = encodeMetadata(color, 1, custom, view, ownerId, remoteId);

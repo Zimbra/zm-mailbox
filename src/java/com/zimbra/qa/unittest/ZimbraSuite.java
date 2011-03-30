@@ -28,6 +28,7 @@ import org.testng.TestNG;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.qa.unittest.server.TestDocumentServer;
 
 /**
  * Complete unit test suite for the Zimbra code base.
@@ -86,6 +87,7 @@ public class ZimbraSuite extends TestSuite
         sClasses.add(TestParsedMessage.class);
         sClasses.add(TestUserServlet.class);
         sClasses.add(TestDocument.class);
+        sClasses.add(TestDocumentServer.class);
         sClasses.add(TestFileUpload.class);
         sClasses.add(TestFilterExisting.class);
         sClasses.add(TestSpam.class);

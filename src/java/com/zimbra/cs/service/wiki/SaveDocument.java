@@ -45,6 +45,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.ZAttrProvisioning;
 import com.zimbra.cs.mailbox.Document;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -52,6 +53,7 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.UserServlet;
@@ -154,7 +156,12 @@ public class SaveDocument extends WikiDocumentHandler {
                 }
                 boolean descEnabled = docElem.getAttributeBool(MailConstants.A_DESC_ENABLED, true);
                 try {
-                    docItem = mbox.createDocument(octxt, fid.getId(), doc.name, doc.contentType, getAuthor(zsc), doc.description, descEnabled, is, MailItem.Type.DOCUMENT);
+                    ParsedDocument pd = new ParsedDocument(is, doc.name, doc.contentType, System.currentTimeMillis(),
+                        getAuthor(zsc), doc.description, descEnabled);
+                    String flags = docElem.getAttribute(MailConstants.A_FLAGS, null);
+                    docItem = mbox.createDocument(octxt, fid.getId(), pd, MailItem.Type.DOCUMENT, Flag.toBitmask(flags));
+                } catch (IOException e) {
+                    throw ServiceException.FAILURE("unable to create document", e);
                 } catch (ServiceException e) {
                     if (e.getCode().equals(MailServiceException.ALREADY_EXISTS)) {
                         MailItem item = mbox.getItemByPath(octxt, doc.name, fid.getId());
