@@ -120,28 +120,30 @@ public class SearchFolder extends Folder {
         }
         name = validateItemName(name);
         query = validateQuery(query);
-        if (parent.findSubfolder(name) != null)
+        if (parent.findSubfolder(name) != null) {
             throw MailServiceException.ALREADY_EXISTS(name);
-        if (types != null && types.trim().equals(""))
+        }
+        if (types != null && types.trim().equals("")) {
             types = null;
-        if (sort != null && sort.trim().equals(""))
+        }
+        if (sort != null && sort.trim().equals("")) {
             sort = null;
-
+        }
         Mailbox mbox = parent.getMailbox();
         UnderlyingData data = new UnderlyingData();
-        data.id          = id;
-        data.type        = Type.SEARCHFOLDER.toByte();
-        data.folderId    = parent.getId();
-        data.parentId    = parent.getId();
-        data.date        = mbox.getOperationTimestamp();
-        data.flags       = flags;
-        data.name        = name;
-        data.subject     = name;
-        data.metadata    = encodeMetadata(color, 1, custom, query, types, sort);
+        data.id = id;
+        data.type = Type.SEARCHFOLDER.toByte();
+        data.folderId = parent.getId();
+        data.parentId = parent.getId();
+        data.date = mbox.getOperationTimestamp();
+        data.flags = flags;
+        data.name = name;
+        data.setSubject(name);
+        data.metadata = encodeMetadata(color, 1, custom, query, types, sort);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("Adding SearchFolder %s: id=%d, parentId=%d, parentName=%s.",
-            name, data.id, parent.getId(), parent.getName());
-        DbMailItem.create(mbox, data, null);
+                name, data.id, parent.getId(), parent.getName());
+        DbMailItem.create(mbox, data);
 
         SearchFolder search = new SearchFolder(mbox, data);
         search.finishCreation(parent);

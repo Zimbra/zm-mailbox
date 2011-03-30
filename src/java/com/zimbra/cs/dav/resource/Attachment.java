@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -86,8 +86,7 @@ public class Attachment extends PhantomResource {
             Account account = prov.get(AccountBy.name, user);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
             // if more than one attachments with the same name, take the first one.
-            zqr = mbox.index.search(ctxt.getOperationContext(), query.toString(), SEARCH_TYPES,
-                    SortBy.NAME_ASCENDING, 10);
+            zqr = mbox.index.search(ctxt.getOperationContext(), query.toString(), SEARCH_TYPES, SortBy.NAME_ASC, 10);
             if (zqr.hasNext()) {
                 ZimbraHit hit = zqr.getNext();
                 if (hit instanceof MessageHit) {

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -32,22 +32,27 @@ public final class LuceneFields {
     // MUST match the values in the corresponding MailItem row entry. They MUST be Indexed and NOT_ANALYZED.
 
     /**
-     * Subject for sorting purposes (NOT_ANALYZED).
+     * Subject for sorting.
      */
     public static final String L_SORT_SUBJECT = "subjSort";
 
     /**
-     * name for sorting purposes
+     * Name for sorting.
      */
     public static final String L_SORT_NAME = "nameSort";
 
     /**
-     * date for sorting purposes. ALSO searchable date-  "date:"  "after:" and "before:".
+     * Recipient for sorting.
+     */
+    public static final String L_SORT_RCPT = "rcptSort";
+
+    /**
+     * Date for sorting. ALSO searchable date-  "date:"  "after:" and "before:".
      */
     public static final String L_SORT_DATE = "l.date";
 
     /**
-     * size of document "size:" searches, "larger:" and "smaller:".
+     * Size of document "size:" searches, "larger:" and "smaller:" for sorting.
      */
     public static final String L_SORT_SIZE = "l.size";
 

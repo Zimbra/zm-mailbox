@@ -77,7 +77,7 @@ public class Document extends MailItem {
     public String getDescription() {
         return mDescription == null ? "" : mDescription;
     }
-    
+
     public boolean isDescriptionEnabled() {
         return mDescEnabled;
     }
@@ -160,13 +160,13 @@ public class Document extends MailItem {
         }
 
         mContentType = pd.getContentType();
-        mCreator     = pd.getCreator();
-        mFragment    = pd.getFragment();
-        mData.date    = (int) (pd.getCreatedDate() / 1000L);
-        mData.name    = pd.getFilename();
-        mData.subject = pd.getFilename();
-        mDescription  = pd.getDescription();
-        mDescEnabled  = pd.isDescriptionEnabled();
+        mCreator = pd.getCreator();
+        mFragment = pd.getFragment();
+        mData.date = (int) (pd.getCreatedDate() / 1000L);
+        mData.name = pd.getFilename();
+        mData.setSubject(pd.getFilename());
+        mDescription = pd.getDescription();
+        mDescEnabled = pd.isDescriptionEnabled();
         pd.setVersion(getVersion());
 
         if (mData.size != pd.getSize()) {
@@ -194,19 +194,20 @@ public class Document extends MailItem {
         Mailbox mbox = folder.getMailbox();
 
         UnderlyingData data = new UnderlyingData();
-        data.id          = id;
-        data.type        = type.toByte();
-        data.folderId    = folder.getId();
+        data.id = id;
+        data.type = type.toByte();
+        data.folderId = folder.getId();
         if (!folder.inSpam() || mbox.getAccount().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false)) {
             data.indexId = IndexStatus.DEFERRED.id();
         }
-        data.imapId      = id;
-        data.date        = (int) (pd.getCreatedDate() / 1000L);
-        data.size        = pd.getSize();
-        data.name        = name;
-        data.subject     = name;
+        data.imapId = id;
+        data.date = (int) (pd.getCreatedDate() / 1000L);
+        data.size = pd.getSize();
+        data.name = name;
+        data.setSubject(name);
         data.setBlobDigest(pd.getDigest());
-        data.metadata    = encodeMetadata(meta, DEFAULT_COLOR_RGB, 1, extended, mimeType, pd.getCreator(), pd.getFragment(), null, 0, pd.getDescription(), pd.isDescriptionEnabled()).toString();
+        data.metadata = encodeMetadata(meta, DEFAULT_COLOR_RGB, 1, extended, mimeType, pd.getCreator(),
+                pd.getFragment(), null, 0, pd.getDescription(), pd.isDescriptionEnabled()).toString();
         return data;
     }
 
@@ -219,7 +220,7 @@ public class Document extends MailItem {
         data.contentChanged(mbox);
 
         ZimbraLog.mailop.info("Adding Document %s: id=%d, folderId=%d, folderName=%s.", filename, data.id, folder.getId(), folder.getName());
-        DbMailItem.create(mbox, data, null);
+        DbMailItem.create(mbox, data);
 
         Document doc = new Document(mbox, data);
         doc.finishCreation(null);

@@ -29,28 +29,28 @@ import com.zimbra.cs.util.Config;
  * @since Jul 7, 2004
  * @author tim
  */
-public class Versions {
+public final class Versions {
 
-    private static Log mLog = LogFactory.getLog(Versions.class);
+    private static final Log LOG = LogFactory.getLog(Versions.class);
 
     /**
      * The DB_VERSION is stored into the config table of the DB when the DB is created.
      * If the DB_VERSION does not match our server's version, we will not run.
      *
      * UPDATE THESE TO REQUIRE RESET-WORLD TO BE RUN
-     *
      */
-    public static final String DB_VERSION = "68";
+    public static final String DB_VERSION = "69";
 
     /**
      * The INDEX_VERSION is stored into the config table of the DB when the DB is created.
      * If the INDEX_VERSION does not match our server's version, we will not run.
      *
      * UPDATE THESE TO REQUIRE RESET-WORLD TO BE RUN
-     *
      */
     public static final String INDEX_VERSION = "2";
 
+    private Versions() {
+    }
 
     /////////////////////////////////////////////////////////////
     // Called at boot time
@@ -64,7 +64,7 @@ public class Versions {
         if (val.equals(DB_VERSION)) {
             return true;
         } else {
-            mLog.error("DB Version Mismatch: ours=\""+DB_VERSION+"\" from DB=\""+val+"\"");
+            LOG.error("DB Version Mismatch: ours=%s from DB=%s", DB_VERSION, val);
             return false;
         }
     }
@@ -74,11 +74,10 @@ public class Versions {
         if (val.equals(INDEX_VERSION)) {
             return true;
         } else {
-            mLog.error("Index Version Mismatch: ours=\""+INDEX_VERSION+"\" from DB=\""+val+"\"");
+            LOG.error("Index Version Mismatch: ours=%s from DB=%s", INDEX_VERSION, val);
             return false;
         }
     }
-
 
     /////////////////////////////////////////////////////////////
     // main and command-line parsing

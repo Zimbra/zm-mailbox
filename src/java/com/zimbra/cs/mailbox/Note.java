@@ -19,6 +19,7 @@ import java.util.List;
 
 
 import com.google.common.base.Objects;
+import com.google.common.base.Strings;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.LuceneFields;
@@ -148,19 +149,19 @@ public class Note extends MailItem {
         }
         Mailbox mbox = folder.getMailbox();
         UnderlyingData data = new UnderlyingData();
-        data.id          = id;
-        data.type        = Type.NOTE.toByte();
-        data.folderId    = folder.getId();
+        data.id = id;
+        data.type = Type.NOTE.toByte();
+        data.folderId = folder.getId();
         if (!folder.inSpam() || mbox.getAccount().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false)) {
             data.indexId = IndexStatus.DEFERRED.id();
         }
-        data.date        = mbox.getOperationTimestamp();
-        data.subject     = content;
-        data.metadata    = encodeMetadata(color, 1, custom, location);
+        data.date = mbox.getOperationTimestamp();
+        data.setSubject(content);
+        data.metadata = encodeMetadata(color, 1, custom, location);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("Adding Note: id=%d, folderId=%d, folderName=%s.",
-            data.id, folder.getId(), folder.getName());
-        DbMailItem.create(mbox, data, null);
+                data.id, folder.getId(), folder.getName());
+        DbMailItem.create(mbox, data);
 
         Note note = new Note(mbox, data);
         note.finishCreation(null);
@@ -177,24 +178,25 @@ public class Note extends MailItem {
         return Collections.singletonList(doc);
     }
 
-
     void setContent(String content) throws ServiceException {
-        if (!isMutable())
+        if (!isMutable()) {
             throw MailServiceException.IMMUTABLE_OBJECT(mId);
-        if (!canAccess(ACL.RIGHT_WRITE))
+        }
+        if (!canAccess(ACL.RIGHT_WRITE)) {
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on the note");
-
+        }
         content = StringUtil.stripControlCharacters(content);
-        if (content == null || content.equals(""))
+        if (Strings.isNullOrEmpty(content)) {
             throw ServiceException.INVALID_REQUEST("notes may not be empty", null);
-        if (content.equals(mData.subject))
+        }
+        if (content.equals(mData.getSubject())) {
             return;
-
+        }
         addRevision(false);
         markItemModified(Change.MODIFIED_CONTENT | Change.MODIFIED_DATE);
         // XXX: should probably update both mData.size and the Mailbox's size
-        mData.subject = content;
-        mData.date    = mMailbox.getOperationTimestamp();
+        mData.setSubject(content);
+        mData.date = mMailbox.getOperationTimestamp();
         saveData(null);
     }
 

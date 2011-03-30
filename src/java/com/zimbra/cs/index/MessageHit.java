@@ -22,6 +22,8 @@ import java.util.List;
 import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.Document;
 
+import com.google.common.base.Objects;
+import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
@@ -43,21 +45,21 @@ import com.zimbra.common.util.LogFactory;
  */
 public final class MessageHit extends ZimbraHit {
 
-    private static Log mLog = LogFactory.getLog(MessageHit.class);
+    private static final Log LOG = LogFactory.getLog(MessageHit.class);
 
-    private Document mDoc = null;
-    private Message mMessage = null;
-    private List<MessagePartHit> mMatchedParts = null;
-    private int mConversationId = 0;
-    private int mMessageId = 0;
-    private ConversationHit mConversationHit = null;
+    private Document document = null;
+    private Message message = null;
+    private List<MessagePartHit> matchedParts = null;
+    private int conversationId = 0;
+    private int messageId = 0;
+    private ConversationHit conversationHit = null;
 
-    MessageHit(ZimbraQueryResultsImpl results, Mailbox mbx, int mailItemId, Document doc, Message message) {
+    MessageHit(ZimbraQueryResultsImpl results, Mailbox mbx, int itemId, Document doc, Message msg) {
         super(results, mbx);
-        assert(mailItemId != 0);
-        mMessageId = mailItemId;
-        mDoc = doc;
-        mMessage = message;
+        assert(itemId != 0);
+        messageId = itemId;
+        document = doc;
+        message = msg;
     }
 
     int getFolderId() throws ServiceException {
@@ -66,95 +68,75 @@ public final class MessageHit extends ZimbraHit {
 
     @Override
     public int getConversationId() throws ServiceException {
-        if (mConversationId == 0) {
-            mConversationId = getMessage().getConversationId();
+        if (conversationId == 0) {
+            conversationId = getMessage().getConversationId();
         }
-        return mConversationId;
+        return conversationId;
     }
 
     @Override
     public long getDate() throws ServiceException {
-        if (mCachedDate == -1) {
-            if (mMessage == null && mDoc != null) {
-                String dateStr = mDoc.get(LuceneFields.L_SORT_DATE);
+        if (cachedDate == -1) {
+            if (message == null && document != null) {
+                String dateStr = document.get(LuceneFields.L_SORT_DATE);
                 if (dateStr != null) {
                     try {
-                        return mCachedDate = DateTools.stringToTime(dateStr);
+                        return cachedDate = DateTools.stringToTime(dateStr);
                     } catch (ParseException e) {
                         return 0;
                     }
                 }
             }
-            mCachedDate = getMessage().getDate();
+            cachedDate = getMessage().getDate();
         }
-        return mCachedDate;
+        return cachedDate;
     }
 
     public void addPart(MessagePartHit part) {
-        if (mMatchedParts == null)
-            mMatchedParts = new ArrayList<MessagePartHit>();
-
-        if (!mMatchedParts.contains(part)) {
-            mMatchedParts.add(part);
+        if (matchedParts == null) {
+            matchedParts = new ArrayList<MessagePartHit>();
+        }
+        if (!matchedParts.contains(part)) {
+            matchedParts.add(part);
         }
     }
 
     public List<MessagePartHit> getMatchedMimePartNames() {
-        return mMatchedParts;
+        return matchedParts;
     }
 
     @Override
     public int getItemId() {
-        return mMessageId;
+        return messageId;
     }
 
     @Override
     public String toString() {
-        int convId = 0;
-        boolean convIdUnknown = false;
         try {
-            // don't load the message from the DB just to get the convid!
-            if (mConversationId == 0 && mMessage == null) {
-                convIdUnknown = true;
-            } else {
-                convId = getConversationId();
-            }
+            return Objects.toStringHelper(this)
+                .add("id", getItemId())
+                .add("conv", getConversationId())
+                .add("size", getSize())
+                .addValue(super.toString())
+                .toString();
         } catch (ServiceException e) {
-            e.printStackTrace();
-        }
-        long size = 0;
-        try {
-            if (mCachedSize == -1 && mMessage == null) {
-                size = -1;
-            } else {
-                size = getSize();
-            }
-        } catch (ServiceException e) {
-            e.printStackTrace();
-        }
-        if (mMessage == null) {
-            return "MS: " + this.getItemId();
-        } else {
-            return "MS: " + super.toString() +
-                " C" + (convIdUnknown ? "?" : convId) +
-                " M" + Integer.toString(getItemId()) +
-                " S="+size;
+            return e.toString();
         }
     }
 
     @Override
     public long getSize() throws ServiceException {
-        if (mCachedSize == -1) {
-            if (mMessage == null && mDoc != null) {
-                String sizeStr = mDoc.get(LuceneFields.L_SORT_SIZE);
+        if (cachedSize == -1) {
+            if (message == null && document != null) {
+                String sizeStr = document.get(LuceneFields.L_SORT_SIZE);
                 if (sizeStr != null) {
-                    mCachedSize = Long.parseLong(sizeStr);
-                    return mCachedSize;
+                    cachedSize = Long.parseLong(sizeStr);
+                    return cachedSize;
                 }
             }
-            mCachedSize = getMessage().getSize();
+            cachedSize = getMessage().getSize();
         }
-        return mCachedSize;
+        return cachedSize;
     }
 
     public boolean isTagged(Tag tag) throws ServiceException {
@@ -163,12 +145,12 @@ public final class MessageHit extends ZimbraHit {
 
     @Override
     void setItem(MailItem item) {
-        mMessage = (Message) item;
+        message = (Message) item;
     }
 
     @Override
     boolean itemIsLoaded() {
-        return mMessage != null;
+        return message != null;
     }
 
     @Override
@@ -177,41 +159,44 @@ public final class MessageHit extends ZimbraHit {
     }
 
     public Message getMessage() throws ServiceException {
-        if (mMessage == null) {
+        if (message == null) {
             Mailbox mbox = MailboxManager.getInstance().getMailboxById(
                     getMailbox().getId());
             int messageId = getItemId();
             try {
-                mMessage = mbox.getMessageById(null, messageId);
+                message = mbox.getMessageById(null, messageId);
             } catch (ServiceException e) {
-                mLog.error("Error getting message id=" + messageId +
-                        " from mailbox " + mbox.getId(), e);
-                e.printStackTrace();
+                LOG.error("Failed to get message mbox=%d,id=%d", mbox.getId(), messageId, e);
                 throw e;
             }
         }
-        return mMessage;
+        return message;
     }
 
     @Override
     public String getSubject() throws ServiceException {
-        if (mCachedSubj == null) {
-            mCachedSubj = getMessage().getSortSubject();
+        if (cachedSubj == null) {
+            cachedSubj = getMessage().getSortSubject();
         }
-        return mCachedSubj;
+        return cachedSubj;
     }
 
     @Override
     public String getName() throws ServiceException {
-        if (mCachedName == null) {
-            mCachedName = getSender();
+        if (cachedName == null) {
+            cachedName = getSender();
         }
-        return mCachedName;
+        return cachedName;
+    }
+
+    @Override
+    public String getRecipients() throws ServiceException {
+        return Strings.nullToEmpty(getMessage().getSortRecipients());
     }
 
     public long getDateHeader() throws ServiceException {
-        if (mMessage == null && mDoc != null) {
-            String dateStr = mDoc.get(LuceneFields.L_SORT_DATE);
+        if (message == null && document != null) {
+            String dateStr = document.get(LuceneFields.L_SORT_DATE);
             if (dateStr != null) {
                 try {
                     return DateTools.stringToTime(dateStr);
@@ -230,14 +215,14 @@ public final class MessageHit extends ZimbraHit {
     }
 
     /**
-     * @return a ConversationResult corresponding to this message's conversation
+     * Returns a {@link ConversationHit} corresponding to this message's conversation.
      */
     public ConversationHit getConversationResult() throws ServiceException {
-        if (mConversationHit == null) {
+        if (conversationHit == null) {
             Integer cid = new Integer(getConversationId());
-            mConversationHit = getResults().getConversationHit(getMailbox(), cid);
-            mConversationHit.addMessageHit(this);
+            conversationHit = getResults().getConversationHit(getMailbox(), cid);
+            conversationHit.addMessageHit(this);
         }
-        return mConversationHit;
+        return conversationHit;
     }
 }

@@ -2477,7 +2477,7 @@ public class Mailbox {
                         }
                     }
                     // DbMailItem call handles all sorts except SORT_BY_NAME_NAT
-                    if (sort.getCriterion() == SortBy.SortCriterion.NAME_NATURAL_ORDER) {
+                    if (sort.getKey() == SortBy.Key.NAME_NATURAL_ORDER) {
                         sort = SortBy.NONE;
                     }
                     success = true;
@@ -3133,7 +3133,7 @@ public class Mailbox {
     }
 
     public synchronized List<Message> getMessagesByConversation(OperationContext octxt, int convId) throws ServiceException {
-        return getMessagesByConversation(octxt, convId, SortBy.DATE_ASCENDING);
+        return getMessagesByConversation(octxt, convId, SortBy.DATE_ASC);
     }
 
     public synchronized List<Message> getMessagesByConversation(OperationContext octxt, int convId, SortBy sort) throws ServiceException {

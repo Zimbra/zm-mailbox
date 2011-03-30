@@ -29,6 +29,7 @@ import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailAddress;
 import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.HSQLDB;
 import com.zimbra.cs.index.IndexDocument;
@@ -110,6 +111,36 @@ public final class MessageTest {
         Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox, msg1.mData.senderId));
         Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox, msg2.mData.senderId));
         Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox, msg3.mData.senderId));
+        conn.closeQuietly();
+    }
+
+    @Test
+    public void getSortRecipients() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        DeliveryOptions opt = new DeliveryOptions();
+        opt.setFolderId(Mailbox.ID_FOLDER_INBOX);
+        Message msg1 = mbox.addMessage(null, new ParsedMessage(
+                "From: from1@zimbra.com\r\nTo: to1@zimbra.com".getBytes(), false), opt);
+        Message msg2 = mbox.addMessage(null, new ParsedMessage(
+                "From: from2@zimbra.com\r\nTo: to2 <to2@zimbra.com>".getBytes(), false), opt);
+        Message msg3 = mbox.addMessage(null, new ParsedMessage(
+                "From: from3@zimbra.com\r\nTo: to3-1 <to3-1@zimbra.com>, to3-2 <to3-2@zimbra.com>".getBytes(),
+                false), opt);
+
+        Assert.assertEquals("to1@zimbra.com", msg1.getSortRecipients());
+        Assert.assertEquals("to2", msg2.getSortRecipients());
+        Assert.assertEquals("to3-1, to3-2", msg3.getSortRecipients());
+
+        DbConnection conn = DbPool.getConnection(mbox);
+        Assert.assertEquals("to1@zimbra.com", DbUtil.executeQuery(conn,
+                "SELECT recipients FROM mboxgroup1.mail_item WHERE mailbox_id = ? AND id = ?",
+                mbox.getId(), msg1.getId()).getString(1));
+        Assert.assertEquals("to2", DbUtil.executeQuery(conn,
+                "SELECT recipients FROM mboxgroup1.mail_item WHERE mailbox_id = ? AND id = ?",
+                mbox.getId(), msg2.getId()).getString(1));
+        Assert.assertEquals("to3-1, to3-2", DbUtil.executeQuery(conn,
+                "SELECT recipients FROM mboxgroup1.mail_item WHERE mailbox_id = ? AND id = ?",
+                mbox.getId(), msg3.getId()).getString(1));
         conn.closeQuietly();
     }
 

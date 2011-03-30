@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -109,13 +110,14 @@ public class ParsedMessage {
     private boolean mTemporaryAnalysisFailure = false;
 
     private List<MPartInfo> mMessageParts;
-    private String mRecipients;
-    private String mSender;
+    private String recipients;
+    private String sender;
     private RFC822AddressTokenStream mFromTokenStream;
     private RFC822AddressTokenStream mToTokenStream;
     private RFC822AddressTokenStream mCcTokenStream;
 
-    private ParsedAddress mParsedSender;
+    private ParsedAddress parsedSender;
+    private List<ParsedAddress> parsedRecipients;
     private boolean mHasAttachments = false;
     private boolean mHasTextCalendarPart = false;
     private String mFragment = "";
@@ -642,25 +644,47 @@ public class ParsedMessage {
         return refs;
     }
 
+    /**
+     * Returns a comma-separated list of {@code To} addresses.
+     */
     public String getRecipients() {
-        if (mRecipients == null) {
+        if (recipients == null) {
             try {
-                mRecipients = getMimeMessage().getHeader("To", ", ");
+                recipients = getMimeMessage().getHeader("To", ", ");
             } catch (MessagingException e) {
-                mRecipients = "";
+                recipients = "";
             }
         }
-        return mRecipients;
+        return recipients;
+    }
+
+    /**
+     * Returns the {@code To} addresses.
+     */
+    public List<ParsedAddress> getParsedRecipients() {
+        if (parsedRecipients == null) {
+            List<com.zimbra.common.mime.InternetAddress> addrs = com.zimbra.common.mime.InternetAddress.parseHeader(
+                    getRecipients());
+            if (addrs != null) {
+                parsedRecipients = new ArrayList<ParsedAddress>(addrs.size());
+                for (com.zimbra.common.mime.InternetAddress addr : addrs) {
+                    parsedRecipients.add(new ParsedAddress(addr).parse());
+                }
+            } else {
+                parsedRecipients = Collections.emptyList();
+            }
+        }
+        return parsedRecipients;
     }
 
     /** Returns the value of the <tt>From</tt> header.  If not available,
      *  returns the value of the <tt>Sender</tt> header.  Returns an empty
      *  {@code String} if neither header is available. */
     public String getSender() {
-        if (mSender == null) {
-            mSender = Mime.getSender(getMimeMessage());
+        if (sender == null) {
+            sender = Mime.getSender(getMimeMessage());
         }
-        return mSender;
+        return sender;
     }
 
     private RFC822AddressTokenStream getFromTokenStream() {
@@ -745,9 +769,10 @@ public class ParsedMessage {
     }
 
     public ParsedAddress getParsedSender() {
-        if (mParsedSender == null)
-            mParsedSender = new ParsedAddress(getSender()).parse();
-        return mParsedSender;
+        if (parsedSender == null) {
+            parsedSender = new ParsedAddress(getSender()).parse();
+        }
+        return parsedSender;
     }
 
     public String getReplyTo() {
@@ -1280,13 +1305,13 @@ public class ParsedMessage {
             Pair<String, Boolean> normalized = trimPrefixes(mSubject);
             mNormalizedSubject = compressWhitespace(normalized.getFirst());
             mSubjectIsReply = normalized.getSecond();
-            mNormalizedSubject = DbMailItem.truncateSubjectToMaxAllowedLength(mNormalizedSubject);
+            mNormalizedSubject = DbMailItem.normalize(mNormalizedSubject, DbMailItem.MAX_SUBJECT_LENGTH);
         }
     }
 
     public static String normalize(String subject) {
         String trimmed = compressWhitespace(trimPrefixes(StringUtil.stripControlCharacters(subject)).getFirst());
-        return DbMailItem.truncateSubjectToMaxAllowedLength(trimmed);
+        return DbMailItem.normalize(trimmed, DbMailItem.MAX_SUBJECT_LENGTH);
     }
 
     public static boolean isReply(String subject) {

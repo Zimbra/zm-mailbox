@@ -235,7 +235,9 @@ public class Search extends MailDocumentHandler  {
         Set<MailItem.Type> types = params.getTypes();
         MailItem.Type type = types.size() == 1 ? Iterables.getOnlyElement(types) : MailItem.Type.APPOINTMENT;
 
-        parent.addAttribute(MailConstants.A_SORTBY, params.getSortByStr());
+        if (params.getSortBy() != null) {
+            parent.addAttribute(MailConstants.A_SORTBY, params.getSortBy().toString());
+        }
         parent.addAttribute(MailConstants.A_QUERY_OFFSET, params.getOffset());
         parent.addAttribute(MailConstants.A_QUERY_MORE, false);
 
@@ -390,7 +392,9 @@ public class Search extends MailDocumentHandler  {
         }
         Element req = zsc.createElement(MailConstants.SEARCH_REQUEST);
         req.addAttribute(MailConstants.A_SEARCH_TYPES, MailItem.Type.toString(params.getTypes()));
-        req.addAttribute(MailConstants.A_SORTBY, params.getSortByStr());
+        if (params.getSortBy() != null) {
+            req.addAttribute(MailConstants.A_SORTBY, params.getSortBy().toString());
+        }
         req.addAttribute(MailConstants.A_QUERY_OFFSET, params.getOffset());
         if (params.getLimit() != 0)
             req.addAttribute(MailConstants.A_QUERY_LIMIT, params.getLimit());

@@ -45,11 +45,11 @@ public class MsgQueryResultsTest {
         top.add(new MessageHit(null, null, 1003, null, null));
 
         ProxiedHit phit = new ProxiedHit(null, null);
-        phit.itemID = new ItemId("A", 1000);
+        phit.setParsedItemId(new ItemId("A", 1000));
         top.add(phit);
 
         phit = new ProxiedHit(null, null);
-        phit.itemID = new ItemId("B", 1000);
+        phit.setParsedItemId(new ItemId("B", 1000));
         top.add(phit);
 
         MsgQueryResults result = new MsgQueryResults(top, null, SortBy.NONE,

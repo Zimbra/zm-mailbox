@@ -24,7 +24,7 @@ CREATE TABLE *{DATABASE_NAME}.mail_address (
    contact_count INTEGER NOT NULL,
 
    CONSTRAINT i_mail_address_address UNIQUE (mailbox_id, address),
-   CONSTRAINT fk_mail_address_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id)
+   CONSTRAINT fk_mail_address_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id) ON DELETE CASCADE
 );
 
 CREATE TABLE *{DATABASE_NAME}.mail_item (
@@ -44,6 +44,7 @@ CREATE TABLE *{DATABASE_NAME}.mail_item (
    tags          BIGINT DEFAULT 0 NOT NULL,
    sender        VARCHAR(128),
    sender_id     INTEGER DEFAULT NULL,
+   recipients    VARCHAR(128),
    subject       VARCHAR(255),
    name          VARCHAR(128),
    metadata      VARCHAR(255),
@@ -76,6 +77,7 @@ CREATE TABLE *{DATABASE_NAME}.mail_item_dumpster (
    flags         INTEGER DEFAULT 0 NOT NULL,
    tags          BIGINT DEFAULT 0 NOT NULL,
    sender        VARCHAR(128),
+   recipients    VARCHAR(128),
    subject       VARCHAR(255),
    name          VARCHAR(128),
    metadata      VARCHAR(255),

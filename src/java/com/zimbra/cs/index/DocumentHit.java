@@ -16,31 +16,32 @@ package com.zimbra.cs.index;
 
 import org.apache.lucene.document.Document;
 
+import com.google.common.base.Strings;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 
 public final class DocumentHit extends ZimbraHit {
 
-    private int mMessageId;
-    private Document mLuceneDoc;
-    private com.zimbra.cs.mailbox.Document mDocItem;
+    private final int itemId;
+    private final Document luceneDoc;
+    private com.zimbra.cs.mailbox.Document docItem;
 
-    DocumentHit(ZimbraQueryResultsImpl results, Mailbox mbx, int mailItemId, Document luceneDoc,
+    DocumentHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id, Document luceneDoc,
             com.zimbra.cs.mailbox.Document docItem) {
         super(results, mbx);
-        mMessageId = mailItemId;
-        mLuceneDoc = luceneDoc;
-        mDocItem = docItem;
+        itemId = id;
+        this.luceneDoc = luceneDoc;
+        this.docItem = docItem;
     }
 
     @Override
     public long getDate() {
-        return mDocItem.getDate();
+        return docItem.getDate();
     }
 
     @Override
     public long getSize() {
-        return mDocItem.getSize();
+        return docItem.getSize();
     }
 
     @Override
@@ -50,33 +51,38 @@ public final class DocumentHit extends ZimbraHit {
 
     @Override
     public int getItemId() {
-        return mMessageId;
+        return itemId;
     }
 
     public MailItem.Type getItemType() {
-        return mDocItem.getType();
+        return docItem.getType();
     }
 
     @Override
     void setItem(MailItem item) {
         if (item instanceof com.zimbra.cs.mailbox.Document) {
-            mDocItem = (com.zimbra.cs.mailbox.Document) item;
+            docItem = (com.zimbra.cs.mailbox.Document) item;
         }
     }
 
     @Override
     boolean itemIsLoaded() {
-        return mDocItem != null;
+        return docItem != null;
     }
 
     @Override
     public String getSubject() {
-        return mDocItem.getName();
+        return docItem.getName();
     }
 
     @Override
     public String getName() {
-        return mDocItem.getName();
+        return docItem.getName();
+    }
+
+    @Override
+    public String getRecipients() {
+        return Strings.nullToEmpty(docItem.getSortRecipients());
     }
 
     @Override
@@ -85,18 +91,17 @@ public final class DocumentHit extends ZimbraHit {
     }
 
     public com.zimbra.cs.mailbox.Document getDocument() {
-        return mDocItem;
+        return docItem;
     }
 
     public int getVersion() {
-        if (mDocItem != null) {
-            String verStr = mLuceneDoc.get(LuceneFields.L_VERSION);
+        if (docItem != null) {
+            String verStr = luceneDoc.get(LuceneFields.L_VERSION);
             if (verStr != null) {
                 return Integer.parseInt(verStr);
             }
         }
-        // if there is no lucene Document, only the db search was done.
-        // then just match the latest version.
-        return mDocItem.getVersion();
+        // if there is no lucene Document, only the db search was done. then just match the latest version.
+        return docItem.getVersion();
     }
 }

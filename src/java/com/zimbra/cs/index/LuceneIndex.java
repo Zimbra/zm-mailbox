@@ -165,14 +165,17 @@ public final class LuceneIndex {
      */
     void addDocument(MailItem item, List<IndexDocument> docs) throws IOException {
         for (IndexDocument doc : docs) {
-            // doc can be shared by multiple threads if multiple mailboxes
-            // are referenced in a single email
+            // doc can be shared by multiple threads if multiple mailboxes are referenced in a single email
             synchronized (doc) {
-                doc.removeSortSubject();
-                doc.removeSortName();
 
+                doc.removeSortSubject();
                 doc.addSortSubject(item.getSortSubject());
+
+                doc.removeSortName();
                 doc.addSortName(item.getSortSender());
+
+                doc.removeSortRcpt();
+                doc.addSortRcpt(item.getSortRecipients());
 
                 doc.removeMailboxBlobId();
                 doc.addMailboxBlobId(item.getId());
@@ -369,7 +372,7 @@ public final class LuceneIndex {
     @Override
     public String toString() {
         return Objects.toStringHelper(this)
-            .add("mbox", mailboxIndex.getMailboxId())
+            .add("mbox", mailboxIndex.mailbox.getId())
             .add("dir", luceneDirectory)
             .toString();
     }

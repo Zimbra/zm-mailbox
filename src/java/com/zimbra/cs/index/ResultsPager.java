@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedList;
 
+import com.google.common.base.Objects;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailItem;
@@ -46,8 +47,7 @@ public final class ResultsPager {
 
     private Comparator<ZimbraHit> mComparator;
 
-    public static ResultsPager create(ZimbraQueryResults results,
-            SearchParams params) throws ServiceException {
+    public static ResultsPager create(ZimbraQueryResults results, SearchParams params) throws ServiceException {
         ResultsPager toRet;
 
         // must use results.getSortBy() because the results might have ignored our sortBy
@@ -58,28 +58,22 @@ public final class ResultsPager {
         //               at all
         boolean dontUseCursor = false;
         boolean skipOffsetHack = false;
-        switch (params.getSortBy().getType()) {
-            case TASK_DUE_ASCENDING:
-            case TASK_DUE_DESCENDING:
-            case TASK_PERCENT_COMPLETE_ASCENDING:
-            case TASK_PERCENT_COMPLETE_DESCENDING:
-            case TASK_STATUS_ASCENDING:
-            case TASK_STATUS_DESCENDING:
+        switch (params.getSortBy()) {
+            case TASK_DUE_ASC:
+            case TASK_DUE_DESC:
+            case TASK_PERCENT_COMPLETE_ASC:
+            case TASK_PERCENT_COMPLETE_DESC:
+            case TASK_STATUS_ASC:
+            case TASK_STATUS_DESC:
                 dontUseCursor = true;
                 break;
-            case NAME_LOCALIZED_ASCENDING:
-            case NAME_LOCALIZED_DESCENDING:
-                if (DebugConfig.enableContactLocalizedSort)
-                    dontUseCursor = false;
-                else
-                    dontUseCursor = true;
-
-                // for localized sorts, the cursor is actually simulated by the
-                // ReSortingQueryResults....so we need to zero out the offset here
-                if (DebugConfig.enableContactLocalizedSort)
-                    skipOffsetHack = false;
-                else
-                    skipOffsetHack = true;
+            case NAME_LOCALIZED_ASC:
+            case NAME_LOCALIZED_DESC:
+                dontUseCursor = !DebugConfig.enableContactLocalizedSort;
+                // for localized sorts, the cursor is actually simulated by the ReSortingQueryResults....
+                // so we need to zero out the offset here
+                skipOffsetHack = !DebugConfig.enableContactLocalizedSort;
+                break;
         }
 
         if (dontUseCursor || !params.hasCursor()) {
@@ -110,9 +104,11 @@ public final class ResultsPager {
         mForward = forward;
 
         if (DebugConfig.enableContactLocalizedSort) {
-            SortBy desiredSort = mParams.getSortBy();
-            if (desiredSort instanceof LocalizedSortBy) {
-                mComparator = ((LocalizedSortBy)desiredSort).getZimbraHitComparator();
+            switch (mParams.getSortBy()) {
+                case NAME_LOCALIZED_ASC:
+                case NAME_LOCALIZED_DESC:
+                    mComparator = mParams.getSortBy().getHitComparator(mParams.getLocale());
+                    break;
             }
         }
 
@@ -197,7 +193,7 @@ public final class ResultsPager {
                     return hit;
                 }
 
-                if (mParams.getSortBy().isDescending()) {
+                if (mParams.getSortBy().getDirection() == SortBy.Direction.DESC) {
                     if (hit.getItemId() < mParams.getPrevMailItemId().getId()) {
                         return hit;
                     }
@@ -271,51 +267,44 @@ public final class ResultsPager {
     }
 
     /**
-     * @return a dummy hit which is immediately before the first hit we want to return
+     * Returns a dummy hit which is immediately before the first hit we want to return.
      */
     private ZimbraHit getDummyPrevHit() {
-        long dateVal = 0;
-        String strVal = "";
-        strVal = mParams.getPrevSortValueStr();
-        dateVal = mParams.getPrevSortValueLong();
-
-        return new DummyHit(strVal, strVal, dateVal, mParams.getPrevMailItemId().getId());
+        return new DummyHit(mParams.getPrevSortValueStr(), mParams.getPrevSortValueLong(),
+                mParams.getPrevMailItemId().getId());
     }
 
     /**
-     * @return a dummy hit which is immediately after the last hit we want to return
+     * Returns a dummy hit which is immediately after the last hit we want to return.
      */
     private ZimbraHit getDummyEndHit() {
-        long dateVal = 0;
-        String strVal = "";
-        strVal = mParams.getEndSortValueStr();
-        dateVal = mParams.getEndSortValueLong();
-
-        return new DummyHit(strVal, strVal, dateVal, 0);
+        return new DummyHit(mParams.getEndSortValueStr(), mParams.getEndSortValueLong(), 0);
     }
 
     static class DummyHit extends ZimbraHit {
-        private int mItemId;
-        private long mDate;
-        private String mName;
-        private String mSubject;
+        private int idCursor;
+        private long dateCursor;
+        private String stringCursor;
 
-        DummyHit(String name, String subject, long date, int itemId) {
+        DummyHit(String str, long date, int id) {
             super(null, null);
-            mName = name;
-            mSubject = subject;
-            mDate = date;
-            mItemId = itemId;
+            stringCursor = str;
+            dateCursor = date;
+            idCursor = id;
         }
 
         @Override
         public String toString() {
-            return "DummyHit(" + mName + "," + mSubject + "," + mDate + "," + mItemId + ")";
+            return Objects.toStringHelper(this)
+                .add("id", idCursor)
+                .add("str", stringCursor)
+                .add("date", dateCursor)
+                .toString();
         }
 
         @Override
         public long getDate() {
-            return mDate;
+            return dateCursor;
         }
 
         @Override
@@ -330,7 +319,7 @@ public final class ResultsPager {
 
         @Override
         public int getItemId() {
-            return mItemId;
+            return idCursor;
         }
 
         @Override
@@ -344,17 +333,22 @@ public final class ResultsPager {
 
         @Override
         public String getSubject() {
-            return mSubject;
+            return stringCursor;
         }
 
         @Override
         public String getName() {
-            return mName;
+            return stringCursor;
         }
 
         @Override
-        public MailItem getMailItem() throws ServiceException {
-            return  null;
+        public String getRecipients() {
+            return stringCursor;
+        }
+
+        @Override
+        public MailItem getMailItem() {
+            return null;
         }
     }
 

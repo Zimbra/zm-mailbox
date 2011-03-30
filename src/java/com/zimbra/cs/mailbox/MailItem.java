@@ -234,12 +234,38 @@ public abstract class MailItem implements Comparable<MailItem> {
         public int unreadCount;
         public int flags;
         public long tags;
-        public String subject;
+        private String sender;
+        private String recipients;
+        private String subject;
         public String name;
         public String metadata;
         public int modMetadata;
         public int dateChanged;
         public int modContent;
+
+        public String getSubject() {
+            return subject;
+        }
+
+        public void setSubject(String value) {
+            subject = DbMailItem.normalize(value, DbMailItem.MAX_SUBJECT_LENGTH);
+        }
+
+        public String getSender() {
+            return sender;
+        }
+
+        public void setSender(String value) {
+            sender = DbMailItem.normalize(value, DbMailItem.MAX_SENDER_LENGTH);
+        }
+
+        public String getRecipients() {
+            return recipients;
+        }
+
+        public void setRecipients(String value) {
+            recipients = DbMailItem.normalize(value, DbMailItem.MAX_RECIPIENTS_LENGTH);
+        }
 
         /** Returns the item's blob digest, or <tt>null</tt> if the item has no blob. */
         public String getBlobDigest() {
@@ -269,6 +295,8 @@ public abstract class MailItem implements Comparable<MailItem> {
             data.size = this.size;
             data.flags = this.flags;
             data.tags = this.tags;
+            data.sender = this.sender;
+            data.recipients = this.recipients;
             data.subject = this.subject;
             data.unreadCount = this.unreadCount;
             return data;
@@ -360,6 +388,11 @@ public abstract class MailItem implements Comparable<MailItem> {
             modMetadata = (int) meta.getLong(FN_MOD_METADATA, 0);
             modContent = (int) meta.getLong(FN_MOD_CONTENT, 0);
             dateChanged = (int) meta.getLong(FN_DATE_CHANGED, 0);
+        }
+
+        @Override
+        public String toString() {
+            return Objects.toStringHelper(this).add("id", id).add("type", Type.of(type)).toString();
         }
     }
 
@@ -765,7 +798,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
     public String getSubject() {
-        return (mData.subject == null ? "" : mData.subject);
+        return Strings.nullToEmpty(mData.subject);
     }
 
     /** Returns the item's underlying storage data so that it may be persisted
@@ -777,17 +810,19 @@ public abstract class MailItem implements Comparable<MailItem> {
 
     public abstract String getSender();
 
-    /** Returns the SORT-FORM (UPPERCASED, maybe truncated, etc.) of the
-     *  subject of this mail item. */
+    /** Returns the SORT-FORM (maybe truncated, etc.) of the subject of this mail item. */
     public String getSortSubject() {
-        return DbMailItem.truncateSubjectToMaxAllowedLength(getSubject()).toUpperCase();
+        return mData.getSubject();
     }
 
-    /** Returns the SORT-FORM (UPPERCASED, maybe truncated, etc.) of the
-     *  sender of this mail item. */
+    /** Returns the SORT-FORM (maybe truncated) of the sender of this mail item. */
     public String getSortSender() {
-        String sender = getSender();
-        return sender.toUpperCase().substring(0, Math.min(DbMailItem.MAX_SENDER_LENGTH, sender.length()));
+        return mData.sender;
+    }
+
+    /** Returns the SORT-FORM (maybe truncated) of the recipients of this mail item. */
+    public String getSortRecipients() {
+        return mData.recipients;
     }
 
     /** Returns the "external" flag bitmask, which includes
@@ -1247,14 +1282,20 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
     static Comparator<MailItem> getComparator(SortBy sort) {
-        boolean ascending = sort.getDirection() == SortBy.SortDirection.ASCENDING;
-        switch (sort.getCriterion()) {
-            case ID:       return ascending ? new SortIdAscending() : new SortIdDescending();
-            case DATE:     return ascending ? new SortDateAscending() : new SortDateDescending();
-            case SIZE:     return ascending ? new SortSizeAscending() : new SortSizeDescending();
-            case SUBJECT:  return ascending ? new SortSubjectAscending() : new SortSubjectDescending();
-            case NAME_NATURAL_ORDER: return ascending ? new SortNameNaturalOrderAscending() : new SortNameNaturalOrderDescending();
-            default:       return null;
+        boolean asc = sort.getDirection() == SortBy.Direction.ASC;
+        switch (sort.getKey()) {
+            case ID:
+                return asc ? new SortIdAscending() : new SortIdDescending();
+            case DATE:
+                return asc ? new SortDateAscending() : new SortDateDescending();
+            case SIZE:
+                return asc ? new SortSizeAscending() : new SortSizeDescending();
+            case SUBJECT:
+                return asc ? new SortSubjectAscending() : new SortSubjectDescending();
+            case NAME_NATURAL_ORDER:
+                return asc ? new SortNameNaturalOrderAscending() : new SortNameNaturalOrderDescending();
+            default:
+                return null;
         }
     }
 
@@ -3043,15 +3084,16 @@ public abstract class MailItem implements Comparable<MailItem> {
         DbMailItem.saveName(this, folderId, encodeMetadata());
     }
 
-    protected void saveData(String sender) throws ServiceException {
-        saveData(sender, encodeMetadata());
+    protected void saveData() throws ServiceException {
+        saveData(encodeMetadata());
     }
 
-    protected void saveData(String sender, String metadata) throws ServiceException {
+    protected void saveData(String metadata) throws ServiceException {
         mData.metadataChanged(mMailbox);
-        if (ZimbraLog.mailop.isDebugEnabled())
+        if (ZimbraLog.mailop.isDebugEnabled()) {
             ZimbraLog.mailop.debug("saving data for %s", getMailopContext(this));
-        DbMailItem.saveData(this, mData.subject, sender, metadata);
+        }
+        DbMailItem.saveData(this, mData.subject, metadata);
     }
 
     /**

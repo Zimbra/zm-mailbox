@@ -368,7 +368,7 @@ public class TestUnread extends TestCase {
         verifySetUp();
 
         ZimbraQueryResults results = mMbox.index.search(new OperationContext(mMbox), "is:unread",
-                EnumSet.of(MailItem.Type.MESSAGE), SortBy.DATE_DESCENDING, 100);
+                EnumSet.of(MailItem.Type.MESSAGE), SortBy.DATE_DESC, 100);
         assertTrue("No search results found", results.hasNext());
         results.doneWithSearchResults();
     }

@@ -78,7 +78,7 @@ class MailboxErrorUtil {
                         if (children != null && children.size() > 0) {
                             ZimbraLog.mailbox.error("folder["+folder.getId()+"] still has "+children.size()+" children.");
                             for (UnderlyingData data: children) {
-                                logMsg = "child["+item+"] type["+data.type+"] subject["+data.subject+"] still present in folder ["+folder.getId()+"]";
+                                logMsg = "child["+item+"] type["+data.type+"] subject["+data.getSubject()+"] still present in folder ["+folder.getId()+"]";
                                 sb.append(logMsg);
                                 ZimbraLog.mailbox.error(logMsg);
                             }

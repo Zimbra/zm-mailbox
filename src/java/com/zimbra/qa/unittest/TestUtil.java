@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -161,7 +161,7 @@ extends Assert {
         else
             return userName + "@" + getDomain();
     }
-    
+
     public static String getAddress(String userName, String domainName) {
         return userName + "@" + domainName;
     }
@@ -359,7 +359,7 @@ extends Assert {
     public static List<Integer> search(Mailbox mbox, String query, Set<MailItem.Type> types)
             throws ServiceException {
         List<Integer> ids = new ArrayList<Integer>();
-        ZimbraQueryResults r = mbox.index.search(new OperationContext(mbox), query, types, SortBy.DATE_DESCENDING, 100);
+        ZimbraQueryResults r = mbox.index.search(new OperationContext(mbox), query, types, SortBy.DATE_DESC, 100);
         while (r.hasNext()) {
             ZimbraHit hit = r.getNext();
             ids.add(new Integer(hit.getItemId()));

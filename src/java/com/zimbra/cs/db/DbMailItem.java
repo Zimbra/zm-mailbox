@@ -106,6 +106,7 @@ public class DbMailItem {
         new TimeoutMap<Integer, TagsetCache>(120 * Constants.MILLIS_PER_MINUTE);
 
     public static final int MAX_SENDER_LENGTH  = 128;
+    public static final int MAX_RECIPIENTS_LENGTH = 128;
     public static final int MAX_SUBJECT_LENGTH = 1024;
     public static final int MAX_TEXT_LENGTH    = 65534;
     public static final int MAX_MEDIUMTEXT_LENGTH = 16777216;
@@ -135,12 +136,12 @@ public class DbMailItem {
     }
 
 
-    public static void create(Mailbox mbox, UnderlyingData data, String sender) throws ServiceException {
+    public static void create(Mailbox mbox, UnderlyingData data) throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
-        if (data == null || data.id <= 0 || data.folderId <= 0 || data.parentId == 0)
+        if (data == null || data.id <= 0 || data.folderId <= 0 || data.parentId == 0) {
             throw ServiceException.FAILURE("invalid data for DB item create", null);
-
+        }
         checkNamingConstraint(mbox, data.folderId, data.name, data.id);
 
         DbConnection conn = mbox.getOperationConnection();
@@ -149,8 +150,9 @@ public class DbMailItem {
             String mailbox_id = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
             stmt = conn.prepareStatement("INSERT INTO " + getMailItemTableName(mbox) + "(" + mailbox_id +
                     " id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest, unread," +
-                    " flags, tags, sender, sender_id, subject, name, metadata, mod_metadata, change_date, mod_content)" +
-                    " VALUES (" + MAILBOX_ID_VALUE + " ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    " flags, tags, sender, sender_id, recipients, subject, name, metadata, mod_metadata, change_date," +
+                    " mod_content) VALUES (" + MAILBOX_ID_VALUE +
+                    "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, data.id);
@@ -192,13 +194,14 @@ public class DbMailItem {
             }
             stmt.setInt(pos++, data.flags);
             stmt.setLong(pos++, data.tags);
-            stmt.setString(pos++, checkSenderLength(sender));
+            stmt.setString(pos++, data.getSender());
             if (data.senderId >= 0) {
                 stmt.setInt(pos++, data.senderId);
             } else {
                 stmt.setNull(pos++, Types.INTEGER);
             }
-            stmt.setString(pos++, checkSubjectLength(data.subject));
+            stmt.setString(pos++, data.getRecipients());
+            stmt.setString(pos++, data.getSubject());
             stmt.setString(pos++, data.name);
             stmt.setString(pos++, checkMetadataLength(data.metadata));
             stmt.setInt(pos++, data.modMetadata);
@@ -953,7 +956,7 @@ public class DbMailItem {
             int pos = 1;
             stmt.setInt(pos++, (int) (note.getDate() / 1000));
             stmt.setLong(pos++, note.getSize());
-            stmt.setString(pos++, checkSubjectLength(note.getSubject()));
+            stmt.setString(pos++, note.getSubject());
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
             stmt.setInt(pos++, mbox.getOperationChangeID());
@@ -1011,18 +1014,18 @@ public class DbMailItem {
         }
     }
 
-    public static void saveData(MailItem item, String subject, String sender, String metadata) throws ServiceException {
+    public static void saveData(MailItem item, String subject, String metadata) throws ServiceException {
         Mailbox mbox = item.getMailbox();
 
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
         String name = item.getName().equals("") ? null : item.getName();
 
-        if (item instanceof Conversation)
+        if (item instanceof Conversation) {
             subject = ((Conversation) item).getNormalizedSubject();
-        else if (item instanceof Message)
+        } else if (item instanceof Message) {
             subject = ((Message) item).getNormalizedSubject();
-
+        }
         checkNamingConstraint(mbox, item.getFolderId(), name, item.getId());
 
         DbConnection conn = mbox.getOperationConnection();
@@ -1030,7 +1033,7 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
                         " SET type = ?, imap_id = ?, index_id = ?, parent_id = ?, date = ?, size = ?, flags = ?," +
-                        "  blob_digest = ?, sender = ?, subject = ?, name = ?, metadata = ?," +
+                        "  blob_digest = ?, sender = ?, recipients = ?, subject = ?, name = ?, metadata = ?," +
                         "  mod_metadata = ?, change_date = ?, mod_content = ?, volume_id = ?" +
                         " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
@@ -1046,39 +1049,44 @@ public class DbMailItem {
                 stmt.setInt(pos++, item.getIndexId());
             }
             // messages in virtual conversations are stored with a null parent_id
-            if (item.getParentId() <= 0)
+            if (item.getParentId() <= 0) {
                 stmt.setNull(pos++, Types.INTEGER);
-            else
+            } else {
                 stmt.setInt(pos++, item.getParentId());
+            }
             stmt.setInt(pos++, (int) (item.getDate() / 1000));
             stmt.setLong(pos++, item.getSize());
             stmt.setInt(pos++, item.getInternalFlagBitmask());
             stmt.setString(pos++, item.getDigest());
-            stmt.setString(pos++, checkSenderLength(sender));
-            stmt.setString(pos++, checkSubjectLength(subject));
+            stmt.setString(pos++, item.getSortSender());
+            stmt.setString(pos++, item.getSortRecipients());
+            stmt.setString(pos++, subject);
             stmt.setString(pos++, name);
             stmt.setString(pos++, checkMetadataLength(metadata));
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
             stmt.setInt(pos++, item.getSavedSequence());
-            if (item.getLocator() != null)
+            if (item.getLocator() != null) {
                 stmt.setString(pos++, item.getLocator());
-            else
+            } else {
                 stmt.setNull(pos++, Types.TINYINT);
+            }
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
 
             // Update the flagset cache.  Assume that the item's in-memory
             // data has already been updated.
-            if (areFlagsetsLoaded(mbox))
+            if (areFlagsetsLoaded(mbox)) {
                 getFlagsetCache(conn, mbox).addTagset(item.getInternalFlagBitmask());
+            }
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
-            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW))
+            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
                 throw MailServiceException.ALREADY_EXISTS(item.getName(), e);
-            else
+            } else {
                 throw ServiceException.FAILURE("rewriting row data for mailbox " + item.getMailboxId() + ", item " + item.getId(), e);
+            }
         } finally {
             DbPool.closeStatement(stmt);
         }
@@ -1830,11 +1838,11 @@ public class DbMailItem {
     private static String MAIL_ITEM_DUMPSTER_COPY_SRC_FIELDS =
         (DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ") +
         "id, type, null, folder_id, index_id, imap_id, date, size, volume_id, blob_digest, " +
-        "unread, flags, tags, sender, subject, name, metadata, mod_metadata, ?, mod_content";
+        "unread, flags, tags, sender, recipients, subject, name, metadata, mod_metadata, ?, mod_content";
     private static String MAIL_ITEM_DUMPSTER_COPY_DEST_FIELDS =
         (DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ") +
         "id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest, " +
-        "unread, flags, tags, sender, subject, name, metadata, mod_metadata, change_date, mod_content";
+        "unread, flags, tags, sender, recipients, subject, name, metadata, mod_metadata, change_date, mod_content";
 
     /**
      * Copy rows from mail_item, appointment and revision table to the corresponding dumpster tables.
@@ -2276,7 +2284,7 @@ public class DbMailItem {
     }
 
     public static List<UnderlyingData> getByParent(MailItem parent) throws ServiceException {
-        return getByParent(parent, SortBy.DATE_DESCENDING);
+        return getByParent(parent, SortBy.DATE_DESC);
     }
 
     public static List<UnderlyingData> getByParent(MailItem parent, SortBy sort) throws ServiceException {
@@ -3345,19 +3353,17 @@ public class DbMailItem {
     public static final int CI_UNREAD      = 11;
     public static final int CI_FLAGS       = 12;
     public static final int CI_TAGS        = 13;
-//  public static final int CI_SENDER      = 14;
-    public static final int CI_SUBJECT     = 14;
-    public static final int CI_NAME        = 15;
-    public static final int CI_METADATA    = 16;
-    public static final int CI_MODIFIED    = 17;
-    public static final int CI_MODIFY_DATE = 18;
-    public static final int CI_SAVED       = 19;
+    public static final int CI_RECIPIENTS  = 14;
+    public static final int CI_SUBJECT     = 15;
+    public static final int CI_NAME        = 16;
+    public static final int CI_METADATA    = 17;
+    public static final int CI_MODIFIED    = 18;
+    public static final int CI_MODIFY_DATE = 19;
+    public static final int CI_SAVED       = 20;
 
-    static final String DB_FIELDS = "mi.id, mi.type, mi.parent_id, mi.folder_id, mi.index_id, " +
-                                    "mi.imap_id, mi.date, mi.size, mi.volume_id, mi.blob_digest, " +
-                                    "mi.unread, mi.flags, mi.tags, mi.subject, mi.name, " +
-                                    "mi.metadata, mi.mod_metadata, mi.change_date, mi.mod_content";
-
+    static final String DB_FIELDS = "mi.id, mi.type, mi.parent_id, mi.folder_id, mi.index_id, mi.imap_id, mi.date, " +
+        "mi.size, mi.volume_id, mi.blob_digest, mi.unread, mi.flags, mi.tags, mi.recipients, mi.subject, mi.name, " +
+        "mi.metadata, mi.mod_metadata, mi.change_date, mi.mod_content";
 
     private static UnderlyingData constructItem(ResultSet rs) throws SQLException, ServiceException {
         return constructItem(rs, 0, false);
@@ -3373,37 +3379,44 @@ public class DbMailItem {
 
     static UnderlyingData constructItem(ResultSet rs, int offset, boolean fromDumpster) throws SQLException, ServiceException {
         UnderlyingData data = new UnderlyingData();
-        data.id          = rs.getInt(CI_ID + offset);
-        data.type        = rs.getByte(CI_TYPE + offset);
-        data.parentId    = rs.getInt(CI_PARENT_ID + offset);
-        data.folderId    = rs.getInt(CI_FOLDER_ID + offset);
-        data.indexId     = rs.getInt(CI_INDEX_ID + offset);
+        data.id = rs.getInt(CI_ID + offset);
+        data.type = rs.getByte(CI_TYPE + offset);
+        data.parentId = rs.getInt(CI_PARENT_ID + offset);
+        data.folderId = rs.getInt(CI_FOLDER_ID + offset);
+        data.indexId = rs.getInt(CI_INDEX_ID + offset);
         if (rs.wasNull()) {
             data.indexId = MailItem.IndexStatus.NO.id();
         }
-        data.imapId      = rs.getInt(CI_IMAP_ID + offset);
-        if (rs.wasNull())
+        data.imapId = rs.getInt(CI_IMAP_ID + offset);
+        if (rs.wasNull()) {
             data.imapId = -1;
-        data.date        = rs.getInt(CI_DATE + offset);
-        data.size        = rs.getLong(CI_SIZE + offset);
-        data.locator    = rs.getString(CI_VOLUME_ID + offset);
+        }
+        data.date = rs.getInt(CI_DATE + offset);
+        data.size = rs.getLong(CI_SIZE + offset);
+        data.locator = rs.getString(CI_VOLUME_ID + offset);
         data.setBlobDigest(rs.getString(CI_BLOB_DIGEST + offset));
         data.unreadCount = rs.getInt(CI_UNREAD + offset);
         int flags = rs.getInt(CI_FLAGS + offset);
-        if (!fromDumpster)
+        if (!fromDumpster) {
             data.flags = flags;
-        else
+        } else {
             data.flags = flags | Flag.BITMASK_UNCACHED | Flag.BITMASK_IN_DUMPSTER;
-        data.tags        = rs.getLong(CI_TAGS + offset);
-        data.subject     = rs.getString(CI_SUBJECT + offset);
-        data.name        = rs.getString(CI_NAME + offset);
-        data.metadata    = decodeMetadata(rs.getString(CI_METADATA + offset));
+        }
+        data.tags = rs.getLong(CI_TAGS + offset);
+        data.setRecipients(rs.getString(CI_RECIPIENTS) + offset);
+        data.setSubject(rs.getString(CI_SUBJECT + offset));
+        data.name = rs.getString(CI_NAME + offset);
+        data.metadata = decodeMetadata(rs.getString(CI_METADATA + offset));
         data.modMetadata = rs.getInt(CI_MODIFIED + offset);
-        data.modContent  = rs.getInt(CI_SAVED + offset);
+        data.modContent = rs.getInt(CI_SAVED + offset);
         data.dateChanged = rs.getInt(CI_MODIFY_DATE + offset);
         // make sure to handle NULL column values
-        if (data.parentId == 0)     data.parentId = -1;
-        if (data.dateChanged == 0)  data.dateChanged = -1;
+        if (data.parentId == 0) {
+            data.parentId = -1;
+        }
+        if (data.dateChanged == 0) {
+            data.dateChanged = -1;
+        }
         return data;
     }
 
@@ -3428,7 +3441,7 @@ public class DbMailItem {
         else
             data.flags = item.getInternalFlagBitmask() | Flag.BITMASK_UNCACHED | Flag.BITMASK_IN_DUMPSTER;
         data.tags        = item.getTagBitmask();
-        data.subject     = item.getSubject();
+        data.setSubject(item.getSubject());
         data.name        = rs.getString(5);
         data.metadata    = decodeMetadata(rs.getString(6));
         data.modMetadata = rs.getInt(7);
@@ -3944,7 +3957,10 @@ public class DbMailItem {
             if (Math.max(data.parentId, -1) != dbdata.parentId)  failures += " PARENT_ID";
             if (dataBlobDigest != dbdataBlobDigest && (dataBlobDigest == null || !dataBlobDigest.equals(dbdataBlobDigest)))  failures += " BLOB_DIGEST";
             if (dataSender != dbdataSender && (dataSender == null || !dataSender.equalsIgnoreCase(dbdataSender)))  failures += " SENDER";
-            if (data.subject != dbdata.subject && (data.subject == null || !data.subject.equals(dbdata.subject)))  failures += " SUBJECT";
+            if (data.getSubject() != dbdata.getSubject() &&
+                    (data.getSubject() == null || !data.getSubject().equals(dbdata.getSubject()))) {
+                failures += " SUBJECT";
+            }
             if (data.name != dbdata.name && (data.name == null || !data.name.equals(dbdata.name)))                 failures += " NAME";
             if (metadata != dbdata.metadata && (metadata == null || !metadata.equals(dbdata.metadata)))            failures += " METADATA";
 
@@ -3963,49 +3979,20 @@ public class DbMailItem {
     }
 
 
-    /** Makes sure that the argument won't overflow the maximum length of a
-     *  MySQL VARCHAR(128) column (128 characters) by truncating the string
-     *  if necessary.  Strips surrogate characters from the string if needed
-     *  so that the database (i.e. MySQL) doesn't choke on Unicode characters
-     *  outside the BMP (U+10000 and higher).
+    /**
+     * Makes sure that the argument won't overflow the maximum length by truncating the string if necessary.  Strips
+     * surrogate characters from the string if needed so that the database (i.e. MySQL) doesn't choke on Unicode
+     * characters outside the BMP (U+10000 and higher).
      *
-     * @param sender  The string to check (can be null).
-     * @return The passed-in String, truncated to 128 chars. */
-    public static String checkSenderLength(String sender) {
-        if (sender == null) {
-            return sender;
+     * @param value the string to check (can be null).
+     * @param max maximum length
+     * @return The passed-in String, truncated to the maximum length.
+     */
+    public static String normalize(String value, int max) {
+        if (Strings.isNullOrEmpty(value)) {
+            return value;
         }
-
-        String trimmed = sender.length() <= MAX_SENDER_LENGTH ? sender : sender.substring(0, MAX_SENDER_LENGTH).trim();
-        if (!Db.supports(Db.Capability.NON_BMP_CHARACTERS)) {
-            trimmed = StringUtil.removeSurrogates(trimmed);
-        }
-        return trimmed;
-    }
-
-    /** Makes sure that the argument won't overflow the maximum length of a
-     *  MySQL VARCHAR(1024) column (1024 characters).
-     *
-     * @param subject  The string to check (can be null).
-     * @return The passed-in String.
-     * @throws ServiceException <code>service.FAILURE</code> if the
-     *         parameter would be silently truncated when inserted. */
-    public static String checkSubjectLength(String subject) throws ServiceException {
-        if (subject == null || subject.length() <= MAX_SUBJECT_LENGTH)
-            return subject;
-        throw ServiceException.FAILURE("subject too long", null);
-    }
-
-    /** Truncates the passed-in {@code String} to a maximum length of
-     *  {@link #MAX_SUBJECT_LENGTH} characters.  Strips surrogate characters
-     *  from the string if needed so that the database (i.e. MySQL) doesn't
-     *  choke on Unicode characters outside the BMP (U+10000 and higher). */
-    public static String truncateSubjectToMaxAllowedLength(String subject) {
-        if (subject == null) {
-            return subject;
-        }
-
-        String trimmed = subject.length() <= MAX_SUBJECT_LENGTH ? subject : subject.substring(0, MAX_SUBJECT_LENGTH).trim();
+        String trimmed = value.length() <= max ? value : value.substring(0, max).trim();
         if (!Db.supports(Db.Capability.NON_BMP_CHARACTERS)) {
             trimmed = StringUtil.removeSurrogates(trimmed);
         }

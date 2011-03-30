@@ -257,18 +257,18 @@ public class Conversation extends MailItem {
         }
 
         UnderlyingData data = new UnderlyingData();
-        data.id          = id;
-        data.type        = Type.CONVERSATION.toByte();
-        data.folderId    = Mailbox.ID_FOLDER_CONVERSATIONS;
-        data.subject     = msgs.length > 0 ? DbMailItem.truncateSubjectToMaxAllowedLength(msgs[0].getSubject()) : "";
-        data.date        = date;
-        data.size        = msgs.length;
+        data.id = id;
+        data.type = Type.CONVERSATION.toByte();
+        data.folderId = Mailbox.ID_FOLDER_CONVERSATIONS;
+        data.setSubject(msgs.length > 0 ? msgs[0].getSubject() : "");
+        data.date = date;
+        data.size = msgs.length;
         data.unreadCount = unread;
-        data.flags       = flags;
-        data.tags        = tags;
-        data.metadata    = encodeMetadata(DEFAULT_COLOR_RGB, 1, extended, new SenderList(msgs));
+        data.flags = flags;
+        data.tags = tags;
+        data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, extended, new SenderList(msgs));
         data.contentChanged(mbox);
-        DbMailItem.create(mbox, data, null);
+        DbMailItem.create(mbox, data);
 
         Conversation conv = new Conversation(mbox, data);
         conv.finishCreation(null);

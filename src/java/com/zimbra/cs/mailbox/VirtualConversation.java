@@ -78,18 +78,18 @@ public class VirtualConversation extends Conversation {
         CustomMetadataList extended = MetadataCallback.duringConversationAdd(null, msg);
 
         UnderlyingData data = new UnderlyingData();
-        data.id          = -msg.getId();
-        data.type        = Type.VIRTUAL_CONVERSATION.toByte();
-        data.folderId    = Mailbox.ID_FOLDER_CONVERSATIONS;
-        data.subject     = DbMailItem.truncateSubjectToMaxAllowedLength(msg.getSubject());
-        data.date        = (int) (msg.getDate() / 1000);
+        data.id = -msg.getId();
+        data.type = Type.VIRTUAL_CONVERSATION.toByte();
+        data.folderId = Mailbox.ID_FOLDER_CONVERSATIONS;
+        data.setSubject(msg.getSubject());
+        data.date = (int) (msg.getDate() / 1000);
         data.modMetadata = msg.getSavedSequence();
-        data.modContent  = msg.getSavedSequence();
-        data.size        = 1;
+        data.modContent = msg.getSavedSequence();
+        data.size = 1;
         data.unreadCount = msg.getUnreadCount();
-        data.flags       = msg.getInternalFlagBitmask();
-        data.tags        = msg.getTagBitmask();
-        data.metadata    = encodeMetadata(DEFAULT_COLOR_RGB, 1, extended, new SenderList(msg));
+        data.flags = msg.getInternalFlagBitmask();
+        data.tags = msg.getTagBitmask();
+        data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, extended, new SenderList(msg));
         return data;
     }
 

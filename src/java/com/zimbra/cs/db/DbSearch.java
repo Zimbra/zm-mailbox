@@ -36,8 +36,6 @@ import com.zimbra.cs.db.DbSearchConstraints.StringRange;
 import com.zimbra.cs.db.DbSearchConstraintsNode.NodeType;
 import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.index.SortBy;
-import com.zimbra.cs.index.SortBy.SortCriterion;
-import com.zimbra.cs.index.SortBy.SortDirection;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
@@ -92,43 +90,30 @@ public final class DbSearch {
     }
 
     private static String toSortField(SortBy sort) {
-        String result;
-        boolean str = false;
-        switch (sort.getCriterion()) {
+        switch (sort.getKey()) {
             case NONE:
                 return null;
             case SENDER:
-                result = "mi.sender";
-                str = true;
-                break;
+                return toStringSortField("mi.sender");
+            case RCPT:
+                return toStringSortField("mi.recipients");
             case SUBJECT:
-                result = "mi.subject";
-                str = true;
-                break;
-            case NAME_NATURAL_ORDER:
+                return toStringSortField("mi.subject");
             case NAME:
-                result = "mi.name";
-                str = true;
-                break;
+            case NAME_NATURAL_ORDER:
+                return toStringSortField("mi.name");
             case ID:
-                result = "mi.id";
-                break;
+                return "mi.id";
             case SIZE:
-                result = "mi.size";
-                break;
+                return "mi.size";
             case DATE:
             default:
-                result = "mi.date";
-                break;
+                return "mi.date";
         }
+    }
 
-        if (str && Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON)) {
-            result = "UPPER(" + result + ")";
-        }
-
-        //TODO Db.Capability.REQUEST_UTF8_UNICODE_COLLATION
-
-        return result;
+    private static String toStringSortField(String key) {
+        return Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON) ? "UPPER(" + key + ")" : key;
     }
 
     /**
@@ -146,11 +131,11 @@ public final class DbSearch {
      * Generate the ORDER BY part that goes at the end of the SELECT.
      */
     static String orderBy(SortBy sort, boolean alias) {
-        if (sort.getCriterion() == SortCriterion.NONE) { // no ORDER BY for NONE
+        if (sort.getKey() == SortBy.Key.NONE) { // no ORDER BY for NONE
             return "";
         }
         return " ORDER BY " + (alias ? SORT_COLUMN_ALIAS : toSortField(sort)) +
-            (sort.getDirection() == SortDirection.DESCENDING ? " DESC" : "");
+            (sort.getDirection() == SortBy.Direction.DESC ? " DESC" : "");
     }
 
     public static int countResults(DbConnection conn, DbSearchConstraintsNode node, Mailbox mbox, boolean inDumpster)
@@ -194,7 +179,7 @@ public final class DbSearch {
         if (LC.search_disable_database_hints.booleanValue())
             return NO_HINT;
 
-        if (!Db.supports(Db.Capability.FORCE_INDEX_EVEN_IF_NO_SORT) && sort.getCriterion() == SortCriterion.NONE)
+        if (!Db.supports(Db.Capability.FORCE_INDEX_EVEN_IF_NO_SORT) && sort.getKey() == SortBy.Key.NONE)
             return NO_HINT;
 
         String index = null;
@@ -208,7 +193,7 @@ public final class DbSearch {
                 index = MI_I_MBOX_PARENT;
             } else if (!constraints.indexIds.isEmpty()) {
                 index = MI_I_MBOX_INDEX;
-            } else if (sort.getCriterion() == SortCriterion.DATE && hasLimit) {
+            } else if (sort.getKey() == SortBy.Key.DATE && hasLimit) {
                 // Whenever we learn a new case of mysql choosing wrong index, add a case here.
                 if (constraints.getOnlyFolder() != null) {
                     // Optimization for folder query
@@ -429,7 +414,7 @@ public final class DbSearch {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
         if (!Db.supports(Db.Capability.AVOID_OR_IN_WHERE_CLAUSE) ||
-                (sort.getCriterion() != SortCriterion.DATE && sort.getCriterion() != SortCriterion.SIZE) ||
+                (sort.getKey() != SortBy.Key.DATE && sort.getKey() != SortBy.Key.SIZE) ||
                 NodeType.OR != node.getNodeType()) {
             try {
                 return searchInternal(conn, mbox, node, sort, offset, limit, fetch, inDumpster);
@@ -592,9 +577,10 @@ public final class DbSearch {
     }
 
     private static Object getSortKey(ResultSet rs, SortBy sort) throws SQLException {
-        switch (sort.getCriterion()) {
+        switch (sort.getKey()) {
             case SUBJECT:
             case SENDER:
+            case RCPT:
             case NAME:
             case NAME_NATURAL_ORDER:
                 return rs.getString(SORT_COLUMN_ALIAS);
@@ -1182,14 +1168,14 @@ public final class DbSearch {
 
         @Override
         public int compare(Result o1, Result o2) {
-            switch (sort.getCriterion()) {
+            switch (sort.getKey()) {
                 case SIZE:
                 case DATE:
                     long date1 = (Long) o1.getSortKey();
                     long date2 = (Long) o2.getSortKey();
                     if (date1 != date2) {
                         long diff;
-                        if (sort.getDirection() == SortDirection.DESCENDING) {
+                        if (sort.getDirection() == SortBy.Direction.DESC) {
                             diff = date2 - date1;
                         } else {
                             diff = date1 - date2;
@@ -1201,9 +1187,9 @@ public final class DbSearch {
                 case NONE:
                     break;
                 default:
-                    throw new UnsupportedOperationException(sort.getCriterion().toString());
+                    throw new UnsupportedOperationException(sort.getKey().toString());
             }
-            if (sort.getDirection() == SortDirection.DESCENDING) {
+            if (sort.getDirection() == SortBy.Direction.DESC) {
                 return o2.getId() - o1.getId();
             } else {
                 return o1.getId() - o2.getId();

@@ -305,7 +305,7 @@ final class ImapSessionManager {
         params.setQueryStr(search.getQuery());
         params.setIncludeTagDeleted(true);
         params.setTypes(types);
-        params.setSortBy(SortBy.DATE_ASCENDING);
+        params.setSortBy(SortBy.DATE_ASC);
         params.setChunkSize(1000);
         params.setMode(Mailbox.SearchResultMode.IMAP);
 
@@ -494,7 +494,7 @@ final class ImapSessionManager {
         return diskcache.get(cacheKey(folder, false));
     }
 
-    /** 
+    /**
      * Remove cached values from both memcache and disk cache.
      */
     private void clearCache(Folder folder) {

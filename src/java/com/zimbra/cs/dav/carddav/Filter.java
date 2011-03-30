@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -290,7 +290,7 @@ public abstract class Filter {
                     return result;
                 }
                 zqr = mbox.index.search(ctxt.getOperationContext(), filter,
-                        EnumSet.of(MailItem.Type.CONTACT), SortBy.NAME_ASCENDING, 100);
+                        EnumSet.of(MailItem.Type.CONTACT), SortBy.NAME_ASC, 100);
                 while (zqr.hasNext()) {
                     ZimbraHit hit = zqr.getNext();
                     if (hit instanceof ContactHit) {

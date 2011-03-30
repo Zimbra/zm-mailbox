@@ -26,18 +26,18 @@ import com.zimbra.cs.localconfig.DebugConfig;
  * QueryResults wrapper that implements Re-Sorting. It does this by caching **ALL** hits and then sorting them. It is
  * used for the Task sorts as well as specially localized language sorts
  */
-public class ReSortingQueryResults implements ZimbraQueryResults {
+public final class ReSortingQueryResults implements ZimbraQueryResults {
     private static final int MAX_BUFFERED_HITS = 10000;
 
     private final ZimbraQueryResults results;
-    private final SortBy desiredSort;
+    private final SortBy sort;
     private List<ZimbraHit> mHitBuffer = null;
     private int iterOffset = 0;
     private final SearchParams params;
 
-    ReSortingQueryResults(ZimbraQueryResults results, SortBy desiredSort, SearchParams params) {
+    ReSortingQueryResults(ZimbraQueryResults results, SortBy sort, SearchParams params) {
         this.results = results;
-        this.desiredSort = desiredSort;
+        this.sort = sort;
         this.params = params;
     }
 
@@ -69,7 +69,7 @@ public class ReSortingQueryResults implements ZimbraQueryResults {
 
     @Override
     public SortBy getSortBy() {
-        return desiredSort;
+        return sort;
     }
 
     @Override
@@ -111,13 +111,13 @@ public class ReSortingQueryResults implements ZimbraQueryResults {
     }
 
     private boolean isTaskSort() {
-        switch (desiredSort.getType()) {
-            case TASK_DUE_ASCENDING:
-            case TASK_DUE_DESCENDING:
-            case TASK_STATUS_ASCENDING:
-            case TASK_STATUS_DESCENDING:
-            case TASK_PERCENT_COMPLETE_ASCENDING:
-            case TASK_PERCENT_COMPLETE_DESCENDING:
+        switch (sort) {
+            case TASK_DUE_ASC:
+            case TASK_DUE_DESC:
+            case TASK_STATUS_ASC:
+            case TASK_STATUS_DESC:
+            case TASK_PERCENT_COMPLETE_ASC:
+            case TASK_PERCENT_COMPLETE_DESC:
                 return true;
             default:
                 return false;
@@ -130,9 +130,9 @@ public class ReSortingQueryResults implements ZimbraQueryResults {
 
         // get the proper comparator
         Comparator<ZimbraHit> comp;
-        switch (desiredSort.getType()) {
+        switch (sort) {
             default:
-            case TASK_DUE_ASCENDING:
+            case TASK_DUE_ASC:
                 comp = new Comparator<ZimbraHit>() {
                     @Override
                     public int compare(ZimbraHit lhs, ZimbraHit rhs) {
@@ -140,7 +140,7 @@ public class ReSortingQueryResults implements ZimbraQueryResults {
                     }
                 };
                 break;
-            case TASK_DUE_DESCENDING:
+            case TASK_DUE_DESC:
                 comp = new Comparator<ZimbraHit>() {
                     @Override
                     public int compare(ZimbraHit lhs, ZimbraHit rhs) {
@@ -148,7 +148,7 @@ public class ReSortingQueryResults implements ZimbraQueryResults {
                     }
                 };
                 break;
-            case TASK_STATUS_ASCENDING:
+            case TASK_STATUS_ASC:
                 comp = new Comparator<ZimbraHit>() {
                     @Override
                     public int compare(ZimbraHit lhs, ZimbraHit rhs) {
@@ -156,7 +156,7 @@ public class ReSortingQueryResults implements ZimbraQueryResults {
                     }
                 };
                 break;
-            case TASK_STATUS_DESCENDING:
+            case TASK_STATUS_DESC:
                 comp = new Comparator<ZimbraHit>() {
                     @Override
                     public int compare(ZimbraHit lhs, ZimbraHit rhs) {
@@ -164,7 +164,7 @@ public class ReSortingQueryResults implements ZimbraQueryResults {
                     }
                 };
                 break;
-            case TASK_PERCENT_COMPLETE_ASCENDING:
+            case TASK_PERCENT_COMPLETE_ASC:
                 comp = new Comparator<ZimbraHit>() {
                     @Override
                     public int compare(ZimbraHit lhs, ZimbraHit rhs) {
@@ -172,7 +172,7 @@ public class ReSortingQueryResults implements ZimbraQueryResults {
                     }
                 };
                 break;
-            case TASK_PERCENT_COMPLETE_DESCENDING:
+            case TASK_PERCENT_COMPLETE_DESC:
                 comp = new Comparator<ZimbraHit>() {
                     @Override
                     public int compare(ZimbraHit lhs, ZimbraHit rhs) {
@@ -180,9 +180,9 @@ public class ReSortingQueryResults implements ZimbraQueryResults {
                     }
                 };
                 break;
-            case NAME_LOCALIZED_ASCENDING:
-            case NAME_LOCALIZED_DESCENDING:
-                comp = ((LocalizedSortBy) desiredSort).getZimbraHitComparator();
+            case NAME_LOCALIZED_ASC:
+            case NAME_LOCALIZED_DESC:
+                comp = sort.getHitComparator(params.getLocale());
                 break;
         }
 
@@ -199,24 +199,25 @@ public class ReSortingQueryResults implements ZimbraQueryResults {
 
             boolean handleCursorFilteringForFirstHit = true;
             if (DebugConfig.enableContactLocalizedSort) {
-                if (desiredSort.getType() == SortBy.Type.NAME_LOCALIZED_ASCENDING ||
-                        desiredSort.getType() == SortBy.Type.NAME_LOCALIZED_DESCENDING) {
-                    handleCursorFilteringForFirstHit = false;
+                switch (sort) {
+                    case NAME_LOCALIZED_ASC:
+                    case NAME_LOCALIZED_DESC:
+                        handleCursorFilteringForFirstHit = false;
+                        break;
                 }
             }
 
             // handle cursor filtering
             if (params != null && params.hasCursor()) {
                 ZimbraHit firstHit = null;
-                if (params.getPrevSortValueStr() != null)
-                    firstHit = new ResultsPager.DummyHit(params.getPrevSortValueStr(), params.getPrevSortValueStr(),
+                if (params.getPrevSortValueStr() != null) {
+                    firstHit = new ResultsPager.DummyHit(params.getPrevSortValueStr(),
                             params.getPrevSortValueLong(), params.getPrevMailItemId().getId());
-
+                }
                 ZimbraHit endHit = null;
-                if (params.getEndSortValueStr() != null)
-                    endHit = new ResultsPager.DummyHit(params.getEndSortValueStr(), params.getEndSortValueStr(),
-                            params.getEndSortValueLong(), 0);
-
+                if (params.getEndSortValueStr() != null) {
+                    endHit = new ResultsPager.DummyHit(params.getEndSortValueStr(), params.getEndSortValueLong(), 0);
+                }
                 // fail if cur < first OR cur >= end
                 if (handleCursorFilteringForFirstHit) {
                     if (firstHit != null && comp.compare(cur, firstHit) < 0) {

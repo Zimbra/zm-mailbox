@@ -814,18 +814,19 @@ public class Folder extends MailItem {
         }
 
         UnderlyingData data = new UnderlyingData();
-        data.id       = id;
-        data.type     = Type.FOLDER.toByte();
+        data.id = id;
+        data.type = Type.FOLDER.toByte();
         data.folderId = (id == Mailbox.ID_FOLDER_ROOT ? id : parent.getId());
         data.parentId = data.folderId;
-        data.date     = mbox.getOperationTimestamp();
-        data.flags    = flags & Flag.FLAGS_FOLDER;
-        data.name     = name;
-        data.subject  = name;
-        data.metadata = encodeMetadata(color, 1, custom, attributes, view, null, new SyncData(url), id + 1, 0, mbox.getOperationChangeID(), -1, 0, 0, 0);
+        data.date = mbox.getOperationTimestamp();
+        data.flags = flags & Flag.FLAGS_FOLDER;
+        data.name = name;
+        data.setSubject(name);
+        data.metadata = encodeMetadata(color, 1, custom, attributes, view, null, new SyncData(url), id + 1, 0,
+                mbox.getOperationChangeID(), -1, 0, 0, 0);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("adding folder %s: id=%d, parentId=%d.", name, data.id, data.parentId);
-        DbMailItem.create(mbox, data, null);
+        DbMailItem.create(mbox, data);
 
         Folder folder = new Folder(mbox, data);
         folder.finishCreation(parent);

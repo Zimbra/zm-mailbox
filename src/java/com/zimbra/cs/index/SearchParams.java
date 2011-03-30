@@ -167,12 +167,8 @@ public final class SearchParams implements Cloneable {
         return types;
     }
 
-    public String getSortByStr() {
-        return mSortByStr;
-    }
-
     public SortBy getSortBy() {
-        return mSortBy;
+        return sortBy;
     }
 
     public ExpandResults getInlineRule() {
@@ -208,7 +204,7 @@ public final class SearchParams implements Cloneable {
     }
 
     public Locale getLocale() {
-        return mLocale;
+        return locale;
     }
 
     public boolean getPrefetch() {
@@ -355,32 +351,27 @@ public final class SearchParams implements Cloneable {
     }
 
     private boolean isSystemDefaultLocale() {
-        if (mLocale == null) {
+        if (locale == null) {
             return true;
         }
-
         // Gets the current value of the default locale for this instance of the Java Virtual Machine.
-        Locale systemDefaultLocale = Locale.getDefault();
-
-        return mLocale.equals(systemDefaultLocale);
+        return locale.equals(Locale.getDefault());
     }
 
     private void checkForLocalizedContactSearch() {
         if (DebugConfig.enableContactLocalizedSort) {
-
             // FIXME: for bug 41920, disable localized contact sorting
             // bug 22665 - if searching ONLY for contacts, and locale is not EN, used localized re-sort
             if (types.size() == 1 && types.contains(MailItem.Type.CONTACT) && !isSystemDefaultLocale()) {
-                if (mLocale != null) {
-                    if (mSortBy != null) {
-                        if (mSortBy.getType() == SortBy.Type.NAME_ASCENDING) {
-                            mSortBy = new LocalizedSortBy(SortBy.Type.NAME_LOCALIZED_ASCENDING,
-                                    null, SortBy.SortCriterion.NAME,
-                                    SortBy.SortDirection.ASCENDING, mLocale);
-                        } else if (mSortBy.getType() == SortBy.Type.NAME_DESCENDING) {
-                            mSortBy = new LocalizedSortBy(SortBy.Type.NAME_LOCALIZED_DESCENDING,
-                                    null, SortBy.SortCriterion.NAME,
-                                    SortBy.SortDirection.DESCENDING, mLocale);
+                if (locale != null) {
+                    if (sortBy != null) {
+                        switch (sortBy) {
+                            case NAME_ASC:
+                                sortBy = SortBy.NAME_LOCALIZED_ASC;
+                                break;
+                            case NAME_DESC:
+                                sortBy = SortBy.NAME_LOCALIZED_DESC;
+                                break;
                         }
                     }
                 }
@@ -388,19 +379,17 @@ public final class SearchParams implements Cloneable {
         }
     }
 
-    public void setSortBy(SortBy sortBy) {
-        mSortBy = sortBy;
-        mSortByStr = mSortBy.toString();
+    public void setSortBy(SortBy value) {
+        sortBy = value;
         checkForLocalizedContactSearch();
     }
 
-    public void setSortByStr(String sortByStr) {
-        mSortByStr = sortByStr;
-        SortBy sb = SortBy.lookup(sortByStr);
-        if (sb == null) {
-            sb = SortBy.DATE_DESCENDING;
+    public void setSortBy(String value) {
+        SortBy sort = SortBy.of(value);
+        if (sort == null) {
+            sort = SortBy.DATE_DESC;
         }
-        setSortBy(sb);
+        setSortBy(sort);
     }
 
     public void setInlineRule(ExpandResults fetch) {
@@ -438,8 +427,8 @@ public final class SearchParams implements Cloneable {
         mTimeZone = tz;
     }
 
-    public void setLocale(Locale loc) {
-        mLocale = loc;
+    public void setLocale(Locale value) {
+        locale = value;
         checkForLocalizedContactSearch();
     }
 
@@ -520,7 +509,9 @@ public final class SearchParams implements Cloneable {
         searchElt.addAttribute(MailConstants.E_QUERY, getQueryStr(),
                 Element.Disposition.CONTENT);
         searchElt.addAttribute(MailConstants.A_SEARCH_TYPES, MailItem.Type.toString(types));
-        searchElt.addAttribute(MailConstants.A_SORTBY, getSortByStr());
+        if (sortBy != null) {
+            searchElt.addAttribute(MailConstants.A_SORTBY, sortBy.toString());
+        }
         if (getInlineRule() != null)
             searchElt.addAttribute(MailConstants.A_FETCH,
                     getInlineRule().toString());
@@ -607,8 +598,7 @@ public final class SearchParams implements Cloneable {
         } else {
             params.setTypes(types);
         }
-        params.setSortByStr(request.getAttribute(MailConstants.A_SORTBY,
-                SortBy.DATE_DESCENDING.toString()));
+        params.setSortBy(request.getAttribute(MailConstants.A_SORTBY, null));
 
         params.setInlineRule(ExpandResults.valueOf(
                 request.getAttribute(MailConstants.A_FETCH, null), zsc));
@@ -662,19 +652,13 @@ public final class SearchParams implements Cloneable {
     }
 
     /**
-     * Parse cursor element and set cursor info in SearchParams object
+     * Parse cursor element and set cursor info in {@link SearchParams} object.
      *
-     * @param cursor
-     *            cursor element taken from a <SearchRequest>
-     * @param acctId
-     *            requested account id
-     * @param params
-     *            SearchParams object to set cursor info to
-     * @return
-     * @throws ServiceException
+     * @param cursor cursor element taken from a {@code <SearchRequest>}
+     * @param acctId requested account id
+     * @param params {@link SearchParams} object to set cursor info to
      */
-    public static void parseCursor(Element cursor, String  acctId,
-            SearchParams params) throws ServiceException {
+    public static void parseCursor(Element cursor, String  acctId, SearchParams params) throws ServiceException {
         boolean useCursorToNarrowDbQuery = true;
 
         // in some cases we cannot use cursors, even if they are requested.
@@ -686,27 +670,23 @@ public final class SearchParams implements Cloneable {
         //     in the search results....in Conv mode we need to walk through all the results
         //     so that we can guarantee that we only return each Conversation once in
         //     a given results set
-        //
-        {
-            // bug: 23427 -- TASK sorts are incompatible with CURSORS, since cursors require
-            //               real (db-visible) sort fields
-            switch (params.getSortBy().getType()) {
-                case TASK_DUE_ASCENDING:
-                case TASK_DUE_DESCENDING:
-                case TASK_PERCENT_COMPLETE_ASCENDING:
-                case TASK_PERCENT_COMPLETE_DESCENDING:
-                case TASK_STATUS_ASCENDING:
-                case TASK_STATUS_DESCENDING:
-                case NAME_LOCALIZED_ASCENDING:
-                case NAME_LOCALIZED_DESCENDING:
-                    useCursorToNarrowDbQuery = false;
-            }
 
-            // bug 35039 - using cursors with conversation-coalescing leads to convs
-            //             appearing on multiple pages
-            if (params.getTypes().contains(MailItem.Type.CONVERSATION)) {
+        // bug: 23427 -- TASK sorts are incompatible with CURSORS, since cursors require real (db-visible) sort fields
+        switch (params.getSortBy()) {
+            case TASK_DUE_ASC:
+            case TASK_DUE_DESC:
+            case TASK_PERCENT_COMPLETE_ASC:
+            case TASK_PERCENT_COMPLETE_DESC:
+            case TASK_STATUS_ASC:
+            case TASK_STATUS_DESC:
+            case NAME_LOCALIZED_ASC:
+            case NAME_LOCALIZED_DESC:
                 useCursorToNarrowDbQuery = false;
-            }
+        }
+
+        // bug 35039 - using cursors with conversation-coalescing leads to convs appearing on multiple pages
+        if (params.getTypes().contains(MailItem.Type.CONVERSATION)) {
+            useCursorToNarrowDbQuery = false;
         }
 
         String cursorStr = cursor.getAttribute(MailConstants.A_ID);
@@ -724,43 +704,41 @@ public final class SearchParams implements Cloneable {
         String addedPart = null;
 
         if (useCursorToNarrowDbQuery) {
-            switch (params.getSortBy().getType()) {
+            switch (params.getSortBy()) {
                 case NONE:
                     throw new IllegalArgumentException(
                             "Invalid request: cannot use cursor with SortBy=NONE");
-                case DATE_ASCENDING:
+                case DATE_ASC:
                     addedPart = "date:" + quote(">=", sortVal) +
                         (endSortVal != null ? " date:" + quote("<", endSortVal) : "");
                     break;
-                case DATE_DESCENDING:
+                case DATE_DESC:
                     addedPart = "date:" + quote("<=", sortVal) +
                         (endSortVal != null ? " date:" + quote(">", endSortVal) : "");
                     break;
-                case SUBJ_ASCENDING:
+                case SUBJ_ASC:
                     addedPart = "subject:" + quote(">=", sortVal) +
                         (endSortVal != null ? " subject:" + quote("<", endSortVal) : "");
                     break;
-                case SUBJ_DESCENDING:
+                case SUBJ_DESC:
                     addedPart = "subject:" + quote("<=", sortVal) +
                         (endSortVal != null ? " subject:" + quote(">", endSortVal) : "");
                     break;
-                case SIZE_ASCENDING:
-                    // hackaround because "size:>=" doesn't parse but "size:>" does
+                case SIZE_ASC: // hackaround because "size:>=" doesn't parse but "size:>" does
                     sortVal = "" + (Long.parseLong(sortVal) - 1);
                     addedPart = "size:" + quote(">", sortVal) +
                         (endSortVal != null ? " size:" + quote("<", endSortVal) : "");
                     break;
-                case SIZE_DESCENDING:
-                    // hackaround because "size:<=" doesn't parse but "size:<" does
+                case SIZE_DESC: // hackaround because "size:<=" doesn't parse but "size:<" does
                     sortVal = "" + (Long.parseLong(sortVal) + 1);
                     addedPart = "size:" + quote("<", sortVal) +
                         (endSortVal != null ? " size:" + quote(">", endSortVal) : "");
                     break;
-                case NAME_ASCENDING:
+                case NAME_ASC:
                     addedPart = "from:" + quote(">=", sortVal) +
                         (endSortVal != null ? " from:" + quote("<", endSortVal) : "");
                     break;
-                case NAME_DESCENDING:
+                case NAME_DESC:
                     addedPart = "from:" + quote("<=", sortVal) +
                         (endSortVal != null ? " from:" + quote(">", endSortVal) : "");
                     break;
@@ -900,7 +878,7 @@ public final class SearchParams implements Cloneable {
         o.mCalItemExpandEnd = mCalItemExpandEnd;
         o.mIncludeTagDeleted = mIncludeTagDeleted;
         o.mTimeZone = mTimeZone;
-        o.mLocale = mLocale;
+        o.locale = locale;
         o.mHasCursor = mHasCursor;
         o.mPrevMailItemId = mPrevMailItemId;
         o.mPrevSortValueStr = mPrevSortValueStr;
@@ -908,8 +886,7 @@ public final class SearchParams implements Cloneable {
         o.mPrevOffset = mPrevOffset;
         o.mEndSortValueStr = mEndSortValueStr;
         o.mEndSortValueLong = mEndSortValueLong;
-        o.mSortByStr = mSortByStr;
-        o.mSortBy = mSortBy;
+        o.sortBy = sortBy;
         o.types = types;
         o.mPrefetch = mPrefetch;
         o.mMode = mMode;
@@ -955,7 +932,7 @@ public final class SearchParams implements Cloneable {
      * timezone that the query should be parsed in (for date/time queries).
      */
     private TimeZone mTimeZone = null;
-    private Locale mLocale  = null;
+    private Locale locale;
 
     private boolean mHasCursor = false;
 
@@ -995,12 +972,7 @@ public final class SearchParams implements Cloneable {
      */
     private long mEndSortValueLong;
 
-
-    // unparsed -- these need to go away!
-    private String mSortByStr;
-
-    // parsed:
-    private SortBy mSortBy;
+    private SortBy sortBy;
     private Set<MailItem.Type> types = EnumSet.noneOf(MailItem.Type.class); // types to seach for
 
     private boolean mPrefetch = true;

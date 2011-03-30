@@ -613,7 +613,7 @@ public class ToXML {
 
     public static Element encodeConversation(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Conversation conv, SearchParams params) throws ServiceException {
         Mailbox mbox = conv.getMailbox();
-        List<Message> msgs = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_ASCENDING);
+        List<Message> msgs = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_ASC);
         return encodeConversation(parent, ifmt, octxt, conv, msgs, params);
     }
 
@@ -680,7 +680,7 @@ public class ToXML {
             isDelegatedNonAccessible = !AccessManager.getInstance().canAccessAccount(octxt.getAuthenticatedUser(), conv.getAccount(), octxt.isUsingAdminPrivileges());
         }
         if (isDelegatedNonAccessible || conv.isTagged(Flag.ID_DELETED)) {
-            msgs = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_ASCENDING);
+            msgs = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_ASC);
         }
         boolean noneVisible = msgs != null && msgs.isEmpty();
         Element c = noneVisible && !alwaysSerialize ? null : encodeConversationCommon(parent, ifmt, conv, msgs, fields);
@@ -2373,7 +2373,7 @@ public class ToXML {
             }
         }
     }
-    
+
     public static Element encodeGalContact(Element response, GalContact contact) {
         Element cn = response.addElement(MailConstants.E_CONTACT);
         cn.addAttribute(MailConstants.A_ID, contact.getId());

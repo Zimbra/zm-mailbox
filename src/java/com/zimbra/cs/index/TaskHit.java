@@ -80,39 +80,39 @@ public final class TaskHit extends CalendarItemHit {
     }
 
     @Override
-    public Object getSortField(SortBy sortOrder) throws ServiceException {
-        switch (sortOrder.getType()) {
-            case TASK_DUE_ASCENDING:
-            case TASK_DUE_DESCENDING:
+    public Object getSortField(SortBy sort) throws ServiceException {
+        switch (sort) {
+            case TASK_DUE_ASC:
+            case TASK_DUE_DESC:
                 return getDueTime();
-            case TASK_STATUS_ASCENDING:
-            case TASK_STATUS_DESCENDING:
+            case TASK_STATUS_ASC:
+            case TASK_STATUS_DESC:
                 return getStatus();
-            case TASK_PERCENT_COMPLETE_ASCENDING:
-            case TASK_PERCENT_COMPLETE_DESCENDING:
+            case TASK_PERCENT_COMPLETE_ASC:
+            case TASK_PERCENT_COMPLETE_DESC:
                 return getCompletionPercentage();
             default:
-                return super.getSortField(sortOrder);
+                return super.getSortField(sort);
         }
     }
 
     @Override
-    int compareBySortField(SortBy sortOrder, ZimbraHit other) throws ServiceException {
-        switch (sortOrder.getType()) {
-            case TASK_DUE_ASCENDING:
+    int compareBySortField(SortBy sort, ZimbraHit other) throws ServiceException {
+        switch (sort) {
+            case TASK_DUE_ASC:
                 return compareByDueDate(true, this, other);
-            case TASK_DUE_DESCENDING:
+            case TASK_DUE_DESC:
                 return compareByDueDate(false, this, other);
-            case TASK_STATUS_ASCENDING:
+            case TASK_STATUS_ASC:
                 return compareByStatus(true, this, other);
-            case TASK_STATUS_DESCENDING:
+            case TASK_STATUS_DESC:
                 return compareByStatus(false, this, other);
-            case TASK_PERCENT_COMPLETE_ASCENDING:
+            case TASK_PERCENT_COMPLETE_ASC:
                 return compareByCompletionPercent(true, this, other);
-            case TASK_PERCENT_COMPLETE_DESCENDING:
+            case TASK_PERCENT_COMPLETE_DESC:
                 return compareByCompletionPercent(false, this, other);
             default:
-                return super.compareBySortField(sortOrder, other);
+                return super.compareBySortField(sort, other);
         }
     }
 

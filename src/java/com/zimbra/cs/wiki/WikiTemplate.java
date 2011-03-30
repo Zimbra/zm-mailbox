@@ -540,7 +540,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
                 buf.append(">");
             }
             Mailbox mbox = ctxt.item.getMailbox();
-            for (Document doc : mbox.getDocumentList(ctxt.wctxt.octxt, folder.getId(), SortBy.NAME_NATURAL_ORDER_ASCENDING)) {
+            for (Document doc : mbox.getDocumentList(ctxt.wctxt.octxt, folder.getId(), SortBy.NAME_NATURAL_ORDER_ASC)) {
                 buf.append("<");
                 buf.append(sTAGS[sINNER][style]);
                 buf.append(" class='zmwiki-pageLink'>");
@@ -567,11 +567,10 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
             Mailbox mbox = ctxt.item.getMailbox();
             MailItem.Type type = folder.getDefaultView();
             if (ctxt.wctxt.view == null) {
-                list.addAll(mbox.getItemList(ctxt.wctxt.octxt, type, folder.getId(),
-                        SortBy.NAME_NATURAL_ORDER_ASCENDING));
+                list.addAll(mbox.getItemList(ctxt.wctxt.octxt, type, folder.getId(), SortBy.NAME_NATURAL_ORDER_ASC));
             } else {
                 list.addAll(mbox.getItemList(ctxt.wctxt.octxt, MailItem.Type.of(ctxt.wctxt.view), folder.getId(),
-                        SortBy.NAME_NATURAL_ORDER_ASCENDING));
+                        SortBy.NAME_NATURAL_ORDER_ASC));
             }
 
             String bt = params.get(sBODYTEMPLATE);

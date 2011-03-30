@@ -64,7 +64,7 @@ public class IndexEditor {
     static final int SEARCH_RETURN_MESSAGES = 2;
     static final int SEARCH_RETURN_DOCUMENTS = 3;
 
-    private static SortBy sortOrder = SortBy.DATE_DESCENDING;
+    private static SortBy sortOrder = SortBy.DATE_DESC;
     private BufferedReader inputReader = null;
     private PrintStream outputStream = null;
 
@@ -604,28 +604,28 @@ public class IndexEditor {
 //                    int msgId = Integer.parseInt(msg);
 //                    reIndexMsg(mailboxId, msgId);
                 } else if (command.equals("sort da")) {
-                    sortOrder = SortBy.DATE_ASCENDING;
+                    sortOrder = SortBy.DATE_ASC;
                     outputStream.println("---->Search order = DATE_ASCENDING");
                 } else if (command.equals("sort dd")) {
-                    sortOrder = SortBy.DATE_DESCENDING;
+                    sortOrder = SortBy.DATE_DESC;
                     outputStream.println("---->Search order = DATE_DESCENDING");
                 } else if (command.equals("sort sa")) {
-                    sortOrder = SortBy.SUBJ_ASCENDING;
+                    sortOrder = SortBy.SUBJ_ASC;
                     outputStream.println("---->Search order = SUBJ_ASCENDING");
                 } else if (command.equals("sort sd")) {
-                    sortOrder = SortBy.SUBJ_DESCENDING;
+                    sortOrder = SortBy.SUBJ_DESC;
                     outputStream.println("---->Search order = SUBJ_DESCENDING");
                 } else if (command.equals("sort na")) {
-                    sortOrder = SortBy.NAME_ASCENDING;
+                    sortOrder = SortBy.NAME_ASC;
                     outputStream.println("---->Search order = NAME_ASCENDING");
                 } else if (command.equals("sort nd")) {
-                    sortOrder = SortBy.NAME_DESCENDING;
+                    sortOrder = SortBy.NAME_DESC;
                     outputStream.println("---->Search order = NAME_DESCENDING");
                 } else if (command.equals("sort za")) {
-                    sortOrder = SortBy.SIZE_ASCENDING;
+                    sortOrder = SortBy.SIZE_ASC;
                     outputStream.println("---->Search order = SIZE_ASCENDING");
                 } else if (command.equals("sort zd")) {
-                    sortOrder = SortBy.SIZE_DESCENDING;
+                    sortOrder = SortBy.SIZE_DESC;
                     outputStream.println("---->Search order = SIZE_DESCENDING");
                 } else if (command.equals("q") || command.equals("query")) {
                     QueryRunner runner = new SingleQueryRunner(mailboxId);

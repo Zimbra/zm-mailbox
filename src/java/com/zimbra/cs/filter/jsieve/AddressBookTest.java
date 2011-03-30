@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -144,7 +144,7 @@ public class AddressBookTest extends AbstractTest {
                             } catch (AddressException e1) {
                             }
                             results = mbox.index.search(new OperationContext(mbox), "To:" + iaddrStr,
-                                    SEARCH_TYPE, SortBy.DATE_ASCENDING, 100);
+                                    SEARCH_TYPE, SortBy.DATE_ASC, 100);
                             mLog.debug("searching for " + iaddrStr);
                             if (results.hasNext()) {
                                 mLog.debug("found " + iaddrStr + " in contacts");

@@ -648,31 +648,33 @@ public class Contact extends MailItem {
         mbox.updateContactCount(1);
 
         UnderlyingData data = new UnderlyingData();
-        data.id          = id;
-        data.type        = Type.CONTACT.toByte();
-        data.folderId    = folder.getId();
+        data.id = id;
+        data.type = Type.CONTACT.toByte();
+        data.folderId = folder.getId();
         if (!folder.inSpam() || mbox.getAccount().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false)) {
             data.indexId = IndexStatus.DEFERRED.id();
         }
-        data.imapId      = id;
-        data.locator     = mblob == null ? null : mblob.getLocator();
+        data.imapId = id;
+        data.locator = mblob == null ? null : mblob.getLocator();
         data.setBlobDigest(pc.getDigest());
-        data.size        = pc.getSize();
-        data.date        = mbox.getOperationTimestamp();
-        data.flags       = flags | (pc.hasAttachment() ? Flag.BITMASK_ATTACHED : 0);
-        data.tags        = Tag.tagsToBitmask(tags);
-        data.metadata    = encodeMetadata(DEFAULT_COLOR_RGB, 1, custom, pc.getFields(), pc.getAttachments());
+        data.size = pc.getSize();
+        data.date = mbox.getOperationTimestamp();
+        data.flags = flags | (pc.hasAttachment() ? Flag.BITMASK_ATTACHED : 0);
+        data.tags = Tag.tagsToBitmask(tags);
+        data.setSender(getFileAsString(pc.getFields()));
+        data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, custom, pc.getFields(), pc.getAttachments());
         data.contentChanged(mbox);
 
         if (ZimbraLog.mailop.isInfoEnabled()) {
             String email = "null";
-            if (pc.getFields() != null)
+            if (pc.getFields() != null) {
                 email = pc.getFields().get(ContactConstants.A_email);
+            }
             ZimbraLog.mailop.info("adding contact %s: id=%d, folderId=%d, folderName=%s.",
                 email, data.id, folder.getId(), folder.getName());
         }
 
-        DbMailItem.create(mbox, data, getFileAsString(pc.getFields()));
+        DbMailItem.create(mbox, data);
 
         Contact contact = new Contact(mbox, data);
         contact.finishCreation(null);

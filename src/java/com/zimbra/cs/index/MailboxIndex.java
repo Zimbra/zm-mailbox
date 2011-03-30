@@ -30,7 +30,6 @@ import org.apache.lucene.search.SortField;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.index.SortBy.SortDirection;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -45,25 +44,23 @@ import com.zimbra.cs.store.file.Volume;
 public final class MailboxIndex {
 
     private final LuceneIndex luceneIndex;
-    private final int mMailboxId;
     final Mailbox mailbox;
-    private Analyzer mAnalyzer = null;
+    private Analyzer analyzer;
 
     public MailboxIndex(Mailbox mbox) throws ServiceException {
-        mMailboxId = mbox.getId();
         mailbox = mbox;
         Volume indexVol = Volume.getById(mbox.getIndexVolume());
-        String idxParentDir = indexVol.getMailboxDir(mMailboxId, Volume.TYPE_INDEX);
-        luceneIndex = new LuceneIndex(this, idxParentDir, mMailboxId);
+        String idxParentDir = indexVol.getMailboxDir(mailbox.getId(), Volume.TYPE_INDEX);
+        luceneIndex = new LuceneIndex(this, idxParentDir, mailbox.getId());
         String analyzerName = mbox.getAccount().getTextAnalyzer();
 
         if (analyzerName != null) {
-            mAnalyzer = ZimbraAnalyzer.getAnalyzer(analyzerName);
+            analyzer = ZimbraAnalyzer.getAnalyzer(analyzerName);
         } else {
-            mAnalyzer = ZimbraAnalyzer.getInstance();
+            analyzer = ZimbraAnalyzer.getInstance();
         }
 
-        ZimbraLog.index.info("index opened mid=%d,dir=%s,analyzer=%s", mMailboxId, luceneIndex, mAnalyzer);
+        ZimbraLog.index.info("index opened mid=%d,dir=%s,analyzer=%s", mailbox.getId(), luceneIndex, analyzer);
     }
 
 
@@ -102,40 +99,39 @@ public final class MailboxIndex {
         boolean isTaskSort = false;
         boolean isLocalizedSort = false;
         SortBy originalSort = params.getSortBy();
-        switch (originalSort.getType()) {
-            case TASK_DUE_ASCENDING:
+        switch (originalSort) {
+            case TASK_DUE_ASC:
                 isTaskSort = true;
-                params.setSortBy(SortBy.DATE_DESCENDING);
+                params.setSortBy(SortBy.DATE_DESC);
                 break;
-            case TASK_DUE_DESCENDING:
+            case TASK_DUE_DESC:
                 isTaskSort = true;
-                params.setSortBy(SortBy.DATE_DESCENDING);
+                params.setSortBy(SortBy.DATE_DESC);
                 break;
-            case TASK_STATUS_ASCENDING:
+            case TASK_STATUS_ASC:
                 isTaskSort = true;
-                params.setSortBy(SortBy.DATE_DESCENDING);
+                params.setSortBy(SortBy.DATE_DESC);
                 break;
-            case TASK_STATUS_DESCENDING:
+            case TASK_STATUS_DESC:
                 isTaskSort = true;
-                params.setSortBy(SortBy.DATE_DESCENDING);
+                params.setSortBy(SortBy.DATE_DESC);
                 break;
-            case TASK_PERCENT_COMPLETE_ASCENDING:
+            case TASK_PERCENT_COMPLETE_ASC:
                 isTaskSort = true;
-                params.setSortBy(SortBy.DATE_DESCENDING);
+                params.setSortBy(SortBy.DATE_DESC);
                 break;
-            case TASK_PERCENT_COMPLETE_DESCENDING:
+            case TASK_PERCENT_COMPLETE_DESC:
                 isTaskSort = true;
-                params.setSortBy(SortBy.DATE_DESCENDING);
+                params.setSortBy(SortBy.DATE_DESC);
                 break;
-            case NAME_LOCALIZED_ASCENDING:
-            case NAME_LOCALIZED_DESCENDING:
+            case NAME_LOCALIZED_ASC:
+            case NAME_LOCALIZED_DESC:
                 isLocalizedSort = true;
                 break;
         }
 
         if (ZimbraLog.searchstats.isDebugEnabled()) {
-            int textCount = zq.countTextOperations();
-            ZimbraLog.searchstats.debug("Executing search with [" + textCount + "] text parts");
+            ZimbraLog.searchstats.debug("Executing search with [%d] text parts", zq.countTextOperations());
         }
 
         ZimbraQueryResults results = zq.execute();
@@ -208,7 +204,7 @@ public final class MailboxIndex {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("id", mMailboxId).toString();
+        return Objects.toStringHelper(this).add("id", mailbox.getId()).toString();
     }
 
     IndexSearcherRef getIndexSearcherRef(SortBy sortBy) throws IOException {
@@ -218,42 +214,31 @@ public final class MailboxIndex {
     }
 
     private Sort toSort(SortBy sortBy) {
-        if (sortBy == null || sortBy == SortBy.NONE) {
+        if (sortBy == null) {
             return null;
         }
 
-        boolean reverse = false;;
-        if (sortBy.getDirection() == SortDirection.DESCENDING) {
-            reverse = true;
+        switch (sortBy.getKey()) {
+            case NONE:
+                return null;
+            case NAME:
+            case NAME_NATURAL_ORDER:
+            case SENDER:
+                return new Sort(new SortField(LuceneFields.L_SORT_NAME, SortField.STRING,
+                        sortBy.getDirection() == SortBy.Direction.DESC));
+            case RCPT:
+                return new Sort(new SortField(LuceneFields.L_SORT_RCPT, SortField.STRING,
+                        sortBy.getDirection() == SortBy.Direction.DESC));
+            case SUBJECT:
+                return new Sort(new SortField(LuceneFields.L_SORT_SUBJECT, SortField.STRING,
+                        sortBy.getDirection() == SortBy.Direction.DESC));
+            case SIZE:
+                return new Sort(new SortField(LuceneFields.L_SORT_SIZE, SortField.LONG,
+                        sortBy.getDirection() == SortBy.Direction.DESC));
+            case DATE:
+            default: // default to DATE_DESCENDING
+                return new Sort(new SortField(LuceneFields.L_SORT_DATE, SortField.STRING, true));
         }
-
-        int type;
-        String field;
-        switch (sortBy.getCriterion()) {
-        case NAME:
-        case NAME_NATURAL_ORDER:
-        case SENDER:
-            field = LuceneFields.L_SORT_NAME;
-            type = SortField.STRING;
-            break;
-        case SUBJECT:
-            field = LuceneFields.L_SORT_SUBJECT;
-            type = SortField.STRING;
-            break;
-        case SIZE:
-            field = LuceneFields.L_SORT_SIZE;
-            type = SortField.LONG;
-            break;
-        case DATE:
-        default:
-            // default to DATE_DESCENDING!
-            field = LuceneFields.L_SORT_DATE;
-            type = SortField.STRING;
-            reverse = true;;
-            break;
-        }
-
-        return new Sort(new SortField(field, type, reverse));
     }
 
     LuceneIndex getLuceneIndex() {
@@ -293,9 +278,9 @@ public final class MailboxIndex {
                 String analyzerName = mbox.getAccount().getTextAnalyzer();
 
                 if (analyzerName != null) {
-                    mAnalyzer = ZimbraAnalyzer.getAnalyzer(analyzerName);
+                    analyzer = ZimbraAnalyzer.getAnalyzer(analyzerName);
                 } else {
-                    mAnalyzer = ZimbraAnalyzer.getInstance();
+                    analyzer = ZimbraAnalyzer.getInstance();
                 }
             }
         }
@@ -303,7 +288,7 @@ public final class MailboxIndex {
 
     public Analyzer getAnalyzer() {
         synchronized (getLock()) {
-            return mAnalyzer;
+            return analyzer;
         }
     }
 
@@ -345,10 +330,6 @@ public final class MailboxIndex {
 
     final Object getLock() {
         return mailbox;
-    }
-
-    int getMailboxId() {
-        return mMailboxId;
     }
 
     public boolean verify(PrintStream out) throws IOException {

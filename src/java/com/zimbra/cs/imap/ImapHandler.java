@@ -640,19 +640,25 @@ abstract class ImapHandler {
                         }
                         SortBy sort;
                         String key = req.readATOM();
-                        if (key.equals("REVERSE") && !desc)  { desc = true;  continue; }
-                        else if (key.equals("ARRIVAL"))      sort = desc ? SortBy.DATE_DESCENDING : SortBy.DATE_ASCENDING;
-                        // FIXME: CC sort not implemented
-                        else if (key.equals("CC"))           sort = SortBy.NONE;
-                        // FIXME: DATE sorts on INTERNALDATE, not the Date header
-                        else if (key.equals("DATE"))         sort = desc ? SortBy.DATE_DESCENDING : SortBy.DATE_ASCENDING;
-                        else if (key.equals("FROM"))         sort = desc ? SortBy.NAME_DESCENDING : SortBy.NAME_ASCENDING;
-                        else if (key.equals("SIZE"))         sort = desc ? SortBy.SIZE_DESCENDING : SortBy.SIZE_ASCENDING;
-                        else if (key.equals("SUBJECT"))      sort = desc ? SortBy.SUBJ_DESCENDING : SortBy.SUBJ_ASCENDING;
-                        // FIXME: TO sort not implemented
-                        else if (key.equals("TO"))           sort = SortBy.NONE;
-                        else
+                        if (key.equals("REVERSE") && !desc) {
+                            desc = true;  continue;
+                        } else if (key.equals("ARRIVAL")) {
+                            sort = desc ? SortBy.DATE_DESC : SortBy.DATE_ASC;
+                        } else if (key.equals("CC")) { // FIXME: CC sort not implemented
+                            sort = SortBy.NONE;
+                        } else if (key.equals("DATE")) { // FIXME: DATE sorts on INTERNALDATE, not the Date header
+                            sort = desc ? SortBy.DATE_DESC : SortBy.DATE_ASC;
+                        } else if (key.equals("FROM")) {
+                            sort = desc ? SortBy.NAME_DESC : SortBy.NAME_ASC;
+                        } else if (key.equals("SIZE")) {
+                            sort = desc ? SortBy.SIZE_DESC : SortBy.SIZE_ASC;
+                        } else if (key.equals("SUBJECT")) {
+                            sort = desc ? SortBy.SUBJ_DESC : SortBy.SUBJ_ASC;
+                        } else if (key.equals("TO")) {
+                            sort = desc ? SortBy.RCPT_DESC : SortBy.RCPT_ASC;
+                        } else {
                             throw new ImapParseException(tag, "unknown SORT key \"" + key + '"');
+                        }
                         order.add(sort);  desc = false;
                     } while (desc || req.peekChar() != ')');
                     req.skipChar(')');
@@ -3042,7 +3048,7 @@ abstract class ImapHandler {
             //              threads, with each thread containing messages with the same
             //              base subject text.  Finally, the threads are sorted by the
             //              sent date of the first message in the thread."
-            ZimbraQueryResults zqr = runSearch(i4search, i4folder, SortBy.DATE_ASCENDING, Mailbox.SearchResultMode.PARENT);
+            ZimbraQueryResults zqr = runSearch(i4search, i4folder, SortBy.DATE_ASC, Mailbox.SearchResultMode.PARENT);
             try {
                 for (ZimbraHit hit = zqr.getNext(); hit != null; hit = zqr.getNext()) {
                     ImapMessage i4msg = i4folder.getById(hit.getItemId());

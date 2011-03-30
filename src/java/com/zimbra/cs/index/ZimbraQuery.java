@@ -396,13 +396,12 @@ public final class ZimbraQuery {
             parser.setLocale(params.getLocale());
             clauses = parser.parse(params.getQueryStr());
 
-            String sortByStr = parser.getSortBy();
-            if (sortByStr != null) {
-                SortBy sortBy = SortBy.lookup(sortByStr);
-                if (sortBy == null) {
-                    throw ServiceException.PARSE_ERROR("INVALID_SORTBY: " + sortByStr, null);
+            if (parser.getSortBy() != null) {
+                SortBy sort = SortBy.of(parser.getSortBy());
+                if (sort == null) {
+                    throw ServiceException.PARSE_ERROR("INVALID_SORTBY: " + sort, null);
                 }
-                params.setSortBy(sortBy);
+                params.setSortBy(sort);
             }
         } catch (Error e) {
             throw ServiceException.PARSE_ERROR("PARSER_ERROR", e);

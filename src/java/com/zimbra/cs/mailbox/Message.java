@@ -16,7 +16,6 @@ package com.zimbra.cs.mailbox;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -171,25 +170,20 @@ public class Message extends MailItem {
         }
     }
 
-    /** Class logger for Message class */
-    static Log sLog = LogFactory.getLog(Message.class);
+    private static final Log LOG = LogFactory.getLog(Message.class);
 
-    private String mSender;
-    private String mRecipients;
-    private String mFragment;
-    private String mRawSubject;
+    private String sender;
+    private String recipients;
+    private String fragment;
+    private String rawSubject;
 
-    private DraftInfo mDraftInfo;
-    private ArrayList<CalendarItemInfo> mCalendarItemInfos;
-    private String mCalendarIntendedFor;
+    private DraftInfo draftInfo;
+    private ArrayList<CalendarItemInfo> calendarItemInfos;
+    private String calendarIntendedFor;
 
 
     /**
-     * this one will call back into decodeMetadata() to do our initialization
-     *
-     * @param mbox
-     * @param ud
-     * @throws ServiceException
+     * this one will call back into decodeMetadata() to do our initialization.
      */
     Message(Mailbox mbox, UnderlyingData ud) throws ServiceException {
         super(mbox, ud);
@@ -208,10 +202,11 @@ public class Message extends MailItem {
         return isTagged(Flag.ID_DRAFT);
     }
 
-    /** Returns the <code>To:</code> header of the message, if the message
-     *  was sent by the user.  Retuns <code>""</code> otherwise. */
+    /**
+     * Returns the {@code To:} header of the message, if the message was sent by the user, otherwise an empty string.
+     */
     public String getRecipients() {
-        return (mRecipients == null ? "" : mRecipients);
+        return Strings.nullToEmpty(recipients);
     }
 
     /** Returns the first 100 characters of the message's content.  The system
@@ -220,7 +215,7 @@ public class Message extends MailItem {
      *
      * @see com.zimbra.cs.index.Fragment */
     public String getFragment() {
-        return (mFragment == null ? "" : mFragment);
+        return Strings.nullToEmpty(fragment);
     }
 
     /** Returns the normalized subject of the message.  This is done by
@@ -235,24 +230,27 @@ public class Message extends MailItem {
 
     /** Returns the raw subject of the message.  This is taken directly from
      *  the <tt>Subject:</tt> header with no processing. */
-    @Override public String getSubject() {
-        return (mRawSubject == null ? "" : mRawSubject);
+    @Override
+    public String getSubject() {
+        return Strings.nullToEmpty(rawSubject);
     }
 
-    /** Returns the <tt>From:</tt> header of the message if available;
-     *  if not, returns the <tt>Sender:</tt> header. */
-    @Override public String getSender() {
-        return (mSender == null ? "" : mSender);
+    /** Returns the {@code From:} header of the message if available; if not, returns the {@code Sender:} header. */
+    @Override
+    public String getSender() {
+        return Strings.nullToEmpty(sender);
     }
 
-    @Override public String getSortSubject() {
+    @Override
+    public String getSortSubject() {
         return getNormalizedSubject().toUpperCase();
     }
 
-    @Override public String getSortSender() {
+    @Override
+    public String getSortSender() {
         String sender = new ParsedAddress(getSender()).getSortString().toUpperCase();
         // remove surrogate characters and trim to DbMailItem.MAX_SENDER_LENGTH
-        return DbMailItem.checkSenderLength(sender);
+        return DbMailItem.normalize(sender, DbMailItem.MAX_SENDER_LENGTH);
     }
 
     /** Returns whether the Message was sent by the owner of this mailbox.
@@ -275,7 +273,7 @@ public class Message extends MailItem {
      *         or -1 for Messages that are not drafts or not replies/forwards.
      * @see #getDraftReplyType */
     public String getDraftOrigId() {
-        return (mDraftInfo == null || mDraftInfo.origId == null ? "" : mDraftInfo.origId);
+        return (draftInfo == null || draftInfo.origId == null ? "" : draftInfo.origId);
     }
 
     /** Returns the "reply type" for a draft message.
@@ -288,7 +286,7 @@ public class Message extends MailItem {
      * @see com.zimbra.cs.service.mail.SendMsg#TYPE_FORWARD
      * @see com.zimbra.cs.service.mail.SendMsg#TYPE_REPLY */
     public String getDraftReplyType() {
-        return (mDraftInfo == null || mDraftInfo.replyType == null ? "" : mDraftInfo.replyType);
+        return (draftInfo == null || draftInfo.replyType == null ? "" : draftInfo.replyType);
     }
 
 
@@ -299,7 +297,7 @@ public class Message extends MailItem {
      * @see #getDraftReplyType
      * @see #getDraftOrigId() */
     public String getDraftAccountId() {
-        return (mDraftInfo == null || mDraftInfo.accountId == null ? "" : mDraftInfo.accountId);
+        return (draftInfo == null || draftInfo.accountId == null ? "" : draftInfo.accountId);
     }
 
     /** Returns the ID of the {@link com.zimbra.cs.account.Identity} that was
@@ -310,7 +308,7 @@ public class Message extends MailItem {
      * @see #getDraftReplyType
      * @see #getDraftOrigId() */
     public String getDraftIdentityId() {
-        return (mDraftInfo == null || mDraftInfo.identityId == null ? "" : mDraftInfo.identityId);
+        return (draftInfo == null || draftInfo.identityId == null ? "" : draftInfo.identityId);
     }
 
     /** Returns the time (millis since epoch) at which the draft message is
@@ -319,15 +317,15 @@ public class Message extends MailItem {
      *
      * @return Draft auto send time */
     public long getDraftAutoSendTime() {
-        return mDraftInfo == null ? 0 : mDraftInfo.autoSendTime;
+        return draftInfo == null ? 0 : draftInfo.autoSendTime;
     }
 
     public void setDraftAutoSendTime(long autoSendTime) throws ServiceException {
-        if (mDraftInfo == null && autoSendTime != 0) {
-            mDraftInfo = new DraftInfo(null, null, null, null, autoSendTime);
+        if (draftInfo == null && autoSendTime != 0) {
+            draftInfo = new DraftInfo(null, null, null, null, autoSendTime);
             saveMetadata();
-        } else if (mDraftInfo != null && mDraftInfo.autoSendTime != autoSendTime) {
-            mDraftInfo.autoSendTime = autoSendTime;
+        } else if (draftInfo != null && draftInfo.autoSendTime != autoSendTime) {
+            draftInfo.autoSendTime = autoSendTime;
             saveMetadata();
         }
     }
@@ -338,26 +336,27 @@ public class Message extends MailItem {
     }
 
     public boolean hasCalendarItemInfos() {
-        return mCalendarItemInfos != null && !mCalendarItemInfos.isEmpty();
+        return calendarItemInfos != null && !calendarItemInfos.isEmpty();
     }
 
     public Iterator<CalendarItemInfo> getCalendarItemInfoIterator() {
-        if (mCalendarItemInfos != null)
-            return mCalendarItemInfos.iterator();
-        else
-            return new ArrayList<CalendarItemInfo>().iterator();
+        if (calendarItemInfos != null) {
+            return calendarItemInfos.iterator();
+        } else {
+            return Collections.<CalendarItemInfo>emptyList().iterator();
+        }
     }
 
     public CalendarItemInfo getCalendarItemInfo(int componentId) {
-        if (mCalendarItemInfos != null &&
-            (componentId < 0 || componentId < mCalendarItemInfos.size()))
-            return mCalendarItemInfos.get(componentId);
-        else
+        if (calendarItemInfos != null && (componentId < 0 || componentId < calendarItemInfos.size())) {
+            return calendarItemInfos.get(componentId);
+        } else {
             return null;
+        }
     }
 
     public String getCalendarIntendedFor() {
-        return mCalendarIntendedFor;
+        return calendarIntendedFor;
     }
 
     /** Returns a JavaMail {@link javax.mail.internet.MimeMessage}
@@ -526,14 +525,16 @@ public class Message extends MailItem {
         data.setBlobDigest(staged.getDigest());
         data.flags = flags & (Flag.FLAGS_MESSAGE | Flag.FLAGS_GENERIC);
         data.tags = tags;
-        data.subject = pm.getNormalizedSubject();
+        data.setSender(pm.getParsedSender().getSortString());
+        data.setRecipients(ParsedAddress.getSortString(pm.getParsedRecipients()));
+        data.setSubject(pm.getNormalizedSubject());
         data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, extended, pm, flags, dinfo, null, null);
         data.unreadCount = unread ? 1 : 0;
         data.contentChanged(mbox);
 
         ZimbraLog.mailop.info("Adding Message: id=%d, Message-ID=%s, parentId=%d, folderId=%d, folderName=%s.",
                               data.id, pm.getMessageID(), data.parentId, folder.getId(), folder.getName());
-        DbMailItem.create(mbox, data, pm.getParsedSender().getSortString());
+        DbMailItem.create(mbox, data);
         Message msg = fact.create(mbox, data);
 
         // process the components in this invite (must do this last so blob is created, etc)
@@ -571,8 +572,9 @@ public class Message extends MailItem {
                 isForwardedInvite = true;
                 intendedForAddress = headerVal;
                 intendedForMe = AccountUtil.addressMatchesAccount(acct, headerVal);
-                if (!intendedForMe)
-                    mCalendarIntendedFor = headerVal;
+                if (!intendedForMe) {
+                    calendarIntendedFor = headerVal;
+                }
             }
         } catch (MessagingException e) {
             ZimbraLog.calendar.warn(
@@ -662,8 +664,9 @@ public class Message extends MailItem {
         // Ignore alarms set by organizer.
         boolean allowOrganizerAlarm = DebugConfig.calendarAllowOrganizerSpecifiedAlarms;
 
-        if (mCalendarItemInfos == null)
-            mCalendarItemInfos = new ArrayList<CalendarItemInfo>();
+        if (calendarItemInfos == null) {
+            calendarItemInfos = new ArrayList<CalendarItemInfo>();
+        }
 
         // Clean up invalid missing organizer/attendee from some Exchanged-originated invite. (bug 43195)
         // We are looking for a multi-VEVENT structure where the series VEVENT has organizer and attendees
@@ -836,7 +839,8 @@ public class Message extends MailItem {
                                     calItemFolderId = calItem.getFolderId();
                                 }
                             } else {
-                                sLog.info("Mailbox " + getMailboxId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c no CalendarItem could be found");
+                                LOG.info("Mailbox %d Message %d SKIPPING Invite %s b/c no CalendarItem could be found",
+                                        getMailboxId(), getId(), method);
                                 success = true;
                                 continue; // for now, just ignore this Invitation
                             }
@@ -906,7 +910,7 @@ public class Message extends MailItem {
 
                     int calItemId = calItem != null ? calItem.getId() : CalendarItemInfo.CALITEM_ID_NONE;
                     CalendarItemInfo info = new CalendarItemInfo(calItemId, cur.getComponentNum(), cur, invChanges);
-                    mCalendarItemInfos.add(info);
+                    calendarItemInfos.add(info);
                     updatedMetadata = true;
                     if (calItem != null && (calItemIsNew || modifiedCalItem)) {
                         mMailbox.index.add(calItem);
@@ -915,7 +919,7 @@ public class Message extends MailItem {
                     // Not intended for me.  Just save the invite detail in metadata.
                     CalendarItemInfo info = new CalendarItemInfo(
                             CalendarItemInfo.CALITEM_ID_NONE, cur.getComponentNum(), cur, invChanges);
-                    mCalendarItemInfos.add(info);
+                    calendarItemInfos.add(info);
                     updatedMetadata = true;
                 }
                 success = true;
@@ -1165,22 +1169,26 @@ public class Message extends MailItem {
     }
 
 
-    @Override void reanalyze(Object data, long newSize) throws ServiceException {
-        if (!(data instanceof ParsedMessage))
+    @Override
+    void reanalyze(Object data, long newSize) throws ServiceException {
+        if (!(data instanceof ParsedMessage)) {
             throw ServiceException.FAILURE("cannot reanalyze non-ParsedMessage object", null);
-
+        }
         ParsedMessage pm = (ParsedMessage) data;
 
         MailItem parent = getParent();
 
         // make sure the SUBJECT is correct
-        if (!getSubject().equals(pm.getSubject()))
+        if (!getSubject().equals(pm.getSubject())) {
             markItemModified(Change.MODIFIED_SUBJECT);
-        mRawSubject = pm.getSubject();
-        mData.subject = pm.getNormalizedSubject();
+        }
+        rawSubject = pm.getSubject();
+        mData.setSubject(pm.getNormalizedSubject());
+        mData.setSender(pm.getParsedSender().getSortString());
+        mData.setRecipients(ParsedAddress.getSortString(pm.getParsedRecipients()));
 
         // the fragment may have changed
-        mFragment = pm.getFragment();
+        fragment = pm.getFragment();
 
         // make sure the "attachments" FLAG is correct
         boolean hadAttachment = (mData.flags & Flag.BITMASK_ATTACHED) != 0;
@@ -1216,16 +1224,19 @@ public class Message extends MailItem {
             mData.size = newSize;
         }
 
-        String metadata = encodeMetadata(mRGBColor, mVersion, mExtendedData, pm, mData.flags, mDraftInfo, mCalendarItemInfos, mCalendarIntendedFor);
+        String metadata = encodeMetadata(mRGBColor, mVersion, mExtendedData, pm, mData.flags, draftInfo,
+                calendarItemInfos, calendarIntendedFor);
 
         // rewrite the DB row to reflect our new view
-        saveData(pm.getParsedSender().getSortString(), metadata);
+        saveData(metadata);
 
-        if (parent instanceof VirtualConversation)
-            ((VirtualConversation) parent).recalculateMetadata(Arrays.asList(new Message[] { this } ));
+        if (parent instanceof VirtualConversation) {
+            ((VirtualConversation) parent).recalculateMetadata(Collections.singletonList(this));
+        }
     }
 
-    @Override void detach() throws ServiceException {
+    @Override
+    void detach() throws ServiceException {
         MailItem parent = getParent();
         if (!(parent instanceof Conversation))
             return;
@@ -1242,8 +1253,8 @@ public class Message extends MailItem {
         }
     }
 
-
-    @Override void delete(DeleteScope scope, boolean writeTombstones) throws ServiceException {
+    @Override
+    void delete(DeleteScope scope, boolean writeTombstones) throws ServiceException {
         MailItem parent = getParent();
         if (parent instanceof Conversation && ((Conversation) parent).getMessageCount() == 1)
             parent.delete(DeleteScope.ENTIRE_ITEM, writeTombstones);
@@ -1251,40 +1262,45 @@ public class Message extends MailItem {
             super.delete(scope, writeTombstones);
     }
 
-
-    @Override void decodeMetadata(Metadata meta) throws ServiceException {
+    @Override
+    void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);
 
-        mSender = meta.get(Metadata.FN_SENDER, null);
-        mRecipients = meta.get(Metadata.FN_RECIPIENTS, null);
-        mFragment = meta.get(Metadata.FN_FRAGMENT, null);
+        sender = meta.get(Metadata.FN_SENDER, null);
+        recipients = meta.get(Metadata.FN_RECIPIENTS, null);
+        fragment = meta.get(Metadata.FN_FRAGMENT, null);
 
         if (meta.containsKey(Metadata.FN_CALITEM_IDS)) {
-            mCalendarItemInfos = new ArrayList<CalendarItemInfo>();
+            calendarItemInfos = new ArrayList<CalendarItemInfo>();
             MetadataList mdList = meta.getList(Metadata.FN_CALITEM_IDS);
             for (int i = 0; i < mdList.size(); i++) {
                 Metadata md = mdList.getMap(i);
-                mCalendarItemInfos.add(CalendarItemInfo.decodeMetadata(md, getMailbox()));
+                calendarItemInfos.add(CalendarItemInfo.decodeMetadata(md, getMailbox()));
             }
         }
-        mCalendarIntendedFor = meta.get(Metadata.FN_CAL_INTENDED_FOR, null);
+        calendarIntendedFor = meta.get(Metadata.FN_CAL_INTENDED_FOR, null);
 
         Metadata draftMeta = meta.getMap(Metadata.FN_DRAFT, true);
-        if (draftMeta != null)
-            mDraftInfo = new DraftInfo(draftMeta);
+        if (draftMeta != null) {
+            draftInfo = new DraftInfo(draftMeta);
+        }
 
-        mRawSubject = mData.subject;
         String prefix = meta.get(Metadata.FN_PREFIX, null);
-        if (prefix != null)
-            mRawSubject = (mData.subject == null ? prefix : prefix + mData.subject);
-        String rawSubject = meta.get(Metadata.FN_RAW_SUBJ, null);
-        if (rawSubject != null)
-            mRawSubject = rawSubject;
+        if (prefix != null) {
+            rawSubject = (mData.getSubject() == null ? prefix : prefix + mData.getSubject());
+        } else {
+            rawSubject = mData.getSubject();
+        }
+        String rawSubj = meta.get(Metadata.FN_RAW_SUBJ, null);
+        if (rawSubj != null) {
+            rawSubject = rawSubj;
+        }
     }
 
-    @Override Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, mSender, mRecipients, mFragment,
-                              mData.subject, mRawSubject, mDraftInfo, mCalendarItemInfos, mCalendarIntendedFor);
+    @Override
+    Metadata encodeMetadata(Metadata meta) {
+        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, sender, recipients, fragment,
+                mData.getSubject(), rawSubject, draftInfo, calendarItemInfos, calendarIntendedFor);
     }
 
     private static String encodeMetadata(Color color, int version, CustomMetadataList extended, ParsedMessage pm,
@@ -1298,29 +1314,29 @@ public class Message extends MailItem {
                 pm.getNormalizedSubject(), pm.getSubject(), dinfo, calItemInfos, calIntendedFor).toString();
     }
 
-
-    static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended, String sender, String recipients,
-                                   String fragment, String subject, String rawSubject, DraftInfo dinfo,
-                                   List<CalendarItemInfo> calItemInfos, String calIntendedFor) {
+    static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended, String sender,
+            String recipients, String fragment, String subject, String rawSubj, DraftInfo dinfo,
+            List<CalendarItemInfo> calItemInfos, String calIntendedFor) {
         // try to figure out a simple way to make the raw subject from the normalized one
         String prefix = null;
-        if (rawSubject == null || rawSubject.equals(subject)) {
-            rawSubject = null;
-        } else if (rawSubject.endsWith(subject)) {
-            prefix = rawSubject.substring(0, rawSubject.length() - subject.length());
-            rawSubject = null;
+        if (rawSubj == null || rawSubj.equals(subject)) {
+            rawSubj = null;
+        } else if (rawSubj.endsWith(subject)) {
+            prefix = rawSubj.substring(0, rawSubj.length() - subject.length());
+            rawSubj = null;
         }
 
-        meta.put(Metadata.FN_SENDER,     sender);
+        meta.put(Metadata.FN_SENDER, sender);
         meta.put(Metadata.FN_RECIPIENTS, recipients);
-        meta.put(Metadata.FN_FRAGMENT,   fragment);
-        meta.put(Metadata.FN_PREFIX,     prefix);
-        meta.put(Metadata.FN_RAW_SUBJ,   rawSubject);
+        meta.put(Metadata.FN_FRAGMENT, fragment);
+        meta.put(Metadata.FN_PREFIX, prefix);
+        meta.put(Metadata.FN_RAW_SUBJ, rawSubj);
 
         if (calItemInfos != null) {
             MetadataList mdList = new MetadataList();
-            for (CalendarItemInfo info : calItemInfos)
+            for (CalendarItemInfo info : calItemInfos) {
                 mdList.add(info.encodeMetadata());
+            }
             meta.put(Metadata.FN_CALITEM_IDS, mdList);
         }
         meta.put(Metadata.FN_CAL_INTENDED_FOR, calIntendedFor);
@@ -1349,19 +1365,15 @@ public class Message extends MailItem {
         return !account.isMailAllowReceiveButNotSendWhenOverQuota();
     }
 
-    private static final String CN_SENDER     = "sender";
-    private static final String CN_RECIPIENTS = "to";
-    private static final String CN_FRAGMENT   = "fragment";
-
     @Override
     public String toString() {
         Objects.ToStringHelper helper = Objects.toStringHelper(this);
         appendCommonMembers(helper);
-        helper.add(CN_SENDER, mSender);
-        if (mRecipients != null) {
-            helper.add(CN_RECIPIENTS, mRecipients);
+        helper.add("sender", sender);
+        if (recipients != null) {
+            helper.add("to", recipients);
         }
-        helper.add(CN_FRAGMENT, mFragment);
+        helper.add("fragment", fragment);
         return helper.toString();
     }
 }

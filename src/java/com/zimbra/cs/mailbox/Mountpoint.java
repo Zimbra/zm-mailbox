@@ -123,7 +123,7 @@ public class Mountpoint extends Folder {
         if (!parent.canAccess(ACL.RIGHT_INSERT)) {
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on the parent folder");
         }
-        if (parent == null || !parent.canContain(Type.MOUNTPOINT)) {
+        if (!parent.canContain(Type.MOUNTPOINT)) {
             throw MailServiceException.CANNOT_CONTAIN();
         }
         name = validateItemName(name);
@@ -133,19 +133,19 @@ public class Mountpoint extends Folder {
         Mailbox mbox = parent.getMailbox();
 
         UnderlyingData data = new UnderlyingData();
-        data.id       = id;
-        data.type     = Type.MOUNTPOINT.toByte();
+        data.id = id;
+        data.type = Type.MOUNTPOINT.toByte();
         data.folderId = parent.getId();
         data.parentId = data.folderId;
-        data.date     = mbox.getOperationTimestamp();
-        data.flags    = flags & Flag.FLAGS_FOLDER;
-        data.name     = name;
-        data.subject  = name;
+        data.date = mbox.getOperationTimestamp();
+        data.flags = flags & Flag.FLAGS_FOLDER;
+        data.name = name;
+        data.setSubject(name);
         data.metadata = encodeMetadata(color, 1, custom, view, ownerId, remoteId);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("Adding Mountpoint %s: id=%d, parentId=%d, parentName=%s.",
             name, data.id, parent.getId(), parent.getName());
-        DbMailItem.create(mbox, data, null);
+        DbMailItem.create(mbox, data);
 
         Mountpoint mpt = new Mountpoint(mbox, data);
         mpt.finishCreation(parent);

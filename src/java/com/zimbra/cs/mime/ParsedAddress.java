@@ -1,20 +1,16 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/*
- * Created on Jan 31, 2005
  */
 package com.zimbra.cs.mime;
 
@@ -26,11 +22,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.base.Joiner;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.util.StringUtil;
 
-public class ParsedAddress implements Comparable<ParsedAddress> {
+/**
+ * @since Jan 31, 2005
+ */
+public final class ParsedAddress implements Comparable<ParsedAddress> {
 
     public String emailPart;
     public String personalPart;
@@ -43,7 +43,7 @@ public class ParsedAddress implements Comparable<ParsedAddress> {
     private boolean parsed = false;
 
     public ParsedAddress(String address) {
-        InternetAddress ia = new InternetAddress(address); 
+        InternetAddress ia = new InternetAddress(address);
         initialize(ia.getAddress(), ia.getPersonal());
     }
 
@@ -83,6 +83,14 @@ public class ParsedAddress implements Comparable<ParsedAddress> {
         parse();
         String sort = (personalPart != null ? personalPart : emailPart);
         return (sort != null ? sort : "");
+    }
+
+    public static String getSortString(List<ParsedAddress> addrs) {
+        List<String> list = new ArrayList<String>(addrs.size());
+        for (ParsedAddress addr : addrs) {
+            list.add(addr.getSortString());
+        }
+        return Joiner.on(", ").join(list);
     }
 
     public Map<String, String> getAttributes() {
@@ -195,7 +203,7 @@ public class ParsedAddress implements Comparable<ParsedAddress> {
         int hstart = 0, hend = index = readHonorific(tokens, index);
         // first name: ABBREVIATION | (INITIAL? (INITIAL | TOKEN | PREFIX))
         int fstart = index, fend = index = readFirstName(tokens, index, false);
-        // middle name & last name: (INITIAL | ABBREVIATION | PREFIX | TOKEN)* PREFIX* (PREFIX | TOKEN) 
+        // middle name & last name: (INITIAL | ABBREVIATION | PREFIX | TOKEN)* PREFIX* (PREFIX | TOKEN)
         int start = index;
         for ( ; index < total; index++) {
             if ((type = tokens.get(index).getType()) != NameTokenType.INITIAL && type != NameTokenType.ABBREVIATION && type != NameTokenType.PREFIX && type != NameTokenType.TOKEN)
@@ -324,8 +332,8 @@ public class ParsedAddress implements Comparable<ParsedAddress> {
         return index >= end ? null : personalPart.substring(tokens.get(index - 1).getEndOffset(), tokens.get(end - 1).getEndOffset()).trim();
     }
 
-
-    @Override public int hashCode() {
+    @Override
+    public int hashCode() {
         if (emailPart != null)
             return emailPart.hashCode();
         else if (personalPart != null)
@@ -334,7 +342,8 @@ public class ParsedAddress implements Comparable<ParsedAddress> {
             return 0;
     }
 
-    @Override public boolean equals(Object obj) {
+    @Override
+    public boolean equals(Object obj) {
         if (this == obj)
             return true;
         else if (obj == null || !(obj instanceof ParsedAddress))
@@ -343,6 +352,7 @@ public class ParsedAddress implements Comparable<ParsedAddress> {
             return compareTo((ParsedAddress) obj) == 0;
     }
 
+    @Override
     public int compareTo(ParsedAddress pa) {
         if (emailPart != null && pa.emailPart != null)
             return emailPart.compareToIgnoreCase(pa.emailPart);
@@ -360,7 +370,8 @@ public class ParsedAddress implements Comparable<ParsedAddress> {
             return 0;
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         if (emailPart == null)
             return personalPart;
         else if (personalPart == null)
@@ -368,7 +379,6 @@ public class ParsedAddress implements Comparable<ParsedAddress> {
         else
             return '"' + personalPart + "\" <" + emailPart + '>';
     }
-
 
     private enum NameTokenType {
         TOKEN, PREFIX, INITIAL, HONORIFIC, ABBREVIATION, NUMERAL, COMMA, OPEN, CLOSE, DELIMITER;
@@ -459,7 +469,8 @@ public class ParsedAddress implements Comparable<ParsedAddress> {
             return mEndOffset;
         }
 
-        @Override public String toString() {
+        @Override
+        public String toString() {
             return mValue;
         }
 
@@ -507,193 +518,6 @@ public class ParsedAddress implements Comparable<ParsedAddress> {
             for (NameToken token : tokens)
                 sb.append(sb.length() == 0 ? "[" : ", ").append(token.getType());
             return sb.append(']').toString();
-        }
-    }
-
-
-    private static boolean runNameTest(String name, String description, String honorific, String first, String middle, String last, String suffix) {
-        return runTest(new ParsedAddress(null, name).parse(), name, description, honorific, first, middle, last, suffix);
-    }
-
-    private static boolean runAddressTest(String addr, String description, String honorific, String first, String middle, String last, String suffix) {
-        return runTest(new ParsedAddress(addr).parse(), addr, description, honorific, first, middle, last, suffix);
-    }
-
-    private static boolean runTest(ParsedAddress pa, String raw, String description, String honorific, String first, String middle, String last, String suffix) {
-        boolean fail = false;
-        if (honorific == null ^ pa.honorific == null || (honorific != null && !honorific.equals(pa.honorific)))
-            fail = true;
-        else if (first == null ^ pa.firstName == null || (first != null && !first.equals(pa.firstName)))
-            fail = true;
-        else if (middle == null ^ pa.middleName == null || (middle != null && !middle.equals(pa.middleName)))
-            fail = true;
-        else if (last == null ^ pa.lastName == null || (last != null && !last.equals(pa.lastName)))
-            fail = true;
-        else if (suffix == null ^ pa.suffix == null || (suffix != null && !suffix.equals(pa.suffix)))
-            fail = true;
-
-        if (fail) {
-            System.out.println("failed test: " + description);
-            System.out.println("  raw:      {" + raw + '}');
-//            System.out.println("  tokens:   " + pa.tokentypes);
-            System.out.println("  personal: {" + bformat(pa.personalPart) + '}');
-            System.out.println("  actual:   |" + bformat(pa.honorific) + '|' + bformat(pa.firstName) + '|' + bformat(pa.middleName) + '|' + bformat(pa.lastName) + '|' + bformat(pa.suffix));
-            System.out.println("  expected: |" + bformat(honorific) + '|' + bformat(first) + '|' + bformat(middle) + '|' + bformat(last) + '|' + bformat(suffix));
-        }
-
-        return !fail;
-    }
-
-    private static String bformat(String s) {
-        if (s == null)
-            return "null";
-
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
-            if (c >= 0x20 && c < 0x7F)
-                sb.append(c);
-            else
-                sb.append(String.format("\\u%04X", (int) c));
-        }
-        return sb.toString();
-    }
-
-    private static void runNameParserSuite(String first, String middle, String last) {
-        runNameTest(first + ' ' + last,              "first last",       null,  first, null, last, null);
-        runNameTest("Mr. " + first + ' ' + last,     "hon. first last",  "Mr.", first, null, last, null);
-        runNameTest(first + ' ' + last + ", MD",     "first last, suf",  null,  first, null, last, "MD");
-        runNameTest(first + ' ' + last + " III",     "first last num",   null,  first, null, last, "III");
-        runNameTest(first + ' ' + last + " (dec'd)", "first last (suf)", null,  first, null, last, "dec'd");
-        runNameTest(first + ' ' + last + " [CPA]",   "first last [suf]", null,  first, null, last, "CPA");
-
-        if (middle != null) {
-            runNameTest(first + ' ' + middle + ' ' + last,              "first middle last",       null,   first, middle, last, null);
-            runNameTest("Gov. " + first + ' ' + middle + ' ' + last,    "hon. first middle last", "Gov.",  first, middle, last, null);
-            runNameTest(first + ' ' + middle + ' ' + last + " M.D.",    "first middle last, abbr", null,   first, middle, last, "M.D.");
-            runNameTest(first + ' ' + middle + ' ' + last + " III",     "first middle last num",   null,   first, middle, last, "III");
-            runNameTest(first + ' ' + middle + ' ' + last + " (dec'd)", "first middle last (suf)", null,   first, middle, last, "dec'd");
-            runNameTest(first + ' ' + middle + ' ' + last + " [CPA]",   "first middle last [suf]", null,   first, middle, last, "CPA");
-        }
-
-        runNameTest(last + ", " + first,              "last, first",       null,    first, null, last, null);
-        runNameTest(last + ", Prof. " + first,        "last, hon. first",  "Prof.", first, null, last, null);
-        runNameTest(last + ", " + first + ", M.D.",   "last, first, suf",  null,    first, null, last, "M.D.");
-        runNameTest(last + ", " + first + " Jr.",     "last, first suf",   null,    first, null, last, "Jr.");
-        runNameTest(last + ", " + first + " (dec'd)", "last, first (suf)", null,    first, null, last, "dec'd");
-        runNameTest(last + ", " + first + " [CPA]",   "last, first [suf]", null,    first, null, last, "CPA");
-
-        if (middle != null) {
-            runNameTest(last + ", " + first + ' ' + middle,                "last, first middle",           null,  first, middle, last, null);
-            runNameTest(last + ", Dr. " + first + ' ' + middle,            "last, hon. first middle",      "Dr.", first, middle, last, null);
-            runNameTest(last + ", " + first + ' ' + middle + ", Ph.D.",    "last, first middle, suf",      null,  first, middle, last, "Ph.D.");
-            runNameTest(last + ", " + first + ' ' + middle + " (dec'd)",   "last, first middle (suf)",     null,  first, middle, last, "dec'd");
-            runNameTest(last + ", " + first + ' ' + middle + " [CPA]",     "last, first middle [suf]",     null,  first, middle, last, "CPA");
-            runNameTest(last + ", " + first + ' ' + middle + " \\(ITC\\)", "last, first middle \\(suf\\)", null,  first, middle, last, "ITC");
-        }
-    }
-
-//    private String tokentypes;
-
-    public static void main(String... args) throws java.io.IOException {
-        runNameParserSuite("Steven", "Paul", "Jobs");
-        runNameParserSuite("Steven", "P.", "ben Jobs");
-        runNameParserSuite("F. Steve", "Paul", "Jobs");
-        runNameParserSuite("F. S.", "Paul", "Jobs");
-        runNameParserSuite("Steven", "X. Paul", "van der Jobs");
-        runNameParserSuite("S.P.", null, "Jobs");
-        runNameParserSuite("S.", "van der Woz", "del Jobs");
-        runNameParserSuite("F. S. P.", "van der Woz", "Jobs");
-
-        if (false) {
-            runAddressTest("     \"Della Gonzales\" <rvhxhjyjxugp@example.com>", "prefix lastname", null, "Della", null, "Gonzales", null);
-            runAddressTest("     \"Stan O'Neal- Chairman, CEO & President\" <antifraudcentre@example.com>", "trailing dash is delimiter", null, "Stan", null, "O'Neal", "Chairman, CEO & President");
-            runAddressTest("=?iso-2022-jp?B?GyRCIVo4N0EqPnBKcyFbGyhC?=<teresa@example.com>", "chinese square brackets", null, "\u53B3\u9078\u60C5\u5831", null, null, null);
-            runAddressTest("=?iso-2022-jp?B?GyRCNkEbKEI=?=<lovecherry_hibiki_15@example.co.jp>", "1-character name", null, "\u97FF", null, null, null);
-            runAddressTest("=?iso-2022-jp?B?GyRCQTBAbhsoQiAbJEI9YxsoQg==?=<maekawa_junjun.pickpick1976@example.ne.jp>", "asian last first", null, "\u7D14", null, "\u524D\u5DDD", null);
-            runAddressTest("=?iso-2022-jp?B?IhskQjJPOWdARTlhGyhCIjxzd2VldF9zaXp1MDMwNUB5YWhvby5jby5qcD4=?=<sweet_sizu0305@example.co.jp>", "email in name", null, "\u6CB3\u5408\u9759\u9999", null, null, null);
-            runAddressTest("=?iso-2022-jp?B?cGVlcmxlc3NfcF8wQHlhaG9vLmNvLmpw?=<peerless_p_0@example.co.jp>", "numeral is delimiter", null, "\u6CB3\u5408\u9759\u9999", null, null, null);
-            runAddressTest("=?iso-8859-1?Q?Janine_Gr=FCndel_-Intergroove-?= <JanineGruendel@example.com>", "leading dash is delimiter", null, "Janine", null, "Gr\u00FCndel", "Intergroove");
-            runAddressTest("=?koi8-r?B?5tXOy8PJySDXzi4gwdXEydTB?= <info@example.ru>", "honorific middle name", null, "\u0424\u0443\u043D\u043A\u0446\u0438\u0438", "\u0432\u043D.", "\u0430\u0443\u0434\u0438\u0442\u0430", null);
-            runAddressTest("=?koi8-r?B?MjcgzcHRIDIwMDg=?= <webmaster@example.org>", "numeral not first name", null, "\u043C\u0430\u044F", null, null, null);
-            runAddressTest("Dr R G Edwards <rich.edwards@example.com>", "honorific w/o dot", "Dr", "R G", null, "Edwards", null);
-            runAddressTest("Emerich R Winkler Jr <erwinklerjr@example.ca>", "suffix honorific w/o dot", null, "Emerich", "R", "Winkler", "Jr");
-            runAddressTest("Farai Aggrey jnr <faraiggrey@example.com>", "nonstandard suffix honorific w/o dot", null, "Farai", null, "Aggrey", "jnr");
-            runAddressTest("Luigi Ottaviani T <luigi.ottaviani@example.it>", "initial (no comma) as suffix", null, "Luigi", null, "Ottaviani", "T");
-            runAddressTest("MRS JENNIFER PETERS <jenniferpeters2000@example.com>", "honorific w/o dot", "MRS", "JENNIFER", null, "PETERS", null);
-            runAddressTest("\" <ymskjetuiuod@example.ru>", "mis-quoted address", null, "ymskjetuiuod", null, null, null);
-            runAddressTest("\":PROFECO\"@dogfood.zimbra.com: <buzon@example.mx>", "oddball quoting", null, "PROFECO@dogfood.zimbra.com", null, null, null);
-            runAddressTest("\"=?BIG5?B?tO6qzi+rT7C3pOiqa7Ddp9o=?=\" <whyslim4@example.com>", "inlined slash as delimiter", null, "\u6E1B\u80A5", null, null, null);
-            runAddressTest("\"=?ISO-8859-1?Q?Francisco_Gon=E7alves?=\" <francis.goncalves@example.com>", "embedded quoted 2047", null, "Francisco", null, "Gon\u00E7alves", null);
-            runAddressTest("\"Anthony (Tony) Foiani\" <tfoiani@yahoo-example.com>", "nickname in parens", null, "Anthony", null, "Foiani", null);
-            runAddressTest("\"B. Winston Sandage, III\" <wsandage@example.com>", "numeral in suffix", null, "B. Winston", null, "Sandage", "III");
-            runAddressTest("\"Benjamin Wu \\(y!mail\\)\" <wub@example.com>", "extraneous backslashes", null, "Benjamin", null, "Wu", "y!mail");
-            runAddressTest("\"Comercial Ideas & Dise=?iso-8859-1?b?8Q==?=o\" <ideasydiseno@example.es>", "ampersand means company", null, "Comercial", null, null, null);
-            runAddressTest("\"Eli Stevens (Y!)\" <elis@example.com>", "trailing !", null, "Eli", null, "Stevens", "Y!");
-            runAddressTest("\"Ewald de Bever (Mr),\"<verbever1@example.com>", "trailing comma", null, "Ewald", null, "de Bever", "Mr");
-            runAddressTest("\"Flickerbox, Inc.\" <paul@example.com>", "Inc. means company", null, "Flickerbox", null, null, null);
-            runAddressTest("\"Goligoski, Cory (MENLO PARK, CA)\" <cory_r_goligoski@example.com>", "retain delimiters in suffix", null, "Cory", null, "Goligoski", "MENLO PARK, CA");
-            runAddressTest("\"Hans Th. Prade\" <h.prade@example.com>", "honorific middle name", null, "Hans", "Th.", "Prade", null);
-            runAddressTest("\"J.P. Maxwell / tipit.net\" <jp@example.net>", ".net means company", null, "J.P.", null, "Maxwell", null);
-            runAddressTest("\"John Katsaros -- Internet Research Group\" <jkatsar1169@example.net>", "multi-dashes as delimiter", null, "John", null, "Katsaros", "Internet Research Group");
-            runAddressTest("\"Louis Ferreira - BCX - Microsoft Competency\" <Louis.Ferreira@example.co.za>", "retain delimiters in suffix", null, "Louis", null, "Ferreira", "BCX - Microsoft Competency");
-            runAddressTest("\"Macworld Conference & Expo\" <macworldexpo@example.com>", "ampersand means company", null, "Macworld", null, null, null);
-            runAddressTest("\"Montgomery Research: Midmarket Strategies\" <yms@example.com>", "colon as delimiter", null, "Montgomery", null, "Research", "Midmarket Strategies");
-            runAddressTest("\"NG Jiang Hao (jianghao@mjm.com.sg)\" <Jianghao@example.com.sg>", "skip duplicate (addr)", null, "NG", "Jiang", "Hao", null);
-            runAddressTest("\"Nuevora, Inc.\" <accountspayable@example.com>", "Inc. means company", null, "Nuevora", null, null, null);
-            runAddressTest("\"Patric. W. Chan \" <wikster1@example.net>", "too-long honorific", null, "Patric.", "W.", "Chan", null);
-            runAddressTest("\"Philip W. Dalrymple III\" <pwd@example.com>", "roman numeral", null, "Philip", "W.", "Dalrymple", "III");
-            runAddressTest("\"Prof. Dr. Karl-Heinz Kunzelmann\" <karl-heinz@example.de>", "multiple honorifics", "Prof. Dr.", "Karl-Heinz", null, "Kunzelmann", null);
-            runAddressTest("\"Regina Ciardiello, Editor, VSR\" <edgell@example.com>", "retain delimiters in suffix", null, "Regina", null, "Ciardiello", "Editor, VSR");
-            runAddressTest("\"Rene' N. Godwin\" <godwin4@example.net>", "trailing apostrophe", null, "Rene'", "N.", "Godwin", null);
-            runAddressTest("\"Reuven Cohen [ruvnet@gmail.com]\" <ruv@example.com>", "nonduplicate addr", null, "Reuven", null, "Cohen", "ruvnet@gmail.com");
-            runAddressTest("\"Robert Q.H. Bui\" <robertb@example.com.au>", "middle name abbr", null, "Robert", "Q.H.", "Bui", null);
-            runAddressTest("\"Sander Manneke | Internet Today\" <s.manneke@example.nl>", "bar as delimiter", null, "Sander", null, "Manneke", "Internet Today");
-            runAddressTest("\"Scheffler, Avis @ -P-f-i-z-e-r Supplies\" <turryeaProducts.Registration5876@example.com>", "at-sign delimiter", null, "Avis", null, "Scheffler", "P-f-i-z-e-r Supplies");
-            runAddressTest("\"SearchWebJobs .com\" <jobs@example.com>", ".com is company", null, "SearchWebJobs", null, null, null);
-            runAddressTest("\"William J. Robb III, M.D.\" <wrobb@example.com>", "roman numeral", null, "William", "J.", "Robb", "III, M.D.");
-        }
-
-        runAddressTest("     \"Della Gonzales\" <rvhxhjyjxugp@example.com>", "prefix lastname", null, "Della", null, "Gonzales", null);
-        runAddressTest("Emerich R Winkler Jr <erwinklerjr@example.ca>", "suffix honorific w/o dot", null, "Emerich", "R", "Winkler", "Jr");
-        runAddressTest("\"B. Winston Sandage, III\" <wsandage@example.com>", "numeral in suffix", null, "B. Winston", null, "Sandage", "III");
-        runAddressTest("\"Eli Stevens (Y!)\" <elis@example.com>", "trailing !", null, "Eli", null, "Stevens", "Y!");
-        runAddressTest("\"Ewald de Bever (Mr),\"<verbever1@example.com>", "trailing comma", null, "Ewald", null, "de Bever", "Mr");
-        runAddressTest("\"Goligoski, Cory (MENLO PARK, CA)\" <cory_r_goligoski@example.com>", "retain delimiters in suffix", null, "Cory", null, "Goligoski", "MENLO PARK, CA");
-        runAddressTest("\"interWays e.K.\" <info@example.de>", "terminal abbr", null, "interWays", null, null, null);
-        runAddressTest("\"John Katsaros -- Internet Research Group\" <jkatsar1169@example.net>", "multi-dashes as delimiter", null, "John", null, "Katsaros", "Internet Research Group");
-        runAddressTest("\"Louis Ferreira - BCX - Microsoft Competency\" <Louis.Ferreira@example.co.za>", "retain delimiters in suffix", null, "Louis", null, "Ferreira", "BCX - Microsoft Competency");
-        runAddressTest("\"Philip W. Dalrymple III\" <pwd@example.com>", "roman numeral", null, "Philip", "W.", "Dalrymple", "III");
-        runAddressTest("\"Prof. Dr. Karl-Heinz Kunzelmann\" <karl-heinz@example.de>", "multiple honorifics", "Prof. Dr.", "Karl-Heinz", null, "Kunzelmann", null);
-        runAddressTest("\"Rene' N. Godwin\" <godwin4@example.net>", "drailing apostrophe", null, "Rene'", "N.", "Godwin", null);
-        runAddressTest("\"Robert Q.H. Bui\" <robertb@example.com.au>", "middle name abbr", null, "Robert", "Q.H.", "Bui", null);
-        runAddressTest("\"William J. Robb III, M.D.\" <wrobb@example.com>", "roman numeral", null, "William", "J.", "Robb", "III, M.D.");
-
-        // "Howard J. Bleier \"J.R.\"" <hjbleier@example.com>
-        // "Melissa Jill :)" <melissajill@example.com>
-
-        if (args.length == 1) {
-            java.io.File oldFile = new java.io.File(args[0] + ".out");
-            if (oldFile.exists())
-                oldFile.renameTo(new java.io.File(args[0] + "-" + (System.currentTimeMillis() / 1000) + ".out"));
-
-            java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.FileReader(args[0]));
-            java.io.OutputStreamWriter writer = new java.io.OutputStreamWriter(new java.io.FileOutputStream(args[0] + ".out"));
-            String address;
-            while ((address = reader.readLine()) != null) {
-                ParsedAddress pa = new ParsedAddress(address).parse();
-                Map<String, String> attrs = pa.getAttributes();
-//                Map<String, String> attrsOld = new ParsedAddressOld(address).getAttributes();
-//                if (!attrs.toString().equals(attrsOld.toString())) {
-//                    System.out.println(address + ": ");
-//                    System.out.println("   new: " + attrs);
-//                    System.out.println("   old: " + attrsOld);
-//                }
-                writer.append(address).append('\t');
-//                writer.append(pa.tokentypes).append('\t');
-                writer.append(bformat(attrs.toString())).append('\n');
-            }
-            writer.close();
         }
     }
 }

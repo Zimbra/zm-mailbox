@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -36,7 +36,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.convert.ConversionUnsupportedException;
-import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
@@ -54,9 +53,9 @@ public abstract class Formatter {
     protected static final int TIME_UNSPECIFIED = -1;
 
     public abstract FormatType getType();
-    
+
     private static String PROGRESS = "-progress";
-    
+
     public String[] getDefaultMimeTypes() {
         return new String[0];
     }
@@ -68,7 +67,7 @@ public abstract class Formatter {
         return true;
     }
 
-   
+
 
     // eventually get this from query param ?start=long|YYYYMMMDDHHMMSS
     public long getDefaultStartTime() {
@@ -82,13 +81,13 @@ public abstract class Formatter {
     public Set<MailItem.Type> getDefaultSearchTypes() {
         return EnumSet.of(MailItem.Type.MESSAGE);
     }
-    
+
     private static Map<Class<? extends Formatter>,FormatListener> listeners = new ConcurrentHashMap<Class<? extends Formatter>, FormatListener>();
-    
+
     public static void registerListener(Class<? extends Formatter> clazz, FormatListener listener) {
         listeners.put(clazz, listener);
     }
-    
+
     private Set<FormatListener> getClassListeners() {
         Set<FormatListener> set = new HashSet<FormatListener>();
         for (Class<? extends Formatter> clazz : listeners.keySet()) {
@@ -104,25 +103,25 @@ public abstract class Formatter {
             listener.formatCallbackStarted(context);
         }
     }
-    
+
     private void formatEnded(UserServletContext context) throws ServiceException {
         for (FormatListener listener : getClassListeners()) {
             listener.formatCallbackEnded(context);
         }
     }
-    
+
     private void saveStarted(UserServletContext context) throws ServiceException {
         for (FormatListener listener : getClassListeners()) {
             listener.saveCallbackStarted(context);
         }
     }
-    
+
     private void saveEnded(UserServletContext context) throws ServiceException {
         for (FormatListener listener : getClassListeners()) {
             listener.saveCallbackEnded(context);
         }
     }
-    
+
     public final void format(UserServletContext context)
         throws UserServletException, IOException, ServletException, ServiceException {
 
@@ -192,7 +191,7 @@ public abstract class Formatter {
                 }
             }
             ZimbraQueryResults results = context.targetMailbox.index.search(context.opContext, query, types,
-                    SortBy.DATE_DESCENDING, context.getOffset() + context.getLimit());
+                    SortBy.DATE_DESC, context.getOffset() + context.getLimit());
             return new QueryResultIterator(results);
         } else if (context.target instanceof Folder) {
             Collection<? extends MailItem> items = getMailItemsFromFolder(context, (Folder) context.target, startTime, endTime, chunkSize);
@@ -207,16 +206,16 @@ public abstract class Formatter {
     protected Collection<? extends MailItem> getMailItemsFromFolder(UserServletContext context, Folder folder,
             long startTime, long endTime, long chunkSize) throws ServiceException {
         switch (folder.getDefaultView()) {
-        case APPOINTMENT:
-        case TASK:
-            return context.targetMailbox.getCalendarItemsForRange(context.opContext, startTime, endTime, folder.getId(), null);
-        case CONTACT:
-            return context.targetMailbox.getContactList(context.opContext, folder.getId(), SortBy.NAME_ASCENDING);
-        case DOCUMENT:
-        case WIKI:
-            return context.targetMailbox.getDocumentList(context.opContext, folder.getId(), SortBy.NAME_ASCENDING);
-        default:
-            return context.targetMailbox.getItemList(context.opContext, MailItem.Type.MESSAGE, folder.getId());
+            case APPOINTMENT:
+            case TASK:
+                return context.targetMailbox.getCalendarItemsForRange(context.opContext, startTime, endTime, folder.getId(), null);
+            case CONTACT:
+                return context.targetMailbox.getContactList(context.opContext, folder.getId(), SortBy.NAME_ASC);
+            case DOCUMENT:
+            case WIKI:
+                return context.targetMailbox.getDocumentList(context.opContext, folder.getId(), SortBy.NAME_ASC);
+            default:
+                return context.targetMailbox.getItemList(context.opContext, MailItem.Type.MESSAGE, folder.getId());
         }
     }
 

@@ -38,6 +38,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import com.google.common.base.Strings;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
@@ -183,9 +184,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             if (org != null)
                 sender = org.getIndexString();
         }
-        if (sender == null)
-            sender = "";
-        return sender;
+        return Strings.nullToEmpty(sender);
     }
 
     public long getStartTime() {
@@ -403,15 +402,15 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
     }
 
     static CalendarItem create(int id, Folder folder, int flags, long tags, String uid,
-                               ParsedMessage pm, Invite firstInvite, long nextAlarm, CustomMetadata custom)
-    throws ServiceException {
+            ParsedMessage pm, Invite firstInvite, long nextAlarm, CustomMetadata custom) throws ServiceException {
         firstInvite.sanitize(false);
 
-        if (!folder.canAccess(ACL.RIGHT_INSERT))
+        if (!folder.canAccess(ACL.RIGHT_INSERT)) {
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
-        if (!firstInvite.isPublic() && !folder.canAccess(ACL.RIGHT_PRIVATE))
+        }
+        if (!firstInvite.isPublic() && !folder.canAccess(ACL.RIGHT_PRIVATE)) {
             throw ServiceException.PERM_DENIED("you do not have permission to create private calendar item in this folder");
-
+        }
         Mailbox mbox = folder.getMailbox();
 
         if (pm != null && pm.hasAttachments()) {
@@ -421,31 +420,30 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             firstInvite.setHasAttachment(false);
             flags &= ~Flag.BITMASK_ATTACHED;
         }
-        if (firstInvite.isDraft())
+        if (firstInvite.isDraft()) {
             flags |= Flag.BITMASK_DRAFT;
-        else
+        } else {
             flags &= ~Flag.BITMASK_DRAFT;
-        if (firstInvite.isHighPriority())
+        }
+        if (firstInvite.isHighPriority()) {
             flags |= Flag.BITMASK_HIGH_PRIORITY;
-        else
+        } else {
             flags &= ~Flag.BITMASK_HIGH_PRIORITY;
-        if (firstInvite.isLowPriority())
+        }
+        if (firstInvite.isLowPriority()) {
             flags |= Flag.BITMASK_LOW_PRIORITY;
-        else
+        } else {
             flags &= ~Flag.BITMASK_LOW_PRIORITY;
-
+        }
         MailItem.Type type = firstInvite.isEvent() ? Type.APPOINTMENT : Type.TASK;
 
         String sender = null;
         ZOrganizer org = firstInvite.getOrganizer();
-        if (org != null)
+        if (org != null) {
             sender = org.getIndexString();
-        if (sender == null)
-            sender = "";
-
-        String subject = firstInvite.getName();
-        if (subject == null)
-            subject= "";
+        }
+        sender = Strings.nullToEmpty(sender);
+        String subject = Strings.nullToEmpty(firstInvite.getName());
 
         List<Invite> invites = new ArrayList<Invite>();
         invites.add(firstInvite);
@@ -468,33 +466,35 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         firstInvite.updateMyPartStat(account, firstInvite.getPartStat());
 
         UnderlyingData data = new UnderlyingData();
-        data.id       = id;
-        data.type     = type.toByte();
+        data.id = id;
+        data.type = type.toByte();
         data.folderId = folder.getId();
         if (!folder.inSpam() || mbox.getAccount().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false)) {
             data.indexId = IndexStatus.DEFERRED.id();
         }
-        data.imapId   = id;
-        data.date     = mbox.getOperationTimestamp();
-        data.flags    = flags & (Flag.FLAGS_CALITEM | Flag.FLAGS_GENERIC);
-        data.tags     = tags;
-        data.subject  = DbMailItem.truncateSubjectToMaxAllowedLength(subject);
+        data.imapId = id;
+        data.date = mbox.getOperationTimestamp();
+        data.flags = flags & (Flag.FLAGS_CALITEM | Flag.FLAGS_GENERIC);
+        data.tags = tags;
+        data.setSubject(subject);
+        data.setSender(sender);
         data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, custom, uid, startTime, endTime, recur,
                                        invites, firstInvite.getTimeZoneMap(), new ReplyList(), null);
         data.contentChanged(mbox);
-        if (!firstInvite.hasRecurId())
+        if (!firstInvite.hasRecurId()) {
             ZimbraLog.calendar.info(
                     "Adding CalendarItem: id=%d, Message-ID=\"%s\", folderId=%d, subject=\"%s\", UID=%s",
                     data.id, pm != null ? pm.getMessageID() : "(none)", folder.getId(),
                     firstInvite.isPublic() ? firstInvite.getName() : "(private)",
                     firstInvite.getUid());
-        else
+        } else {
             ZimbraLog.calendar.info(
                     "Adding CalendarItem: id=%d, Message-ID=\"%s\", folderId=%d, subject=\"%s\", UID=%s, recurId=%s",
                     data.id, pm != null ? pm.getMessageID() : "(none)", folder.getId(),
                     firstInvite.isPublic() ? firstInvite.getName() : "(private)",
                     firstInvite.getUid(), firstInvite.getRecurId().getDtZ());
-        DbMailItem.create(mbox, data, sender);
+        }
+        DbMailItem.create(mbox, data);
 
         CalendarItem item = type == Type.APPOINTMENT ? new Appointment(mbox, data) : new Task(mbox, data);
 
@@ -511,9 +511,9 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         item.processPartStat(firstInvite, pm != null ? pm.getMimeMessage() : null, true, defaultPartStat);
         item.finishCreation(null);
 
-        if (pm != null)
+        if (pm != null) {
             item.createBlob(pm, firstInvite);
-
+        }
         item.mEndTime = item.recomputeRecurrenceEndTime(item.mEndTime);
 
         if (firstInvite.hasAlarm()) {
@@ -522,17 +522,18 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             AlarmData alarmData = item.getAlarmData();
             if (alarmData != null) {
                 long newNextAlarm = alarmData.getNextAt();
-                if (newNextAlarm > 0 && newNextAlarm < item.mStartTime)
+                if (newNextAlarm > 0 && newNextAlarm < item.mStartTime) {
                     item.mStartTime = newNextAlarm;
+                }
             }
         }
 
         DbMailItem.addToCalendarItemTable(item);
 
         Callback cb = getCallback();
-        if (cb != null)
+        if (cb != null) {
             cb.created(item);
-
+        }
         return item;
     }
 
@@ -2191,13 +2192,12 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
     void reanalyze(Object data, long newSize) throws ServiceException {
         String subject = null;
         Invite firstInvite = getDefaultInviteOrNull();
-        if (firstInvite != null)
+        if (firstInvite != null) {
             subject = firstInvite.getName();
-        if (subject == null)
-            subject= "";
-
-        mData.subject = DbMailItem.truncateSubjectToMaxAllowedLength(subject);
-        saveData(getSender());
+        }
+        mData.setSubject(Strings.nullToEmpty(subject));
+        mData.setSender(getSender());
+        saveData();
     }
 
     /**

@@ -15,6 +15,8 @@
 
 package com.zimbra.cs.index;
 
+import com.google.common.base.Objects;
+import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
@@ -25,13 +27,13 @@ import com.zimbra.cs.mailbox.Mailbox;
  */
 public class CalendarItemHit extends ZimbraHit {
 
-    protected int mId;
-    protected CalendarItem mCalItem;
+    protected int id;
+    protected CalendarItem item;
 
     CalendarItemHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id, CalendarItem cal) {
         super(results, mbx);
-        mId = id;
-        mCalItem = cal;
+        this.id = id;
+        item = cal;
     }
 
     @Override
@@ -40,10 +42,10 @@ public class CalendarItemHit extends ZimbraHit {
     }
 
     public CalendarItem getCalendarItem() throws ServiceException {
-        if (mCalItem == null) {
-            mCalItem = this.getMailbox().getCalendarItemById(null, mId);
+        if (item == null) {
+            item = getMailbox().getCalendarItemById(null, id);
         }
-        return mCalItem;
+        return item;
     }
 
     @Override
@@ -64,17 +66,17 @@ public class CalendarItemHit extends ZimbraHit {
 
     @Override
     public int getItemId() {
-        return mId;
+        return id;
     }
 
     @Override
-    void setItem(MailItem item) {
-        mCalItem = (CalendarItem) item;
+    void setItem(MailItem value) {
+        item = (CalendarItem) value;
     }
 
     @Override
     boolean itemIsLoaded() {
-        return (mId == 0) || (mCalItem != null);
+        return (id == 0) || (item != null);
     }
 
     @Override
@@ -88,17 +90,16 @@ public class CalendarItemHit extends ZimbraHit {
     }
 
     @Override
+    public String getRecipients() throws ServiceException {
+        return Strings.nullToEmpty(getCalendarItem().getSortRecipients());
+    }
+
+    @Override
     public String toString() {
-        String name= "";
-        String subject= "";
         try {
-            name = getName();
-        } catch(Exception e) {
+            return Objects.toStringHelper(this).add("name", getName()).add("subject", getSubject()).toString();
+        } catch (Exception e) {
+            return e.toString();
         }
-        try {
-            subject=getSubject();
-        } catch(Exception e) {
-        }
-        return "CalendarItem: " + super.toString() + " " + name + " " + subject;
     }
 }

@@ -164,13 +164,14 @@ public class Tag extends MailItem {
         return item.isTaggable();
     }
 
-    static Tag create(Mailbox mbox, int id, String name, Color color)
-    throws ServiceException {
-        if (!validateId(id))
+    static Tag create(Mailbox mbox, int id, String name, Color color) throws ServiceException {
+        if (!validateId(id)) {
             throw MailServiceException.INVALID_ID(id);
+        }
         Folder tagFolder = mbox.getFolderById(Mailbox.ID_FOLDER_TAGS);
-        if (!tagFolder.canAccess(ACL.RIGHT_INSERT))
+        if (!tagFolder.canAccess(ACL.RIGHT_INSERT)) {
             throw ServiceException.PERM_DENIED("you do not have the necessary permissions");
+        }
         name = validateItemName(name);
         try {
             // if we can successfully get a tag with that name, we've got a naming conflict
@@ -179,16 +180,16 @@ public class Tag extends MailItem {
         } catch (MailServiceException.NoSuchItemException nsie) {}
 
         UnderlyingData data = new UnderlyingData();
-        data.id          = id;
-        data.type        = Type.TAG.toByte();
-        data.folderId    = tagFolder.getId();
-        data.date        = mbox.getOperationTimestamp();
-        data.name        = name;
-        data.subject     = name;
-        data.metadata    = encodeMetadata(color, 1, 0);
+        data.id = id;
+        data.type = Type.TAG.toByte();
+        data.folderId = tagFolder.getId();
+        data.date = mbox.getOperationTimestamp();
+        data.name = name;
+        data.setSubject(name);
+        data.metadata = encodeMetadata(color, 1, 0);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("Adding Tag %s: id=%d.", name, data.id);
-        DbMailItem.create(mbox, data, null);
+        DbMailItem.create(mbox, data);
 
         Tag tag = new Tag(mbox, data);
         tag.finishCreation(null);

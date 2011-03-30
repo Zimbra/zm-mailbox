@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -14,7 +14,6 @@
  */
 package com.zimbra.cs.dav.resource;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -126,7 +125,7 @@ public class SearchWrapper extends PhantomResource {
             SearchParams params = new SearchParams();
             params.setQueryStr(mQuery.toString());
             params.setTypes(SEARCH_TYPES);
-            params.setSortBy(SortBy.NAME_ASCENDING);
+            params.setSortBy(SortBy.NAME_ASC);
             params.setMode(SearchResultMode.NORMAL);
             params.setPrefetch(true);
             params.setChunkSize(SEARCH_LIMIT);

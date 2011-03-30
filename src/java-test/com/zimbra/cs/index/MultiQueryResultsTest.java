@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -27,7 +27,7 @@ public class MultiQueryResultsTest {
 
     @Test
     public void multi() throws Exception {
-        SortBy sort = SortBy.DATE_DESCENDING;
+        SortBy sort = SortBy.DATE_DESC;
         MultiQueryResults multi = new MultiQueryResults(3, sort);
 
         MockQueryResults result = new MockQueryResults(sort);
@@ -42,7 +42,7 @@ public class MultiQueryResultsTest {
         result.add(hit);
         multi.add(result);
 
-        result = new MockQueryResults(SortBy.DATE_DESCENDING);
+        result = new MockQueryResults(SortBy.DATE_DESC);
         hit = new MockHit(1, "2-1");
         hit.setDate(9);
         result.add(hit);

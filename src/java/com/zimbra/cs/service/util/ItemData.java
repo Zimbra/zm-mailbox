@@ -77,7 +77,7 @@ public class ItemData {
             ud.flags = json.getInt(Keys.flags.toString()) |
                 Flag.BITMASK_UNCACHED;
             ud.tags = json.getLong(Keys.tags.toString());
-            ud.subject = json.optString(Keys.subject.toString());
+            ud.setSubject(json.optString(Keys.subject.toString()));
             ud.name = json.optString(Keys.name.toString());
             ud.metadata = json.optString(Keys.metadata.toString());
             ud.modMetadata = json.getInt(Keys.mod_metadata.toString());
@@ -115,7 +115,7 @@ public class ItemData {
                 put(Keys.unread.toString(), ud.unreadCount).
                 put(Keys.flags.toString(), ud.flags).
                 put(Keys.tags.toString(), ud.tags).
-                putOpt(Keys.subject.toString(), ud.subject).
+                putOpt(Keys.subject.toString(), ud.getSubject()).
                 putOpt(Keys.name.toString(), ud.name).
                 putOpt(Keys.metadata.toString(), ud.metadata).
                 put(Keys.mod_metadata.toString(), ud.modMetadata).

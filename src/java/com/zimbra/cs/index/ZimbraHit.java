@@ -16,9 +16,10 @@
 package com.zimbra.cs.index;
 
 import java.util.Comparator;
-import java.util.Date;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
@@ -32,54 +33,43 @@ import com.zimbra.cs.service.util.ItemId;
  */
 public abstract class ZimbraHit {
 
-    protected Mailbox mMailbox;
-    protected ZimbraQueryResultsImpl mResults;
-    protected long mCachedDate = -1;
-    protected long mCachedSize = -1;
-    protected String mCachedName = null;
-    protected String mCachedSubj = null;
-    protected ImapMessage mCachedImapMessage = null;
-    protected int mCachedModseq = -1;
-    protected int mCachedParentId = 0;
+    protected final Mailbox mailbox;
+    protected final ZimbraQueryResultsImpl results;
+    protected long cachedDate = -1;
+    protected long cachedSize = -1;
+    protected String cachedName;
+    protected String cachedSubj;
+    protected ImapMessage cachedImapMessage;
+    protected int cachedModseq = -1;
+    protected int cachedParentId = 0;
 
     public ZimbraHit(ZimbraQueryResultsImpl results, Mailbox mbx) {
-        mMailbox = mbx;
-        mResults = results;
+        mailbox = mbx;
+        this.results = results;
     }
 
     public abstract int getItemId() throws ServiceException;
 
     /**
-     * This function is only guaranteed to return a useful value for
-     * sort-by-date, or for local hits
-     *
-     * @return
-     * @throws ServiceException
+     * Only guaranteed to return a useful value for sort-by-date, or for local hits.
      */
     abstract long getDate() throws ServiceException;
 
 
     /**
-     * This function is only guaranteed to return a useful value for local hits
-     *
-     * @return
-     * @throws ServiceException
+     * Only guaranteed to return a useful value for local hits.
      */
     abstract long getSize() throws ServiceException;
 
-
     /**
-     * This function is only guaranteed to return a useful value for local hits
+     * Only guaranteed to return a useful value for local hits.
      *
      * @return the conversation ID, or 0 if there is not one
-     *
-     * @throws ServiceException
      */
     abstract int getConversationId() throws ServiceException;
 
     /**
-     * return the MailItem corresponding to this hit, or NULL if one is not available
-     * (e.g. for a ProxiedHit)
+     * Returns the {@link MailItem} corresponding to this hit, or NULL if one is not available (e.g. for a ProxiedHit).
      */
     public abstract MailItem getMailItem() throws ServiceException;
 
@@ -89,248 +79,208 @@ public abstract class ZimbraHit {
     abstract void setItem(MailItem item) throws ServiceException;
 
     /**
-     * @return TRUE if our associated MailItem is already loaded (or we don't have one,
-     * ie ProxiedHit )
+     * Returns TRUE if our associated {@link MailItem} is already loaded (or we don't have one, ie ProxiedHit).
      */
     abstract boolean itemIsLoaded() throws ServiceException;
 
     /**
-     * Returns the logical "subject" -- by which we mean the subject for sorting purposes.
-     *
-     * Note that this function is only guaranteed to work if the search is sort-by-subject
-     *
-     * @return
-     * @throws ServiceException
+     * Returns the logical "subject" -- by which we mean the subject for sorting purposes. Only guaranteed to work if
+     * the search is sort-by-subject.
      */
     abstract String getSubject() throws ServiceException;
 
     /**
-     * Returns the "name" for sorting purposes.
-     *
-     * Note that this function is only guaranteed to work if the search is sort-by-name
-     *
-     * @return
-     * @throws ServiceException
+     * Returns the "name" for sorting purposes. Only guaranteed to work if the search is sort-by-name.
      */
     abstract String getName() throws ServiceException;
 
     /**
-     * Used for cross-mailbox-search, returns the AccountId of the hit
-     *
-     * @return
-     * @throws ServiceException
+     * Returns the recipients for sorting, or an empty string if the item has no value for it.
+     */
+    abstract String getRecipients() throws ServiceException;
+
+    /**
+     * Used for cross-mailbox-search, returns the AccountId of the hit.
      */
     public String getAcctIdStr() {
-        if (mMailbox == null) return "NULL_ACCOUNTID";
-        return mMailbox.getAccountId();
+        return mailbox != null ? mailbox.getAccountId() : "NULL_ACCOUNTID";
     }
 
     @Override
     public String toString() {
-        StringBuilder toRet = new StringBuilder("MB");
-        toRet.append(getMailbox().getId());
-        toRet.append(" ");
         try {
-            toRet.append(getItemId());
-            toRet.append("-\"");
-            toRet.append(getName());
-            toRet.append("\"-\"");
-            toRet.append(getSubject());
-            toRet.append("\"-\"");
-            toRet.append((new Date(getDate())).toString());
-            toRet.append("\"");
-            toRet.append("\"-(");
-            toRet.append(getDate());
-            toRet.append(")");
+            return Objects.toStringHelper(this)
+                .add("mbox", mailbox.getId())
+                .add("item", getItemId())
+                .add("name", getName())
+                .add("subject", getSubject())
+                .add("date", getDate())
+                .toString();
         } catch (ServiceException e) {
-            e.printStackTrace();
+            return e.toString();
         }
-        return toRet.toString();
     }
 
     public Object getSortField(SortBy sortOrder) throws ServiceException {
-        switch (sortOrder.getType()) {
+        switch (sortOrder) {
             case NONE:
                 return "";
-            case DATE_ASCENDING:
-            case DATE_DESCENDING: /* 5...4...3...*/
+            case DATE_ASC:
+            case DATE_DESC: // 5...4...3...
                 return getDate();
-            case SUBJ_ASCENDING:
-            case SUBJ_DESCENDING:
+            case SUBJ_ASC:
+            case SUBJ_DESC:
                 return getSubject().toUpperCase();
-            case NAME_ASCENDING:
-            case NAME_DESCENDING:
-            case NAME_LOCALIZED_ASCENDING:
-            case NAME_LOCALIZED_DESCENDING:
+            case NAME_ASC:
+            case NAME_DESC:
+            case NAME_LOCALIZED_ASC:
+            case NAME_LOCALIZED_DESC:
                 return getName().toUpperCase();
-            case SIZE_ASCENDING:
-            case SIZE_DESCENDING: /* 5K...4K...3K...*/
+            case RCPT_ASC:
+            case RCPT_DESC:
+                return getRecipients();
+            case SIZE_ASC:
+            case SIZE_DESC: // 5K...4K...3K...
                 return getSize();
-            case SCORE_DESCENDING:
+            case SCORE_DESC:
                 return 1.0F;
-            case TASK_DUE_ASCENDING:
-            case TASK_DUE_DESCENDING:
-            case TASK_STATUS_ASCENDING:
-            case TASK_STATUS_DESCENDING:
-            case TASK_PERCENT_COMPLETE_ASCENDING:
-            case TASK_PERCENT_COMPLETE_DESCENDING:
-                throw new IllegalArgumentException("Wrong hit type for hit " +
-                        this + " with sort order: " + sortOrder);
+            case TASK_DUE_ASC:
+            case TASK_DUE_DESC:
+            case TASK_STATUS_ASC:
+            case TASK_STATUS_DESC:
+            case TASK_PERCENT_COMPLETE_ASC:
+            case TASK_PERCENT_COMPLETE_DESC:
+                throw new IllegalArgumentException("Wrong hit type for hit " + this + " with sort order: " + sortOrder);
             default:
-                throw new IllegalArgumentException("Unknown sort order: "
-                        + sortOrder);
+                throw new IllegalArgumentException("Unknown sort order: " + sortOrder);
         }
     }
 
     public ItemId getParsedItemID() throws ServiceException {
-        return new ItemId(mMailbox, getItemId());
+        return new ItemId(mailbox, getItemId());
     }
 
     final Mailbox getMailbox() {
-        return mMailbox;
+        return mailbox;
     }
 
     final ZimbraQueryResultsImpl getResults() {
-        return mResults;
+        return results;
     }
 
     /**
      * Compare this hit to other using the sort field only
      *
-     * @param sortOrder
-     * @param other
-     * @return <0 if "this" is BEFORE other, 0 if EQUAL, >0 if this AFTER other
-     * @throws ServiceException
+     * @return {@code <0} if "this" is BEFORE other, {@code 0} if EQUAL, {@code >0} if this AFTER other
      */
-    int compareBySortField(SortBy sortOrder, ZimbraHit other) throws ServiceException {
-        long retVal = 0;
-
-        switch (sortOrder.getType()) {
+    int compareBySortField(SortBy sort, ZimbraHit other) throws ServiceException {
+        switch (sort) {
             case NONE:
-                throw new IllegalArgumentException("Illegal to use sort comparison on unsorted results");
-            case DATE_ASCENDING:
-                retVal = other.getDate() - getDate();
-                break;
-            case DATE_DESCENDING: // 5...4...3...
-                retVal = getDate() - other.getDate();
-                break;
-            case SUBJ_ASCENDING:
+                throw new IllegalArgumentException(SortBy.NONE.name());
+            case DATE_ASC:
+                return Long.signum(getDate() - other.getDate());
+            case DATE_DESC: // 5...4...3...
+                return Long.signum(other.getDate() - getDate());
+            case SUBJ_ASC:
                  // We to compare(toUpper()) instead of compareIgnoreCase or using a collator because that's the only
                  // method that seems to give us the same results as the sorts from SQL server -- esp the [] characters
-                retVal = -1 * getSubject().toUpperCase().compareTo(other.getSubject().toUpperCase());
-                break;
-            case SUBJ_DESCENDING:
+                return getSubject().toUpperCase().compareTo(other.getSubject().toUpperCase());
+            case SUBJ_DESC:
                 // We to compare(toUpper()) instead of compareIgnoreCase or using a collator because that's the only
                 // method that seems to give us the same results as the sorts from SQL server -- esp the [] characters
-                retVal = getSubject().toUpperCase().compareTo(other.getSubject().toUpperCase());
-                break;
-            case NAME_ASCENDING:
-            case NAME_LOCALIZED_ASCENDING:
+                return other.getSubject().toUpperCase().compareTo(getSubject().toUpperCase());
+            case NAME_ASC:
+            case NAME_LOCALIZED_ASC:
                 // We to compare(toUpper()) instead of compareIgnoreCase or using a collator because that's the only
                 // method that seems to give us the same results as the sorts from SQL server -- esp the [] characters
-                retVal = -1 * getName().toUpperCase().compareTo(other.getName().toUpperCase());
-                break;
-            case NAME_DESCENDING:
-            case NAME_LOCALIZED_DESCENDING:
+                return getName().toUpperCase().compareTo(other.getName().toUpperCase());
+            case NAME_DESC:
+            case NAME_LOCALIZED_DESC:
                  // We to compare(toUpper()) instead of compareIgnoreCase or using a collator because that's the only
                  // method that seems to give us the same results as the sorts from SQL server -- esp the [] characters
-                retVal = getName().toUpperCase().compareTo(other.getName().toUpperCase());
-                break;
-            case SIZE_ASCENDING:
-                retVal = other.getSize() - getSize();
-                break;
-            case SIZE_DESCENDING:
-                retVal = other.getSize() - getSize();
-                break;
-            case SCORE_DESCENDING:
-                retVal = 0;
-                break;
+                return other.getName().toUpperCase().compareTo(getName().toUpperCase());
+            case RCPT_ASC:
+                return getRecipients().toUpperCase().compareTo(other.getRecipients().toUpperCase());
+            case RCPT_DESC:
+                return other.getRecipients().toUpperCase().compareTo(getRecipients().toUpperCase());
+            case SIZE_ASC:
+                return Long.signum(getSize() - other.getSize());
+            case SIZE_DESC:
+                return Long.signum(other.getSize() - getSize());
+            case SCORE_DESC:
+                return 0;
             default:
-                throw new IllegalArgumentException("Unknown sort order: " + sortOrder);
-        }
-
-        if (retVal == 0) {
-            return 0;
-        } else if (retVal > 0) {
-            return -1;
-        } else {
-            return 1;
+                throw new IllegalArgumentException("Unknown sort order: " + sort);
         }
     }
 
     /**
-     * @return TRUE if this hit is local to this mailbox (ie not proxied)
+     * Returns TRUE if this hit is local to this mailbox (ie not proxied).
      */
     boolean isLocal() {
         return true;
     }
 
     public ImapMessage getImapMessage() throws ServiceException {
-        if (mCachedImapMessage != null) {
-            return mCachedImapMessage;
+        if (cachedImapMessage == null) {
+            MailItem item = getMailItem();
+            if (item == null) {
+                return null;
+            }
+            cachedImapMessage = new ImapMessage(item);
         }
-        MailItem item = getMailItem();
-        if (item == null) {
-            return null;
-        }
-        return (mCachedImapMessage = new ImapMessage(item));
+        return cachedImapMessage;
     }
 
     public int getModifiedSequence() throws ServiceException {
-        if (mCachedModseq > 0) {
-            return mCachedModseq;
+        if (cachedModseq < 0) {
+            MailItem item = getMailItem();
+            cachedModseq = item != null ? item.getModifiedSequence() : 0;
         }
-        MailItem item = getMailItem();
-        if (item == null) {
-            return -1;
-        }
-        return item.getModifiedSequence();
+        return cachedModseq;
     }
 
     public int getParentId() throws ServiceException {
-        if (mCachedParentId != 0) {
-            return mCachedParentId;
+        if (cachedParentId == 0) {
+            MailItem item = getMailItem();
+            cachedParentId = item != null ? item.getParentId() : -1;
         }
-        MailItem item = getMailItem();
-        if (item == null) {
-            return -1;
-        }
-        return item.getParentId();
+        return cachedParentId;
     }
 
     final void cacheSortField(SortBy sortType, Object sortKey) {
-        switch(sortType.getType()) {
-            case DATE_ASCENDING:
-            case DATE_DESCENDING:
-                mCachedDate = ((Long) sortKey).longValue();
+        switch(sortType) {
+            case DATE_ASC:
+            case DATE_DESC:
+                cachedDate = ((Long) sortKey).longValue();
                 break;
-            case NAME_ASCENDING:
-            case NAME_LOCALIZED_ASCENDING:
-            case NAME_DESCENDING:
-            case NAME_LOCALIZED_DESCENDING:
-                mCachedName = (String) sortKey;
+            case NAME_ASC:
+            case NAME_LOCALIZED_ASC:
+            case NAME_DESC:
+            case NAME_LOCALIZED_DESC:
+                cachedName = (String) sortKey;
                 break;
-            case SUBJ_ASCENDING:
-            case SUBJ_DESCENDING:
-                mCachedSubj = (String) sortKey;
+            case SUBJ_ASC:
+            case SUBJ_DESC:
+                cachedSubj = (String) sortKey;
                 break;
-            case SIZE_ASCENDING:
-            case SIZE_DESCENDING:
-                mCachedSize = ((Long) sortKey).longValue();
+            case SIZE_ASC:
+            case SIZE_DESC:
+                cachedSize = ((Long) sortKey).longValue();
                 break;
         }
     }
 
-    final void cacheImapMessage(ImapMessage i4msg) {
-        mCachedImapMessage = i4msg;
+    final void cacheImapMessage(ImapMessage value) {
+        cachedImapMessage = value;
     }
 
-    final void cacheModifiedSequence(int modseq) {
-        mCachedModseq = modseq;
+    final void cacheModifiedSequence(int value) {
+        cachedModseq = value;
     }
 
-    final void cacheParentId(int parentId) {
-        mCachedParentId = parentId;
+    final void cacheParentId(int value) {
+        cachedParentId = value;
     }
 
     /**
@@ -343,17 +293,17 @@ public abstract class ZimbraHit {
     }
 
     private static class ZimbraHitSortAndIdComparator implements Comparator<ZimbraHit> {
-        SortBy mSortOrder;
+        private final SortBy sort;
 
-        ZimbraHitSortAndIdComparator(SortBy sortOrder){
-            mSortOrder = sortOrder;
+        ZimbraHitSortAndIdComparator(SortBy sort){
+            this.sort = sort;
         }
 
         @Override
         public int compare(ZimbraHit lhs, ZimbraHit rhs) {
             try {
-                int retVal = lhs.compareBySortField(mSortOrder, rhs);
-                if (retVal == 0) {
+                int result = lhs.compareBySortField(sort, rhs);
+                if (result == 0) {
                     int lhsId = lhs.getItemId();
                     if (lhsId <= 0) {
                         lhsId = lhs.getConversationId();
@@ -363,15 +313,15 @@ public abstract class ZimbraHit {
                         rhsId = rhs.getConversationId();
                     }
 
-                    if (!mSortOrder.isDescending()) {
-                        retVal = lhsId - rhsId;
+                    if (sort.getDirection() == SortBy.Direction.ASC) {
+                        result = lhsId - rhsId;
                     } else {
-                        retVal = rhsId - lhsId;
+                        result = rhsId - lhsId;
                     }
                 }
-                return retVal;
+                return result;
             } catch (ServiceException e) {
-                e.printStackTrace();
+                ZimbraLog.search.error("Failed to compare %s and %s", lhs, rhs, e);
                 return 0;
             }
         }
