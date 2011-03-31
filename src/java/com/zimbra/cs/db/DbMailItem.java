@@ -68,6 +68,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.Note;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
@@ -80,6 +81,8 @@ import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StoreManager;
 
 /**
+ * DAO for MAIL_ITEM table.
+ *
  * @since Aug 13, 2004
  */
 public class DbMailItem {
@@ -136,25 +139,24 @@ public class DbMailItem {
     }
 
 
-    public static void create(Mailbox mbox, UnderlyingData data) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
-        if (data == null || data.id <= 0 || data.folderId <= 0 || data.parentId == 0) {
+    public void create(UnderlyingData data) throws ServiceException {
+        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mailbox));
+        if (data.id <= 0 || data.folderId <= 0 || data.parentId == 0) {
             throw ServiceException.FAILURE("invalid data for DB item create", null);
         }
-        checkNamingConstraint(mbox, data.folderId, data.name, data.id);
+        checkNamingConstraint(mailbox, data.folderId, data.name, data.id);
 
-        DbConnection conn = mbox.getOperationConnection();
+        DbConnection conn = mailbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
             String mailbox_id = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
-            stmt = conn.prepareStatement("INSERT INTO " + getMailItemTableName(mbox) + "(" + mailbox_id +
+            stmt = conn.prepareStatement("INSERT INTO " + getMailItemTableName(mailbox) + "(" + mailbox_id +
                     " id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest, unread," +
                     " flags, tags, sender, sender_id, recipients, subject, name, metadata, mod_metadata, change_date," +
                     " mod_content) VALUES (" + MAILBOX_ID_VALUE +
                     "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             int pos = 1;
-            pos = setMailboxId(stmt, mbox, pos);
+            pos = setMailboxId(stmt, mailbox, pos);
             stmt.setInt(pos++, data.id);
             stmt.setByte(pos++, data.type);
             if (data.parentId <= 0) {
@@ -194,13 +196,13 @@ public class DbMailItem {
             }
             stmt.setInt(pos++, data.getFlags());
             stmt.setLong(pos++, data.tags);
-            stmt.setString(pos++, data.getSender());
+            stmt.setString(pos++, sender);
             if (data.senderId >= 0) {
                 stmt.setInt(pos++, data.senderId);
             } else {
                 stmt.setNull(pos++, Types.INTEGER);
             }
-            stmt.setString(pos++, data.getRecipients());
+            stmt.setString(pos++, recipients);
             stmt.setString(pos++, data.getSubject());
             stmt.setString(pos++, data.name);
             stmt.setString(pos++, checkMetadataLength(data.metadata));
@@ -217,18 +219,18 @@ public class DbMailItem {
             }
 
             // Track the tags and flags for fast lookup later
-            if (areTagsetsLoaded(mbox)) {
-                getTagsetCache(conn, mbox).addTagset(data.tags);
+            if (areTagsetsLoaded(mailbox)) {
+                getTagsetCache(conn, mailbox).addTagset(data.tags);
             }
-            if (areFlagsetsLoaded(mbox)) {
-                getFlagsetCache(conn, mbox).addTagset(data.getFlags());
+            if (areFlagsetsLoaded(mailbox)) {
+                getFlagsetCache(conn, mailbox).addTagset(data.getFlags());
             }
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
             if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
                 throw MailServiceException.ALREADY_EXISTS(data.id, e);
             } else {
-                throw ServiceException.FAILURE("writing new object of type " + data.type, e);
+                throw ServiceException.FAILURE("Failed to create id=" + data.id + ",type=" + data.type, e);
             }
         } finally {
             DbPool.closeStatement(stmt);
@@ -910,7 +912,7 @@ public class DbMailItem {
         }
     }
 
-    public static void persistCounts(MailItem item, String metadata) throws ServiceException {
+    public static void persistCounts(MailItem item, Metadata metadata) throws ServiceException {
         Mailbox mbox = item.getMailbox();
 
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
@@ -924,7 +926,7 @@ public class DbMailItem {
             int pos = 1;
             stmt.setLong(pos++, item.getSize());
             stmt.setInt(pos++, item.getUnreadCount());
-            stmt.setString(pos++, checkMetadataLength(metadata));
+            stmt.setString(pos++, checkMetadataLength(metadata.toString()));
             stmt.setInt(pos++, item.getModifiedSequence());
             if (item.getChangeDate() > 0)
                 stmt.setInt(pos++, (int) (item.getChangeDate() / 1000));
@@ -970,7 +972,7 @@ public class DbMailItem {
         }
     }
 
-    public static void saveName(MailItem item, int folderId, String metadata) throws ServiceException {
+    public static void saveName(MailItem item, int folderId, Metadata metadata) throws ServiceException {
         Mailbox mbox = item.getMailbox();
         String name = item.getName().equals("") ? null : item.getName();
 
@@ -994,9 +996,10 @@ public class DbMailItem {
             stmt.setString(pos++, name);
             stmt.setString(pos++, name);
             stmt.setInt(pos++, folderId);
-            if (isFolder)
+            if (isFolder) {
                 stmt.setInt(pos++, folderId);
-            stmt.setString(pos++, metadata);
+            }
+            stmt.setString(pos++, metadata.toString());
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
             stmt.setInt(pos++, mbox.getOperationChangeID());
@@ -1014,18 +1017,10 @@ public class DbMailItem {
         }
     }
 
-    public static void saveData(MailItem item, String subject, String metadata) throws ServiceException {
+    public static void saveData(MailItem item, Metadata metadata) throws ServiceException {
         Mailbox mbox = item.getMailbox();
-
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         String name = item.getName().equals("") ? null : item.getName();
-
-        if (item instanceof Conversation) {
-            subject = ((Conversation) item).getNormalizedSubject();
-        } else if (item instanceof Message) {
-            subject = ((Message) item).getNormalizedSubject();
-        }
         checkNamingConstraint(mbox, item.getFolderId(), name, item.getId());
 
         DbConnection conn = mbox.getOperationConnection();
@@ -1060,9 +1055,9 @@ public class DbMailItem {
             stmt.setString(pos++, item.getDigest());
             stmt.setString(pos++, item.getSortSender());
             stmt.setString(pos++, item.getSortRecipients());
-            stmt.setString(pos++, subject);
+            stmt.setString(pos++, item.getSortSubject());
             stmt.setString(pos++, name);
-            stmt.setString(pos++, checkMetadataLength(metadata));
+            stmt.setString(pos++, checkMetadataLength(metadata.toString()));
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
             stmt.setInt(pos++, item.getSavedSequence());
@@ -3354,16 +3349,15 @@ public class DbMailItem {
     public static final int CI_UNREAD      = 11;
     public static final int CI_FLAGS       = 12;
     public static final int CI_TAGS        = 13;
-    public static final int CI_RECIPIENTS  = 14;
-    public static final int CI_SUBJECT     = 15;
-    public static final int CI_NAME        = 16;
-    public static final int CI_METADATA    = 17;
-    public static final int CI_MODIFIED    = 18;
-    public static final int CI_MODIFY_DATE = 19;
-    public static final int CI_SAVED       = 20;
+    public static final int CI_SUBJECT     = 14;
+    public static final int CI_NAME        = 15;
+    public static final int CI_METADATA    = 16;
+    public static final int CI_MODIFIED    = 17;
+    public static final int CI_MODIFY_DATE = 18;
+    public static final int CI_SAVED       = 19;
 
     static final String DB_FIELDS = "mi.id, mi.type, mi.parent_id, mi.folder_id, mi.index_id, mi.imap_id, mi.date, " +
-        "mi.size, mi.volume_id, mi.blob_digest, mi.unread, mi.flags, mi.tags, mi.recipients, mi.subject, mi.name, " +
+        "mi.size, mi.volume_id, mi.blob_digest, mi.unread, mi.flags, mi.tags, mi.subject, mi.name, " +
         "mi.metadata, mi.mod_metadata, mi.change_date, mi.mod_content";
 
     private static UnderlyingData constructItem(ResultSet rs) throws SQLException, ServiceException {
@@ -3400,11 +3394,10 @@ public class DbMailItem {
         int flags = rs.getInt(CI_FLAGS + offset);
         if (!fromDumpster) {
             data.setFlags(flags);
-        } else { 
+        } else {
             data.setFlags(flags | Flag.BITMASK_UNCACHED | Flag.BITMASK_IN_DUMPSTER);
         }
         data.tags = rs.getLong(CI_TAGS + offset);
-        data.setRecipients(rs.getString(CI_RECIPIENTS) + offset);
         data.setSubject(rs.getString(CI_SUBJECT + offset));
         data.name = rs.getString(CI_NAME + offset);
         data.metadata = decodeMetadata(rs.getString(CI_METADATA + offset));
@@ -4280,4 +4273,29 @@ public class DbMailItem {
         return conv;
     }
 
+    private final Mailbox mailbox;
+    // The following data are only used for INSERT/UPDATE, not loaded by SELECT.
+    private String sender;
+    private String recipients;
+
+    /**
+     * {@link UnderlyingData} + extra data used for INSERT/UPDATE into MAIL_ITEM table.
+     */
+    public DbMailItem(Mailbox mbox) {
+        mailbox = mbox;
+    }
+
+    public DbMailItem setSender(String value) {
+        if (!Strings.isNullOrEmpty(value)) {
+            sender = DbMailItem.normalize(value, DbMailItem.MAX_SENDER_LENGTH);
+        }
+        return this;
+    }
+
+    public DbMailItem setRecipients(String value) {
+        if (!Strings.isNullOrEmpty(value)) {
+            recipients = DbMailItem.normalize(value, DbMailItem.MAX_RECIPIENTS_LENGTH);
+        }
+        return this;
+    }
 }

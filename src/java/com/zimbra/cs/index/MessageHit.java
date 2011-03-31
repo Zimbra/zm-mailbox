@@ -191,7 +191,10 @@ public final class MessageHit extends ZimbraHit {
 
     @Override
     public String getRecipients() throws ServiceException {
-        return Strings.nullToEmpty(getMessage().getSortRecipients());
+        if (cachedRecipients == null) {
+            cachedRecipients = Strings.nullToEmpty(getMessage().getSortRecipients());
+        }
+        return cachedRecipients;
     }
 
     public long getDateHeader() throws ServiceException {

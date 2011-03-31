@@ -177,7 +177,7 @@ public class Document extends MailItem {
             mData.size = pd.getSize();
         }
 
-        saveData(null);
+        saveData();
     }
 
     protected static UnderlyingData prepareCreate(MailItem.Type type, int id, Folder folder, String name,
@@ -221,8 +221,9 @@ public class Document extends MailItem {
         UnderlyingData data = prepareCreate(Type.DOCUMENT, id, folder, filename, type, pd, null, custom, flags);
         data.contentChanged(mbox);
 
-        ZimbraLog.mailop.info("Adding Document %s: id=%d, folderId=%d, folderName=%s.", filename, data.id, folder.getId(), folder.getName());
-        DbMailItem.create(mbox, data);
+        ZimbraLog.mailop.info("Adding Document %s: id=%d, folderId=%d, folderName=%s",
+                filename, data.id, folder.getId(), folder.getName());
+        new DbMailItem(mbox).create(data);
 
         Document doc = new Document(mbox, data);
         doc.finishCreation(null);

@@ -45,13 +45,13 @@ public class Conversation extends MailItem {
         }
     }
 
-    /** Returns the normalized subject of the conversation.  This is done by
-     *  taking the <tt>Subject:</tt> header of the first message and removing
-     *  prefixes (e.g. <tt>"Re:"</tt>) and suffixes (e.g. <tt>"(fwd)"</tt>)
-     *  and the like.
+    /**
+     * Returns the normalized subject of the conversation.  This is done by taking the {@code Subject:} header of the
+     * first message and removing prefixes (e.g. {@code "Re:"}) and suffixes (e.g. {@code "(fwd)"}) and the like.
      *
-     * @see ParsedMessage#normalizeSubject */
-    public String getNormalizedSubject() {
+     * @see ParsedMessage#normalizeSubject
+     */
+    String getNormalizedSubject() {
         return ParsedMessage.normalize(getSubject());
     }
 
@@ -62,8 +62,7 @@ public class Conversation extends MailItem {
 
     @Override
     public String getSortSubject() {
-        // not actually used since Conversations aren't indexed...but here for correctness/completeness
-        return getNormalizedSubject().toUpperCase();
+        return getNormalizedSubject();
     }
 
     /** Returns the number of messages in the conversation, as calculated from
@@ -165,7 +164,7 @@ public class Conversation extends MailItem {
 
         // need to rewrite the overview metadata
         ZimbraLog.mailbox.debug("resetting metadata: cid=" + mId + ", size was=" + mData.size + " is=" + mSenderList.size());
-        saveData(null);
+        saveData();
         return mSenderList;
     }
 
@@ -269,7 +268,7 @@ public class Conversation extends MailItem {
         data.tags = tags;
         data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, extended, new SenderList(msgs));
         data.contentChanged(mbox);
-        DbMailItem.create(mbox, data);
+        new DbMailItem(mbox).create(data);
 
         Conversation conv = new Conversation(mbox, data);
         conv.finishCreation(null);

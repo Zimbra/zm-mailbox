@@ -82,7 +82,10 @@ public final class DocumentHit extends ZimbraHit {
 
     @Override
     public String getRecipients() {
-        return Strings.nullToEmpty(docItem.getSortRecipients());
+        if (cachedRecipients == null) {
+            cachedRecipients = Strings.nullToEmpty(docItem.getSortRecipients());
+        }
+        return cachedRecipients;
     }
 
     @Override

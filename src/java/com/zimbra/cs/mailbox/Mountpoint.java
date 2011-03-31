@@ -144,8 +144,8 @@ public class Mountpoint extends Folder {
         data.metadata = encodeMetadata(color, 1, custom, view, ownerId, remoteId);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("Adding Mountpoint %s: id=%d, parentId=%d, parentName=%s.",
-            name, data.id, parent.getId(), parent.getName());
-        DbMailItem.create(mbox, data);
+                name, data.id, parent.getId(), parent.getName());
+        new DbMailItem(mbox).create(data);
 
         Mountpoint mpt = new Mountpoint(mbox, data);
         mpt.finishCreation(parent);

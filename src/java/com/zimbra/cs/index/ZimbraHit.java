@@ -38,6 +38,7 @@ public abstract class ZimbraHit {
     protected long cachedDate = -1;
     protected long cachedSize = -1;
     protected String cachedName;
+    protected String cachedRecipients;
     protected String cachedSubj;
     protected ImapMessage cachedImapMessage;
     protected int cachedModseq = -1;

@@ -477,7 +477,6 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         data.setFlags(flags & (Flag.FLAGS_CALITEM | Flag.FLAGS_GENERIC));
         data.tags = tags;
         data.setSubject(subject);
-        data.setSender(sender);
         data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, custom, uid, startTime, endTime, recur,
                                        invites, firstInvite.getTimeZoneMap(), new ReplyList(), null);
         data.contentChanged(mbox);
@@ -494,7 +493,8 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
                     firstInvite.isPublic() ? firstInvite.getName() : "(private)",
                     firstInvite.getUid(), firstInvite.getRecurId().getDtZ());
         }
-        DbMailItem.create(mbox, data);
+
+        new DbMailItem(mbox).setSender(sender).create(data);
 
         CalendarItem item = type == Type.APPOINTMENT ? new Appointment(mbox, data) : new Task(mbox, data);
 
@@ -2196,7 +2196,6 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             subject = firstInvite.getName();
         }
         mData.setSubject(Strings.nullToEmpty(subject));
-        mData.setSender(getSender());
         saveData();
     }
 

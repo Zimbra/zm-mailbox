@@ -99,7 +99,10 @@ public final class ContactHit extends ZimbraHit {
 
     @Override
     public String getRecipients() throws ServiceException {
-        return Strings.nullToEmpty(getContact().getSortRecipients());
+        if (cachedRecipients == null) {
+            cachedRecipients = Strings.nullToEmpty(getContact().getSortRecipients());
+        }
+        return cachedRecipients;
     }
 
     @Override

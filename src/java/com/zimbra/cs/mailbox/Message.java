@@ -27,6 +27,7 @@ import javax.mail.internet.MimeMessage;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
+import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
@@ -51,7 +52,6 @@ import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteChanges;
-import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
@@ -218,13 +218,13 @@ public class Message extends MailItem {
         return Strings.nullToEmpty(fragment);
     }
 
-    /** Returns the normalized subject of the message.  This is done by
-     *  taking the <code>Subject:</code> header and removing prefixes (e.g.
-     *  <code>"Re:"</code>) and suffixes (e.g. <code>"(fwd)"</code>) and
-     *  the like.
+    /**
+     * Returns the normalized subject of the message.  This is done by taking the {@code Subject:} header and removing
+     * prefixes (e.g. {@code "Re:"}) and suffixes (e.g. {@code "(fwd)"}) and the like.
      *
-     * @see ParsedMessage#normalizeSubject */
-    public String getNormalizedSubject() {
+     * @see ParsedMessage#normalizeSubject
+     */
+    String getNormalizedSubject() {
         return super.getSubject();
     }
 
@@ -243,14 +243,27 @@ public class Message extends MailItem {
 
     @Override
     public String getSortSubject() {
-        return getNormalizedSubject().toUpperCase();
+        return getNormalizedSubject();
     }
 
     @Override
     public String getSortSender() {
-        String sender = new ParsedAddress(getSender()).getSortString().toUpperCase();
+        String sender = new ParsedAddress(getSender()).getSortString();
         // remove surrogate characters and trim to DbMailItem.MAX_SENDER_LENGTH
         return DbMailItem.normalize(sender, DbMailItem.MAX_SENDER_LENGTH);
+    }
+
+    @Override
+    public String getSortRecipients() {
+        List<InternetAddress> iaddrs = com.zimbra.common.mime.InternetAddress.parseHeader(getRecipients());
+        if (iaddrs == null || iaddrs.isEmpty()) {
+            return null;
+        }
+        List<ParsedAddress> paddrs = new ArrayList<ParsedAddress>(iaddrs.size());
+        for (InternetAddress iaddr : iaddrs) {
+            paddrs.add(new ParsedAddress(iaddr));
+        }
+        return DbMailItem.normalize(ParsedAddress.getSortString(paddrs), DbMailItem.MAX_RECIPIENTS_LENGTH);
     }
 
     /** Returns whether the Message was sent by the owner of this mailbox.
@@ -525,16 +538,17 @@ public class Message extends MailItem {
         data.setBlobDigest(staged.getDigest());
         data.setFlags(flags & (Flag.FLAGS_MESSAGE | Flag.FLAGS_GENERIC));
         data.tags = tags;
-        data.setSender(pm.getParsedSender().getSortString());
-        data.setRecipients(ParsedAddress.getSortString(pm.getParsedRecipients()));
         data.setSubject(pm.getNormalizedSubject());
-        data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, extended, pm, flags, dinfo, null, null);
+        data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, extended, pm, dinfo, null, null).toString();
         data.unreadCount = unread ? 1 : 0;
         data.contentChanged(mbox);
 
         ZimbraLog.mailop.info("Adding Message: id=%d, Message-ID=%s, parentId=%d, folderId=%d, folderName=%s.",
                               data.id, pm.getMessageID(), data.parentId, folder.getId(), folder.getName());
-        DbMailItem.create(mbox, data);
+        new DbMailItem(mbox)
+            .setSender(pm.getParsedSender().getSortString())
+            .setRecipients(ParsedAddress.getSortString(pm.getParsedRecipients()))
+            .create(data);
         Message msg = fact.create(mbox, data);
 
         // process the components in this invite (must do this last so blob is created, etc)
@@ -752,7 +766,7 @@ public class Message extends MailItem {
                             ZOrganizer org = null;
                             CalendarItem ci = mMailbox.getCalendarItemByUid(cur.getUid());
                             if (ci != null) {
-                                Invite inv = ci.getInvite((RecurId) cur.getRecurId());
+                                Invite inv = ci.getInvite(cur.getRecurId());
                                 if (inv == null)
                                     inv = ci.getDefaultInviteOrNull();
                                 if (inv != null)
@@ -1184,8 +1198,6 @@ public class Message extends MailItem {
         }
         rawSubject = pm.getSubject();
         mData.setSubject(pm.getNormalizedSubject());
-        mData.setSender(pm.getParsedSender().getSortString());
-        mData.setRecipients(ParsedAddress.getSortString(pm.getParsedRecipients()));
 
         // the fragment may have changed
         fragment = pm.getFragment();
@@ -1225,11 +1237,9 @@ public class Message extends MailItem {
             mData.size = newSize;
         }
 
-        String metadata = encodeMetadata(mRGBColor, mVersion, mExtendedData, pm, mData.getFlags(), draftInfo,
-                calendarItemInfos, calendarIntendedFor);
-
         // rewrite the DB row to reflect our new view
-        saveData(metadata);
+        saveData(encodeMetadata(mRGBColor, mVersion, mExtendedData, pm, draftInfo,
+                calendarItemInfos, calendarIntendedFor));
 
         if (parent instanceof VirtualConversation) {
             ((VirtualConversation) parent).recalculateMetadata(Collections.singletonList(this));
@@ -1304,15 +1314,11 @@ public class Message extends MailItem {
                 mData.getSubject(), rawSubject, draftInfo, calendarItemInfos, calendarIntendedFor);
     }
 
-    private static String encodeMetadata(Color color, int version, CustomMetadataList extended, ParsedMessage pm,
-                                         int flags, DraftInfo dinfo,
-                                         List<CalendarItemInfo> calItemInfos, String calIntendedFor) {
-        // cache the "To" header only for messages sent by the user
-        //TODO: Cache To header for all messages because of Priority Inbox prorotype
-        // String recipients = ((flags & Flag.BITMASK_FROM_ME) == 0 ? null : pm.getRecipients());
-        String recipients = pm.getRecipients();
-        return encodeMetadata(new Metadata(), color, version, extended, pm.getSender(), recipients, pm.getFragment(),
-                pm.getNormalizedSubject(), pm.getSubject(), dinfo, calItemInfos, calIntendedFor).toString();
+    private static Metadata encodeMetadata(Color color, int version, CustomMetadataList extended, ParsedMessage pm,
+            DraftInfo dinfo, List<CalendarItemInfo> calItemInfos, String calIntendedFor) {
+        return encodeMetadata(new Metadata(), color, version, extended, pm.getSender(), pm.getRecipients(),
+                pm.getFragment(), pm.getNormalizedSubject(), pm.getSubject(), dinfo,
+                calItemInfos, calIntendedFor);
     }
 
     static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended, String sender,

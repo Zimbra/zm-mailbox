@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -20,7 +20,7 @@ import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mime.ParsedDocument;
 
-public class WikiItem extends Document {
+public final class WikiItem extends Document {
 
     WikiItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
         super(mbox, data);
@@ -33,7 +33,7 @@ public class WikiItem extends Document {
     public static final String WIKI_CONTENT_TYPE = "text/html; charset=utf-8";
 
     static WikiItem create(int id, Folder folder, String wikiword, ParsedDocument pd, CustomMetadata custom)
-    throws ServiceException {
+            throws ServiceException {
         Metadata meta = new Metadata();
         UnderlyingData data = prepareCreate(Type.WIKI, id, folder, wikiword, WIKI_CONTENT_TYPE, pd, meta, custom, 0);
 
@@ -41,7 +41,7 @@ public class WikiItem extends Document {
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("Adding WikiItem %s: id=%d, folderId=%d, folderName=%s.",
             wikiword, data.id, folder.getId(), folder.getName());
-        DbMailItem.create(mbox, data);
+        new DbMailItem(mbox).create(data);
 
         WikiItem wiki = new WikiItem(mbox, data);
         wiki.finishCreation(null);

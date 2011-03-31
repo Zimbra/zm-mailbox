@@ -826,7 +826,7 @@ public class Folder extends MailItem {
                 mbox.getOperationChangeID(), -1, 0, 0, 0);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("adding folder %s: id=%d, parentId=%d.", name, data.id, data.parentId);
-        DbMailItem.create(mbox, data);
+        new DbMailItem(mbox).create(data);
 
         Folder folder = new Folder(mbox, data);
         folder.finishCreation(parent);

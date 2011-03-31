@@ -91,7 +91,10 @@ public class CalendarItemHit extends ZimbraHit {
 
     @Override
     public String getRecipients() throws ServiceException {
-        return Strings.nullToEmpty(getCalendarItem().getSortRecipients());
+        if (cachedRecipients == null) {
+            cachedRecipients = Strings.nullToEmpty(getCalendarItem().getSortRecipients());
+        }
+        return cachedRecipients;
     }
 
     @Override

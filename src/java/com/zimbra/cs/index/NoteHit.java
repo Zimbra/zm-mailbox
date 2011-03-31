@@ -84,7 +84,10 @@ public final class NoteHit extends ZimbraHit {
 
     @Override
     public String getRecipients() throws ServiceException {
-        return Strings.nullToEmpty(getNote().getSortRecipients());
+        if (cachedRecipients == null) {
+            cachedRecipients = Strings.nullToEmpty(getNote().getSortRecipients());
+        }
+        return cachedRecipients;
     }
 
     @Override

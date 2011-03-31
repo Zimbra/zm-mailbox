@@ -82,7 +82,10 @@ public final class MessagePartHit extends ZimbraHit {
 
     @Override
     public String getRecipients() throws ServiceException {
-        return Strings.nullToEmpty(getMailItem().getSortRecipients());
+        if (cachedRecipients == null) {
+            cachedRecipients = Strings.nullToEmpty(getMailItem().getSortRecipients());
+        }
+        return cachedRecipients;
     }
 
     @Override

@@ -161,7 +161,7 @@ public class Note extends MailItem {
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("Adding Note: id=%d, folderId=%d, folderName=%s.",
                 data.id, folder.getId(), folder.getName());
-        DbMailItem.create(mbox, data);
+        new DbMailItem(mbox).create(data);
 
         Note note = new Note(mbox, data);
         note.finishCreation(null);
@@ -197,7 +197,7 @@ public class Note extends MailItem {
         // XXX: should probably update both mData.size and the Mailbox's size
         mData.setSubject(content);
         mData.date = mMailbox.getOperationTimestamp();
-        saveData(null);
+        saveData();
     }
 
     protected void saveSubject() throws ServiceException {

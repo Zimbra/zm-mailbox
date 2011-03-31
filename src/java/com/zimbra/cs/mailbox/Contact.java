@@ -661,7 +661,6 @@ public class Contact extends MailItem {
         data.date = mbox.getOperationTimestamp();
         data.setFlags(flags | (pc.hasAttachment() ? Flag.BITMASK_ATTACHED : 0));
         data.tags = Tag.tagsToBitmask(tags);
-        data.setSender(getFileAsString(pc.getFields()));
         data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, custom, pc.getFields(), pc.getAttachments());
         data.contentChanged(mbox);
 
@@ -674,7 +673,7 @@ public class Contact extends MailItem {
                 email, data.id, folder.getId(), folder.getName());
         }
 
-        DbMailItem.create(mbox, data);
+        new DbMailItem(mbox).setSender(getFileAsString(pc.getFields())).create(data);
 
         Contact contact = new Contact(mbox, data);
         contact.finishCreation(null);
@@ -740,7 +739,6 @@ public class Contact extends MailItem {
         if (pc.hasAttachment()) {
             mData.setFlag(Flag.FlagInfo.ATTACHED);
         }
-        saveData(getFileAsString(fields));
         Set<String> newAddrs = getNormalizedEmailAddrs();
 
         saveEmailAddrs(Sets.difference(newAddrs, oldAddrs), Sets.difference(oldAddrs, newAddrs));

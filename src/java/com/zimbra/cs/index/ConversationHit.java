@@ -127,7 +127,10 @@ public final class ConversationHit extends ZimbraHit {
 
     @Override
     public String getRecipients() throws ServiceException {
-        return Strings.nullToEmpty(lastMessageHitAdded.getRecipients());
+        if (cachedRecipients == null) {
+            cachedRecipients = Strings.nullToEmpty(lastMessageHitAdded.getRecipients());
+        }
+        return cachedRecipients;
     }
 
     public long getHitDate() throws ServiceException {

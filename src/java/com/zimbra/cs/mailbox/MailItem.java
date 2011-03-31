@@ -234,8 +234,6 @@ public abstract class MailItem implements Comparable<MailItem> {
         public int unreadCount;
         private int flags;
         public long tags;
-        private String sender;
-        private String recipients;
         private String subject;
         public String name;
         public String metadata;
@@ -249,22 +247,6 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         public void setSubject(String value) {
             subject = DbMailItem.normalize(value, DbMailItem.MAX_SUBJECT_LENGTH);
-        }
-
-        public String getSender() {
-            return sender;
-        }
-
-        public void setSender(String value) {
-            sender = DbMailItem.normalize(value, DbMailItem.MAX_SENDER_LENGTH);
-        }
-
-        public String getRecipients() {
-            return recipients;
-        }
-
-        public void setRecipients(String value) {
-            recipients = DbMailItem.normalize(value, DbMailItem.MAX_RECIPIENTS_LENGTH);
         }
 
         /** Returns the item's blob digest, or <tt>null</tt> if the item has no blob. */
@@ -328,8 +310,6 @@ public abstract class MailItem implements Comparable<MailItem> {
             data.size = this.size;
             data.flags = this.flags;
             data.tags = this.tags;
-            data.sender = this.sender;
-            data.recipients = this.recipients;
             data.subject = this.subject;
             data.unreadCount = this.unreadCount;
             return data;
@@ -836,7 +816,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     /** Returns the item's underlying storage data so that it may be persisted
      *  somewhere besides the database - usually in encoded form. */
     public UnderlyingData getUnderlyingData() {
-        mData.metadata = encodeMetadata();
+        mData.metadata = encodeMetadata().toString();
         return mData;
     }
 
@@ -844,17 +824,17 @@ public abstract class MailItem implements Comparable<MailItem> {
 
     /** Returns the SORT-FORM (maybe truncated, etc.) of the subject of this mail item. */
     public String getSortSubject() {
-        return mData.getSubject();
+        return getSubject();
     }
 
     /** Returns the SORT-FORM (maybe truncated) of the sender of this mail item. */
     public String getSortSender() {
-        return mData.sender;
+        return getSender();
     }
 
     /** Returns the SORT-FORM (maybe truncated) of the recipients of this mail item. */
     public String getSortRecipients() {
-        return mData.recipients;
+        return null;
     }
 
     /** Returns the "external" flag bitmask, which includes
@@ -1808,7 +1788,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             }
 
             UnderlyingData data = mData.clone();
-            data.metadata = encodeMetadata();
+            data.metadata = encodeMetadata().toString();
             data.flags   |= Flag.BITMASK_UNCACHED;
             mRevisions.add(constructItem(mMailbox, data));
 
@@ -1862,8 +1842,9 @@ public abstract class MailItem implements Comparable<MailItem> {
         }
 
         mData.metadataChanged(mMailbox);
-        if (persist)
-            saveData(getSender());
+        if (persist) {
+            saveData();
+        }
     }
 
     // do *not* make this public, as it'd skirt Mailbox-level synchronization and caching
@@ -2214,7 +2195,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         data.parentId = detach ? -1 : parentId;
         data.indexId = shareIndex ? getIndexId() : IndexStatus.DEFERRED.id();
         data.flags &= shareIndex ? ~0 : ~Flag.BITMASK_COPIED;
-        data.metadata = encodeMetadata();
+        data.metadata = encodeMetadata().toString();
         data.contentChanged(mMailbox);
 
         ZimbraLog.mailop.info("Copying %s: copyId=%d, folderId=%d, folderName=%s, parentId=%d.",
@@ -2315,7 +2296,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         boolean shareIndex = !isMutable() && getIndexStatus() == IndexStatus.DONE && !target.inSpam();
 
         UnderlyingData data = mData.duplicate(copyId, target.getId(), locator);
-        data.metadata = encodeMetadata();
+        data.metadata = encodeMetadata().toString();
         data.imapId = copyId;
         data.indexId = shareIndex ? getIndexId() : IndexStatus.DEFERRED.id();
         data.contentChanged(mMailbox);
@@ -2942,14 +2923,15 @@ public abstract class MailItem implements Comparable<MailItem> {
         return false;
     }
 
-    String encodeMetadata() {
+    Metadata encodeMetadata() {
         Metadata meta = encodeMetadata(new Metadata());
         if (trackUserAgentInMetadata()) {
             OperationContext octxt = getMailbox().getOperationContext();
-            if (octxt != null)
+            if (octxt != null) {
                 meta.put(Metadata.FN_USER_AGENT, octxt.getUserAgent());
+            }
         }
-        return meta.toString();
+        return meta;
     }
 
     abstract Metadata encodeMetadata(Metadata meta);
@@ -3097,7 +3079,7 @@ public abstract class MailItem implements Comparable<MailItem> {
 
 
     protected void saveMetadata() throws ServiceException {
-        saveMetadata(encodeMetadata());
+        saveMetadata(encodeMetadata().toString());
     }
 
     protected void saveMetadata(String metadata) throws ServiceException {
@@ -3120,12 +3102,13 @@ public abstract class MailItem implements Comparable<MailItem> {
         saveData(encodeMetadata());
     }
 
-    protected void saveData(String metadata) throws ServiceException {
+    protected void saveData(Metadata metadata) throws ServiceException {
+        assert(metadata != null);
         mData.metadataChanged(mMailbox);
         if (ZimbraLog.mailop.isDebugEnabled()) {
             ZimbraLog.mailop.debug("saving data for %s", getMailopContext(this));
         }
-        DbMailItem.saveData(this, mData.subject, metadata);
+        DbMailItem.saveData(this, metadata);
     }
 
     /**

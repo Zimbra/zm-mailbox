@@ -1856,8 +1856,8 @@ public class Mailbox {
         }
 
         MailItem.UnderlyingData data = item.getUnderlyingData().clone();
-        data.setFlag(Flag.FlagInfo.UNCACHED);
-        data.metadata = item.encodeMetadata();
+        data.setFlags(Flag.BITMASK_UNCACHED);
+        data.metadata = item.encodeMetadata().toString();
         if (item instanceof VirtualConversation) {
             // VirtualConversations need to be special-cased since MailItem.constructItem() returns null for them
             return (T) new VirtualConversation(this, data);
@@ -1886,8 +1886,8 @@ public class Mailbox {
         Map<Integer, Folder> copies = new HashMap<Integer, Folder>();
         for (Folder folder : mFolderCache.values()) {
             MailItem.UnderlyingData data = folder.getUnderlyingData().clone();
-            data.setFlag(Flag.FlagInfo.UNCACHED);
-            data.metadata = folder.encodeMetadata();
+            data.setFlags(Flag.BITMASK_UNCACHED);
+            data.metadata = folder.encodeMetadata().toString();
             copies.put(folder.getId(), (Folder) MailItem.constructItem(this, data));
         }
         for (Folder folder : copies.values()) {
@@ -7466,14 +7466,14 @@ public class Mailbox {
         if (DebugConfig.checkMailboxCacheConsistency && mCurrentChange.mDirty != null && mCurrentChange.mDirty.hasNotifications()) {
             if (mCurrentChange.mDirty.created != null) {
                 for (MailItem item : mCurrentChange.mDirty.created.values()) {
-                    DbMailItem.consistencyCheck(item, item.mData, item.encodeMetadata());
+                    DbMailItem.consistencyCheck(item, item.mData, item.encodeMetadata().toString());
                 }
             }
             if (mCurrentChange.mDirty.modified != null) {
                 for (Change change : mCurrentChange.mDirty.modified.values()) {
                     if (change.what instanceof MailItem) {
                         MailItem item = (MailItem) change.what;
-                        DbMailItem.consistencyCheck(item, item.mData, item.encodeMetadata());
+                        DbMailItem.consistencyCheck(item, item.mData, item.encodeMetadata().toString());
                     }
                 }
             }
