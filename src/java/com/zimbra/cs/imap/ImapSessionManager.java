@@ -45,8 +45,6 @@ import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.Zimbra;
 
 final class ImapSessionManager {
-    private static final ImapSessionManager SINGLETON = new ImapSessionManager();
-
     static final long SERIALIZER_INTERVAL_MSEC =
             DebugConfig.imapSessionSerializerFrequency * Constants.MILLIS_PER_SECOND;
     static final long SESSION_INACTIVITY_SERIALIZATION_TIME =
@@ -58,10 +56,11 @@ final class ImapSessionManager {
     private static final boolean TERMINATE_ON_CLOSE = DebugConfig.imapTerminateSessionOnClose;
     private static final boolean SERIALIZE_ON_CLOSE = DebugConfig.imapSerializeSessionOnClose;
 
-    private final LinkedHashMap<ImapSession, Object> sessions =
-            new LinkedHashMap<ImapSession, Object>(128, 0.75F, true);
+    private final LinkedHashMap<ImapSession, Object> sessions = new LinkedHashMap<ImapSession, Object>(128, 0.75F, true);
     private final MemcachedImapCache memcache; // null if memcached is not available
     private final DiskImapCache diskcache;
+
+    private static final ImapSessionManager SINGLETON = new ImapSessionManager();
 
     private ImapSessionManager() {
         if (SERIALIZER_INTERVAL_MSEC > 0) {
