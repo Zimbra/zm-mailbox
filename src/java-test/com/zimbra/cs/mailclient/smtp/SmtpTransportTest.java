@@ -248,13 +248,13 @@ public final class SmtpTransportTest {
     }
 
     @Test(timeout = 3000)
-    public void auth() throws Exception {
+    public void authLogin() throws Exception {
         server = MockTcpServer.scenario()
         .sendLine("220 test ready")
         .recvLine() // EHLO
         .sendLine("250-smtp.zimbra.com")
         .sendLine("250 AUTH LOGIN")
-        .recvLine() // AUTH
+        .recvLine() // AUTH LOGIN
         .sendLine("334 OK")
         .recvLine() // USER
         .sendLine("334")
@@ -293,6 +293,45 @@ public final class SmtpTransportTest {
     }
 
     @Test(timeout = 3000)
+    public void authPlain() throws Exception {
+        server = MockTcpServer.scenario()
+        .sendLine("220 test ready")
+        .recvLine() // EHLO
+        .sendLine("250-smtp.zimbra.com")
+        .sendLine("250 AUTH PLAIN")
+        .recvLine() // AUTH PLAIN initial-response
+        .sendLine("235 Authentication successful")
+        .recvLine() // MAIL FROM
+        .sendLine("250 OK")
+        .recvLine() // RCPT TO
+        .sendLine("250 OK")
+        .recvLine() // DATA
+        .sendLine("354 OK")
+        .swallowUntil("\r\n.\r\n")
+        .sendLine("250 OK")
+        .recvLine() // QUIT
+        .sendLine("221 bye")
+        .build().start(PORT);
+
+        Session session = JMSession.getSession();
+        Transport transport = session.getTransport("smtp");
+        transport.connect("localhost", PORT, "zimbra", "secret");
+        String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\nSubject: test\n\ntest";
+        MimeMessage msg = new JavaMailMimeMessage(session, new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
+        transport.sendMessage(msg, msg.getAllRecipients());
+        transport.close();
+
+        server.shutdown(1000);
+        Assert.assertEquals("EHLO localhost\r\n", server.replay());
+        Assert.assertEquals("AUTH PLAIN " + base64("\0zimbra\0secret") + "\r\n", server.replay());
+        Assert.assertEquals("MAIL FROM:<sender@zimbra.com>\r\n", server.replay());
+        Assert.assertEquals("RCPT TO:<rcpt@zimbra.com>\r\n", server.replay());
+        Assert.assertEquals("DATA\r\n", server.replay());
+        Assert.assertEquals("QUIT\r\n", server.replay());
+        Assert.assertNull(server.replay());
+    }
+
+    @Test(timeout = 3000)
     public void noAuth() throws Exception {
         server = MockTcpServer.scenario()
         .sendLine("220 test ready")
@@ -306,7 +345,7 @@ public final class SmtpTransportTest {
             transport.connect("localhost", PORT, "zimbra", "secret");
             Assert.fail();
         } catch (MessagingException e) {
-            Assert.assertEquals("The server doesn't support authentication.", e.getMessage());
+            Assert.assertEquals("The server doesn't support SMTP-AUTH.", e.getMessage());
         }
         server.shutdown(1000);
     }
@@ -317,7 +356,7 @@ public final class SmtpTransportTest {
         .sendLine("220 test ready")
         .recvLine() // EHLO
         .sendLine("250-OK")
-        .sendLine("250 AUTH PLAIN NTLM")
+        .sendLine("250 AUTH NTLM")
         .build().start(PORT);
 
         Session session = JMSession.getSession();
@@ -326,7 +365,7 @@ public final class SmtpTransportTest {
             transport.connect("localhost", PORT, "zimbra", "secret");
             Assert.fail();
         } catch (MessagingException e) {
-            Assert.assertEquals("No authentication mechansims supported: [NTLM, PLAIN]", e.getMessage());
+            Assert.assertEquals("No auth mechanism supported: [NTLM]", e.getMessage());
         }
         server.shutdown(1000);
     }

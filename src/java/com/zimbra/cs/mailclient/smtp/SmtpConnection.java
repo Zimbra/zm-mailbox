@@ -31,6 +31,7 @@ import javax.mail.Address;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import javax.security.sasl.SaslException;
 
 import org.apache.commons.codec.binary.Base64;
 
@@ -45,19 +46,21 @@ import com.zimbra.cs.mailclient.MailConnection;
 import com.zimbra.cs.mailclient.MailException;
 import com.zimbra.cs.mailclient.MailInputStream;
 import com.zimbra.cs.mailclient.MailOutputStream;
+import com.zimbra.cs.mailclient.auth.SaslAuthenticator;
 import com.zimbra.cs.mailclient.util.Ascii;
 
 public final class SmtpConnection extends MailConnection {
 
-    public static final String EHLO = "EHLO";
-    public static final String HELO = "HELO";
-    public static final String MAIL = "MAIL";
-    public static final String RCPT = "RCPT";
-    public static final String DATA = "DATA";
-    public static final String QUIT = "QUIT";
-    public static final String AUTH = "AUTH";
-    public static final String STARTTLS = "STARTTLS";
-    public static final String RSET = "RSET";
+    static final String EHLO = "EHLO";
+    static final String HELO = "HELO";
+    static final String MAIL = "MAIL";
+    static final String RCPT = "RCPT";
+    static final String DATA = "DATA";
+    static final String QUIT = "QUIT";
+    static final String AUTH = "AUTH";
+    static final String STARTTLS = "STARTTLS";
+    static final String RSET = "RSET";
+    private static final String LOGIN = "LOGIN";
 
     // Same headers that SMTPTransport passes to MimeMessage.writeTo().
     private static final String[] IGNORE_HEADERS = new String[] { "Bcc", "Resent-Bcc", "Content-Length" };
@@ -197,12 +200,12 @@ public final class SmtpConnection extends MailConnection {
     @Override
     protected void processGreeting() throws IOException {
         // Server greeting.
-        String reply = mailIn.readLine();
+        Reply reply = Reply.parse(mailIn.readLine());
         mailIn.trace();
         if (reply == null) {
             throw new MailException("Did not receive greeting from server");
         }
-        if (getReplyCode(reply) != 220) {
+        if (reply.code != 220) {
             throw new IOException("Expected greeting, but got: " + reply);
         }
 
@@ -212,15 +215,27 @@ public final class SmtpConnection extends MailConnection {
         }
 
         SmtpConfig config = getSmtpConfig();
-        if (config.needAuth()) {
+        if (config.getAuthenticationId() != null) {
             if (!serverExtensions.contains(AUTH)) {
-                throw new MailException("The server doesn't support authentication.");
+                throw new MailException("The server doesn't support SMTP-AUTH.");
             }
-            //TODO Only LOGIN is supported so far.
-            if (serverAuthMechanisms.contains("LOGIN")) {
-                config.setMechanism("LOGIN");
+            String mech = config.getMechanism();
+            if (mech != null) {
+                if (!serverAuthMechanisms.contains(mech.toUpperCase())) {
+                    throw new MailException("Auth mechanism mismatch client=" + mech + ",server="+ serverAuthMechanisms);
+                }
             } else {
-                throw new MailException("No authentication mechansims supported: " + serverAuthMechanisms);
+                if (serverAuthMechanisms.contains(LOGIN)) {
+                    config.setMechanism(LOGIN);
+                } else if (serverAuthMechanisms.contains(SaslAuthenticator.PLAIN)) {
+                    config.setMechanism(SaslAuthenticator.PLAIN);
+                } else if (serverAuthMechanisms.contains(SaslAuthenticator.CRAM_MD5)) {
+                    config.setMechanism(SaslAuthenticator.CRAM_MD5);
+                } else if (serverAuthMechanisms.contains(SaslAuthenticator.DIGEST_MD5)) {
+                    config.setMechanism(SaslAuthenticator.DIGEST_MD5);
+                } else {
+                    throw new MailException("No auth mechanism supported: " + serverAuthMechanisms);
+                }
             }
         }
 
@@ -234,7 +249,7 @@ public final class SmtpConnection extends MailConnection {
      * @throws IOException if the server response was invalid
      */
     private int ehlo() throws IOException {
-        String reply = sendCommand(EHLO, getSmtpConfig().getDomain());
+        Reply reply = sendCommand(EHLO, getSmtpConfig().getDomain());
         return readHelloReplies(EHLO, reply);
     }
 
@@ -244,14 +259,14 @@ public final class SmtpConnection extends MailConnection {
      * @throws IOException if the server did not respond with reply code {@code 250}
      */
     private void helo() throws IOException {
-        String reply = sendCommand(HELO, getSmtpConfig().getDomain());
+        Reply reply = sendCommand(HELO, getSmtpConfig().getDomain());
         int replyCode = readHelloReplies(HELO, reply);
         if (replyCode != 250) {
-            throw new CommandFailedException(HELO, reply);
+            throw new CommandFailedException(HELO, reply.toString());
         }
     }
 
-    private static final Pattern PAT_EXTENSION = Pattern.compile("250[ -]([^\\s]+)(.*)");
+    private static final Pattern PAT_EXTENSION = Pattern.compile("([^\\s]+)(.*)");
 
     /**
      * Reads replies to {@code EHLO} or {@code HELO}.
@@ -261,26 +276,24 @@ public final class SmtpConnection extends MailConnection {
      * @param command the command name
      * @param firstReply the first reply line returned from sending {@code EHLO} or {@code HELO}
      */
-    private int readHelloReplies(String command, String firstReply) throws IOException {
+    private int readHelloReplies(String command, Reply firstReply) throws IOException {
 
-        String reply = firstReply;
-        int replyCode;
+        Reply reply = firstReply;
         int line = 1;
         serverExtensions.clear();
         serverAuthMechanisms.clear();
 
         while (true) {
-            if (reply.length() < 4) {
+            if (reply.text == null) {
                 throw new CommandFailedException(command, "Invalid server response at line " + line + ": " + reply);
             }
-            replyCode = getReplyCode(reply);
-            if (replyCode != 250) {
-                return replyCode;
+            if (reply.code != 250) {
+                return reply.code;
             }
 
             if (line > 1) {
                 // Parse server extensions.
-                Matcher matcher = PAT_EXTENSION.matcher(reply);
+                Matcher matcher = PAT_EXTENSION.matcher(reply.text);
                 if (matcher.matches()) {
                     String extName = matcher.group(1).toUpperCase();
                     serverExtensions.add(extName);
@@ -293,17 +306,11 @@ public final class SmtpConnection extends MailConnection {
                     }
                 }
             }
-
-            char fourthChar = reply.charAt(3);
-            if (fourthChar == '-') {
-                // Multiple response lines.
-                reply = mailIn.readLine();
-            } else if (fourthChar == ' ') {
+            if (reply.last) { // Last 250 response.
                 mailIn.trace();
-                // Last 250 response.
                 return 250;
-            } else {
-                throw new CommandFailedException(command, "Invalid server response at line " + line + ": " + reply);
+            } else { // Multiple response lines.
+                reply = Reply.parse(mailIn.readLine());
             }
             line++;
         }
@@ -312,15 +319,15 @@ public final class SmtpConnection extends MailConnection {
     @Override
     protected void sendLogin(String user, String pass) throws IOException {
         // Send AUTH LOGIN command.
-        String reply = sendCommand(AUTH, "LOGIN");
-        if (getReplyCode(reply) != 334) {
-            throw new CommandFailedException(AUTH, reply);
+        Reply reply = sendCommand(AUTH, LOGIN);
+        if (reply.code != 334) {
+            throw new CommandFailedException(AUTH, reply.toString());
         }
 
         // Send username.
         reply = sendCommand(Base64.encodeBase64(user.getBytes()), null);
-        if (getReplyCode(reply) != 334) {
-            if (isPositive(reply)) {
+        if (reply.code != 334) {
+            if (reply.isPositive()) {
                 return;
             } else {
                 throw new CommandFailedException(AUTH, "AUTH LOGIN failed: " + reply);
@@ -329,21 +336,41 @@ public final class SmtpConnection extends MailConnection {
 
         // Send password.
         reply = sendCommand(Base64.encodeBase64(pass.getBytes()), null);
-        if (!isPositive(reply)) {
+        if (!reply.isPositive()) {
             throw new CommandFailedException(AUTH, "AUTH LOGIN failed: " + reply);
         }
     }
 
     @Override
     protected void sendAuthenticate(boolean ir) throws IOException {
-        StringBuilder sb = new StringBuilder(authenticator.getMechanism());
-        if (ir) {
-            sb.append(' ');
-            sb.append(Ascii.toString(Base64.encodeBase64(authenticator.getInitialResponse())));
+        Reply reply;
+        if (authenticator.hasInitialResponse()) {
+            reply = sendCommand(AUTH, authenticator.getMechanism() + ' ' +
+                    Ascii.toString(Base64.encodeBase64(authenticator.getInitialResponse())));
+        } else {
+            reply = sendCommand(AUTH, authenticator.getMechanism());
         }
-        String reply = sendCommand(AUTH, sb.toString());
-        if (isNegative(reply)) {
-            throw new CommandFailedException(AUTH, reply);
+
+        while (true) {
+            switch (reply.code) {
+                case 235: // success
+                    if (authenticator.isComplete()) {
+                        return;
+                    } else {
+                        throw new SaslException("SASL client auth not complete yet S: " + reply.toString());
+                    }
+                case 334: // continue
+                    byte[] challenge = Strings.isNullOrEmpty(reply.text) ? new byte[0] : Base64.decodeBase64(reply.text);
+                    byte[] response = authenticator.evaluateChallenge(challenge);
+                    if (response != null) {
+                        reply = sendCommand(Ascii.toString(Base64.encodeBase64(response)), null);
+                    } else {
+                        reply = sendCommand("", null);
+                    }
+                    continue;
+                default:
+                    throw new CommandFailedException(AUTH, reply.toString());
+            }
         }
     }
 
@@ -486,9 +513,9 @@ public final class SmtpConnection extends MailConnection {
 
         mail(sender);
         rcpt(recipients);
-        String reply = sendCommand(DATA, null);
-        if (getReplyCode(reply) != 354) {
-            throw new CommandFailedException(DATA, reply);
+        Reply reply = sendCommand(DATA, null);
+        if (reply.code != 354) {
+            throw new CommandFailedException(DATA, reply.toString());
         }
 
         SmtpDataOutputStream smtpData = new SmtpDataOutputStream(mailOut);
@@ -500,13 +527,13 @@ public final class SmtpConnection extends MailConnection {
         smtpData.end();
         mailOut.flush();
         mailOut.trace();
-        reply = mailIn.readLine();
+        reply = Reply.parse(mailIn.readLine());
         mailIn.trace();
         if (reply == null) {
             throw new CommandFailedException(DATA, "No response");
         }
-        if (!isPositive(reply)) {
-            throw new CommandFailedException(DATA, reply);
+        if (!reply.isPositive()) {
+            throw new CommandFailedException(DATA, reply.toString());
         }
         quit();
         close();
@@ -517,7 +544,7 @@ public final class SmtpConnection extends MailConnection {
      *
      * @throws CommandFailedException if the server did not respond
      */
-    private String sendCommand(String command, String args) throws IOException {
+    private Reply sendCommand(String command, String args) throws IOException {
         return sendCommand(command.getBytes(), args);
     }
 
@@ -526,7 +553,7 @@ public final class SmtpConnection extends MailConnection {
      *
      * @throws CommandFailedException if the server did not respond
      */
-    private String sendCommand(byte[] command, String args) throws IOException {
+    private Reply sendCommand(byte[] command, String args) throws IOException {
         mailOut.write(command);
         if (!Strings.isNullOrEmpty(args)) {
             mailOut.write(' ');
@@ -535,7 +562,7 @@ public final class SmtpConnection extends MailConnection {
         mailOut.newLine();
         mailOut.flush();
         mailOut.trace();
-        String reply = mailIn.readLine();
+        Reply reply = Reply.parse(mailIn.readLine());
         mailIn.trace();
         if (reply == null) {
             throw new CommandFailedException(new String(command), "No response from server");
@@ -554,18 +581,19 @@ public final class SmtpConnection extends MailConnection {
         if (from == null) {
             from = "";
         }
-        String reply = sendCommand(MAIL, "FROM:" + normalizeAddress(from));
-        if (!isPositive(reply)) {
+        Reply reply = sendCommand(MAIL, "FROM:" + normalizeAddress(from));
+        if (!reply.isPositive()) {
             validRecipients.clear();
-            throw new CommandFailedException(MAIL, reply);
+            throw new CommandFailedException(MAIL, reply.toString());
         }
     }
 
     private String normalizeAddress(String addr) {
-        if ((!addr.startsWith("<")) && (!addr.endsWith(">")))
+        if ((!addr.startsWith("<")) && (!addr.endsWith(">"))) {
             return "<" + addr + ">";
-        else
+        } else {
             return addr;
+        }
     }
 
     /**
@@ -575,9 +603,9 @@ public final class SmtpConnection extends MailConnection {
      * @throws IOException socket error
      */
     void rset() throws IOException {
-        String reply = sendCommand(RSET, null);
-        if (!isPositive(reply)) {
-            throw new CommandFailedException(RSET, reply);
+        Reply reply = sendCommand(RSET, null);
+        if (!reply.isPositive()) {
+            throw new CommandFailedException(RSET, reply.toString());
         }
     }
 
@@ -586,33 +614,18 @@ public final class SmtpConnection extends MailConnection {
             if (recipient == null) {
                 recipient = "";
             }
-            String reply = sendCommand(RCPT, "TO:" + normalizeAddress(recipient));
-            if (!isPositive(reply)) {
+            Reply reply = sendCommand(RCPT, "TO:" + normalizeAddress(recipient));
+            if (!reply.isPositive()) {
                 validRecipients.remove(recipient);
                 invalidRecipients.add(recipient);
                 if (!getSmtpConfig().isPartialSendAllowed()) {
-                    throw new InvalidRecipientException(recipient, reply);
+                    throw new InvalidRecipientException(recipient, reply.toString());
                 }
             }
         }
         if (validRecipients.isEmpty()) {
             throw new CommandFailedException(RCPT, "No valid recipients");
         }
-    }
-
-    /**
-     * Returns {@code true} if the code from the given reply is between {@code 200} and {@code 299}.
-     */
-    private boolean isPositive(String reply) throws IOException {
-        int replyCode = getReplyCode(reply);
-        if (200 <= replyCode && replyCode <= 299) {
-            return true;
-        }
-        return false;
-    }
-
-    private boolean isNegative(String reply) throws IOException {
-        return (getReplyCode(reply) >= 400);
     }
 
     private void quit() throws IOException {
@@ -623,19 +636,58 @@ public final class SmtpConnection extends MailConnection {
         }
     }
 
-    private static int getReplyCode(String line) throws IOException {
-        if (line == null || line.length() < 3) {
-            throw new IOException("Invalid server response: '" + line + "'");
-        }
-        String replyCodeString = line.substring(0, 3);
-        try {
-            return Integer.parseInt(replyCodeString);
-        } catch (NumberFormatException e) {
-            throw new IOException("Could not parse reply code: " + line);
-        }
-    }
-
     private SmtpConfig getSmtpConfig() {
         return (SmtpConfig) config;
     }
+
+    private static final class Reply {
+        final int code;
+        String text;
+        boolean last;
+
+        private Reply(String line) throws IOException {
+            if (line == null || line.length() < 3) {
+                throw new IOException("Invalid server response: '" + line + "'");
+            }
+            try {
+                code = Integer.parseInt(line.substring(0, 3));
+            } catch (NumberFormatException e) {
+                throw new IOException("Invalid server response: '" + line + "'");
+            }
+            if (line.length() > 4) {
+                switch (line.charAt(3)) {
+                    case '-':
+                        last = false;
+                        break;
+                    case ' ':
+                        last = true;
+                        break;
+                    default:
+                        throw new IOException("Invalid server response: '" + line + "'");
+                }
+                text = line.substring(4).trim();
+            }
+        }
+
+        static Reply parse(String line) throws IOException {
+            if (Strings.isNullOrEmpty(line)) {
+                return null;
+            } else {
+                return new Reply(line);
+            }
+        }
+
+        /**
+         * Returns true if the reply code is between {@code 200} and {@code 299}.
+         */
+        boolean isPositive() {
+            return 200 <= code && code <= 299;
+        }
+
+        @Override
+        public String toString() {
+            return text == null ? String.valueOf(code) : (code + " " + text);
+        }
+    }
+
 }

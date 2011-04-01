@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -25,7 +25,7 @@ public final class AuthenticatorFactory {
     private Map<String, Info> authenticators;
 
     private static class Info {
-        Class clazz;
+        Class<? extends Authenticator> clazz;
         boolean passwordRequired;
     }
 
@@ -38,11 +38,12 @@ public final class AuthenticatorFactory {
 
     public AuthenticatorFactory() {
         authenticators = new HashMap<String, Info>();
-        register(SaslAuthenticator.MECHANISM_PLAIN, SaslAuthenticator.class);
-        register(SaslAuthenticator.MECHANISM_GSSAPI, SaslAuthenticator.class, false);
-        register(SaslAuthenticator.MECHANISM_CRAM_MD5, SaslAuthenticator.class);
+        register(SaslAuthenticator.PLAIN, SaslAuthenticator.class);
+        register(SaslAuthenticator.GSSAPI, SaslAuthenticator.class, false);
+        register(SaslAuthenticator.CRAM_MD5, SaslAuthenticator.class);
+        register(SaslAuthenticator.DIGEST_MD5, SaslAuthenticator.class);
     }
-    
+
     public Authenticator newAuthenticator(MailConfig config, String password)
         throws LoginException, SaslException {
         String mechanism = config.getMechanism();
@@ -55,10 +56,9 @@ public final class AuthenticatorFactory {
         }
         Authenticator auth;
         try {
-            auth = (Authenticator) info.clazz.newInstance();
+            auth = info.clazz.newInstance();
         } catch (Exception e) {
-            throw new IllegalStateException(
-                "Unable to instantiate class: " + info.clazz, e);
+            throw new IllegalStateException("Unable to instantiate class: " + info.clazz, e);
         }
         auth.init(config, password);
         return auth;
@@ -68,15 +68,13 @@ public final class AuthenticatorFactory {
         Info info = authenticators.get(mechanism);
         return info != null && info.passwordRequired;
     }
-    
+
     public Authenticator newAuthenticator(MailConfig config)
         throws LoginException, SaslException {
         return newAuthenticator(config, null);
     }
 
-    public void register(String mechanism,
-                         Class<? extends Authenticator> clazz,
-                         boolean passwordRequired) {
+    public void register(String mechanism, Class<? extends Authenticator> clazz, boolean passwordRequired) {
         Info info = new Info();
         info.clazz = clazz;
         info.passwordRequired = passwordRequired;
