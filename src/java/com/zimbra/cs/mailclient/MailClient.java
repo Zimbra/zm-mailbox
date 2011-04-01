@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -21,7 +21,6 @@ import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
 import com.zimbra.cs.mailclient.smtp.SmtpConfig;
 import com.zimbra.cs.mailclient.smtp.SmtpConnection;
 import com.zimbra.cs.mailclient.util.SSLUtil;
-import com.zimbra.cs.mailclient.util.Password;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.pop3.Pop3Config;
@@ -29,6 +28,8 @@ import com.zimbra.cs.mailclient.pop3.Pop3Connection;
 
 import javax.security.sasl.Sasl;
 import javax.security.auth.login.LoginException;
+
+import java.io.Console;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -43,28 +44,31 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.Level;
 
 public abstract class MailClient {
-    private MailConfig config;
+    private final MailConfig config;
     protected MailConnection connection;
-    private StringBuilder sbuf;
+    private final StringBuilder sbuf = new StringBuilder(132);
     private String password;
     private boolean eof;
 
     protected MailClient(MailConfig config) {
         this.config = config;
-        sbuf = new StringBuilder(132);
     }
 
     public void run(String[] args) throws LoginException, IOException {
         BasicConfigurator.configure();
         Logger.getRootLogger().setLevel(Level.INFO);
         config.getLogger().setLevel(Log.Level.trace);
-        parseArguments(args);
+        parseArguments(args, config);
         connect();
         authenticate();
         startCommandLoop();
     }
 
     protected abstract void printUsage(PrintStream ps);
+
+    protected void setPassword(String value) {
+        password = value;
+    }
 
     protected void connect() throws IOException {
         config.setConnectTimeout(30);
@@ -74,12 +78,14 @@ public abstract class MailClient {
     }
 
     protected void authenticate() throws LoginException, IOException {
-        if (password == null && isPasswordRequired()) {
-            password = Password.read("Password: ");
-        }
-        if (config.getAuthenticationId() == null) {
-            // Authentication id defaults to login username
-            config.setAuthenticationId(System.getProperty("user.name"));
+        Console console = System.console();
+        if (console != null) {
+            if (config.getAuthenticationId() == null) {
+                config.setAuthenticationId(console.readLine("Username: "));
+            }
+            if (password == null && isPasswordRequired()) {
+                password = new String(console.readPassword("Password: "));
+            }
         }
         connection.authenticate(password);
         String qop = connection.getNegotiatedQop();
@@ -103,8 +109,7 @@ public abstract class MailClient {
         } else if (config instanceof SmtpConfig) {
             return new SmtpConnection((SmtpConfig) config);
         } else {
-            throw new IllegalArgumentException(
-                "Unsupported protocol: " + config.getProtocol());
+            throw new IllegalArgumentException("Unsupported protocol: " + config.getProtocol());
         }
     }
 
@@ -152,26 +157,21 @@ public abstract class MailClient {
         return c != -1 ? sbuf.toString() : null;
     }
 
-    public void parseArguments(String[] args) {
+    protected void parseArguments(String[] args, MailConfig config) {
+        ListIterator<String> itr = Arrays.asList(args).listIterator();
         try {
-            parseArguments(Arrays.asList(args).listIterator());
+            while (itr.hasNext() && parseArgument(itr));
+            if (!itr.hasNext()) {
+                throw new IllegalArgumentException("Missing required hostname");
+            }
+            config.setHost(itr.next());
+            if (itr.hasNext()) {
+                throw new IllegalArgumentException("Extra arguments found after hostname");
+            }
         } catch (IllegalArgumentException e) {
             System.err.printf("ERROR: %s\n", e);
             printUsage(System.err);
             System.exit(1);
-        }
-    }
-
-    private void parseArguments(ListIterator<String> args) {
-        while (args.hasNext() && parseArgument(args)) {
-            // Continue parsing...
-        }
-        if (!args.hasNext()) {
-            throw new IllegalArgumentException("Missing required hostname");
-        }
-        config.setHost(args.next());
-        if (args.hasNext()) {
-            throw new IllegalArgumentException("Extra arguments found after hostname");
         }
     }
 

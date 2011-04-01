@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -41,22 +41,24 @@ import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
 import java.util.Map;
 
-public class SaslAuthenticator extends Authenticator {
+public final class SaslAuthenticator extends Authenticator {
     private MailConfig config;
     private String password;
     private LoginContext loginContext;
     private Subject subject;
     private SaslClient saslClient;
 
-    public static final String MECHANISM_GSSAPI = "GSSAPI";
-    public static final String MECHANISM_PLAIN = "PLAIN";
-    public static final String MECHANISM_CRAM_MD5 = "CRAM-MD5";
+    public static final String GSSAPI = "GSSAPI";
+    public static final String PLAIN = "PLAIN";
+    public static final String CRAM_MD5 = "CRAM-MD5";
+    public static final String DIGEST_MD5 = "DIGEST-MD5";
 
     public static final String QOP_AUTH = "auth";
     public static final String QOP_AUTH_CONF = "auth-conf";
     public static final String QOP_AUTH_INT = "auth-int";
 
-    public SaslAuthenticator() {}
+    public SaslAuthenticator() {
+    }
 
     @Override
     public void init(MailConfig config, String password) throws LoginException, SaslException {
@@ -67,8 +69,7 @@ public class SaslAuthenticator extends Authenticator {
         checkRequired("host", config.getHost());
         checkRequired("protocol", config.getProtocol());
         checkRequired("authentication id", config.getAuthenticationId());
-        saslClient = mechanism.equals(MECHANISM_GSSAPI) ?
-            createGssSaslClient() : createSaslClient();
+        saslClient = mechanism.equals(GSSAPI) ? createGssSaslClient() : createSaslClient();
         Map<String, String> props = config.getSaslProperties();
         String qop = QOP_AUTH;
         if (props != null) {
@@ -108,14 +109,12 @@ public class SaslAuthenticator extends Authenticator {
             } else if (cause instanceof LoginException) {
                 throw (LoginException) cause;
             } else {
-                throw new IllegalStateException(
-                    "Error initialization GSS authenticator", e);
+                throw new IllegalStateException("Error initialization GSS authenticator", e);
             }
         }
     }
 
-    private static final String LOGIN_MODULE_NAME =
-        "com.sun.security.auth.module.Krb5LoginModule";
+    private static final String LOGIN_MODULE_NAME = "com.sun.security.auth.module.Krb5LoginModule";
 
     private LoginContext getLoginContext() throws LoginException {
         Map<String, String> options = new HashMap<String, String>();
@@ -123,10 +122,8 @@ public class SaslAuthenticator extends Authenticator {
         options.put("principal", getPrincipal());
         // options.put("useTicketCache", "true");
         // options.put("storeKey", "true");
-        final AppConfigurationEntry ace = new AppConfigurationEntry(
-            LOGIN_MODULE_NAME,
-            AppConfigurationEntry.LoginModuleControlFlag.REQUIRED,
-            options);
+        final AppConfigurationEntry ace = new AppConfigurationEntry(LOGIN_MODULE_NAME,
+                AppConfigurationEntry.LoginModuleControlFlag.REQUIRED, options);
         Configuration config = new Configuration() {
             @Override
             public AppConfigurationEntry[] getAppConfigurationEntry(String name) {
@@ -142,8 +139,7 @@ public class SaslAuthenticator extends Authenticator {
     private String getPrincipal() {
         String realm = config.getRealm();
         String authenticationId = config.getAuthenticationId();
-        return realm != null && authenticationId.indexOf('@') == -1 ?
-            authenticationId + '@' + realm : authenticationId;
+        return realm != null && authenticationId.indexOf('@') == -1 ? authenticationId + '@' + realm : authenticationId;
     }
 
     private SaslClient createSaslClient() throws SaslException {
@@ -187,8 +183,7 @@ public class SaslAuthenticator extends Authenticator {
     @Override
     public byte[] getInitialResponse() throws SaslException {
         if (!hasInitialResponse()) {
-            throw new IllegalStateException(
-                "Mechanism does not support initial response");
+            throw new IllegalStateException("Mechanism does not support initial response");
         }
         return saslClient.evaluateChallenge(new byte[0]);
     }
@@ -211,16 +206,14 @@ public class SaslAuthenticator extends Authenticator {
                     ((NameCallback) cb).setName(config.getAuthenticationId());
                 } else if (cb instanceof PasswordCallback) {
                     if (password == null) {
-                        throw new IllegalStateException(
-                            "Password missing but required");
+                        throw new IllegalStateException("Password missing but required");
                     }
                     ((PasswordCallback) cb).setPassword(password.toCharArray());
                     password = null; // Clear password once finished
                 } else if (cb instanceof RealmCallback) {
                     String realm = config.getRealm();
                     if (realm == null) {
-                        throw new IllegalStateException(
-                            "Realm missing but required");
+                        throw new IllegalStateException("Realm missing but required");
                     }
                     ((RealmCallback) cb).setText(realm);
                 } else {
@@ -237,14 +230,12 @@ public class SaslAuthenticator extends Authenticator {
 
     @Override
     public OutputStream wrap(OutputStream os) {
-        return isEncryptionEnabled() ?
-            new SaslOutputStream(os, saslClient) : os;
+        return isEncryptionEnabled() ? new SaslOutputStream(os, saslClient) : os;
     }
 
     @Override
     public InputStream unwrap(InputStream is) {
-        return isEncryptionEnabled() ?
-            new SaslInputStream(is, saslClient) : is;
+        return isEncryptionEnabled() ? new SaslInputStream(is, saslClient) : is;
     }
 
     @Override
