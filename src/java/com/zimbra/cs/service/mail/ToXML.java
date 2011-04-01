@@ -1538,6 +1538,8 @@ public class ToXML {
                 e.addAttribute(MailConstants.A_CAL_ID, itemId);
                 if (invite.isEvent())
                     e.addAttribute(MailConstants.A_APPT_ID_DEPRECATE_ME, itemId);  // for backward compat
+                ItemId ciFolderId = new ItemId(calItem.getMailbox(), calItem.getFolderId());
+                e.addAttribute(MailConstants.A_CAL_ITEM_FOLDER, ifmt.formatItemId(ciFolderId));
             }
 
             Recurrence.IRecurrence recur = invite.getRecurrence();
