@@ -169,7 +169,7 @@ public class Note extends MailItem {
     }
 
     @Override
-    public List<IndexDocument> generateIndexData(boolean doConsistencyCheck) {
+    public List<IndexDocument> generateIndexData() {
         String toIndex = getText();
         IndexDocument doc = new IndexDocument();
         doc.addContent(toIndex);
@@ -197,7 +197,7 @@ public class Note extends MailItem {
         // XXX: should probably update both mData.size and the Mailbox's size
         mData.setSubject(content);
         mData.date = mMailbox.getOperationTimestamp();
-        saveData();
+        saveData(new DbMailItem(mMailbox));
     }
 
     protected void saveSubject() throws ServiceException {

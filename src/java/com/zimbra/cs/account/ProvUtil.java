@@ -120,7 +120,6 @@ import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.SoapCLI;
 import com.zimbra.cs.wiki.WikiUtil;
 import com.zimbra.cs.zclient.ZMailboxUtil;
-import com.zimbra.soap.admin.message.RecalculateMailboxCountsRequest;
 
 /**
  * @author schemers
@@ -567,7 +566,7 @@ public class ProvUtil implements HttpDebugListener {
         PUSH_FREEBUSY_DOMAIN("pushFreebusyDomain", "pfbd", "{domain}", Category.FREEBUSY, 1, 1),
         PURGE_ACCOUNT_CALENDAR_CACHE("purgeAccountCalendarCache", "pacc", "{name@domain|id} [...]", Category.CALENDAR, 1, Integer.MAX_VALUE),
         PURGE_FREEBUSY_QUEUE("purgeFreebusyQueue", "pfbq", "[{provider-name}]", Category.FREEBUSY, 0, 1),
-        RECALCULATE_MAILBOX_COUNTS("recalculateMailboxCounts", "rmc", "{name@domain|id} [ALL|FOLDER_TAG|MAIL_ADDRESS]", Category.MAILBOX, 1, 2),
+        RECALCULATE_MAILBOX_COUNTS("recalculateMailboxCounts", "rmc", "{name@domain|id}", Category.MAILBOX, 1, 1),
         REMOVE_ACCOUNT_ALIAS("removeAccountAlias", "raa", "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 2),
         REMOVE_ACCOUNT_LOGGER("removeAccountLogger", "ral", "[-s/--server hostname] [{name@domain|id}] [{logging-category}]", Category.LOG, 0, 4),
         REMOVE_DISTRIBUTION_LIST_ALIAS("removeDistributionListAlias", "rdla", "{list@domain|id} {alias@domain}", Category.LIST, 2, 2),
@@ -1387,18 +1386,7 @@ public class ProvUtil implements HttpDebugListener {
         }
         SoapProvisioning sp = (SoapProvisioning) prov;
         Account account = lookupAccount(args[1]);
-        RecalculateMailboxCountsRequest.Action action;
-        if (args.length > 2 && args[2] != null) {
-            try {
-                action = RecalculateMailboxCountsRequest.Action.valueOf(args[2]);
-            } catch (IllegalArgumentException e) {
-                usage();
-                return;
-            }
-        } else {
-            action = RecalculateMailboxCountsRequest.Action.ALL;
-        }
-        long quotaUsed = sp.recalculateMailboxCounts(account, action);
+        long quotaUsed = sp.recalculateMailboxCounts(account);
         console.printf("account: " + account.getName() + "\nquotaUsed: " + quotaUsed + "\n");
     }
 

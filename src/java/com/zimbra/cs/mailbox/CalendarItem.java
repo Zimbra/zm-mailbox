@@ -237,7 +237,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
     }
 
     @Override
-    public List<IndexDocument> generateIndexData(boolean doConsistencyCheck) throws MailItem.TemporaryIndexingException {
+    public List<IndexDocument> generateIndexData() throws TemporaryIndexingException {
         List<IndexDocument> docs = null;
         synchronized(getMailbox()) {
             docs = getIndexDocuments();
@@ -2196,7 +2196,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             subject = firstInvite.getName();
         }
         mData.setSubject(Strings.nullToEmpty(subject));
-        saveData();
+        saveData(new DbMailItem(mMailbox));
     }
 
     /**
@@ -3434,8 +3434,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
      *                  CalendarItem.NEXT_ALARM_FROM_NOW - compute next trigger time from current time
      * @param skipAlarmDefChangeCheck
      */
-    private AlarmData getNextAbsoluteTriggerAlarm(long atOrAfter, boolean forEmailAction)
-    throws ServiceException {
+    private AlarmData getNextAbsoluteTriggerAlarm(long atOrAfter, boolean forEmailAction) {
         long triggerAt = Long.MAX_VALUE;
         Alarm theAlarm = null;
         Invite theInvite = null;

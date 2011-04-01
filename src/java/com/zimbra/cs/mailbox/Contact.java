@@ -704,18 +704,18 @@ public class Contact extends MailItem {
     }
 
     @Override
-    public List<IndexDocument> generateIndexData(boolean doConsistencyCheck) throws TemporaryIndexingException {
+    public List<IndexDocument> generateIndexData() throws TemporaryIndexingException {
         synchronized (mMailbox) {
             try {
                 ParsedContact pc = new ParsedContact(this);
                 pc.analyze(mMailbox);
-                if (pc.hasTemporaryAnalysisFailure())
+                if (pc.hasTemporaryAnalysisFailure()) {
                     throw new TemporaryIndexingException();
+                }
                 return pc.getLuceneDocuments(mMailbox);
-            } catch (TemporaryIndexingException tie) {
-                throw tie;
-            } catch (Exception e) {
-                return new ArrayList<IndexDocument>();
+            } catch (ServiceException e) {
+                ZimbraLog.index.error("Failed to index contact id=%d", getId());
+                return Collections.emptyList();
             }
         }
     }

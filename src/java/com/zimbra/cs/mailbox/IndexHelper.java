@@ -42,6 +42,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.db.DbMailAddress;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
@@ -362,7 +363,9 @@ public final class IndexHelper {
                     boolean success = false;
                     try {
                         mailbox.beginTransaction("re-index-fully", octx, null);
+                        ZimbraLog.index.info("Resetting all index IDs");
                         DbMailItem.resetIndexId(mailbox);
+                        ZimbraLog.index.info("Deleting Lucene index data");
                         getMailboxIndex().deleteIndex();
                         success = true;
                     } catch (IOException e) {
@@ -372,7 +375,19 @@ public final class IndexHelper {
                     }
                 }
                 clearDeferredIds();
+                ZimbraLog.index.info("Re-indexing all items");
                 indexDeferredItems(EnumSet.noneOf(MailItem.Type.class), status, true);
+
+                ZimbraLog.index.info("Rebuilding MAIL_ADDRESS table");
+                synchronized (mailbox) {
+                    boolean success = false;
+                    try {
+                        mailbox.beginTransaction("DbMailAddress.rebuild", octx, null);
+                        DbMailAddress.rebuild(mailbox.getOperationConnection(), mailbox);
+                    } finally {
+                        mailbox.endTransaction(success);
+                    }
+                }
             } else { // partial re-index
                 indexLock.acquireUninterruptibly();
                 try {
@@ -505,7 +520,7 @@ public final class IndexHelper {
                 continue;
             }
             try {
-                chunk.add(new Mailbox.IndexItemEntry(item, item.generateIndexData(true)));
+                chunk.add(new Mailbox.IndexItemEntry(item, item.generateIndexData()));
             } catch (MailItem.TemporaryIndexingException e) {
                 ZimbraLog.index.warn("Temporary index failure id=%d", id, e);
                 lastFailedTime = System.currentTimeMillis();

@@ -61,7 +61,6 @@ import com.zimbra.soap.admin.message.GetServerNIfsRequest;
 import com.zimbra.soap.admin.message.GetServerNIfsResponse;
 import com.zimbra.soap.admin.message.GetVersionInfoRequest;
 import com.zimbra.soap.admin.message.GetVersionInfoResponse;
-import com.zimbra.soap.admin.message.RecalculateMailboxCountsRequest;
 import com.zimbra.soap.admin.type.LicenseExpirationInfo;
 import com.zimbra.soap.admin.type.NetworkInformation;
 import com.zimbra.soap.admin.type.ServerSelector;
@@ -491,7 +490,7 @@ public class TestJaxbProvisioning extends TestCase {
     public void testMboxCounts() throws Exception {
         ZimbraLog.test.debug("Starting testMboxCounts");
         Account acct = ensureMailboxExists(testAcctEmail);
-        long quotaUsed = prov.recalculateMailboxCounts(acct, RecalculateMailboxCountsRequest.Action.ALL);
+        long quotaUsed = prov.recalculateMailboxCounts(acct);
         assertTrue("quota used=" + quotaUsed + " should be >= =", quotaUsed >= 0);
     }
 

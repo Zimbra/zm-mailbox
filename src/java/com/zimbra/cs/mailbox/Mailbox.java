@@ -71,7 +71,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.datasource.DataSourceManager;
-import com.zimbra.cs.db.DbMailAddress;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
@@ -1568,17 +1567,6 @@ public class Mailbox {
             mData.contacts = -1;
             loadFoldersAndTags();
 
-            success = true;
-        } finally {
-            endTransaction(success);
-        }
-    }
-
-    public synchronized void rebuildMailAddressDirectory() throws ServiceException {
-        boolean success = false;
-        try {
-            beginTransaction("rebuildMailAddressDirectory", null);
-            DbMailAddress.rebuild(getOperationConnection(), this);
             success = true;
         } finally {
             endTransaction(success);
@@ -6951,7 +6939,7 @@ public class Mailbox {
             boolean success = false;
             try {
                 beginTransaction("addDocumentRevision", octxt, redoRecorder);
-                
+
                 Document doc = getDocumentById(docId);
                 redoRecorder.setDocument(pd);
                 redoRecorder.setDocId(docId);

@@ -21,7 +21,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.google.common.base.Strings;
-import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.Contact;
@@ -180,17 +179,15 @@ public final class DbMailAddress {
     public static void rebuild(DbConnection conn, Mailbox mbox) throws ServiceException {
         String[] emailFields = Contact.getEmailFields(mbox.getAccount());
         PreparedStatement stmt = null;
-        PreparedStatement inner = null;
         ResultSet rs = null;
         try {
-            // clear all sender_id in mail_item
-            stmt = conn.prepareStatement("UPDATE " + DbMailItem.getMailItemTableName(mbox) +
-                    " SET sender_id = NULL WHERE mailbox_id = ?");
-            stmt.setInt(1, mbox.getId());
+            // reset all counts
+            stmt = conn.prepareStatement("UPDATE " + getTableName(mbox) +
+                    " SET contact_count = ? WHERE mailbox_id = ?");
+            stmt.setInt(1, 0);
+            stmt.setInt(2, mbox.getId());
             stmt.executeUpdate();
             stmt.close();
-            // delete all rows in mail_address
-            DbMailAddress.delete(conn, mbox);
 
             // extract email addresses from all contacts, and put them into mail_address
             stmt = conn.prepareStatement("SELECT metadata FROM " + DbMailItem.getMailItemTableName(mbox) +
@@ -217,40 +214,9 @@ public final class DbMailAddress {
                     }
                 }
             }
-            rs.close();
-            stmt.close();
-
-            // extract sender addresses from all messages, put them into mail_address, and set sender_id
-            stmt = conn.prepareStatement("SELECT id, sender FROM " + DbMailItem.getMailItemTableName(mbox) +
-                    " WHERE mailbox_id = ? AND type = ? AND sender IS NOT NULL");
-            stmt.setInt(1, mbox.getId());
-            stmt.setByte(2, MailItem.Type.MESSAGE.toByte());
-            rs = stmt.executeQuery();
-            while (rs.next()) {
-                int itemId = rs.getInt(1);
-                String sender = rs.getString(2);
-                for (InternetAddress iaddr : InternetAddress.parseHeader(sender)) {
-                    String addr = iaddr.getAddress();
-                    if (!Strings.isNullOrEmpty(addr)) {
-                        addr = addr.trim().toLowerCase();
-                        int senderId = DbMailAddress.getId(conn, mbox, addr);
-                        if (senderId < 0) {
-                            senderId = DbMailAddress.save(conn, mbox, addr, 0);
-                        }
-                        inner = conn.prepareStatement("UPDATE " + DbMailItem.getMailItemTableName(mbox) +
-                                " SET sender_id = ? WHERE mailbox_id = ? AND id = ?");
-                        inner.setInt(1, senderId);
-                        inner.setInt(2, mbox.getId());
-                        inner.setInt(3, itemId);
-                        inner.executeUpdate();
-                        inner.close();
-                    }
-                }
-            }
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("Failed to rebuild Mail Address Directory", e);
+            throw ServiceException.FAILURE("Failed to rebuild", e);
         } finally {
-            conn.closeQuietly(inner);
             conn.closeQuietly(rs);
             conn.closeQuietly(stmt);
         }

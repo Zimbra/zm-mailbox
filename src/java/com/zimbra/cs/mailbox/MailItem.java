@@ -1,15 +1,15 @@
 /*
+ * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
- * The contents of this file are subject to the Yahoo! Public License
- * Version 1.0 ("License"); you may not use this file except in
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
  *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- *
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.mailbox;
@@ -226,7 +226,6 @@ public abstract class MailItem implements Comparable<MailItem> {
         public int folderId = -1;
         public int indexId = IndexStatus.NO.id();
         public int imapId   = -1;
-        public int senderId = -1;
         public String locator;
         private String blobDigest;
         public int date;
@@ -261,23 +260,23 @@ public abstract class MailItem implements Comparable<MailItem> {
         public boolean isUnread() {
             return (unreadCount > 0);
         }
-        
+
         public int getFlags() {
             return flags;
         }
-        
+
         public void setFlag(Flag flag) {
             setFlags(flags | (int) flag.getBitmask());
         }
-        
+
         public void setFlag(Flag.FlagInfo flag) {
             setFlags(flags | flag.toBitmask());
         }
-        
+
         public void unsetFlag(Flag flag) {
             setFlags(flags & ~((int) flag.getBitmask()));
         }
-        
+
         public void unsetFlag(Flag.FlagInfo flag) {
             setFlags(flags & ~flag.toBitmask());
         }
@@ -290,11 +289,11 @@ public abstract class MailItem implements Comparable<MailItem> {
             bitfield &= Flag.FLAGS_ALL;
             this.flags = bitfield;
         }
-        
+
         public boolean isSet(Flag.FlagInfo flag) {
             return (this.flags & flag.toBitmask()) != 0;
         }
-        
+
         UnderlyingData duplicate(int newId, int newFolder, String newLocator) {
             UnderlyingData data = new UnderlyingData();
             data.id = newId;
@@ -303,7 +302,6 @@ public abstract class MailItem implements Comparable<MailItem> {
             data.folderId = newFolder;
             data.indexId = this.indexId;
             data.imapId = this.imapId <= 0 ? this.imapId : newId;
-            data.senderId = this.senderId;
             data.locator = newLocator;
             data.blobDigest = this.blobDigest;
             data.date = this.date;
@@ -1320,29 +1318,17 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
     /**
-     * Returns the indexable data to be passed into reIndex.  This API is generally
-     * to be called WITHOUT the Mailbox lock is held -- it is the implementation's
-     * responsibility to lock the mailbox if that is necessary to get a consistent
-     * snapshot.
+     * Returns the indexable data to be passed into index. Subclasses that support indexing must override.
      * <p>
-     * Note that <code>doConsistencyCheck</code> <u>must</u> be <tt>false</tt> when
-     * this method is called from {@see Mailbox#endTransaction(boolean)}.
+     * This API is generally to be called WITHOUT the Mailbox lock is held -- it is the implementation's responsibility
+     * to lock the mailbox if that is necessary to get a consistent snapshot.
      *
-     * @param doConsistencyCheck  If <tt>true</tt>, also perform a sanity check by
-     *                            comparing the overview data (subject, fragment,
-     *                            etc.) with that in the object itself; if the check
-     *                            fails, {@see Mailbox#reanalyze(int, byte, Object)}
-     *                            will be called to update the database before the
-     *                            index data is generated
-     * @return a list of lucene Documents to be added to the index for this item
-     * @throws ServiceException
+     * @return a list of Lucene Documents to be added to the index for this item
+     * @throws TemporaryIndexingException recoverable index error
      */
-    @SuppressWarnings("unused")
-    public List<IndexDocument> generateIndexData(boolean doConsistencyCheck) throws TemporaryIndexingException {
-        // override in subclasses that support indexing
+    public List<IndexDocument> generateIndexData() throws TemporaryIndexingException {
         return null;
     }
-
 
     /** Returns the item's parent.  Returns <tt>null</tt> if the item
      *  does not have a parent.
@@ -1843,7 +1829,7 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         mData.metadataChanged(mMailbox);
         if (persist) {
-            saveData();
+            saveData(new DbMailItem(mMailbox));
         }
     }
 
@@ -3098,17 +3084,17 @@ public abstract class MailItem implements Comparable<MailItem> {
         DbMailItem.saveName(this, folderId, encodeMetadata());
     }
 
-    protected void saveData() throws ServiceException {
-        saveData(encodeMetadata());
+    protected void saveData(DbMailItem data) throws ServiceException {
+        saveData(data, encodeMetadata());
     }
 
-    protected void saveData(Metadata metadata) throws ServiceException {
+    protected void saveData(DbMailItem data, Metadata metadata) throws ServiceException {
         assert(metadata != null);
         mData.metadataChanged(mMailbox);
         if (ZimbraLog.mailop.isDebugEnabled()) {
             ZimbraLog.mailop.debug("saving data for %s", getMailopContext(this));
         }
-        DbMailItem.saveData(this, metadata);
+        data.update(this, metadata);
     }
 
     /**

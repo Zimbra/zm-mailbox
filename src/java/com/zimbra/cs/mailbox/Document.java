@@ -111,12 +111,14 @@ public class Document extends MailItem {
         return getAccount().getIntAttr(Provisioning.A_zimbraNotebookMaxRevisions, 0);
     }
 
-    @Override public List<IndexDocument> generateIndexData(boolean doConsistencyCheck) throws MailItem.TemporaryIndexingException {
+    @Override
+    public List<IndexDocument> generateIndexData() throws TemporaryIndexingException {
         ParsedDocument pd = null;
         try {
             MailboxBlob mblob = getBlob();
             if (mblob == null) {
-                ZimbraLog.index.warn("Unable to fetch blob for Document id "+mId+" version "+mVersion+" on volume "+getLocator());
+                ZimbraLog.index.warn("Unable to fetch blob for Document id=%d,ver=%d,vol=%s",
+                        mId, mVersion, getLocator());
                 throw new MailItem.TemporaryIndexingException();
             }
 
@@ -144,12 +146,14 @@ public class Document extends MailItem {
         }
     }
 
-    @Override public void reanalyze(Object obj, long newSize) throws ServiceException {
-        if (!(obj instanceof ParsedDocument))
+    @Override
+    public void reanalyze(Object obj, long newSize) throws ServiceException {
+        if (!(obj instanceof ParsedDocument)) {
             throw ServiceException.FAILURE("cannot reanalyze non-ParsedDocument object", null);
-        if (mData.isSet(Flag.FlagInfo.UNCACHED))
+        }
+        if (mData.isSet(Flag.FlagInfo.UNCACHED)) {
             throw ServiceException.FAILURE("cannot reanalyze an old item revision", null);
-
+        }
         ParsedDocument pd = (ParsedDocument) obj;
 
         // new revision has at least new date.
@@ -177,7 +181,7 @@ public class Document extends MailItem {
             mData.size = pd.getSize();
         }
 
-        saveData();
+        saveData(new DbMailItem(mMailbox));
     }
 
     protected static UnderlyingData prepareCreate(MailItem.Type type, int id, Folder folder, String name,

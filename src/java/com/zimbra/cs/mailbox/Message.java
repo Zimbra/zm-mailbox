@@ -478,14 +478,6 @@ public class Message extends MailItem {
         Account acct = mbox.getAccount();
 
         String sender = pm.getSenderEmail();
-        int senderId = -1;
-        if (!Strings.isNullOrEmpty(sender)) {
-            String addr = sender.trim().toLowerCase();
-            senderId = DbMailAddress.getId(mbox.getOperationConnection(), mbox, addr);
-            if (senderId < 0) {
-                senderId = DbMailAddress.save(mbox.getOperationConnection(), mbox, addr, 0);
-            }
-        }
 
         List<Invite> components = null;
         String methodStr = null;
@@ -532,7 +524,6 @@ public class Message extends MailItem {
         }
         data.locator = staged.getLocator();
         data.imapId = id;
-        data.senderId = senderId;
         data.date = (int) (date / 1000);
         data.size = staged.getSize();
         data.setBlobDigest(staged.getDigest());
@@ -547,6 +538,7 @@ public class Message extends MailItem {
                               data.id, pm.getMessageID(), data.parentId, folder.getId(), folder.getName());
         new DbMailItem(mbox)
             .setSender(pm.getParsedSender().getSortString())
+            .setSenderId(saveSender(mbox, sender))
             .setRecipients(ParsedAddress.getSortString(pm.getParsedRecipients()))
             .create(data);
         Message msg = fact.create(mbox, data);
@@ -562,6 +554,19 @@ public class Message extends MailItem {
 
         msg.finishCreation(conv);
         return msg;
+    }
+
+    private static int saveSender(Mailbox mbox, String sender) throws ServiceException {
+        if (Strings.isNullOrEmpty(sender)) { // skip
+            return -1;
+        } else {
+            String addr = sender.trim().toLowerCase();
+            int senderId = DbMailAddress.getId(mbox.getOperationConnection(), mbox, addr);
+            if (senderId < 0) {
+                senderId = DbMailAddress.save(mbox.getOperationConnection(), mbox, addr, 0);
+            }
+            return senderId;
+        }
     }
 
     /**
@@ -1139,7 +1144,7 @@ public class Message extends MailItem {
     }
 
     @Override
-    public List<IndexDocument> generateIndexData(boolean doConsistencyCheck) throws TemporaryIndexingException {
+    public List<IndexDocument> generateIndexData() throws TemporaryIndexingException {
         try {
             ParsedMessage pm = null;
             synchronized (getMailbox()) {
@@ -1153,20 +1158,8 @@ public class Message extends MailItem {
             }
             pm.setDefaultCharset(getAccount().getPrefMailDefaultCharset());
 
-            if (doConsistencyCheck) {
-                // because of bug 8263, we sometimes have fragments that are incorrect;
-                //   check them here and correct them if necessary
-                String fragment = pm.getFragment();
-                boolean fragmentChanged = !getFragment().equals(fragment == null ? "" : fragment);
-
-                // because of changes to normalization algorithm (notably bug 28536), normalized subject may be wrong;
-                //   check here and correct if necessary
-                String subject = pm.getNormalizedSubject();
-                boolean subjectChanged = !getNormalizedSubject().equals(subject == null ? "" : subject);
-
-                if (fragmentChanged || subjectChanged) {
-                    getMailbox().reanalyze(getId(), getType(), pm, getSize());
-                }
+            if (mMailbox.index.isReIndexInProgress()) {
+                getMailbox().reanalyze(getId(), getType(), pm, getSize());
             }
 
             // don't hold the lock while extracting text!
@@ -1182,14 +1175,12 @@ public class Message extends MailItem {
         }
     }
 
-
     @Override
     void reanalyze(Object data, long newSize) throws ServiceException {
         if (!(data instanceof ParsedMessage)) {
             throw ServiceException.FAILURE("cannot reanalyze non-ParsedMessage object", null);
         }
         ParsedMessage pm = (ParsedMessage) data;
-
         MailItem parent = getParent();
 
         // make sure the SUBJECT is correct
@@ -1238,8 +1229,8 @@ public class Message extends MailItem {
         }
 
         // rewrite the DB row to reflect our new view
-        saveData(encodeMetadata(mRGBColor, mVersion, mExtendedData, pm, draftInfo,
-                calendarItemInfos, calendarIntendedFor));
+        saveData(new DbMailItem(mMailbox).setSenderId(saveSender(mMailbox, pm.getSenderEmail())), encodeMetadata(
+                mRGBColor, mVersion, mExtendedData, pm, draftInfo, calendarItemInfos, calendarIntendedFor));
 
         if (parent instanceof VirtualConversation) {
             ((VirtualConversation) parent).recalculateMetadata(Collections.singletonList(this));

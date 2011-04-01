@@ -163,8 +163,8 @@ public class Conversation extends MailItem {
         }
 
         // need to rewrite the overview metadata
-        ZimbraLog.mailbox.debug("resetting metadata: cid=" + mId + ", size was=" + mData.size + " is=" + mSenderList.size());
-        saveData();
+        ZimbraLog.mailbox.debug("resetting metadata: cid=%d,size was=%d is=%d", mId, mData.size, mSenderList.size());
+        saveData(new DbMailItem(mMailbox));
         return mSenderList;
     }
 

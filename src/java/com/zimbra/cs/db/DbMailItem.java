@@ -197,8 +197,8 @@ public class DbMailItem {
             stmt.setInt(pos++, data.getFlags());
             stmt.setLong(pos++, data.tags);
             stmt.setString(pos++, sender);
-            if (data.senderId >= 0) {
-                stmt.setInt(pos++, data.senderId);
+            if (senderId >= 0) {
+                stmt.setInt(pos++, senderId);
             } else {
                 stmt.setNull(pos++, Types.INTEGER);
             }
@@ -1017,20 +1017,19 @@ public class DbMailItem {
         }
     }
 
-    public static void saveData(MailItem item, Metadata metadata) throws ServiceException {
-        Mailbox mbox = item.getMailbox();
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
+    public void update(MailItem item, Metadata metadata) throws ServiceException {
+        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mailbox));
         String name = item.getName().equals("") ? null : item.getName();
-        checkNamingConstraint(mbox, item.getFolderId(), name, item.getId());
+        checkNamingConstraint(mailbox, item.getFolderId(), name, item.getId());
 
-        DbConnection conn = mbox.getOperationConnection();
+        DbConnection conn = mailbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-                        " SET type = ?, imap_id = ?, index_id = ?, parent_id = ?, date = ?, size = ?, flags = ?," +
-                        "  blob_digest = ?, sender = ?, recipients = ?, subject = ?, name = ?, metadata = ?," +
-                        "  mod_metadata = ?, change_date = ?, mod_content = ?, volume_id = ?" +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
+                    " SET type = ?, imap_id = ?, index_id = ?, parent_id = ?, date = ?, size = ?, flags = ?, " +
+                    "blob_digest = ?, sender = ?, sender_id = ?, recipients = ?, subject = ?, name = ?, " +
+                    "metadata = ?, mod_metadata = ?, change_date = ?, mod_content = ?, volume_id = ? WHERE " +
+                    IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             stmt.setByte(pos++, item.getType().toByte());
             if (item.getImapUid() >= 0) {
@@ -1054,33 +1053,37 @@ public class DbMailItem {
             stmt.setInt(pos++, item.getInternalFlagBitmask());
             stmt.setString(pos++, item.getDigest());
             stmt.setString(pos++, item.getSortSender());
+            if (senderId >= 0) {
+                stmt.setInt(pos++, senderId);
+            } else {
+                stmt.setNull(pos++, Types.INTEGER);
+            }
             stmt.setString(pos++, item.getSortRecipients());
             stmt.setString(pos++, item.getSortSubject());
             stmt.setString(pos++, name);
             stmt.setString(pos++, checkMetadataLength(metadata.toString()));
-            stmt.setInt(pos++, mbox.getOperationChangeID());
-            stmt.setInt(pos++, mbox.getOperationTimestamp());
+            stmt.setInt(pos++, mailbox.getOperationChangeID());
+            stmt.setInt(pos++, mailbox.getOperationTimestamp());
             stmt.setInt(pos++, item.getSavedSequence());
             if (item.getLocator() != null) {
                 stmt.setString(pos++, item.getLocator());
             } else {
                 stmt.setNull(pos++, Types.TINYINT);
             }
-            pos = setMailboxId(stmt, mbox, pos);
+            pos = setMailboxId(stmt, mailbox, pos);
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
 
-            // Update the flagset cache.  Assume that the item's in-memory
-            // data has already been updated.
-            if (areFlagsetsLoaded(mbox)) {
-                getFlagsetCache(conn, mbox).addTagset(item.getInternalFlagBitmask());
+            // Update the flagset cache.  Assume that the item's in-memory data has already been updated.
+            if (areFlagsetsLoaded(mailbox)) {
+                getFlagsetCache(conn, mailbox).addTagset(item.getInternalFlagBitmask());
             }
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
             if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
                 throw MailServiceException.ALREADY_EXISTS(item.getName(), e);
             } else {
-                throw ServiceException.FAILURE("rewriting row data for mailbox " + item.getMailboxId() + ", item " + item.getId(), e);
+                throw ServiceException.FAILURE("Failed to update item mbox=" + mailbox.getId() + ",id=" + item.getId(), e);
             }
         } finally {
             DbPool.closeStatement(stmt);
@@ -4276,6 +4279,7 @@ public class DbMailItem {
     private final Mailbox mailbox;
     // The following data are only used for INSERT/UPDATE, not loaded by SELECT.
     private String sender;
+    private int senderId = -1;
     private String recipients;
 
     /**
@@ -4289,6 +4293,11 @@ public class DbMailItem {
         if (!Strings.isNullOrEmpty(value)) {
             sender = DbMailItem.normalize(value, DbMailItem.MAX_SENDER_LENGTH);
         }
+        return this;
+    }
+
+    public DbMailItem setSenderId(int value) {
+        senderId = value;
         return this;
     }
 

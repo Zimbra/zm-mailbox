@@ -106,7 +106,7 @@ public class IndexItem extends RedoableOp {
         }
 
         try {
-            List<IndexDocument> docList = item.generateIndexData(true);
+            List<IndexDocument> docList = item.generateIndexData();
             mbox.index.redoIndexItem(item, mId, docList);
         } catch (Exception e) {
             // TODO - update the item and set the item's "unindexed" flag

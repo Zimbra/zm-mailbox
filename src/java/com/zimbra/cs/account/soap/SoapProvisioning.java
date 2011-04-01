@@ -440,7 +440,7 @@ public class SoapProvisioning extends Provisioning {
         if (attrs == null) return;
 
         for (Entry<String, ? extends Object> entry : attrs.entrySet()) {
-            String key = (String) entry.getKey();
+            String key = entry.getKey();
             Object value = entry.getValue();
             if (value instanceof String) {
                 Element  a = req.addElement(AdminConstants.E_A);
@@ -456,7 +456,7 @@ public class SoapProvisioning extends Provisioning {
                     for (String v: values) {
                         Element  a = req.addElement(AdminConstants.E_A);
                         a.addAttribute(AdminConstants.A_N, key);
-                        a.setText((String)v);
+                        a.setText(v);
                     }
                 }
             } else if (value == null) {
@@ -764,7 +764,7 @@ public class SoapProvisioning extends Provisioning {
         public long getUsed() { return mUsed; }
         public long getLimit() { return mLimit; }
 
-        QuotaUsage(AccountQuotaInfo quotaInfo) throws ServiceException {
+        QuotaUsage(AccountQuotaInfo quotaInfo) {
             mName = quotaInfo.getName();
             mId = quotaInfo.getId();
             mUsed = quotaInfo.getQuotaUsed();
@@ -992,11 +992,10 @@ public class SoapProvisioning extends Provisioning {
         return new VerifyIndexResult(resp.isStatus(), resp.getMessage());
     }
 
-    public long recalculateMailboxCounts(Account acct, RecalculateMailboxCountsRequest.Action action)
-            throws ServiceException {
+    public long recalculateMailboxCounts(Account acct) throws ServiceException {
         String hostname = getServer(acct).getServiceHostname();
         MailboxByAccountIdSelector mbox = new MailboxByAccountIdSelector(acct.getId());
-        RecalculateMailboxCountsResponse resp = invokeJaxb(new RecalculateMailboxCountsRequest(mbox, action), hostname);
+        RecalculateMailboxCountsResponse resp = invokeJaxb(new RecalculateMailboxCountsRequest(mbox), hostname);
         return resp.getMailbox().getQuotaUsed();
     }
 
@@ -1656,7 +1655,7 @@ public class SoapProvisioning extends Provisioning {
         if (attrs == null) return;
 
         for (Entry<String, ? extends Object> entry : attrs.entrySet()) {
-            String key = (String) entry.getKey();
+            String key = entry.getKey();
             Object value = entry.getValue();
             if (value instanceof String) {
                 Element  a = req.addElement(MailConstants.E_ATTRIBUTE);

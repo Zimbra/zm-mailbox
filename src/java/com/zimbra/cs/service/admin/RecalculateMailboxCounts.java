@@ -21,7 +21,6 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
@@ -32,7 +31,6 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.admin.message.RecalculateMailboxCountsRequest;
 
 public final class RecalculateMailboxCounts extends AdminDocumentHandler {
 
@@ -76,9 +74,6 @@ public final class RecalculateMailboxCounts extends AdminDocumentHandler {
 
         Element mreq = request.getElement(AdminConstants.E_MAILBOX);
         String accountId = mreq.getAttribute(AdminConstants.A_ACCOUNTID);
-        RecalculateMailboxCountsRequest.Action action = parseAction(request);
-
-        ZimbraLog.mailbox.info("RecalculateMailboxCounts action=%s", action);
 
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(AccountBy.id, accountId, zsc.getAuthToken());
@@ -92,20 +87,7 @@ public final class RecalculateMailboxCounts extends AdminDocumentHandler {
             throw MailServiceException.NO_SUCH_MBOX(accountId);
         }
 
-        switch (action) {
-            case FOLDER_TAG:
-                mbox.recalculateFolderAndTagCounts();
-                break;
-            case MAIL_ADDRESS:
-                mbox.rebuildMailAddressDirectory();
-                break;
-            case ALL:
-                mbox.recalculateFolderAndTagCounts();
-                mbox.rebuildMailAddressDirectory();
-                break;
-            default:
-                assert false : action;
-        }
+        mbox.recalculateFolderAndTagCounts();
 
         Element response = zsc.createElement(AdminConstants.RECALCULATE_MAILBOX_COUNTS_RESPONSE);
         response.addElement(AdminConstants.E_MAILBOX)
@@ -119,18 +101,6 @@ public final class RecalculateMailboxCounts extends AdminDocumentHandler {
         relatedRights.add(Admin.R_adminLoginAs);
         relatedRights.add(Admin.R_adminLoginCalendarResourceAs);
         notes.add(AdminRightCheckPoint.Notes.ADMIN_LOGIN_AS);
-    }
-
-    private RecalculateMailboxCountsRequest.Action parseAction(Element req) throws ServiceException {
-        String value = req.getAttribute(AdminConstants.A_ACTION, null);
-        if (value == null) {
-            return RecalculateMailboxCountsRequest.Action.ALL;
-        }
-        try {
-            return RecalculateMailboxCountsRequest.Action.valueOf(value.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw ServiceException.INVALID_REQUEST("Unknown action: " + value, null);
-        }
     }
 
 }

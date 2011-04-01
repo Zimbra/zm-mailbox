@@ -30,7 +30,6 @@ import com.zimbra.cs.db.DbMailAddress;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.db.DbPool.DbConnection;
-import com.zimbra.cs.db.HSQLDB;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -45,7 +44,7 @@ public final class MessageTest {
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
-        
+
         Provisioning prov = Provisioning.getInstance();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
     }
@@ -66,7 +65,7 @@ public final class MessageTest {
         ParsedMessage pm = new ParsedMessage(raw, false);
         Message message = mbox.addMessage(null, pm, opt);
         Assert.assertEquals("\u65e5\u672c\u8a9e", pm.getFragment());
-        List<IndexDocument> docs = message.generateIndexData(false);
+        List<IndexDocument> docs = message.generateIndexData();
         Assert.assertEquals(2, docs.size());
         String subject = docs.get(0).toDocument().getField(LuceneFields.L_H_SUBJECT).stringValue();
         String body = docs.get(0).toDocument().getField(LuceneFields.L_CONTENT).stringValue();
@@ -84,12 +83,21 @@ public final class MessageTest {
         Message msg3 = mbox.addMessage(null, new ParsedMessage("From: test3@zimbra.com".getBytes(), false), opt);
 
         DbConnection conn = DbPool.getConnection(mbox);
-        Assert.assertEquals(DbMailAddress.getId(conn, mbox, "test1@zimbra.com"), msg1.mData.senderId);
-        Assert.assertEquals(DbMailAddress.getId(conn, mbox, "test2@zimbra.com"), msg2.mData.senderId);
-        Assert.assertEquals(DbMailAddress.getId(conn, mbox, "test3@zimbra.com"), msg3.mData.senderId);
-        Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox, msg1.mData.senderId));
-        Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox, msg2.mData.senderId));
-        Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox, msg3.mData.senderId));
+        int senderId1 = DbUtil.executeQuery(conn,
+                "SELECT sender_id FROM mboxgroup1.mail_item WHERE mailbox_id = ? AND id = ?",
+                mbox.getId(), msg1.getId()).getInt(1);
+        int senderId2 = DbUtil.executeQuery(conn,
+                "SELECT sender_id FROM mboxgroup1.mail_item WHERE mailbox_id = ? AND id = ?",
+                mbox.getId(), msg2.getId()).getInt(1);
+        int senderId3 = DbUtil.executeQuery(conn,
+                "SELECT sender_id FROM mboxgroup1.mail_item WHERE mailbox_id = ? AND id = ?",
+                mbox.getId(), msg3.getId()).getInt(1);
+        Assert.assertEquals(DbMailAddress.getId(conn, mbox, "test1@zimbra.com"), senderId1);
+        Assert.assertEquals(DbMailAddress.getId(conn, mbox, "test2@zimbra.com"), senderId2);
+        Assert.assertEquals(DbMailAddress.getId(conn, mbox, "test3@zimbra.com"), senderId3);
+        Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox, senderId1));
+        Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox, senderId2));
+        Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox, senderId3));
         conn.closeQuietly();
     }
 
