@@ -23,15 +23,8 @@ import com.zimbra.soap.admin.type.MailboxByAccountIdSelector;
 @XmlRootElement(name=AdminConstants.E_RECALCULATE_MAILBOX_COUNTS_REQUEST)
 public class RecalculateMailboxCountsRequest {
 
-    public enum Action {
-        ALL, FOLDER_TAG, MAIL_ADDRESS
-    }
-
     @XmlElement(name=AdminConstants.E_MAILBOX, required=true)
     private final MailboxByAccountIdSelector mbox;
-
-    @XmlElement(name=AdminConstants.A_ACTION)
-    private final Action action;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -39,19 +32,14 @@ public class RecalculateMailboxCountsRequest {
     @SuppressWarnings("unused")
     private RecalculateMailboxCountsRequest() {
         mbox = null;
-        action = null;
     }
 
-    public RecalculateMailboxCountsRequest(MailboxByAccountIdSelector mbox, Action action) {
+    public RecalculateMailboxCountsRequest(MailboxByAccountIdSelector mbox) {
         this.mbox = mbox;
-        this.action = action;
     }
 
     public MailboxByAccountIdSelector getMbox() {
         return mbox;
     }
 
-    public Action getAction() {
-        return action;
-    }
 }
