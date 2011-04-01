@@ -5607,5 +5607,16 @@ TODO: delete them permerntly from here
   <desc>SSL certificate</desc>
 </attr>
 
+<attr id="2003" name="zimbraPrefCalendarAcceptSignatureId" type="id" cardinality="single" optionalIn="account,identity,dataSource" flags="domainAdminModifiable" since="8.0.0">
+  <desc>calendar manual accept reply signature for account/identity/dataSource</desc>
+</attr>
+
+<attr id="2004" name="zimbraPrefCalendarTentativeSignatureId" type="id" cardinality="single" optionalIn="account,identity,dataSource" flags="domainAdminModifiable" since="8.0.0">
+  <desc>calendar manual tentative accept reply signature id for account/identity/dataSource</desc>
+</attr>
+
+<attr id="2005" name="zimbraPrefCalendarDeclineSignatureId" type="id" cardinality="single" optionalIn="account,identity,dataSource" flags="domainAdminModifiable" since="8.0.0">
+  <desc>calendar manual decline reply signature id for account/identity/dataSource</desc>
+</attr>
 
 </attrs>

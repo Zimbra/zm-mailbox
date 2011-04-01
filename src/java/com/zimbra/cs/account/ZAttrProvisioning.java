@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110328-1433 */
+    /* build: 7.0.0_BETA1_1111 jhahm 20110331-1747 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -6238,6 +6238,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefBriefcaseReadingPaneLocation = "zimbraPrefBriefcaseReadingPaneLocation";
 
     /**
+     * calendar manual accept reply signature for account/identity/dataSource
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=2003)
+    public static final String A_zimbraPrefCalendarAcceptSignatureId = "zimbraPrefCalendarAcceptSignatureId";
+
+    /**
      * whether to allow a cancel email sent to organizer of appointment
      *
      * @since ZCS 5.0.9
@@ -6339,6 +6347,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=439)
     public static final String A_zimbraPrefCalendarDayHourStart = "zimbraPrefCalendarDayHourStart";
+
+    /**
+     * calendar manual decline reply signature id for
+     * account/identity/dataSource
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=2005)
+    public static final String A_zimbraPrefCalendarDeclineSignatureId = "zimbraPrefCalendarDeclineSignatureId";
 
     /**
      * first day of week to show in calendar (0=sunday, 6=saturday)
@@ -6470,6 +6487,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1022)
     public static final String A_zimbraPrefCalendarShowPastDueReminders = "zimbraPrefCalendarShowPastDueReminders";
+
+    /**
+     * calendar manual tentative accept reply signature id for
+     * account/identity/dataSource
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=2004)
+    public static final String A_zimbraPrefCalendarTentativeSignatureId = "zimbraPrefCalendarTentativeSignatureId";
 
     /**
      * whether to enable toaster notification for new mail
