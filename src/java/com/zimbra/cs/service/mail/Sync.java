@@ -112,8 +112,9 @@ public class Sync extends MailDocumentHandler {
 
                 boolean anyFolders = folderSync(response, octxt, ifmt, mbox, root, visible, calendarStart, SyncPhase.INITIAL);
                 // if no folders are visible, add an empty "<folder/>" as a hint
-                if (!anyFolders)
+                if (!anyFolders) {
                     response.addElement(MailConstants.E_FOLDER);
+                }
             } else {
                 boolean typedDeletes = request.getAttributeBool(MailConstants.A_TYPED_DELETES, false);
                 String newToken = deltaSync(response, octxt, ifmt, mbox, tokenInt, itemCutoff, typedDeletes, root, visible);
@@ -165,28 +166,32 @@ public class Sync extends MailDocumentHandler {
 
         // write the subfolders' data to the response
         for (Folder subfolder : subfolders) {
-            if (subfolder != null)
+            if (subfolder != null) {
                 isVisible |= folderSync(f, octxt, ifmt, mbox, subfolder, visible, calendarStart, phase);
+            }
         }
 
         // if this folder and all its subfolders are not visible (oops!), remove them from the response
-        if (!isVisible)
+        if (!isVisible) {
             f.detach();
+        }
 
         return isVisible;
     }
 
     private static void initialTagSync(Element f, OperationContext octxt, ItemIdFormatter ifmt, Mailbox mbox) throws ServiceException {
         for (Tag tag : mbox.getTagList(octxt)) {
-            if (tag != null && !(tag instanceof Flag))
+            if (tag != null && !(tag instanceof Flag)) {
                 ToXML.encodeTag(f, ifmt, tag, Change.ALL_FIELDS);
+            }
         }
     }
 
     private static final Set<MailItem.Type> CALENDAR_TYPES = EnumSet.of(MailItem.Type.APPOINTMENT, MailItem.Type.TASK);
 
     private static void initialCalendarSync(Element f, TypedIdList idlist, OperationContext octxt, Mailbox mbox,
-            Folder folder, long calendarStart) throws ServiceException {
+            Folder folder, long calendarStart)
+    throws ServiceException {
         if (calendarStart > 0 && !Collections.disjoint(idlist.types(), CALENDAR_TYPES)) {
             idlist = mbox.listCalendarItemsForRange(octxt, MailItem.Type.UNKNOWN, calendarStart, -1, folder.getId());
         }
@@ -214,7 +219,7 @@ public class Sync extends MailDocumentHandler {
 
     private static String deltaSync(Element response, OperationContext octxt, ItemIdFormatter ifmt, Mailbox mbox,
             int begin, int itemCutoff, boolean typedDeletes, Folder root, Set<Folder> visible)
-            throws ServiceException {
+    throws ServiceException {
         String newToken = mbox.getLastChangeID() + "";
         if (begin >= mbox.getLastChangeID())
             return newToken;
@@ -226,33 +231,37 @@ public class Sync extends MailDocumentHandler {
         // then, put together the requested folder hierarchy in 2 different flavors
         List<Folder> hierarchy = (root == null || root.getId() == Mailbox.ID_FOLDER_USER_ROOT ? null : root.getSubfolderHierarchy());
         Set<Integer> targetIds = (root != null && root.getId() == Mailbox.ID_FOLDER_USER_ROOT ? null : new HashSet<Integer>(hierarchy == null ? 0 : hierarchy.size()));
-        if (hierarchy != null)
-            for (Folder folder : hierarchy)
+        if (hierarchy != null) {
+            for (Folder folder : hierarchy) {
                 targetIds.add(folder.getId());
+            }
+        }
 
         // then, handle created/modified folders
         if (octxt.isDelegatedRequest(mbox)) {
             // first, make sure that something changed...
-            if (!mbox.getModifiedFolders(begin).isEmpty() ||
-                    (tombstones != null && !Collections.disjoint(tombstones.types(), FOLDER_TYPES))) {
+            if (!mbox.getModifiedFolders(begin).isEmpty() || !Collections.disjoint(tombstones.types(), FOLDER_TYPES)) {
                 // special-case the folder hierarchy for delegated delta sync
                 boolean anyFolders = folderSync(response, octxt, ifmt, mbox, root, visible, -1, SyncPhase.DELTA);
                 // if no folders are visible, add an empty "<folder/>" as a hint
-                if (!anyFolders)
+                if (!anyFolders) {
                     response.addElement(MailConstants.E_FOLDER);
+                }
             }
         } else {
             for (Folder folder : mbox.getModifiedFolders(begin)) {
-                if (targetIds == null || targetIds.contains(folder.getId()))
+                if (targetIds == null || targetIds.contains(folder.getId())) {
                     ToXML.encodeFolder(response, ifmt, octxt, folder, Change.ALL_FIELDS);
-                else
+                } else {
                     tombstones.add(folder.getType(), folder.getId());
+                }
             }
         }
 
         // next, handle created/modified tags
-        for (Tag tag : mbox.getModifiedTags(octxt, begin))
+        for (Tag tag : mbox.getModifiedTags(octxt, begin)) {
             ToXML.encodeTag(response, ifmt, tag, Change.ALL_FIELDS);
+        }
 
         // finally, handle created/modified "other items"
         int itemCount = 0;
@@ -285,11 +294,12 @@ public class Sync extends MailDocumentHandler {
         }
 
         // items that have been altered in non-visible folders will be returned as "deleted" in order to handle moves
-        if (changed.getSecond() != null)
+        if (changed.getSecond() != null) {
             tombstones.add(changed.getSecond());
+        }
 
         // cleanup: only return a <deleted> element if we're sending back deleted item ids
-        if (tombstones == null || tombstones.isEmpty()) {
+        if (tombstones.isEmpty()) {
             eDeleted.detach();
         } else {
             StringBuilder deleted = new StringBuilder(), typed = new StringBuilder();
@@ -297,14 +307,16 @@ public class Sync extends MailDocumentHandler {
                 typed.setLength(0);
                 for (Integer id : entry.getValue()) {
                     deleted.append(deleted.length() == 0 ? "" : ",").append(id);
-                    if (typedDeletes)
+                    if (typedDeletes) {
                         typed.append(typed.length() == 0 ? "" : ",").append(id);
+                    }
                 }
                 if (typedDeletes) {
                     // only add typed delete information if the client explicitly requested it
                     String eltName = elementNameForType(entry.getKey());
-                    if (eltName != null)
+                    if (eltName != null) {
                         eDeleted.addElement(eltName).addAttribute(MailConstants.A_IDS, typed.toString());
+                    }
                 }
             }
             eDeleted.addAttribute(MailConstants.A_IDS, deleted.toString());

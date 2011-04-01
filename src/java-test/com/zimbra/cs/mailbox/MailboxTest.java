@@ -24,6 +24,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
@@ -136,7 +137,51 @@ public final class MailboxTest {
         // fifth draft is not related to the parent and should not be threaded
         pm = generateMessage("Re: unrelated subject");
         draft = mbox.saveDraft(null, pm, Mailbox.ID_AUTO_INCREMENT);
-        parent = mbox.getMessageById(null, rootId);
         Assert.assertEquals("unrelated", -draft.getId(), draft.getConversationId());
+    }
+
+    @Test
+    public void trimTombstones() throws Exception {
+        Account acct = Provisioning.getInstance().getAccount("test@zimbra.com");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+
+        // add a message
+        int changeId1 = mbox.getLastChangeID();
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
+        int msgId = mbox.addMessage(null, generateMessage("foo"), dopt).getId();
+
+        // turn on sync tracking -- tombstone table should be empty
+        mbox.beginTrackingSync();
+        int changeId2 = mbox.getLastChangeID();
+        Assert.assertTrue("no changes", mbox.getTombstones(changeId2).isEmpty());
+
+        // verify that we can't use a sync token from *before* sync tracking was enabled
+        try {
+            mbox.getTombstones(changeId1);
+            Assert.fail("too-early sync token");
+        } catch (MailServiceException e) {
+            Assert.assertEquals("too-early sync token", e.getCode(), MailServiceException.MUST_RESYNC);
+        }
+
+        // delete the message and check that it generated a tombstone
+        mbox.delete(null, msgId, MailItem.Type.MESSAGE);
+        int changeId3 = mbox.getLastChangeID();
+        Assert.assertTrue("deleted item in tombstones", mbox.getTombstones(changeId2).contains(msgId));
+        Assert.assertTrue("no changes since delete", mbox.getTombstones(changeId3).isEmpty());
+
+        // purge the account with the default tombstone purge lifetime (3 months)
+        mbox.purgeMessages(null);
+        Assert.assertTrue("deleted item still in tombstones", mbox.getTombstones(changeId2).contains(msgId));
+
+        // purge the account and all its tombstones
+        LC.tombstone_max_age_ms.setDefault(0);
+        mbox.purgeMessages(null);
+        try {
+            mbox.getTombstones(changeId2);
+            Assert.fail("sync token predates purged tombstone");
+        } catch (MailServiceException e) {
+            Assert.assertEquals("sync token predates purged tombstone", e.getCode(), MailServiceException.MUST_RESYNC);
+        }
+        Assert.assertTrue("sync token matches last purged tombstone", mbox.getTombstones(changeId3).isEmpty());
     }
 }

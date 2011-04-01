@@ -67,6 +67,7 @@ public class MailServiceException extends ServiceException {
     public static final String CANNOT_LOCK     = "mail.CANNOT_LOCK";
     public static final String CANNOT_UNLOCK   = "mail.CANNOT_UNLOCK";
     public static final String LOCKED          = "mail.LOCKED";
+    public static final String MUST_RESYNC     = "mail.MUST_RESYNC";
 
     public static final String SCAN_ERROR      = "mail.SCAN_ERROR";
     public static final String UPLOAD_REJECTED = "mail.UPLOAD_REJECTED";
@@ -511,5 +512,9 @@ public class MailServiceException extends ServiceException {
 
     public static MailServiceException LOCKED(int id, String accountId) {
         return new MailServiceException("item is locked: " + id, LOCKED, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID), new Argument(ACCOUNT_ID, accountId, Argument.Type.ACCTID));
+    }
+    
+    public static ServiceException TOMBSTONES_EXPIRED() {
+        return new MailServiceException("sync token too old; tombstones have already been expired", MUST_RESYNC, SENDERS_FAULT);
     }
 }

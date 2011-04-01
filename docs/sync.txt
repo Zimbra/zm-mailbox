@@ -32,7 +32,7 @@
 </SyncResponse>
 
 
-<-- subsequent sync request -->
+<-- subsequent delta sync request -->
 
 <SyncRequest token="403" [l="{root-folder-id}"]/>
 
@@ -84,6 +84,8 @@
 <--   * any externally-caused changes since the last sync -->
 
 <-- if typed="1" is specified on the SyncRequest, deletes are also broken down by item type -->
+
+<-- if the response is a mail.MUST_RESYNC fault, client has fallen too far out of date and must re-initial sync -->
 
 <SyncRequest token="500" typed="1"/>
 

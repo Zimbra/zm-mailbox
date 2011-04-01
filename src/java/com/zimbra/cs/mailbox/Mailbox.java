@@ -263,6 +263,8 @@ public class Mailbox {
         List<Object> mOtherDirtyStuff = new LinkedList<Object>();
         PendingDelete deletes = null;
 
+        MailboxChange()  { }
+
         MailboxOperation getOperation() {
             if (recorder != null)
                 return recorder.getOperation();
@@ -295,6 +297,7 @@ public class Mailbox {
                     ZimbraLog.mailbox.debug("  increasing stack depth to " + depth + " (" + caller + ')');
             }
         }
+
         boolean endChange() {
             if (ZimbraLog.mailbox.isDebugEnabled()) {
                 if (depth <= 1) {
@@ -307,6 +310,7 @@ public class Mailbox {
             }
             return (--depth == 0);
         }
+
         boolean isActive()  { return active; }
 
         DbConnection getConnection() throws ServiceException {
@@ -329,10 +333,11 @@ public class Mailbox {
         }
 
         void addPendingDelete(PendingDelete info) {
-            if (deletes == null)
+            if (deletes == null) {
                 deletes = info;
-            else
+            } else {
                 deletes.add(info);
+            }
         }
 
         boolean isMailboxRowDirty(MailboxData data) {
@@ -346,8 +351,9 @@ public class Mailbox {
         }
 
         void reset() {
-            if (conn != null)
+            if (conn != null) {
                 DbPool.quietClose(conn);
+            }
             active = false;
             conn = null;  octxt = null;  tcon = null;
             depth = 0;
@@ -356,8 +362,8 @@ public class Mailbox {
             itemCache = null;
             indexItems.clear();
             mDirty.clear();  mOtherDirtyStuff.clear();
-            if (ZimbraLog.mailbox.isDebugEnabled())
-                ZimbraLog.mailbox.debug("clearing change");
+
+            ZimbraLog.mailbox.debug("clearing change");
         }
     }
 
@@ -657,16 +663,26 @@ public class Mailbox {
 
     /** Posts an IM-related notification to all the Mailbox's sessions. */
     public void postIMNotification(IMNotification imn) {
-        for (Session session : mListeners)
+        for (Session session : mListeners) {
             session.notifyIM(imn);
+        }
     }
 
     /** Returns whether the server is keeping track of message deletes
      *  (etc.) for sync clients.  By default, sync tracking is off.
      *
+     * @see #getSyncCutoff
      * @see #beginTrackingSync */
     boolean isTrackingSync() {
-        return (mCurrentChange.sync == null ? mData.trackSync : mCurrentChange.sync) > 0;
+        return getSyncCutoff() > 0;
+    }
+
+    /** Returns the smallest change number that can be used as a sync token.
+     *  If sync tracking is off, returns {@code 0}.
+     *
+     * @see #beginTrackingSync */
+    public int getSyncCutoff() {
+        return mCurrentChange.sync == null ? mData.trackSync : mCurrentChange.sync;
     }
 
     /** Returns whether the server is keeping track of message moves
@@ -2581,8 +2597,8 @@ public class Mailbox {
         try {
             beginTransaction("beginTrackingSync", null, redoRecorder);
 
-            DbMailbox.startTrackingSync(this);
             mCurrentChange.sync = getLastChangeID();
+            DbMailbox.startTrackingSync(this);
 
             success = true;
         } finally {
@@ -2607,8 +2623,11 @@ public class Mailbox {
     }
 
     public synchronized TypedIdList getTombstones(int lastSync) throws ServiceException {
-        if (!isTrackingSync())
+        if (!isTrackingSync()) {
             throw ServiceException.FAILURE("not tracking sync", null);
+        } else if (lastSync < getSyncCutoff()) {
+            throw MailServiceException.TOMBSTONES_EXPIRED();
+        }
 
         boolean success = false;
         try {
@@ -2626,7 +2645,7 @@ public class Mailbox {
     }
 
     public synchronized List<Folder> getModifiedFolders(final int lastSync, final MailItem.Type type)
-            throws ServiceException {
+    throws ServiceException {
         if (lastSync >= getLastChangeID()) {
             return Collections.emptyList();
         }
@@ -6723,7 +6742,7 @@ public class Mailbox {
             // get the folders we're going to be purging
             Folder trash = getFolderById(ID_FOLDER_TRASH);
             Folder spam  = getFolderById(ID_FOLDER_SPAM);
-            Folder sent = getFolderById(ID_FOLDER_SENT);
+            Folder sent  = getFolderById(ID_FOLDER_SENT);
             Folder inbox = getFolderById(ID_FOLDER_INBOX);
 
             boolean purgedAll = true;
@@ -6733,8 +6752,7 @@ public class Mailbox {
                 purgedAll = updatePurgedAll(purgedAll, numPurged, maxItemsPerFolder);
             }
             if (trashTimeout > 0) {
-                boolean useChangeDate =
-                    acct.getBooleanAttr(Provisioning.A_zimbraMailPurgeUseChangeDateForTrash, true);
+                boolean useChangeDate = acct.getBooleanAttr(Provisioning.A_zimbraMailPurgeUseChangeDateForTrash, true);
                 int numPurged = Folder.purgeMessages(this, trash, getOperationTimestamp() - trashTimeout, null, useChangeDate, true, maxItemsPerFolder);
                 ZimbraLog.purge.debug("Purged %d messages from Trash", numPurged);
                 purgedAll = updatePurgedAll(purgedAll, numPurged, maxItemsPerFolder);
@@ -6772,14 +6790,19 @@ public class Mailbox {
             }
 
             if (Threader.isHashPurgeAllowed(acct)) {
-                int convTimeout = (int) (LC.conversation_max_age_ms.longValue() / 1000);
+                int convTimeout = (int) (LC.conversation_max_age_ms.longValue() / Constants.MILLIS_PER_SECOND);
                 DbMailItem.closeOldConversations(this, getOperationTimestamp() - convTimeout);
             }
 
-            // TODO: reenamble tombstone purging once we're able to add the client
-            // support described in bug 12965.
-            // int tombstoneTimeout = (int) (LC.tombstone_max_age_ms.longValue() / 1000);
-            // DbMailItem.purgeTombstones(this, getOperationTimestamp() - tombstoneTimeout);
+            if (isTrackingSync()) {
+                int tombstoneTimeout = (int) (LC.tombstone_max_age_ms.longValue() / Constants.MILLIS_PER_SECOND);
+                int largestTrimmed = DbMailItem.purgeTombstones(this, getOperationTimestamp() - tombstoneTimeout);
+                if (largestTrimmed > getSyncCutoff()) {
+                    mCurrentChange.sync = largestTrimmed;
+                    DbMailbox.setSyncCutoff(this, mCurrentChange.sync);
+                }
+            }
+
             success = true;
             ZimbraLog.purge.debug("purgedAll=%b", purgedAll);
             return purgedAll;
@@ -6789,10 +6812,7 @@ public class Mailbox {
     }
 
     private boolean updatePurgedAll(boolean purgedAll, int numDeleted, Integer maxItems) {
-        if (!purgedAll) {
-            return false;
-        }
-        return (maxItems == null || numDeleted < maxItems);
+        return purgedAll && (maxItems == null || numDeleted < maxItems);
     }
 
     /** Returns the smaller non-zero value, or <tt>0</tt> if both

@@ -2013,28 +2013,43 @@ public class DbMailItem {
      *
      * @param mbox the mailbox
      * @param beforeDate timestamp in seconds
-     * @return the number of tombstones deleted
+     * @return the change number of the most recent tombstone that was deleted, or 0 if none were removed
      */
     public static int purgeTombstones(Mailbox mbox, int beforeDate)
     throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
+        assert Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox);
+
+        int cutoff = 0;
+
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
-
+        ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement(
-                "DELETE FROM " + getTombstoneTableName(mbox) +
-                " WHERE " + IN_THIS_MAILBOX_AND + "date < ?");
+            stmt = conn.prepareStatement("SELECT MAX(sequence) FROM " + getTombstoneTableName(mbox) +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "date <= ?");
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setLong(pos++, beforeDate);
-            int numRows = stmt.executeUpdate();
-            if (numRows > 0) {
-                ZimbraLog.mailbox.info("Purged %d tombstones dated before %d.", numRows, beforeDate);
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                cutoff = rs.getInt(1);
             }
-            return numRows;
+
+            if (cutoff > 0) {
+                stmt = conn.prepareStatement("DELETE FROM " + getTombstoneTableName(mbox) +
+                        " WHERE " + IN_THIS_MAILBOX_AND + "sequence <= ?");
+                pos = 1;
+                pos = setMailboxId(stmt, mbox, pos);
+                stmt.setLong(pos++, cutoff);
+                int numRows = stmt.executeUpdate();
+                if (numRows > 0) {
+                    ZimbraLog.mailbox.info("Purged %d tombstones dated before %d.", numRows, beforeDate);
+                }
+            }
+
+            return cutoff;
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("purging tombstones with date before " + beforeDate, null);
+            throw ServiceException.FAILURE("purging tombstones with date before " + beforeDate, e);
         } finally {
             DbPool.closeStatement(stmt);
         }
@@ -2044,20 +2059,25 @@ public class DbMailItem {
         MailItem.Type.FOLDER.toByte() + ',' +
         MailItem.Type.SEARCHFOLDER.toByte() + ',' +
         MailItem.Type.MOUNTPOINT.toByte() + ')';
+
     private static final String FOLDER_AND_TAG_TYPES = "(" +
         MailItem.Type.FOLDER.toByte() + ',' +
         MailItem.Type.SEARCHFOLDER.toByte() + ',' +
         MailItem.Type.MOUNTPOINT.toByte() + ',' +
         MailItem.Type.TAG.toByte() + ')';
+
     private static final String MESSAGE_TYPES = "(" +
         MailItem.Type.MESSAGE.toByte() + ',' +
         MailItem.Type.CHAT.toByte() + ')';
+
     private static final String DOCUMENT_TYPES = "(" +
         MailItem.Type.DOCUMENT.toByte() + ',' +
         MailItem.Type.WIKI.toByte() + ')';
+
     private static final String CALENDAR_TYPES = "(" +
         MailItem.Type.APPOINTMENT.toByte() + ',' +
         MailItem.Type.TASK.toByte() + ')';
+
     private static final String DUMPSTER_TYPES = "(" +
         MailItem.Type.MESSAGE.toByte() + ',' +
         MailItem.Type.CONTACT.toByte() + ',' +
@@ -2065,6 +2085,7 @@ public class DbMailItem {
         MailItem.Type.APPOINTMENT.toByte() + ',' +
         MailItem.Type.TASK.toByte() + ',' +
         MailItem.Type.CHAT.toByte() + ')';
+
     static final String NON_SEARCHABLE_TYPES = "(" +
         MailItem.Type.FOLDER.toByte() + ',' +
         MailItem.Type.SEARCHFOLDER.toByte() + ',' +
@@ -2074,10 +2095,10 @@ public class DbMailItem {
 
     private static String typeIn(MailItem.Type type) {
         switch (type) {
-        case FOLDER: return "type IN " + FOLDER_TYPES;
-        case MESSAGE: return "type IN " + MESSAGE_TYPES;
-        case DOCUMENT: return "type IN " + DOCUMENT_TYPES;
-        default: return "type = " + type.toByte();
+            case FOLDER:    return "type IN " + FOLDER_TYPES;
+            case MESSAGE:   return "type IN " + MESSAGE_TYPES;
+            case DOCUMENT:  return "type IN " + DOCUMENT_TYPES;
+            default:        return "type = " + type.toByte();
         }
     }
 
@@ -2088,7 +2109,10 @@ public class DbMailItem {
         public long totalSize;
         public int deletedCount, deletedUnreadCount;
 
-        @Override public String toString()  { return totalSize + "/" + deletedCount + "/" + deletedUnreadCount; }
+        @Override
+        public String toString() {
+            return totalSize + "/" + deletedCount + "/" + deletedUnreadCount;
+        }
     }
 
     public static Mailbox.MailboxData getFoldersAndTags(Mailbox mbox, FolderTagMap folderData, FolderTagMap tagData, boolean reload)

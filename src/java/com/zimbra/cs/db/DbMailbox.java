@@ -482,15 +482,20 @@ public final class DbMailbox {
     }
 
     public static void startTrackingSync(Mailbox mbox) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(getZimbraSynchronizer(mbox)));
+        setSyncCutoff(mbox, mbox.getLastChangeID());
+    }
+
+    public static void setSyncCutoff(Mailbox mbox, int cutoff) throws ServiceException {
+        assert Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(getZimbraSynchronizer(mbox));
 
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("UPDATE " + qualifyZimbraTableName(mbox, TABLE_MAILBOX) +
-                    " SET tracking_sync = ? WHERE id = ? AND tracking_sync <= 0");
-            stmt.setInt(1, mbox.getLastChangeID());
+                    " SET tracking_sync = ? WHERE id = ? AND tracking_sync < ?");
+            stmt.setInt(1, cutoff);
             stmt.setInt(2, mbox.getId());
+            stmt.setInt(3, cutoff);
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("turning on sync tracking for mailbox " + mbox.getId(), e);
