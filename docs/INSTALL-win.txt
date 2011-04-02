@@ -42,10 +42,12 @@ mysql> flush privileges;
 Query OK, 0 rows affected (0.00 sec)
 On Windows, follow instructions to install MySQL as a service with the required database admin user password.
 
-7. Install OpenLDAP, get it from p4: main\ThirdPartyBuilds\windows\openldap What you want to install is the CDS Silver build. On Windows, install to c:\opt\zimbra\openldap. Then go to the openldap directory and run "slapd install" to install it as a Windows service.
+7. Install OpenLDAP, get it from p4: main\ThirdPartyBuilds\windows\openldap What you want to install is the CDS Silver build. On Windows, install to c:\opt\zimbra\openldap. Then go to the openldap directory and run "slapd install CDSSilverSlapd" to install it as a Windows service named "CDSSilverSlapd".
 
 Note:  Check your Windows Services to verify that the new service is called "CDSSilverSlapd".  If it's called something else (i.e. OpenLDAP-slapd) then you can create a build-custom.properties file in the same directory as build.xml, and add a local variable like this:
 ldap.service.windows = OpenLDAP-slapd
+
+or run "slapd remove" followed by "slapd install CDSSilverSlapd"
 
 8. Initialize system From inside Eclipse on the Java Perspective select:
 Window -> Show View -> Ant
