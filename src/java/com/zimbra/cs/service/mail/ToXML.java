@@ -1073,20 +1073,22 @@ public class ToXML {
     }
 
     private static void encodeCalendarReplies(Element parent, CalendarItem calItem, List<CalendarItem.ReplyInfo> replies) {
-        Element repliesElt = parent.addElement(MailConstants.E_CAL_REPLIES);
-        for (CalendarItem.ReplyInfo repInfo : replies) {
-            Element curElt = repliesElt.addElement(MailConstants.E_CAL_REPLY);
-            curElt.addAttribute(MailConstants.A_SEQ, repInfo.getSeq()); //zdsync
-            curElt.addAttribute(MailConstants.A_DATE, repInfo.getDtStamp());
-            ZAttendee attendee = repInfo.getAttendee();
-            curElt.addAttribute(MailConstants.A_CAL_ATTENDEE, attendee.getAddress());
-            if (attendee.hasSentBy())
-                curElt.addAttribute(MailConstants.A_CAL_SENTBY, attendee.getSentBy());
-            if (attendee.hasPartStat())
-                curElt.addAttribute(MailConstants.A_CAL_PARTSTAT, attendee.getPartStat());
-            RecurId rid = repInfo.getRecurId();
-            if (rid != null)
-                rid.toXml(curElt);
+        if (!replies.isEmpty()) {
+            Element repliesElt = parent.addElement(MailConstants.E_CAL_REPLIES);
+            for (CalendarItem.ReplyInfo repInfo : replies) {
+                Element curElt = repliesElt.addElement(MailConstants.E_CAL_REPLY);
+                curElt.addAttribute(MailConstants.A_SEQ, repInfo.getSeq()); //zdsync
+                curElt.addAttribute(MailConstants.A_DATE, repInfo.getDtStamp());
+                ZAttendee attendee = repInfo.getAttendee();
+                curElt.addAttribute(MailConstants.A_CAL_ATTENDEE, attendee.getAddress());
+                if (attendee.hasSentBy())
+                    curElt.addAttribute(MailConstants.A_CAL_SENTBY, attendee.getSentBy());
+                if (attendee.hasPartStat())
+                    curElt.addAttribute(MailConstants.A_CAL_PARTSTAT, attendee.getPartStat());
+                RecurId rid = repInfo.getRecurId();
+                if (rid != null)
+                    rid.toXml(curElt);
+            }
         }
     }
 
@@ -1719,6 +1721,11 @@ public class ToXML {
                         Element comp = ie.getOptionalElement(MailConstants.E_INVITE_COMPONENT);
                         if (comp != null)
                             comp.addAttribute(MailConstants.A_CAL_CHANGES, invChanges.toString());
+                    }
+                    boolean showAll = invite.isPublic() || allowPrivateAccess(octxt, calItem);
+                    if (showAll) {
+                        RecurId rid = invite.getRecurId();
+                        encodeCalendarReplies(ie, calItem, invite, rid != null ? rid.getDtZ() : null);
                     }
                 }
             }
