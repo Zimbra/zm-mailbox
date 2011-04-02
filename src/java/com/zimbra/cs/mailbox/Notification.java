@@ -15,32 +15,18 @@
 
 package com.zimbra.cs.mailbox;
 
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.mail.Address;
-import javax.mail.MessagingException;
-import javax.mail.Transport;
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
-
 import com.sun.mail.smtp.SMTPMessage;
+import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
+import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
+import com.zimbra.common.mime.shim.JavaMailMimeMessage;
+import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.mime.MimeConstants;
-import com.zimbra.common.mime.shim.JavaMailInternetAddress;
-import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
-import com.zimbra.common.mime.shim.JavaMailMimeMessage;
-import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailbox;
@@ -51,6 +37,20 @@ import com.zimbra.cs.lmtpserver.LmtpCallback;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
+
+import javax.mail.Address;
+import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Notification implements LmtpCallback {
     
@@ -418,10 +418,11 @@ public class Notification implements LmtpCallback {
         from = StringUtil.fillTemplate(from, vars);
         subject = StringUtil.fillTemplate(subject, vars);
         body = StringUtil.fillTemplate(body, vars);
-        
+
         // Send the message
         try {
-            SMTPMessage out = new SMTPMessage(JMSession.getSmtpSession());
+            Session smtpSession = JMSession.getSmtpSession();
+            MimeMessage out = new JavaMailMimeMessage(smtpSession);
             out.setHeader("Auto-Submitted", "auto-replied (notification; " + rcpt + ")");
             InternetAddress address = new JavaMailInternetAddress(from);
             out.setFrom(address);
@@ -441,8 +442,8 @@ public class Notification implements LmtpCallback {
             } catch (ServiceException se) {
                 ZimbraLog.mailbox.warn("error encoutered looking up return path configuration, using null return path instead", se);
             }
-            out.setEnvelopeFrom(envFrom);
-            
+            smtpSession.getProperties().setProperty("mail.smtp.from", envFrom);
+
             Transport.send(out);
             ZimbraLog.mailbox.info("notification sent dest='" + destination + "' rcpt='" + rcpt + "' mid=" + msg.getId());
         } catch (MessagingException me) {
