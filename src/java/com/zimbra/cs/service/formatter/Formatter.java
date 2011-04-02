@@ -50,6 +50,10 @@ import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
 
 public abstract class Formatter {
 
+    static final Set<MailItem.Type> SEARCH_FOR_EVERYTHING = EnumSet.of(MailItem.Type.APPOINTMENT,
+            MailItem.Type.CONTACT, MailItem.Type.DOCUMENT, MailItem.Type.MESSAGE, MailItem.Type.NOTE,
+            MailItem.Type.TASK, MailItem.Type.WIKI);
+
     protected static final int TIME_UNSPECIFIED = -1;
 
     public abstract FormatType getType();

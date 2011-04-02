@@ -59,7 +59,6 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.HttpUtil.Browser;
-import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.ACL;
@@ -161,9 +160,8 @@ public abstract class ArchiveFormatter extends Formatter {
 
     @Override
     public Set<MailItem.Type> getDefaultSearchTypes() {
-        return MailboxIndex.SEARCH_FOR_EVERYTHING;
+        return SEARCH_FOR_EVERYTHING;
     }
-
 
     @Override public boolean supportsSave() { return true; }
 

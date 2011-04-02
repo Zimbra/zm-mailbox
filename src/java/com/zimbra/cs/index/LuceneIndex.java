@@ -35,6 +35,8 @@ import org.apache.lucene.index.SerialMergeScheduler;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.SortField;
 import org.apache.lucene.store.NoSuchDirectoryException;
 import org.apache.lucene.store.SingleInstanceLockFactory;
 import org.apache.lucene.util.Version;
@@ -45,17 +47,18 @@ import com.google.common.io.NullOutputStream;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.localconfig.DebugConfig;
-import com.zimbra.cs.mailbox.IndexHelper;
+import com.zimbra.cs.mailbox.MailboxIndex;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.store.file.Volume;
 
 /**
- * Lucene index.
+ * {@link IndexStore} implementation using Apache Lucene.
  *
  * @author tim
  * @author ysasaki
  */
-public final class LuceneIndex {
+public final class LuceneIndex implements IndexStore {
 
     /**
      * We don't want to enable StopFilter preserving position increments, which is enabled on or after 2.9, because we
@@ -68,15 +71,11 @@ public final class LuceneIndex {
 
     private static IndexReadersCache readersCache;
 
+    private final Mailbox mailbox;
     private final LuceneDirectory luceneDirectory;
-    private MailboxIndex mailboxIndex;
     private IndexWriterRef writerRef;
 
-    static void startup() {
-        if (DebugConfig.disableIndexing) {
-            ZimbraLog.index.info("Indexing is disabled by the localconfig 'debug_disable_indexing' flag");
-            return;
-        }
+    public static void startup() {
         BooleanQuery.setMaxClauseCount(LC.zimbra_index_lucene_max_terms_per_query.intValue());
         readersCache = new IndexReadersCache(
                 LC.zimbra_index_reader_cache_size.intValue(),
@@ -84,40 +83,17 @@ public final class LuceneIndex {
                 LC.zimbra_index_reader_cache_sweep_frequency.longValue() * 1000);
     }
 
-    static void shutdown() {
-        if (DebugConfig.disableIndexing) {
-            return;
-        }
+    public static void shutdown() {
         readersCache.shutdown();
     }
 
-    /**
-     * Returns total bytes written to the filesystem by Lucene - for stats.
-     * logging.
-     *
-     * @return bytes count
-     */
-    long getBytesWritten() {
-        return luceneDirectory.getBytesWritten();
-    }
+    public LuceneIndex(Mailbox mbox) throws ServiceException {
+        mailbox = mbox;
+        Volume vol = Volume.getById(mbox.getIndexVolume());
+        String dir = vol.getMailboxDir(mailbox.getId(), Volume.TYPE_INDEX);
 
-    /**
-     * Returns total bytes read from the filesystem by Lucene - for stats
-     * logging.
-     *
-     * @return bytes count
-     */
-    long getBytesRead() {
-        return luceneDirectory.getBytesRead();
-    }
-
-    LuceneIndex(MailboxIndex mbidx, String idxParentDir, int mailboxId) throws ServiceException {
-        mailboxIndex = mbidx;
-
-        // this must be different from the idxParentDir (see the IMPORTANT comment below)
-        String idxPath = idxParentDir + File.separatorChar + '0';
-
-        File parentDirFile = new File(idxParentDir);
+        // this must be different from the root dir (see the IMPORTANT comment below)
+        File root = new File(dir + File.separatorChar + '0');
 
         // IMPORTANT!  Don't make the actual index directory (mIdxDirectory) yet!
         //
@@ -126,35 +102,40 @@ public final class LuceneIndex {
         // assumption that the index was somehow corrupted and shouldn't be messed-with....on the
         // other hand if the index dir does NOT exist, then we assume it has never existed (or
         // was deleted intentionally) and therefore we should just create an index.
-        if (!parentDirFile.exists()) {
-            parentDirFile.mkdirs();
+        if (!root.exists()) {
+            root.mkdirs();
         }
 
-        if (!parentDirFile.canRead()) {
-            throw ServiceException.FAILURE("Cannot READ index directory (mailbox=" + mailboxId + " idxPath=" + idxPath + ")", null);
+        if (!root.canRead()) {
+            throw ServiceException.FAILURE("LuceneDirectory not readable mbox=" + mbox.getId() + ",dir=" + root, null);
         }
-        if (!parentDirFile.canWrite()) {
-            throw ServiceException.FAILURE("Cannot WRITE index directory (mailbox=" + mailboxId + " idxPath=" + idxPath + ")", null);
+        if (!root.canWrite()) {
+            throw ServiceException.FAILURE("LuceneDirectory not writable mbox=" + mbox.getId() + ",dir=" + root, null);
         }
 
-        // the Lucene code does not atomically swap the "segments" and "segments.new"
-        // files...so it is possible that a previous run of the server crashed exactly in such
-        // a way that we have a "segments.new" file but not a "segments" file.  We we will check here
-        // for the special situation that we have a segments.new
-        // file but not a segments file...
-        File segments = new File(idxPath, "segments");
+        // the Lucene code does not atomically swap the "segments" and "segments.new" files...so it is possible that a
+        // previous run of the server crashed exactly in such a way that we have a "segments.new" file but not a
+        // "segments" file. We we will check here for the special situation that we have a segments.new/ file but not a
+        // segments file...
+        File segments = new File(root, "segments");
         if (!segments.exists()) {
-            File segments_new = new File(idxPath, "segments.new");
-            if (segments_new.exists()) {
-                segments_new.renameTo(segments);
+            File newSegments = new File(root, "segments.new");
+            if (newSegments.exists()) {
+                newSegments.renameTo(segments);
             }
         }
 
         try {
-            luceneDirectory = LuceneDirectory.open(new File(idxPath), new SingleInstanceLockFactory());
+            luceneDirectory = LuceneDirectory.open(root, new SingleInstanceLockFactory());
         } catch (IOException e) {
-            throw ServiceException.FAILURE("Failed to create LuceneDirectory: " + idxPath, e);
+            throw ServiceException.FAILURE("Failed to create LuceneDirectory: " + root, e);
         }
+        ZimbraLog.index.info("Lucene index opened dir=%s", root);
+    }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this).add("mbox", mailbox.getId()).add("dir", luceneDirectory).toString();
     }
 
     /**
@@ -163,7 +144,12 @@ public final class LuceneIndex {
      * If the index status is stale, delete the stale documents first, then add new documents. If the index status is
      * deferred, we are sure that this item is not already in the index, and so we can skip the check-update step.
      */
-    void addDocument(MailItem item, List<IndexDocument> docs) throws IOException {
+    @Override
+    public synchronized void addDocument(MailItem item, List<IndexDocument> docs) throws IOException {
+        if (docs == null || docs.isEmpty()) {
+            return;
+        }
+
         for (IndexDocument doc : docs) {
             // doc can be shared by multiple threads if multiple mailboxes are referenced in a single email
             synchronized (doc) {
@@ -212,7 +198,8 @@ public final class LuceneIndex {
      * optimized out yet -- some Lucene APIs (e.g. docFreq) will still return the old count until the indexes are
      * optimized.
      */
-    void deleteDocuments(List<Integer> ids) throws IOException {
+    @Override
+    public void deleteDocument(List<Integer> ids) throws IOException {
         for (Integer id : ids) {
             Term term = new Term(LuceneFields.L_MAILBOX_BLOB_ID, id.toString());
             writerRef.get().deleteDocuments(term);
@@ -223,7 +210,8 @@ public final class LuceneIndex {
     /**
      * Deletes this index completely.
      */
-    synchronized void deleteIndex() throws IOException {
+    @Override
+    public synchronized void deleteIndex() throws IOException {
         assert(writerRef == null);
         ZimbraLog.index.debug("Deleting index %s", luceneDirectory);
         readersCache.remove(this);
@@ -269,11 +257,10 @@ public final class LuceneIndex {
     }
 
     /**
-     * Returns {@code true} if all tokens were expanded or {@code false} if more
-     * tokens were available but we hit the specified maximum.
+     * Returns true if all tokens were expanded or false if more tokens were available but we hit the specified maximum.
      */
-    boolean expandWildcardToken(Collection<String> toRet, String field, String token, int maxToReturn)
-            throws IOException {
+    @Override
+    public boolean expandWildcard(Collection<String> result, String field, String token, int max) throws IOException {
         // all lucene text should be in lowercase...
         token = token.toLowerCase();
 
@@ -292,11 +279,11 @@ public final class LuceneIndex {
                     String curText = cur.text();
 
                     if (curText.startsWith(token)) {
-                        if (toRet.size() >= maxToReturn) {
+                        if (result.size() >= max) {
                             return false;
                         }
                         // we don't care about deletions, they will be filtered later
-                        toRet.add(cur.text());
+                        result.add(cur.text());
                     } else {
                         if (curText.compareTo(token) > 0) {
                             break;
@@ -314,7 +301,8 @@ public final class LuceneIndex {
     /**
      * Removes from cache.
      */
-    void evict() {
+    @Override
+    public void evict() {
         readersCache.remove(this);
     }
 
@@ -325,7 +313,8 @@ public final class LuceneIndex {
      * @param regex matching pattern or null to match everything
      * @return {@link BrowseTerm}s which correspond to all of the domain terms stored in a given field
      */
-    List<BrowseTerm> getDomains(String field, String regex) throws IOException {
+    @Override
+    public List<BrowseTerm> getDomains(String field, String regex) throws IOException {
         TermEnumCallback callback = new DomainEnumCallback(
                 !Strings.isNullOrEmpty(regex) ? Pattern.compile(regex.startsWith("@") ? regex : "@" + regex) : null);
         enumerateTerms(new Term(field, ""), callback);
@@ -338,7 +327,8 @@ public final class LuceneIndex {
      * @param regex matching pattern or null to match everything
      * @return {@link BrowseTerm}s which correspond to all of the attachment types in the index
      */
-    List<BrowseTerm> getAttachmentTypes(String regex) throws IOException {
+    @Override
+    public List<BrowseTerm> getAttachmentTypes(String regex) throws IOException {
         TermEnumCallback callback = new SimpleTermEnumCallback(
                 !Strings.isNullOrEmpty(regex) ? Pattern.compile(regex) : null);
         enumerateTerms(new Term(LuceneFields.L_ATTACHMENTS, ""), callback);
@@ -351,7 +341,8 @@ public final class LuceneIndex {
      * @param regex matching pattern or null to match everything
      * @return {@link BrowseTerm}s which correspond to all of the objects in the index
      */
-    List<BrowseTerm> getObjects(String regex) throws IOException {
+    @Override
+    public List<BrowseTerm> getObjects(String regex) throws IOException {
         TermEnumCallback callback = new SimpleTermEnumCallback(
                 !Strings.isNullOrEmpty(regex) ? Pattern.compile(regex) : null);
         enumerateTerms(new Term(LuceneFields.L_OBJECTS, ""), callback);
@@ -365,16 +356,39 @@ public final class LuceneIndex {
      * @return A {@link IndexSearcherRef} for this index.
      * @throws IOException if opening an {@link IndexReader} failed
      */
-    IndexSearcherRef getIndexSearcherRef() throws IOException {
-        return new IndexSearcherRef(getIndexReaderRef());
+    @Override
+    public IndexSearcherRef getIndexSearcherRef(SortBy sort) throws IOException {
+        IndexSearcherRef ref = new IndexSearcherRef(getIndexReaderRef());
+        ref.setSort(toLuceneSort(sort));
+        return ref;
     }
 
-    @Override
-    public String toString() {
-        return Objects.toStringHelper(this)
-            .add("mbox", mailboxIndex.mailbox.getId())
-            .add("dir", luceneDirectory)
-            .toString();
+    private Sort toLuceneSort(SortBy sortBy) {
+        if (sortBy == null) {
+            return null;
+        }
+
+        switch (sortBy.getKey()) {
+            case NONE:
+                return null;
+            case NAME:
+            case NAME_NATURAL_ORDER:
+            case SENDER:
+                return new Sort(new SortField(LuceneFields.L_SORT_NAME, SortField.STRING,
+                        sortBy.getDirection() == SortBy.Direction.DESC));
+            case RCPT:
+                return new Sort(new SortField(LuceneFields.L_SORT_RCPT, SortField.STRING,
+                        sortBy.getDirection() == SortBy.Direction.DESC));
+            case SUBJECT:
+                return new Sort(new SortField(LuceneFields.L_SORT_SUBJECT, SortField.STRING,
+                        sortBy.getDirection() == SortBy.Direction.DESC));
+            case SIZE:
+                return new Sort(new SortField(LuceneFields.L_SORT_SIZE, SortField.LONG,
+                        sortBy.getDirection() == SortBy.Direction.DESC));
+            case DATE:
+            default: // default to DATE_DESCENDING
+                return new Sort(new SortField(LuceneFields.L_SORT_DATE, SortField.STRING, true));
+        }
     }
 
     private IndexReader openIndexReader(boolean tryRepair) throws IOException {
@@ -398,7 +412,7 @@ public final class LuceneIndex {
 
     private IndexWriter openIndexWriter(boolean create, boolean tryRepair) throws IOException {
         try {
-            IndexWriter writer = new IndexWriter(luceneDirectory, mailboxIndex.getAnalyzer(),
+            IndexWriter writer = new IndexWriter(luceneDirectory, mailbox.index.getAnalyzer(),
                     create, IndexWriter.MaxFieldLength.LIMITED) {
                 /**
                  * Redirect Lucene's logging to ZimbraLog.
@@ -547,7 +561,8 @@ public final class LuceneIndex {
         return (num <= 0);
     }
 
-    synchronized void beginWrite() throws IOException {
+    @Override
+    public synchronized void beginWrite() throws IOException {
         if (writerRef != null) {
             writerRef.inc();
         } else {
@@ -562,7 +577,8 @@ public final class LuceneIndex {
         }
     }
 
-    synchronized void endWrite() throws IOException {
+    @Override
+    public synchronized void endWrite() throws IOException {
         commitWriter();
         readersCache.stale(this); // let the reader reopen
     }
@@ -625,7 +641,7 @@ public final class LuceneIndex {
         ZimbraLog.index.debug("Commit IndexWriter");
 
         MergeTask task = new MergeTask(writerRef);
-        if (IndexHelper.isIndexThread()) { // batch index running in background
+        if (MailboxIndex.isIndexThread()) { // batch index running in background
             task.exec();
         } else { // catch-up index running in foreground
             boolean success = false;
@@ -648,7 +664,7 @@ public final class LuceneIndex {
                     repair(e);
                     throw e; // fail to commit regardless of the repair
                 }
-                mailboxIndex.mailbox.index.submit(task); // merge must run in background
+                mailbox.index.submit(task); // merge must run in background
                 success = true;
             } catch (RejectedExecutionException e) {
                 ZimbraLog.index.warn("Skipping merge because all index threads are busy");
@@ -711,6 +727,7 @@ public final class LuceneIndex {
      * @return true if no problems were found, otherwise false
      * @throws IOException failed to verify, but it doesn't necessarily mean the index is corrupted.
      */
+    @Override
     public boolean verify(PrintStream out) throws IOException {
         CheckIndex check = new CheckIndex(luceneDirectory);
         if (out != null) {
@@ -808,11 +825,11 @@ public final class LuceneIndex {
      * readers without long delay that merges likely cause. Merge threads don't block other writer threads running in
      * foreground. Another indexing using the same writer may start even while the merge is in progress.
      */
-    private final class MergeTask extends IndexHelper.IndexTask {
+    private final class MergeTask extends MailboxIndex.IndexTask {
         private final IndexWriterRef ref;
 
         MergeTask(IndexWriterRef ref) {
-            super(ref.getIndex().mailboxIndex.mailbox);
+            super(ref.getIndex().mailbox);
             this.ref = ref;
         }
 
@@ -871,6 +888,65 @@ public final class LuceneIndex {
             ramBufferSizeKB = LC.zimbra_index_lucene_ram_buffer_size_kb.intValue();
         }
 
+    }
+
+    public static ZimbraQueryResults search(ZimbraQuery zq) throws ServiceException {
+        SearchParams params = zq.getParams();
+        ZimbraLog.search.debug("query: %s", params.getQueryStr());
+
+        // handle special-case Task-only sorts: convert them to a "normal sort"
+        //     and then re-sort them at the end
+        // FIXME - this hack (converting the sort) should be able to go away w/ the new SortBy
+        //         implementation, if the lower-level code was modified to use the SortBy.Criterion
+        //         and SortBy.Direction data (instead of switching on the SortBy itself)
+        //         We still will need this switch so that we can wrap the
+        //         results in the ReSortingQueryResults
+        boolean isTaskSort = false;
+        boolean isLocalizedSort = false;
+        SortBy originalSort = params.getSortBy();
+        switch (originalSort) {
+            case TASK_DUE_ASC:
+                isTaskSort = true;
+                params.setSortBy(SortBy.DATE_DESC);
+                break;
+            case TASK_DUE_DESC:
+                isTaskSort = true;
+                params.setSortBy(SortBy.DATE_DESC);
+                break;
+            case TASK_STATUS_ASC:
+                isTaskSort = true;
+                params.setSortBy(SortBy.DATE_DESC);
+                break;
+            case TASK_STATUS_DESC:
+                isTaskSort = true;
+                params.setSortBy(SortBy.DATE_DESC);
+                break;
+            case TASK_PERCENT_COMPLETE_ASC:
+                isTaskSort = true;
+                params.setSortBy(SortBy.DATE_DESC);
+                break;
+            case TASK_PERCENT_COMPLETE_DESC:
+                isTaskSort = true;
+                params.setSortBy(SortBy.DATE_DESC);
+                break;
+            case NAME_LOCALIZED_ASC:
+            case NAME_LOCALIZED_DESC:
+                isLocalizedSort = true;
+                break;
+        }
+
+        if (ZimbraLog.searchstats.isDebugEnabled()) {
+            ZimbraLog.searchstats.debug("Executing search with [%d] text parts", zq.countTextOperations());
+        }
+
+        ZimbraQueryResults results = zq.execute();
+        if (isTaskSort) {
+            results = new ReSortingQueryResults(results, originalSort, null);
+        }
+        if (isLocalizedSort) {
+            results = new ReSortingQueryResults(results, originalSort, params);
+        }
+        return results;
     }
 
 }

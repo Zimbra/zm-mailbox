@@ -33,6 +33,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.lucene.analysis.Analyzer;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
@@ -49,10 +51,13 @@ import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.db.DbSearchConstraints;
 import com.zimbra.cs.db.DbSearchConstraintsNode;
-import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.index.LuceneIndex;
+import com.zimbra.cs.index.IndexStore;
+import com.zimbra.cs.index.ReSortingQueryResults;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.IndexDocument;
+import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.MailItem.Type;
@@ -66,8 +71,7 @@ import com.zimbra.cs.util.Zimbra;
  * @author tim
  * @author ysasaki
  */
-public final class IndexHelper {
-
+public final class MailboxIndex {
     private static final long MAX_TX_BYTES = LC.zimbra_index_max_transaction_bytes.longValue();
     private static final int MAX_TX_ITEMS = LC.zimbra_index_max_transaction_items.intValue();
     private static final long FAILURE_DELAY = LC.zimbra_index_deferred_items_failure_delay.intValue() * 1000;
@@ -79,18 +83,26 @@ public final class IndexHelper {
     private static final ExecutorService REINDEX_EXECUTOR = new ThreadPoolExecutor(
             0, LC.zimbra_reindex_threads.intValue(), 0L, TimeUnit.SECONDS,
             new SynchronousQueue<Runnable>(), new IndexThreadFactory("ReIndex"));
+
     private volatile long lastFailedTime = -1;
     // Only one thread may run index at a time.
     private Semaphore indexLock = new Semaphore(1);
     private final Mailbox mailbox;
-    private MailboxIndex mailboxIndex;
+    private final Analyzer analyzer;
+    private IndexStore indexStore;
     // current re-indexing operation for this mailbox, or NULL if a re-index is not in progress.
     private volatile ReIndexTask reIndex;
     private SetMultimap<MailItem.Type, Integer> deferredIds; // guarded by IndexHelper
 
-
-    IndexHelper(Mailbox mbox) {
+    MailboxIndex(Mailbox mbox) {
         mailbox = mbox;
+        String analyzerName;
+        try {
+            analyzerName = mbox.getAccount().getTextAnalyzer();
+        } catch (ServiceException e) {
+            analyzerName = null;
+        }
+        analyzer = ZimbraAnalyzer.getAnalyzer(analyzerName);
     }
 
     /**
@@ -100,6 +112,10 @@ public final class IndexHelper {
         INDEX_EXECUTOR.prestartAllCoreThreads();
     }
 
+    public Analyzer getAnalyzer() {
+        return analyzer;
+    }
+
     /**
      * Returns true if the current thread was spawned by {@link #INDEX_EXECUTOR}.
      */
@@ -107,13 +123,34 @@ public final class IndexHelper {
         return Thread.currentThread().getThreadGroup() == IndexThreadFactory.GROUP;
     }
 
-    void instantiateMailboxIndex() throws ServiceException {
-        mailboxIndex = new MailboxIndex(mailbox);
+    void open() throws ServiceException {
+        indexStore = new LuceneIndex(mailbox);
     }
 
-    public final MailboxIndex getMailboxIndex() {
-        assert(mailboxIndex != null);
-        return mailboxIndex;
+    public final IndexStore getIndexStore() {
+        assert(indexStore != null);
+        return indexStore;
+    }
+
+    private ZimbraQuery compileQuery(SoapProtocol proto, OperationContext octx, SearchParams params)
+        throws ServiceException {
+        String qs = params.getQueryStr();
+
+        // calendar expansions
+        if (params.getCalItemExpandStart() > 0 || params.getCalItemExpandEnd() > 0) {
+            StringBuilder toAdd = new StringBuilder();
+            toAdd.append('(').append(qs).append(')');
+            if (params.getCalItemExpandStart() > 0) {
+                toAdd.append(" appt-end:>=").append(params.getCalItemExpandStart());
+            }
+            if (params.getCalItemExpandEnd() > 0) {
+                toAdd.append(" appt-start:<=").append(params.getCalItemExpandEnd());
+            }
+            qs = toAdd.toString();
+            params.setQueryStr(qs);
+        }
+
+        return new ZimbraQuery(octx, proto, mailbox, params);
     }
 
     /**
@@ -134,7 +171,7 @@ public final class IndexHelper {
         assert(!Thread.holdsLock(mailbox));
         assert(octx != null);
 
-        ZimbraQuery query = MailboxIndex.compileQuery(proto, octx, mailbox, params);
+        ZimbraQuery query = compileQuery(proto, octx, params);
         Set<MailItem.Type> types = toIndexTypes(params.getTypes());
         // no need to index if the search doesn't involve Lucene
         if (query.countTextOperations() > 0 && getDeferredCount(types) > 0) {
@@ -145,7 +182,7 @@ public final class IndexHelper {
                 ZimbraLog.index.error("Failed to index deferred items", e);
             }
         }
-        return MailboxIndex.search(query);
+        return search(query);
     }
 
     public ZimbraQueryResults search(OperationContext octxt, String queryString, Set<MailItem.Type> types,
@@ -168,6 +205,62 @@ public final class IndexHelper {
         return search(octxt, queryString, types, sortBy, chunkSize, false);
     }
 
+    private ZimbraQueryResults search(ZimbraQuery zq) throws ServiceException {
+        SearchParams params = zq.getParams();
+        ZimbraLog.search.debug("query: %s", params.getQueryStr());
+
+        // handle special-case Task-only sorts: convert them to a "normal sort" and then re-sort them at the end
+        // TODO: this hack (converting the sort) should be able to go away w/ the new SortBy implementation, if the
+        // lower-level code was modified to use the SortBy.Criterion and SortBy.Direction data (instead of switching on
+        // the SortBy itself). We still will need this switch so that we can wrap the results in ReSortingQueryResults.
+        boolean isTaskSort = false;
+        boolean isLocalizedSort = false;
+        SortBy originalSort = params.getSortBy();
+        switch (originalSort) {
+            case TASK_DUE_ASC:
+                isTaskSort = true;
+                params.setSortBy(SortBy.DATE_DESC);
+                break;
+            case TASK_DUE_DESC:
+                isTaskSort = true;
+                params.setSortBy(SortBy.DATE_DESC);
+                break;
+            case TASK_STATUS_ASC:
+                isTaskSort = true;
+                params.setSortBy(SortBy.DATE_DESC);
+                break;
+            case TASK_STATUS_DESC:
+                isTaskSort = true;
+                params.setSortBy(SortBy.DATE_DESC);
+                break;
+            case TASK_PERCENT_COMPLETE_ASC:
+                isTaskSort = true;
+                params.setSortBy(SortBy.DATE_DESC);
+                break;
+            case TASK_PERCENT_COMPLETE_DESC:
+                isTaskSort = true;
+                params.setSortBy(SortBy.DATE_DESC);
+                break;
+            case NAME_LOCALIZED_ASC:
+            case NAME_LOCALIZED_DESC:
+                isLocalizedSort = true;
+                break;
+        }
+
+        if (ZimbraLog.search.isDebugEnabled()) {
+            ZimbraLog.search.debug("Executing search with [%d] text parts", zq.countTextOperations());
+        }
+
+        ZimbraQueryResults results = zq.execute();
+        if (isTaskSort) {
+            results = new ReSortingQueryResults(results, originalSort, null);
+        }
+        if (isLocalizedSort) {
+            results = new ReSortingQueryResults(results, originalSort, params);
+        }
+        return results;
+    }
+
     /**
      * Returns the maximum number of items to be batched in a single indexing pass. If a search comes in that requires
      * use of the index, all deferred unindexed items are immediately indexed regardless of batch size. If this number
@@ -183,11 +276,11 @@ public final class IndexHelper {
     }
 
     void evict() {
-        getMailboxIndex().evict();
+        indexStore.evict();
     }
 
-    void deleteIndex() throws IOException {
-        getMailboxIndex().deleteIndex();
+    public void deleteIndex() throws IOException {
+        indexStore.deleteIndex();
     }
 
     /**
@@ -291,7 +384,7 @@ public final class IndexHelper {
     public boolean verify(PrintStream out) throws ServiceException {
         indexLock.acquireUninterruptibly(); // make sure no writers are opened
         try {
-            return mailboxIndex.verify(out);
+            return indexStore.verify(out);
         } catch (IOException e) {
             throw ServiceException.FAILURE("Failed to verify index", e);
         } finally {
@@ -340,7 +433,7 @@ public final class IndexHelper {
             } catch (Throwable t) {
                 ZimbraLog.index.error("Re-index failed. This mailbox must be manually re-indexed.", t);
             } finally {
-                synchronized (IndexHelper.this) {
+                synchronized (MailboxIndex.this) {
                     reIndex = null;
                 }
             }
@@ -366,7 +459,7 @@ public final class IndexHelper {
                         ZimbraLog.index.info("Resetting all index IDs");
                         DbMailItem.resetIndexId(mailbox);
                         ZimbraLog.index.info("Deleting Lucene index data");
-                        getMailboxIndex().deleteIndex();
+                        indexStore.deleteIndex();
                         success = true;
                     } catch (IOException e) {
                         throw ServiceException.FAILURE("Failed to delete index before re-index", e);
@@ -597,14 +690,14 @@ public final class IndexHelper {
     /**
      * Entry point for Redo-logging system only. Everybody else should use queueItemForIndexing inside a transaction.
      */
-    public void redoIndexItem(MailItem item, int itemId, List<IndexDocument> docList) {
+    public void redoIndexItem(MailItem item, int itemId, List<IndexDocument> docs) {
         synchronized (mailbox) {
             try {
-                mailboxIndex.beginWrite();
+                indexStore.beginWrite();
                 try {
-                    mailboxIndex.indexMailItem(mailbox, docList, item);
+                    indexStore.addDocument(item, docs);
                 } finally {
-                    mailboxIndex.endWrite();
+                    indexStore.endWrite();
                 }
             } catch (Exception e) {
                 ZimbraLog.index.warn("Skipping indexing; Unable to parse message %d", itemId, e);
@@ -624,7 +717,7 @@ public final class IndexHelper {
         assert(Thread.holdsLock(mailbox));
 
         try {
-            mailboxIndex.beginWrite();
+            indexStore.beginWrite();
         } catch (IOException e) {
             ZimbraLog.index.warn("Failed to open IndexWriter", e);
             lastFailedTime = System.currentTimeMillis();
@@ -636,7 +729,7 @@ public final class IndexHelper {
         try {
             if (!del.isEmpty()) {
                 try {
-                    mailboxIndex.deleteDocuments(del);
+                    indexStore.deleteDocument(del);
                 } catch (IOException e) {
                     ZimbraLog.index.warn("Failed to delete index documents", e);
                 }
@@ -651,8 +744,8 @@ public final class IndexHelper {
                 ZimbraLog.mailbox.debug("index item=%s", entry);
 
                 try {
-                    mailboxIndex.indexMailItem(mailbox, entry.documents, entry.item);
-                } catch (ServiceException e) {
+                    indexStore.addDocument(entry.item, entry.documents);
+                } catch (IOException e) {
                     ZimbraLog.index.warn("Failed to index item=%s", entry, e);
                     lastFailedTime = System.currentTimeMillis();
                     continue;
@@ -661,7 +754,7 @@ public final class IndexHelper {
             }
         } finally {
             try {
-                mailboxIndex.endWrite();
+                indexStore.endWrite();
             } catch (IOException e) {
                 ZimbraLog.index.error("Failed to commit IndexWriter", e);
                 return;

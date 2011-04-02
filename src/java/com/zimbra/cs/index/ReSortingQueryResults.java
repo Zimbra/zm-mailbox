@@ -35,7 +35,7 @@ public final class ReSortingQueryResults implements ZimbraQueryResults {
     private int iterOffset = 0;
     private final SearchParams params;
 
-    ReSortingQueryResults(ZimbraQueryResults results, SortBy sort, SearchParams params) {
+    public ReSortingQueryResults(ZimbraQueryResults results, SortBy sort, SearchParams params) {
         this.results = results;
         this.sort = sort;
         this.params = params;

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -33,7 +33,6 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.LuceneQueryOperation;
-import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.NoTermQueryOperation;
 import com.zimbra.cs.index.QueryInfo;
 import com.zimbra.cs.index.QueryOperation;
@@ -109,9 +108,8 @@ public class TextQuery extends Query {
                 boolean expandedAllTokens = false;
                 List<String> expandedTokens = new ArrayList<String>(100);
                 if (mailbox != null) { // null if testing
-                    MailboxIndex mbidx = mailbox.index.getMailboxIndex();
                     try {
-                        expandedAllTokens = mbidx.expandWildcardToken(
+                        expandedAllTokens = mailbox.index.getIndexStore().expandWildcard(
                                 expandedTokens, field, wcToken, MAX_WILDCARD_TERMS);
                     } catch (IOException e) {
                         throw ServiceException.FAILURE("Failed to expand wildcard", e);

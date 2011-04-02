@@ -85,7 +85,7 @@ import com.zimbra.cs.index.BrowseTerm;
 import com.zimbra.cs.index.DomainBrowseTerm;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.LuceneFields;
-import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraQuery;
@@ -368,7 +368,7 @@ public class Mailbox {
     }
 
     // This class handles all the indexing internals for the Mailbox
-    public final IndexHelper index = new IndexHelper(this);
+    public final MailboxIndex index;
 
     // TODO: figure out correct caching strategy
     private static final int MAX_ITEM_CACHE_WITH_LISTENERS    = LC.zimbra_mailbox_active_cache.intValue();
@@ -392,9 +392,10 @@ public class Mailbox {
     private volatile boolean open = false;
 
     protected Mailbox(MailboxData data) {
-        mId   = data.id;
+        mId = data.id;
         mData = data;
         mData.lastChangeDate = System.currentTimeMillis();
+        index = new MailboxIndex(this);
         // version init done in finishInitialization()
         // index init done in finishInitialization()
     }
@@ -424,9 +425,7 @@ public class Mailbox {
                 return false;
             }
 
-            // init the index
-            if (!DebugConfig.disableIndexing)
-                index.instantiateMailboxIndex();
+            index.open(); // init the index
 
             if (version == null) {
                 // if we've just initialized() the mailbox, then the version will
@@ -3676,7 +3675,7 @@ public class Mailbox {
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions on this mailbox");
 
             List<BrowseTerm> result = null;
-            MailboxIndex idx = index.getMailboxIndex();
+            IndexStore idx = index.getIndexStore();
             if (idx != null) {
                 switch (browseBy) {
                     case attachments:

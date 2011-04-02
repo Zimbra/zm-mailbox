@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -38,7 +38,6 @@ import org.apache.commons.cli.UnrecognizedOptionException;
 
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.tar.*;
-import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.service.util.ItemData;

@@ -35,7 +35,7 @@ import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.extension.ExtensionUtil;
-import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Mailbox.MailboxData;
 import com.zimbra.cs.redolog.op.CreateMailbox;
@@ -228,7 +228,7 @@ public class MailboxManager {
     }
 
     public void startup() {
-        IndexHelper.startup();
+        MailboxIndex.startup();
     }
 
     public void shutdown() {}
@@ -636,12 +636,12 @@ public class MailboxManager {
 
                     if (removeFromCache) {
                         mbox.purge(MailItem.Type.UNKNOWN);
-                        // We're going to let the Mailbox drop out of the
-                        // cache and eventually get GC'd.  Some immediate
-                        // cleanup is necessary though.
-                        MailboxIndex mi = mbox.index.getMailboxIndex();
-                        if (mi != null)
-                            mi.evict();
+                        // We're going to let the Mailbox drop out of the cache and eventually get GC'd.
+                        // Some immediate cleanup is necessary though.
+                        IndexStore index = mbox.index.getIndexStore();
+                        if (index != null) {
+                            index.evict();
+                        }
                         // Note: mbox is left in maintenance mode.
                     } else {
                         mbox.endMaintenance(success);

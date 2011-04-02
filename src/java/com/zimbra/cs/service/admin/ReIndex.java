@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -32,7 +32,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.cs.mailbox.IndexHelper;
+import com.zimbra.cs.mailbox.MailboxIndex;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -145,7 +145,7 @@ public final class ReIndex extends AdminDocumentHandler {
                 response.addAttribute(AdminConstants.A_STATUS, STATUS_STARTED);
             }
         } else if (ACTION_STATUS.equalsIgnoreCase(action)) {
-            IndexHelper.ReIndexStatus status = mbox.index.getReIndexStatus();
+            MailboxIndex.ReIndexStatus status = mbox.index.getReIndexStatus();
             if (status != null) {
                 addProgressInfo(response, status);
                 response.addAttribute(AdminConstants.A_STATUS, STATUS_RUNNING);
@@ -153,7 +153,7 @@ public final class ReIndex extends AdminDocumentHandler {
                 response.addAttribute(AdminConstants.A_STATUS, STATUS_IDLE);
             }
         } else if (ACTION_CANCEL.equalsIgnoreCase(action)) {
-            IndexHelper.ReIndexStatus status = mbox.index.cancelReIndex();
+            MailboxIndex.ReIndexStatus status = mbox.index.cancelReIndex();
             if (status != null) {
                 response.addAttribute(AdminConstants.A_STATUS, STATUS_CANCELLED);
                 addProgressInfo(response, status);
@@ -167,7 +167,7 @@ public final class ReIndex extends AdminDocumentHandler {
         return response;
     }
 
-    private void addProgressInfo(Element response, IndexHelper.ReIndexStatus status) {
+    private void addProgressInfo(Element response, MailboxIndex.ReIndexStatus status) {
         Element prog = response.addElement(AdminConstants.E_PROGRESS);
         prog.addAttribute(AdminConstants.A_NUM_SUCCEEDED, status.getProcessed() - status.getFailed());
         prog.addAttribute(AdminConstants.A_NUM_FAILED, status.getFailed());

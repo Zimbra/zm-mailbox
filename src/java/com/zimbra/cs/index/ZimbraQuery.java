@@ -21,7 +21,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.TermQuery;
 
@@ -378,18 +377,9 @@ public final class ZimbraQuery {
             chunkSize = (int) chunkSize;
         }
 
-        Analyzer analyzer = null;
-        MailboxIndex index = mbox.index.getMailboxIndex();
-
         // Step 1: parse the text using the JavaCC parser
         try {
-            if (index != null) {
-                index.initAnalyzer(mbox);
-                analyzer = index.getAnalyzer();
-            } else {
-                analyzer = ZimbraAnalyzer.getInstance();
-            }
-            QueryParser parser = new QueryParser(mbox, analyzer);
+            QueryParser parser = new QueryParser(mbox, mbox.index.getAnalyzer());
             parser.setDefaultField(params.getDefaultField());
             parser.setTypes(params.getTypes());
             parser.setTimeZone(params.getTimeZone());
@@ -659,7 +649,7 @@ public final class ZimbraQuery {
         ZimbraLog.search.debug("END_ZIMBRAQUERY_CONSTRUCTOR=%s", operation);
     }
 
-    SearchParams getParams() {
+    public SearchParams getParams() {
         return params;
     }
 

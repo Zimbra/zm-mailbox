@@ -30,7 +30,7 @@ import com.zimbra.cs.db.DbMailAddress;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.HSQLDB;
 import com.zimbra.cs.db.DbPool.DbConnection;
-import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.index.LuceneIndex;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.store.MockStoreManager;
 import com.zimbra.cs.store.StoreManager;
@@ -53,7 +53,7 @@ public final class ContactTest {
         HSQLDB.createDatabase();
 
         MailboxManager.setInstance(null);
-        MailboxIndex.startup();
+        LuceneIndex.startup();
 
         LC.zimbra_class_store.setDefault(MockStoreManager.class.getName());
         StoreManager.getInstance().startup();

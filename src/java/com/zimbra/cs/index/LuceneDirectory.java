@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -69,6 +69,11 @@ public final class LuceneDirectory extends Directory {
         return new LuceneDirectory(FSDirectory.open(path, lockFactory));
     }
 
+    /**
+     * Returns total bytes read from the filesystem by Lucene - for stats logging.
+     *
+     * @return bytes count
+     */
     long getBytesRead() {
         return rcount.get();
     }
@@ -77,6 +82,11 @@ public final class LuceneDirectory extends Directory {
         rcount.set(0);
     }
 
+    /**
+     * Returns total bytes written to the filesystem by Lucene - for stats logging.
+     *
+     * @return bytes count
+     */
     long getBytesWritten() {
         return wcount.get();
     }

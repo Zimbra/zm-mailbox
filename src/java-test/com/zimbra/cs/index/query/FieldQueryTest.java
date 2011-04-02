@@ -29,7 +29,7 @@ import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.HSQLDB;
-import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.index.LuceneIndex;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 
@@ -55,7 +55,7 @@ public final class FieldQueryTest {
         HSQLDB.createDatabase();
 
         mailbox = MailboxManager.getInstance().getMailboxByAccountId("0-0-0");
-        MailboxIndex.startup();
+        LuceneIndex.startup();
     }
 
     @Before

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -11,10 +11,6 @@
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/*
- * Created on 2004. 7. 16.
  */
 package com.zimbra.cs.redolog;
 
@@ -37,7 +33,6 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 
 import com.zimbra.cs.db.Db;
-import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.redolog.logger.FileLogReader;
 import com.zimbra.cs.redolog.logger.FileLogWriter;
@@ -47,10 +42,10 @@ import com.zimbra.cs.redolog.op.Checkpoint;
 import com.zimbra.cs.redolog.op.CommitTxn;
 import com.zimbra.cs.redolog.op.RedoableOp;
 import com.zimbra.cs.util.Zimbra;
-//import com.zimbra.cs.redolog.op.Rollover;
 import com.zimbra.znative.IO;
 
 /**
+ * @since 2004. 7. 16.
  * @author jhahm
  */
 public class RedoLogManager {

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -38,7 +38,7 @@ import com.zimbra.cs.db.Versions;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.im.IMRouter;
 import com.zimbra.cs.im.ZimbraIM;
-import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.index.LuceneIndex;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.PurgeThread;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
@@ -210,7 +210,7 @@ public class Zimbra {
 
         // ZimletUtil.loadZimlets();
 
-        MailboxIndex.startup();
+        LuceneIndex.startup();
 
         RedoLogProvider redoLog = RedoLogProvider.getInstance();
         if (sIsMailboxd) {
@@ -311,7 +311,7 @@ public class Zimbra {
             SessionCache.shutdown();
         }
 
-        MailboxIndex.shutdown();
+        LuceneIndex.shutdown();
 
         if (sIsMailboxd) {
             if (app.supports(IMRouter.class.getName())) {

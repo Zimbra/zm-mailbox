@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -23,7 +23,7 @@ import com.zimbra.common.localconfig.LC;
  *
  * @since 2005. 4. 25.
  */
-public class DebugConfig {
+public final class DebugConfig {
 
     /** If true, then we do ICalendar Validation every time we generate
      *  ICalendar data. */
@@ -55,11 +55,6 @@ public class DebugConfig {
      *  allows one to test the performance of JavaMail apart from performance
      *  of text extraction routines. */
     public static boolean disableMimePartExtraction;
-
-    /** If true, messages aren't indexed and won't be searchable.
-     *  If this key is set to true, the keys for indexing attachments
-     *  separately/together are meaningless. */
-    public static boolean disableIndexing;
 
     /** If true, turns off DHTML UI's highlighting of attachment with search
      *  hit. */
@@ -185,14 +180,12 @@ public class DebugConfig {
         disableMessageAnalysis = booleanValue("debug_disable_message_analysis", false);
         if (disableMessageAnalysis) {
             disableMimePartExtraction = true;
-            disableIndexing = true;
             disableObjects = true;
 
             // When message analysis is disabled, conversation fragment is
             // also disabled.
         } else {
             disableMimePartExtraction = booleanValue("debug_disable_mime_part_extraction", false);
-            disableIndexing = booleanValue("debug_disable_indexing", false);
             disableObjects = booleanValue("debug_disable_objects", false);
         }
         disableIndexingAttachmentsSeparately = booleanValue("debug_disable_indexing_attachments_separately", false);

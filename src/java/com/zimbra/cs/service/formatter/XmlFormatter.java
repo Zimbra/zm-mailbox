@@ -21,7 +21,6 @@ import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
-import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.CalendarItem.Instance;
@@ -39,7 +38,7 @@ public class XmlFormatter extends Formatter {
 
     @Override
     public Set<MailItem.Type> getDefaultSearchTypes() {
-         return MailboxIndex.SEARCH_FOR_EVERYTHING;
+         return SEARCH_FOR_EVERYTHING;
     }
 
     @Override

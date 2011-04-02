@@ -365,13 +365,6 @@ public final class LuceneQueryOperation extends QueryOperation {
         }
     }
 
-    private void setupTextQueryOperation(QueryContext ctx) throws IOException {
-        MailboxIndex midx = ctx.getMailbox().index.getMailboxIndex();
-        if (midx != null) {
-            searcher = midx.getIndexSearcherRef(ctx.getResults().getSortBy());
-        }
-    }
-
     @Override
     public String toString() {
         return "LUCENE(" + luceneQuery + (hasSpamTrashSetting() ? " <ANYWHERE>" : "") + ")";
@@ -596,7 +589,7 @@ public final class LuceneQueryOperation extends QueryOperation {
             dbOp.begin(ctx); // will call back into this method again!
         } else { // 2nd time called
             try {
-                setupTextQueryOperation(ctx);
+                searcher = ctx.getMailbox().index.getIndexStore().getIndexSearcherRef(ctx.getResults().getSortBy());
             } catch (IOException e) {
                 throw ServiceException.FAILURE("Failed to open index", e);
             }

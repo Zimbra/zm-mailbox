@@ -72,9 +72,8 @@ public class IndexEditor {
 
     public void deleteIndex(int mailboxId) throws ServiceException {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mailboxId);
-        MailboxIndex mi = mbox.index.getMailboxIndex();
         try {
-            mi.deleteIndex();
+            mbox.index.deleteIndex();
         } catch (IOException e) {
             throw ServiceException.FAILURE("Caught IOException", e);
         }
@@ -780,14 +779,13 @@ public class IndexEditor {
         mHandler = null;
     }
 
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) {
         CliUtil.toolSetup("DEBUG");
 
-        MailboxIndex.startup();
+        LuceneIndex.startup();
         IndexEditor editor = new IndexEditor();
         editor.run();
-        MailboxIndex.shutdown();
+        LuceneIndex.shutdown();
     }
 
     void getSize(int mailboxId) throws ServiceException {
