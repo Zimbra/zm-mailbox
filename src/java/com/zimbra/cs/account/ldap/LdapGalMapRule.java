@@ -17,6 +17,8 @@ package com.zimbra.cs.account.ldap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
@@ -26,7 +28,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.AttributeManager.IDNType;
+import com.zimbra.cs.account.AttributeType;
 import com.zimbra.cs.account.IDNUtil;
+import com.zimbra.cs.mailbox.Contact;
 
 /*
  * maps LDAP attrs into contact attrs. 
@@ -40,18 +44,29 @@ class LdapGalMapRule {
     private LdapGalValueMap[] mContactAttrsValueMaps;
     
     private boolean mIsBinary;
+    private boolean mIsBinaryTransfer;
     private boolean mIsSMIMECertificate;
     
-    // indicating that all LDAP attributes in the rule contain binary data
-    // the LDAP value will be base64 encoded when it is stored in the GalContact 
-    private static final String BINARY_INDICATOR = "binary ";
-    private static final int BINARY_INDICATOR_LEN = BINARY_INDICATOR.length();
+    private static final Pattern typedRule = Pattern.compile("\\((.*)\\)\\s(.*)");
         
     public LdapGalMapRule(String rule, Map<String, LdapGalValueMap> valueMaps) {
         
-        if (rule.startsWith(BINARY_INDICATOR)) {
-            mIsBinary = true;
-            rule = rule.substring(BINARY_INDICATOR_LEN);
+        Matcher matcher = typedRule.matcher(rule);
+        if (matcher.matches()) {
+            String type = matcher.group(1);
+            AttributeType attrType = AttributeType.getType(type);
+            if (attrType == null) {
+                ZimbraLog.gal.warn("Unrecognized type in attr map: " + type + ", type is ignore for rule " + rule);
+            } else {
+                if (AttributeManager.isBinaryType(attrType)) {
+                    mIsBinary = true;
+                } else if (AttributeManager.isBinaryTransferType(attrType)) {
+                    mIsBinaryTransfer = true;
+                }
+                // no special treatment for all other types
+                
+                rule = matcher.group(2);
+            }
         }
         
         int p = rule.indexOf('=');
@@ -71,7 +86,7 @@ class LdapGalMapRule {
         }
         
         for (String contactAttr : mContactAttrs) {
-        	if (ContactConstants.A_SMIMECertificate.equals(contactAttr)) {
+        	if (Contact.isSMIMECertField(contactAttr)) {
         		mIsSMIMECertificate = true;
         		break;
         	}
@@ -80,6 +95,14 @@ class LdapGalMapRule {
     
     public boolean isBinary() {
         return mIsBinary;
+    }
+    
+    public boolean isBinaryTransfer() {
+        return mIsBinaryTransfer;
+    }
+    
+    public boolean containsBinaryData() {
+        return mIsBinary || mIsBinaryTransfer;
     }
     
     // return if this rule is the SMIME certificate rule
@@ -129,7 +152,7 @@ class LdapGalMapRule {
         for (String ldapAttr: mLdapAttrs) {
             if (index >= mContactAttrs.length) return;
             String val[];
-            try { val = LdapUtil.getMultiAttrString(ldapAttrs, ldapAttr, mIsBinary); } 
+            try { val = LdapUtil.getMultiAttrString(ldapAttrs, ldapAttr, containsBinaryData(), isBinaryTransfer()); } 
             catch (NamingException e) { return; }
             
             IDNType idnType = AttributeManager.idnType(attrMgr, ldapAttr);

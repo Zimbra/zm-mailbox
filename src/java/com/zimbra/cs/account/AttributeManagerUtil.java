@@ -319,9 +319,23 @@ public class AttributeManagerUtil {
             equality = "booleanMatch";
             break;
         case TYPE_BINARY:
-            // cannot use the binary syntax because it cannot support multi-valued attrs
-            // when a second value is added to a multi-valued attr, will get "no equality matching rule"
-            // error from LDAP server, because there is no equality matching for 1.3.6.1.4.1.1466.115.121.1.5
+            // cannot use the binary syntax because it cannot support adding/deleting individual values 
+            // in a multi-valued attrs, only replacement(i.e. replace all values) is supported.
+            // 
+            // when a value is added to a multi-valued attr, or when an attempt is made to delete a 
+            // specific value, will get "no equality matching rule" error from LDAP server, because 
+            // there is no equality matching for 1.3.6.1.4.1.1466.115.121.1.5
+            // 
+            // Note: 1.3.6.1.4.1.1466.115.121.1.5 attrs, like userSMIMECertificate, when included in 
+            //       the zimbra schema, are declared as type="binary" in zimbra-attrs.xml.
+            //       Handling for the two (1.3.6.1.4.1.1466.115.121.1.5 and 1.3.6.1.4.1.1466.115.121.1.40)
+            //       are *exactly the same* in ZCS.  They are:
+            //       - transferred as binary on the wire, by setting the JNDI "java.naming.ldap.attributes.binary" 
+            //         environment property
+            //       - stored as base64 encoded string in ZCS memory
+            //       - Entry.getAttr(String name) returns the base64 encoded value
+            //       - Entry.getBinaryAttr(String name) returns the base64 decoded value
+            //   
             /*
             lengthSuffix = "";
             if (ai.getMax() != Long.MAX_VALUE) {
@@ -339,7 +353,17 @@ public class AttributeManagerUtil {
             syntax = "1.3.6.1.4.1.1466.115.121.1.40" + lengthSuffix;
             equality = "octetStringMatch";
             break;
-            
+        case TYPE_CERTIFICATE:
+            // This type does have a equality matching rule, so adding/deleting individual values
+            // is supported.
+            //
+            lengthSuffix = "";
+            if (ai.getMax() != Long.MAX_VALUE) {
+                lengthSuffix = "{" + ai.getMax() + "}";
+            }
+            syntax = "1.3.6.1.4.1.1466.115.121.1.8" + lengthSuffix;
+            equality = "certificateExactMatch";
+            break;
         case TYPE_EMAIL:
         case TYPE_EMAILP:
         case TYPE_CS_EMAILP:
@@ -917,6 +941,7 @@ public class AttributeManagerUtil {
 
            switch (ai.getType()) {
                case TYPE_BINARY:
+               case TYPE_CERTIFICATE:    
                case TYPE_DURATION:
                case TYPE_GENTIME:
                case TYPE_ENUM:
@@ -1018,6 +1043,7 @@ public class AttributeManagerUtil {
                javaDocReturns = String.format(", or %s if unset", defaultValue);
                break;
            case TYPE_BINARY:
+           case TYPE_CERTIFICATE:    
                defaultValue = "null";
                javaType = "byte[]";
                javaBody = String.format("return getBinaryAttr(Provisioning.A_%s);", name);
@@ -1147,6 +1173,7 @@ public class AttributeManagerUtil {
                putParam = String.format("%s ? Provisioning.TRUE : Provisioning.FALSE", name);
                break;
            case TYPE_BINARY:
+           case TYPE_CERTIFICATE:    
                javaType = "byte[]";
                putParam = String.format("%s==null ? \"\" : ByteUtil.encodeLDAPBase64(%s)", name, name);
                break;

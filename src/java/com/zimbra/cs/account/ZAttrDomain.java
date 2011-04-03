@@ -41,7 +41,7 @@ public class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110321-1148 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110402-2122 */
 
     /**
      * RFC2256: descriptive information
@@ -4743,7 +4743,7 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * The duration of f/b block pushed to Exchange server. Must be in valid
+     * The duration of f/b block pushed to Exchange server.. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -4763,7 +4763,7 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * The duration of f/b block pushed to Exchange server. Must be in valid
+     * The duration of f/b block pushed to Exchange server.. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -4779,7 +4779,7 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * The duration of f/b block pushed to Exchange server. Must be in valid
+     * The duration of f/b block pushed to Exchange server.. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -4798,7 +4798,7 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * The duration of f/b block pushed to Exchange server. Must be in valid
+     * The duration of f/b block pushed to Exchange server.. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -4818,7 +4818,7 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * The duration of f/b block pushed to Exchange server. Must be in valid
+     * The duration of f/b block pushed to Exchange server.. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -4836,7 +4836,7 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * The duration of f/b block pushed to Exchange server. Must be in valid
+     * The duration of f/b block pushed to Exchange server.. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -4856,8 +4856,8 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * The value of duration is used to indicate the start date (in the past
-     * relative to today) of the f/b interval pushed to Exchange server. Must
-     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * relative to today) of the f/b interval pushed to Exchange server..
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
      * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
      * ms - milliseconds. If time unit is not specified, the default is
      * s(seconds).
@@ -4877,8 +4877,8 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * The value of duration is used to indicate the start date (in the past
-     * relative to today) of the f/b interval pushed to Exchange server. Must
-     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * relative to today) of the f/b interval pushed to Exchange server..
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
      * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
      * ms - milliseconds. If time unit is not specified, the default is
      * s(seconds).
@@ -4894,8 +4894,8 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * The value of duration is used to indicate the start date (in the past
-     * relative to today) of the f/b interval pushed to Exchange server. Must
-     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * relative to today) of the f/b interval pushed to Exchange server..
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
      * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
      * ms - milliseconds. If time unit is not specified, the default is
      * s(seconds).
@@ -4914,8 +4914,8 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * The value of duration is used to indicate the start date (in the past
-     * relative to today) of the f/b interval pushed to Exchange server. Must
-     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * relative to today) of the f/b interval pushed to Exchange server..
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
      * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
      * ms - milliseconds. If time unit is not specified, the default is
      * s(seconds).
@@ -4935,8 +4935,8 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * The value of duration is used to indicate the start date (in the past
-     * relative to today) of the f/b interval pushed to Exchange server. Must
-     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * relative to today) of the f/b interval pushed to Exchange server..
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
      * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
      * ms - milliseconds. If time unit is not specified, the default is
      * s(seconds).
@@ -4954,8 +4954,8 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * The value of duration is used to indicate the start date (in the past
-     * relative to today) of the f/b interval pushed to Exchange server. Must
-     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * relative to today) of the f/b interval pushed to Exchange server..
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
      * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
      * ms - milliseconds. If time unit is not specified, the default is
      * s(seconds).
@@ -5679,7 +5679,7 @@ public class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=153)
     public String[] getGalLdapAttrMap() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap); return value.length > 0 ? value : new String[] {"co=workCountry","company=company","zimbraPhoneticCompany,ms-DS-Phonetic-Company-Name=phoneticCompany","givenName,gn=firstName","zimbraPhoneticFirstName,ms-DS-Phonetic-First-Name=phoneticFirstName","sn=lastName","zimbraPhoneticLastName,ms-DS-Phonetic-Last-Name=phoneticLastName","displayName,cn=fullName,fullName2,fullName3,fullName4,fullName5,fullName6,fullName7,fullName8,fullName9,fullName10","initials=initials","description=notes","l=workCity","physicalDeliveryOfficeName=office","ou=department","street,streetAddress=workStreet","postalCode=workPostalCode","facsimileTelephoneNumber,fax=workFax","homeTelephoneNumber,homePhone=homePhone","mobileTelephoneNumber,mobile=mobilePhone","pagerTelephoneNumber,pager=pager","telephoneNumber=workPhone","st=workState","zimbraMailDeliveryAddress,zimbraMailAlias,mail=email,email2,email3,email4,email5,email6,email7,email8,email9,email10,email11,email12,email13,email14,email15,email16","title=jobTitle","whenChanged,modifyTimeStamp=modifyTimeStamp","whenCreated,createTimeStamp=createTimeStamp","zimbraId=zimbraId","objectClass=objectClass","zimbraMailForwardingAddress=member","zimbraCalResType,msExchResourceSearchProperties=zimbraCalResType","zimbraCalResLocationDisplayName=zimbraCalResLocationDisplayName","zimbraCalResBuilding=zimbraCalResBuilding","zimbraCalResCapacity,msExchResourceCapacity=zimbraCalResCapacity","zimbraCalResFloor=zimbraCalResFloor","zimbraCalResSite=zimbraCalResSite","zimbraCalResContactEmail=zimbraCalResContactEmail","msExchResourceSearchProperties=zimbraAccountCalendarUserType","binary zimbraPrefMailSMIMECertificate,userCertificate,userSMIMECertificate=SMIMECertificate"};
+        String[] value = getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap); return value.length > 0 ? value : new String[] {"co=workCountry","company=company","zimbraPhoneticCompany,ms-DS-Phonetic-Company-Name=phoneticCompany","givenName,gn=firstName","zimbraPhoneticFirstName,ms-DS-Phonetic-First-Name=phoneticFirstName","sn=lastName","zimbraPhoneticLastName,ms-DS-Phonetic-Last-Name=phoneticLastName","displayName,cn=fullName,fullName2,fullName3,fullName4,fullName5,fullName6,fullName7,fullName8,fullName9,fullName10","initials=initials","description=notes","l=workCity","physicalDeliveryOfficeName=office","ou=department","street,streetAddress=workStreet","postalCode=workPostalCode","facsimileTelephoneNumber,fax=workFax","homeTelephoneNumber,homePhone=homePhone","mobileTelephoneNumber,mobile=mobilePhone","pagerTelephoneNumber,pager=pager","telephoneNumber=workPhone","st=workState","zimbraMailDeliveryAddress,zimbraMailAlias,mail=email,email2,email3,email4,email5,email6,email7,email8,email9,email10,email11,email12,email13,email14,email15,email16","title=jobTitle","whenChanged,modifyTimeStamp=modifyTimeStamp","whenCreated,createTimeStamp=createTimeStamp","zimbraId=zimbraId","objectClass=objectClass","zimbraMailForwardingAddress=member","zimbraCalResType,msExchResourceSearchProperties=zimbraCalResType","zimbraCalResLocationDisplayName=zimbraCalResLocationDisplayName","zimbraCalResBuilding=zimbraCalResBuilding","zimbraCalResCapacity,msExchResourceCapacity=zimbraCalResCapacity","zimbraCalResFloor=zimbraCalResFloor","zimbraCalResSite=zimbraCalResSite","zimbraCalResContactEmail=zimbraCalResContactEmail","msExchResourceSearchProperties=zimbraAccountCalendarUserType","(certificate) userCertificate=userCertificate","(binary) userSMIMECertificate=userSMIMECertificate"};
     }
 
     /**

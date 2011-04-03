@@ -40,7 +40,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110321-1148 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110402-2122 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -355,7 +355,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime of newly created admin auth tokens Must be in valid duration
+     * lifetime of newly created admin auth tokens. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -372,7 +372,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime of newly created admin auth tokens Must be in valid duration
+     * lifetime of newly created admin auth tokens. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -385,7 +385,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime of newly created admin auth tokens Must be in valid duration
+     * lifetime of newly created admin auth tokens. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -401,7 +401,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime of newly created admin auth tokens Must be in valid duration
+     * lifetime of newly created admin auth tokens. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -418,7 +418,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime of newly created admin auth tokens Must be in valid duration
+     * lifetime of newly created admin auth tokens. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -433,7 +433,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime of newly created admin auth tokens Must be in valid duration
+     * lifetime of newly created admin auth tokens. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -967,7 +967,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime of newly created auth tokens Must be in valid duration
+     * lifetime of newly created auth tokens. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -984,7 +984,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime of newly created auth tokens Must be in valid duration
+     * lifetime of newly created auth tokens. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -997,7 +997,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime of newly created auth tokens Must be in valid duration
+     * lifetime of newly created auth tokens. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -1013,7 +1013,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime of newly created auth tokens Must be in valid duration
+     * lifetime of newly created auth tokens. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -1030,7 +1030,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime of newly created auth tokens Must be in valid duration
+     * lifetime of newly created auth tokens. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -1045,7 +1045,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime of newly created auth tokens Must be in valid duration
+     * lifetime of newly created auth tokens. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -1383,7 +1383,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * CalDAV shared folder cache duration Must be in valid duration format:
+     * CalDAV shared folder cache duration. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -1402,7 +1402,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * CalDAV shared folder cache duration Must be in valid duration format:
+     * CalDAV shared folder cache duration. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -1417,7 +1417,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * CalDAV shared folder cache duration Must be in valid duration format:
+     * CalDAV shared folder cache duration. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -1435,7 +1435,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * CalDAV shared folder cache duration Must be in valid duration format:
+     * CalDAV shared folder cache duration. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -1454,7 +1454,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * CalDAV shared folder cache duration Must be in valid duration format:
+     * CalDAV shared folder cache duration. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -1471,7 +1471,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * CalDAV shared folder cache duration Must be in valid duration format:
+     * CalDAV shared folder cache duration. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -1489,7 +1489,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * see description of zimbraCalendarCalDavSyncStart Must be in valid
+     * see description of zimbraCalendarCalDavSyncStart. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -1509,7 +1509,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * see description of zimbraCalendarCalDavSyncStart Must be in valid
+     * see description of zimbraCalendarCalDavSyncStart. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -1525,7 +1525,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * see description of zimbraCalendarCalDavSyncStart Must be in valid
+     * see description of zimbraCalendarCalDavSyncStart. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -1544,7 +1544,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * see description of zimbraCalendarCalDavSyncStart Must be in valid
+     * see description of zimbraCalendarCalDavSyncStart. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -1564,7 +1564,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * see description of zimbraCalendarCalDavSyncStart Must be in valid
+     * see description of zimbraCalendarCalDavSyncStart. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -1582,7 +1582,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * see description of zimbraCalendarCalDavSyncStart Must be in valid
+     * see description of zimbraCalendarCalDavSyncStart. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -1607,10 +1607,10 @@ public class ZAttrCos extends NamedEntry {
      * zimbraCalendarCalDavSyncEnd is set to 1 years, then the appointments
      * between (now - 30 days) and (now + 1 year) will be available via
      * CalDAV. When they are unset all the appointments are available via
-     * CalDAV. Must be in valid duration format: {digits}{time-unit}. digits:
-     * 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d -
-     * days, ms - milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * CalDAV. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * <p>Use getCalendarCalDavSyncStartAsString to access value as a string.
      *
@@ -1632,10 +1632,10 @@ public class ZAttrCos extends NamedEntry {
      * zimbraCalendarCalDavSyncEnd is set to 1 years, then the appointments
      * between (now - 30 days) and (now + 1 year) will be available via
      * CalDAV. When they are unset all the appointments are available via
-     * CalDAV. Must be in valid duration format: {digits}{time-unit}. digits:
-     * 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d -
-     * days, ms - milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * CalDAV. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @return zimbraCalendarCalDavSyncStart, or null if unset
      *
@@ -1653,10 +1653,10 @@ public class ZAttrCos extends NamedEntry {
      * zimbraCalendarCalDavSyncEnd is set to 1 years, then the appointments
      * between (now - 30 days) and (now + 1 year) will be available via
      * CalDAV. When they are unset all the appointments are available via
-     * CalDAV. Must be in valid duration format: {digits}{time-unit}. digits:
-     * 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d -
-     * days, ms - milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * CalDAV. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @param zimbraCalendarCalDavSyncStart new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -1677,10 +1677,10 @@ public class ZAttrCos extends NamedEntry {
      * zimbraCalendarCalDavSyncEnd is set to 1 years, then the appointments
      * between (now - 30 days) and (now + 1 year) will be available via
      * CalDAV. When they are unset all the appointments are available via
-     * CalDAV. Must be in valid duration format: {digits}{time-unit}. digits:
-     * 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d -
-     * days, ms - milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * CalDAV. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @param zimbraCalendarCalDavSyncStart new value
      * @param attrs existing map to populate, or null to create a new map
@@ -1702,10 +1702,10 @@ public class ZAttrCos extends NamedEntry {
      * zimbraCalendarCalDavSyncEnd is set to 1 years, then the appointments
      * between (now - 30 days) and (now + 1 year) will be available via
      * CalDAV. When they are unset all the appointments are available via
-     * CalDAV. Must be in valid duration format: {digits}{time-unit}. digits:
-     * 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d -
-     * days, ms - milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * CalDAV. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -1725,10 +1725,10 @@ public class ZAttrCos extends NamedEntry {
      * zimbraCalendarCalDavSyncEnd is set to 1 years, then the appointments
      * between (now - 30 days) and (now + 1 year) will be available via
      * CalDAV. When they are unset all the appointments are available via
-     * CalDAV. Must be in valid duration format: {digits}{time-unit}. digits:
-     * 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d -
-     * days, ms - milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * CalDAV. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -2634,7 +2634,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Caldav data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -2655,7 +2655,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Caldav data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -2672,7 +2672,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Caldav data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -2692,7 +2692,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Caldav data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -2713,7 +2713,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Caldav data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -2732,7 +2732,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Caldav data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -2752,7 +2752,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a remote calendar
      * data source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -2773,7 +2773,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a remote calendar
      * data source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -2790,7 +2790,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a remote calendar
      * data source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -2810,7 +2810,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a remote calendar
      * data source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -2831,7 +2831,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a remote calendar
      * data source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -2850,7 +2850,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a remote calendar
      * data source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -2870,7 +2870,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a GAL data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -2891,7 +2891,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a GAL data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -2908,7 +2908,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a GAL data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -2928,7 +2928,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a GAL data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -2949,7 +2949,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a GAL data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -2968,7 +2968,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a GAL data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -2988,7 +2988,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for an Imap data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -3009,7 +3009,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for an Imap data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -3026,7 +3026,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for an Imap data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -3046,7 +3046,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for an Imap data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -3067,7 +3067,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for an Imap data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -3086,7 +3086,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for an Imap data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -3106,7 +3106,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Live data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -3127,7 +3127,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Live data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -3144,7 +3144,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Live data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -3164,7 +3164,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Live data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -3185,7 +3185,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Live data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -3204,7 +3204,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Live data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -3284,10 +3284,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Shortest allowed duration for zimbraDataSourcePollingInterval. Must be
-     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
+     * Shortest allowed duration for zimbraDataSourcePollingInterval.. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
      * s(seconds).
      *
      * <p>Use getDataSourceMinPollingIntervalAsString to access value as a string.
@@ -3304,10 +3304,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Shortest allowed duration for zimbraDataSourcePollingInterval. Must be
-     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
+     * Shortest allowed duration for zimbraDataSourcePollingInterval.. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
      * s(seconds).
      *
      * @return zimbraDataSourceMinPollingInterval, or "1m" if unset
@@ -3320,10 +3320,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Shortest allowed duration for zimbraDataSourcePollingInterval. Must be
-     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
+     * Shortest allowed duration for zimbraDataSourcePollingInterval.. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
      * s(seconds).
      *
      * @param zimbraDataSourceMinPollingInterval new value
@@ -3339,10 +3339,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Shortest allowed duration for zimbraDataSourcePollingInterval. Must be
-     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
+     * Shortest allowed duration for zimbraDataSourcePollingInterval.. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
      * s(seconds).
      *
      * @param zimbraDataSourceMinPollingInterval new value
@@ -3359,10 +3359,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Shortest allowed duration for zimbraDataSourcePollingInterval. Must be
-     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
+     * Shortest allowed duration for zimbraDataSourcePollingInterval.. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
      * s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -3377,10 +3377,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Shortest allowed duration for zimbraDataSourcePollingInterval. Must be
-     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
+     * Shortest allowed duration for zimbraDataSourcePollingInterval.. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
      * s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -3405,8 +3405,8 @@ public class ZAttrCos extends NamedEntry {
      * zimbraDataSourcePollingInterval is set on data source, use it 2.
      * otherwise use the zimbraDataSource{Proto}PollingInterval on
      * account/cos 3. if zimbraDataSource{Proto}PollingInterval is not set on
-     * account/cos, use 0, which means no automated polling. Must be in valid
-     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * account/cos, use 0, which means no automated polling. . Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
      * s(seconds).
@@ -3432,8 +3432,8 @@ public class ZAttrCos extends NamedEntry {
      * zimbraDataSourcePollingInterval is set on data source, use it 2.
      * otherwise use the zimbraDataSource{Proto}PollingInterval on
      * account/cos 3. if zimbraDataSource{Proto}PollingInterval is not set on
-     * account/cos, use 0, which means no automated polling. Must be in valid
-     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * account/cos, use 0, which means no automated polling. . Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
      * s(seconds).
@@ -3455,8 +3455,8 @@ public class ZAttrCos extends NamedEntry {
      * zimbraDataSourcePollingInterval is set on data source, use it 2.
      * otherwise use the zimbraDataSource{Proto}PollingInterval on
      * account/cos 3. if zimbraDataSource{Proto}PollingInterval is not set on
-     * account/cos, use 0, which means no automated polling. Must be in valid
-     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * account/cos, use 0, which means no automated polling. . Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
      * s(seconds).
@@ -3481,8 +3481,8 @@ public class ZAttrCos extends NamedEntry {
      * zimbraDataSourcePollingInterval is set on data source, use it 2.
      * otherwise use the zimbraDataSource{Proto}PollingInterval on
      * account/cos 3. if zimbraDataSource{Proto}PollingInterval is not set on
-     * account/cos, use 0, which means no automated polling. Must be in valid
-     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * account/cos, use 0, which means no automated polling. . Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
      * s(seconds).
@@ -3508,8 +3508,8 @@ public class ZAttrCos extends NamedEntry {
      * zimbraDataSourcePollingInterval is set on data source, use it 2.
      * otherwise use the zimbraDataSource{Proto}PollingInterval on
      * account/cos 3. if zimbraDataSource{Proto}PollingInterval is not set on
-     * account/cos, use 0, which means no automated polling. Must be in valid
-     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * account/cos, use 0, which means no automated polling. . Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
      * s(seconds).
@@ -3533,8 +3533,8 @@ public class ZAttrCos extends NamedEntry {
      * zimbraDataSourcePollingInterval is set on data source, use it 2.
      * otherwise use the zimbraDataSource{Proto}PollingInterval on
      * account/cos 3. if zimbraDataSource{Proto}PollingInterval is not set on
-     * account/cos, use 0, which means no automated polling. Must be in valid
-     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * account/cos, use 0, which means no automated polling. . Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
      * s(seconds).
@@ -3552,7 +3552,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Pop3 data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -3573,7 +3573,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Pop3 data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -3590,7 +3590,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Pop3 data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -3610,7 +3610,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Pop3 data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -3631,7 +3631,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Pop3 data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -3650,7 +3650,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Pop3 data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -3670,7 +3670,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Rss data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -3691,7 +3691,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Rss data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -3708,7 +3708,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Rss data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -3728,7 +3728,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Rss data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -3749,7 +3749,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Rss data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -3768,7 +3768,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Rss data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. Must be in valid duration format:
+     * automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -3788,7 +3788,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Yahoo address
      * book data source. If unset or 0, the data source will not be scheduled
-     * for automated polling. Must be in valid duration format:
+     * for automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -3809,7 +3809,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Yahoo address
      * book data source. If unset or 0, the data source will not be scheduled
-     * for automated polling. Must be in valid duration format:
+     * for automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -3826,7 +3826,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Yahoo address
      * book data source. If unset or 0, the data source will not be scheduled
-     * for automated polling. Must be in valid duration format:
+     * for automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -3846,7 +3846,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Yahoo address
      * book data source. If unset or 0, the data source will not be scheduled
-     * for automated polling. Must be in valid duration format:
+     * for automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -3867,7 +3867,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Yahoo address
      * book data source. If unset or 0, the data source will not be scheduled
-     * for automated polling. Must be in valid duration format:
+     * for automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -3886,7 +3886,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Yahoo address
      * book data source. If unset or 0, the data source will not be scheduled
-     * for automated polling. Must be in valid duration format:
+     * for automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -9267,7 +9267,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The amount of time to sleep between every two messages during
      * ApplyFilterRules. Increasing this value will even out server load at
-     * the expense of slowing down the operation. Must be in valid duration
+     * the expense of slowing down the operation. . Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -9288,7 +9288,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The amount of time to sleep between every two messages during
      * ApplyFilterRules. Increasing this value will even out server load at
-     * the expense of slowing down the operation. Must be in valid duration
+     * the expense of slowing down the operation. . Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -9305,7 +9305,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The amount of time to sleep between every two messages during
      * ApplyFilterRules. Increasing this value will even out server load at
-     * the expense of slowing down the operation. Must be in valid duration
+     * the expense of slowing down the operation. . Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -9325,7 +9325,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The amount of time to sleep between every two messages during
      * ApplyFilterRules. Increasing this value will even out server load at
-     * the expense of slowing down the operation. Must be in valid duration
+     * the expense of slowing down the operation. . Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -9346,7 +9346,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The amount of time to sleep between every two messages during
      * ApplyFilterRules. Increasing this value will even out server load at
-     * the expense of slowing down the operation. Must be in valid duration
+     * the expense of slowing down the operation. . Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -9365,7 +9365,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The amount of time to sleep between every two messages during
      * ApplyFilterRules. Increasing this value will even out server load at
-     * the expense of slowing down the operation. Must be in valid duration
+     * the expense of slowing down the operation. . Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -9658,7 +9658,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * The duration of f/b block pushed to Exchange server. Must be in valid
+     * The duration of f/b block pushed to Exchange server.. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -9678,7 +9678,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * The duration of f/b block pushed to Exchange server. Must be in valid
+     * The duration of f/b block pushed to Exchange server.. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -9694,7 +9694,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * The duration of f/b block pushed to Exchange server. Must be in valid
+     * The duration of f/b block pushed to Exchange server.. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -9713,7 +9713,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * The duration of f/b block pushed to Exchange server. Must be in valid
+     * The duration of f/b block pushed to Exchange server.. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -9733,7 +9733,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * The duration of f/b block pushed to Exchange server. Must be in valid
+     * The duration of f/b block pushed to Exchange server.. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -9751,7 +9751,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * The duration of f/b block pushed to Exchange server. Must be in valid
+     * The duration of f/b block pushed to Exchange server.. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -9771,8 +9771,8 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * The value of duration is used to indicate the start date (in the past
-     * relative to today) of the f/b interval pushed to Exchange server. Must
-     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * relative to today) of the f/b interval pushed to Exchange server..
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
      * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
      * ms - milliseconds. If time unit is not specified, the default is
      * s(seconds).
@@ -9792,8 +9792,8 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * The value of duration is used to indicate the start date (in the past
-     * relative to today) of the f/b interval pushed to Exchange server. Must
-     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * relative to today) of the f/b interval pushed to Exchange server..
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
      * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
      * ms - milliseconds. If time unit is not specified, the default is
      * s(seconds).
@@ -9809,8 +9809,8 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * The value of duration is used to indicate the start date (in the past
-     * relative to today) of the f/b interval pushed to Exchange server. Must
-     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * relative to today) of the f/b interval pushed to Exchange server..
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
      * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
      * ms - milliseconds. If time unit is not specified, the default is
      * s(seconds).
@@ -9829,8 +9829,8 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * The value of duration is used to indicate the start date (in the past
-     * relative to today) of the f/b interval pushed to Exchange server. Must
-     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * relative to today) of the f/b interval pushed to Exchange server..
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
      * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
      * ms - milliseconds. If time unit is not specified, the default is
      * s(seconds).
@@ -9850,8 +9850,8 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * The value of duration is used to indicate the start date (in the past
-     * relative to today) of the f/b interval pushed to Exchange server. Must
-     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * relative to today) of the f/b interval pushed to Exchange server..
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
      * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
      * ms - milliseconds. If time unit is not specified, the default is
      * s(seconds).
@@ -9869,8 +9869,8 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * The value of duration is used to indicate the start date (in the past
-     * relative to today) of the f/b interval pushed to Exchange server. Must
-     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * relative to today) of the f/b interval pushed to Exchange server..
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
      * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
      * ms - milliseconds. If time unit is not specified, the default is
      * s(seconds).
@@ -11366,7 +11366,7 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of messages in the dumpster. 0 means that all
-     * messages will be retained. Must be in valid duration format:
+     * messages will be retained. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -11386,7 +11386,7 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of messages in the dumpster. 0 means that all
-     * messages will be retained. Must be in valid duration format:
+     * messages will be retained. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -11402,7 +11402,7 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of messages in the dumpster. 0 means that all
-     * messages will be retained. Must be in valid duration format:
+     * messages will be retained. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -11421,7 +11421,7 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of messages in the dumpster. 0 means that all
-     * messages will be retained. Must be in valid duration format:
+     * messages will be retained. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -11441,7 +11441,7 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of messages in the dumpster. 0 means that all
-     * messages will be retained. Must be in valid duration format:
+     * messages will be retained. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -11459,7 +11459,7 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of messages in the dumpster. 0 means that all
-     * messages will be retained. Must be in valid duration format:
+     * messages will be retained. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -11737,7 +11737,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * idle timeout Must be in valid duration format: {digits}{time-unit}.
+     * idle timeout. Must be in valid duration format: {digits}{time-unit}.
      * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
      * seconds, d - days, ms - milliseconds. If time unit is not specified,
      * the default is s(seconds).
@@ -11754,7 +11754,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * idle timeout Must be in valid duration format: {digits}{time-unit}.
+     * idle timeout. Must be in valid duration format: {digits}{time-unit}.
      * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
      * seconds, d - days, ms - milliseconds. If time unit is not specified,
      * the default is s(seconds).
@@ -11767,7 +11767,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * idle timeout Must be in valid duration format: {digits}{time-unit}.
+     * idle timeout. Must be in valid duration format: {digits}{time-unit}.
      * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
      * seconds, d - days, ms - milliseconds. If time unit is not specified,
      * the default is s(seconds).
@@ -11783,7 +11783,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * idle timeout Must be in valid duration format: {digits}{time-unit}.
+     * idle timeout. Must be in valid duration format: {digits}{time-unit}.
      * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
      * seconds, d - days, ms - milliseconds. If time unit is not specified,
      * the default is s(seconds).
@@ -11800,7 +11800,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * idle timeout Must be in valid duration format: {digits}{time-unit}.
+     * idle timeout. Must be in valid duration format: {digits}{time-unit}.
      * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
      * seconds, d - days, ms - milliseconds. If time unit is not specified,
      * the default is s(seconds).
@@ -11815,7 +11815,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * idle timeout Must be in valid duration format: {digits}{time-unit}.
+     * idle timeout. Must be in valid duration format: {digits}{time-unit}.
      * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
      * seconds, d - days, ms - milliseconds. If time unit is not specified,
      * the default is s(seconds).
@@ -11831,7 +11831,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime of a mail message regardless of location Must be in valid
+     * lifetime of a mail message regardless of location. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -11849,7 +11849,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime of a mail message regardless of location Must be in valid
+     * lifetime of a mail message regardless of location. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -11863,7 +11863,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime of a mail message regardless of location Must be in valid
+     * lifetime of a mail message regardless of location. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -11880,7 +11880,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime of a mail message regardless of location Must be in valid
+     * lifetime of a mail message regardless of location. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -11898,7 +11898,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime of a mail message regardless of location Must be in valid
+     * lifetime of a mail message regardless of location. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -11914,7 +11914,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime of a mail message regardless of location Must be in valid
+     * lifetime of a mail message regardless of location. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -11931,7 +11931,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * minimum allowed value for zimbraPrefMailPollingInterval Must be in
+     * minimum allowed value for zimbraPrefMailPollingInterval. Must be in
      * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -11949,7 +11949,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * minimum allowed value for zimbraPrefMailPollingInterval Must be in
+     * minimum allowed value for zimbraPrefMailPollingInterval. Must be in
      * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -11963,7 +11963,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * minimum allowed value for zimbraPrefMailPollingInterval Must be in
+     * minimum allowed value for zimbraPrefMailPollingInterval. Must be in
      * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -11980,7 +11980,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * minimum allowed value for zimbraPrefMailPollingInterval Must be in
+     * minimum allowed value for zimbraPrefMailPollingInterval. Must be in
      * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -11998,7 +11998,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * minimum allowed value for zimbraPrefMailPollingInterval Must be in
+     * minimum allowed value for zimbraPrefMailPollingInterval. Must be in
      * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -12014,7 +12014,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * minimum allowed value for zimbraPrefMailPollingInterval Must be in
+     * minimum allowed value for zimbraPrefMailPollingInterval. Must be in
      * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -12327,7 +12327,7 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefJunkLifetime, which is user-modifiable. The
-     * shorter duration is used. Must be in valid duration format:
+     * shorter duration is used. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -12347,7 +12347,7 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefJunkLifetime, which is user-modifiable. The
-     * shorter duration is used. Must be in valid duration format:
+     * shorter duration is used. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -12363,7 +12363,7 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefJunkLifetime, which is user-modifiable. The
-     * shorter duration is used. Must be in valid duration format:
+     * shorter duration is used. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -12382,7 +12382,7 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefJunkLifetime, which is user-modifiable. The
-     * shorter duration is used. Must be in valid duration format:
+     * shorter duration is used. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -12402,7 +12402,7 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefJunkLifetime, which is user-modifiable. The
-     * shorter duration is used. Must be in valid duration format:
+     * shorter duration is used. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -12420,7 +12420,7 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefJunkLifetime, which is user-modifiable. The
-     * shorter duration is used. Must be in valid duration format:
+     * shorter duration is used. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -12439,7 +12439,7 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefTrashLifetime, which is user-modifiable.
-     * The shorter duration is used. Must be in valid duration format:
+     * The shorter duration is used. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -12459,7 +12459,7 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefTrashLifetime, which is user-modifiable.
-     * The shorter duration is used. Must be in valid duration format:
+     * The shorter duration is used. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -12475,7 +12475,7 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefTrashLifetime, which is user-modifiable.
-     * The shorter duration is used. Must be in valid duration format:
+     * The shorter duration is used. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -12494,7 +12494,7 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefTrashLifetime, which is user-modifiable.
-     * The shorter duration is used. Must be in valid duration format:
+     * The shorter duration is used. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -12514,7 +12514,7 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefTrashLifetime, which is user-modifiable.
-     * The shorter duration is used. Must be in valid duration format:
+     * The shorter duration is used. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -12532,7 +12532,7 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefTrashLifetime, which is user-modifiable.
-     * The shorter duration is used. Must be in valid duration format:
+     * The shorter duration is used. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -14675,10 +14675,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * how long an account is locked out. Use 0 to lockout an account until
-     * admin resets it Must be in valid duration format: {digits}{time-unit}.
-     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
-     * seconds, d - days, ms - milliseconds. If time unit is not specified,
-     * the default is s(seconds).
+     * admin resets it. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getPasswordLockoutDurationAsString to access value as a string.
      *
@@ -14693,10 +14693,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * how long an account is locked out. Use 0 to lockout an account until
-     * admin resets it Must be in valid duration format: {digits}{time-unit}.
-     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
-     * seconds, d - days, ms - milliseconds. If time unit is not specified,
-     * the default is s(seconds).
+     * admin resets it. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraPasswordLockoutDuration, or "1h" if unset
      */
@@ -14707,10 +14707,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * how long an account is locked out. Use 0 to lockout an account until
-     * admin resets it Must be in valid duration format: {digits}{time-unit}.
-     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
-     * seconds, d - days, ms - milliseconds. If time unit is not specified,
-     * the default is s(seconds).
+     * admin resets it. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraPasswordLockoutDuration new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -14724,10 +14724,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * how long an account is locked out. Use 0 to lockout an account until
-     * admin resets it Must be in valid duration format: {digits}{time-unit}.
-     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
-     * seconds, d - days, ms - milliseconds. If time unit is not specified,
-     * the default is s(seconds).
+     * admin resets it. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraPasswordLockoutDuration new value
      * @param attrs existing map to populate, or null to create a new map
@@ -14742,10 +14742,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * how long an account is locked out. Use 0 to lockout an account until
-     * admin resets it Must be in valid duration format: {digits}{time-unit}.
-     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
-     * seconds, d - days, ms - milliseconds. If time unit is not specified,
-     * the default is s(seconds).
+     * admin resets it. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -14758,10 +14758,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * how long an account is locked out. Use 0 to lockout an account until
-     * admin resets it Must be in valid duration format: {digits}{time-unit}.
-     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
-     * seconds, d - days, ms - milliseconds. If time unit is not specified,
-     * the default is s(seconds).
+     * admin resets it. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -14838,7 +14838,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * the duration after which old consecutive failed login attempts are
      * purged from the list, even though no successful authentication has
-     * occurred Must be in valid duration format: {digits}{time-unit}.
+     * occurred. Must be in valid duration format: {digits}{time-unit}.
      * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
      * seconds, d - days, ms - milliseconds. If time unit is not specified,
      * the default is s(seconds).
@@ -14857,7 +14857,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * the duration after which old consecutive failed login attempts are
      * purged from the list, even though no successful authentication has
-     * occurred Must be in valid duration format: {digits}{time-unit}.
+     * occurred. Must be in valid duration format: {digits}{time-unit}.
      * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
      * seconds, d - days, ms - milliseconds. If time unit is not specified,
      * the default is s(seconds).
@@ -14872,7 +14872,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * the duration after which old consecutive failed login attempts are
      * purged from the list, even though no successful authentication has
-     * occurred Must be in valid duration format: {digits}{time-unit}.
+     * occurred. Must be in valid duration format: {digits}{time-unit}.
      * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
      * seconds, d - days, ms - milliseconds. If time unit is not specified,
      * the default is s(seconds).
@@ -14890,7 +14890,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * the duration after which old consecutive failed login attempts are
      * purged from the list, even though no successful authentication has
-     * occurred Must be in valid duration format: {digits}{time-unit}.
+     * occurred. Must be in valid duration format: {digits}{time-unit}.
      * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
      * seconds, d - days, ms - milliseconds. If time unit is not specified,
      * the default is s(seconds).
@@ -14909,7 +14909,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * the duration after which old consecutive failed login attempts are
      * purged from the list, even though no successful authentication has
-     * occurred Must be in valid duration format: {digits}{time-unit}.
+     * occurred. Must be in valid duration format: {digits}{time-unit}.
      * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
      * seconds, d - days, ms - milliseconds. If time unit is not specified,
      * the default is s(seconds).
@@ -14926,7 +14926,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * the duration after which old consecutive failed login attempts are
      * purged from the list, even though no successful authentication has
-     * occurred Must be in valid duration format: {digits}{time-unit}.
+     * occurred. Must be in valid duration format: {digits}{time-unit}.
      * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
      * seconds, d - days, ms - milliseconds. If time unit is not specified,
      * the default is s(seconds).
@@ -16143,7 +16143,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * time to wait before auto saving a draft Must be in valid duration
+     * time to wait before auto saving a draft. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -16162,7 +16162,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * time to wait before auto saving a draft Must be in valid duration
+     * time to wait before auto saving a draft. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -16177,7 +16177,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * time to wait before auto saving a draft Must be in valid duration
+     * time to wait before auto saving a draft. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -16195,7 +16195,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * time to wait before auto saving a draft Must be in valid duration
+     * time to wait before auto saving a draft. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -16214,7 +16214,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * time to wait before auto saving a draft Must be in valid duration
+     * time to wait before auto saving a draft. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -16231,7 +16231,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * time to wait before auto saving a draft Must be in valid duration
+     * time to wait before auto saving a draft. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
@@ -22037,7 +22037,7 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of read messages in the Inbox folder. 0 means that
-     * all messages will be retained. Must be in valid duration format:
+     * all messages will be retained. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -22057,7 +22057,7 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of read messages in the Inbox folder. 0 means that
-     * all messages will be retained. Must be in valid duration format:
+     * all messages will be retained. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -22073,7 +22073,7 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of read messages in the Inbox folder. 0 means that
-     * all messages will be retained. Must be in valid duration format:
+     * all messages will be retained. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -22092,7 +22092,7 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of read messages in the Inbox folder. 0 means that
-     * all messages will be retained. Must be in valid duration format:
+     * all messages will be retained. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -22112,7 +22112,7 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of read messages in the Inbox folder. 0 means that
-     * all messages will be retained. Must be in valid duration format:
+     * all messages will be retained. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -22130,7 +22130,7 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of read messages in the Inbox folder. 0 means that
-     * all messages will be retained. Must be in valid duration format:
+     * all messages will be retained. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -22149,7 +22149,7 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of unread messages in the Inbox folder. 0 means that
-     * all messages will be retained. Must be in valid duration format:
+     * all messages will be retained. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -22169,7 +22169,7 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of unread messages in the Inbox folder. 0 means that
-     * all messages will be retained. Must be in valid duration format:
+     * all messages will be retained. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -22185,7 +22185,7 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of unread messages in the Inbox folder. 0 means that
-     * all messages will be retained. Must be in valid duration format:
+     * all messages will be retained. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -22204,7 +22204,7 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of unread messages in the Inbox folder. 0 means that
-     * all messages will be retained. Must be in valid duration format:
+     * all messages will be retained. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -22224,7 +22224,7 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of unread messages in the Inbox folder. 0 means that
-     * all messages will be retained. Must be in valid duration format:
+     * all messages will be retained. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -22242,7 +22242,7 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of unread messages in the Inbox folder. 0 means that
-     * all messages will be retained. Must be in valid duration format:
+     * all messages will be retained. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -22459,7 +22459,7 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailSpamLifetime, which is admin-modifiable.
-     * The shorter duration is used. Must be in valid duration format:
+     * The shorter duration is used. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -22481,7 +22481,7 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailSpamLifetime, which is admin-modifiable.
-     * The shorter duration is used. Must be in valid duration format:
+     * The shorter duration is used. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -22499,7 +22499,7 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailSpamLifetime, which is admin-modifiable.
-     * The shorter duration is used. Must be in valid duration format:
+     * The shorter duration is used. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -22520,7 +22520,7 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailSpamLifetime, which is admin-modifiable.
-     * The shorter duration is used. Must be in valid duration format:
+     * The shorter duration is used. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -22542,7 +22542,7 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailSpamLifetime, which is admin-modifiable.
-     * The shorter duration is used. Must be in valid duration format:
+     * The shorter duration is used. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -22562,7 +22562,7 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailSpamLifetime, which is admin-modifiable.
-     * The shorter duration is used. Must be in valid duration format:
+     * The shorter duration is used. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -23151,7 +23151,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * interval at which the web client polls the server for new messages
+     * interval at which the web client polls the server for new messages.
      * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
      * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
      * ms - milliseconds. If time unit is not specified, the default is
@@ -23169,7 +23169,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * interval at which the web client polls the server for new messages
+     * interval at which the web client polls the server for new messages.
      * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
      * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
      * ms - milliseconds. If time unit is not specified, the default is
@@ -23183,7 +23183,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * interval at which the web client polls the server for new messages
+     * interval at which the web client polls the server for new messages.
      * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
      * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
      * ms - milliseconds. If time unit is not specified, the default is
@@ -23200,7 +23200,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * interval at which the web client polls the server for new messages
+     * interval at which the web client polls the server for new messages.
      * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
      * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
      * ms - milliseconds. If time unit is not specified, the default is
@@ -23218,7 +23218,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * interval at which the web client polls the server for new messages
+     * interval at which the web client polls the server for new messages.
      * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
      * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
      * ms - milliseconds. If time unit is not specified, the default is
@@ -23234,7 +23234,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * interval at which the web client polls the server for new messages
+     * interval at which the web client polls the server for new messages.
      * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
      * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
      * ms - milliseconds. If time unit is not specified, the default is
@@ -24203,7 +24203,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * server remembers addresses to which notifications have been sent for
      * this interval, and does not send duplicate notifications in this
-     * interval Must be in valid duration format: {digits}{time-unit}.
+     * interval. Must be in valid duration format: {digits}{time-unit}.
      * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
      * seconds, d - days, ms - milliseconds. If time unit is not specified,
      * the default is s(seconds).
@@ -24222,7 +24222,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * server remembers addresses to which notifications have been sent for
      * this interval, and does not send duplicate notifications in this
-     * interval Must be in valid duration format: {digits}{time-unit}.
+     * interval. Must be in valid duration format: {digits}{time-unit}.
      * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
      * seconds, d - days, ms - milliseconds. If time unit is not specified,
      * the default is s(seconds).
@@ -24237,7 +24237,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * server remembers addresses to which notifications have been sent for
      * this interval, and does not send duplicate notifications in this
-     * interval Must be in valid duration format: {digits}{time-unit}.
+     * interval. Must be in valid duration format: {digits}{time-unit}.
      * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
      * seconds, d - days, ms - milliseconds. If time unit is not specified,
      * the default is s(seconds).
@@ -24255,7 +24255,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * server remembers addresses to which notifications have been sent for
      * this interval, and does not send duplicate notifications in this
-     * interval Must be in valid duration format: {digits}{time-unit}.
+     * interval. Must be in valid duration format: {digits}{time-unit}.
      * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
      * seconds, d - days, ms - milliseconds. If time unit is not specified,
      * the default is s(seconds).
@@ -24274,7 +24274,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * server remembers addresses to which notifications have been sent for
      * this interval, and does not send duplicate notifications in this
-     * interval Must be in valid duration format: {digits}{time-unit}.
+     * interval. Must be in valid duration format: {digits}{time-unit}.
      * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
      * seconds, d - days, ms - milliseconds. If time unit is not specified,
      * the default is s(seconds).
@@ -24291,7 +24291,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * server remembers addresses to which notifications have been sent for
      * this interval, and does not send duplicate notifications in this
-     * interval Must be in valid duration format: {digits}{time-unit}.
+     * interval. Must be in valid duration format: {digits}{time-unit}.
      * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
      * seconds, d - days, ms - milliseconds. If time unit is not specified,
      * the default is s(seconds).
@@ -24895,7 +24895,7 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of messages in the Sent folder. 0 means that all
-     * messages will be retained. Must be in valid duration format:
+     * messages will be retained. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -24915,7 +24915,7 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of messages in the Sent folder. 0 means that all
-     * messages will be retained. Must be in valid duration format:
+     * messages will be retained. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -24931,7 +24931,7 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of messages in the Sent folder. 0 means that all
-     * messages will be retained. Must be in valid duration format:
+     * messages will be retained. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -24950,7 +24950,7 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of messages in the Sent folder. 0 means that all
-     * messages will be retained. Must be in valid duration format:
+     * messages will be retained. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -24970,7 +24970,7 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of messages in the Sent folder. 0 means that all
-     * messages will be retained. Must be in valid duration format:
+     * messages will be retained. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -24988,7 +24988,7 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of messages in the Sent folder. 0 means that all
-     * messages will be retained. Must be in valid duration format:
+     * messages will be retained. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -26290,7 +26290,7 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailTrashLifetime, which is admin-modifiable.
-     * The shorter duration is used. Must be in valid duration format:
+     * The shorter duration is used. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -26312,7 +26312,7 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailTrashLifetime, which is admin-modifiable.
-     * The shorter duration is used. Must be in valid duration format:
+     * The shorter duration is used. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -26330,7 +26330,7 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailTrashLifetime, which is admin-modifiable.
-     * The shorter duration is used. Must be in valid duration format:
+     * The shorter duration is used. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -26351,7 +26351,7 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailTrashLifetime, which is admin-modifiable.
-     * The shorter duration is used. Must be in valid duration format:
+     * The shorter duration is used. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -26373,7 +26373,7 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailTrashLifetime, which is admin-modifiable.
-     * The shorter duration is used. Must be in valid duration format:
+     * The shorter duration is used. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -26393,7 +26393,7 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailTrashLifetime, which is admin-modifiable.
-     * The shorter duration is used. Must be in valid duration format:
+     * The shorter duration is used. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -27179,7 +27179,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Minimum duration of time between quota warnings. Must be in valid
+     * Minimum duration of time between quota warnings.. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -27197,7 +27197,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Minimum duration of time between quota warnings. Must be in valid
+     * Minimum duration of time between quota warnings.. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -27211,7 +27211,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Minimum duration of time between quota warnings. Must be in valid
+     * Minimum duration of time between quota warnings.. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -27228,7 +27228,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Minimum duration of time between quota warnings. Must be in valid
+     * Minimum duration of time between quota warnings.. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -27246,7 +27246,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Minimum duration of time between quota warnings. Must be in valid
+     * Minimum duration of time between quota warnings.. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -27262,7 +27262,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Minimum duration of time between quota warnings. Must be in valid
+     * Minimum duration of time between quota warnings.. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is

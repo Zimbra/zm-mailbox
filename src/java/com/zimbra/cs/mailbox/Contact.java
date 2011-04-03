@@ -18,11 +18,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
@@ -790,6 +793,18 @@ public class Contact extends MailItem {
 
     public static boolean isGroup(Map<String,? extends Object> attrs) {
         return ContactConstants.TYPE_GROUP.equals(attrs.get(ContactConstants.A_type));
+    }
+    
+    private static Set<String> SMIME_FIELDS = Collections.unmodifiableSet(new HashSet(Arrays.asList(new String[]{
+            ContactConstants.A_userCertificate,
+            ContactConstants.A_userSMIMECertificate})));
+     
+    public static Set<String> getSMIMECertFields() {
+        return SMIME_FIELDS;
+    }
+    
+    public static boolean isSMIMECertField(String fieldName) {
+        return SMIME_FIELDS.contains(fieldName);
     }
 
     public static Map<String,String> decodeXProps(String xpropStr) {

@@ -461,7 +461,8 @@ public class AttributeConstraint {
         case TYPE_OSTRING:
         case TYPE_CSTRING:
         case TYPE_REGEX:
-        case TYPE_BINARY:    
+        case TYPE_BINARY:
+        case TYPE_CERTIFICATE:      
             return new AttributeConstraint(attrName);
         case TYPE_LONG:
             return new LongConstraint(attrName);

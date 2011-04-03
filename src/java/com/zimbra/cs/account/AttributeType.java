@@ -21,6 +21,7 @@ import java.util.Map;
 public enum AttributeType {
     TYPE_BOOLEAN("boolean"),
     TYPE_BINARY("binary"),
+    TYPE_CERTIFICATE("certificate"),
     TYPE_DURATION("duration"),
     TYPE_GENTIME("gentime"),
     TYPE_EMAIL("email"),

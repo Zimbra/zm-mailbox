@@ -93,12 +93,15 @@ public class GalSearchResultCallback implements GalContact.Visitor {
     	} else if (mOp == GalOp.sync) {
     	    eContact = ToXML.encodeContact(mResponse, mFormatter, c, true, c.getAllFields().keySet());
     	} else if (mNeedsSMIMECerts) {
-    		// this is the case when proxying SearcgGalRequest for the call from GetSMIMEPublicCerts (in ZimbraNetwork)
-    		Set<String> fieldSet = new HashSet<String>(c.getFields().keySet());
-    		fieldSet.add(ContactConstants.A_SMIMECertificate);
+    		// this is the case only when proxying SearcgGalRequest for the call from 
+    	    // GetSMIMEPublicCerts (in ZimbraNetwork)
+    	    Set<String> fieldSet = new HashSet<String>(c.getFields().keySet());
+    		fieldSet.addAll(Contact.getSMIMECertFields());
     	    eContact = ToXML.encodeContact(mResponse, mFormatter, c, true, fieldSet);
     	} else {
-    	    eContact = ToXML.encodeContact(mResponse, mFormatter, c, true, null);
+    	    Set<String> fieldSet = new HashSet<String>(c.getFields().keySet());
+            fieldSet.removeAll(Contact.getSMIMECertFields());
+    	    eContact = ToXML.encodeContact(mResponse, mFormatter, c, true, fieldSet);
     	}
     	
     	if (mNeedsCanExpandInfo && c.isGroup()) {

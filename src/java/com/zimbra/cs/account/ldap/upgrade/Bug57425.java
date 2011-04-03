@@ -43,6 +43,12 @@ public class Bug57425 extends LdapUpgrade {
     }
     
     private void doEntry(ZimbraLdapContext zlc, Entry entry, String entryName) throws ServiceException {
+        /* 
+         * after bug 58514, SMIMECertificate is deprecated and no longer in ContactConstants
+         * 
+         * Define it here.
+         */
+        final String SMIMECertificate = "SMIMECertificate";
         
         String attrName = Provisioning.A_zimbraContactHiddenAttributes;
         
@@ -60,16 +66,16 @@ public class Bug57425 extends LdapUpgrade {
         		return;
         	}
         } else {
-        	needsUpdate = !curValue.contains(ContactConstants.A_SMIMECertificate);
+        	needsUpdate = !curValue.contains(SMIMECertificate);
         }
         
         if (needsUpdate) {
             String newValue;
             
             if (curValue == null) {
-            	newValue = ContactConstants.A_SMIMECertificate;
+            	newValue = SMIMECertificate;
             } else {
-            	newValue = curValue + "," + ContactConstants.A_SMIMECertificate;
+            	newValue = curValue + "," + SMIMECertificate;
             }
             
             Map<String, Object> attrs = new HashMap<String, Object>();
