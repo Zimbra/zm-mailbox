@@ -265,6 +265,7 @@ public class AccountConstants {
     public static final String A_VISIBLE = "visible";
     public static final String A_PERM_DENIED = "pd";
     public static final String A_EMAIL = "email";
+    public static final String A_FIELD = "field";
     public static final String A_STORE = "store";
     
     // gal
