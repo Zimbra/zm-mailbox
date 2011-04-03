@@ -39,7 +39,7 @@ public class LdapGalMapRules {
     
     private List<LdapGalMapRule> mRules;
     private List<String> mLdapAttrs;
-    private Set<String> mBinaryLdapAttrs;
+    private Set<String> mBinaryLdapAttrs; // attrs need to be set in JNDI "java.naming.ldap.attributes.binary" environment property
     private Map<String, LdapGalValueMap> mValueMaps;
     private GalGroupHandler mGroupHandler;
     private boolean mFetchGroupMembers;
@@ -98,6 +98,7 @@ public class LdapGalMapRules {
         return mLdapAttrs.toArray(new String[mLdapAttrs.size()]);
     }
     
+    // attrs need to be set in JNDI "java.naming.ldap.attributes.binary" environment property
     public Set<String> getBinaryLdapAttrs() {
         return mBinaryLdapAttrs;
     }

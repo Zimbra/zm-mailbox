@@ -35,7 +35,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 jhahm 20110331-1747 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110402-1800 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -2200,6 +2200,78 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * RFC2256: X.509 user certificate
+     *
+     * @return userCertificate, or null if unset
+     */
+    @ZAttr(id=-1)
+    public byte[] getUserCertificate() {
+        return getBinaryAttr(Provisioning.A_userCertificate);
+    }
+
+    /**
+     * RFC2256: X.509 user certificate
+     *
+     * @return userCertificate, or empty array if unset
+     */
+    @ZAttr(id=-1)
+    public String[] getUserCertificateAsString() {
+        return getMultiAttr(Provisioning.A_userCertificate);
+    }
+
+    /**
+     * RFC2256: X.509 user certificate
+     *
+     * @param userCertificate new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void setUserCertificate(byte[] userCertificate) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_userCertificate, userCertificate==null ? "" : ByteUtil.encodeLDAPBase64(userCertificate));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2256: X.509 user certificate
+     *
+     * @param userCertificate new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> setUserCertificate(byte[] userCertificate, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_userCertificate, userCertificate==null ? "" : ByteUtil.encodeLDAPBase64(userCertificate));
+        return attrs;
+    }
+
+    /**
+     * RFC2256: X.509 user certificate
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void unsetUserCertificate() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_userCertificate, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2256: X.509 user certificate
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> unsetUserCertificate(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_userCertificate, "");
+        return attrs;
+    }
+
+    /**
      * RFC2256/2307: password of user. Stored encoded as SSHA (salted-SHA1)
      *
      * @return userPassword, or null if unset
@@ -2258,6 +2330,78 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetUserPassword(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_userPassword, "");
+        return attrs;
+    }
+
+    /**
+     * RFC2798: PKCS#7 SignedData used to support S/MIME
+     *
+     * @return userSMIMECertificate, or null if unset
+     */
+    @ZAttr(id=-1)
+    public byte[] getUserSMIMECertificate() {
+        return getBinaryAttr(Provisioning.A_userSMIMECertificate);
+    }
+
+    /**
+     * RFC2798: PKCS#7 SignedData used to support S/MIME
+     *
+     * @return userSMIMECertificate, or empty array if unset
+     */
+    @ZAttr(id=-1)
+    public String[] getUserSMIMECertificateAsString() {
+        return getMultiAttr(Provisioning.A_userSMIMECertificate);
+    }
+
+    /**
+     * RFC2798: PKCS#7 SignedData used to support S/MIME
+     *
+     * @param userSMIMECertificate new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void setUserSMIMECertificate(byte[] userSMIMECertificate) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_userSMIMECertificate, userSMIMECertificate==null ? "" : ByteUtil.encodeLDAPBase64(userSMIMECertificate));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2798: PKCS#7 SignedData used to support S/MIME
+     *
+     * @param userSMIMECertificate new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> setUserSMIMECertificate(byte[] userSMIMECertificate, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_userSMIMECertificate, userSMIMECertificate==null ? "" : ByteUtil.encodeLDAPBase64(userSMIMECertificate));
+        return attrs;
+    }
+
+    /**
+     * RFC2798: PKCS#7 SignedData used to support S/MIME
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void unsetUserSMIMECertificate() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_userSMIMECertificate, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2798: PKCS#7 SignedData used to support S/MIME
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> unsetUserSMIMECertificate(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_userSMIMECertificate, "");
         return attrs;
     }
 
@@ -32237,7 +32381,9 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * user&#039;s S/MIME public keys (certificates)
+     * Deprecated since: 7.1.1. deprecated in favor of userCertificate and
+     * userSMIMECertificate. Orig desc: user&#039;s S/MIME public keys
+     * (certificates)
      *
      * @return zimbraPrefMailSMIMECertificate, or null if unset
      *
@@ -32249,7 +32395,9 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * user&#039;s S/MIME public keys (certificates)
+     * Deprecated since: 7.1.1. deprecated in favor of userCertificate and
+     * userSMIMECertificate. Orig desc: user&#039;s S/MIME public keys
+     * (certificates)
      *
      * @return zimbraPrefMailSMIMECertificate, or empty array if unset
      *
@@ -32261,7 +32409,9 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * user&#039;s S/MIME public keys (certificates)
+     * Deprecated since: 7.1.1. deprecated in favor of userCertificate and
+     * userSMIMECertificate. Orig desc: user&#039;s S/MIME public keys
+     * (certificates)
      *
      * @param zimbraPrefMailSMIMECertificate new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -32276,7 +32426,9 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * user&#039;s S/MIME public keys (certificates)
+     * Deprecated since: 7.1.1. deprecated in favor of userCertificate and
+     * userSMIMECertificate. Orig desc: user&#039;s S/MIME public keys
+     * (certificates)
      *
      * @param zimbraPrefMailSMIMECertificate new value
      * @param attrs existing map to populate, or null to create a new map
@@ -32292,7 +32444,9 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * user&#039;s S/MIME public keys (certificates)
+     * Deprecated since: 7.1.1. deprecated in favor of userCertificate and
+     * userSMIMECertificate. Orig desc: user&#039;s S/MIME public keys
+     * (certificates)
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -32306,7 +32460,9 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * user&#039;s S/MIME public keys (certificates)
+     * Deprecated since: 7.1.1. deprecated in favor of userCertificate and
+     * userSMIMECertificate. Orig desc: user&#039;s S/MIME public keys
+     * (certificates)
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

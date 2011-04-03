@@ -2475,7 +2475,7 @@ public class ProvUtil implements HttpDebugListener {
         for (Map.Entry<String, Object> entry : attrs.entrySet()) {
             String name = entry.getKey();
 
-            boolean isBinary = attrMgr.isBinary(name);
+            boolean isBinary = needsBinaryIO(attrMgr, name);
 
             Set<String> specificValues = null;
             if (specificAttrValues != null) {
@@ -2980,6 +2980,10 @@ public class ProvUtil implements HttpDebugListener {
             console.println();
         }
     }
+    
+    private static boolean needsBinaryIO(AttributeManager attrMgr, String attr) {
+        return attrMgr.containsBinaryData(attr);
+    }
 
     /**
      * get map and check/warn deprecated attrs.
@@ -3020,7 +3024,7 @@ public class ProvUtil implements HttpDebugListener {
             if (n.charAt(0) == '+' || n.charAt(0) == '-') {
                 attrName = attrName.substring(1);
             }
-            if (attrMgr.isBinary(attrName) && v.length() > 0) {
+            if (needsBinaryIO(attrMgr, attrName) && v.length() > 0) {
                 File file = new File(v);
                 byte[] bytes = ByteUtil.getContent(file);
                 v = ByteUtil.encodeLDAPBase64(bytes);

@@ -70,5 +70,9 @@ public abstract class LdapSMIMEConfig {
     public abstract void modify(String configName, Map<String, Object> attrs) throws ServiceException;
     public abstract void remove(String configName) throws ServiceException;
     
-    public abstract List<String> lookupPublicKeys(Account acct, String email) throws ServiceException;
+    public interface ResultCallback {
+        public void add(String field, String cert);
+    }
+    
+    public abstract void lookupPublicKeys(Account acct, String email, ResultCallback resultCallback) throws ServiceException;
 };

@@ -61,8 +61,8 @@ public class TestSearchGal {
     private static final String ACCOUNT_PREFIX = "account";
     private static final String DEPARTMENT_PREFIX = "engineering";
     
-    private static final String BINARY_LDAP_ATTR = Provisioning.A_zimbraPrefMailSMIMECertificate;
-    private static final String BINARY_GALCONTACT_FIELD = ContactConstants.A_SMIMECertificate;
+    private static final String BINARY_LDAP_ATTR = Provisioning.A_userSMIMECertificate;
+    private static final String BINARY_GALCONTACT_FIELD = ContactConstants.A_userSMIMECertificate;
     private static final int ACCOUNT_CONTAINS_BINARY_DATA = 5;
     private static final int NUM_BYTES_IN_BINARY_DATA = 100;
     private static final Content BINARY_CONTENT_1 = Content.generateContent(NUM_BYTES_IN_BINARY_DATA);
@@ -325,7 +325,7 @@ public class TestSearchGal {
         String matchDepartment = getDepartment(acctToMatch, domainName);
         Element eCondResSite = eConds.addElement(AccountConstants.E_ENTRY_SEARCH_FILTER_SINGLECOND);
         eCondResSite.addAttribute(AccountConstants.A_ENTRY_SEARCH_FILTER_ATTR, ContactConstants.A_department);
-        eCondResSite.addAttribute(AccountConstants.A_ENTRY_SEARCH_FILTER_OP, Operator.eq.name());
+        eCondResSite.addAttribute(AccountConstants.A_ENTRY_SEARCH_FILTER_OP, Operator.has.name());
         eCondResSite.addAttribute(AccountConstants.A_ENTRY_SEARCH_FILTER_VALUE, matchDepartment);
         
         Element response = transport.invoke(request);
@@ -339,11 +339,14 @@ public class TestSearchGal {
         Assert.assertEquals(getEmail(acctToMatch, domainName), result.get(0).getSingleAttr(ContactConstants.A_email));
     }
 
-    private void binaryDataInEntry(boolean ldap, String domainName) throws Exception {
+    private void binaryDataInEntry(boolean ldap, String domainName, boolean wantSMIMECert) throws Exception {
         SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
         TestSearchGal.authUser(transport, TestUtil.getAddress(AUTHED_USER, domainName));
         
         Element request = Element.create(transport.getRequestProtocol(), AccountConstants.SEARCH_GAL_REQUEST);
+        if (wantSMIMECert) {
+            request.addAttribute(AccountConstants.A_NEED_SMIME_CERTS, true);
+        }
         request.addElement(AccountConstants.E_NAME).setText(getEmail(ACCOUNT_CONTAINS_BINARY_DATA, domainName));
         
         Element response = transport.invoke(request);
@@ -357,6 +360,11 @@ public class TestSearchGal {
         GalContact galContact = result.get(0);
         Map<String, Object> fields = galContact.getAttrs();
         Object value = fields.get(BINARY_GALCONTACT_FIELD);
+        
+        if (!wantSMIMECert) {
+            Assert.assertNull(value);
+            return;
+        }
         
         Assert.assertTrue(value instanceof String[]);
         String[] values = (String[])value;
@@ -450,14 +458,6 @@ public class TestSearchGal {
     public static void cleanup() throws Exception {
         deleteDomainObjects(DOMAIN_LDAP);
         deleteDomainObjects(DOMAIN_GSA);
-        
-        Provisioning prov = Provisioning.getInstance();
-        Config config = prov.getConfig();
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        config.removeGalLdapFilterDef("department_eq:(ou=%s)", attrs);
-        config.removeGalLdapFilterDef("email_has:(mail=*%s*)", attrs);
-        prov.modifyAttrs(config, attrs);
-        
     }
     
     @Test
@@ -487,7 +487,8 @@ public class TestSearchGal {
     @Test
     public void testGSASerarhEntryWithBinaryData() throws Exception {
         TestSearchGal.enableGalSyncAccount(DOMAIN_GSA);
-        binaryDataInEntry(false, DOMAIN_GSA);
+        binaryDataInEntry(false, DOMAIN_GSA, true);
+        binaryDataInEntry(false, DOMAIN_GSA, false);
     }
 
     @Test
@@ -507,23 +508,13 @@ public class TestSearchGal {
     
     @Test
     public void testLdapSerarhByFilter() throws Exception {
-        /*
-         *   <globalConfigValue>department_eq:(ou=%s)</globalConfigValue>
-         *   <globalConfigValue>email_has:(mail=*%s*)</globalConfigValue>
-         */
-        Provisioning prov = Provisioning.getInstance();
-        Config config = prov.getConfig();
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        config.addGalLdapFilterDef("department_eq:(ou=%s)", attrs);
-        config.addGalLdapFilterDef("email_has:(mail=*%s*)", attrs);
-        prov.modifyAttrs(config, attrs);
-        
         searchByFilter(true, DOMAIN_LDAP);
     }
     
     @Test
     public void testLdapSerarhEntryWithBinaryData() throws Exception {
-        binaryDataInEntry(true, DOMAIN_LDAP);
+        binaryDataInEntry(true, DOMAIN_LDAP, true);
+        binaryDataInEntry(true, DOMAIN_LDAP, false);
     }
 
 }

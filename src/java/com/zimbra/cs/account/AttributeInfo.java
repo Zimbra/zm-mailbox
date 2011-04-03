@@ -306,6 +306,7 @@ public class AttributeInfo {
             else
                 throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be TRUE or FALSE", null);
         case TYPE_BINARY:
+        case TYPE_CERTIFICATE:    
             byte[] binary = ByteUtil.decodeLDAPBase64(value);
             if (binary.length > mMax)
                 throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value length("+binary.length+") larger then max allowed: "+mMax, null);

@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 jhahm 20110331-1747 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110402-1800 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -1424,10 +1424,22 @@ public class ZAttrProvisioning {
     public static final String A_uid = "uid";
 
     /**
+     * RFC2256: X.509 user certificate
+     */
+    @ZAttr(id=-1)
+    public static final String A_userCertificate = "userCertificate";
+
+    /**
      * RFC2256/2307: password of user. Stored encoded as SSHA (salted-SHA1)
      */
     @ZAttr(id=-1)
     public static final String A_userPassword = "userPassword";
+
+    /**
+     * RFC2798: PKCS#7 SignedData used to support S/MIME
+     */
+    @ZAttr(id=-1)
+    public static final String A_userSMIMECertificate = "userSMIMECertificate";
 
     /**
      * RFC2256: X.121 Address
@@ -7117,7 +7129,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefMailSignatureStyle = "zimbraPrefMailSignatureStyle";
 
     /**
-     * user&#039;s S/MIME public keys (certificates)
+     * Deprecated since: 7.1.1. deprecated in favor of userCertificate and
+     * userSMIMECertificate. Orig desc: user&#039;s S/MIME public keys
+     * (certificates)
      *
      * @since ZCS 7.1.0
      */

@@ -14,8 +14,9 @@
  */
 package com.zimbra.qa.unittest;
 
-import junit.framework.TestCase;
-
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,16 +25,33 @@ import java.util.Random;
 import java.io.File;
 import java.io.IOException;
 
-import org.testng.annotations.Test;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 
-public class TestLdapBinary extends TestCase {
+/*
+TODO: Add this class to {@link ZimbraSuite} once it supports JUnit 4 annotations.
+*/
+
+/*
+ * LDAP test suite:
+ * 
+ * TestLdapBinary
+ * TestSearchGal
+ * 
+ */
+public class TestLdapBinary  {
     
     /* 
      * To run this unit test, paste these attributes to zimbra-attrs.xml and run:
@@ -41,30 +59,92 @@ public class TestLdapBinary extends TestCase {
      * ant generate-getters
      * ant init-unittest
      * 
-    <attr id="10000" name="zimbraBinary" type="binary" max="5000" cardinality="single" optionalIn="globalConfig" since="8.0.0">
+    <attr id="10000" name="zimbraUnittestBinary" type="binary" max="5000" cardinality="single" optionalIn="account" since="8.0.0">
       <desc>binary data</desc>
     </attr>
     
-    <attr id="10001" name="zimbraBinaryMulti" type="binary" max="5000" cardinality="multi" optionalIn="globalConfig" since="8.0.0">
+    <attr id="10001" name="zimbraUnittestCertificate" type="certificate" cardinality="single" optionalIn="account" since="8.0.0">
       <desc>binary data</desc>
     </attr>
+
     */
+    private static final String USER = "test-ldap-binary";
     
     private static final String DATA_PATH = "/opt/zimbra/unittest/ldap/binaryContent/";
     private static final String CONTENT_NAME = DATA_PATH + "zimbra.jpeg";
+    
     private static final String CONTENT_NAME_1 = DATA_PATH + "1.jpeg";
     private static final String CONTENT_NAME_2 = DATA_PATH + "2.jpeg";
     private static final String CONTENT_NAME_3 = DATA_PATH + "3.jpeg";
+    
+    private static final String CERT_NAME_1 = DATA_PATH + "user1_primary.DER.crt";
+    private static final String CERT_NAME_2 = DATA_PATH + "user1_alias.DER.crt";
+    
     private static final String CONTENT_NAME_TOO_LARGE = DATA_PATH + "too_large.txt";
 
-    private static final String ATTR_SINGLE = "zimbraBinary";
-    private static final String ATTR_MULTI = "zimbraBinaryMulti";
+    // private static final String ATTR_SINGLE = "zimbraBinary";
+    // private static final String ATTR_MULTI = "zimbraBinaryMulti";
     
-    // private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
+    private static SingleValuedTestData ZIMBRA_BINARY_SINGLE = new SingleValuedTestData(
+            "zimbraUnittestBinary", CONTENT_NAME);
+    
+    private static SingleValuedTestData ZIMBRA_CERTIFICATE_SINGLE = new SingleValuedTestData(
+            "zimbraUnittestCertificate", CERT_NAME_1);
+    
+    private static SingleValuedTestData ZIMBRA_BINARY_SINGLE_TEST_TOO_LARGE = new SingleValuedTestData(
+            "zimbraUnittestBinary", CONTENT_NAME_TOO_LARGE);
+    
+    private static MultiValuedTestData ZIMBRA_BINARY_MULTI = new MultiValuedTestData(
+            Provisioning.A_zimbraPrefMailSMIMECertificate,
+            new String[]{CONTENT_NAME_1, CONTENT_NAME_2, CONTENT_NAME_3},
+            new String[]{CONTENT_NAME_1, CONTENT_NAME_2},
+            new String[]{CONTENT_NAME_3}
+            );
+    
+    private static MultiValuedTestData CERTIFICATE_MULTI = new MultiValuedTestData(
+            Provisioning.A_userCertificate,
+            new String[]{CERT_NAME_1, CERT_NAME_2},
+            new String[]{CERT_NAME_1},
+            new String[]{CERT_NAME_2}
+            );
+    
+    private static MultiValuedTestData RFC2252_BINARY_MULTI = new MultiValuedTestData(
+            Provisioning.A_userSMIMECertificate,
+            new String[]{CONTENT_NAME_1, CONTENT_NAME_2, CONTENT_NAME_3},
+            new String[]{CONTENT_NAME_1, CONTENT_NAME_2},
+            new String[]{CONTENT_NAME_3}
+            );
+    
+    
+    private static class SingleValuedTestData {
+        String attrName;
+        String content;
+        
+        SingleValuedTestData(String attrName, String content) {
+            this.attrName = attrName;
+            this.content = content;
+        }
+    };
+    
+    private static class MultiValuedTestData {
+        String attrName;
+        String[] contents;
+        String[] contentsToRemove;
+        String[] contentsRemaining;
+        
+        MultiValuedTestData(String attrName, String[] contents, String[] contentsToRemove, String[] contentsRemaining) {
+            this.attrName = attrName;
+            this.contents = contents;
+            this.contentsToRemove = contentsToRemove;
+            this.contentsRemaining = contentsRemaining;
+        }
+    }
     
     public static class Content {
         private String string;
         private byte[] binary;
+        
+        private static int SEQUENCE = 0;
         
         public Content(byte[] content) {
             this.binary = content;
@@ -91,6 +171,121 @@ public class TestLdapBinary extends TestCase {
             return new Content(content);
         }
         
+        private static synchronized int nextSequence() {
+            return ++SEQUENCE;
+        }
+        
+        public static Content generateCert() throws Exception {
+            StringBuilder sb = new StringBuilder(DATA_PATH);
+            sb.append(File.separator).append("temp");
+            
+            File dir = new File(sb.toString());
+            FileUtil.deleteDir(dir);
+            
+            // create the temp directory
+            FileUtil.ensureDirExists(dir);
+            
+            String keystoreFileName = dir.getAbsolutePath() + File.separator + "keystore.unittest";
+            String aliasName = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
+            String certFileName = dir.getAbsolutePath() + File.separator + aliasName + ".crt";
+            
+            File keyStoreFile = new File(keystoreFileName);
+            if (keyStoreFile.exists()) {
+                keyStoreFile.delete();
+            }
+            
+            String cn = aliasName + "-" + nextSequence();  // make sure it is a unique one
+            
+            /*
+            String GEN_CERT_CMD = "keytool -genkey -alias " + aliasName +
+            " -keystore " + keystoreFileName + " -storepass test123 -keypass test123" + 
+            " -dname 'CN=cName, OU=orgUnit, O=org, L=city, S=state, C=countryCode'";
+            */
+            
+            List<String> GEN_CERT_CMD = new ArrayList<String>();
+            GEN_CERT_CMD.add("keytool");
+            GEN_CERT_CMD.add("-genkey");
+            GEN_CERT_CMD.add("-keystore");
+            GEN_CERT_CMD.add(keystoreFileName);
+            GEN_CERT_CMD.add("-storepass");
+            GEN_CERT_CMD.add("test123");
+            GEN_CERT_CMD.add("-alias");
+            GEN_CERT_CMD.add("aliasName");
+            GEN_CERT_CMD.add("-keypass");
+            GEN_CERT_CMD.add("test123");
+            GEN_CERT_CMD.add("-dname");
+            GEN_CERT_CMD.add("CN= " + cn + ", OU=zimbra, O=VMWare, L=Palo Alto, S=California, C=US");
+            
+            StringBuilder GEN_CERT_CMD_STR = new StringBuilder();
+            for (String str : GEN_CERT_CMD) {
+                GEN_CERT_CMD_STR.append(str).append(" ");
+            }
+            
+            /*
+            String EXPORT_CERT_CMD = "keytool -export" +
+            " -keystore " + keystoreFileName + " -storepass test123 -keypass test123" + 
+            " -alias " + aliasName + " -file " + certFileName;
+            System.out.println(GEN_CERT_CMD);
+            System.out.println(EXPORT_CERT_CMD);
+            */
+            
+            List<String> EXPORT_CERT_CMD = new ArrayList<String>();
+            EXPORT_CERT_CMD.add("keytool");
+            EXPORT_CERT_CMD.add("-export");
+            EXPORT_CERT_CMD.add("-keystore");
+            EXPORT_CERT_CMD.add(keystoreFileName);
+            EXPORT_CERT_CMD.add("-storepass");
+            EXPORT_CERT_CMD.add("test123");
+            EXPORT_CERT_CMD.add("-alias");
+            EXPORT_CERT_CMD.add("aliasName");
+            EXPORT_CERT_CMD.add("-keypass");
+            EXPORT_CERT_CMD.add("test123");
+            EXPORT_CERT_CMD.add("-file");
+            EXPORT_CERT_CMD.add(certFileName);
+            
+            StringBuilder EXPORT_CERT_CMD_STR = new StringBuilder();
+            for (String str : EXPORT_CERT_CMD) {
+                EXPORT_CERT_CMD_STR.append(str).append(" ");
+            }
+            
+            ProcessBuilder pb;
+            Process process;
+            int exitValue;
+            
+            // System.out.println(GEN_CERT_CMD_STR.toString());
+            pb = new ProcessBuilder(GEN_CERT_CMD);
+            pb.directory(dir);
+            process = pb.start();
+            exitValue = process.waitFor();
+            if (exitValue != 0) {
+                String error = new String(ByteUtil.getContent(process.getErrorStream(), -1));
+                System.out.println(error);
+            }
+            Assert.assertEquals(0, exitValue);
+            
+            // System.out.println(EXPORT_CERT_CMD_STR.toString());
+            pb = new ProcessBuilder(EXPORT_CERT_CMD);
+            pb.directory(dir);
+            process = pb.start();
+            exitValue = process.waitFor();
+            if (exitValue != 0) {
+                String error = new String(ByteUtil.getContent(process.getErrorStream(), -1));
+                System.out.println(error);
+            }
+            Assert.assertEquals(0, exitValue);
+            
+            File certFile = new File(certFileName);
+            Assert.assertTrue(certFile.exists());
+            
+            Content content = getContentByFileName(certFileName);
+            
+            // delete the temp directory and all files under it
+            FileUtil.deleteDir(dir);
+            
+            // content = getContentByFileName("/Users/pshao/p4/main/ZimbraServer/data/unittest/ldap/binaryContent/user1_primary.DER.crt");
+            return content;
+        }
+        
         public boolean equals(String str) {
             return string.equals(str);
         }
@@ -114,42 +309,43 @@ public class TestLdapBinary extends TestCase {
         }
     }
 
-    private Config getConfig() throws Exception {
-        return Provisioning.getInstance().getConfig();
+    private Entry getEntry() throws Exception {
+        String entryName = TestUtil.getAddress(USER);
+        return Provisioning.getInstance().get(AccountBy.name, entryName);
     }
     
     private void delete(String attrName) throws Exception {
         Provisioning prov = Provisioning.getInstance();
-        Config config = prov.getConfig();
+        Entry entry = getEntry();
         
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(attrName, null); 
-        prov.modifyAttrs(config, attrs);
+        prov.modifyAttrs(entry, attrs);
         
-        byte[] value = config.getBinaryAttr(attrName);
-        assertNull(value);
+        byte[] value = entry.getBinaryAttr(attrName);
+        Assert.assertNull(value);
     }
     
     // testing the code path when value is a String 
     private void modify(String attrName, String contentName) throws Exception {
         Provisioning prov = Provisioning.getInstance();
-        Config config = prov.getConfig();
+        Entry entry = getEntry();
         
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(attrName, Content.getContentByFileName(contentName).getString());
-        prov.modifyAttrs(config, attrs);
+        prov.modifyAttrs(entry, attrs);
     }
     
     // testing the code path when value is a String[]
     private void modify(String attrName, String[] contentNames) throws Exception {
         Provisioning prov = Provisioning.getInstance();
-        Config config = prov.getConfig();
+        Entry entry = getEntry();
         
         Map<String, Object> attrs = new HashMap<String, Object>();
         for (String contentName : contentNames) {
             StringUtil.addToMultiMap(attrs, attrName, Content.getContentByFileName(contentName).getString());
         }
-        prov.modifyAttrs(config, attrs);
+        prov.modifyAttrs(entry, attrs);
     }
     
     
@@ -178,24 +374,24 @@ public class TestLdapBinary extends TestCase {
     }
     
     private void verify(String attrName, String contentName) throws Exception  {
-        Config config = getConfig();
-        String stringValue = config.getAttr(attrName);
-        byte[] binaryValue = config.getBinaryAttr(attrName);
+        Entry entry = getEntry();
+        String stringValue = entry.getAttr(attrName);
+        byte[] binaryValue = entry.getBinaryAttr(attrName);
         
         Content content = Content.getContentByFileName(contentName);
-        assertTrue(content.equals(stringValue));
-        assertTrue(content.equals(binaryValue));
+        Assert.assertTrue(content.equals(stringValue));
+        Assert.assertTrue(content.equals(binaryValue));
     }
     
     private void verify(String attrName, String[] contentNames) throws Exception{
         int numContents = contentNames.length;
         
-        Config config = getConfig();
-        String[] stringValues = config.getMultiAttr(attrName);
-        List<byte[]> binaryValues = config.getMultiBinaryAttr(attrName);
+        Entry entry = getEntry();
+        String[] stringValues = entry.getMultiAttr(attrName);
+        List<byte[]> binaryValues = entry.getMultiBinaryAttr(attrName);
         
-        assertEquals(numContents, stringValues.length);
-        assertEquals(numContents, binaryValues.size());
+        Assert.assertEquals(numContents, stringValues.length);
+        Assert.assertEquals(numContents, binaryValues.size());
         
         for (int i = 0; i < numContents; i++) {
             Content content = Content.getContentByFileName(contentNames[i]);
@@ -206,7 +402,7 @@ public class TestLdapBinary extends TestCase {
                     found = true;
                 }
             }
-            assertTrue(found);
+            Assert.assertTrue(found);
             
             found = false;
             for (int j = 0; j < binaryValues.size() && !found; j++) {
@@ -214,41 +410,61 @@ public class TestLdapBinary extends TestCase {
                     found = true;
                 }
             }
-            assertTrue(found);
+            Assert.assertTrue(found);
         }
     }
     
-    private void verifyIsEmpty(Config config, String attrName) {
-        String value = config.getAttr(attrName);
-        assertNull(value);
+    private void verifyIsEmpty(Entry entry, String attrName) {
+        String value = entry.getAttr(attrName);
+        Assert.assertNull(value);
+    }
+    
+    private void replaceSingle(SingleValuedTestData data) throws Exception {
+        String attrName = data.attrName;
+        String contentName = data.content;
+        
+        delete(attrName);
+
+        replaceAttr(attrName, contentName);
+        verify(attrName, contentName);
+    }
+    
+    private void replaceMulti(MultiValuedTestData data) throws Exception {
+        String attrName = data.attrName;
+        String[] contentNames = data.contents;
+        
+        delete(attrName);
+        
+        replaceAttr(attrName, contentNames);
+        verify(attrName, contentNames);
     }
    
-    private void remove(boolean array) throws Exception {
-        String attrName = ATTR_MULTI;
-        String[] contentNames = new String[]{CONTENT_NAME_1, CONTENT_NAME_2, CONTENT_NAME_3};
+    private void remove(MultiValuedTestData data, boolean array) throws Exception {
+        String attrName = data.attrName;
+        String[] contentNames = data.contents;
         
         delete(attrName);
         
         replaceAttr(attrName, contentNames);
         verify(attrName, contentNames);  
         
-        String[] removedContentNames = new String[]{CONTENT_NAME_1, CONTENT_NAME_2};
-        String[] remainingContentNames = new String[]{CONTENT_NAME_3};
+        String[] contentNamesToRemove = data.contentsToRemove;
+        String[] contentNamesRemaining = data.contentsRemaining;
         
         if (array) {
-            removeAttr(attrName, removedContentNames);
+            removeAttr(attrName, contentNamesToRemove);
         } else {
-            for (String contentName : removedContentNames) {
+            for (String contentName : contentNamesToRemove) {
                 removeAttr(attrName, contentName);
             }
         }
 
-        verify(attrName, remainingContentNames);
+        verify(attrName, contentNamesRemaining);
     }
 
-    private void add(boolean array) throws Exception {
-        String attrName = ATTR_MULTI;
-        String[] contentNames = new String[]{CONTENT_NAME_1, CONTENT_NAME_2, CONTENT_NAME_3};
+    private void add(MultiValuedTestData data, boolean array) throws Exception {
+        String attrName = data.attrName;
+        String[] contentNames = data.contents;
         
         delete(attrName);
         
@@ -263,10 +479,36 @@ public class TestLdapBinary extends TestCase {
         verify(attrName, contentNames);
     }
     
+    @BeforeClass
+    public static void init() throws Exception {
+        Provisioning prov = Provisioning.getInstance();
+        
+        String entryName = TestUtil.getAddress(USER);
+        Account acct = prov.get(AccountBy.name, entryName);
+        Assert.assertNull(acct);
+        
+        acct = prov.createAccount(entryName, "test123", null);
+        Assert.assertNotNull(acct);
+    }
+    
+    @AfterClass
+    public static void cleanup() throws Exception {
+        Provisioning prov = Provisioning.getInstance();
+        
+        String entryName = TestUtil.getAddress(USER);
+        Account acct = prov.get(AccountBy.name, entryName);
+        Assert.assertNotNull(acct);
+        
+        prov.deleteAccount(acct.getId());
+    }
+    
+    
     @Test
     public void testTooLarge() throws Exception {
-        String attrName = ATTR_SINGLE;
-        String contentName = CONTENT_NAME_TOO_LARGE;
+        SingleValuedTestData data = ZIMBRA_BINARY_SINGLE_TEST_TOO_LARGE;
+        
+        String attrName = data.attrName;
+        String contentName = data.content;
         
         delete(attrName);
 
@@ -279,41 +521,46 @@ public class TestLdapBinary extends TestCase {
             }
         }
         
-        assertTrue(caught);
+        Assert.assertTrue(caught);
     }
     
     @Test
     public void testReplaceSingle() throws Exception {
-        String attrName = ATTR_SINGLE;
-        String contentName = CONTENT_NAME;
-        
-        delete(attrName);
-
-        replaceAttr(attrName, contentName);
-        verify(attrName, contentName);
+        replaceSingle(ZIMBRA_BINARY_SINGLE);
+        replaceSingle(ZIMBRA_CERTIFICATE_SINGLE);
     }
     
     @Test
     public void testReplaceMulti() throws Exception {
-        String attrName = ATTR_MULTI;
-        String[] contentNames = new String[]{CONTENT_NAME_1, CONTENT_NAME_2, CONTENT_NAME_3};
-        
-        delete(attrName);
-        
-        replaceAttr(attrName, contentNames);
-        verify(attrName, contentNames);
+        replaceMulti(ZIMBRA_BINARY_MULTI);
+        replaceMulti(CERTIFICATE_MULTI);
+        replaceMulti(RFC2252_BINARY_MULTI);
     }
     
     @Test
     public void testRemove() throws Exception {
-        remove(false);
-        remove(true);
+        remove(ZIMBRA_BINARY_MULTI, false);
+        remove(ZIMBRA_BINARY_MULTI, true);
+        
+        remove(CERTIFICATE_MULTI, false);
+        remove(CERTIFICATE_MULTI, true);
+        
+        // RFC 2252 binary does not support adding/deleting individual values
+        // remove(RFC2252_BINARY_MULTI, false);
+        // remove(RFC2252_BINARY_MULTI, true);
     }
     
     @Test
     public void testAdd() throws Exception {
-        add(false);
-        add(true);
+        add(ZIMBRA_BINARY_MULTI, false);
+        add(ZIMBRA_BINARY_MULTI, true);
+        
+        add(CERTIFICATE_MULTI, false);
+        add(CERTIFICATE_MULTI, true);
+        
+        // RFC 2252 binary does not support adding/deleting individual values
+        // add(RFC2252_BINARY_MULTI, false);
+        // add(RFC2252_BINARY_MULTI, true);
     }
     
     //
@@ -409,10 +656,8 @@ public class TestLdapBinary extends TestCase {
     //
     // END uncomment after running "ant generate-getters" with the test binary attributes
     //
-    
-    
-    public static void main(String[] args) throws Exception  {
-        TestUtil.runTest(TestLdapBinary.class);
-    }
 
+    public static void main(String[] args) throws Exception {
+        Content content = Content.generateCert();
+    }
 }
