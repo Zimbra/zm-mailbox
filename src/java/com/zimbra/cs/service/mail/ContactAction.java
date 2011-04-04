@@ -101,7 +101,7 @@ public class ContactAction extends ItemAction {
                 ParsedContact pc = null;
                 if (!action.listElements(MailConstants.E_ATTRIBUTE).isEmpty()) {
                     Contact cn = local.size() == 1 ? mbox.getContactById(octxt, local.get(0)) : null;
-                    Pair<Map<String,String>, List<Attachment>> cdata = CreateContact.parseContact(action, zsc, octxt, cn);
+                    Pair<Map<String,Object>, List<Attachment>> cdata = CreateContact.parseContact(action, zsc, octxt, cn);
                     pc = new ParsedContact(cdata.getFirst(), cdata.getSecond());
                 }
 
