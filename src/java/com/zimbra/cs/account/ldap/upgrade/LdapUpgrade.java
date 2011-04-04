@@ -84,9 +84,11 @@ abstract class LdapUpgrade {
     }  
     
     protected void modifyAttrs(Entry entry, Map<String, Object> attrs) throws ServiceException {
-        System.out.println();
-        System.out.println("Modifying " + TargetType.getTargetType(entry).getPrettyName() + " " + entry.getLabel());
-        
+    	if (!attrs.isEmpty()) {
+	        System.out.println();
+	        System.out.println("Modifying " + TargetType.getTargetType(entry).getPrettyName() + " " + entry.getLabel());
+    	}
+    	
         for (Map.Entry<String, Object> attr : attrs.entrySet()) {
             String key = attr.getKey();
             Object value = attr.getValue();

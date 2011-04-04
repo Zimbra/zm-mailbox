@@ -15,10 +15,10 @@ public class Bug57855 extends LdapUpgrade {
     
     @Override
     void doUpgrade() throws ServiceException {
-        upgradeZimbraGalLdapAttrMap();
+        upgradeZimbraGalLdapFilterDef();
     }
     
-    void upgradeZimbraGalLdapAttrMap() throws ServiceException {
+    void upgradeZimbraGalLdapFilterDef() throws ServiceException {
         Config config = mProv.getConfig();
         
         String attrName = Provisioning.A_zimbraGalLdapFilterDef;
