@@ -14,39 +14,30 @@
  */
 package com.zimbra.cs.index;
 
+import java.io.Closeable;
 import java.io.IOException;
-import java.io.PrintStream;
+import java.util.List;
+
+import com.zimbra.cs.mailbox.MailItem;
 
 /**
- * Abstraction of index store backend.
+ * Abstraction of index write operations.
  *
+ * @see IndexStore#openIndexer()
  * @author ysasaki
  */
-public interface IndexStore {
+public interface Indexer extends Closeable {
 
     /**
-     * {@link Indexer#close()} must be called after use.
+     * Adds index documents.
      */
-    Indexer openIndexer() throws IOException;
+    void addDocument(MailItem item, List<IndexDocument> docs) throws IOException;
 
     /**
-     * {@link Searcher#close()} must be called after use.
+     * Deletes index documents.
+     *
+     * @param ids list of item IDs to delete
      */
-    Searcher openSearcher() throws IOException;
-
-    /**
-     * Removes from cache.
-     */
-    void evict();
-
-    /**
-     * Deletes the whole index data for the mailbox.
-     */
-    void deleteIndex() throws IOException;
-
-    /**
-     * Runs a sanity check for the index data.
-     */
-    boolean verify(PrintStream out) throws IOException;
+    void deleteDocument(List<Integer> ids) throws IOException;
 
 }

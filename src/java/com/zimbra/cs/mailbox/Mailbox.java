@@ -85,7 +85,6 @@ import com.zimbra.cs.index.BrowseTerm;
 import com.zimbra.cs.index.DomainBrowseTerm;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.LuceneFields;
-import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraQuery;
@@ -3675,46 +3674,43 @@ public class Mailbox {
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions on this mailbox");
 
             List<BrowseTerm> result = null;
-            IndexStore idx = index.getIndexStore();
-            if (idx != null) {
-                switch (browseBy) {
-                    case attachments:
-                        result = idx.getAttachmentTypes(regex);
-                        break;
-                    case domains:
-                        Map<String, DomainBrowseTerm> domains = new HashMap<String, DomainBrowseTerm>();
-                        for (BrowseTerm term : idx.getDomains(LuceneFields.L_H_FROM, regex)) {
-                            DomainBrowseTerm domain = domains.get(term.getText());
-                            if (domain == null) {
-                                domain = new DomainBrowseTerm(term);
-                                domains.put(term.getText(), domain);
-                            }
-                            domain.addField(DomainBrowseTerm.Field.FROM);
+            switch (browseBy) {
+                case attachments:
+                    result = index.getAttachmentTypes(regex);
+                    break;
+                case domains:
+                    Map<String, DomainBrowseTerm> domains = new HashMap<String, DomainBrowseTerm>();
+                    for (BrowseTerm term : index.getDomains(LuceneFields.L_H_FROM, regex)) {
+                        DomainBrowseTerm domain = domains.get(term.getText());
+                        if (domain == null) {
+                            domain = new DomainBrowseTerm(term);
+                            domains.put(term.getText(), domain);
                         }
-                        for (BrowseTerm term : idx.getDomains(LuceneFields.L_H_TO, regex)) {
-                            DomainBrowseTerm domain = domains.get(term.getText());
-                            if (domain == null) {
-                                domain = new DomainBrowseTerm(term);
-                                domains.put(term.getText(), domain);
-                            }
-                            domain.addField(DomainBrowseTerm.Field.TO);
+                        domain.addField(DomainBrowseTerm.Field.FROM);
+                    }
+                    for (BrowseTerm term : index.getDomains(LuceneFields.L_H_TO, regex)) {
+                        DomainBrowseTerm domain = domains.get(term.getText());
+                        if (domain == null) {
+                            domain = new DomainBrowseTerm(term);
+                            domains.put(term.getText(), domain);
                         }
-                        for (BrowseTerm term : idx.getDomains(LuceneFields.L_H_CC, regex)) {
-                            DomainBrowseTerm domain = domains.get(term.getText());
-                            if (domain == null) {
-                                domain = new DomainBrowseTerm(term);
-                                domains.put(term.getText(), domain);
-                            }
-                            domain.addField(DomainBrowseTerm.Field.CC);
+                        domain.addField(DomainBrowseTerm.Field.TO);
+                    }
+                    for (BrowseTerm term : index.getDomains(LuceneFields.L_H_CC, regex)) {
+                        DomainBrowseTerm domain = domains.get(term.getText());
+                        if (domain == null) {
+                            domain = new DomainBrowseTerm(term);
+                            domains.put(term.getText(), domain);
                         }
-                        result = new ArrayList<BrowseTerm>(domains.values());
-                        break;
-                    case objects:
-                        result = idx.getObjects(regex);
-                        break;
-                    default:
-                        assert false : browseBy;
-                }
+                        domain.addField(DomainBrowseTerm.Field.CC);
+                    }
+                    result = new ArrayList<BrowseTerm>(domains.values());
+                    break;
+                case objects:
+                    result = index.getObjects(regex);
+                    break;
+                default:
+                    assert false : browseBy;
             }
 
             Collections.sort(result, new Comparator<BrowseTerm>() {

@@ -18,13 +18,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Pattern;
 
+import org.apache.lucene.document.Document;
 import org.apache.lucene.index.CheckIndex;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexReader;
@@ -35,14 +35,17 @@ import org.apache.lucene.index.SerialMergeScheduler;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.Filter;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.Sort;
-import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.NoSuchDirectoryException;
 import org.apache.lucene.store.SingleInstanceLockFactory;
 import org.apache.lucene.util.Version;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Strings;
 import com.google.common.io.NullOutputStream;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -139,75 +142,6 @@ public final class LuceneIndex implements IndexStore {
     }
 
     /**
-     * Adds the list of documents to the index.
-     * <p>
-     * If the index status is stale, delete the stale documents first, then add new documents. If the index status is
-     * deferred, we are sure that this item is not already in the index, and so we can skip the check-update step.
-     */
-    @Override
-    public synchronized void addDocument(MailItem item, List<IndexDocument> docs) throws IOException {
-        if (docs == null || docs.isEmpty()) {
-            return;
-        }
-
-        for (IndexDocument doc : docs) {
-            // doc can be shared by multiple threads if multiple mailboxes are referenced in a single email
-            synchronized (doc) {
-
-                doc.removeSortSubject();
-                doc.addSortSubject(item.getSortSubject());
-
-                doc.removeSortName();
-                doc.addSortName(item.getSortSender());
-
-                doc.removeSortRcpt();
-                doc.addSortRcpt(item.getSortRecipients());
-
-                doc.removeMailboxBlobId();
-                doc.addMailboxBlobId(item.getId());
-
-                // If this doc is shared by multi threads, then the date might just be wrong,
-                // so remove and re-add the date here to make sure the right one gets written!
-                doc.removeSortDate();
-                doc.addSortDate(item.getDate());
-
-                doc.removeSortSize();
-                doc.addSortSize(item.getSize());
-                doc.addAll();
-
-                switch (item.getIndexStatus()) {
-                    case STALE:
-                    case DONE: // for partial re-index
-                        Term term = new Term(LuceneFields.L_MAILBOX_BLOB_ID, String.valueOf(item.getId()));
-                        writerRef.get().updateDocument(term, doc.toDocument());
-                        break;
-                    case DEFERRED:
-                        writerRef.get().addDocument(doc.toDocument());
-                        break;
-                    default:
-                        assert false : item.getIndexId();
-                }
-            }
-        }
-    }
-
-    /**
-     * Deletes documents.
-     * <p>
-     * The document count may be more than you expect here, the document may already be deleted and just not be
-     * optimized out yet -- some Lucene APIs (e.g. docFreq) will still return the old count until the indexes are
-     * optimized.
-     */
-    @Override
-    public void deleteDocument(List<Integer> ids) throws IOException {
-        for (Integer id : ids) {
-            Term term = new Term(LuceneFields.L_MAILBOX_BLOB_ID, id.toString());
-            writerRef.get().deleteDocuments(term);
-            ZimbraLog.index.debug("Deleted documents id=%d", id);
-        }
-    }
-
-    /**
      * Deletes this index completely.
      */
     @Override
@@ -231,73 +165,6 @@ public final class LuceneIndex implements IndexStore {
         }
     }
 
-    private void enumerateTerms(Term firstTerm, TermEnumCallback callback) throws IOException {
-        IndexReaderRef ref = getIndexReaderRef();
-        try {
-            TermEnum terms = ref.get().terms(firstTerm);
-            boolean hasDeletions = ref.get().hasDeletions();
-
-            do {
-                Term cur = terms.term();
-                if (cur != null) {
-                    if (!cur.field().equals(firstTerm.field())) {
-                        break;
-                    }
-                    // NOTE: the term could exist in docs, but they might all be deleted. Unfortunately this means
-                    // that we need to actually walk the TermDocs enumeration for this document to see if it is
-                    // non-empty
-                    if (!hasDeletions || ref.get().termDocs(cur).next()) {
-                        callback.onTerm(cur, terms.docFreq());
-                    }
-                }
-            } while (terms.next());
-        } finally {
-            ref.dec();
-        }
-    }
-
-    /**
-     * Returns true if all tokens were expanded or false if more tokens were available but we hit the specified maximum.
-     */
-    @Override
-    public boolean expandWildcard(Collection<String> result, String field, String token, int max) throws IOException {
-        // all lucene text should be in lowercase...
-        token = token.toLowerCase();
-
-        IndexReaderRef ref = getIndexReaderRef();
-        try {
-            Term firstTerm = new Term(field, token);
-            TermEnum terms = ref.get().terms(firstTerm);
-
-            do {
-                Term cur = terms.term();
-                if (cur != null) {
-                    if (!cur.field().equals(firstTerm.field())) {
-                        break;
-                    }
-
-                    String curText = cur.text();
-
-                    if (curText.startsWith(token)) {
-                        if (result.size() >= max) {
-                            return false;
-                        }
-                        // we don't care about deletions, they will be filtered later
-                        result.add(cur.text());
-                    } else {
-                        if (curText.compareTo(token) > 0) {
-                            break;
-                        }
-                    }
-                }
-            } while (terms.next());
-
-            return true;
-        } finally {
-            ref.dec();
-        }
-    }
-
     /**
      * Removes from cache.
      */
@@ -307,88 +174,15 @@ public final class LuceneIndex implements IndexStore {
     }
 
     /**
-     * Returns all domain names from the index.
-     *
-     * @param field Lucene field name (e.g. LuceneFields.L_H_CC)
-     * @param regex matching pattern or null to match everything
-     * @return {@link BrowseTerm}s which correspond to all of the domain terms stored in a given field
-     */
-    @Override
-    public List<BrowseTerm> getDomains(String field, String regex) throws IOException {
-        TermEnumCallback callback = new DomainEnumCallback(
-                !Strings.isNullOrEmpty(regex) ? Pattern.compile(regex.startsWith("@") ? regex : "@" + regex) : null);
-        enumerateTerms(new Term(field, ""), callback);
-        return callback.result;
-    }
-
-    /**
-     * Returns all attachment types from the index.
-     *
-     * @param regex matching pattern or null to match everything
-     * @return {@link BrowseTerm}s which correspond to all of the attachment types in the index
-     */
-    @Override
-    public List<BrowseTerm> getAttachmentTypes(String regex) throws IOException {
-        TermEnumCallback callback = new SimpleTermEnumCallback(
-                !Strings.isNullOrEmpty(regex) ? Pattern.compile(regex) : null);
-        enumerateTerms(new Term(LuceneFields.L_ATTACHMENTS, ""), callback);
-        return callback.result;
-    }
-
-    /**
-     * Returns all objects (e.g. PO, etc) from the index.
-     *
-     * @param regex matching pattern or null to match everything
-     * @return {@link BrowseTerm}s which correspond to all of the objects in the index
-     */
-    @Override
-    public List<BrowseTerm> getObjects(String regex) throws IOException {
-        TermEnumCallback callback = new SimpleTermEnumCallback(
-                !Strings.isNullOrEmpty(regex) ? Pattern.compile(regex) : null);
-        enumerateTerms(new Term(LuceneFields.L_OBJECTS, ""), callback);
-        return callback.result;
-    }
-
-    /**
-     * Caller is responsible for calling {@link IndexSearcherRef#dec()} before allowing it to go out of scope
+     * Caller is responsible for calling {@link Searcher#close()} before allowing it to go out of scope
      * (otherwise a RuntimeException will occur).
      *
-     * @return A {@link IndexSearcherRef} for this index.
+     * @return A {@link Searcher} for this index.
      * @throws IOException if opening an {@link IndexReader} failed
      */
     @Override
-    public IndexSearcherRef getIndexSearcherRef(SortBy sort) throws IOException {
-        IndexSearcherRef ref = new IndexSearcherRef(getIndexReaderRef());
-        ref.setSort(toLuceneSort(sort));
-        return ref;
-    }
-
-    private Sort toLuceneSort(SortBy sortBy) {
-        if (sortBy == null) {
-            return null;
-        }
-
-        switch (sortBy.getKey()) {
-            case NONE:
-                return null;
-            case NAME:
-            case NAME_NATURAL_ORDER:
-            case SENDER:
-                return new Sort(new SortField(LuceneFields.L_SORT_NAME, SortField.STRING,
-                        sortBy.getDirection() == SortBy.Direction.DESC));
-            case RCPT:
-                return new Sort(new SortField(LuceneFields.L_SORT_RCPT, SortField.STRING,
-                        sortBy.getDirection() == SortBy.Direction.DESC));
-            case SUBJECT:
-                return new Sort(new SortField(LuceneFields.L_SORT_SUBJECT, SortField.STRING,
-                        sortBy.getDirection() == SortBy.Direction.DESC));
-            case SIZE:
-                return new Sort(new SortField(LuceneFields.L_SORT_SIZE, SortField.LONG,
-                        sortBy.getDirection() == SortBy.Direction.DESC));
-            case DATE:
-            default: // default to DATE_DESCENDING
-                return new Sort(new SortField(LuceneFields.L_SORT_DATE, SortField.STRING, true));
-        }
+    public Searcher openSearcher() throws IOException {
+        return new LuceneSearcher(getIndexReaderRef());
     }
 
     private IndexReader openIndexReader(boolean tryRepair) throws IOException {
@@ -562,7 +356,7 @@ public final class LuceneIndex implements IndexStore {
     }
 
     @Override
-    public synchronized void beginWrite() throws IOException {
+    public synchronized Indexer openIndexer() throws IOException {
         if (writerRef != null) {
             writerRef.inc();
         } else {
@@ -575,12 +369,7 @@ public final class LuceneIndex implements IndexStore {
                 }
             }
         }
-    }
-
-    @Override
-    public synchronized void endWrite() throws IOException {
-        commitWriter();
-        readersCache.stale(this); // let the reader reopen
+        return new LuceneIndexer(writerRef);
     }
 
     private IndexWriterRef openWriter() throws IOException {
@@ -634,8 +423,7 @@ public final class LuceneIndex implements IndexStore {
         return new IndexWriterRef(this, writer);
     }
 
-    private void commitWriter() throws IOException {
-        assert(Thread.holdsLock(this));
+    private synchronized void commitWriter() throws IOException {
         assert(writerRef != null);
 
         ZimbraLog.index.debug("Commit IndexWriter");
@@ -679,7 +467,7 @@ public final class LuceneIndex implements IndexStore {
     /**
      * Called by {@link IndexWriterRef#dec()}. Can be called by the thread that opened the writer or the merge thread.
      */
-    synchronized void closeWriter() {
+    private synchronized void closeWriter() {
         if (writerRef == null) {
             return;
         }
@@ -735,48 +523,6 @@ public final class LuceneIndex implements IndexStore {
         }
         CheckIndex.Status status = check.checkIndex();
         return status.clean;
-    }
-
-    private static abstract class TermEnumCallback {
-        final List<BrowseTerm> result = new ArrayList<BrowseTerm>();
-        abstract void onTerm(Term term, int docFreq);
-    }
-
-    private static final class DomainEnumCallback extends TermEnumCallback {
-        private final Pattern pattern;
-
-        DomainEnumCallback(Pattern pattern) {
-            this.pattern = pattern;
-        }
-
-        @Override
-        public void onTerm(Term term, int docFreq) {
-            String text = term.text();
-            // Domains are tokenized with '@' prefix. Exclude partial domain tokens.
-            if (text.startsWith("@") && text.contains(".")) {
-                if (pattern == null || pattern.matcher(text).matches()) {
-                    result.add(new BrowseTerm(text.substring(1), docFreq));
-                }
-            }
-        }
-    }
-
-    private static final class SimpleTermEnumCallback extends TermEnumCallback {
-        private final Pattern pattern;
-
-        SimpleTermEnumCallback(Pattern pattern) {
-            this.pattern = pattern;
-        }
-
-        @Override
-        public void onTerm(Term term, int docFreq) {
-            String text = term.text();
-            if (text.length() > 1) {
-                if (pattern == null || pattern.matcher(text).matches()) {
-                    result.add(new BrowseTerm(text, docFreq));
-                }
-            }
-        }
     }
 
     /**
@@ -947,6 +693,178 @@ public final class LuceneIndex implements IndexStore {
             results = new ReSortingQueryResults(results, originalSort, params);
         }
         return results;
+    }
+
+    private static final class LuceneIndexer implements Indexer {
+        private final IndexWriterRef writer;
+
+        LuceneIndexer(IndexWriterRef writer) {
+            this.writer = writer;
+        }
+
+        @Override
+        public void close() throws IOException {
+            writer.index.commitWriter();
+            readersCache.stale(writer.index); // let the reader reopen
+        }
+
+        /**
+         * Adds the list of documents to the index.
+         * <p>
+         * If the index status is stale, delete the stale documents first, then add new documents. If the index status
+         * is deferred, we are sure that this item is not already in the index, and so we can skip the check-update step.
+         */
+        @Override
+        public synchronized void addDocument(MailItem item, List<IndexDocument> docs) throws IOException {
+            if (docs == null || docs.isEmpty()) {
+                return;
+            }
+
+            for (IndexDocument doc : docs) {
+                // doc can be shared by multiple threads if multiple mailboxes are referenced in a single email
+                synchronized (doc) {
+                    doc.removeSortSubject();
+                    doc.addSortSubject(item.getSortSubject());
+
+                    doc.removeSortName();
+                    doc.addSortName(item.getSortSender());
+
+                    doc.removeSortRcpt();
+                    doc.addSortRcpt(item.getSortRecipients());
+
+                    doc.removeMailboxBlobId();
+                    doc.addMailboxBlobId(item.getId());
+
+                    // If this doc is shared by multi threads, then the date might just be wrong,
+                    // so remove and re-add the date here to make sure the right one gets written!
+                    doc.removeSortDate();
+                    doc.addSortDate(item.getDate());
+
+                    doc.removeSortSize();
+                    doc.addSortSize(item.getSize());
+                    doc.addAll();
+
+                    switch (item.getIndexStatus()) {
+                        case STALE:
+                        case DONE: // for partial re-index
+                            Term term = new Term(LuceneFields.L_MAILBOX_BLOB_ID, String.valueOf(item.getId()));
+                            writer.get().updateDocument(term, doc.toDocument());
+                            break;
+                        case DEFERRED:
+                            writer.get().addDocument(doc.toDocument());
+                            break;
+                        default:
+                            assert false : item.getIndexId();
+                    }
+                }
+            }
+        }
+
+        /**
+         * Deletes documents.
+         * <p>
+         * The document count may be more than you expect here, the document may already be deleted and just not be
+         * optimized out yet -- some Lucene APIs (e.g. docFreq) will still return the old count until the indexes are
+         * optimized.
+         */
+        @Override
+        public void deleteDocument(List<Integer> ids) throws IOException {
+            for (Integer id : ids) {
+                Term term = new Term(LuceneFields.L_MAILBOX_BLOB_ID, id.toString());
+                writer.get().deleteDocuments(term);
+                ZimbraLog.index.debug("Deleted documents id=%d", id);
+            }
+        }
+    }
+
+    private static final class LuceneSearcher implements Searcher {
+        private final IndexSearcher searcher;
+        private final IndexReaderRef reader;
+
+        LuceneSearcher(IndexReaderRef reader) {
+            this.reader = reader;
+            searcher = new IndexSearcher(reader.get());
+        }
+
+        @Override
+        public void close() throws IOException {
+            try {
+                searcher.close();
+            } finally {
+                reader.dec();
+            }
+        }
+
+        @Override
+        public List<Integer> search(Query query, Filter filter, Sort sort, int max) throws IOException {
+            TopDocs docs;
+            if (sort != null) {
+                docs = searcher.search(query, filter, max, sort);
+            } else {
+                docs = searcher.search(query, filter, max);
+            }
+            List<Integer> result = new ArrayList<Integer>(docs.scoreDocs.length);
+            for (ScoreDoc hit : docs.scoreDocs) {
+                result.add(hit.doc);
+            }
+            return result;
+        }
+
+        /**
+         * TODO: This may include terms associated with deleted documents.
+         */
+        @Override
+        public TermEnum getTerms(Term term) throws IOException {
+            return reader.get().terms(term);
+        }
+
+        @Override
+        public Document getDocument(int id) throws IOException {
+            return searcher.doc(id);
+        }
+
+        @Override
+        public int getCount(Term term) throws IOException {
+            return searcher.docFreq(term);
+        }
+
+        @Override
+        public int getTotal() throws IOException {
+            return searcher.maxDoc();
+        }
+    }
+
+    /**
+     * {@link IndexWriter} wrapper that supports a reference counter.
+     */
+    private final class IndexWriterRef {
+        private final LuceneIndex index;
+        private final IndexWriter writer;
+        private final AtomicInteger count = new AtomicInteger(1); // ref counter
+
+        IndexWriterRef(LuceneIndex index, IndexWriter writer) {
+            this.index = index;
+            this.writer = writer;
+        }
+
+        IndexWriter get() {
+            return writer;
+        }
+
+        LuceneIndex getIndex() {
+            return index;
+        }
+
+        void inc() {
+            count.incrementAndGet();
+        }
+
+        void dec() {
+            if (count.decrementAndGet() <= 0) {
+                index.closeWriter();
+            }
+        }
+
     }
 
 }

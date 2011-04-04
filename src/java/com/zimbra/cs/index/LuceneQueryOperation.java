@@ -27,11 +27,13 @@ import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.TopDocs;
 
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.io.Closeables;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -69,14 +71,15 @@ public final class LuceneQueryOperation extends QueryOperation {
      * Because we don't store the real mail-item-id of documents, we ALWAYS need
      * a DBOp in order to properly get our results.
      */
-    private DBQueryOperation dbOp = null;
+    private DBQueryOperation dbOp;
     private List<QueryInfo> queryInfo = new ArrayList<QueryInfo>();
     private boolean hasSpamTrashSetting = false;
 
-    private TopDocs topDocs = null;
+    private List<Integer> hits;
     private int topDocsLen = 0; // number of hits fetched
     private int topDocsChunkSize = 2000; // how many hits to fetch per step in Lucene
-    private IndexSearcherRef searcher = null;
+    private Searcher searcher;
+    private Sort sort;
 
     /**
      * Adds the specified text clause at the toplevel.
@@ -213,8 +216,8 @@ public final class LuceneQueryOperation extends QueryOperation {
                 TermQuery tq = (TermQuery)q;
                 Term term = tq.getTerm();
                 try {
-                    int freq = searcher.getSearcher().docFreq(term);
-                    int docsCutoff = (int) (searcher.getSearcher().maxDoc() * DB_FIRST_TERM_FREQ_PERC);
+                    int freq = searcher.getCount(term);
+                    int docsCutoff = (int) (searcher.getTotal() * DB_FIRST_TERM_FREQ_PERC);
                     ZimbraLog.search.debug("Term matches %d docs. DB-First cutoff (%d%%) is %d docs",
                             freq, (int) (100 * DB_FIRST_TERM_FREQ_PERC), docsCutoff);
                     if (freq > docsCutoff) {
@@ -246,9 +249,8 @@ public final class LuceneQueryOperation extends QueryOperation {
 
     @Override
     public void doneWithSearchResults() throws ServiceException {
-        if (searcher != null) {
-            searcher.dec();
-        }
+        Closeables.closeQuietly(searcher);
+        searcher = null;
     }
 
     private void fetchFirstResults(int initialChunkSize) {
@@ -257,10 +259,8 @@ public final class LuceneQueryOperation extends QueryOperation {
             topDocsLen = 3 * initialChunkSize;
             long start= System.currentTimeMillis();
             runSearch();
-            if (ZimbraLog.search.isDebugEnabled()) {
-                ZimbraLog.search.debug("Fetched Initial %d (out of %d total) search results from Lucene in %d ms",
-                        topDocsLen, topDocs != null ? topDocs.totalHits : 0, System.currentTimeMillis() - start);
-            }
+            ZimbraLog.search.debug("Fetched Initial %d (out of %d total) search results from Lucene in %d ms",
+                    topDocsLen, hits != null ? hits.size() : 0, System.currentTimeMillis() - start);
         }
     }
 
@@ -277,7 +277,7 @@ public final class LuceneQueryOperation extends QueryOperation {
             }
 
             LuceneResultsChunk toRet = new LuceneResultsChunk();
-            int luceneLen = topDocs != null ? topDocs.totalHits : 0;
+            int luceneLen = hits != null ? hits.size() : 0;
             long timeUsed = 0;
             long start = 0;
             long fetchFromLucene1 = 0;
@@ -300,18 +300,17 @@ public final class LuceneQueryOperation extends QueryOperation {
                 }
 
                 start = System.currentTimeMillis();
-                int docId = topDocs.scoreDocs[curHitNo].doc;
-                Document d = searcher.getSearcher().doc(docId);
+                Document doc = searcher.getDocument(hits.get(curHitNo));
                 long now = System.currentTimeMillis();
                 fetchFromLucene1 += (now - start);
                 start = now;
                 fetchFromLucene2 += (System.currentTimeMillis() - start);
                 curHitNo++;
-                String mbid = d.get(LuceneFields.L_MAILBOX_BLOB_ID);
+                String mbid = doc.get(LuceneFields.L_MAILBOX_BLOB_ID);
                 try {
                     if (mbid != null) {
                         start = System.currentTimeMillis();
-                        toRet.addHit(Integer.parseInt(mbid), d);
+                        toRet.addHit(Integer.parseInt(mbid), doc);
                         long end = System.currentTimeMillis();
                         timeUsed += (end-start);
                     }
@@ -350,18 +349,15 @@ public final class LuceneQueryOperation extends QueryOperation {
                         filter.addTerm(t);
                     }
                 }
-                topDocs = searcher.search(outerQuery, filter, topDocsLen);
+                hits = searcher.search(outerQuery, filter, sort, topDocsLen);
             } else {
-                topDocs = null;
+                hits = null;
             }
         } catch (IOException e) {
             ZimbraLog.search.error("Failed to search", e);
-            e.printStackTrace();
-            if (searcher != null) {
-                searcher.dec();
-                searcher = null;
-            }
-            topDocs = null;
+            Closeables.closeQuietly(searcher);
+            searcher = null;
+            hits = null;
         }
     }
 
@@ -409,7 +405,7 @@ public final class LuceneQueryOperation extends QueryOperation {
      */
     @Override
     public long getTotalHitCount() {
-        return topDocs != null ? topDocs.totalHits : 0;
+        return hits != null ? hits.size() : 0;
     }
 
     /**
@@ -589,10 +585,39 @@ public final class LuceneQueryOperation extends QueryOperation {
             dbOp.begin(ctx); // will call back into this method again!
         } else { // 2nd time called
             try {
-                searcher = ctx.getMailbox().index.getIndexStore().getIndexSearcherRef(ctx.getResults().getSortBy());
+                searcher = ctx.getMailbox().index.getIndexStore().openSearcher();
             } catch (IOException e) {
-                throw ServiceException.FAILURE("Failed to open index", e);
+                throw ServiceException.FAILURE("Failed to open searcher", e);
             }
+            sort = toLuceneSort(ctx.getResults().getSortBy());
+        }
+    }
+
+    private Sort toLuceneSort(SortBy sortBy) {
+        if (sortBy == null) {
+            return null;
+        }
+
+        switch (sortBy.getKey()) {
+            case NONE:
+                return null;
+            case NAME:
+            case NAME_NATURAL_ORDER:
+            case SENDER:
+                return new Sort(new SortField(LuceneFields.L_SORT_NAME, SortField.STRING,
+                        sortBy.getDirection() == SortBy.Direction.DESC));
+            case RCPT:
+                return new Sort(new SortField(LuceneFields.L_SORT_RCPT, SortField.STRING,
+                        sortBy.getDirection() == SortBy.Direction.DESC));
+            case SUBJECT:
+                return new Sort(new SortField(LuceneFields.L_SORT_SUBJECT, SortField.STRING,
+                        sortBy.getDirection() == SortBy.Direction.DESC));
+            case SIZE:
+                return new Sort(new SortField(LuceneFields.L_SORT_SIZE, SortField.LONG,
+                        sortBy.getDirection() == SortBy.Direction.DESC));
+            case DATE:
+            default: // default to DATE_DESCENDING
+                return new Sort(new SortField(LuceneFields.L_SORT_DATE, SortField.STRING, true));
         }
     }
 

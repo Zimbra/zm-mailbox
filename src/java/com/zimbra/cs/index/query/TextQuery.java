@@ -17,6 +17,7 @@ package com.zimbra.cs.index.query;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -24,11 +25,13 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.BooleanClause.Occur;
 
+import com.google.common.io.Closeables;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.LuceneFields;
@@ -36,6 +39,7 @@ import com.zimbra.cs.index.LuceneQueryOperation;
 import com.zimbra.cs.index.NoTermQueryOperation;
 import com.zimbra.cs.index.QueryInfo;
 import com.zimbra.cs.index.QueryOperation;
+import com.zimbra.cs.index.Searcher;
 import com.zimbra.cs.index.WildcardExpansionQueryInfo;
 import com.zimbra.cs.mailbox.Mailbox;
 
@@ -92,35 +96,33 @@ public class TextQuery extends Query {
             // wildcard query!
             String wcToken;
 
-            // only the last token is allowed to have a wildcard in it
-            if (tokens.size() > 0) {
-                wcToken = tokens.remove(tokens.size() - 1);
-            } else {
+
+            if (tokens.isEmpty()) {
                 wcToken = text;
+            } else { // only the last token is allowed to have a wildcard in it
+                wcToken = tokens.remove(tokens.size() - 1);
             }
 
             if (wcToken.endsWith("*")) {
                 wcToken = wcToken.substring(0, wcToken.length() - 1);
             }
 
-            if (wcToken.length() > 0) {
+            if (!wcToken.isEmpty()) {
                 wildcardTerm = wcToken;
-                boolean expandedAllTokens = false;
-                List<String> expandedTokens = new ArrayList<String>(100);
+                List<String> expandedTokens = Collections.emptyList();
                 if (mailbox != null) { // null if testing
                     try {
-                        expandedAllTokens = mailbox.index.getIndexStore().expandWildcard(
-                                expandedTokens, field, wcToken, MAX_WILDCARD_TERMS);
+                        expandedTokens = expandWildcard(field, wcToken, MAX_WILDCARD_TERMS);
                     } catch (IOException e) {
                         throw ServiceException.FAILURE("Failed to expand wildcard", e);
                     }
                     queryInfo.add(new WildcardExpansionQueryInfo(wcToken + "*",
-                            expandedTokens.size(), expandedAllTokens));
+                            expandedTokens.size(), expandedTokens.size() <= MAX_WILDCARD_TERMS));
                 }
                 // By design, we interpret *zero* tokens to mean "ignore this search term" therefore if the wildcard
                 // expands to no terms, we need to stick something in right here, just so we don't get confused when we
                 // go to execute the query later.
-                if (expandedTokens.size() == 0 || !expandedAllTokens) {
+                if (expandedTokens.isEmpty() || expandedTokens.size() > MAX_WILDCARD_TERMS) {
                     tokens.add(wcToken);
                 } else {
                     for (String token : expandedTokens) {
@@ -128,6 +130,45 @@ public class TextQuery extends Query {
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Expand the wildcard.
+     *
+     * @param field index field
+     * @param token wildcard token
+     * @param max the wildcard is expanded up to this number of tokens
+     * @return expanded tokens. If the size is max + 1, there are more to expand.
+     */
+    private List<String> expandWildcard(String field, String token, int max) throws IOException {
+        // all lucene text should be in lowercase
+        token = token.toLowerCase();
+
+        Searcher searcher = mailbox.index.getIndexStore().openSearcher();
+        try {
+            TermEnum terms = searcher.getTerms(new Term(field, token));
+            List<String> result = new ArrayList<String>(100);
+            do {
+                Term term = terms.term();
+                if (term == null || !term.field().equals(field)) {
+                    break;
+                }
+
+                String text = term.text();
+                if (text.startsWith(token)) {
+                    // we don't care about deletions, they will be filtered later
+                    result.add(text);
+                    if (result.size() > max) { // allow max + 1
+                        break;
+                    }
+                } else if (text.compareTo(token) > 0) {
+                    break;
+                }
+            } while (terms.next());
+            return result;
+        } finally {
+            Closeables.closeQuietly(searcher);
         }
     }
 

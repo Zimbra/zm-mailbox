@@ -32,13 +32,18 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.index.TermEnum;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.SetMultimap;
+import com.google.common.io.Closeables;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
@@ -51,10 +56,14 @@ import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.db.DbSearchConstraints;
 import com.zimbra.cs.db.DbSearchConstraintsNode;
+import com.zimbra.cs.index.BrowseTerm;
+import com.zimbra.cs.index.Indexer;
+import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.LuceneIndex;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.ReSortingQueryResults;
 import com.zimbra.cs.index.SearchParams;
+import com.zimbra.cs.index.Searcher;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.ZimbraAnalyzer;
@@ -693,11 +702,11 @@ public final class MailboxIndex {
     public void redoIndexItem(MailItem item, int itemId, List<IndexDocument> docs) {
         synchronized (mailbox) {
             try {
-                indexStore.beginWrite();
+                Indexer indexer = indexStore.openIndexer();
                 try {
-                    indexStore.addDocument(item, docs);
+                    indexer.addDocument(item, docs);
                 } finally {
-                    indexStore.endWrite();
+                    indexer.close();
                 }
             } catch (Exception e) {
                 ZimbraLog.index.warn("Skipping indexing; Unable to parse message %d", itemId, e);
@@ -716,10 +725,11 @@ public final class MailboxIndex {
     synchronized void update(List<IndexItemEntry> add, List<Integer> del) throws ServiceException {
         assert(Thread.holdsLock(mailbox));
 
+        Indexer indexer;
         try {
-            indexStore.beginWrite();
+            indexer = indexStore.openIndexer();
         } catch (IOException e) {
-            ZimbraLog.index.warn("Failed to open IndexWriter", e);
+            ZimbraLog.index.warn("Failed to open Indexer", e);
             lastFailedTime = System.currentTimeMillis();
             return;
         }
@@ -729,7 +739,7 @@ public final class MailboxIndex {
         try {
             if (!del.isEmpty()) {
                 try {
-                    indexStore.deleteDocument(del);
+                    indexer.deleteDocument(del);
                 } catch (IOException e) {
                     ZimbraLog.index.warn("Failed to delete index documents", e);
                 }
@@ -744,7 +754,7 @@ public final class MailboxIndex {
                 ZimbraLog.mailbox.debug("index item=%s", entry);
 
                 try {
-                    indexStore.addDocument(entry.item, entry.documents);
+                    indexer.addDocument(entry.item, entry.documents);
                 } catch (IOException e) {
                     ZimbraLog.index.warn("Failed to index item=%s", entry, e);
                     lastFailedTime = System.currentTimeMillis();
@@ -754,9 +764,9 @@ public final class MailboxIndex {
             }
         } finally {
             try {
-                indexStore.endWrite();
+                indexer.close();
             } catch (IOException e) {
-                ZimbraLog.index.error("Failed to commit IndexWriter", e);
+                ZimbraLog.index.error("Failed to close Indexer", e);
                 return;
             }
         }
@@ -801,6 +811,95 @@ public final class MailboxIndex {
             } finally {
                 mailbox.endTransaction(success);
             }
+        }
+        return result;
+    }
+
+    /**
+     * Returns all domain names from the index.
+     *
+     * @param field Lucene field name (e.g. LuceneFields.L_H_CC)
+     * @param regex matching pattern or null to match everything
+     * @return {@link BrowseTerm}s which correspond to all of the domain terms stored in a given field
+     */
+    public List<BrowseTerm> getDomains(String field, String regex) throws IOException {
+        Pattern pattern = Strings.isNullOrEmpty(regex) ? null : Pattern.compile(
+                regex.startsWith("@") ? regex : "@" + regex);
+        List<BrowseTerm> result = new ArrayList<BrowseTerm>();
+        Searcher searcher = indexStore.openSearcher();
+        try {
+            TermEnum terms = searcher.getTerms(new Term(field, ""));
+            do {
+                Term term = terms.term();
+                if (term == null || !term.field().equals(field)) {
+                    break;
+                }
+                String text = term.text();
+                // Domains are tokenized with '@' prefix. Exclude partial domain tokens.
+                if (text.startsWith("@") && text.contains(".")) {
+                    if (pattern == null || pattern.matcher(text).matches()) {
+                        result.add(new BrowseTerm(text.substring(1), terms.docFreq()));
+                    }
+                }
+            } while (terms.next());
+        } finally {
+            Closeables.closeQuietly(searcher);
+        }
+        return result;
+    }
+
+    /**
+     * Returns all attachment types from the index.
+     *
+     * @param regex matching pattern or null to match everything
+     * @return {@link BrowseTerm}s which correspond to all of the attachment types in the index
+     */
+    public List<BrowseTerm> getAttachmentTypes(String regex) throws IOException {
+        Pattern pattern = Strings.isNullOrEmpty(regex) ? null : Pattern.compile(regex);
+        List<BrowseTerm> result = new ArrayList<BrowseTerm>();
+        Searcher searcher = indexStore.openSearcher();
+        try {
+            TermEnum terms = searcher.getTerms(new Term(LuceneFields.L_ATTACHMENTS, ""));
+            do {
+                Term term = terms.term();
+                if (term == null || !term.field().equals(LuceneFields.L_ATTACHMENTS)) {
+                    break;
+                }
+                String text = term.text();
+                if (pattern == null || pattern.matcher(text).matches()) {
+                    result.add(new BrowseTerm(text, terms.docFreq()));
+                }
+            } while (terms.next());
+        } finally {
+            Closeables.closeQuietly(searcher);
+        }
+        return result;
+    }
+
+    /**
+     * Returns all objects (e.g. PO, etc) from the index.
+     *
+     * @param regex matching pattern or null to match everything
+     * @return {@link BrowseTerm}s which correspond to all of the objects in the index
+     */
+    public List<BrowseTerm> getObjects(String regex) throws IOException {
+        Pattern pattern = Strings.isNullOrEmpty(regex) ? null : Pattern.compile(regex);
+        List<BrowseTerm> result = new ArrayList<BrowseTerm>();
+        Searcher searcher = indexStore.openSearcher();
+        try {
+            TermEnum terms = searcher.getTerms(new Term(LuceneFields.L_OBJECTS, ""));
+            do {
+                Term term = terms.term();
+                if (term == null || !term.field().equals(LuceneFields.L_OBJECTS)) {
+                    break;
+                }
+                String text = term.text();
+                if (pattern == null || pattern.matcher(text).matches()) {
+                    result.add(new BrowseTerm(text, terms.docFreq()));
+                }
+            } while (terms.next());
+        } finally {
+            Closeables.closeQuietly(searcher);
         }
         return result;
     }
