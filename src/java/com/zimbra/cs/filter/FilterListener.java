@@ -41,7 +41,7 @@ public class FilterListener extends MailboxListener {
     
     @Override
     public void notify(ChangeNotification notification) {
-        if (notification.mods.modified != null) {
+        if (notification.mods.modified != null && notification.mods.preModifyItems != null) {
             for (PendingModifications.Change change : notification.mods.modified.values()) {
                 if (!EVENTS.contains(change.op))
                     continue;
@@ -59,7 +59,7 @@ public class FilterListener extends MailboxListener {
                 }
             }
         }
-        if (notification.mods.deleted != null) {
+        if (notification.mods.deleted != null && notification.mods.preModifyItems != null) {
             for (Object value : notification.mods.deleted.values()) {
                 if (value instanceof Folder) {
                     Folder folder = (Folder) value;
