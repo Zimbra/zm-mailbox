@@ -94,6 +94,7 @@ public final class Metadata {
     public static final String FN_SORT             = "s";
     public static final String FN_SYNC_DATE        = "sd";
     public static final String FN_SYNC_GUID        = "sg";
+    public static final String FN_REMINDER_ENABLED = "rem";
     public static final String FN_TOTAL_SIZE       = "sz";
     public static final String FN_RECIPIENTS       = "t";
     public static final String FN_TYPES            = "t";

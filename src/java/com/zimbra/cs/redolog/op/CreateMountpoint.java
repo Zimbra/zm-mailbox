@@ -37,6 +37,7 @@ public class CreateMountpoint extends RedoableOp {
     private MailItem.Type defaultView;
     private int mFlags;
     private long mColor;
+    private boolean mReminderEnabled;
 
     public CreateMountpoint() {
         super(MailboxOperation.CreateMountpoint);
@@ -44,7 +45,7 @@ public class CreateMountpoint extends RedoableOp {
     }
 
     public CreateMountpoint(int mailboxId, int folderId, String name, String ownerId, int remoteId, MailItem.Type view,
-            int flags, MailItem.Color color) {
+            int flags, MailItem.Color color, boolean reminderEnabled) {
         this();
         setMailboxId(mailboxId);
         mId = UNKNOWN_ID;
@@ -55,6 +56,7 @@ public class CreateMountpoint extends RedoableOp {
         defaultView = view;
         mFlags = flags;
         mColor = color.getValue();
+        mReminderEnabled = reminderEnabled;
     }
 
     public int getId() {
@@ -71,6 +73,7 @@ public class CreateMountpoint extends RedoableOp {
         sb.append(", name=").append(mName).append(", folder=").append(mFolderId);
         sb.append(", owner=").append(mOwnerId).append(", remote=").append(mRemoteId);
         sb.append(", view=").append(defaultView).append(", flags=").append(mFlags).append(", color=").append(mColor);
+        sb.append(", reminder=").append(mReminderEnabled);
         return sb.toString();
     }
 
@@ -83,8 +86,8 @@ public class CreateMountpoint extends RedoableOp {
         out.writeInt(mFolderId);
         out.writeByte(defaultView.toByte());
         out.writeInt(mFlags);
-        // mColor from byte to long in Version 1.27
-        out.writeLong(mColor);
+        out.writeLong(mColor);  // mColor from byte to long in Version 1.27
+        out.writeBoolean(mReminderEnabled);  // since version 1.33
     }
 
     @Override
@@ -101,6 +104,9 @@ public class CreateMountpoint extends RedoableOp {
         } else {
             mColor = in.readByte();
         }
+        if (getVersion().atLeast(1, 33)) {
+            mReminderEnabled = in.readBoolean();
+        }
     }
 
     @Override
@@ -110,7 +116,7 @@ public class CreateMountpoint extends RedoableOp {
 
         try {
             mailbox.createMountpoint(getOperationContext(), mFolderId, mName, mOwnerId, mRemoteId, defaultView, mFlags,
-                    MailItem.Color.fromMetadata(mColor));
+                    MailItem.Color.fromMetadata(mColor), mReminderEnabled);
         } catch (MailServiceException e) {
             if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
                 if (mLog.isInfoEnabled()) {

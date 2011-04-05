@@ -72,6 +72,7 @@ public class CreateMountpoint extends MailDocumentHandler {
         String rgb       = t.getAttribute(MailConstants.A_RGB, null);
         ItemId iidParent = new ItemId(t.getAttribute(MailConstants.A_FOLDER), zsc);
         boolean fetchIfExists = t.getAttributeBool(MailConstants.A_FETCH_IF_EXISTS, false);
+        boolean reminderEnabled = t.getAttributeBool(MailConstants.A_REMINDER, false);
 
         Account target = null;
         String ownerId = t.getAttribute(MailConstants.A_ZIMBRA_ID, null);
@@ -97,7 +98,7 @@ public class CreateMountpoint extends MailDocumentHandler {
         try {
             MailItem.Color itemColor = rgb != null ? new MailItem.Color(rgb) : new MailItem.Color(color);
             mpt = mbox.createMountpoint(octxt, iidParent.getId(), name, ownerId, remoteId, MailItem.Type.of(view),
-                    Flag.toBitmask(flags), itemColor);
+                    Flag.toBitmask(flags), itemColor, reminderEnabled);
         } catch (ServiceException se) {
             if (se.getCode() == MailServiceException.ALREADY_EXISTS && fetchIfExists) {
                 Folder folder = mbox.getFolderByName(octxt, iidParent.getId(), name);

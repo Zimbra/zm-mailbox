@@ -94,7 +94,8 @@ public enum MailboxOperation {
     PurgeRevision(76),
     DeleteItemFromDumpster(77),
     FixCalendarItemPriority(78),
-    RecoverItem(79);
+    RecoverItem(79),
+    EnableSharedReminder(80);
     
     private MailboxOperation(int c) {
         code = c;

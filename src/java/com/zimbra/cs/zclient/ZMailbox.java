@@ -3150,6 +3150,7 @@ public class ZMailbox implements ToZJSONObject {
      * @param owner either the id or name of the owner
      * @param itemBy used to specify whether sharedItem is an id or path to the shared item
      * @param sharedItem either the id or path of the item
+     * @param reminderEnabled whether client should show reminders on appointments/tasks
      *
      * @return newly created folder
      * @throws ServiceException on error
@@ -3158,7 +3159,8 @@ public class ZMailbox implements ToZJSONObject {
      */
     public ZMountpoint createMountpoint(String parentId, String name,
             ZFolder.View defaultView, ZFolder.Color color, String flags,
-            OwnerBy ownerBy, String owner, SharedItemBy itemBy, String sharedItem) throws ServiceException {
+            OwnerBy ownerBy, String owner, SharedItemBy itemBy, String sharedItem,
+            boolean reminderEnabled) throws ServiceException {
         Element req = newRequestElement(MailConstants.CREATE_MOUNTPOINT_REQUEST);
         Element linkEl = req.addUniqueElement(MailConstants.E_MOUNT);
         linkEl.addAttribute(MailConstants.A_NAME, name);
@@ -3168,9 +3170,24 @@ public class ZMailbox implements ToZJSONObject {
         if (flags != null) linkEl.addAttribute(MailConstants.A_FLAGS, flags);
         linkEl.addAttribute(ownerBy == OwnerBy.BY_ID ? MailConstants.A_ZIMBRA_ID : MailConstants.A_OWNER_NAME, owner);
         linkEl.addAttribute(itemBy == SharedItemBy.BY_ID ? MailConstants.A_REMOTE_ID: MailConstants.A_PATH, sharedItem);
+        linkEl.addAttribute(MailConstants.A_REMINDER, reminderEnabled);
         Element newMountEl = invoke(req).getElement(MailConstants.E_MOUNT);
         ZMountpoint newMount = getMountpointById(newMountEl.getAttribute(MailConstants.A_ID));
         return newMount != null ? newMount : new ZMountpoint(newMountEl, null, this);
+    }
+
+    /**
+     * enable/disable displaying reminder for shared appointments/tasks
+     * @param mountpointId
+     * @param reminderEnabled
+     * @throws ServiceException
+     */
+    public void enableSharedReminder(String mountpointId, boolean reminderEnabled) throws ServiceException {
+        Element req = newRequestElement(MailConstants.ENABLE_SHARED_REMINDER_REQUEST);
+        Element linkEl = req.addUniqueElement(MailConstants.E_MOUNT);
+        linkEl.addAttribute(MailConstants.A_ID, mountpointId);
+        linkEl.addAttribute(MailConstants.A_REMINDER, reminderEnabled);
+        invoke(req);
     }
 
     /**

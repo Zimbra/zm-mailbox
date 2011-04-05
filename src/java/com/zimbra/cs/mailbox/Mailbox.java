@@ -6645,13 +6645,15 @@ public class Mailbox {
     }
 
     public synchronized Mountpoint createMountpoint(OperationContext octxt, int folderId, String name,
-            String ownerId, int remoteId, MailItem.Type view, int flags, byte color) throws ServiceException {
-        return createMountpoint(octxt, folderId, name, ownerId, remoteId, view, flags, new MailItem.Color(color));
+            String ownerId, int remoteId, MailItem.Type view, int flags, byte color, boolean showReminders)
+    throws ServiceException {
+        return createMountpoint(octxt, folderId, name, ownerId, remoteId, view, flags, new MailItem.Color(color), showReminders);
     }
 
     public synchronized Mountpoint createMountpoint(OperationContext octxt, int folderId, String name,
-            String ownerId, int remoteId, MailItem.Type view, int flags, MailItem.Color color) throws ServiceException {
-        CreateMountpoint redoRecorder = new CreateMountpoint(mId, folderId, name, ownerId, remoteId, view, flags, color);
+            String ownerId, int remoteId, MailItem.Type view, int flags, MailItem.Color color, boolean showReminders)
+    throws ServiceException {
+        CreateMountpoint redoRecorder = new CreateMountpoint(mId, folderId, name, ownerId, remoteId, view, flags, color, showReminders);
 
         boolean success = false;
         try {
@@ -6659,10 +6661,26 @@ public class Mailbox {
             CreateMountpoint redoPlayer = (CreateMountpoint) mCurrentChange.getRedoPlayer();
 
             int mptId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getId());
-            Mountpoint mpt = Mountpoint.create(mptId, getFolderById(folderId), name, ownerId, remoteId, view, flags, color, null);
+            Mountpoint mpt = Mountpoint.create(mptId, getFolderById(folderId), name, ownerId, remoteId, view, flags,
+                    color, showReminders, null);
             redoRecorder.setId(mpt.getId());
             success = true;
             return mpt;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public synchronized void enableSharedReminder(OperationContext octxt, int mountpointId, boolean enable)
+    throws ServiceException {
+        EnableSharedReminder redoRecorder = new EnableSharedReminder(mId, mountpointId, enable);
+
+        boolean success = false;
+        try {
+            beginTransaction("enableSharedReminders", octxt, redoRecorder);
+            Mountpoint mpt = getMountpointById(octxt, mountpointId);
+            mpt.enableReminder(enable);
+            success = true;
         } finally {
             endTransaction(success);
         }

@@ -383,6 +383,9 @@ public class ToXML {
                 elem.addAttribute(MailConstants.A_DEFAULT_VIEW, mpt.getDefaultView().toString());
             }
         }
+        if (needToOutput(fields, Change.MODIFIED_SHAREDREM)) {
+            elem.addAttribute(MailConstants.A_REMINDER, mpt.isReminderEnabled());
+        }
         return elem;
     }
 

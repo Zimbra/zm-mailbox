@@ -87,8 +87,9 @@ public class MailService implements DocumentService {
         dispatcher.registerHandler(MailConstants.CREATE_SEARCH_FOLDER_REQUEST, new CreateSearchFolder());
         dispatcher.registerHandler(MailConstants.MODIFY_SEARCH_FOLDER_REQUEST, new ModifySearchFolder());
 
-        // saved searches
+        // mountpoints
         dispatcher.registerHandler(MailConstants.CREATE_MOUNTPOINT_REQUEST, new CreateMountpoint());
+        dispatcher.registerHandler(MailConstants.ENABLE_SHARED_REMINDER_REQUEST, new EnableSharedReminder());
 
         // contacts
         dispatcher.registerHandler(MailConstants.GET_CONTACTS_REQUEST, new GetContacts());

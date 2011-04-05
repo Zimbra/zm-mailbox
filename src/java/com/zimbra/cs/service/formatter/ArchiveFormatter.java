@@ -1284,7 +1284,7 @@ public abstract class ArchiveFormatter extends Formatter {
                     newItem = mbox.createMountpoint(context.opContext,
                         fldr.getId(), mp.getName(), mp.getOwnerId(),
                         mp.getRemoteId(), mp.getDefaultView(),
-                        mp.getFlagBitmask(), mp.getColor());
+                        mp.getFlagBitmask(), mp.getColor(), mp.isReminderEnabled());
                 }
                 break;
             case NOTE:

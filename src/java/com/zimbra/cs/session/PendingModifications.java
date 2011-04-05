@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Set;
 
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -57,6 +56,7 @@ public final class PendingModifications {
         public static final int MODIFIED_ACL       = 0x00200000;
         public static final int MODIFIED_CONFLICT  = 0x00400000;
         public static final int MODIFIED_LOCK      = 0x00800000;
+        public static final int MODIFIED_SHAREDREM = 0x01000000;
         public static final int INTERNAL_ONLY      = 0x10000000;
         public static final int ALL_FIELDS         = ~0;
 
@@ -105,6 +105,7 @@ public final class PendingModifications {
             if ((why & MODIFIED_ACL) != 0)       sb.append(" ACL");
             if ((why & MODIFIED_CONFLICT) != 0)  sb.append(" CONFLICT");
             if ((why & MODIFIED_LOCK) != 0)      sb.append(" LOCK");
+            if ((why & MODIFIED_SHAREDREM) != 0) sb.append(" SHAREDREM");
             if ((why & INTERNAL_ONLY) != 0)      sb.append(" **INTERNAL**");
 
             return sb.toString();

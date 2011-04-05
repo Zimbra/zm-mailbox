@@ -800,7 +800,8 @@ extends Assert {
         remoteMbox.modifyFolderGrant(
             remoteFolder.getId(), GranteeType.all, null, "rwidx", null);
         return localMbox.createMountpoint(Integer.toString(Mailbox.ID_FOLDER_USER_ROOT),
-            mountpointName, null, null, null, OwnerBy.BY_ID, remoteInfo.getId(), SharedItemBy.BY_ID, remoteFolder.getId());
+            mountpointName, null, null, null,
+            OwnerBy.BY_ID, remoteInfo.getId(), SharedItemBy.BY_ID, remoteFolder.getId(), false);
     }
 
     /**

@@ -335,7 +335,7 @@ public class ZMailboxUtil implements DebugListener {
         CREATE_CONTACT("createContact", "cct", "[attr1 value1 [attr2 value2...]]", "create contact", Category.CONTACT, 2, Integer.MAX_VALUE, O_FOLDER, O_IGNORE, O_TAGS),
         CREATE_FOLDER("createFolder", "cf", "{folder-path}", "create folder", Category.FOLDER, 1, 1, O_VIEW, O_COLOR, O_FLAGS, O_URL),
         CREATE_IDENTITY("createIdentity", "cid", "{identity-name} [attr1 value1 [attr2 value2...]]", "create identity", Category.ACCOUNT, 1, Integer.MAX_VALUE),
-        CREATE_MOUNTPOINT("createMountpoint", "cm", "{folder-path} {owner-id-or-name} {remote-item-id-or-path}", "create mountpoint", Category.FOLDER, 3, 3, O_VIEW, O_COLOR, O_FLAGS),
+        CREATE_MOUNTPOINT("createMountpoint", "cm", "{folder-path} {owner-id-or-name} {remote-item-id-or-path} [{reminder-enabled (0*|1)}]", "create mountpoint", Category.FOLDER, 3, 4, O_VIEW, O_COLOR, O_FLAGS),
         CREATE_SEARCH_FOLDER("createSearchFolder", "csf", "{folder-path} {query}", "create search folder", Category.FOLDER, 2, 2, O_SORT, O_TYPES, O_COLOR),
         CREATE_SIGNATURE("createSignature", "csig", "{signature-name} [signature-value}", "create signature", Category.ACCOUNT, 2, 2),
         CREATE_TAG("createTag", "ct", "{tag-name}", "create tag", Category.TAG, 1, 1, O_COLOR),
@@ -397,6 +397,7 @@ public class ZMailboxUtil implements DebugListener {
         MODIFY_FOLDER_URL("modifyFolderURL", "mfu", "{folder-path} {url}", "modify a folder's URL", Category.FOLDER, 2, 2),
         MODIFY_IDENTITY("modifyIdentity", "mid", "{identity-name} [attr1 value1 [attr2 value2...]]", "modify an identity", Category.ACCOUNT, 1, Integer.MAX_VALUE),
         MODIFY_ITEM_FLAGS("modifyItemFlags", "mif", "{item-ids} {item-flags}", "replaces the flags on the items (answered, unread, flagged, etc.)", Category.ITEM, 2, 2),
+        MODIFY_MOUNTPOINT_ENABLE_SHARED_REMINDER("modifyMountpointEnableSharedReminder", "mmesr", "{mountpoint-path} {0|1}", "enable/disable appointment/task reminder on shared calendar", Category.FOLDER, 2, 2),
         MODIFY_SIGNATURE("modifySignature", "msig", "{signature-name|signature-id} {value}", "modify signature value", Category.ACCOUNT, 2, 2),
         MODIFY_TAG_COLOR("modifyTagColor", "mtc", "{tag-name} {tag-color}", "modify a tag's color", Category.TAG, 2, 2),
         MOVE_CONTACT("moveContact", "mct", "{contact-ids} {dest-folder-path}", "move contact(s) to a new folder", Category.CONTACT, 2, 2),
@@ -1115,6 +1116,9 @@ public class ZMailboxUtil implements DebugListener {
             break;
         case MODIFY_ITEM_FLAGS:
             mMbox.updateItem(id(args[0]), null, null, args[1], null);
+            break;
+        case MODIFY_MOUNTPOINT_ENABLE_SHARED_REMINDER:
+            mMbox.enableSharedReminder(lookupFolderId(args[0]), paramb(args, 1, false));
             break;
         case MODIFY_SIGNATURE:
             doModifySignature(args);
@@ -1863,6 +1867,7 @@ public class ZMailboxUtil implements DebugListener {
         String cmPath = args[0];
         String cmOwner = args[1];
         String cmItem = args[2];
+        boolean reminderEnabled = paramb(args, 3, false);
 
         OwnerBy ownerBy = OwnerBy.BY_NAME;
         if (Provisioning.isUUID(cmOwner))
@@ -1881,17 +1886,13 @@ public class ZMailboxUtil implements DebugListener {
             }
         }
 
-        ZMountpoint cm = mMbox.createMountpoint(
-                    lookupFolderId(cmPath, true),
-                    ZMailbox.getBasePath(cmPath),
-                    folderViewOpt(),
-                    folderColorOpt(),
-                    flagsOpt(),
-                    ownerBy,
-                    cmOwner,
-                    sharedItemBy,
-                    sharedItem);
+        ZMountpoint cm = mMbox.createMountpoint(lookupFolderId(cmPath, true), ZMailbox.getBasePath(cmPath),
+                    folderViewOpt(), folderColorOpt(), flagsOpt(), ownerBy, cmOwner, sharedItemBy, sharedItem, reminderEnabled);
         stdout.println(cm.getId());
+    }
+
+    private void doEnableSharedReminder(String args[]) throws ServiceException {
+        
     }
 
     private void doSearch(String[] args) throws ServiceException {
