@@ -95,6 +95,8 @@ public final class MailConstants {
     public static final String E_MODIFY_SEARCH_FOLDER_RESPONSE = "ModifySearchFolderResponse";
     public static final String E_CREATE_MOUNTPOINT_REQUEST = "CreateMountpointRequest";
     public static final String E_CREATE_MOUNTPOINT_RESPONSE = "CreateMountpointResponse";
+    public static final String E_ENABLE_SHARED_REMINDER_REQUEST = "EnableSharedReminderRequest";
+    public static final String E_ENABLE_SHARED_REMINDER_RESPONSE = "EnableSharedReminderResponse";
     public static final String E_CREATE_CONTACT_REQUEST = "CreateContactRequest";
     public static final String E_CREATE_CONTACT_RESPONSE = "CreateContactResponse";
     public static final String E_MODIFY_CONTACT_REQUEST = "ModifyContactRequest";
@@ -323,6 +325,8 @@ public final class MailConstants {
     // mountpoints
     public static final QName CREATE_MOUNTPOINT_REQUEST = QName.get(E_CREATE_MOUNTPOINT_REQUEST, NAMESPACE);
     public static final QName CREATE_MOUNTPOINT_RESPONSE = QName.get(E_CREATE_MOUNTPOINT_RESPONSE, NAMESPACE);
+    public static final QName ENABLE_SHARED_REMINDER_REQUEST = QName.get(E_ENABLE_SHARED_REMINDER_REQUEST, NAMESPACE);
+    public static final QName ENABLE_SHARED_REMINDER_RESPONSE = QName.get(E_ENABLE_SHARED_REMINDER_RESPONSE, NAMESPACE);
     // contacts
     public static final QName CREATE_CONTACT_REQUEST = QName.get(E_CREATE_CONTACT_REQUEST, NAMESPACE);
     public static final QName CREATE_CONTACT_RESPONSE = QName.get(E_CREATE_CONTACT_RESPONSE, NAMESPACE);
@@ -665,6 +669,7 @@ public final class MailConstants {
     public static final String A_CSVSEPARATOR = "csvsep";
     public static final String A_NEED_GRANTEE_NAME = "needGranteeName";
     public static final String A_INVALID = "invalid";
+    public static final String A_REMINDER = "reminder";
 
 
     // messages
