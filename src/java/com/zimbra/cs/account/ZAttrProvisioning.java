@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110402-2122 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110405-1515 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -892,6 +892,24 @@ public class ZAttrProvisioning {
         public boolean isBottom() { return this == bottom;}
         public boolean isOff() { return this == off;}
         public boolean isRight() { return this == right;}
+    }
+
+    public static enum ReverseProxyClientCertMode {
+        optional("optional"),
+        off("off"),
+        on("on");
+        private String mValue;
+        private ReverseProxyClientCertMode(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static ReverseProxyClientCertMode fromString(String s) throws ServiceException {
+            for (ReverseProxyClientCertMode value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isOptional() { return this == optional;}
+        public boolean isOff() { return this == off;}
+        public boolean isOn() { return this == on;}
     }
 
     public static enum ReverseProxyImapStartTlsMode {
@@ -7578,6 +7596,24 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=730)
     public static final String A_zimbraReverseProxyCacheReconnectInterval = "zimbraReverseProxyCacheReconnectInterval";
+
+    /**
+     * CA certificate for authenticating client certificates in nginx proxy
+     * (https only)
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=2001)
+    public static final String A_zimbraReverseProxyClientCertCA = "zimbraReverseProxyClientCertCA";
+
+    /**
+     * enable authentication via X.509 Client Certificate in nginx proxy
+     * (https only)
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=2000)
+    public static final String A_zimbraReverseProxyClientCertMode = "zimbraReverseProxyClientCertMode";
 
     /**
      * Time interval after which NGINX mail proxy will disconnect while

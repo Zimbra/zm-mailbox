@@ -41,7 +41,7 @@ public class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110402-2122 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110405-1515 */
 
     /**
      * RFC2256: descriptive information
@@ -10441,6 +10441,222 @@ public class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetResponseHeader(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraResponseHeader, "");
+        return attrs;
+    }
+
+    /**
+     * CA certificate for authenticating client certificates in nginx proxy
+     * (https only)
+     *
+     * @return zimbraReverseProxyClientCertCA, or null if unset
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=2001)
+    public String getReverseProxyClientCertCA() {
+        return getAttr(Provisioning.A_zimbraReverseProxyClientCertCA, null);
+    }
+
+    /**
+     * CA certificate for authenticating client certificates in nginx proxy
+     * (https only)
+     *
+     * @param zimbraReverseProxyClientCertCA new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=2001)
+    public void setReverseProxyClientCertCA(String zimbraReverseProxyClientCertCA) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyClientCertCA, zimbraReverseProxyClientCertCA);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * CA certificate for authenticating client certificates in nginx proxy
+     * (https only)
+     *
+     * @param zimbraReverseProxyClientCertCA new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=2001)
+    public Map<String,Object> setReverseProxyClientCertCA(String zimbraReverseProxyClientCertCA, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyClientCertCA, zimbraReverseProxyClientCertCA);
+        return attrs;
+    }
+
+    /**
+     * CA certificate for authenticating client certificates in nginx proxy
+     * (https only)
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=2001)
+    public void unsetReverseProxyClientCertCA() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyClientCertCA, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * CA certificate for authenticating client certificates in nginx proxy
+     * (https only)
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=2001)
+    public Map<String,Object> unsetReverseProxyClientCertCA(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyClientCertCA, "");
+        return attrs;
+    }
+
+    /**
+     * enable authentication via X.509 Client Certificate in nginx proxy
+     * (https only)
+     *
+     * <p>Valid values: [off, on, optional]
+     *
+     * @return zimbraReverseProxyClientCertMode, or ZAttrProvisioning.ReverseProxyClientCertMode.off if unset and/or has invalid value
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=2000)
+    public ZAttrProvisioning.ReverseProxyClientCertMode getReverseProxyClientCertMode() {
+        try { String v = getAttr(Provisioning.A_zimbraReverseProxyClientCertMode); return v == null ? ZAttrProvisioning.ReverseProxyClientCertMode.off : ZAttrProvisioning.ReverseProxyClientCertMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.ReverseProxyClientCertMode.off; }
+    }
+
+    /**
+     * enable authentication via X.509 Client Certificate in nginx proxy
+     * (https only)
+     *
+     * <p>Valid values: [off, on, optional]
+     *
+     * @return zimbraReverseProxyClientCertMode, or "off" if unset
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=2000)
+    public String getReverseProxyClientCertModeAsString() {
+        return getAttr(Provisioning.A_zimbraReverseProxyClientCertMode, "off");
+    }
+
+    /**
+     * enable authentication via X.509 Client Certificate in nginx proxy
+     * (https only)
+     *
+     * <p>Valid values: [off, on, optional]
+     *
+     * @param zimbraReverseProxyClientCertMode new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=2000)
+    public void setReverseProxyClientCertMode(ZAttrProvisioning.ReverseProxyClientCertMode zimbraReverseProxyClientCertMode) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyClientCertMode, zimbraReverseProxyClientCertMode.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * enable authentication via X.509 Client Certificate in nginx proxy
+     * (https only)
+     *
+     * <p>Valid values: [off, on, optional]
+     *
+     * @param zimbraReverseProxyClientCertMode new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=2000)
+    public Map<String,Object> setReverseProxyClientCertMode(ZAttrProvisioning.ReverseProxyClientCertMode zimbraReverseProxyClientCertMode, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyClientCertMode, zimbraReverseProxyClientCertMode.toString());
+        return attrs;
+    }
+
+    /**
+     * enable authentication via X.509 Client Certificate in nginx proxy
+     * (https only)
+     *
+     * <p>Valid values: [off, on, optional]
+     *
+     * @param zimbraReverseProxyClientCertMode new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=2000)
+    public void setReverseProxyClientCertModeAsString(String zimbraReverseProxyClientCertMode) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyClientCertMode, zimbraReverseProxyClientCertMode);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * enable authentication via X.509 Client Certificate in nginx proxy
+     * (https only)
+     *
+     * <p>Valid values: [off, on, optional]
+     *
+     * @param zimbraReverseProxyClientCertMode new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=2000)
+    public Map<String,Object> setReverseProxyClientCertModeAsString(String zimbraReverseProxyClientCertMode, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyClientCertMode, zimbraReverseProxyClientCertMode);
+        return attrs;
+    }
+
+    /**
+     * enable authentication via X.509 Client Certificate in nginx proxy
+     * (https only)
+     *
+     * <p>Valid values: [off, on, optional]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=2000)
+    public void unsetReverseProxyClientCertMode() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyClientCertMode, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * enable authentication via X.509 Client Certificate in nginx proxy
+     * (https only)
+     *
+     * <p>Valid values: [off, on, optional]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=2000)
+    public Map<String,Object> unsetReverseProxyClientCertMode(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyClientCertMode, "");
         return attrs;
     }
 

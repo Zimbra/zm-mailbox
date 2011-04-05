@@ -5505,4 +5505,13 @@ TODO: delete them permerntly from here
   <desc>SSL port requesting client certificate for end-user UI</desc>
 </attr>
 
+<attr id="2000" name="zimbraReverseProxyClientCertMode" type="enum" value="on,off,optional" cardinality="single" optionalIn="globalConfig,server,domain" flags="serverInherited,domainInherited" since="7.1.1">
+  <globalConfigValue>off</globalConfigValue>
+  <desc>enable authentication via X.509 Client Certificate in nginx proxy (https only)</desc>
+</attr>
+
+<attr id="2001" name="zimbraReverseProxyClientCertCA" type="astring" cardinality="single" optionalIn="globalConfig,server,domain" flags="serverInherited,domainInherited" since="7.1.1">
+  <desc>CA certificate for authenticating client certificates in nginx proxy (https only)</desc>
+</attr>
+
 </attrs>
