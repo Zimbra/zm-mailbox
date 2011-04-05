@@ -71,6 +71,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.datasource.DataSourceManager;
+import com.zimbra.cs.db.DbMailAddress;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
@@ -180,42 +181,44 @@ public class Mailbox {
 
     static final String MD_CONFIG_VERSION = "ver";
 
-
     public static final class MailboxData implements Cloneable {
-        public int     id;
-        public int     schemaGroupId;
-        public String  accountId;
-        public long    size;
-        public int     contacts;
-        public short   indexVolumeId;
-        public int     lastBackupDate;
-        public int     lastItemId;
-        public int     lastChangeId;
-        public long    lastChangeDate;
-        public int     lastWriteDate;
-        public int     recentMessages;
-        public int     trackSync;
+        public int id;
+        public int schemaGroupId;
+        public String accountId;
+        public long size;
+        public int contacts;
+        public short indexVolumeId;
+        public int lastBackupDate;
+        public int lastItemId;
+        public int lastAddressId;
+        public int lastChangeId;
+        public long lastChangeDate;
+        public int lastWriteDate;
+        public int recentMessages;
+        public int trackSync;
         public boolean trackImap;
         public Set<String> configKeys;
 
         @Override
         protected MailboxData clone() {
             MailboxData mbd = new MailboxData();
-            mbd.id             = id;
-            mbd.schemaGroupId  = schemaGroupId;
-            mbd.accountId      = accountId;
-            mbd.size           = size;
-            mbd.contacts       = contacts;
-            mbd.indexVolumeId  = indexVolumeId;
-            mbd.lastItemId     = lastItemId;
-            mbd.lastChangeId   = lastChangeId;
+            mbd.id = id;
+            mbd.schemaGroupId = schemaGroupId;
+            mbd.accountId = accountId;
+            mbd.size = size;
+            mbd.contacts = contacts;
+            mbd.indexVolumeId = indexVolumeId;
+            mbd.lastItemId = lastItemId;
+            mbd.lastAddressId = lastAddressId;
+            mbd.lastChangeId  = lastChangeId;
             mbd.lastChangeDate = lastChangeDate;
-            mbd.lastWriteDate  = lastWriteDate;
+            mbd.lastWriteDate = lastWriteDate;
             mbd.recentMessages = recentMessages;
-            mbd.trackSync      = trackSync;
-            mbd.trackImap      = trackImap;
-            if (configKeys != null)
+            mbd.trackSync = trackSync;
+            mbd.trackImap = trackImap;
+            if (configKeys != null) {
                 mbd.configKeys = new HashSet<String>(configKeys);
+            }
             return mbd;
         }
     }
@@ -238,24 +241,25 @@ public class Mailbox {
     private final class MailboxChange {
         private static final int NO_CHANGE = -1;
 
-        long       timestamp = System.currentTimeMillis();
-        int        depth     = 0;
-        boolean    active;
-        DbConnection conn      = null;
-        RedoableOp recorder  = null;
+        long timestamp = System.currentTimeMillis();
+        int depth = 0;
+        boolean active;
+        DbConnection conn = null;
+        RedoableOp recorder = null;
         List<IndexItemEntry> indexItems = new ArrayList<IndexItemEntry>();
         Map<Integer, MailItem> itemCache = null;
         OperationContext octxt = null;
         TargetConstraint tcon  = null;
 
-        Integer sync     = null;
-        Boolean imap     = null;
-        long    size     = NO_CHANGE;
-        int     itemId   = NO_CHANGE;
-        int     changeId = NO_CHANGE;
-        int     contacts = NO_CHANGE;
-        int     accessed = NO_CHANGE;
-        int     recent   = NO_CHANGE;
+        Integer sync = null;
+        Boolean imap = null;
+        long size = NO_CHANGE;
+        int itemId = NO_CHANGE;
+        int addressId = NO_CHANGE;
+        int changeId = NO_CHANGE;
+        int contacts = NO_CHANGE;
+        int accessed = NO_CHANGE;
+        int recent = NO_CHANGE;
         Pair<String, Metadata> config = null;
 
         PendingModifications mDirty = new PendingModifications();
@@ -354,13 +358,24 @@ public class Mailbox {
                 DbPool.quietClose(conn);
             }
             active = false;
-            conn = null;  octxt = null;  tcon = null;
+            conn = null;
+            octxt = null;
+            tcon = null;
             depth = 0;
-            size = changeId = itemId = contacts = accessed = recent = NO_CHANGE;
-            sync = null;  config = null;  deletes = null;
+            size = NO_CHANGE;
+            changeId = NO_CHANGE;
+            itemId = NO_CHANGE;
+            addressId = NO_CHANGE;
+            contacts = NO_CHANGE;
+            accessed = NO_CHANGE;
+            recent = NO_CHANGE;
+            sync = null;
+            config = null;
+            deletes = null;
             itemCache = null;
             indexItems.clear();
-            mDirty.clear();  mOtherDirtyStuff.clear();
+            mDirty.clear();
+            mOtherDirtyStuff.clear();
 
             ZimbraLog.mailbox.debug("clearing change");
         }
@@ -799,6 +814,10 @@ public class Mailbox {
         return nextId;
     }
 
+    int getNextAddressId() {
+        int last = mCurrentChange.addressId == MailboxChange.NO_CHANGE ? mData.lastAddressId : mCurrentChange.addressId;
+        return mCurrentChange.addressId = ++last;
+    }
 
     TargetConstraint getOperationTargetConstraint() {
         return mCurrentChange.tcon;
@@ -5082,6 +5101,26 @@ public class Mailbox {
         }
     }
 
+    /**
+     * Resets all INDEX_ID and SENDER_ID in MAIL_ITEM table, delete all rows in MAIL_ADDRESS table, and reset the
+     * lastAddressId. The caller must hold the mailbox lock.
+     */
+    void resetIndex() throws ServiceException {
+        assert(Thread.holdsLock(this));
+
+        boolean success = false;
+        try {
+            beginTransaction("resetIndex", null);
+            DbMailItem.resetIndexId(getOperationConnection(), this);
+            DbMailItem.resetSenderId(getOperationConnection(), this);
+            DbMailAddress.delete(getOperationConnection(), this);
+            mData.lastAddressId = 0;
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
     public synchronized void setColor(OperationContext octxt, int itemId, MailItem.Type type, byte color)
             throws ServiceException {
         setColor(octxt, new int[] { itemId }, type, color);
@@ -6090,6 +6129,17 @@ public class Mailbox {
 
                 sm.quietDelete(staged);
             }
+        }
+    }
+
+    synchronized void rebuildMailAddressTable() throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("DbMailAddress.rebuild", null);
+            mCurrentChange.addressId = DbMailAddress.rebuild(getOperationConnection(), this, mData.lastAddressId);
+            success = true;
+        } finally {
+            endTransaction(success);
         }
     }
 
@@ -7530,6 +7580,9 @@ public class Mailbox {
             }
             if (change.itemId != MailboxChange.NO_CHANGE) {
                 mData.lastItemId = change.itemId;
+            }
+            if (change.addressId != MailboxChange.NO_CHANGE) {
+                mData.lastAddressId = change.addressId;
             }
             if (change.contacts != MailboxChange.NO_CHANGE) {
                 mData.contacts = change.contacts;

@@ -563,7 +563,7 @@ public class Message extends MailItem {
             String addr = sender.trim().toLowerCase();
             int senderId = DbMailAddress.getId(mbox.getOperationConnection(), mbox, addr);
             if (senderId < 0) {
-                senderId = DbMailAddress.save(mbox.getOperationConnection(), mbox, addr, 0);
+                senderId = new DbMailAddress(mbox).setId(mbox.getNextAddressId()).setAddress(addr).create();
             }
             return senderId;
         }

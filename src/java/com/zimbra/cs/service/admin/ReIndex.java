@@ -74,8 +74,7 @@ public final class ReIndex extends AdminDocumentHandler {
     }
 
     @Override
-    public Element handle(Element request, Map<String, Object> context)
-        throws ServiceException {
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
@@ -92,19 +91,15 @@ public final class ReIndex extends AdminDocumentHandler {
 
         if (account.isCalendarResource()) {
             // need a CalendarResource instance for RightChecker
-            CalendarResource resource = prov.get(CalendarResourceBy.id,
-                    account.getId());
-            checkCalendarResourceRight(zsc, resource,
-                    Admin.R_reindexCalendarResourceMailbox);
+            CalendarResource resource = prov.get(CalendarResourceBy.id, account.getId());
+            checkCalendarResourceRight(zsc, resource, Admin.R_reindexCalendarResourceMailbox);
         } else {
             checkAccountRight(zsc, account, Admin.R_reindexMailbox);
         }
 
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
-                account, false);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account, false);
         if (mbox == null) {
-            throw ServiceException.FAILURE(
-                    "mailbox not found for account " + accountId, null);
+            throw ServiceException.FAILURE("mailbox not found for account " + accountId, null);
         }
 
         Element response = zsc.createElement(AdminConstants.REINDEX_RESPONSE);
@@ -127,7 +122,7 @@ public final class ReIndex extends AdminDocumentHandler {
                     } catch (IllegalArgumentException e) {
                         throw MailServiceException.INVALID_TYPE(e.getMessage());
                     }
-                    mbox.index.startReIndexByType(getOperationContext(zsc, context), types);
+                    mbox.index.startReIndexByType(types);
                 } else if (idsStr != null) {
                     Set<Integer> ids = new HashSet<Integer>();
                     for (String id : Splitter.on(',').trimResults().split(idsStr)) {
@@ -137,9 +132,9 @@ public final class ReIndex extends AdminDocumentHandler {
                             ServiceException.INVALID_REQUEST("invalid item ID: " + id, e);
                         }
                     }
-                    mbox.index.startReIndexById(getOperationContext(zsc, context), ids);
+                    mbox.index.startReIndexById(ids);
                 } else {
-                    mbox.index.startReIndex(getOperationContext(zsc, context));
+                    mbox.index.startReIndex();
                 }
 
                 response.addAttribute(AdminConstants.A_STATUS, STATUS_STARTED);

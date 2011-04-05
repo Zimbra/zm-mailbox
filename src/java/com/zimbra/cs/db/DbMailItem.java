@@ -789,21 +789,31 @@ public class DbMailItem {
         }
     }
 
-    public static void resetIndexId(Mailbox mbox) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
-        DbConnection conn = mbox.getOperationConnection();
+    public static void resetIndexId(DbConnection conn, Mailbox mbox) throws ServiceException {
+        PreparedStatement stmt = null;
         try {
-            PreparedStatement stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox) +
+            stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox) +
                     " SET index_id = 0 WHERE " + IN_THIS_MAILBOX_AND + "index_id > 0");
-            try {
-                setMailboxId(stmt, mbox, 1);
-                stmt.executeUpdate();
-            } finally {
-                DbPool.closeStatement(stmt);
-            }
+            setMailboxId(stmt, mbox, 1);
+            stmt.executeUpdate();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("Failed to reset index_id", e);
+        } finally {
+            conn.closeQuietly(stmt);
+        }
+    }
+
+    public static void resetSenderId(DbConnection conn, Mailbox mbox) throws ServiceException {
+        PreparedStatement stmt = null;
+        try {
+            stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox) +
+                    " SET sender_id = NULL WHERE " + IN_THIS_MAILBOX_AND + "sender_id IS NOT NULL");
+            setMailboxId(stmt, mbox, 1);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Failed to reset sender_id", e);
+        } finally {
+            conn.closeQuietly(stmt);
         }
     }
 

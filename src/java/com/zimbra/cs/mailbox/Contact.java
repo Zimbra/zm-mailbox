@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -39,6 +38,7 @@ import org.json.JSONObject;
 import com.google.common.base.Objects;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
@@ -692,7 +692,8 @@ public class Contact extends MailItem {
             addr = addr.trim().toLowerCase();
             int id = DbMailAddress.getId(mMailbox.getOperationConnection(), mMailbox, addr);
             if (id < 0) {
-                DbMailAddress.save(mMailbox.getOperationConnection(), mMailbox, addr, 1);
+                new DbMailAddress(mMailbox).setId(mMailbox.getNextAddressId())
+                    .setAddress(addr).setContactCount(1).create();
             } else {
                 DbMailAddress.incCount(mMailbox.getOperationConnection(), mMailbox, id);
             }
@@ -903,15 +904,14 @@ public class Contact extends MailItem {
     public static boolean isGroup(Map<String,? extends Object> attrs) {
         return ContactConstants.TYPE_GROUP.equals(attrs.get(ContactConstants.A_type));
     }
-    
-    private static Set<String> SMIME_FIELDS = Collections.unmodifiableSet(new HashSet(Arrays.asList(new String[]{
-            ContactConstants.A_userCertificate,
-            ContactConstants.A_userSMIMECertificate})));
-     
+
+    private static Set<String> SMIME_FIELDS = ImmutableSet.of(
+            ContactConstants.A_userCertificate, ContactConstants.A_userSMIMECertificate);
+
     public static Set<String> getSMIMECertFields() {
         return SMIME_FIELDS;
     }
-    
+
     public static boolean isSMIMECertField(String fieldName) {
         return SMIME_FIELDS.contains(fieldName);
     }

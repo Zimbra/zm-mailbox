@@ -31,6 +31,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.db.DbMailAddress;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
@@ -454,22 +455,21 @@ public class MailboxManager {
 
         if (mbox == null) { // not found in cache
             ZimbraPerf.COUNTER_MBOX_CACHE.increment(0);
-            MailboxData data;
-            synchronized (DbMailbox.getSynchronizer()) {
-                DbConnection conn = null;
-                try {
+            DbConnection conn = DbPool.getConnection();
+            try {
+                MailboxData data;
+                synchronized (DbMailbox.getSynchronizer()) {
                     // fetch the Mailbox data from the database
-                    conn = DbPool.getConnection();
                     data = DbMailbox.getMailboxStats(conn, mailboxId);
-                    if (data == null)
+                    if (data == null) {
                         throw MailServiceException.NO_SUCH_MBOX(mailboxId);
-                } finally {
-                    if (conn != null)
-                        DbPool.quietClose(conn);
+                    }
                 }
+                mbox = instantiateMailbox(data);
+                data.lastAddressId = DbMailAddress.getLastId(conn, mbox);
+            } finally {
+                conn.closeQuietly();
             }
-
-            mbox = instantiateMailbox(data);
 
             if (!skipMailHostCheck) {
                 // The host check here makes sure that sessions that were

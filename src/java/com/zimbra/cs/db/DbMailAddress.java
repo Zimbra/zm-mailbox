@@ -20,6 +20,7 @@ import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbPool.DbConnection;
@@ -34,34 +35,57 @@ import com.zimbra.cs.mailbox.Metadata;
  * @author ysasaki
  */
 public final class DbMailAddress {
+    private final Mailbox mailbox;
+    private int id;
+    private String address;
+    private int contactCount = 0;
+
+    public DbMailAddress(Mailbox mbox) {
+        mailbox = mbox;
+    }
+
+    public DbMailAddress setId(int value) {
+        id = value;
+        return this;
+    }
+
+    public DbMailAddress setAddress(String value) {
+        address = value;
+        return this;
+    }
+
+    public DbMailAddress setContactCount(int value) {
+        contactCount = value;
+        return this;
+    }
 
     static String getTableName(Mailbox mbox) {
         return DbMailbox.qualifyTableName(mbox, "mail_address");
     }
 
-    public static int save(DbConnection conn, Mailbox mbox, String addr, int count) throws ServiceException {
+    public int create() throws ServiceException {
+        return create(mailbox.getOperationConnection());
+    }
+
+    @VisibleForTesting
+    int create(DbConnection conn) throws ServiceException {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement("INSERT INTO " + getTableName(mbox) +
-                    " (mailbox_id, address, contact_count) VALUES (?, ?, ?)",
-                    PreparedStatement.RETURN_GENERATED_KEYS);
-            stmt.setInt(1, mbox.getId());
-            stmt.setString(2, addr);
-            stmt.setInt(3, count);
+            stmt = conn.prepareStatement("INSERT INTO " + getTableName(mailbox) +
+                    " (mailbox_id, id, address, contact_count) VALUES (?, ?, ?, ?)");
+            stmt.setInt(1, mailbox.getId());
+            stmt.setInt(2, id);
+            stmt.setString(3, address);
+            stmt.setInt(4, contactCount);
             stmt.executeUpdate();
-            rs = stmt.getGeneratedKeys();
-            if (rs.next()) {
-                return rs.getInt(1);
-            } else {
-                throw ServiceException.FAILURE("Failed to get mail address ID", null);
-            }
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("Failed to save mail address", e);
+            throw ServiceException.FAILURE("Failed to create", e);
         } finally {
             conn.closeQuietly(rs);
             conn.closeQuietly(stmt);
         }
+        return id;
     }
 
     public static int delete(DbConnection conn, Mailbox mbox) throws ServiceException {
@@ -71,8 +95,28 @@ public final class DbMailAddress {
             stmt.setInt(1, mbox.getId());
             return stmt.executeUpdate();
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("Failed to delete mail addresses", e);
+            throw ServiceException.FAILURE("Failed to delete all", e);
         } finally {
+            conn.closeQuietly(stmt);
+        }
+    }
+
+    public static int getLastId(DbConnection conn, Mailbox mbox) throws ServiceException {
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement("SELECT MAX(id) FROM " + getTableName(mbox) + " WHERE mailbox_id = ?");
+            stmt.setInt(1, mbox.getId());
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            } else {
+                return 0;
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Failed to get last ID", e);
+        } finally {
+            conn.closeQuietly(rs);
             conn.closeQuietly(stmt);
         }
     }
@@ -92,7 +136,7 @@ public final class DbMailAddress {
                 return -1;
             }
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("Failed to get mail address ID", e);
+            throw ServiceException.FAILURE("Failed to get ID", e);
         } finally {
             conn.closeQuietly(rs);
             conn.closeQuietly(stmt);
@@ -102,7 +146,6 @@ public final class DbMailAddress {
     public static void incCount(DbConnection conn, Mailbox mbox, int id) throws ServiceException {
         PreparedStatement stmt = null;
         try {
-            // ID is unique in the table, but specify mailbox_id as a precaution
             stmt = conn.prepareStatement("UPDATE " + getTableName(mbox) +
                     " SET contact_count = contact_count + 1 WHERE mailbox_id = ? AND id = ?");
             stmt.setInt(1, mbox.getId());
@@ -134,7 +177,6 @@ public final class DbMailAddress {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            // ID is unique in the table, but specify mailbox_id as a precaution
             stmt = conn.prepareStatement("SELECT contact_count FROM " + getTableName(mbox) +
                     " WHERE mailbox_id = ? AND id = ?");
             stmt.setInt(1, mbox.getId());
@@ -157,7 +199,6 @@ public final class DbMailAddress {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            // ID is unique in the table, but specify mailbox_id as a precaution
             stmt = conn.prepareStatement("SELECT contact_count FROM " + getTableName(mbox) +
                     " WHERE mailbox_id = ? AND address = ?");
             stmt.setInt(1, mbox.getId());
@@ -176,7 +217,7 @@ public final class DbMailAddress {
         }
     }
 
-    public static void rebuild(DbConnection conn, Mailbox mbox) throws ServiceException {
+    public static int rebuild(DbConnection conn, Mailbox mbox, int lastAddressId) throws ServiceException {
         String[] emailFields = Contact.getEmailFields(mbox.getAccount());
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -208,12 +249,13 @@ public final class DbMailAddress {
                 for (String addr : emails) {
                     int senderId = DbMailAddress.getId(conn, mbox, addr);
                     if (senderId < 0) {
-                        DbMailAddress.save(conn, mbox, addr, 1);
+                        new DbMailAddress(mbox).setId(++lastAddressId).setAddress(addr).setContactCount(1).create(conn);
                     } else {
                         DbMailAddress.incCount(conn, mbox, senderId);
                     }
                 }
             }
+            return lastAddressId;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("Failed to rebuild", e);
         } finally {

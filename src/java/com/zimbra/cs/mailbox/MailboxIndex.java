@@ -49,7 +49,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.db.DbMailAddress;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
@@ -358,16 +357,16 @@ public final class MailboxIndex {
      * Kick off the requested re-index in a background thread. The re-index is run on a best-effort basis, if it fails
      * a WARN message is logged, but it won't be retried.
      */
-    public void startReIndex(OperationContext octx) throws ServiceException {
-        startReIndex(new ReIndexTask(octx, mailbox, null));
+    public void startReIndex() throws ServiceException {
+        startReIndex(new ReIndexTask(mailbox, null));
     }
 
-    public void startReIndexById(OperationContext octx, Collection<Integer> ids) throws ServiceException {
-        startReIndex(new ReIndexTask(octx, mailbox, ids));
+    public void startReIndexById(Collection<Integer> ids) throws ServiceException {
+        startReIndex(new ReIndexTask(mailbox, ids));
     }
 
-    public void startReIndexByType(OperationContext octx, Set<MailItem.Type> types) throws ServiceException {
-        startReIndexById(octx, DbMailItem.getReIndexIds(mailbox, types));
+    public void startReIndexByType(Set<MailItem.Type> types) throws ServiceException {
+        startReIndexById(DbMailItem.getReIndexIds(mailbox, types));
     }
 
     private synchronized void startReIndex(ReIndexTask task) throws ServiceException {
@@ -402,14 +401,12 @@ public final class MailboxIndex {
     }
 
     private class ReIndexTask extends IndexTask {
-        private final OperationContext octx;
         private final Collection<Integer> ids;
         private final ReIndexStatus status = new ReIndexStatus();
 
-        ReIndexTask(OperationContext octx, Mailbox mbox, Collection<Integer> ids) {
+        ReIndexTask(Mailbox mbox, Collection<Integer> ids) {
             super(mbox);
             assert(ids == null || !ids.isEmpty());
-            this.octx = octx;
             this.ids = ids;
         }
 
@@ -462,34 +459,21 @@ public final class MailboxIndex {
         void reIndex() throws ServiceException {
             if (ids == null) { // full re-index
                 synchronized (mailbox) {
-                    boolean success = false;
+                    ZimbraLog.index.info("Resetting DB index data");
+                    mailbox.resetIndex();
+                    ZimbraLog.index.info("Deleting Lucene index data");
                     try {
-                        mailbox.beginTransaction("re-index-fully", octx, null);
-                        ZimbraLog.index.info("Resetting all index IDs");
-                        DbMailItem.resetIndexId(mailbox);
-                        ZimbraLog.index.info("Deleting Lucene index data");
                         indexStore.deleteIndex();
-                        success = true;
                     } catch (IOException e) {
                         throw ServiceException.FAILURE("Failed to delete index before re-index", e);
-                    } finally {
-                        mailbox.endTransaction(success);
                     }
+                    clearDeferredIds();
                 }
-                clearDeferredIds();
                 ZimbraLog.index.info("Re-indexing all items");
                 indexDeferredItems(EnumSet.noneOf(MailItem.Type.class), status, true);
 
                 ZimbraLog.index.info("Rebuilding MAIL_ADDRESS table");
-                synchronized (mailbox) {
-                    boolean success = false;
-                    try {
-                        mailbox.beginTransaction("DbMailAddress.rebuild", octx, null);
-                        DbMailAddress.rebuild(mailbox.getOperationConnection(), mailbox);
-                    } finally {
-                        mailbox.endTransaction(success);
-                    }
-                }
+                mailbox.rebuildMailAddressTable();
             } else { // partial re-index
                 indexLock.acquireUninterruptibly();
                 try {
@@ -525,7 +509,7 @@ public final class MailboxIndex {
             }
         }
 
-        ReIndexTask task = new ReIndexTask(null, mailbox, ids) {
+        ReIndexTask task = new ReIndexTask(mailbox, ids) {
             @Override
             protected void onCompletion() {
                 try {
@@ -674,7 +658,7 @@ public final class MailboxIndex {
             if (ids.isEmpty()) {
                 return;
             }
-            ReIndexTask task = new ReIndexTask(null, mailbox, ids) {
+            ReIndexTask task = new ReIndexTask(mailbox, ids) {
                 @Override
                 protected void onCompletion() {
                     synchronized (mailbox) {
