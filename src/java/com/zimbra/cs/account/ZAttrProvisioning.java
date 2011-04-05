@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110402-1800 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110405-1454 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -952,15 +952,15 @@ public class ZAttrProvisioning {
         public boolean isRight() { return this == right;}
     }
 
-    public static enum ReverseProxyClientVerifyMode {
+    public static enum ReverseProxyClientCertMode {
         optional("optional"),
         off("off"),
         on("on");
         private String mValue;
-        private ReverseProxyClientVerifyMode(String value) { mValue = value; }
+        private ReverseProxyClientCertMode(String value) { mValue = value; }
         public String toString() { return mValue; }
-        public static ReverseProxyClientVerifyMode fromString(String s) throws ServiceException {
-            for (ReverseProxyClientVerifyMode value : values()) {
+        public static ReverseProxyClientCertMode fromString(String s) throws ServiceException {
+            for (ReverseProxyClientCertMode value : values()) {
                 if (value.mValue.equals(s)) return value;
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
@@ -6254,7 +6254,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=2003)
+    @ZAttr(id=2002)
     public static final String A_zimbraPrefCalendarAcceptSignatureId = "zimbraPrefCalendarAcceptSignatureId";
 
     /**
@@ -6366,7 +6366,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=2005)
+    @ZAttr(id=2004)
     public static final String A_zimbraPrefCalendarDeclineSignatureId = "zimbraPrefCalendarDeclineSignatureId";
 
     /**
@@ -6506,7 +6506,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=2004)
+    @ZAttr(id=2003)
     public static final String A_zimbraPrefCalendarTentativeSignatureId = "zimbraPrefCalendarTentativeSignatureId";
 
     /**
@@ -7823,28 +7823,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyCacheReconnectInterval = "zimbraReverseProxyCacheReconnectInterval";
 
     /**
-     * SSL certificate
+     * CA certificate for authenticating client certificates in nginx proxy
+     * (https only)
      *
      * @since ZCS 7.1.1
      */
     @ZAttr(id=2001)
-    public static final String A_zimbraReverseProxyClientCertificate = "zimbraReverseProxyClientCertificate";
+    public static final String A_zimbraReverseProxyClientCertCA = "zimbraReverseProxyClientCertCA";
 
     /**
-     * SSL certificate
-     *
-     * @since ZCS 7.1.1
-     */
-    @ZAttr(id=2002)
-    public static final String A_zimbraReverseProxyClientVerifyDepth = "zimbraReverseProxyClientVerifyDepth";
-
-    /**
-     * SSL certificate
+     * enable authentication via X.509 Client Certificate in nginx proxy
+     * (https only)
      *
      * @since ZCS 7.1.1
      */
     @ZAttr(id=2000)
-    public static final String A_zimbraReverseProxyClientVerifyMode = "zimbraReverseProxyClientVerifyMode";
+    public static final String A_zimbraReverseProxyClientCertMode = "zimbraReverseProxyClientCertMode";
 
     /**
      * Time interval after which NGINX mail proxy will disconnect while

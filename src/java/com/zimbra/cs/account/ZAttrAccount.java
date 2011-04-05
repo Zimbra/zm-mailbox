@@ -35,7 +35,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110402-1800 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110405-1454 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -23703,7 +23703,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=2003)
+    @ZAttr(id=2002)
     public String getPrefCalendarAcceptSignatureId() {
         return getAttr(Provisioning.A_zimbraPrefCalendarAcceptSignatureId, null);
     }
@@ -23716,7 +23716,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=2003)
+    @ZAttr(id=2002)
     public void setPrefCalendarAcceptSignatureId(String zimbraPrefCalendarAcceptSignatureId) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarAcceptSignatureId, zimbraPrefCalendarAcceptSignatureId);
@@ -23732,7 +23732,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=2003)
+    @ZAttr(id=2002)
     public Map<String,Object> setPrefCalendarAcceptSignatureId(String zimbraPrefCalendarAcceptSignatureId, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarAcceptSignatureId, zimbraPrefCalendarAcceptSignatureId);
@@ -23746,7 +23746,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=2003)
+    @ZAttr(id=2002)
     public void unsetPrefCalendarAcceptSignatureId() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarAcceptSignatureId, "");
@@ -23761,7 +23761,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=2003)
+    @ZAttr(id=2002)
     public Map<String,Object> unsetPrefCalendarAcceptSignatureId(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarAcceptSignatureId, "");
@@ -24769,7 +24769,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=2005)
+    @ZAttr(id=2004)
     public String getPrefCalendarDeclineSignatureId() {
         return getAttr(Provisioning.A_zimbraPrefCalendarDeclineSignatureId, null);
     }
@@ -24783,7 +24783,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=2005)
+    @ZAttr(id=2004)
     public void setPrefCalendarDeclineSignatureId(String zimbraPrefCalendarDeclineSignatureId) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarDeclineSignatureId, zimbraPrefCalendarDeclineSignatureId);
@@ -24800,7 +24800,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=2005)
+    @ZAttr(id=2004)
     public Map<String,Object> setPrefCalendarDeclineSignatureId(String zimbraPrefCalendarDeclineSignatureId, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarDeclineSignatureId, zimbraPrefCalendarDeclineSignatureId);
@@ -24815,7 +24815,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=2005)
+    @ZAttr(id=2004)
     public void unsetPrefCalendarDeclineSignatureId() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarDeclineSignatureId, "");
@@ -24831,7 +24831,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=2005)
+    @ZAttr(id=2004)
     public Map<String,Object> unsetPrefCalendarDeclineSignatureId(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarDeclineSignatureId, "");
@@ -26128,7 +26128,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=2004)
+    @ZAttr(id=2003)
     public String getPrefCalendarTentativeSignatureId() {
         return getAttr(Provisioning.A_zimbraPrefCalendarTentativeSignatureId, null);
     }
@@ -26142,7 +26142,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=2004)
+    @ZAttr(id=2003)
     public void setPrefCalendarTentativeSignatureId(String zimbraPrefCalendarTentativeSignatureId) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarTentativeSignatureId, zimbraPrefCalendarTentativeSignatureId);
@@ -26159,7 +26159,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=2004)
+    @ZAttr(id=2003)
     public Map<String,Object> setPrefCalendarTentativeSignatureId(String zimbraPrefCalendarTentativeSignatureId, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarTentativeSignatureId, zimbraPrefCalendarTentativeSignatureId);
@@ -26174,7 +26174,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=2004)
+    @ZAttr(id=2003)
     public void unsetPrefCalendarTentativeSignatureId() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarTentativeSignatureId, "");
@@ -26190,7 +26190,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=2004)
+    @ZAttr(id=2003)
     public Map<String,Object> unsetPrefCalendarTentativeSignatureId(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarTentativeSignatureId, "");
