@@ -57,7 +57,7 @@ Query Syntax
   field[FIELDNAME]:(TEXT)|[>,<,>=,<=](NUMBER)
   #FIELDNAME:(TEXT)|[>,<,>=,<=](NUMBER)
 
-  sort:(score|dateasc|datedesc|subjasc|subjdesc|nameasc|namedesc)
+  sort:(dateAsc|dateDesc|subjAsc|subjDesc|nameAsc|nameDesc|rcptAsc|rcptDesc|none)
   // overrides the sort field specified in the <SearchRequest>
 
 FRIENDLY_MIME_TYPE:"text"|"application"|"word"|"msword"|"excel"|"xls"|"ppt"|"pdf"|"ms-tnef"|"image"|"jpeg"|"gif"|"bmp"|"none"|"any"

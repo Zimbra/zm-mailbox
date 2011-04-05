@@ -1371,18 +1371,13 @@ if recip="1" is specified
         **NOTE: only ONE of message, conversation may be set. If
                 both are set, the first is used.
 
-  {sort-by}  = default is "dateDesc"
-               Valid choices:
-                    dateDesc|dateAsc|subjDesc|subjAsc|nameDesc|nameAsc|none(*)
-                    * - If sort-by is "none" then cursors MUST NOT be
-                        used, and some searches are impossible
-                        (searches that require intersection of complex
-                        sub-ops).  Server will throw an
-                        IllegalArgumentException if the search is
-                        invalid.
-
-               ADDITIONAL SORT MODES FOR TASKS: valid only if types="task" (and task alone):
-                        taskDueAsc|taskDueDesc|taskStatusAsc|taskStatusDesc|taskPercCompletedAsc|taskPercCompletedDesc
+  {sort-by} = default is "dateDesc"
+    Possible values:
+      dateAsc|dateDesc|subjAsc|subjDesc|nameAsc|nameDesc|rcptAsc|rcptDesc|none
+      * If sort-by is "none" then cursors MUST NOT be used, and some searches are impossible (searches that require
+        intersection of complex sub-ops). Server will throw an IllegalArgumentException if the search is invalid.
+    ADDITIONAL SORT MODES FOR TASKS: valid only if types="task" (and task alone):
+      taskDueAsc|taskDueDesc|taskStatusAsc|taskStatusDesc|taskPercCompletedAsc|taskPercCompletedDesc
 
   {more-flag} = 1 if there are more search results remaining.
   {content-matched} = 1 if the content of the message matched
