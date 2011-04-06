@@ -22,7 +22,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.StringValue;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_CHECK_EXCHANGE_AUTH_RESPONSE)
@@ -30,24 +29,24 @@ import com.zimbra.soap.admin.type.StringValue;
 public class CheckExchangeAuthResponse {
 
     @XmlElement(name=AdminConstants.E_CODE, required=true)
-    private final StringValue code;
+    private final String code;
 
     @XmlElement(name=AdminConstants.E_MESSAGE, required=false)
-    private final StringValue message;
+    private final String message;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
     private CheckExchangeAuthResponse() {
-        this((StringValue) null, (StringValue) null);
+        this((String) null, (String) null);
     }
 
-    public CheckExchangeAuthResponse(StringValue code, StringValue message) {
+    public CheckExchangeAuthResponse(String code, String message) {
         this.code = code;
         this.message = message;
     }
 
-    public StringValue getCode() { return code; }
-    public StringValue getMessage() { return message; }
+    public String getCode() { return code; }
+    public String getMessage() { return message; }
 }

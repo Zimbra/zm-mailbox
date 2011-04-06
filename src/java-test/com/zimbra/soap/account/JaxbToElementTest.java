@@ -15,6 +15,8 @@
 package com.zimbra.soap.account;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.Maps;
+
 import java.io.BufferedReader;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -23,6 +25,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.nio.charset.Charset;
+import java.util.Map;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
@@ -35,6 +38,7 @@ import org.apache.log4j.Level;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import com.zimbra.soap.JaxbUtil;
+import com.zimbra.soap.account.message.CreateIdentityRequest;
 import com.zimbra.soap.account.message.GetInfoResponse;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.JSONElement;
@@ -204,4 +208,19 @@ public class JaxbToElementTest {
                  getInfoResp.getAccountName());
         }
     }
+
+    @Test
+    public void IdentityToStringTest () throws Exception {
+        com.zimbra.soap.account.type.Identity id =
+                new com.zimbra.soap.account.type.Identity("hello", null);
+        Map<String, String> attrs = Maps.newHashMap();
+        attrs.put("key1", "value1");
+        attrs.put("key2", "value2 wonderful");
+        id.setAttrs(attrs);
+        CreateIdentityRequest request = new CreateIdentityRequest(id);
+        Assert.assertEquals("toString output", 
+            "CreateIdentityRequest{identity=Identity{name=hello, id=null, attrs=[Attr{name=key2, value=value2 wonderful}, Attr{name=key1, value=value1}]}}",
+            request.toString());
+    }
+
 }

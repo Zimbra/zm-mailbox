@@ -13,31 +13,41 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
+package com.zimbra.soap.mail.message;
 
+import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlValue;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
 
-import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class StringValue {
+@XmlRootElement(name=MailConstants.E_SET_METADATA_RESPONSE)
+public class SetCustomMetadataResponse {
 
-    @XmlValue
-    private final String value;
+    @XmlAttribute(name=MailConstants.A_ID, required=true)
+    private final String id;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private StringValue() {
+    private SetCustomMetadataResponse() {
         this((String) null);
     }
 
-    public StringValue(String value) {
-        this.value = value;
+    public SetCustomMetadataResponse(String id) {
+        this.id = id;
     }
 
-    public String getValue() { return value; }
+    public String getId() { return id; }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this)
+            .add("id", id)
+            .toString();
+    }
 }

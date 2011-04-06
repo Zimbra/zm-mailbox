@@ -13,40 +13,40 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.account.type;
+package com.zimbra.soap.mail.type;
 
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
-import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class NewIdentity extends AttrsImpl {
+public class ByMonthDayRule {
 
-    @XmlAttribute(name=AccountConstants.A_NAME, required=true)
-    private final String name;
+    @XmlAttribute(name=MailConstants.A_CAL_RULE_BYMONTHDAY_MODAYLIST,
+                        required=true)
+    private final String list;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private NewIdentity() {
+    private ByMonthDayRule() {
         this((String) null);
     }
 
-    public NewIdentity(String name) {
-        this.name = name;
+    public ByMonthDayRule(String list) {
+        this.list = list;
     }
 
-    public String getName() { return name; }
+    public String getList() { return list; }
 
     @Override
     public String toString() {
         return Objects.toStringHelper(this)
-            .add("name", name)
-            .add("attrs", super.getAttrs())
+            .add("list", list)
             .toString();
     }
 }

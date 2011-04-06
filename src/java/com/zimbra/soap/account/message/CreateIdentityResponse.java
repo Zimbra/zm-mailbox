@@ -30,7 +30,7 @@ import com.zimbra.soap.account.type.Identity;
 public class CreateIdentityResponse {
 
     @XmlElement(name=AccountConstants.E_IDENTITY, required=true)
-    private final Identity identities;
+    private final Identity identity;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -40,16 +40,16 @@ public class CreateIdentityResponse {
         this((Identity) null);
     }
 
-    public CreateIdentityResponse(Identity identities) {
-        this.identities = identities;
+    public CreateIdentityResponse(Identity identity) {
+        this.identity = identity;
     }
 
-    public Identity getIdentities() { return identities; }
+    public Identity getIdentity() { return identity; }
 
     @Override
     public String toString() {
         return Objects.toStringHelper(this)
-            .add("identities", identities)
+            .add("identity", identity)
             .toString();
     }
 }

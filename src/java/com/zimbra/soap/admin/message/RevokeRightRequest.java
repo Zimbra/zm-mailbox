@@ -23,7 +23,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.EffectiveRightsTargetSelector;
 import com.zimbra.soap.admin.type.GranteeSelector;
-import com.zimbra.soap.admin.type.StringValue;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_REVOKE_RIGHT_REQUEST)
@@ -36,7 +35,7 @@ public class RevokeRightRequest {
     private final GranteeSelector grantee;
 
     @XmlElement(name=AdminConstants.E_RIGHT, required=true)
-    private final StringValue right;
+    private final String right;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -44,11 +43,11 @@ public class RevokeRightRequest {
     @SuppressWarnings("unused")
     private RevokeRightRequest() {
         this((EffectiveRightsTargetSelector) null,
-                (GranteeSelector) null, (StringValue) null);
+                (GranteeSelector) null, (String) null);
     }
 
     public RevokeRightRequest(EffectiveRightsTargetSelector target,
-                GranteeSelector grantee, StringValue right) {
+                GranteeSelector grantee, String right) {
         this.target = target;
         this.grantee = grantee;
         this.right = right;
@@ -56,5 +55,5 @@ public class RevokeRightRequest {
 
     public EffectiveRightsTargetSelector getTarget() { return target; }
     public GranteeSelector getGrantee() { return grantee; }
-    public StringValue getRight() { return right; }
+    public String getRight() { return right; }
 }

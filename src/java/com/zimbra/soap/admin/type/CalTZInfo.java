@@ -21,6 +21,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.TzOnsetInfo;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class CalTZInfo {

@@ -30,4 +30,5 @@ public interface Attrs {
     public Attrs addAttr(Attr attr);
     public List<Attr> getAttrs();
     public Multimap<String, String> getAttrsMultimap();
+    public Map<String, Object> getAttrsAsOldMultimap();
 }

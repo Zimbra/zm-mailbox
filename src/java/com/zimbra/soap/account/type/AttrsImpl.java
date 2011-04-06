@@ -31,6 +31,7 @@ import com.google.common.collect.Multimap;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.util.StringUtil;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 abstract public class AttrsImpl implements Attrs {
@@ -76,6 +77,10 @@ abstract public class AttrsImpl implements Attrs {
 
     public Multimap<String, String> getAttrsMultimap() {
         return Attr.toMultimap(attrs);
+    }
+
+    public Map<String, Object> getAttrsAsOldMultimap() {
+        return StringUtil.toOldMultimap(getAttrsMultimap());
     }
 
     @Override

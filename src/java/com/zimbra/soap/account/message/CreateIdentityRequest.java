@@ -22,28 +22,28 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.soap.account.type.NewIdentity;
+import com.zimbra.soap.account.type.Identity;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AccountConstants.E_CREATE_IDENTITY_REQUEST)
 public class CreateIdentityRequest {
 
     @XmlElement(name=AccountConstants.E_IDENTITY, required=true)
-    private final NewIdentity identity;
+    private final Identity identity;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
     private CreateIdentityRequest() {
-        this((NewIdentity) null);
+        this((Identity) null);
     }
 
-    public CreateIdentityRequest(NewIdentity identity) {
+    public CreateIdentityRequest(Identity identity) {
         this.identity = identity;
     }
 
-    public NewIdentity getIdentity() { return identity; }
+    public Identity getIdentity() { return identity; }
 
     @Override
     public String toString() {

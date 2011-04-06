@@ -51,3 +51,6 @@ Gotchas
     to use non-JAXB fields for the real data.
 .   Elements which have both sub-elements AND a value.  End up having to used
     @XmlMixed which is horrible.
+.   You cannot use basic types like "int" for optional attributes/variables.
+    This is because need something which can have a null value to represent
+    absence.

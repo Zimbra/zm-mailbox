@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -15,18 +15,14 @@
 
 package com.zimbra.soap.account.type;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
+
+import com.zimbra.common.soap.AccountConstants;
 
 /*
      <identity name={identity-name} id="...">
@@ -36,57 +32,43 @@ import com.google.common.collect.Multimap;
      </identity>*
 
  */
-@XmlType(propOrder = {})
-public class Identity {
+@XmlAccessorType(XmlAccessType.FIELD)
+public class Identity extends AttrsImpl {
 
-    @XmlAttribute private String name;
-    @XmlAttribute private String id;
-    @XmlElement(name="a") private List<Attr> attrs = new ArrayList<Attr>();
+    @XmlAttribute(name=AccountConstants.A_NAME, required=false)
+    private final String name;
 
+    @XmlAttribute(name=AccountConstants.A_ID, required=false)
+    private final String id;
 
-    public Identity() {
+    /**
+     * no-argument constructor wanted by JAXB
+     */
+    @SuppressWarnings("unused")
+    private Identity() {
+        this((String) null, (String) null);
+    }
+
+    public Identity(String name, String id) {
+        this.name = name;
+        this.id = id;
     }
 
     public Identity(Identity i) {
         name = i.getName();
         id = i.getId();
-        attrs.addAll(Lists.transform(i.getAttrs(), Attr.COPY));
+        super.setAttrs(Lists.transform(i.getAttrs(), Attr.COPY));
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public List<Attr> getAttrs() {
-        return Collections.unmodifiableList(attrs);
-    }
-
-    public void setAttrs(Iterable<Attr> attrs) {
-        Iterables.addAll(this.attrs, attrs);
-    }
-
-    public Multimap<String, String> getAttrsMultimap() {
-        return Attr.toMultimap(attrs);
-    }
+    public String getName() { return name; }
+    public String getId() { return id; }
 
     @Override
     public String toString() {
         return Objects.toStringHelper(this)
             .add("name", name)
             .add("id", id)
-            .add("attrs", attrs)
+            .add("attrs", super.getAttrs())
             .toString();
     }
 

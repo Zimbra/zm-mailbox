@@ -31,11 +31,11 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
 
-import com.zimbra.soap.admin.type.AttributeName;
 import com.zimbra.soap.admin.type.CalTZInfo;
-import com.zimbra.soap.admin.type.CursorInfo;
 import com.zimbra.soap.admin.type.GalSearchType;
-import com.zimbra.soap.admin.type.StringValue;
+
+import com.zimbra.soap.type.AttributeName;
+import com.zimbra.soap.type.CursorInfo;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_AUTO_COMPLETE_GAL_REQUEST)
@@ -125,7 +125,7 @@ public class AutoCompleteGalRequest {
     private CalTZInfo calTz;
 
     @XmlElement(name=MailConstants.E_LOCALE, required=false)
-    private StringValue locale;
+    private String locale;
 
     @XmlElement(name=MailConstants.E_CURSOR, required=false)
     private CursorInfo cursor;
@@ -212,7 +212,7 @@ public class AutoCompleteGalRequest {
     }
 
     public void setCalTz(CalTZInfo calTz) { this.calTz = calTz; }
-    public void setLocale(StringValue locale) { this.locale = locale; }
+    public void setLocale(String locale) { this.locale = locale; }
     public void setCursor(CursorInfo cursor) { this.cursor = cursor; }
     public String getDomain() { return domain; }
     public String getName() { return name; }
@@ -242,6 +242,6 @@ public class AutoCompleteGalRequest {
         return Collections.unmodifiableList(headers);
     }
     public CalTZInfo getCalTz() { return calTz; }
-    public StringValue getLocale() { return locale; }
+    public String getLocale() { return locale; }
     public CursorInfo getCursor() { return cursor; }
 }

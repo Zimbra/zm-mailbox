@@ -13,8 +13,9 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
+package com.zimbra.soap.mail.type;
 
+import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -22,22 +23,29 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class AttributeName {
+public class ByMinuteRule {
 
-    @XmlAttribute(name=MailConstants.A_ATTRIBUTE_NAME, required=true)
-    private final String name;
+    @XmlAttribute(name=MailConstants.A_CAL_RULE_BYMINUTE_MINLIST, required=true)
+    private final String list;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private AttributeName() {
+    private ByMinuteRule() {
         this((String) null);
     }
 
-    public AttributeName(String name) {
-        this.name = name;
+    public ByMinuteRule(String list) {
+        this.list = list;
     }
 
-    public String getName() { return name; }
+    public String getList() { return list; }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this)
+            .add("list", list)
+            .toString();
+    }
 }

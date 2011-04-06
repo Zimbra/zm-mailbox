@@ -27,31 +27,30 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.StringValue;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_RUN_UNIT_TESTS_REQUEST)
 public class RunUnitTestsRequest {
 
     @XmlElement(name=AdminConstants.E_TEST, required=false)
-    private List<StringValue> tests = Lists.newArrayList();
+    private List<String> tests = Lists.newArrayList();
 
     public RunUnitTestsRequest() {
     }
 
-    public void setTests(Iterable <StringValue> tests) {
+    public void setTests(Iterable <String> tests) {
         this.tests.clear();
         if (tests != null) {
             Iterables.addAll(this.tests,tests);
         }
     }
 
-    public RunUnitTestsRequest addTest(StringValue test) {
+    public RunUnitTestsRequest addTest(String test) {
         this.tests.add(test);
         return this;
     }
 
-    public List<StringValue> getTests() {
+    public List<String> getTests() {
         return Collections.unmodifiableList(tests);
     }
 }

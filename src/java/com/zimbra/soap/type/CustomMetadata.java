@@ -13,8 +13,9 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
+package com.zimbra.soap.type;
 
+import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -22,32 +23,32 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class CursorInfo {
+public class CustomMetadata extends KeyValuePairsImpl {
 
-    @XmlAttribute(name=MailConstants.A_ID, required=false)
-    private final String id;
-
-    @XmlAttribute(name=MailConstants.A_SORTVAL, required=false)
-    private final String sortVal;
-
-    @XmlAttribute(name=MailConstants.A_ENDSORTVAL, required=false)
-    private final String endSortVal;
+    // Normally present but sometimes an empty element is created
+    // to show that CustomMetadata info is present but there are
+    // no sections to report on
+    @XmlAttribute(name=MailConstants.A_SECTION, required=false)
+    private final String section;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private CursorInfo() {
-        this((String) null, (String) null, (String) null);
+    private CustomMetadata() {
+        this((String) null);
     }
 
-    public CursorInfo(String id, String sortVal, String endSortVal) {
-        this.id = id;
-        this.sortVal = sortVal;
-        this.endSortVal = endSortVal;
+    public CustomMetadata(String section) {
+        this.section = section;
     }
 
-    public String getId() { return id; }
-    public String getSortVal() { return sortVal; }
-    public String getEndSortVal() { return endSortVal; }
+    public String getSection() { return section; }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this)
+            .add("section", section)
+            .toString();
+    }
 }

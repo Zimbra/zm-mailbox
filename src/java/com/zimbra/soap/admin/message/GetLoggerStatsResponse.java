@@ -30,7 +30,6 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.NamedElement;
 import com.zimbra.soap.admin.type.HostStats;
-import com.zimbra.soap.admin.type.StringValue;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_GET_LOGGER_STATS_RESPONSE)
@@ -44,7 +43,7 @@ public class GetLoggerStatsResponse {
     private List<NamedElement> stats = Lists.newArrayList();
 
     @XmlElement(name=AdminConstants.E_NOTE, required=false)
-    private StringValue note;
+    private String note;
 
     public GetLoggerStatsResponse() {
     }
@@ -73,7 +72,7 @@ public class GetLoggerStatsResponse {
         return this;
     }
 
-    public void setNote(StringValue note) { this.note = note; }
+    public void setNote(String note) { this.note = note; }
     public List<HostStats> getHostNames() {
         return Collections.unmodifiableList(hostNames);
     }
@@ -82,5 +81,5 @@ public class GetLoggerStatsResponse {
         return Collections.unmodifiableList(stats);
     }
 
-    public StringValue getNote() { return note; }
+    public String getNote() { return note; }
 }
