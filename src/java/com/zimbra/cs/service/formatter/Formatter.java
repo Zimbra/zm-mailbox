@@ -317,6 +317,7 @@ public abstract class Formatter {
             exception = cause instanceof UserServletException ||
                 cause instanceof ServletException ||
                 cause instanceof IOException ? cause : e;
+            context.logError(exception);
         }
 
         if (callback == null || callback.equals("")) {

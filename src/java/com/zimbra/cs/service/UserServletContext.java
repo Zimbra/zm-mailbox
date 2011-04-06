@@ -83,6 +83,7 @@ public final class UserServletContext {
     private Locale locale;
     private long mStartTime = -2;
     private long mEndTime = -2;
+    private Throwable error;
 
     public static class Item {
         public int id;
@@ -551,6 +552,14 @@ public final class UserServletContext {
         return is;
     }
 
+    public void logError(Throwable e) {
+        error = e;
+    }
+    
+    public Throwable getLoggedError() {
+        return error;
+    }
+    
     @Override
     public String toString() {
         return Objects.toStringHelper(this)

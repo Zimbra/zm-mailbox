@@ -95,7 +95,9 @@ public enum MailboxOperation {
     DeleteItemFromDumpster(77),
     FixCalendarItemPriority(78),
     RecoverItem(79),
-    EnableSharedReminder(80);
+    EnableSharedReminder(80),
+    Download(81),    // not a true mailbox operation but it's used for audit logging
+    Preview(82);     // ditto
     
     private MailboxOperation(int c) {
         code = c;
