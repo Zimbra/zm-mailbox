@@ -1877,7 +1877,7 @@ public class Mailbox {
         }
 
         MailItem.UnderlyingData data = item.getUnderlyingData().clone();
-        data.setFlags(Flag.BITMASK_UNCACHED);
+        data.setFlag(Flag.FlagInfo.UNCACHED);
         data.metadata = item.encodeMetadata().toString();
         if (item instanceof VirtualConversation) {
             // VirtualConversations need to be special-cased since MailItem.constructItem() returns null for them
@@ -1907,7 +1907,7 @@ public class Mailbox {
         Map<Integer, Folder> copies = new HashMap<Integer, Folder>();
         for (Folder folder : mFolderCache.values()) {
             MailItem.UnderlyingData data = folder.getUnderlyingData().clone();
-            data.setFlags(Flag.BITMASK_UNCACHED);
+            data.setFlag(Flag.FlagInfo.UNCACHED);
             data.metadata = folder.encodeMetadata().toString();
             copies.put(folder.getId(), (Folder) MailItem.constructItem(this, data));
         }
