@@ -58,7 +58,7 @@ public class VCard {
 
 
     private static final Set<String> PROPERTY_NAMES = new HashSet<String>(Arrays.asList(new String[] {
-            "BEGIN", "FN", "N", "NICKNAME", "PHOTO", "BDAY", "ADR", "TEL", "EMAIL", "URL", "ORG", "TITLE", "NOTE", "AGENT", "END", "UID"
+            "BEGIN", "FN", "N", "NICKNAME", "PHOTO", "BDAY", "ADR", "TEL", "EMAIL", "URL", "ORG", "TITLE", "NOTE", "AGENT", "END", "UID", "X-ZIMBRA-IMADDRESS1", "X-ZIMBRA-IMADDRESS2", "X-ZIMBRA-IMADDRESS3"
     }));
 
     static final Map<String, String> PARAM_ABBREVIATIONS = new HashMap<String, String>();
@@ -222,7 +222,7 @@ public class VCard {
 
             if (name.equals("")) {
                 throw ServiceException.PARSE_ERROR("missing property name in line " + line, null);
-            } else if (name.startsWith("X-")) {
+            } else if (name.startsWith("X-") && !name.startsWith("X-ZIMBRA-")) {
                 String decodedValue = vcfDecode(vcprop.getValue());
                 // handle multiple occurrences of xprops with the same key
                 String group = vcprop.getGroup();
@@ -322,6 +322,9 @@ public class VCard {
             else if (name.equals("TITLE"))     addField(ContactConstants.A_jobTitle, vcfDecode(value), "altJobTitle", 2, fields);
             else if (name.equals("NOTE"))      addField(ContactConstants.A_notes, vcfDecode(value), null, 2, fields);
             else if (name.equals("EMAIL"))     addField(ContactConstants.A_email, vcfDecode(value), null, 2, fields);
+            else if (name.equals("X-ZIMBRA-IMADDRESS1"))    fields.put(ContactConstants.A_imAddress1, value);
+            else if (name.equals("X-ZIMBRA-IMADDRESS2"))    fields.put(ContactConstants.A_imAddress2, value);
+            else if (name.equals("X-ZIMBRA-IMADDRESS3"))    fields.put(ContactConstants.A_imAddress3, value);
             else if (name.equals("UID")) uid = value;
         }
 
@@ -588,6 +591,21 @@ public class VCard {
         if (vcattrs == null || vcattrs.contains("UID"))
             sb.append("UID:").append(uid).append("\r\n");
         // sb.append("MAILER:Zimbra ").append(BuildInfo.VERSION).append("\r\n");
+        if ((vcattrs == null || vcattrs.contains("X-ZIMBRA-IMADDRESS1"))) {
+            String imAddr1 = con.get(ContactConstants.A_imAddress1);
+            if (imAddr1 != null)
+                sb.append("X-ZIMBRA-IMADDRESS1:").append(imAddr1).append("\r\n");
+        }
+        if ((vcattrs == null || vcattrs.contains("X-ZIMBRA-IMADDRESS2"))) {
+            String imAddr2 = con.get(ContactConstants.A_imAddress2);
+            if (imAddr2 != null)
+                sb.append("X-ZIMBRA-IMADDRESS2:").append(imAddr2).append("\r\n");
+        }
+        if ((vcattrs == null || vcattrs.contains("X-ZIMBRA-IMADDRESS3"))) {
+            String imAddr3 = con.get(ContactConstants.A_imAddress3);
+            if (imAddr3 != null)
+                sb.append("X-ZIMBRA-IMADDRESS3:").append(imAddr3).append("\r\n");
+        }
         if (includeXProps) {
             Map<String,String> xprops = con.getXProps();
             for (String key : xprops.keySet()) {
