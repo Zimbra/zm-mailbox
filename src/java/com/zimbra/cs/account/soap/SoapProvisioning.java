@@ -59,6 +59,14 @@ import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.account.message.ChangePasswordRequest;
+import com.zimbra.soap.account.message.CreateIdentityRequest;
+import com.zimbra.soap.account.message.CreateIdentityResponse;
+import com.zimbra.soap.account.message.DeleteIdentityRequest;
+import com.zimbra.soap.account.message.GetIdentitiesRequest;
+import com.zimbra.soap.account.message.GetIdentitiesResponse;
+import com.zimbra.soap.account.message.ModifyIdentityRequest;
+import com.zimbra.soap.account.message.ModifyIdentityResponse;
+import com.zimbra.soap.account.type.NameId;
 import com.zimbra.soap.admin.message.*;
 import com.zimbra.soap.admin.type.AccountInfo;
 import com.zimbra.soap.admin.type.AccountLoggerInfo;
@@ -411,14 +419,24 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T invokeJaxb(Object jaxbObject) throws ServiceException {
+    public <T> T invokeJaxb(Object jaxbObject)
+    throws ServiceException {
         Element req = JaxbUtil.jaxbToElement(jaxbObject);
         Element res = invoke(req);
         return (T) JaxbUtil.elementToJaxb(res);
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T invokeJaxb(Object jaxbObject, String serverName) throws ServiceException {
+    public <T> T invokeJaxbOnTargetAccount(Object jaxbObject, String targetId)
+    throws ServiceException {
+        Element req = JaxbUtil.jaxbToElement(jaxbObject);
+        Element res = invokeOnTargetAccount(req, targetId);
+        return (T) JaxbUtil.elementToJaxb(res);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T invokeJaxb(Object jaxbObject, String serverName)
+    throws ServiceException {
         Element req = JaxbUtil.jaxbToElement(jaxbObject);
         Element res = invoke(req, serverName);
         return (T) JaxbUtil.elementToJaxb(res);
@@ -628,7 +646,6 @@ public class SoapProvisioning extends Provisioning {
             mAuthToken = new ZAuthToken(e.getElement(AccountConstants.E_AUTH_TOKEN), false);
             mLifetime = e.getAttributeLong(AccountConstants.E_LIFETIME);
             mExpires = System.currentTimeMillis() + mLifetime;
-            @SuppressWarnings("unused")
             Element re = e.getOptionalElement(AccountConstants.E_REFERRAL);
         }
 
@@ -1675,46 +1692,56 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
-    public Identity createIdentity(Account account, String identityName, Map<String, Object> attrs) throws ServiceException {
-        XMLElement req = new XMLElement(AccountConstants.CREATE_IDENTITY_REQUEST);
-        Element identity = req.addElement(AccountConstants.E_IDENTITY);
-        identity.addAttribute(AccountConstants.A_NAME, identityName);
-        addAttrElementsMailService(identity, attrs);
-        Element response = invokeOnTargetAccount(req, account.getId()).getElement(AccountConstants.E_IDENTITY);
-        return new SoapIdentity(account, response, this);
+    public Identity createIdentity(Account account, String identityName,
+            Map<String, Object> attrs)
+    throws ServiceException {
+        com.zimbra.soap.account.type.Identity id =
+                new com.zimbra.soap.account.type.Identity(identityName, null);
+        id.setAttrs(attrs);
+        CreateIdentityRequest request = new CreateIdentityRequest(id);
+        CreateIdentityResponse response =
+            invokeJaxbOnTargetAccount(request, account.getId());
+        return new SoapIdentity(account, response.getIdentity(), this);
     }
 
     @Override
-    public Identity restoreIdentity(Account account, String identityName, Map<String, Object> attrs) throws ServiceException {
+    public Identity restoreIdentity(Account account, String identityName,
+            Map<String, Object> attrs)
+    throws ServiceException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void deleteIdentity(Account account, String identityName) throws ServiceException {
-        XMLElement req = new XMLElement(AccountConstants.DELETE_IDENTITY_REQUEST);
-        Element identity = req.addElement(AccountConstants.E_IDENTITY);
-        identity.addAttribute(AccountConstants.A_NAME, identityName);
-        invokeOnTargetAccount(req, account.getId());
+    public void deleteIdentity(Account account, String identityName)
+    throws ServiceException {
+        NameId identity = new NameId(identityName, null);
+        DeleteIdentityRequest request = new DeleteIdentityRequest(identity);
+        invokeJaxbOnTargetAccount(request, account.getId());
     }
 
     @Override
-    public List<Identity> getAllIdentities(Account account) throws ServiceException {
+    public List<Identity> getAllIdentities(Account account)
+    throws ServiceException {
         List<Identity> result = new ArrayList<Identity>();
-        XMLElement req = new XMLElement(AccountConstants.GET_IDENTITIES_REQUEST);
-        Element resp = invokeOnTargetAccount(req, account.getId());
-        for (Element identity: resp.listElements(AccountConstants.E_IDENTITY)) {
+        GetIdentitiesResponse response = 
+            invokeJaxbOnTargetAccount(new GetIdentitiesRequest(),
+                    account.getId());
+        for (com.zimbra.soap.account.type.Identity identity : 
+            response.getIdentities()) {
             result.add(new SoapIdentity(account, identity, this));
         }
         return result;
     }
 
     @Override
-    public void modifyIdentity(Account account, String identityName, Map<String, Object> attrs) throws ServiceException {
-        XMLElement req = new XMLElement(AccountConstants.MODIFY_IDENTITY_REQUEST);
-        Element identity = req.addElement(AccountConstants.E_IDENTITY);
-        identity.addAttribute(AccountConstants.A_NAME, identityName);
-        addAttrElementsMailService(identity, attrs);
-        invokeOnTargetAccount(req, account.getId());
+    public void modifyIdentity(Account account, String identityName,
+            Map<String, Object> attrs)
+    throws ServiceException {
+        com.zimbra.soap.account.type.Identity id =
+                new com.zimbra.soap.account.type.Identity(identityName, null);
+        id.setAttrs(attrs);
+        ModifyIdentityRequest request = new ModifyIdentityRequest(id);
+        invokeJaxbOnTargetAccount(request, account.getId());
     }
 
     @Override

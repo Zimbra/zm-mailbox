@@ -39,10 +39,8 @@ public class ZIdentity  implements ToZJSONObject {
     }
 
     public ZIdentity(String name, Map<String, Object> attrs) {
-        data = new Identity();
-        data.setName(name);
+        data = new Identity(name, get(Provisioning.A_zimbraPrefIdentityId));
         data.setAttrs(Attr.fromMultimap(StringUtil.toNewMultimap(attrs)));
-        data.setId(get(Provisioning.A_zimbraPrefIdentityId));
     }
     
     public Identity getData() {

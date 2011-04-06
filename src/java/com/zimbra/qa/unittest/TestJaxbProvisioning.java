@@ -28,6 +28,7 @@ import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
@@ -81,6 +82,7 @@ public class TestJaxbProvisioning extends TestCase {
     private final static String testServer = "jaxb.server.example.test";
     private final static String testAcctEmail = "jaxb1@" + testAcctDomainName;
     private final static String testAcctAlias = "alias_4_jaxb1@" + testAcctDomainName;
+    private final static String testAcctIdentity = "identity_4_jaxb1@" + testAcctDomainName;
     private final static String testNewAcctEmail = "new_jaxb1@" + testAcctDomainName;
     private final static String testCalResDomain = "jaxb.calr.domain.example.test";
     private final static String testCalRes = "jaxb1@" + testCalResDomain;
@@ -387,7 +389,7 @@ public class TestJaxbProvisioning extends TestCase {
         deleteDomainIfExists(testCalResDomain);
         Domain dom = prov.createDomain(testCalResDomain, null);
         assertNotNull("Domain for " + testAcctDomainName, dom);
-        Map<String, Object> attrs = new HashMap<String, Object>();
+        Map<String, Object> attrs = Maps.newHashMap();
         attrs.put("displayName", testCalResDisplayName);
         attrs.put ("zimbraCalResType", "Location");
         attrs.put("zimbraCalResLocationDisplayName", "Harare");
@@ -560,6 +562,22 @@ public class TestJaxbProvisioning extends TestCase {
     public void testHealth() throws Exception {
         ZimbraLog.test.debug("Starting testHealth");
         assertTrue(prov.healthCheck());
+    }
+
+    public void testIdentities() throws Exception {
+        ZimbraLog.test.debug("Starting testIdentities");
+        Account acct = ensureAccountExists(testAcctEmail);
+        List<Identity> identities = prov.getAllIdentities(acct);
+        assertEquals("Number of identities for new acct", 1, identities.size());
+        Map<String, Object> attrs = Maps.newHashMap();
+        attrs.put("zimbraPrefFromAddress", testAcctIdentity);
+        Identity newId = prov.createIdentity(acct, "altIdentity", attrs);
+        assertNotNull("New identity", newId);
+        identities = prov.getAllIdentities(acct);
+        assertEquals("Number of identities after add", 2, identities.size());
+        prov.deleteIdentity(acct, "altIdentity");
+        identities = prov.getAllIdentities(acct);
+        assertEquals("Number of identities after delete", 1, identities.size());
     }
 
     public static void main(String[] args)

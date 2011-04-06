@@ -826,6 +826,14 @@ public class ToXML {
                 part = "";
             }
 
+            // Add fragment before emails to maintain consistent ordering
+            // of elements with encodeConversation - need to do this to
+            // overcome JAXB issues.
+            String fragment = msg.getFragment();
+            if (fragment != null && !fragment.isEmpty()) {
+                m.addAttribute(MailConstants.E_FRAG, fragment, Element.Disposition.CONTENT);
+            }
+
             addEmails(m, Mime.parseAddressHeader(mm, "From"), EmailType.FROM);
             addEmails(m, Mime.parseAddressHeader(mm, "Sender"), EmailType.SENDER);
             addEmails(m, Mime.parseAddressHeader(mm, "Reply-To"), EmailType.REPLY_TO);
@@ -844,11 +852,6 @@ public class ToXML {
             String subject = Mime.getSubject(mm);
             if (subject != null) {
                 m.addAttribute(MailConstants.E_SUBJECT, StringUtil.stripControlCharacters(subject), Element.Disposition.CONTENT);
-            }
-
-            String fragment = msg.getFragment();
-            if (fragment != null && !fragment.isEmpty()) {
-                m.addAttribute(MailConstants.E_FRAG, fragment, Element.Disposition.CONTENT);
             }
 
             String messageID = mm.getMessageID();
