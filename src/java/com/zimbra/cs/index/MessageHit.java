@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -23,7 +23,6 @@ import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.Document;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
@@ -54,12 +53,11 @@ public final class MessageHit extends ZimbraHit {
     private int messageId = 0;
     private ConversationHit conversationHit = null;
 
-    MessageHit(ZimbraQueryResultsImpl results, Mailbox mbx, int itemId, Document doc, Message msg) {
-        super(results, mbx);
-        assert(itemId != 0);
-        messageId = itemId;
-        document = doc;
+    MessageHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id, Message msg, Document doc, Object sortValue) {
+        super(results, mbx, sortValue);
+        messageId = id;
         message = msg;
+        document = doc;
     }
 
     int getFolderId() throws ServiceException {
@@ -189,14 +187,6 @@ public final class MessageHit extends ZimbraHit {
         return cachedName;
     }
 
-    @Override
-    public String getRecipients() throws ServiceException {
-        if (cachedRecipients == null) {
-            cachedRecipients = Strings.nullToEmpty(getMessage().getSortRecipients());
-        }
-        return cachedRecipients;
-    }
-
     public long getDateHeader() throws ServiceException {
         if (message == null && document != null) {
             String dateStr = document.get(LuceneFields.L_SORT_DATE);
@@ -223,7 +213,7 @@ public final class MessageHit extends ZimbraHit {
     public ConversationHit getConversationResult() throws ServiceException {
         if (conversationHit == null) {
             Integer cid = new Integer(getConversationId());
-            conversationHit = getResults().getConversationHit(getMailbox(), cid);
+            conversationHit = getResults().getConversationHit(getMailbox(), cid, sortValue);
             conversationHit.addMessageHit(this);
         }
         return conversationHit;

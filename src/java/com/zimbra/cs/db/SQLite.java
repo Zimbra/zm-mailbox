@@ -39,7 +39,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbPool.PoolConfig;
 
-public class SQLite extends Db {
+public final class SQLite extends Db {
 
     private static final String PRAGMA_JOURNAL_MODE_DEFAULT = "DELETE";
     private static final String PRAGMA_SYNCHRONOUS_DEFAULT  = "FULL";
@@ -59,7 +59,8 @@ public class SQLite extends Db {
         mErrorCodes.put(Db.Error.TOO_MANY_SQL_PARAMS, "too many SQL variables");
     }
 
-    @Override boolean supportsCapability(Db.Capability capability) {
+    @Override
+    boolean supportsCapability(Db.Capability capability) {
         switch (capability) {
             case AVOID_OR_IN_WHERE_CLAUSE:   return false;
             case BITWISE_OPERATIONS:         return true;
@@ -85,27 +86,37 @@ public class SQLite extends Db {
         return false;
     }
 
-    @Override boolean compareError(SQLException e, Error error) {
+    @Override
+    boolean compareError(SQLException e, Error error) {
         // XXX: the SQLite JDBC driver doesn't yet expose SQLite error codes, which sucks
         String code = mErrorCodes.get(error);
         return code != null && e.getMessage().contains(code);
     }
 
-    @Override String forceIndexClause(String index) {
+    @Override
+    String forceIndexClause(String index) {
         // don't think we can direct the sqlite optimizer...
         return "";
     }
 
-    @Override String getIFNULLClause(String expr1, String expr2) {
+    @Override
+    String getIFNULLClause(String expr1, String expr2) {
         return "IFNULL(" + expr1 + ", " + expr2 + ")";
     }
 
-    @Override PoolConfig getPoolConfig() {
+    @Override
+    public String bitAND(String expr1, String expr2) {
+        return expr1 + " & " + expr2;
+    }
+
+    @Override
+    PoolConfig getPoolConfig() {
         return new SQLiteConfig();
     }
 
 
-    @Override void startup(org.apache.commons.dbcp.PoolingDataSource pool, int poolSize) throws SQLException {
+    @Override
+    void startup(org.apache.commons.dbcp.PoolingDataSource pool, int poolSize) throws SQLException {
         cacheSize = LC.sqlite_cache_size.value();
         if (cacheSize.equals("0"))
             cacheSize = null;
@@ -121,7 +132,8 @@ public class SQLite extends Db {
         super.startup(pool, poolSize);
     }
 
-    @Override void postCreate(Connection conn) throws SQLException {
+    @Override
+    void postCreate(Connection conn) throws SQLException {
         try {
             conn.setAutoCommit(true);
             pragmas(conn, null);
@@ -178,7 +190,8 @@ public class SQLite extends Db {
         return retVal == null ? conn : retVal;
     }
 
-    @Override public void optimize(DbConnection conn, String dbname, int level)
+    @Override
+    public void optimize(DbConnection conn, String dbname, int level)
         throws ServiceException {
         try {
             boolean autocommit = conn.getConnection().getAutoCommit();
@@ -210,7 +223,8 @@ public class SQLite extends Db {
         }
     }
 
-    @Override public void registerDatabaseInterest(DbConnection conn, String dbname) throws SQLException, ServiceException {
+    @Override
+    public void registerDatabaseInterest(DbConnection conn, String dbname) throws SQLException, ServiceException {
         LinkedHashMap<String, String> attachedDBs = getAttachedDatabases(conn);
         if (attachedDBs != null && attachedDBs.containsKey(dbname))
             return;
@@ -290,7 +304,8 @@ public class SQLite extends Db {
 //        }
 //    }
 
-    @Override public boolean databaseExists(DbConnection conn, String dbname) throws ServiceException {
+    @Override
+    public boolean databaseExists(DbConnection conn, String dbname) throws ServiceException {
         if (!new File(getDatabaseFilename(dbname)).exists())
             return false;
 
@@ -321,7 +336,8 @@ public class SQLite extends Db {
         }
     }
 
-    @Override void deleteDatabaseFile(String dbname) {
+    @Override
+    void deleteDatabaseFile(String dbname) {
         assert(dbname != null && !dbname.trim().equals(""));
         ZimbraLog.dbconn.info("deleting database file for DB '" + dbname + "'");
         new File(getDatabaseFilename(dbname)).delete();
@@ -369,15 +385,18 @@ public class SQLite extends Db {
     }
 
 
-    @Override public void flushToDisk() {
+    @Override
+    public void flushToDisk() {
         // not really implemented
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return "SQLite";
     }
 
-    @Override protected int getInClauseBatchSize() {
+    @Override
+    protected int getInClauseBatchSize() {
         return 200;
     }
 

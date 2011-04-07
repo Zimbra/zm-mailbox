@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -21,7 +21,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -43,8 +42,8 @@ public final class ConversationHit extends ZimbraHit {
     private Map<Long, MessageHit> messageHits = new LinkedHashMap<Long, MessageHit>();
     private MessageHit lastMessageHitAdded;
 
-    ConversationHit(ZimbraQueryResultsImpl results, Mailbox mbx, int convId) {
-        super(results, mbx);
+    ConversationHit(ZimbraQueryResultsImpl results, Mailbox mbx, int convId, Object sortKey) {
+        super(results, mbx, sortKey);
         conversationId = convId;
     }
 
@@ -123,14 +122,6 @@ public final class ConversationHit extends ZimbraHit {
             cachedName = mh == null ? "" : mh.getName();
         }
         return cachedName;
-    }
-
-    @Override
-    public String getRecipients() throws ServiceException {
-        if (cachedRecipients == null) {
-            cachedRecipients = Strings.nullToEmpty(lastMessageHitAdded.getRecipients());
-        }
-        return cachedRecipients;
     }
 
     public long getHitDate() throws ServiceException {

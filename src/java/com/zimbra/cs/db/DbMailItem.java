@@ -427,12 +427,14 @@ public class DbMailItem {
             String table = getMailItemTableName(mbox);
             String mailbox_id = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
             String flags;
-            if (!shared)
+            if (!shared) {
                 flags = "flags";
-            else if (Db.supports(Db.Capability.BITWISE_OPERATIONS))
+            } else if (Db.supports(Db.Capability.BITWISE_OPERATIONS)) {
                 flags = "flags | " + Flag.BITMASK_COPIED;
-            else
-                flags = "CASE WHEN " + Db.bitmaskAND("flags", Flag.BITMASK_COPIED) + " THEN flags ELSE flags + " + Flag.BITMASK_COPIED + " END";
+            } else {
+                flags = "CASE WHEN " + Db.getInstance().bitAND("flags", String.valueOf(Flag.BITMASK_COPIED)) +
+                        " <> 0 THEN flags ELSE flags + " + Flag.BITMASK_COPIED + " END";
+            }
             stmt = conn.prepareStatement("INSERT INTO " + table +
                         "(" + mailbox_id +
                         " id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest," +
@@ -1317,15 +1319,22 @@ public class DbMailItem {
 
             String primaryUpdate = column + " = " + column + (add ? " + ?" : " - ?");
             String updateChangeID = (altersModseq ? ", mod_metadata = ?, change_date = ?" : "");
-            String precondition = (add ? "NOT " : "") + Db.bitmaskAND(column);
+            String precondition = Db.getInstance().bitAND(column, "?") + (add ? " = 0" : " <> 0");
 
             String relation;
-            if (item instanceof VirtualConversation)  relation = "id = ?";
-            else if (item instanceof Conversation)    relation = "parent_id = ?";
-            else if (item instanceof Folder)          relation = "folder_id = ?";
-            else if (item instanceof Flag)            relation = Db.bitmaskAND("flags");
-            else if (item instanceof Tag)             relation = Db.bitmaskAND("tags");
-            else                                      relation = "id = ?";
+            if (item instanceof VirtualConversation) {
+                relation = "id = ?";
+            } else if (item instanceof Conversation) {
+                relation = "parent_id = ?";
+            } else if (item instanceof Folder) {
+                relation = "folder_id = ?";
+            } else if (item instanceof Flag) {
+                relation = Db.getInstance().bitAND("flags", "?") + " <> 0";
+            } else if (item instanceof Tag) {
+                relation = Db.getInstance().bitAND("tags", "?") + " <> 0";
+            } else {
+                relation = "id = ?";
+            }
 
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
                     " SET " + primaryUpdate + updateChangeID +
@@ -1339,12 +1348,13 @@ public class DbMailItem {
             }
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setLong(pos++, tag.getBitmask());
-            if (item instanceof Tag)
+            if (item instanceof Tag) {
                 stmt.setLong(pos++, ((Tag) item).getBitmask());
-            else if (item instanceof VirtualConversation)
+            } else if (item instanceof VirtualConversation) {
                 stmt.setInt(pos++, ((VirtualConversation) item).getMessageId());
-            else
+            } else {
                 stmt.setInt(pos++, item.getId());
+            }
             stmt.executeUpdate();
 
             // Update the flagset or tagset cache.  Assume that the item's in-memory
@@ -1360,10 +1370,10 @@ public class DbMailItem {
         }
     }
 
-    public static void alterTag(Tag tag, List<Integer> itemIDs, boolean add)
-    throws ServiceException {
-        if (itemIDs == null || itemIDs.isEmpty())
+    public static void alterTag(Tag tag, List<Integer> itemIDs, boolean add) throws ServiceException {
+        if (itemIDs == null || itemIDs.isEmpty()) {
             return;
+        }
         Mailbox mbox = tag.getMailbox();
 
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
@@ -1377,7 +1387,7 @@ public class DbMailItem {
 
             String primaryUpdate = column + " = " + column + (add ? " + ?" : " - ?");
             String updateChangeID = (altersModseq ? ", mod_metadata = ?, change_date = ?" : "");
-            String precondition = (add ? "NOT " : "") + Db.bitmaskAND(column);
+            String precondition = Db.getInstance().bitAND(column, "?") + (add ? " = 0" : " <> 0");
 
             for (int i = 0; i < itemIDs.size(); i += Db.getINClauseBatchSize()) {
                 int count = Math.min(Db.getINClauseBatchSize(), itemIDs.size() - i);
@@ -1393,8 +1403,9 @@ public class DbMailItem {
                 }
                 pos = setMailboxId(stmt, mbox, pos);
                 stmt.setLong(pos++, tag.getBitmask());
-                for (int index = i; index < i + count; index++)
+                for (int index = i; index < i + count; index++) {
                     stmt.setInt(pos++, itemIDs.get(index));
+                }
                 stmt.executeUpdate();
                 stmt.close();
                 stmt = null;
@@ -1402,10 +1413,11 @@ public class DbMailItem {
 
             // Update the flagset or tagset cache.  Assume that the item's in-memory
             // data has already been updated.
-            if (tag instanceof Flag && areFlagsetsLoaded(mbox))
+            if (tag instanceof Flag && areFlagsetsLoaded(mbox)) {
                 getFlagsetCache(conn, mbox).applyMask(tag.getBitmask(), add);
-            else if (areTagsetsLoaded(mbox))
+            } else if (areTagsetsLoaded(mbox)) {
                 getTagsetCache(conn, mbox).applyMask(tag.getBitmask(), add);
+            }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("updating tag data for " + itemIDs.size() + " items: " + getIdListForLogging(itemIDs), e);
         } finally {
@@ -1423,7 +1435,7 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(tag) +
                         " SET tags = tags - ?, mod_metadata = ?, change_date = ?" +
-                        " WHERE " + IN_THIS_MAILBOX_AND + Db.bitmaskAND("tags"));
+                        " WHERE " + IN_THIS_MAILBOX_AND + Db.getInstance().bitAND("tags", "?") + " <> 0");
             int pos = 1;
             stmt.setLong(pos++, tag.getBitmask());
             stmt.setInt(pos++, mbox.getOperationChangeID());
@@ -1432,8 +1444,9 @@ public class DbMailItem {
             stmt.setLong(pos++, tag.getBitmask());
             stmt.executeUpdate();
 
-            if (areTagsetsLoaded(mbox))
+            if (areTagsetsLoaded(mbox)) {
                 getTagsetCache(conn, mbox).applyMask(tag.getTagBitmask(), false);
+            }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("clearing all references to tag " + tag.getId(), e);
         } finally {
@@ -1446,8 +1459,7 @@ public class DbMailItem {
      * If the <code>MailItem</code> is a <code>Conversation</code>, <code>Tag</code>
      * or <code>Folder</code>, sets the <code>unread</code> column for all related items.
      */
-    public static void alterUnread(MailItem item, boolean unread)
-    throws ServiceException {
+    public static void alterUnread(MailItem item, boolean unread) throws ServiceException {
         Mailbox mbox = item.getMailbox();
 
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
@@ -1456,12 +1468,19 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             String relation;
-            if (item instanceof VirtualConversation)  relation = "id = ?";
-            else if (item instanceof Conversation)    relation = "parent_id = ?";
-            else if (item instanceof Folder)          relation = "folder_id = ?";
-            else if (item instanceof Flag)            relation = Db.bitmaskAND("flags");
-            else if (item instanceof Tag)             relation = Db.bitmaskAND("tags");
-            else                                      relation = "id = ?";
+            if (item instanceof VirtualConversation) {
+                relation = "id = ?";
+            } else if (item instanceof Conversation) {
+                relation = "parent_id = ?";
+            } else if (item instanceof Folder) {
+                relation = "folder_id = ?";
+            } else if (item instanceof Flag) {
+                relation = Db.getInstance().bitAND("flags", "?") + " <> 0";
+            } else if (item instanceof Tag) {
+                relation = Db.getInstance().bitAND("tags", "?") + " <> 0";
+            } else {
+                relation = "id = ?";
+            }
 
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
                         " SET unread = ?, mod_metadata = ?, change_date = ?" +
@@ -1473,12 +1492,13 @@ public class DbMailItem {
             stmt.setInt(pos++, mbox.getOperationTimestamp());
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, unread ? 0 : 1);
-            if (item instanceof Tag)
+            if (item instanceof Tag) {
                 stmt.setLong(pos++, ((Tag) item).getBitmask());
-            else if (item instanceof VirtualConversation)
+            } else if (item instanceof VirtualConversation) {
                 stmt.setInt(pos++, ((VirtualConversation) item).getMessageId());
-            else
+            } else {
                 stmt.setInt(pos++, item.getId());
+            }
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("updating unread state for item " + item.getId(), e);
@@ -2369,12 +2389,19 @@ public class DbMailItem {
         ResultSet rs = null;
         try {
             String relation;
-            if (relativeTo instanceof VirtualConversation)  relation = "id = ?";
-            else if (relativeTo instanceof Conversation)    relation = "parent_id = ?";
-            else if (relativeTo instanceof Folder)          relation = "folder_id = ?";
-            else if (relativeTo instanceof Flag)            relation = Db.bitmaskAND("flags");
-            else if (relativeTo instanceof Tag)             relation = Db.bitmaskAND("tags");
-            else                                            relation = "id = ?";
+            if (relativeTo instanceof VirtualConversation) {
+                relation = "id = ?";
+            } else if (relativeTo instanceof Conversation) {
+                relation = "parent_id = ?";
+            } else if (relativeTo instanceof Folder) {
+                relation = "folder_id = ?";
+            } else if (relativeTo instanceof Flag) {
+                relation = Db.getInstance().bitAND("flags", "?") + " <> 0";
+            } else if (relativeTo instanceof Tag) {
+                relation = Db.getInstance().bitAND("tags", "?") + " <> 0";
+            } else {
+                relation = "id = ?";
+            }
 
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                     " FROM " + getMailItemTableName(relativeTo.getMailbox(), " mi") +
@@ -2383,12 +2410,13 @@ public class DbMailItem {
                 Db.getInstance().enableStreaming(stmt);
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
-            if (relativeTo instanceof Tag)
+            if (relativeTo instanceof Tag) {
                 stmt.setLong(pos++, ((Tag) relativeTo).getBitmask());
-            else if (relativeTo instanceof VirtualConversation)
+            } else if (relativeTo instanceof VirtualConversation) {
                 stmt.setInt(pos++, ((VirtualConversation) relativeTo).getMessageId());
-            else
+            } else {
                 stmt.setInt(pos++, relativeTo.getId());
+            }
             rs = stmt.executeQuery();
 
             while (rs.next()) {
@@ -3243,8 +3271,9 @@ public class DbMailItem {
             stmt = conn.prepareStatement(
                     "SELECT mi.id, mi.size, mi.blob_digest FROM " + getMailItemTableName(mbox, " mi") +
                     " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("folder_id", folders.size()) +
-                    " AND type = " + MailItem.Type.MESSAGE.toByte() +
-                    " AND NOT " + Db.bitmaskAND("flags", Flag.BITMASK_DELETED | Flag.BITMASK_POPPED) + dateConstraint);
+                    " AND type = " + MailItem.Type.MESSAGE.toByte() + " AND " +
+                    Db.getInstance().bitAND("flags", String.valueOf(Flag.BITMASK_DELETED | Flag.BITMASK_POPPED)) +
+                    " = 0" + dateConstraint);
             if (getTotalFolderSize(folders) > RESULTS_STREAMING_MIN_ROWS) {
                 //TODO: Because of POPPED flag, the folder size no longer represent the count.
                 Db.getInstance().enableStreaming(stmt);

@@ -15,42 +15,39 @@
 
 package com.zimbra.cs.index;
 
+import java.util.EnumSet;
+
 import org.junit.Assert;
 import org.junit.Test;
+
+import com.zimbra.cs.mailbox.MailItem;
 
 /**
  * Unit test for {@link MultiQueryResults}.
  *
  * @author ysasaki
  */
-public class MultiQueryResultsTest {
+public final class MultiQueryResultsTest {
 
     @Test
     public void multi() throws Exception {
-        SortBy sort = SortBy.DATE_DESC;
-        MultiQueryResults multi = new MultiQueryResults(3, sort);
+        MultiQueryResults multi = new MultiQueryResults(3, SortBy.DATE_DESC);
 
-        MockQueryResults result = new MockQueryResults(sort);
-        MockHit hit = new MockHit(1, "1-1");
-        hit.setDate(10);
+        MockQueryResults result = new MockQueryResults(EnumSet.of(MailItem.Type.MESSAGE), SortBy.DATE_DESC);
+        MockHit hit = new MockHit(result, 1, "1-1", 10L);
         result.add(hit);
-        hit = new MockHit(2, "1-2");
-        hit.setDate(8);
+        hit = new MockHit(result, 2, "1-2", 8L);
         result.add(hit);
-        hit = new MockHit(2, "1-3");
-        hit.setDate(6);
+        hit = new MockHit(result, 2, "1-3", 6L);
         result.add(hit);
         multi.add(result);
 
-        result = new MockQueryResults(SortBy.DATE_DESC);
-        hit = new MockHit(1, "2-1");
-        hit.setDate(9);
+        result = new MockQueryResults(EnumSet.of(MailItem.Type.MESSAGE), SortBy.DATE_DESC);
+        hit = new MockHit(result, 1, "2-1", 9L);
         result.add(hit);
-        hit = new MockHit(2, "2-2");
-        hit.setDate(7);
+        hit = new MockHit(result, 2, "2-2", 7L);
         result.add(hit);
-        hit = new MockHit(2, "2-3");
-        hit.setDate(5);
+        hit = new MockHit(result, 2, "2-3", 5L);
         result.add(hit);
         multi.add(result);
 

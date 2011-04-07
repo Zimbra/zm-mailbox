@@ -16,7 +16,6 @@
 package com.zimbra.cs.index;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Note;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -30,8 +29,8 @@ public final class NoteHit extends ZimbraHit {
     private Note note ;
     private final int itemId;
 
-    NoteHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id, Note note) {
-        super(results, mbx);
+    NoteHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id, Note note, Object sortValue) {
+        super(results, mbx, sortValue);
         itemId = id;
         this.note = note;
     }
@@ -80,14 +79,6 @@ public final class NoteHit extends ZimbraHit {
             cachedName = getNote().getSubject();
         }
         return cachedName;
-    }
-
-    @Override
-    public String getRecipients() throws ServiceException {
-        if (cachedRecipients == null) {
-            cachedRecipients = Strings.nullToEmpty(getNote().getSortRecipients());
-        }
-        return cachedRecipients;
     }
 
     @Override

@@ -29,7 +29,7 @@ import com.zimbra.common.util.ZimbraLog;
  * @author tim
  */
 public final class HitIdGrouper extends BufferingResultsGrouper {
-    private final SortBy sortOrder;
+    private final SortBy sortBy;
 
     public static ZimbraQueryResults create(ZimbraQueryResults hits, SortBy sortOrder) {
         if (sortOrder == SortBy.NONE) {
@@ -41,7 +41,7 @@ public final class HitIdGrouper extends BufferingResultsGrouper {
 
     private HitIdGrouper(ZimbraQueryResults hits, SortBy sort) {
         super(hits);
-        sortOrder = sort;
+        sortBy = sort;
     }
 
     @Override
@@ -63,13 +63,13 @@ public final class HitIdGrouper extends BufferingResultsGrouper {
         bufferedHit.add(curGroupHit);
 
         // buffer all the hits with the same sort field
-        while (hits.hasNext() && curGroupHit.compareBySortField(sortOrder, hits.peekNext()) == 0) {
+        while (hits.hasNext() && curGroupHit.compareTo(sortBy, hits.peekNext()) == 0) {
             ZimbraLog.search.debug("HitIdGrouper buffering %s", hits.peekNext());
             bufferedHit.add(hits.getNext());
         }
 
         // sort them by mail-item-id
-        Collections.sort(bufferedHit, ZimbraHit.getSortAndIdComparator(sortOrder));
+        Collections.sort(bufferedHit, ZimbraHit.getSortAndIdComparator(sortBy));
 
         // we're done
         return true;

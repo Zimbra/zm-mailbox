@@ -106,6 +106,13 @@ public final class DbSearch {
                 return "mi.id";
             case SIZE:
                 return "mi.size";
+            case ATTACHMENT: // 0 or 1
+                return "SIGN(" + Db.getInstance().bitAND("mi.flags", String.valueOf(Flag.BITMASK_ATTACHED)) + ")";
+            case FLAG: // 0 or 1
+                return "SIGN(" + Db.getInstance().bitAND("mi.flags", String.valueOf(Flag.BITMASK_FLAGGED)) + ")";
+            case PRIORITY: // -1 or 0 or 1
+                return "SIGN(" + Db.getInstance().bitAND("mi.flags", String.valueOf(Flag.BITMASK_HIGH_PRIORITY)) +
+                    ") - SIGN(" + Db.getInstance().bitAND("mi.flags", String.valueOf(Flag.BITMASK_LOW_PRIORITY)) + ")";
             case DATE:
             default:
                 return "mi.date";
@@ -578,6 +585,8 @@ public final class DbSearch {
 
     private static Object getSortKey(ResultSet rs, SortBy sort) throws SQLException {
         switch (sort.getKey()) {
+            case NONE: // no sort column in the result set for NONE
+                return null;
             case SUBJECT:
             case SENDER:
             case RCPT:
@@ -586,8 +595,11 @@ public final class DbSearch {
                 return rs.getString(SORT_COLUMN_ALIAS);
             case SIZE:
                 return new Long(rs.getInt(SORT_COLUMN_ALIAS));
-            case NONE: // no sort column in the result set for NONE
-                return null;
+            case ATTACHMENT:
+            case FLAG:
+            case PRIORITY:
+                return new Integer(rs.getInt(SORT_COLUMN_ALIAS));
+            case DATE:
             default:
                 return new Long(rs.getInt(SORT_COLUMN_ALIAS) * 1000L);
         }
@@ -973,15 +985,16 @@ public final class DbSearch {
     }
 
     public static abstract class Result {
-        private final Object sortkey;
+        private final Object sortValue;
 
-        protected Result(Object sortkey) {
-            assert (sortkey == null || sortkey instanceof String || sortkey instanceof Long) : sortkey;
-            this.sortkey = sortkey;
+        protected Result(Object sortValue) {
+            assert (sortValue == null || sortValue instanceof String ||
+                    sortValue instanceof Long || sortValue instanceof Integer) : sortValue;
+            this.sortValue = sortValue;
         }
 
-        public Object getSortKey() {
-            return sortkey;
+        public Object getSortValue() {
+            return sortValue;
         }
 
         public abstract int getId();
@@ -1017,7 +1030,7 @@ public final class DbSearch {
             return Objects.toStringHelper(this)
                 .add("id", getId())
                 .add("type", getType())
-                .add("sort", sortkey)
+                .add("sort", sortValue)
                 .toString();
         }
 
@@ -1171,8 +1184,8 @@ public final class DbSearch {
             switch (sort.getKey()) {
                 case SIZE:
                 case DATE:
-                    long date1 = (Long) o1.getSortKey();
-                    long date2 = (Long) o2.getSortKey();
+                    long date1 = (Long) o1.getSortValue();
+                    long date2 = (Long) o2.getSortValue();
                     if (date1 != date2) {
                         long diff;
                         if (sort.getDirection() == SortBy.Direction.DESC) {

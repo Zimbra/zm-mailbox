@@ -242,7 +242,7 @@ public final class IntersectionQueryOperation extends CombiningQueryOperation {
             while (subOp.hasNext()) {
                 ZimbraHit hit = subOp.peekNext();
 
-                if (hit.compareBySortField(sortOrder, groupHit) == 0) {
+                if (hit.compareTo(sortOrder, groupHit) == 0) {
                     bufferedHit.add(hit);
                     // go to next one:
                     ZimbraHit check = subOp.getNext();
@@ -331,7 +331,7 @@ public final class IntersectionQueryOperation extends CombiningQueryOperation {
 
             ZimbraHit newStamp = null;
             while ((newStamp = subOp.peekNext()) != null) {
-                int result = newStamp.compareBySortField(sortOrder, groupHit);
+                int result = newStamp.compareTo(sortOrder, groupHit);
                 if (result == 0) {
                     bufferedHit.add(newStamp);
                     // go to nex thit

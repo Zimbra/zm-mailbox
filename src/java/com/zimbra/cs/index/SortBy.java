@@ -42,6 +42,12 @@ public enum SortBy {
     RCPT_DESC("rcptDesc", Key.RCPT, Direction.DESC),
     SIZE_ASC("sizeAsc", Key.SIZE, Direction.ASC),
     SIZE_DESC("sizeDesc", Key.SIZE, Direction.DESC),
+    ATTACHMENT_ASC("attachAsc", Key.ATTACHMENT, Direction.ASC),
+    ATTACHMENT_DESC("attachDesc", Key.ATTACHMENT, Direction.DESC),
+    FLAG_ASC("flagAsc", Key.FLAG, Direction.ASC),
+    FLAG_DESC("flagDesc", Key.FLAG, Direction.DESC),
+    PRIORITY_ASC("priorityAsc", Key.PRIORITY, Direction.ASC),
+    PRIORITY_DESC("priorityDesc", Key.PRIORITY, Direction.DESC),
     @Deprecated SCORE_DESC("score", Key.DATE, Direction.DESC),
 
     // wiki "natural order" sorts are not exposed via SOAP
@@ -59,11 +65,8 @@ public enum SortBy {
     TASK_PERCENT_COMPLETE_ASC("taskPercCompletedAsc",  Key.DATE, Direction.ASC),
     TASK_PERCENT_COMPLETE_DESC("taskPercCompletedDesc", Key.DATE, Direction.DESC);
 
-    /**
-     * This is the sort field that the DB/Lucene knows about
-     */
     public enum Key {
-        DATE, SENDER, RCPT, SUBJECT, ID, NONE, NAME, NAME_NATURAL_ORDER, SIZE
+        DATE, SENDER, RCPT, SUBJECT, ID, NONE, NAME, NAME_NATURAL_ORDER, SIZE, ATTACHMENT, FLAG, PRIORITY
     }
 
     public enum Direction {

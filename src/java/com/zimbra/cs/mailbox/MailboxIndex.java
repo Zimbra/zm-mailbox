@@ -788,7 +788,7 @@ public final class MailboxIndex {
                     while (itr.hasNext()) {
                         DbSearch.Result sr = itr.next();
                         MailItem item = mailbox.getItem(sr.getItemData());
-                        itr.set(new ItemSearchResult(item, sr.getSortKey()));
+                        itr.set(new ItemSearchResult(item, sr.getSortValue()));
                     }
                 }
                 success = true;

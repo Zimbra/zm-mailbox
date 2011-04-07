@@ -34,7 +34,8 @@ import com.zimbra.cs.service.util.ItemId;
 public abstract class ZimbraHit {
 
     protected final Mailbox mailbox;
-    protected final ZimbraQueryResultsImpl results;
+    protected final ZimbraQueryResults results;
+    protected final Object sortValue;
     protected long cachedDate = -1;
     protected long cachedSize = -1;
     protected String cachedName;
@@ -44,9 +45,73 @@ public abstract class ZimbraHit {
     protected int cachedModseq = -1;
     protected int cachedParentId = 0;
 
-    public ZimbraHit(ZimbraQueryResultsImpl results, Mailbox mbx) {
+    public ZimbraHit(ZimbraQueryResults results, Mailbox mbx, Object sort) {
         mailbox = mbx;
         this.results = results;
+
+        switch (results.getSortBy().getKey()) {
+            case NONE:
+                sortValue = "";
+                break;
+            case DATE:
+                sortValue = toLong(sort);
+                cachedDate = ((Long) sortValue).longValue();
+                break;
+            case SENDER:
+            case NAME:
+            case NAME_NATURAL_ORDER:
+                sortValue = sort;
+                cachedName = (String) sortValue;
+                break;
+            case SUBJECT:
+                sortValue = sort;
+                cachedSubj = (String) sortValue;
+                break;
+            case RCPT:
+                sortValue = sort;
+                cachedRecipients = (String) sortValue;
+                break;
+            case SIZE:
+                sortValue = toLong(sort);
+                cachedSize = ((Long) sortValue).longValue();
+                break;
+            case ID:
+            case ATTACHMENT:
+            case FLAG:
+            case PRIORITY:
+                sortValue = toInteger(sort);
+                break;
+            default:
+                throw new IllegalArgumentException(results.getSortBy().toString());
+        }
+    }
+
+    private Long toLong(Object value) {
+        if (value instanceof Long) {
+            return (Long) value;
+        } else if (value instanceof String) {
+            try {
+                return new Long((String) value);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException(value.toString());
+            }
+        } else {
+            throw new IllegalArgumentException(value.toString());
+        }
+    }
+
+    private Integer toInteger(Object value) {
+        if (value instanceof Integer) {
+            return (Integer) value;
+        } else if (value instanceof String) {
+            try {
+                return new Integer((String) value);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException(value.toString());
+            }
+        } else {
+            throw new IllegalArgumentException(value.toString());
+        }
     }
 
     public abstract int getItemId() throws ServiceException;
@@ -96,11 +161,6 @@ public abstract class ZimbraHit {
     abstract String getName() throws ServiceException;
 
     /**
-     * Returns the recipients for sorting, or an empty string if the item has no value for it.
-     */
-    abstract String getRecipients() throws ServiceException;
-
-    /**
      * Used for cross-mailbox-search, returns the AccountId of the hit.
      */
     public String getAcctIdStr() {
@@ -122,38 +182,23 @@ public abstract class ZimbraHit {
         }
     }
 
-    public Object getSortField(SortBy sortOrder) throws ServiceException {
-        switch (sortOrder) {
+    /**
+     * Subclasses may override.
+     *
+     * @throws ServiceException failed to get the sort field
+     */
+    public Object getSortField(SortBy sort) throws ServiceException {
+        switch (sort.getKey()) {
             case NONE:
                 return "";
-            case DATE_ASC:
-            case DATE_DESC: // 5...4...3...
-                return getDate();
-            case SUBJ_ASC:
-            case SUBJ_DESC:
-                return getSubject().toUpperCase();
-            case NAME_ASC:
-            case NAME_DESC:
-            case NAME_LOCALIZED_ASC:
-            case NAME_LOCALIZED_DESC:
-                return getName().toUpperCase();
-            case RCPT_ASC:
-            case RCPT_DESC:
-                return getRecipients();
-            case SIZE_ASC:
-            case SIZE_DESC: // 5K...4K...3K...
-                return getSize();
-            case SCORE_DESC:
-                return 1.0F;
-            case TASK_DUE_ASC:
-            case TASK_DUE_DESC:
-            case TASK_STATUS_ASC:
-            case TASK_STATUS_DESC:
-            case TASK_PERCENT_COMPLETE_ASC:
-            case TASK_PERCENT_COMPLETE_DESC:
-                throw new IllegalArgumentException("Wrong hit type for hit " + this + " with sort order: " + sortOrder);
+            case SUBJECT:
+            case NAME:
+            case RCPT:
+                return ((String) sortValue).toUpperCase();
+            case DATE:
+            case SIZE:
             default:
-                throw new IllegalArgumentException("Unknown sort order: " + sortOrder);
+                return sortValue;
         }
     }
 
@@ -166,52 +211,52 @@ public abstract class ZimbraHit {
     }
 
     final ZimbraQueryResultsImpl getResults() {
-        return results;
+        return (ZimbraQueryResultsImpl) results;
     }
 
     /**
      * Compare this hit to other using the sort field only
      *
      * @return {@code <0} if "this" is BEFORE other, {@code 0} if EQUAL, {@code >0} if this AFTER other
+     * @throws ServiceException failed to compare
      */
-    int compareBySortField(SortBy sort, ZimbraHit other) throws ServiceException {
+    int compareTo(SortBy sort, ZimbraHit other) throws ServiceException {
         switch (sort) {
             case NONE:
                 throw new IllegalArgumentException(SortBy.NONE.name());
             case DATE_ASC:
-                return Long.signum(getDate() - other.getDate());
-            case DATE_DESC: // 5...4...3...
-                return Long.signum(other.getDate() - getDate());
+            case SIZE_ASC:
+                return Long.signum((Long) sortValue - (Long) other.sortValue);
+            case DATE_DESC:
+            case SIZE_DESC:
+                return Long.signum((Long) other.sortValue - (Long) sortValue);
             case SUBJ_ASC:
-                 // We to compare(toUpper()) instead of compareIgnoreCase or using a collator because that's the only
-                 // method that seems to give us the same results as the sorts from SQL server -- esp the [] characters
-                return getSubject().toUpperCase().compareTo(other.getSubject().toUpperCase());
-            case SUBJ_DESC:
-                // We to compare(toUpper()) instead of compareIgnoreCase or using a collator because that's the only
-                // method that seems to give us the same results as the sorts from SQL server -- esp the [] characters
-                return other.getSubject().toUpperCase().compareTo(getSubject().toUpperCase());
             case NAME_ASC:
             case NAME_LOCALIZED_ASC:
-                // We to compare(toUpper()) instead of compareIgnoreCase or using a collator because that's the only
-                // method that seems to give us the same results as the sorts from SQL server -- esp the [] characters
-                return getName().toUpperCase().compareTo(other.getName().toUpperCase());
-            case NAME_DESC:
-            case NAME_LOCALIZED_DESC:
+            case RCPT_ASC:
                  // We to compare(toUpper()) instead of compareIgnoreCase or using a collator because that's the only
                  // method that seems to give us the same results as the sorts from SQL server -- esp the [] characters
-                return other.getName().toUpperCase().compareTo(getName().toUpperCase());
-            case RCPT_ASC:
-                return getRecipients().toUpperCase().compareTo(other.getRecipients().toUpperCase());
+                return ((String) sortValue).toUpperCase().compareTo(((String) other.sortValue).toUpperCase());
+            case SUBJ_DESC:
+            case NAME_DESC:
+            case NAME_LOCALIZED_DESC:
             case RCPT_DESC:
-                return other.getRecipients().toUpperCase().compareTo(getRecipients().toUpperCase());
-            case SIZE_ASC:
-                return Long.signum(getSize() - other.getSize());
-            case SIZE_DESC:
-                return Long.signum(other.getSize() - getSize());
+                // We to compare(toUpper()) instead of compareIgnoreCase or using a collator because that's the only
+                // method that seems to give us the same results as the sorts from SQL server -- esp the [] characters
+                return ((String) other.sortValue).toUpperCase().compareTo(((String) sortValue).toUpperCase());
+            case ATTACHMENT_ASC:
+            case FLAG_ASC:
+            case PRIORITY_ASC:
+                return (Integer) sortValue - (Integer) other.sortValue;
+            case ATTACHMENT_DESC:
+            case FLAG_DESC:
+            case PRIORITY_DESC:
+                return (Integer) other.sortValue - (Integer) sortValue;
             case SCORE_DESC:
                 return 0;
             default:
-                throw new IllegalArgumentException("Unknown sort order: " + sort);
+                assert false : sort;
+                return 0;
         }
     }
 
@@ -249,29 +294,6 @@ public abstract class ZimbraHit {
         return cachedParentId;
     }
 
-    final void cacheSortField(SortBy sortType, Object sortKey) {
-        switch(sortType) {
-            case DATE_ASC:
-            case DATE_DESC:
-                cachedDate = ((Long) sortKey).longValue();
-                break;
-            case NAME_ASC:
-            case NAME_LOCALIZED_ASC:
-            case NAME_DESC:
-            case NAME_LOCALIZED_DESC:
-                cachedName = (String) sortKey;
-                break;
-            case SUBJ_ASC:
-            case SUBJ_DESC:
-                cachedSubj = (String) sortKey;
-                break;
-            case SIZE_ASC:
-            case SIZE_DESC:
-                cachedSize = ((Long) sortKey).longValue();
-                break;
-        }
-    }
-
     final void cacheImapMessage(ImapMessage value) {
         cachedImapMessage = value;
     }
@@ -303,7 +325,7 @@ public abstract class ZimbraHit {
         @Override
         public int compare(ZimbraHit lhs, ZimbraHit rhs) {
             try {
-                int result = lhs.compareBySortField(sort, rhs);
+                int result = lhs.compareTo(sort, rhs);
                 if (result == 0) {
                     int lhsId = lhs.getItemId();
                     if (lhsId <= 0) {

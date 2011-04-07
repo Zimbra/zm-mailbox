@@ -14,10 +14,10 @@
  */
 package com.zimbra.cs.index;
 
-import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedList;
+import java.util.List;
 
 import com.google.common.base.Objects;
 import com.zimbra.cs.localconfig.DebugConfig;
@@ -31,21 +31,18 @@ import com.zimbra.cs.mailbox.MailItem;
  * (see bug 2937)
  */
 public final class ResultsPager {
-    private ZimbraQueryResults mResults;
-    private boolean mFixedOffset;
-
+    private ZimbraQueryResults results;
+    private boolean fixedOffset;
     // in cases where ReSortingQueryResults is simulating the cursor for us, we need to skip
     // the passed-in cursor AND offset....otherwise pages will be skipped b/c we will end up
     // skipping OFFSET entries into the cursor-narrowed return set.  Note that we can't just
     // change the requested offset in SearchParams because that would cause the offset returned
     // in <SearchResponse> to be incorrect.
-    private boolean mIgnoreOffsetHack = false;
-
-    private AbstractList<ZimbraHit> mBufferedHits = null;;
-    private SearchParams mParams;
-    private boolean mForward = true;
-
-    private Comparator<ZimbraHit> mComparator;
+    private boolean ignoreOffsetHack = false;
+    private List<ZimbraHit> bufferedHits;
+    private SearchParams params;
+    private boolean forward = true;
+    private Comparator<ZimbraHit> comparator;
 
     public static ResultsPager create(ZimbraQueryResults results, SearchParams params) throws ServiceException {
         ResultsPager toRet;
@@ -91,119 +88,116 @@ public final class ResultsPager {
     }
 
     /**
-     * @param params SearchParams: if OFFSET-MODE, requires SortBy, offset, limit to be set,
-     *               otherwise requires cursor to be set
-     * @throws ServiceException
+     * @param params if OFFSET-MODE, requires SortBy, offset, limit to be set, otherwise requires cursor to be set
      */
     private ResultsPager(ZimbraQueryResults results, SearchParams params,
             boolean useCursor, boolean forward, boolean skipOffset) throws ServiceException {
-        mResults = results;
-        mParams = params;
-        mFixedOffset = !useCursor;
-        mIgnoreOffsetHack = skipOffset;
-        mForward = forward;
+        this.results = results;
+        this.params = params;
+        this.fixedOffset = !useCursor;
+        this.ignoreOffsetHack = skipOffset;
+        this.forward = forward;
 
         if (DebugConfig.enableContactLocalizedSort) {
-            switch (mParams.getSortBy()) {
+            switch (params.getSortBy()) {
                 case NAME_LOCALIZED_ASC:
                 case NAME_LOCALIZED_DESC:
-                    mComparator = mParams.getSortBy().getHitComparator(mParams.getLocale());
+                    comparator = params.getSortBy().getHitComparator(params.getLocale());
                     break;
             }
         }
 
-        assert(forward || !mFixedOffset); // only can go backward if using cursor
+        assert(forward || !fixedOffset); // only can go backward if using cursor
         reset();
     }
 
     public SortBy getSortOrder() {
-        return mParams.getSortBy();
+        return params.getSortBy();
     }
 
     public void reset() throws ServiceException {
-        if (mFixedOffset) {
-            int offsetToUse = mParams.getOffset();
-            if (mIgnoreOffsetHack)
+        if (fixedOffset) {
+            int offsetToUse = params.getOffset();
+            if (ignoreOffsetHack) {
                 offsetToUse = 0;
+            }
             if (offsetToUse > 0) {
-                mResults.skipToHit(offsetToUse-1);
+                results.skipToHit(offsetToUse-1);
             } else {
-                mResults.resetIterator();
+                results.resetIterator();
             }
         } else {
-            if (mForward) {
-                mBufferedHits = new ArrayList<ZimbraHit>(1);
+            if (forward) {
+                bufferedHits = new ArrayList<ZimbraHit>(1);
                 ZimbraHit current = forwardFindFirst();
                 if (current != null)
-                    mBufferedHits.add(current);
+                    bufferedHits.add(current);
             } else {
-                mBufferedHits = backward();
+                bufferedHits = backward();
             }
         }
     }
 
     public boolean hasNext() throws ServiceException {
-        if (mBufferedHits != null && !mBufferedHits.isEmpty()) {
+        if (bufferedHits != null && !bufferedHits.isEmpty()) {
             return true;
         } else {
-            return mResults.hasNext();
+            return results.hasNext();
         }
     }
 
     public ZimbraHit getNextHit() throws ServiceException {
-        if (mBufferedHits != null && !mBufferedHits.isEmpty()) {
-            return mBufferedHits.remove(0);
+        if (bufferedHits != null && !bufferedHits.isEmpty()) {
+            return bufferedHits.remove(0);
         } else {
-            return mResults.getNext();
+            return results.getNext();
         }
     }
 
     private ZimbraHit forwardFindFirst() throws ServiceException {
         int offset = 0;
-
         ZimbraHit prevHit = getDummyPrevHit();
-
-        mResults.resetIterator();
-        ZimbraHit hit = mResults.getNext();
+        results.resetIterator();
+        ZimbraHit hit = results.getNext();
         while (hit != null) {
             offset++;
 
-            if (hit.getItemId() == mParams.getPrevMailItemId().getId()) {
+            if (hit.getItemId() == params.getPrevMailItemId().getId()) {
                 // found it!
-                return mResults.getNext();
+                return results.getNext();
             }
 
             int comp;
             if (DebugConfig.enableContactLocalizedSort) {
-                if (mComparator != null) {
-                    comp = mComparator.compare(hit, prevHit);
+                if (comparator != null) {
+                    comp = comparator.compare(hit, prevHit);
                 } else {
-                    comp = hit.compareBySortField(mParams.getSortBy(), prevHit);
+                    comp = hit.compareTo(params.getSortBy(), prevHit);
                 }
-            } else
-                comp = hit.compareBySortField(mParams.getSortBy(), prevHit);
-
+            } else {
+                comp = hit.compareTo(params.getSortBy(), prevHit);
+            }
             // if (hit at the SAME TIME as prevSortValue) AND the ID is > prevHitId
             //   --> this depends on a secondary sort-order of HitID.  This doesn't
             //  currently hold up with ProxiedHits: we need to convert Hit sorting to
             //  use ItemIds (instead of int's) TODO FIXME
             if (comp == 0) {
                 // special case prevId of 0
-                if (mParams.getPrevMailItemId().getId() == 0) {
+                if (params.getPrevMailItemId().getId() == 0) {
                     return hit;
                 }
 
-                if (mParams.getSortBy().getDirection() == SortBy.Direction.DESC) {
-                    if (hit.getItemId() < mParams.getPrevMailItemId().getId()) {
+                if (params.getSortBy().getDirection() == SortBy.Direction.DESC) {
+                    if (hit.getItemId() < params.getPrevMailItemId().getId()) {
                         return hit;
                     }
                 } else {
-                    if (hit.getItemId() > mParams.getPrevMailItemId().getId()) {
+                    if (hit.getItemId() > params.getPrevMailItemId().getId()) {
                         return hit;
                     }
                 }
                 // keep looking...
-                hit = mResults.getNext();
+                hit = results.getNext();
             } else if (comp < 0) {
                 // oops, we haven't gotten to the cursor-specified sort field yet...this happens
                 // when we use a cursor without doing adding a range constraint to specify
@@ -211,7 +205,7 @@ public final class ResultsPager {
                 // we skip the range b/c we need to force the search code to iterate over all
                 // results (to build the conversations and hit them into the right spot
                 // in the results)
-                hit = mResults.getNext();
+                hit = results.getNext();
             } else {
                 return hit;
             }
@@ -222,72 +216,66 @@ public final class ResultsPager {
     }
 
     /**
-     * @return A list (in reverse order) of all hits between start and current-cursor
-     *         position
-     * @throws ServiceException
+     * Returns a list (in reverse order) of all hits between start and current-cursor position.
      */
-    private AbstractList<ZimbraHit> backward() throws ServiceException {
-        LinkedList<ZimbraHit> ll = new LinkedList<ZimbraHit>();
-
+    private List<ZimbraHit> backward() throws ServiceException {
+        List<ZimbraHit> result = new LinkedList<ZimbraHit>();
         int offset = 0;
-        mResults.resetIterator();
-        ZimbraHit hit = mResults.getNext();
+        results.resetIterator();
+        ZimbraHit hit = results.getNext();
         ZimbraHit prevHit = getDummyPrevHit();
 
         ZimbraHit dummyEndHit = null;
-        if (mParams.hasEndSortValue()) {
+        if (params.hasEndSortValue()) {
             dummyEndHit = getDummyEndHit();
         }
 
-
-        while(hit != null) {
+        while (hit != null) {
             offset++;
+            result.add(hit);
 
-            ll.addLast(hit);
-
-            if (hit.getItemId() == mParams.getPrevMailItemId().getId()) {
+            if (hit.getItemId() == params.getPrevMailItemId().getId()) {
                 // found old one
                 break;
             }
 
             // if (hit COMES AFTER prevSortValue) {
-            if (hit.compareBySortField(mParams.getSortBy(), prevHit) > 0) {
+            if (hit.compareTo(params.getSortBy(), prevHit) > 0) {
                 break;
             }
 
             // if (hit COMES BEFORE endSortValue) {
-            if (mParams.hasEndSortValue() &&
-                    hit.compareBySortField(mParams.getSortBy(), dummyEndHit) <= 0) {
+            if (params.hasEndSortValue() && hit.compareTo(params.getSortBy(), dummyEndHit) <= 0) {
                 break;
             }
 
-            hit = mResults.getNext();
+            hit = results.getNext();
         }
-        return ll;
+        return result;
     }
 
     /**
      * Returns a dummy hit which is immediately before the first hit we want to return.
      */
     private ZimbraHit getDummyPrevHit() {
-        return new DummyHit(mParams.getPrevSortValueStr(), mParams.getPrevSortValueLong(),
-                mParams.getPrevMailItemId().getId());
+        return new DummyHit(results, params.getPrevSortValueStr(), params.getPrevSortValueLong(),
+                params.getPrevMailItemId().getId());
     }
 
     /**
      * Returns a dummy hit which is immediately after the last hit we want to return.
      */
     private ZimbraHit getDummyEndHit() {
-        return new DummyHit(mParams.getEndSortValueStr(), mParams.getEndSortValueLong(), 0);
+        return new DummyHit(results, params.getEndSortValueStr(), params.getEndSortValueLong(), 0);
     }
 
-    static class DummyHit extends ZimbraHit {
+    static final class DummyHit extends ZimbraHit {
         private int idCursor;
         private long dateCursor;
         private String stringCursor;
 
-        DummyHit(String str, long date, int id) {
-            super(null, null);
+        DummyHit(ZimbraQueryResults results, String str, long date, int id) {
+            super(results, null, str);
             stringCursor = str;
             dateCursor = date;
             idCursor = id;
@@ -338,11 +326,6 @@ public final class ResultsPager {
 
         @Override
         public String getName() {
-            return stringCursor;
-        }
-
-        @Override
-        public String getRecipients() {
             return stringCursor;
         }
 

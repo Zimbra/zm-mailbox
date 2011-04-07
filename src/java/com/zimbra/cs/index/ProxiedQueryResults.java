@@ -361,16 +361,14 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
         // put these hits into our buffer!
         int bufferIdx = 0;
         int stop = bufferEndOffset - bufferStartOffset;
-        for (Iterator<Element> iter = searchResp.elementIterator();
-            iter.hasNext() && bufferIdx < stop; ) {
-
+        for (Iterator<Element> iter = searchResp.elementIterator(); iter.hasNext() && bufferIdx < stop; ) {
             Element el = iter.next();
             if (el.getName().equalsIgnoreCase(MailConstants.E_INFO)) {
                 for (Element info : el.listElements()) {
                     queryInfo.add(new ProxiedQueryInfo(info));
                 }
             } else {
-                hitBuffer.add(bufferIdx++, new ProxiedHit(this, el));
+                hitBuffer.add(bufferIdx++, new ProxiedHit(this, el, el.getAttribute(MailConstants.A_SORT_FIELD)));
             }
         }
 

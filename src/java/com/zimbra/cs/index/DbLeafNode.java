@@ -28,7 +28,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.util.ItemId;
 
-class DbLeafNode extends DbSearchConstraints implements IConstraints {
+public final class DbLeafNode extends DbSearchConstraints implements IConstraints {
 
     /**
      * Set by the forceHasSpamTrashSetting() API

@@ -23,8 +23,8 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 
 public final class TaskHit extends CalendarItemHit {
 
-    TaskHit(ZimbraQueryResultsImpl results, Mailbox mbx, int mailItemId, Task task) {
-        super(results, mbx, mailItemId, task);
+    TaskHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id, Task task, Object sortValue) {
+        super(results, mbx, id, task, sortValue);
     }
 
     public long getDueTime() throws ServiceException {
@@ -97,7 +97,7 @@ public final class TaskHit extends CalendarItemHit {
     }
 
     @Override
-    int compareBySortField(SortBy sort, ZimbraHit other) throws ServiceException {
+    int compareTo(SortBy sort, ZimbraHit other) throws ServiceException {
         switch (sort) {
             case TASK_DUE_ASC:
                 return compareByDueDate(true, this, other);
@@ -112,7 +112,7 @@ public final class TaskHit extends CalendarItemHit {
             case TASK_PERCENT_COMPLETE_DESC:
                 return compareByCompletionPercent(false, this, other);
             default:
-                return super.compareBySortField(sort, other);
+                return super.compareTo(sort, other);
         }
     }
 

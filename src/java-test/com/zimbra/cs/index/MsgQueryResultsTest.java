@@ -14,6 +14,8 @@
  */
 package com.zimbra.cs.index;
 
+import java.util.EnumSet;
+
 import org.junit.Test;
 import org.testng.Assert;
 
@@ -21,6 +23,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.util.ItemId;
 
@@ -29,31 +32,30 @@ import com.zimbra.cs.service.util.ItemId;
  *
  * @author ysasaki
  */
-public class MsgQueryResultsTest {
+public final class MsgQueryResultsTest {
 
     @Test
     public void merge() throws Exception {
-        MockQueryResults top = new MockQueryResults(SortBy.NONE);
-        top.add(new MessageHit(null, null, 1000, null, null));
-        top.add(new MessagePartHit(null, null, 1000, null, null));
-        top.add(new MessagePartHit(null, null, 1000, null, null));
-        top.add(new MessageHit(null, null, 1001, null, null));
-        top.add(new MessageHit(null, null, 1001, null, null));
-        top.add(new MessagePartHit(null, null, 1001, null, null));
-        top.add(new MessagePartHit(null, null, 1001, null, null));
-        top.add(new MessageHit(null, null, 1002, null, null));
-        top.add(new MessageHit(null, null, 1003, null, null));
+        MockQueryResults top = new MockQueryResults(EnumSet.of(MailItem.Type.MESSAGE), SortBy.NONE);
+        top.add(new MessageHit(top, null, 1000, null, null, 0));
+        top.add(new MessagePartHit(top, null, 1000, null, null, 0));
+        top.add(new MessagePartHit(top, null, 1000, null, null, 0));
+        top.add(new MessageHit(top, null, 1001, null, null, 0));
+        top.add(new MessageHit(top, null, 1001, null, null, 0));
+        top.add(new MessagePartHit(top, null, 1001, null, null, 0));
+        top.add(new MessagePartHit(top, null, 1001, null, null, 0));
+        top.add(new MessageHit(top, null, 1002, null, null, 0));
+        top.add(new MessageHit(top, null, 1003, null, null, 0));
 
-        ProxiedHit phit = new ProxiedHit(null, null);
+        ProxiedHit phit = new ProxiedHit(top, null, 0);
         phit.setParsedItemId(new ItemId("A", 1000));
         top.add(phit);
 
-        phit = new ProxiedHit(null, null);
+        phit = new ProxiedHit(top, null, 0);
         phit.setParsedItemId(new ItemId("B", 1000));
         top.add(phit);
 
-        MsgQueryResults result = new MsgQueryResults(top, null, SortBy.NONE,
-                Mailbox.SearchResultMode.NORMAL);
+        MsgQueryResults result = new MsgQueryResults(top, null, SortBy.NONE, Mailbox.SearchResultMode.NORMAL);
 
         ZimbraHit hit = result.getNext();
         Assert.assertEquals(hit.getClass(), MessageHit.class);
@@ -84,15 +86,14 @@ public class MsgQueryResultsTest {
 
     @Test
     public void proxiedHitNotMerged() throws Exception {
-        MockQueryResults top = new MockQueryResults(SortBy.NONE);
-        top.add(new MessageHit(null, null, 1000, null, null));
+        MockQueryResults top = new MockQueryResults(EnumSet.of(MailItem.Type.MESSAGE), SortBy.NONE);
+        top.add(new MessageHit(top, null, 1000, null, null, 0));
 
         Element el = XMLElement.create(SoapProtocol.Soap12, "hit");
         el.addAttribute(MailConstants.A_ID, 1000);
-        top.add(new ProxiedHit(null, el));
+        top.add(new ProxiedHit(top, el, 0));
 
-        MsgQueryResults result = new MsgQueryResults(top, null, SortBy.NONE,
-                Mailbox.SearchResultMode.NORMAL);
+        MsgQueryResults result = new MsgQueryResults(top, null, SortBy.NONE, Mailbox.SearchResultMode.NORMAL);
 
         ZimbraHit hit = result.getNext();
         Assert.assertEquals(hit.getClass(), MessageHit.class);

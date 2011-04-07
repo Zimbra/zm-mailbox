@@ -56,9 +56,7 @@ Query Syntax
   item:(all|none|[0-9]+|{[0-9]+(,[0-9]+)*})
   field[FIELDNAME]:(TEXT)|[>,<,>=,<=](NUMBER)
   #FIELDNAME:(TEXT)|[>,<,>=,<=](NUMBER)
-
-  sort:(dateAsc|dateDesc|subjAsc|subjDesc|nameAsc|nameDesc|rcptAsc|rcptDesc|none)
-  // overrides the sort field specified in the <SearchRequest>
+  sort: overrides the sort field specified in the <SearchRequest>
 
 FRIENDLY_MIME_TYPE:"text"|"application"|"word"|"msword"|"excel"|"xls"|"ppt"|"pdf"|"ms-tnef"|"image"|"jpeg"|"gif"|"bmp"|"none"|"any"
 TEXT: text string, must be in "'s if has spaces in it

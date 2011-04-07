@@ -16,7 +16,6 @@
 package com.zimbra.cs.index;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
@@ -30,8 +29,8 @@ public class CalendarItemHit extends ZimbraHit {
     protected int id;
     protected CalendarItem item;
 
-    CalendarItemHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id, CalendarItem cal) {
-        super(results, mbx);
+    CalendarItemHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id, CalendarItem cal, Object sortValue) {
+        super(results, mbx, sortValue);
         this.id = id;
         item = cal;
     }
@@ -87,14 +86,6 @@ public class CalendarItemHit extends ZimbraHit {
     @Override
     public String getName() throws ServiceException {
         return getCalendarItem().getSubject();
-    }
-
-    @Override
-    public String getRecipients() throws ServiceException {
-        if (cachedRecipients == null) {
-            cachedRecipients = Strings.nullToEmpty(getCalendarItem().getSortRecipients());
-        }
-        return cachedRecipients;
     }
 
     @Override

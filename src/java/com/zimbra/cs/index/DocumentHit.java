@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -16,7 +16,6 @@ package com.zimbra.cs.index;
 
 import org.apache.lucene.document.Document;
 
-import com.google.common.base.Strings;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 
@@ -26,9 +25,9 @@ public final class DocumentHit extends ZimbraHit {
     private final Document luceneDoc;
     private com.zimbra.cs.mailbox.Document docItem;
 
-    DocumentHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id, Document luceneDoc,
-            com.zimbra.cs.mailbox.Document docItem) {
-        super(results, mbx);
+    DocumentHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id,
+            com.zimbra.cs.mailbox.Document docItem, Document luceneDoc, Object sortKey) {
+        super(results, mbx, sortKey);
         itemId = id;
         this.luceneDoc = luceneDoc;
         this.docItem = docItem;
@@ -78,14 +77,6 @@ public final class DocumentHit extends ZimbraHit {
     @Override
     public String getName() {
         return docItem.getName();
-    }
-
-    @Override
-    public String getRecipients() {
-        if (cachedRecipients == null) {
-            cachedRecipients = Strings.nullToEmpty(docItem.getSortRecipients());
-        }
-        return cachedRecipients;
     }
 
     @Override

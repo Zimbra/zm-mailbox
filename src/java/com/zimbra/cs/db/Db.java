@@ -62,10 +62,8 @@ public abstract class Db {
         AVOID_OR_IN_WHERE_CLAUSE, // if set, then try to avoid ORs in WHERE clauses, run them as separate queries and mergesort in memory
         REQUEST_UTF8_UNICODE_COLLATION, // for mysql
         FORCE_INDEX_EVEN_IF_NO_SORT, // for derby
-        SQL_PARAM_LIMIT
-        ;
+        SQL_PARAM_LIMIT;
     }
-
 
     private static Db sDatabase;
 
@@ -85,7 +83,6 @@ public abstract class Db {
         return sDatabase;
     }
 
-
     /** Returns whether the currently-configured database supports the given
      *  {@link Db.Capability}. */
     public static boolean supports(Db.Capability capability) {
@@ -94,7 +91,6 @@ public abstract class Db {
 
     abstract boolean supportsCapability(Db.Capability capability);
 
-
     /** Returns whether the given {@link SQLException} is an instance of the
      *  specified {@link Db.Error}. */
     public static boolean errorMatches(SQLException e, Db.Error error) {
@@ -102,7 +98,6 @@ public abstract class Db {
     }
 
     abstract boolean compareError(SQLException e, Db.Error error);
-
 
     /** Returns the set of configuration settings necessary to initialize the
      *  appropriate database connection pool.
@@ -177,7 +172,6 @@ public abstract class Db {
         throw new UnsupportedOperationException("DB is not file-per-database");
     }
 
-
     /** Generates the correct SQL to direct the current database engine to use
      *  a particular index to perform a SELECT query.  This string should come
      *  after the FROM clause and before the WHERE clause in the final SQL
@@ -245,26 +239,10 @@ public abstract class Db {
             return column + " LIKE ?";
     }
 
-
-    /** Generates a WHERE-type clause that evaluates to true when the given
-     *  column matches a bitmask later specified by <tt>stmt.setLong()</tt>.
-     *  Note that this is only valid when the bitmask has only 1 bit set. */
-    static String bitmaskAND(String column) {
-        if (supports(Capability.BITWISE_OPERATIONS))
-            return column + " & ?";
-        else
-            return "MOD(" + column + " / ?, 2) = 1";
-    }
-
-    /** Generates a WHERE-type clause that evaluates to true when the given
-     *  column matches the given bitmask.  Note that this is only valid when
-     *  the bitmask has only 1 bit set. */
-    static String bitmaskAND(String column, long bitmask) {
-        if (supports(Capability.BITWISE_OPERATIONS))
-            return column + " & " + bitmask;
-        else
-            return "MOD(" + column + " / " + bitmask + ", 2) = 1";
-    }
+    /**
+     * Generates a bitwise AND on two values.
+     */
+    public abstract String bitAND(String expr1, String expr2);
 
     public void enableStreaming(Statement stmt) throws SQLException {}
 

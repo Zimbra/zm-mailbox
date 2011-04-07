@@ -17,23 +17,25 @@ package com.zimbra.cs.index;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
 
 /**
  * Mock implementation of {@link ZimbraQueryResults} for testing.
  *
  * @author ysasaki
  */
-public class MockQueryResults implements ZimbraQueryResults {
+public class MockQueryResults extends ZimbraQueryResultsImpl {
 
-    private final SortBy sortOrder;
     private List<ZimbraHit> hits = new ArrayList<ZimbraHit>();
     private int next = 0;
     private final List<QueryInfo> queryInfo = new ArrayList<QueryInfo>();
 
-    public MockQueryResults(SortBy sort) {
-        sortOrder = sort;
+    public MockQueryResults(Set<MailItem.Type> types, SortBy sort) {
+        super(types, sort, Mailbox.SearchResultMode.NORMAL);
     }
 
     public void add(ZimbraHit hit) {
@@ -74,11 +76,6 @@ public class MockQueryResults implements ZimbraQueryResults {
     @Override
     public void doneWithSearchResults() throws ServiceException {
         hits = null;
-    }
-
-    @Override
-    public SortBy getSortBy() {
-        return sortOrder;
     }
 
     @Override

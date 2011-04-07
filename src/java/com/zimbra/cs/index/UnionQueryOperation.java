@@ -101,7 +101,7 @@ public final class UnionQueryOperation extends CombiningQueryOperation {
                             currentBestHit = op.peekNext();
                         } else {
                             ZimbraHit opNext = op.peekNext();
-                            int result = opNext.compareBySortField(context.getResults().getSortBy(), currentBestHit);
+                            int result = opNext.compareTo(context.getResults().getSortBy(), currentBestHit);
                             if (result < 0) {
                                 // "before"
                                 currentBestHitOffset = i;

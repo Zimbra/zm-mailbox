@@ -40,49 +40,49 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
     static final class LRUHashMap<T, U> extends LinkedHashMap<T, U> {
         private static final long serialVersionUID = -6181398012977532525L;
 
-        private final int mMaxSize;
+        private final int max;
 
-        LRUHashMap(int maxSize) {
-            super(maxSize, 0.75f, true);
-            mMaxSize = maxSize;
+        LRUHashMap(int max) {
+            super(max, 0.75f, true);
+            this.max = max;
         }
 
-        LRUHashMap(int maxSize, int tableSize) {
-            super(tableSize, 0.75f, true);
-            mMaxSize = maxSize;
+        LRUHashMap(int max, int size) {
+            super(size, 0.75f, true);
+            this.max = max;
         }
 
         @Override
         protected boolean removeEldestEntry(Map.Entry<T, U> eldest) {
-            return size() > mMaxSize;
+            return size() > max;
         }
     }
 
     private static final int MAX_LRU_ENTRIES = 2048;
     private static final int INITIAL_TABLE_SIZE = 100;
 
-    private Map<Integer, ConversationHit> mConversationHits;
-    private Map<Integer, MessageHit> mMessageHits;
-    private Map<String, MessagePartHit> mPartHits;
-    private Map<Integer, ContactHit> mContactHits;
-    private Map<Integer, NoteHit>  mNoteHits;
-    private Map<Integer, CalendarItemHit> mCalItemHits;
+    private Map<Integer, ConversationHit> conversationHits;
+    private Map<Integer, MessageHit> messageHits;
+    private Map<String, MessagePartHit> partHits;
+    private Map<Integer, ContactHit> contactHits;
+    private Map<Integer, NoteHit>  noteHits;
+    private Map<Integer, CalendarItemHit> calItemHits;
 
     private final Set<MailItem.Type> types;
-    private final SortBy mSearchOrder;
-    private final Mailbox.SearchResultMode mMode;
+    private final SortBy sortBy;
+    private final Mailbox.SearchResultMode mode;
 
-    ZimbraQueryResultsImpl(Set<MailItem.Type> types, SortBy searchOrder, Mailbox.SearchResultMode mode) {
+    ZimbraQueryResultsImpl(Set<MailItem.Type> types, SortBy sort, Mailbox.SearchResultMode mode) {
         this.types = types;
-        mMode = mode;
-        mSearchOrder = searchOrder;
+        this.mode = mode;
+        sortBy = sort;
 
-        mConversationHits = new LRUHashMap<Integer, ConversationHit>(MAX_LRU_ENTRIES, INITIAL_TABLE_SIZE);
-        mMessageHits = new LRUHashMap<Integer, MessageHit>(MAX_LRU_ENTRIES, INITIAL_TABLE_SIZE);
-        mPartHits = new LRUHashMap<String, MessagePartHit>(MAX_LRU_ENTRIES, INITIAL_TABLE_SIZE);
-        mContactHits = new LRUHashMap<Integer, ContactHit>(MAX_LRU_ENTRIES, INITIAL_TABLE_SIZE);
-        mNoteHits = new LRUHashMap<Integer, NoteHit>(MAX_LRU_ENTRIES, INITIAL_TABLE_SIZE);
-        mCalItemHits = new LRUHashMap<Integer, CalendarItemHit>(MAX_LRU_ENTRIES, INITIAL_TABLE_SIZE);
+        conversationHits = new LRUHashMap<Integer, ConversationHit>(MAX_LRU_ENTRIES, INITIAL_TABLE_SIZE);
+        messageHits = new LRUHashMap<Integer, MessageHit>(MAX_LRU_ENTRIES, INITIAL_TABLE_SIZE);
+        partHits = new LRUHashMap<String, MessagePartHit>(MAX_LRU_ENTRIES, INITIAL_TABLE_SIZE);
+        contactHits = new LRUHashMap<Integer, ContactHit>(MAX_LRU_ENTRIES, INITIAL_TABLE_SIZE);
+        noteHits = new LRUHashMap<Integer, NoteHit>(MAX_LRU_ENTRIES, INITIAL_TABLE_SIZE);
+        calItemHits = new LRUHashMap<Integer, CalendarItemHit>(MAX_LRU_ENTRIES, INITIAL_TABLE_SIZE);
     };
 
     @Override
@@ -98,7 +98,7 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
 
     @Override
     public SortBy getSortBy() {
-        return mSearchOrder;
+        return sortBy;
     }
 
     Set<MailItem.Type> getTypes() {
@@ -106,71 +106,76 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
     }
 
     public Mailbox.SearchResultMode getSearchMode() {
-        return mMode;
+        return mode;
     }
 
-    protected ConversationHit getConversationHit(Mailbox mbx, int convId) {
-        ConversationHit ch = mConversationHits.get(convId);
-        if (ch == null) {
-            ch = new ConversationHit(this, mbx, convId);
-            mConversationHits.put(convId, ch);
-        }
-        return ch;
-    }
-
-    protected ContactHit getContactHit(Mailbox mbx, int mailItemId, Contact contact) {
-        ContactHit hit = mContactHits.get(mailItemId);
+    protected ConversationHit getConversationHit(Mailbox mbx, int id, Object sortValue) {
+        ConversationHit hit = conversationHits.get(id);
         if (hit == null) {
-            hit = new ContactHit(this, mbx, mailItemId, contact);
-            mContactHits.put(mailItemId, hit);
+            hit = new ConversationHit(this, mbx, id, sortValue);
+            conversationHits.put(id, hit);
         }
         return hit;
     }
 
-    protected NoteHit getNoteHit(Mailbox mbx, int mailItemId, Note note) {
-        NoteHit hit = mNoteHits.get(mailItemId);
+    protected ContactHit getContactHit(Mailbox mbx, int id, Contact contact, Object sortValue) {
+        ContactHit hit = contactHits.get(contact.getId());
         if (hit == null) {
-            hit = new NoteHit(this, mbx, mailItemId, note);
-            mNoteHits.put(mailItemId, hit);
+            hit = new ContactHit(this, mbx, id, contact, sortValue);
+            contactHits.put(id, hit);
         }
         return hit;
     }
 
-    protected CalendarItemHit getAppointmentHit(Mailbox mbx, int mailItemId, CalendarItem cal) {
-        CalendarItemHit hit = mCalItemHits.get(mailItemId);
+    protected NoteHit getNoteHit(Mailbox mbx, int id, Note note, Object sortValue) {
+        NoteHit hit = noteHits.get(id);
         if (hit == null) {
-            hit = new CalendarItemHit(this, mbx, mailItemId, cal);
-            mCalItemHits.put(mailItemId, hit);
+            hit = new NoteHit(this, mbx, id, note, sortValue);
+            noteHits.put(id, hit);
         }
         return hit;
     }
 
-    protected CalendarItemHit getTaskHit(Mailbox mbx, int mailItemId, Task task) {
-        CalendarItemHit hit = mCalItemHits.get(mailItemId);
+    protected CalendarItemHit getAppointmentHit(Mailbox mbx, int id, CalendarItem cal, Object sortValue) {
+        CalendarItemHit hit = calItemHits.get(id);
         if (hit == null) {
-            hit = new TaskHit(this, mbx, mailItemId, task);
-            mCalItemHits.put(mailItemId, hit);
+            hit = new CalendarItemHit(this, mbx, id, cal, sortValue);
+            calItemHits.put(id, hit);
         }
         return hit;
     }
 
-    protected MessageHit getMessageHit(Mailbox mbx, int mailItemId, Document doc, Message message) {
-        MessageHit hit = mMessageHits.get(mailItemId);
+    protected CalendarItemHit getTaskHit(Mailbox mbx, int id, Task task, Object sortValue) {
+        CalendarItemHit hit = calItemHits.get(id);
         if (hit == null) {
-            hit = new MessageHit(this, mbx, mailItemId, doc, message);
-            mMessageHits.put(mailItemId, hit);
+            hit = new TaskHit(this, mbx, id, task, sortValue);
+            calItemHits.put(id, hit);
         }
         return hit;
     }
 
-    protected MessagePartHit getMessagePartHit(Mailbox mbx, int mailItemId, Document doc, Message message) {
-        String partKey = Integer.toString(mailItemId) + "-" + doc.get(LuceneFields.L_PARTNAME);
-        MessagePartHit hit = mPartHits.get(partKey);
+    protected MessageHit getMessageHit(Mailbox mbx, int id, Message msg, Document doc, Object sortValue) {
+        MessageHit hit = messageHits.get(id);
         if (hit == null) {
-            hit = new MessagePartHit(this, mbx, mailItemId, doc, message);
-            mPartHits.put(partKey, hit);
+            hit = new MessageHit(this, mbx, id, msg, doc, sortValue);
+            messageHits.put(id, hit);
         }
         return hit;
+    }
+
+    protected MessagePartHit getMessagePartHit(Mailbox mbx, int id, Message msg, Document doc, Object sortValue) {
+        String key = Integer.toString(id) + "-" + doc.get(LuceneFields.L_PARTNAME);
+        MessagePartHit hit = partHits.get(key);
+        if (hit == null) {
+            hit = new MessagePartHit(this, mbx, id, msg, doc, sortValue);
+            partHits.put(key, hit);
+        }
+        return hit;
+    }
+
+    protected DocumentHit getDocumentHit(Mailbox mbx, int id, com.zimbra.cs.mailbox.Document item,
+            Document doc, Object sortValue) {
+        return new DocumentHit(this, mbx, id, item, doc, sortValue);
     }
 
     /**
@@ -209,52 +214,46 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
                 break;
         }
 
-        ZimbraHit toRet = null;
+        ZimbraHit result = null;
         switch (sr.getType()) {
             case CHAT:
             case MESSAGE:
                 if (doc != null) {
-                    toRet = getMessagePartHit(mbox, sr.getId(), doc, (Message) item);
+                    result = getMessagePartHit(mbox, sr.getId(), (Message) item, doc, sr.getSortValue());
                 } else {
-                    toRet = getMessageHit(mbox, sr.getId(), null, (Message) item);
+                    result = getMessageHit(mbox, sr.getId(), (Message) item, null, sr.getSortValue());
                 }
-                toRet.cacheSortField(getSortBy(), sr.getSortKey());
                 break;
             case CONTACT:
-                toRet = getContactHit(mbox, sr.getId(), (Contact) item);
+                result = getContactHit(mbox, sr.getId(), (Contact) item, sr.getSortValue());
                 break;
             case NOTE:
-                toRet = getNoteHit(mbox, sr.getId(), (Note) item);
+                result = getNoteHit(mbox, sr.getId(), (Note) item, sr.getSortValue());
                 break;
             case APPOINTMENT:
-                toRet = getAppointmentHit(mbox, sr.getId(), (CalendarItem) item);
+                result = getAppointmentHit(mbox, sr.getId(), (CalendarItem) item, sr.getSortValue());
                 break;
             case TASK:
-                toRet = getTaskHit(mbox, sr.getId(), (Task) item);
+                result = getTaskHit(mbox, sr.getId(), (Task) item, sr.getSortValue());
                 break;
             case DOCUMENT:
             case WIKI:
-                toRet = getDocumentHit(mbox, sr.getId(), doc, (com.zimbra.cs.mailbox.Document) item);
+                result = getDocumentHit(mbox, sr.getId(), (com.zimbra.cs.mailbox.Document) item, doc, sr.getSortValue());
                 break;
             default:
                 assert(false);
         }
 
         if (i4msg != null) {
-            toRet.cacheImapMessage(i4msg);
+            result.cacheImapMessage(i4msg);
         }
         if (modseq > 0) {
-            toRet.cacheModifiedSequence(modseq);
+            result.cacheModifiedSequence(modseq);
         }
         if (parentId != 0) {
-            toRet.cacheParentId(parentId);
-
+            result.cacheParentId(parentId);
         }
-        return toRet;
+        return result;
     }
 
-    protected DocumentHit getDocumentHit(Mailbox mbx, int mailItemId, Document luceneDoc,
-            com.zimbra.cs.mailbox.Document docItem) {
-        return new DocumentHit(this, mbx, mailItemId, luceneDoc, docItem);
-    }
 }

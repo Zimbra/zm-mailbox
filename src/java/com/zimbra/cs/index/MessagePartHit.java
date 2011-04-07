@@ -18,7 +18,6 @@ package com.zimbra.cs.index;
 import org.apache.lucene.document.Document;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
@@ -42,8 +41,9 @@ public final class MessagePartHit extends ZimbraHit {
     private MessageHit hit;
     private final int itemId;
 
-    protected MessagePartHit(ZimbraQueryResultsImpl res, Mailbox mbx, int id, Document doc, Message msg) {
-        super(res, mbx);
+    protected MessagePartHit(ZimbraQueryResultsImpl res, Mailbox mbx, int id,
+            Message msg, Document doc, Object sortValue) {
+        super(res, mbx, sortValue);
         itemId = id;
         document = doc;
         if (msg != null) {
@@ -78,14 +78,6 @@ public final class MessagePartHit extends ZimbraHit {
             cachedName = getMessageResult().getSender();
         }
         return cachedName;
-    }
-
-    @Override
-    public String getRecipients() throws ServiceException {
-        if (cachedRecipients == null) {
-            cachedRecipients = Strings.nullToEmpty(getMailItem().getSortRecipients());
-        }
-        return cachedRecipients;
     }
 
     @Override
@@ -154,7 +146,7 @@ public final class MessagePartHit extends ZimbraHit {
      */
     public MessageHit getMessageResult(Message msg) {
         if (hit == null) {
-            hit = getResults().getMessageHit(getMailbox(), getItemId(), document, msg);
+            hit = getResults().getMessageHit(getMailbox(), getItemId(), msg, document, sortValue);
             hit.addPart(this);
             hit.cacheImapMessage(cachedImapMessage);
             hit.cacheModifiedSequence(cachedModseq);

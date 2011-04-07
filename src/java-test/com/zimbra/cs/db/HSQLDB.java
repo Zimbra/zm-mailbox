@@ -132,6 +132,11 @@ public final class HSQLDB extends Db {
     }
 
     @Override
+    public String bitAND(String expr1, String expr2) {
+        return "BITAND(" + expr1 + ", " + expr2 + ")";
+    }
+
+    @Override
     public void flushToDisk() {
     }
 

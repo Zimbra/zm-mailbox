@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -211,12 +211,13 @@ public final class ReSortingQueryResults implements ZimbraQueryResults {
             if (params != null && params.hasCursor()) {
                 ZimbraHit firstHit = null;
                 if (params.getPrevSortValueStr() != null) {
-                    firstHit = new ResultsPager.DummyHit(params.getPrevSortValueStr(),
+                    firstHit = new ResultsPager.DummyHit(results, params.getPrevSortValueStr(),
                             params.getPrevSortValueLong(), params.getPrevMailItemId().getId());
                 }
                 ZimbraHit endHit = null;
                 if (params.getEndSortValueStr() != null) {
-                    endHit = new ResultsPager.DummyHit(params.getEndSortValueStr(), params.getEndSortValueLong(), 0);
+                    endHit = new ResultsPager.DummyHit(results,
+                            params.getEndSortValueStr(), params.getEndSortValueLong(), 0);
                 }
                 // fail if cur < first OR cur >= end
                 if (handleCursorFilteringForFirstHit) {

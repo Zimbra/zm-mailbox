@@ -49,7 +49,8 @@ public class MySQL extends Db {
         mErrorCodes.put(Db.Error.NO_SUCH_TABLE,            1146);
     }
 
-    @Override boolean supportsCapability(Db.Capability capability) {
+    @Override
+    boolean supportsCapability(Db.Capability capability) {
         switch (capability) {
             case AVOID_OR_IN_WHERE_CLAUSE:   return false;
             case BITWISE_OPERATIONS:         return true;
@@ -74,25 +75,34 @@ public class MySQL extends Db {
         return false;
     }
 
-    @Override boolean compareError(SQLException e, Db.Error error) {
+    @Override
+    boolean compareError(SQLException e, Db.Error error) {
         Integer code = mErrorCodes.get(error);
         return (code != null && e.getErrorCode() == code);
     }
 
-    @Override String forceIndexClause(String index) {
+    @Override
+    String forceIndexClause(String index) {
         return " FORCE INDEX (" + index + ')';
     }
 
-    @Override String getIFNULLClause(String expr1, String expr2) {
+    @Override
+    String getIFNULLClause(String expr1, String expr2) {
         return "IFNULL(" + expr1 + ", " + expr2 + ")";
     }
 
-    @Override DbPool.PoolConfig getPoolConfig() {
+    @Override
+    public String bitAND(String expr1, String expr2) {
+        return expr1 + " & " + expr2;
+    }
+
+    @Override
+    DbPool.PoolConfig getPoolConfig() {
         return new MySQLConfig();
     }
 
-    @Override public boolean databaseExists(DbConnection conn, String dbname)
-    throws ServiceException {
+    @Override
+    public boolean databaseExists(DbConnection conn, String dbname) throws ServiceException {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         int numSchemas = 0;
@@ -183,7 +193,8 @@ public class MySQL extends Db {
         }
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return "MySQL";
     }
 
@@ -192,7 +203,8 @@ public class MySQL extends Db {
         "CREATE TABLE IF NOT EXISTS " + sTableName + " (dummy_column INTEGER) ENGINE = InnoDB";
     private final String sDropTable = "DROP TABLE IF EXISTS " + sTableName;
 
-    @Override public synchronized void flushToDisk() {
+    @Override
+    public synchronized void flushToDisk() {
         // Create a table and then drop it.  We take advantage of the fact that innodb will call
         // log_buffer_flush_to_disk() during CREATE TABLE or DELETE TABLE.
         DbConnection conn = null;

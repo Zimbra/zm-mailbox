@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -16,7 +16,6 @@
 package com.zimbra.cs.index;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -30,9 +29,9 @@ public final class ContactHit extends ZimbraHit {
     private final int itemId;
     private Contact contact;
 
-    public ContactHit(ZimbraQueryResultsImpl results, Mailbox mbx, int itemId, Contact contact) {
-        super(results, mbx);
-        this.itemId = itemId;
+    public ContactHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id, Contact contact, Object sortValue) {
+        super(results, mbx, sortValue);
+        itemId = id;
         this.contact = contact;
     }
 
@@ -95,14 +94,6 @@ public final class ContactHit extends ZimbraHit {
             cachedName = getContact().getSortName();
         }
         return cachedName;
-    }
-
-    @Override
-    public String getRecipients() throws ServiceException {
-        if (cachedRecipients == null) {
-            cachedRecipients = Strings.nullToEmpty(getContact().getSortRecipients());
-        }
-        return cachedRecipients;
     }
 
     @Override

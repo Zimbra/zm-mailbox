@@ -15,7 +15,6 @@
 
 package com.zimbra.cs.index;
 
-import com.google.common.base.Strings;
 import com.zimbra.cs.mailbox.MailItem;
 
 /**
@@ -23,7 +22,7 @@ import com.zimbra.cs.mailbox.MailItem;
  *
  * @author ysasaki
  */
-public class MockHit extends ZimbraHit {
+public final class MockHit extends ZimbraHit {
     private int id;
     private long date;
     private long size;
@@ -31,10 +30,9 @@ public class MockHit extends ZimbraHit {
     private MailItem mailItem;
     private String subject;
     private String name;
-    private String recipients;
 
-    public MockHit(int id, String name) {
-        super(null, null);
+    public MockHit(ZimbraQueryResultsImpl results, int id, String name, Object sortValue) {
+        super(results, null, sortValue);
         this.id = id;
         this.name = name;
     }
@@ -106,15 +104,6 @@ public class MockHit extends ZimbraHit {
 
     void setName(String value) {
         name = value;
-    }
-
-    @Override
-    public String getRecipients() {
-        return Strings.nullToEmpty(recipients);
-    }
-
-    void setRecipients(String value) {
-        recipients = value;
     }
 
 }

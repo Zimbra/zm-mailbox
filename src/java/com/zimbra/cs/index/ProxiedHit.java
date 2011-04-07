@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -36,8 +36,8 @@ public final class ProxiedHit extends ZimbraHit  {
     private ItemId itemId;
     private final Element element;
 
-    public ProxiedHit(ProxiedQueryResults results, Element elt) {
-        super(results, null);
+    public ProxiedHit(ZimbraQueryResultsImpl results, Element elt, Object sortValue) {
+        super(results, null, sortValue);
         element = elt;
     }
 
@@ -118,11 +118,6 @@ public final class ProxiedHit extends ZimbraHit  {
 
     @Override
     String getName() throws ServiceException {
-        return element.getAttribute(MailConstants.A_SORT_FIELD);
-    }
-
-    @Override
-    String getRecipients() throws ServiceException {
         return element.getAttribute(MailConstants.A_SORT_FIELD);
     }
 
