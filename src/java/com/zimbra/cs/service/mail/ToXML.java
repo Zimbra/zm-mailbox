@@ -1728,10 +1728,12 @@ public class ToXML {
                         if (comp != null)
                             comp.addAttribute(MailConstants.A_CAL_CHANGES, invChanges.toString());
                     }
-                    boolean showAll = invite.isPublic() || allowPrivateAccess(octxt, calItem);
-                    if (showAll) {
-                        RecurId rid = invite.getRecurId();
-                        encodeCalendarReplies(ie, calItem, invite, rid != null ? rid.getDtZ() : null);
+                    if (calItem != null) {
+                        boolean showAll = invite.isPublic() || allowPrivateAccess(octxt, calItem);
+                        if (showAll) {
+                            RecurId rid = invite.getRecurId();
+                            encodeCalendarReplies(ie, calItem, invite, rid != null ? rid.getDtZ() : null);
+                        }
                     }
                 }
             }
