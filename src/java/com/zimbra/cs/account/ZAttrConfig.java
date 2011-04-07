@@ -41,7 +41,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 smukhopadhyay 20110406-1755 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110407-1028 */
 
     /**
      * RFC2256: descriptive information
@@ -24017,7 +24017,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=2001)
+    @ZAttr(id=1201)
     public String getReverseProxyClientCertCA() {
         return getAttr(Provisioning.A_zimbraReverseProxyClientCertCA, null);
     }
@@ -24031,7 +24031,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=2001)
+    @ZAttr(id=1201)
     public void setReverseProxyClientCertCA(String zimbraReverseProxyClientCertCA) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyClientCertCA, zimbraReverseProxyClientCertCA);
@@ -24048,7 +24048,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=2001)
+    @ZAttr(id=1201)
     public Map<String,Object> setReverseProxyClientCertCA(String zimbraReverseProxyClientCertCA, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyClientCertCA, zimbraReverseProxyClientCertCA);
@@ -24063,7 +24063,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=2001)
+    @ZAttr(id=1201)
     public void unsetReverseProxyClientCertCA() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyClientCertCA, "");
@@ -24079,7 +24079,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=2001)
+    @ZAttr(id=1201)
     public Map<String,Object> unsetReverseProxyClientCertCA(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyClientCertCA, "");
@@ -24096,7 +24096,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=2000)
+    @ZAttr(id=1200)
     public ZAttrProvisioning.ReverseProxyClientCertMode getReverseProxyClientCertMode() {
         try { String v = getAttr(Provisioning.A_zimbraReverseProxyClientCertMode); return v == null ? ZAttrProvisioning.ReverseProxyClientCertMode.off : ZAttrProvisioning.ReverseProxyClientCertMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.ReverseProxyClientCertMode.off; }
     }
@@ -24111,7 +24111,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=2000)
+    @ZAttr(id=1200)
     public String getReverseProxyClientCertModeAsString() {
         return getAttr(Provisioning.A_zimbraReverseProxyClientCertMode, "off");
     }
@@ -24127,7 +24127,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=2000)
+    @ZAttr(id=1200)
     public void setReverseProxyClientCertMode(ZAttrProvisioning.ReverseProxyClientCertMode zimbraReverseProxyClientCertMode) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyClientCertMode, zimbraReverseProxyClientCertMode.toString());
@@ -24146,7 +24146,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=2000)
+    @ZAttr(id=1200)
     public Map<String,Object> setReverseProxyClientCertMode(ZAttrProvisioning.ReverseProxyClientCertMode zimbraReverseProxyClientCertMode, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyClientCertMode, zimbraReverseProxyClientCertMode.toString());
@@ -24164,7 +24164,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=2000)
+    @ZAttr(id=1200)
     public void setReverseProxyClientCertModeAsString(String zimbraReverseProxyClientCertMode) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyClientCertMode, zimbraReverseProxyClientCertMode);
@@ -24183,7 +24183,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=2000)
+    @ZAttr(id=1200)
     public Map<String,Object> setReverseProxyClientCertModeAsString(String zimbraReverseProxyClientCertMode, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyClientCertMode, zimbraReverseProxyClientCertMode);
@@ -24200,7 +24200,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=2000)
+    @ZAttr(id=1200)
     public void unsetReverseProxyClientCertMode() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyClientCertMode, "");
@@ -24218,7 +24218,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=2000)
+    @ZAttr(id=1200)
     public Map<String,Object> unsetReverseProxyClientCertMode(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyClientCertMode, "");

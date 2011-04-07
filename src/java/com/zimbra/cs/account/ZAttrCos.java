@@ -40,7 +40,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 smukhopadhyay 20110406-1755 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110407-1028 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -14420,7 +14420,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=2005)
+    @ZAttr(id=1205)
     public boolean isMobileSmartForwardRFC822Enabled() {
         return getBooleanAttr(Provisioning.A_zimbraMobileSmartForwardRFC822Enabled, false);
     }
@@ -14435,7 +14435,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=2005)
+    @ZAttr(id=1205)
     public void setMobileSmartForwardRFC822Enabled(boolean zimbraMobileSmartForwardRFC822Enabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobileSmartForwardRFC822Enabled, zimbraMobileSmartForwardRFC822Enabled ? Provisioning.TRUE : Provisioning.FALSE);
@@ -14453,7 +14453,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=2005)
+    @ZAttr(id=1205)
     public Map<String,Object> setMobileSmartForwardRFC822Enabled(boolean zimbraMobileSmartForwardRFC822Enabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobileSmartForwardRFC822Enabled, zimbraMobileSmartForwardRFC822Enabled ? Provisioning.TRUE : Provisioning.FALSE);
@@ -14469,7 +14469,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=2005)
+    @ZAttr(id=1205)
     public void unsetMobileSmartForwardRFC822Enabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobileSmartForwardRFC822Enabled, "");
@@ -14486,7 +14486,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=2005)
+    @ZAttr(id=1205)
     public Map<String,Object> unsetMobileSmartForwardRFC822Enabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobileSmartForwardRFC822Enabled, "");
@@ -24811,7 +24811,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1998)
+    @ZAttr(id=1198)
     public boolean isPrefMessageIdDedupingEnabled() {
         return getBooleanAttr(Provisioning.A_zimbraPrefMessageIdDedupingEnabled, true);
     }
@@ -24825,7 +24825,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1998)
+    @ZAttr(id=1198)
     public void setPrefMessageIdDedupingEnabled(boolean zimbraPrefMessageIdDedupingEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefMessageIdDedupingEnabled, zimbraPrefMessageIdDedupingEnabled ? Provisioning.TRUE : Provisioning.FALSE);
@@ -24842,7 +24842,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1998)
+    @ZAttr(id=1198)
     public Map<String,Object> setPrefMessageIdDedupingEnabled(boolean zimbraPrefMessageIdDedupingEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefMessageIdDedupingEnabled, zimbraPrefMessageIdDedupingEnabled ? Provisioning.TRUE : Provisioning.FALSE);
@@ -24857,7 +24857,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1998)
+    @ZAttr(id=1198)
     public void unsetPrefMessageIdDedupingEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefMessageIdDedupingEnabled, "");
@@ -24873,7 +24873,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1998)
+    @ZAttr(id=1198)
     public Map<String,Object> unsetPrefMessageIdDedupingEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefMessageIdDedupingEnabled, "");

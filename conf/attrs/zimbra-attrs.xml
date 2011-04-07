@@ -5591,40 +5591,41 @@ TODO: delete them permerntly from here
   <desc>indicates which application to use for file sharing</desc>
 </attr>
 
-<attr id="1998" name="zimbraPrefMessageIdDedupingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+<attr id="1198" name="zimbraPrefMessageIdDedupingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>
     Account-level switch that enables message deduping.  See zimbraMessageIdDedupeCacheSize for more details.
   </desc>
 </attr>
 
+<!-- id should really have been 1199, but 7.1.0 had been shipped. -->
 <attr id="1999" name="zimbraMailSSLClientCertPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" requiresRestart="mailbox" since="7.1.0">
   <globalConfigValue>0</globalConfigValue>
   <desc>SSL port requesting client certificate for end-user UI</desc>
 </attr>
 
-<attr id="2000" name="zimbraReverseProxyClientCertMode" type="enum" value="on,off,optional" cardinality="single" optionalIn="globalConfig,server,domain" flags="serverInherited,domainInherited" since="7.1.1">
+<attr id="1200" name="zimbraReverseProxyClientCertMode" type="enum" value="on,off,optional" cardinality="single" optionalIn="globalConfig,server,domain" flags="serverInherited,domainInherited" since="7.1.1">
   <globalConfigValue>off</globalConfigValue>
   <desc>enable authentication via X.509 Client Certificate in nginx proxy (https only)</desc>
 </attr>
 
-<attr id="2001" name="zimbraReverseProxyClientCertCA" type="astring" cardinality="single" optionalIn="globalConfig,server,domain" flags="serverInherited,domainInherited" since="7.1.1">
+<attr id="1201" name="zimbraReverseProxyClientCertCA" type="astring" cardinality="single" optionalIn="globalConfig,server,domain" flags="serverInherited,domainInherited" since="7.1.1">
   <desc>CA certificate for authenticating client certificates in nginx proxy (https only)</desc>
 </attr>
 
-<attr id="2002" name="zimbraPrefCalendarAcceptSignatureId" type="id" cardinality="single" optionalIn="account,identity,dataSource" flags="domainAdminModifiable" since="8.0.0">
+<attr id="1202" name="zimbraPrefCalendarAcceptSignatureId" type="id" cardinality="single" optionalIn="account,identity,dataSource" flags="domainAdminModifiable" since="8.0.0">
   <desc>calendar manual accept reply signature for account/identity/dataSource</desc>
 </attr>
 
-<attr id="2003" name="zimbraPrefCalendarTentativeSignatureId" type="id" cardinality="single" optionalIn="account,identity,dataSource" flags="domainAdminModifiable" since="8.0.0">
+<attr id="1203" name="zimbraPrefCalendarTentativeSignatureId" type="id" cardinality="single" optionalIn="account,identity,dataSource" flags="domainAdminModifiable" since="8.0.0">
   <desc>calendar manual tentative accept reply signature id for account/identity/dataSource</desc>
 </attr>
 
-<attr id="2004" name="zimbraPrefCalendarDeclineSignatureId" type="id" cardinality="single" optionalIn="account,identity,dataSource" flags="domainAdminModifiable" since="8.0.0">
+<attr id="1204" name="zimbraPrefCalendarDeclineSignatureId" type="id" cardinality="single" optionalIn="account,identity,dataSource" flags="domainAdminModifiable" since="8.0.0">
   <desc>calendar manual decline reply signature id for account/identity/dataSource</desc>
 </attr>
 
-<attr id="2005" name="zimbraMobileSmartForwardRFC822Enabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+<attr id="1205" name="zimbraMobileSmartForwardRFC822Enabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>
     indicates whether the application can forward original email as RFC 822 .eml attachment.

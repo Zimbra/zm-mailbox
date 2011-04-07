@@ -301,6 +301,8 @@ public class AttributeManager {
             error(null, file, "root tag is not " + E_ATTRS);
             return;
         }
+        
+        Map<Integer, String> idsSeen = new HashMap<Integer, String>();
 
         String group = root.attributeValue(A_GROUP);
         String groupIdStr = root.attributeValue(A_GROUP_ID);
@@ -349,7 +351,7 @@ public class AttributeManager {
             Set<AttributeClass> requiredIn = null;
             Set<AttributeClass> optionalIn = null;
             Set<AttributeFlag> flags = null;
-
+            
             String canonicalName = null;
             String name = eattr.attributeValue(A_NAME);
             if (name == null) {
@@ -501,10 +503,19 @@ public class AttributeManager {
                 error(name, file, "cardinality not specified");
             }
 
-            // Check that if id is specified, then atleast one object class is
-            // defined
+            // Check that if id is specified, then at least one object class is defined
             if (id > 0 && (optionalIn != null && optionalIn.isEmpty()) && (requiredIn != null && requiredIn.isEmpty())) {
                 error(name, file, "atleast one of " + A_REQUIRED_IN + " or " + A_OPTIONAL_IN + " must be specified");
+            }
+            
+            // Check that if id is specified, it must be unique
+            if (id > 0) {
+                String idForAttr = idsSeen.get(Integer.valueOf(id));
+                if (idForAttr != null) {
+                    error(name, file, "duplicate id: " + id + " is already used for " + idForAttr);
+                } else {
+                    idsSeen.put(Integer.valueOf(id), name);
+                }
             }
 
             // Check that if it is COS inheritable it is in account and COS classes

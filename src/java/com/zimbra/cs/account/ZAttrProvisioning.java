@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 smukhopadhyay 20110406-1755 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110407-1028 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -5512,7 +5512,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=2005)
+    @ZAttr(id=1205)
     public static final String A_zimbraMobileSmartForwardRFC822Enabled = "zimbraMobileSmartForwardRFC822Enabled";
 
     /**
@@ -6264,7 +6264,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=2002)
+    @ZAttr(id=1202)
     public static final String A_zimbraPrefCalendarAcceptSignatureId = "zimbraPrefCalendarAcceptSignatureId";
 
     /**
@@ -6376,7 +6376,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=2004)
+    @ZAttr(id=1204)
     public static final String A_zimbraPrefCalendarDeclineSignatureId = "zimbraPrefCalendarDeclineSignatureId";
 
     /**
@@ -6516,7 +6516,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=2003)
+    @ZAttr(id=1203)
     public static final String A_zimbraPrefCalendarTentativeSignatureId = "zimbraPrefCalendarTentativeSignatureId";
 
     /**
@@ -7196,7 +7196,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1998)
+    @ZAttr(id=1198)
     public static final String A_zimbraPrefMessageIdDedupingEnabled = "zimbraPrefMessageIdDedupingEnabled";
 
     /**
@@ -7838,7 +7838,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=2001)
+    @ZAttr(id=1201)
     public static final String A_zimbraReverseProxyClientCertCA = "zimbraReverseProxyClientCertCA";
 
     /**
@@ -7847,7 +7847,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=2000)
+    @ZAttr(id=1200)
     public static final String A_zimbraReverseProxyClientCertMode = "zimbraReverseProxyClientCertMode";
 
     /**
