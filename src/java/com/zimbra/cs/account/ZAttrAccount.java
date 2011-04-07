@@ -35,7 +35,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110405-1454 */
+    /* build: 7.0.0_BETA1_1111 smukhopadhyay 20110406-1755 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -20534,6 +20534,88 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetMobilePolicyRefreshInterval(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobilePolicyRefreshInterval, "");
+        return attrs;
+    }
+
+    /**
+     * indicates whether the application can forward original email as RFC
+     * 822 .eml attachment. Note: this setiing is applicable only to the
+     * devices using activesync smart forward for forwarding email messages.
+     *
+     * @return zimbraMobileSmartForwardRFC822Enabled, or false if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=2005)
+    public boolean isMobileSmartForwardRFC822Enabled() {
+        return getBooleanAttr(Provisioning.A_zimbraMobileSmartForwardRFC822Enabled, false);
+    }
+
+    /**
+     * indicates whether the application can forward original email as RFC
+     * 822 .eml attachment. Note: this setiing is applicable only to the
+     * devices using activesync smart forward for forwarding email messages.
+     *
+     * @param zimbraMobileSmartForwardRFC822Enabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=2005)
+    public void setMobileSmartForwardRFC822Enabled(boolean zimbraMobileSmartForwardRFC822Enabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileSmartForwardRFC822Enabled, zimbraMobileSmartForwardRFC822Enabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * indicates whether the application can forward original email as RFC
+     * 822 .eml attachment. Note: this setiing is applicable only to the
+     * devices using activesync smart forward for forwarding email messages.
+     *
+     * @param zimbraMobileSmartForwardRFC822Enabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=2005)
+    public Map<String,Object> setMobileSmartForwardRFC822Enabled(boolean zimbraMobileSmartForwardRFC822Enabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileSmartForwardRFC822Enabled, zimbraMobileSmartForwardRFC822Enabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * indicates whether the application can forward original email as RFC
+     * 822 .eml attachment. Note: this setiing is applicable only to the
+     * devices using activesync smart forward for forwarding email messages.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=2005)
+    public void unsetMobileSmartForwardRFC822Enabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileSmartForwardRFC822Enabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * indicates whether the application can forward original email as RFC
+     * 822 .eml attachment. Note: this setiing is applicable only to the
+     * devices using activesync smart forward for forwarding email messages.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=2005)
+    public Map<String,Object> unsetMobileSmartForwardRFC822Enabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileSmartForwardRFC822Enabled, "");
         return attrs;
     }
 

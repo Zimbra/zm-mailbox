@@ -183,7 +183,7 @@ public class Threader {
         public static String newThreadIndex() {
             byte[] random = new byte[22];
             new Random().nextBytes(random);
-            return new BASE64Encoder().encode(random);
+            return new BASE64Encoder().encode(random).trim();
         }
 
         /** Generates a new {@code Thread-Index} value suitable for adding as
@@ -199,7 +199,7 @@ public class Threader {
             new Random().nextBytes(random);
             System.arraycopy(oldTIndex, 0, tindex, 0, oldLength);
             System.arraycopy(random, 0, tindex, oldLength, 5);
-            return new BASE64Encoder().encode(tindex);
+            return new BASE64Encoder().encode(tindex).trim();
         }
 
         /** Parses the contents of a {@code Thread-Index} header and returns

@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110405-1454 */
+    /* build: 7.0.0_BETA1_1111 smukhopadhyay 20110406-1755 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -5504,6 +5504,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=836)
     public static final String A_zimbraMobilePolicyRefreshInterval = "zimbraMobilePolicyRefreshInterval";
+
+    /**
+     * indicates whether the application can forward original email as RFC
+     * 822 .eml attachment. Note: this setiing is applicable only to the
+     * devices using activesync smart forward for forwarding email messages.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=2005)
+    public static final String A_zimbraMobileSmartForwardRFC822Enabled = "zimbraMobileSmartForwardRFC822Enabled";
 
     /**
      * mta anti spam lock method.
