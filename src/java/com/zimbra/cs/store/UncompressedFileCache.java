@@ -193,6 +193,7 @@ public class UncompressedFileCache<K> {
             
             if (keys == null || keys.isEmpty()) {
                 File file = mDigestToFile.remove(digest);
+                mDigestToKeys.remove(digest);
                 sLog.debug("Deleting unreferenced file %s.", file);
                 if (file != null) {
                     try {
