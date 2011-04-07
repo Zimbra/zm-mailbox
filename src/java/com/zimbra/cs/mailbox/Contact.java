@@ -736,14 +736,13 @@ public class Contact extends MailItem {
             throw ServiceException.INVALID_REQUEST("contact must have fields", null);
         }
         attachments = pc.getAttachments();
-
         mData.unsetFlag(Flag.FlagInfo.ATTACHED);
         if (pc.hasAttachment()) {
             mData.setFlag(Flag.FlagInfo.ATTACHED);
         }
         Set<String> newAddrs = getNormalizedEmailAddrs();
-
         saveEmailAddrs(Sets.difference(newAddrs, oldAddrs), Sets.difference(oldAddrs, newAddrs));
+        saveData(new DbMailItem(mMailbox).setSender(getFileAsString(fields)));
     }
 
     /** @perms {@link ACL#RIGHT_INSERT} on the target folder,

@@ -28,6 +28,7 @@ import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailAddress;
 import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.db.HSQLDB;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.index.LuceneIndex;
@@ -116,6 +117,31 @@ public final class ContactTest {
         Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox, "test1@zimbra.com"));
         mbox.delete(null, contact2.getId(), MailItem.Type.CONTACT); // hard-delete from Trash
         Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox, "test1@zimbra.com"));
+        conn.closeQuietly();
+    }
+
+    @Test
+    public void reanalyze() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Map<String, Object> fields = new HashMap<String, Object>();
+        fields.put(ContactConstants.A_firstName, "First1");
+        fields.put(ContactConstants.A_lastName, "Last1");
+        Contact contact = mbox.createContact(null, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
+
+        DbConnection conn = DbPool.getConnection(mbox);
+
+        Assert.assertEquals("Last1, First1", DbUtil.executeQuery(conn,
+                "SELECT sender FROM mboxgroup1.mail_item WHERE mailbox_id = ? AND id = ?",
+                mbox.getId(), contact.getId()).getString(1));
+
+        fields.put(ContactConstants.A_firstName, "First2");
+        fields.put(ContactConstants.A_lastName, "Last2");
+        mbox.modifyContact(null, contact.getId(), new ParsedContact(fields));
+
+        Assert.assertEquals("Last2, First2", DbUtil.executeQuery(conn,
+                "SELECT sender FROM mboxgroup1.mail_item WHERE mailbox_id = ? AND id = ?",
+                mbox.getId(), contact.getId()).getString(1));
+
         conn.closeQuietly();
     }
 
