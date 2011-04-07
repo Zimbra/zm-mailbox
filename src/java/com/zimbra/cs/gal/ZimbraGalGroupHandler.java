@@ -36,7 +36,11 @@ public class ZimbraGalGroupHandler extends GalGroupHandler {
     public boolean isGroup(SearchResult sr) {
         Attributes ldapAttrs = sr.getAttributes();
         Attribute objectclass = ldapAttrs.get(Provisioning.A_objectClass);
-        return objectclass.contains(LdapProvisioning.C_zimbraMailList);
+        if (objectclass == null) {
+            return false;
+        } else {
+            return objectclass.contains(LdapProvisioning.C_zimbraMailList);
+        }
     }
     
     @Override
