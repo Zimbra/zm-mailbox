@@ -76,7 +76,6 @@
 
     <property name="jars.dir" location="jars"/>
     <property name="lib.dir" location="lib"/>
-    <property name="tools.lib.dir" location="tools/lib"/>
     <property name="src.dir" location="src"/>
     <property name="src.java.dir" location="${src.dir}/java"/>
     <property name="test.dir" location="${build.dir}/test"/>
@@ -110,8 +109,6 @@
     <property name="lmtpinject.numthreads" value="2"/>
 
     <property name="zimbra.home.dir" location="/opt/zimbra"/>
-
-    <property name="zimbra.derby.dir" location="${zimbra.home.dir}/derby"/>
     <property name="zimbra.index.dir" location="${zimbra.home.dir}/index"/>
     <property name="zimbra.store.dir" location="${zimbra.home.dir}/store"/>
     <property name="zimbra.sqlite.dir" location="${zimbra.home.dir}/sqlite"/>
@@ -129,21 +126,8 @@
     <condition property="db-sqlite">
         <isset property="env.ZIMBRA_USE_SQLITE"/>
     </condition>
-    <condition property="db-derby">
-        <and>
-            <isset property="env.ZIMBRA_USE_DERBY"/>
-            <not><isset property="db-sqlite"/></not>
-        </and>
-    </condition>
     <condition property="db-mysql">
-        <and>
-            <not><isset property="db-sqlite"/></not>
-            <not><isset property="db-derby"/></not>
-        </and>
-    </condition>
-
-    <condition property="db.driver.jar" value="derby*.jar">
-        <isset property="db-derby"/>
+      <not><isset property="db-sqlite"/></not>
     </condition>
     <condition property="db.driver.jar" value="mysql-connector-java*.jar">
         <isset property="db-mysql"/>
@@ -245,22 +229,19 @@
     </taskdef>
 
     <path id="class.path">
-        <pathelement location="${common.classes.dir}"/>
+      <pathelement location="${common.classes.dir}"/>
       <pathelement location="${soap.classes.dir}"/>
-        <pathelement location="${im.classes.dir}"/>
-        <pathelement location="${build.classes.dir}"/>
-        <fileset dir="${jars.dir}">
-            <include name="**/*.jar"/>
-        </fileset>
-        <fileset dir="${common.jars.dir}">
-            <include name="**/*.jar"/>
-        </fileset>
-        <fileset dir="${im.jars.dir}">
-            <include name="**/*.jar"/>
-        </fileset>
-        <fileset dir="${tools.lib.dir}">
-            <include name="**/*.jar"/>
-        </fileset>
+      <pathelement location="${im.classes.dir}"/>
+      <pathelement location="${build.classes.dir}"/>
+      <fileset dir="${jars.dir}">
+        <include name="**/*.jar"/>
+      </fileset>
+      <fileset dir="${common.jars.dir}">
+        <include name="**/*.jar"/>
+      </fileset>
+      <fileset dir="${im.jars.dir}">
+        <include name="**/*.jar"/>
+      </fileset>
     </path>
 
     <taskdef name="deploy" classname="org.apache.catalina.ant.DeployTask" classpathref="class.path"/>
@@ -516,12 +497,6 @@
         </java>
     </target>
 
-    <target name="derby-versions-init" if="db-derby">
-        <java classname="com.zimbra.cs.db.Derby" fork="true" classpathref="class.path" failonerror="true">
-            <arg line="-o ${build.dir}"/>
-        </java>
-    </target>
-
     <target name="mysql-versions-init" if="db-mysql">
         <java classname="com.zimbra.cs.db.MySQL" fork="true" classpathref="class.path" failonerror="true">
             <arg line="-o ${build.dir}"/>
@@ -534,7 +509,7 @@
         </java>
     </target>
 
-    <target name="db-versions-init" depends="mysql-versions-init,sqlite-versions-init,derby-versions-init"/>
+    <target name="db-versions-init" depends="mysql-versions-init,sqlite-versions-init"/>
 
     <target name="compile" depends="build-init">
         <ant dir="${common.dir}" target="jar" inheritAll="false"/>
@@ -650,81 +625,81 @@
         <!--
             Setup the service principal name registered with setspn and ktpass
             it has to be a real routable name to reach the jetty server.
-            
-            This name is also used to create a zimbra server and provisioning a 
+
+            This name is also used to create a zimbra server and provisioning a
             user on the server.
-            Note: such server and user is not needed if the test client box can 
+            Note: such server and user is not needed if the test client box can
                   DNS resolve the home server of the user.
-                  But in dev env the server name is usually not a resolvble real 
-                  hostanme, but a simple name like myserver.local, which cannot 
+                  But in dev env the server name is usually not a resolvble real
+                  hostanme, but a simple name like myserver.local, which cannot
                   be resolved from the test client. (Windows 7 VM on jj-esx.spnego.local)
         -->
-        
+
         <!-- <property name="SERVICE_PRINCIPAL_NAME"     value="jj-server.spnego.local"/> -->
         <!-- <property name="SERVICE_PRINCIPAL_NAME"     value="prome-2s-dhcp141.eng.vmware.com"/> -->
         <exec executable="hostname" outputproperty="hostname-FQDN">
             <arg value="-f"/>
         </exec>
         <property name="SERVICE_PRINCIPAL_NAME"     value="${hostname-FQDN}"/>
-        
-        <!-- 
-            Again, could've used just ${zimbra.server.hostname} for spnego.server.name if the 
+
+        <!--
+            Again, could've used just ${zimbra.server.hostname} for spnego.server.name if the
             test client box can DNS resolve the home server for the user.
         -->
-        <property name="spnego.server.name"         value="${SERVICE_PRINCIPAL_NAME}"/>  
+        <property name="spnego.server.name"         value="${SERVICE_PRINCIPAL_NAME}"/>
     </target>
 
     <target name="spnego-inject" depends="spnego-service-name">
-        <!-- 
+        <!--
             Create a server with real hostname so it can be resolved from the test client box.
             Create a user homed on this server.
             (Calling this target is not required if the dev server hostname can be resolved on the test client box)
         -->
         <antcall target="zmprov">
-            <param name="args" value="-l cs ${spnego.server.name} 
-                                            zimbraSmtpHostname ${zimbra.smtp.host} 
-                                            zimbraSmtpPort 7024 
-                                            zimbraMailPort 7070 
-                                            zimbraMailSSLPort 7443 
-                                            zimbraMailMode http 
-                                            zimbraImapCleartextLoginEnabled TRUE 
-                                            zimbraPop3CleartextLoginEnabled TRUE 
-                                            zimbraServiceInstalled ldap 
-                                            zimbraServiceInstalled mta 
-                                            zimbraServiceInstalled mailbox 
-                                            zimbraServiceEnabled ldap 
-                                            zimbraServiceEnabled mta 
-                                            zimbraServiceEnabled mailbox 
+            <param name="args" value="-l cs ${spnego.server.name}
+                                            zimbraSmtpHostname ${zimbra.smtp.host}
+                                            zimbraSmtpPort 7024
+                                            zimbraMailPort 7070
+                                            zimbraMailSSLPort 7443
+                                            zimbraMailMode http
+                                            zimbraImapCleartextLoginEnabled TRUE
+                                            zimbraPop3CleartextLoginEnabled TRUE
+                                            zimbraServiceInstalled ldap
+                                            zimbraServiceInstalled mta
+                                            zimbraServiceInstalled mailbox
+                                            zimbraServiceEnabled ldap
+                                            zimbraServiceEnabled mta
+                                            zimbraServiceEnabled mailbox
                                             zimbraMailPurgeSleepInterval 0"/>
       </antcall>
-        
+
       <antcall target="zmprov">
-          <param name="args" value="-l ca spnego@${defaultdomain.name} test123 
-                                            zimbraMailHost ${spnego.server.name} 
-                                            cn 'Spnego Demo User' 
-                                            displayName 'Spnego Demo User' 
+          <param name="args" value="-l ca spnego@${defaultdomain.name} test123
+                                            zimbraMailHost ${spnego.server.name}
+                                            cn 'Spnego Demo User'
+                                            displayName 'Spnego Demo User'
                                             zimbraForeignPrincipal kerberos5:spnego@${zimbra.kerberos.realm}"/>
       </antcall>
-        
-      <!-- 
-          note: after done with spnego testing, remember to set the LC key zimbra_server_hostname 
+
+      <!--
+          note: after done with spnego testing, remember to set the LC key zimbra_server_hostname
                 back to your default server
-      -->     
+      -->
       <antcall target="zmlocalconfig">
           <param name="localconfig-args" value="-e zimbra_server_hostname=${spnego.server.name}"/>
       </antcall>
-        
-    </target>	
+
+    </target>
 
     <!--
         To test spnego:
         - ant reset-all
         - [ant spnego-inject]
         - ant spnego-dev-deploy
-        
+
         If you run service-deploy after this point, you need to retun spnego-dev-deploy,
         but not spnego-inject.  spnego-inject only needs to be run once after reset-all.
-        
+
     -->
     <target name="spnego-dev-deploy" depends="spnego-war, spnego-service-name">
       <antcall target="stop-webserver"/>
@@ -760,7 +735,7 @@
       <property name="zimbraWebClientLogoutURL"    value="../?sso=1"/>
       <property name="zimbraAuthKerberos5Realm"    value="${zimbraSpnegoAuthRealm}"/>
 
-      
+
       <!-- modify ldap -->
       <antcall target="zmprov">
         <param name="args" value="-l mcf zimbraSpnegoAuthEnabled ${zimbraSpnegoAuthEnabled}"/>
@@ -1047,18 +1022,6 @@
         </copy>
 
         <if>
-          <isset property="db-derby"/>
-          <then>
-            <copy todir="${dist.dir}/conf" file="${config.dir}/derby.properties" overwrite="true"/>
-            <copy todir="${dist.dir}/lib" file="../ZimbraServer/tools/lib/derbytools.jar" overwrite="true"/>
-            <copy todir="${dist.dir}/jetty/common/lib" file="${common.jars.dir}/derby.jar" overwrite="true"/>
-            <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
-              <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
-              <arg line="-e zimbra_class_database=com.zimbra.cs.db.Derby -f"/>
-            </java>
-          </then>
-        </if>
-        <if>
           <isset property="db-sqlite"/>
           <then>
             <copy todir="${dist.dir}/jetty/common/lib" overwrite="true">
@@ -1204,8 +1167,8 @@
              3. start web server
              4. run the target "reset-the-world-stage2" -->
     <target name="reset-the-world" description="Reset the world">
-    	<!-- do not add any other ant calls in between reset-the-world-stage1 and stage2.
-    	     instead add them as a dependency of stage1 and stage2 targets. -->
+      <!-- do not add any other ant calls in between reset-the-world-stage1 and stage2.
+           instead add them as a dependency of stage1 and stage2 targets. -->
         <antcall target="reset-the-world-stage1"/>
         <antcall target="reset-the-world-stage2"/>
     </target>
@@ -1326,8 +1289,8 @@
                 <param name="CN" value="localhost"/>
                 <param name="OU" value="Engineering"/>
                 <param name="O" value="Zimbra Systems"/>
-            	<param name="L" value="Palo Alto"/>
-            	<param name="S" value="California"/>
+              <param name="L" value="Palo Alto"/>
+              <param name="S" value="California"/>
                 <param name="C" value="US"/>
             </dname>
         </genkey>
@@ -1410,23 +1373,13 @@
         <condition property="db.schema.dir" value="src/db/sqlite">
             <isset property="db-sqlite"/>
         </condition>
-        <condition property="db.schema.dir" value="src/db/derby">
-            <isset property="db-derby"/>
-        </condition>
         <condition property="db.schema.dir" value="src/db/mysql">
             <isset property="db-mysql"/>
         </condition>
         <echo>Using database schema in ${db.schema.dir}</echo>
     </target>
 
-    <target name="db-init" depends="choose-db-schema,mysql-init,sqlite-init,derby-init"/>
-
-    <target name="derby-init" if="db-derby">
-        <delete dir="${zimbra.derby.dir}"/>
-        <java classname="org.apache.derby.tools.ij" fork="true" classpathref="class.path" failonerror="true">
-            <arg file="${dist.db.dir}/init.sql" />
-        </java>
-    </target>
+    <target name="db-init" depends="choose-db-schema,mysql-init,sqlite-init"/>
 
     <target name="mysql-init" if="db-mysql">
         <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
@@ -1590,9 +1543,9 @@
             zimbraSmtpHostname ${zimbra.smtp.host} \
             zimbraSmtpPort 7024 \
             zimbraMailPort 7070 \
-        	zimbraMailSSLPort 7443 \
+          zimbraMailSSLPort 7443 \
             zimbraMailSSLClientCertPort 9443 \
-        	zimbraMailMode http \
+          zimbraMailMode http \
             zimbraMailSSLClientCertMode WantClientAuth \
             zimbraImapCleartextLoginEnabled TRUE \
             zimbraPop3CleartextLoginEnabled TRUE
