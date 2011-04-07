@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110405-1515 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110407-1038 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -7603,7 +7603,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=2001)
+    @ZAttr(id=1201)
     public static final String A_zimbraReverseProxyClientCertCA = "zimbraReverseProxyClientCertCA";
 
     /**
@@ -7612,7 +7612,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=2000)
+    @ZAttr(id=1200)
     public static final String A_zimbraReverseProxyClientCertMode = "zimbraReverseProxyClientCertMode";
 
     /**
