@@ -185,6 +185,9 @@ class MimeParser {
                 String bnd = ctype.getParameter("boundary");
                 boundary = bnd == null || bnd.trim().isEmpty() ? "" : bnd;
                 recalculateBoundaries();
+            } else if (boundary != null) {
+                boundary = null;
+                recalculateBoundaries();
             }
         }
 
@@ -492,18 +495,18 @@ class MimeParser {
             bodyStart(lineStart);
         }
         while (!bnd.equals(pcurrent.boundary) && parts.size() > 1) {
-            if ("".equals(pcurrent.boundary) && (boundaries == null || !boundaries.contains(bnd))) {
-                // "" meant that the multipart Content-Type didn't specify a boundary
-                //   so pick the next new boundary we see and *that* is the boundary
-                ((MimeMultipart) pcurrent.part).setEffectiveBoundary(bnd);
-                pcurrent.boundary = ((MimeMultipart) pcurrent.part).getBoundary();
+            if ("".equals(pcurrent.boundary) && (boundaries == null || !boundaries.contains(bnd)))
                 break;
-            }
             endPart(pcurrent, partEnd);
             parts.remove(parts.size() - 1);
             pcurrent = currentPart();
         }
         MimeMultipart multi = (MimeMultipart) pcurrent.part;
+        if ("".equals(pcurrent.boundary)) {
+            // "" meant that the multipart Content-Type didn't specify a boundary
+            //   so pick the next new boundary we see and *that* is the boundary
+            pcurrent.boundary = multi.setEffectiveBoundary(bnd);
+        }
 
         // set up the new part
         if (isEnd) {
@@ -524,7 +527,7 @@ class MimeParser {
 
     /** Regenerates the list of valid MIME boundaries from the set of active
      *  enclosing parts.  Sets {@link #boundaries} appropriately, or to
-     *  <tt>null</tt> if there are no valid boundaries. */
+     *  {@code null} if there are no valid boundaries. */
     void recalculateBoundaries() {
         boundaries = new ArrayList<String>(parts.size());
         for (PartInfo pinfo : parts) {
