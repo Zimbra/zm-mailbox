@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110407-1028 */
+    /* build: 7.0.0_BETA1_1111 administrator 20110407-1714 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -1662,6 +1662,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=431)
     public static final String A_zimbraArchiveAccountNameTemplate = "zimbraArchiveAccountNameTemplate";
+
+    /**
+     * whether account archiving is enabled
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1206)
+    public static final String A_zimbraArchiveEnabled = "zimbraArchiveEnabled";
 
     /**
      * Address to which archive message bounces should be sent. Typically

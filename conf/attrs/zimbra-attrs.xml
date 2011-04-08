@@ -5633,5 +5633,10 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
+<attr id="1206" name="zimbraArchiveEnabled" type="boolean" cardinality="single" optionalIn="account,cos,globalConfig" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>whether account archiving is enabled</desc>
+</attr>
 
 </attrs>
