@@ -182,7 +182,7 @@ public final class MailboxIndex {
         ZimbraQuery query = compileQuery(proto, octx, params);
         Set<MailItem.Type> types = toIndexTypes(params.getTypes());
         // no need to index if the search doesn't involve Lucene
-        if (query.countTextOperations() > 0 && getDeferredCount(types) > 0) {
+        if (query.getTextOperationCount() > 0 && getDeferredCount(types) > 0) {
             try {
                 // don't wait if an indexing is in progress by other thread
                 indexDeferredItems(types, new BatchStatus(), false);
@@ -256,7 +256,7 @@ public final class MailboxIndex {
         }
 
         if (ZimbraLog.search.isDebugEnabled()) {
-            ZimbraLog.search.debug("Executing search with [%d] text parts", zq.countTextOperations());
+            ZimbraLog.search.debug("Executing search with [%d] text parts", zq.getTextOperationCount());
         }
 
         ZimbraQueryResults results = zq.execute();

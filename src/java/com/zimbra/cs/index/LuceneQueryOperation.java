@@ -606,15 +606,17 @@ public final class LuceneQueryOperation extends QueryOperation {
             case SENDER:
                 return new Sort(new SortField(LuceneFields.L_SORT_NAME, SortField.STRING,
                         sortBy.getDirection() == SortBy.Direction.DESC));
-            case RCPT:
-                return new Sort(new SortField(LuceneFields.L_SORT_RCPT, SortField.STRING,
-                        sortBy.getDirection() == SortBy.Direction.DESC));
             case SUBJECT:
                 return new Sort(new SortField(LuceneFields.L_SORT_SUBJECT, SortField.STRING,
                         sortBy.getDirection() == SortBy.Direction.DESC));
             case SIZE:
                 return new Sort(new SortField(LuceneFields.L_SORT_SIZE, SortField.LONG,
                         sortBy.getDirection() == SortBy.Direction.DESC));
+            case RCPT:
+            case ATTACHMENT:
+            case FLAG:
+            case PRIORITY:
+                assert false : sortBy; // should already be checked in the compile phase
             case DATE:
             default: // default to DATE_DESCENDING
                 return new Sort(new SortField(LuceneFields.L_SORT_DATE, SortField.STRING, true));

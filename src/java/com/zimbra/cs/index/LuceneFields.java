@@ -18,6 +18,9 @@ package com.zimbra.cs.index;
 /**
  * Standard Lucene fields.
  *
+ * The sort fields are used for the sorting of Lucene results. They MUST be stored with all documents, and their values
+ * MUST match the values in the corresponding MailItem row entry. They MUST be Indexed and NOT_ANALYZED.
+ *
  * @since Apr 30, 2004
  * @author schemers
  */
@@ -25,11 +28,6 @@ public final class LuceneFields {
 
     private LuceneFields() {
     }
-
-    // SORTING FIELDS
-    //
-    // These fields are used for the sorting of lucene results. They MUST be stored with all documents, and their values
-    // MUST match the values in the corresponding MailItem row entry. They MUST be Indexed and NOT_ANALYZED.
 
     /**
      * Subject for sorting.
@@ -40,11 +38,6 @@ public final class LuceneFields {
      * Name for sorting.
      */
     public static final String L_SORT_NAME = "nameSort";
-
-    /**
-     * Recipient for sorting.
-     */
-    public static final String L_SORT_RCPT = "rcptSort";
 
     /**
      * Date for sorting. ALSO searchable date-  "date:"  "after:" and "before:".
@@ -60,7 +53,6 @@ public final class LuceneFields {
      * "ALL" field, workaround for lucene's inability to do naked not queries.
      * <p>
      * This field will automatically be populated with one term, "all" for all documents.
-     *
      */
     public static final String L_ALL = "ALL";
 

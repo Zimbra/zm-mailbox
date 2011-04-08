@@ -114,18 +114,6 @@ public final class IndexDocument {
         document.removeFields(LuceneFields.L_SORT_NAME);
     }
 
-    public void addSortRcpt(String value) {
-        if (Strings.isNullOrEmpty(value)) {
-            return;
-        }
-        document.add(new Field(LuceneFields.L_SORT_RCPT, value.toUpperCase(),
-                Field.Store.NO, Field.Index.NOT_ANALYZED));
-    }
-
-    public void removeSortRcpt() {
-        document.removeField(LuceneFields.L_SORT_RCPT);
-    }
-
     public void addSubject(String value) {
         document.add(new Field(LuceneFields.L_H_SUBJECT, value, Field.Store.NO, Field.Index.ANALYZED));
     }

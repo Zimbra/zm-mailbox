@@ -682,7 +682,7 @@ public final class LuceneIndex implements IndexStore {
         }
 
         if (ZimbraLog.searchstats.isDebugEnabled()) {
-            ZimbraLog.searchstats.debug("Executing search with [%d] text parts", zq.countTextOperations());
+            ZimbraLog.searchstats.debug("Executing search with [%d] text parts", zq.getTextOperationCount());
         }
 
         ZimbraQueryResults results = zq.execute();
@@ -728,9 +728,6 @@ public final class LuceneIndex implements IndexStore {
 
                     doc.removeSortName();
                     doc.addSortName(item.getSortSender());
-
-                    doc.removeSortRcpt();
-                    doc.addSortRcpt(item.getSortRecipients());
 
                     doc.removeMailboxBlobId();
                     doc.addMailboxBlobId(item.getId());

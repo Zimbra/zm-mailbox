@@ -324,7 +324,7 @@ public final class ZimbraQuery {
     /**
      * Returns the number of text parts of this query.
      */
-    public int countTextOperations() {
+    public int getTextOperationCount() {
         if (operation == null) {
             return 0;
         }
@@ -336,7 +336,7 @@ public final class ZimbraQuery {
     /**
      * Returns number of text parts of this query.
      */
-    private static int countTextOperations(QueryOperation op) {
+    private int getTextOperationCount(QueryOperation op) {
         if (op == null) {
             return 0;
         }
@@ -358,12 +358,7 @@ public final class ZimbraQuery {
     }
 
     /**
-     * Take the specified query string and build an optimized query. Do not
-     * execute the query, however.
-     *
-     * @param mbox
-     * @param params
-     * @throws ServiceException
+     * Take the specified query string and build an optimized query. Do not execute the query, however.
      */
     public ZimbraQuery(OperationContext octxt, SoapProtocol proto, Mailbox mbox, SearchParams params)
             throws ServiceException {
@@ -573,8 +568,8 @@ public final class ZimbraQuery {
                 // ...don't do any of this if they aren't asking for a calendar type...
                 Set<MailItem.Type> types = params.getTypes();
                 boolean hasCalendarType =
-                        types.contains(MailItem.Type.APPOINTMENT) || types.contains(MailItem.Type.TASK);
-                if (hasCalendarType && !allowPrivateAccess && countTextOperations(localOps) > 0) {
+                    types.contains(MailItem.Type.APPOINTMENT) || types.contains(MailItem.Type.TASK);
+                if (hasCalendarType && !allowPrivateAccess && getTextOperationCount(localOps) > 0) {
                     // the searcher is NOT allowed to see private items globally....lets check
                     // to see if there are any individual folders that they DO have rights to...
                     // if there are any, then we'll need to run special searches in those
@@ -646,6 +641,23 @@ public final class ZimbraQuery {
             ZimbraLog.search.debug("BEFORE_FINAL_OPT=%s", union);
             operation = union.optimize(mbox);
         }
+
+        // Check sort compatibility.
+        switch (params.getSortBy().getKey()) {
+            case RCPT:
+            case ATTACHMENT:
+            case FLAG:
+            case PRIORITY:
+                // We don't store these in Lucene.
+                if (getTextOperationCount() > 0) {
+                    throw ServiceException.INVALID_REQUEST(
+                            "Sort '" + params.getSortBy().name() + "' can't be used with text query.", null);
+                }
+                break;
+            default:
+                break;
+        }
+
         ZimbraLog.search.debug("END_ZIMBRAQUERY_CONSTRUCTOR=%s", operation);
     }
 
