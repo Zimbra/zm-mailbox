@@ -216,11 +216,11 @@ public class Tag extends MailItem {
         // and tags.
         List<Integer> targets = new ArrayList<Integer>();
         boolean missed = false;
+        int delta = unread ? 1 : -1;
         for (UnderlyingData data : DbMailItem.getUnreadMessages(this)) {
             Message msg = mMailbox.getMessage(data);
             if (msg.checkChangeID() || !msg.canAccess(ACL.RIGHT_WRITE)) {
-                int delta = unread ? 1 : -1;
-                msg.updateUnread(delta, isTagged(Flag.ID_DELETED) ? delta : 0);
+                msg.updateUnread(delta, msg.isTagged(Flag.ID_DELETED) ? delta : 0);
                 msg.mData.metadataChanged(mMailbox);
                 targets.add(msg.getId());
             } else {
