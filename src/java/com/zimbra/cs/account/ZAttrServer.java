@@ -40,7 +40,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110407-1038 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110408-1107 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -8258,7 +8258,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 7.1.0
      */
-    @ZAttr(id=1999)
+    @ZAttr(id=1199)
     public int getMailSSLClientCertPort() {
         return getIntAttr(Provisioning.A_zimbraMailSSLClientCertPort, 0);
     }
@@ -8270,7 +8270,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 7.1.0
      */
-    @ZAttr(id=1999)
+    @ZAttr(id=1199)
     public String getMailSSLClientCertPortAsString() {
         return getAttr(Provisioning.A_zimbraMailSSLClientCertPort, "0");
     }
@@ -8283,7 +8283,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 7.1.0
      */
-    @ZAttr(id=1999)
+    @ZAttr(id=1199)
     public void setMailSSLClientCertPort(int zimbraMailSSLClientCertPort) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailSSLClientCertPort, Integer.toString(zimbraMailSSLClientCertPort));
@@ -8299,7 +8299,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 7.1.0
      */
-    @ZAttr(id=1999)
+    @ZAttr(id=1199)
     public Map<String,Object> setMailSSLClientCertPort(int zimbraMailSSLClientCertPort, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailSSLClientCertPort, Integer.toString(zimbraMailSSLClientCertPort));
@@ -8314,7 +8314,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 7.1.0
      */
-    @ZAttr(id=1999)
+    @ZAttr(id=1199)
     public void setMailSSLClientCertPortAsString(String zimbraMailSSLClientCertPort) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailSSLClientCertPort, zimbraMailSSLClientCertPort);
@@ -8330,7 +8330,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 7.1.0
      */
-    @ZAttr(id=1999)
+    @ZAttr(id=1199)
     public Map<String,Object> setMailSSLClientCertPortAsString(String zimbraMailSSLClientCertPort, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailSSLClientCertPort, zimbraMailSSLClientCertPort);
@@ -8344,7 +8344,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 7.1.0
      */
-    @ZAttr(id=1999)
+    @ZAttr(id=1199)
     public void unsetMailSSLClientCertPort() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailSSLClientCertPort, "");
@@ -8359,7 +8359,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 7.1.0
      */
-    @ZAttr(id=1999)
+    @ZAttr(id=1199)
     public Map<String,Object> unsetMailSSLClientCertPort(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailSSLClientCertPort, "");
