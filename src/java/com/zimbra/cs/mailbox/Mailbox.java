@@ -190,7 +190,6 @@ public class Mailbox {
         public short indexVolumeId;
         public int lastBackupDate;
         public int lastItemId;
-        public int lastAddressId;
         public int lastChangeId;
         public long lastChangeDate;
         public int lastWriteDate;
@@ -209,7 +208,6 @@ public class Mailbox {
             mbd.contacts = contacts;
             mbd.indexVolumeId = indexVolumeId;
             mbd.lastItemId = lastItemId;
-            mbd.lastAddressId = lastAddressId;
             mbd.lastChangeId  = lastChangeId;
             mbd.lastChangeDate = lastChangeDate;
             mbd.lastWriteDate = lastWriteDate;
@@ -404,6 +402,7 @@ public class Mailbox {
     private IMPersona      mPersona = null;
     private MailboxVersion version;
     private volatile boolean open = false;
+    private int lastAddressId = -1; // lazily loaded by DbMailAddress.getLastId()
 
     protected Mailbox(MailboxData data) {
         mId = data.id;
@@ -814,9 +813,16 @@ public class Mailbox {
         return nextId;
     }
 
-    int getNextAddressId() {
-        int last = mCurrentChange.addressId == MailboxChange.NO_CHANGE ? mData.lastAddressId : mCurrentChange.addressId;
-        return mCurrentChange.addressId = ++last;
+    int getNextAddressId() throws ServiceException {
+        if (mCurrentChange.addressId == MailboxChange.NO_CHANGE) {
+            if (lastAddressId < 0) {
+                lastAddressId = DbMailAddress.getLastId(getOperationConnection(), this);
+            }
+            mCurrentChange.addressId = lastAddressId + 1;
+        } else {
+            mCurrentChange.addressId++;
+        }
+        return mCurrentChange.addressId;
     }
 
     TargetConstraint getOperationTargetConstraint() {
@@ -5114,7 +5120,7 @@ public class Mailbox {
             DbMailItem.resetIndexId(getOperationConnection(), this);
             DbMailItem.resetSenderId(getOperationConnection(), this);
             DbMailAddress.delete(getOperationConnection(), this);
-            mData.lastAddressId = 0;
+            lastAddressId = 0;
             success = true;
         } finally {
             endTransaction(success);
@@ -6136,7 +6142,7 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("DbMailAddress.rebuild", null);
-            mCurrentChange.addressId = DbMailAddress.rebuild(getOperationConnection(), this, mData.lastAddressId);
+            mCurrentChange.addressId = DbMailAddress.rebuild(getOperationConnection(), this, lastAddressId);
             success = true;
         } finally {
             endTransaction(success);
@@ -7582,7 +7588,7 @@ public class Mailbox {
                 mData.lastItemId = change.itemId;
             }
             if (change.addressId != MailboxChange.NO_CHANGE) {
-                mData.lastAddressId = change.addressId;
+                lastAddressId = change.addressId;
             }
             if (change.contacts != MailboxChange.NO_CHANGE) {
                 mData.contacts = change.contacts;
