@@ -5598,8 +5598,7 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
-<!-- id should really have been 1199, but 7.1.0 had been shipped. -->
-<attr id="1999" name="zimbraMailSSLClientCertPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" requiresRestart="mailbox" since="7.1.0">
+<attr id="1199" name="zimbraMailSSLClientCertPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" requiresRestart="mailbox" since="7.1.0">
   <globalConfigValue>0</globalConfigValue>
   <desc>SSL port requesting client certificate for end-user UI</desc>
 </attr>
