@@ -49,6 +49,7 @@ TODO: Add this class to {@link ZimbraSuite} once it supports JUnit 4 annotations
  * 
  * TestLdapBinary
  * TestSearchGal
+ * TestLdapSDK
  * 
  */
 public class TestLdapBinary  {

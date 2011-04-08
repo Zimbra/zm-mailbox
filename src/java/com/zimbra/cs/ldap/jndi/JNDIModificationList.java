@@ -1,0 +1,117 @@
+package com.zimbra.cs.ldap.jndi;
+
+import java.util.ArrayList;
+
+import javax.naming.directory.BasicAttribute;
+import javax.naming.directory.DirContext;
+import javax.naming.directory.ModificationItem;
+
+import com.unboundid.ldap.sdk.ModificationType;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.ZModificationList;
+
+public class JNDIModificationList extends ZModificationList {
+
+    private ArrayList<ModificationItem> modList = new ArrayList<ModificationItem>();
+    
+    JNDIModificationList() {
+    }
+    
+    @Override
+    public void debug() {
+        // TODO Auto-generated method stub
+        
+    }
+    
+    ModificationItem[] getModListAsArray() {
+        ModificationItem[] mods = new ModificationItem[modList.size()];
+        return modList.toArray(mods);
+    }
+    
+    private static BasicAttribute newBasicAttribute(boolean isBinaryTransfer, String attrName) {
+        String transferAttrName = LdapUtilCommon.attrNameToBinaryTransferAttrName(isBinaryTransfer, attrName);
+        return new BasicAttribute(transferAttrName);
+    }
+    
+    @Override
+    public void addAttr(String name, String value[], Entry entry, 
+            boolean containsBinaryData, boolean isBinaryTransfer) {
+        String[] currentValues = entry.getMultiAttr(name, false);
+        
+        BasicAttribute ba = null;
+        for (int i=0; i < value.length; i++) {
+            if (LdapUtilCommon.contains(currentValues, value[i])) {
+                continue;
+            }
+            if (ba == null) {
+                ba = newBasicAttribute(isBinaryTransfer, name);
+            }
+            ba.add(LdapUtilCommon.decodeBase64IfBinary(containsBinaryData, value[i]));
+        }
+        if (ba != null) {
+            modList.add(new ModificationItem(DirContext.ADD_ATTRIBUTE, ba));
+        }
+    }
+    
+    @Override
+    public void modifyAttr(String name, String value, Entry entry, 
+            boolean containsBinaryData, boolean isBinaryTransfer) {
+        int modOp = (StringUtil.isNullOrEmpty(value)) ? DirContext.REMOVE_ATTRIBUTE : DirContext.REPLACE_ATTRIBUTE;
+        if (modOp == DirContext.REMOVE_ATTRIBUTE) {
+            // make sure it exists
+            if (entry.getAttr(name, false) == null) {
+                return;
+            }
+        }
+        
+        if (modOp == DirContext.REMOVE_ATTRIBUTE) {
+            removeAttr(name);
+        } else {
+            String[] val = new String[]{value};
+            modifyAttr(name, val, containsBinaryData, isBinaryTransfer);
+        }
+    }
+    
+    @Override
+    public void modifyAttr(String name, String[] value, 
+            boolean containsBinaryData, boolean isBinaryTransfer) {
+        BasicAttribute ba = newBasicAttribute(isBinaryTransfer, name);
+        for (int i=0; i < value.length; i++) {
+            ba.add(LdapUtilCommon.decodeBase64IfBinary(containsBinaryData, value[i]));
+        }
+        modList.add(new ModificationItem(DirContext.REPLACE_ATTRIBUTE, ba));
+    }
+    
+    @Override
+    public void removeAttr(String name, String value[], Entry entry, 
+            boolean containsBinaryData, boolean isBinaryTransfer) {
+        String[] currentValues = entry.getMultiAttr(name, false);
+        if (currentValues == null || currentValues.length == 0) {
+            return;
+        }
+        
+        BasicAttribute ba = null;
+        for (int i=0; i < value.length; i++) {
+            if (!LdapUtilCommon.contains(currentValues, value[i])) {
+                continue;
+            }
+            if (ba == null) {
+                ba = newBasicAttribute(isBinaryTransfer, name);
+            }
+            ba.add(LdapUtilCommon.decodeBase64IfBinary(containsBinaryData, value[i]));
+        }
+        if (ba != null) {
+            modList.add(new ModificationItem(DirContext.REMOVE_ATTRIBUTE, ba));
+        }
+    }
+    
+
+    @Override
+    public void removeAttr(String attrName) {
+        BasicAttribute ba = new BasicAttribute(attrName);
+        modList.add(new ModificationItem(DirContext.REMOVE_ATTRIBUTE, ba));
+    }
+
+}

@@ -30,6 +30,7 @@ import com.zimbra.cs.account.gal.GalParams;
 import com.zimbra.cs.account.gal.GalUtil;
 import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.gal.GalSearchParams;
+import com.zimbra.cs.ldap.LdapUtilCommon;
 
 import javax.naming.AuthenticationException;
 import javax.naming.NamingEnumeration;
@@ -162,7 +163,7 @@ public class LdapUtil {
         boolean containsBinaryData = attrMgr == null ? false : attrMgr.containsBinaryData(name);
         boolean isBinaryTransfer = attrMgr == null ? false : attrMgr.isBinaryTransfer(name);
         
-        String attrName = attrNameToBinaryTransferAttrName(isBinaryTransfer, name);
+        String attrName = LdapUtilCommon.attrNameToBinaryTransferAttrName(isBinaryTransfer, name);
         
         Attribute attr = attrs.get(attrName);
         if (attr != null) {
@@ -189,7 +190,7 @@ public class LdapUtil {
     
     public static String[] getMultiAttrString(Attributes attrs, String name, boolean containsBinaryData, boolean isBinaryTransfer) 
     throws NamingException {
-        String attrName = attrNameToBinaryTransferAttrName(isBinaryTransfer, name);
+        String attrName = LdapUtilCommon.attrNameToBinaryTransferAttrName(isBinaryTransfer, name);
         
         Attribute attr = attrs.get(attrName);
         if (attr != null) {
@@ -239,7 +240,7 @@ public class LdapUtil {
             Attribute attr = (Attribute) ne.next();
             String transferAttrName = attr.getID();
             
-            String attrName = binaryTransferAttrNameToAttrName(transferAttrName);
+            String attrName = LdapUtilCommon.binaryTransferAttrNameToAttrName(transferAttrName);
             
             boolean containsBinaryData = 
                 (attrMgr != null && attrMgr.containsBinaryData(attrName)) ||
@@ -320,7 +321,7 @@ public class LdapUtil {
         
         BasicAttribute ba = newBasicAttribute(isBinaryTransfer, name);
         if (mod_op == DirContext.REPLACE_ATTRIBUTE)
-            ba.add(decodeBase64IfBinary(containsBinaryData, value));
+            ba.add(LdapUtilCommon.decodeBase64IfBinary(containsBinaryData, value));
         modList.add(new ModificationItem(mod_op, ba));
     }
     
@@ -328,7 +329,7 @@ public class LdapUtil {
             boolean containsBinaryData, boolean isBinaryTransfer) {
         BasicAttribute ba = newBasicAttribute(isBinaryTransfer, name);
         for (int i=0; i < value.length; i++) {
-            ba.add(decodeBase64IfBinary(containsBinaryData, value[i]));
+            ba.add(LdapUtilCommon.decodeBase64IfBinary(containsBinaryData, value[i]));
         }
         modList.add(new ModificationItem(DirContext.REPLACE_ATTRIBUTE, ba));
     }
@@ -338,19 +339,11 @@ public class LdapUtil {
      */
     private static void removeAttr(ArrayList<ModificationItem> modList, String name, String value, 
             com.zimbra.cs.account.Entry entry, boolean containsBinaryData, boolean isBinaryTransfer) {
-        if (!contains(entry.getMultiAttr(name, false), value)) return;
+        if (!LdapUtilCommon.contains(entry.getMultiAttr(name, false), value)) return;
         
         BasicAttribute ba = newBasicAttribute(isBinaryTransfer, name);
-        ba.add(decodeBase64IfBinary(containsBinaryData, value));
+        ba.add(LdapUtilCommon.decodeBase64IfBinary(containsBinaryData, value));
         modList.add(new ModificationItem(DirContext.REMOVE_ATTRIBUTE, ba));
-    }
-
-    private static boolean contains(String[] values, String val) {
-        if (values == null) return false;
-        for (String s : values) {
-            if (s.compareToIgnoreCase(val) == 0) return true;
-        }
-        return false;
     }
     
     /**
@@ -363,9 +356,9 @@ public class LdapUtil {
         
         BasicAttribute ba = null;
         for (int i=0; i < value.length; i++) {
-            if (!contains(currentValues, value[i])) continue;
+            if (!LdapUtilCommon.contains(currentValues, value[i])) continue;
             if (ba == null) ba = newBasicAttribute(isBinaryTransfer, name);
-            ba.add(decodeBase64IfBinary(containsBinaryData, value[i]));
+            ba.add(LdapUtilCommon.decodeBase64IfBinary(containsBinaryData, value[i]));
         }
         if (ba != null) modList.add(new ModificationItem(DirContext.REMOVE_ATTRIBUTE, ba));
 
@@ -376,10 +369,10 @@ public class LdapUtil {
      */
     private static void addAttr(ArrayList<ModificationItem> modList, String name, String value, 
             com.zimbra.cs.account.Entry entry, boolean containsBinaryData, boolean isBinaryTransfer) {
-        if (contains(entry.getMultiAttr(name, false), value)) return;     
+        if (LdapUtilCommon.contains(entry.getMultiAttr(name, false), value)) return;     
         
         BasicAttribute ba = newBasicAttribute(isBinaryTransfer, name);
-        ba.add(decodeBase64IfBinary(containsBinaryData, value));
+        ba.add(LdapUtilCommon.decodeBase64IfBinary(containsBinaryData, value));
         modList.add(new ModificationItem(DirContext.ADD_ATTRIBUTE, ba));
     }
 
@@ -393,9 +386,9 @@ public class LdapUtil {
         
         BasicAttribute ba = null;
         for (int i=0; i < value.length; i++) {
-            if (contains(currentValues, value[i])) continue;
+            if (LdapUtilCommon.contains(currentValues, value[i])) continue;
             if (ba == null) ba = newBasicAttribute(isBinaryTransfer, name);
-            ba.add(decodeBase64IfBinary(containsBinaryData, value[i]));
+            ba.add(LdapUtilCommon.decodeBase64IfBinary(containsBinaryData, value[i]));
         }
         if (ba != null) modList.add(new ModificationItem(DirContext.ADD_ATTRIBUTE, ba));
     }
@@ -507,20 +500,20 @@ public class LdapUtil {
             if (v instanceof String) {
                 // attrs.put(name, decodeBase64IfBinary(isBinary, (String)v));
                 BasicAttribute a = newBasicAttribute(isBinaryTransfer, attrName);
-                a.add(decodeBase64IfBinary(isBinary, (String)v));
+                a.add(LdapUtilCommon.decodeBase64IfBinary(isBinary, (String)v));
                 attrs.put(a);
             } else if (v instanceof String[]) {
                 String[] sa = (String[]) v;
                 BasicAttribute a = newBasicAttribute(isBinaryTransfer, attrName);
                 for (int i=0; i < sa.length; i++) {
-                    a.add(decodeBase64IfBinary(isBinary, sa[i]));
+                    a.add(LdapUtilCommon.decodeBase64IfBinary(isBinary, sa[i]));
                 }
                 attrs.put(a);
             } else if (v instanceof Collection) {
                 Collection c = (Collection) v;
                 BasicAttribute a = newBasicAttribute(isBinaryTransfer, attrName);
                 for (Object o : c) {
-                	a.add(decodeBase64IfBinary(isBinary, o.toString()));
+                	a.add(LdapUtilCommon.decodeBase64IfBinary(isBinary, o.toString()));
                 }
                 attrs.put(a);
             }
@@ -1168,45 +1161,29 @@ public class LdapUtil {
         return "";
     }
     
-    private static Object decodeBase64IfBinary(boolean isBinary, String value) {
-        return isBinary ? ByteUtil.decodeLDAPBase64(value) : value;
-    }
-    
     private static BasicAttribute newBasicAttribute(boolean isBinaryTransfer, String attrName) {
-        String transferAttrName = attrNameToBinaryTransferAttrName(isBinaryTransfer, attrName);
+        String transferAttrName = LdapUtilCommon.attrNameToBinaryTransferAttrName(isBinaryTransfer, attrName);
         return new BasicAttribute(transferAttrName);
     }
     
-    /*
-     * convert a real attrName to a binaryTransferAttrName if necessary
-     * 
-     * e.g. userCertificate => userCertificate;binary
-     */
-    private static String attrNameToBinaryTransferAttrName(boolean isBinaryTransfer, String attrName) {
-        return isBinaryTransfer ? attrName + ";binary" : attrName;
-    }
-    
-    /*
-     * convert a binaryTransferAttrName to the real attrName
-     * 
-     * e.g. userCertificate;binary => userCertificate
-     *      zimbraId => zimbraId
-     */
-    private static String binaryTransferAttrNameToAttrName(String transferAttrName) {
-        if (transferAttrName.endsWith(";binary")) {
-            String[] parts = transferAttrName.split(";");
-            if (parts.length == 2) {
-                return parts[0];
-            }
+
+    public static void main(String[] args)  {
+        try {
+            com.zimbra.cs.account.Config config = Provisioning.getInstance().getConfig();
+            String dn = ((LdapConfig)config).getDN();
+            
+            ZimbraLdapContext zlc = new ZimbraLdapContext(true);
+            
+            ArrayList<ModificationItem> modlist = new ArrayList<ModificationItem>();
+            modifyAttr(modlist, Provisioning.A_description, null, config, false, false);
+            
+            ModificationItem[] mods = new ModificationItem[modlist.size()];
+            modlist.toArray(mods);
+            zlc.modifyAttributes(dn, mods);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        return transferAttrName;
     }
-    
-    public static void main(String[] args) {
-        String junk;
         
-        junk = binaryTransferAttrNameToAttrName("userCertificate;binary");
-        junk = binaryTransferAttrNameToAttrName("userCertificate");
-        junk = "blah";
-    }
  }

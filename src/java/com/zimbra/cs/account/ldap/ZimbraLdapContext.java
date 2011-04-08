@@ -64,6 +64,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.ldap.ILdapContext;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.Zimbra;
 
@@ -72,7 +73,7 @@ import com.zimbra.cs.util.Zimbra;
  * @author pshao
  *
  */
-public class ZimbraLdapContext {
+public class ZimbraLdapContext implements ILdapContext {
 
     private static String sLdapURL;
     private static String sLdapMasterURL;    
