@@ -24,7 +24,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.google.common.base.Strings;
-import com.sun.istack.internal.Nullable;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -409,7 +408,7 @@ public final class SearchParams implements Cloneable {
     /**
      * Sets the cursor, or null to clear.
      */
-    public void setCursor(@Nullable Cursor value) {
+    public void setCursor(Cursor value) {
         cursor = value;
     }
 
