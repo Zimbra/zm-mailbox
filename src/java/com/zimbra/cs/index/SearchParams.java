@@ -24,6 +24,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.google.common.base.Strings;
+import com.sun.istack.internal.Nullable;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -40,7 +41,6 @@ import com.zimbra.cs.service.mail.ToXML.OutputParticipants;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.ZimbraSoapContext;
 
-
 /**
  * Simple class that encapsulates all of the parameters involved in a Search request.
  * Not used everywhere, need to convert all code to use this....
@@ -54,9 +54,8 @@ import com.zimbra.soap.ZimbraSoapContext;
  *  <li>sortByStr (sets sortBy value)
  * </ul>
  * <p>
- * IMPORTANT NOTE: if you add new {@link SearchParams}, you MUST add
- * parsing/serialization code to the {@link SearchParams#encodeParams(Element)}
- * and {@link SearchParams#parse(Element, ZimbraSoapContext, String)}) APIs.
+ * IMPORTANT NOTE: if you add new {@link SearchParams}, you MUST add parsing/serialization code to the
+ * {@link SearchParams#encodeParams(Element)} and {@link SearchParams#parse(Element, ZimbraSoapContext, String)}) APIs.
  * This IS NOT optional and will break cross-server search if you do not comply.
  */
 public final class SearchParams implements Cloneable {
@@ -235,35 +234,6 @@ public final class SearchParams implements Cloneable {
         return mOffset;
     }
 
-    // cursor parameters:
-    public ItemId getPrevMailItemId() {
-        return mPrevMailItemId;
-    }
-
-    public String getPrevSortValueStr() {
-        return mPrevSortValueStr;
-    }
-
-    public long getPrevSortValueLong() {
-        return mPrevSortValueLong;
-    }
-
-    public int getPrevOffset() {
-        return mPrevOffset;
-    }
-
-    public boolean hasEndSortValue() {
-        return mEndSortValueStr != null;
-    }
-
-    public String getEndSortValueStr() {
-        return mEndSortValueStr;
-    }
-
-    public long getEndSortValueLong() {
-        return mEndSortValueLong;
-    }
-
     public boolean inDumpster() {
         return mInDumpster;
     }
@@ -432,40 +402,15 @@ public final class SearchParams implements Cloneable {
         checkForLocalizedContactSearch();
     }
 
-    public boolean hasCursor() {
-        return mHasCursor;
+    public Cursor getCursor() {
+        return cursor;
     }
 
-    public void setCursor(ItemId prevMailItemId, String prevSort,
-            int prevOffset, String endSort) {
-        mHasCursor = true;
-        mPrevMailItemId = prevMailItemId;
-        mPrevSortValueStr = prevSort;
-        try {
-            mPrevSortValueLong = Long.parseLong(prevSort);
-        } catch (NumberFormatException e) {
-            mPrevSortValueLong = 0;
-        }
-        mPrevOffset = prevOffset;
-        mEndSortValueStr = endSort;
-        mEndSortValueLong = -1;
-        if (mEndSortValueStr != null) {
-            try {
-                mEndSortValueLong = Long.parseLong(mEndSortValueStr);
-            } catch (NumberFormatException e) {
-                mEndSortValueLong = Long.MAX_VALUE;
-            }
-        }
-    }
-
-    public void clearCursor() {
-        mHasCursor = false;
-        mPrevOffset = 0;
-        mPrevMailItemId = null;
-        mPrevSortValueStr = null;
-        mPrevSortValueLong = 0;
-        mEndSortValueStr = null;
-        mEndSortValueLong = -1;
+    /**
+     * Sets the cursor, or null to clear.
+     */
+    public void setCursor(@Nullable Cursor value) {
+        cursor = value;
     }
 
     public void setPrefetch(boolean truthiness) {
@@ -627,7 +572,7 @@ public final class SearchParams implements Cloneable {
         // <loc>
         Element locElt = request.getOptionalElement(MailConstants.E_LOCALE);
         if (locElt != null) {
-            params.setLocale(parseLocale(locElt));
+            params.setLocale(parseLocale(locElt.getText()));
         }
 
         params.setPrefetch(request.getAttributeBool(
@@ -658,7 +603,7 @@ public final class SearchParams implements Cloneable {
      * @param acctId requested account id
      * @param params {@link SearchParams} object to set cursor info to
      */
-    public static void parseCursor(Element cursor, String  acctId, SearchParams params) throws ServiceException {
+    public static void parseCursor(Element el, String  acctId, SearchParams params) throws ServiceException {
         boolean useCursorToNarrowDbQuery = true;
 
         // in some cases we cannot use cursors, even if they are requested.
@@ -689,65 +634,73 @@ public final class SearchParams implements Cloneable {
             useCursorToNarrowDbQuery = false;
         }
 
-        String cursorStr = cursor.getAttribute(MailConstants.A_ID);
-        ItemId prevMailItemId = null;
-        if (cursorStr != null) {
-            prevMailItemId = new ItemId(cursorStr, acctId);
+        Cursor cursor = new Cursor();
+        String id = el.getAttribute(MailConstants.A_ID);
+        if (id != null) {
+            cursor.itemId = new ItemId(id, acctId);
         }
+        cursor.sortValue = el.getAttribute(MailConstants.A_SORTVAL);
+        cursor.endSortValue = el.getAttribute(MailConstants.A_ENDSORTVAL, null); // optional
+        params.setCursor(cursor);
 
-        int prevOffset = 0;
-        String sortVal = cursor.getAttribute(MailConstants.A_SORTVAL);
-
-        String endSortVal = cursor.getAttribute(MailConstants.A_ENDSORTVAL, null);
-        params.setCursor(prevMailItemId, sortVal, prevOffset, endSortVal);
-
-        String addedPart = null;
-
+        //TODO Move to ZimbraQuery
+        StringBuilder extra = new StringBuilder();
         if (useCursorToNarrowDbQuery) {
             switch (params.getSortBy()) {
                 case NONE:
-                    throw new IllegalArgumentException(
-                            "Invalid request: cannot use cursor with SortBy=NONE");
+                    throw new IllegalArgumentException("Invalid request: cannot use cursor with SortBy=NONE");
                 case DATE_ASC:
-                    addedPart = "date:" + quote(">=", sortVal) +
-                        (endSortVal != null ? " date:" + quote("<", endSortVal) : "");
+                    extra.append("date:").append(quote(">=", cursor.getSortValue()));
+                    if (cursor.getEndSortValue() != null) {
+                        extra.append(" date:").append(quote("<", cursor.getEndSortValue()));
+                    }
                     break;
                 case DATE_DESC:
-                    addedPart = "date:" + quote("<=", sortVal) +
-                        (endSortVal != null ? " date:" + quote(">", endSortVal) : "");
+                    extra.append("date:").append(quote("<=", cursor.getSortValue()));
+                    if (cursor.getEndSortValue() != null) {
+                        extra.append(" date:").append(quote(">", cursor.getEndSortValue()));
+                    }
                     break;
                 case SUBJ_ASC:
-                    addedPart = "subject:" + quote(">=", sortVal) +
-                        (endSortVal != null ? " subject:" + quote("<", endSortVal) : "");
+                    extra.append("subject:").append(quote(">=", cursor.getSortValue()));
+                    if (cursor.getEndSortValue() != null) {
+                        extra.append(" subject:").append(quote("<", cursor.getEndSortValue()));
+                    }
                     break;
                 case SUBJ_DESC:
-                    addedPart = "subject:" + quote("<=", sortVal) +
-                        (endSortVal != null ? " subject:" + quote(">", endSortVal) : "");
+                    extra.append("subject:").append(quote("<=", cursor.getSortValue()));
+                    if (cursor.getEndSortValue() != null) {
+                        extra.append(" subject:").append(quote(">", cursor.getEndSortValue()));
+                    }
                     break;
-                case SIZE_ASC: // hackaround because "size:>=" doesn't parse but "size:>" does
-                    sortVal = "" + (Long.parseLong(sortVal) - 1);
-                    addedPart = "size:" + quote(">", sortVal) +
-                        (endSortVal != null ? " size:" + quote("<", endSortVal) : "");
+                case SIZE_ASC: //TODO: "size:>=" doesn't parse but "size:>" does
+                    extra.append("size:").append(quote(">", String.valueOf(Long.parseLong(cursor.getSortValue()) - 1)));
+                    if (cursor.getEndSortValue() != null) {
+                        extra.append(" size:").append(quote("<", cursor.getEndSortValue()));
+                    }
                     break;
-                case SIZE_DESC: // hackaround because "size:<=" doesn't parse but "size:<" does
-                    sortVal = "" + (Long.parseLong(sortVal) + 1);
-                    addedPart = "size:" + quote("<", sortVal) +
-                        (endSortVal != null ? " size:" + quote(">", endSortVal) : "");
+                case SIZE_DESC: //TODO: "size:<=" doesn't parse but "size:<" does
+                    extra.append("size:").append(quote("<", String.valueOf(Long.parseLong(cursor.getSortValue()) + 1)));
+                    if (cursor.getEndSortValue() != null) {
+                        extra.append(" size:").append(quote(">", cursor.getEndSortValue()));
+                    }
                     break;
                 case NAME_ASC:
-                    addedPart = "from:" + quote(">=", sortVal) +
-                        (endSortVal != null ? " from:" + quote("<", endSortVal) : "");
+                    extra.append("from:").append(quote(">=", cursor.getSortValue()));
+                    if (cursor.getEndSortValue() != null) {
+                        extra.append(" from:").append(quote("<", cursor.getEndSortValue()));
+                    }
                     break;
                 case NAME_DESC:
-                    addedPart = "from:" + quote("<=", sortVal) +
-                        (endSortVal != null ? " from:" + quote(">", endSortVal) : "");
+                    extra.append("from:").append(quote("<=", cursor.getSortValue()));
+                    if (cursor.getEndSortValue() != null) {
+                        extra.append(" from:").append(quote(">", cursor.getEndSortValue()));
+                    }
                     break;
             }
         }
 
-        if (addedPart != null) {
-            params.setQueryStr("(" + params.getQueryStr() + ")" + addedPart);
-        }
+        params.setQueryStr("(" + params.getQueryStr() + ")" + extra.toString());
     }
 
     private static java.util.TimeZone parseTimeZonePart(Element tzElt) throws ServiceException {
@@ -770,68 +723,42 @@ public final class SearchParams implements Cloneable {
         return CalendarUtils.parseTzElement(tzElt);
     }
 
-    private static final String LOCALE_PATTERN = "([a-zA-Z]{2})(?:[-_]([a-zA-Z]{2})([-_](.+))?)?";
-    private final static Pattern sLocalePattern = Pattern.compile(LOCALE_PATTERN);
+    private final static Pattern LOCALE_PATTERN = Pattern.compile("([a-zA-Z]{2})(?:[-_]([a-zA-Z]{2})([-_](.+))?)?");
 
-    private static Locale parseLocale(Element localeElt) {
-        String locStr = localeElt.getText();
-        return lookupLocaleFromString(locStr);
-    }
+    static Locale parseLocale(String src) {
+        if (Strings.isNullOrEmpty(src)) {
+            return null;
+        }
+        Matcher matcher = LOCALE_PATTERN.matcher(src);
+        if (matcher.lookingAt()) {
+            String lang = null;
+            String country = null;
+            String variant = null;
+            if (matcher.start(1) >= 0) {
+                lang = matcher.group(1);
+            }
 
-    private static Locale lookupLocaleFromString(String locStr) {
-        if (locStr != null && locStr.length() > 0) {
-            Matcher m = sLocalePattern.matcher(locStr);
-            if (m.lookingAt()) {
-                String lang=null, country=null, variant=null;
+            if (Strings.isNullOrEmpty(lang)) {
+                return null;
+            }
 
-                if (m.start(1) != -1) {
-                    lang = locStr.substring(m.start(1), m.end(1));
-                }
+            if (matcher.start(2) >= 0) {
+                country = matcher.group(2);
+            }
 
-                if (lang == null || lang.length() <= 0) {
-                    return null;
-                }
+            if (matcher.start(4) >= 0) {
+                variant = matcher.group(4);
+            }
 
-                if (m.start(2) != -1) {
-                    country = locStr.substring(m.start(2), m.end(2));
-                }
-
-                if (m.start(4) != -1) {
-                    variant = locStr.substring(m.start(4), m.end(4));
-                }
-
-                if (variant != null && country != null &&
-                        variant.length() > 0 && country.length() > 0) {
-                    return new Locale(lang, country, variant);
-                }
-
-                if (country != null && country.length() > 0) {
-                    return new Locale(lang, country);
-                }
-
+            if (Strings.isNullOrEmpty(country)) {
                 return new Locale(lang);
+            } else if (Strings.isNullOrEmpty(variant)) {
+                return new Locale(lang, country);
+            } else {
+                return new Locale(lang, country, variant);
             }
         }
         return null;
-    }
-
-    public static void main(String args[]) {
-        {
-            Locale l = lookupLocaleFromString("da");
-            System.out.println(" got locale: " + l);
-        }
-        {
-            Locale l = lookupLocaleFromString("da_DK");
-            System.out.println(" got locale: " + l);
-        }
-        {
-            Locale l = lookupLocaleFromString("en");
-            System.out.println(" got locale: " + l);
-        }
-        {
-            Locale l = lookupLocaleFromString("en_US-MAC");
-            System.out.println(" got locale: " + l);
-        }
     }
 
     private static final String quote(String s1, String s2) {
@@ -879,13 +806,6 @@ public final class SearchParams implements Cloneable {
         o.mIncludeTagDeleted = mIncludeTagDeleted;
         o.mTimeZone = mTimeZone;
         o.locale = locale;
-        o.mHasCursor = mHasCursor;
-        o.mPrevMailItemId = mPrevMailItemId;
-        o.mPrevSortValueStr = mPrevSortValueStr;
-        o.mPrevSortValueLong = mPrevSortValueLong;
-        o.mPrevOffset = mPrevOffset;
-        o.mEndSortValueStr = mEndSortValueStr;
-        o.mEndSortValueLong = mEndSortValueLong;
         o.sortBy = sortBy;
         o.types = types;
         o.mPrefetch = mPrefetch;
@@ -893,6 +813,9 @@ public final class SearchParams implements Cloneable {
         if (mAllowableTaskStatuses != null) {
             o.mAllowableTaskStatuses = new HashSet<TaskHit.Status>();
             o.mAllowableTaskStatuses.addAll(mAllowableTaskStatuses);
+        }
+        if (cursor != null) {
+            o.cursor = new Cursor(cursor);
         }
         o.mInDumpster = mInDumpster;
 
@@ -934,48 +857,41 @@ public final class SearchParams implements Cloneable {
     private TimeZone mTimeZone = null;
     private Locale locale;
 
-    private boolean mHasCursor = false;
-
-    /////////////////////
-    // "Cursor" Data -- the three pieces of info below are enough for us to find out place in
-    // the previous result set, even if entries have been added or removed from the result
-    // set:
-    /**
-     * the mail item ID of the last item in the previous result set.
-     */
-    private ItemId mPrevMailItemId;
-
-    /**
-     * the sort value of the last item in the previous result set.
-     */
-    private String mPrevSortValueStr;
-
-    /**
-     * the sort value of the last item in the previous result set.
-     */
-    private long mPrevSortValueLong;
-
-    /**
-     * the offset of the last item in the previous result set.
-     */
-    private int mPrevOffset;
-
-    /**
-     * where to end the search. Hits >= this value are NOT included in
-     * the result set.
-     */
-    private String mEndSortValueStr;
-
-    /**
-     * where to end the search. Hits >= this value are NOT included in
-     * the result set.
-     */
-    private long mEndSortValueLong;
-
     private SortBy sortBy;
     private Set<MailItem.Type> types = EnumSet.noneOf(MailItem.Type.class); // types to seach for
+    private Cursor cursor;
 
     private boolean mPrefetch = true;
     private Mailbox.SearchResultMode mMode = Mailbox.SearchResultMode.NORMAL;
 
+    /**
+     * A cursor can be specified by [itemId|sortValue|offset]. These should be enough for us to find out place in the
+     * previous result set, even if entries have been added or removed from the result set.
+     */
+    static final class Cursor {
+        private ItemId itemId; // item ID of the last item in the previous result set
+        private String sortValue; // sort value of the last item in the preivous result set
+        private String endSortValue; // sort value (exclusive) to stop the cursor
+
+        private Cursor() {
+        }
+
+        private Cursor(Cursor src) {
+            itemId = src.itemId;
+            sortValue = src.sortValue;
+            endSortValue = src.endSortValue;
+        }
+
+        public ItemId getItemId() {
+            return itemId;
+        }
+
+        public String getSortValue() {
+            return sortValue;
+        }
+
+        public String getEndSortValue() {
+            return endSortValue;
+        }
+    }
 }

@@ -45,14 +45,11 @@ public final class ResultsPager {
     private Comparator<ZimbraHit> comparator;
 
     public static ResultsPager create(ZimbraQueryResults results, SearchParams params) throws ServiceException {
-        ResultsPager toRet;
-
         // must use results.getSortBy() because the results might have ignored our sortBy
         // request and used something else...
         params.setSortBy(results.getSortBy());
 
-        // bug: 23427 -- TASK sorts are incompatible with cursors here so don't use the cursor
-        //               at all
+        // bug: 23427 -- TASK sorts are incompatible with cursors here so don't use the cursor at all
         boolean dontUseCursor = false;
         boolean skipOffsetHack = false;
         switch (params.getSortBy()) {
@@ -73,30 +70,22 @@ public final class ResultsPager {
                 break;
         }
 
-        if (dontUseCursor || !params.hasCursor()) {
-            toRet = new ResultsPager(results, params, false, true, skipOffsetHack);
+        if (dontUseCursor || params.getCursor() == null) {
+            return new ResultsPager(results, params, false, skipOffsetHack);
         } else {
-            // are we paging FORWARD or BACKWARD?  If requested starting-offset is the same or bigger then the cursor's offset,
-            // then we're going FORWARD, otherwise we're going BACKWARD
-            boolean forward = true;
-            if (params.getOffset() < params.getPrevOffset()) {
-                forward = false;
-            }
-            toRet = new ResultsPager(results, params, true, forward, false);
+            return new ResultsPager(results, params, true, false);
         }
-        return toRet;
     }
 
     /**
      * @param params if OFFSET-MODE, requires SortBy, offset, limit to be set, otherwise requires cursor to be set
      */
-    private ResultsPager(ZimbraQueryResults results, SearchParams params,
-            boolean useCursor, boolean forward, boolean skipOffset) throws ServiceException {
+    private ResultsPager(ZimbraQueryResults results, SearchParams params, boolean useCursor, boolean skipOffset)
+            throws ServiceException {
         this.results = results;
         this.params = params;
         this.fixedOffset = !useCursor;
         this.ignoreOffsetHack = skipOffset;
-        this.forward = forward;
 
         if (DebugConfig.enableContactLocalizedSort) {
             switch (params.getSortBy()) {
@@ -106,8 +95,6 @@ public final class ResultsPager {
                     break;
             }
         }
-
-        assert(forward || !fixedOffset); // only can go backward if using cursor
         reset();
     }
 
@@ -156,14 +143,13 @@ public final class ResultsPager {
 
     private ZimbraHit forwardFindFirst() throws ServiceException {
         int offset = 0;
-        ZimbraHit prevHit = getDummyPrevHit();
+        ZimbraHit prevHit = getPrevCursorHit();
         results.resetIterator();
         ZimbraHit hit = results.getNext();
         while (hit != null) {
             offset++;
 
-            if (hit.getItemId() == params.getPrevMailItemId().getId()) {
-                // found it!
+            if (hit.getItemId() == params.getCursor().getItemId().getId()) { // found it!
                 return results.getNext();
             }
 
@@ -182,17 +168,15 @@ public final class ResultsPager {
             //  currently hold up with ProxiedHits: we need to convert Hit sorting to
             //  use ItemIds (instead of int's) TODO FIXME
             if (comp == 0) {
-                // special case prevId of 0
-                if (params.getPrevMailItemId().getId() == 0) {
+                if (params.getCursor().getItemId().getId() == 0) { // special case prevId of 0
                     return hit;
                 }
-
                 if (params.getSortBy().getDirection() == SortBy.Direction.DESC) {
-                    if (hit.getItemId() < params.getPrevMailItemId().getId()) {
+                    if (hit.getItemId() < params.getCursor().getItemId().getId()) {
                         return hit;
                     }
                 } else {
-                    if (hit.getItemId() > params.getPrevMailItemId().getId()) {
+                    if (hit.getItemId() > params.getCursor().getItemId().getId()) {
                         return hit;
                     }
                 }
@@ -223,32 +207,27 @@ public final class ResultsPager {
         int offset = 0;
         results.resetIterator();
         ZimbraHit hit = results.getNext();
-        ZimbraHit prevHit = getDummyPrevHit();
+        ZimbraHit prevHit = getPrevCursorHit();
 
         ZimbraHit dummyEndHit = null;
-        if (params.hasEndSortValue()) {
-            dummyEndHit = getDummyEndHit();
+        if (params.getCursor().getEndSortValue() != null) {
+            dummyEndHit = getEndCursorHit();
         }
 
         while (hit != null) {
             offset++;
             result.add(hit);
-
-            if (hit.getItemId() == params.getPrevMailItemId().getId()) {
-                // found old one
+            if (hit.getItemId() == params.getCursor().getItemId().getId()) { // found old one
                 break;
             }
-
-            // if (hit COMES AFTER prevSortValue) {
+            // hit COMES AFTER sortValue
             if (hit.compareTo(params.getSortBy(), prevHit) > 0) {
                 break;
             }
-
-            // if (hit COMES BEFORE endSortValue) {
-            if (params.hasEndSortValue() && hit.compareTo(params.getSortBy(), dummyEndHit) <= 0) {
+            // hit COMES BEFORE endSortValue
+            if (params.getCursor().getEndSortValue() != null && hit.compareTo(params.getSortBy(), dummyEndHit) <= 0) {
                 break;
             }
-
             hit = results.getNext();
         }
         return result;
@@ -257,27 +236,22 @@ public final class ResultsPager {
     /**
      * Returns a dummy hit which is immediately before the first hit we want to return.
      */
-    private ZimbraHit getDummyPrevHit() {
-        return new DummyHit(results, params.getPrevSortValueStr(), params.getPrevSortValueLong(),
-                params.getPrevMailItemId().getId());
+    private ZimbraHit getPrevCursorHit() {
+        return new CursorHit(results, params.getCursor().getSortValue(), params.getCursor().getItemId().getId());
     }
 
     /**
      * Returns a dummy hit which is immediately after the last hit we want to return.
      */
-    private ZimbraHit getDummyEndHit() {
-        return new DummyHit(results, params.getEndSortValueStr(), params.getEndSortValueLong(), 0);
+    private ZimbraHit getEndCursorHit() {
+        return new CursorHit(results, params.getCursor().getEndSortValue(), 0);
     }
 
-    static final class DummyHit extends ZimbraHit {
-        private int idCursor;
-        private long dateCursor;
-        private String stringCursor;
+    static final class CursorHit extends ZimbraHit {
+        private final int idCursor;
 
-        DummyHit(ZimbraQueryResults results, String str, long date, int id) {
-            super(results, null, str);
-            stringCursor = str;
-            dateCursor = date;
+        CursorHit(ZimbraQueryResults results, String sortValue, int id) {
+            super(results, null, sortValue);
             idCursor = id;
         }
 
@@ -285,19 +259,8 @@ public final class ResultsPager {
         public String toString() {
             return Objects.toStringHelper(this)
                 .add("id", idCursor)
-                .add("str", stringCursor)
-                .add("date", dateCursor)
+                .add("sortValue", sortValue)
                 .toString();
-        }
-
-        @Override
-        public long getDate() {
-            return dateCursor;
-        }
-
-        @Override
-        public long getSize() {
-            return 0;
         }
 
         @Override
@@ -320,13 +283,8 @@ public final class ResultsPager {
         }
 
         @Override
-        public String getSubject() {
-            return stringCursor;
-        }
-
-        @Override
         public String getName() {
-            return stringCursor;
+            return (String) sortValue;
         }
 
         @Override

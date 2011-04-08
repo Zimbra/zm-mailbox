@@ -72,24 +72,6 @@ public final class MessageHit extends ZimbraHit {
         return conversationId;
     }
 
-    @Override
-    public long getDate() throws ServiceException {
-        if (cachedDate == -1) {
-            if (message == null && document != null) {
-                String dateStr = document.get(LuceneFields.L_SORT_DATE);
-                if (dateStr != null) {
-                    try {
-                        return cachedDate = DateTools.stringToTime(dateStr);
-                    } catch (ParseException e) {
-                        return 0;
-                    }
-                }
-            }
-            cachedDate = getMessage().getDate();
-        }
-        return cachedDate;
-    }
-
     public void addPart(MessagePartHit part) {
         if (matchedParts == null) {
             matchedParts = new ArrayList<MessagePartHit>();
@@ -114,27 +96,11 @@ public final class MessageHit extends ZimbraHit {
             return Objects.toStringHelper(this)
                 .add("id", getItemId())
                 .add("conv", getConversationId())
-                .add("size", getSize())
                 .addValue(super.toString())
                 .toString();
         } catch (ServiceException e) {
             return e.toString();
         }
-    }
-
-    @Override
-    public long getSize() throws ServiceException {
-        if (cachedSize == -1) {
-            if (message == null && document != null) {
-                String sizeStr = document.get(LuceneFields.L_SORT_SIZE);
-                if (sizeStr != null) {
-                    cachedSize = Long.parseLong(sizeStr);
-                    return cachedSize;
-                }
-            }
-            cachedSize = getMessage().getSize();
-        }
-        return cachedSize;
     }
 
     public boolean isTagged(Tag tag) throws ServiceException {
@@ -169,14 +135,6 @@ public final class MessageHit extends ZimbraHit {
             }
         }
         return message;
-    }
-
-    @Override
-    public String getSubject() throws ServiceException {
-        if (cachedSubj == null) {
-            cachedSubj = getMessage().getSortSubject();
-        }
-        return cachedSubj;
     }
 
     @Override

@@ -48,7 +48,6 @@ public enum SortBy {
     FLAG_DESC("flagDesc", Key.FLAG, Direction.DESC),
     PRIORITY_ASC("priorityAsc", Key.PRIORITY, Direction.ASC),
     PRIORITY_DESC("priorityDesc", Key.PRIORITY, Direction.DESC),
-    @Deprecated SCORE_DESC("score", Key.DATE, Direction.DESC),
 
     // wiki "natural order" sorts are not exposed via SOAP
     NAME_NATURAL_ORDER_ASC(null, Key.NAME_NATURAL_ORDER, Direction.ASC),

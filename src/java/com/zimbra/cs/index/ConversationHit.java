@@ -40,7 +40,6 @@ public final class ConversationHit extends ZimbraHit {
     private final int conversationId;
     private Conversation conversation;
     private Map<Long, MessageHit> messageHits = new LinkedHashMap<Long, MessageHit>();
-    private MessageHit lastMessageHitAdded;
 
     ConversationHit(ZimbraQueryResultsImpl results, Mailbox mbx, int convId, Object sortKey) {
         super(results, mbx, sortKey);
@@ -53,7 +52,6 @@ public final class ConversationHit extends ZimbraHit {
     }
 
     public void addMessageHit(MessageHit hit) {
-        lastMessageHitAdded = hit;
         messageHits.put(new Long(hit.getItemId()), hit);
     }
 
@@ -102,19 +100,6 @@ public final class ConversationHit extends ZimbraHit {
         return Objects.toStringHelper(this).add("item", getId()).addValue(super.toString()).toString();
     }
 
-    /**
-     * The subject returned here must be the SORTING subject, which is the subject of the most recent hit we found. (as
-     * we iterate through results in order, the most recently added message is the order we want to track for sorting
-     * purposes).
-     */
-    @Override
-    public String getSubject() throws ServiceException {
-        if (cachedSubj == null) {
-            cachedSubj = lastMessageHitAdded.getSubject();
-        }
-        return cachedSubj;
-    }
-
     @Override
     public String getName() throws ServiceException {
         if (cachedName == null) {
@@ -122,31 +107,6 @@ public final class ConversationHit extends ZimbraHit {
             cachedName = mh == null ? "" : mh.getName();
         }
         return cachedName;
-    }
-
-    public long getHitDate() throws ServiceException {
-        MessageHit mh = getFirstMessageHit();
-        return mh == null ? 0 : mh.getDate();
-    }
-
-    @Override
-    public long getSize() throws ServiceException {
-        return getConversation().getSize();
-    }
-
-    /**
-     * Always use the hit date when sorting, otherwise confusion happens (since we are building the conv hit by
-     * aggregating MessageHits....suddenly switching to a/ very different sort-field can cause sort order to be unstable.
-     */
-    @Override
-    public long getDate() throws ServiceException {
-        if (cachedDate == -1) {
-            cachedDate = getHitDate();
-            if (cachedDate == 0) {
-                cachedDate = getConversation().getDate();
-            }
-        }
-        return cachedDate;
     }
 
     @Override

@@ -36,14 +36,6 @@ public final class NoteHit extends ZimbraHit {
     }
 
     @Override
-    public long getDate() throws ServiceException {
-        if (cachedDate == -1) {
-            cachedDate = getNote().getDate();
-        }
-        return cachedDate;
-    }
-
-    @Override
     public MailItem getMailItem() throws ServiceException {
         return getNote();
     }
@@ -66,14 +58,6 @@ public final class NoteHit extends ZimbraHit {
     }
 
     @Override
-    public String getSubject() throws ServiceException {
-        if (cachedSubj == null) {
-            cachedSubj = getNote().getSubject();
-        }
-        return cachedSubj;
-    }
-
-    @Override
     public String getName() throws ServiceException {
         if (cachedName == null) {
             cachedName = getNote().getSubject();
@@ -89,11 +73,6 @@ public final class NoteHit extends ZimbraHit {
     @Override
     public int getItemId() {
         return itemId;
-    }
-
-    @Override
-    public long getSize() throws ServiceException {
-        return getNote().getSize();
     }
 
     @Override

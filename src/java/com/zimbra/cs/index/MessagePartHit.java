@@ -52,24 +52,8 @@ public final class MessagePartHit extends ZimbraHit {
     }
 
     @Override
-    public long getDate() throws ServiceException {
-        if (cachedDate == -1) {
-            cachedDate = getMessageResult().getDate();
-        }
-        return cachedDate;
-    }
-
-    @Override
     public int getConversationId() throws ServiceException {
         return getMessageResult().getConversationId();
-    }
-
-    @Override
-    public String getSubject() throws ServiceException {
-        if (cachedSubj == null) {
-            cachedSubj = getMessageResult().getSubject();
-        }
-        return cachedSubj;
     }
 
     @Override
@@ -101,7 +85,6 @@ public final class MessagePartHit extends ZimbraHit {
             return Objects.toStringHelper(this)
                 .add("id", getItemId() + "-" + getPartName())
                 .add("conv", getConversationId())
-                .add("size", getSize())
                 .addValue(super.toString())
                 .toString();
         } catch (ServiceException e) {
@@ -125,16 +108,6 @@ public final class MessagePartHit extends ZimbraHit {
             }
         }
         return "";
-    }
-
-    @Override
-    public long getSize() {
-        if (document != null) {
-            return Long.parseLong(document.get(LuceneFields.L_SORT_SIZE));
-        } else {
-            assert(false);// should never have a parthit without a document
-            return 0;
-        }
     }
 
     public MessageHit getMessageResult() {

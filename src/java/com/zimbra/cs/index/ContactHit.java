@@ -36,14 +36,6 @@ public final class ContactHit extends ZimbraHit {
     }
 
     @Override
-    public long getDate() throws ServiceException {
-        if (cachedDate == -1) {
-            cachedDate = getContact().getDate();
-        }
-        return cachedDate;
-    }
-
-    @Override
     public MailItem getMailItem() throws ServiceException {
         return getContact();
     }
@@ -53,11 +45,6 @@ public final class ContactHit extends ZimbraHit {
             contact = getMailbox().getContactById(null, getItemId());
         }
         return contact;
-    }
-
-    @Override
-    public long getSize() throws ServiceException {
-        return getContact().getSize();
     }
 
     @Override
@@ -78,14 +65,6 @@ public final class ContactHit extends ZimbraHit {
     @Override
     boolean itemIsLoaded() {
         return contact != null;
-    }
-
-    @Override
-    public String getSubject() throws ServiceException {
-        if (cachedSubj == null) {
-            cachedSubj = getContact().getSubject();
-        }
-        return cachedSubj;
     }
 
     @Override

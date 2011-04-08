@@ -29,10 +29,8 @@ import com.zimbra.cs.mailbox.MailItem;
  * @author tim
  */
 public final class ProxiedHit extends ZimbraHit  {
-    private long proxiedDate = -1;
     private int proxiedConvId = -1;
     private int proxiedMsgId = -1;
-    private String proxiedSubject;
     private ItemId itemId;
     private final Element element;
 
@@ -51,22 +49,6 @@ public final class ProxiedHit extends ZimbraHit  {
 
     void setParsedItemId(ItemId value) {
         itemId = value;
-    }
-
-    @Override
-    long getSize() throws ServiceException {
-        return (int) element.getAttributeLong(MailConstants.A_SIZE, 0);
-    }
-
-    @Override
-    long getDate() throws ServiceException {
-        if (proxiedDate < 0) {
-            proxiedDate = element.getAttributeLong(MailConstants.A_DATE, 0);
-            if (proxiedDate == 0) {
-                proxiedDate = element.getAttributeLong(MailConstants.A_SORT_FIELD, 0);
-            }
-        }
-        return proxiedDate;
     }
 
     @Override
@@ -98,17 +80,6 @@ public final class ProxiedHit extends ZimbraHit  {
     @Override
     boolean itemIsLoaded() {
         return true;
-    }
-
-    @Override
-    String getSubject() throws ServiceException {
-        if (proxiedSubject == null) {
-            proxiedSubject = element.getAttribute(MailConstants.E_SUBJECT, null);
-            if (proxiedSubject == null) {
-                proxiedSubject = element.getAttribute(MailConstants.A_SORT_FIELD);
-            }
-        }
-        return proxiedSubject;
     }
 
     String getFragment() {

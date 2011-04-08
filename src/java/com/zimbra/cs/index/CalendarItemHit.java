@@ -48,16 +48,6 @@ public class CalendarItemHit extends ZimbraHit {
     }
 
     @Override
-    public long getDate() throws ServiceException {
-        return getCalendarItem().getDate();
-    }
-
-    @Override
-    public long getSize() throws ServiceException {
-        return getCalendarItem().getSize();
-    }
-
-    @Override
     public int getConversationId() {
         assert(false);
         return 0;
@@ -79,11 +69,6 @@ public class CalendarItemHit extends ZimbraHit {
     }
 
     @Override
-    public String getSubject() throws ServiceException {
-        return getCalendarItem().getSubject();
-    }
-
-    @Override
     public String getName() throws ServiceException {
         return getCalendarItem().getSubject();
     }
@@ -91,7 +76,7 @@ public class CalendarItemHit extends ZimbraHit {
     @Override
     public String toString() {
         try {
-            return Objects.toStringHelper(this).add("name", getName()).add("subject", getSubject()).toString();
+            return Objects.toStringHelper(this).add("name", getName()).toString();
         } catch (Exception e) {
             return e.toString();
         }

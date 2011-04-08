@@ -34,33 +34,33 @@ public final class MultiQueryResultsTest {
         MultiQueryResults multi = new MultiQueryResults(3, SortBy.DATE_DESC);
 
         MockQueryResults result = new MockQueryResults(EnumSet.of(MailItem.Type.MESSAGE), SortBy.DATE_DESC);
-        MockHit hit = new MockHit(result, 1, "1-1", 10L);
-        result.add(hit);
-        hit = new MockHit(result, 2, "1-2", 8L);
-        result.add(hit);
-        hit = new MockHit(result, 2, "1-3", 6L);
-        result.add(hit);
+        MockHit hit11 = new MockHit(result, 1, 10L);
+        result.add(hit11);
+        MockHit hit12 = new MockHit(result, 2, 8L);
+        result.add(hit12);
+        MockHit hit13 = new MockHit(result, 2, 6L);
+        result.add(hit13);
         multi.add(result);
 
         result = new MockQueryResults(EnumSet.of(MailItem.Type.MESSAGE), SortBy.DATE_DESC);
-        hit = new MockHit(result, 1, "2-1", 9L);
-        result.add(hit);
-        hit = new MockHit(result, 2, "2-2", 7L);
-        result.add(hit);
-        hit = new MockHit(result, 2, "2-3", 5L);
-        result.add(hit);
+        MockHit hit21 = new MockHit(result, 1, 9L);
+        result.add(hit21);
+        MockHit hit22 = new MockHit(result, 2, 7L);
+        result.add(hit22);
+        MockHit hit23 = new MockHit(result, 2, 5L);
+        result.add(hit23);
         multi.add(result);
 
-        Assert.assertEquals("1-1", multi.getNext().getName());
-        Assert.assertEquals("2-1", multi.getNext().getName());
-        Assert.assertEquals("1-2", multi.getNext().getName());
+        Assert.assertSame(hit11, multi.getNext());
+        Assert.assertSame(hit21, multi.getNext());
+        Assert.assertSame(hit12, multi.getNext());
         Assert.assertFalse(multi.hasNext());
         Assert.assertNull(multi.getNext());
 
         multi.shrink(1);
         multi.resetIterator();
-        Assert.assertEquals("2-1", multi.getNext().getName());
-        Assert.assertEquals("1-2", multi.getNext().getName());
+        Assert.assertSame(hit21, multi.getNext());
+        Assert.assertSame(hit12, multi.getNext());
         Assert.assertFalse(multi.hasNext());
         Assert.assertNull(multi.getNext());
     }

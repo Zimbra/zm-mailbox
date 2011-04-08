@@ -171,7 +171,7 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
 
     private void setSearchParams(SearchParams params) {
         searchParams = (SearchParams) params.clone();
-        searchParams.clearCursor();
+        searchParams.setCursor(null);
         // when doing offset-paging, since we do a mergesort locally, the remote query must start
         // at offset 0 and page through all the results
         searchParams.setOffset(0);

@@ -24,17 +24,12 @@ import com.zimbra.cs.mailbox.MailItem;
  */
 public final class MockHit extends ZimbraHit {
     private int id;
-    private long date;
-    private long size;
     private int convId;
     private MailItem mailItem;
-    private String subject;
-    private String name;
 
-    public MockHit(ZimbraQueryResultsImpl results, int id, String name, Object sortValue) {
+    public MockHit(ZimbraQueryResultsImpl results, int id, Object sortValue) {
         super(results, null, sortValue);
         this.id = id;
-        this.name = name;
     }
 
     @Override
@@ -44,24 +39,6 @@ public final class MockHit extends ZimbraHit {
 
     public void setItemId(int value) {
         id = value;
-    }
-
-    @Override
-    long getDate() {
-        return date;
-    }
-
-    public void setDate(long value) {
-        date = value;
-    }
-
-    @Override
-    long getSize() {
-        return size;
-    }
-
-    public void setSize(long value) {
-        size = value;
     }
 
     @Override
@@ -89,21 +66,8 @@ public final class MockHit extends ZimbraHit {
     }
 
     @Override
-    String getSubject() {
-        return subject;
-    }
-
-    void setSubject(String value) {
-        subject = value;
-    }
-
-    @Override
     String getName() {
-        return name;
-    }
-
-    void setName(String value) {
-        name = value;
+        return (String) sortValue;
     }
 
 }

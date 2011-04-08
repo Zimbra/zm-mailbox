@@ -34,16 +34,6 @@ public final class DocumentHit extends ZimbraHit {
     }
 
     @Override
-    public long getDate() {
-        return docItem.getDate();
-    }
-
-    @Override
-    public long getSize() {
-        return docItem.getSize();
-    }
-
-    @Override
     public int getConversationId() {
         return 0;
     }
@@ -67,11 +57,6 @@ public final class DocumentHit extends ZimbraHit {
     @Override
     boolean itemIsLoaded() {
         return docItem != null;
-    }
-
-    @Override
-    public String getSubject() {
-        return docItem.getName();
     }
 
     @Override

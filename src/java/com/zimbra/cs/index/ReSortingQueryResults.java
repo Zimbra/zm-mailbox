@@ -208,16 +208,15 @@ public final class ReSortingQueryResults implements ZimbraQueryResults {
             }
 
             // handle cursor filtering
-            if (params != null && params.hasCursor()) {
+            if (params != null && params.getCursor() != null) {
                 ZimbraHit firstHit = null;
-                if (params.getPrevSortValueStr() != null) {
-                    firstHit = new ResultsPager.DummyHit(results, params.getPrevSortValueStr(),
-                            params.getPrevSortValueLong(), params.getPrevMailItemId().getId());
+                if (params.getCursor().getSortValue() != null) {
+                    firstHit = new ResultsPager.CursorHit(results, params.getCursor().getSortValue(),
+                            params.getCursor().getItemId().getId());
                 }
                 ZimbraHit endHit = null;
-                if (params.getEndSortValueStr() != null) {
-                    endHit = new ResultsPager.DummyHit(results,
-                            params.getEndSortValueStr(), params.getEndSortValueLong(), 0);
+                if (params.getCursor().getEndSortValue() != null) {
+                    endHit = new ResultsPager.CursorHit(results, params.getCursor().getEndSortValue(), 0);
                 }
                 // fail if cur < first OR cur >= end
                 if (handleCursorFilteringForFirstHit) {
