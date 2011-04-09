@@ -272,21 +272,6 @@ public class LdapUtil {
         return map;
     }
     
-    /**
-     * escape *()\ in specified string to make sure user-supplied string doesn't open a security hole.
-     * i.e., if the format string is "(sn=*%s*)", and the user types in "a)(zimbraIsAdminAccount=TRUE)(cn=a",
-     * we don't want to search for "(sn=*a)(zimbraIsAdminAccount=TRUE)(cn=a*)".
-     * 
-     * @param s
-     * @return
-     */
-    public static String escapeSearchFilterArg(String s) {
-        if (s == null)
-            return null;
-        else 
-            return s.replaceAll("([\\\\\\*\\(\\)])", "\\\\$0");
-    }
-    
     public static Attribute addAttr(Attributes attrs, String name, String value) {
         BasicAttribute a = new BasicAttribute(name);
         a.add(value);

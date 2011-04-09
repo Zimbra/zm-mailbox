@@ -81,10 +81,12 @@ import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.prov.ldap.ChangePasswordListener;
 import com.zimbra.cs.prov.ldap.DomainNameMappingHandler;
+import com.zimbra.cs.prov.ldap.LdapEntrySearchFilter;
 import com.zimbra.cs.prov.ldap.LdapLockoutPolicy;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zimlet.ZimletException;
@@ -565,7 +567,7 @@ public class LdapProvisioning extends Provisioning {
         ZimbraLdapContext zlc = null;
         try {
             zlc = new ZimbraLdapContext();
-            mimeType = LdapUtil.escapeSearchFilterArg(mimeType);
+            mimeType = LdapUtilCommon.escapeSearchFilterArg(mimeType);
             NamingEnumeration<SearchResult> ne = zlc.searchDir(
                     mDIT.mimeBaseDN(), LdapFilter.mimeEntryByMimeType(mimeType), sSubtreeSC);
             List<MimeTypeInfo> mimeTypes = new ArrayList<MimeTypeInfo>();
@@ -654,7 +656,7 @@ public class LdapProvisioning extends Provisioning {
             return null;
         Account a = sAccountCache.getById(zimbraId);
         if (a == null) {
-            zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
+            zimbraId = LdapUtilCommon.escapeSearchFilterArg(zimbraId);
             String query = LdapFilter.accountById(zimbraId);
 
             a = getAccountByQuery(mDIT.mailBranchBaseDN(), query, zlc, loadFromMaster);
@@ -714,7 +716,7 @@ public class LdapProvisioning extends Provisioning {
         Account a = sAccountCache.getByForeignPrincipal(foreignPrincipal);
 
         // bug 27966, always do a search so dup entries can be thrown
-        foreignPrincipal = LdapUtil.escapeSearchFilterArg(foreignPrincipal);
+        foreignPrincipal = LdapUtilCommon.escapeSearchFilterArg(foreignPrincipal);
         Account acct = getAccountByQuery(
                 mDIT.mailBranchBaseDN(),
                 LdapFilter.accountByForeignPrincipal(foreignPrincipal),
@@ -733,7 +735,7 @@ public class LdapProvisioning extends Provisioning {
     private Account getAdminAccountByName(String name, boolean loadFromMaster) throws ServiceException {
         Account a = sAccountCache.getByName(name);
         if (a == null) {
-            name = LdapUtil.escapeSearchFilterArg(name);
+            name = LdapUtilCommon.escapeSearchFilterArg(name);
             a = getAccountByQuery(
                     mDIT.adminBaseDN(),
                     LdapFilter.adminAccountByRDN(mDIT.accountNamingRdnAttr(), name),
@@ -746,7 +748,7 @@ public class LdapProvisioning extends Provisioning {
     private Account getAppAdminAccountByName(String name, boolean loadFromMaster) throws ServiceException {
         Account a = sAccountCache.getByName(name);
         if (a == null) {
-            name = LdapUtil.escapeSearchFilterArg(name);
+            name = LdapUtilCommon.escapeSearchFilterArg(name);
             a = getAccountByQuery(
                     mDIT.appAdminBaseDN(),
                     LdapFilter.adminAccountByRDN(mDIT.accountNamingRdnAttr(), name),
@@ -799,7 +801,7 @@ public class LdapProvisioning extends Provisioning {
 
         Account account = sAccountCache.getByName(emailAddress);
         if (account == null) {
-            emailAddress = LdapUtil.escapeSearchFilterArg(emailAddress);
+            emailAddress = LdapUtilCommon.escapeSearchFilterArg(emailAddress);
             account = getAccountByQuery(
                     mDIT.mailBranchBaseDN(),
                     LdapFilter.accountByName(emailAddress),
@@ -1980,7 +1982,7 @@ public class LdapProvisioning extends Provisioning {
 
         LdapDomain domain = (LdapDomain)d;
         if (domain == null) {
-            zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
+            zimbraId = LdapUtilCommon.escapeSearchFilterArg(zimbraId);
             domain = getDomainByQuery(LdapFilter.domainById(zimbraId), zlc);
             sDomainCache.put(DomainBy.id, zimbraId, domain);
         }
@@ -2003,7 +2005,7 @@ public class LdapProvisioning extends Provisioning {
 
         LdapDomain domain = (LdapDomain)d;
         if (domain == null) {
-            name = LdapUtil.escapeSearchFilterArg(name);
+            name = LdapUtilCommon.escapeSearchFilterArg(name);
             domain = getDomainByQuery(LdapFilter.domainByName(name), zlc);
             sDomainCache.put(DomainBy.name, name, domain);
         }
@@ -2017,7 +2019,7 @@ public class LdapProvisioning extends Provisioning {
 
         LdapDomain domain = (LdapDomain)d;
         if (domain == null) {
-            virtualHostname = LdapUtil.escapeSearchFilterArg(virtualHostname);
+            virtualHostname = LdapUtilCommon.escapeSearchFilterArg(virtualHostname);
             domain = getDomainByQuery(LdapFilter.domainByVirtualHostame(virtualHostname), null);
             sDomainCache.put(DomainBy.virtualHostname, virtualHostname, domain);
         }
@@ -2031,7 +2033,7 @@ public class LdapProvisioning extends Provisioning {
 
         LdapDomain domain = (LdapDomain)d;
         if (domain == null) {
-            foreignName = LdapUtil.escapeSearchFilterArg(foreignName);
+            foreignName = LdapUtilCommon.escapeSearchFilterArg(foreignName);
             domain = getDomainByQuery(LdapFilter.domainByForeignName(foreignName), null);
             sDomainCache.put(DomainBy.foreignName, foreignName, domain);
         }
@@ -2045,7 +2047,7 @@ public class LdapProvisioning extends Provisioning {
 
         LdapDomain domain = (LdapDomain)d;
         if (domain == null) {
-            krb5Realm = LdapUtil.escapeSearchFilterArg(krb5Realm);
+            krb5Realm = LdapUtilCommon.escapeSearchFilterArg(krb5Realm);
             domain = getDomainByQuery(LdapFilter.domainByKrb5Realm(krb5Realm), null);
             sDomainCache.put(DomainBy.krb5Realm, krb5Realm, domain);
         }
@@ -2239,7 +2241,7 @@ public class LdapProvisioning extends Provisioning {
 
         LdapCos cos = sCosCache.getById(zimbraId);
         if (cos == null) {
-            zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
+            zimbraId = LdapUtilCommon.escapeSearchFilterArg(zimbraId);
             cos = getCOSByQuery(LdapFilter.cosById(zimbraId), zlc);
             sCosCache.put(cos);
         }
@@ -2687,7 +2689,7 @@ public class LdapProvisioning extends Provisioning {
         if (!nocache)
             s = sServerCache.getById(zimbraId);
         if (s == null) {
-            zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
+            zimbraId = LdapUtilCommon.escapeSearchFilterArg(zimbraId);
             s = getServerByQuery(LdapFilter.serverById(zimbraId), zlc);
             sServerCache.put(s);
         }
@@ -2761,7 +2763,7 @@ public class LdapProvisioning extends Provisioning {
             zlc = new ZimbraLdapContext();
             String filter;
             if (service != null) {
-                filter = LdapFilter.serverByService(LdapUtil.escapeSearchFilterArg(service));
+                filter = LdapFilter.serverByService(LdapUtilCommon.escapeSearchFilterArg(service));
             } else {
                 filter = LdapFilter.allServers();
             }
@@ -3167,7 +3169,7 @@ public class LdapProvisioning extends Provisioning {
     private DistributionList getDistributionListByNameInternal(String listAddress) throws ServiceException {
         listAddress = IDNUtil.toAsciiEmail(listAddress);
 
-        listAddress = LdapUtil.escapeSearchFilterArg(listAddress);
+        listAddress = LdapUtilCommon.escapeSearchFilterArg(listAddress);
         return getDistributionListByQuery(mDIT.mailBranchBaseDN(),
                                           LdapFilter.distributionListByName(listAddress),
                                           null, null);
@@ -4327,7 +4329,7 @@ public class LdapProvisioning extends Provisioning {
         LdapCalendarResource resource =
             (LdapCalendarResource) sAccountCache.getById(zimbraId);
         if (resource == null) {
-            zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
+            zimbraId = LdapUtilCommon.escapeSearchFilterArg(zimbraId);
             resource = (LdapCalendarResource) getAccountByQuery(
                 mDIT.mailBranchBaseDN(),
                 LdapFilter.calendarResourceById(zimbraId),
@@ -4345,7 +4347,7 @@ public class LdapProvisioning extends Provisioning {
         LdapCalendarResource resource =
             (LdapCalendarResource) sAccountCache.getByName(emailAddress);
         if (resource == null) {
-            emailAddress = LdapUtil.escapeSearchFilterArg(emailAddress);
+            emailAddress = LdapUtilCommon.escapeSearchFilterArg(emailAddress);
             resource = (LdapCalendarResource) getAccountByQuery(
                 mDIT.mailBranchBaseDN(),
                 LdapFilter.calendarResourceByName(emailAddress),
@@ -4357,7 +4359,7 @@ public class LdapProvisioning extends Provisioning {
 
     private CalendarResource getCalendarResourceByForeignPrincipal(String foreignPrincipal, boolean loadFromMaster)
     throws ServiceException {
-        foreignPrincipal = LdapUtil.escapeSearchFilterArg(foreignPrincipal);
+        foreignPrincipal = LdapUtilCommon.escapeSearchFilterArg(foreignPrincipal);
         LdapCalendarResource resource =
             (LdapCalendarResource) getAccountByQuery(
                 mDIT.mailBranchBaseDN(),
@@ -5017,7 +5019,7 @@ public class LdapProvisioning extends Provisioning {
     throws ServiceException {
         GalOp galOp = token != null ? GalOp.sync : GalOp.search;
         // escape user-supplied string
-        n = LdapUtil.escapeSearchFilterArg(n);
+        n = LdapUtilCommon.escapeSearchFilterArg(n);
 
         int maxResults = token != null ? 0 : d.getIntAttr(Provisioning.A_zimbraGalMaxResults, DEFAULT_GAL_MAX_RESULTS);
         if (type == Provisioning.GalSearchType.resource)
@@ -5066,7 +5068,7 @@ public class LdapProvisioning extends Provisioning {
     {
         GalOp galOp = GalOp.autocomplete;
         // escape user-supplied string
-        n = LdapUtil.escapeSearchFilterArg(n);
+        n = LdapUtilCommon.escapeSearchFilterArg(n);
 
         int maxResults = Math.min(max, d.getIntAttr(Provisioning.A_zimbraGalMaxResults, DEFAULT_GAL_MAX_RESULTS));
         if (type == Provisioning.GalSearchType.resource)
@@ -5497,7 +5499,7 @@ public class LdapProvisioning extends Provisioning {
     }
 
     private Identity getIdentityByName(LdapEntry entry, String name,  ZimbraLdapContext zlc) throws ServiceException {
-        name = LdapUtil.escapeSearchFilterArg(name);
+        name = LdapUtilCommon.escapeSearchFilterArg(name);
         List<Identity> result = getIdentitiesByQuery(entry, LdapFilter.identityByName(name), zlc);
         return result.isEmpty() ? null : result.get(0);
     }
@@ -5749,7 +5751,7 @@ public class LdapProvisioning extends Provisioning {
     }
 
     private Signature getSignatureById(Account acct, LdapEntry entry, String id,  ZimbraLdapContext zlc) throws ServiceException {
-        id = LdapUtil.escapeSearchFilterArg(id);
+        id = LdapUtilCommon.escapeSearchFilterArg(id);
         List<Signature> result = getSignaturesByQuery(acct, entry, LdapFilter.signatureById(id), zlc, null);
         return result.isEmpty() ? null : result.get(0);
     }
@@ -6041,7 +6043,7 @@ public class LdapProvisioning extends Provisioning {
     }
 
     private DataSource getDataSourceById(LdapEntry entry, String id,  ZimbraLdapContext zlc) throws ServiceException {
-        id= LdapUtil.escapeSearchFilterArg(id);
+        id= LdapUtilCommon.escapeSearchFilterArg(id);
         List<DataSource> result = getDataSourcesByQuery(entry, LdapFilter.dataSourceById(id), zlc);
         return result.isEmpty() ? null : result.get(0);
     }
@@ -6406,7 +6408,7 @@ public class LdapProvisioning extends Provisioning {
         if (!nocache)
             x = sXMPPComponentCache.getById(zimbraId);
         if (x == null) {
-            zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
+            zimbraId = LdapUtilCommon.escapeSearchFilterArg(zimbraId);
             x = getXMPPComponentByQuery(LdapFilter.xmppComponentById(zimbraId), zlc);
             sXMPPComponentCache.put(x);
         }
