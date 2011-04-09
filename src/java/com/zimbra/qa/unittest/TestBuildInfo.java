@@ -14,13 +14,15 @@
  */
 package com.zimbra.qa.unittest;
 
-import junit.framework.TestCase;
+import org.junit.*;
+import static org.junit.Assert.*;
 
 import com.zimbra.cs.account.AttributeManager;
 
 
-public class TestBuildInfo extends TestCase {
+public class TestBuildInfo  {
 
+    @Test
     public void testInVersion() throws Exception {
         AttributeManager am = AttributeManager.getInstance();
 
@@ -32,10 +34,6 @@ public class TestBuildInfo extends TestCase {
         assertTrue(am.inVersion("zimbraZimletDomainAvailableZimlets", "5.0.11"));
         assertTrue(am.inVersion("zimbraZimletDomainAvailableZimlets", "5.5"));
         assertTrue(am.inVersion("zimbraZimletDomainAvailableZimlets", "6"));
-    }
-
-    public static void main(String[] args) throws Exception  {
-        TestUtil.runTest(TestBuildInfo.class);
     }
 
 }

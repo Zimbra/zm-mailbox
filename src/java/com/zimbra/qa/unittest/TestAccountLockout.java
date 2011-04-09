@@ -30,11 +30,6 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.ldap.LdapUtil;
 
-
-/*
-TODO: Add this class to {@link ZimbraSuite} once it supports JUnit 4 annotations.
-*/
-
 public class TestAccountLockout {
     
     private static final String ACCT = "testlockout";
@@ -50,7 +45,7 @@ public class TestAccountLockout {
         
         // setup lockout config attrs
         attrs.put(Provisioning.A_zimbraPasswordLockoutEnabled, LdapUtil.LDAP_TRUE);
-        attrs.put(Provisioning.A_zimbraPasswordLockoutDuration, "1m");
+        attrs.put(Provisioning.A_zimbraPasswordLockoutDuration, "15s");
         attrs.put(Provisioning.A_zimbraPasswordLockoutMaxFailures, LOCKOUT_AFTER_NUM_FAILURES + "");
         attrs.put(Provisioning.A_zimbraPasswordLockoutFailureLifetime, "30s");
         
@@ -90,6 +85,7 @@ public class TestAccountLockout {
                 }
             }
             Assert.assertTrue(caughtAuthFailed);
+            Thread.sleep(1000);
         }
         
         Provisioning.AccountStatus status = acct.getAccountStatus();
@@ -104,6 +100,7 @@ public class TestAccountLockout {
         Account acct = getAccount();
         
         long milliSecondsToWait = acct.getPasswordLockoutDuration() + 2000;
+        System.out.println("Waiting " + milliSecondsToWait + " milli seconds");
         Thread.sleep(milliSecondsToWait);
         
         prov.authAccount(acct, PASSWORD , AuthContext.Protocol.test, null);

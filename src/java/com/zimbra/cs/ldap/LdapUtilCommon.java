@@ -1,5 +1,7 @@
 package com.zimbra.cs.ldap;
 
+import java.util.Map;
+
 import com.zimbra.common.util.ByteUtil;
 
 /**
@@ -8,6 +10,20 @@ import com.zimbra.common.util.ByteUtil;
  */
 public class LdapUtilCommon {
 
+    /*
+    public static String getAttrString(Map<String, Object> attrs, String name) {
+        Object v = attrs.get(name);
+        if (v instanceof String) {
+            return (String) v;
+        } else if (v instanceof String[]) {
+            String[] a = (String[]) v;
+            return a.length > 0 ? a[0] : null;
+        } else {
+            return null;
+        }
+    }
+    */
+    
     public static boolean contains(String[] values, String val) {
         if (values == null) {
             return false;

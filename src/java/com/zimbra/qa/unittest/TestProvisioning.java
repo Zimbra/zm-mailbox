@@ -770,10 +770,20 @@ public class TestProvisioning extends TestCase {
 
         // test dup zFP on multiple accounts - should fail
         String krb5PrincipalDup = "fp-dup@FOO.COM";
+        
+        String user = "acctx-dup-kerberos";
         acctAttrs.clear();
+        mCustomProvTester.addAttr(acctAttrs, BASE_DN_PSEUDO_ATTR, ACCT_BASE_DN);
+        mCustomProvTester.addAttr(acctAttrs, ACCT_NAMING_ATTR, namingAttrValue(user));
         acctAttrs.put(Provisioning.A_zimbraForeignPrincipal, new String[]{"kerberos5:"+krb5PrincipalDup});
-        Account acctX = mProv.createAccount("acctx-dup-kerberos@" + DOMAIN_NAME, "test123", acctAttrs);
-        Account acctY = mProv.createAccount("accty-dup-kerberos@" + DOMAIN_NAME, "test123", acctAttrs);
+        Account acctX = mProv.createAccount(user+"@" + DOMAIN_NAME, "test123", acctAttrs);
+        
+        user = "accty-dup-kerberos";
+        acctAttrs.clear();
+        mCustomProvTester.addAttr(acctAttrs, BASE_DN_PSEUDO_ATTR, ACCT_BASE_DN);
+        mCustomProvTester.addAttr(acctAttrs, ACCT_NAMING_ATTR, namingAttrValue(user));
+        acctAttrs.put(Provisioning.A_zimbraForeignPrincipal, new String[]{"kerberos5:"+krb5PrincipalDup});
+        Account acctY = mProv.createAccount(user+"@" + DOMAIN_NAME, "test123", acctAttrs);
         try {
             mProv.get(Provisioning.AccountBy.krb5Principal, krb5PrincipalDup);
             fail();
@@ -787,7 +797,12 @@ public class TestProvisioning extends TestCase {
         domainAttrs.put(Provisioning.A_zimbraAuthKerberos5Realm, "JUNKREALM.COM");
         String krb5DomainName = "krb-test." + DOMAIN_NAME;
         Domain krb5TestDomain = mProv.createDomain(krb5DomainName, domainAttrs);
-        Account krb5TestAcct = mProv.createAccount("user1@"+krb5DomainName, "test123", null);
+        
+        user = "user1";
+        acctAttrs.clear();
+        mCustomProvTester.addAttr(acctAttrs, BASE_DN_PSEUDO_ATTR, ACCT_BASE_DN);
+        mCustomProvTester.addAttr(acctAttrs, ACCT_NAMING_ATTR, namingAttrValue(user));
+        Account krb5TestAcct = mProv.createAccount(user+"@"+krb5DomainName, "test123", acctAttrs);
         entryGot = mProv.get(Provisioning.AccountBy.krb5Principal, "user1@JUNKREALM.COM");
         TestProvisioningUtil.verifySameEntry(krb5TestAcct, entryGot);
 
@@ -1897,6 +1912,7 @@ public class TestProvisioning extends TestCase {
 
         // mCustomProvTester.cleanup();
 
+
         healthTest();
         Config config = configTest();
         String cosName = cosTest();
@@ -1923,8 +1939,8 @@ public class TestProvisioning extends TestCase {
         signatureTest(account);
 
         entryTest(account);
-        galTest(mProv.get(Provisioning.DomainBy.name, domainName));
-        searchTest(mProv.get(Provisioning.DomainBy.name, domainName));
+        galTest(mProv.get(Provisioning.DomainBy.name, domainName));    // TODO: fixme for the custom DIT
+        searchTest(mProv.get(Provisioning.DomainBy.name, domainName)); // TODO: fixme for the custom DIT
 
         Domain aliasTestDomain = aliasTest();
         familyTest();

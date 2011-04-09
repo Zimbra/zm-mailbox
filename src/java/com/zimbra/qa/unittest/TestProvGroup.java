@@ -1,22 +1,19 @@
 package com.zimbra.qa.unittest;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+
+import org.junit.*;
+import static org.junit.Assert.*;
 
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
-import com.zimbra.cs.account.Entry;
-import com.zimbra.cs.account.GroupedEntry;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 
 import java.util.HashSet;
 
-import junit.framework.TestCase;
 
 public class TestProvGroup extends TestProv {
 
@@ -167,6 +164,7 @@ public class TestProvGroup extends TestProv {
         ldapTimer.reportElapsed("ldap");
     }
 
+    @Test
     public void testCircular_1() throws Exception {
         useLdapProv();
         
@@ -197,6 +195,7 @@ public class TestProvGroup extends TestProv {
         verifyMembership(acct2Id, expectedAllGroups, expectedDirectGroups);
     }
     
+    @Test
     public void testCircular_2() throws Exception {
         useLdapProv();
         
@@ -229,7 +228,7 @@ public class TestProvGroup extends TestProv {
         verifyMembership(acct2Id, expectedAllGroups, expectedDirectGroups);
     }
 
-        
+    @Test
     public void testBug42132() throws Exception {
         useLdapProv();
         

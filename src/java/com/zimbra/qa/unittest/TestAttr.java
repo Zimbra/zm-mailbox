@@ -19,8 +19,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
+import static org.junit.Assert.*;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
@@ -35,19 +35,20 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 
 
-public class TestAttr extends TestCase {
-    private String TEST_ID = TestProvisioningUtil.genTestId();;
+public class TestAttr {
+    private static String TEST_ID = TestProvisioningUtil.genTestId();;
     private static String TEST_NAME = "test-attr";
     private static String PASSWORD = "test123";
 
-    private String DOMAIN_NAME;
-    private String ACCT_EMAIL;
-    private String SERVER_NAME;
-    private String COS_NAME;
+    private static String DOMAIN_NAME;
+    private static String ACCT_EMAIL;
+    private static String SERVER_NAME;
+    private static String COS_NAME;
     
-    private Provisioning mProv;
+    private static Provisioning mProv;
     
-    public void setUp() throws Exception {
+    @BeforeClass
+    public static void init() throws Exception {
         DOMAIN_NAME = TestProvisioningUtil.baseDomainName(TEST_NAME, TEST_ID);
         ACCT_EMAIL = "user1" + "@" + DOMAIN_NAME;
         SERVER_NAME = "server-" + TEST_ID + "-" + TEST_NAME;
@@ -168,6 +169,7 @@ public class TestAttr extends TestCase {
         assertEquals(value, newValue);
     }
     
+    @Test
     public void testSingleValuedAttr() throws Exception {
         Account acct = getAccount();
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -213,6 +215,7 @@ public class TestAttr extends TestCase {
         assertNull(value);
     }
     
+    @Test
     public void testMultiValuedAttr() throws Exception {
         Account acct = getAccount();
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -272,6 +275,7 @@ public class TestAttr extends TestCase {
         assertTrue(values != null && values.size() == 0);
     }
     
+    @Test
     public void testDurationAttr() throws Exception {
         Server server = getServer();  
         String attrName = Provisioning.A_zimbraHsmAge;
@@ -412,6 +416,7 @@ public class TestAttr extends TestCase {
         
     }
     
+    @Test
     public void testCallbackAccountStatus() throws Exception {
         Account acct = getAccount();
         String attrName = Provisioning.A_zimbraAccountStatus;
@@ -425,6 +430,7 @@ public class TestAttr extends TestCase {
         assertEquals(acct.getAttr(Provisioning.A_zimbraMailStatus), Provisioning.MAIL_STATUS_DISABLED);
     }
     
+    @Test
     public void testCallbackCheckPortConflict() throws Exception {
         Server server = getServer();    
         String attrName = Provisioning.A_zimbraLmtpBindPort;
@@ -432,6 +438,7 @@ public class TestAttr extends TestCase {
         unsetTest(server, attrName);
     }
     
+    @Test
     public void testCallbackDataSource() throws Exception {
         Account acct = getAccount();        
         String attrName = Provisioning.A_zimbraDataSourcePollingInterval;
@@ -439,6 +446,7 @@ public class TestAttr extends TestCase {
         unsetTest(acct, attrName);
     }
     
+    @Test
     public void testCallbackDisplayName() throws Exception {
         Account acct = getAccount();
         String attrName = Provisioning.A_displayName;
@@ -446,6 +454,7 @@ public class TestAttr extends TestCase {
         unsetTest(acct, attrName);
     }
     
+    @Test
     public void testCallbackDomainStatus() throws Exception {
         Domain domain = getDomain();
         String attrName = Provisioning.A_zimbraDomainStatus;
@@ -454,6 +463,7 @@ public class TestAttr extends TestCase {
         // unsetTest(domain, attrName);
     }
     
+    @Test
     public void testCallbackMailSignature() throws Exception {
         Account acct = getAccount();
         String attrName = Provisioning.A_zimbraPrefMailSignature;
@@ -478,6 +488,7 @@ public class TestAttr extends TestCase {
         assertTrue(good); 
     }
  
+    /*
     public static void main(String[] args) throws Exception {
         CliUtil.toolSetup();
         try {
@@ -486,5 +497,6 @@ public class TestAttr extends TestCase {
             System.out.println(e.getMessage());
         }
     }
+    */
 }
 

@@ -17,8 +17,8 @@ package com.zimbra.qa.unittest;
 import java.util.HashMap;
 import java.util.Map;
 
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
+import static org.junit.Assert.*;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
@@ -32,7 +32,7 @@ import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 
-public class TestCos extends TestCase {
+public class TestCos {
     
     Provisioning mProv= Provisioning.getInstance();
     
@@ -56,6 +56,7 @@ public class TestCos extends TestCase {
     private long DOMAIN_DEFAULT_COS_VALUE = 30000;
     private long ACCOUNT_VALUE = 40000;
     
+    @Before
     public void setUp() throws Exception {
         cleanup();
         
@@ -73,6 +74,7 @@ public class TestCos extends TestCase {
         Cos cos = mProv.getCOS(ACCT);
     }
     
+    @After
     public void tearDown() throws ServiceException {
         cleanup();   
     }
@@ -130,6 +132,7 @@ public class TestCos extends TestCase {
             ACCT = mProv.get(Provisioning.AccountBy.name, ACCT_NAME);
     }
     
+    @Test
     public void testDomainCos() throws Exception {
         assertEquals(DOMAIN_DEFAULT_COS_VALUE, getAttrValue());  
         
@@ -162,6 +165,7 @@ public class TestCos extends TestCase {
         assertEquals(DEFAULT_COS_VALUE, getAttrValue());     // broken before
     }
     
+    @Test
     public void testAcctCos() throws ServiceException {
         assertEquals(DOMAIN_DEFAULT_COS_VALUE, getAttrValue()); 
         

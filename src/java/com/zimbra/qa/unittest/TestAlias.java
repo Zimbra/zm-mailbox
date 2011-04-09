@@ -24,8 +24,8 @@ import java.util.Set;
 
 import javax.naming.NamingException;
 
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
+import static org.junit.Assert.*;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
@@ -53,7 +53,7 @@ import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.qa.unittest.TestProvisioningUtil.IDNName;
 
-public class TestAlias extends TestCase {
+public class TestAlias {
     private static String TEST_NAME = "test-alias";
     private static String PASSWORD = "test123";
    
@@ -64,6 +64,8 @@ public class TestAlias extends TestCase {
     private static String LOCAL_DOMAIN_NAME;
     private static String ALIAS_DOMAIN_NAME;
     
+    private static String origdDefaultDomainName;
+    
     /*
      * convert underscores in inStr to hyphens
      */
@@ -71,8 +73,8 @@ public class TestAlias extends TestCase {
         return inStr.replaceAll("_", "-");
     }
     
+    @Test
     public void testInit() throws Exception {
-        mProv = Provisioning.getInstance();
         
         String TEST_ID = TestProvisioningUtil.genTestId();
         
@@ -120,8 +122,9 @@ public class TestAlias extends TestCase {
             Alias1@localdomain.com points at account1@localdomain.com.
             Auth is attempted with alias1@aliasdomain.com. Does it work?  YES
     */
+    @Test
     public void testAliasDomain_Case1() throws Exception {
-        String testName = getName();
+        String testName = "testAliasDomain_Case1"; // getName();
         
         String acctLocalPart = "account1";
         String acctName = getEmail(acctLocalPart, LOCAL_DOMAIN_NAME, testName);
@@ -145,8 +148,9 @@ public class TestAlias extends TestCase {
             Auth is attempted with alias1@localdomain.com.    Does it work?  NO
             Auth is attempted with account1@aliasdomain.com.  Does it work?  YES
     */
+    @Test
     public void testAliasDomain_Case2() throws Exception {
-        String testName = getName();
+        String testName = "testAliasDomain_Case2"; // getName();
         
         String acctLocalPart = "account1";
         String acctName = getEmail(acctLocalPart, LOCAL_DOMAIN_NAME, testName);
@@ -174,8 +178,9 @@ public class TestAlias extends TestCase {
             Auth is attempted with "alias1".  Does it work?  NO
             
     */
+    @Test
     public void testAliasDomain_Case3() throws Exception {
-        String testName = getName();
+        String testName = "testAliasDomain_Case3"; // getName();
         
         String acctLocalPart = "account1";
         String acctName = getEmail(acctLocalPart, LOCAL_DOMAIN_NAME, testName);
@@ -229,10 +234,11 @@ public class TestAlias extends TestCase {
     //
     // A - alias points to the entry
     // 
+    @Test
     public void testRemoveAlias_entryExist_aliasExist_aliasPointToEntry() throws Exception {
         // Call toLowerCase to avoid the bug that we don't convert an address to lower case when it is 
         // added as a DL member, and later the address can't be removed from the DL because case does not match.
-        String testName = getName().toLowerCase();  
+        String testName = "testRemoveAlias_entryExist_aliasExist_aliasPointToEntry".toLowerCase(); // getName().toLowerCase();  
         
         // create the domain
         String domainName = "EE-AE-aliasPointToEntry" + "." + BASE_DOMAIN_NAME;
@@ -290,8 +296,9 @@ public class TestAlias extends TestCase {
     //
     // A - alias points to other existing entry
     //
+    @Test
     public void testRemoveAlias_entryExist_aliasExist_aliasPointToOtherEntry() throws Exception {
-        String testName = getName().toLowerCase();  
+        String testName = "testRemoveAlias_entryExist_aliasExist_aliasPointToOtherEntry".toLowerCase(); // getName().toLowerCase();  
         
         // create the domain
         String domainName = "EE-AE-aliasPointToOtherEntry" + "." + BASE_DOMAIN_NAME;
@@ -392,8 +399,9 @@ public class TestAlias extends TestCase {
     //
     // A - alias points to a non-existing entry
     // 
+    @Test
     public void testRemoveAlias_entryExist_aliasExist_aliasPointToNonExistEntry() throws Exception {
-        String testName = getName().toLowerCase();  
+        String testName = "testRemoveAlias_entryExist_aliasExist_aliasPointToNonExistEntry".toLowerCase(); // getName().toLowerCase();  
         
         // create the domain
         String domainName = "EE-AE-aliasPointToNonExistEntry" + "." + BASE_DOMAIN_NAME;
@@ -475,8 +483,9 @@ public class TestAlias extends TestCase {
     //
     // B
     //
+    @Test
     public void testRemoveAlias_entryExist_aliasNotExist() throws Exception {
-        String testName = getName().toLowerCase();  
+        String testName = "testRemoveAlias_entryExist_aliasNotExist".toLowerCase(); // getName().toLowerCase();  
         
         // create the domain
         String domainName = "EE-AN" + "." + BASE_DOMAIN_NAME;
@@ -556,8 +565,9 @@ public class TestAlias extends TestCase {
     //
     // C - alias points to other existing entry
     // 
+    @Test
     public void testRemoveAlias_entryNotExist_aliasExist_aliasPointToOtherEntry() throws Exception {
-        String testName = getName().toLowerCase();  
+        String testName = "testRemoveAlias_entryNotExist_aliasExist_aliasPointToOtherEntry".toLowerCase(); // getName().toLowerCase();  
         
         // create the domain
         String domainName = "EN-AE-aliasPointToOtherEntry" + "." + BASE_DOMAIN_NAME;
@@ -621,8 +631,9 @@ public class TestAlias extends TestCase {
     //
     // C - alias points to a non-existing entry
     //
+    @Test
     public void testRemoveAlias_entryNotExist_aliasExist_aliasPointToNonExistEntry() throws Exception {
-        String testName = getName().toLowerCase();  
+        String testName = "testRemoveAlias_entryNotExist_aliasExist_aliasPointToNonExistEntry".toLowerCase(); //  getName().toLowerCase();  
         
         // create the domain
         String domainName = "EN-AE-aliasPointToNonExistEntry" + "." + BASE_DOMAIN_NAME;
@@ -701,8 +712,9 @@ public class TestAlias extends TestCase {
     //
     // D
     //
+    @Test
     public void testRemoveAlias_entryNotExist_aliasNotExist() throws Exception {
-        String testName = getName().toLowerCase();  
+        String testName = "testRemoveAlias_entryNotExist_aliasNotExist".toLowerCase(); // getName().toLowerCase();  
         
         // create the domain
         String domainName = "EN-AN" + "." + BASE_DOMAIN_NAME;
@@ -773,8 +785,9 @@ public class TestAlias extends TestCase {
         assertEquals(aliases.size(), 0);
     }
     
+    @Test
     public void testRemoveAlias_aliasNameExistsButIsNotAnAlias() throws Exception {
-        String testName = getName().toLowerCase();  
+        String testName = "testRemoveAlias_aliasNameExistsButIsNotAnAlias".toLowerCase(); // getName().toLowerCase();  
         
         // create the domain
         String domainName = underscoreToHyphen(testName) + "." + BASE_DOMAIN_NAME;
@@ -835,8 +848,9 @@ public class TestAlias extends TestCase {
      * 
      * The dangling alias should be removed then recreated and then added to the account
      */
+    @Test
     public void testCreateAlias_aliasExistAndDangling() throws Exception {
-        String testName = getName().toLowerCase();  
+        String testName = "testCreateAlias_aliasExistAndDangling".toLowerCase(); // getName().toLowerCase();  
         
         // create the domain
         String domainName = underscoreToHyphen(testName) + "." + BASE_DOMAIN_NAME;
@@ -910,8 +924,9 @@ public class TestAlias extends TestCase {
         assertFalse(aliases.get(0).getId().equals(origZimbraIdOfAlias));
     }
     
+    @Test
     public void testCreateAlias_aliasNameExistsButIsNotAnAlias() throws Exception {
-        String testName = getName().toLowerCase();  
+        String testName = "testCreateAlias_aliasNameExistsButIsNotAnAlias".toLowerCase(); // getName().toLowerCase();  
         
         // create the domain
         String domainName = underscoreToHyphen(testName) + "." + BASE_DOMAIN_NAME;
@@ -950,8 +965,9 @@ public class TestAlias extends TestCase {
         assertTrue(good);
     }
     
+    @Test
     public void testCreateAlias_aliasExists() throws Exception {
-        String testName = getName().toLowerCase();  
+        String testName = "testCreateAlias_aliasExists".toLowerCase(); // getName().toLowerCase();  
         
         // create the domain
         String domainName = underscoreToHyphen(testName) + "." + BASE_DOMAIN_NAME;
@@ -1027,6 +1043,7 @@ javax.naming.NameAlreadyBoundException: [LDAP: error code 68 - Entry Already Exi
         After the fix, it should throw ACCOUNT_EXISTS (com.zimbra.cs.account.AccountServiceException: email address already exists: phoebe@other.com)
         i.e. the renameAccount should not be allowed
       */
+    @Test
     public void testBug41884() throws Exception {
         String OLD_DOMAIN_NAME = "main." + BASE_DOMAIN_NAME;
         String NEW_DOMAIN_NAME = "other." + BASE_DOMAIN_NAME;
@@ -1052,16 +1069,21 @@ javax.naming.NameAlreadyBoundException: [LDAP: error code 68 - Entry Already Exi
         assertTrue(good);
     }
     
-    public static void main(String[] args) throws Exception {
-        // TestUtil.cliSetup();
-        CliUtil.toolSetup();
-        TestUtil.runTest(TestAlias.class);
+    
+    @BeforeClass
+    public static void init() throws Exception {
+        mProv = Provisioning.getInstance();
         
-        /*
-        TestAlias test = new TestAlias();
-        test.testInit();
-        test.testCreateAlias_aliasExists();
-        */
+        Config config = mProv.getConfig();
+        origdDefaultDomainName = config.getAttr(Provisioning.A_zimbraDefaultDomainName);
+    }
+    
+    @AfterClass
+    public static void cleanup() throws Exception {
+        Config config = mProv.getConfig();
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraDefaultDomainName, origdDefaultDomainName);
+        mProv.modifyAttrs(config, attrs);
     }
 
 }

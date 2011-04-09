@@ -4,8 +4,6 @@ import java.util.Collection;
 
 import com.unboundid.ldap.sdk.Attribute;
 
-import com.zimbra.cs.ldap.LdapTODO;
-import com.zimbra.cs.ldap.LdapTODO.TODO;
 import com.zimbra.cs.ldap.ZAttributes;
 
 public class UBIDAttributes extends ZAttributes {

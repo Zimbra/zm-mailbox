@@ -1,5 +1,8 @@
 package com.zimbra.qa.unittest;
 
+import org.junit.*;
+import static org.junit.Assert.*;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.AccessManager;
@@ -87,6 +90,7 @@ public class TestACPermissionCache extends TestAC {
      * target side test
      * =================
      */
+    @Test
     public void testGuestAccount() throws Exception {
         Right right = A_USER_RIGHT;
         
@@ -105,6 +109,7 @@ public class TestACPermissionCache extends TestAC {
         assertFalse(allow); 
     }
     
+    @Test
     public void testGrantChangeOnTarget() throws Exception {
         Right right = A_USER_RIGHT;
         
@@ -128,6 +133,7 @@ public class TestACPermissionCache extends TestAC {
         assertTrue(allow); 
     }
     
+    @Test
     public void testGrantChangeOnDirectlyInheritedDistributionList() throws Exception {
         Right right = A_USER_RIGHT_DISTRIBUTION_LIST;
         
@@ -153,6 +159,7 @@ public class TestACPermissionCache extends TestAC {
         assertTrue(allow); 
     }
     
+    @Test
     public void testGrantChangeOnIndirectlyInheritedDistributionList() throws Exception {
         Right right = A_USER_RIGHT_DISTRIBUTION_LIST;
         
@@ -180,6 +187,7 @@ public class TestACPermissionCache extends TestAC {
         assertTrue(allow); 
     }
     
+    @Test
     public void testGrantChangeOnDomain() throws Exception {
         Right right = A_USER_RIGHT;
         
@@ -203,6 +211,7 @@ public class TestACPermissionCache extends TestAC {
         assertTrue(allow); 
     }
     
+    @Test
     public void testGrantChangeOnGlobalGrant() throws Exception {
         Right right = A_USER_RIGHT;
         
@@ -226,6 +235,7 @@ public class TestACPermissionCache extends TestAC {
         assertTrue(allow); 
     }
     
+    @Test
     public void testDirectGroupMembershipChanged() throws Exception {
         Right right = A_USER_RIGHT_DISTRIBUTION_LIST;
         
@@ -251,6 +261,7 @@ public class TestACPermissionCache extends TestAC {
         assertTrue(allow); 
     }
     
+    @Test
     public void testIndirectGroupMembershipChanged() throws Exception {
         Right right = A_USER_RIGHT_DISTRIBUTION_LIST;
         
@@ -286,6 +297,7 @@ public class TestACPermissionCache extends TestAC {
         assertTrue(allow); 
     }
     
+    @Test
     public void testDomainOfTargetChanged() throws Exception {
         Right right = A_USER_RIGHT;
         
@@ -315,7 +327,8 @@ public class TestACPermissionCache extends TestAC {
         assertTrue(allow); 
     }
     
-    public void testGrantTargetDeleted() throws Exception {
+    @Test
+    public void GrantTargetDeleted() throws Exception {
         Right right = A_USER_RIGHT_DISTRIBUTION_LIST;
         
         Domain domain = createDomain();
@@ -347,6 +360,7 @@ public class TestACPermissionCache extends TestAC {
      * grantee side test
      * =================
      */
+    @Test
     public void testGranteeGroupMembershipChanged() throws Exception {  
         Right right = A_USER_RIGHT;
         
@@ -369,6 +383,7 @@ public class TestACPermissionCache extends TestAC {
         assertFalse(allow); 
     }
     
+    @Test
     public void testGranteeAdminFlagChanged() throws Exception {
         Right right = A_CACHEABLE_ADMIN_RIGHT;
         

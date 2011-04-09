@@ -5,8 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import junit.framework.TestCase;
-
 import com.zimbra.common.net.SocketFactories;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
@@ -25,7 +23,7 @@ import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Zimlet;
 
-public abstract class TestProv extends TestCase {
+public abstract class TestProv {
 
     protected static final String TEST_ID = TestProvisioningUtil.genTestId();
     protected static final String BASE_DOMAIN_NAME = TestProvisioningUtil.baseDomainName("test-prov", TEST_ID);

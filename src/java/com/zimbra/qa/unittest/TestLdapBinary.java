@@ -25,10 +25,8 @@ import java.util.Random;
 import java.io.File;
 import java.io.IOException;
 
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
+import org.junit.Assert.*;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
@@ -40,19 +38,7 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 
-/*
-TODO: Add this class to {@link ZimbraSuite} once it supports JUnit 4 annotations.
-*/
-
-/*
- * LDAP test suite:
- * 
- * TestLdapBinary
- * TestSearchGal
- * TestLdapSDK
- * 
- */
-public class TestLdapBinary  {
+public class TestLdapBinary {
     
     /* 
      * To run this unit test, paste these attributes to zimbra-attrs.xml and run:
@@ -503,7 +489,6 @@ public class TestLdapBinary  {
         prov.deleteAccount(acct.getId());
     }
     
-    
     @Test
     public void testTooLarge() throws Exception {
         SingleValuedTestData data = ZIMBRA_BINARY_SINGLE_TEST_TOO_LARGE;
@@ -658,7 +643,4 @@ public class TestLdapBinary  {
     // END uncomment after running "ant generate-getters" with the test binary attributes
     //
 
-    public static void main(String[] args) throws Exception {
-        Content content = Content.generateCert();
-    }
 }

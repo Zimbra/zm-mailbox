@@ -3,16 +3,13 @@ package com.zimbra.qa.unittest;
 import java.util.List;
 import java.util.ArrayList;
 
+import org.junit.*;
+import static org.junit.Assert.*;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
-import com.zimbra.cs.account.Provisioning.GranteeBy;
-import com.zimbra.cs.account.Provisioning.TargetBy;
-import com.zimbra.cs.account.accesscontrol.GranteeType;
-import com.zimbra.cs.account.accesscontrol.RightCommand;
-import com.zimbra.cs.account.accesscontrol.Rights.User;
-import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.zclient.ZAce;
 import com.zimbra.cs.zclient.ZFolder;
@@ -38,6 +35,7 @@ public class TestACUserRights extends TestProv {
     }
     
     // bug 42146
+    @Test
     public void testFallbackToFolderRight() throws Exception {
         
         useSoapProv();
