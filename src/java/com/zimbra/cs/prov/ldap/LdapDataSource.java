@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -12,66 +12,77 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
+package com.zimbra.cs.prov.ldap;
 
-package com.zimbra.cs.account.ldap;
+import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
-
-import javax.naming.NamingException;
-import javax.naming.directory.Attribute;
-import javax.naming.directory.Attributes;
+import com.zimbra.cs.account.ldap.LdapEntry;
+import com.zimbra.cs.ldap.LdapException;
+import com.zimbra.cs.ldap.LdapUtil;
+import com.zimbra.cs.ldap.ZSearchResultEntry;
 
 /**
- * @author schemers
+ * 
+ * @author pshao
+ *
  */
 class LdapDataSource extends DataSource implements LdapEntry {
 
-	static String getObjectClass(Type type) {
-		switch (type) {
-		case pop3: return "zimbraPop3DataSource";
-		case imap: return "zimbraImapDataSource";
-		case rss:  return "zimbraRssDataSource";
-		case gal:  return "zimbraGalDataSource";
-		default: return null;
-		}
-	}
-
-	static Type getObjectType(Attributes attrs) throws ServiceException {
-		try {
-			String dsType = LdapUtil.getAttrString(attrs, Provisioning.A_zimbraDataSourceType);
-			if (dsType != null)
-				return Type.fromString(dsType);
-		} catch (NamingException e) {
-			ZimbraLog.datasource.error("cannot get DataSource type", e);
-		}
-		Attribute attr = attrs.get("objectclass");
-		if (attr.contains("zimbraPop3DataSource")) 
-			return Type.pop3;
-		else if (attr.contains("zimbraImapDataSource"))
-			return Type.imap;
-		else if (attr.contains("zimbraRssDataSource"))
-		    return Type.rss;
-		else if (attr.contains("zimbraGalDataSource"))
-            return Type.gal;
-		else
-			throw ServiceException.FAILURE("unable to determine data source type from object class", null);
-	}
-
 	private String mDn;
 
-	LdapDataSource(Account acct, String dn, Attributes attrs, Provisioning prov) throws NamingException, ServiceException {
-		super(acct, 
-				getObjectType(attrs),
-				LdapUtil.getAttrString(attrs, Provisioning.A_zimbraDataSourceName),
-				LdapUtil.getAttrString(attrs, Provisioning.A_zimbraDataSourceId),                
-				LdapUtil.getAttrs(attrs), prov);
-		mDn = dn;
+	LdapDataSource(Account acct, ZSearchResultEntry entry, Provisioning prov) throws LdapException, ServiceException {
+		super(acct, getObjectType(entry),
+		        LdapUtil.getAttrString(entry, Provisioning.A_zimbraDataSourceName),
+		        LdapUtil.getAttrString(entry, Provisioning.A_zimbraDataSourceId),                
+		        LdapUtil.getAttrs(entry), 
+		        prov);
+		mDn = entry.getDN();
 	}
+	
 	public String getDN() {
 		return mDn;
 	}
+
+    static String getObjectClass(Type type) {
+        switch (type) {
+            case pop3:
+                return AttributeClass.pop3DataSource.getOCName();
+            case imap:
+                return AttributeClass.imapDataSource.getOCName();
+            case rss:
+                return AttributeClass.rssDataSource.getOCName();
+            case gal:
+                return AttributeClass.galDataSource.getOCName();
+            default: 
+                return null;
+        }
+    }
+
+    static Type getObjectType(ZSearchResultEntry entry) throws ServiceException {
+        try {
+            String dsType = LdapUtil.getAttrString(entry, Provisioning.A_zimbraDataSourceType);
+            if (dsType != null)
+                return Type.fromString(dsType);
+        } catch (LdapException e) {
+            ZimbraLog.datasource.error("cannot get DataSource type", e);
+        }
+        
+        List<String> attr = entry.getMultiAttrString(Provisioning.A_objectClass);
+        if (attr.contains(AttributeClass.pop3DataSource.getOCName())) 
+            return Type.pop3;
+        else if (attr.contains(AttributeClass.imapDataSource.getOCName()))
+            return Type.imap;
+        else if (attr.contains(AttributeClass.rssDataSource.getOCName()))
+            return Type.rss;
+        else if (attr.contains(AttributeClass.galDataSource.getOCName()))
+            return Type.gal;
+        else
+            throw ServiceException.FAILURE("unable to determine data source type from object class", null);
+    }
 }
