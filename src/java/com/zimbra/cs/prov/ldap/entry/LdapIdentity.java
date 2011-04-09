@@ -12,12 +12,11 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.prov.ldap;
+package com.zimbra.cs.prov.ldap.entry;
 
-import java.util.Map;
-
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ldap.LdapEntry;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapUtil;
@@ -28,18 +27,21 @@ import com.zimbra.cs.ldap.ZSearchResultEntry;
  * @author pshao
  *
  */
-class LdapServer extends Server implements LdapEntry {
+class LdapIdentity extends Identity implements LdapEntry {
 
     private String mDn;
 
-    LdapServer(ZSearchResultEntry entry, Map<String,Object> defaults, Provisioning prov) throws LdapException {
-        super(LdapUtil.getAttrString(entry, Provisioning.A_cn), 
-                LdapUtil.getAttrString(entry, Provisioning.A_zimbraId), 
-                LdapUtil.getAttrs(entry), defaults, prov);
+    LdapIdentity(Account acct, ZSearchResultEntry entry, Provisioning prov) throws LdapException {
+        super(acct,
+                LdapUtil.getAttrString(entry, Provisioning.A_zimbraPrefIdentityName),
+                LdapUtil.getAttrString(entry, Provisioning.A_zimbraPrefIdentityId),
+                LdapUtil.getAttrs(entry), 
+                prov);
         mDn = entry.getDN();
     }
 
     public String getDN() {
         return mDn;
     }
+
 }

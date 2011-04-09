@@ -12,9 +12,9 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.prov.ldap;
+package com.zimbra.cs.prov.ldap.entry;
 
-import com.zimbra.cs.account.XMPPComponent;
+import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapEntry;
 import com.zimbra.cs.ldap.LdapException;
@@ -26,20 +26,19 @@ import com.zimbra.cs.ldap.ZSearchResultEntry;
  * @author pshao
  *
  */
-class LdapXMPPComponent extends XMPPComponent implements LdapEntry {
-    
+class LdapCos extends Cos implements LdapEntry {
+
     private String mDn;
 
-    LdapXMPPComponent(ZSearchResultEntry entry, Provisioning prov) throws LdapException {
-        super(LdapUtil.getAttrString(entry, Provisioning.A_cn),
-                LdapUtil.getAttrString(entry, Provisioning.A_zimbraId),
-                LdapUtil.getAttrs(entry),
+    LdapCos(ZSearchResultEntry entry, Provisioning prov) throws LdapException {
+        super(LdapUtil.getAttrString(entry, Provisioning.A_cn), 
+                LdapUtil.getAttrString(entry, Provisioning.A_zimbraId), 
+                LdapUtil.getAttrs(entry), 
                 prov);
         mDn = entry.getDN();
     }
 
     public String getDN() {
-        return mDn;
+        return mDn; 
     }
-
 }

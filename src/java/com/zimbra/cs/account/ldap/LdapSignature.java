@@ -20,7 +20,7 @@ import javax.naming.directory.Attributes;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.prov.ldap.LdapSignatureBase;
+import com.zimbra.cs.prov.ldap.entry.LdapSignatureBase;
 
 /**
  * @author schemers
