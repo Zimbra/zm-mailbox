@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2009, 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -12,7 +12,7 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.account.ldap;
+package com.zimbra.cs.prov.ldap;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -94,7 +94,7 @@ public abstract class ChangePasswordListener {
     /*
      * class to stage context for each listener
      */
-    static class ChangePasswordListenerContext {
+    public static class ChangePasswordListenerContext {
         Map<InternalChangePasswordListenerId, Map<String, Object>> mInternalCtxts = 
             new EnumMap<InternalChangePasswordListenerId, Map<String, Object>>(InternalChangePasswordListenerId.class);
         
