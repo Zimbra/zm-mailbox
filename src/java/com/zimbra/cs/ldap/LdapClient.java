@@ -4,14 +4,13 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
-import com.zimbra.cs.account.ldap.UBIDLdapProvisioning;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.ldap.ZSearchControls.ZSearchControlsFactory;
 import com.zimbra.cs.ldap.ZSearchScope.ZSearchScopeFactory;
 import com.zimbra.cs.ldap.jndi.JNDILdapContext;
 import com.zimbra.cs.ldap.jndi.JNDISearchControls;
 import com.zimbra.cs.ldap.jndi.JNDISearchScope;
+import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.unboundid.UBIDLdapContext;
 import com.zimbra.cs.ldap.unboundid.UBIDSearchControls;
 import com.zimbra.cs.ldap.unboundid.UBIDSearchScope;
@@ -48,8 +47,10 @@ public abstract class LdapClient {
     /* 
      * Bridging the legacy ZimbraLdapContext and the new ZLdapContext classes.
      */
-    public static ZimbraLdapContext toZimbraLdapContext(LdapProvisioning prov, ILdapContext ldapContext) {
-        if (!prov.getClass().equals(LdapProvisioning.class)) {
+    @TODO
+    public static ZimbraLdapContext toZimbraLdapContext(com.zimbra.cs.account.Provisioning prov, ILdapContext ldapContext) {
+        if (!prov.getClass().equals(com.zimbra.cs.account.ldap.LdapProvisioning.class) &&
+            !prov.getClass().equals(com.zimbra.cs.account.ldap.custom.CustomLdapProvisioning.class)) { // TODO: what to do with CustomLdapProvisioning?
             Zimbra.halt("Provisioning instance is not LdapProvisioning", 
                     ServiceException.FAILURE("internal error, wrong ldap context instance", null));
         }
@@ -68,11 +69,14 @@ public abstract class LdapClient {
         return (ZimbraLdapContext)ldapContext;
     }
     
-    public static ZLdapContext toZLdapContext(LdapProvisioning prov, ILdapContext ldapContext) {
-        if (!prov.getClass().equals(UBIDLdapProvisioning.class)) {
-            Zimbra.halt("Provisioning instance is not UBIDLdapProvisioning", 
+    @TODO
+    public static ZLdapContext toZLdapContext(com.zimbra.cs.account.Provisioning prov, ILdapContext ldapContext) {
+        /*
+        if (!prov.getClass().equals(com.zimbra.cs.prov.ldap.LdapProvisioning.class)) {
+            Zimbra.halt("Provisioning instance is not XXXLdapProvisioning",  // TODO, what would be the name?
                     ServiceException.FAILURE("internal error, wrong ldap context instance", null));
         }
+        */
         
         if (!(getInstance() instanceof UBIDLdapClient)) {
             Zimbra.halt("LdapClient instance is not UBIDLdapClient", 
