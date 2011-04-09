@@ -23,7 +23,7 @@ import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.prov.LdapMimeTypeBase;
+import com.zimbra.cs.prov.ldap.LdapMimeTypeBase;
 
 class LdapMimeType extends LdapMimeTypeBase {
        

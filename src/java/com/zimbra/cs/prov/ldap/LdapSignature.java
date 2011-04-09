@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -12,34 +12,34 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-
-package com.zimbra.cs.account.ldap;
-
-import javax.naming.NamingException;
-import javax.naming.directory.Attributes;
+package com.zimbra.cs.prov.ldap;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.prov.LdapSignatureBase;
+import com.zimbra.cs.ldap.LdapException;
+import com.zimbra.cs.ldap.LdapUtil;
+import com.zimbra.cs.ldap.ZSearchResultEntry;
 
 /**
- * @author schemers
+ * 
+ * @author pshao
+ *
  */
- class LdapSignature extends LdapSignatureBase {
+class LdapSignature extends LdapSignatureBase {
 
     private String mDn;
 
-    LdapSignature(Account acct, String dn, Attributes attrs, Provisioning prov) throws NamingException {
+    LdapSignature(Account acct, ZSearchResultEntry entry, Provisioning prov) throws LdapException {
         super(acct,
-              LdapUtil.getAttrString(attrs, Provisioning.A_zimbraSignatureName),
-              LdapUtil.getAttrString(attrs, Provisioning.A_zimbraSignatureId),
-              LdapUtil.getAttrs(attrs), prov);
-        mDn = dn;
+                LdapUtil.getAttrString(entry, Provisioning.A_zimbraSignatureName),
+              LdapUtil.getAttrString(entry, Provisioning.A_zimbraSignatureId),
+              LdapUtil.getAttrs(entry), 
+              prov);
+        mDn = entry.getDN();
     }
 
     public String getDN() {
         return mDn;
     }
-    
 
 }

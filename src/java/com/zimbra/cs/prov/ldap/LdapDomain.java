@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -12,34 +12,32 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-
-/*
- * Created on Sep 23, 2004
- *
- * Window - Preferences - Java - Code Style - Code Templates
- */
-package com.zimbra.cs.account.ldap;
+package com.zimbra.cs.prov.ldap;
 
 import java.util.Map;
 
-import javax.naming.NamingException;
-import javax.naming.directory.Attributes;
-
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapEntry;
+import com.zimbra.cs.ldap.LdapException;
+import com.zimbra.cs.ldap.LdapUtil;
+import com.zimbra.cs.ldap.ZSearchResultEntry;
 
 /**
- * @author schemers
+ * 
+ * @author pshao
+ *
  */
-public class LdapDomain extends Domain implements LdapEntry {
+class LdapDomain extends Domain implements LdapEntry {
 
     private String mDn;
 
-    LdapDomain(String dn, Attributes attrs, Map<String, Object> defaults, Provisioning prov) throws NamingException {
-        super(LdapUtil.getAttrString(attrs, Provisioning.A_zimbraDomainName), 
-                LdapUtil.getAttrString(attrs, Provisioning.A_zimbraId), 
-                LdapUtil.getAttrs(attrs), defaults, prov);
-        mDn = dn;
+    LdapDomain(ZSearchResultEntry entry, Map<String, Object> defaults, Provisioning prov) throws LdapException {
+        super(LdapUtil.getAttrString(entry, Provisioning.A_zimbraDomainName), 
+                LdapUtil.getAttrString(entry, Provisioning.A_zimbraId), 
+                LdapUtil.getAttrs(entry), 
+                defaults, prov);
+        mDn = entry.getDN();
     }
 
     public String getDN() {

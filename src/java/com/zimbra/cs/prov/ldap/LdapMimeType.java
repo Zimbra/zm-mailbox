@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -12,24 +12,23 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-
-/*
- * Created on Apr 14, 2005
- *
- */
-package com.zimbra.cs.account.ldap;
-
-import javax.naming.NamingException;
-import javax.naming.directory.Attributes;
+package com.zimbra.cs.prov.ldap;
 
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.prov.LdapMimeTypeBase;
+import com.zimbra.cs.ldap.LdapException;
+import com.zimbra.cs.ldap.LdapUtil;
+import com.zimbra.cs.ldap.ZSearchResultEntry;
 
+/**
+ * 
+ * @author pshao
+ *
+ */
 class LdapMimeType extends LdapMimeTypeBase {
        
-    LdapMimeType(String dn, Attributes attrs, Provisioning prov) throws NamingException {
-        super(LdapUtil.getAttrs(attrs), null, prov);
-        mDn = dn;
+    LdapMimeType(ZSearchResultEntry entry, Provisioning prov) throws LdapException {
+        super(LdapUtil.getAttrs(entry), null, prov);
+        mDn = entry.getDN();
     }
 
 }
