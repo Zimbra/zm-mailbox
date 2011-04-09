@@ -13,10 +13,11 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.account.ldap;
+package com.zimbra.cs.prov.ldap;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.AttributeManager.IDNType;
 import com.zimbra.cs.account.EntrySearchFilter;
@@ -27,6 +28,7 @@ import com.zimbra.cs.account.EntrySearchFilter.Operator;
 import com.zimbra.cs.account.EntrySearchFilter.Single;
 import com.zimbra.cs.account.EntrySearchFilter.Term;
 import com.zimbra.cs.account.EntrySearchFilter.Visitor;
+import com.zimbra.cs.ldap.LdapUtilCommon;
 
 public class LdapEntrySearchFilter {
 
@@ -108,7 +110,7 @@ public class LdapEntrySearchFilter {
         }
         
         protected String getVal(Single term) {
-            return LdapUtil.escapeSearchFilterArg(term.getRhs());
+            return LdapUtilCommon.escapeSearchFilterArg(term.getRhs());
         }
     }
     
@@ -136,7 +138,7 @@ public class LdapEntrySearchFilter {
                 false,
                 Provisioning.A_objectClass,
                 Operator.eq,
-                LdapProvisioning.C_zimbraCalendarResource);
+                AttributeClass.calendarResource.getOCName());
         sCalendarResourcesFilter = new EntrySearchFilter(calResType);
     }
 
