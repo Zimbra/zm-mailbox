@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.account.ldap;
+package com.zimbra.cs.prov.ldap;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,6 +29,11 @@ import com.zimbra.cs.account.EntryCacheDataKey;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.extension.ExtensionUtil;
 
+/**
+ * 
+ * @author pshao
+ *
+ */
 public abstract class DomainNameMappingHandler {
     
     private static Map<String, HandlerInfo> sHandlers = new ConcurrentHashMap<String,HandlerInfo>();
@@ -97,7 +102,7 @@ public abstract class DomainNameMappingHandler {
         }
     }
     
-    static class HandlerConfig {
+    public static class HandlerConfig {
         String mApplication;
         String mClassName;
         String mParams;
@@ -121,7 +126,7 @@ public abstract class DomainNameMappingHandler {
         }
     }
     
-    static HandlerConfig getHandlerConfig(Domain domain, String application) {
+    public static HandlerConfig getHandlerConfig(Domain domain, String application) {
         Map<String, HandlerConfig> handlers = 
             (Map<String, HandlerConfig>)domain.getCachedData(EntryCacheDataKey.DOMAIN_FOREIGN_NAME_HANDLERS.getKeyName());
         
@@ -152,7 +157,7 @@ public abstract class DomainNameMappingHandler {
         return handlers.get(application);
     }
 
-    static String mapName(HandlerConfig handlerConfig, String foreignName, String zimbraDomainName) throws ServiceException {
+    public static String mapName(HandlerConfig handlerConfig, String foreignName, String zimbraDomainName) throws ServiceException {
         DomainNameMappingHandler handler = getHandler(handlerConfig);
         
         if (handler instanceof UnknownDomainNameMappingHandler)

@@ -84,6 +84,7 @@ import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.prov.ldap.ChangePasswordListener;
+import com.zimbra.cs.prov.ldap.DomainNameMappingHandler;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletUtil;
