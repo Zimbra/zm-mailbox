@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.account.ldap;
+package com.zimbra.cs.prov.ldap;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -27,7 +27,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
 
-class LdapLockoutPolicy {
+public class LdapLockoutPolicy {
 
     private String[] mFailures;
     private List<String> mFailuresToRemove;
@@ -39,7 +39,7 @@ class LdapLockoutPolicy {
     private boolean mIsLockedOut;
     private String mAccountStatus;
     
-    LdapLockoutPolicy(Provisioning prov, Account account) throws ServiceException {
+    public LdapLockoutPolicy(Provisioning prov, Account account) throws ServiceException {
         mAccount = account;
         mProv = prov;
         mAccountStatus = account.getAccountStatus(prov);
