@@ -12,11 +12,11 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.prov.ldap;
+package com.zimbra.cs.prov.ldap.entry;
 
 import java.util.Map;
 
-import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapEntry;
 import com.zimbra.cs.ldap.LdapException;
@@ -28,12 +28,13 @@ import com.zimbra.cs.ldap.ZSearchResultEntry;
  * @author pshao
  *
  */
-class LdapDomain extends Domain implements LdapEntry {
+class LdapAccount extends Account implements LdapEntry {
 
     private String mDn;
-
-    LdapDomain(ZSearchResultEntry entry, Map<String, Object> defaults, Provisioning prov) throws LdapException {
-        super(LdapUtil.getAttrString(entry, Provisioning.A_zimbraDomainName), 
+    
+    LdapAccount(String email, ZSearchResultEntry entry, Map<String, Object> defaults, Provisioning prov) 
+    throws LdapException {
+        super(email, 
                 LdapUtil.getAttrString(entry, Provisioning.A_zimbraId), 
                 LdapUtil.getAttrs(entry), 
                 defaults, prov);
@@ -43,4 +44,5 @@ class LdapDomain extends Domain implements LdapEntry {
     public String getDN() {
         return mDn;
     }
+
 }
