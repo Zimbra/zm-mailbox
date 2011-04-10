@@ -21,10 +21,10 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapDomain;
-import com.zimbra.cs.account.ldap.LdapGalCredential;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.gal.GalSearchConfig;
+import com.zimbra.cs.prov.ldap.LdapGalCredential;
 
 public abstract class GalParams {
     

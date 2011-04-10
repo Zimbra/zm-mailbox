@@ -19,6 +19,7 @@ import javax.naming.directory.Attributes;
 
 import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 
 class LdapGlobalGrant extends GlobalGrant implements LdapEntry {
     

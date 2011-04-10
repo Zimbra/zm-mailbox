@@ -20,6 +20,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 
 import javax.naming.NamingException;
 import javax.naming.directory.Attribute;

@@ -17,11 +17,12 @@
  * Created on Sep 23, 2004
  *
  */
-package com.zimbra.cs.account.ldap;
+package com.zimbra.cs.prov.ldap.entry;
 
 /**
- * @author schemers
  * 
+ * @author pshao
+ *
  */
 public interface LdapEntry {
 

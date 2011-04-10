@@ -18,6 +18,7 @@ package com.zimbra.cs.account.ldap;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;

@@ -13,10 +13,10 @@ import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapFilter;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.ldap.LdapUtil.SearchLdapVisitor;
+import com.zimbra.cs.prov.ldap.LdapFilter;
 
 public class zimbraPrefCalendarReminderSendEmail extends LdapUpgrade {
     

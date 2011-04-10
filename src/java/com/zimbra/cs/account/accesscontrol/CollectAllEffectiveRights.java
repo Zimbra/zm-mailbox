@@ -28,9 +28,9 @@ import com.zimbra.cs.account.accesscontrol.RightCommand.EffectiveRights;
 import com.zimbra.cs.account.accesscontrol.SearchGrants.GrantsOnTarget;
 import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.account.ldap.LdapDomain;
-import com.zimbra.cs.account.ldap.LdapFilter;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.prov.ldap.LdapFilter;
 
 public class CollectAllEffectiveRights {
 

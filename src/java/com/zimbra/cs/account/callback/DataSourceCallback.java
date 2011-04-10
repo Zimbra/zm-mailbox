@@ -31,12 +31,12 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.ldap.LdapFilter;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
+import com.zimbra.cs.prov.ldap.LdapFilter;
 import com.zimbra.cs.util.Zimbra;
 
 /**

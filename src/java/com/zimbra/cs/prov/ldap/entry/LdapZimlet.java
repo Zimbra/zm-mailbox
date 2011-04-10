@@ -16,7 +16,6 @@ package com.zimbra.cs.prov.ldap.entry;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
-import com.zimbra.cs.account.ldap.LdapEntry;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.ZSearchResultEntry;

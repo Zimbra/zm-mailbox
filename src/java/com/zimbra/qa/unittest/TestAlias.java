@@ -46,11 +46,11 @@ import com.zimbra.cs.account.Provisioning.CacheEntryBy;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.account.ldap.LdapEntry;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.auth.AuthContext;
+import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 import com.zimbra.qa.unittest.TestProvisioningUtil.IDNName;
 
 public class TestAlias {

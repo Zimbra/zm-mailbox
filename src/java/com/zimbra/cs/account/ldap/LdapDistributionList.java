@@ -20,6 +20,7 @@ import javax.naming.directory.Attributes;
 
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 
 class LdapDistributionList extends DistributionList implements LdapEntry {
     private String mDn;

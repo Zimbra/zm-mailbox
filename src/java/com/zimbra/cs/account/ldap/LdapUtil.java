@@ -31,6 +31,7 @@ import com.zimbra.cs.account.gal.GalUtil;
 import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.prov.ldap.LdapGalCredential;
 
 import javax.naming.AuthenticationException;
 import javax.naming.NamingEnumeration;

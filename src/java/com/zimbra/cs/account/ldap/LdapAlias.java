@@ -20,6 +20,7 @@ import javax.naming.directory.Attributes;
 
 import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 
 class LdapAlias extends Alias implements LdapEntry {
     private String mDn;

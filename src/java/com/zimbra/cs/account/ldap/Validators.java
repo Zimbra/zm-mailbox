@@ -38,6 +38,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.CountObjectsType;
+import com.zimbra.cs.prov.ldap.LdapFilter;
 
 final class Validators {
 

@@ -12,7 +12,7 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.account.ldap;
+package com.zimbra.cs.prov.ldap;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
@@ -56,23 +56,23 @@ public class LdapGalCredential {
         mKrb5Keytab = krb5Keytab;
     }
     
-    String getAuthMech() {
+    public String getAuthMech() {
         return mAuthMech;
     }
     
-    String getBindDn() {
+    public String getBindDn() {
         return mBindDn;
     }
     
-    String getBindPassword() {
+    public String getBindPassword() {
         return mBindPassword;
     }
     
-    String getKrb5Principal() {
+    public String getKrb5Principal() {
         return mKrb5Principal;
     }
     
-    String getKrb5Keytab() {
+    public String getKrb5Keytab() {
         return mKrb5Keytab;
     }
 }

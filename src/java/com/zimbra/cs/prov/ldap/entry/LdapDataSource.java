@@ -22,7 +22,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapEntry;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
