@@ -24,7 +24,6 @@ import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Signature;
-import com.zimbra.cs.account.ldap.LdapEntry;
 import com.zimbra.cs.account.ldap.LdapUtil;
 
 /**

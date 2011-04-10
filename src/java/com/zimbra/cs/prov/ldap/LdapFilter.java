@@ -12,7 +12,7 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.account.ldap;
+package com.zimbra.cs.prov.ldap;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
@@ -256,6 +256,7 @@ public class LdapFilter {
         System.out.println("filter: " + filter);
     }
     
+    /*
     private static void printFilters(LdapProvisioning prov) throws ServiceException {
         // account
         printFilter("all non system accounts", 
@@ -445,4 +446,5 @@ public class LdapFilter {
         LdapProvisioning prov = (LdapProvisioning)Provisioning.getInstance();
         printFilters(prov);
     }
+    */
 }
