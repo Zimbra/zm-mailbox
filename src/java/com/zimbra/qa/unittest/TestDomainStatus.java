@@ -18,13 +18,14 @@ package com.zimbra.qa.unittest;
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
 
-
-
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import org.junit.*;
+import static org.junit.Assert.*;
 
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
@@ -49,11 +50,7 @@ import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
 import com.zimbra.cs.lmtpserver.LmtpProtocolException;
 
-import junit.framework.AssertionFailedError;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-
-public class TestDomainStatus extends TestCase {
+public class TestDomainStatus {
     private Provisioning mProv;
     private SoapProvisioning mSoapProv;
     private SoapProvisioning mSoapProvAdmin;
@@ -70,7 +67,10 @@ public class TestDomainStatus extends TestCase {
     
     private static HashMap<String, Map<String, String>> sStatusMap;
     
-    static {
+    @BeforeClass
+    public static void init() throws Exception {
+        CliUtil.toolSetup();
+        
         sStatusMap = new HashMap<String, Map<String, String>>();
         
         Map<String, String> domainActive = new HashMap<String, String>();
@@ -141,6 +141,7 @@ public class TestDomainStatus extends TestCase {
         ACCT_GLOBAL_ADMIN
     }
     
+    @Before
     public void setUp() throws Exception {
 
         TEST_ID = TestProvisioningUtil.genTestId();
@@ -1077,6 +1078,7 @@ public class TestDomainStatus extends TestCase {
         suspendedDomainTest();
     }
 
+    @Test
     public void testDomainStatus() throws Exception {
         try {
             System.out.println("\nTest " + TEST_ID + " starting\n");
@@ -1088,11 +1090,11 @@ public class TestDomainStatus extends TestCase {
                                (cause == null ? "" : " (cause: " + cause.getClass().getName() + " " + cause.getMessage() + ")"));
             e.printStackTrace(System.out);
             System.out.println("\nTest " + TEST_ID + " failed!");
-        } catch (AssertionFailedError e) {
+        } /* catch (AssertionFailedError e) {
             System.out.println("\n===== assertion failed =====");
             System.out.println(e.getMessage());
             e.printStackTrace(System.out);
-        }
+        } */
     }
     
     public static void main(String[] args) throws Exception {

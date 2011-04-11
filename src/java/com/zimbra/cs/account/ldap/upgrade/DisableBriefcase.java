@@ -11,6 +11,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.ldap.LdapUtil.SearchLdapVisitor;
+import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.prov.ldap.LdapFilter;
 
 public class DisableBriefcase extends LdapUpgrade {
@@ -41,17 +42,17 @@ public class DisableBriefcase extends LdapUpgrade {
             mModZlc = modZlc;
         }
         
-        public void visit(String dn, Map<String, Object> attrs, Attributes ldapAttrs) {
+        public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs) {
             Attributes modAttrs = new BasicAttributes(true);
             
             try {
-                if (LdapUtil.getAttrString(ldapAttrs, ATTR_SPREADSHEET) != null)
+                if (ldapAttrs.getAttrString( ATTR_SPREADSHEET) != null)
                     modAttrs.put(ATTR_SPREADSHEET, LdapUtil.LDAP_FALSE);
                 
-                if (LdapUtil.getAttrString(ldapAttrs, ATTR_SLIDES) != null)
+                if (ldapAttrs.getAttrString(ATTR_SLIDES) != null)
                     modAttrs.put(ATTR_SLIDES, LdapUtil.LDAP_FALSE);
                 
-                if (LdapUtil.getAttrString(ldapAttrs, ATTR_NOTEBOOK) != null)
+                if (ldapAttrs.getAttrString(ATTR_NOTEBOOK) != null)
                     modAttrs.put(ATTR_NOTEBOOK, LdapUtil.LDAP_FALSE);
                 
                 if (modAttrs.size() > 0) {
@@ -61,6 +62,10 @@ public class DisableBriefcase extends LdapUpgrade {
             } catch (NamingException e) {
                 // log and continue
                 System.out.println("Caught NamingException while modifying " + dn);
+                e.printStackTrace();
+            } catch (ServiceException e) {
+                // log and continue
+                System.out.println("Caught ServiceException while modifying " + dn);
                 e.printStackTrace();
             }
         }

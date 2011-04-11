@@ -50,6 +50,24 @@ public enum AttributeClass {
     aclTarget("zimbraAclTarget",                true),
     group("zimbraGroup",                        false);
     
+    public static final String OC_zimbraAccount = account.getOCName();
+    public static final String OC_zimbraAclTarget = aclTarget.getOCName();
+    public static final String OC_zimbraAlias = alias.getOCName();
+    public static final String OC_zimbraCalendarResource = calendarResource.getOCName();
+    public static final String OC_zimbraCOS = cos.getOCName();
+    public static final String OC_zimbraDistributionList = distributionList.getOCName();
+    public static final String OC_zimbraDomain = domain.getOCName();
+    public static final String OC_zimbraGalDataSource = galDataSource.getOCName();
+    public static final String OC_zimbraGlobalConfig = globalConfig.getOCName();
+    public static final String OC_zimbraImapDataSource = imapDataSource.getOCName();
+    public static final String OC_zimbraMailRecipient = mailRecipient.getOCName();
+    public static final String OC_zimbraMimeEntry = mimeEntry.getOCName();
+    public static final String OC_zimbraPop3DataSource = pop3DataSource.getOCName();
+    public static final String OC_zimbraRssDataSource = rssDataSource.getOCName();
+    public static final String OC_zimbraServer = server.getOCName();
+    public static final String OC_zimbraXMPPComponent = xmppComponent.getOCName();
+    public static final String OC_zimbraZimletEntry = zimletEntry.getOCName();
+    
     private static class TM {
         static Map<String, AttributeClass> sOCMap = new HashMap<String, AttributeClass>();
     }

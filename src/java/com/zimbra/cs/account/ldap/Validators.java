@@ -33,6 +33,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
@@ -73,7 +74,7 @@ final class Validators {
                 return;
 
             if (args.length > 1 && args[1] instanceof String[] &&
-                    Arrays.asList((String[]) args[1]).contains(LdapProvisioning.C_zimbraCalendarResource)) {
+                    Arrays.asList((String[]) args[1]).contains(AttributeClass.OC_zimbraCalendarResource)) {
                 return; // as in LicenseManager, don't want to count calendar resources
             }
 
@@ -145,7 +146,7 @@ final class Validators {
         o = attrs.get(Provisioning.A_objectClass);
         if (o instanceof String[]) {
             Set<String> ocs = new HashSet<String>(Arrays.asList((String[])o));
-            if (ocs.contains(LdapProvisioning.C_zimbraCalendarResource))
+            if (ocs.contains(AttributeClass.OC_zimbraCalendarResource))
                 return true;
         }
 

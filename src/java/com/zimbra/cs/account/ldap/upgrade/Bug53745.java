@@ -11,6 +11,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.ldap.LdapUtil.SearchLdapVisitor;
+import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.prov.ldap.LdapFilter;
 
 public class Bug53745 extends LdapUpgrade {
@@ -41,13 +42,13 @@ public class Bug53745 extends LdapUpgrade {
             mModZlc = modZlc;
         }
         
-        public void visit(String dn, Map<String, Object> attrs, Attributes ldapAttrs) {
+        public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs) {
             Attributes modAttrs = new BasicAttributes(true);
             
             try {
-                String importExportVal = LdapUtil.getAttrString(ldapAttrs, ATTR_IMPORTEXPORT);
-                String importVal = LdapUtil.getAttrString(ldapAttrs, ATTR_IMPORT);
-                String exportVal = LdapUtil.getAttrString(ldapAttrs, ATTR_EXPORT);
+                String importExportVal = ldapAttrs.getAttrString(ATTR_IMPORTEXPORT);
+                String importVal = ldapAttrs.getAttrString(ATTR_IMPORT);
+                String exportVal = ldapAttrs.getAttrString(ATTR_EXPORT);
                 
                 if (importExportVal != null) {
                     if (importVal == null) {
@@ -66,6 +67,10 @@ public class Bug53745 extends LdapUpgrade {
             } catch (NamingException e) {
                 // log and continue
                 System.out.println("Caught NamingException while modifying " + dn);
+                e.printStackTrace();
+            } catch (ServiceException e) {
+                // log and continue
+                System.out.println("Caught ServiceException while modifying " + dn);
                 e.printStackTrace();
             }
         }

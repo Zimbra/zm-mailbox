@@ -14,11 +14,12 @@
  */
 package com.zimbra.cs.account.ldap;
 
-// use LinkedHashSet to preserve the order and uniqueness of entries, not that the order/uniqueness matters
-// LDAP server, just cleaner this way
+// use LinkedHashSet to preserve the order and uniqueness of entries, 
+// not that order/uniqueness matters to LDAP server, just cleaner this way
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.service.ServiceException;
 
@@ -26,7 +27,7 @@ public class LdapObjectClass {
     
     static String ZIMBRA_DEFAULT_PERSON_OC = "organizationalPerson";
     
-    private static void addExtraObjectClasses(Set<String> ocs, LdapProvisioning prov, String extraOCAttr) throws ServiceException {
+    private static void addExtraObjectClasses(Set<String> ocs, Provisioning prov, String extraOCAttr) throws ServiceException {
         String[] extraObjectClasses = prov.getConfig().getMultiAttr(extraOCAttr);
         for (String eoc : extraObjectClasses) {
             ocs.add(eoc);
@@ -40,54 +41,54 @@ public class LdapObjectClass {
         */
     }
     
-    public static Set<String> getAccountObjectClasses(LdapProvisioning prov, boolean zimbraDefaultOnly) throws ServiceException {
+    public static Set<String> getAccountObjectClasses(Provisioning prov, boolean zimbraDefaultOnly) throws ServiceException {
         Set<String> ocs = new LinkedHashSet<String>();
         
         ocs.add(ZIMBRA_DEFAULT_PERSON_OC);
-        ocs.add(LdapProvisioning.C_zimbraAccount);
+        ocs.add(AttributeClass.OC_zimbraAccount);
         
         if (!zimbraDefaultOnly)
             addExtraObjectClasses(ocs, prov, Provisioning.A_zimbraAccountExtraObjectClass);
         return ocs;
     }
     
-    public static Set<String> getAccountObjectClasses(LdapProvisioning prov) throws ServiceException {
+    public static Set<String> getAccountObjectClasses(Provisioning prov) throws ServiceException {
         return getAccountObjectClasses(prov, false);
     }
     
-    public static Set<String> getCalendarResourceObjectClasses(LdapProvisioning prov) throws ServiceException {
+    public static Set<String> getCalendarResourceObjectClasses(Provisioning prov) throws ServiceException {
         Set<String> ocs = new LinkedHashSet<String>();
         
-        ocs.add(LdapProvisioning.C_zimbraCalendarResource);
+        ocs.add(AttributeClass.OC_zimbraCalendarResource);
         
         addExtraObjectClasses(ocs, prov, Provisioning.A_zimbraCalendarResourceExtraObjectClass);
         return ocs;
     }
     
-    public static Set<String> getCosObjectClasses(LdapProvisioning prov) throws ServiceException {
+    public static Set<String> getCosObjectClasses(Provisioning prov) throws ServiceException {
         Set<String> ocs = new LinkedHashSet<String>();
         
-        ocs.add(LdapProvisioning.C_zimbraCOS);
+        ocs.add(AttributeClass.OC_zimbraCOS);
         
         addExtraObjectClasses(ocs, prov, Provisioning.A_zimbraCosExtraObjectClass);
         return ocs;
     }
     
-    public static Set<String> getDomainObjectClasses(LdapProvisioning prov) throws ServiceException {
+    public static Set<String> getDomainObjectClasses(Provisioning prov) throws ServiceException {
         Set<String> ocs = new LinkedHashSet<String>();
         
         ocs.add("dcObject");
         ocs.add("organization");
-        ocs.add(LdapProvisioning.C_zimbraDomain);
+        ocs.add(AttributeClass.OC_zimbraDomain); 
         
         addExtraObjectClasses(ocs, prov, Provisioning.A_zimbraDomainExtraObjectClass);
         return ocs;
     }
     
-    public static Set<String> getServerObjectClasses(LdapProvisioning prov) throws ServiceException {
+    public static Set<String> getServerObjectClasses(Provisioning prov) throws ServiceException {
         Set<String> ocs = new LinkedHashSet<String>();
         
-        ocs.add(LdapProvisioning.C_zimbraServer);
+        ocs.add(AttributeClass.OC_zimbraServer);
         
         addExtraObjectClasses(ocs, prov, Provisioning.A_zimbraServerExtraObjectClass);
         return ocs;
@@ -97,7 +98,7 @@ public class LdapObjectClass {
      * @param args
      */
     public static void main(String[] args) throws ServiceException {
-        LdapProvisioning prov = (LdapProvisioning)Provisioning.getInstance();
+        Provisioning prov = Provisioning.getInstance();
         Set<String> ocs = LdapObjectClass.getCalendarResourceObjectClasses(prov);
 
         for (String oc : ocs) {

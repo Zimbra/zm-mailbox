@@ -36,9 +36,8 @@ import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.params.HttpMethodParams;
 
-
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
+import static org.junit.Assert.*;
 
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.service.ServiceException;
@@ -57,7 +56,7 @@ import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.qa.unittest.TestProvisioningUtil.IDNName;
 
-public class TestIDN extends TestCase {
+public class TestIDN {
     private static String TEST_ID;
     private static String TEST_NAME = "test-IDN";
     private static String UNICODESTR = "\u4e2d\u6587";
@@ -67,6 +66,7 @@ public class TestIDN extends TestCase {
     private static Provisioning mProv;
     private static String BASE_DOMAIN_NAME;
     
+    @Before
     public void setUp() throws Exception {
         
         if (TEST_ID != null)
@@ -274,6 +274,7 @@ public class TestIDN extends TestCase {
         mProv.modifyAttrs(entry, attrs);
     }
     
+    @Test
     public void testDomain() throws Exception {
 
         IDNName d1Name = new IDNName(makeDomainName("domain-1."));
@@ -314,6 +315,7 @@ public class TestIDN extends TestCase {
         assertEquals(expectedValid, actualValid);
     }
     
+    @Test
     public void testDomainInvalidNames() throws Exception {
         
         Config config = mProv.getConfig();
@@ -356,6 +358,7 @@ public class TestIDN extends TestCase {
         mProv.modifyAttrs(config, attrs);
     }
     
+    @Test
     public void testAccount() throws Exception {
         
         IDNName domainName = new IDNName(makeDomainName("domain-acct-test."));
@@ -421,6 +424,7 @@ public class TestIDN extends TestCase {
         getTest(EntryType.CR, cr2, cr2RenamedName);
     }
     
+    @Test
     public void testDistributionList() throws Exception {
        
         IDNName domainName = new IDNName(makeDomainName("domain-dl-test."));
@@ -468,16 +472,17 @@ public class TestIDN extends TestCase {
         HashMap<String,String> via = new HashMap<String, String>();
         String[] members = dl1.getAllMembers();
         List<String> memberIds = Arrays.asList(members);
-        assertTrue(memberIds.contains(acct1Name.aName()));
-        assertTrue(memberIds.contains(acct2Name.aName()));
-        assertTrue(memberIds.contains(nestedDl1Name.aName()));
-        assertTrue(memberIds.contains(nestedDl2Name.aName()));
+        assertTrue(memberIds.contains(acct1Name.aName().toLowerCase()));
+        assertTrue(memberIds.contains(acct2Name.aName().toLowerCase()));
+        assertTrue(memberIds.contains(nestedDl1Name.aName().toLowerCase()));
+        assertTrue(memberIds.contains(nestedDl2Name.aName().toLowerCase()));
         
         mProv.removeMembers(dl1, new String[]{acct1Name.uName(), acct2Name.aName(), nestedDl1Name.uName(), nestedDl2Name.aName()});
         members = dl1.getAllMembers();
         assertEquals(0, members.length);
     }
     
+    @Test
     public void testBasicAuth() throws Exception {
         
         IDNName domainName = new IDNName(makeDomainName("basicAuthTest."));
@@ -520,6 +525,7 @@ public class TestIDN extends TestCase {
                  boolean chunked = false;
                  boolean textContent = false;
                  
+                 /*
                  System.out.println("Headers:");
                  System.out.println("--------");
                  for (Header header : method.getRequestHeaders()) {
@@ -531,6 +537,7 @@ public class TestIDN extends TestCase {
                  System.out.println("-----");
                  String respBody = method.getResponseBodyAsString();
                  System.out.println(respBody);
+                 */
              }
          } finally {
              // Release the connection.
@@ -579,6 +586,7 @@ public class TestIDN extends TestCase {
      * run this test with both JRE1.5 and 1.6, should get same result
      * 
      */
+    @Test
     public void testIDNUtil() throws Exception {
         
         IDNUtilTest("foobar.com", "foobar.com");
@@ -604,17 +612,18 @@ public class TestIDN extends TestCase {
         printOutput(verbose, "emailp_u2: " + emailp_u2);
         printOutput(verbose, "emailp_a2: " + emailp_a2);
         
-        assertTrue(emailp_u1.equals(emailp_u2));
-        assertTrue(emailp_a1.equals(emailp_a2));
+        assertEquals(emailp_u1, emailp_u2);
+        assertEquals(emailp_a1, emailp_a2);
     }
     
+    @Test
     public void testEmailp() throws Exception {
         
         // with personal name
-        emailpTest("foo bar <test@\u4e2d\u6587.xyz\u4e2d\u6587abc.com>", IDNType.emailp);
+        emailpTest("\"foo bar\" <test@\u4e2d\u6587.xyz\u4e2d\u6587abc.com>", IDNType.emailp);
         emailpTest("\"\u4e2d\u6587\" <test@\u4e2d\u6587.xyz\u4e2d\u6587abc.com>", IDNType.emailp);
-        emailpTest("foo bar <test@\u4e2d\u6587.xyz\u4e2d\u6587abc.com>", IDNType.cs_emailp);
-        emailpTest("foo bar <test@\u4e2d\u6587.xyz\u4e2d\u6587abc.com>, cat dog <test@xyz\u4e2d\u6587abc.com>", IDNType.cs_emailp);
+        emailpTest("\"foo bar\" <test@\u4e2d\u6587.xyz\u4e2d\u6587abc.com>", IDNType.cs_emailp);
+        emailpTest("\"foo bar\" <test@\u4e2d\u6587.xyz\u4e2d\u6587abc.com>, \"cat dog\" <test@xyz\u4e2d\u6587abc.com>", IDNType.cs_emailp);
     }
     
     private void printOutput(boolean verbose, String text) {

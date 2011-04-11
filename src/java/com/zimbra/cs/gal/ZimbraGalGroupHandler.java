@@ -23,6 +23,7 @@ import javax.naming.directory.Attributes;
 import javax.naming.directory.SearchResult;
 
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
@@ -39,7 +40,7 @@ public class ZimbraGalGroupHandler extends GalGroupHandler {
         if (objectclass == null) {
             return false;
         } else {
-            return objectclass.contains(LdapProvisioning.C_zimbraMailList);
+            return objectclass.contains(AttributeClass.OC_zimbraDistributionList);
         }
     }
     

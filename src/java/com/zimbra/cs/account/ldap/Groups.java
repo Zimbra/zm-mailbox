@@ -5,12 +5,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javax.naming.directory.Attributes;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.prov.ldap.LdapFilter;
 
 public class Groups {
@@ -22,7 +21,7 @@ public class Groups {
         Set<String> allDLs = new HashSet<String>();
         
         @Override
-        public void visit(String dn, Map<String, Object> attrs, Attributes ldapAttrs) {
+        public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs) {
             Object addrs = attrs.get(Provisioning.A_mail);
             if (addrs instanceof String)
                 allDLs.add(((String)addrs).toLowerCase());

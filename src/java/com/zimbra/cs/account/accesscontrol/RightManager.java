@@ -90,7 +90,7 @@ public class RightManager {
     static private class CoreRightDefFiles {
         private static final HashSet<String> sCoreRightDefFiles = new HashSet<String>();
         
-        static {
+        static void init() {
             sCoreRightDefFiles.add("zimbra-rights.xml");
             sCoreRightDefFiles.add("zimbra-user-rights.xml");
             // sCoreRightDefFiles.add("rights-unittest.xml");
@@ -118,6 +118,9 @@ public class RightManager {
         if (mInstance != null) {
             return mInstance;
         }
+        
+        CoreRightDefFiles.init();
+        
         String dir = LC.zimbra_rights_directory.value();
         mInstance = new RightManager(dir);
         

@@ -138,7 +138,7 @@ public class LdapEntrySearchFilter {
                 false,
                 Provisioning.A_objectClass,
                 Operator.eq,
-                AttributeClass.calendarResource.getOCName());
+                AttributeClass.OC_zimbraCalendarResource);
         sCalendarResourcesFilter = new EntrySearchFilter(calResType);
     }
 

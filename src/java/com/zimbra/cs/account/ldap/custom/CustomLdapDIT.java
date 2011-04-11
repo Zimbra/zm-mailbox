@@ -16,9 +16,6 @@ package com.zimbra.cs.account.ldap.custom;
 
 import java.util.Map;
 
-import javax.naming.NamingException;
-import javax.naming.directory.Attributes;
-
 import com.zimbra.common.localconfig.KnownKey;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -31,6 +28,7 @@ import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.SpecialAttrs;
+import com.zimbra.cs.ldap.IAttributes;
 
 /*
  * This class and CustomerLdapProvisioning should really go under the 
@@ -174,9 +172,9 @@ public class CustomLdapDIT extends LdapDIT {
         return defaultDomain;
     }
     
-    private String acctAndDLDNCreate(String baseDn, Attributes attrs) throws ServiceException, NamingException {
+    private String acctAndDLDNCreate(String baseDn, IAttributes attrs) throws ServiceException {
         String rdnAttr = NAMING_RDN_ATTR_USER;
-        String rdnValue = LdapUtil.getAttrString(attrs, rdnAttr);
+        String rdnValue = attrs.getAttrString(rdnAttr);
         
         if (rdnValue == null)
             throw ServiceException.FAILURE("missing rdn attribute" + rdnAttr, null);
@@ -191,36 +189,35 @@ public class CustomLdapDIT extends LdapDIT {
      *   account
      * ===========
      */
+    @Override
     public String emailToDN(String localPart, String domain) throws ServiceException{
         throw UNSUPPORTED("function emailToDN");
     }
     
+    @Override
     public String emailToDN(String email) throws ServiceException {
         throw UNSUPPORTED("function emailToDN");
     }
     
-    public String accountDNCreate(String baseDn, Attributes attrs, String localPart, String domain) throws ServiceException, NamingException {
+    @Override
+    public String accountDNCreate(String baseDn, IAttributes attrs, String localPart, String domain) throws ServiceException {
         if (baseDn == null)
             throw ServiceException.INVALID_REQUEST("base dn is required in DIT impl " + getClass().getCanonicalName(), null);
        
         return acctAndDLDNCreate(baseDn, attrs);
     }
     
-    public String accountDNRename(String oldDn, String newLocalPart, String newDomain) throws ServiceException, NamingException {
+    @Override
+    public String accountDNRename(String oldDn, String newLocalPart, String newDomain) throws ServiceException {
         return oldDn;
     }
     
     /*
      * Get email local part attr from attrs and form the email with the default domain
      */
-    public String dnToEmail(String dn, Attributes attrs) throws ServiceException {
-        String localPart = null;
-        try {
-            localPart = LdapUtil.getAttrString(attrs, DEFAULT_NAMING_RDN_ATTR_USER);
-            
-        } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to map dn [" + dn + "] to email", e);
-        }
+    @Override
+    public String dnToEmail(String dn, IAttributes attrs) throws ServiceException {
+        String localPart = attrs.getAttrString(DEFAULT_NAMING_RDN_ATTR_USER);
         
         if (localPart != null)
             return localPart + "@" + defaultDomain();
@@ -228,6 +225,7 @@ public class CustomLdapDIT extends LdapDIT {
             throw ServiceException.FAILURE("unable to map dn [" + dn + "] to email", null);
     }
     
+    @Override
     public String filterAccountsByDomain(Domain domain, boolean includeObjectClass) {
         String filter = "(zimbraMailDeliveryAddress=*@" + domain.getName() + ")";
         
@@ -260,6 +258,7 @@ public class CustomLdapDIT extends LdapDIT {
      *    in the custom DIT is flakey and this is the best we can do.  Maybe we should just disallow
      *    aliases in the custom DIT?
      */
+    @Override
     public String aliasDN(String targetDn, String targetDomain, String aliasLocalPart, String aliasDomain) throws ServiceException {
         if (targetDn == null || targetDomain == null)
             throw UNSUPPORTED("alias DN without target dn or target domain");
@@ -278,6 +277,7 @@ public class CustomLdapDIT extends LdapDIT {
         return NAMING_RDN_ATTR_USER + "=" + LdapUtil.escapeRDNValue(aliasLocalPart) + "," + parts[1];
     }
     
+    @Override
     public String aliasDNRename(String targetNewDn, String targetNewDomain, String newAliasEmail) throws ServiceException {
         if (targetNewDn == null || targetNewDomain == null)
             throw UNSUPPORTED("alias DN rename without target dn or target domain");
@@ -293,6 +293,7 @@ public class CustomLdapDIT extends LdapDIT {
      * calendar resource
      * =================
      */
+    @Override
     public String filterCalendarResourcesByDomain(Domain domain, boolean includeObjectClass) {
         String filter = "(zimbraMailDeliveryAddress=*@" + domain.getName() + ")";
         
@@ -310,7 +311,8 @@ public class CustomLdapDIT extends LdapDIT {
     /*
      * same restrictions on domain as the restrictions for aliases.
      */
-    public String distributionListDNCreate(String baseDn, Attributes attrs, String localPart, String domain) throws ServiceException, NamingException {
+    @Override
+    public String distributionListDNCreate(String baseDn, IAttributes attrs, String localPart, String domain) throws ServiceException {
         if (baseDn == null)
             throw ServiceException.INVALID_REQUEST("base dn is required in DIT impl " + getClass().getCanonicalName(), null);
        
@@ -321,7 +323,8 @@ public class CustomLdapDIT extends LdapDIT {
         return acctAndDLDNCreate(baseDn, attrs);
     }
     
-    public String distributionListDNRename(String oldDn, String newLocalPart, String newDomain) throws ServiceException, NamingException {
+    @Override
+    public String distributionListDNRename(String oldDn, String newLocalPart, String newDomain) throws ServiceException {
         return oldDn;
     }
     
@@ -350,10 +353,12 @@ public class CustomLdapDIT extends LdapDIT {
      *   domain
      * ==========
      */
+    @Override
     public String domainBaseDN() {
         return BASE_DN_DOMAIN;
     }
     
+    @Override
     public String[] domainToDNs(String[] parts) {
         return domainToDNsInternal(parts, BASE_DN_DOMAIN);
     }
@@ -365,11 +370,13 @@ public class CustomLdapDIT extends LdapDIT {
      * Accounts can be created anywhere in the DIT.  We use the mail branch base if 
      * it is configured, the default mail branch base is "".
      */ 
+    @Override
     public String domainToAccountSearchDN(String domain) throws ServiceException {
         return BASE_DN_MAIL_BRANCH;
     }
     
     // account base search dn
+    @Override
     public String domainDNToAccountSearchDN(String domainDN) throws ServiceException {
         return BASE_DN_MAIL_BRANCH;
     }
@@ -378,6 +385,7 @@ public class CustomLdapDIT extends LdapDIT {
     /*
      * ========================================================================================
      */
+    @Override
     protected SpecialAttrs handleSpecialAttrs(Map<String, Object> attrs) throws ServiceException {
         
         // check for required attrs

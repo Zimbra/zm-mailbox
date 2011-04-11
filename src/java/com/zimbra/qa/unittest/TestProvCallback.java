@@ -18,21 +18,23 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.junit.*;
+import static org.junit.Assert.*;
+
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CosBy;
 
-import junit.framework.TestCase;
-
-public class TestProvCallback extends TestCase {
+public class TestProvCallback {
     
     private static String COS_NAME = "cos1";
-    private Provisioning mProv = Provisioning.getInstance();
+    private static Provisioning mProv = Provisioning.getInstance();
     
-    
-    public void testCreate() throws Exception {
+    // this test has to be run first.  TODO: fix and don't make it @BeforeClass
+    @BeforeClass
+    public static void testCreate() throws Exception {
         Map<String, Object> attrs = new HashMap<String, Object>(); 
         
         StringUtil.addToMultiMap(attrs, Provisioning.A_zimbraZimletAvailableZimlets, "foo");
@@ -48,7 +50,7 @@ public class TestProvCallback extends TestCase {
         
         Set<String> getAttrs = cos.getMultiAttrSet(Provisioning.A_zimbraZimletAvailableZimlets);
         
-        // only one of the value for each zimlet should exist
+        // only one of the values for each zimlet should exist
         assertEquals(2, getAttrs.size());
         
         assertTrue(getAttrs.contains("-foo") ||
@@ -60,6 +62,7 @@ public class TestProvCallback extends TestCase {
                    getAttrs.contains("!bar"));
     } 
     
+    @Test
     public void testReplace() throws Exception {
         Cos cos = mProv.get(CosBy.name, COS_NAME);
         
@@ -83,6 +86,7 @@ public class TestProvCallback extends TestCase {
         assertTrue(getAttrs.contains("+foobar")); // foobar got turned into +foobar in the callback
     }
     
+    @Test
     public void testDelete() throws Exception {
         Cos cos = mProv.get(CosBy.name, COS_NAME);
         
@@ -137,6 +141,7 @@ public class TestProvCallback extends TestCase {
         
     }
     
+    @Test
     public void testAdd() throws Exception {
         Cos cos = mProv.get(CosBy.name, COS_NAME);
         
@@ -201,6 +206,7 @@ public class TestProvCallback extends TestCase {
 
     }
     
+    @Test
     public void testDeleteAdd() throws Exception {
         Cos cos = mProv.get(CosBy.name, COS_NAME);
         

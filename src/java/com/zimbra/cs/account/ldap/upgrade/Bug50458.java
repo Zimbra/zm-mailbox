@@ -11,6 +11,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.ldap.LdapUtil.SearchLdapVisitor;
+import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.prov.ldap.LdapFilter;
 
 public class Bug50458  extends LdapUpgrade {
@@ -63,7 +64,7 @@ public class Bug50458  extends LdapUpgrade {
             mModZlc = modZlc;
         }
         
-        public void visit(String dn, Map<String, Object> attrs, Attributes ldapAttrs) {
+        public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs) {
             Attributes modAttrs = new BasicAttributes(true);
             
             try {

@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.naming.NamingException;
-import javax.naming.directory.Attributes;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
@@ -28,6 +27,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.ldap.LdapUtil.SearchLdapVisitor;
+import com.zimbra.cs.ldap.IAttributes;
 
 public class GalSyncAccountContactLimit extends LdapUpgrade {
 
@@ -51,7 +51,7 @@ public class GalSyncAccountContactLimit extends LdapUpgrade {
         final Set<String> galSyncAcctIds = new HashSet<String>();
         
         SearchLdapVisitor visitor = new SearchLdapVisitor() {
-            public void visit(String dn, Map<String, Object> attrs, Attributes ldapAttrs) {
+            public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs) {
                 System.out.println("Domain " + attrs.get(Provisioning.A_zimbraDomainName));
                 
                 Object values = attrs.get(Provisioning.A_zimbraGalAccountId);

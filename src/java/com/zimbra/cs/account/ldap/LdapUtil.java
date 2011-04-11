@@ -30,8 +30,10 @@ import com.zimbra.cs.account.gal.GalParams;
 import com.zimbra.cs.account.gal.GalUtil;
 import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.gal.GalSearchParams;
+import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.prov.ldap.LdapGalCredential;
+import com.zimbra.cs.prov.ldap.LdapProv;
 
 import javax.naming.AuthenticationException;
 import javax.naming.NamingEnumeration;
@@ -645,7 +647,7 @@ public class LdapUtil {
       }
       
       public static interface SearchLdapVisitor {
-          public void visit(String dn, Map<String, Object> attrs, Attributes ldapAttrs);
+          public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs);
       }
       
       public static void searchLdapOnMaster(String base, String query, String[] returnAttrs, SearchLdapVisitor visitor) throws ServiceException {
@@ -660,6 +662,24 @@ public class LdapUtil {
       throws ServiceException {
           ZimbraLdapContext zlc = new ZimbraLdapContext(useMaster);
           searchLdap(zlc, base, query, returnAttrs, null, visitor);
+      }
+      
+      
+      public static class JNDIAttributes implements IAttributes {
+          private Attributes attrs;
+          
+          public JNDIAttributes(Attributes attrs) {
+              this.attrs = attrs;
+          }
+          
+          @Override
+          public String getAttrString(String attrName) throws ServiceException {
+              try {
+                  return LdapUtil.getAttrString(attrs, attrName);
+              } catch (NamingException e) {
+                  throw ServiceException.FAILURE("unable to get attribute " + attrName, e);
+              }
+          }
       }
               
       public static void searchLdap(ZimbraLdapContext zlc, String base, String query, String[] returnAttrs, 
@@ -687,7 +707,7 @@ public class LdapUtil {
                           SearchResult sr = (SearchResult) ne.nextElement();
                           String dn = sr.getNameInNamespace();
                           Attributes attrs = sr.getAttributes();
-                          visitor.visit(dn, LdapUtil.getAttrs(attrs, binaryAttrs), attrs);
+                          visitor.visit(dn, LdapUtil.getAttrs(attrs, binaryAttrs), new JNDIAttributes(attrs));
                       }
                       cookie = zlc.getCookie();
                   } while (cookie != null);

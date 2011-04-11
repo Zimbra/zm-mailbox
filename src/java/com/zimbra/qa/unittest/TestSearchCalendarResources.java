@@ -19,10 +19,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
+import static org.junit.Assert.*;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
@@ -42,9 +40,6 @@ import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.ZAttrProvisioning.CalResType;
 
-/*
-TODO: Add this class to {@link ZimbraSuite} once it supports JUnit 4 annotations.
-*/
 
 public class TestSearchCalendarResources {
 

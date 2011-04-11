@@ -20,16 +20,14 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javax.naming.directory.Attributes;
-
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.ldap.IAttributes;
 
 public class SearchGrants {
     private Provisioning mProv;
@@ -103,25 +101,25 @@ public class SearchGrants {
         throws ServiceException {
             
             TargetType tt;
-            if (sgr.objectClass.contains(AttributeClass.calendarResource.getOCName()))
+            if (sgr.objectClass.contains(AttributeClass.OC_zimbraCalendarResource))
                 tt = TargetType.calresource;
-            else if (sgr.objectClass.contains(AttributeClass.account.getOCName()))
+            else if (sgr.objectClass.contains(AttributeClass.OC_zimbraAccount))
                 tt = TargetType.account;
-            else if (sgr.objectClass.contains(AttributeClass.cos.getOCName()))
+            else if (sgr.objectClass.contains(AttributeClass.OC_zimbraCOS))
                 tt = TargetType.cos;
-            else if (sgr.objectClass.contains(AttributeClass.distributionList.getOCName()))
+            else if (sgr.objectClass.contains(AttributeClass.OC_zimbraDistributionList))
                 tt = TargetType.dl;
-            else if (sgr.objectClass.contains(AttributeClass.domain.getOCName()))
+            else if (sgr.objectClass.contains(AttributeClass.OC_zimbraDomain))
                 tt = TargetType.domain;
-            else if (sgr.objectClass.contains(AttributeClass.server.getOCName()))
+            else if (sgr.objectClass.contains(AttributeClass.OC_zimbraServer))
                 tt = TargetType.server;
-            else if (sgr.objectClass.contains(AttributeClass.xmppComponent.getOCName()))
+            else if (sgr.objectClass.contains(AttributeClass.OC_zimbraXMPPComponent))
                 tt = TargetType.xmppcomponent;
-            else if (sgr.objectClass.contains(AttributeClass.zimletEntry.getOCName()))
+            else if (sgr.objectClass.contains(AttributeClass.OC_zimbraZimletEntry))
                 tt = TargetType.zimlet;
-            else if (sgr.objectClass.contains(AttributeClass.globalConfig.getOCName()))
+            else if (sgr.objectClass.contains(AttributeClass.OC_zimbraGlobalConfig))
                 tt = TargetType.config;
-            else if (sgr.objectClass.contains(AttributeClass.aclTarget.getOCName()))
+            else if (sgr.objectClass.contains(AttributeClass.OC_zimbraAclTarget))
                 tt = TargetType.global;
             else 
                 throw ServiceException.FAILURE("cannot determine target type from SearchGrantResult. " + sgr.dump(), null);
@@ -203,7 +201,7 @@ public class SearchGrants {
             mResults = results;
         }
 
-        public void visit(String dn, Map<String, Object> attrs, Attributes ldapAttrs) {
+        public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs) {
             GrantsOnTargetRaw sgr = new GrantsOnTargetRaw(attrs);
             mResults.addResult(sgr);
         }

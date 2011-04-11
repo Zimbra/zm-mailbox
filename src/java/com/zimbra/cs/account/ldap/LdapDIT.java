@@ -16,9 +16,6 @@ package com.zimbra.cs.account.ldap;
 
 import java.util.Map;
 
-import javax.naming.NamingException;
-import javax.naming.directory.Attributes;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.cs.account.Account;
@@ -34,6 +31,8 @@ import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.ldap.IAttributes;
+import com.zimbra.cs.prov.ldap.LdapProv;
 import com.zimbra.cs.util.Zimbra;
 
 public class LdapDIT {
@@ -128,7 +127,7 @@ public class LdapDIT {
     protected String DN_GLOBALCONFIG;
     protected String DN_GLOBALGRANT;
     
-    public LdapDIT(LdapProvisioning prov) {
+    public LdapDIT(LdapProv prov) {
         // our Provisioning instance
         mProv = prov;  
         
@@ -224,16 +223,16 @@ public class LdapDIT {
         return NAMING_RDN_ATTR_USER;
     }
 
-    private String emailToDN(String localPart, String domain) throws ServiceException {
+    protected String emailToDN(String localPart, String domain) throws ServiceException {
         return NAMING_RDN_ATTR_USER + "=" + LdapUtil.escapeRDNValue(localPart) + "," + domainToAccountBaseDN(domain);
     }
     
-    private String emailToDN(String email) throws ServiceException {
+    protected String emailToDN(String email) throws ServiceException {
         String[] parts = EmailUtil.getLocalPartAndDomain(email);
         return emailToDN(parts[0], parts[1]);
     }
     
-    public String accountDNCreate(String baseDn, Attributes attrs, String localPart, String domain) throws ServiceException, NamingException {
+    public String accountDNCreate(String baseDn, IAttributes attrs, String localPart, String domain) throws ServiceException {
         // sanity check, the default DIT does not support a supplied base
         if (baseDn != null)
             throw ServiceException.INVALID_REQUEST("base dn is not supported in DIT impl " + getClass().getCanonicalName(), null);
@@ -242,7 +241,7 @@ public class LdapDIT {
     }
 
     
-    public String accountDNRename(String oldDn, String newLocalPart, String newDomain) throws ServiceException, NamingException {
+    public String accountDNRename(String oldDn, String newLocalPart, String newDomain) throws ServiceException {
         return emailToDN(newLocalPart, newDomain);
     }
     
@@ -251,7 +250,7 @@ public class LdapDIT {
      * 
      * Param attrs is not used in this implementation of DIT
      */
-    public String dnToEmail(String dn, Attributes attrs) throws ServiceException {
+    public String dnToEmail(String dn, IAttributes attrs) throws ServiceException {
         String [] parts = dn.split(",");
         StringBuffer domain = new StringBuffer(dn.length());
         
@@ -357,7 +356,7 @@ public class LdapDIT {
      *   distribution list 
      * =====================
      */
-    public String distributionListDNCreate(String baseDn, Attributes attrs, String localPart, String domain) throws ServiceException, NamingException {
+    public String distributionListDNCreate(String baseDn, IAttributes attrs, String localPart, String domain) throws ServiceException {
         // sanity check, the default DIT does not support a supplied base
         if (baseDn != null)
             throw ServiceException.INVALID_REQUEST("base dn is not supported in DIT impl " + getClass().getCanonicalName(), null);
@@ -365,7 +364,7 @@ public class LdapDIT {
         return emailToDN(localPart, domain);
     }
     
-    public String distributionListDNRename(String oldDn, String newLocalPart, String newDomain) throws ServiceException, NamingException {
+    public String distributionListDNRename(String oldDn, String newLocalPart, String newDomain) throws ServiceException {
         return emailToDN(newLocalPart, newDomain);
     }
 

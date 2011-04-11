@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.naming.directory.Attributes;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -30,6 +29,7 @@ import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.account.ldap.LdapDomain;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.prov.ldap.LdapFilter;
 
 public class CollectAllEffectiveRights {
@@ -171,16 +171,18 @@ public class CollectAllEffectiveRights {
     }
     
     private static class Visitor implements LdapUtil.SearchLdapVisitor {
+        private LdapProvisioning mProv;
         private LdapDIT mLdapDIT;
         
         // set of names
         private Set<String> mNames = new HashSet<String>();
 
-        Visitor(LdapDIT ldapDIT) {
-            mLdapDIT = ldapDIT;
+        Visitor(LdapProvisioning prov) {
+            mProv = prov;
+            mLdapDIT = mProv.getDIT();
         }
         
-        public void visit(String dn, Map<String, Object> attrs, Attributes ldapAttrs) {
+        public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs) {
             try {
                 String name = mLdapDIT.dnToEmail(dn, ldapAttrs);
                 mNames.add(name);
@@ -393,7 +395,7 @@ public class CollectAllEffectiveRights {
         // hack, see LDAPDIT.dnToEmail, for now we get naming rdn for both default and possible custom DIT
         String[] returnAttrs = new String[] {Provisioning.A_cn, Provisioning.A_uid}; 
         
-        Visitor visitor = new Visitor(ldapDIT);
+        Visitor visitor = new Visitor((LdapProvisioning)mProv);
         LdapUtil.searchLdapOnMaster(base, query, returnAttrs, visitor);
         return visitor.getResult();
     }
@@ -406,7 +408,7 @@ public class CollectAllEffectiveRights {
         // hack, see LDAPDIT.dnToEmail, for now we get naming rdn for both default and possible custom DIT
         String[] returnAttrs = new String[] {Provisioning.A_cn, Provisioning.A_uid}; 
         
-        Visitor visitor = new Visitor(ldapDIT);
+        Visitor visitor = new Visitor((LdapProvisioning)mProv);
         LdapUtil.searchLdapOnMaster(base, query, returnAttrs, visitor);
         return visitor.getResult();
     }
@@ -518,7 +520,7 @@ public class CollectAllEffectiveRights {
     private static class SearchSubDomainVisitor implements LdapUtil.SearchLdapVisitor {
         List<String> mDomainIds = new ArrayList<String>();
 
-        public void visit(String dn, Map<String, Object> attrs, Attributes ldapAttrs) {
+        public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs) {
             String zimbraId = (String)attrs.get(Provisioning.A_zimbraId);
             if (zimbraId != null) {
                 mDomainIds.add(zimbraId);

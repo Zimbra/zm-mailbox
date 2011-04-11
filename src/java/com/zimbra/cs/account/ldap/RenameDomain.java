@@ -91,7 +91,7 @@ class RenameDomain {
          * 2. move all accounts, DLs, and aliases
          */ 
         RenameDomainVisitor visitor;
-        String searchBase = mProv.mDIT.domainDNToAccountSearchDN(((LdapDomain)mOldDomain).getDN());
+        String searchBase = mProv.getDIT().domainDNToAccountSearchDN(((LdapDomain)mOldDomain).getDN());
         int flags = 0;
             
         // first phase, go thru DLs and accounts and their aliases that are in the old domain into the new domain
@@ -125,7 +125,7 @@ class RenameDomain {
             renameInfo.setPhase(phase);
             renameInfo.write(mProv, mOldDomain);
             visitor = getVisitor(phase);
-            searchBase = mProv.mDIT.domainDNToAccountSearchDN(((LdapDomain)newDomain).getDN());
+            searchBase = mProv.getDIT().domainDNToAccountSearchDN(((LdapDomain)newDomain).getDN());
             flags = Provisioning.SA_ACCOUNT_FLAG + Provisioning.SA_CALENDAR_RESOURCE_FLAG + Provisioning.SA_DISTRIBUTION_LIST_FLAG;
             mProv.searchObjects(null, null, searchBase, flags, visitor, 0);
         }
@@ -480,11 +480,8 @@ class RenameDomain {
             String newDn = null;
         
             try {
-                newDn = (isDL)?mProv.mDIT.distributionListDNRename(ldapEntry.getDN(), parts[0], mNewDomainName):
-                               mProv.mDIT.accountDNRename(ldapEntry.getDN(), parts[0], mNewDomainName);
-            } catch (NamingException e) {
-                warn(e, "handleEntry", "cannot get new DN, entry not handled", "entry=[%s]", entry.getName());
-                return;
+                newDn = (isDL)?mProv.getDIT().distributionListDNRename(ldapEntry.getDN(), parts[0], mNewDomainName):
+                               mProv.getDIT().accountDNRename(ldapEntry.getDN(), parts[0], mNewDomainName);
             } catch (ServiceException e) {
                 warn(e, "handleEntry", "cannot get new DN, entry not handled", "entry=[%s]", entry.getName());
                 return;
@@ -531,8 +528,8 @@ class RenameDomain {
                     String oldAliasDn = "";  
                     String newAliasDn = "";
                     try {
-                        oldAliasDn = mProv.mDIT.aliasDN(oldDn, mOldDomainName, aliasLocal, mOldDomainName);
-                        newAliasDn = mProv.mDIT.aliasDNRename(newTargetDn, mNewDomainName, aliasLocal+"@"+mNewDomainName);
+                        oldAliasDn = mProv.getDIT().aliasDN(oldDn, mOldDomainName, aliasLocal, mOldDomainName);
+                        newAliasDn = mProv.getDIT().aliasDNRename(newTargetDn, mNewDomainName, aliasLocal+"@"+mNewDomainName);
                         if (!oldAliasDn.equals(newAliasDn))
                             mZlc.renameEntry(oldAliasDn, newAliasDn);
                     } catch (NamingException e) {

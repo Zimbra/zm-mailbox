@@ -15,6 +15,44 @@
 
 package com.zimbra.cs.account.ldap;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.Stack;
+import java.util.TreeSet;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
+
+import javax.naming.AuthenticationException;
+import javax.naming.AuthenticationNotSupportedException;
+import javax.naming.ContextNotEmptyException;
+import javax.naming.InvalidNameException;
+import javax.naming.NameAlreadyBoundException;
+import javax.naming.NameNotFoundException;
+import javax.naming.NamingEnumeration;
+import javax.naming.NamingException;
+import javax.naming.SizeLimitExceededException;
+import javax.naming.directory.Attribute;
+import javax.naming.directory.Attributes;
+import javax.naming.directory.BasicAttributes;
+import javax.naming.directory.InvalidAttributeIdentifierException;
+import javax.naming.directory.InvalidAttributeValueException;
+import javax.naming.directory.InvalidAttributesException;
+import javax.naming.directory.InvalidSearchFilterException;
+import javax.naming.directory.SchemaViolationException;
+import javax.naming.directory.SearchControls;
+import javax.naming.directory.SearchResult;
+
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.ServiceException.Argument;
@@ -32,8 +70,6 @@ import com.zimbra.cs.account.AccountCache;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.DomainCache.GetFromDomainCacheOption;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
@@ -78,10 +114,10 @@ import com.zimbra.cs.account.gal.GalUtil;
 import com.zimbra.cs.account.krb5.Krb5Principal;
 import com.zimbra.cs.account.ldap.LdapUtil.SearchLdapVisitor;
 import com.zimbra.cs.account.names.NameUtil;
-import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.prov.ldap.ChangePasswordListener;
@@ -89,49 +125,13 @@ import com.zimbra.cs.prov.ldap.DomainNameMappingHandler;
 import com.zimbra.cs.prov.ldap.LdapEntrySearchFilter;
 import com.zimbra.cs.prov.ldap.LdapFilter;
 import com.zimbra.cs.prov.ldap.LdapLockoutPolicy;
+import com.zimbra.cs.prov.ldap.LdapProvBase;
 import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletUtil;
-import com.zimbra.soap.ZimbraSoapContext;
 
-import javax.naming.AuthenticationException;
-import javax.naming.AuthenticationNotSupportedException;
-import javax.naming.ContextNotEmptyException;
-import javax.naming.InvalidNameException;
-import javax.naming.NameAlreadyBoundException;
-import javax.naming.NameNotFoundException;
-import javax.naming.NamingEnumeration;
-import javax.naming.NamingException;
-import javax.naming.SizeLimitExceededException;
-import javax.naming.directory.Attribute;
-import javax.naming.directory.Attributes;
-import javax.naming.directory.BasicAttributes;
-import javax.naming.directory.InvalidAttributeIdentifierException;
-import javax.naming.directory.InvalidAttributeValueException;
-import javax.naming.directory.InvalidAttributesException;
-import javax.naming.directory.InvalidSearchFilterException;
-import javax.naming.directory.SchemaViolationException;
-import javax.naming.directory.SearchControls;
-import javax.naming.directory.SearchResult;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-import java.util.Stack;
-import java.util.TreeSet;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
+
 
 /**
  * LDAP implementation of {@link Provisioning}.
@@ -139,19 +139,8 @@ import java.util.regex.PatternSyntaxException;
  * @since Sep 23, 2004
  * @author schemers
  */
-public class LdapProvisioning extends Provisioning {
-
-    // object classes
-    public static final String C_zimbraAccount = "zimbraAccount";
-    public static final String C_zimbraCOS = "zimbraCOS";
-    public static final String C_zimbraDomain = "zimbraDomain";
-    public static final String C_zimbraMailList = "zimbraDistributionList";
-    public static final String C_zimbraMailRecipient = "zimbraMailRecipient";
-    public static final String C_zimbraServer = "zimbraServer";
-    public static final String C_zimbraCalendarResource = "zimbraCalendarResource";
-    public static final String C_zimbraAlias = "zimbraAlias";
-    public static final String C_zimbraMimeEntry = "zimbraMimeEntry";
-
+public class LdapProvisioning extends LdapProvBase {
+    
     private static final long ONE_DAY_IN_MILLIS = 1000*60*60*24;
 
     private static final SearchControls sObjectSC = new SearchControls(SearchControls.OBJECT_SCOPE, 0, 0, null, false, false);
@@ -180,49 +169,49 @@ public class LdapProvisioning extends Provisioning {
     };
 
 
-    private static AccountCache sAccountCache =
+    private AccountCache sAccountCache =
         new AccountCache(
                 LC.ldap_cache_account_maxsize.intValue(),
                 LC.ldap_cache_account_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
 
-    private static NamedEntryCache<LdapCos> sCosCache =
+    private NamedEntryCache<LdapCos> sCosCache =
         new NamedEntryCache<LdapCos>(
                 LC.ldap_cache_cos_maxsize.intValue(),
                 LC.ldap_cache_cos_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
 
-    private static DomainCache sDomainCache =
+    private DomainCache sDomainCache =
         new DomainCache(
                 LC.ldap_cache_domain_maxsize.intValue(),
                 LC.ldap_cache_domain_maxage.intValue() * Constants.MILLIS_PER_MINUTE,
                 LC.ldap_cache_external_domain_maxsize.intValue(),
                 LC.ldap_cache_external_domain_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
 
-    private static LdapMimeTypeCache sMimeTypeCache = new LdapMimeTypeCache();
+    private LdapMimeTypeCache sMimeTypeCache = new LdapMimeTypeCache();
     	
-    private static NamedEntryCache<Server> sServerCache =
+    private NamedEntryCache<Server> sServerCache =
         new NamedEntryCache<Server>(
                 LC.ldap_cache_server_maxsize.intValue(),
                 LC.ldap_cache_server_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
 
-    private static NamedEntryCache<LdapZimlet> sZimletCache =
+    private NamedEntryCache<LdapZimlet> sZimletCache =
         new NamedEntryCache<LdapZimlet>(
                 LC.ldap_cache_zimlet_maxsize.intValue(),
                 LC.ldap_cache_zimlet_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
 
 
-    private static NamedEntryCache<DistributionList> sAclGroupCache =
+    private NamedEntryCache<DistributionList> sAclGroupCache =
         new NamedEntryCache<DistributionList>(
                 LC.ldap_cache_group_maxsize.intValue(),
                 LC.ldap_cache_group_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
 
     // TODO: combine with sAclGroupCache
     //       note: DLs cached in this cache only contains sMinimalDlAttrs
-    private static NamedEntryCache<DistributionList> sDLCache =
+    private NamedEntryCache<DistributionList> sDLCache =
         new NamedEntryCache<DistributionList>(
                 LC.ldap_cache_group_maxsize.intValue(),
                 LC.ldap_cache_group_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
 
-    private static NamedEntryCache<XMPPComponent> sXMPPComponentCache =
+    private NamedEntryCache<XMPPComponent> sXMPPComponentCache =
         new NamedEntryCache<XMPPComponent>(
                 LC.ldap_cache_xmppcomponent_maxsize.intValue(),
                 LC.ldap_cache_xmppcomponent_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
@@ -242,10 +231,22 @@ public class LdapProvisioning extends Provisioning {
     public int getXMPPCacheSize() { return sXMPPComponentCache.getSize(); }
     public double getXMPPCacheHitRate() { return sXMPPComponentCache.getHitRate(); }
 
-    protected LdapDIT mDIT;
     private Groups mAllDLs; // email addresses of all distribution lists on the system
     
+    private static LdapProvisioning theOnlyInstance = null;
+    
+    private static synchronized void ensureSingleton(LdapProvisioning prov) {
+        if (theOnlyInstance != null) {
+            // pass an exception to have the stack logged
+            Zimbra.halt("can have only one instance of LdapProvisioning", 
+                    ServiceException.FAILURE("failed to instantiate LdapProvisioning", null));
+        }
+        theOnlyInstance = prov;
+    }
+    
     public LdapProvisioning() {
+        ensureSingleton(this);
+        
         setDIT();
         mAllDLs = new Groups(this);
         
@@ -253,13 +254,6 @@ public class LdapProvisioning extends Provisioning {
         register(new Validators.DomainMaxAccountsValidator());
     }
 
-    protected void setDIT() {
-        mDIT = new LdapDIT(this);
-    }
-
-    public LdapDIT getDIT() {
-        return mDIT;
-    }
     
     /*
      * Contains parallel arrays of old addrs and new addrs as a result of domain change
@@ -278,6 +272,15 @@ public class LdapProvisioning extends Provisioning {
 
     private static final Random sPoolRandom = new Random();
 
+    
+    public IAttributes toIAttributesByDIT(Attributes attrs) {
+        if (LdapDIT.isZimbraDefault(mDIT)) {
+            return null;
+        } else {
+            return new LdapUtil.JNDIAttributes(attrs);
+        }
+    }
+    
     @Override
     public void modifyAttrs(Entry e, Map<String, ? extends Object> attrs, boolean checkImmutable)
             throws ServiceException {
@@ -1077,7 +1080,7 @@ public class LdapProvisioning extends Provisioning {
 
             setInitialPassword(cos, attrs, password);
 
-            dn = mDIT.accountDNCreate(baseDn, attrs, localPart, domain);
+            dn = mDIT.accountDNCreate(baseDn, toIAttributesByDIT(attrs), localPart, domain);
 
             zlc.createEntry(dn, attrs, "createAccount");
             Account acct = getAccountById(zimbraIdStr, zlc, true);
@@ -1380,18 +1383,20 @@ public class LdapProvisioning extends Provisioning {
 
                         // skip admin accounts
                         // if we are looking for domains or coses, they can be under config branch in non default DIT impl.
-                        if (dn.endsWith(configBranchBaseDn) && !objectclass.contains(C_zimbraDomain) && !objectclass.contains(C_zimbraCOS))
+                        if (dn.endsWith(configBranchBaseDn) && 
+                                !objectclass.contains(AttributeClass.OC_zimbraDomain) && 
+                                !objectclass.contains(AttributeClass.OC_zimbraCOS))
                             continue;
 
-                        if (objectclass == null || objectclass.contains(C_zimbraAccount))
+                        if (objectclass == null || objectclass.contains(AttributeClass.OC_zimbraAccount))
                             visitor.visit(makeAccount(dn, attrs, flags));
-                        else if (objectclass.contains(C_zimbraAlias))
+                        else if (objectclass.contains(AttributeClass.OC_zimbraAlias))
                             visitor.visit(makeAlias(dn, attrs, this));
-                        else if (objectclass.contains(C_zimbraMailList))
+                        else if (objectclass.contains(AttributeClass.OC_zimbraDistributionList))
                             visitor.visit(makeDistributionList(dn, attrs));
-                        else if (objectclass.contains(C_zimbraDomain))
+                        else if (objectclass.contains(AttributeClass.OC_zimbraDomain))
                             visitor.visit(new LdapDomain(dn, attrs, getConfig().getDomainDefaults(), this));
-                        else if (objectclass.contains(C_zimbraCOS))
+                        else if (objectclass.contains(AttributeClass.OC_zimbraCOS))
                             visitor.visit(new LdapCos(dn, attrs, this));
                     }
                     cookie = zlc.getCookie();
@@ -1542,10 +1547,10 @@ public class LdapProvisioning extends Provisioning {
         Map<String, Object> entryAttrs = LdapUtil.getAttrs(attrs);
         Object ocs = entryAttrs.get(Provisioning.A_objectClass);
         if (ocs instanceof String)
-            return ((String)ocs).equalsIgnoreCase(C_zimbraAlias);
+            return ((String)ocs).equalsIgnoreCase(AttributeClass.OC_zimbraAlias);
         else if (ocs instanceof String[]) {
             for (String oc : (String[])ocs) {
-                if (oc.equalsIgnoreCase(C_zimbraAlias))
+                if (oc.equalsIgnoreCase(AttributeClass.OC_zimbraAlias))
                     return true;
             }
         }
@@ -2835,7 +2840,7 @@ public class LdapProvisioning extends Provisioning {
     private static class CountingVisitor implements SearchLdapVisitor {
         long numAccts = 0;
             
-        public void visit(String dn, Map<String, Object> attrs, Attributes ldapAttrs) {
+        public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs) {
             numAccts++;
         }
             
@@ -2940,7 +2945,7 @@ public class LdapProvisioning extends Provisioning {
 
             attrs.put(A_uid, localPart);
 
-            String dn = mDIT.distributionListDNCreate(baseDn, attrs, localPart, domain);
+            String dn = mDIT.distributionListDNCreate(baseDn, toIAttributesByDIT(attrs), localPart, domain);
 
             zlc.createEntry(dn, attrs, "createDistributionList");
 
@@ -2960,7 +2965,7 @@ public class LdapProvisioning extends Provisioning {
 
     @Override
     public List<DistributionList> getDistributionLists(DistributionList list, boolean directOnly, Map<String, String> via) throws ServiceException {
-        return LdapProvisioning.getGroups(list, directOnly, via);
+        return getGroups(list, directOnly, via);
     }
 
     private DistributionList getDistributionListByQuery(String base, String query, ZimbraLdapContext initZlc, String[] returnAttrs) throws ServiceException {
@@ -3287,7 +3292,7 @@ public class LdapProvisioning extends Provisioning {
 
     private AclGroups computeUpwardMembership(DistributionList list) throws ServiceException {
         Map<String, String> via = new HashMap<String, String>();
-        List<DistributionList> lists = LdapProvisioning.getGroups(list, false, via);
+        List<DistributionList> lists = getGroups(list, false, via);
         return computeUpwardMembership(lists);
     }
 
@@ -3336,7 +3341,7 @@ public class LdapProvisioning extends Provisioning {
             return dls;
 
         Map<String, String> via = new HashMap<String, String>();
-        List<DistributionList> lists = LdapProvisioning.getGroups(acct, false, via);
+        List<DistributionList> lists = getGroups(acct, false, via);
 
         dls = computeUpwardMembership(lists);
 
@@ -4401,7 +4406,7 @@ public class LdapProvisioning extends Provisioning {
 
         String emailAddress = LdapUtil.getAttrString(attrs, Provisioning.A_zimbraMailDeliveryAddress);
         if (emailAddress == null)
-            emailAddress = mDIT.dnToEmail(dn, attrs);
+            emailAddress = mDIT.dnToEmail(dn, toIAttributesByDIT(attrs));
 
         Account acct = (isAccount) ? new LdapAccount(dn, emailAddress, attrs, null, this) : new LdapCalendarResource(dn, emailAddress, attrs, null, this);
 
@@ -4437,13 +4442,13 @@ public class LdapProvisioning extends Provisioning {
     }
 
     private Alias makeAlias(String dn, Attributes attrs, LdapProvisioning prov) throws NamingException, ServiceException {
-        String emailAddress = mDIT.dnToEmail(dn, attrs);
+        String emailAddress = mDIT.dnToEmail(dn, toIAttributesByDIT(attrs));
         Alias alias = new LdapAlias(dn, emailAddress, attrs, prov);
         return alias;
     }
 
     private DistributionList makeDistributionList(String dn, Attributes attrs) throws NamingException, ServiceException {
-        String emailAddress = mDIT.dnToEmail(dn, attrs);
+        String emailAddress = mDIT.dnToEmail(dn, toIAttributesByDIT(attrs));
         DistributionList dl = new LdapDistributionList(dn, emailAddress, attrs, this);
         return dl;
     }
@@ -4555,7 +4560,7 @@ public class LdapProvisioning extends Provisioning {
     }
 
     // GROUP-TODO: retire after getGroupsInternal is stable and have callsites call it directly
-    private static List<DistributionList> getGroups(Entry entry, boolean directOnly, Map<String, String> via) throws ServiceException {
+    private List<DistributionList> getGroups(Entry entry, boolean directOnly, Map<String, String> via) throws ServiceException {
         if (DebugConfig.disableComputeGroupMembershipOptimization) {
             // old way
             String[] addr = ((GroupedEntry)entry).getAllAddrsAsGroupMember();
@@ -4604,7 +4609,7 @@ public class LdapProvisioning extends Provisioning {
         return result;
     }
 
-    private static List<DistributionList> getAllDirectGroups(LdapProvisioning prov, Entry entry) throws ServiceException {
+    private List<DistributionList> getAllDirectGroups(LdapProvisioning prov, Entry entry) throws ServiceException {
         if (!(entry instanceof GroupedEntry))
             throw ServiceException.FAILURE("internal error", null);
 
@@ -4720,7 +4725,7 @@ public class LdapProvisioning extends Provisioning {
         return group;
     }
 
-    private static List<DistributionList> getGroupsInternal(Entry entry, boolean directOnly, Map<String, String> via)
+    private List<DistributionList> getGroupsInternal(Entry entry, boolean directOnly, Map<String, String> via)
         throws ServiceException
     {
         LdapProvisioning prov = (LdapProvisioning) Provisioning.getInstance(); // GROSS
@@ -4798,7 +4803,7 @@ public class LdapProvisioning extends Provisioning {
 
     @Override
     public List<DistributionList> getDistributionLists(Account acct, boolean directOnly, Map<String, String> via) throws ServiceException {
-        return LdapProvisioning.getGroups(acct, directOnly, via);
+        return getGroups(acct, directOnly, via);
     }
 
     private static final int DEFAULT_GAL_MAX_RESULTS = 100;
@@ -6961,13 +6966,13 @@ public class LdapProvisioning extends Provisioning {
             }
             nameAttr = Provisioning.A_zimbraMailDeliveryAddress;
             base = mDIT.mailBranchBaseDN();
-            objectClass = C_zimbraAccount;
+            objectClass = AttributeClass.OC_zimbraAccount;
             break;
         case group:
             unresolvedIds = ids;
             nameAttr = Provisioning.A_uid; // see dnToEmail
             base = mDIT.mailBranchBaseDN();
-            objectClass = C_zimbraMailList;
+            objectClass = AttributeClass.OC_zimbraDistributionList;
             break;
         case cos:
             unresolvedIds = new HashSet<String>();
@@ -6980,7 +6985,7 @@ public class LdapProvisioning extends Provisioning {
             }
             nameAttr = Provisioning.A_cn;
             base = mDIT.cosBaseDN();
-            objectClass = C_zimbraCOS;
+            objectClass = AttributeClass.OC_zimbraCOS;
             break;
         case domain:
             unresolvedIds = new HashSet<String>();
@@ -6993,7 +6998,7 @@ public class LdapProvisioning extends Provisioning {
             }
             nameAttr = Provisioning.A_zimbraDomainName;
             base = mDIT.domainBaseDN();
-            objectClass = C_zimbraDomain;
+            objectClass = AttributeClass.OC_zimbraDomain;
             break;
         default:
             throw ServiceException.FAILURE("unsupported entry type for getNamesForIds" + type.name(), null);
@@ -7005,14 +7010,14 @@ public class LdapProvisioning extends Provisioning {
 
         LdapUtil.SearchLdapVisitor visitor = new LdapUtil.SearchLdapVisitor() {
             @Override
-            public void visit(String dn, Map<String, Object> attrs, Attributes ldapAttrs) {
+            public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs) {
                 String id = (String)attrs.get(Provisioning.A_zimbraId);
 
                 String name = null;
                 try {
                     switch (entryType) {
                     case account:
-                        name = LdapUtil.getAttrString(ldapAttrs, Provisioning.A_zimbraMailDeliveryAddress);
+                        name = ldapAttrs.getAttrString(Provisioning.A_zimbraMailDeliveryAddress);
                         if (name == null)
                             name = mDIT.dnToEmail(dn, ldapAttrs);
                         break;
@@ -7020,15 +7025,13 @@ public class LdapProvisioning extends Provisioning {
                         name = mDIT.dnToEmail(dn, ldapAttrs);
                         break;
                     case cos:
-                        name = LdapUtil.getAttrString(ldapAttrs, Provisioning.A_cn);
+                        name = ldapAttrs.getAttrString(Provisioning.A_cn);
                         break;
                     case domain:
-                        name = LdapUtil.getAttrString(ldapAttrs, Provisioning.A_zimbraDomainName);
+                        name = ldapAttrs.getAttrString(Provisioning.A_zimbraDomainName);
                         break;
                     }
                 } catch (ServiceException e) {
-                    name = null;
-                } catch (NamingException e) {
                     name = null;
                 }
 
