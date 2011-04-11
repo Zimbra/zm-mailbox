@@ -25,7 +25,7 @@ import com.zimbra.cs.ldap.ZSearchResultEntry;
  * @author pshao
  *
  */
-class LdapXMPPComponent extends XMPPComponent implements LdapEntry {
+public class LdapXMPPComponent extends XMPPComponent implements LdapEntry {
     
     private String mDn;
 

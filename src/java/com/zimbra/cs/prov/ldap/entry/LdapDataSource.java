@@ -31,7 +31,7 @@ import com.zimbra.cs.ldap.ZSearchResultEntry;
  * @author pshao
  *
  */
-class LdapDataSource extends DataSource implements LdapEntry {
+public class LdapDataSource extends DataSource implements LdapEntry {
 
 	private String mDn;
 

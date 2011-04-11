@@ -27,7 +27,7 @@ import com.zimbra.cs.ldap.ZSearchResultEntry;
  * @author pshao
  *
  */
-class LdapCalendarResource extends CalendarResource implements LdapEntry {
+public class LdapCalendarResource extends CalendarResource implements LdapEntry {
 
     private String mDn;
 

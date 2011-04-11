@@ -25,7 +25,7 @@ import com.zimbra.cs.ldap.ZSearchResultEntry;
  * @author pshao
  *
  */
-class LdapDistributionList extends DistributionList implements LdapEntry {
+public class LdapDistributionList extends DistributionList implements LdapEntry {
     private String mDn;
 
     LdapDistributionList(String email, ZSearchResultEntry entry, Provisioning prov) throws LdapException {

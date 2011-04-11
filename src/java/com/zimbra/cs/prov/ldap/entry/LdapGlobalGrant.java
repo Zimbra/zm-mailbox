@@ -25,7 +25,7 @@ import com.zimbra.cs.ldap.ZSearchResultEntry;
  * @author pshao
  *
  */
-class LdapGlobalGrant extends GlobalGrant implements LdapEntry {
+public class LdapGlobalGrant extends GlobalGrant implements LdapEntry {
     
     private String mDn;
     
