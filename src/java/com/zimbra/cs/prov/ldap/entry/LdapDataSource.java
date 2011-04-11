@@ -51,13 +51,13 @@ class LdapDataSource extends DataSource implements LdapEntry {
     static String getObjectClass(Type type) {
         switch (type) {
             case pop3:
-                return AttributeClass.pop3DataSource.getOCName();
+                return AttributeClass.OC_zimbraPop3DataSource;
             case imap:
-                return AttributeClass.imapDataSource.getOCName();
+                return AttributeClass.OC_zimbraImapDataSource;
             case rss:
-                return AttributeClass.rssDataSource.getOCName();
+                return AttributeClass.OC_zimbraRssDataSource;
             case gal:
-                return AttributeClass.galDataSource.getOCName();
+                return AttributeClass.OC_zimbraGalDataSource;
             default: 
                 return null;
         }
@@ -73,13 +73,13 @@ class LdapDataSource extends DataSource implements LdapEntry {
         }
         
         List<String> attr = entry.getMultiAttrString(Provisioning.A_objectClass);
-        if (attr.contains(AttributeClass.pop3DataSource.getOCName())) 
+        if (attr.contains(AttributeClass.OC_zimbraPop3DataSource)) 
             return Type.pop3;
-        else if (attr.contains(AttributeClass.imapDataSource.getOCName()))
+        else if (attr.contains(AttributeClass.OC_zimbraImapDataSource))
             return Type.imap;
-        else if (attr.contains(AttributeClass.rssDataSource.getOCName()))
+        else if (attr.contains(AttributeClass.OC_zimbraRssDataSource))
             return Type.rss;
-        else if (attr.contains(AttributeClass.galDataSource.getOCName()))
+        else if (attr.contains(AttributeClass.OC_zimbraGalDataSource))
             return Type.gal;
         else
             throw ServiceException.FAILURE("unable to determine data source type from object class", null);
