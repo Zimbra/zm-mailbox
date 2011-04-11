@@ -12,12 +12,13 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.account.ldap;
+package com.zimbra.cs.prov.ldap;
 
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapUtil;
 
 public class SpecialAttrs {
     
