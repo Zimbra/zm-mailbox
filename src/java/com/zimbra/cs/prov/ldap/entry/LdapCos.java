@@ -25,7 +25,7 @@ import com.zimbra.cs.ldap.ZSearchResultEntry;
  * @author pshao
  *
  */
-class LdapCos extends Cos implements LdapEntry {
+public class LdapCos extends Cos implements LdapEntry {
 
     private String mDn;
 

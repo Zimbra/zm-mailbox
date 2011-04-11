@@ -25,7 +25,7 @@ import com.zimbra.cs.ldap.ZSearchResultEntry;
  * @author pshao
  *
  */
-class LdapAlias extends Alias implements LdapEntry {
+public class LdapAlias extends Alias implements LdapEntry {
     private String mDn;
 
     LdapAlias(String email, ZSearchResultEntry entry, Provisioning prov) throws LdapException {

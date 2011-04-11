@@ -5,12 +5,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javax.naming.NamingException;
-import javax.naming.directory.Attributes;
-import javax.naming.directory.DirContext;
-
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.prov.ldap.LdapProv;
 
 public class LdapObjectClassHierarchy {
 
@@ -43,55 +39,6 @@ public class LdapObjectClassHierarchy {
         return false;
     }
     
-    private static void searchOCsForSuperClasses(Map<String, Set<String>> ocs) {
-        
-        ZimbraLdapContext zlc = null;
-        try {
-            zlc = new ZimbraLdapContext(true);
-            DirContext schema = zlc.getSchema();
-          
-            Map<String, Object> attrs;
-            for (Map.Entry<String, Set<String>> entry : ocs.entrySet()) {
-                String oc = entry.getKey();
-                Set<String> superOCs = entry.getValue();
-                
-                attrs = null;
-                try {
-                    ZimbraLog.account.debug("Looking up OC: " + oc);
-                    DirContext ocSchema = (DirContext)schema.lookup("ClassDefinition/" + oc);
-                    Attributes attributes = ocSchema.getAttributes("");
-                    attrs = LdapUtil.getAttrs(attributes);
-                } catch (NamingException e) {
-                    ZimbraLog.account.debug("unable to load LDAP schema extension for objectclass: " + oc, e);
-                }
-                
-                if (attrs == null)
-                    continue;
-                
-                for (Map.Entry<String, Object> attr : attrs.entrySet()) {
-                    String attrName = attr.getKey();
-                    if ("SUP".compareToIgnoreCase(attrName) == 0) {
-                         Object value = attr.getValue();
-                        if (value instanceof String)
-                            superOCs.add(((String)value).toLowerCase());
-                        else if (value instanceof String[]) {
-                            for (String v : (String[])value)
-                                superOCs.add(v.toLowerCase());
-                        }
-                    }
-                }
-              
-            }          
-
-        } catch (NamingException e) {
-            ZimbraLog.account.warn("unable to load LDAP schema", e);
-        } catch (ServiceException e) {
-            ZimbraLog.account.warn("unable to load LDAP schema", e);
-        } finally {
-            ZimbraLdapContext.closeContext(zlc);
-        }
-    }
-    
     /**
      * get the most specific OC among oc1s and oc2
      * 
@@ -99,7 +46,7 @@ public class LdapObjectClassHierarchy {
      * @param oc2
      * @return
      */
-    static String getMostSpecificOC(String[] oc1s, String oc2) {
+    public static String getMostSpecificOC(LdapProv prov, String[] oc1s, String oc2) {
         
         Map<String, Set<String>> ocsToLookFor = new HashMap<String, Set<String>>();
         
@@ -117,7 +64,7 @@ public class LdapObjectClassHierarchy {
         
         // query LDAP schema if needed
         if (ocsToLookFor.size() > 0) {
-            searchOCsForSuperClasses(ocsToLookFor);  // query LDAP
+            prov.searchOCsForSuperClasses(ocsToLookFor);  // query LDAP
             addToSuperOCCache(ocsToLookFor);         // put in cache
         }
         
@@ -131,13 +78,14 @@ public class LdapObjectClassHierarchy {
     }
     
     public static void main(String[] args) {
-        System.out.println(getMostSpecificOC(new String[]{"zimbraAccount", "organizationalPerson", "person"}, "inetOrgPerson") + ", expecting inetOrgPerson");
-        System.out.println(getMostSpecificOC(new String[]{"inetOrgPerson"}, "organizationalPerson")                            + ", expecting inetOrgPerson");
-        System.out.println(getMostSpecificOC(new String[]{"organizationalPerson", "inetOrgPerson"}, "person")                  + ", expecting inetOrgPerson");
-        System.out.println(getMostSpecificOC(new String[]{"inetOrgPerson"}, "bbb")                                             + ", expecting bbb");
-        System.out.println(getMostSpecificOC(new String[]{"aaa"}, "inetOrgPerson")                                             + ", expecting inetOrgPerson");
-        System.out.println(getMostSpecificOC(new String[]{"aaa"}, "inetOrgPerson")                                             + ", expecting inetOrgPerson");
-        System.out.println(getMostSpecificOC(new String[]{"person", "inetOrgPerson"}, "organizationalPerson")                  + ", expecting inetOrgPerson");
+        LdapProv ldapProv = (LdapProv)Provisioning.getInstance();
+        System.out.println(getMostSpecificOC(ldapProv, new String[]{"zimbraAccount", "organizationalPerson", "person"}, "inetOrgPerson") + ", expecting inetOrgPerson");
+        System.out.println(getMostSpecificOC(ldapProv, new String[]{"inetOrgPerson"}, "organizationalPerson")                            + ", expecting inetOrgPerson");
+        System.out.println(getMostSpecificOC(ldapProv, new String[]{"organizationalPerson", "inetOrgPerson"}, "person")                  + ", expecting inetOrgPerson");
+        System.out.println(getMostSpecificOC(ldapProv, new String[]{"inetOrgPerson"}, "bbb")                                             + ", expecting bbb");
+        System.out.println(getMostSpecificOC(ldapProv, new String[]{"aaa"}, "inetOrgPerson")                                             + ", expecting inetOrgPerson");
+        System.out.println(getMostSpecificOC(ldapProv, new String[]{"aaa"}, "inetOrgPerson")                                             + ", expecting inetOrgPerson");
+        System.out.println(getMostSpecificOC(ldapProv, new String[]{"person", "inetOrgPerson"}, "organizationalPerson")                  + ", expecting inetOrgPerson");
     }
 
 }

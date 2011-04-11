@@ -10,11 +10,12 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ldap.IAttributes;
+import com.zimbra.cs.prov.ldap.LdapProv;
 import com.zimbra.cs.prov.ldap.LdapFilter;
 
 public class Groups {
     
-    private LdapProvisioning mProv;
+    private LdapProv mProv;
     private Set<String> mAllDLs = null; // email addresses of all distribution lists on the system
     
     private static class GetAllDLsVisitor implements LdapUtil.SearchLdapVisitor {
@@ -36,7 +37,7 @@ public class Groups {
         }
     }
     
-    Groups(LdapProvisioning prov) {
+    Groups(LdapProv prov) {
         mProv = prov;
     }
     

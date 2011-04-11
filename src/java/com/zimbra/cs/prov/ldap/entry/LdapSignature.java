@@ -25,7 +25,7 @@ import com.zimbra.cs.ldap.ZSearchResultEntry;
  * @author pshao
  *
  */
-class LdapSignature extends LdapSignatureBase {
+public class LdapSignature extends LdapSignatureBase {
 
     private String mDn;
 

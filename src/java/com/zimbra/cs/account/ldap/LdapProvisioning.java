@@ -45,6 +45,7 @@ import javax.naming.SizeLimitExceededException;
 import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.BasicAttributes;
+import javax.naming.directory.DirContext;
 import javax.naming.directory.InvalidAttributeIdentifierException;
 import javax.naming.directory.InvalidAttributeValueException;
 import javax.naming.directory.InvalidAttributesException;
@@ -125,7 +126,7 @@ import com.zimbra.cs.prov.ldap.DomainNameMappingHandler;
 import com.zimbra.cs.prov.ldap.LdapEntrySearchFilter;
 import com.zimbra.cs.prov.ldap.LdapFilter;
 import com.zimbra.cs.prov.ldap.LdapLockoutPolicy;
-import com.zimbra.cs.prov.ldap.LdapProvBase;
+import com.zimbra.cs.prov.ldap.LdapProv;
 import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zimlet.ZimletException;
@@ -139,7 +140,7 @@ import com.zimbra.cs.zimlet.ZimletUtil;
  * @since Sep 23, 2004
  * @author schemers
  */
-public class LdapProvisioning extends LdapProvBase {
+public class LdapProvisioning extends LdapProv {
     
     private static final long ONE_DAY_IN_MILLIS = 1000*60*60*24;
 
@@ -568,7 +569,8 @@ public class LdapProvisioning extends LdapProvBase {
     	return sMimeTypeCache.getMimeTypes(this, mimeType);
     }
     
-    List<MimeTypeInfo> getMimeTypesByQuery(String mimeType) throws ServiceException {
+    @Override
+    public List<MimeTypeInfo> getMimeTypesByQuery(String mimeType) throws ServiceException {
         ZimbraLdapContext zlc = null;
         try {
             zlc = new ZimbraLdapContext();
@@ -598,7 +600,8 @@ public class LdapProvisioning extends LdapProvBase {
     	return sMimeTypeCache.getAllMimeTypes(this);
     }
 
-    List<MimeTypeInfo> getAllMimeTypesByQuery() throws ServiceException {
+    @Override
+    public List<MimeTypeInfo> getAllMimeTypesByQuery() throws ServiceException {
         ZimbraLdapContext zlc = null;
         try {
             zlc = new ZimbraLdapContext();
@@ -990,7 +993,7 @@ public class LdapProvisioning extends LdapProvBase {
                     throw ServiceException.FAILURE("internal error", null);
                 }
 
-                String mostSpecificOC = LdapObjectClassHierarchy.getMostSpecificOC(ocsInBackup, LdapObjectClass.ZIMBRA_DEFAULT_PERSON_OC);
+                String mostSpecificOC = LdapObjectClassHierarchy.getMostSpecificOC(this, ocsInBackup, LdapObjectClass.ZIMBRA_DEFAULT_PERSON_OC);
 
                 if (!LdapObjectClass.ZIMBRA_DEFAULT_PERSON_OC.equalsIgnoreCase(mostSpecificOC))
                     ocs.add(mostSpecificOC);
@@ -1095,6 +1098,56 @@ public class LdapProvisioning extends LdapProvBase {
             throw AccountServiceException.ACCOUNT_EXISTS(emailAddress, dn, nabe);
         } catch (NamingException e) {
            throw ServiceException.FAILURE("unable to create account: "+emailAddress, e);
+        } finally {
+            ZimbraLdapContext.closeContext(zlc);
+        }
+    }
+    
+    @Override
+    public void searchOCsForSuperClasses(Map<String, Set<String>> ocs) {
+        
+        ZimbraLdapContext zlc = null;
+        try {
+            zlc = new ZimbraLdapContext(true);
+            DirContext schema = zlc.getSchema();
+          
+            Map<String, Object> attrs;
+            for (Map.Entry<String, Set<String>> entry : ocs.entrySet()) {
+                String oc = entry.getKey();
+                Set<String> superOCs = entry.getValue();
+                
+                attrs = null;
+                try {
+                    ZimbraLog.account.debug("Looking up OC: " + oc);
+                    DirContext ocSchema = (DirContext)schema.lookup("ClassDefinition/" + oc);
+                    Attributes attributes = ocSchema.getAttributes("");
+                    attrs = LdapUtil.getAttrs(attributes);
+                } catch (NamingException e) {
+                    ZimbraLog.account.debug("unable to load LDAP schema extension for objectclass: " + oc, e);
+                }
+                
+                if (attrs == null)
+                    continue;
+                
+                for (Map.Entry<String, Object> attr : attrs.entrySet()) {
+                    String attrName = attr.getKey();
+                    if ("SUP".compareToIgnoreCase(attrName) == 0) {
+                         Object value = attr.getValue();
+                        if (value instanceof String)
+                            superOCs.add(((String)value).toLowerCase());
+                        else if (value instanceof String[]) {
+                            for (String v : (String[])value)
+                                superOCs.add(v.toLowerCase());
+                        }
+                    }
+                }
+              
+            }          
+
+        } catch (NamingException e) {
+            ZimbraLog.account.warn("unable to load LDAP schema", e);
+        } catch (ServiceException e) {
+            ZimbraLog.account.warn("unable to load LDAP schema", e);
         } finally {
             ZimbraLdapContext.closeContext(zlc);
         }
