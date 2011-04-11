@@ -12,7 +12,7 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.account.ldap;
+package com.zimbra.cs.prov.ldap;
 
 // use LinkedHashSet to preserve the order and uniqueness of entries, 
 // not that order/uniqueness matters to LDAP server, just cleaner this way
@@ -25,7 +25,7 @@ import com.zimbra.common.service.ServiceException;
 
 public class LdapObjectClass {
     
-    static String ZIMBRA_DEFAULT_PERSON_OC = "organizationalPerson";
+    public static String ZIMBRA_DEFAULT_PERSON_OC = "organizationalPerson";
     
     private static void addExtraObjectClasses(Set<String> ocs, Provisioning prov, String extraOCAttr) throws ServiceException {
         String[] extraObjectClasses = prov.getConfig().getMultiAttr(extraOCAttr);

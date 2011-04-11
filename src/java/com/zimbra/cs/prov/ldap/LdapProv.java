@@ -6,7 +6,6 @@ import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.mime.MimeTypeInfo;
 
 public abstract class LdapProv extends Provisioning {

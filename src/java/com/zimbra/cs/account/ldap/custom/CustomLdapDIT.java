@@ -24,11 +24,11 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
-import com.zimbra.cs.account.ldap.SpecialAttrs;
 import com.zimbra.cs.ldap.IAttributes;
+import com.zimbra.cs.prov.ldap.LdapDIT;
+import com.zimbra.cs.prov.ldap.SpecialAttrs;
 
 /*
  * This class and CustomerLdapProvisioning should really go under the 
@@ -386,7 +386,7 @@ public class CustomLdapDIT extends LdapDIT {
      * ========================================================================================
      */
     @Override
-    protected SpecialAttrs handleSpecialAttrs(Map<String, Object> attrs) throws ServiceException {
+    public SpecialAttrs handleSpecialAttrs(Map<String, Object> attrs) throws ServiceException {
         
         // check for required attrs
         if (SpecialAttrs.getSingleValuedAttr(attrs, SpecialAttrs.PA_ldapBase) == null)

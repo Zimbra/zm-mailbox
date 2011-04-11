@@ -12,7 +12,7 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.account.ldap;
+package com.zimbra.cs.prov.ldap;
 
 import java.util.Map;
 
@@ -31,6 +31,7 @@ import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.prov.ldap.LdapProv;
 import com.zimbra.cs.util.Zimbra;
@@ -510,7 +511,7 @@ public class LdapDIT {
     /*
      * ========================================================================================
      */
-    protected SpecialAttrs handleSpecialAttrs(Map<String, Object> attrs) throws ServiceException {
+    public SpecialAttrs handleSpecialAttrs(Map<String, Object> attrs) throws ServiceException {
         SpecialAttrs specialAttrs = new SpecialAttrs();
         if (attrs != null) {
             specialAttrs.handleZimbraId(attrs);

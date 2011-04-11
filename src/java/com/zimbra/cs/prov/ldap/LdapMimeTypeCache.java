@@ -1,4 +1,18 @@
-package com.zimbra.cs.account.ldap;
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2011 Zimbra, Inc.
+ * 
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * ***** END LICENSE BLOCK *****
+ */
+package com.zimbra.cs.prov.ldap;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -18,20 +32,20 @@ public class LdapMimeTypeCache {
 	private long mRefreshTTL;
 	private long mLifetime;
 	
-	LdapMimeTypeCache() {
+	public LdapMimeTypeCache() {
 		mRefreshTTL = LC.ldap_cache_mime_maxage.intValue() * Constants.MILLIS_PER_MINUTE;
 	}
 	
-	synchronized void flushCache(LdapProv prov) throws ServiceException {
+	public synchronized void flushCache(LdapProv prov) throws ServiceException {
 		refresh(prov);
 	}
 	
-	synchronized List<MimeTypeInfo> getAllMimeTypes(LdapProv prov) throws ServiceException {
+	public synchronized List<MimeTypeInfo> getAllMimeTypes(LdapProv prov) throws ServiceException {
 		refreshIfNecessary(prov);
 		return mAllMimeTypes;
 	}
 	
-	synchronized List<MimeTypeInfo> getMimeTypes(LdapProv prov, String mimeType) throws ServiceException {
+	public synchronized List<MimeTypeInfo> getMimeTypes(LdapProv prov, String mimeType) throws ServiceException {
 		refreshIfNecessary(prov);
 		List<MimeTypeInfo> mimeTypes = mMapByMimeType.get(mimeType);
 		if (mimeTypes == null) {

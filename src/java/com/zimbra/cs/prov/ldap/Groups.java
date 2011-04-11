@@ -1,4 +1,18 @@
-package com.zimbra.cs.account.ldap;
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2011 Zimbra, Inc.
+ * 
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * ***** END LICENSE BLOCK *****
+ */
+package com.zimbra.cs.prov.ldap;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -9,6 +23,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.prov.ldap.LdapProv;
 import com.zimbra.cs.prov.ldap.LdapFilter;
@@ -37,7 +52,7 @@ public class Groups {
         }
     }
     
-    Groups(LdapProv prov) {
+    public Groups(LdapProv prov) {
         mProv = prov;
     }
     
@@ -57,7 +72,7 @@ public class Groups {
         return mAllDLs;
     }
     
-    void addGroup(DistributionList dl) {
+    public void addGroup(DistributionList dl) {
         try {
             Set<String> allGroups = getAllDLs();
             for (String email : dl.getMultiAttrSet(Provisioning.A_mail))
@@ -67,7 +82,7 @@ public class Groups {
         }
     }
     
-    void removeGroup(Set<String> addrs) {
+    public void removeGroup(Set<String> addrs) {
         try {
             Set<String> allGroups = getAllDLs();
             for (String email : addrs)
@@ -82,7 +97,7 @@ public class Groups {
      * @param addr
      * @return
      */
-    boolean isGroup(String addr) {
+    public boolean isGroup(String addr) {
         boolean isGroup = false;
         try {
             isGroup = getAllDLs().contains(addr.toLowerCase());

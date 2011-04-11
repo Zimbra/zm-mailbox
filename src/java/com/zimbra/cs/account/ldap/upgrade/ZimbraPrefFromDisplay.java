@@ -25,9 +25,9 @@ import javax.naming.directory.SearchResult;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.prov.ldap.LdapDIT;
 
 public class ZimbraPrefFromDisplay extends LdapUpgrade {    
     
