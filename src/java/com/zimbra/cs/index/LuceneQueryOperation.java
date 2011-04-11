@@ -82,18 +82,18 @@ public final class LuceneQueryOperation extends QueryOperation {
     private Sort sort;
 
     /**
-     * Adds the specified text clause at the toplevel.
+     * Adds the specified text clause at the top level.
      * <p>
      * e.g. going in "a b c" if we addClause("d") we get "a b c d".
      *
      * @param queryStr Appended to the end of the text-representation of this query
-     * @param query Lucene Query term
+     * @param query Lucene query
      * @param bool allows for negated query terms
      */
     public void addClause(String queryStr, Query query, boolean bool) {
-        queryString = queryString + " " + (bool ? "" : "-") + queryStr;
         assert(!haveRunSearch);
 
+        queryString = queryString + " " + (bool ? "" : "-") + queryStr;
         if (bool) {
             luceneQuery.add(new BooleanClause(query, BooleanClause.Occur.MUST));
         } else {
@@ -646,4 +646,5 @@ public final class LuceneQueryOperation extends QueryOperation {
             return hits.get(indexId);
         }
     }
+
 }

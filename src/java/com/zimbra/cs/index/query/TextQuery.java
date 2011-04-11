@@ -32,7 +32,6 @@ import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.BooleanClause.Occur;
 
 import com.google.common.io.Closeables;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.LuceneQueryOperation;
@@ -58,9 +57,6 @@ public class TextQuery extends Query {
     private String wildcardTerm;
     private List<QueryInfo> queryInfo = new ArrayList<QueryInfo>();
     private final Mailbox mailbox;
-
-    private static final int MAX_WILDCARD_TERMS =
-        LC.zimbra_index_wildcard_max_terms_expanded.intValue();
 
     /**
      * A single search term. If text has multiple words, it is treated as a phrase (full exact match required) text may
@@ -110,19 +106,18 @@ public class TextQuery extends Query {
             if (!wcToken.isEmpty()) {
                 wildcardTerm = wcToken;
                 List<String> expandedTokens = Collections.emptyList();
-                if (mailbox != null) { // null if testing
-                    try {
-                        expandedTokens = expandWildcard(field, wcToken, MAX_WILDCARD_TERMS);
-                    } catch (IOException e) {
-                        throw ServiceException.FAILURE("Failed to expand wildcard", e);
-                    }
-                    queryInfo.add(new WildcardExpansionQueryInfo(wcToken + "*",
-                            expandedTokens.size(), expandedTokens.size() <= MAX_WILDCARD_TERMS));
+                int max = mailbox.index.getMaxWildcardTerms();
+                try {
+                    expandedTokens = expandWildcard(field, wcToken, max);
+                } catch (IOException e) {
+                    throw ServiceException.FAILURE("Failed to expand wildcard", e);
                 }
+                queryInfo.add(new WildcardExpansionQueryInfo(wcToken + "*",
+                        expandedTokens.size(), expandedTokens.size() <= max));
                 // By design, we interpret *zero* tokens to mean "ignore this search term" therefore if the wildcard
                 // expands to no terms, we need to stick something in right here, just so we don't get confused when we
                 // go to execute the query later.
-                if (expandedTokens.isEmpty() || expandedTokens.size() > MAX_WILDCARD_TERMS) {
+                if (expandedTokens.isEmpty() || expandedTokens.size() > max) {
                     tokens.add(wcToken);
                 } else {
                     for (String token : expandedTokens) {

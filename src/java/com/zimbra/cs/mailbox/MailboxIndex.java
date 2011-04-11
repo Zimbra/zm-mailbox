@@ -283,6 +283,10 @@ public final class MailboxIndex {
         }
     }
 
+    public int getMaxWildcardTerms() {
+        return LC.zimbra_index_wildcard_max_terms_expanded.intValue();
+    }
+
     void evict() {
         indexStore.evict();
     }

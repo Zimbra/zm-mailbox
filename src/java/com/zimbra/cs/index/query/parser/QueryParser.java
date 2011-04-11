@@ -38,6 +38,7 @@ import com.zimbra.cs.index.query.AddrQuery;
 import com.zimbra.cs.index.query.AttachmentQuery;
 import com.zimbra.cs.index.query.BuiltInQuery;
 import com.zimbra.cs.index.query.ConjQuery;
+import com.zimbra.cs.index.query.ContactQuery;
 import com.zimbra.cs.index.query.ConvCountQuery;
 import com.zimbra.cs.index.query.ConvQuery;
 import com.zimbra.cs.index.query.DateQuery;
@@ -602,11 +603,11 @@ public final class QueryParser {
         case FIELD:
             return createFieldQuery(field.image, term, text);
         case CONTACT:
-            return createContactQuery(text);
+            return new ContactQuery(mailbox, text);
         case CONTENT:
             if (types.contains(MailItem.Type.CONTACT)) { // combine with CONTACT query
                 List<Query> clauses = new ArrayList<Query>(3);
-                clauses.add(createContactQuery(text));
+                clauses.add(new ContactQuery(mailbox, text));
                 clauses.add(new ConjQuery(ConjQuery.Conjunction.OR));
                 clauses.add(createContentQuery(text));
                 return new SubQuery(clauses);
@@ -652,11 +653,6 @@ public final class QueryParser {
         } else {
             throw exception("INVALID_FIELD_FORMAT", term);
         }
-    }
-
-    private Query createContactQuery(String text) throws ServiceException {
-        // always make it wildcard search
-        return new TextQuery(mailbox, analyzer, LuceneFields.L_CONTACT_DATA, text.replaceFirst("[*]*$", "*"));
     }
 
     private Query createContentQuery(String text) throws ServiceException {

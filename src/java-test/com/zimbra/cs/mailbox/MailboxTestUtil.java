@@ -35,13 +35,15 @@ import com.zimbra.cs.mime.handler.TextPlainHandler;
 import com.zimbra.cs.store.MockStoreManager;
 import com.zimbra.cs.store.StoreManager;
 
-public class MailboxTestUtil {
+public final class MailboxTestUtil {
+
+    private MailboxTestUtil() {
+    }
 
     /**
      * Initializes the database, index, store manager, and provisioning.
      */
-    public static void initServer()
-    throws Exception {
+    public static void initServer() throws Exception {
         // Initialize provisioning and set up default MIME handlers for indexing.
         MockProvisioning prov = new MockProvisioning();
         for (Map.Entry<String, MockMimeTypeInfo> entry : getMimeHandlers().entrySet()) {
@@ -84,8 +86,7 @@ public class MailboxTestUtil {
     /**
      * Clears the database and index.
      */
-    public static void clearData()
-    throws Exception {
+    public static void clearData() throws Exception {
         HSQLDB.clearDatabase();
         MailboxManager.getInstance().clearCache();
         File index = new File("build/test/index");
@@ -94,17 +95,19 @@ public class MailboxTestUtil {
         }
     }
 
-    public static void setFlag(Mailbox mbox, int itemId, Flag.FlagInfo flag)
-    throws ServiceException {
+    public static void setFlag(Mailbox mbox, int itemId, Flag.FlagInfo flag) throws ServiceException {
         MailItem item = mbox.getItemById(null, itemId, MailItem.Type.UNKNOWN);
         int flags = item.getFlagBitmask() | flag.toBitmask();
         mbox.setTags(null, itemId, item.getType(), flags, item.getTagBitmask(), null);
     }
 
-    public static void unsetFlag(Mailbox mbox, int itemId, Flag.FlagInfo flag)
-    throws ServiceException {
+    public static void unsetFlag(Mailbox mbox, int itemId, Flag.FlagInfo flag) throws ServiceException {
         MailItem item = mbox.getItemById(null, itemId, MailItem.Type.UNKNOWN);
         int flags = item.getFlagBitmask() & ~flag.toBitmask();
         mbox.setTags(null, itemId, item.getType(), flags, item.getTagBitmask(), null);
+    }
+
+    public static void index(Mailbox mbox) throws ServiceException {
+        mbox.index.indexDeferredItems();
     }
 }

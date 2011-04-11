@@ -18,7 +18,6 @@ import java.util.Calendar;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.TimeZone;
 
 import org.apache.lucene.document.DateTools;
@@ -27,18 +26,16 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.HSQLDB;
 import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.index.query.parser.QueryParser;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
 
 /**
  * Unit test for {@link QueryParser}.
@@ -50,26 +47,17 @@ public final class QueryParserTest {
 
     @BeforeClass
     public static void init() throws Exception {
-        MockProvisioning prov = new MockProvisioning();
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraId, "0-0-0");
-        attrs.put(Provisioning.A_zimbraMailHost, "localhost");
-        prov.createAccount("test@zimbra.com", "secret", attrs);
-        Provisioning.setInstance(prov);
+        MailboxTestUtil.initServer();
+        Provisioning prov = Provisioning.getInstance();
+        prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
 
-        LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
-        DbPool.startup();
-        HSQLDB.createDatabase();
-
-        MailboxManager mgr = MailboxManager.getInstance();
-        Mailbox mbox = mgr.getMailboxByAccountId("0-0-0");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         parser = new QueryParser(mbox, ZimbraAnalyzer.getInstance());
     }
 
     @Before
     public void setUp() throws Exception {
-        HSQLDB.clearDatabase();
-        MailboxManager.getInstance().clearCache();
+        MailboxTestUtil.clearData();
     }
 
     @Test
@@ -493,19 +481,19 @@ public final class QueryParserTest {
     public void contact() throws Exception {
         QueryParser parser = new QueryParser(null, ZimbraAnalyzer.getInstance());
         String src = "contact:\"Conf -\"";
-        Assert.assertEquals("Q(l.contactData,conf,- *=- [0 terms])", Query.toString(parser.parse(src)));
+        Assert.assertEquals("Q(CONTACT:conf,-)", Query.toString(parser.parse(src)));
 
         src = "contact:\"Conf - Prom\"";
-        Assert.assertEquals("Q(l.contactData,conf,-,prom *=prom [0 terms])", Query.toString(parser.parse(src)));
+        Assert.assertEquals("Q(CONTACT:conf,-,prom)", Query.toString(parser.parse(src)));
 
         src = "contact:\"Conf - Promontory E\"";
-        Assert.assertEquals("Q(l.contactData,conf,-,promontory,e *=e [0 terms])", Query.toString(parser.parse(src)));
+        Assert.assertEquals("Q(CONTACT:conf,-,promontory,e)", Query.toString(parser.parse(src)));
 
         src = "contact:\"Conf - Promontory E*****\"";
-        Assert.assertEquals("Q(l.contactData,conf,-,promontory,e *=e [0 terms])", Query.toString(parser.parse(src)));
+        Assert.assertEquals("Q(CONTACT:conf,-,promontory,e)", Query.toString(parser.parse(src)));
 
         src = "contact:\"Conf - Prom* E*\"";
-        Assert.assertEquals("Q(l.contactData,conf,-,prom*,e *=e [0 terms])", Query.toString(parser.parse(src)));
+        Assert.assertEquals("Q(CONTACT:conf,-,prom,e)", Query.toString(parser.parse(src)));
     }
 
     @Test
@@ -514,11 +502,10 @@ public final class QueryParserTest {
         parser.setTypes(EnumSet.of(MailItem.Type.CONTACT));
 
         String src = "zimbra";
-        Assert.assertEquals("(Q(l.contactData,zimbra *=zimbra [0 terms]) || Q(l.content,zimbra))",
-                Query.toString(parser.parse(src)));
+        Assert.assertEquals("(Q(CONTACT:zimbra) || Q(l.content,zimbra))", Query.toString(parser.parse(src)));
 
         src = "in"; // stop word
-        Assert.assertEquals("(Q(l.contactData,in *=in [0 terms]) || Q(l.content))", Query.toString(parser.parse(src)));
+        Assert.assertEquals("(Q(CONTACT:in) || Q(l.content))", Query.toString(parser.parse(src)));
     }
 
     @Test
@@ -526,7 +513,7 @@ public final class QueryParserTest {
         QueryParser parser = new QueryParser(null, ZimbraAnalyzer.getInstance());
         parser.setTypes(EnumSet.of(MailItem.Type.CONTACT));
 
-        Assert.assertEquals("(Q(l.contactData,zimbra,quoted,test *=test [0 terms]) || Q(l.content,zimbra,quoted,test))",
+        Assert.assertEquals("(Q(CONTACT:zimbra,quoted,test) || Q(l.content,zimbra,quoted,test))",
                 Query.toString(parser.parse("\"Zimbra \\\"quoted\\\" test\"")));
     }
 
