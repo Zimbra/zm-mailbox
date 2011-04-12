@@ -97,6 +97,7 @@ import com.zimbra.cs.mailbox.FoldersTagsCache.FoldersTags;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
+import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.MailboxManager.MailboxLock;
 import com.zimbra.cs.mailbox.Note.Rectangle;
@@ -170,11 +171,13 @@ public class Mailbox {
     public static final int ID_FOLDER_CONVERSATIONS = 9;
     public static final int ID_FOLDER_CALENDAR  = 10;
     public static final int ID_FOLDER_ROOT      = 11;
+    @Deprecated
     public static final int ID_FOLDER_NOTEBOOK  = 12;      // no longer created in new mailboxes since Helix (bug 39647).  old mailboxes may still contain a system folder with id 12
     public static final int ID_FOLDER_AUTO_CONTACTS = 13;
     public static final int ID_FOLDER_IM_LOGS   = 14;
     public static final int ID_FOLDER_TASKS     = 15;
     public static final int ID_FOLDER_BRIEFCASE = 16;
+    public static final int ID_FOLDER_COMMENTS  = 17;
 
     public static final int HIGHEST_SYSTEM_ID = 16;
     public static final int FIRST_USER_ID     = 256;
@@ -1422,6 +1425,7 @@ public class Mailbox {
      *     MAILBOX_ROOT
      *       +--Tags
      *       +--Conversations
+     *       +--Comments
      *       +--&lt;other hidden system folders>
      *       +--USER_ROOT
      *            +--INBOX
@@ -1443,6 +1447,8 @@ public class Mailbox {
         Folder.create(ID_FOLDER_TAGS, this, root, "Tags", hidden, MailItem.Type.TAG, 0,
                 MailItem.DEFAULT_COLOR_RGB, null, null);
         Folder.create(ID_FOLDER_CONVERSATIONS, this, root, "Conversations", hidden, MailItem.Type.CONVERSATION, 0,
+                MailItem.DEFAULT_COLOR_RGB, null, null);
+        Folder.create(ID_FOLDER_COMMENTS, this, root, "Comments", hidden, MailItem.Type.COMMENT, 0,
                 MailItem.DEFAULT_COLOR_RGB, null, null);
 
         byte system = Folder.FOLDER_IS_IMMUTABLE;
@@ -7836,6 +7842,45 @@ public class Mailbox {
         }
     }
 
+    public synchronized Comment createComment(OperationContext octxt, int parentId, String text, String creatorId) throws ServiceException {
+        CreateComment redoRecorder = new CreateComment(mId, parentId, text, creatorId);
+        
+        boolean success = false;
+        try {
+            beginTransaction("createComment", octxt, redoRecorder);
+            
+            MailItem parent = getItemById(octxt, parentId, Type.UNKNOWN);
+            if (parent.getType() != Type.DOCUMENT) {
+                throw MailServiceException.CANNOT_PARENT();
+            }
+            
+            CreateComment redoPlayer = (CreateComment)mCurrentChange.getRedoPlayer();
+
+            int itemId = (redoPlayer == null) ?
+                    getNextItemId(ID_AUTO_INCREMENT) : redoPlayer.getItemId();
+
+            Comment comment = Comment.create(this, parent, itemId, text, creatorId, null);
+            redoRecorder.setItemId(itemId);
+            
+            index.add(comment);
+            success = true;
+            return comment;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public synchronized Collection<Comment> getComments(OperationContext octxt, int parentId, int offset, int length) throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("getComments", octxt, null);
+            MailItem parent = getItemById(octxt, parentId, Type.UNKNOWN);
+            return Comment.getComments(this, parent, offset, length);
+        } finally {
+            endTransaction(success);
+        }
+    }
+    
     protected void migrateWikiFolders() throws ServiceException {
         MigrateToDocuments migrate = new MigrateToDocuments();
         try {

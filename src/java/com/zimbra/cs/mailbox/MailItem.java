@@ -91,11 +91,13 @@ public abstract class MailItem implements Comparable<MailItem> {
         /** Item is a {@link Mountpoint} pointing to a {@link Folder}, possibly in another user's {@link Mailbox}. */
         MOUNTPOINT(13),
         /** Item is a {@link WikiItem} */
-        WIKI(14),
+        @Deprecated WIKI(14),
         /** Item is a {@link Task} */
         TASK(15),
         /** Item is a {@link Chat} */
-        CHAT(16);
+        CHAT(16),
+        /** Item is a {@link Comment} */
+        COMMENT(17);
 
         private static final Map<Byte, Type> BYTE2TYPE;
         static {
@@ -1411,6 +1413,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         case MOUNTPOINT:   return new Mountpoint(mbox, data);
         case WIKI:         return new WikiItem(mbox, data);
         case CHAT:         return new Chat(mbox, data);
+        case COMMENT:      return new Comment(mbox, data);
         default:           return null;
         }
     }

@@ -218,5 +218,9 @@ public class MailService implements DocumentService {
 
         //TODO: Priority Inbox prototype
         dispatcher.registerHandler(QName.get("PriorityInboxRequest", MailConstants.NAMESPACE), new PriorityInbox());
+        
+        // comments
+        dispatcher.registerHandler(MailConstants.ADD_COMMENT_REQUEST, new AddComment());
+        dispatcher.registerHandler(MailConstants.GET_COMMENTS_REQUEST, new GetComments());
     }
 }

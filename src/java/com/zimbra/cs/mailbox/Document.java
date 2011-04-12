@@ -104,7 +104,7 @@ public class Document extends MailItem {
 
     @Override
     boolean canHaveChildren() {
-        return false;
+        return true;
     }
 
     @Override int getMaxRevisions() throws ServiceException {

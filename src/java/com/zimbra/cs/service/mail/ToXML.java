@@ -2456,4 +2456,33 @@ public class ToXML {
             }
         }
     }
+    
+    public static void encodeComment(Element response, ItemIdFormatter ifmt, Comment comment) {
+        encodeComment(response, ifmt, comment, NOTIFY_FIELDS);
+    }
+    public static void encodeComment(Element response, ItemIdFormatter ifmt, Comment comment, int fields) {
+        Element c = response.addElement(MailConstants.E_COMMENT);
+        if (needToOutput(fields, Change.MODIFIED_SUBJECT))
+            c.setText(comment.getText());
+        c.addAttribute(MailConstants.A_ID, ifmt.formatItemId(comment));
+        String creator = comment.getCreatorAccountId();
+        try {
+            Account a = Provisioning.getInstance().getAccountById(creator);
+            String name = null;
+            if (a != null)
+                name = a.getDisplayName();
+            if (name == null)
+                name = a.getName();
+            if (name != null)
+                creator = name;
+        } catch (ServiceException e) {
+        }
+        c.addAttribute(MailConstants.A_CREATOR, creator);
+        recordItemTags(c, comment, fields);
+        encodeColor(c, comment, fields);
+        if (needToOutput(fields, Change.MODIFIED_DATE))
+            c.addAttribute(MailConstants.A_DATE, comment.getDate());
+        if (needToOutput(fields, Change.MODIFIED_METADATA))
+            encodeAllCustomMetadata(c, comment, fields);
+    }
 }
