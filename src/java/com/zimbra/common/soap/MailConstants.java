@@ -238,6 +238,10 @@ public final class MailConstants {
     public static final String E_VERIFY_CODE_RESPONSE = "VerifyCodeResponse";
     public static final String E_INVALIDATE_REMINDER_DEVICE_REQUEST = "InvalidateReminderDeviceRequest";
     public static final String E_INVALIDATE_REMINDER_DEVICE_RESPONSE = "InvalidateReminderDeviceResponse";
+    public static final String E_ADD_COMMENT_REQUEST = "AddCommentRequest";
+    public static final String E_ADD_COMMENT_RESPONSE = "AddCommentResponse";
+    public static final String E_GET_COMMENTS_REQUEST = "GetCommentsRequest";
+    public static final String E_GET_COMMENTS_RESPONSE = "GetCommentsResponse";
 
     // noop
     public static final QName NO_OP_REQUEST = QName.get(E_NO_OP_REQUEST, NAMESPACE);
@@ -510,6 +514,12 @@ public final class MailConstants {
     public static final QName INVALIDATE_REMINDER_DEVICE_REQUEST = QName.get(E_INVALIDATE_REMINDER_DEVICE_REQUEST, NAMESPACE);
     public static final QName INVALIDATE_REMINDER_DEVICE_RESPONSE = QName.get(E_INVALIDATE_REMINDER_DEVICE_RESPONSE, NAMESPACE);
 
+    // comments
+    public static final QName ADD_COMMENT_REQUEST = QName.get(E_ADD_COMMENT_REQUEST, NAMESPACE);
+    public static final QName ADD_COMMENT_RESPONSE = QName.get(E_ADD_COMMENT_RESPONSE, NAMESPACE);
+    public static final QName GET_COMMENTS_REQUEST = QName.get(E_GET_COMMENTS_REQUEST, NAMESPACE);
+    public static final QName GET_COMMENTS_RESPONSE = QName.get(E_GET_COMMENTS_RESPONSE, NAMESPACE);
+    
     public static final String E_MAILBOX = "mbx";
     public static final String E_ITEM = "item";
     public static final String E_MSG = "m";
@@ -521,6 +531,7 @@ public final class MailConstants {
     public static final String E_FOLDER = "folder";
     public static final String E_SEARCH = "search";
     public static final String E_MOUNT = "link";
+    public static final String E_COMMENT = "comment";
 
     public static final String E_INFO = "info";
     public static final String E_LOCALE = "locale";
@@ -1073,8 +1084,10 @@ public final class MailConstants {
     public static final String A_ITEMID = "itemId";
     public static final String A_ITEM_NAME = "itemName";
     
-     public static final String E_DEVICE = "device";
-     public static final String A_CREATED = "created";
-     public static final String A_ACCESSED = "accessed";
+    public static final String E_DEVICE = "device";
+    public static final String A_CREATED = "created";
+    public static final String A_ACCESSED = "accessed";
 
+    public static final String A_PARENT_ID = "parentId";
+    public static final String A_TEXT = "text";
 }
