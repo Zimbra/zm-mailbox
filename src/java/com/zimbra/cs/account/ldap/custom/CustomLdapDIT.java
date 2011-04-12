@@ -24,10 +24,10 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.ldap.IAttributes;
-import com.zimbra.cs.prov.ldap.LdapDIT;
 import com.zimbra.cs.prov.ldap.SpecialAttrs;
 
 /*

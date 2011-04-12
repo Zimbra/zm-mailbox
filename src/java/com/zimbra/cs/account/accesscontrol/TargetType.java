@@ -48,11 +48,11 @@ import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.Provisioning.XMPPComponentBy;
 import com.zimbra.cs.account.Provisioning.ZimletBy;
+import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
-import com.zimbra.cs.prov.ldap.LdapDIT;
 import com.zimbra.soap.admin.type.EffectiveRightsTarget;
 
 

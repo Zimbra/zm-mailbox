@@ -35,10 +35,10 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
-import com.zimbra.cs.prov.ldap.LdapDIT;
 import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 
 public class ZimbraCreateTimestamp extends LdapUpgrade {

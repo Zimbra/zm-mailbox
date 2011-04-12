@@ -41,10 +41,10 @@ import com.zimbra.cs.account.accesscontrol.InlineAttrRight;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.generated.RightConsts;
+import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext.LdapConfig;
-import com.zimbra.cs.prov.ldap.LdapDIT;
 
 public class AdminRights extends LdapUpgrade {
     
