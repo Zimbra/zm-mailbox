@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -18,8 +18,10 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.QueryOperation;
+import com.zimbra.cs.mailbox.Mailbox;
 
 /**
  * Abstract base class for queries.
@@ -163,9 +165,13 @@ public abstract class Query {
     }
 
     /**
-     * Called by the optimizer, returns an initialized {@link QueryOperation}
-     * of the requested type.
+     * Compiles this query into a {@link QueryOperation}.
      */
-    public abstract QueryOperation getQueryOperation(boolean truth);
+    public abstract QueryOperation compile(Mailbox mbox, boolean bool) throws ServiceException;
+
+    /**
+     * Returns true if this query has at least one text query, false if it's entirely DB query.
+     */
+    public abstract boolean hasTextOperation();
 
 }

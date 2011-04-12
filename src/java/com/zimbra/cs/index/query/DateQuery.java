@@ -29,6 +29,7 @@ import org.apache.lucene.document.DateTools;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.DBQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
+import com.zimbra.cs.mailbox.Mailbox;
 
 /**
  * Query by absolute date or relative date.
@@ -137,7 +138,12 @@ public final class DateQuery extends Query {
     }
 
     @Override
-    public QueryOperation getQueryOperation(boolean bool) {
+    public boolean hasTextOperation() {
+        return false;
+    }
+
+    @Override
+    public QueryOperation compile(Mailbox mbox, boolean bool) {
         DBQueryOperation op = new DBQueryOperation();
         switch (type) {
             case APPT_START:
@@ -442,7 +448,7 @@ public final class DateQuery extends Query {
 
     @Override
     public void dump(StringBuilder out) {
-        out.append("DATE,");
+        out.append("DATE:");
         out.append(type);
         out.append(',');
         out.append(DateTools.timeToString(lowestTime, DateTools.Resolution.MINUTE));

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -17,6 +17,7 @@ package com.zimbra.cs.index.query;
 import java.util.List;
 
 import com.zimbra.cs.index.QueryOperation;
+import com.zimbra.cs.mailbox.Mailbox;
 
 /**
  * Special query that wraps sub queries.
@@ -37,9 +38,19 @@ public class SubQuery extends Query {
     }
 
     @Override
-    public QueryOperation getQueryOperation(boolean truth) {
-        assert(false);
-        return null;
+    public boolean hasTextOperation() {
+        for (Query sub : clauses) {
+            if (sub.hasTextOperation()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public QueryOperation compile(Mailbox mbox, boolean bool) {
+        assert false;
+        throw new UnsupportedOperationException();
     }
 
     @Override

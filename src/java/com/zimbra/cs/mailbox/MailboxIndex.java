@@ -141,7 +141,7 @@ public final class MailboxIndex {
     }
 
     private ZimbraQuery compileQuery(SoapProtocol proto, OperationContext octx, SearchParams params)
-        throws ServiceException {
+            throws ServiceException {
         String qs = params.getQueryStr();
 
         // calendar expansions
@@ -169,7 +169,6 @@ public final class MailboxIndex {
      * You MUST call {@link ZimbraQueryResults#doneWithSearchResults()} when you are done with the search results,
      * otherwise resources will be leaked.
      *
-     * @param proto soap protocol the request is coming from. Determines the type of Element we create for proxied results.
      * @param octxt Operation Context
      * @param params Search Parameters
      * @return search result
@@ -182,7 +181,7 @@ public final class MailboxIndex {
         ZimbraQuery query = compileQuery(proto, octx, params);
         Set<MailItem.Type> types = toIndexTypes(params.getTypes());
         // no need to index if the search doesn't involve Lucene
-        if (query.getTextOperationCount() > 0 && getDeferredCount(types) > 0) {
+        if (query.hasTextOperation() && getDeferredCount(types) > 0) {
             try {
                 // don't wait if an indexing is in progress by other thread
                 indexDeferredItems(types, new BatchStatus(), false);
@@ -253,10 +252,6 @@ public final class MailboxIndex {
             case NAME_LOCALIZED_DESC:
                 isLocalizedSort = true;
                 break;
-        }
-
-        if (ZimbraLog.search.isDebugEnabled()) {
-            ZimbraLog.search.debug("Executing search with [%d] text parts", zq.getTextOperationCount());
         }
 
         ZimbraQueryResults results = zq.execute();

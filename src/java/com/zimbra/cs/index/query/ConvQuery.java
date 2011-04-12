@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -30,47 +30,46 @@ import com.zimbra.cs.service.util.ItemId;
  * @author ysasaki
  */
 public final class ConvQuery extends Query {
-    private ItemId mConvId;
-    private Mailbox mMailbox;
+    private final ItemId convId;
 
-    private ConvQuery(Mailbox mbox, ItemId convId) throws ServiceException {
-        mMailbox = mbox;
-        mConvId = convId;
+    private ConvQuery(ItemId convId) throws ServiceException {
+        this.convId = convId;
 
-        if (mConvId.getId() < 0) {
-            // should never happen (make an ItemQuery instead
-            throw ServiceException.FAILURE("Illegal Negative ConvID: " +
-                    convId.toString() + ", use ItemQuery for virtual convs",
-                    null);
+        if (convId.getId() < 0) { // should never happen (make an ItemQuery instead)
+            throw ServiceException.FAILURE(
+                    "Illegal Negative ConvID: " + convId + ", use ItemQuery for virtual convs", null);
         }
     }
 
-    public static Query create(Mailbox mbox, String target)
-        throws ServiceException {
-
+    public static Query create(Mailbox mbox, String target) throws ServiceException {
         ItemId convId = new ItemId(target, mbox.getAccountId());
         if (convId.getId() < 0) {
             // ...convert negative convId to positive ItemId...
             convId = new ItemId(convId.getAccountId(), -1 * convId.getId());
             List<ItemId> iidList = new ArrayList<ItemId>(1);
             iidList.add(convId);
-            return new ItemQuery(mbox, false, false, iidList);
+            return new ItemQuery(false, false, iidList);
         } else {
-            return new ConvQuery(mbox, convId);
+            return new ConvQuery(convId);
         }
     }
 
     @Override
-    public QueryOperation getQueryOperation(boolean bool) {
+    public boolean hasTextOperation() {
+        return false;
+    }
+
+    @Override
+    public QueryOperation compile(Mailbox mbox, boolean bool) {
         DBQueryOperation op = new DBQueryOperation();
-        op.addConvId(mMailbox, mConvId, evalBool(bool));
+        op.addConvId(mbox, convId, evalBool(bool));
         return op;
     }
 
     @Override
     public void dump(StringBuilder out) {
-        out.append("CONV,");
-        out.append(mConvId);
+        out.append("CONV:");
+        out.append(convId);
     }
 
 }

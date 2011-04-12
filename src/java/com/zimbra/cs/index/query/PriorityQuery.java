@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -15,8 +15,6 @@
 package com.zimbra.cs.index.query;
 
 import com.google.common.base.Preconditions;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.mailbox.Mailbox;
 
 /**
  * Query messages by priority.
@@ -46,14 +44,14 @@ public final class PriorityQuery extends TagQuery {
 
     private final Priority priority;
 
-    public PriorityQuery(Mailbox mailbox, Priority priority) throws ServiceException {
-        super(mailbox, Preconditions.checkNotNull(priority).toFlag(), true);
+    public PriorityQuery(Priority priority) {
+        super(Preconditions.checkNotNull(priority).toFlag(), true);
         this.priority = priority;
     }
 
     @Override
     public void dump(StringBuilder out) {
-        out.append("Priority,");
+        out.append("PRIORITY:");
         out.append(priority.name());
     }
 

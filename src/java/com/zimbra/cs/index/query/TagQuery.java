@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -18,7 +18,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.DBQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Tag;
 
 /**
  * Query by tag.
@@ -28,25 +27,29 @@ import com.zimbra.cs.mailbox.Tag;
  */
 public class TagQuery extends Query {
 
-    private final Tag mTag;
+    private final String name;
 
-    public TagQuery(Mailbox mailbox, String name, boolean truth)
-        throws ServiceException {
-        mTag = mailbox.getTagByName(name);
-        setBool(truth);
+    public TagQuery(String name, boolean bool) {
+        this.name = name;
+        setBool(bool);
     }
 
     @Override
-    public QueryOperation getQueryOperation(boolean bool) {
-        DBQueryOperation dbOp = new DBQueryOperation();
-        dbOp.addTagClause(mTag, evalBool(bool));
-        return dbOp;
+    public boolean hasTextOperation() {
+        return false;
+    }
+
+    @Override
+    public QueryOperation compile(Mailbox mbox, boolean bool) throws ServiceException {
+        DBQueryOperation op = new DBQueryOperation();
+        op.addTagClause(mbox.getTagByName(name), evalBool(bool));
+        return op;
     }
 
     @Override
     public void dump(StringBuilder out) {
-        out.append("TAG,");
-        out.append(mTag.getName());
+        out.append("TAG:");
+        out.append(name);
     }
 
 }

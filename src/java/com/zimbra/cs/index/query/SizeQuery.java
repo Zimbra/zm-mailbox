@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -18,6 +18,7 @@ import java.text.ParseException;
 
 import com.zimbra.cs.index.DBQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
+import com.zimbra.cs.mailbox.Mailbox;
 
 /**
  * Query by size.
@@ -42,37 +43,35 @@ public final class SizeQuery extends Query {
     }
 
     private final Type type;
-    private String mSizeStr;
-    private long mSize;
+    private long size;
 
-    public SizeQuery(Type type, String size) throws ParseException {
-        mSizeStr = size;
+    public SizeQuery(Type type, String text) throws ParseException {
 
-        char ch = mSizeStr.charAt(0);
+        char ch = text.charAt(0);
         if (ch == '>') {
             this.type = Type.GT;
-            mSizeStr = mSizeStr.substring(1);
+            text = text.substring(1);
         } else if (ch == '<') {
             this.type = Type.LT;
-            mSizeStr = mSizeStr.substring(1);
+            text = text.substring(1);
         } else {
             this.type = type;
         }
 
         boolean hasEQ = false;
-        ch = mSizeStr.charAt(0);
+        ch = text.charAt(0);
         if (ch == '=') {
-            mSizeStr = mSizeStr.substring(1);
+            text = text.substring(1);
             hasEQ = true;
         }
 
         char typeChar = '\0';
 
-        typeChar = Character.toLowerCase(mSizeStr.charAt(mSizeStr.length() - 1));
+        typeChar = Character.toLowerCase(text.charAt(text.length() - 1));
         // strip "b" off end (optimize me)
         if (typeChar == 'b') {
-            mSizeStr = mSizeStr.substring(0, mSizeStr.length() - 1);
-            typeChar = Character.toLowerCase(mSizeStr.charAt(mSizeStr.length() - 1));
+            text = text.substring(0, text.length() - 1);
+            typeChar = Character.toLowerCase(text.charAt(text.length() - 1));
         }
 
         // size:100b size:1kb size:1mb bigger:10kb smaller:3gb
@@ -89,31 +88,34 @@ public final class SizeQuery extends Query {
         }
 
         if (multiplier > 1) {
-            mSizeStr = mSizeStr.substring(0, mSizeStr.length() - 1);
+            text = text.substring(0, text.length() - 1);
         }
 
         try {
-            mSize = Integer.parseInt(mSizeStr.trim()) * multiplier;
+            size = Integer.parseInt(text.trim()) * multiplier;
         } catch (NumberFormatException e) {
-            throw new ParseException(size, 0);
+            throw new ParseException(text, 0);
         }
 
         if (hasEQ) {
             switch (this.type) {
                 case GT:
-                    mSize--; // correct since range constraint is strict >
+                    size--; // correct since range constraint is strict >
                     break;
                 case LT:
-                    mSize++; // correct since range constraint is strict <
+                    size++; // correct since range constraint is strict <
                     break;
             }
         }
-
-        mSizeStr = String.valueOf(mSize);
     }
 
     @Override
-    public QueryOperation getQueryOperation(boolean bool) {
+    public boolean hasTextOperation() {
+        return false;
+    }
+
+    @Override
+    public QueryOperation compile(Mailbox mbox, boolean bool) {
         DBQueryOperation op = new DBQueryOperation();
         long highest = -1;
         long lowest = -1;
@@ -121,18 +123,18 @@ public final class SizeQuery extends Query {
         switch (type) {
             case GT:
                 highest = -1;
-                lowest = mSize;
+                lowest = size;
                 break;
             case LT:
-                highest = mSize;
+                highest = size;
                 lowest = -1;
                 break;
             case EQ:
-                highest = mSize + 1;
-                lowest = mSize - 1;
+                highest = size + 1;
+                lowest = size - 1;
                 break;
             default:
-                assert(false);
+                assert false : type;
         }
         op.addSizeClause(lowest, highest, evalBool(bool));
         return op;
@@ -140,8 +142,8 @@ public final class SizeQuery extends Query {
 
     @Override
     public void dump(StringBuilder out) {
-        out.append("SIZE");
+        out.append("SIZE:");
         out.append(type);
-        out.append(mSize);
+        out.append(size);
     }
 }

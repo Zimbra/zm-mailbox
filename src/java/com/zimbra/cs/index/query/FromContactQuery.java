@@ -16,6 +16,7 @@ package com.zimbra.cs.index.query;
 
 import com.zimbra.cs.index.DBQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
+import com.zimbra.cs.mailbox.Mailbox;
 
 /**
  * Query messages sent from my contacts.
@@ -25,7 +26,12 @@ import com.zimbra.cs.index.QueryOperation;
 public final class FromContactQuery extends Query {
 
     @Override
-    public QueryOperation getQueryOperation(boolean bool) {
+    public boolean hasTextOperation() {
+        return false;
+    }
+
+    @Override
+    public QueryOperation compile(Mailbox mbox, boolean bool) {
         DBQueryOperation op = new DBQueryOperation();
         op.setFromContact(evalBool(bool));
         return op;

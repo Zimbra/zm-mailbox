@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -16,6 +16,7 @@ package com.zimbra.cs.index.query;
 
 import com.zimbra.cs.index.DBQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
+import com.zimbra.cs.mailbox.Mailbox;
 
 /**
  * Query by conversation count.
@@ -24,34 +25,37 @@ import com.zimbra.cs.index.QueryOperation;
  * @author ysasaki
  */
 public final class ConvCountQuery extends Query {
-    private int mLowestCount;
-    private boolean mLowerEq;
-    private int mHighestCount;
-    private boolean mHigherEq;
+    private int lowestCount;
+    private boolean lowerEq;
+    private int highestCount;
+    private boolean higherEq;
 
-    private ConvCountQuery(int lowestCount, boolean lowerEq,
-            int highestCount, boolean higherEq) {
-        mLowestCount = lowestCount;
-        mLowerEq = lowerEq;
-        mHighestCount = highestCount;
-        mHigherEq = higherEq;
+    private ConvCountQuery(int lowestCount, boolean lowerEq, int highestCount, boolean higherEq) {
+        this.lowestCount = lowestCount;
+        this.lowerEq = lowerEq;
+        this.highestCount = highestCount;
+        this.higherEq = higherEq;
     }
 
     @Override
     public void dump(StringBuilder out) {
-        out.append("ConvCount");
-        out.append(mLowerEq ? ">=" : ">");
-        out.append(mLowestCount);
+        out.append("ConvCount:");
+        out.append(lowerEq ? ">=" : ">");
+        out.append(lowestCount);
         out.append(' ');
-        out.append(mHigherEq? "<=" : "<");
-        out.append(mHighestCount);
+        out.append(higherEq? "<=" : "<");
+        out.append(highestCount);
     }
 
     @Override
-    public QueryOperation getQueryOperation(boolean bool) {
+    public boolean hasTextOperation() {
+        return false;
+    }
+
+    @Override
+    public QueryOperation compile(Mailbox mbox, boolean bool) {
         DBQueryOperation op = new DBQueryOperation();
-        op.addConvCountClause(mLowestCount, mLowerEq,
-                mHighestCount, mHigherEq, evalBool(bool));
+        op.addConvCountClause(lowestCount, lowerEq, highestCount, higherEq, evalBool(bool));
         return op;
     }
 

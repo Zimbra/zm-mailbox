@@ -17,8 +17,6 @@ package com.zimbra.cs.index.query;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.lucene.analysis.Analyzer;
@@ -26,17 +24,17 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
-import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.MultiPhraseQuery;
 import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.BooleanClause.Occur;
 
+import com.google.common.base.Joiner;
 import com.google.common.io.Closeables;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.LuceneQueryOperation;
 import com.zimbra.cs.index.NoTermQueryOperation;
-import com.zimbra.cs.index.QueryInfo;
 import com.zimbra.cs.index.QueryOperation;
 import com.zimbra.cs.index.Searcher;
 import com.zimbra.cs.index.WildcardExpansionQueryInfo;
@@ -49,121 +47,32 @@ import com.zimbra.cs.mailbox.Mailbox;
  * @author ysasaki
  */
 public class TextQuery extends Query {
-    private List<String> tokens;
-    private int slop;  // sloppiness for PhraseQuery
+    private final List<String> tokens = new ArrayList<String>();
     private final String field;
-    private final String term;
-    private List<String> oredTokens;
-    private String wildcardTerm;
-    private List<QueryInfo> queryInfo = new ArrayList<QueryInfo>();
-    private final Mailbox mailbox;
+    private final String text;
 
     /**
      * A single search term. If text has multiple words, it is treated as a phrase (full exact match required) text may
      * end in a *, which wildcards the last term.
      */
-    public TextQuery(Mailbox mbox, Analyzer analyzer, String field, String text) throws ServiceException {
-        this(mbox, analyzer.tokenStream(field, new StringReader(text)), field, text);
+    public TextQuery(Analyzer analyzer, String field, String text) {
+        this(analyzer.tokenStream(field, new StringReader(text)), field, text);
     }
 
-    protected TextQuery(Mailbox mbox, TokenStream stream, String field, String text) throws ServiceException {
-        mailbox = mbox;
+    protected TextQuery(TokenStream stream, String field, String text) {
         this.field = field;
-        this.term = text;
-        oredTokens = new LinkedList<String>();
-
-        // The set of tokens from the user's query. The way the parser
-        // works, the token set should generally only be one element.
-        tokens = new ArrayList<String>(1);
-        wildcardTerm = null;
+        this.text = text;
 
         try {
             TermAttribute termAttr = stream.addAttribute(TermAttribute.class);
+            stream.reset();
             while (stream.incrementToken()) {
                 tokens.add(termAttr.term());
             }
             stream.end();
             stream.close();
-        } catch (IOException ignore) {
-        }
-
-        // must look at original text here b/c analyzer strips *'s
-        if (text.endsWith("*")) {
-            // wildcard query!
-            String wcToken;
-
-
-            if (tokens.isEmpty()) {
-                wcToken = text;
-            } else { // only the last token is allowed to have a wildcard in it
-                wcToken = tokens.remove(tokens.size() - 1);
-            }
-
-            if (wcToken.endsWith("*")) {
-                wcToken = wcToken.substring(0, wcToken.length() - 1);
-            }
-
-            if (!wcToken.isEmpty()) {
-                wildcardTerm = wcToken;
-                List<String> expandedTokens = Collections.emptyList();
-                int max = mailbox.index.getMaxWildcardTerms();
-                try {
-                    expandedTokens = expandWildcard(field, wcToken, max);
-                } catch (IOException e) {
-                    throw ServiceException.FAILURE("Failed to expand wildcard", e);
-                }
-                queryInfo.add(new WildcardExpansionQueryInfo(wcToken + "*",
-                        expandedTokens.size(), expandedTokens.size() <= max));
-                // By design, we interpret *zero* tokens to mean "ignore this search term" therefore if the wildcard
-                // expands to no terms, we need to stick something in right here, just so we don't get confused when we
-                // go to execute the query later.
-                if (expandedTokens.isEmpty() || expandedTokens.size() > max) {
-                    tokens.add(wcToken);
-                } else {
-                    for (String token : expandedTokens) {
-                        oredTokens.add(token);
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Expand the wildcard.
-     *
-     * @param field index field
-     * @param token wildcard token
-     * @param max the wildcard is expanded up to this number of tokens
-     * @return expanded tokens. If the size is max + 1, there are more to expand.
-     */
-    private List<String> expandWildcard(String field, String token, int max) throws IOException {
-        // all lucene text should be in lowercase
-        token = token.toLowerCase();
-
-        Searcher searcher = mailbox.index.getIndexStore().openSearcher();
-        try {
-            TermEnum terms = searcher.getTerms(new Term(field, token));
-            List<String> result = new ArrayList<String>(100);
-            do {
-                Term term = terms.term();
-                if (term == null || !term.field().equals(field)) {
-                    break;
-                }
-
-                String text = term.text();
-                if (text.startsWith(token)) {
-                    // we don't care about deletions, they will be filtered later
-                    result.add(text);
-                    if (result.size() > max) { // allow max + 1
-                        break;
-                    }
-                } else if (text.compareTo(token) > 0) {
-                    break;
-                }
-            } while (terms.next());
-            return result;
-        } finally {
-            Closeables.closeQuietly(searcher);
+        } catch (IOException e) { // should never happen
+            ZimbraLog.search.error("Failed to tokenize text=%s", text);
         }
     }
 
@@ -178,47 +87,73 @@ public class TextQuery extends Query {
     }
 
     @Override
-    public QueryOperation getQueryOperation(boolean bool) {
-        if (tokens.size() <= 0 && oredTokens.size() <= 0) {
-            // if we have no tokens, that is usually because the analyzer removed them
-            // -- the user probably queried for a stop word like "a" or "an" or "the"
-            //
-            // By design: interpret *zero* tokens to mean "ignore this search term"
-            //
-            // We can't simply skip this term in the generated parse tree -- we have to put a null
-            // query into the query list, otherwise conjunctions will get confused...so
-            // we pass NULL to addClause which will add a blank clause for us...
-            return new NoTermQueryOperation();
-        } else {
-            LuceneQueryOperation op = new LuceneQueryOperation();
+    public boolean hasTextOperation() {
+        return true;
+    }
 
-            for (QueryInfo inf : queryInfo) {
-                op.addQueryInfo(inf);
+    @Override
+    public QueryOperation compile(Mailbox mbox, boolean bool) throws ServiceException {
+        if (text.endsWith("*")) { // wildcard, must look at original text here b/c analyzer strips *'s
+            // only the last token is allowed to have a wildcard in it
+            String prefix = tokens.isEmpty() ? text : tokens.remove(tokens.size() - 1);
+            prefix = prefix.replace("*", "");
+
+            int max = mbox.index.getMaxWildcardTerms();
+            List<Term> terms = new ArrayList<Term>();
+            boolean overflow = false;
+            Searcher searcher = null;
+            try {
+                searcher = mbox.index.getIndexStore().openSearcher();
+                TermEnum itr = searcher.getTerms(new Term(field, prefix));
+                do {
+                    Term term = itr.term();
+                    if (term != null && term.field().equals(field) && term.text().startsWith(prefix)) {
+                        if (terms.size() >= max) {
+                            overflow = true;
+                            break;
+                        }
+                        terms.add(term);
+                    } else {
+                        break;
+                    }
+                } while (itr.next());
+                itr.close();
+            } catch (IOException e) {
+                throw ServiceException.FAILURE("Failed to expand wildcard", e);
+            } finally {
+                Closeables.closeQuietly(searcher);
             }
 
-            if (tokens.size() == 0) {
-                op.setQueryString(toQueryString(field, term));
-            } else if (tokens.size() == 1) {
-                TermQuery query = new TermQuery(new Term(field, tokens.get(0)));
-                op.addClause(toQueryString(field, term), query, evalBool(bool));
-            } else if (tokens.size() > 1) {
-                PhraseQuery phrase = new PhraseQuery();
-                phrase.setSlop(slop); // TODO configurable?
+            if (terms.isEmpty()) {
+                return new NoTermQueryOperation();
+            } else {
+                MultiPhraseQuery query = new MultiPhraseQuery();
                 for (String token : tokens) {
-                    phrase.add(new Term(field, token));
+                    query.add(new Term(field, token));
                 }
-                op.addClause(toQueryString(field, term), phrase, evalBool(bool));
+                query.add(terms.toArray(new Term[terms.size()]));
+                LuceneQueryOperation op = new LuceneQueryOperation();
+                op.addQueryInfo(new WildcardExpansionQueryInfo(prefix + "*", terms.size(), !overflow));
+                op.addClause(toQueryString(field, text), query, evalBool(bool));
+                return op;
             }
-
-            if (oredTokens.size() > 0) {
-                // probably don't need to do this here...can probably just call addClause
-                BooleanQuery orQuery = new BooleanQuery();
-                for (String token : oredTokens) {
-                    orQuery.add(new TermQuery(new Term(field, token)), Occur.SHOULD);
-                }
-                op.addClause("", orQuery, evalBool(bool));
+        } else if (tokens.isEmpty()) {
+            // if we have no tokens, that is usually because the analyzer removed them. The user probably queried for
+            // a stop word like "a" or "an" or "the".
+            return new NoTermQueryOperation();
+        } else if (tokens.size() == 1) {
+            String token = tokens.get(0);
+            LuceneQueryOperation op = new LuceneQueryOperation();
+            op.addClause(toQueryString(field, text), new TermQuery(new Term(field, token)), evalBool(bool));
+            return op;
+        } else {
+            assert tokens.size() > 1 : tokens.size();
+            PhraseQuery query = new PhraseQuery();
+            for (String token : tokens) {
+                query.add(new Term(field, token));
             }
-
+            LuceneQueryOperation op = new LuceneQueryOperation();
+            op.addClause(toQueryString(field, text), query, evalBool(bool));
             return op;
         }
     }
@@ -226,16 +161,10 @@ public class TextQuery extends Query {
     @Override
     public void dump(StringBuilder out) {
         out.append(field);
-        for (String token : tokens) {
-            out.append(',');
-            out.append(token);
-        }
-        if (wildcardTerm != null) {
-            out.append(" *=");
-            out.append(wildcardTerm);
-            out.append(" [");
-            out.append(oredTokens.size());
-            out.append(" terms]");
+        out.append(':');
+        Joiner.on(',').appendTo(out, tokens);
+        if (text.endsWith("*")) {
+            out.append("[*]");
         }
     }
 }

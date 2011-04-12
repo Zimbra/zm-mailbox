@@ -27,6 +27,8 @@ import org.apache.lucene.search.MultiPhraseQuery;
 import org.apache.lucene.search.PrefixQuery;
 
 import com.google.common.base.Joiner;
+import com.google.common.io.Closeables;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.LuceneQueryOperation;
@@ -43,12 +45,9 @@ import com.zimbra.cs.mailbox.Mailbox;
  * @author ysasaki
  */
 public final class ContactQuery extends Query {
-    private final Mailbox mailbox;
     private List<String> tokens = new ArrayList<String>();
 
-    public ContactQuery(Mailbox mbox, String text) {
-        mailbox = mbox;
-
+    public ContactQuery(String text) {
         TokenStream stream = new ContactTokenFilter(new AddrCharTokenizer(new StringReader(text)));
         TermAttribute termAttr = stream.addAttribute(TermAttribute.class);
         try {
@@ -64,7 +63,12 @@ public final class ContactQuery extends Query {
     }
 
     @Override
-    public QueryOperation getQueryOperation(boolean bool) {
+    public boolean hasTextOperation() {
+        return true;
+    }
+
+    @Override
+    public QueryOperation compile(Mailbox mbox, boolean bool) throws ServiceException {
         if (tokens.isEmpty()) {
             return new NoTermQueryOperation();
         }
@@ -74,37 +78,36 @@ public final class ContactQuery extends Query {
             op.addClause("contact:" +  tokens.get(0), query, evalBool(bool));
         } else {
             MultiPhraseQuery query = new MultiPhraseQuery();
-            int max = mailbox.index.getMaxWildcardTerms();
+            int max = mbox.index.getMaxWildcardTerms();
+            Searcher searcher = null;
             try {
-                Searcher searcher = mailbox.index.getIndexStore().openSearcher();
-                try {
-                    for (String token : tokens) {
-                        TermEnum itr = searcher.getTerms(new Term(LuceneFields.L_CONTACT_DATA, token));
-                        List<Term> terms = new ArrayList<Term>();
-                        do {
-                            Term term = itr.term();
-                            if (term != null && term.field().equals(LuceneFields.L_CONTACT_DATA) &&
-                                    term.text().startsWith(token)) {
-                                terms.add(term);
-                                if (terms.size() >= max) { // too many terms expanded
-                                    break;
-                                }
-                            } else {
+                searcher = mbox.index.getIndexStore().openSearcher();
+                for (String token : tokens) {
+                    TermEnum itr = searcher.getTerms(new Term(LuceneFields.L_CONTACT_DATA, token));
+                    List<Term> terms = new ArrayList<Term>();
+                    do {
+                        Term term = itr.term();
+                        if (term != null && term.field().equals(LuceneFields.L_CONTACT_DATA) &&
+                                term.text().startsWith(token)) {
+                            terms.add(term);
+                            if (terms.size() >= max) { // too many terms expanded
                                 break;
                             }
-                        } while (itr.next());
-                        itr.close();
-                        if (terms.isEmpty()) {
-                            return new NoTermQueryOperation();
+                        } else {
+                            break;
                         }
-                        query.add(terms.toArray(new Term[terms.size()]));
+                    } while (itr.next());
+                    itr.close();
+                    if (terms.isEmpty()) {
+                        return new NoTermQueryOperation();
                     }
-                } finally {
-                    searcher.close();
+                    query.add(terms.toArray(new Term[terms.size()]));
                 }
                 op.addClause("contact:\"" + Joiner.on(' ').join(tokens) + "\"", query, evalBool(bool));
             } catch (IOException e) {
-                ZimbraLog.search.error("Failed to expand wildcard tokens=%s", tokens);
+                throw ServiceException.FAILURE("Failed to expand wildcard", e);
+            } finally {
+                Closeables.closeQuietly(searcher);
             }
         }
         return op;

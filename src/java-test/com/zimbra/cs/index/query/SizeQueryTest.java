@@ -29,7 +29,7 @@ import com.zimbra.cs.account.Provisioning;
  *
  * @author ysasaki
  */
-public class SizeQueryTest {
+public final class SizeQueryTest {
 
     @BeforeClass
     public static void init() throws Exception {
@@ -41,22 +41,22 @@ public class SizeQueryTest {
     @Test
     public void parseSize() throws Exception {
         SizeQuery query = new SizeQuery(SizeQuery.Type.EQ, "1KB");
-        Assert.assertEquals("Q(SIZE=1024)", query.toString());
+        Assert.assertEquals("Q(SIZE:=1024)", query.toString());
 
         query = new SizeQuery(SizeQuery.Type.EQ, ">1KB");
-        Assert.assertEquals("Q(SIZE>1024)", query.toString());
+        Assert.assertEquals("Q(SIZE:>1024)", query.toString());
 
         query = new SizeQuery(SizeQuery.Type.EQ, "<1KB");
-        Assert.assertEquals("Q(SIZE<1024)", query.toString());
+        Assert.assertEquals("Q(SIZE:<1024)", query.toString());
 
         query = new SizeQuery(SizeQuery.Type.EQ, ">=1KB");
-        Assert.assertEquals("Q(SIZE>1023)", query.toString());
+        Assert.assertEquals("Q(SIZE:>1023)", query.toString());
 
         query = new SizeQuery(SizeQuery.Type.EQ, "<=1KB");
-        Assert.assertEquals("Q(SIZE<1025)", query.toString());
+        Assert.assertEquals("Q(SIZE:<1025)", query.toString());
 
         query = new SizeQuery(SizeQuery.Type.EQ, "1 KB");
-        Assert.assertEquals("Q(SIZE=1024)", query.toString());
+        Assert.assertEquals("Q(SIZE:=1024)", query.toString());
 
         try {
             query = new SizeQuery(SizeQuery.Type.EQ, "x KB");

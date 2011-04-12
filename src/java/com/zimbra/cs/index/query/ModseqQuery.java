@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -16,6 +16,7 @@ package com.zimbra.cs.index.query;
 
 import com.zimbra.cs.index.DBQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
+import com.zimbra.cs.mailbox.Mailbox;
 
 /**
  * Query by modseq number.
@@ -28,59 +29,64 @@ public final class ModseqQuery extends Query {
         EQ, GT, GTEQ, LT, LTEQ;
     }
 
-    private int mValue;
-    private Operator mOp;
+    private final int modseq;
+    private final Operator operator;
 
     public ModseqQuery(String changeId) {
         if (changeId.charAt(0) == '<') {
             if (changeId.charAt(1) == '=') {
-                mOp = Operator.LTEQ;
+                operator = Operator.LTEQ;
                 changeId = changeId.substring(2);
             } else {
-                mOp = Operator.LT;
+                operator = Operator.LT;
                 changeId = changeId.substring(1);
             }
         } else if (changeId.charAt(0) == '>') {
             if (changeId.charAt(1) == '=') {
-                mOp = Operator.GTEQ;
+                operator = Operator.GTEQ;
                 changeId = changeId.substring(2);
             } else {
-                mOp = Operator.GT;
+                operator = Operator.GT;
                 changeId = changeId.substring(1);
             }
         } else {
-            mOp = Operator.EQ;
+            operator = Operator.EQ;
         }
-        mValue = Integer.parseInt(changeId);
+        modseq = Integer.parseInt(changeId);
     }
 
     @Override
-    public QueryOperation getQueryOperation(boolean bool) {
+    public boolean hasTextOperation() {
+        return false;
+    }
+
+    @Override
+    public QueryOperation compile(Mailbox mbox, boolean bool) {
         DBQueryOperation op = new DBQueryOperation();
         long highest = -1;
         long lowest = -1;
         boolean lowestEq = false;
         boolean highestEq = false;
 
-        switch (mOp) {
+        switch (operator) {
             case EQ:
-                highest = mValue;
-                lowest = mValue;
+                highest = modseq;
+                lowest = modseq;
                 highestEq = true;
                 lowestEq = true;
                 break;
             case GT:
-                lowest = mValue;
+                lowest = modseq;
                 break;
             case GTEQ:
-                lowest = mValue;
+                lowest = modseq;
                 lowestEq = true;
                 break;
             case LT:
-                highest = mValue;
+                highest = modseq;
                 break;
             case LTEQ:
-                highest = mValue;
+                highest = modseq;
                 highestEq = true;
                 break;
         }
@@ -91,9 +97,8 @@ public final class ModseqQuery extends Query {
 
     @Override
     public void dump(StringBuilder out) {
-        out.append("MODSEQ,");
-        out.append(mOp);
-        out.append(' ');
-        out.append(mValue);
+        out.append("MODSEQ:");
+        out.append(operator);
+        out.append(modseq);
     }
 }

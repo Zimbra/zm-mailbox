@@ -24,6 +24,7 @@ import java.util.Set;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.TermQuery;
 
+import com.google.common.base.Joiner;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.AccessManager;
@@ -39,8 +40,8 @@ import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Mailbox.SearchResultMode;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * Executes a search query.
@@ -65,11 +66,14 @@ import com.zimbra.common.soap.SoapProtocol;
  */
 public final class ZimbraQuery {
 
-    private List<Query> clauses;
+    private final List<Query> clauses;
     private QueryOperation operation;
+    private final OperationContext octxt;
+    private final SoapProtocol protocol;
     private final Mailbox mailbox;
     private final SearchParams params;
     private int chunkSize;
+    private final ParseTree.Node parseTree;
 
     /**
      * ParseTree's job is to take the LIST of query terms (BaseQuery's) and build them
@@ -80,64 +84,55 @@ public final class ZimbraQuery {
      * expensive for nontrivial cases.
      */
     private static class ParseTree {
-        private static final int STATE_AND = 1;
-        private static final int STATE_OR = 2;
+        enum Conjunction {
+            AND, OR;
+        }
 
         static abstract class Node {
-            boolean mTruthFlag = true;
+            boolean bool = true;
 
             Node() {
             }
 
-            void setTruth(boolean truth) {
-                mTruthFlag = truth;
+            void setBool(boolean value) {
+                bool = value;
             };
 
-            void invertTruth() {
-                mTruthFlag = !mTruthFlag;
+            void invert() {
+                bool = !bool;
             }
 
             abstract void pushNotsDown();
             abstract Node simplify();
-            abstract QueryOperation getQueryOperation();
+            abstract QueryOperation compile(Mailbox mbox) throws ServiceException;
         }
 
         static class OperatorNode extends Node {
-            private int mKind;
-            private boolean mTruthFlag = true;
-            private List<Node> mNodes = new ArrayList<Node>();
+            private Conjunction conjunction;
+            private List<Node> nodes = new ArrayList<Node>();
 
-            OperatorNode(int kind) {
-                mKind = kind;
-            }
-
-            @Override
-            void setTruth(boolean truth) {
-                mTruthFlag = truth;
-            };
-
-            @Override
-            void invertTruth() {
-                mTruthFlag = !mTruthFlag;
+            OperatorNode(Conjunction conj) {
+                conjunction = conj;
             }
 
             @Override
             void pushNotsDown() {
-                if (!mTruthFlag) { // ONLY push down if this is a "not"
-                    mTruthFlag = !mTruthFlag;
-
-                    if (mKind == STATE_AND) {
-                        mKind = STATE_OR;
-                    } else {
-                        mKind = STATE_AND;
+                if (!bool) { // ONLY push down if this is a "not"
+                    bool = true;
+                    switch (conjunction) {
+                        case AND:
+                            conjunction = Conjunction.OR;
+                            break;
+                        case OR:
+                            conjunction = Conjunction.AND;
+                            break;
                     }
-                    for (Node n : mNodes) {
-                        n.invertTruth();
+                    for (Node node : nodes) {
+                        node.invert();
                     }
                 }
-                assert(mTruthFlag);
-                for (Node n : mNodes) {
-                    n.pushNotsDown();
+                for (Node node : nodes) {
+                    node.pushNotsDown();
                 }
             }
 
@@ -147,105 +142,88 @@ public final class ZimbraQuery {
                 do {
                     simplifyAgain = false;
                     // first, simplify our sub-ops...
-                    List<Node> newNodes = new ArrayList<Node>();
-                    for (Node n : mNodes) {
-                        newNodes.add(n.simplify());
+                    List<Node> simplified = new ArrayList<Node>();
+                    for (Node node : nodes) {
+                        simplified.add(node.simplify());
                     }
-                    mNodes = newNodes;
+                    nodes = simplified;
 
                     // now, see if any of our subops can be trivially combined with us
-                    newNodes = new ArrayList<Node>();
-                    for (Node n : mNodes) {
-                        boolean addIt = true;
-
-                        if (n instanceof OperatorNode) {
-                            OperatorNode opn = (OperatorNode)n;
-                            if (opn.mKind == mKind && opn.mTruthFlag == true) {
-                                addIt = false;
+                    List<Node> combined = new ArrayList<Node>();
+                    for (Node node : nodes) {
+                        if (node instanceof OperatorNode) {
+                            OperatorNode opnode = (OperatorNode) node;
+                            if (opnode.conjunction == conjunction && opnode.bool) {
                                 simplifyAgain = true;
-                                for (Node opNode: opn.mNodes) {
-                                    newNodes.add(opNode);
+                                for (Node child : opnode.nodes) {
+                                    combined.add(child);
                                 }
+                                continue;
                             }
                         }
-                        if (addIt) {
-                            newNodes.add(n);
-                        }
+                        combined.add(node);
                     }
-                    mNodes = newNodes;
+                    nodes = combined;
                 } while (simplifyAgain);
 
-                if (mNodes.size() == 0) {
+                if (nodes.isEmpty()) {
                     return null;
-                }
-                if (mNodes.size() == 1) {
-                    Node n = mNodes.get(0);
-                    if (!mTruthFlag) {
-                        n.invertTruth();
+                } else if (nodes.size() == 1) {
+                    Node node = nodes.get(0);
+                    if (!bool) {
+                        node.invert();
                     }
-                    return n;
+                    return node;
                 }
                 return this;
             }
 
             void add(Node subNode) {
-                mNodes.add(subNode);
+                nodes.add(subNode);
             }
 
             @Override
             public String toString() {
-                StringBuilder buff = mTruthFlag ?
-                        new StringBuilder() : new StringBuilder(" NOT ");
-
-                buff.append(mKind == STATE_AND ? " AND[" : " OR(");
-
-                for (Node node : mNodes) {
-                    buff.append(node.toString());
-                    buff.append(", ");
-                }
-                buff.append(mKind == STATE_AND ? "] " : ") ");
+                StringBuilder buff = bool ? new StringBuilder() : new StringBuilder(" NOT ");
+                buff.append(conjunction).append('[');
+                Joiner.on(',').appendTo(buff, nodes);
+                buff.append("] ");
                 return buff.toString();
             }
 
             @Override
-            QueryOperation getQueryOperation() {
-                assert(mTruthFlag == true); // we should have pushed the NOT's down the tree already
-                if (mKind == STATE_AND) {
-                    IntersectionQueryOperation intersect = new IntersectionQueryOperation();
-
-                    for (Node n : mNodes) {
-                        QueryOperation op = n.getQueryOperation();
-                        assert(op!=null);
-                        intersect.addQueryOp(op);
-                    }
-
-                    return intersect;
-                } else {
-
-                    UnionQueryOperation union = new UnionQueryOperation();
-
-                    for (Node n : mNodes) {
-                        QueryOperation op = n.getQueryOperation();
-                        assert(op != null);
-                        union.add(op);
-                    }
-                    return union;
+            QueryOperation compile(Mailbox mbox) throws ServiceException {
+                assert(bool); // we should have pushed the NOT's down the tree already
+                switch (conjunction) {
+                    case AND:
+                        IntersectionQueryOperation intersect = new IntersectionQueryOperation();
+                        for (Node node : nodes) {
+                            QueryOperation op = node.compile(mbox);
+                            assert(op != null);
+                            intersect.addQueryOp(op);
+                        }
+                        return intersect;
+                    case OR:
+                        UnionQueryOperation union = new UnionQueryOperation();
+                        for (Node node : nodes) {
+                            QueryOperation op = node.compile(mbox);
+                            assert(op != null);
+                            union.add(op);
+                        }
+                        return union;
+                    default:
+                        throw new IllegalStateException(conjunction.name());
                 }
             }
 
         }
 
         static class ThingNode extends Node {
-            private Query mThing;
+            private Query query;
 
-            ThingNode(Query thing) {
-                mThing = thing;
-                mTruthFlag = thing.getBool();
-            }
-
-            @Override
-            void invertTruth() {
-                mTruthFlag = !mTruthFlag;
+            ThingNode(Query query) {
+                this.query = query;
+                this.bool = query.getBool();
             }
 
             @Override
@@ -259,38 +237,35 @@ public final class ZimbraQuery {
 
             @Override
             public String toString() {
-                StringBuilder buff = mTruthFlag ?
-                        new StringBuilder() : new StringBuilder(" NOT ");
-                buff.append(mThing.toString());
+                StringBuilder buff = bool ? new StringBuilder() : new StringBuilder(" NOT ");
+                buff.append(query);
                 return buff.toString();
             }
 
             @Override
-            QueryOperation getQueryOperation() {
-                return mThing.getQueryOperation(mTruthFlag);
+            QueryOperation compile(Mailbox mbox) throws ServiceException {
+                return query.compile(mbox, bool);
             }
         }
 
         static Node build(List<Query> clauses) {
-            OperatorNode top = new OperatorNode(STATE_OR);
-            OperatorNode cur = new OperatorNode(STATE_AND);
+            OperatorNode top = new OperatorNode(Conjunction.OR);
+            OperatorNode cur = new OperatorNode(Conjunction.AND);
             top.add(cur);
 
-            for (Query q : clauses) {
-                if (q instanceof ConjQuery) {
-                    if (((ConjQuery) q).getConjunction() == ConjQuery.Conjunction.OR) {
-                        cur = new OperatorNode(STATE_AND);
+            for (Query query : clauses) {
+                if (query instanceof ConjQuery) {
+                    if (((ConjQuery) query).getConjunction() == ConjQuery.Conjunction.OR) {
+                        cur = new OperatorNode(Conjunction.AND);
                         top.add(cur);
                     }
+                } else if (query instanceof SubQuery) {
+                    SubQuery sq = (SubQuery) query;
+                    Node subTree = build(sq.getSubClauses());
+                    subTree.setBool(sq.getModifier() != Query.Modifier.MINUS);
+                    cur.add(subTree);
                 } else {
-                    if (q instanceof SubQuery) {
-                        SubQuery sq = (SubQuery) q;
-                        Node subTree = build(sq.getSubClauses());
-                        subTree.setTruth(sq.getModifier() != Query.Modifier.MINUS);
-                        cur.add(subTree);
-                    } else {
-                        cur.add(new ThingNode(q));
-                    }
+                    cur.add(new ThingNode(query));
                 }
             }
 
@@ -308,6 +283,7 @@ public final class ZimbraQuery {
             }
         }
     }
+
     private static final class CountCombiningOperations implements QueryOperation.RecurseCallback {
         int num = 0;
 
@@ -322,15 +298,15 @@ public final class ZimbraQuery {
     }
 
     /**
-     * Returns the number of text parts of this query.
+     * Returns true if this query has at least one text query, false if it's entirely DB query.
      */
-    public int getTextOperationCount() {
-        if (operation == null) {
-            return 0;
+    public boolean hasTextOperation() {
+        for (Query query : clauses) {
+            if (query.hasTextOperation()) {
+                return true;
+            }
         }
-        CountTextOperations count = new CountTextOperations();
-        operation.depthFirstRecurse(count);
-        return count.num;
+        return false;
     }
 
     /**
@@ -358,11 +334,12 @@ public final class ZimbraQuery {
     }
 
     /**
-     * Take the specified query string and build an optimized query. Do not execute the query, however.
+     * Parse the query string.
      */
     public ZimbraQuery(OperationContext octxt, SoapProtocol proto, Mailbox mbox, SearchParams params)
             throws ServiceException {
-
+        this.octxt = octxt;
+        this.protocol = proto;
         this.params = params;
         this.mailbox = mbox;
         long chunkSize = (long) params.getOffset() + (long) params.getLimit();
@@ -372,7 +349,7 @@ public final class ZimbraQuery {
             chunkSize = (int) chunkSize;
         }
 
-        // Step 1: parse the text using the JavaCC parser
+        // Parse the text using the JavaCC parser.
         try {
             QueryParser parser = new QueryParser(mbox, mbox.index.getAnalyzer());
             parser.setDefaultField(params.getDefaultField());
@@ -394,21 +371,38 @@ public final class ZimbraQuery {
 
         ZimbraLog.search.debug("%s,types=%s,sort=%s", this, params.getTypes(), params.getSortBy());
 
-        // Step 2: build a parse tree and push all the "NOT's" down to the bottom level.
-        // This is because we cannot invert result sets
-        ParseTree.Node parseTree = ParseTree.build(clauses);
-        parseTree = parseTree.simplify();
+        // Build a parse tree and push all the "NOT's" down to the bottom level.
+        // This is because we cannot invert result sets.
+        parseTree = ParseTree.build(clauses).simplify();
         parseTree.pushNotsDown();
 
-        // Step 3: Convert list of BaseQueries into list of QueryOperations, then Optimize the Ops
+        // Check sort compatibility.
+        switch (params.getSortBy().getKey()) {
+            case RCPT:
+            case ATTACHMENT:
+            case FLAG:
+            case PRIORITY:
+                // We don't store these in Lucene.
+                if (hasTextOperation()) {
+                    throw ServiceException.INVALID_REQUEST(
+                            "Sort '" + params.getSortBy().name() + "' can't be used with text query.", null);
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void compile() throws ServiceException {
+        // Convert list of Queries into list of QueryOperations, then optimize them.
         if (clauses.size() > 0) {
             // this generates all of the query operations
-            operation = parseTree.getQueryOperation();
+            operation = parseTree.compile(mailbox);
 
             ZimbraLog.search.debug("OP=%s", operation);
 
             // expand the is:local and is:remote parts into in:(LIST)'s
-            operation = operation.expandLocalRemotePart(mbox);
+            operation = operation.expandLocalRemotePart(mailbox);
             ZimbraLog.search.debug("AFTEREXP=%s", operation);
 
             // optimize the query down
@@ -419,7 +413,7 @@ public final class ZimbraQuery {
             ZimbraLog.search.debug("OPTIMIZED=%s", operation);
         }
 
-        // STEP 4: use the OperationContext to update the set of visible referenced folders, local AND remote
+        // Use the OperationContext to update the set of visible referenced folders, local AND remote.
         if (operation != null) {
             QueryTargetSet queryTargets = operation.getQueryTargets();
             assert(operation instanceof UnionQueryOperation || queryTargets.countExplicitTargets() <= 1);
@@ -505,7 +499,7 @@ public final class ZimbraQuery {
                 for (QueryOperation remoteOp : remoteOps.mQueryOperations) {
                     assert(remoteOp instanceof RemoteQueryOperation);
                     try {
-                        ((RemoteQueryOperation) remoteOp).setup(proto, octxt.getAuthToken(), params);
+                        ((RemoteQueryOperation) remoteOp).setup(protocol, octxt.getAuthToken(), params);
                     } catch (Exception e) {
                         ZimbraLog.search.info("Ignoring " + e + " during RemoteQuery generation for " + remoteOps);
                     }
@@ -516,13 +510,7 @@ public final class ZimbraQuery {
             if (!localOps.mQueryOperations.isEmpty()) {
                 ZimbraLog.search.debug("LOCAL_IN=%s", localOps);
 
-                Account authAcct = null;
-                if (octxt != null) {
-                    authAcct = octxt.getAuthenticatedUser();
-                } else {
-                    authAcct = mbox.getAccount();
-                }
-
+                Account authAcct = octxt != null ? octxt.getAuthenticatedUser() : mailbox.getAccount();
                 // Now, for all the LOCAL PARTS of the query, add the trash/spam exclusion part
                 boolean includeTrash = false;
                 boolean includeSpam = false;
@@ -535,7 +523,7 @@ public final class ZimbraQuery {
                     for (Iterator<QueryOperation> iter = localOps.mQueryOperations.iterator(); iter.hasNext();) {
                         QueryOperation cur = iter.next();
                         if (!cur.hasSpamTrashSetting()) {
-                            QueryOperation newOp = cur.ensureSpamTrashSetting(mbox, includeTrash, includeSpam);
+                            QueryOperation newOp = cur.ensureSpamTrashSetting(mailbox, includeTrash, includeSpam);
                             if (newOp != cur) {
                                 iter.remove();
                                 toAdd.add(newOp);
@@ -551,7 +539,7 @@ public final class ZimbraQuery {
                 boolean allowPrivateAccess = true;
                 if (octxt != null) {
                     allowPrivateAccess = AccessManager.getInstance().allowPrivateAccess(octxt.getAuthenticatedUser(),
-                            mbox.getAccount(), octxt.isUsingAdminPrivileges());
+                            mailbox.getAccount(), octxt.isUsingAdminPrivileges());
                 }
 
                 //
@@ -574,10 +562,10 @@ public final class ZimbraQuery {
                     // to see if there are any individual folders that they DO have rights to...
                     // if there are any, then we'll need to run special searches in those
                     // folders
-                    Set<Folder> allVisibleFolders = mbox.getVisibleFolders(octxt);
+                    Set<Folder> allVisibleFolders = mailbox.getVisibleFolders(octxt);
                     if (allVisibleFolders == null) {
                         allVisibleFolders = new HashSet<Folder>();
-                        allVisibleFolders.addAll(mbox.getFolderList(octxt, SortBy.NONE));
+                        allVisibleFolders.addAll(mailbox.getFolderList(octxt, SortBy.NONE));
                     }
                     for (Folder f : allVisibleFolders) {
                         if (f.getType() == MailItem.Type.FOLDER &&
@@ -590,7 +578,7 @@ public final class ZimbraQuery {
                     }
                 }
 
-                Set<Folder> visibleFolders = mbox.getVisibleFolders(octxt);
+                Set<Folder> visibleFolders = mailbox.getVisibleFolders(octxt);
 
                 localOps = handleLocalPermissionChecks(localOps, visibleFolders, allowPrivateAccess);
 
@@ -610,7 +598,7 @@ public final class ZimbraQuery {
                     // clonedLocal should only have the single INTERSECT in it
                     assert(clonedLocal.mQueryOperations.size() == 1);
 
-                    QueryOperation optimizedClonedLocal = clonedLocal.optimize(mbox);
+                    QueryOperation optimizedClonedLocal = clonedLocal.optimize(mailbox);
                     ZimbraLog.search.debug("CLONED_LOCAL_AFTER_OPTIMIZE=%s", optimizedClonedLocal);
 
                     UnionQueryOperation withPrivateExcluded = localOps;
@@ -639,25 +627,8 @@ public final class ZimbraQuery {
             union.add(localOps);
             union.add(remoteOps);
             ZimbraLog.search.debug("BEFORE_FINAL_OPT=%s", union);
-            operation = union.optimize(mbox);
+            operation = union.optimize(mailbox);
         }
-
-        // Check sort compatibility.
-        switch (params.getSortBy().getKey()) {
-            case RCPT:
-            case ATTACHMENT:
-            case FLAG:
-            case PRIORITY:
-                // We don't store these in Lucene.
-                if (getTextOperationCount() > 0) {
-                    throw ServiceException.INVALID_REQUEST(
-                            "Sort '" + params.getSortBy().name() + "' can't be used with text query.", null);
-                }
-                break;
-            default:
-                break;
-        }
-
         ZimbraLog.search.debug("END_ZIMBRAQUERY_CONSTRUCTOR=%s", operation);
     }
 
@@ -676,6 +647,7 @@ public final class ZimbraQuery {
      * @throws ServiceException
      */
     public ZimbraQueryResults execute() throws ServiceException {
+        compile();
         if (operation != null) {
             QueryTargetSet targets = operation.getQueryTargets();
             assert(operation instanceof UnionQueryOperation || targets.countExplicitTargets() <= 1);

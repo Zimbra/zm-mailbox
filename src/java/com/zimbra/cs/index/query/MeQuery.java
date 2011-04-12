@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -37,48 +37,37 @@ public final class MeQuery extends SubQuery {
         super(clauses);
     }
 
-    public static Query create(Mailbox mbox, Analyzer analyzer,
-            Set<AddrQuery.Address> addrs) throws ServiceException {
+    public static Query create(Mailbox mbox, Analyzer analyzer, Set<AddrQuery.Address> addrs) throws ServiceException {
         List<Query> clauses = new ArrayList<Query>();
         Account acct = mbox.getAccount();
-        boolean atFirst = true;
         if (addrs.contains(AddrQuery.Address.FROM)) {
-            clauses.add(new SentQuery(mbox, true));
-            atFirst = false;
+            clauses.add(new SentQuery(true));
         }
         if (addrs.contains(AddrQuery.Address.TO)) {
-            if (atFirst) {
-                atFirst = false;
-            } else {
+            if (!clauses.isEmpty()) {
                 clauses.add(new ConjQuery(ConjQuery.Conjunction.OR));
             }
-            clauses.add(new TextQuery(mbox, analyzer, LuceneFields.L_H_TO, acct.getName()));
+            clauses.add(new TextQuery(analyzer, LuceneFields.L_H_TO, acct.getName()));
         }
         if (addrs.contains(AddrQuery.Address.CC)) {
-            if (atFirst) {
-                atFirst = false;
-            } else {
+            if (!clauses.isEmpty()) {
                 clauses.add(new ConjQuery(ConjQuery.Conjunction.OR));
             }
-            clauses.add(new TextQuery(mbox, analyzer, LuceneFields.L_H_CC, acct.getName()));
+            clauses.add(new TextQuery(analyzer, LuceneFields.L_H_CC, acct.getName()));
         }
 
         for (String alias : acct.getMailAlias()) {
             if (addrs.contains(AddrQuery.Address.TO)) {
-                if (atFirst) {
-                    atFirst = false;
-                } else {
+                if (!clauses.isEmpty()) {
                     clauses.add(new ConjQuery(ConjQuery.Conjunction.OR));
                 }
-                clauses.add(new TextQuery(mbox, analyzer, LuceneFields.L_H_TO, alias));
+                clauses.add(new TextQuery(analyzer, LuceneFields.L_H_TO, alias));
             }
             if (addrs.contains(AddrQuery.Address.CC)) {
-                if (atFirst) {
-                    atFirst = false;
-                } else {
+                if (!clauses.isEmpty()) {
                     clauses.add(new ConjQuery(ConjQuery.Conjunction.OR));
                 }
-                clauses.add(new TextQuery(mbox, analyzer, LuceneFields.L_H_CC, alias));
+                clauses.add(new TextQuery(analyzer, LuceneFields.L_H_CC, alias));
             }
         }
         return new MeQuery(clauses);

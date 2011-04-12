@@ -681,10 +681,6 @@ public final class LuceneIndex implements IndexStore {
                 break;
         }
 
-        if (ZimbraLog.searchstats.isDebugEnabled()) {
-            ZimbraLog.searchstats.debug("Executing search with [%d] text parts", zq.getTextOperationCount());
-        }
-
         ZimbraQueryResults results = zq.execute();
         if (isTaskSort) {
             results = new ReSortingQueryResults(results, originalSort, null);

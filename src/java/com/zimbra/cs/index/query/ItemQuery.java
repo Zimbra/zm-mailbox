@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -32,13 +32,11 @@ import com.zimbra.cs.service.util.ItemId;
  */
 public final class ItemQuery extends Query {
 
-    private boolean mIsAllQuery;
-    private boolean mIsNoneQuery;
-    private List<ItemId> mItemIds;
-    private Mailbox mMailbox;
+    private final boolean isAllQuery;
+    private final boolean isNoneQuery;
+    private final List<ItemId> itemIds;
 
     public static Query create(Mailbox mbox, String str) throws ServiceException {
-
         boolean allQuery = false;
         boolean noneQuery = false;
         List<ItemId> itemIds = new ArrayList<ItemId>();
@@ -60,29 +58,31 @@ public final class ItemQuery extends Query {
             }
         }
 
-        return new ItemQuery(mbox, allQuery, noneQuery, itemIds);
+        return new ItemQuery(allQuery, noneQuery, itemIds);
     }
 
-    ItemQuery(Mailbox mbox, boolean all, boolean none, List<ItemId> ids) {
-        mIsAllQuery = all;
-        mIsNoneQuery = none;
-        mItemIds = ids;
-        mMailbox = mbox;
+    ItemQuery(boolean all, boolean none, List<ItemId> ids) {
+        this.isAllQuery = all;
+        this.isNoneQuery = none;
+        this.itemIds = ids;
     }
 
     @Override
-    public QueryOperation getQueryOperation(boolean bool) {
+    public boolean hasTextOperation() {
+        return false;
+    }
+
+    @Override
+    public QueryOperation compile(Mailbox mbox, boolean bool) {
         DBQueryOperation dbOp = new DBQueryOperation();
-
         bool = evalBool(bool);
-
-        if (bool && mIsAllQuery || !bool && mIsNoneQuery) {
+        if (bool && isAllQuery || !bool && isNoneQuery) {
             // adding no constraints should match everything...
-        } else if (bool && mIsNoneQuery || !bool && mIsAllQuery) {
+        } else if (bool && isNoneQuery || !bool && isAllQuery) {
             return new NoResultsQueryOperation();
         } else {
-            for (ItemId iid : mItemIds) {
-                dbOp.addItemIdClause(mMailbox, iid, bool);
+            for (ItemId iid : itemIds) {
+                dbOp.addItemIdClause(mbox, iid, bool);
             }
         }
         return dbOp;
@@ -91,12 +91,12 @@ public final class ItemQuery extends Query {
     @Override
     public void dump(StringBuilder out) {
         out.append("ITEMID");
-        if (mIsAllQuery) {
+        if (isAllQuery) {
             out.append(",all");
-        } else if (mIsNoneQuery) {
+        } else if (isNoneQuery) {
             out.append(",none");
         } else {
-            for (ItemId id : mItemIds) {
+            for (ItemId id : itemIds) {
                 out.append(',');
                 out.append(id.toString());
             }

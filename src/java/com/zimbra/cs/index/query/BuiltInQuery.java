@@ -51,68 +51,68 @@ public abstract class BuiltInQuery {
     private static final Map<String, BuiltInQuery> BUILTIN_QUERIES = ImmutableMap.<String, BuiltInQuery>builder()
         .put("read", new BuiltInQuery() {
             @Override
-            Query create(Mailbox mbox, Analyzer analyzer) throws ServiceException {
-                return new ReadQuery(mbox, true);
+            Query create(Mailbox mbox, Analyzer analyzer) {
+                return new ReadQuery(true);
             }
         })
         .put("unread", new BuiltInQuery() {
             @Override
-            Query create(Mailbox mbox, Analyzer analyzer) throws ServiceException {
-                return new ReadQuery(mbox, false);
+            Query create(Mailbox mbox, Analyzer analyzer) {
+                return new ReadQuery(false);
             }
         })
         .put("flagged", new BuiltInQuery() {
             @Override
-            Query create(Mailbox mbox, Analyzer analyzer) throws ServiceException {
-                return new FlaggedQuery(mbox, true);
+            Query create(Mailbox mbox, Analyzer analyzer) {
+                return new FlaggedQuery(true);
             }
         })
         .put("unflagged", new BuiltInQuery() {
             @Override
-            Query create(Mailbox mbox, Analyzer analyzer) throws ServiceException {
-                return new FlaggedQuery(mbox, false);
+            Query create(Mailbox mbox, Analyzer analyzer) {
+                return new FlaggedQuery(false);
             }
         })
         .put("draft", new BuiltInQuery() {
             @Override
-            Query create(Mailbox mbox, Analyzer analyzer) throws ServiceException {
-                return new DraftQuery(mbox, true);
+            Query create(Mailbox mbox, Analyzer analyzer) {
+                return new DraftQuery(true);
             }
         })
         .put("received", new BuiltInQuery() {
             @Override
-            Query create(Mailbox mbox, Analyzer analyzer) throws ServiceException {
-                return new SentQuery(mbox, false);
+            Query create(Mailbox mbox, Analyzer analyzer) {
+                return new SentQuery(false);
             }
         })
         .put("replied", new BuiltInQuery() {
             @Override
-            Query create(Mailbox mbox, Analyzer analyzer) throws ServiceException {
-                return new RepliedQuery(mbox, true);
+            Query create(Mailbox mbox, Analyzer analyzer) {
+                return new RepliedQuery(true);
             }
         })
         .put("unreplied", new BuiltInQuery() {
             @Override
-            Query create(Mailbox mbox, Analyzer analyzer) throws ServiceException {
-                return new RepliedQuery(mbox, false);
+            Query create(Mailbox mbox, Analyzer analyzer) {
+                return new RepliedQuery(false);
             }
         })
         .put("forwarded", new BuiltInQuery() {
             @Override
-            Query create(Mailbox mbox, Analyzer analyzer) throws ServiceException {
-                return new ForwardedQuery(mbox, true);
+            Query create(Mailbox mbox, Analyzer analyzer) {
+                return new ForwardedQuery(true);
             }
         })
         .put("unforwarded", new BuiltInQuery() {
             @Override
-            Query create(Mailbox mbox, Analyzer analyzer) throws ServiceException {
-                return new ForwardedQuery(mbox, false);
+            Query create(Mailbox mbox, Analyzer analyzer)  {
+                return new ForwardedQuery(false);
             }
         })
         .put("invite", new BuiltInQuery() {
             @Override
-            Query create(Mailbox mbox, Analyzer analyzer) throws ServiceException {
-                return new InviteQuery(mbox, true);
+            Query create(Mailbox mbox, Analyzer analyzer) {
+                return new InviteQuery(true);
             }
         })
         .put("anywhere", new BuiltInQuery() {
@@ -141,8 +141,8 @@ public abstract class BuiltInQuery {
         })
         .put("sent", new BuiltInQuery() { // send by me
             @Override
-            Query create(Mailbox mbox, Analyzer analyzer) throws ServiceException {
-                return new SentQuery(mbox, true);
+            Query create(Mailbox mbox, Analyzer analyzer) {
+                return new SentQuery(true);
             }
         })
         .put("tome", new BuiltInQuery() {
@@ -153,8 +153,8 @@ public abstract class BuiltInQuery {
         })
         .put("fromme", new BuiltInQuery() { // sent by me
             @Override
-            Query create(Mailbox mbox, Analyzer analyzer) throws ServiceException {
-                return new SentQuery(mbox, true);
+            Query create(Mailbox mbox, Analyzer analyzer) {
+                return new SentQuery(true);
             }
         })
         .put("ccme", new BuiltInQuery() {

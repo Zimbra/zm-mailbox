@@ -33,7 +33,7 @@ import com.zimbra.cs.account.Provisioning;
  *
  * @author ysasaki
  */
-public class DateQueryTest {
+public final class DateQueryTest {
 
     @BeforeClass
     public static void init() throws Exception {
@@ -47,7 +47,7 @@ public class DateQueryTest {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         DateQuery query = new DateQuery(DateQuery.Type.DATE);
         TimeZone tz = TimeZone.getTimeZone("UTC");
-        String expected = "Q(DATE,DATE,201001230000-201001240000)";
+        String expected = "Q(DATE:DATE,201001230000-201001240000)";
 
         query.parseDate("1/23/2010", tz, Locale.ENGLISH);
         Assert.assertEquals(expected, query.toString());
@@ -75,58 +75,58 @@ public class DateQueryTest {
         TimeZone tz = TimeZone.getTimeZone("UTC");
 
         query.parseDate("+2mi", tz, Locale.ENGLISH);
-        Assert.assertEquals("Q(DATE,DATE," + getMinute(2) + "-" + getMinute(3) + ")", query.toString());
+        Assert.assertEquals("Q(DATE:DATE," + getMinute(2) + "-" + getMinute(3) + ")", query.toString());
 
         query.parseDate("+2minute", tz, Locale.ENGLISH);
-        Assert.assertEquals("Q(DATE,DATE," + getMinute(2) + "-" + getMinute(3) + ")", query.toString());
+        Assert.assertEquals("Q(DATE:DATE," + getMinute(2) + "-" + getMinute(3) + ")", query.toString());
 
         query.parseDate("+2minutes", tz, Locale.ENGLISH);
-        Assert.assertEquals("Q(DATE,DATE," + getMinute(2) + "-" + getMinute(3) + ")", query.toString());
+        Assert.assertEquals("Q(DATE:DATE," + getMinute(2) + "-" + getMinute(3) + ")", query.toString());
 
         query.parseDate("+2h", tz, Locale.ENGLISH);
-        Assert.assertEquals("Q(DATE,DATE," + getHour(2) + "-" + getHour(3) + ")", query.toString());
+        Assert.assertEquals("Q(DATE:DATE," + getHour(2) + "-" + getHour(3) + ")", query.toString());
 
         query.parseDate("+2hour", tz, Locale.ENGLISH);
-        Assert.assertEquals("Q(DATE,DATE," + getHour(2) + "-" + getHour(3) + ")", query.toString());
+        Assert.assertEquals("Q(DATE:DATE," + getHour(2) + "-" + getHour(3) + ")", query.toString());
 
         query.parseDate("+2hours", tz, Locale.ENGLISH);
-        Assert.assertEquals("Q(DATE,DATE," + getHour(2) + "-" + getHour(3) + ")", query.toString());
+        Assert.assertEquals("Q(DATE:DATE," + getHour(2) + "-" + getHour(3) + ")", query.toString());
 
         query.parseDate("+2d", tz, Locale.ENGLISH);
-        Assert.assertEquals("Q(DATE,DATE," + getDate(2) + "-" + getDate(3) + ")", query.toString());
+        Assert.assertEquals("Q(DATE:DATE," + getDate(2) + "-" + getDate(3) + ")", query.toString());
 
         query.parseDate("+2day", tz, Locale.ENGLISH);
-        Assert.assertEquals("Q(DATE,DATE," + getDate(2) + "-" + getDate(3) + ")", query.toString());
+        Assert.assertEquals("Q(DATE:DATE," + getDate(2) + "-" + getDate(3) + ")", query.toString());
 
         query.parseDate("+2days", tz, Locale.ENGLISH);
-        Assert.assertEquals("Q(DATE,DATE," + getDate(2) + "-" + getDate(3) + ")", query.toString());
+        Assert.assertEquals("Q(DATE:DATE," + getDate(2) + "-" + getDate(3) + ")", query.toString());
 
         query.parseDate("+2w", tz, Locale.ENGLISH);
-        Assert.assertEquals("Q(DATE,DATE," + getWeek(2) + "-" + getWeek(3) + ")", query.toString());
+        Assert.assertEquals("Q(DATE:DATE," + getWeek(2) + "-" + getWeek(3) + ")", query.toString());
 
         query.parseDate("+2week", tz, Locale.ENGLISH);
-        Assert.assertEquals("Q(DATE,DATE," + getWeek(2) + "-" + getWeek(3) + ")", query.toString());
+        Assert.assertEquals("Q(DATE:DATE," + getWeek(2) + "-" + getWeek(3) + ")", query.toString());
 
         query.parseDate("+2weeks", tz, Locale.ENGLISH);
-        Assert.assertEquals("Q(DATE,DATE," + getWeek(2) + "-" + getWeek(3) + ")", query.toString());
+        Assert.assertEquals("Q(DATE:DATE," + getWeek(2) + "-" + getWeek(3) + ")", query.toString());
 
         query.parseDate("+2m", tz, Locale.ENGLISH);
-        Assert.assertEquals("Q(DATE,DATE," + getMonth(2) + "-" + getMonth(3) + ")", query.toString());
+        Assert.assertEquals("Q(DATE:DATE," + getMonth(2) + "-" + getMonth(3) + ")", query.toString());
 
         query.parseDate("+2month", tz, Locale.ENGLISH);
-        Assert.assertEquals("Q(DATE,DATE," + getMonth(2) + "-" + getMonth(3) + ")", query.toString());
+        Assert.assertEquals("Q(DATE:DATE," + getMonth(2) + "-" + getMonth(3) + ")", query.toString());
 
         query.parseDate("+2months", tz, Locale.ENGLISH);
-        Assert.assertEquals("Q(DATE,DATE," + getMonth(2) + "-" + getMonth(3) + ")", query.toString());
+        Assert.assertEquals("Q(DATE:DATE," + getMonth(2) + "-" + getMonth(3) + ")", query.toString());
 
         query.parseDate("+2y", tz, Locale.ENGLISH);
-        Assert.assertEquals("Q(DATE,DATE," + getYear(2) + "-" + getYear(3) + ")", query.toString());
+        Assert.assertEquals("Q(DATE:DATE," + getYear(2) + "-" + getYear(3) + ")", query.toString());
 
         query.parseDate("+2year", tz, Locale.ENGLISH);
-        Assert.assertEquals("Q(DATE,DATE," + getYear(2) + "-" + getYear(3) + ")", query.toString());
+        Assert.assertEquals("Q(DATE:DATE," + getYear(2) + "-" + getYear(3) + ")", query.toString());
 
         query.parseDate("+2years", tz, Locale.ENGLISH);
-        Assert.assertEquals("Q(DATE,DATE," + getYear(2) + "-" + getYear(3) + ")", query.toString());
+        Assert.assertEquals("Q(DATE:DATE," + getYear(2) + "-" + getYear(3) + ")", query.toString());
     }
 
     private String getMinute(int minute) {
@@ -220,7 +220,7 @@ public class DateQueryTest {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         DateQuery query = new DateQuery(DateQuery.Type.DATE);
         query.parseDate("1/23/2010", TimeZone.getTimeZone("UTC"), Locale.GERMAN);
-        Assert.assertEquals("Q(DATE,DATE,201001230000-201001240000)", query.toString());
+        Assert.assertEquals("Q(DATE:DATE,201001230000-201001240000)", query.toString());
     }
 
 }

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -14,9 +14,6 @@
  */
 package com.zimbra.cs.index.query;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.mailbox.Mailbox;
-
 /**
  * Query messages tagged with Invite.
  *
@@ -25,8 +22,8 @@ import com.zimbra.cs.mailbox.Mailbox;
  */
 public final class InviteQuery extends TagQuery {
 
-    public InviteQuery(Mailbox mailbox, boolean truth) throws ServiceException {
-        super(mailbox, "\\Invite", truth);
+    public InviteQuery(boolean bool) {
+        super("\\Invite", bool);
     }
 
     @Override

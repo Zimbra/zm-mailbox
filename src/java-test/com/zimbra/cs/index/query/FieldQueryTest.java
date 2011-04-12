@@ -67,32 +67,32 @@ public final class FieldQueryTest {
 
     @Test
     public void textFieldQuery() throws Exception {
-        Query query = FieldQuery.newQuery(mailbox, "company", "zimbra");
-        Assert.assertEquals("Q(l.field,company:zimbra)", query.toString());
+        Query query = FieldQuery.create(mailbox, "company", "zimbra");
+        Assert.assertEquals("Q(l.field:company:zimbra)", query.toString());
     }
 
     @Test
     public void numericFieldQuery() throws Exception {
-        Query query = FieldQuery.newQuery(mailbox, "capacity", "3");
+        Query query = FieldQuery.create(mailbox, "capacity", "3");
         Assert.assertEquals("Q(#capacity#:3)", query.toString());
 
-        query = FieldQuery.newQuery(mailbox, "capacity", ">3");
+        query = FieldQuery.create(mailbox, "capacity", ">3");
         Assert.assertEquals("Q(#capacity#:>3)", query.toString());
 
-        query = FieldQuery.newQuery(mailbox, "capacity", ">=3");
+        query = FieldQuery.create(mailbox, "capacity", ">=3");
         Assert.assertEquals("Q(#capacity#:>=3)", query.toString());
 
-        query = FieldQuery.newQuery(mailbox, "capacity", "<-3");
+        query = FieldQuery.create(mailbox, "capacity", "<-3");
         Assert.assertEquals("Q(#capacity#:<-3)", query.toString());
 
-        query = FieldQuery.newQuery(mailbox, "capacity", "<=-3");
+        query = FieldQuery.create(mailbox, "capacity", "<=-3");
         Assert.assertEquals("Q(#capacity#:<=-3)", query.toString());
     }
 
     @Test
     public void wildcard() throws Exception {
-        Query query = FieldQuery.newQuery(mailbox, "firstname", "*");
-        Assert.assertEquals("Q(l.field,firstname: *=firstname: [0 terms])", query.toString());
+        Query query = FieldQuery.create(mailbox, "firstname", "*");
+        Assert.assertEquals("Q(l.field:firstname:*[*])", query.toString());
     }
 
 }

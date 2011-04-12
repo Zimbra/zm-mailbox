@@ -57,8 +57,7 @@ public final class ContactQueryTest {
 
     @Test
     public void tokenize() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        Assert.assertEquals("Q(CONTACT:john,smith)", new ContactQuery(mbox, "John Smith").toString());
+        Assert.assertEquals("Q(CONTACT:john,smith)", new ContactQuery("John Smith").toString());
     }
 
     @Test
@@ -74,7 +73,6 @@ public final class ContactQueryTest {
         fields.put(ContactConstants.A_lastName, "Smith");
         fields.put(ContactConstants.A_email, "jonathan.smith@zimbra.com");
         Contact contact = mbox.createContact(null, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
-        MailboxTestUtil.index(mbox);
 
         ZimbraQueryResults results = mbox.index.search(new OperationContext(mbox), "contact:\"Jon Smith\"",
                 EnumSet.of(MailItem.Type.CONTACT), SortBy.NONE, 100);

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -20,9 +20,7 @@ import java.util.Set;
 
 import org.apache.lucene.analysis.Analyzer;
 
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.LuceneFields;
-import com.zimbra.cs.mailbox.Mailbox;
 
 /**
  * A simpler way of expressing (to:FOO or from:FOO or cc:FOO).
@@ -40,32 +38,30 @@ public final class AddrQuery extends SubQuery {
         super(clauses);
     }
 
-    public static AddrQuery create(Mailbox mbox, Analyzer analyzer,
-            Set<Address> addrs, String text) throws ServiceException {
+    @Override
+    public boolean hasTextOperation() {
+        return true;
+    }
+
+    public static AddrQuery create(Analyzer analyzer, Set<Address> addrs, String text) {
         List<Query> clauses = new ArrayList<Query>();
-        boolean atFirst = true;
 
         if (addrs.contains(Address.FROM)) {
-            clauses.add(new TextQuery(mbox, analyzer, LuceneFields.L_H_FROM, text));
-            atFirst = false;
+            clauses.add(new TextQuery(analyzer, LuceneFields.L_H_FROM, text));
         }
 
         if (addrs.contains(Address.TO)) {
-            if (atFirst) {
-                atFirst = false;
-            } else {
+            if (!clauses.isEmpty()) {
                 clauses.add(new ConjQuery(ConjQuery.Conjunction.OR));
             }
-            clauses.add(new TextQuery(mbox, analyzer, LuceneFields.L_H_TO, text));
+            clauses.add(new TextQuery(analyzer, LuceneFields.L_H_TO, text));
         }
 
         if (addrs.contains(Address.CC)) {
-            if (atFirst) {
-                atFirst = false;
-            } else {
+            if (!clauses.isEmpty()) {
                 clauses.add(new ConjQuery(ConjQuery.Conjunction.OR));
             }
-            clauses.add(new TextQuery(mbox, analyzer, LuceneFields.L_H_CC, text));
+            clauses.add(new TextQuery(analyzer, LuceneFields.L_H_CC, text));
         }
 
         return new AddrQuery(clauses);

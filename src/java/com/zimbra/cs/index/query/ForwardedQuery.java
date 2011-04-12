@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -14,9 +14,6 @@
  */
 package com.zimbra.cs.index.query;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.mailbox.Mailbox;
-
 /**
  * Query messages tagged with Forwarded.
  *
@@ -25,8 +22,8 @@ import com.zimbra.cs.mailbox.Mailbox;
  */
 public final class ForwardedQuery extends TagQuery {
 
-    public ForwardedQuery(Mailbox mailbox, boolean truth) throws ServiceException {
-        super(mailbox, "\\Forwarded", truth);
+    public ForwardedQuery(boolean bool) {
+        super("\\Forwarded", bool);
     }
 
     @Override
