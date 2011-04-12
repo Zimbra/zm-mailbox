@@ -2412,7 +2412,7 @@ public class Invite {
         return thisSeq >= otherSeq;
     }
 
-    public Invite newCopy() throws ServiceException {
+    public Invite newCopy() {
         List<ZAttendee> attendees = new ArrayList<ZAttendee>(mAttendees.size());
         for (ZAttendee at : mAttendees) {
             attendees.add(new ZAttendee(at));  // add a copy of attendee

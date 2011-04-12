@@ -1231,15 +1231,6 @@ creation, an INVITE_OUT_OF_DATE exception will be thrown.
 
 -------------------------------------------------------------------------------
 
-     * <DismissCalendarItemAlarmRequest>
-     *   <appt|task id="cal item id" lastAlarm="alarm time in millis"/>+
-     * </DismissCalendarItemAlarmRequest>
-     *
-     * <DismissCalendarItemAlarmResponse>
-     *   <appt|task id="cal item id">
-     *     <alarmData ...>  // so the client knows when to trigger the next alarm
-     *   </appt|task>+
-     * </DismissCalendarItemAlarmResponse>
 <DismissCalendarItemAlarmRequest>
   <appt|task id="cal item id" dismissedAt="time alarm was dismissed, in millis"/>+
 </DismissCalendarItemAlarmRequest>
@@ -1250,6 +1241,19 @@ creation, an INVITE_OUT_OF_DATE exception will be thrown.
                      // See <alarmData> definition under SearchResponse, in soap.txt
   </appt|task>+  // one for each <appt|task> in the request
 </DismissCalendarItemAlarmResponse>
+
+-------------------------------------------------------------------------------
+
+<SnoozeCalendarItemAlarmRequest>
+  <appt|task id="cal item id" until="when to show the alarm agian, in millis"/>+
+</SnoozeCalendarItemAlarmRequest>
+
+<SnoozeCalendarItemAlarmResponse>
+  <appt|task id="cal item id">
+    <alarmData ...>  // so the client knows when to trigger the next alarm
+                     // See <alarmData> definition under SearchResponse, in soap.txt
+  </appt|task>+  // one for each <appt|task> in the request
+</SnoozeCalendarItemAlarmResponse>
 
 -------------------------------------------------------------------------------
 

@@ -150,7 +150,7 @@ public class Alarm {
         mAttendees = attendees;
     }
 
-    public Alarm newCopy() throws ServiceException {
+    public Alarm newCopy() {
         List<ZAttendee> attendees = null;
         if (mAttendees != null) {
             attendees = new ArrayList<ZAttendee>(mAttendees.size());
@@ -159,8 +159,14 @@ public class Alarm {
             }
         }
         // Assume mAttach is immutable.  No need to create a copy object.
-        return new Alarm(mAction, mTriggerType, mTriggerRelated, mTriggerRelative, mTriggerAbsolute,
-                         mRepeatDuration, mRepeatCount, mDescription, mSummary, mAttach, attendees);
+        Alarm copy = null;
+        try {
+            copy = new Alarm(mAction, mTriggerType, mTriggerRelated, mTriggerRelative, mTriggerAbsolute,
+                             mRepeatDuration, mRepeatCount, mDescription, mSummary, mAttach, attendees);
+        } catch (ServiceException e) {
+            // shouldn't happen
+        }
+        return copy;
     }
 
     public String toString() {

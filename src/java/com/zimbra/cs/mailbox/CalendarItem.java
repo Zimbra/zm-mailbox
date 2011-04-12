@@ -517,11 +517,11 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         item.mEndTime = item.recomputeRecurrenceEndTime(item.mEndTime);
 
         if (firstInvite.hasAlarm()) {
-            item.recomputeNextAlarm(nextAlarm, false);
+            item.recomputeNextAlarm(nextAlarm, false, false);
             item.saveMetadata();
             AlarmData alarmData = item.getAlarmData();
             if (alarmData != null) {
-                long newNextAlarm = alarmData.getNextAt();
+                long newNextAlarm = alarmData.getNextAtBase();
                 if (newNextAlarm > 0 && newNextAlarm < item.mStartTime) {
                     item.mStartTime = newNextAlarm;
                 }
@@ -663,9 +663,9 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         }
         // Recompute next alarm.  Bring appointment start time forward to the alarm time,
         // if the next alarm is before the first instance.
-        recomputeNextAlarm(nextAlarm, false);
+        recomputeNextAlarm(nextAlarm, false, false);
         if (mAlarmData != null) {
-            long newNextAlarm = mAlarmData.getNextAt();
+            long newNextAlarm = mAlarmData.getNextAtBase();
             if (newNextAlarm > 0 && newNextAlarm < startTime && mStartTime != startTime) {
                 timesChanged = true;
                 mStartTime = newNextAlarm;
@@ -804,7 +804,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             // range.
             if (mAlarmData != null) {
                 alarmInstStart = mAlarmData.getNextInstanceStart();
-                long nextAlarm = mAlarmData.getNextAt();
+                long nextAlarm = mAlarmData.getNextAtBase();
                 if (nextAlarm >= start && nextAlarm < end) {
                     if (alarmInstStart >= end)
                         endAdjusted = alarmInstStart + 1;
@@ -1920,7 +1920,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
                        // it doesn't have anymore REQUESTs!
             return false;
         } else {
-            if (nextAlarm > 0 && mAlarmData != null && mAlarmData.getNextAt() != nextAlarm)
+            if (nextAlarm > 0 && mAlarmData != null && mAlarmData.getNextAtBase() != nextAlarm)
                 modifiedCalItem = true;
 
             if (modifiedCalItem) {
@@ -3188,27 +3188,48 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
 
 
     public static class AlarmData {
-        private long mNextAt = Long.MAX_VALUE;
+        private static final long NO_SNOOZE = Long.MAX_VALUE;
+
+        private long mNextAt = Long.MAX_VALUE;  // time when the alarm goes off, unless snoozed
+        private long mSnoozeUntil = NO_SNOOZE;  // time when the snoozed alarm goes off
+                                                // When an alarm is snoozed, mNextAt remains the same and
+                                                // mSnoozeUntil is set to the new time.
         private long mNextInstStart;  // start time of the instance that mNextAt alarm is for
         private int mInvId;
         private int mCompNum;
         private Alarm mAlarm;
 
-        public AlarmData(long next, long nextInstStart, int invId, int compNum, Alarm alarm) {
+        public AlarmData(long next, long snoozeUntil, long nextInstStart, int invId, int compNum, Alarm alarm) {
             mNextAt = next;
+            mSnoozeUntil = snoozeUntil;
             mNextInstStart = nextInstStart;
             mInvId = invId;
             mCompNum = compNum;
             mAlarm = alarm;
         }
 
-        public long getNextAt() { return mNextAt; }
+        public Object clone() {
+            return new AlarmData(mNextAt, mSnoozeUntil, mNextInstStart, mInvId, mCompNum, mAlarm.newCopy());
+        }
+
+        /**
+         * Returns the next alarm trigger time.  It is either the snoozed re-trigger time or the base trigger time.
+         * @return
+         */
+        public long getNextAt() {
+            return mSnoozeUntil != NO_SNOOZE ? mSnoozeUntil : mNextAt; 
+        }
+
+        private long getNextAtBase() { return mNextAt; }
+        public long getSnoozeUntil() { return mSnoozeUntil; }
+        private void setSnoozeUntil(long s) { mSnoozeUntil = s; }
         public long getNextInstanceStart() { return mNextInstStart; }
         public int getInvId() { return mInvId; }
         public int getCompNum() { return mCompNum; }
         public Alarm getAlarm() { return mAlarm; }
 
         private static final String FNAME_NEXT_AT = "na";
+        private static final String FNAME_SNOOZE = "snuz";
         private static final String FNAME_NEXT_INSTANCE_START = "nis";
         private static final String FNAME_INV_ID = "invId";
         private static final String FNAME_COMP_NUM = "compNum";
@@ -3216,6 +3237,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
 
         static AlarmData decodeMetadata(Metadata meta) throws ServiceException {
             long nextAt = meta.getLong(FNAME_NEXT_AT);
+            long snoozeUntil = meta.getLong(FNAME_SNOOZE, NO_SNOOZE);
             long nextInstStart = meta.getLong(FNAME_NEXT_INSTANCE_START);
             int invId = (int) meta.getLong(FNAME_INV_ID);
             int compNum = (int) meta.getLong(FNAME_COMP_NUM);
@@ -3223,12 +3245,14 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             Metadata metaAlarm = meta.getMap(FNAME_ALARM, true);
             if (metaAlarm != null)
                 alarm = Alarm.decodeMetadata(metaAlarm);
-            return new AlarmData(nextAt, nextInstStart, invId, compNum, alarm);
+            return new AlarmData(nextAt, snoozeUntil, nextInstStart, invId, compNum, alarm);
         }
 
         Metadata encodeMetadata() {
             Metadata meta = new Metadata();
             meta.put(FNAME_NEXT_AT, mNextAt);
+            if (mSnoozeUntil != NO_SNOOZE)
+                meta.put(FNAME_NEXT_AT, mSnoozeUntil);
             meta.put(FNAME_NEXT_INSTANCE_START, mNextInstStart);
             meta.put(FNAME_INV_ID, mInvId);
             meta.put(FNAME_COMP_NUM, mCompNum);
@@ -3248,11 +3272,16 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         return false;
     }
 
-    public void updateNextAlarm(long nextAlarm) throws ServiceException {
+    void updateNextAlarm(long nextAlarm, boolean dismissed) throws ServiceException {
+        updateNextAlarm(nextAlarm, mAlarmData, dismissed);
+    }
+
+    void updateNextAlarm(long nextAlarm, AlarmData savedAlarmData, boolean dismissed) throws ServiceException {
         boolean hadAlarm = mAlarmData != null;
-        recomputeNextAlarm(nextAlarm, true);
+        mAlarmData = savedAlarmData;  // Restore old alarm data before recomputing.
+        recomputeNextAlarm(nextAlarm, true, dismissed);
         if (mAlarmData != null) {
-            long newNextAlarm = mAlarmData.getNextAt();
+            long newNextAlarm = mAlarmData.getNextAtBase();
             if (newNextAlarm > 0 && newNextAlarm < mStartTime)
                 mStartTime = newNextAlarm;
             if (ZimbraLog.calendar.isDebugEnabled()) {
@@ -3276,18 +3305,9 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         return endTime;
     }
 
-    /**
-     * Recompute the next non-EMAIL alarm trigger time that is at or later than "nextAlarm".
-     * @param nextAlarm next alarm should go off at or after this time
-     *                  special values:
-     *                  CalendarItem.NEXT_ALARM_KEEP_CURRENT - keep current value
-     *                  CalendarItem.NEXT_ALARM_ALL_DISMISSED - all alarms have been shown and dismissed
-     *                  CalendarItem.NEXT_ALARM_FROM_NOW - compute next trigger time from current time
-     * @param skipAlarmDefChangeCheck
-     */
-    private void recomputeNextAlarm(long nextAlarm, boolean skipAlarmDefChangeCheck)
+    private void recomputeNextAlarm(long nextAlarm, boolean skipAlarmDefChangeCheck, boolean dismissed)
     throws ServiceException {
-        mAlarmData = getNextAlarm(nextAlarm, skipAlarmDefChangeCheck, mAlarmData, false);
+        mAlarmData = getNextAlarm(nextAlarm, skipAlarmDefChangeCheck, mAlarmData, dismissed, false);
     }
 
     /**
@@ -3297,10 +3317,11 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
      * @throws ServiceException
      */
     public AlarmData getNextEmailAlarm() throws ServiceException {
-        return getNextAlarm(System.currentTimeMillis(), true, null, true);
+        return getNextAlarm(System.currentTimeMillis(), true, null, false, true);
     }
 
-    private AlarmData getNextAlarm(long nextAlarm, boolean skipAlarmDefChangeCheck, AlarmData currentNextAlarmData, boolean forEmailAction)
+    private AlarmData getNextAlarm(long nextAlarm, boolean skipAlarmDefChangeCheck,
+            AlarmData currentNextAlarmData, boolean dismissed, boolean forEmailAction)
     throws ServiceException {
         if (nextAlarm == NEXT_ALARM_ALL_DISMISSED || !hasAlarm()) {
             return null;
@@ -3308,22 +3329,32 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
 
         long now = getMailbox().getOperationTimestampMillis();
         long atOrAfter;  // Chosen alarm must be at or after this time.
+        long snoozeUntil;
         if (nextAlarm == NEXT_ALARM_KEEP_CURRENT) {
             // special case to preserve current next alarm trigger time
             if (currentNextAlarmData != null) {
-                atOrAfter = currentNextAlarmData.getNextAt();
+                atOrAfter = currentNextAlarmData.getNextAtBase();
+                snoozeUntil = currentNextAlarmData.getSnoozeUntil();
             } else {
-                atOrAfter = now;  // no existing alarm; pick the first alarm in the future
+                atOrAfter = snoozeUntil = now;  // no existing alarm; pick the first alarm in the future
             }
         } else if (nextAlarm == NEXT_ALARM_FROM_NOW) {
             // another special case to mean starting from "now"; pick the first alarm in the future
-            atOrAfter = now;
+            atOrAfter = snoozeUntil = now;
+        } else if (!dismissed && currentNextAlarmData != null) {
+            // if not dismissing previous alarm, keep it as the base trigger time.  nextAlarm has snoozed re-trigger time
+            atOrAfter = currentNextAlarmData.getNextAtBase();
+            snoozeUntil = nextAlarm;
         } else {
             // else we just use the nextAlarm value that was passed in
-            atOrAfter = nextAlarm;
+            atOrAfter = snoozeUntil = nextAlarm;
         }
-        if (atOrAfter <= 0)  // sanity check
-            atOrAfter = now;
+        if (atOrAfter <= 0) {  // sanity check
+            atOrAfter = snoozeUntil = now;
+        }
+        if (snoozeUntil != AlarmData.NO_SNOOZE && snoozeUntil < atOrAfter) {
+            snoozeUntil = atOrAfter;
+        }
 
         // startTime and endTime limit the time range for meeting instances to be examined.
         // All instances that ended before startTime are ignored, and by extension the alarms for them.
@@ -3378,109 +3409,207 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
                 // If alarm definition changed, just pick the earliest alarm from now.  Without this,
                 // we can't change alarm definition to an earlier trigger time, e.g. from 5 minutes before
                 // to 10 minutes before. (bug 28630)
-                atOrAfter = now;
+                atOrAfter = snoozeUntil = now;
             }
         }
 
-        long triggerAt = Long.MAX_VALUE;
-        Instance alarmInstance = null;
-        Alarm theAlarm = null;
+        AlarmData alarmData = getNextAlarmHelper(atOrAfter, snoozeUntil, instances, startTime, forEmailAction);
+        if (alarmData == null && this instanceof Task) {
+            // special handling for Tasks
+            return getNextAlarmHelperForTasks(atOrAfter, snoozeUntil, forEmailAction);
+        } else {
+            return alarmData;
+        }
+    }
 
+    private AlarmData getNextAlarmHelper(
+            long atOrAfter, long snoozeUntil, Collection<Instance> instances, long rangeStart, boolean forEmailAction) {
+        // Find the two nearest alarms that surround atOrAfter such that t(alarm1) <= atOrAfter < t(alarm2).
+        Alarm alarm1 = null, alarm2 = null;
+        long trigger1 = Long.MIN_VALUE, trigger2 = Long.MAX_VALUE;  // trigger times for alarm1 and alarm2
+        long instStart1 = 0, instStart2 = 0;  // instance start time for alarm1 and alarm2
+        int invId1 = 0, compNum1 = 0, invId2 = 0, compNum2 = 0;  // invId and compNum for inst1 and inst2
         for (Instance inst : instances) {
             long instStart = inst.getStart();
             long instEnd = inst.getEnd();
             if (inst.hasStart() && inst.hasEnd()) {
                 // Ignore instances that ended already.
-                if (instEnd <= startTime)
+                if (instEnd <= rangeStart)
                     continue;
                 // For appointments (but not tasks), ignore instances whose start time has come and gone.
-                if (instStart < startTime && (this instanceof Appointment))
+                if (instStart < rangeStart && (this instanceof Appointment))
                     continue;
             }
             InviteInfo invId = inst.getInviteInfo();
             Invite inv = getInvite(invId.getMsgId(), invId.getComponentId());
-            Pair<Long, Alarm> curr =
-                getAlarmTriggerTime(atOrAfter, inv.alarmsIterator(), instStart, instEnd, forEmailAction);
-            if (curr != null) {
-                long currAt = curr.getFirst();
-                if (atOrAfter <= currAt && currAt < triggerAt) {
-                    triggerAt = currAt;
-                    theAlarm = curr.getSecond();
-                    alarmInstance = inst;
+            assert(inv != null);
+            // The instance can have multiple alarms.
+            for (Iterator<Alarm> alarms = inv.alarmsIterator(); alarms.hasNext(); ) {
+                Alarm alarm = alarms.next();
+                if (Action.EMAIL.equals(alarm.getAction()) == forEmailAction) {
+                    long trg = alarm.getTriggerTime(instStart, instEnd);
+                    if (trg <= atOrAfter) {
+                        if (trg > trigger1) {
+                            trigger1 = trg; alarm1 = alarm; instStart1 = instStart;
+                            invId1 = invId.getMsgId(); compNum1 = invId.getComponentId();
+                        }
+                    } else {  // trg > atOrAfter
+                        if (trg < trigger2) {
+                            trigger2 = trg; alarm2 = alarm; instStart2 = instStart;
+                            invId2 = invId.getMsgId(); compNum2 = invId.getComponentId();
+                        }
+                    }
                 }
             }
+            if (alarm1 != null && alarm2 != null) {
+                break;
+            }
         }
-        if (alarmInstance != null) {
-            InviteInfo invInfo = alarmInstance.getInviteInfo();
-            if (invInfo != null)
-                return new AlarmData(triggerAt, alarmInstance.getStart(),
-                                     invInfo.getMsgId(), invInfo.getComponentId(), theAlarm);
-        }
-        if (this instanceof Task) {
-            // Unlike appointments, tasks may have alarms that go off after instance start time and even after
-            // instance end time (as defined by DUE property), and these alarms must be computed differently.
-            return getNextAbsoluteTriggerAlarm(atOrAfter, forEmailAction);
-        } else {
-            return null;
-        }
+
+        AlarmData ad1 = alarm1 != null ? new AlarmData(trigger1, snoozeUntil, instStart1, invId1, compNum1, alarm1) : null;
+        AlarmData ad2 = alarm2 != null ? new AlarmData(trigger2, AlarmData.NO_SNOOZE, instStart2, invId2, compNum2, alarm2) : null;
+        return chooseNextAlarm(atOrAfter, snoozeUntil, ad1, ad2);
     }
 
     /**
-     * Finds the next absolute-trigger alarm that is at or later than "atOrAfter".
-     * @param nextAlarm next alarm should go off at or after this time
-     *                  special values:
-     *                  CalendarItem.NEXT_ALARM_KEEP_CURRENT - keep current value
-     *                  CalendarItem.NEXT_ALARM_ALL_DISMISSED - all alarms have been shown and dismissed
-     *                  CalendarItem.NEXT_ALARM_FROM_NOW - compute next trigger time from current time
-     * @param skipAlarmDefChangeCheck
+     * Find the next absolute trigger alarm.  This is primarily for tasks.  Tasks have a slightly different constraint
+     * on alarms than appointments do.  In particular, the absolute trigger time of tasks need not be before DTSTART
+     * or DUE, whereas alarms for appointments are meaningful only if it triggers before DTSTART.  A reminder for a
+     * meeting that has already started is useless, but a reminder for an over-due task can be quite useful.
+     * 
+     * @param atOrAfter
+     * @param snoozeUntil
+     * @param forEmailAction
+     * @return
      */
-    private AlarmData getNextAbsoluteTriggerAlarm(long atOrAfter, boolean forEmailAction) {
-        long triggerAt = Long.MAX_VALUE;
-        Alarm theAlarm = null;
-        Invite theInvite = null;
+    private AlarmData getNextAlarmHelperForTasks(long atOrAfter, long snoozeUntil, boolean forEmailAction) {
+        // Find the two nearest alarms that surround atOrAfter such that t(alarm1) <= atOrAfter < t(alarm2).
+        Alarm alarm1 = null, alarm2 = null;
+        long trigger1 = Long.MIN_VALUE, trigger2 = Long.MAX_VALUE;  // trigger times for alarm1 and alarm2
+        long instStart1 = 0, instStart2 = 0;  // instance start time for alarm1 and alarm2
+        int invId1 = 0, compNum1 = 0, invId2 = 0, compNum2 = 0;  // invId and compNum for inst1 and inst2
         for (Invite inv : mInvites) {
             if (inv.isCancel())
                 continue;
+            // The invite can have multiple alarms.
             for (Iterator<Alarm> alarms = inv.alarmsIterator(); alarms.hasNext(); ) {
                 Alarm alarm = alarms.next();
                 if (Action.EMAIL.equals(alarm.getAction()) == forEmailAction && alarm.getTriggerAbsolute() != null) {
-                    long absTrig = alarm.getTriggerAbsolute().getUtcTime();
-                    if (atOrAfter <= absTrig && absTrig < triggerAt) {
-                        triggerAt = absTrig;
-                        theAlarm = alarm;
-                        theInvite = inv;
+                    long trg = alarm.getTriggerAbsolute().getUtcTime();
+                    if (trg <= atOrAfter) {
+                        if (trg > trigger1) {
+                            trigger1 = trg; alarm1 = alarm;
+                            instStart1 = inv.getStartTime() != null ? inv.getStartTime().getUtcTime() : 0;
+                            invId1 = inv.getMailItemId(); compNum1 = inv.getComponentNum();
+                        }
+                    } else {  // trg > atOrAfter
+                        if (trg < trigger2) {
+                            trigger2 = trg; alarm2 = alarm;
+                            instStart2 = inv.getStartTime() != null ? inv.getStartTime().getUtcTime() : 0;
+                            invId2 = inv.getMailItemId(); compNum2 = inv.getComponentNum();
+                        }
                     }
                 }
             }
         }
-        if (theAlarm != null) {
-            long instStart = theInvite.getStartTime() != null ? theInvite.getStartTime().getUtcTime() : 0;
-            return new AlarmData(triggerAt, instStart, theInvite.getMailItemId(), theInvite.getComponentNum(), theAlarm);
-        } else {
-            return null;
-        }
+
+        AlarmData ad1 = alarm1 != null ? new AlarmData(trigger1, snoozeUntil, instStart1, invId1, compNum1, alarm1) : null;
+        AlarmData ad2 = alarm2 != null ? new AlarmData(trigger2, AlarmData.NO_SNOOZE, instStart2, invId2, compNum2, alarm2) : null;
+        return chooseNextAlarm(atOrAfter, snoozeUntil, ad1, ad2);
     }
 
-    // Find the earliest alarm whose trigger time is at or after nextAlarm.
-    // Only alarms with email action are examined if forEmailAction==true.  If false, all other alarms are examined.
-    private static Pair<Long, Alarm> getAlarmTriggerTime(
-            long nextAlarm, Iterator<Alarm> alarms, long instStart, long instEnd, boolean forEmailAction) {
-        long triggerAt = Long.MAX_VALUE;
-        Alarm theAlarm = null;
-        for (; alarms.hasNext(); ) {
-            Alarm alarm = alarms.next();
-            if (Action.EMAIL.equals(alarm.getAction()) == forEmailAction) {
-                long currTrigger = alarm.getTriggerTime(instStart, instEnd);
-                if (nextAlarm <= currTrigger && currTrigger < triggerAt) {
-                    triggerAt = currTrigger;
-                    theAlarm = alarm;
+    /**
+     * Choose the next alarm, based on atOrAfter and snoozeUntil, from the two nearest alarms that surround atOrAfter.
+     * Client/caller supplies atOrAfter to indicate the next alarm to trigger should go off no sooner that this time.
+     * The actual trigger time can be deferred with snoozeUntil.  If snoozeUntil is specified, atOrAfter is the time
+     * based on the alarm definition, and snoozeUntil is the re-trigger time.
+     * 
+     * The two surrounding alarms passed in must satisfy the following condition:
+     * 
+     *     t(alarm 1) <= atOrAfter < t(alarm 2)
+     * 
+     * atOrAfter and snoozeUntil are related thusly, if snoozeUntil != AlarmData.NO_SNOOZE.
+     * 
+     *     atOrAfter < snoozeUntil
+     * 
+     * From these, there are several cases possible.
+     *
+     * 1. There is no snoozed alarm if snoozeUntil == atOrAfter or snoozeUntil == AlarmData.NO_SNOOZE.
+     * case 1.1: t(alarm 1) == atOrAfter
+     * --> Choose alarm 1.
+     * case 1.2: t(alarm 1) < atOrAfter < t(alarm 2)
+     * --> Choose alarm 2.
+     *
+     * 2. atOrAfter < snoozeUntil
+     * case 2.1: t(alarm 1) == atOrAfter < snoozeUntil < t(alarm 2)
+     * --> Choose alarm 1 and retain snooze.
+     * case 2.2: t(alarm 1) == atOrAfter < t(alarm 2) <= snoozeUntil
+     * --> Choose alarm 2 and discard snooze.  Old alarm was snoozed past the next alarm.  It is effectively a dismissal.
+     * case 2.3: t(alarm 1) < atOrAfter < snoozeUntil < t(alarm 2)
+     * --> Choose alarm 2.  Discard snooze.
+     * case 2.4: t(alarm 1) < atOrAfter < t(alarm 2) <= snoozeUntil
+     * --> Choose alarm 2.  Discard snooze.
+     *
+     * Cases 2.3 and 2.4 are equivalent to case 1.2.  When atOrAfter doesn't coincide with any alarm, the earliest
+     * next alarm is chosen.  The old alarm at atOrAfter is essentially being dismissed, and snooze is discarded.
+     *
+     * Cases 2.2, 2.3, and 2.4 have the same outcome, so case 2 only have two real subcases: Choose alarm1 and retain
+     * snooze, or choose alarm2 and discard snooze.
+     *
+     * Special handling for alarms with same trigger time: If multiple alarms have the same trigger time,
+     * the first alarm in the list is chosen.  All alarms with the same trigger time are skipped when atOrAfter
+     * is later.
+     *
+     * @param atOrAfter
+     * @param snoozeUntil
+     * @param alarmData1 nearest alarm at or before atOrAfter; has snooze info set if available; can be null
+     * @param alarmData2 nearest alarm after atOrAfter; does not have snooze info; can be null
+     * @return alarmData1 or alarmData2; The returned object's snooze field is modified in this method.
+     */
+    private AlarmData chooseNextAlarm(long atOrAfter, long snoozeUntil, AlarmData alarmData1, AlarmData alarmData2) {
+        if (snoozeUntil <= atOrAfter) {
+            snoozeUntil = AlarmData.NO_SNOOZE;
+        }
+        if (alarmData1 != null) {
+            if (alarmData2 != null) {
+                if (snoozeUntil == AlarmData.NO_SNOOZE) {
+                    if (alarmData1.getNextAtBase() == atOrAfter) {
+                        // case 1.1: Choose alarm 1.
+                        alarmData1.setSnoozeUntil(AlarmData.NO_SNOOZE);
+                        return alarmData1;
+                    } else {  // trigger1 < atOrAfter
+                        // case 1.2: Choose alarm 2.
+                        alarmData2.setSnoozeUntil(AlarmData.NO_SNOOZE);
+                        return alarmData2;
+                    }
+                } else {  // has snooze
+                    if (alarmData1.getNextAtBase() == atOrAfter && snoozeUntil < alarmData2.getNextAtBase()) {
+                        // case 2.1: Choose alarm 1.  Snooze is retained.
+                        alarmData1.setSnoozeUntil(snoozeUntil);
+                        return alarmData1;
+                    } else {
+                        // cases 2.2, 2.3, and 2.4: Choose alarm 2.  Snooze is discarded.
+                        alarmData2.setSnoozeUntil(AlarmData.NO_SNOOZE);
+                        return alarmData2;
+                    }
+                }
+            } else {
+                // alarmData2 is null.  Use alarmData1 if its trigger time coincides with atOrAfter.  Otherwise we have no alarm.
+                if (alarmData1.getNextAtBase() == atOrAfter) {
+                    alarmData1.setSnoozeUntil(snoozeUntil);
+                    return alarmData1;
+                } else {
+                    return null;
                 }
             }
+        } else {
+            if (alarmData2 != null) {
+                alarmData2.setSnoozeUntil(AlarmData.NO_SNOOZE);
+                return alarmData2;
+            } else {
+                return null;
+            }
         }
-        if (theAlarm != null)
-            return new Pair<Long, Alarm>(triggerAt, theAlarm);
-        else
-            return null;
     }
 
     public static class NextAlarms {

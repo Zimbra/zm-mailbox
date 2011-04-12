@@ -3765,12 +3765,30 @@ public class Mailbox {
         DismissCalendarItemAlarm redoRecorder = new DismissCalendarItemAlarm(getId(), calItemId, dismissedAt);
         boolean success = false;
         try {
-            beginTransaction("setLastAlarm", octxt, redoRecorder);
+            beginTransaction("dismissAlarm", octxt, redoRecorder);
             CalendarItem calItem = getCalendarItemById(octxt, calItemId);
             if (calItem == null)
                 throw MailServiceException.NO_SUCH_CALITEM(calItemId);
             calItem.snapshotRevision();
-            calItem.updateNextAlarm(dismissedAt + 1);
+            calItem.updateNextAlarm(dismissedAt + 1, true);
+            markItemModified(calItem, Change.MODIFIED_INVITE);
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public synchronized void snoozeCalendarItemAlarm(OperationContext octxt, int calItemId, long snoozeUntil)
+    throws ServiceException {
+        SnoozeCalendarItemAlarm redoRecorder = new SnoozeCalendarItemAlarm(getId(), calItemId, snoozeUntil);
+        boolean success = false;
+        try {
+            beginTransaction("snoozeAlarm", octxt, redoRecorder);
+            CalendarItem calItem = getCalendarItemById(octxt, calItemId);
+            if (calItem == null)
+                throw MailServiceException.NO_SUCH_CALITEM(calItemId);
+            calItem.snapshotRevision();
+            calItem.updateNextAlarm(snoozeUntil, false);
             markItemModified(calItem, Change.MODIFIED_INVITE);
             success = true;
         } finally {
@@ -3889,7 +3907,7 @@ public class Mailbox {
             redoRecorder.setData(defaultInv, exceptions, replies, nextAlarm);
 
             boolean first = true;
-            long oldNextAlarm = 0;
+            AlarmData oldAlarmData = null;
             for (SetCalendarItemData scid : scidList) {
                 if (scid.mPm == null) {
                     scid.mInv.setDontIndexMimeMessage(true); // the MimeMessage is fake, so we don't need to index it
@@ -3923,9 +3941,9 @@ public class Mailbox {
                         calItem.snapshotRevision();
 
                         // Preserve alarm time before any modification is made to the item.
-                        AlarmData alarmData = calItem.getAlarmData();
-                        if (alarmData != null)
-                            oldNextAlarm = alarmData.getNextAt();
+                        if (calItem.getAlarmData() != null) {
+                            oldAlarmData = (AlarmData) calItem.getAlarmData().clone();
+                        }
 
                         calItem.setTags(flags, tags);
                         calItem.processNewInvite(scid.mPm, scid.mInv, folderId, nextAlarm, false, true);
@@ -3939,8 +3957,8 @@ public class Mailbox {
 
             // Recompute alarm time after processing all Invites.
             if (nextAlarm == CalendarItem.NEXT_ALARM_KEEP_CURRENT)
-                nextAlarm = oldNextAlarm;
-            calItem.updateNextAlarm(nextAlarm);
+                nextAlarm = oldAlarmData != null ? oldAlarmData.getNextAt() : CalendarItem.NEXT_ALARM_FROM_NOW;
+            calItem.updateNextAlarm(nextAlarm, oldAlarmData, false);
 
             // Override replies list if one is provided.
             // Null list means keep existing replies.  Empty list means to clear existing replies.

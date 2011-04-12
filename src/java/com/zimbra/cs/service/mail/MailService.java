@@ -162,6 +162,7 @@ public class MailService implements DocumentService {
         dispatcher.registerHandler(MailConstants.GET_ICAL_REQUEST, new GetICal());
         dispatcher.registerHandler(MailConstants.ANNOUNCE_ORGANIZER_CHANGE_REQUEST, new AnnounceOrganizerChange());
         dispatcher.registerHandler(MailConstants.DISMISS_CALITEM_ALARM_REQUEST, new DismissCalendarItemAlarm());
+        dispatcher.registerHandler(MailConstants.SNOOZE_CALITEM_ALARM_REQUEST, new SnoozeCalendarItemAlarm());
         dispatcher.registerHandler(MailConstants.GET_MINI_CAL_REQUEST, new GetMiniCal());
         dispatcher.registerHandler(MailConstants.GET_RECUR_REQUEST, new GetRecur());
         dispatcher.registerHandler(MailConstants.EXPAND_RECUR_REQUEST, new ExpandRecur());

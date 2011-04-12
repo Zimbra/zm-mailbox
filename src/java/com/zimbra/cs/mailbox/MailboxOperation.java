@@ -97,7 +97,8 @@ public enum MailboxOperation {
     RecoverItem(79),
     EnableSharedReminder(80),
     Download(81),    // not a true mailbox operation but it's used for audit logging
-    Preview(82);     // ditto
+    Preview(82),     // ditto
+    SnoozeCalendarItemAlarm(83);
     
     private MailboxOperation(int c) {
         code = c;
