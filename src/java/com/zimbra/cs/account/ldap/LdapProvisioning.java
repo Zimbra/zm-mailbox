@@ -124,7 +124,6 @@ import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.prov.ldap.ChangePasswordListener;
 import com.zimbra.cs.prov.ldap.DomainNameMappingHandler;
 import com.zimbra.cs.prov.ldap.Groups;
-import com.zimbra.cs.prov.ldap.LdapDIT;
 import com.zimbra.cs.prov.ldap.LdapEntrySearchFilter;
 import com.zimbra.cs.prov.ldap.LdapFilter;
 import com.zimbra.cs.prov.ldap.LdapLockoutPolicy;
@@ -149,33 +148,11 @@ import com.zimbra.cs.zimlet.ZimletUtil;
  */
 public class LdapProvisioning extends LdapProv {
     
-    private static final long ONE_DAY_IN_MILLIS = 1000*60*60*24;
-
     private static final SearchControls sObjectSC = new SearchControls(SearchControls.OBJECT_SCOPE, 0, 0, null, false, false);
 
     static final SearchControls sSubtreeSC = new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, null, false, false);
 
     private static final Log mLog = LogFactory.getLog(LdapProvisioning.class);
-
-    private static LdapConfig sConfig = null;
-
-    private static GlobalGrant sGlobalGrant = null;
-
-    private static final String[] sInvalidAccountCreateModifyAttrs = {
-            Provisioning.A_zimbraMailAlias,
-            Provisioning.A_zimbraMailDeliveryAddress,
-            Provisioning.A_uid
-    };
-
-    private static final String[] sMinimalDlAttrs = {
-            Provisioning.A_zimbraMailAlias,
-            Provisioning.A_zimbraId,
-            Provisioning.A_uid,
-            Provisioning.A_zimbraACE,
-            Provisioning.A_zimbraIsAdminGroup,
-            Provisioning.A_zimbraAdminConsoleUIComponents
-    };
-
 
     private AccountCache sAccountCache =
         new AccountCache(
@@ -239,6 +216,8 @@ public class LdapProvisioning extends LdapProv {
     public int getXMPPCacheSize() { return sXMPPComponentCache.getSize(); }
     public double getXMPPCacheHitRate() { return sXMPPComponentCache.getHitRate(); }
 
+    private static LdapConfig sConfig = null;
+    private static GlobalGrant sGlobalGrant = null;
     private Groups mAllDLs; // email addresses of all distribution lists on the system
     
     private static LdapProvisioning theOnlyInstance = null;
@@ -525,8 +504,6 @@ public class LdapProvisioning extends LdapProv {
     @Override
     public Config getConfig() throws ServiceException
     {
-        // TODO: failure scenarios? fallback to static config file or hard-coded defaults?
-        // double-checked-locking is broken
         if (sConfig == null) {
             synchronized(LdapProvisioning.class) {
                 if (sConfig == null) {
@@ -550,7 +527,6 @@ public class LdapProvisioning extends LdapProv {
     @Override
     public GlobalGrant getGlobalGrant() throws ServiceException
     {
-        // TODO: failure scenarios? fallback to static config file or hard-coded defaults?
         if (sGlobalGrant == null) {
             synchronized(LdapProvisioning.class) {
                 if (sGlobalGrant == null) {
