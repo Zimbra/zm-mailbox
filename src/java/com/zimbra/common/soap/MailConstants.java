@@ -169,6 +169,7 @@ public final class MailConstants {
     public static final String E_GET_ICAL_REQUEST = "GetICalRequest";
     public static final String E_ANNOUNCE_ORGANIZER_CHANGE_REQUEST = "AnnounceOrganizerChangeRequest";
     public static final String E_DISMISS_CALITEM_ALARM_REQUEST = "DismissCalendarItemAlarmRequest";
+    public static final String E_SNOOZE_CALITEM_ALARM_REQUEST = "SnoozeCalendarItemAlarmRequest";
     public static final String E_GET_MINI_CAL_REQUEST = "GetMiniCalRequest";
     public static final String E_GET_RECUR_REQUEST = "GetRecurRequest";
     public static final String E_EXPAND_RECUR_REQUEST = "ExpandRecurRequest";
@@ -418,6 +419,7 @@ public final class MailConstants {
     public static final QName GET_ICAL_REQUEST = QName.get(E_GET_ICAL_REQUEST, NAMESPACE);
     public static final QName ANNOUNCE_ORGANIZER_CHANGE_REQUEST = QName.get(E_ANNOUNCE_ORGANIZER_CHANGE_REQUEST, NAMESPACE);
     public static final QName DISMISS_CALITEM_ALARM_REQUEST = QName.get(E_DISMISS_CALITEM_ALARM_REQUEST, NAMESPACE);
+    public static final QName SNOOZE_CALITEM_ALARM_REQUEST = QName.get(E_SNOOZE_CALITEM_ALARM_REQUEST, NAMESPACE);
     public static final QName GET_MINI_CAL_REQUEST = QName.get(E_GET_MINI_CAL_REQUEST, NAMESPACE);
 
     public static final QName GET_RECUR_REQUEST = QName.get(E_GET_RECUR_REQUEST, NAMESPACE);
@@ -840,6 +842,7 @@ public final class MailConstants {
 
     public static final String A_CAL_METHOD = "method";
     public static final String A_CAL_ALARM_DISMISSED_AT = "dismissedAt";
+    public static final String A_CAL_ALARM_SNOOZE_UNTIL = "until";
     public static final String A_CAL_NEXT_ALARM = "nextAlarm";
     public static final String A_CAL_NO_NEXT_ALARM = "noNextAlarm";
     public static final String A_CAL_ALARM_INSTANCE_START = "alarmInstStart";
