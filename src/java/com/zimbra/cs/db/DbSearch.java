@@ -768,10 +768,11 @@ public final class DbSearch {
     /**
      * @return number of parameters bound
      */
-    private static final int encodeRangeWithMinimum(StringBuilder statement, String column, Collection<? extends DbSearchConstraints.NumericRange> ranges, long lowestValue) {
-        if (ListUtil.isEmpty(ranges))
+    private static final int encodeRangeWithMinimum(StringBuilder out, String column,
+            Collection<? extends DbSearchConstraints.NumericRange> ranges, long lowestValue) {
+        if (ListUtil.isEmpty(ranges)) {
             return 0;
-
+        }
         if (Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON) && isCaseSensitiveField(column) ) {
             column = "UPPER("+column+")";
         }
@@ -780,27 +781,22 @@ public final class DbSearch {
         for (DbSearchConstraints.NumericRange r : ranges) {
             boolean lowValid = r.lowest >= lowestValue;
             boolean highValid = r.highest >= lowestValue;
-            if (!(lowValid || highValid))
+            if (!(lowValid || highValid)) {
                 continue;
-
-            statement.append(r.negated ? " AND NOT (" : " AND (");
+            }
+            out.append(r.negated ? " AND NOT (" : " AND (");
             if (lowValid) {
-                if (r.lowestEqual)
-                    statement.append(" " + column + " >= ?");
-                else
-                    statement.append(" " + column + " > ?");
+                out.append(column).append(r.lowestEqual ? " >= ?" : " > ?");
                 params++;
             }
             if (highValid) {
-                if (lowValid)
-                    statement.append(" AND");
-                if (r.highestEqual)
-                    statement.append(" " + column + " <= ?");
-                else
-                    statement.append(" " + column + " < ?");
+                if (lowValid) {
+                    out.append(" AND ");
+                }
+                out.append(column).append(r.highestEqual ? " <= ?" : " < ?");
                 params++;
             }
-            statement.append(')');
+            out.append(')');
         }
         return params;
     }
@@ -808,36 +804,32 @@ public final class DbSearch {
     /**
      * @return number of parameters bound
      */
-    private static final int encodeRange(StringBuilder statement, String column, Collection<? extends DbSearchConstraints.StringRange> ranges) {
-        int retVal = 0;
+    private static final int encodeRange(StringBuilder out, String column,
+            Collection<? extends DbSearchConstraints.StringRange> ranges) {
 
         if (Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON) && isCaseSensitiveField(column)) {
-            column = "UPPER("+column+")";
+            column = "UPPER(" + column + ")";
         }
 
+        int params = 0;
         if (!ListUtil.isEmpty(ranges)) {
             for (DbSearchConstraints.StringRange r : ranges) {
-                statement.append(r.negated ? " AND NOT (" : " AND (");
+                out.append(r.negated ? " AND NOT (" : " AND (");
                 if (r.lowest != null) {
-                    retVal++;
-                    if (r.lowestEqual)
-                        statement.append(" " + column + " >= ?");
-                    else
-                        statement.append(" " + column + " > ?");
+                    params++;
+                    out.append(column).append(r.lowestEqual ? " >= ?" : " > ?");
                 }
                 if (r.highest != null) {
-                    if (r.lowest != null)
-                        statement.append(" AND");
-                    retVal++;
-                    if (r.highestEqual)
-                        statement.append(" " + column + " <= ?");
-                    else
-                        statement.append(" " + column + " < ?");
+                    if (r.lowest != null) {
+                        out.append(" AND ");
+                    }
+                    params++;
+                    out.append(column).append(r.highestEqual ? " <= ?" : " < ?");
                 }
-                statement.append(')');
+                out.append(')');
             }
         }
-        return retVal;
+        return params;
     }
 
 

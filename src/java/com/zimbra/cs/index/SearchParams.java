@@ -589,117 +589,23 @@ public final class SearchParams implements Cloneable {
 
         Element cursor = request.getOptionalElement(MailConstants.E_CURSOR);
         if (cursor != null) {
-            parseCursor(cursor, zsc.getRequestedAccountId(), params);
+            params.parseCursor(cursor, zsc.getRequestedAccountId());
         }
 
         return params;
     }
 
     /**
-     * Parse cursor element and set cursor info in {@link SearchParams} object.
+     * Parse a cursor element.
      *
      * @param cursor cursor element taken from a {@code <SearchRequest>}
      * @param acctId requested account id
-     * @param params {@link SearchParams} object to set cursor info to
      */
-    public static void parseCursor(Element el, String  acctId, SearchParams params) throws ServiceException {
-        boolean useCursorToNarrowDbQuery = true;
-
-        // in some cases we cannot use cursors, even if they are requested.
-        //
-        //  -- Task-sorts cannot be used with cursors (bug 23427) at all
-        //
-        //  -- Conversation mode can use cursors to find the right location in the
-        //     hits, but we *can't* use a constrained-offset query to find the right place
-        //     in the search results....in Conv mode we need to walk through all the results
-        //     so that we can guarantee that we only return each Conversation once in
-        //     a given results set
-
-        // bug: 23427 -- TASK sorts are incompatible with CURSORS, since cursors require real (db-visible) sort fields
-        switch (params.getSortBy()) {
-            case TASK_DUE_ASC:
-            case TASK_DUE_DESC:
-            case TASK_PERCENT_COMPLETE_ASC:
-            case TASK_PERCENT_COMPLETE_DESC:
-            case TASK_STATUS_ASC:
-            case TASK_STATUS_DESC:
-            case NAME_LOCALIZED_ASC:
-            case NAME_LOCALIZED_DESC:
-                useCursorToNarrowDbQuery = false;
-        }
-
-        // bug 35039 - using cursors with conversation-coalescing leads to convs appearing on multiple pages
-        if (params.getTypes().contains(MailItem.Type.CONVERSATION)) {
-            useCursorToNarrowDbQuery = false;
-        }
-
-        Cursor cursor = new Cursor();
-        String id = el.getAttribute(MailConstants.A_ID);
-        if (id != null) {
-            cursor.itemId = new ItemId(id, acctId);
-        }
+    public void parseCursor(Element el, String acctId) throws ServiceException {
+        cursor = new Cursor();
+        cursor.itemId = new ItemId(el.getAttribute(MailConstants.A_ID), acctId);
         cursor.sortValue = el.getAttribute(MailConstants.A_SORTVAL);
         cursor.endSortValue = el.getAttribute(MailConstants.A_ENDSORTVAL, null); // optional
-        params.setCursor(cursor);
-
-        //TODO Move to ZimbraQuery
-        StringBuilder extra = new StringBuilder();
-        if (useCursorToNarrowDbQuery) {
-            switch (params.getSortBy()) {
-                case NONE:
-                    throw new IllegalArgumentException("Invalid request: cannot use cursor with SortBy=NONE");
-                case DATE_ASC:
-                    extra.append("date:").append(quote(">=", cursor.getSortValue()));
-                    if (cursor.getEndSortValue() != null) {
-                        extra.append(" date:").append(quote("<", cursor.getEndSortValue()));
-                    }
-                    break;
-                case DATE_DESC:
-                    extra.append("date:").append(quote("<=", cursor.getSortValue()));
-                    if (cursor.getEndSortValue() != null) {
-                        extra.append(" date:").append(quote(">", cursor.getEndSortValue()));
-                    }
-                    break;
-                case SUBJ_ASC:
-                    extra.append("subject:").append(quote(">=", cursor.getSortValue()));
-                    if (cursor.getEndSortValue() != null) {
-                        extra.append(" subject:").append(quote("<", cursor.getEndSortValue()));
-                    }
-                    break;
-                case SUBJ_DESC:
-                    extra.append("subject:").append(quote("<=", cursor.getSortValue()));
-                    if (cursor.getEndSortValue() != null) {
-                        extra.append(" subject:").append(quote(">", cursor.getEndSortValue()));
-                    }
-                    break;
-                case SIZE_ASC: //TODO: "size:>=" doesn't parse but "size:>" does
-                    extra.append("size:").append(quote(">", String.valueOf(Long.parseLong(cursor.getSortValue()) - 1)));
-                    if (cursor.getEndSortValue() != null) {
-                        extra.append(" size:").append(quote("<", cursor.getEndSortValue()));
-                    }
-                    break;
-                case SIZE_DESC: //TODO: "size:<=" doesn't parse but "size:<" does
-                    extra.append("size:").append(quote("<", String.valueOf(Long.parseLong(cursor.getSortValue()) + 1)));
-                    if (cursor.getEndSortValue() != null) {
-                        extra.append(" size:").append(quote(">", cursor.getEndSortValue()));
-                    }
-                    break;
-                case NAME_ASC:
-                    extra.append("from:").append(quote(">=", cursor.getSortValue()));
-                    if (cursor.getEndSortValue() != null) {
-                        extra.append(" from:").append(quote("<", cursor.getEndSortValue()));
-                    }
-                    break;
-                case NAME_DESC:
-                    extra.append("from:").append(quote("<=", cursor.getSortValue()));
-                    if (cursor.getEndSortValue() != null) {
-                        extra.append(" from:").append(quote(">", cursor.getEndSortValue()));
-                    }
-                    break;
-            }
-        }
-
-        params.setQueryStr("(" + params.getQueryStr() + ")" + extra.toString());
     }
 
     private static java.util.TimeZone parseTimeZonePart(Element tzElt) throws ServiceException {
@@ -758,13 +664,6 @@ public final class SearchParams implements Cloneable {
             }
         }
         return null;
-    }
-
-    private static final String quote(String s1, String s2) {
-        // escape quotation marks and quote the whole string
-        String in = s1 + s2;
-        in = in.replace("\"", "\\\"");
-        return "\"" + in + "\"";
     }
 
     private static int parseLimit(Element request) throws ServiceException {

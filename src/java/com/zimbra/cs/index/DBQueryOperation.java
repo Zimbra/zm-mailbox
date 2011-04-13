@@ -864,12 +864,95 @@ public class DBQueryOperation extends QueryOperation {
         }
 
         constraints.setTypes(toDbQueryTypes(context.getResults().getTypes()));
+        addCursorConstraint();
 
         if (luceneOp != null) {
             hitsPerChunk *= 2; // enlarge chunk size b/c of join
             luceneOp.setDBOperation(this);
             // this is 2nd time to call begin() of this Lucene op.
             luceneOp.begin(new QueryContext(ctx.getMailbox(), ctx.getResults(), ctx.getParams(), hitsPerChunk));
+        }
+    }
+
+    private void addCursorConstraint() {
+        SearchParams.Cursor cursor = context.getParams().getCursor();
+        if (cursor == null) {
+            return;
+        }
+        // bug 35039 - using cursors with conversation-coalescing leads to convs appearing on multiple pages
+        if (context.getParams().getTypes().contains(MailItem.Type.CONVERSATION)) {
+            return;
+        }
+        SortBy sort = context.getParams().getSortBy();
+        // in some cases we cannot use cursors, even if they are requested.
+        // - Task-sorts cannot be used with cursors (bug 23427) at all.
+        // - Conversation mode can use cursors to find the right location in the hits, but we *can't* use a
+        //   constrained-offset query to find the right place in the search results....in Conv mode we need to walk
+        //   through all the results so that we can guarantee that we only return each Conversation once in a given
+        //   results set.
+        // - bug:23427 TASK sorts are incompatible with CURSORS, since cursors require real (db-visible) sort fields.
+        switch (sort) {
+            case NONE:
+                throw new IllegalArgumentException("Invalid request: cannot use cursor with SortBy=NONE");
+            case TASK_DUE_ASC:
+            case TASK_DUE_DESC:
+            case TASK_PERCENT_COMPLETE_ASC:
+            case TASK_PERCENT_COMPLETE_DESC:
+            case TASK_STATUS_ASC:
+            case TASK_STATUS_DESC:
+            case NAME_LOCALIZED_ASC:
+            case NAME_LOCALIZED_DESC:
+                return;
+            case DATE_ASC: {
+                long low = Long.parseLong(cursor.getSortValue());
+                long high = cursor.getEndSortValue() != null ? Long.parseLong(cursor.getEndSortValue()) : -1;
+                getTopANDedConstraint().addDateClause(low, true, high, false, true);
+                break;
+            }
+            case DATE_DESC: {
+                long high = Long.parseLong(cursor.getSortValue());
+                long low = cursor.getEndSortValue() != null ? Long.parseLong(cursor.getEndSortValue()) : -1;
+                getTopANDedConstraint().addDateClause(low, false, high, true, true);
+                break;
+            }
+            case SUBJ_ASC: {
+                String low = cursor.getSortValue();
+                String high = cursor.getEndSortValue();
+                getTopANDedConstraint().addSubjectRelClause(low, true, high, false, true);
+                break;
+            }
+            case SUBJ_DESC: {
+                String high = cursor.getSortValue();
+                String low = cursor.getEndSortValue();
+                getTopANDedConstraint().addSubjectRelClause(low, false, high, true, true);
+                break;
+            }
+            case SIZE_ASC: {
+                long low = Long.parseLong(cursor.getSortValue()) - 1;
+                long high = cursor.getEndSortValue() != null ? Long.parseLong(cursor.getEndSortValue()) : -1;
+                getTopANDedConstraint().addSizeClause(low, high, true);
+                break;
+            }
+            case SIZE_DESC: {
+                long high = Long.parseLong(cursor.getSortValue()) + 1;
+                long low = cursor.getEndSortValue() != null ? Long.parseLong(cursor.getEndSortValue()) : -1;
+                getTopANDedConstraint().addSizeClause(low, high, true);
+                break;
+            }
+            case NAME_ASC: {
+                String low = cursor.getSortValue();
+                String high = cursor.getEndSortValue();
+                getTopANDedConstraint().addSenderRelClause(low, true, high, false, true);
+                break;
+            }
+            case NAME_DESC: {
+                String high = cursor.getSortValue();
+                String low = cursor.getEndSortValue();
+                getTopANDedConstraint().addSenderRelClause(low, false, high, true, true);
+                break;
+            }
+            default:
+                break;
         }
     }
 
