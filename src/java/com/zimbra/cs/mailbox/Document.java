@@ -352,4 +352,20 @@ public class Document extends MailItem {
                 !authenticatedAccount.getId().equalsIgnoreCase(mLockOwner))
             throw MailServiceException.LOCKED(mId, mLockOwner);
     }
+    
+    @Override PendingDelete getDeletionInfo() throws ServiceException {
+        PendingDelete info = new PendingDelete();
+        info.rootId = mId;
+        info.itemIds.add(getType(), mId);
+
+        ArrayList<Integer> comments = new ArrayList<Integer>();
+        try {
+            for (Comment comment : mMailbox.getComments(null, mId, 0, -1)) {
+                info.add(comment.getDeletionInfo());
+                comments.add(comment.mId);
+            }
+        } catch (Exception e) {
+        }
+        return info;
+    }
 }

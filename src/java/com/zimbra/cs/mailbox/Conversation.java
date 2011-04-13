@@ -184,7 +184,7 @@ public class Conversation extends MailItem {
      *              <code>SORT_XXX</code> constants from {@link DbMailItem}. */
     List<Message> getMessages(SortBy sort) throws ServiceException {
         List<Message> msgs = new ArrayList<Message>(getMessageCount());
-        List<UnderlyingData> listData = DbMailItem.getByParent(this, sort);
+        List<UnderlyingData> listData = DbMailItem.getByParent(this, sort, false);
         for (UnderlyingData data : listData) {
             msgs.add(mMailbox.getMessage(data));
         }

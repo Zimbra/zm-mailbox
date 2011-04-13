@@ -62,6 +62,7 @@ import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Conversation;
+import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -1810,6 +1811,7 @@ public class DbMailItem {
         String target;
         if (item instanceof VirtualConversation)  target = "id = ?";
         else if (item instanceof Conversation)    target = "parent_id = ?";
+        else if (item instanceof Document)        target = "parent_id = ?";
         else if (item instanceof SearchFolder)    return;
         else if (item instanceof Folder)          target = "folder_id = ?";
         else                                      return;
@@ -1865,7 +1867,7 @@ public class DbMailItem {
     // parent_id = null, change_date = ? (to be set to deletion time)
     private static String MAIL_ITEM_DUMPSTER_COPY_SRC_FIELDS =
         (DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ") +
-        "id, type, null, folder_id, index_id, imap_id, date, size, volume_id, blob_digest, " +
+        "id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest, " +
         "unread, flags, tags, sender, recipients, subject, name, metadata, mod_metadata, ?, mod_content";
     private static String MAIL_ITEM_DUMPSTER_COPY_DEST_FIELDS =
         (DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ") +
@@ -2114,7 +2116,8 @@ public class DbMailItem {
         MailItem.Type.DOCUMENT.toByte() + ',' +
         MailItem.Type.APPOINTMENT.toByte() + ',' +
         MailItem.Type.TASK.toByte() + ',' +
-        MailItem.Type.CHAT.toByte() + ')';
+        MailItem.Type.CHAT.toByte() + ',' +
+        MailItem.Type.COMMENT.toByte() + ')';
 
     static final String NON_SEARCHABLE_TYPES = "(" +
         MailItem.Type.FOLDER.toByte() + ',' +
@@ -2336,10 +2339,10 @@ public class DbMailItem {
     }
 
     public static List<UnderlyingData> getByParent(MailItem parent) throws ServiceException {
-        return getByParent(parent, SortBy.DATE_DESC);
+        return getByParent(parent, SortBy.DATE_DESC, false);
     }
 
-    public static List<UnderlyingData> getByParent(MailItem parent, SortBy sort) throws ServiceException {
+    public static List<UnderlyingData> getByParent(MailItem parent, SortBy sort, boolean fromDumpster) throws ServiceException {
         Mailbox mbox = parent.getMailbox();
 
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
@@ -2351,7 +2354,7 @@ public class DbMailItem {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
-                    " FROM " + getMailItemTableName(parent.getMailbox(), " mi") +
+                    " FROM " + getMailItemTableName(parent.getMailbox(), " mi", fromDumpster) +
                     " WHERE " + IN_THIS_MAILBOX_AND + "parent_id = ? " + DbSearch.orderBy(sort, false));
             if (parent.getSize() > RESULTS_STREAMING_MIN_ROWS) {
                 Db.getInstance().enableStreaming(stmt);

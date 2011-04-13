@@ -7875,7 +7875,7 @@ public class Mailbox {
         try {
             beginTransaction("getComments", octxt, null);
             MailItem parent = getItemById(octxt, parentId, Type.UNKNOWN);
-            return Comment.getComments(this, parent, offset, length);
+            return parent.getComments(SortBy.DATE_DESC, offset, length);
         } finally {
             endTransaction(success);
         }

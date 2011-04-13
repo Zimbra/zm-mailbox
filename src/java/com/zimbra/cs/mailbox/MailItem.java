@@ -2159,7 +2159,7 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         // if the copy or original is in Spam, put the copy in its own conversation
         boolean detach = parentId <= 0 || isTagged(Flag.ID_DRAFT) || inSpam() != folder.inSpam();
-        MailItem parent = detach ? null : getParent();
+        MailItem parent = detach ? null : mMailbox.getItemById(parentId, Type.UNKNOWN);
 
         if (shareIndex && !isTagged(Flag.ID_COPIED)) {
             alterSystemFlag(mMailbox.getFlagById(Flag.ID_COPIED), true);
@@ -3124,6 +3124,22 @@ public abstract class MailItem implements Comparable<MailItem> {
         throw MailServiceException.CANNOT_UNLOCK(mId);
     }
 
+    List<Comment> getComments(SortBy sortBy, int offset, int length) throws ServiceException {
+        List<UnderlyingData> listData = DbMailItem.getByParent(this, sortBy, inDumpster());
+        ArrayList<Comment> comments = new ArrayList<Comment>();
+        for (UnderlyingData data : listData) {
+            MailItem item = mMailbox.getItem(data);
+            if (item instanceof Comment) {
+                comments.add((Comment)item);
+            }
+        }
+        if (comments.size() <= offset) {
+            return Collections.<Comment>emptyList();
+        }
+        int last = length == -1 ? comments.size() : Math.min(comments.size(), offset + length);
+        return comments.subList(offset, last);
+    }
+    
     Metadata serializeUnderlyingData() {
         Metadata meta = mData.serialize();
         // metadata

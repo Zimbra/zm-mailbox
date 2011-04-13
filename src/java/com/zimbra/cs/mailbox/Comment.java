@@ -14,16 +14,10 @@
  */
 package com.zimbra.cs.mailbox;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 
 public class Comment extends MailItem {
@@ -54,29 +48,6 @@ public class Comment extends MailItem {
         return comment;
     }
     
-    public static Collection<Comment> getComments(Mailbox mbox, MailItem parent, int offset, int length) throws ServiceException {
-        ArrayList<Comment> comments = loadComments(mbox, parent);
-        if (comments.size() <= offset) {
-            return Collections.emptyList();
-        }
-        int last = length == -1 ? comments.size() : Math.min(comments.size(), offset + length);
-        return comments.subList(offset, last);
-    }
-    
-    private static ArrayList<Comment> loadComments(Mailbox mbox, MailItem parent) throws ServiceException {
-        List<UnderlyingData> listData = DbMailItem.getByParent(parent, SortBy.DATE_DESC);
-        ArrayList<Comment> ret = new ArrayList<Comment>();
-        for (UnderlyingData data : listData) {
-            MailItem item = mbox.getItem(data);
-            if (item instanceof Comment) {
-                ret.add((Comment)item);
-            }
-        }
-        // cache the array somewhere
-        return ret;
-    }
-
-    
     @Override
     public String getSender() {
         return "";
@@ -89,12 +60,12 @@ public class Comment extends MailItem {
 
     @Override
     boolean isCopyable() {
-        return false;
+        return true;
     }
 
     @Override
     boolean isMovable() {
-        return false;
+        return true;
     }
 
     @Override
