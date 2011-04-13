@@ -347,6 +347,16 @@ class ProxyConfVar
                     mValue = mDefault;
                 }
             }
+            else if ("ssl.clientcertca.default".equalsIgnoreCase(mKeyword))
+            {
+                String defaultClientCertCaContent = serverSource.getAttr(mAttribute,"");
+                if ( !ProxyConfUtil.isEmptyString(defaultClientCertCaContent) ){
+                    String defaultClientCertCaPath = (String)mDefault;
+                    ProxyConfUtil.writeContentToFile(defaultClientCertCaContent, defaultClientCertCaPath);
+                }
+                mValue = mDefault; 
+                //"ssl.clientcertca.default" indicates the local client ca cert path other than file content
+            }
         }
     }
 
@@ -438,6 +448,10 @@ class ProxyConfVar
                     capa = capa + " " + "\"" + c + "\"";
                 }
                 return capa;
+            }
+            else if ("ssl.clientcertca.default".equalsIgnoreCase(mKeyword))
+            {
+                return formatString(o);
             }
             else
             {
@@ -602,10 +616,10 @@ public class ProxyConfGen
     private static String mDomainSSLDir = mConfDir + File.separator + "domaincerts";
     private static String mSSLCrtExt = ".crt";
     private static String mSSLKeyExt = ".key";
-    private static String mSSLClientCertCaExt = ".client_ca.crt";
+    private static String mSSLClientCertCaExt = ".client.ca.crt";
     private static String mDefaultSSLCrt = mConfDir + File.separator + "nginx.crt";
     private static String mDefaultSSLKey = mConfDir + File.separator + "nginx.key";
-    private static String mDefaultSSLClientCertCa = mConfDir + File.separator + "nginx_client_ca.crt";
+    private static String mDefaultSSLClientCertCa = mConfDir + File.separator + "nginx.client.ca.crt";
     private static String mConfIncludesDir = mConfDir + File.separator + mIncDir;
     private static String mConfPrefix = "nginx.conf";
     private static String mTemplatePrefix = mConfPrefix;
@@ -746,14 +760,14 @@ public class ProxyConfGen
                 int i = 0;
                 try {
 
-                    for(; i < virtualHostnames.length; i++) {
+                    for( ; i < virtualHostnames.length; i++) {
                         String vip = InetAddress.getByName(virtualHostnames[i])
                                                     .getHostAddress();
-                        if ( clientCertCA != null && !clientCertCA.equalsIgnoreCase("") ){
+                        if (!ProxyConfUtil.isEmptyString(clientCertCA)){
 
                             createDomainSSLDirIfNotExists();
                             String clientCertCaPath = getClientCertCaPathByDomain(domainName);
-                            writeContentToFile(clientCertCA, clientCertCaPath);
+                            ProxyConfUtil.writeContentToFile(clientCertCA, clientCertCaPath);
                         }
                         result.add(new DnVhnVIPItem(domainName,
                                 virtualHostnames[i], vip, certificate, privateKey, clientCertMode, clientCertCA));
@@ -772,32 +786,11 @@ public class ProxyConfGen
         return result;
     }
 
-
     public static void createDomainSSLDirIfNotExists( ){
         File domainSSLDir = new File( mDomainSSLDir );
         if( !domainSSLDir.exists() ){
           domainSSLDir.mkdirs();
         }
-    }
-
-    public static void writeContentToFile( String content, String filePath )
-        throws ServiceException {
-
-        try{
-            BufferedWriter bw = new BufferedWriter(new FileWriter(filePath));
-
-            bw.write(content);
-            bw.flush();
-            bw.close();
-
-        }catch( IOException e ){
-            throw ServiceException.FAILURE("Cannot write the content (" + content + ") to " + filePath, e);
-        }
-    }
-
-    public static String getClientCertCaPathByDomain( String domainName ){
-
-       return mDomainSSLDir + File.separator + domainName + mSSLClientCertCaExt;
     }
 
     /* Guess how to find a server object -- taken from ProvUtil::guessServerBy */
@@ -854,6 +847,11 @@ public class ProxyConfGen
 
     public static String getWebHttpSModeConfTemplate (String mode) {
         return mTemplatePrefix + ".web.https.mode-" + mode + mTemplateSuffix;
+    }
+
+    public static String getClientCertCaPathByDomain( String domainName ){
+
+       return mDomainSSLDir + File.separator + domainName + mSSLClientCertCaExt;
     }
 
     public static void expandTemplate (File tFile, File wFile)
@@ -1169,8 +1167,8 @@ public class ProxyConfGen
         mConfVars.put("core.ipboth.enabled", new ProxyConfVar("core.ipboth.enabled", null, true, ProxyConfValueType.ENABLER, ProxyConfOverride.CUSTOM, "Both IPv4 and IPv6"));
         mConfVars.put("ssl.crt.default", new ProxyConfVar("ssl.crt.default", null, mDefaultSSLCrt, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "default nginx certificate file path"));
         mConfVars.put("ssl.key.default", new ProxyConfVar("ssl.key.default", null, mDefaultSSLKey, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "default nginx private key file path"));
-        mConfVars.put("ssl.clientcertmode.default", new ProxyConfVar("ssl.clientcertmode.default", "zimbraReverseProxyClientCertMode", "off", ProxyConfValueType.STRING, ProxyConfOverride.NONE,"enable authentication via X.509 Client Certificate in nginx proxy (https only)"));
-        mConfVars.put("ssl.clientcertca.default", new ProxyConfVar("ssl.clientcertca.default", "zimbraReverseProxyClientCertCA", mDefaultSSLClientCertCa, ProxyConfValueType.STRING, ProxyConfOverride.NONE,"CA certificate for authenticating client certificates in nginx proxy (https only)"));
+        mConfVars.put("ssl.clientcertmode.default", new ProxyConfVar("ssl.clientcertmode.default", "zimbraReverseProxyClientCertMode", "off", ProxyConfValueType.STRING, ProxyConfOverride.SERVER,"enable authentication via X.509 Client Certificate in nginx proxy (https only)"));
+        mConfVars.put("ssl.clientcertca.default", new ProxyConfVar("ssl.clientcertca.default", "zimbraReverseProxyClientCertCA", mDefaultSSLClientCertCa, ProxyConfValueType.CUSTOM, ProxyConfOverride.CUSTOM,"CA certificate for authenticating client certificates in nginx proxy (https only)"));
         mConfVars.put("ssl.clientcertdepth.default", new ProxyConfVar("ssl.clientcertdepth.default", "zimbraReverseProxyClientCertDepth", new Integer(10), ProxyConfValueType.INTEGER, ProxyConfOverride.NONE,"indicate how depth the verification will load the ca chain. This is useful when client crt is signed by multiple intermediate ca"));
         mConfVars.put("main.user", new ProxyConfVar("main.user", null, "zimbra", ProxyConfValueType.STRING, ProxyConfOverride.NONE, "The user as which the worker processes will run"));
         mConfVars.put("main.group", new ProxyConfVar("main.group", null, "zimbra", ProxyConfValueType.STRING, ProxyConfOverride.NONE, "The group as which the worker processes will run"));
@@ -1475,4 +1473,28 @@ public class ProxyConfGen
         int exitCode = createConf(args);
         System.exit(exitCode);
     }
+}
+
+
+class ProxyConfUtil{
+
+    public static void writeContentToFile( String content, String filePath )
+        throws ServiceException {
+
+        try{
+            BufferedWriter bw = new BufferedWriter(new FileWriter(filePath));
+
+            bw.write(content);
+            bw.flush();
+            bw.close();
+
+        }catch( IOException e ){
+            throw ServiceException.FAILURE("Cannot write the content (" + content + ") to " + filePath, e);
+        }
+    }
+
+    public static boolean isEmptyString( String target ){
+        return (target == null) || (target.trim().equalsIgnoreCase(""));
+    }
+
 }
