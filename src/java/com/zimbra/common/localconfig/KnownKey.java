@@ -37,7 +37,7 @@ public class KnownKey {
      * @param defaultValue default value
      * @return new instance
      */
-    static KnownKey newKey(String defaultValue) {
+    public static KnownKey newKey(String defaultValue) {
         return new KnownKey().setDefault(defaultValue);
     }
 
@@ -47,7 +47,7 @@ public class KnownKey {
      * @param defaultValue default value
      * @return new instance
      */
-    static KnownKey newKey(boolean defaultValue) {
+    public static KnownKey newKey(boolean defaultValue) {
         return new KnownKey().setDefault(String.valueOf(defaultValue));
     }
 
@@ -57,7 +57,7 @@ public class KnownKey {
      * @param defaultValue default value
      * @return new instance
      */
-    static KnownKey newKey(int defaultValue) {
+    public static KnownKey newKey(int defaultValue) {
         return new KnownKey().setDefault(String.valueOf(defaultValue));
     }
 
@@ -67,7 +67,7 @@ public class KnownKey {
      * @param defaultValue default value
      * @return new instance
      */
-    static KnownKey newKey(long defaultValue) {
+    public static KnownKey newKey(long defaultValue) {
         return new KnownKey().setDefault(String.valueOf(defaultValue));
     }
 
@@ -77,7 +77,7 @@ public class KnownKey {
      * @param defaultValue default value
      * @return new instance
      */
-    static KnownKey newKey(float defaultValue) {
+    public static KnownKey newKey(float defaultValue) {
         return new KnownKey().setDefault(String.valueOf(defaultValue));
     }
 
@@ -212,7 +212,7 @@ public class KnownKey {
         return mKey;
     }
 
-    void setKey(String name) {
+    public void setKey(String name) {
         assert mKey == null : name;
         assert !ALL.containsKey(name) : name;
         mKey = name;
