@@ -37,7 +37,7 @@ public abstract class TestProv {
     
     List<NamedEntry> mCreatedEntries = new ArrayList<NamedEntry>();
     
-    // add domains in a seperate list, so they are deleted, after all domained 
+    // add domains in a separate list, so they are deleted, after all domain-ed 
     // entries are deleted, or else will get domain not empty exception
     // TODO: need to handle subdomains - those needed to be deleted before parent domains or
     //       else won't get deleted.  For now just go in LDAP and delete the test root directly.

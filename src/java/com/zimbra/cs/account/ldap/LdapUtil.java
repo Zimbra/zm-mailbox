@@ -680,6 +680,21 @@ public class LdapUtil {
                   throw ServiceException.FAILURE("unable to get attribute " + attrName, e);
               }
           }
+          
+          @Override
+          public String[] getMultiAttrString(String attrName) throws ServiceException {
+              try {
+                return LdapUtil.getMultiAttrString(attrs, attrName);
+            } catch (NamingException e) {
+                throw ServiceException.FAILURE("unable to get attribute " + attrName, e);
+            }
+          }
+          
+          @Override
+          public List<String> getMultiAttrStringAsList(String attrName) throws ServiceException {
+              return Arrays.asList(getMultiAttrString(attrName));
+          }
+          
       }
               
       public static void searchLdap(ZimbraLdapContext zlc, String base, String query, String[] returnAttrs, 
