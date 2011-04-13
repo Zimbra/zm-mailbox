@@ -253,8 +253,6 @@ public class Tag extends MailItem {
         if (!originalName.equals(name)) {
             // any folder that contains items might have seen some of its contents change
             touchAllFolders();
-            // tag rename needs to cascade into filter rules
-            RuleManager.tagRenamed(getAccount(), originalName, name);
         }
     }
 

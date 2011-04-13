@@ -32,7 +32,8 @@ public class FilterListener extends MailboxListener {
     
     public static final ImmutableSet<MailboxOperation> EVENTS = ImmutableSet.of(
             MailboxOperation.MoveItem, MailboxOperation.DeleteItem, 
-            MailboxOperation.RenameItem, MailboxOperation.RenameItemPath
+            MailboxOperation.RenameItem, MailboxOperation.RenameItemPath,
+            MailboxOperation.RenameTag
     );
     
     public static final ImmutableSet<Type> ITEMTYPES = ImmutableSet.of(
@@ -56,6 +57,16 @@ public class FilterListener extends MailboxListener {
                         continue;
                     }
                     updateFilterRules(notification.mailboxAccount, folder, oldFolder.getPath());
+                } else if (change.what instanceof Tag) {
+                    if ((change.why & Change.MODIFIED_NAME) == 0)
+                        continue;
+                    Tag tag = (Tag) change.what;
+                    Tag oldTag = (Tag)notification.mods.preModifyItems.get(tag.getId());
+                    if (oldTag == null) {
+                        ZimbraLog.filter.warn("Cannot determine the old tag name for %s.", tag.getName());
+                        continue;
+                    }
+                    updateFilterRules(notification.mailboxAccount, tag, oldTag.getName());
                 }
             }
         }
@@ -95,8 +106,18 @@ public class FilterListener extends MailboxListener {
         }
     }
 
+    private void updateFilterRules(Account account, Tag tag, String oldName) {
+        try {
+            ZimbraLog.filter.info("Updating filter rules that reference %s.", oldName);
+            RuleManager.tagRenamed(account, oldName, tag.getName());
+        } catch (ServiceException e) {
+            ZimbraLog.filter.warn("Unable to update filter rules with new folder path.", e);
+        }
+    }
+
     private void updateFilterRules(Account account, Tag tag) {
         try {
+            ZimbraLog.filter.info("Disabling filter rules that reference %s.", tag.getName());
             RuleManager.tagDeleted(account, tag.getName());
         } catch (ServiceException e) {
             ZimbraLog.filter.warn("Unable to update filter rules with new folder path.", e);
