@@ -651,19 +651,23 @@ public class LdapUtil {
       }
       
       public static void searchLdapOnMaster(String base, String query, String[] returnAttrs, SearchLdapVisitor visitor) throws ServiceException {
-          searchLdap(base, query, returnAttrs, true, visitor);
+          searchZimbraLdap(base, query, returnAttrs, true, visitor);
       }
 
       public static void searchLdapOnReplica(String base, String query, String[] returnAttrs, SearchLdapVisitor visitor) throws ServiceException {
-          searchLdap(base, query, returnAttrs, false, visitor);
+          searchZimbraLdap(base, query, returnAttrs, false, visitor);
       }
       
-      private static void searchLdap(String base, String query, String[] returnAttrs, boolean useMaster, SearchLdapVisitor visitor) 
+      private static void searchZimbraLdap(String base, String query, String[] returnAttrs, boolean useMaster, SearchLdapVisitor visitor) 
       throws ServiceException {
-          ZimbraLdapContext zlc = new ZimbraLdapContext(useMaster);
-          searchLdap(zlc, base, query, returnAttrs, null, visitor);
+          ZimbraLdapContext zlc = null;
+          try {
+              zlc = new ZimbraLdapContext(useMaster);
+              searchLdap(zlc, base, query, returnAttrs, null, visitor);
+          } finally {
+              ZimbraLdapContext.closeContext(zlc);
+          }
       }
-      
       
       public static class JNDIAttributes implements IAttributes {
           private Attributes attrs;
@@ -696,7 +700,10 @@ public class LdapUtil {
           }
           
       }
-              
+             
+      /*
+       * Important Note: caller is responsible to close the ZimbraLdapContext
+       */
       public static void searchLdap(ZimbraLdapContext zlc, String base, String query, String[] returnAttrs, 
               Set<String> binaryAttrs, SearchLdapVisitor visitor) 
       throws ServiceException {
@@ -733,8 +740,6 @@ public class LdapUtil {
               throw ServiceException.FAILURE("unable to search ldap", e);
           } catch (IOException e) {
               throw ServiceException.FAILURE("unable to search ldap", e);
-          } finally {
-              ZimbraLdapContext.closeContext(zlc);
           }
       }
 
