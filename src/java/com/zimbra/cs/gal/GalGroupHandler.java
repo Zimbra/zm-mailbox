@@ -18,18 +18,18 @@ package com.zimbra.cs.gal;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.naming.directory.SearchResult;
-
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.ldap.IAttributes;
+import com.zimbra.cs.ldap.ILdapContext;
 
 public abstract class GalGroupHandler {
 
-    public abstract boolean isGroup(SearchResult sr);
+    public abstract boolean isGroup(IAttributes ldapAttrs);
     
-    public abstract String[] getMembers(ZimbraLdapContext zlc, String searchBase, SearchResult sr);
+    public abstract String[] getMembers(ILdapContext ldapContext, String searchBase, 
+            String entryDN, IAttributes ldapAttrs);
     
     
     private static Map<String, HandlerInfo> sHandlers = new ConcurrentHashMap<String,HandlerInfo>();

@@ -646,6 +646,14 @@ public class LdapUtil {
          return LdapProvisioning.expandStr(bindDnRule, vars);
       }
       
+      // TODO: move to LdapUtilCommon? 
+      // Be careful that com.zimbra.cs.license.LicenseManager uses it (also LdapDIT, see bug 58898).
+      // During upgrade, "com.zimbra.cs.license.LicenseCLI --ping" is invoked.  And in that context 
+      // only zimbra-license-tools.jar(LicenseManager lives in there) is new, all other libs are old 
+      // (could be 5.x, 6.x, 7.x).  If we do move SearchLdapVisitor to LdapUtilCommon, we will have 
+      // to fix "com.zimbra.cs.license.LicenseCLI --ping" to *not* do the ldap search - it should not 
+      // anyway.
+      //
       public static interface SearchLdapVisitor {
           public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs);
       }
@@ -695,10 +703,21 @@ public class LdapUtil {
           }
           
           @Override
+          public String[] getMultiAttrString(String attrName, boolean containsBinaryData, boolean isBinaryTransfer) 
+          throws ServiceException {
+              try {
+                return LdapUtil.getMultiAttrString(attrs, attrName, containsBinaryData, isBinaryTransfer);
+            } catch (NamingException e) {
+                throw ServiceException.FAILURE("unable to get attribute " + attrName, e);
+            }
+          }
+                  
+          @Override
           public List<String> getMultiAttrStringAsList(String attrName) throws ServiceException {
               return Arrays.asList(getMultiAttrString(attrName));
           }
-          
+
+         
       }
              
       /*
@@ -815,8 +834,9 @@ public class LdapUtil {
                         
                         SearchResult sr = (SearchResult) ne.next();
                         String dn = sr.getNameInNamespace();
+                        JNDIAttributes attrs = new JNDIAttributes(sr.getAttributes());
                         
-                        GalContact lgc = new GalContact(galType, dn, rules.apply(zlc, base, sr));
+                        GalContact lgc = new GalContact(galType, dn, rules.apply(zlc, base, dn, attrs));
                         String mts = (String) lgc.getAttrs().get("modifyTimeStamp");
                         result.setToken(getLaterTimestamp(result.getToken(), mts));
                         String cts = (String) lgc.getAttrs().get("createTimeStamp");

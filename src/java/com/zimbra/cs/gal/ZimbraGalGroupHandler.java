@@ -16,43 +16,39 @@
 package com.zimbra.cs.gal;
 
 import java.util.Arrays;
+import java.util.List;
 
-import javax.naming.NamingException;
-import javax.naming.directory.Attribute;
-import javax.naming.directory.Attributes;
-import javax.naming.directory.SearchResult;
-
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
-import com.zimbra.cs.account.ldap.LdapUtil;
-import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.ldap.IAttributes;
+import com.zimbra.cs.ldap.ILdapContext;
 
 public class ZimbraGalGroupHandler extends GalGroupHandler {
 
     private static String[] sEmptyMembers = new String[0];
     
     @Override
-    public boolean isGroup(SearchResult sr) {
-        Attributes ldapAttrs = sr.getAttributes();
-        Attribute objectclass = ldapAttrs.get(Provisioning.A_objectClass);
-        if (objectclass == null) {
-            return false;
-        } else {
+    public boolean isGroup(IAttributes ldapAttrs) {
+        try {
+            List<String> objectclass = ldapAttrs.getMultiAttrStringAsList(Provisioning.A_objectClass);
             return objectclass.contains(AttributeClass.OC_zimbraDistributionList);
+        } catch (ServiceException e) {
+            ZimbraLog.gal.warn("unable to get attribute " + Provisioning.A_objectClass, e);
         }
+        return false;
     }
     
     @Override
-    public String[] getMembers(ZimbraLdapContext zlc, String searchBase, SearchResult sr) {
+    public String[] getMembers(ILdapContext ldapContext, String searchBase, String entryDN, IAttributes ldapAttrs) {
         try {
-            ZimbraLog.gal.debug("Fetching members for group " + LdapUtil.getAttrString(sr.getAttributes(), LdapProvisioning.A_mail));
-            Attributes ldapAttrs = sr.getAttributes();
-            String[] members = LdapUtil.getMultiAttrString(ldapAttrs, Provisioning.A_zimbraMailForwardingAddress);
+            ZimbraLog.gal.debug("Fetching members for group " + ldapAttrs.getAttrString(LdapProvisioning.A_mail));
+            String[] members = ldapAttrs.getMultiAttrString(Provisioning.A_zimbraMailForwardingAddress);
             Arrays.sort(members);
             return members;
-        } catch (NamingException e) {
+        } catch (ServiceException e) {
             ZimbraLog.gal.warn("unable to retrieve group members ", e);
             return sEmptyMembers;
         }

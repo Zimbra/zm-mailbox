@@ -1,3 +1,17 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2011 Zimbra, Inc.
+ * 
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.cs.prov.ldap;
 
 import java.util.List;
@@ -8,10 +22,12 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.mime.MimeTypeInfo;
+import com.zimbra.cs.prov.ldap.LdapHelper;
 
 public abstract class LdapProv extends Provisioning {
     
     protected LdapDIT mDIT;
+    protected LdapHelper helper;
     
     protected static final long ONE_DAY_IN_MILLIS = 1000*60*60*24;
     
@@ -30,12 +46,30 @@ public abstract class LdapProv extends Provisioning {
             Provisioning.A_zimbraAdminConsoleUIComponents
     };
     
+    public static LdapProv getInst() throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        
+        if (prov instanceof LdapProv) {
+            return (LdapProv) prov;
+        } else {
+            throw ServiceException.FAILURE("not an instance of LdapProv", null);
+        }
+    }
+    
     protected void setDIT() {
         mDIT = new LdapDIT(this);
     }
 
     public LdapDIT getDIT() {
         return mDIT;
+    }
+    
+    protected void setHelper(LdapHelper helper) {
+        this.helper = helper;
+    }
+    
+    public LdapHelper getHelper() {
+        return helper;
     }
     
     public abstract void searchOCsForSuperClasses(Map<String, Set<String>> ocs);

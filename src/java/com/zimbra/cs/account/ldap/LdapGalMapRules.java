@@ -21,9 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.naming.directory.Attributes;
-import javax.naming.directory.SearchResult;
-
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Config;
@@ -31,6 +28,9 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.gal.GalGroupHandler;
+import com.zimbra.cs.ldap.IAttributes;
+import com.zimbra.cs.ldap.ILdapContext;
+
 
 /*
  * maps LDAP attrs into contact attrs. 
@@ -103,10 +103,8 @@ public class LdapGalMapRules {
         return mBinaryLdapAttrs;
     }
     
-    public Map<String, Object> apply(ZimbraLdapContext zlc, String searchBase, SearchResult sr) {
-        String dn = sr.getNameInNamespace();
-        Attributes ldapAttrs = sr.getAttributes();
-        
+    public Map<String, Object> apply(ILdapContext ldapContext, String searchBase, String entryDN, IAttributes ldapAttrs) {
+         
         HashMap<String,Object> contactAttrs = new HashMap<String, Object>();        
         for (LdapGalMapRule rule: mRules) {
         	if (!mNeedSMIMECerts && rule.isSMIMECertificate()) {
@@ -115,11 +113,11 @@ public class LdapGalMapRules {
             rule.apply(ldapAttrs, contactAttrs);
         }
         
-        if (mGroupHandler.isGroup(sr)) {
+        if (mGroupHandler.isGroup(ldapAttrs)) {
             contactAttrs.put(ContactConstants.A_type, ContactConstants.TYPE_GROUP);
             
             if (mFetchGroupMembers)
-                contactAttrs.put(ContactConstants.A_member, mGroupHandler.getMembers(zlc, searchBase, sr));
+                contactAttrs.put(ContactConstants.A_member, mGroupHandler.getMembers(ldapContext, searchBase, entryDN, ldapAttrs));
             else {
                 // for internal LDAP, all members are on the DL entry and have been fetched/mapped
                 // delete it.

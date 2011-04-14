@@ -225,7 +225,7 @@ public class LdapProvisioning extends LdapProv {
     private static synchronized void ensureSingleton(LdapProvisioning prov) {
         if (theOnlyInstance != null) {
             // pass an exception to have the stack logged
-            Zimbra.halt("can have only one instance of LdapProvisioning", 
+            Zimbra.halt("Only one instance of LdapProvisioning can be created", 
                     ServiceException.FAILURE("failed to instantiate LdapProvisioning", null));
         }
         theOnlyInstance = prov;
@@ -235,6 +235,7 @@ public class LdapProvisioning extends LdapProv {
         ensureSingleton(this);
         
         setDIT();
+        setHelper(new LegacyLdapHelper(this));
         mAllDLs = new Groups(this);
         
         register(new Validators.DomainAccountValidator());

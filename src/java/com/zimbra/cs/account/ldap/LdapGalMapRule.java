@@ -14,16 +14,10 @@
  */
 package com.zimbra.cs.account.ldap;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.naming.NamingException;
-import javax.naming.directory.Attributes;
-
-import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeManager;
@@ -31,6 +25,7 @@ import com.zimbra.cs.account.AttributeManager.IDNType;
 import com.zimbra.cs.account.AttributeType;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.ldap.IAttributes;
 
 /*
  * maps LDAP attrs into contact attrs. 
@@ -145,15 +140,18 @@ class LdapGalMapRule {
             return value;
     }
     
-    void apply(Attributes ldapAttrs, Map<String,Object> contactAttrs) {
+    void apply(IAttributes ldapAttrs, Map<String,Object> contactAttrs) {
         AttributeManager attrMgr = AttributeManager.getInst();
         
         int index = 0; // index into mContactAttrs
         for (String ldapAttr: mLdapAttrs) {
             if (index >= mContactAttrs.length) return;
             String val[];
-            try { val = LdapUtil.getMultiAttrString(ldapAttrs, ldapAttr, containsBinaryData(), isBinaryTransfer()); } 
-            catch (NamingException e) { return; }
+            try { 
+                val = ldapAttrs.getMultiAttrString(ldapAttr, containsBinaryData(), isBinaryTransfer()); 
+            } catch (ServiceException e) { 
+                return; 
+            }
             
             IDNType idnType = AttributeManager.idnType(attrMgr, ldapAttr);
             

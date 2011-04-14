@@ -15,96 +15,85 @@
 
 package com.zimbra.cs.gal;
 
-import java.io.IOException;
-import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.TreeSet;
-
-import javax.naming.NamingEnumeration;
-import javax.naming.NamingException;
-import javax.naming.directory.Attribute;
-import javax.naming.directory.Attributes;
-import javax.naming.directory.SearchControls;
-import javax.naming.directory.SearchResult;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapUtil;
-import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.ldap.LdapUtil.SearchLdapVisitor;
+import com.zimbra.cs.ldap.IAttributes;
+import com.zimbra.cs.ldap.ILdapContext;
+import com.zimbra.cs.prov.ldap.LdapHelper;
+import com.zimbra.cs.prov.ldap.LdapHelper.SearchLdapOptions;
+import com.zimbra.cs.prov.ldap.LdapProv;
 
 public class ADGalGroupHandler extends GalGroupHandler {
 
-    private static final String[] sEmptyMembers = new String[0];
     private static final String MAIL_ATTR = "mail";
     
     @Override
-    public boolean isGroup(SearchResult sr) {
-        Attributes ldapAttrs = sr.getAttributes();
-        Attribute objectclass = ldapAttrs.get(Provisioning.A_objectClass);
-        return objectclass.contains("group");
+    public boolean isGroup(IAttributes ldapAttrs) {
+        try {
+            List<String> objectclass = ldapAttrs.getMultiAttrStringAsList(Provisioning.A_objectClass);
+            return objectclass.contains("group");
+        } catch (ServiceException e) {
+            ZimbraLog.gal.warn("unable to get attribute " + Provisioning.A_objectClass, e);
+        }
+        return false;
     }
 
     @Override
-    public String[] getMembers(ZimbraLdapContext zlc, String searchBase, SearchResult sr) {
-        String dn = sr.getNameInNamespace();
+    public String[] getMembers(ILdapContext ldapContext, String searchBase, String entryDN, IAttributes ldapAttrs) {
         if (ZimbraLog.gal.isDebugEnabled()) {
             try {
-                ZimbraLog.gal.debug("Fetching members for group " + LdapUtil.getAttrString(sr.getAttributes(), MAIL_ATTR));
-            } catch (NamingException e) {
-                ZimbraLog.gal.debug("unable to get email address of group " + dn, e);
+                ZimbraLog.gal.debug("Fetching members for group " + ldapAttrs.getAttrString(MAIL_ATTR));
+            } catch (ServiceException e) {
+                ZimbraLog.gal.debug("unable to get email address of group " + entryDN, e);
             }
         }
-        TreeSet<String> result = searchLdap(zlc, searchBase, dn);
+        
+        SearchADGroupMembers searcher = new SearchADGroupMembers();
+        TreeSet<String> result = searcher.searchLdap(ldapContext, searchBase, entryDN);
         return result.toArray(new String[result.size()]);
     }
     
-    private TreeSet<String> searchLdap(ZimbraLdapContext zlc, String searchBase, String dnOfGroup) {
-        TreeSet result = new TreeSet<String>();
-        
-        int maxResults = 0; // no limit
-        String query = "(memberof=" + dnOfGroup + ")";
-        String[] returnAttrs = new String[]{MAIL_ATTR};
-        
-        try {
-            SearchControls searchControls =
-                new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, returnAttrs, false, false);
+    
+    private static class SearchADGroupMembers implements SearchLdapVisitor {
 
-            //Set the page size and initialize the cookie that we pass back in subsequent pages
-            int pageSize = LdapUtil.adjustPageSize(maxResults, 1000);
-            byte[] cookie = null;
-
-            NamingEnumeration ne = null;
-            
+        TreeSet<String> result = new TreeSet<String>();
+        
+        @Override
+        public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs) {
+            String email;
             try {
-                do {
-                    zlc.setPagedControl(pageSize, cookie, true);
-
-                    ne = zlc.searchDir(searchBase, query, searchControls);
-                    while (ne != null && ne.hasMore()) {
-                        SearchResult sr = (SearchResult) ne.nextElement();
-                        // String dn = sr.getNameInNamespace();
-                        Attributes attrs = sr.getAttributes();
-                        String email = LdapUtil.getAttrString(attrs, MAIL_ATTR);
-                        if (email != null)
-                            result.add(email);
-                    }
-                    cookie = zlc.getCookie();
-                } while (cookie != null);
-            } finally {
-                if (ne != null) ne.close();
+                email = ldapAttrs.getAttrString(MAIL_ATTR);
+                if (email != null) {
+                    result.add(email);
+                }
+            } catch (ServiceException e) {
+                // swallow exceptions and continue
+                ZimbraLog.gal.warn("unable to get attribute " + MAIL_ATTR + " from search result", e);
             }
-        } catch (NamingException e) {
-            // log and continue
-            ZimbraLog.gal.warn("unable to search group members", e);
-        } catch (IOException e) {
-            // log and continue
-            ZimbraLog.gal.warn("unable to search group members", e);
-        } finally {
-            // we didn't open this connection, we don't close it
         }
         
-        return result;
+        private TreeSet<String> searchLdap(ILdapContext zlc, String searchBase, String dnOfGroup) {
+            
+            String query = "(memberof=" + dnOfGroup + ")";
+            String[] returnAttrs = new String[]{MAIL_ATTR};
+            
+            try {
+                LdapHelper ldapHelper = LdapProv.getInst().getHelper();
+                SearchLdapOptions searchOptions = new SearchLdapOptions(zlc, searchBase, query, returnAttrs, null, this);
+                ldapHelper.searchLdap(searchOptions);
+            } catch (ServiceException e) {
+                // log and continue
+                ZimbraLog.gal.warn("unable to search group members", e);
+            }
+                        
+            return result;
+        }
     }
     
 }
