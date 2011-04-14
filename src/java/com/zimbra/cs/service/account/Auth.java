@@ -59,7 +59,7 @@ public class Auth extends AccountDocumentHandler {
         if (authTokenEl != null) {
             try {
                 String token = authTokenEl.getText();
-                AuthToken at = AuthToken.getAuthToken(token);
+                AuthToken at = AuthProvider.getAuthToken(token);
                 
                 addAccountToLogContextByAuthToken(prov, at);
                 
