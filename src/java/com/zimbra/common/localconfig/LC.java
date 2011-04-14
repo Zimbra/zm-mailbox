@@ -543,7 +543,6 @@ public final class LC {
     public static final KnownKey postfix_smtpd_sasl_authenticated_header = KnownKey.newKey("no");
     public static final KnownKey postfix_smtpd_sasl_security_options = KnownKey.newKey("noanonymous");
     public static final KnownKey postfix_smtpd_tls_security_options = KnownKey.newKey("$smtpd_sasl_security_options");
-    public static final KnownKey postfix_smtpd_sender_restrictions = KnownKey.newKey("");
     public static final KnownKey postfix_smtpd_client_restrictions = KnownKey.newKey("reject_unauth_pipelining");
     public static final KnownKey postfix_smtpd_data_restrictions = KnownKey.newKey("reject_unauth_pipelining");
     public static final KnownKey postfix_smtpd_helo_required = KnownKey.newKey("yes");
