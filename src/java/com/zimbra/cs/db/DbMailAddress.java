@@ -24,6 +24,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbPool.DbConnection;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -73,11 +74,14 @@ public final class DbMailAddress {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement("INSERT INTO " + getTableName(mailbox) +
-                    " (mailbox_id, id, address, contact_count) VALUES (?, ?, ?, ?)");
-            stmt.setInt(1, mailbox.getId());
-            stmt.setInt(2, id);
-            stmt.setString(3, address);
-            stmt.setInt(4, contactCount);
+                    " (" + (DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ") + "id, address, contact_count) VALUES (" + (DebugConfig.disableMailboxGroups ? "" : "?, ") + " ?, ?, ?)");
+            int pos = 1;
+            if (!DebugConfig.disableMailboxGroups) {
+                stmt.setInt(pos++, mailbox.getId());
+            }
+            stmt.setInt(pos++, id);
+            stmt.setString(pos++, address);
+            stmt.setInt(pos, contactCount);
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("Failed to create", e);
@@ -91,8 +95,10 @@ public final class DbMailAddress {
     public static int delete(DbConnection conn, Mailbox mbox) throws ServiceException {
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement("DELETE FROM " + getTableName(mbox) + " WHERE mailbox_id = ?");
-            stmt.setInt(1, mbox.getId());
+            stmt = conn.prepareStatement("DELETE FROM " + getTableName(mbox) + (DebugConfig.disableMailboxGroups ? "" : " WHERE mailbox_id = ?"));
+            if (!DebugConfig.disableMailboxGroups) {
+                stmt.setInt(1, mbox.getId());
+            }
             return stmt.executeUpdate();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("Failed to delete all", e);
@@ -105,8 +111,10 @@ public final class DbMailAddress {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement("SELECT MAX(id) FROM " + getTableName(mbox) + " WHERE mailbox_id = ?");
-            stmt.setInt(1, mbox.getId());
+            stmt = conn.prepareStatement("SELECT MAX(id) FROM " + getTableName(mbox) + (DebugConfig.disableMailboxGroups ? "" : " WHERE mailbox_id = ?"));
+            if (!DebugConfig.disableMailboxGroups) {
+                stmt.setInt(1, mbox.getId());
+            }
             rs = stmt.executeQuery();
             if (rs.next()) {
                 return rs.getInt(1);
@@ -126,9 +134,12 @@ public final class DbMailAddress {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement("SELECT id FROM " + getTableName(mbox) +
-                    " WHERE mailbox_id = ? AND address = ?");
-            stmt.setInt(1, mbox.getId());
-            stmt.setString(2, addr);
+                    " WHERE " + (DebugConfig.disableMailboxGroups ? "" : "mailbox_id = ? AND ") + "address = ?");
+            int pos = 1;
+            if (!DebugConfig.disableMailboxGroups) {
+                stmt.setInt(pos++, mbox.getId());
+            }
+            stmt.setString(pos, addr);
             rs = stmt.executeQuery();
             if (rs.next()) {
                 return rs.getInt(1);
@@ -147,9 +158,12 @@ public final class DbMailAddress {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("UPDATE " + getTableName(mbox) +
-                    " SET contact_count = contact_count + 1 WHERE mailbox_id = ? AND id = ?");
-            stmt.setInt(1, mbox.getId());
-            stmt.setInt(2, id);
+                    " SET contact_count = contact_count + 1 WHERE " + (DebugConfig.disableMailboxGroups ? "" : "mailbox_id = ? AND ") + "id = ?");
+            int pos = 1;
+            if (!DebugConfig.disableMailboxGroups) {
+                stmt.setInt(pos++, mbox.getId());
+            }
+            stmt.setInt(pos, id);
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("Failed to increment contact count", e);
@@ -162,9 +176,12 @@ public final class DbMailAddress {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("UPDATE " + getTableName(mbox) +
-                    " SET contact_count = contact_count - 1 WHERE mailbox_id = ? AND address = ?");
-            stmt.setInt(1, mbox.getId());
-            stmt.setString(2, addr);
+                    " SET contact_count = contact_count - 1 WHERE " + (DebugConfig.disableMailboxGroups ? "" : "mailbox_id = ? AND ") + "address = ?");
+            int pos = 1;
+            if (!DebugConfig.disableMailboxGroups) {
+                stmt.setInt(pos++, mbox.getId());
+            }
+            stmt.setString(pos, addr);
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("Failed to decrement contact count", e);
@@ -178,9 +195,12 @@ public final class DbMailAddress {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement("SELECT contact_count FROM " + getTableName(mbox) +
-                    " WHERE mailbox_id = ? AND id = ?");
-            stmt.setInt(1, mbox.getId());
-            stmt.setInt(2, id);
+                    " WHERE " + (DebugConfig.disableMailboxGroups ? "" : "mailbox_id = ? AND ") + "id = ?");
+            int pos = 1;
+            if (!DebugConfig.disableMailboxGroups) {
+                stmt.setInt(pos++, mbox.getId());
+            }
+            stmt.setInt(pos, id);
             rs = stmt.executeQuery();
             if (rs.next()) {
                 return rs.getInt(1);
@@ -200,9 +220,12 @@ public final class DbMailAddress {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement("SELECT contact_count FROM " + getTableName(mbox) +
-                    " WHERE mailbox_id = ? AND address = ?");
-            stmt.setInt(1, mbox.getId());
-            stmt.setString(2, addr);
+                    " WHERE " + (DebugConfig.disableMailboxGroups ? "" : "mailbox_id = ? AND ") + "address = ?");
+            int pos = 1;
+            if (!DebugConfig.disableMailboxGroups) {
+                stmt.setInt(pos++, mbox.getId());
+            }
+            stmt.setString(pos, addr);
             rs = stmt.executeQuery();
             if (rs.next()) {
                 return rs.getInt(1);
@@ -224,17 +247,23 @@ public final class DbMailAddress {
         try {
             // reset all counts
             stmt = conn.prepareStatement("UPDATE " + getTableName(mbox) +
-                    " SET contact_count = ? WHERE mailbox_id = ?");
-            stmt.setInt(1, 0);
-            stmt.setInt(2, mbox.getId());
+                    " SET contact_count = ?" + (DebugConfig.disableMailboxGroups ? "" : " WHERE mailbox_id = ?"));
+            int pos = 1;
+            stmt.setInt(pos++, 0);
+            if (!DebugConfig.disableMailboxGroups) {
+                stmt.setInt(pos, mbox.getId());
+            }
             stmt.executeUpdate();
             stmt.close();
 
             // extract email addresses from all contacts, and put them into mail_address
             stmt = conn.prepareStatement("SELECT metadata FROM " + DbMailItem.getMailItemTableName(mbox) +
-                    " WHERE mailbox_id = ? AND type = ?");
-            stmt.setInt(1, mbox.getId());
-            stmt.setByte(2, MailItem.Type.CONTACT.toByte());
+                    " WHERE " + (DebugConfig.disableMailboxGroups ? "" : "mailbox_id = ? AND ") + "type = ?");
+            pos = 1;
+            if (!DebugConfig.disableMailboxGroups) {
+                stmt.setInt(pos++, mbox.getId());
+            }
+            stmt.setByte(pos, MailItem.Type.CONTACT.toByte());
             rs = stmt.executeQuery();
             while (rs.next()) {
                 Metadata metadata = new Metadata(rs.getString(1));
