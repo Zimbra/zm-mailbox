@@ -23,6 +23,7 @@ SECTION amavis
 	VAR zimbraSpamSubjectTag
 	VAR zimbraAmavisQuarantineAccount
 	VAR zimbraMtaMyNetworks
+	VAR zimbraDomainMandatoryMailSignatureEnabled
   RESTART archiving antispam antivirus mta
 
 SECTION antivirus DEPENDS amavis
