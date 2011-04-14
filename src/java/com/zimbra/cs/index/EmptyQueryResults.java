@@ -37,6 +37,11 @@ final class EmptyQueryResults extends ZimbraQueryResultsImpl {
     }
 
     @Override
+    public long getCursorOffset() {
+        return 0;
+    }
+
+    @Override
     public void resetIterator()  {
     }
 

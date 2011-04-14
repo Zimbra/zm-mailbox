@@ -36,6 +36,11 @@ public final class NoResultsQueryOperation extends QueryOperation {
     }
 
     @Override
+    public long getCursorOffset() {
+        return 0;
+    }
+
+    @Override
     public SortBy getSortBy() {
         return context.getParams().getSortBy();
     }

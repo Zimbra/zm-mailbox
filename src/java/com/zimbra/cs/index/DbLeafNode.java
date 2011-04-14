@@ -41,7 +41,7 @@ public final class DbLeafNode extends DbSearchConstraints implements IConstraint
     protected boolean mHasSpamTrashSetting = false;
 
     @Override
-    public Object clone() throws CloneNotSupportedException {
+    public Object clone() {
         DbLeafNode toRet = (DbLeafNode)super.clone();
 
         // make sure we cloned folders instead of just copying them!

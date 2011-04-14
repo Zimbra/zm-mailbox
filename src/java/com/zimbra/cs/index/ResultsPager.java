@@ -43,6 +43,7 @@ public final class ResultsPager {
     private SearchParams params;
     private boolean forward = true;
     private Comparator<ZimbraHit> comparator;
+    private long offset = -1;
 
     public static ResultsPager create(ZimbraQueryResults results, SearchParams params) throws ServiceException {
         // must use results.getSortBy() because the results might have ignored our sortBy
@@ -125,6 +126,10 @@ public final class ResultsPager {
         }
     }
 
+    public long getCursorOffset() {
+        return offset >= 0 ? offset + results.getCursorOffset() : -1;
+    }
+
     public boolean hasNext() throws ServiceException {
         if (bufferedHits != null && !bufferedHits.isEmpty()) {
             return true;
@@ -142,7 +147,7 @@ public final class ResultsPager {
     }
 
     private ZimbraHit forwardFindFirst() throws ServiceException {
-        int offset = 0;
+        offset = -1;
         ZimbraHit prevHit = getPrevCursorHit();
         results.resetIterator();
         ZimbraHit hit = results.getNext();
@@ -154,12 +159,8 @@ public final class ResultsPager {
             }
 
             int comp;
-            if (DebugConfig.enableContactLocalizedSort) {
-                if (comparator != null) {
-                    comp = comparator.compare(hit, prevHit);
-                } else {
-                    comp = hit.compareTo(params.getSortBy(), prevHit);
-                }
+            if (DebugConfig.enableContactLocalizedSort && comparator != null) {
+                comp = comparator.compare(hit, prevHit);
             } else {
                 comp = hit.compareTo(params.getSortBy(), prevHit);
             }
@@ -196,6 +197,7 @@ public final class ResultsPager {
         }
 
         // end of line
+        offset = -1;
         return null;
     }
 
@@ -204,7 +206,7 @@ public final class ResultsPager {
      */
     private List<ZimbraHit> backward() throws ServiceException {
         List<ZimbraHit> result = new LinkedList<ZimbraHit>();
-        int offset = 0;
+        offset = -1;
         results.resetIterator();
         ZimbraHit hit = results.getNext();
         ZimbraHit prevHit = getPrevCursorHit();

@@ -113,7 +113,6 @@ public class Search extends MailDocumentHandler  {
             // must use results.getSortBy() because the results might have ignored our sortBy
             // request and used something else...
             response.addAttribute(MailConstants.A_SORTBY, results.getSortBy().toString());
-            response.addAttribute(MailConstants.A_QUERY_OFFSET, params.getOffset());
             long total = results.getTotalHitCount();
             if (total >= 0) {
                 response.addAttribute(MailConstants.A_TOTAL_SIZE, total);
@@ -139,8 +138,7 @@ public class Search extends MailDocumentHandler  {
         }
     }
 
-    private void putHits(ZimbraSoapContext zsc,
-            OperationContext octxt, Element el, ZimbraQueryResults results,
+    private void putHits(ZimbraSoapContext zsc, OperationContext octxt, Element el, ZimbraQueryResults results,
             SearchParams params) throws ServiceException {
 
         if (params.getInlineRule() == ExpandResults.HITS) {
@@ -149,6 +147,16 @@ public class Search extends MailDocumentHandler  {
         }
 
         ResultsPager pager = ResultsPager.create(results, params);
+        if (params.getCursor() != null) {
+            if (params.getCursor().isIncludeOffset()) {
+                long offset = pager.getCursorOffset();
+                if (offset >= 0) {
+                    el.addAttribute(MailConstants.A_QUERY_OFFSET, offset);
+                }
+            }
+        } else {
+            el.addAttribute(MailConstants.A_QUERY_OFFSET, params.getOffset());
+        }
 
         SearchResponse resp = new SearchResponse(zsc, octxt, el, params);
         resp.setIncludeMailbox(false);

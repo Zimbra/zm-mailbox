@@ -42,6 +42,11 @@ class UngroupedQueryResults extends ZimbraQueryResultsImpl {
     }
 
     @Override
+    public long getCursorOffset() {
+        return results.getCursorOffset();
+    }
+
+    @Override
     public void resetIterator() throws ServiceException {
         results.resetIterator();
     }

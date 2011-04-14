@@ -327,39 +327,34 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
     }
 
     @Override
-    public Object clone() throws CloneNotSupportedException {
-        DbSearchConstraints result = (DbSearchConstraints) super.clone();
+    public Object clone() {
+        DbSearchConstraints result;
+        try {
+            result = (DbSearchConstraints) super.clone();
+        } catch (CloneNotSupportedException e) { // should never happen
+            return null;
+        }
 
         result.tags = SetHelper.cloneHashSet(tags);
         result.excludeTags = SetHelper.cloneHashSet(excludeTags);
-
         result.folders = SetHelper.cloneHashSet(folders);
         result.excludeFolders = SetHelper.cloneHashSet(excludeFolders);
-
         result.remoteFolders = SetHelper.cloneHashSet(remoteFolders);
         result.excludeRemoteFolders = SetHelper.cloneHashSet(excludeRemoteFolders);
-
         result.convId = convId;
         result.prohibitedConvIds = SetHelper.cloneHashSet(prohibitedConvIds);
-
         result.remoteConvId = remoteConvId;
         result.prohibitedRemoteConvIds = SetHelper.cloneHashSet(prohibitedRemoteConvIds);
-
         result.itemIds = SetHelper.cloneHashSet(itemIds);
         result.prohibitedItemIds = SetHelper.cloneHashSet(prohibitedItemIds);
-
         result.remoteItemIds = SetHelper.cloneHashSet(remoteItemIds);
         result.prohibitedRemoteItemIds = SetHelper.cloneHashSet(prohibitedRemoteItemIds);
-
         result.indexIds = SetHelper.cloneHashSet(indexIds);
-
         result.types = SetHelper.cloneHashSet(types);
         result.excludeTypes = SetHelper.cloneHashSet(excludeTypes);
-
         result.dates = SetHelper.cloneHashSet(dates);
         result.calStartDates = SetHelper.cloneHashSet(calStartDates);
         result.calEndDates = SetHelper.cloneHashSet(calEndDates);
-
         result.modified = SetHelper.cloneHashSet(modified);
         result.modifiedContent = SetHelper.cloneHashSet(modifiedContent);
         result.sizes = SetHelper.cloneHashSet(sizes);

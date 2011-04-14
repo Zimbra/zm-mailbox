@@ -97,4 +97,11 @@ public interface ZimbraQueryResults {
      * @return number of total hits
      */
     long getTotalHitCount() throws ServiceException;
+
+    /**
+     * Returns the cursor offset from the top, or -1 if undetermined.
+     *
+     * @return offset of the cursor position from the top
+     */
+    long getCursorOffset();
 }

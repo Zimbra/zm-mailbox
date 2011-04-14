@@ -52,6 +52,11 @@ public abstract class BufferingResultsGrouper implements ZimbraQueryResults {
     }
 
     @Override
+    public long getCursorOffset() {
+        return hits.getCursorOffset();
+    }
+
+    @Override
     public void resetIterator() throws ServiceException {
         if (!atStart) {
             bufferedHit.clear();

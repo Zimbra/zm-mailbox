@@ -192,6 +192,11 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
     }
 
     @Override
+    public long getCursorOffset() {
+        return -1;
+    }
+
+    @Override
     public void doneWithSearchResults() {
     }
 

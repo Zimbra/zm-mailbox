@@ -38,6 +38,11 @@ public final class IntersectionQueryOperation extends CombiningQueryOperation {
     }
 
     @Override
+    public long getCursorOffset() {
+        return -1;
+    }
+
+    @Override
     public void resetIterator() throws ServiceException {
         bufferedNext.clear();
         for (int i = 0; i < messageGrouper.length; i++) {

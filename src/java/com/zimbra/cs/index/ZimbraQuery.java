@@ -35,6 +35,7 @@ import com.zimbra.cs.index.query.parser.QueryParser;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -390,6 +391,44 @@ public final class ZimbraQuery {
                 break;
             default:
                 break;
+        }
+
+        SearchParams.Cursor cursor = params.getCursor();
+        if (cursor != null) {
+            // Check cursor compatibility
+            if (params.getCursor().isIncludeOffset() && hasTextOperation()) {
+                throw ServiceException.INVALID_REQUEST("cursor.includeOffset can't be used with text query.", null);
+            }
+            // Supplement sortValue
+            if (cursor.getSortValue() == null) {
+                ZimbraLog.search.debug("Supplementing sortValue sort=%s,id=%s", params.getSortBy(), cursor.getItemId());
+                try {
+                    MailItem item = mailbox.getItemById(null, cursor.getItemId().getId(), MailItem.Type.UNKNOWN);
+                    switch (params.getSortBy().getKey()) {
+                        case NAME:
+                            cursor.setSortValue(item.getSortSender());
+                            break;
+                        case RCPT:
+                            cursor.setSortValue(item.getSortRecipients());
+                            break;
+                        case SENDER:
+                            cursor.setSortValue(item.getSortSender());
+                            break;
+                        case SIZE:
+                            cursor.setSortValue(String.valueOf(item.getSize()));
+                            break;
+                        case SUBJECT:
+                            cursor.setSortValue(item.getSortSubject());
+                            break;
+                        case DATE:
+                        default:
+                            cursor.setSortValue(String.valueOf(item.getDate()));
+                            break;
+                    }
+                } catch (NoSuchItemException e) {
+                    params.setCursor(null); // clear cursor
+                }
+            }
         }
     }
 

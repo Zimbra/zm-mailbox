@@ -40,6 +40,11 @@ public final class UnionQueryOperation extends CombiningQueryOperation {
     }
 
     @Override
+    public long getCursorOffset() {
+        return -1;
+    }
+
+    @Override
     QueryTargetSet getQueryTargets() {
         QueryTargetSet toRet = new QueryTargetSet();
 

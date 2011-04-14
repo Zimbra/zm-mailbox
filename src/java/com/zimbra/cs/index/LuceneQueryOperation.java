@@ -408,6 +408,11 @@ public final class LuceneQueryOperation extends QueryOperation {
         return hits != null ? hits.size() : 0;
     }
 
+    @Override
+    public long getCursorOffset() {
+        return -1;
+    }
+
     /**
      * Reset our hit iterator back to the beginning of the result set.
      */

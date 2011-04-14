@@ -41,6 +41,11 @@ final class RemoteQueryOperation extends FilterQueryOperation {
         return -1;
     }
 
+    @Override
+    public long getCursorOffset() {
+        return -1;
+    }
+
     /**
      * Try to OR an operation into this one.  Return FALSE if that isn't possible (incompatible query targets).
      *

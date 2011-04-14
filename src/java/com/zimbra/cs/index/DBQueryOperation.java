@@ -56,6 +56,7 @@ public class DBQueryOperation extends QueryOperation {
     private IConstraints constraints = new DbLeafNode();
     private int hitsOffset = 0; // this is the logical offset of the end of the mDBHits buffer
     private int dbOffset = 0; // this is the offset IN THE DATABASE when we're doing a DB-FIRST iteration
+    private int cursorOffset = -1; // calculated cursor offset
 
     /**
      * this gets set to FALSE if we have any real work to do this lets us optimize away queries that might match
@@ -641,7 +642,8 @@ public class DBQueryOperation extends QueryOperation {
     }
 
     private void dbSearch(List<DbSearch.Result> results, SortBy sort, int offset, int size) throws ServiceException {
-        results.addAll(context.getMailbox().index.search(constraints, fetch, sort, offset, size, searchInDumpster()));
+        results.addAll(context.getMailbox().index.search(constraints, fetch, sort, offset, size,
+                context.getParams().inDumpster()));
     }
 
     private boolean shouldExecuteDbFirst() throws ServiceException {
@@ -669,10 +671,6 @@ public class DBQueryOperation extends QueryOperation {
         if (hitsPerChunk > MAX_HITS_PER_CHUNK) {
             hitsPerChunk = MAX_HITS_PER_CHUNK;
         }
-    }
-
-    private boolean searchInDumpster() {
-        return context.getParams().inDumpster();
     }
 
     private void dbFirstGetNextChunk(SortBy sort) throws ServiceException {
@@ -874,7 +872,7 @@ public class DBQueryOperation extends QueryOperation {
         }
     }
 
-    private void addCursorConstraint() {
+    private void addCursorConstraint() throws ServiceException {
         SearchParams.Cursor cursor = context.getParams().getCursor();
         if (cursor == null) {
             return;
@@ -883,6 +881,8 @@ public class DBQueryOperation extends QueryOperation {
         if (context.getParams().getTypes().contains(MailItem.Type.CONVERSATION)) {
             return;
         }
+        boolean calcOffset = cursor.isIncludeOffset();
+        DbLeafNode offsetConstraints = null; // to calculate the cursor offset
         SortBy sort = context.getParams().getSortBy();
         // in some cases we cannot use cursors, even if they are requested.
         // - Task-sorts cannot be used with cursors (bug 23427) at all.
@@ -906,53 +906,104 @@ public class DBQueryOperation extends QueryOperation {
             case DATE_ASC: {
                 long low = Long.parseLong(cursor.getSortValue());
                 long high = cursor.getEndSortValue() != null ? Long.parseLong(cursor.getEndSortValue()) : -1;
-                getTopANDedConstraint().addDateClause(low, true, high, false, true);
+                DbLeafNode top = getTopANDedConstraint();
+                if (calcOffset) {
+                    offsetConstraints = (DbLeafNode) top.clone();
+                    offsetConstraints.addDateClause(-1, false, low, false, true);
+                }
+                top.addDateClause(low, true, high, false, true);
                 break;
             }
             case DATE_DESC: {
                 long high = Long.parseLong(cursor.getSortValue());
                 long low = cursor.getEndSortValue() != null ? Long.parseLong(cursor.getEndSortValue()) : -1;
-                getTopANDedConstraint().addDateClause(low, false, high, true, true);
+                DbLeafNode top = getTopANDedConstraint();
+                if (calcOffset) {
+                    offsetConstraints = (DbLeafNode) top.clone();
+                    offsetConstraints.addDateClause(high, false, -1, false, true);
+                }
+                top.addDateClause(low, false, high, true, true);
                 break;
             }
             case SUBJ_ASC: {
                 String low = cursor.getSortValue();
                 String high = cursor.getEndSortValue();
-                getTopANDedConstraint().addSubjectRelClause(low, true, high, false, true);
+                DbLeafNode top = getTopANDedConstraint();
+                if (calcOffset) {
+                    offsetConstraints = (DbLeafNode) top.clone();
+                    offsetConstraints.addSubjectRelClause(null, false, low, false, true);
+                }
+                top.addSubjectRelClause(low, true, high, false, true);
                 break;
             }
             case SUBJ_DESC: {
                 String high = cursor.getSortValue();
                 String low = cursor.getEndSortValue();
-                getTopANDedConstraint().addSubjectRelClause(low, false, high, true, true);
+                DbLeafNode top = getTopANDedConstraint();
+                if (calcOffset) {
+                    offsetConstraints = (DbLeafNode) top.clone();
+                    offsetConstraints.addSubjectRelClause(high, false, null, false, true);
+                }
+                top.addSubjectRelClause(low, false, high, true, true);
                 break;
             }
             case SIZE_ASC: {
                 long low = Long.parseLong(cursor.getSortValue()) - 1;
                 long high = cursor.getEndSortValue() != null ? Long.parseLong(cursor.getEndSortValue()) : -1;
-                getTopANDedConstraint().addSizeClause(low, high, true);
+                DbLeafNode top = getTopANDedConstraint();
+                if (calcOffset) {
+                    offsetConstraints = (DbLeafNode) top.clone();
+                    offsetConstraints.addSizeClause(-1, low, true);
+                }
+                top.addSizeClause(low, high, true);
                 break;
             }
             case SIZE_DESC: {
                 long high = Long.parseLong(cursor.getSortValue()) + 1;
                 long low = cursor.getEndSortValue() != null ? Long.parseLong(cursor.getEndSortValue()) : -1;
-                getTopANDedConstraint().addSizeClause(low, high, true);
+                DbLeafNode top = getTopANDedConstraint();
+                if (calcOffset) {
+                    offsetConstraints = (DbLeafNode) top.clone();
+                    offsetConstraints.addSizeClause(high, -1, true);
+                }
+                top.addSizeClause(low, high, true);
                 break;
             }
             case NAME_ASC: {
                 String low = cursor.getSortValue();
                 String high = cursor.getEndSortValue();
-                getTopANDedConstraint().addSenderRelClause(low, true, high, false, true);
+                DbLeafNode top = getTopANDedConstraint();
+                if (calcOffset)  {
+                    offsetConstraints = (DbLeafNode) top.clone();
+                    offsetConstraints.addSenderRelClause(null, false, low, false, true);
+                }
+                top.addSenderRelClause(low, true, high, false, true);
                 break;
             }
             case NAME_DESC: {
                 String high = cursor.getSortValue();
                 String low = cursor.getEndSortValue();
-                getTopANDedConstraint().addSenderRelClause(low, false, high, true, true);
+                DbLeafNode top = getTopANDedConstraint();
+                if (calcOffset) {
+                    offsetConstraints = (DbLeafNode) top.clone();
+                    offsetConstraints.addSenderRelClause(high, false, null, false, true);
+                }
+                top.addSenderRelClause(low, false, high, true, true);
                 break;
             }
             default:
                 break;
+        }
+
+        if (offsetConstraints != null) {
+            assert cursorOffset < 0 : cursorOffset;
+            DbConnection conn = DbPool.getConnection(context.getMailbox());
+            try {
+                cursorOffset = DbSearch.countResults(conn, offsetConstraints, context.getMailbox(),
+                        context.getParams().inDumpster());
+            } finally {
+                conn.closeQuietly();
+            }
         }
     }
 
@@ -1001,21 +1052,15 @@ public class DBQueryOperation extends QueryOperation {
     }
 
     private DBQueryOperation cloneInternal() {
-        try {
-            DBQueryOperation result = (DBQueryOperation) super.clone();
+        assert(dbHits == null);
+        assert(dbHitsIter == null);
+        assert(luceneChunk == null);
 
-            assert(dbHits == null);
-            assert(dbHitsIter == null);
-            assert(luceneChunk == null);
-
-            result.constraints = (IConstraints) constraints.clone();
-            result.excludeTypes.addAll(excludeTypes);
-            result.nextHits = new ArrayList<ZimbraHit>();
-            return result;
-        } catch (CloneNotSupportedException e) {
-            assert(false);
-            return null;
-        }
+        DBQueryOperation result = (DBQueryOperation) super.clone();
+        result.constraints = (IConstraints) constraints.clone();
+        result.excludeTypes.addAll(excludeTypes);
+        result.nextHits = new ArrayList<ZimbraHit>();
+        return result;
     }
 
     @Override
@@ -1157,9 +1202,9 @@ public class DBQueryOperation extends QueryOperation {
             synchronized (DbMailItem.getSynchronizer(mbox)) {
                 DbConnection conn = DbPool.getConnection(mbox);
                 try {
-                    dbHitCount = DbSearch.countResults(conn, constraints, mbox, searchInDumpster());
+                    dbHitCount = DbSearch.countResults(conn, constraints, mbox, context.getParams().inDumpster());
                 } finally {
-                    DbPool.quietClose(conn);
+                    conn.closeQuietly();
                 }
             }
         }
@@ -1178,6 +1223,11 @@ public class DBQueryOperation extends QueryOperation {
         } else {
             return -1;
         }
+    }
+
+    @Override
+    public long getCursorOffset() {
+        return cursorOffset;
     }
 
 }

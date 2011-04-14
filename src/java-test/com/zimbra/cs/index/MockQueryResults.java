@@ -48,6 +48,11 @@ public class MockQueryResults extends ZimbraQueryResultsImpl {
     }
 
     @Override
+    public long getCursorOffset() {
+        return -1;
+    }
+
+    @Override
     public void resetIterator() {
         next = 0;
     }

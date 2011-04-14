@@ -45,6 +45,11 @@ public final class NoTermQueryOperation extends QueryOperation {
     }
 
     @Override
+    public long getCursorOffset() {
+        return -1;
+    }
+
+    @Override
     protected void begin(QueryContext ctx) {
         assert(context == null);
         context = ctx;
@@ -61,8 +66,7 @@ public final class NoTermQueryOperation extends QueryOperation {
     }
 
     @Override
-    QueryOperation ensureSpamTrashSetting(Mailbox mbox, boolean includeTrash,
-            boolean includeSpam) {
+    QueryOperation ensureSpamTrashSetting(Mailbox mbox, boolean includeTrash, boolean includeSpam) {
         return this;
     }
 

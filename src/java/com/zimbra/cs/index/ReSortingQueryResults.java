@@ -47,6 +47,11 @@ public final class ReSortingQueryResults implements ZimbraQueryResults {
     }
 
     @Override
+    public long getCursorOffset() {
+        return -1;
+    }
+
+    @Override
     public void doneWithSearchResults() throws ServiceException {
         results.doneWithSearchResults();
     }

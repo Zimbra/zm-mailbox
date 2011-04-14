@@ -56,6 +56,11 @@ public class MultiQueryResults implements ZimbraQueryResults {
     }
 
     @Override
+    public long getCursorOffset() {
+        return -1;
+    }
+
+    @Override
     public SortBy getSortBy() {
         return sortOrder;
     }

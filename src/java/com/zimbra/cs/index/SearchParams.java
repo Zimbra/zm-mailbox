@@ -41,20 +41,10 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
- * Simple class that encapsulates all of the parameters involved in a Search request.
- * Not used everywhere, need to convert all code to use this....
+ * Encapsulates all parameters in a search request.
  * <p>
- * To initialize, set:
- * <ul>
- *  <li>query str
- *  <li>offset
- *  <li>limit
- *  <li>typesStr (sets type value)
- *  <li>sortByStr (sets sortBy value)
- * </ul>
- * <p>
- * IMPORTANT NOTE: if you add new {@link SearchParams}, you MUST add parsing/serialization code to the
- * {@link SearchParams#encodeParams(Element)} and {@link SearchParams#parse(Element, ZimbraSoapContext, String)}) APIs.
+ * IMPORTANT NOTE: if you add new parameters, you MUST add parsing/serialization code to the
+ * {@link #encodeParams(Element)} and {@link #parse(Element, ZimbraSoapContext, String)}) APIs.
  * This IS NOT optional and will break cross-server search if you do not comply.
  */
 public final class SearchParams implements Cloneable {
@@ -226,11 +216,11 @@ public final class SearchParams implements Cloneable {
     }
 
     public int getLimit() {
-        return mLimit;
+        return limit;
     }
 
     public int getOffset() {
-        return mOffset;
+        return offset;
     }
 
     public boolean inDumpster() {
@@ -249,12 +239,12 @@ public final class SearchParams implements Cloneable {
         mQueryStr = queryStr;
     }
 
-    public void setOffset(int offset) {
-        mOffset = offset; if (mOffset > MAX_OFFSET) mOffset = MAX_OFFSET;
+    public void setOffset(int value) {
+        offset = Math.min(value, MAX_OFFSET);
     }
 
-    public void setLimit(int limit) {
-        mLimit = limit; if (mLimit > MAX_LIMIT) mLimit = MAX_LIMIT;
+    public void setLimit(int value) {
+        limit = Math.min(value, MAX_LIMIT);
     }
 
     public void setDefaultField(String field) {
@@ -294,16 +284,12 @@ public final class SearchParams implements Cloneable {
     }
 
     /**
-     * Since the results are iterator-based, the "limit" is really the same as
-     * the chunk size + offset ie, the limit is used to tell the system
-     * approximately how many results you want and it tries to get them
-     * in a single chunk --- but it isn't until you do the results iteration
-     * that the limit is enforced.
-     *
-     * @param chunkSize
+     * Since the results are iterator-based, the {@code limit} is really the same as the {@code chunk size + offset}
+     * i.e. the limit is used to tell the system approximately how many results you want and it tries to get them in a
+     * single chunk, but it isn't until you do the results iteration that the limit is enforced.
      */
-    public void setChunkSize(int chunkSize) {
-        setLimit(chunkSize + mOffset);
+    public void setChunkSize(int value) {
+        setLimit(value + offset);
     }
 
     public void setTypes(String value) throws ServiceException {
@@ -478,8 +464,8 @@ public final class SearchParams implements Cloneable {
         searchElt.addAttribute(MailConstants.A_RESULT_MODE, getMode().name());
         searchElt.addAttribute(MailConstants.A_FIELD, getDefaultField());
 
-        searchElt.addAttribute(MailConstants.A_QUERY_LIMIT, mLimit);
-        searchElt.addAttribute(MailConstants.A_QUERY_OFFSET, mOffset);
+        searchElt.addAttribute(MailConstants.A_QUERY_LIMIT, limit);
+        searchElt.addAttribute(MailConstants.A_QUERY_OFFSET, offset);
 
         searchElt.addAttribute(MailConstants.A_IN_DUMPSTER, mInDumpster);
 
@@ -489,27 +475,20 @@ public final class SearchParams implements Cloneable {
     }
 
     /**
-     * Parse the search parameters from a <SearchRequest> or similar element.
+     * Parse the search parameters from a {@code <SearchRequest>} or similar element.
      *
-     * @param requesthttp
-     *            The <SearchRequest> itself, or similar element (<SearchConvRequest>, etc)
-     * @param requestedAccount
-     *            The account who's mailbox we should search in
-     * @param zsc
-     *            The SoapContext of the request.
-     * @return
-     * @throws ServiceException
+     * @param request {@code <SearchRequest>} itself, or similar element ({@code <SearchConvRequest>}, etc)
+     * @param requestedAccount account who's mailbox we should search in
+     * @param zsc SoapContext of the request
      */
-    public static SearchParams parse(Element request, ZimbraSoapContext zsc,
-            String defaultQueryStr) throws ServiceException {
+    public static SearchParams parse(Element request, ZimbraSoapContext zsc, String defaultQueryStr)
+            throws ServiceException {
         SearchParams params = new SearchParams();
 
         params.mRequestContext = zsc;
         params.setHopCount(zsc.getHopCount());
-        params.setIncludeTagDeleted(request.getAttributeBool(
-                MailConstants.A_INCLUDE_TAG_DELETED, false));
-        String allowableTasks = request.getAttribute(
-                MailConstants.A_ALLOWABLE_TASK_STATUS, null);
+        params.setIncludeTagDeleted(request.getAttributeBool(MailConstants.A_INCLUDE_TAG_DELETED, false));
+        String allowableTasks = request.getAttribute(MailConstants.A_ALLOWABLE_TASK_STATUS, null);
         if (allowableTasks != null) {
             params.mAllowableTaskStatuses = new HashSet<TaskHit.Status>();
             String[] split = allowableTasks.split(",");
@@ -524,14 +503,11 @@ public final class SearchParams implements Cloneable {
                 }
             }
         }
-        params.setCalItemExpandStart(request.getAttributeLong(
-                MailConstants.A_CAL_EXPAND_INST_START, -1));
-        params.setCalItemExpandEnd(request.getAttributeLong(
-                MailConstants.A_CAL_EXPAND_INST_END, -1));
+        params.setCalItemExpandStart(request.getAttributeLong(MailConstants.A_CAL_EXPAND_INST_START, -1));
+        params.setCalItemExpandEnd(request.getAttributeLong(MailConstants.A_CAL_EXPAND_INST_END, -1));
         String query = request.getAttribute(MailConstants.E_QUERY, defaultQueryStr);
         if (query == null) {
-            throw ServiceException.INVALID_REQUEST(
-                    "no query submitted and no default query found", null);
+            throw ServiceException.INVALID_REQUEST("no query submitted and no default query found", null);
         }
         params.setInDumpster(request.getAttributeBool(MailConstants.A_IN_DUMPSTER, false));
         params.setQueryStr(query);
@@ -544,23 +520,17 @@ public final class SearchParams implements Cloneable {
         }
         params.setSortBy(request.getAttribute(MailConstants.A_SORTBY, null));
 
-        params.setInlineRule(ExpandResults.valueOf(
-                request.getAttribute(MailConstants.A_FETCH, null), zsc));
+        params.setInlineRule(ExpandResults.valueOf(request.getAttribute(MailConstants.A_FETCH, null), zsc));
         if (params.getInlineRule() != ExpandResults.NONE) {
-            params.setMarkRead(request.getAttributeBool(
-                    MailConstants.A_MARK_READ, false));
-            params.setMaxInlinedLength((int) request.getAttributeLong(
-                    MailConstants.A_MAX_INLINED_LENGTH, -1));
-            params.setWantHtml(request.getAttributeBool(
-                    MailConstants.A_WANT_HTML, false));
-            params.setNeuterImages(request.getAttributeBool(
-                    MailConstants.A_NEUTER, true));
-            for (Element elt : request.listElements(MailConstants.A_HEADER))
-                params.addInlinedHeader(elt.getAttribute(
-                        MailConstants.A_ATTRIBUTE_NAME));
+            params.setMarkRead(request.getAttributeBool(MailConstants.A_MARK_READ, false));
+            params.setMaxInlinedLength((int) request.getAttributeLong(MailConstants.A_MAX_INLINED_LENGTH, -1));
+            params.setWantHtml(request.getAttributeBool(MailConstants.A_WANT_HTML, false));
+            params.setNeuterImages(request.getAttributeBool(MailConstants.A_NEUTER, true));
+            for (Element elt : request.listElements(MailConstants.A_HEADER)) {
+                params.addInlinedHeader(elt.getAttribute(MailConstants.A_ATTRIBUTE_NAME));
+            }
         }
-        params.setWantRecipients(request.getAttributeBool(
-                MailConstants.A_RECIPIENTS, false));
+        params.setWantRecipients(request.getAttributeBool(MailConstants.A_RECIPIENTS, false));
 
         // <tz>
         Element tzElt = request.getOptionalElement(MailConstants.E_CAL_TZ);
@@ -574,18 +544,17 @@ public final class SearchParams implements Cloneable {
             params.setLocale(parseLocale(locElt.getText()));
         }
 
-        params.setPrefetch(request.getAttributeBool(
-                MailConstants.A_PREFETCH, true));
-        params.setMode(Mailbox.SearchResultMode.get(request.getAttribute(
-                MailConstants.A_RESULT_MODE, null)));
+        params.setPrefetch(request.getAttributeBool(MailConstants.A_PREFETCH, true));
+        params.setMode(Mailbox.SearchResultMode.get(request.getAttribute(MailConstants.A_RESULT_MODE, null)));
 
         // field
         String field = request.getAttribute(MailConstants.A_FIELD, null);
-        if (field != null)
+        if (field != null) {
             params.setDefaultField(field);
+        }
 
         params.setLimit(parseLimit(request));
-        params.setOffset(parseOffset(request));
+        params.setOffset(request.getAttributeInt(MailConstants.A_QUERY_OFFSET, 0));
 
         Element cursor = request.getOptionalElement(MailConstants.E_CURSOR);
         if (cursor != null) {
@@ -604,8 +573,9 @@ public final class SearchParams implements Cloneable {
     public void parseCursor(Element el, String acctId) throws ServiceException {
         cursor = new Cursor();
         cursor.itemId = new ItemId(el.getAttribute(MailConstants.A_ID), acctId);
-        cursor.sortValue = el.getAttribute(MailConstants.A_SORTVAL);
+        cursor.sortValue = el.getAttribute(MailConstants.A_SORTVAL, null); // optional
         cursor.endSortValue = el.getAttribute(MailConstants.A_ENDSORTVAL, null); // optional
+        cursor.includeOffset = el.getAttributeBool(MailConstants.A_INCLUDE_OFFSET, false); // optional
     }
 
     private static java.util.TimeZone parseTimeZonePart(Element tzElt) throws ServiceException {
@@ -677,47 +647,39 @@ public final class SearchParams implements Cloneable {
         return limit;
     }
 
-    private static int parseOffset(Element request) throws ServiceException {
-        // Lookup the offset= and limit= parameters in the soap request
-        return (int) request.getAttributeLong(MailConstants.A_QUERY_OFFSET, 0);
-    }
-
     @Override
     public Object clone() {
-        SearchParams o = new SearchParams();
-
-        o.mRequestContext = mRequestContext;
-        o.mHopCount = mHopCount;
-        o.mDefaultField = mDefaultField;
-        o.mQueryStr = mQueryStr;
-        o.mOffset = mOffset;
-        o.mLimit = mLimit;
-        o.mInlineRule = mInlineRule;
-        o.mMarkRead = mMarkRead;
-        o.mMaxInlinedLength = mMaxInlinedLength;
-        o.mWantHtml = mWantHtml;
-        o.mNeuterImages = mNeuterImages;
-        o.mInlinedHeaders = mInlinedHeaders;
-        o.mRecipients = mRecipients;
-        o.mCalItemExpandStart = mCalItemExpandStart;
-        o.mCalItemExpandEnd = mCalItemExpandEnd;
-        o.mIncludeTagDeleted = mIncludeTagDeleted;
-        o.mTimeZone = mTimeZone;
-        o.locale = locale;
-        o.sortBy = sortBy;
-        o.types = types;
-        o.mPrefetch = mPrefetch;
-        o.mMode = mMode;
+        SearchParams result = new SearchParams();
+        result.mRequestContext = mRequestContext;
+        result.mHopCount = mHopCount;
+        result.mDefaultField = mDefaultField;
+        result.mQueryStr = mQueryStr;
+        result.offset = offset;
+        result.limit = limit;
+        result.mInlineRule = mInlineRule;
+        result.mMaxInlinedLength = mMaxInlinedLength;
+        result.mWantHtml = mWantHtml;
+        result.mNeuterImages = mNeuterImages;
+        result.mInlinedHeaders = mInlinedHeaders;
+        result.mRecipients = mRecipients;
+        result.mCalItemExpandStart = mCalItemExpandStart;
+        result.mCalItemExpandEnd = mCalItemExpandEnd;
+        result.mIncludeTagDeleted = mIncludeTagDeleted;
+        result.mTimeZone = mTimeZone;
+        result.locale = locale;
+        result.sortBy = sortBy;
+        result.types = types;
+        result.mPrefetch = mPrefetch;
+        result.mMode = mMode;
         if (mAllowableTaskStatuses != null) {
-            o.mAllowableTaskStatuses = new HashSet<TaskHit.Status>();
-            o.mAllowableTaskStatuses.addAll(mAllowableTaskStatuses);
+            result.mAllowableTaskStatuses = new HashSet<TaskHit.Status>();
+            result.mAllowableTaskStatuses.addAll(mAllowableTaskStatuses);
         }
         if (cursor != null) {
-            o.cursor = new Cursor(cursor);
+            result.cursor = new Cursor(cursor);
         }
-        o.mInDumpster = mInDumpster;
-
-        return o;
+        result.mInDumpster = mInDumpster;
+        return result;
     }
 
     private ZimbraSoapContext mRequestContext;
@@ -730,8 +692,8 @@ public final class SearchParams implements Cloneable {
 
     private String mDefaultField = "content:";
     private String mQueryStr;
-    private int mOffset;
-    private int mLimit;
+    private int offset;
+    private int limit;
     private ExpandResults mInlineRule = null;
     private boolean mMarkRead = false;
     private int mMaxInlinedLength;
@@ -763,13 +725,17 @@ public final class SearchParams implements Cloneable {
     private Mailbox.SearchResultMode mMode = Mailbox.SearchResultMode.NORMAL;
 
     /**
-     * A cursor can be specified by [itemId|sortValue|offset]. These should be enough for us to find out place in the
-     * previous result set, even if entries have been added or removed from the result set.
+     * A cursor can be specified by itemId and sortValue. These should be enough for us to find out place in the
+     * previous result set, even if entries have been added or removed from the result set. If the client doesn't know
+     * sortValue, e.g. changing the sort field from date to subject, it may leave it null, then the server fetches the
+     * item by the specified itemId, and sets the sortValue accordingly. If the item no longer exist when fetching it,
+     * the cursor gets cleared.
      */
-    static final class Cursor {
+    public static final class Cursor {
         private ItemId itemId; // item ID of the last item in the previous result set
-        private String sortValue; // sort value of the last item in the preivous result set
+        private String sortValue; // sort value of the last item in the previous result set
         private String endSortValue; // sort value (exclusive) to stop the cursor
+        private boolean includeOffset = false; // whether or not to include the cursor offset in the response
 
         private Cursor() {
         }
@@ -778,6 +744,7 @@ public final class SearchParams implements Cloneable {
             itemId = src.itemId;
             sortValue = src.sortValue;
             endSortValue = src.endSortValue;
+            includeOffset = src.includeOffset;
         }
 
         public ItemId getItemId() {
@@ -788,8 +755,16 @@ public final class SearchParams implements Cloneable {
             return sortValue;
         }
 
+        public void setSortValue(String value) {
+            sortValue = value;
+        }
+
         public String getEndSortValue() {
             return endSortValue;
+        }
+
+        public boolean isIncludeOffset() {
+            return includeOffset;
         }
     }
 }

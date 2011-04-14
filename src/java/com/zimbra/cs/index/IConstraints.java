@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -101,16 +101,11 @@ interface IConstraints extends DbSearchConstraintsNode, Cloneable {
      */
     void setTypes(Set<MailItem.Type> types);
 
-
     /**
-     * Clone is critical for things to work correctly (exploding constraints into multiple trees
-     * if the query goes to many target servers).
-     *
-     * @return
-     * @throws CloneNotSupportedException
+     * Clone is critical for things to work correctly (exploding constraints into multiple trees if the query goes to
+     * many target servers).
      */
-    public Object clone() throws CloneNotSupportedException;
-
+    public Object clone();
 
     /**
      * Outputs the constraints tree in a format that is parsable via our QueryParser.  This is

@@ -51,13 +51,18 @@ class DbOrNode implements IConstraints {
     protected List<IConstraints> mSubNodes = new ArrayList<IConstraints>();
 
     @Override
-    public Object clone() throws CloneNotSupportedException {
-        DbOrNode toRet = (DbOrNode) super.clone();
-        toRet.mSubNodes = new ArrayList<IConstraints>();
-        for (IConstraints node : mSubNodes) {
-           toRet.mSubNodes.add((IConstraints) node.clone());
+    public Object clone() {
+        DbOrNode result;
+        try {
+            result = (DbOrNode) super.clone();
+        } catch (CloneNotSupportedException e) { // should never happen
+            return null;
         }
-        return toRet;
+        result.mSubNodes = new ArrayList<IConstraints>();
+        for (IConstraints node : mSubNodes) {
+           result.mSubNodes.add((IConstraints) node.clone());
+        }
+        return result;
     }
 
     @Override

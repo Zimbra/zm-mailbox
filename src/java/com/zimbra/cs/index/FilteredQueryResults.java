@@ -56,6 +56,11 @@ public final class FilteredQueryResults implements ZimbraQueryResults {
     }
 
     @Override
+    public long getCursorOffset() {
+        return results.getCursorOffset();
+    }
+
+    @Override
     public void doneWithSearchResults() throws ServiceException {
         results.doneWithSearchResults();
     }

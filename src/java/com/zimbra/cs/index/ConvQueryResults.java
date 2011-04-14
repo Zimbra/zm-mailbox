@@ -48,6 +48,11 @@ final class ConvQueryResults extends ZimbraQueryResultsImpl {
         return results.getTotalHitCount();
     }
 
+    @Override
+    public long getCursorOffset() {
+        return results.getCursorOffset();
+    }
+
     /**
      * Get the next Conversation Hit from our subOp
      *
