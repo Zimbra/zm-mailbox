@@ -38,6 +38,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Contact;
@@ -200,7 +201,8 @@ public class NativeFormatter extends Formatter {
 
         doc = (version > 0 ? (Document)doc.getMailbox().getItemRevision(context.opContext, doc.getId(), doc.getType(), version) : doc);
         InputStream is = doc.getContentStream();
-        if (HTML_VIEW.equals(context.getView())) {
+        // If the view is html and the convertd extension is deployed
+        if (HTML_VIEW.equals(context.getView()) && ExtensionUtil.getExtension("convertd") != null) {
             handleConversion(context, is, doc.getName(), doc.getContentType(), doc.getDigest(), doc.getSize());
         } else {
             String defaultCharset = context.targetAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null);
