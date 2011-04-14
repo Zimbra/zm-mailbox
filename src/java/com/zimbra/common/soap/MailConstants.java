@@ -519,7 +519,7 @@ public final class MailConstants {
     public static final QName ADD_COMMENT_RESPONSE = QName.get(E_ADD_COMMENT_RESPONSE, NAMESPACE);
     public static final QName GET_COMMENTS_REQUEST = QName.get(E_GET_COMMENTS_REQUEST, NAMESPACE);
     public static final QName GET_COMMENTS_RESPONSE = QName.get(E_GET_COMMENTS_RESPONSE, NAMESPACE);
-    
+
     public static final String E_MAILBOX = "mbx";
     public static final String E_ITEM = "item";
     public static final String E_MSG = "m";
@@ -762,6 +762,7 @@ public final class MailConstants {
     public static final String A_QUERY_OFFSET = "offset";
     public static final String A_QUERY_LIMIT = "limit";
     public static final String A_QUERY_MORE = "more";
+    public static final String A_INCLUDE_OFFSET = "includeOffset";
 
     // sync
     public static final String E_DELETED = "deleted";
@@ -1078,12 +1079,12 @@ public final class MailConstants {
     // device verification for reminders
     public static final String A_VERIFICATION_CODE = "code";
     public static final String A_VERIFICATION_SUCCESS = "success";
-    
+
     public static final String A_USER = "user";
     public static final String A_TS = "ts";
     public static final String A_ITEMID = "itemId";
     public static final String A_ITEM_NAME = "itemName";
-    
+
     public static final String E_DEVICE = "device";
     public static final String A_CREATED = "created";
     public static final String A_ACCESSED = "accessed";
