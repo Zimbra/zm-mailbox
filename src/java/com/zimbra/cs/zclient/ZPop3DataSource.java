@@ -27,7 +27,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.DataSource.ConnectionType;
 import com.zimbra.cs.account.DataSource.Type;
-import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.soap.account.type.AccountPop3DataSource;
 import com.zimbra.soap.type.DataSources;
 import com.zimbra.soap.type.Pop3DataSource;
@@ -127,7 +127,7 @@ public class ZPop3DataSource implements ZDataSource, ToZJSONObject {
             attrs.put(Provisioning.A_zimbraDataSourcePort, "" + getPort());
         if (data.getFolderId() != null)
             attrs.put(Provisioning.A_zimbraDataSourceFolderId, data.getFolderId());
-        attrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer, LdapUtil.getBooleanString(leaveOnServer()));
+        attrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer, LegacyLdapUtil.getBooleanString(leaveOnServer()));
         return attrs;
     }
 

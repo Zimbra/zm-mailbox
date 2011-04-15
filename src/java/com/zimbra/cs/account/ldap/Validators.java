@@ -43,6 +43,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.CountObjectsType;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.prov.ldap.LdapFilter;
 
@@ -389,7 +390,7 @@ final class Validators {
             map.put(parts[0], max);
         }
 
-        private static class BuildDomainCounts implements LdapUtil.SearchLdapVisitor {
+        private static class BuildDomainCounts implements LegacyLdapUtil.SearchLdapVisitor {
             
             private Provisioning prov;
             private String domain;
@@ -413,7 +414,7 @@ final class Validators {
                 String searchBaseDN = ((LdapProvisioning) prov).getDIT().domainToAccountSearchDN(domain);
                 String query = LdapFilter.allNonSystemAccounts();
                 
-                LdapUtil.searchLdapOnReplica(searchBaseDN, query, null, this);
+                LegacyLdapUtil.searchLdapOnReplica(searchBaseDN, query, null, this);
                 ZimbraLog.account.debug("COS/Feature counts: %s + %s", cosCount, featureCount);
             }
             

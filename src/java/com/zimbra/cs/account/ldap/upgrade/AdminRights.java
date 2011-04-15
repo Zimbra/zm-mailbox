@@ -42,9 +42,9 @@ import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.generated.RightConsts;
 import com.zimbra.cs.account.ldap.LdapDIT;
-import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext.LdapConfig;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 
 public class AdminRights extends LdapUpgrade {
     
@@ -127,7 +127,7 @@ public class AdminRights extends LdapUpgrade {
                 new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, returnAttrs, false, false);
 
             //Set the page size and initialize the cookie that we pass back in subsequent pages
-            int pageSize = LdapUtil.adjustPageSize(maxResults, 1000);
+            int pageSize = LegacyLdapUtil.adjustPageSize(maxResults, 1000);
             byte[] cookie = null;
 
             NamingEnumeration ne = null;
@@ -172,23 +172,23 @@ public class AdminRights extends LdapUpgrade {
     }
     
     String getZimbraIdIfDomainOnlyAdmin(Attributes attrs) throws NamingException {
-        String isAdmin = LdapUtil.getAttrString(attrs, Provisioning.A_zimbraIsAdminAccount);
-        String isDomainAdmin = LdapUtil.getAttrString(attrs, Provisioning.A_zimbraIsDomainAdminAccount);
-        String isDelegatedAdmin = LdapUtil.getAttrString(attrs, Provisioning.A_zimbraIsDelegatedAdminAccount);
+        String isAdmin = LegacyLdapUtil.getAttrString(attrs, Provisioning.A_zimbraIsAdminAccount);
+        String isDomainAdmin = LegacyLdapUtil.getAttrString(attrs, Provisioning.A_zimbraIsDomainAdminAccount);
+        String isDelegatedAdmin = LegacyLdapUtil.getAttrString(attrs, Provisioning.A_zimbraIsDelegatedAdminAccount);
         
-        if (LdapUtil.LDAP_TRUE.equals(isDomainAdmin) &&
-            !LdapUtil.LDAP_TRUE.equals(isAdmin) &&         // is a global admin, don't touch it
-            !LdapUtil.LDAP_TRUE.equals(isDelegatedAdmin))  // already migrated, don't touch it
-            return LdapUtil.getAttrString(attrs, Provisioning.A_zimbraId);
+        if (LegacyLdapUtil.LDAP_TRUE.equals(isDomainAdmin) &&
+            !LegacyLdapUtil.LDAP_TRUE.equals(isAdmin) &&         // is a global admin, don't touch it
+            !LegacyLdapUtil.LDAP_TRUE.equals(isDelegatedAdmin))  // already migrated, don't touch it
+            return LegacyLdapUtil.getAttrString(attrs, Provisioning.A_zimbraId);
         else
             return null;
     }
     
     String getZimbraIdIfGlobalAdmin(Attributes attrs) throws NamingException {
-        String isAdmin = LdapUtil.getAttrString(attrs, Provisioning.A_zimbraIsAdminAccount);
+        String isAdmin = LegacyLdapUtil.getAttrString(attrs, Provisioning.A_zimbraIsAdminAccount);
         
-        if (LdapUtil.LDAP_TRUE.equals(isAdmin))
-            return LdapUtil.getAttrString(attrs, Provisioning.A_zimbraId);
+        if (LegacyLdapUtil.LDAP_TRUE.equals(isAdmin))
+            return LegacyLdapUtil.getAttrString(attrs, Provisioning.A_zimbraId);
         else
             return null;
     }

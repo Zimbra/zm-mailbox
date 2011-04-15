@@ -28,7 +28,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.auth.AuthContext;
-import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 
 public class TestAccountLockout {
     
@@ -44,7 +44,7 @@ public class TestAccountLockout {
         Map<String, Object> attrs = new HashMap<String, Object>();
         
         // setup lockout config attrs
-        attrs.put(Provisioning.A_zimbraPasswordLockoutEnabled, LdapUtil.LDAP_TRUE);
+        attrs.put(Provisioning.A_zimbraPasswordLockoutEnabled, LegacyLdapUtil.LDAP_TRUE);
         attrs.put(Provisioning.A_zimbraPasswordLockoutDuration, "15s");
         attrs.put(Provisioning.A_zimbraPasswordLockoutMaxFailures, LOCKOUT_AFTER_NUM_FAILURES + "");
         attrs.put(Provisioning.A_zimbraPasswordLockoutFailureLifetime, "30s");

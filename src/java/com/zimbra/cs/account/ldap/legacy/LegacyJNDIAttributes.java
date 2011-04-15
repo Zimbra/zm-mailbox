@@ -21,7 +21,6 @@ import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.ldap.IAttributes;
 
 /**
@@ -40,7 +39,7 @@ public class LegacyJNDIAttributes implements IAttributes {
     @Override
     public String getAttrString(String attrName) throws ServiceException {
         try {
-            return LdapUtil.getAttrString(attrs, attrName);
+            return LegacyLdapUtil.getAttrString(attrs, attrName);
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to get attribute " + attrName, e);
         }
@@ -49,7 +48,7 @@ public class LegacyJNDIAttributes implements IAttributes {
     @Override
     public String[] getMultiAttrString(String attrName) throws ServiceException {
         try {
-            return LdapUtil.getMultiAttrString(attrs, attrName);
+            return LegacyLdapUtil.getMultiAttrString(attrs, attrName);
         } catch (NamingException e) {
           throw ServiceException.FAILURE("unable to get attribute " + attrName, e);
         }
@@ -59,7 +58,7 @@ public class LegacyJNDIAttributes implements IAttributes {
     public String[] getMultiAttrString(String attrName, boolean containsBinaryData, boolean isBinaryTransfer) 
     throws ServiceException {
         try {
-            return LdapUtil.getMultiAttrString(attrs, attrName, containsBinaryData, isBinaryTransfer);
+            return LegacyLdapUtil.getMultiAttrString(attrs, attrName, containsBinaryData, isBinaryTransfer);
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to get attribute " + attrName, e);
         }
@@ -72,7 +71,7 @@ public class LegacyJNDIAttributes implements IAttributes {
     public List<String> getMultiAttrStringAsList(String attrName, CheckBinary checkBinary) 
     throws ServiceException {
         try {
-            return Arrays.asList(LdapUtil.getMultiAttrString(attrs, attrName));
+            return Arrays.asList(LegacyLdapUtil.getMultiAttrString(attrs, attrName));
         } catch (NamingException e) {
           throw ServiceException.FAILURE("unable to get attribute " + attrName, e);
         }

@@ -47,8 +47,8 @@ import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
-import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 import com.zimbra.qa.unittest.TestProvisioningUtil.IDNName;
@@ -339,7 +339,7 @@ public class TestAlias {
             attributes.put(Provisioning.A_mail, aliasName);
             attributes.put(Provisioning.A_zimbraMailAlias, aliasName);
             LdapEntry ldapAccount = (LdapEntry)otherAcct;
-            LdapUtil.modifyAttrs(zlc, ldapAccount.getDN(), attributes, (Entry)ldapAccount);
+            LegacyLdapUtil.modifyAttrs(zlc, ldapAccount.getDN(), attributes, (Entry)ldapAccount);
             
             // make the attrs did get hacked in
             mProv.reload(otherAcct);
@@ -434,12 +434,12 @@ public class TestAlias {
         try {
             zlc = new ZimbraLdapContext(true);
             Map<String, Object> attributes = new HashMap<String, Object>();
-            attributes.put(Provisioning.A_zimbraAliasTargetId, LdapUtil.generateUUID());
+            attributes.put(Provisioning.A_zimbraAliasTargetId, LegacyLdapUtil.generateUUID());
             
             List<NamedEntry> aliases = searchAliasesInDomain(domain);
             assertEquals(aliases.size(), 1);
             LdapEntry ldapAlias = (LdapEntry)aliases.get(0);
-            LdapUtil.modifyAttrs(zlc, ldapAlias.getDN(), attributes, (Entry)ldapAlias);
+            LegacyLdapUtil.modifyAttrs(zlc, ldapAlias.getDN(), attributes, (Entry)ldapAlias);
         } finally {
             ZimbraLdapContext.closeContext(zlc);
         }
@@ -666,12 +666,12 @@ public class TestAlias {
         try {
             zlc = new ZimbraLdapContext(true);
             Map<String, Object> attributes = new HashMap<String, Object>();
-            attributes.put(Provisioning.A_zimbraAliasTargetId, LdapUtil.generateUUID());
+            attributes.put(Provisioning.A_zimbraAliasTargetId, LegacyLdapUtil.generateUUID());
             
             List<NamedEntry> aliases = searchAliasesInDomain(domain);
             assertEquals(aliases.size(), 1);
             LdapEntry ldapAlias = (LdapEntry)aliases.get(0);
-            LdapUtil.modifyAttrs(zlc, ldapAlias.getDN(), attributes, (Entry)ldapAlias);
+            LegacyLdapUtil.modifyAttrs(zlc, ldapAlias.getDN(), attributes, (Entry)ldapAlias);
         } finally {
             ZimbraLdapContext.closeContext(zlc);
         }

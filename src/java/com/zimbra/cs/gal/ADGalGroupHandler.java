@@ -22,7 +22,7 @@ import java.util.TreeSet;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapUtil.SearchLdapVisitor;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil.SearchLdapVisitor;
 import com.zimbra.cs.prov.ldap.LdapHelper;
 import com.zimbra.cs.prov.ldap.LdapProv;
 import com.zimbra.cs.ldap.IAttributes;

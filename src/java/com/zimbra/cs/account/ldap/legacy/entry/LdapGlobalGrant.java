@@ -19,7 +19,7 @@ import javax.naming.directory.Attributes;
 
 import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 
 public class LdapGlobalGrant extends GlobalGrant implements LdapEntry {
@@ -27,7 +27,7 @@ public class LdapGlobalGrant extends GlobalGrant implements LdapEntry {
     private String mDn;
     
     public LdapGlobalGrant(String dn, Attributes attrs, Provisioning provisioning) throws NamingException {
-        super(LdapUtil.getAttrs(attrs), provisioning);
+        super(LegacyLdapUtil.getAttrs(attrs), provisioning);
         mDn = dn;
     }
 

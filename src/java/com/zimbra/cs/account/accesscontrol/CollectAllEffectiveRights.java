@@ -27,7 +27,7 @@ import com.zimbra.cs.account.accesscontrol.RightCommand.EffectiveRights;
 import com.zimbra.cs.account.accesscontrol.SearchGrants.GrantsOnTarget;
 import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
-import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.account.ldap.legacy.entry.LdapDomain;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.prov.ldap.LdapFilter;
@@ -170,7 +170,7 @@ public class CollectAllEffectiveRights {
         }
     }
     
-    private static class Visitor implements LdapUtil.SearchLdapVisitor {
+    private static class Visitor implements LegacyLdapUtil.SearchLdapVisitor {
         private LdapProvisioning mProv;
         private LdapDIT mLdapDIT;
         
@@ -396,7 +396,7 @@ public class CollectAllEffectiveRights {
         String[] returnAttrs = new String[] {Provisioning.A_cn, Provisioning.A_uid}; 
         
         Visitor visitor = new Visitor((LdapProvisioning)mProv);
-        LdapUtil.searchLdapOnMaster(base, query, returnAttrs, visitor);
+        LegacyLdapUtil.searchLdapOnMaster(base, query, returnAttrs, visitor);
         return visitor.getResult();
     }
     
@@ -409,7 +409,7 @@ public class CollectAllEffectiveRights {
         String[] returnAttrs = new String[] {Provisioning.A_cn, Provisioning.A_uid}; 
         
         Visitor visitor = new Visitor((LdapProvisioning)mProv);
-        LdapUtil.searchLdapOnMaster(base, query, returnAttrs, visitor);
+        LegacyLdapUtil.searchLdapOnMaster(base, query, returnAttrs, visitor);
         return visitor.getResult();
     }
     
@@ -497,7 +497,7 @@ public class CollectAllEffectiveRights {
         String returnAttrs[] = new String[] {Provisioning.A_zimbraId};
         SearchSubDomainVisitor visitor = new SearchSubDomainVisitor();
         
-        LdapUtil.searchLdapOnMaster(base, query, returnAttrs, visitor);
+        LegacyLdapUtil.searchLdapOnMaster(base, query, returnAttrs, visitor);
         
         List<String> zimbraIds = visitor.getResults();
         for (String zimbraId : zimbraIds) {
@@ -517,7 +517,7 @@ public class CollectAllEffectiveRights {
         return subDomains;
     }
     
-    private static class SearchSubDomainVisitor implements LdapUtil.SearchLdapVisitor {
+    private static class SearchSubDomainVisitor implements LegacyLdapUtil.SearchLdapVisitor {
         List<String> mDomainIds = new ArrayList<String>();
 
         public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs) {

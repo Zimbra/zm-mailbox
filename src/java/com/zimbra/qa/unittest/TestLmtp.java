@@ -30,7 +30,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.lmtpserver.LmtpMessageInputStream;
 import com.zimbra.cs.lmtpserver.ZimbraLmtpBackend;
 import com.zimbra.cs.lmtpserver.utils.LmtpClient;
@@ -534,7 +534,7 @@ extends TestCase {
      */
     public void testAllowReceiveButNotSendWhenOverQuota()
     throws Exception {
-        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailAllowReceiveButNotSendWhenOverQuota, LdapUtil.LDAP_TRUE);
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailAllowReceiveButNotSendWhenOverQuota, LegacyLdapUtil.LDAP_TRUE);
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailQuota, "1");
         String subject = NAME_PREFIX + " testAllowReceiveButNotSendWhenOverQuota";
         

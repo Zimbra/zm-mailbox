@@ -38,6 +38,7 @@ import com.zimbra.cs.account.Provisioning.GalMode;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.gal.GalParams;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.fb.ExchangeEWSFreeBusyProvider;
 import com.zimbra.cs.fb.ExchangeFreeBusyProvider;
 import com.zimbra.common.service.ServiceException;
@@ -164,17 +165,17 @@ public class Check {
                 String searchDn = (String) attrs.get(Provisioning.A_zimbraAuthLdapSearchBindDn);
                 String searchBase = (String) attrs.get(Provisioning.A_zimbraAuthLdapSearchBase);
                 if (searchBase == null) searchBase = "";
-                searchFilter = LdapUtil.computeAuthDn(name, searchFilter);
+                searchFilter = LegacyLdapUtil.computeAuthDn(name, searchFilter);
                 if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with search filter of "+searchFilter);
-                LdapUtil.ldapAuthenticate(url, requireStartTLS, password, searchBase, searchFilter, searchDn, searchPassword);
+                LegacyLdapUtil.ldapAuthenticate(url, requireStartTLS, password, searchBase, searchFilter, searchDn, searchPassword);
                 return new Result(STATUS_OK, "", searchFilter);                
             }
         
             String bindDn = (String) attrs.get(Provisioning.A_zimbraAuthLdapBindDn);
             if (bindDn != null) {
-                String dn = LdapUtil.computeAuthDn(name, bindDn);
+                String dn = LegacyLdapUtil.computeAuthDn(name, bindDn);
                 if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with bind dn template of "+dn);
-                LdapUtil.ldapAuthenticate(url, requireStartTLS, dn, password);
+                LegacyLdapUtil.ldapAuthenticate(url, requireStartTLS, dn, password);
                 return new Result(STATUS_OK, "", dn);
             }
             
@@ -199,11 +200,11 @@ public class Check {
         try {
             SearchGalResult result = null;
             if (galOp == GalOp.autocomplete)
-                result = LdapUtil.searchLdapGal(galParams, GalOp.autocomplete, query, limit, rules, null, null); 
+                result = LegacyLdapUtil.searchLdapGal(galParams, GalOp.autocomplete, query, limit, rules, null, null); 
             else if (galOp == GalOp.search)
-                result = LdapUtil.searchLdapGal(galParams, GalOp.search, query, limit, rules, null, null); 
+                result = LegacyLdapUtil.searchLdapGal(galParams, GalOp.search, query, limit, rules, null, null); 
             else if (galOp == GalOp.sync)
-                result = LdapUtil.searchLdapGal(galParams, GalOp.sync, query, limit, rules, "", null); 
+                result = LegacyLdapUtil.searchLdapGal(galParams, GalOp.sync, query, limit, rules, "", null); 
             else 
                 throw ServiceException.INVALID_REQUEST("invalid GAL op: "+galOp.toString(), null);
             

@@ -27,7 +27,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
-import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.db.DbDataSource;
 import com.zimbra.cs.db.DbPop3Message;
@@ -65,7 +65,7 @@ public class ModifyDataSource extends MailDocumentHandler {
         value = eDataSource.getAttribute(MailConstants.A_DS_IS_ENABLED, null);
         if (value != null)
             dsAttrs.put(Provisioning.A_zimbraDataSourceEnabled,
-                LdapUtil.getBooleanString(eDataSource.getAttributeBool(MailConstants.A_DS_IS_ENABLED)));
+                LegacyLdapUtil.getBooleanString(eDataSource.getAttributeBool(MailConstants.A_DS_IS_ENABLED)));
         value = eDataSource.getAttribute(MailConstants.A_FOLDER, null);
         if (value != null) {
             Mailbox mbox = getRequestedMailbox(zsc);
@@ -104,7 +104,7 @@ public class ModifyDataSource extends MailDocumentHandler {
             boolean newValue = eDataSource.getAttributeBool(MailConstants.A_DS_LEAVE_ON_SERVER);
             if (newValue != ds.leaveOnServer()) {
                 dsAttrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer,
-                    LdapUtil.getBooleanString(newValue));
+                    LegacyLdapUtil.getBooleanString(newValue));
                 Mailbox mbox = getRequestedMailbox(zsc);
                 DbPop3Message.deleteUids(mbox, ds.getId());
                 DbDataSource.deleteAllMappings(ds);
@@ -141,7 +141,7 @@ public class ModifyDataSource extends MailDocumentHandler {
         value = eDataSource.getAttribute(MailConstants.A_DS_USE_ADDRESS_FOR_FORWARD_REPLY, null);
         if (value != null)
             dsAttrs.put(Provisioning.A_zimbraDataSourceUseAddressForForwardReply,
-                    LdapUtil.getBooleanString(eDataSource.getAttributeBool(MailConstants.A_DS_USE_ADDRESS_FOR_FORWARD_REPLY, false)));
+                    LegacyLdapUtil.getBooleanString(eDataSource.getAttributeBool(MailConstants.A_DS_USE_ADDRESS_FOR_FORWARD_REPLY, false)));
         
         value = eDataSource.getAttribute(MailConstants.A_DS_DEFAULT_SIGNATURE, null);
         if (value != null)

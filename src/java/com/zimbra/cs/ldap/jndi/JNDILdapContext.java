@@ -14,8 +14,8 @@ import javax.naming.directory.SearchResult;
 
 import com.zimbra.common.service.ServiceException;
 
-import com.zimbra.cs.account.ldap.LdapUtil;
-import com.zimbra.cs.account.ldap.LdapUtil.SearchLdapVisitor;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil.SearchLdapVisitor;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapException.LdapInvalidNameException;

@@ -64,6 +64,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.ldap.ILdapContext;
 import com.zimbra.cs.prov.ldap.LdapGalCredential;
 import com.zimbra.cs.stats.ZimbraPerf;
@@ -592,7 +593,7 @@ public class ZimbraLdapContext implements ILdapContext {
      * @param password
      * @throws NamingException
      */
-    static void ldapAuthenticate(String urls[], boolean requireStartTLS, String principal, String password, String note) throws NamingException, IOException {
+    public static void ldapAuthenticate(String urls[], boolean requireStartTLS, String principal, String password, String note) throws NamingException, IOException {
         Hashtable<String, String> env = new Hashtable<String, String>();
         
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
@@ -751,7 +752,7 @@ public class ZimbraLdapContext implements ILdapContext {
         } catch (NameAlreadyBoundException e) {            
             throw e;
         } catch (NameNotFoundException e){
-            throw ServiceException.INVALID_REQUEST(method+" dn not found: "+ LdapUtil.dnToRdnAndBaseDn(dn)[1] +e.getMessage(), e);
+            throw ServiceException.INVALID_REQUEST(method+" dn not found: "+ LegacyLdapUtil.dnToRdnAndBaseDn(dn)[1] +e.getMessage(), e);
         } catch (InvalidAttributeIdentifierException e) {
             throw AccountServiceException.INVALID_ATTR_NAME(method+" invalid attr name: "+e.getMessage(), e);
         } catch (InvalidAttributeValueException e) {
@@ -819,7 +820,7 @@ public class ZimbraLdapContext implements ILdapContext {
         } catch (NamingException e) {
             ZimbraLog.account.warn("unable to move children", e);            
         } finally {
-            LdapUtil.closeEnumContext(ne);            
+            LegacyLdapUtil.closeEnumContext(ne);            
         }
     }
     
@@ -837,7 +838,7 @@ public class ZimbraLdapContext implements ILdapContext {
         } catch (NamingException e) {
             ZimbraLog.account.warn("unable to remove children", e);            
         } finally {
-            LdapUtil.closeEnumContext(ne);            
+            LegacyLdapUtil.closeEnumContext(ne);            
         }
     }
     

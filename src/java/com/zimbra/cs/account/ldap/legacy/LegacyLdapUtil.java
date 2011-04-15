@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.account.ldap;
+package com.zimbra.cs.account.ldap.legacy;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
@@ -28,6 +28,9 @@ import com.zimbra.cs.account.krb5.Krb5Login;
 import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.gal.GalParams;
 import com.zimbra.cs.account.gal.GalUtil;
+import com.zimbra.cs.account.ldap.LdapGalMapRules;
+import com.zimbra.cs.account.ldap.LdapProvisioning;
+import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.ldap.legacy.LegacyJNDIAttributes;
 import com.zimbra.cs.account.ldap.legacy.entry.LdapConfig;
 import com.zimbra.cs.account.ldap.legacy.entry.LdapDomain;
@@ -74,7 +77,7 @@ import java.util.UUID;
 /**
  * @author schemers
  */
-public class LdapUtil {
+public class LegacyLdapUtil {
         
     public final static String LDAP_TRUE  = "TRUE";
     public final static String LDAP_FALSE = "FALSE";
@@ -582,7 +585,7 @@ public class LdapUtil {
     }
 
 
-    static String[] removeMultiValue(String values[], String value) {
+    public static String[] removeMultiValue(String values[], String value) {
         List<String> list = new ArrayList<String>(Arrays.asList(values));
         boolean updated = list.remove(value);
         if (updated) {
@@ -686,7 +689,7 @@ public class LdapUtil {
                   new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, returnAttrs, false, false);
 
               //Set the page size and initialize the cookie that we pass back in subsequent pages
-              int pageSize = LdapUtil.adjustPageSize(maxResults, 1000);
+              int pageSize = LegacyLdapUtil.adjustPageSize(maxResults, 1000);
               byte[] cookie = null;
 
               NamingEnumeration ne = null;
@@ -700,7 +703,7 @@ public class LdapUtil {
                           SearchResult sr = (SearchResult) ne.nextElement();
                           String dn = sr.getNameInNamespace();
                           Attributes attrs = sr.getAttributes();
-                          visitor.visit(dn, LdapUtil.getAttrs(attrs, binaryAttrs), new LegacyJNDIAttributes(attrs));
+                          visitor.visit(dn, LegacyLdapUtil.getAttrs(attrs, binaryAttrs), new LegacyJNDIAttributes(attrs));
                       }
                       cookie = zlc.getCookie();
                   } while (cookie != null);
@@ -840,7 +843,7 @@ public class LdapUtil {
              */
             boolean gotNewToken = true;
             String newToken = result.getToken();
-            if (newToken == null || (token != null && token.equals(newToken)) || newToken.equals(LdapUtil.EARLIEST_SYNC_TOKEN))
+            if (newToken == null || (token != null && token.equals(newToken)) || newToken.equals(LegacyLdapUtil.EARLIEST_SYNC_TOKEN))
                 gotNewToken = false;
             
             if (gotNewToken) {

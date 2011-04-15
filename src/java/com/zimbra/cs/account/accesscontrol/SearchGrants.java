@@ -26,7 +26,7 @@ import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.TargetBy;
-import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.ldap.IAttributes;
 
 public class SearchGrants {
@@ -194,7 +194,7 @@ public class SearchGrants {
         }
     }
     
-    private static class SearchGrantVisitor implements LdapUtil.SearchLdapVisitor {
+    private static class SearchGrantVisitor implements LegacyLdapUtil.SearchLdapVisitor {
         SearchGrantsResults mResults; 
         
         SearchGrantVisitor(SearchGrantsResults results) {
@@ -252,6 +252,6 @@ public class SearchGrants {
                                              Provisioning.A_zimbraACE};
         
         
-        LdapUtil.searchLdapOnMaster(base, query, returnAttrs, visitor);
+        LegacyLdapUtil.searchLdapOnMaster(base, query, returnAttrs, visitor);
     }
 }

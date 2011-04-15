@@ -20,7 +20,7 @@ import javax.naming.directory.Attributes;
 
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 
 public class LdapDistributionList extends DistributionList implements LdapEntry {
@@ -28,8 +28,8 @@ public class LdapDistributionList extends DistributionList implements LdapEntry 
 
     public LdapDistributionList(String dn, String email, Attributes attrs, Provisioning prov) throws NamingException {
         super(email,
-              LdapUtil.getAttrString(attrs, Provisioning.A_zimbraId), 
-              LdapUtil.getAttrs(attrs), prov);
+              LegacyLdapUtil.getAttrString(attrs, Provisioning.A_zimbraId), 
+              LegacyLdapUtil.getAttrs(attrs), prov);
         mDn = dn;
     }
     

@@ -24,9 +24,9 @@ import javax.naming.NamingException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
-import com.zimbra.cs.account.ldap.LdapUtil.SearchLdapVisitor;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil.SearchLdapVisitor;
 import com.zimbra.cs.ldap.IAttributes;
 
 public class GalSyncAccountContactLimit extends LdapUpgrade {
@@ -73,7 +73,7 @@ public class GalSyncAccountContactLimit extends LdapUpgrade {
                                        Provisioning.A_zimbraGalAccountId};
         
         for (String base : bases) {
-            LdapUtil.searchLdapOnMaster(base, query, attrs, visitor);
+            LegacyLdapUtil.searchLdapOnMaster(base, query, attrs, visitor);
         }
         
         return galSyncAcctIds;

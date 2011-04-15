@@ -32,7 +32,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -191,7 +191,7 @@ public class TestPreAuthServlet extends TestCase {
         int lockoutAfterNumFailures = 3;
         
         // setup lockout config attrs
-        attrs.put(Provisioning.A_zimbraPasswordLockoutEnabled, LdapUtil.LDAP_TRUE);
+        attrs.put(Provisioning.A_zimbraPasswordLockoutEnabled, LegacyLdapUtil.LDAP_TRUE);
         attrs.put(Provisioning.A_zimbraPasswordLockoutDuration, "1m");
         attrs.put(Provisioning.A_zimbraPasswordLockoutMaxFailures, lockoutAfterNumFailures+"");
         attrs.put(Provisioning.A_zimbraPasswordLockoutFailureLifetime, "30s");

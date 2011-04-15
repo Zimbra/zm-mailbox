@@ -20,8 +20,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.account.ldap.legacy.entry.LdapDomain;
 import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.prov.ldap.LdapGalCredential;
@@ -93,7 +93,7 @@ public abstract class GalParams {
         
         public ZimbraGalParams(Domain domain, GalOp galOp) throws ServiceException {
             super(domain, galOp); 
-            mSearchBase = LdapUtil.getZimbraSearchBase(domain, galOp);
+            mSearchBase = LegacyLdapUtil.getZimbraSearchBase(domain, galOp);
         }
         
         public String searchBase() { return mSearchBase; }

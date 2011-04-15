@@ -19,7 +19,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -141,7 +141,7 @@ public class CompleteTaskInstance extends CalendarRequest {
         long now = System.currentTimeMillis();
 
         // Assign a new UID.
-        String uid = LdapUtil.generateUUID();
+        String uid = LegacyLdapUtil.generateUUID();
         inst.setUid(uid);
         inst.setSeqNo(0);
 

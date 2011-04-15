@@ -2,7 +2,7 @@ package com.zimbra.cs.ldap;
 
 import java.util.Set;
 
-import com.zimbra.cs.account.ldap.LdapUtil.SearchLdapVisitor;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil.SearchLdapVisitor;
 
 public class SearchLdapOptions {
     private static final int DEFAULT_RESULT_PAGE_SIZE = 1000;

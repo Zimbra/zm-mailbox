@@ -37,8 +37,8 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
-import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 
 public class ZimbraCreateTimestamp extends LdapUpgrade {
@@ -207,7 +207,7 @@ public class ZimbraCreateTimestamp extends LdapUpgrade {
                 new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, returnAttrs, false, false);
 
             //Set the page size and initialize the cookie that we pass back in subsequent pages
-            int pageSize = LdapUtil.adjustPageSize(maxResults, 1000);
+            int pageSize = LegacyLdapUtil.adjustPageSize(maxResults, 1000);
             byte[] cookie = null;
 
             NamingEnumeration ne = null;
@@ -223,7 +223,7 @@ public class ZimbraCreateTimestamp extends LdapUpgrade {
                         String dn = sr.getNameInNamespace();
 
                         Attributes attrs = sr.getAttributes();
-                        String createTime = LdapUtil.getAttrString(attrs, "createTimestamp");
+                        String createTime = LegacyLdapUtil.getAttrString(attrs, "createTimestamp");
                        
                         System.out.println(dn + " (" + createTime + ")");
                         

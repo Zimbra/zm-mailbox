@@ -8,9 +8,9 @@ import javax.naming.directory.BasicAttributes;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
-import com.zimbra.cs.account.ldap.LdapUtil.SearchLdapVisitor;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil.SearchLdapVisitor;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.prov.ldap.LdapFilter;
 
@@ -47,13 +47,13 @@ public class DisableBriefcase extends LdapUpgrade {
             
             try {
                 if (ldapAttrs.getAttrString( ATTR_SPREADSHEET) != null)
-                    modAttrs.put(ATTR_SPREADSHEET, LdapUtil.LDAP_FALSE);
+                    modAttrs.put(ATTR_SPREADSHEET, LegacyLdapUtil.LDAP_FALSE);
                 
                 if (ldapAttrs.getAttrString(ATTR_SLIDES) != null)
-                    modAttrs.put(ATTR_SLIDES, LdapUtil.LDAP_FALSE);
+                    modAttrs.put(ATTR_SLIDES, LegacyLdapUtil.LDAP_FALSE);
                 
                 if (ldapAttrs.getAttrString(ATTR_NOTEBOOK) != null)
-                    modAttrs.put(ATTR_NOTEBOOK, LdapUtil.LDAP_FALSE);
+                    modAttrs.put(ATTR_NOTEBOOK, LegacyLdapUtil.LDAP_FALSE);
                 
                 if (modAttrs.size() > 0) {
                     System.out.println("Modifying " + dn);
@@ -78,7 +78,7 @@ public class DisableBriefcase extends LdapUpgrade {
         
         for (String base : bases) {
             try {
-                LdapUtil.searchLdapOnMaster(base, query, attrs, visitor);
+                LegacyLdapUtil.searchLdapOnMaster(base, query, attrs, visitor);
             } catch (ServiceException e) {
                 // log and continue
                 System.out.println("Caught ServiceException while searching " + query + " under base " + base);
@@ -88,9 +88,9 @@ public class DisableBriefcase extends LdapUpgrade {
     }
     
     private String query() {
-        return "(|(" + ATTR_SPREADSHEET + "=" + LdapUtil.LDAP_TRUE + ")" + 
-                 "(" + ATTR_SLIDES + "=" + LdapUtil.LDAP_TRUE + ")" + 
-                 "(" + ATTR_NOTEBOOK + "=" + LdapUtil.LDAP_TRUE + ")" +
+        return "(|(" + ATTR_SPREADSHEET + "=" + LegacyLdapUtil.LDAP_TRUE + ")" + 
+                 "(" + ATTR_SLIDES + "=" + LegacyLdapUtil.LDAP_TRUE + ")" + 
+                 "(" + ATTR_NOTEBOOK + "=" + LegacyLdapUtil.LDAP_TRUE + ")" +
                ")";
     }
     

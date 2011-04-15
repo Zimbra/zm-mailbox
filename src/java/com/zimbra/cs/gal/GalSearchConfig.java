@@ -25,7 +25,7 @@ import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.gal.GalUtil;
 import com.zimbra.cs.account.ldap.LdapGalMapRules;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
-import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 
 public class GalSearchConfig {
     
@@ -155,7 +155,7 @@ public class GalSearchConfig {
 			mFilter = LdapProvisioning.getFilterDef(filterName);
 		mAuthMech = Provisioning.LDAP_AM_SIMPLE;
 		mFilter = "(&("+mFilter+")(!(zimbraHideInGal=TRUE))(!(zimbraIsSystemResource=TRUE)))";
-		mSearchBase = LdapUtil.getZimbraSearchBase(domain, op);
+		mSearchBase = LegacyLdapUtil.getZimbraSearchBase(domain, op);
 		mGalType = GalType.zimbra;
 		mTimestampFormat = GalSyncToken.LDAP_GENERALIZED_TIME_FORMAT;
 		mPageSize = 1000;

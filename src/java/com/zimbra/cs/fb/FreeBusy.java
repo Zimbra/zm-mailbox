@@ -22,7 +22,7 @@ import java.util.*;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -504,7 +504,7 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
         writer.append("VERSION:").append(ZCalendar.sIcalVersion).append(NL);
         writer.append("METHOD:").append(publish).append(NL);
 
-        String uidBase = "tmp_" + LdapUtil.generateUUID() + "_";
+        String uidBase = "tmp_" + LegacyLdapUtil.generateUUID() + "_";
         int uidCount = 0;
         TimeZoneMap tzMap = new TimeZoneMap(ICalTimeZone.getUTC());
         for (Iterator<Interval> iter = this.iterator(); iter.hasNext(); ) {

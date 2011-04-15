@@ -12,8 +12,8 @@ import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 
 public class ZimbraMtaSaslAuthEnable extends LdapUpgrade {
     
@@ -42,7 +42,7 @@ public class ZimbraMtaSaslAuthEnable extends LdapUpgrade {
         
         String curValue = entry.getAttr(attrName, false);
         if (curValue != null) {
-            String newValue =LdapUtil.LDAP_FALSE.equals(curValue) ? "no" : "yes";
+            String newValue =LegacyLdapUtil.LDAP_FALSE.equals(curValue) ? "no" : "yes";
             if (!curValue.equals(newValue)) {
                 System.out.println("    Changing " + attrName + " on " + entryName + " from " + curValue + " to " + newValue);
                 

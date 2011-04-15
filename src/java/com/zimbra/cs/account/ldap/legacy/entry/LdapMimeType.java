@@ -23,13 +23,13 @@ import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.prov.ldap.entry.LdapMimeTypeBase;
 
 public class LdapMimeType extends LdapMimeTypeBase {
        
     public LdapMimeType(String dn, Attributes attrs, Provisioning prov) throws NamingException {
-        super(LdapUtil.getAttrs(attrs), null, prov);
+        super(LegacyLdapUtil.getAttrs(attrs), null, prov);
         mDn = dn;
     }
 

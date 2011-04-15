@@ -39,7 +39,7 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.DataSource.ConnectionType;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.ScheduledTask;
@@ -100,7 +100,7 @@ public class TestDataSource extends TestCase {
         Provisioning prov = Provisioning.getInstance();
         Account account = TestUtil.getAccount(USER_NAME);
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraDataSourceEnabled, LdapUtil.LDAP_FALSE);
+        attrs.put(Provisioning.A_zimbraDataSourceEnabled, LegacyLdapUtil.LDAP_FALSE);
         attrs.put(Provisioning.A_zimbraDataSourceHost, "testhost");
         attrs.put(Provisioning.A_zimbraDataSourcePort, "0");
         attrs.put(Provisioning.A_zimbraDataSourceUsername, "testuser");
@@ -140,14 +140,14 @@ public class TestDataSource extends TestCase {
         // Create data source.
         Provisioning prov = Provisioning.getInstance();
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraDataSourceEnabled, LdapUtil.LDAP_TRUE);
+        attrs.put(Provisioning.A_zimbraDataSourceEnabled, LegacyLdapUtil.LDAP_TRUE);
         attrs.put(Provisioning.A_zimbraDataSourceHost, "localhost");
         attrs.put(Provisioning.A_zimbraDataSourcePort, TestUtil.getServerAttr(Provisioning.A_zimbraPop3BindPort));
         attrs.put(Provisioning.A_zimbraDataSourceUsername, "user2");
         attrs.put(Provisioning.A_zimbraDataSourcePassword, TestUtil.DEFAULT_PASSWORD);
         attrs.put(Provisioning.A_zimbraDataSourceFolderId, Integer.toString(Mailbox.ID_FOLDER_INBOX));
         attrs.put(Provisioning.A_zimbraDataSourceConnectionType, DataSource.ConnectionType.cleartext.toString());
-        attrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer, LdapUtil.LDAP_TRUE);
+        attrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer, LegacyLdapUtil.LDAP_TRUE);
         DataSource ds = prov.createDataSource(account, DataSource.Type.pop3, DS_NAME, attrs);
 
         // Make sure error status is not set.
@@ -233,7 +233,7 @@ public class TestDataSource extends TestCase {
         Provisioning prov = Provisioning.getInstance();
         Account account = TestUtil.getAccount(USER_NAME);
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraDataSourceEnabled, LdapUtil.LDAP_FALSE);
+        attrs.put(Provisioning.A_zimbraDataSourceEnabled, LegacyLdapUtil.LDAP_FALSE);
         attrs.put(Provisioning.A_zimbraDataSourceHost, "testhost");
         attrs.put(Provisioning.A_zimbraDataSourcePort, "0");
         attrs.put(Provisioning.A_zimbraDataSourceUsername, "testuser");
@@ -274,7 +274,7 @@ public class TestDataSource extends TestCase {
         
         Provisioning prov = Provisioning.getInstance();
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraDataSourceEnabled, LdapUtil.LDAP_FALSE);
+        attrs.put(Provisioning.A_zimbraDataSourceEnabled, LegacyLdapUtil.LDAP_FALSE);
         attrs.put(Provisioning.A_zimbraDataSourceHost, "localhost");
         int port = Integer.parseInt(TestUtil.getServerAttr(Provisioning.A_zimbraPop3BindPort));
         attrs.put(Provisioning.A_zimbraDataSourcePort, Integer.toString(port));
@@ -463,7 +463,7 @@ public class TestDataSource extends TestCase {
         TestUtil.setDataSourceAttr(USER_NAME, zds.getName(), attrName, "");
         checkSchedule(mbox, dsId, 300000);
         
-        TestUtil.setDataSourceAttr(USER_NAME, zds.getName(), Provisioning.A_zimbraDataSourceEnabled, LdapUtil.LDAP_FALSE);
+        TestUtil.setDataSourceAttr(USER_NAME, zds.getName(), Provisioning.A_zimbraDataSourceEnabled, LegacyLdapUtil.LDAP_FALSE);
         checkSchedule(mbox, dsId, null);
     }
     

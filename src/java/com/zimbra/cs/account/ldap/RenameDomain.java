@@ -43,6 +43,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.XMPPComponent;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.account.ldap.legacy.entry.LdapDomain;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
@@ -591,7 +592,7 @@ class RenameDomain {
                  * (identities/datasources, signatures).  We create the account entry in the new domain using the fixed adddr attrs.
                  */
                 Attributes attributes = new BasicAttributes(true);
-                LdapUtil.mapToAttrs(fixedAttrs, attributes);
+                LegacyLdapUtil.mapToAttrs(fixedAttrs, attributes);
                 try {
                     mZlc.createEntry(newDn, attributes, "renameDomain-createAccount");
                 } catch (NameAlreadyBoundException e) {

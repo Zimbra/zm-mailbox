@@ -19,7 +19,7 @@ import javax.naming.directory.Attributes;
 
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 
 public class LdapConfig extends Config implements LdapEntry {
@@ -27,7 +27,7 @@ public class LdapConfig extends Config implements LdapEntry {
     private String mDn;
     
     public LdapConfig(String dn, Attributes attrs, Provisioning provisioning) throws NamingException {
-        super(LdapUtil.getAttrs(attrs), provisioning);
+        super(LegacyLdapUtil.getAttrs(attrs), provisioning);
         mDn = dn;
     }
 

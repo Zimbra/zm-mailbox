@@ -8,9 +8,9 @@ import javax.naming.directory.BasicAttributes;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
-import com.zimbra.cs.account.ldap.LdapUtil.SearchLdapVisitor;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil.SearchLdapVisitor;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.prov.ldap.LdapFilter;
 
@@ -48,7 +48,7 @@ public class Bug50458  extends LdapUpgrade {
         
         for (String base : bases) {
             try {
-                LdapUtil.searchLdapOnMaster(base, query, attrs, visitor);
+                LegacyLdapUtil.searchLdapOnMaster(base, query, attrs, visitor);
             } catch (ServiceException e) {
                 // log and continue
                 System.out.println("Caught ServiceException while searching " + query + " under base " + base);

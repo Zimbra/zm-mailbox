@@ -28,8 +28,8 @@ import com.zimbra.common.util.Version;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.callback.IDNCallback;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
-import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.extension.ExtensionUtil;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -1265,7 +1265,7 @@ public class AttributeManager {
                 try {
                     DirContext ocSchema = (DirContext)schema.lookup("ClassDefinition/" + oc);
                     Attributes attributes = ocSchema.getAttributes("");
-                    attrs = LdapUtil.getAttrs(attributes);
+                    attrs = LegacyLdapUtil.getAttrs(attributes);
                 } catch (NamingException e) {
                     ZimbraLog.account.debug("unable to load LDAP schema extension for objectclass: " + oc, e);
                 }

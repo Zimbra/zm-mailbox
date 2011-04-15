@@ -26,7 +26,7 @@ import javax.naming.directory.Attributes;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 
 /**
@@ -37,7 +37,7 @@ public class LdapCos extends Cos implements LdapEntry {
     private String mDn;
 
     public LdapCos(String dn, Attributes attrs, Provisioning prov) throws NamingException, ServiceException {
-        super(LdapUtil.getAttrString(attrs, Provisioning.A_cn), LdapUtil.getAttrString(attrs, Provisioning.A_zimbraId), LdapUtil.getAttrs(attrs), prov);
+        super(LegacyLdapUtil.getAttrString(attrs, Provisioning.A_cn), LegacyLdapUtil.getAttrString(attrs, Provisioning.A_zimbraId), LegacyLdapUtil.getAttrs(attrs), prov);
         mDn = dn;
     }
 

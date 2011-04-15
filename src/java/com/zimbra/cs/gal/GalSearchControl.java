@@ -41,7 +41,7 @@ import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.GalSearchType;
 import com.zimbra.cs.account.ZAttrProvisioning.GalMode;
 import com.zimbra.cs.account.gal.GalOp;
-import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.db.DbDataSource;
 import com.zimbra.cs.db.DbDataSource.DataSourceItem;
@@ -422,7 +422,7 @@ public class GalSearchControl {
                     if (folderMapping.md == null)
                         continue;
                     folderIds.add(fid);
-                    syncToken = LdapUtil.getEarlierTimestamp(syncToken, folderMapping.md.get(GalImport.SYNCTOKEN));
+                    syncToken = LegacyLdapUtil.getEarlierTimestamp(syncToken, folderMapping.md.get(GalImport.SYNCTOKEN));
                     if (mParams.isIdOnly() && token.doMailboxSync()) {
                         int changeId = token.getChangeId(galAcct.getId());
                         Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, changeId,
@@ -461,7 +461,7 @@ public class GalSearchControl {
                 if (folderMapping.md == null)
                     continue;
                 folderIds.add(fid);
-                syncToken = LdapUtil.getEarlierTimestamp(syncToken, folderMapping.md.get(GalImport.SYNCTOKEN));
+                syncToken = LegacyLdapUtil.getEarlierTimestamp(syncToken, folderMapping.md.get(GalImport.SYNCTOKEN));
             }
             if (mParams.isIdOnly() && token.doMailboxSync()) {
                 int changeId = token.getChangeId(galAcct.getId());
@@ -577,7 +577,7 @@ public class GalSearchControl {
             mParams.setType(GalSearchType.resource);
             mParams.createSearchConfig(GalType.zimbra);
             try {
-                LdapUtil.galSearch(mParams);
+                LegacyLdapUtil.galSearch(mParams);
             } catch (Exception e) {
                 throw ServiceException.FAILURE("ldap search failed", e);
             }
@@ -608,7 +608,7 @@ public class GalSearchControl {
         }
         mParams.createSearchConfig(type);
         try {
-            LdapUtil.galSearch(mParams);
+            LegacyLdapUtil.galSearch(mParams);
         } catch (Exception e) {
             throw ServiceException.FAILURE("ldap search failed", e);
         }
@@ -621,12 +621,12 @@ public class GalSearchControl {
             // do the second query
             mParams.createSearchConfig(GalType.ldap);
             try {
-                LdapUtil.galSearch(mParams);
+                LegacyLdapUtil.galSearch(mParams);
             } catch (Exception e) {
                 throw ServiceException.FAILURE("ldap search failed", e);
             }
             hadMore |= mParams.getResult().getHadMore();
-            newToken = LdapUtil.getLaterTimestamp(newToken, mParams.getResult().getToken());
+            newToken = LegacyLdapUtil.getLaterTimestamp(newToken, mParams.getResult().getToken());
             if (mParams.getResult().getTokenizeKey() != null)
                 hadMore = true;
         }

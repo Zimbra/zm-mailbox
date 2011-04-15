@@ -30,7 +30,7 @@ import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.zclient.ZAuthResult;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMailbox;
@@ -81,12 +81,12 @@ extends TestCase {
         Element request = Element.create(transport.getRequestProtocol(), AccountConstants.GET_VERSION_INFO_REQUEST);
         
         // Test with version exposed
-        TestUtil.setServerAttr(Provisioning.A_zimbraSoapExposeVersion, LdapUtil.LDAP_TRUE);
+        TestUtil.setServerAttr(Provisioning.A_zimbraSoapExposeVersion, LegacyLdapUtil.LDAP_TRUE);
         Element response = transport.invoke(request);
         validateSoapVersionResponse(response);
         
         // Test with version not exposed
-        TestUtil.setServerAttr(Provisioning.A_zimbraSoapExposeVersion, LdapUtil.LDAP_FALSE);
+        TestUtil.setServerAttr(Provisioning.A_zimbraSoapExposeVersion, LegacyLdapUtil.LDAP_FALSE);
         request = Element.create(transport.getRequestProtocol(), AccountConstants.GET_VERSION_INFO_REQUEST);
         try {
             response = transport.invoke(request);

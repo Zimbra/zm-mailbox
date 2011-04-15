@@ -13,7 +13,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Entry;
-import com.zimbra.cs.account.ldap.LdapUtil.SearchLdapVisitor;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil.SearchLdapVisitor;
 import com.zimbra.cs.ldap.LdapTODO.SDKDONE;
 
 public class LdapUtil {

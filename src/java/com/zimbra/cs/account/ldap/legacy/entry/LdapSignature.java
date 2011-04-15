@@ -20,7 +20,7 @@ import javax.naming.directory.Attributes;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.prov.ldap.entry.LdapSignatureBase;
 
 /**
@@ -32,9 +32,9 @@ public class LdapSignature extends LdapSignatureBase {
 
     public LdapSignature(Account acct, String dn, Attributes attrs, Provisioning prov) throws NamingException {
         super(acct,
-              LdapUtil.getAttrString(attrs, Provisioning.A_zimbraSignatureName),
-              LdapUtil.getAttrString(attrs, Provisioning.A_zimbraSignatureId),
-              LdapUtil.getAttrs(attrs), prov);
+              LegacyLdapUtil.getAttrString(attrs, Provisioning.A_zimbraSignatureName),
+              LegacyLdapUtil.getAttrString(attrs, Provisioning.A_zimbraSignatureId),
+              LegacyLdapUtil.getAttrs(attrs), prov);
         mDn = dn;
     }
 

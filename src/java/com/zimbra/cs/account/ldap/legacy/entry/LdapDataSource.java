@@ -20,7 +20,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 
 import javax.naming.NamingException;
@@ -44,7 +44,7 @@ public class LdapDataSource extends DataSource implements LdapEntry {
 
 	static Type getObjectType(Attributes attrs) throws ServiceException {
 		try {
-			String dsType = LdapUtil.getAttrString(attrs, Provisioning.A_zimbraDataSourceType);
+			String dsType = LegacyLdapUtil.getAttrString(attrs, Provisioning.A_zimbraDataSourceType);
 			if (dsType != null)
 				return Type.fromString(dsType);
 		} catch (NamingException e) {
@@ -68,9 +68,9 @@ public class LdapDataSource extends DataSource implements LdapEntry {
 	public LdapDataSource(Account acct, String dn, Attributes attrs, Provisioning prov) throws NamingException, ServiceException {
 		super(acct, 
 				getObjectType(attrs),
-				LdapUtil.getAttrString(attrs, Provisioning.A_zimbraDataSourceName),
-				LdapUtil.getAttrString(attrs, Provisioning.A_zimbraDataSourceId),                
-				LdapUtil.getAttrs(attrs), prov);
+				LegacyLdapUtil.getAttrString(attrs, Provisioning.A_zimbraDataSourceName),
+				LegacyLdapUtil.getAttrString(attrs, Provisioning.A_zimbraDataSourceId),                
+				LegacyLdapUtil.getAttrs(attrs), prov);
 		mDn = dn;
 	}
 	public String getDN() {

@@ -35,7 +35,7 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
-import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.datasource.MailItemImport;
 import com.zimbra.cs.db.DbDataSource;
 import com.zimbra.cs.db.DbDataSource.DataSourceItem;
@@ -148,7 +148,7 @@ public class GalImport extends MailItemImport {
             params.getConfig().getRules().add(attr+"="+attr);
         params.getConfig().getRules().setFetchGroupMembers(fetchGroupMembers);
         params.getConfig().getRules().setNeedSMIMECerts(true);
-        LdapUtil.galSearch(params);
+        LegacyLdapUtil.galSearch(params);
     }
     private static String[] ZIMBRA_ATTRS = {
         "zimbraAccountCalendarUserType",

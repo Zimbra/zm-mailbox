@@ -26,8 +26,8 @@ import javax.naming.directory.SearchResult;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapDIT;
-import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 
 public class ZimbraPrefFromDisplay extends LdapUpgrade {    
     
@@ -63,7 +63,7 @@ public class ZimbraPrefFromDisplay extends LdapUpgrade {
                 new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, returnAttrs, false, false);
 
             //Set the page size and initialize the cookie that we pass back in subsequent pages
-            int pageSize = LdapUtil.adjustPageSize(maxResults, 1000);
+            int pageSize = LegacyLdapUtil.adjustPageSize(maxResults, 1000);
             byte[] cookie = null;
 
             NamingEnumeration ne = null;
@@ -80,12 +80,12 @@ public class ZimbraPrefFromDisplay extends LdapUpgrade {
 
                         Attributes attrs = sr.getAttributes();
                         
-                        String zpfd = LdapUtil.getAttrString(attrs, Provisioning.A_zimbraPrefFromDisplay);
+                        String zpfd = LegacyLdapUtil.getAttrString(attrs, Provisioning.A_zimbraPrefFromDisplay);
                         
                         if (zpfd == null) {
-                            String displayName = LdapUtil.getAttrString(attrs, Provisioning.A_displayName);
-                            String cn = LdapUtil.getAttrString(attrs, Provisioning.A_cn);
-                            String uid = LdapUtil.getAttrString(attrs, Provisioning.A_uid);
+                            String displayName = LegacyLdapUtil.getAttrString(attrs, Provisioning.A_displayName);
+                            String cn = LegacyLdapUtil.getAttrString(attrs, Provisioning.A_cn);
+                            String uid = LegacyLdapUtil.getAttrString(attrs, Provisioning.A_uid);
                         
                             String display = displayName;
                             if (display == null)

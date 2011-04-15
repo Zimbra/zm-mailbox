@@ -62,7 +62,7 @@ import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.httpclient.HttpProxyUtil;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -244,7 +244,7 @@ public class FeedManager {
                     // handle missing UIDs on remote calendars by generating them as needed
                     for (Invite inv : invites) {
                     	if (inv.getUid() == null)
-                    	    inv.setUid(LdapUtil.generateUUID());
+                    	    inv.setUid(LegacyLdapUtil.generateUUID());
                     }
                     return new SubscriptionData<Invite>(invites, lastModified);
                 default:

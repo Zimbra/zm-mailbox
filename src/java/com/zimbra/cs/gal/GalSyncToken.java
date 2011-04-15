@@ -22,7 +22,7 @@ import java.util.HashMap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 
 public class GalSyncToken {
 	public GalSyncToken(String token) {
@@ -98,7 +98,7 @@ public class GalSyncToken {
 	
 	public void merge(GalSyncToken that) {
 		ZimbraLog.gal.debug("merging token "+this+" with "+that);
-		mLdapTimestamp = LdapUtil.getEarlierTimestamp(this.mLdapTimestamp, that.mLdapTimestamp);
+		mLdapTimestamp = LegacyLdapUtil.getEarlierTimestamp(this.mLdapTimestamp, that.mLdapTimestamp);
 		for (String aid : that.mChangeIdMap.keySet())
 			mChangeIdMap.put(aid, that.mChangeIdMap.get(aid));
 		ZimbraLog.gal.debug("result: "+this);

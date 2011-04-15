@@ -40,7 +40,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.db.DbOutOfOffice;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
@@ -165,7 +165,7 @@ extends TestCase {
         // Turn on legal intercept for recipient account
         String interceptorAddress = TestUtil.getAddress(INTERCEPTOR_NAME);
         TestUtil.setAccountAttr(TAPPED_NAME, Provisioning.A_zimbraInterceptAddress, interceptorAddress);
-        TestUtil.setAccountAttr(TAPPED_NAME, Provisioning.A_zimbraInterceptSendHeadersOnly, LdapUtil.LDAP_FALSE);
+        TestUtil.setAccountAttr(TAPPED_NAME, Provisioning.A_zimbraInterceptSendHeadersOnly, LegacyLdapUtil.LDAP_FALSE);
 
         // Send message to recipient account and make sure it's intercepted
         ZMailbox interceptorMbox = TestUtil.getZMailbox(INTERCEPTOR_NAME);
@@ -205,7 +205,7 @@ extends TestCase {
         compareContent(tappedMbox, tappedMsg, interceptorMbox, interceptMsg);
 
         // Send message with save-to-sent turned on.
-        TestUtil.setAccountAttr(TAPPED_NAME, Provisioning.A_zimbraPrefSaveToSent, LdapUtil.LDAP_TRUE);
+        TestUtil.setAccountAttr(TAPPED_NAME, Provisioning.A_zimbraPrefSaveToSent, LegacyLdapUtil.LDAP_TRUE);
         subject = NAME_PREFIX + " testIntercept-send-1";
         TestUtil.sendMessage(tappedMbox, INTERCEPTOR_NAME, subject);
         tappedMsg = TestUtil.waitForMessage(tappedMbox, "in:sent subject:\"" + subject + "\"");
@@ -214,14 +214,14 @@ extends TestCase {
         compareContent(tappedMbox, tappedMsg, interceptorMbox, interceptMsg);
 
         // Send message with save-to-sent turned off.
-        TestUtil.setAccountAttr(TAPPED_NAME, Provisioning.A_zimbraPrefSaveToSent, LdapUtil.LDAP_FALSE);
+        TestUtil.setAccountAttr(TAPPED_NAME, Provisioning.A_zimbraPrefSaveToSent, LegacyLdapUtil.LDAP_FALSE);
         subject = NAME_PREFIX + " testIntercept-send-2";
         TestUtil.sendMessage(tappedMbox, INTERCEPTOR_NAME, subject);
         interceptMsg = TestUtil.waitForMessage(interceptorMbox, "subject:intercepted subject:\"" + subject + "\"");
         verifyInterceptMessage(interceptMsg, "send message", "none", "none");
 
         // Check intercepting headers only.
-        TestUtil.setAccountAttr(TAPPED_NAME, Provisioning.A_zimbraInterceptSendHeadersOnly, LdapUtil.LDAP_TRUE);
+        TestUtil.setAccountAttr(TAPPED_NAME, Provisioning.A_zimbraInterceptSendHeadersOnly, LegacyLdapUtil.LDAP_TRUE);
         subject = NAME_PREFIX + " testIntercept-headers-only";
         TestUtil.sendMessage(interceptorMbox, TAPPED_NAME, subject);
         tappedMsg = TestUtil.waitForMessage(tappedMbox, "in:inbox subject:\"" + subject + "\"");
@@ -242,7 +242,7 @@ extends TestCase {
         String[] interceptorAddresses = new String[] { interceptor1Address, interceptor2Address };
 
         TestUtil.setAccountAttr(TAPPED_NAME, Provisioning.A_zimbraInterceptAddress, interceptorAddresses);
-        TestUtil.setAccountAttr(TAPPED_NAME, Provisioning.A_zimbraInterceptSendHeadersOnly, LdapUtil.LDAP_FALSE);
+        TestUtil.setAccountAttr(TAPPED_NAME, Provisioning.A_zimbraInterceptSendHeadersOnly, LegacyLdapUtil.LDAP_FALSE);
 
         // Send message to recipient account.
         ZMailbox tappedMbox = TestUtil.getZMailbox(TAPPED_NAME);
@@ -346,10 +346,10 @@ extends TestCase {
 
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraPrefOutOfOfficeReplyEnabled,
-            LdapUtil.getBooleanString(mOriginalReplyEnabled));
+            LegacyLdapUtil.getBooleanString(mOriginalReplyEnabled));
         attrs.put(Provisioning.A_zimbraPrefOutOfOfficeReply, mOriginalReply);
         attrs.put(Provisioning.A_zimbraPrefNewMailNotificationEnabled,
-            LdapUtil.getBooleanString(mOriginalNotificationEnabled));
+            LegacyLdapUtil.getBooleanString(mOriginalNotificationEnabled));
         attrs.put(Provisioning.A_zimbraPrefNewMailNotificationAddress, mOriginalNotificationAddress);
         attrs.put(Provisioning.A_zimbraNewMailNotificationSubject, mOriginalNotificationSubject);
         attrs.put(Provisioning.A_zimbraNewMailNotificationBody, mOriginalNotificationBody);
