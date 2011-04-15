@@ -23,7 +23,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.prov.ldap.LdapProv;
 import com.zimbra.cs.prov.ldap.LdapFilter;
@@ -33,7 +33,7 @@ public class Groups {
     private LdapProv mProv;
     private Set<String> mAllDLs = null; // email addresses of all distribution lists on the system
     
-    private static class GetAllDLsVisitor implements LdapUtil.SearchLdapVisitor {
+    private static class GetAllDLsVisitor implements LegacyLdapUtil.SearchLdapVisitor {
         Set<String> allDLs = new HashSet<String>();
         
         @Override
@@ -60,7 +60,7 @@ public class Groups {
         if (mAllDLs == null) {
             try {
                 GetAllDLsVisitor visitor = new GetAllDLsVisitor();
-                LdapUtil.searchLdapOnReplica(mProv.getDIT().mailBranchBaseDN(), LdapFilter.allDistributionLists(),
+                LegacyLdapUtil.searchLdapOnReplica(mProv.getDIT().mailBranchBaseDN(), LdapFilter.allDistributionLists(),
                         new String[] {Provisioning.A_mail}, visitor);
                 
                 // all is well, swap in the result Set and cache it
