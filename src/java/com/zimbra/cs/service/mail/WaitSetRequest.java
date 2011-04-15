@@ -29,6 +29,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -322,6 +323,12 @@ public class WaitSetRequest extends MailDocumentHandler {
     
     public static class Callback implements WaitSetCallback {
         public void dataReady(IWaitSet ws, String seqNo, boolean canceled, List<WaitSetError> inErrors, String[] signalledAccounts) {
+            boolean trace = ZimbraLog.session.isTraceEnabled();
+            if (trace) {
+                String accts = signalledAccounts != null ? "[" + StringUtil.join(", ", signalledAccounts) + "]" : "<null>";
+                ZimbraLog.session.trace("WaitSetRequest.Callback.dataReady: ws=" + ws.getWaitSetId() + ", seq=" + seqNo +
+                        (canceled ? ", CANCEL" : "") + ", accounts=" + accts);
+            }
             synchronized(this) {
                 ZimbraLog.session.debug("WaitSet: Called WaitSetCallback.dataReady()!");
                 if (inErrors != null && inErrors.size() > 0)  
@@ -331,9 +338,13 @@ public class WaitSetRequest extends MailDocumentHandler {
                 this.signalledAccounts = signalledAccounts;
                 this.seqNo = seqNo;
                 this.completed = true;
-                if (continuation != null)
+                if (continuation != null) {
+                    if (trace) ZimbraLog.session.trace("WaitSetRequest.Callback.dataReady 1");
                     continuation.resume();
+                    if (trace) ZimbraLog.session.trace("WaitSetRequest.Callback.dataReady 2");
+                }
             }
+            if (trace) ZimbraLog.session.trace("WaitSetRequest.Callback.dataReady done");
         }
 
         public boolean completed = false;

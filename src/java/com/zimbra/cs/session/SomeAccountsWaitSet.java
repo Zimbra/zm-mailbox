@@ -301,11 +301,16 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
      * @param session
      */
     synchronized void signalDataReady(WaitSetSession session) {
+        boolean trace = ZimbraLog.session.isTraceEnabled();
+        if (trace) ZimbraLog.session.trace("SomeAccountsWaitSet.signalDataReady 1");
         if (mSessions.containsKey(session.getAuthenticatedAccountId())) { // ...false if waitset is shutting down...
+            if (trace) ZimbraLog.session.trace("SomeAccountsWaitSet.signalDataReady 2");
             if (mCurrentSignalledSessions.add(session.getAuthenticatedAccountId())) {
+                if (trace) ZimbraLog.session.trace("SomeAccountsWaitSet.signalDataReady 3");
                 trySendData();
             }
         }
+        if (trace) ZimbraLog.session.trace("SomeAccountsWaitSet.signalDataReady done");
     }
     
     public synchronized void handleQuery(Element response) {

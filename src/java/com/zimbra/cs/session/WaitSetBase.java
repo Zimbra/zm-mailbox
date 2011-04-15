@@ -21,6 +21,7 @@ import java.util.List;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.service.mail.WaitSetRequest;
 
 /**
@@ -84,12 +85,16 @@ public abstract class WaitSetBase implements IWaitSet {
     }
     
     protected synchronized void trySendData() {
+        boolean trace = ZimbraLog.session.isTraceEnabled();
+        if (trace) ZimbraLog.session.trace("WaitSetBase.trySendData 1");
+
         if (mCb == null) {
             return;
         }
-        
-        boolean cbIsCurrent = cbSeqIsCurrent(); 
-        
+
+        if (trace) ZimbraLog.session.trace("WaitSetBase.trySendData 2");
+        boolean cbIsCurrent = cbSeqIsCurrent();
+
         if (cbIsCurrent) {
             mSentSignalledSessions.clear();
             mSentErrors.clear();
@@ -114,11 +119,13 @@ public abstract class WaitSetBase implements IWaitSet {
                         (!cbIsCurrent && (mSentSignalledSessions.size() > 0 || mSentErrors.size() > 0))) {
             // if sent empty, then just swap sent,current instead of copying
             if (mSentSignalledSessions.size() == 0) {
+                if (trace) ZimbraLog.session.trace("WaitSetBase.trySendData 3a");
                 // SWAP mSent,mCurrent!
                 HashSet<String> temp = mCurrentSignalledSessions;
                 mCurrentSignalledSessions = mSentSignalledSessions;
                 mSentSignalledSessions = temp;
             } else {
+                if (trace) ZimbraLog.session.trace("WaitSetBase.trySendData 3b");
                 assert(!cbIsCurrent);
                 mSentSignalledSessions.addAll(mCurrentSignalledSessions);
                 mCurrentSignalledSessions.clear();
@@ -136,11 +143,13 @@ public abstract class WaitSetBase implements IWaitSet {
             for (String accountId : mSentSignalledSessions) {
                 toRet[i++] = accountId;
             }
-            
+
+            if (trace) ZimbraLog.session.trace("WaitSetBase.trySendData 4");
             mCb.dataReady(this, toNextSeqNo(), false, mSentErrors, toRet);
             mCb = null;
             mLastAccessedTime = System.currentTimeMillis();
         }
+        if (trace) ZimbraLog.session.trace("WaitSetBase.trySendData done");
     }
     
     public synchronized void handleQuery(Element response) {
