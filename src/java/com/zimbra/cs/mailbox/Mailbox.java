@@ -5389,7 +5389,7 @@ public class Mailbox {
                         if (!original.canAccess(ACL.RIGHT_READ))
                             continue;
                         int newId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getDestId(original.getId()));
-                        Message msg = (Message) original.copy(folder, newId, ID_AUTO_INCREMENT);
+                        Message msg = (Message) original.copy(folder, newId, null);
                         msgs.add(msg);
                         redoRecorder.setDestId(original.getId(), newId);
                     }
@@ -5405,9 +5405,9 @@ public class Mailbox {
                 } else {
                     int newId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getDestId(item.getId()));
                     int parentId = item.getParentId();
+                    MailItem parent = null;
                     if (fromDumpster) {
                         // Parent of dumpstered item may no longer exist.
-                        MailItem parent = null;
                         if (parentId > 0) {
                             try {
                                 parent = getItemById(parentId, MailItem.Type.UNKNOWN);
@@ -5415,10 +5415,15 @@ public class Mailbox {
                                 // ignore
                             }
                         }
-                        if (parent == null)
-                            parentId = -1;
                     }
-                    copy = item.copy(folder, newId, parentId);
+                    copy = item.copy(folder, newId, parent);
+                    if (fromDumpster) {
+                        for (MailItem.UnderlyingData data : DbMailItem.getByParent(item, SortBy.DATE_DESC, true)) {
+                            MailItem child = getItem(data);
+                            Folder destination = (child.getType() == Type.COMMENT) ? getFolderById(ID_FOLDER_COMMENTS) : folder;
+                            child.copy(destination, getNextItemId(ID_AUTO_INCREMENT), copy);
+                        }
+                    }
                     redoRecorder.setDestId(item.getId(), newId);
                 }
 

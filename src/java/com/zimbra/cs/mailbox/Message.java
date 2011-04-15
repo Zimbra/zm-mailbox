@@ -1108,14 +1108,14 @@ public class Message extends MailItem {
 
     /** @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *         {@link ACL#RIGHT_READ} on the original item */
-    @Override MailItem copy(Folder folder, int id, int parentId) throws IOException, ServiceException {
-        Message copy = (Message) super.copy(folder, id, parentId);
+    @Override MailItem copy(Folder folder, int id, MailItem newParent) throws IOException, ServiceException {
+        Message copy = (Message) super.copy(folder, id, newParent);
 
         if (isDraft())
             copy.setDraftAutoSendTime(0);
 
         Conversation parent = (Conversation) getParent();
-        if (parent instanceof VirtualConversation && parent.getId() == parentId && !isDraft() && inSpam() == folder.inSpam()) {
+        if (parent instanceof VirtualConversation && parent.getId() == newParent.mId && !isDraft() && inSpam() == folder.inSpam()) {
             Conversation conv = mMailbox.createConversation(Mailbox.ID_AUTO_INCREMENT, this, copy);
             DbMailItem.changeOpenTargets(this, conv.getId());
             parent.removeChild(this);

@@ -3777,7 +3777,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
     }
 
     @Override
-    MailItem copy(Folder folder, int id, int parentId) throws IOException, ServiceException {
+    MailItem copy(Folder folder, int id, MailItem parent) throws IOException, ServiceException {
         if (!isPublic()) {
             boolean privateAccessSrc = canAccess(ACL.RIGHT_PRIVATE);
             boolean privateAccessDest = folder.canAccess(ACL.RIGHT_PRIVATE);
@@ -3788,7 +3788,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
                 throw ServiceException.PERM_DENIED(
                         "you do not have permission to copy private calendar item to the target folder");
         }
-        return super.copy(folder, id, parentId);
+        return super.copy(folder, id, parent);
     }
 
     @Override

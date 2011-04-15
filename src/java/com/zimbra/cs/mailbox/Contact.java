@@ -748,9 +748,9 @@ public class Contact extends MailItem {
     /** @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *         {@link ACL#RIGHT_READ} on the original item */
     @Override
-    MailItem copy(Folder folder, int id, int parentId) throws IOException, ServiceException {
+    MailItem copy(Folder folder, int id, MailItem parent) throws IOException, ServiceException {
         mMailbox.updateContactCount(1);
-        return super.copy(folder, id, parentId);
+        return super.copy(folder, id, parent);
     }
 
     /** @perms {@link ACL#RIGHT_INSERT} on the target folder,

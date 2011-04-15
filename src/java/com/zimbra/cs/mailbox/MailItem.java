@@ -2131,7 +2131,7 @@ public abstract class MailItem implements Comparable<MailItem> {
      *
      * @param folder    The folder to copy the item to.
      * @param copyId    The item id for the newly-created copy.
-     * @param parentId  The target parent ID for the new copy.
+     * @param parent    The target parent MailItem for the new copy.
      * @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *        {@link ACL#RIGHT_READ} on the original item
      * @throws ServiceException  The following error codes are possible:<ul>
@@ -2141,7 +2141,7 @@ public abstract class MailItem implements Comparable<MailItem> {
      *    <li><tt>service.FAILURE</tt> - if there's a database failure
      *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
      *        permissions</ul> */
-    MailItem copy(Folder folder, int copyId, int parentId) throws IOException, ServiceException {
+    MailItem copy(Folder folder, int copyId, MailItem parent) throws IOException, ServiceException {
         if (!isCopyable())
             throw MailServiceException.CANNOT_COPY(mId);
         if (!folder.canContain(this))
@@ -2158,8 +2158,8 @@ public abstract class MailItem implements Comparable<MailItem> {
         boolean shareIndex = !isMutable() && getIndexStatus() == IndexStatus.DONE && !folder.inSpam();
 
         // if the copy or original is in Spam, put the copy in its own conversation
-        boolean detach = parentId <= 0 || isTagged(Flag.ID_DRAFT) || inSpam() != folder.inSpam();
-        MailItem parent = detach ? null : mMailbox.getItemById(parentId, Type.UNKNOWN);
+        boolean detach = parent == null || isTagged(Flag.ID_DRAFT) || inSpam() != folder.inSpam();
+        parent = detach ? null : parent;
 
         if (shareIndex && !isTagged(Flag.ID_COPIED)) {
             alterSystemFlag(mMailbox.getFlagById(Flag.ID_COPIED), true);
@@ -2181,7 +2181,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         }
 
         UnderlyingData data = mData.duplicate(copyId, folder.getId(), locator);
-        data.parentId = detach ? -1 : parentId;
+        data.parentId = detach ? -1 : parent.mId;
         data.indexId = shareIndex ? getIndexId() : IndexStatus.DEFERRED.id();
         data.flags &= shareIndex ? ~0 : ~Flag.BITMASK_COPIED;
         data.metadata = encodeMetadata().toString();

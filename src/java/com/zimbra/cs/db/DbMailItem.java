@@ -2365,7 +2365,7 @@ public class DbMailItem {
             rs = stmt.executeQuery();
 
             while (rs.next()) {
-                UnderlyingData data = constructItem(rs);
+                UnderlyingData data = constructItem(rs, fromDumpster);
                 if (Mailbox.isCachedType(MailItem.Type.of(data.type))) {
                     throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
                 }
