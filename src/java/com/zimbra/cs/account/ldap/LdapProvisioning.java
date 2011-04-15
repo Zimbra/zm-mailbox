@@ -114,6 +114,8 @@ import com.zimbra.cs.account.gal.GalParams;
 import com.zimbra.cs.account.gal.GalUtil;
 import com.zimbra.cs.account.krb5.Krb5Principal;
 import com.zimbra.cs.account.ldap.LdapUtil.SearchLdapVisitor;
+import com.zimbra.cs.account.ldap.legacy.LegacyJNDIAttributes;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapHelper;
 import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.httpclient.URLUtil;
@@ -265,7 +267,7 @@ public class LdapProvisioning extends LdapProv {
         if (LdapDIT.isZimbraDefault(mDIT)) {
             return null;
         } else {
-            return new LdapUtil.JNDIAttributes(attrs);
+            return new LegacyJNDIAttributes(attrs);
         }
     }
     
