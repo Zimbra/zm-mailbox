@@ -35,7 +35,7 @@ public final class UnionQueryOperation extends CombiningQueryOperation {
     private ZimbraHit cachedNextHit = null;
 
     @Override
-    public long getTotalHitCount() throws ServiceException {
+    public long getTotalHitCount() {
         return -1;
     }
 

@@ -52,6 +52,7 @@ import com.zimbra.cs.service.util.ItemId;
  * @author ysasaki
  */
 public class DBQueryOperation extends QueryOperation {
+    private static final int MAX_HITS_PER_CHUNK = 2000;
 
     private IConstraints constraints = new DbLeafNode();
     private int hitsOffset = 0; // this is the logical offset of the end of the mDBHits buffer
@@ -72,7 +73,7 @@ public class DBQueryOperation extends QueryOperation {
     private Iterator<DbSearch.Result> dbHitsIter;
     private boolean atStart = true; // don't re-fill buffer twice if they call hasNext() then reset() w/o actually getting next
     private int hitsPerChunk = 100;
-    private static final int MAX_HITS_PER_CHUNK = 2000;
+    private long totalHitCount = -1;
 
     /**
      * TRUE if we know there are no more hits to get for mDBHitsIter, i.e. there is no need to call getChunk() anymore.
@@ -862,6 +863,8 @@ public class DBQueryOperation extends QueryOperation {
         }
 
         constraints.setTypes(toDbQueryTypes(context.getResults().getTypes()));
+        // calculate the total hit count before adding cursor constraint
+        totalHitCount = calcTotalHitCount();
         addCursorConstraint();
 
         if (luceneOp != null) {
@@ -869,6 +872,19 @@ public class DBQueryOperation extends QueryOperation {
             luceneOp.setDBOperation(this);
             // this is 2nd time to call begin() of this Lucene op.
             luceneOp.begin(new QueryContext(ctx.getMailbox(), ctx.getResults(), ctx.getParams(), hitsPerChunk));
+        }
+    }
+
+    private long calcTotalHitCount() throws ServiceException {
+        Folder folder = getTopANDedConstraint().getOnlyFolder();
+        if (folder != null) {
+            if (context.getResults().getTypes().contains(MailItem.Type.CONVERSATION)) {
+                return folder.getConversationCount();
+            } else {
+                return folder.getItemCount();
+            }
+        } else {
+            return -1;
         }
     }
 
@@ -1212,17 +1228,8 @@ public class DBQueryOperation extends QueryOperation {
     }
 
     @Override
-    public long getTotalHitCount() throws ServiceException {
-        Folder folder = getTopANDedConstraint().getOnlyFolder();
-        if (folder != null) {
-            if (context.getResults().getTypes().contains(MailItem.Type.CONVERSATION)) {
-                return folder.getConversationCount();
-            } else {
-                return folder.getItemCount();
-            }
-        } else {
-            return -1;
-        }
+    public long getTotalHitCount() {
+        return totalHitCount;
     }
 
     @Override

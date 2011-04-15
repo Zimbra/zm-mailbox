@@ -51,7 +51,7 @@ public final class FilteredQueryResults implements ZimbraQueryResults {
 
     //TODO The filtered count is not subtracted, yet we can't simply subtract it from the total conversation count.
     @Override
-    public long getTotalHitCount() throws ServiceException {
+    public long getTotalHitCount() {
         return results.getTotalHitCount();
     }
 

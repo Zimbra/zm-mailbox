@@ -47,7 +47,7 @@ public abstract class BufferingResultsGrouper implements ZimbraQueryResults {
     }
 
     @Override
-    public long getTotalHitCount() throws ServiceException {
+    public long getTotalHitCount() {
         return hits.getTotalHitCount();
     }
 

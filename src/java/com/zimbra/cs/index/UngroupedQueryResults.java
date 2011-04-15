@@ -37,7 +37,7 @@ class UngroupedQueryResults extends ZimbraQueryResultsImpl {
     }
 
     @Override
-    public long getTotalHitCount() throws ServiceException {
+    public long getTotalHitCount() {
         return results.getTotalHitCount();
     }
 

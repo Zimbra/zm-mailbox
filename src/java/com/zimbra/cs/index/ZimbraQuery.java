@@ -406,7 +406,7 @@ public final class ZimbraQuery {
                     MailItem item = mailbox.getItemById(null, cursor.getItemId().getId(), MailItem.Type.UNKNOWN);
                     switch (params.getSortBy().getKey()) {
                         case NAME:
-                            cursor.setSortValue(item.getSortSender());
+                            cursor.setSortValue(item.getName());
                             break;
                         case RCPT:
                             cursor.setSortValue(item.getSortRecipients());

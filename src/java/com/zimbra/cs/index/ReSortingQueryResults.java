@@ -42,7 +42,7 @@ public final class ReSortingQueryResults implements ZimbraQueryResults {
     }
 
     @Override
-    public long getTotalHitCount() throws ServiceException {
+    public long getTotalHitCount() {
         return results.getTotalHitCount();
     }
 
