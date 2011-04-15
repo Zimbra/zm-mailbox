@@ -13,13 +13,14 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.account.ldap;
+package com.zimbra.cs.account.ldap.legacy.entry;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 
 import javax.naming.NamingException;
@@ -29,9 +30,9 @@ import javax.naming.directory.Attributes;
 /**
  * @author schemers
  */
-class LdapDataSource extends DataSource implements LdapEntry {
+public class LdapDataSource extends DataSource implements LdapEntry {
 
-	static String getObjectClass(Type type) {
+	public static String getObjectClass(Type type) {
 		switch (type) {
 		case pop3: return "zimbraPop3DataSource";
 		case imap: return "zimbraImapDataSource";
@@ -64,7 +65,7 @@ class LdapDataSource extends DataSource implements LdapEntry {
 
 	private String mDn;
 
-	LdapDataSource(Account acct, String dn, Attributes attrs, Provisioning prov) throws NamingException, ServiceException {
+	public LdapDataSource(Account acct, String dn, Attributes attrs, Provisioning prov) throws NamingException, ServiceException {
 		super(acct, 
 				getObjectType(attrs),
 				LdapUtil.getAttrString(attrs, Provisioning.A_zimbraDataSourceName),

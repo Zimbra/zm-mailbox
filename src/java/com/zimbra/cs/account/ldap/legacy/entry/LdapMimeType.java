@@ -17,17 +17,18 @@
  * Created on Apr 14, 2005
  *
  */
-package com.zimbra.cs.account.ldap;
+package com.zimbra.cs.account.ldap.legacy.entry;
 
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.prov.ldap.entry.LdapMimeTypeBase;
 
-class LdapMimeType extends LdapMimeTypeBase {
+public class LdapMimeType extends LdapMimeTypeBase {
        
-    LdapMimeType(String dn, Attributes attrs, Provisioning prov) throws NamingException {
+    public LdapMimeType(String dn, Attributes attrs, Provisioning prov) throws NamingException {
         super(LdapUtil.getAttrs(attrs), null, prov);
         mDn = dn;
     }

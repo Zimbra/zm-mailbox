@@ -13,19 +13,20 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.account.ldap;
+package com.zimbra.cs.account.ldap.legacy.entry;
 
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 
-class LdapDistributionList extends DistributionList implements LdapEntry {
+public class LdapDistributionList extends DistributionList implements LdapEntry {
     private String mDn;
 
-    LdapDistributionList(String dn, String email, Attributes attrs, Provisioning prov) throws NamingException {
+    public LdapDistributionList(String dn, String email, Attributes attrs, Provisioning prov) throws NamingException {
         super(email,
               LdapUtil.getAttrString(attrs, Provisioning.A_zimbraId), 
               LdapUtil.getAttrs(attrs), prov);

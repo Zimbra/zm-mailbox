@@ -12,20 +12,21 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.account.ldap;
+package com.zimbra.cs.account.ldap.legacy.entry;
 
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 
-class LdapConfig extends Config implements LdapEntry {
+public class LdapConfig extends Config implements LdapEntry {
     
     private String mDn;
     
-    LdapConfig(String dn, Attributes attrs, Provisioning provisioning) throws NamingException {
+    public LdapConfig(String dn, Attributes attrs, Provisioning provisioning) throws NamingException {
         super(LdapUtil.getAttrs(attrs), provisioning);
         mDn = dn;
     }

@@ -29,6 +29,8 @@ import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.gal.GalParams;
 import com.zimbra.cs.account.gal.GalUtil;
 import com.zimbra.cs.account.ldap.legacy.LegacyJNDIAttributes;
+import com.zimbra.cs.account.ldap.legacy.entry.LdapConfig;
+import com.zimbra.cs.account.ldap.legacy.entry.LdapDomain;
 import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.ldap.IAttributes;

@@ -13,11 +13,12 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.account.ldap;
+package com.zimbra.cs.account.ldap.legacy.entry;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 
 import javax.naming.NamingException;
@@ -26,11 +27,11 @@ import javax.naming.directory.Attributes;
 /**
  * @author schemers
  */
- class LdapIdentity extends Identity implements LdapEntry {
+public class LdapIdentity extends Identity implements LdapEntry {
 
     private String mDn;
 
-    LdapIdentity(Account acct, String dn, Attributes attrs, Provisioning prov) throws NamingException {
+    public LdapIdentity(Account acct, String dn, Attributes attrs, Provisioning prov) throws NamingException {
         super(  acct,
                 LdapUtil.getAttrString(attrs, Provisioning.A_zimbraPrefIdentityName),
                 LdapUtil.getAttrString(attrs, Provisioning.A_zimbraPrefIdentityId),

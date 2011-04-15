@@ -13,23 +13,24 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.account.ldap;
+package com.zimbra.cs.account.ldap.legacy.entry;
 
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.prov.ldap.entry.LdapSignatureBase;
 
 /**
  * @author schemers
  */
- class LdapSignature extends LdapSignatureBase {
+public class LdapSignature extends LdapSignatureBase {
 
     private String mDn;
 
-    LdapSignature(Account acct, String dn, Attributes attrs, Provisioning prov) throws NamingException {
+    public LdapSignature(Account acct, String dn, Attributes attrs, Provisioning prov) throws NamingException {
         super(acct,
               LdapUtil.getAttrString(attrs, Provisioning.A_zimbraSignatureName),
               LdapUtil.getAttrString(attrs, Provisioning.A_zimbraSignatureId),

@@ -12,11 +12,12 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.account.ldap;
+package com.zimbra.cs.account.ldap.legacy.entry;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 
 import javax.naming.NamingException;
@@ -30,7 +31,7 @@ public class LdapXMPPComponent extends XMPPComponent implements LdapEntry {
     
     private String mDn;
 
-    LdapXMPPComponent(String dn, Attributes attrs, Provisioning prov) throws NamingException, ServiceException {
+    public LdapXMPPComponent(String dn, Attributes attrs, Provisioning prov) throws NamingException, ServiceException {
         super(LdapUtil.getAttrString(attrs, Provisioning.A_cn),
               LdapUtil.getAttrString(attrs, Provisioning.A_zimbraId),
               LdapUtil.getAttrs(attrs),
