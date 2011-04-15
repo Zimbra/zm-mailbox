@@ -1,8 +1,10 @@
 package com.zimbra.cs.ldap;
 
 import java.util.Map;
+import java.util.UUID;
 
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.cs.account.Provisioning;
 
 /**
  * Utils methods shared by both the legacy com.zimbra.cs.account.ldap.LdapUtil
@@ -80,5 +82,32 @@ public class LdapUtilCommon {
             return null;
         else 
             return s.replaceAll("([\\\\\\*\\(\\)])", "\\\\$0");
+    }
+    
+    public static String generateUUID() {
+        return UUID.randomUUID().toString();
+    }
+    
+    
+    /*
+     * we want to throw the IllegalArgumentException instead of catching it so the cause
+     * can be logged with the callers catcher.
+     */
+    public static boolean isValidUUID(String strRep) throws IllegalArgumentException {
+        /*
+        if (strRep.length() > 36)
+            throw new IllegalArgumentException("uuid must be no longer than 36 characters");
+        
+        UUID uuid = UUID.fromString(strRep);
+        return (uuid != null);   
+        */
+        
+        if (strRep.length() > Provisioning.MAX_ZIMBRA_ID_LEN)
+            throw new IllegalArgumentException("uuid must be no longer than " + Provisioning.MAX_ZIMBRA_ID_LEN + " characters");
+        
+        if (strRep.contains(":"))
+            throw new IllegalArgumentException("uuid must not contain ':'");
+        
+        return true;
     }
 }

@@ -17,7 +17,6 @@ package com.zimbra.cs.prov.ldap.entry;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ldap.LdapException;
-import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
 
 /**
@@ -30,11 +29,9 @@ public class LdapSignature extends LdapSignatureBase {
     private String mDn;
 
     LdapSignature(Account acct, ZSearchResultEntry entry, Provisioning prov) throws LdapException {
-        super(acct,
-                LdapUtil.getAttrString(entry, Provisioning.A_zimbraSignatureName),
-              LdapUtil.getAttrString(entry, Provisioning.A_zimbraSignatureId),
-              LdapUtil.getAttrs(entry), 
-              prov);
+        super(acct, entry.getAttributes().getAttrString(Provisioning.A_zimbraSignatureName),
+                entry.getAttributes().getAttrString(Provisioning.A_zimbraSignatureId),
+                entry.getAttributes().getAttrs(), prov);
         mDn = entry.getDN();
     }
 

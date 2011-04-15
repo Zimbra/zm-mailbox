@@ -12,12 +12,15 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.account.ldap;
+package com.zimbra.cs.account.ldap.legacy;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.prov.ldap.LdapHelper;
 import com.zimbra.cs.prov.ldap.LdapProv;
+import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.ldap.LdapClient;
+import com.zimbra.cs.ldap.SearchLdapOptions;
 
 /**
  * An LdapHelper tied to ZimbraLdapContext and the legacy ldapUtil methods.
@@ -27,7 +30,7 @@ import com.zimbra.cs.prov.ldap.LdapProv;
  */
 public class LegacyLdapHelper extends LdapHelper {
 
-    LegacyLdapHelper(LdapProv ldapProv) {
+    public LegacyLdapHelper(LdapProv ldapProv) {
         super(ldapProv);
     }
 

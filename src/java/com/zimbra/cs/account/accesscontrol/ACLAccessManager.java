@@ -33,11 +33,11 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.accesscontrol.RightBearer.Grantee;
 import com.zimbra.cs.account.accesscontrol.RightCommand.AllEffectiveRights;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
+import com.zimbra.cs.ldap.LdapUtilCommon;
 
 public class ACLAccessManager extends AccessManager implements AdminConsoleCapable {
 
@@ -330,7 +330,7 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
             targetType == TargetType.calresource) {
             cosStr = (String)attrs.get(Provisioning.A_zimbraCOSId);
             if (cosStr != null) {
-                if (LdapUtil.isValidUUID(cosStr))
+                if (LdapUtilCommon.isValidUUID(cosStr))
                     cosBy = cosBy.id;
                 else
                     cosBy = cosBy.name;

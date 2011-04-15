@@ -28,9 +28,11 @@ import com.zimbra.cs.account.krb5.Krb5Login;
 import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.gal.GalParams;
 import com.zimbra.cs.account.gal.GalUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyJNDIAttributes;
 import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.ldap.IAttributes;
+import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.prov.ldap.LdapGalCredential;
 import com.zimbra.cs.prov.ldap.LdapProv;
@@ -136,31 +138,12 @@ public class LdapUtil {
     }
     
     public static String generateUUID() {
-        return UUID.randomUUID().toString();
-    }
-    
-    /*
-     * we want to throw the IllegalArgumentException instead of catching it so the cause
-     * can be logged with the callers catcher.
-     */
-    public static boolean isValidUUID(String strRep) throws IllegalArgumentException {
-        /*
-        if (strRep.length() > 36)
-            throw new IllegalArgumentException("uuid must be no longer than 36 characters");
-        
-        UUID uuid = UUID.fromString(strRep);
-        return (uuid != null);   
-        */
-        
-        if (strRep.length() > Provisioning.MAX_ZIMBRA_ID_LEN)
-            throw new IllegalArgumentException("uuid must be no longer than " + Provisioning.MAX_ZIMBRA_ID_LEN + " characters");
-        
-        if (strRep.contains(":"))
-            throw new IllegalArgumentException("uuid must not contain ':'");
-        
-        return true;
+        // delegate to LdapUtilCommon
+        // TODO; refactor
+        return LdapUtilCommon.generateUUID();
     }
 
+    @SDKDONE
     public static String getAttrString(Attributes attrs, String name) throws NamingException {
         AttributeManager attrMgr = AttributeManager.getInst();
         boolean containsBinaryData = attrMgr == null ? false : attrMgr.containsBinaryData(name);
@@ -222,6 +205,7 @@ public class LdapUtil {
      * @param attrs the attributes to enumerate over
      * @throws NamingException
      */
+    @SDKDONE
     public static Map<String, Object> getAttrs(Attributes attrs) throws NamingException {
         return getAttrs(attrs, null);
     }
@@ -234,6 +218,7 @@ public class LdapUtil {
      * @return
      * @throws NamingException
      */
+    @SDKDONE
     public static Map<String, Object> getAttrs(Attributes attrs, Set<String> binaryAttrs) throws NamingException {
         Map<String,Object> map = new HashMap<String,Object>();  
         
@@ -298,6 +283,7 @@ public class LdapUtil {
     /**
      * "modify" the entry. If value is null or "", then remove attribute, otherwise replace/add it.
      */
+    @SDKDONE
     private static void modifyAttr(ArrayList<ModificationItem> modList, String name, String value, 
             com.zimbra.cs.account.Entry entry, boolean containsBinaryData, boolean isBinaryTransfer) {
         int mod_op = (value == null || value.equals("")) ? DirContext.REMOVE_ATTRIBUTE : DirContext.REPLACE_ATTRIBUTE;
@@ -313,6 +299,7 @@ public class LdapUtil {
         modList.add(new ModificationItem(mod_op, ba));
     }
     
+    @SDKDONE
     private static void modifyAttr(ArrayList<ModificationItem> modList, String name, String[] value, 
             boolean containsBinaryData, boolean isBinaryTransfer) {
         BasicAttribute ba = newBasicAttribute(isBinaryTransfer, name);
@@ -325,6 +312,7 @@ public class LdapUtil {
     /**
      * remove the attr with the specified value
      */
+    @SDKDONE
     private static void removeAttr(ArrayList<ModificationItem> modList, String name, String value, 
             com.zimbra.cs.account.Entry entry, boolean containsBinaryData, boolean isBinaryTransfer) {
         if (!LdapUtilCommon.contains(entry.getMultiAttr(name, false), value)) return;
@@ -337,6 +325,7 @@ public class LdapUtil {
     /**
      * remove the attr with the specified value
      */
+    @SDKDONE
     private static void removeAttr(ArrayList<ModificationItem> modList, String name, String value[], 
             com.zimbra.cs.account.Entry entry, boolean containsBinaryData, boolean isBinaryTransfer) {
         String[] currentValues = entry.getMultiAttr(name, false);
@@ -355,6 +344,7 @@ public class LdapUtil {
     /**
      * add an additional attr with the specified value
      */
+    @SDKDONE
     private static void addAttr(ArrayList<ModificationItem> modList, String name, String value, 
             com.zimbra.cs.account.Entry entry, boolean containsBinaryData, boolean isBinaryTransfer) {
         if (LdapUtilCommon.contains(entry.getMultiAttr(name, false), value)) return;     
@@ -368,6 +358,7 @@ public class LdapUtil {
     /**
      * add an additional attr with the specified value
      */
+    @SDKDONE
     private static void addAttr(ArrayList<ModificationItem> modList, String name, String value[], 
             com.zimbra.cs.account.Entry entry, boolean containsBinaryData, boolean isBinaryTransfer) {
         String[] currentValues = entry.getMultiAttr(name, false);
@@ -392,6 +383,7 @@ public class LdapUtil {
      *     in which case a multi-valued attr is updated</li>
      * </ul>
      */
+    @SDKDONE
     public static void modifyAttrs(ZimbraLdapContext zlc, String dn, Map attrs, com.zimbra.cs.account.Entry entry) 
     throws NamingException, ServiceException {
         ArrayList<ModificationItem> modlist = new ArrayList<ModificationItem>();
@@ -676,53 +668,11 @@ public class LdapUtil {
               ZimbraLdapContext.closeContext(zlc);
           }
       }
-      
-      public static class JNDIAttributes implements IAttributes {
-          private Attributes attrs;
-          
-          public JNDIAttributes(Attributes attrs) {
-              this.attrs = attrs;
-          }
-          
-          @Override
-          public String getAttrString(String attrName) throws ServiceException {
-              try {
-                  return LdapUtil.getAttrString(attrs, attrName);
-              } catch (NamingException e) {
-                  throw ServiceException.FAILURE("unable to get attribute " + attrName, e);
-              }
-          }
-          
-          @Override
-          public String[] getMultiAttrString(String attrName) throws ServiceException {
-              try {
-                return LdapUtil.getMultiAttrString(attrs, attrName);
-            } catch (NamingException e) {
-                throw ServiceException.FAILURE("unable to get attribute " + attrName, e);
-            }
-          }
-          
-          @Override
-          public String[] getMultiAttrString(String attrName, boolean containsBinaryData, boolean isBinaryTransfer) 
-          throws ServiceException {
-              try {
-                return LdapUtil.getMultiAttrString(attrs, attrName, containsBinaryData, isBinaryTransfer);
-            } catch (NamingException e) {
-                throw ServiceException.FAILURE("unable to get attribute " + attrName, e);
-            }
-          }
-                  
-          @Override
-          public List<String> getMultiAttrStringAsList(String attrName) throws ServiceException {
-              return Arrays.asList(getMultiAttrString(attrName));
-          }
-
-         
-      }
              
-      /*
+      /**
        * Important Note: caller is responsible to close the ZimbraLdapContext
        */
+      @SDKDONE
       public static void searchLdap(ZimbraLdapContext zlc, String base, String query, String[] returnAttrs, 
               Set<String> binaryAttrs, SearchLdapVisitor visitor) 
       throws ServiceException {
@@ -748,7 +698,7 @@ public class LdapUtil {
                           SearchResult sr = (SearchResult) ne.nextElement();
                           String dn = sr.getNameInNamespace();
                           Attributes attrs = sr.getAttributes();
-                          visitor.visit(dn, LdapUtil.getAttrs(attrs, binaryAttrs), new JNDIAttributes(attrs));
+                          visitor.visit(dn, LdapUtil.getAttrs(attrs, binaryAttrs), new LegacyJNDIAttributes(attrs));
                       }
                       cookie = zlc.getCookie();
                   } while (cookie != null);
@@ -834,7 +784,7 @@ public class LdapUtil {
                         
                         SearchResult sr = (SearchResult) ne.next();
                         String dn = sr.getNameInNamespace();
-                        JNDIAttributes attrs = new JNDIAttributes(sr.getAttributes());
+                        LegacyJNDIAttributes attrs = new LegacyJNDIAttributes(sr.getAttributes());
                         
                         GalContact lgc = new GalContact(galType, dn, rules.apply(zlc, base, dn, attrs));
                         String mts = (String) lgc.getAttrs().get("modifyTimeStamp");

@@ -14,11 +14,8 @@
  */
 package com.zimbra.cs.prov.ldap;
 
-import java.util.Set;
-
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.ldap.LdapUtil.SearchLdapVisitor;
-import com.zimbra.cs.ldap.ILdapContext;
+import com.zimbra.cs.ldap.SearchLdapOptions;
 
 public abstract class LdapHelper {
     
@@ -30,72 +27,6 @@ public abstract class LdapHelper {
     
     protected LdapProv getProv() {
         return ldapProv;
-    }
-
-    public static class SearchLdapOptions {
-        private ILdapContext ldapContext;
-        private String searchBase;
-        private String query;
-        private String[] returnAttrs;
-        private Set<String> binaryAttrs;
-        private SearchLdapVisitor visitor;
-        
-        public SearchLdapOptions(ILdapContext ldapContext, String searchbase, String query, 
-                String[] returnAttrs, Set<String> binaryAttrs, SearchLdapVisitor visitor) {
-            setILdapContext(ldapContext);
-            setSearchBase(searchbase);
-            setQuery(query);
-            setReturnAttrs(returnAttrs);
-            setBinaryAttrs(binaryAttrs);
-            setVisitor(visitor);
-        }
-        
-        public ILdapContext getILdapContext() {
-            return ldapContext;
-        }
-        
-        public String getSearchBase() {
-            return searchBase;
-        }
-        public String getQuery() {
-            return query;
-        }
-        
-        public String[] getReturnAttrs() {
-            return returnAttrs;
-        }
-        
-        public Set<String> getBinaryAttrs() {
-            return binaryAttrs;
-        }
-    
-        public SearchLdapVisitor getVisitor() {
-            return visitor;
-        }
-        
-        public void setILdapContext(ILdapContext ldapContext) {
-            this.ldapContext = ldapContext;
-        }
-        
-        public void setSearchBase(String searchBase) {
-            this.searchBase = searchBase;
-        }
-        
-        public void setQuery(String query) {
-            this.query = query;
-        }
-        
-        public void setReturnAttrs(String[] returnAttrs) {
-            this.returnAttrs = returnAttrs;
-        }
-        
-        public void setBinaryAttrs(Set<String> binaryAttrs) {
-            this.binaryAttrs = binaryAttrs;
-        }
-        
-        public void setVisitor(SearchLdapVisitor visitor) {
-            this.visitor = visitor;
-        }
     }
     
     public abstract void searchLdap(SearchLdapOptions searchOptions) throws ServiceException;

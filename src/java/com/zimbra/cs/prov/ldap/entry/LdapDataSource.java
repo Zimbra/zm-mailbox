@@ -23,7 +23,7 @@ import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ldap.LdapException;
-import com.zimbra.cs.ldap.LdapUtil;
+import com.zimbra.cs.ldap.IAttributes.CheckBinary;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
 
 /**
@@ -35,11 +35,12 @@ public class LdapDataSource extends DataSource implements LdapEntry {
 
 	private String mDn;
 
-	LdapDataSource(Account acct, ZSearchResultEntry entry, Provisioning prov) throws LdapException, ServiceException {
+	LdapDataSource(Account acct, ZSearchResultEntry entry, Provisioning prov) 
+	throws LdapException, ServiceException {
 		super(acct, getObjectType(entry),
-		        LdapUtil.getAttrString(entry, Provisioning.A_zimbraDataSourceName),
-		        LdapUtil.getAttrString(entry, Provisioning.A_zimbraDataSourceId),                
-		        LdapUtil.getAttrs(entry), 
+		        entry.getAttributes().getAttrString(Provisioning.A_zimbraDataSourceName),
+		        entry.getAttributes().getAttrString(Provisioning.A_zimbraDataSourceId),                
+		        entry.getAttributes().getAttrs(), 
 		        prov);
 		mDn = entry.getDN();
 	}
@@ -65,14 +66,14 @@ public class LdapDataSource extends DataSource implements LdapEntry {
 
     static Type getObjectType(ZSearchResultEntry entry) throws ServiceException {
         try {
-            String dsType = LdapUtil.getAttrString(entry, Provisioning.A_zimbraDataSourceType);
+            String dsType = entry.getAttributes().getAttrString(Provisioning.A_zimbraDataSourceType);
             if (dsType != null)
                 return Type.fromString(dsType);
         } catch (LdapException e) {
             ZimbraLog.datasource.error("cannot get DataSource type", e);
         }
         
-        List<String> attr = entry.getMultiAttrString(Provisioning.A_objectClass);
+        List<String> attr = entry.getAttributes().getMultiAttrStringAsList(Provisioning.A_objectClass, CheckBinary.NOCHECK);
         if (attr.contains(AttributeClass.OC_zimbraPop3DataSource)) 
             return Type.pop3;
         else if (attr.contains(AttributeClass.OC_zimbraImapDataSource))

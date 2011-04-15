@@ -33,7 +33,8 @@ public class ZimbraGalGroupHandler extends GalGroupHandler {
     @Override
     public boolean isGroup(IAttributes ldapAttrs) {
         try {
-            List<String> objectclass = ldapAttrs.getMultiAttrStringAsList(Provisioning.A_objectClass);
+            List<String> objectclass = ldapAttrs.getMultiAttrStringAsList(
+                    Provisioning.A_objectClass, IAttributes.CheckBinary.NOCHECK);
             return objectclass.contains(AttributeClass.OC_zimbraDistributionList);
         } catch (ServiceException e) {
             ZimbraLog.gal.warn("unable to get attribute " + Provisioning.A_objectClass, e);

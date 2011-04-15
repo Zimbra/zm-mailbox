@@ -1,24 +1,37 @@
 package com.zimbra.cs.ldap.unboundid;
 
+import java.io.IOException;
+import java.util.Set;
+
 import javax.net.SocketFactory;
 
+import com.unboundid.asn1.ASN1OctetString;
+import com.unboundid.ldap.sdk.Control;
+import com.unboundid.ldap.sdk.DereferencePolicy;
 import com.unboundid.ldap.sdk.LDAPConnection;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
 import com.unboundid.ldap.sdk.LDAPException;
 import com.unboundid.ldap.sdk.LDAPURL;
 import com.unboundid.ldap.sdk.LDAPResult;
 import com.unboundid.ldap.sdk.PostConnectProcessor;
+import com.unboundid.ldap.sdk.SearchScope;
 import com.unboundid.ldap.sdk.StartTLSPostConnectProcessor;
 import com.unboundid.ldap.sdk.SearchRequest;
 import com.unboundid.ldap.sdk.SearchResult;
+import com.unboundid.ldap.sdk.SearchResultEntry;
+import com.unboundid.ldap.sdk.controls.SimplePagedResultsControl;
+
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.net.SocketFactories;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.ldap.LdapUtil.SearchLdapVisitor;
 import com.zimbra.cs.ldap.LdapConfig;
 import com.zimbra.cs.ldap.LdapConnType;
+import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.ZModificationList;
 import com.zimbra.cs.ldap.ZSearchControls;
@@ -26,6 +39,7 @@ import com.zimbra.cs.ldap.ZSearchResultEnumeration;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapTODO;
 import com.zimbra.cs.ldap.LdapTODO.TODO;
+import com.zimbra.cs.ldap.jndi.JNDIAttributes;
 import com.zimbra.cs.ldap.LdapServerType;
 
 public class UBIDLdapContext extends ZLdapContext {
@@ -128,6 +142,52 @@ public class UBIDLdapContext extends ZLdapContext {
     }
     
     @Override
+    public void search(SearchLdapOptions searchOptions) throws LdapException {
+        int maxResults = 0; // no limit
+        String base = searchOptions.getSearchBase();
+        String query = searchOptions.getQuery();
+        Set<String> binaryAttrs = searchOptions.getBinaryAttrs();
+        SearchLdapVisitor visitor = searchOptions.getVisitor();
+        
+        try {
+            SearchRequest searchRequest = new SearchRequest(base, 
+                    SearchScope.SUB,
+                    DereferencePolicy.NEVER,
+                    maxResults,
+                    0,
+                    false,
+                    query);
+
+
+            //Set the page size and initialize the cookie that we pass back in subsequent pages
+            int pageSize = searchOptions.getResultPageSize();
+            ASN1OctetString cookie = null;
+            
+            do {
+                searchRequest.setControls(
+                        new Control[] { new SimplePagedResultsControl(pageSize, cookie) });
+                SearchResult result = conn.search(searchRequest);
+
+                for (SearchResultEntry entry : result.getSearchEntries()) {
+                    String dn = entry.getDN();
+                    UBIDAttributes ubidAttrs = new UBIDAttributes(entry);
+                    visitor.visit(dn, ubidAttrs.getAttrs(binaryAttrs), ubidAttrs);
+                }
+
+                cookie = null;
+                for (Control c : result.getResponseControls()) {
+                    if (c instanceof SimplePagedResultsControl) {
+                        cookie = ((SimplePagedResultsControl) c).getCookie();
+                    }
+                }
+            } while ((cookie != null) && (cookie.getValueLength() > 0));
+            
+        } catch (LDAPException e) {
+            throw LdapException.LDAP_ERROR("unable to search ldap", e);
+        }
+    }
+    
+    @Override
     public ZSearchResultEnumeration searchDir(String baseDN, String filter, 
             ZSearchControls searchControls) throws LdapException {
         
@@ -155,6 +215,7 @@ public class UBIDLdapContext extends ZLdapContext {
     public void unbindEntry(String dn) throws LdapException {
         LdapTODO.TODO();
     }
+
 
     
 }

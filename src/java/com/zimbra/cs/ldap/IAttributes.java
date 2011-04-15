@@ -13,6 +13,12 @@ public interface IAttributes {
     public String[] getMultiAttrString(String attrName, 
             boolean containsBinaryData, boolean isBinaryTransfer) throws ServiceException;
     
-    public List<String> getMultiAttrStringAsList(String attrName) throws ServiceException;
+    
+    public static enum CheckBinary {
+        CHECK,
+        NOCHECK;
+    }
+    
+    public List<String> getMultiAttrStringAsList(String attrName, CheckBinary checkBinary) throws ServiceException;
 
 }

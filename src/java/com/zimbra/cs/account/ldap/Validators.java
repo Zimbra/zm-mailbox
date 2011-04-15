@@ -428,7 +428,8 @@ final class Validators {
             
             private void visitInternal(String dn, Map<String, Object> attrs, IAttributes ldapAttrs) throws ServiceException {
                 
-                List<String> objectclass = ldapAttrs.getMultiAttrStringAsList(Provisioning.A_objectClass);
+                List<String> objectclass = ldapAttrs.getMultiAttrStringAsList(
+                        Provisioning.A_objectClass, IAttributes.CheckBinary.NOCHECK);
                 if (objectclass == null || objectclass.size() == 0) {
                     ZimbraLog.account.error("DN: " + dn + ": does not have objectclass!");
                     return;

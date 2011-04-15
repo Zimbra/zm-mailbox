@@ -18,7 +18,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ldap.LdapException;
-import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
 
 /**
@@ -31,11 +30,9 @@ public class LdapIdentity extends Identity implements LdapEntry {
     private String mDn;
 
     LdapIdentity(Account acct, ZSearchResultEntry entry, Provisioning prov) throws LdapException {
-        super(acct,
-                LdapUtil.getAttrString(entry, Provisioning.A_zimbraPrefIdentityName),
-                LdapUtil.getAttrString(entry, Provisioning.A_zimbraPrefIdentityId),
-                LdapUtil.getAttrs(entry), 
-                prov);
+        super(acct, entry.getAttributes().getAttrString(Provisioning.A_zimbraPrefIdentityName),
+                entry.getAttributes().getAttrString(Provisioning.A_zimbraPrefIdentityId),
+                entry.getAttributes().getAttrs(), prov);
         mDn = entry.getDN();
     }
 

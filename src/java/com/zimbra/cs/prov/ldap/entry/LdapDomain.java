@@ -19,7 +19,6 @@ import java.util.Map;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ldap.LdapException;
-import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
 
 /**
@@ -32,10 +31,9 @@ public class LdapDomain extends Domain implements LdapEntry {
     private String mDn;
 
     LdapDomain(ZSearchResultEntry entry, Map<String, Object> defaults, Provisioning prov) throws LdapException {
-        super(LdapUtil.getAttrString(entry, Provisioning.A_zimbraDomainName), 
-                LdapUtil.getAttrString(entry, Provisioning.A_zimbraId), 
-                LdapUtil.getAttrs(entry), 
-                defaults, prov);
+        super(entry.getAttributes().getAttrString(Provisioning.A_zimbraDomainName), 
+                entry.getAttributes().getAttrString(Provisioning.A_zimbraId), 
+                entry.getAttributes().getAttrs(), defaults, prov);
         mDn = entry.getDN();
     }
 

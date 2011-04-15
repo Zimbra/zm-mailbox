@@ -23,11 +23,11 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapUtil.SearchLdapVisitor;
+import com.zimbra.cs.prov.ldap.LdapHelper;
+import com.zimbra.cs.prov.ldap.LdapProv;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.ILdapContext;
-import com.zimbra.cs.prov.ldap.LdapHelper;
-import com.zimbra.cs.prov.ldap.LdapHelper.SearchLdapOptions;
-import com.zimbra.cs.prov.ldap.LdapProv;
+import com.zimbra.cs.ldap.SearchLdapOptions;
 
 public class ADGalGroupHandler extends GalGroupHandler {
 
@@ -36,7 +36,8 @@ public class ADGalGroupHandler extends GalGroupHandler {
     @Override
     public boolean isGroup(IAttributes ldapAttrs) {
         try {
-            List<String> objectclass = ldapAttrs.getMultiAttrStringAsList(Provisioning.A_objectClass);
+            List<String> objectclass = ldapAttrs.getMultiAttrStringAsList(
+                    Provisioning.A_objectClass, IAttributes.CheckBinary.NOCHECK);
             return objectclass.contains("group");
         } catch (ServiceException e) {
             ZimbraLog.gal.warn("unable to get attribute " + Provisioning.A_objectClass, e);

@@ -1,5 +1,6 @@
 package com.zimbra.cs.ldap;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -12,42 +13,11 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.ldap.LdapUtil.SearchLdapVisitor;
+import com.zimbra.cs.ldap.LdapTODO.SDKDONE;
 
 public class LdapUtil {
     
-    public static String getAttrString(ZSearchResultEntry entry, String name) throws LdapException {
-        AttributeManager attrMgr = AttributeManager.getInst();
-        boolean containsBinaryData = attrMgr == null ? false : attrMgr.containsBinaryData(name);
-        boolean isBinaryTransfer = attrMgr == null ? false : attrMgr.isBinaryTransfer(name);
-        
-        String attrName = LdapUtilCommon.attrNameToBinaryTransferAttrName(isBinaryTransfer, name);
-        
-        return entry.getAttrString(attrName, containsBinaryData);
-    }
-    
-    /**
-     * Enumerates over the specified attributes and populates the specified map. The key in the map is the
-     * attribute ID. For attrs with a single value, the value is a String, and for attrs with multiple values
-     * the value is an array of Strings.
-     * 
-     * @param attrs the attributes to enumerate over
-     * @throws NamingException
-     */
-    public static Map<String, Object> getAttrs(ZSearchResultEntry entry) throws LdapException {
-        return getAttrs(entry, null);
-    }
-    
-    /**
-     * 
-     * @param attrs
-     * @param binaryAttrs set of binary attrs, useful for searching external LDAP.
-     *                    if null, only binary attrs declared in zimbra schema are recognized.  
-     * @return
-     * @throws NamingException
-     */
-    public static Map<String, Object> getAttrs(ZSearchResultEntry entry, Set<String> binaryAttrs) throws LdapException {
-        return entry.getAttrs(binaryAttrs);
-    }
     
     /**
      * Modifies the specified entry.  <code>attrs</code> is a <code>Map</code> consisting of
@@ -131,4 +101,5 @@ public class LdapUtil {
         }
         zlc.modifyAttributes(dn, modList);
     }
+
 }

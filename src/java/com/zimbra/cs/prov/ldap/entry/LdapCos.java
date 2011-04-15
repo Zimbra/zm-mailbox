@@ -17,7 +17,6 @@ package com.zimbra.cs.prov.ldap.entry;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ldap.LdapException;
-import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
 
 /**
@@ -30,10 +29,9 @@ public class LdapCos extends Cos implements LdapEntry {
     private String mDn;
 
     LdapCos(ZSearchResultEntry entry, Provisioning prov) throws LdapException {
-        super(LdapUtil.getAttrString(entry, Provisioning.A_cn), 
-                LdapUtil.getAttrString(entry, Provisioning.A_zimbraId), 
-                LdapUtil.getAttrs(entry), 
-                prov);
+        super(entry.getAttributes().getAttrString(Provisioning.A_cn), 
+                entry.getAttributes().getAttrString(Provisioning.A_zimbraId), 
+                entry.getAttributes().getAttrs(), prov);
         mDn = entry.getDN();
     }
 
