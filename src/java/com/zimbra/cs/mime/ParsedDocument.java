@@ -46,10 +46,16 @@ public final class ParsedDocument {
     private long mCreatedDate;
     private String mDescription;
     private boolean mDescEnabled;
+    private int mVersion = 0;
 
     /** if TRUE then there was a _temporary_ failure analyzing the message.  We should attempt
      * to re-index this message at a later time */
     private boolean mTemporaryAnalysisFailure = false;
+    
+    /**
+     * Flag for whether or not analysis has taken place
+     */
+    private boolean mNeedsAnalysis = true;
 
     private static Blob saveInputAsBlob(InputStream in) throws ServiceException, IOException {
         return StoreManager.getInstance().storeIncoming(in, null);
@@ -77,15 +83,21 @@ public final class ParsedDocument {
         mCreator = creator;
         mDescription = description;
         mDescEnabled = descEnabled;
+    }
 
+    /**
+     * Performs the text extraction lazily if it hasn't been done already
+     */
+    private synchronized void performExtraction() {
         try {
-            MimeHandler handler = MimeHandlerManager.getMimeHandler(ctype, filename);
+            Thread.dumpStack();
+            MimeHandler handler = MimeHandlerManager.getMimeHandler(mContentType, mFilename);
             assert(handler != null);
 
             if (handler.isIndexingEnabled()) {
-                handler.init(new BlobDataSource(mBlob, ctype));
+                handler.init(new BlobDataSource(mBlob, mContentType));
             }
-            handler.setFilename(filename);
+            handler.setFilename(mFilename);
             handler.setPartName(LuceneFields.L_PARTNAME_TOP);
             handler.setSize(mSize);
 
@@ -97,35 +109,44 @@ public final class ParsedDocument {
                     ZimbraLog.wiki.warn("Temporary failure extracting from the document.  (is convertd down?)", e);
                     mTemporaryAnalysisFailure = true;
                 } else {
-                    ZimbraLog.index.warn("Failure indexing wiki document "+filename+".  Item will be partially indexed", e);
+                    ZimbraLog.index.warn("Failure indexing wiki document "+mFilename+".  Item will be partially indexed", e);
                 }
             }
-            mFragment = Fragment.getFragment(textContent, Fragment.Source.NOTEBOOK);
-            try {
-                mZDocument = new IndexDocument(handler.getDocument());
-                mZDocument.addSubject(filename);
+            mFragment = Fragment.getFragment(textContent,
+                    Fragment.Source.NOTEBOOK);
 
-                StringBuilder content = new StringBuilder();
-                appendToContent(content, filename);
-                appendToContent(content, ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_FILENAME, filename));
-                appendToContent(content, textContent);
-                appendToContent(content, description);
-
-                mZDocument.addContent(content.toString());
-                mZDocument.addFrom(new RFC822AddressTokenStream(creator));
-                mZDocument.addFilename(filename);
-            } catch (MimeHandlerException e) {
-                if (ConversionException.isTemporaryCauseOf(e)) {
-                    ZimbraLog.wiki.warn("Temporary failure extracting from the document.  (is convertd down?)", e);
-                    mTemporaryAnalysisFailure = true;
-                } else {
-                    ZimbraLog.index.warn("Failure indexing wiki document " + filename + ".  Item will be partially indexed", e);
-                }
-            } catch (Exception e) {
-                ZimbraLog.index.warn("Failure indexing wiki document " + filename + ".  Item will be partially indexed", e);
+            mZDocument = new IndexDocument(handler.getDocument());
+            mZDocument.addSubject(mFilename);
+            // If the version was changed before extraction, add it in now
+            if(mVersion > 0) {
+                mZDocument.addVersion(mVersion);
             }
-        } catch (MimeHandlerException mhe) {
-            throw ServiceException.FAILURE("cannot create ParsedDocument", mhe);
+
+            StringBuilder content = new StringBuilder();
+            appendToContent(content, mFilename);
+            appendToContent(content, ZimbraAnalyzer.getAllTokensConcatenated(
+                    LuceneFields.L_FILENAME, mFilename));
+            appendToContent(content, textContent);
+            appendToContent(content, mDescription);
+
+            mZDocument.addContent(content.toString());
+            mZDocument.addFrom(new RFC822AddressTokenStream(mCreator));
+            mZDocument.addFilename(mFilename);
+         
+        }
+        catch (MimeHandlerException mhe) {
+            if (ConversionException.isTemporaryCauseOf(mhe)) {
+                ZimbraLog.wiki.warn("Temporary failure extracting from the document.  (is convertd down?)", mhe);
+                mTemporaryAnalysisFailure = true;
+            } else {
+                ZimbraLog.wiki.error("cannot create ParsedDocument", mhe);
+            }
+        } 
+        catch (Exception e) {
+            ZimbraLog.index.warn("Failure indexing wiki document " + mFilename + ".  Item will be partially indexed", e);
+        }
+        finally {
+            mNeedsAnalysis = false;
         }
     }
 
@@ -140,6 +161,7 @@ public final class ParsedDocument {
 
 
     public void setVersion(int version) {
+        mVersion = version;
         // should be indexed so we can add search constraints on the index version
         if (mZDocument == null) {
             ZimbraLog.wiki.warn("Can't index document version.  (is convertd down?)");
@@ -172,16 +194,28 @@ public final class ParsedDocument {
      * Could return null if the conversion has failed.
      */
     public IndexDocument getDocument() {
+        if(mNeedsAnalysis) {
+            performExtraction();
+        }
+
         return mZDocument;
     }
 
     public List<IndexDocument> getDocumentList() {
+        if(mNeedsAnalysis){
+            performExtraction();
+        }
         if (mZDocument == null) {
             return Collections.emptyList();
         }
         return Collections.singletonList(mZDocument);
     }
-
+    
+    /**
+     * Gets a fragment of the content
+     * Note: May be null if extraction hasn't happened yet
+     * @return
+     */
     public String getFragment() {
         return mFragment;
     }
