@@ -156,6 +156,8 @@ public class ProvUtil implements HttpDebugListener {
     private boolean outputBinaryToFile;
     private long sendStart;
 
+    private boolean errorOccursDuringInteraction = false; // bug 58554
+
     public void setDebug(SoapDebugLevel value) {
         debugLevel = value;
     }
@@ -837,7 +839,7 @@ public class ProvUtil implements HttpDebugListener {
                 doDescribe(args);
                 break;
             case EXIT:
-                System.exit(0);
+                System.exit(errorOccursDuringInteraction?2:0);
                 break;
             case FLUSH_CACHE:
                 doFlushCache(args);
@@ -3084,6 +3086,7 @@ public class ProvUtil implements HttpDebugListener {
                 }
             } catch (ServiceException e) {
                 Throwable cause = e.getCause();
+                errorOccursDuringInteraction = true;
                 String errText = "ERROR: " + e.getCode() + " (" + e.getMessage() + ")" +
                         (cause == null ? "" : " (cause: " + cause.getClass().getName() + " " + cause.getMessage() + ")");
                 printError(errText);
