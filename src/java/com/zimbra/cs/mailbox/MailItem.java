@@ -2437,7 +2437,6 @@ public abstract class MailItem implements Comparable<MailItem> {
             } catch (MailServiceException.NoSuchItemException nsie) { }
 
             MailboxBlob oldblob = getBlob();
-            addRevision(false);
 
             if (ZimbraLog.mailop.isDebugEnabled())
                 ZimbraLog.mailop.debug("renaming " + getMailopContext(this) + " to " + name);
