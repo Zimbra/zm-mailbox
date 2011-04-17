@@ -236,6 +236,10 @@ public class UserServlet extends ZimbraServlet {
     }
 
     private void sendError(UserServletContext ctxt, HttpServletRequest req, HttpServletResponse resp, String message) throws IOException {
+        if(resp.isCommitted()) {
+            ZimbraLog.io.info("Response already committed. Skipping sending error code for response");
+            return;
+        }
         if (ctxt != null &&!ctxt.cookieAuthHappened && ctxt.basicAuthAllowed() && !ctxt.basicAuthHappened) {
             resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader(req, null));
             resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
