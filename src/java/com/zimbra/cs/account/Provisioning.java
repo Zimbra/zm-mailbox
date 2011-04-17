@@ -1131,6 +1131,21 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public boolean isDistributionList(String addr) {
         return false;
     }
+    
+    /**
+     * Like get(DistributionListBy keyType, String key)
+     * The difference is this API returns a DistributionList object 
+     * contains only basic DL attributes.  It does not contain members 
+     * of the group.
+     * 
+     * Note: in the LdapProvisioning implementation, this API uses cache wheras 
+     * get(DistributionListBy keyType, String key) does *not* use cache.  
+     * Callsites should use this API if all they need is basic info on the DL, like
+     * id or name.
+     */
+    public DistributionList getGroup(DistributionListBy keyType, String key) throws ServiceException {
+        return get(keyType, key);
+    }
 
     public abstract Zimlet getZimlet(String name) throws ServiceException;
 
