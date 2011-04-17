@@ -38,6 +38,8 @@ public abstract class LdapProv extends Provisioning {
     };
 
     protected static final String[] sMinimalDlAttrs = {
+            Provisioning.A_displayName,
+            Provisioning.A_zimbraShareInfo,
             Provisioning.A_zimbraMailAlias,
             Provisioning.A_zimbraId,
             Provisioning.A_uid,
