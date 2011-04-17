@@ -192,7 +192,7 @@ public class ShareInfo {
             if (acct != null)
                 granteeName = acct.getName();
         } else if (granteeType == ACL.GRANTEE_GROUP) {
-            DistributionList dl = prov.get(DistributionListBy.id, granteeId);
+            DistributionList dl = prov.getGroup(DistributionListBy.id, granteeId);
             if (dl != null)
                 granteeName = dl.getName();
         } else if (granteeType == ACL.GRANTEE_COS) {
@@ -220,7 +220,7 @@ public class ShareInfo {
             if (acct != null)
                 granteeDisplay = acct.getDisplayName();
         } else if (granteeType == ACL.GRANTEE_GROUP) {
-            DistributionList dl = prov.get(DistributionListBy.id, granteeId);
+            DistributionList dl = prov.getGroup(DistributionListBy.id, granteeId);
             if (dl != null)
                 granteeDisplay = dl.getDisplayName();
         } else if (granteeType == ACL.GRANTEE_COS) {
@@ -762,8 +762,9 @@ public class ShareInfo {
                 // does LDAP searches each time
                     
                 // get shares published on parents of this dl
-                if (!dl.isAclGroup())
+                if (!dl.isAclGroup()) {
                     dl = prov.getAclGroup(DistributionListBy.id, dl.getId());
+                }
                 AclGroups aclGroups = prov.getAclGroups(dl, false); 
                 getSharesPublishedOnGroups(prov, visitor, aclGroups, owner, visited);
             }
@@ -889,24 +890,8 @@ public class ShareInfo {
                 AclGroups aclGroups, Account owner, Set<String> visited) 
             throws ServiceException {
             
-            /*
-             * getAclGroup(by, key)
-             *    - objects cached in LdapProvisioning
-             *    - currently cached objects do not cache contain zimbraShareInfo,
-             *      which can be big?
-             *    
-             * getDistributionList(by, key)
-             *    - not cached in LdapProvisioning, will trigger an 
-             *      LDAP search when called each time.
-             * 
-             * call getDistributionList or now, so we don't increase memory 
-             * usage.  If the LDAP search becomes a problem, then cache zimbraShareInfo 
-             * in the object returned by getAclGroup(LdapProvisioning sMinimalDlAttrs), 
-             * and change the following call to prov.getAclGroup.
-             *     
-             */
             for (String groupId : aclGroups.groupIds()) {
-                DistributionList group = prov.get(DistributionListBy.id, groupId);
+                DistributionList group = prov.getGroup(DistributionListBy.id, groupId);
                 getPublishedShares(visitor, group, owner, visited);
             }
         }

@@ -160,6 +160,8 @@ public class LdapProvisioning extends Provisioning {
     };
 
     private static final String[] sMinimalDlAttrs = {
+    	    Provisioning.A_displayName,
+    	    Provisioning.A_zimbraShareInfo,
             Provisioning.A_zimbraMailAlias,
             Provisioning.A_zimbraId,
             Provisioning.A_uid,
@@ -4669,8 +4671,8 @@ public class LdapProvisioning extends Provisioning {
     //     - cached
     //     - entry returned only contains minimal DL attrs
     //
-    // TODO: generalize it to be a Provisioning method
-    private DistributionList getGroup(DistributionListBy keyType, String key) throws ServiceException {
+    @Override
+    public DistributionList getGroup(DistributionListBy keyType, String key) throws ServiceException {
         switch(keyType) {
         case id:
             return getGroupById(key);
