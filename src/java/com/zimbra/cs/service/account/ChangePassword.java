@@ -21,6 +21,7 @@ package com.zimbra.cs.service.account;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AuthToken;
@@ -61,6 +62,24 @@ public class ChangePassword extends AccountDocumentHandler {
         Account acct = prov.get(AccountBy.name, name, zsc.getAuthToken());
         if (acct == null)
             throw AuthFailedServiceException.AUTH_FAILED(name, namePassedIn, "account not found");
+        
+        // proxyIfNecessary is called by the SOAP framework only for 
+        // requests that require auth.  ChangePassword does not require 
+        // an auth token.  Proxy here if this is not the home server of the account.
+        if (!Provisioning.onLocalServer(acct)) {
+            try {
+                return proxyRequest(request, context, acct.getId());
+            } catch (ServiceException e) {
+                // if something went wrong proxying the request, just execute it locally
+                if (ServiceException.PROXY_ERROR.equals(e.getCode())) {
+                    ZimbraLog.account.warn("encountered proxy error", e);
+                } else {
+                    // but if it's a real error, it's a real error
+                    throw e;
+                }
+            }
+        }
+        
 		String oldPassword = request.getAttribute(AccountConstants.E_OLD_PASSWORD);
 		String newPassword = request.getAttribute(AccountConstants.E_PASSWORD);
 		prov.changePassword(acct, oldPassword, newPassword);
