@@ -14,6 +14,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 
+import javax.activation.CommandMap;
+import javax.activation.MailcapCommandMap;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
@@ -67,6 +69,15 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
     static ExchangeServicePortType service = null;
 
     boolean Initialize(ServerInfo info) throws MalformedURLException {
+    	
+        ZimbraLog.fb.debug("Setting MailcapCommandMap handlers back to default");
+        MailcapCommandMap mc = (MailcapCommandMap)CommandMap.getDefaultCommandMap();
+        mc.addMailcap("application/xml;;x-java-content-handler=com.sun.mail.handlers.text_xml");
+        mc.addMailcap("text/xml;;x-java-content-handler=com.sun.mail.handlers.text_xml");
+        mc.addMailcap("text/plain;;x-java-content-handler=com.sun.mail.handlers.text_plain");
+        CommandMap.setDefaultCommandMap(mc);
+        ZimbraLog.fb.debug("Done Setting MailcapCommandMap handlers");
+    	
         URL wsdlUrl = ExchangeWebService.class.getResource("/Services.wsdl");
         ExchangeWebService factory =
             new ExchangeWebService(wsdlUrl,
