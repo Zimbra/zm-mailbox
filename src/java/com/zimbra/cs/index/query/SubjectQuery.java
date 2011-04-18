@@ -29,20 +29,20 @@ import com.zimbra.cs.mailbox.Mailbox;
  */
 public final class SubjectQuery extends Query {
     private String subject;
-    private boolean lessThan;
-    private boolean equal;
+    private boolean lt;
+    private boolean inclusive;
 
     /**
      * This is only used for subject queries that start with {@code <} or {@code >}, otherwise we just use the normal
      * {@link TextQuery}.
      */
     private SubjectQuery(String text) {
-        lessThan = (text.charAt(0) == '<');
-        equal = false;
+        lt = (text.charAt(0) == '<');
+        inclusive = false;
         subject = text.substring(1);
 
         if (subject.charAt(0) == '=') {
-            equal = true;
+            inclusive = true;
             subject = subject.substring(1);
         }
     }
@@ -64,10 +64,10 @@ public final class SubjectQuery extends Query {
     @Override
     public QueryOperation compile(Mailbox mbox, boolean bool) {
         DBQueryOperation op = new DBQueryOperation();
-        if (lessThan) {
-            op.addRelativeSubject(null, false, subject, equal, evalBool(bool));
+        if (lt) {
+            op.addSubjectRange(null, false, subject, inclusive, evalBool(bool));
         } else {
-            op.addRelativeSubject(subject, equal, null, false, evalBool(bool));
+            op.addSubjectRange(subject, inclusive, null, false, evalBool(bool));
         }
         return op;
     }
@@ -75,8 +75,8 @@ public final class SubjectQuery extends Query {
     @Override
     public void dump(StringBuilder out) {
         out.append("SUBJECT:");
-        out.append(lessThan ? '<' : '>');
-        if (equal) {
+        out.append(lt ? '<' : '>');
+        if (inclusive) {
             out.append('=');
         }
         out.append(subject);

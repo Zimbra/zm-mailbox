@@ -55,7 +55,7 @@ public final class ConvCountQuery extends Query {
     @Override
     public QueryOperation compile(Mailbox mbox, boolean bool) {
         DBQueryOperation op = new DBQueryOperation();
-        op.addConvCountClause(lowestCount, lowerEq, highestCount, higherEq, evalBool(bool));
+        op.addConvCountRange(lowestCount, lowerEq, highestCount, higherEq, evalBool(bool));
         return op;
     }
 

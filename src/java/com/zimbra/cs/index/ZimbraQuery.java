@@ -789,7 +789,7 @@ public final class ZimbraQuery {
                             if (!(folder instanceof Mountpoint) || ((Mountpoint) folder).isLocal()) {
                                 DBQueryOperation newOp = new DBQueryOperation();
                                 newUnion.add(newOp);
-                                newOp.addInClause(folder, true);
+                                newOp.addInFolder(folder, true);
                             }
                         }
 

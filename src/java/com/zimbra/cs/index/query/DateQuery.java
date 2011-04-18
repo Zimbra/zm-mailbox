@@ -147,13 +147,13 @@ public final class DateQuery extends Query {
         DBQueryOperation op = new DBQueryOperation();
         switch (type) {
             case APPT_START:
-                op.addCalStartDateClause(lowestTime, lowerEq, highestTime, higherEq, evalBool(bool));
+                op.addCalStartDateRange(lowestTime, lowerEq, highestTime, higherEq, evalBool(bool));
                 break;
             case APPT_END:
-                op.addCalEndDateClause(lowestTime, lowerEq, highestTime, higherEq, evalBool(bool));
+                op.addCalEndDateRange(lowestTime, lowerEq, highestTime, higherEq, evalBool(bool));
                 break;
             default:
-                op.addDateClause(lowestTime, lowerEq, highestTime, higherEq, evalBool(bool));
+                op.addDateRange(lowestTime, lowerEq, highestTime, higherEq, evalBool(bool));
                 break;
         }
 

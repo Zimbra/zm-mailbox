@@ -29,20 +29,20 @@ import com.zimbra.cs.mailbox.Mailbox;
  */
 public final class SenderQuery extends Query {
     private String sender;
-    private boolean lessThan;
-    private boolean equal;
+    private boolean lt;
+    private boolean inclusive;
 
     /**
      * This is only used for subject queries that start with {@code <} or {@code >}, otherwise we just use the normal
      * {@link TextQuery}.
      */
     private SenderQuery(String text) {
-        lessThan = (text.charAt(0) == '<');
-        equal = false;
+        lt = (text.charAt(0) == '<');
+        inclusive = false;
         sender = text.substring(1);
 
         if (sender.charAt(0) == '=') {
-            equal = true;
+            inclusive = true;
             sender = sender.substring(1);
         }
     }
@@ -63,10 +63,10 @@ public final class SenderQuery extends Query {
     @Override
     public QueryOperation compile(Mailbox mbox, boolean bool) {
         DBQueryOperation op = new DBQueryOperation();
-        if (lessThan) {
-            op.addRelativeSender(null, false, sender, lessThan, evalBool(bool));
+        if (lt) {
+            op.addSenderRange(null, false, sender, lt, evalBool(bool));
         } else {
-            op.addRelativeSender(sender, equal, null, false, evalBool(bool));
+            op.addSenderRange(sender, inclusive, null, false, evalBool(bool));
         }
         return op;
     }
@@ -74,8 +74,8 @@ public final class SenderQuery extends Query {
     @Override
     public void dump(StringBuilder out) {
         out.append("SENDER:");
-        out.append(lessThan ? '<' : '>');
-        if (equal) {
+        out.append(lt ? '<' : '>');
+        if (inclusive) {
             out.append('=');
         }
         out.append(sender);

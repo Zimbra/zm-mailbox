@@ -42,7 +42,7 @@ public class TagQuery extends Query {
     @Override
     public QueryOperation compile(Mailbox mbox, boolean bool) throws ServiceException {
         DBQueryOperation op = new DBQueryOperation();
-        op.addTagClause(mbox.getTagByName(name), evalBool(bool));
+        op.addTag(mbox.getTagByName(name), evalBool(bool));
         return op;
     }
 

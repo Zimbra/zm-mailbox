@@ -31,10 +31,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbPool.DbConnection;
-import com.zimbra.cs.db.DbSearchConstraints.NumericRange;
-import com.zimbra.cs.db.DbSearchConstraints.StringRange;
-import com.zimbra.cs.db.DbSearchConstraintsNode.NodeType;
 import com.zimbra.cs.imap.ImapMessage;
+import com.zimbra.cs.index.DbSearchConstraints;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Flag;
@@ -145,14 +143,14 @@ public final class DbSearch {
             (sort.getDirection() == SortBy.Direction.DESC ? " DESC" : "");
     }
 
-    public static int countResults(DbConnection conn, DbSearchConstraintsNode node, Mailbox mbox, boolean inDumpster)
+    public static int countResults(DbConnection conn, DbSearchConstraints node, Mailbox mbox, boolean inDumpster)
             throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
         // Assemble the search query
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM ");
         sql.append(DbMailItem.getMailItemTableName(mbox, "mi", inDumpster));
-        if (node.getSearchConstraints().fromContact != null) {
+        if (node.toLeaf().fromContact != null) {
             sql.append(", ").append(DbMailAddress.getTableName(mbox)).append(" AS ma");
         }
 
@@ -182,18 +180,16 @@ public final class DbSearch {
         }
     }
 
-    private static String getForceIndexClause(DbSearchConstraintsNode node, SortBy sort, boolean hasLimit) {
-        if (LC.search_disable_database_hints.booleanValue())
+    private static String getForceIndexClause(DbSearchConstraints node, SortBy sort, boolean hasLimit) {
+        if (LC.search_disable_database_hints.booleanValue()) {
             return NO_HINT;
-
-        if (!Db.supports(Db.Capability.FORCE_INDEX_EVEN_IF_NO_SORT) && sort.getKey() == SortBy.Key.NONE)
+        }
+        if (!Db.supports(Db.Capability.FORCE_INDEX_EVEN_IF_NO_SORT) && sort.getKey() == SortBy.Key.NONE) {
             return NO_HINT;
-
+        }
         String index = null;
-
-        DbSearchConstraintsNode.NodeType ntype = node.getNodeType();
-        DbSearchConstraints constraints = node.getSearchConstraints();
-        if (ntype == DbSearchConstraintsNode.NodeType.LEAF) {
+        if (node instanceof DbSearchConstraints.Leaf) {
+            DbSearchConstraints.Leaf constraints = node.toLeaf();
             if (!constraints.itemIds.isEmpty()) {
                 return "";
             } else if (constraints.convId > 0) {
@@ -212,12 +208,11 @@ public final class DbSearch {
                 }
             }
         }
-
         return Db.forceIndex(index);
     }
 
     private static final StringBuilder encodeSelect(Mailbox mbox, StringBuilder out, SortBy sort, FetchMode fetch,
-            boolean includeCalTable, DbSearchConstraintsNode node, boolean validLIMIT, boolean inDumpster) {
+            boolean includeCalTable, DbSearchConstraints node, boolean validLIMIT, boolean inDumpster) {
         // SELECT mi.id, ...
         // If you change the first for parameters, you must change the COLUMN_* constants.
         out.append("SELECT ");
@@ -249,7 +244,7 @@ public final class DbSearch {
         if (includeCalTable) {
             out.append(", ").append(DbMailItem.getCalendarItemTableName(mbox, "ap", inDumpster));
         }
-        if (node.getNodeType() == NodeType.LEAF && node.getSearchConstraints().fromContact != null) {
+        if (node instanceof DbSearchConstraints.Leaf && node.toLeaf().fromContact != null) {
             out.append(", ").append(DbMailAddress.getTableName(mbox)).append(" AS ma");
         }
 
@@ -263,7 +258,7 @@ public final class DbSearch {
     }
 
     private static final int encodeConstraint(StringBuilder out, DbConnection conn, Mailbox mbox,
-            DbSearchConstraintsNode node, byte[] calTypes, boolean inCalTable) throws ServiceException {
+            DbSearchConstraints node, byte[] calTypes, boolean inCalTable) throws ServiceException {
         /*
          *( SUB-NODE AND/OR (SUB-NODE...) ) AND/OR ( SUB-NODE ) AND
          *    (
@@ -275,16 +270,15 @@ public final class DbSearch {
          *    )
          */
         int num = 0;
-        DbSearchConstraintsNode.NodeType ntype = node.getNodeType();
-        if (ntype == DbSearchConstraintsNode.NodeType.AND || ntype == DbSearchConstraintsNode.NodeType.OR) {
+        if (node instanceof DbSearchConstraints.Intersection || node instanceof DbSearchConstraints.Union) {
             boolean first = true;
-            boolean and = ntype == DbSearchConstraintsNode.NodeType.AND;
+            boolean and = node instanceof DbSearchConstraints.Intersection;
             out.append('(');
-            for (DbSearchConstraintsNode subnode : node.getSubNodes()) {
+            for (DbSearchConstraints child : node.getChildren()) {
                 if (!first) {
                     out.append(and ? " AND " : " OR ");
                 }
-                num += encodeConstraint(out, conn, mbox, subnode, calTypes, inCalTable);
+                num += encodeConstraint(out, conn, mbox, child, calTypes, inCalTable);
                 first = false;
             }
             out.append(") ");
@@ -292,9 +286,9 @@ public final class DbSearch {
         }
 
         // we're here, so we must be in a DbSearchConstraints leaf node
-        DbSearchConstraints constraint = node.getSearchConstraints();
-        assert(ntype == DbSearchConstraintsNode.NodeType.LEAF && constraint != null);
-        constraint.checkDates();
+        DbSearchConstraints.Leaf constraint = node.toLeaf();
+        assert(node instanceof DbSearchConstraints.Leaf && constraint != null);
+        constraint.validate();
 
         // if there are no possible matches, short-circuit here...
         TagConstraints tc = TagConstraints.getTagConstraints(mbox, constraint, conn);
@@ -340,14 +334,13 @@ public final class DbSearch {
         num += encode(out, "mi.id", true, constraint.itemIds);
         num += encode(out, "mi.id", false, constraint.prohibitedItemIds);
         num += encode(out, "mi.index_id", true, constraint.indexIds);
-        num += encodeRangeWithMinimum(out, "mi.date", constraint.dates, 1);
-        num += encodeRangeWithMinimum(out, "mi.mod_metadata", constraint.modified, 1);
-        num += encodeRangeWithMinimum(out, "mi.mod_content", constraint.modifiedContent, 1);
-        num += encodeRangeWithMinimum(out, "mi.size", constraint.sizes, 0);
+        num += encodeRange(out, "mi.date", constraint.dateRanges, 1);
+        num += encodeRange(out, "mi.mod_metadata", constraint.modSeqRanges, 1);
+        num += encodeRange(out, "mi.size", constraint.sizeRanges, 0);
         num += encodeRange(out, "mi.subject", constraint.subjectRanges);
         num += encodeRange(out, "mi.sender", constraint.senderRanges);
 
-        Boolean isSoloPart = node.getSearchConstraints().getIsSoloPart();
+        Boolean isSoloPart = node.toLeaf().getIsSoloPart();
         if (isSoloPart != null) {
             if (isSoloPart.booleanValue()) {
                 out.append(" AND mi.parent_id is NULL ");
@@ -365,8 +358,8 @@ public final class DbSearch {
         }
 
         if (inCalTable) {
-            num += encodeRangeWithMinimum(out, "ap.start_time", constraint.calStartDates, 1);
-            num += encodeRangeWithMinimum(out, "ap.end_time", constraint.calEndDates, 1);
+            num += encodeRange(out, "ap.start_time", constraint.calStartDateRanges, 1);
+            num += encodeRange(out, "ap.end_time", constraint.calEndDateRanges, 1);
         }
 
         if (constraint.fromContact != null) {
@@ -385,44 +378,44 @@ public final class DbSearch {
     /**
      * @return TRUE if some part of this query has a non-appointment select (ie 'type not in (11,15)' non-null
      */
-    private static final boolean hasMailItemOnlyConstraints(DbSearchConstraintsNode node) {
-        DbSearchConstraintsNode.NodeType ntype = node.getNodeType();
-        if (ntype == DbSearchConstraintsNode.NodeType.AND || ntype == DbSearchConstraintsNode.NodeType.OR) {
-            for (DbSearchConstraintsNode subnode : node.getSubNodes()) {
-                if (hasMailItemOnlyConstraints(subnode))
+    private static final boolean hasMailItemOnlyConstraints(DbSearchConstraints node) {
+        if (node instanceof DbSearchConstraints.Intersection || node instanceof DbSearchConstraints.Union) {
+            for (DbSearchConstraints child : node.getChildren()) {
+                if (hasMailItemOnlyConstraints(child)) {
                     return true;
+                }
             }
             return false;
         }
-        return node.getSearchConstraints().hasNonAppointmentTypes();
+        return node.toLeaf().hasNonAppointmentTypes();
     }
 
     /**
      * @return TRUE if this constraint needs to do a join with the Appointment table in order to be evaluated
      */
-    private static final boolean hasAppointmentTableConstraints(DbSearchConstraintsNode node) {
-        DbSearchConstraintsNode.NodeType ntype = node.getNodeType();
-        if (ntype == DbSearchConstraintsNode.NodeType.AND || ntype == DbSearchConstraintsNode.NodeType.OR) {
-            for (DbSearchConstraintsNode subnode : node.getSubNodes()) {
-                if (hasAppointmentTableConstraints(subnode))
+    private static final boolean hasAppointmentTableConstraints(DbSearchConstraints node) {
+        if (node instanceof DbSearchConstraints.Intersection || node instanceof DbSearchConstraints.Union) {
+            for (DbSearchConstraints child : node.getChildren()) {
+                if (hasAppointmentTableConstraints(child)) {
                     return true;
+                }
             }
             return false;
         }
-        return node.getSearchConstraints().hasAppointmentTableConstraints();
+        return node.toLeaf().hasAppointmentTableConstraints();
     }
 
     static final byte[] APPOINTMENT_TABLE_TYPES = new byte[] {
         MailItem.Type.APPOINTMENT.toByte(), MailItem.Type.TASK.toByte()
     };
 
-    public static List<Result> search(DbConnection conn, Mailbox mbox, DbSearchConstraintsNode node, SortBy sort,
+    public static List<Result> search(DbConnection conn, Mailbox mbox, DbSearchConstraints node, SortBy sort,
             int offset, int limit, FetchMode fetch, boolean inDumpster) throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
         if (!Db.supports(Db.Capability.AVOID_OR_IN_WHERE_CLAUSE) ||
                 (sort.getKey() != SortBy.Key.DATE && sort.getKey() != SortBy.Key.SIZE) ||
-                NodeType.OR != node.getNodeType()) {
+                !(node instanceof DbSearchConstraints.Union)) {
             try {
                 return searchInternal(conn, mbox, node, sort, offset, limit, fetch, inDumpster);
             } catch (SQLException e) {
@@ -436,14 +429,14 @@ public final class DbSearch {
         // if (where a or b) not supported or if we encountered too many sql params try splitting
         // run each toplevel ORed part as a separate SQL query, then merge the results in memory
         List<Result> result = new ArrayList<Result>();
-        for (DbSearchConstraintsNode sub : node.getSubNodes()) {
-            result.addAll(search(conn, mbox, sub, sort, offset, limit, fetch, inDumpster));
+        for (DbSearchConstraints child : node.getChildren()) {
+            result.addAll(search(conn, mbox, child, sort, offset, limit, fetch, inDumpster));
         }
         Collections.sort(result, new ResultComparator(sort));;
         return result;
     }
 
-    private static List<Result> searchInternal(DbConnection conn, Mailbox mbox, DbSearchConstraintsNode node,
+    private static List<Result> searchInternal(DbConnection conn, Mailbox mbox, DbSearchConstraints node,
             SortBy sort, int offset, int limit, FetchMode fetch, boolean inDumpster)
             throws SQLException, ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
@@ -578,8 +571,8 @@ public final class DbSearch {
 
             return result;
         } finally {
-            DbPool.closeResults(rs);
-            DbPool.closeStatement(stmt);
+            conn.closeQuietly(rs);
+            conn.closeQuietly(stmt);
         }
     }
 
@@ -621,61 +614,66 @@ public final class DbSearch {
         return param;
     }
 
-    private static final int setDateRange(PreparedStatement stmt, int param, Collection<NumericRange> c) throws SQLException {
-        if (!ListUtil.isEmpty(c)) {
-            for (NumericRange date : c) {
-                if (date.lowest >= 1)
-                    stmt.setInt(param++, (int) Math.min(date.lowest / 1000, Integer.MAX_VALUE));
-                if (date.highest >= 1)
-                    stmt.setInt(param++, (int) Math.min(date.highest / 1000, Integer.MAX_VALUE));
+    private static final int setDateRange(PreparedStatement stmt, int param,
+            List<DbSearchConstraints.NumericRange> ranges) throws SQLException {
+        for (DbSearchConstraints.NumericRange range : ranges) {
+            if (range.min > 0) {
+                stmt.setInt(param++, (int) Math.min(range.min / 1000, Integer.MAX_VALUE));
+            }
+            if (range.max > 0) {
+                stmt.setInt(param++, (int) Math.min(range.max / 1000, Integer.MAX_VALUE));
             }
         }
         return param;
     }
 
-    private static final int setTimestampRange(PreparedStatement stmt, int param, Collection<NumericRange> c) throws SQLException {
-        if (!ListUtil.isEmpty(c)) {
-            for (NumericRange date : c) {
-                if (date.lowest >= 1)
-                    stmt.setTimestamp(param++, new Timestamp(date.lowest));
-                if (date.highest >= 1)
-                    stmt.setTimestamp(param++, new Timestamp(date.highest));
+    private static final int setTimestampRange(PreparedStatement stmt, int param,
+            List<DbSearchConstraints.NumericRange> ranges) throws SQLException {
+        for (DbSearchConstraints.NumericRange range : ranges) {
+            if (range.min > 0) {
+                stmt.setTimestamp(param++, new Timestamp(range.min));
+            }
+            if (range.max > 0) {
+                stmt.setTimestamp(param++, new Timestamp(range.max));
             }
         }
         return param;
     }
 
-    private static final int setLongRangeWithMinimum(PreparedStatement stmt, int param, Collection<NumericRange> c, int minimum) throws SQLException {
-        if (!ListUtil.isEmpty(c)) {
-            for (NumericRange r : c) {
-                if (r.lowest >= minimum)
-                    stmt.setLong(param++, r.lowest);
-                if (r.highest >= minimum)
-                    stmt.setLong(param++, r.highest);
+    private static final int setLongRange(PreparedStatement stmt, int param,
+            List<DbSearchConstraints.NumericRange> ranges, int min) throws SQLException {
+        for (DbSearchConstraints.NumericRange range : ranges) {
+            if (range.min >= min) {
+                stmt.setLong(param++, range.min);
+            }
+            if (range.max >= min) {
+                stmt.setLong(param++, range.max);
             }
         }
         return param;
     }
 
-    private static final int setIntRangeWithMinimum(PreparedStatement stmt, int param, Collection<NumericRange> c, int minimum) throws SQLException {
-        if (!ListUtil.isEmpty(c)) {
-            for (NumericRange r : c) {
-                if (r.lowest >= minimum)
-                    stmt.setInt(param++, (int)r.lowest);
-                if (r.highest >= minimum)
-                    stmt.setInt(param++, (int)r.highest);
+    private static final int setIntRange(PreparedStatement stmt, int param,
+            List<DbSearchConstraints.NumericRange> ranges, int min) throws SQLException {
+        for (DbSearchConstraints.NumericRange range : ranges) {
+            if (range.min >= min) {
+                stmt.setInt(param++, (int) range.min);
+            }
+            if (range.max >= min) {
+                stmt.setInt(param++, (int) range.max);
             }
         }
         return param;
     }
 
-    private static final int setStringRange(PreparedStatement stmt, int param, Collection<StringRange> c) throws SQLException {
-        if (!ListUtil.isEmpty(c)) {
-            for (StringRange r: c) {
-                if (r.lowest != null)
-                    stmt.setString(param++, r.lowest.replace("\\\"", "\""));
-                if (r.highest != null)
-                    stmt.setString(param++, r.highest.replace("\\\"", "\""));
+    private static final int setStringRange(PreparedStatement stmt, int param,
+            List<DbSearchConstraints.StringRange> ranges) throws SQLException {
+        for (DbSearchConstraints.StringRange range: ranges) {
+            if (range.min != null) {
+                stmt.setString(param++, range.min.replace("\\\"", "\""));
+            }
+            if (range.max != null) {
+                stmt.setString(param++, range.max.replace("\\\"", "\""));
             }
         }
         return param;
@@ -768,32 +766,31 @@ public final class DbSearch {
     /**
      * @return number of parameters bound
      */
-    private static final int encodeRangeWithMinimum(StringBuilder out, String column,
-            Collection<? extends DbSearchConstraints.NumericRange> ranges, long lowestValue) {
-        if (ListUtil.isEmpty(ranges)) {
+    private static final int encodeRange(StringBuilder out, String column,
+            List<DbSearchConstraints.NumericRange> ranges, long min) {
+        if (ranges.isEmpty()) {
             return 0;
         }
         if (Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON) && isCaseSensitiveField(column) ) {
-            column = "UPPER("+column+")";
+            column = "UPPER(" + column + ")";
         }
-
         int params = 0;
-        for (DbSearchConstraints.NumericRange r : ranges) {
-            boolean lowValid = r.lowest >= lowestValue;
-            boolean highValid = r.highest >= lowestValue;
+        for (DbSearchConstraints.NumericRange range : ranges) {
+            boolean lowValid = range.min >= min;
+            boolean highValid = range.max >= min;
             if (!(lowValid || highValid)) {
                 continue;
             }
-            out.append(r.negated ? " AND NOT (" : " AND (");
+            out.append(range.bool ? " AND (" : " AND NOT (");
             if (lowValid) {
-                out.append(column).append(r.lowestEqual ? " >= ?" : " > ?");
+                out.append(column).append(range.minInclusive ? " >= ?" : " > ?");
                 params++;
             }
             if (highValid) {
                 if (lowValid) {
                     out.append(" AND ");
                 }
-                out.append(column).append(r.highestEqual ? " <= ?" : " < ?");
+                out.append(column).append(range.maxInclusive ? " <= ?" : " < ?");
                 params++;
             }
             out.append(')');
@@ -805,50 +802,49 @@ public final class DbSearch {
      * @return number of parameters bound
      */
     private static final int encodeRange(StringBuilder out, String column,
-            Collection<? extends DbSearchConstraints.StringRange> ranges) {
-
+            List<DbSearchConstraints.StringRange> ranges) {
+        if (ranges.isEmpty()) {
+            return 0;
+        }
         if (Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON) && isCaseSensitiveField(column)) {
             column = "UPPER(" + column + ")";
         }
-
         int params = 0;
-        if (!ListUtil.isEmpty(ranges)) {
-            for (DbSearchConstraints.StringRange r : ranges) {
-                out.append(r.negated ? " AND NOT (" : " AND (");
-                if (r.lowest != null) {
-                    params++;
-                    out.append(column).append(r.lowestEqual ? " >= ?" : " > ?");
-                }
-                if (r.highest != null) {
-                    if (r.lowest != null) {
-                        out.append(" AND ");
-                    }
-                    params++;
-                    out.append(column).append(r.highestEqual ? " <= ?" : " < ?");
-                }
-                out.append(')');
+        for (DbSearchConstraints.StringRange range : ranges) {
+            out.append(range.bool ?  " AND (" : " AND NOT (");
+            if (range.min != null) {
+                params++;
+                out.append(column).append(range.minInclusive ? " >= ?" : " > ?");
             }
+            if (range.max != null) {
+                if (range.min != null) {
+                    out.append(" AND ");
+                }
+                params++;
+                out.append(column).append(range.maxInclusive ? " <= ?" : " < ?");
+            }
+            out.append(')');
         }
         return params;
     }
 
-
-    static class TagConstraints {
+    public static final class TagConstraints {
         Set<Long> searchTagsets;
         Set<Long> searchFlagsets;
         Boolean unread;
         boolean noMatches;
 
-        static TagConstraints getTagConstraints(Mailbox mbox, DbSearchConstraints c, DbConnection conn) throws ServiceException {
-            TagConstraints tc = c.tagConstraints = new TagConstraints();
-            if (ListUtil.isEmpty(c.tags) && ListUtil.isEmpty(c.excludeTags))
+        static TagConstraints getTagConstraints(Mailbox mbox, DbSearchConstraints.Leaf leaf, DbConnection conn)
+                throws ServiceException {
+            TagConstraints tc = leaf.tagConstraints = new TagConstraints();
+            if (leaf.tags.isEmpty() && leaf.excludeTags.isEmpty()) {
                 return tc;
-
+            }
             int setFlagMask = 0;
             long setTagMask = 0;
 
-            if (!ListUtil.isEmpty(c.tags)) {
-                for (Tag tag : c.tags) {
+            if (!ListUtil.isEmpty(leaf.tags)) {
+                for (Tag tag : leaf.tags) {
                     if (tag.getId() == Flag.ID_UNREAD) {
                         tc.unread = Boolean.TRUE;
                     } else if (tag instanceof Flag) {
@@ -862,8 +858,8 @@ public final class DbSearch {
             int flagMask = setFlagMask;
             long tagMask = setTagMask;
 
-            if (!ListUtil.isEmpty(c.excludeTags)) {
-                for (Tag tag : c.excludeTags) {
+            if (!ListUtil.isEmpty(leaf.excludeTags)) {
+                for (Tag tag : leaf.excludeTags) {
                     if (tag.getId() == Flag.ID_UNREAD) {
                         if (tc.unread == Boolean.TRUE) {
                             tc.noMatches = true;
@@ -913,7 +909,7 @@ public final class DbSearch {
         }
     }
 
-    private static int setSearchVars(PreparedStatement stmt, DbSearchConstraintsNode node, int param,
+    private static int setSearchVars(PreparedStatement stmt, DbSearchConstraints node, int param,
             byte[] calTypes, boolean inCalTable) throws SQLException {
         /*
          *( SUB-NODE AND/OR (SUB-NODE...) ) AND/OR ( SUB-NODE ) AND
@@ -925,52 +921,51 @@ public final class DbSearch {
          *       ..etc
          *    )
          */
-
-        DbSearchConstraintsNode.NodeType ntype = node.getNodeType();
-        if (ntype == DbSearchConstraintsNode.NodeType.AND || ntype == DbSearchConstraintsNode.NodeType.OR) {
-            for (DbSearchConstraintsNode subnode : node.getSubNodes())
-                param = setSearchVars(stmt, subnode, param, calTypes, inCalTable);
+        if (node instanceof DbSearchConstraints.Intersection || node instanceof DbSearchConstraints.Union) {
+            for (DbSearchConstraints child : node.getChildren()) {
+                param = setSearchVars(stmt, child, param, calTypes, inCalTable);
+            }
             return param;
         }
 
         // we're here, so we must be in a DbSearchConstraints leaf node
-        DbSearchConstraints c = node.getSearchConstraints();
-        assert(ntype == DbSearchConstraintsNode.NodeType.LEAF && c != null);
+        DbSearchConstraints.Leaf leaf = node.toLeaf();
+        assert(node instanceof DbSearchConstraints.Leaf && leaf != null);
 
         // if there are no possible matches, short-circuit here...
-        if (c.automaticEmptySet() || c.tagConstraints.noMatches)
+        if (leaf.automaticEmptySet() || leaf.tagConstraints.noMatches) {
             return param;
-
-        for (MailItem.Type type : c.types) {
+        }
+        for (MailItem.Type type : leaf.types) {
             stmt.setByte(param++, type.toByte());
         }
-        for (MailItem.Type type : c.excludeTypes) {
+        for (MailItem.Type type : leaf.excludeTypes) {
             stmt.setByte(param++, type.toByte());
         }
         param = setBytes(stmt, param, calTypes);
 
-        param = setLongs(stmt, param, c.tagConstraints.searchTagsets);
-        param = setLongs(stmt, param, c.tagConstraints.searchFlagsets);
-        param = setBooleanAsInt(stmt, param, c.tagConstraints.unread);
-        param = setFolders(stmt, param, c.folders);
-        param = setFolders(stmt, param, c.excludeFolders);
-        if (c.convId > 0)
-            stmt.setInt(param++, c.convId);
-        else
-            param = setIntegers(stmt, param, c.prohibitedConvIds);
-        param = setIntegers(stmt, param, c.itemIds);
-        param = setIntegers(stmt, param, c.prohibitedItemIds);
-        param = setIntegers(stmt, param, c.indexIds);
-        param = setDateRange(stmt, param, c.dates);
-        param = setLongRangeWithMinimum(stmt, param, c.modified, 1);
-        param = setLongRangeWithMinimum(stmt, param, c.modifiedContent, 1);
-        param = setIntRangeWithMinimum(stmt, param, c.sizes, 0);
-        param = setStringRange(stmt, param, c.subjectRanges);
-        param = setStringRange(stmt, param, c.senderRanges);
+        param = setLongs(stmt, param, leaf.tagConstraints.searchTagsets);
+        param = setLongs(stmt, param, leaf.tagConstraints.searchFlagsets);
+        param = setBooleanAsInt(stmt, param, leaf.tagConstraints.unread);
+        param = setFolders(stmt, param, leaf.folders);
+        param = setFolders(stmt, param, leaf.excludeFolders);
+        if (leaf.convId > 0) {
+            stmt.setInt(param++, leaf.convId);
+        } else {
+            param = setIntegers(stmt, param, leaf.prohibitedConvIds);
+        }
+        param = setIntegers(stmt, param, leaf.itemIds);
+        param = setIntegers(stmt, param, leaf.prohibitedItemIds);
+        param = setIntegers(stmt, param, leaf.indexIds);
+        param = setDateRange(stmt, param, leaf.dateRanges);
+        param = setLongRange(stmt, param, leaf.modSeqRanges, 1);
+        param = setIntRange(stmt, param, leaf.sizeRanges, 0);
+        param = setStringRange(stmt, param, leaf.subjectRanges);
+        param = setStringRange(stmt, param, leaf.senderRanges);
 
         if (inCalTable) {
-            param = setTimestampRange(stmt, param, c.calStartDates);
-            param = setTimestampRange(stmt, param, c.calEndDates);
+            param = setTimestampRange(stmt, param, leaf.calStartDateRanges);
+            param = setTimestampRange(stmt, param, leaf.calEndDateRanges);
         }
 
         return param;

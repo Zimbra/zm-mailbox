@@ -53,9 +53,8 @@ import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbSearch;
-import com.zimbra.cs.db.DbSearchConstraints;
-import com.zimbra.cs.db.DbSearchConstraintsNode;
 import com.zimbra.cs.index.BrowseTerm;
+import com.zimbra.cs.index.DbSearchConstraints;
 import com.zimbra.cs.index.Indexer;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.LuceneIndex;
@@ -494,8 +493,7 @@ public final class MailboxIndex {
             boolean success = false;
             try {
                 mailbox.beginTransaction("indexAllDeferredFlagItems", null);
-                DbSearchConstraints c = new DbSearchConstraints();
-                c.tags = new HashSet<Tag>();
+                DbSearchConstraints.Leaf c = new DbSearchConstraints.Leaf();
                 c.tags.add(mailbox.getFlagById(Flag.ID_INDEXING_DEFERRED));
                 List<DbSearch.Result> list = DbSearch.search(mailbox.getOperationConnection(), mailbox,
                         c, SortBy.NONE, -1, -1, DbSearch.FetchMode.ID, false);
@@ -516,8 +514,7 @@ public final class MailboxIndex {
                         boolean success = false;
                         try {
                             mailbox.beginTransaction("indexAllDeferredFlagItems", null);
-                            DbSearchConstraints c = new DbSearchConstraints();
-                            c.tags = new HashSet<Tag>();
+                            DbSearchConstraints.Leaf c = new DbSearchConstraints.Leaf();
                             c.tags.add(mailbox.getFlagById(Flag.ID_INDEXING_DEFERRED));
                             List<DbSearch.Result> list = DbSearch.search(mailbox.getOperationConnection(),
                                     mailbox, c, SortBy.NONE, -1, -1, DbSearch.FetchMode.MODCONTENT, false);
@@ -533,7 +530,6 @@ public final class MailboxIndex {
                             }
                             mailbox.getOperationConnection(); // we must call this before DbMailItem.alterTag
                             DbMailItem.alterTag(indexingDeferredFlag, deferredTagsToClear, false);
-
                             success = true;
                         } finally {
                             mailbox.endTransaction(success);
@@ -772,7 +768,7 @@ public final class MailboxIndex {
     /**
      * Executes a DB search in a mailbox transaction.
      */
-    public List<DbSearch.Result> search(DbSearchConstraintsNode constraints,
+    public List<DbSearch.Result> search(DbSearchConstraints constraints,
             DbSearch.FetchMode fetch, SortBy sort, int offset, int size, boolean inDumpster) throws ServiceException {
         List<DbSearch.Result> result;
         boolean success = false;

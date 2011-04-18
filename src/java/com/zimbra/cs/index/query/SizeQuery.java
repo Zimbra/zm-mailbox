@@ -117,26 +117,19 @@ public final class SizeQuery extends Query {
     @Override
     public QueryOperation compile(Mailbox mbox, boolean bool) {
         DBQueryOperation op = new DBQueryOperation();
-        long highest = -1;
-        long lowest = -1;
-
         switch (type) {
             case GT:
-                highest = -1;
-                lowest = size;
+                op.addSizeRange(size, false, -1, false, evalBool(bool));
                 break;
             case LT:
-                highest = size;
-                lowest = -1;
+                op.addSizeRange(-1, false, size, false, evalBool(bool));
                 break;
             case EQ:
-                highest = size + 1;
-                lowest = size - 1;
+                op.addSizeRange(size, true, size, true, evalBool(bool));
                 break;
             default:
                 assert false : type;
         }
-        op.addSizeClause(lowest, highest, evalBool(bool));
         return op;
     }
 

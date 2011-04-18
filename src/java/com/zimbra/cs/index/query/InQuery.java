@@ -177,9 +177,9 @@ public final class InQuery extends Query {
             if (specialTarget == In.NONE) {
                 return new NoResultsQueryOperation();
             } else if (specialTarget == In.ANY) {
-                DBQueryOperation dbOp = new DBQueryOperation();
-                dbOp.addAnyFolderClause(evalBool(bool));
-                return dbOp;
+                DBQueryOperation op = new DBQueryOperation();
+                op.addAnyFolder(evalBool(bool));
+                return op;
             } else {
                 if (evalBool(bool)) {
                     if (specialTarget == In.REMOTE) {
@@ -222,12 +222,12 @@ public final class InQuery extends Query {
                         if (sub instanceof Mountpoint) {
                             Mountpoint mpt = (Mountpoint) sub;
                             if (!mpt.isLocal()) {
-                                dbop.addInRemoteFolderClause(mpt.getTarget(), "", includeSubfolders, evalBool(bool));
+                                dbop.addInRemoteFolder(mpt.getTarget(), "", includeSubfolders, evalBool(bool));
                             } else {
                                 // TODO FIXME handle local mountpoints. Don't forget to check for infinite recursion!
                             }
                         } else {
-                            dbop.addInClause(sub, evalBool(bool));
+                            dbop.addInFolder(sub, evalBool(bool));
                         }
                     }
                     return union;
@@ -241,22 +241,22 @@ public final class InQuery extends Query {
                         if (f instanceof Mountpoint) {
                             Mountpoint mpt = (Mountpoint)f;
                             if (!mpt.isLocal()) {
-                                dbop.addInRemoteFolderClause(mpt.getTarget(), "", includeSubfolders, evalBool(bool));
+                                dbop.addInRemoteFolder(mpt.getTarget(), "", includeSubfolders, evalBool(bool));
                             } else {
                                 // TODO FIXME handle local mountpoints.  Don't forget to check for infinite recursion!
                             }
 
                         } else {
-                            dbop.addInClause(f, evalBool(bool));
+                            dbop.addInFolder(f, evalBool(bool));
                         }
                     }
                     return iop;
                 }
             } else {
-                dbOp.addInClause(folder, evalBool(bool));
+                dbOp.addInFolder(folder, evalBool(bool));
             }
         } else if (remoteId != null) {
-            dbOp.addInRemoteFolderClause(remoteId, subfolderPath, includeSubfolders, evalBool(bool));
+            dbOp.addInRemoteFolder(remoteId, subfolderPath, includeSubfolders, evalBool(bool));
         } else {
             assert(false);
         }

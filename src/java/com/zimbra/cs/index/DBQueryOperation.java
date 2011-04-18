@@ -54,7 +54,7 @@ import com.zimbra.cs.service.util.ItemId;
 public class DBQueryOperation extends QueryOperation {
     private static final int MAX_HITS_PER_CHUNK = 2000;
 
-    private IConstraints constraints = new DbLeafNode();
+    private DbSearchConstraints constraints = new DbSearchConstraints.Leaf();
     private int hitsOffset = 0; // this is the logical offset of the end of the mDBHits buffer
     private int dbOffset = 0; // this is the offset IN THE DATABASE when we're doing a DB-FIRST iteration
     private int cursorOffset = -1; // calculated cursor offset
@@ -122,13 +122,13 @@ public class DBQueryOperation extends QueryOperation {
 
     @Override
     QueryOperation expandLocalRemotePart(Mailbox mbox) throws ServiceException {
-        if (constraints instanceof DbLeafNode) {
+        if (constraints instanceof DbSearchConstraints.Leaf) {
             boolean added = false;
 
             if (includeIsLocalFolders) {
                 includeIsLocalFolders = false; // expanded!
 
-                DbLeafNode leaf = (DbLeafNode) constraints;
+                DbSearchConstraints.Leaf leaf = (DbSearchConstraints.Leaf) constraints;
 
                 for (Folder f : mbox.getFolderById(null, Mailbox.ID_FOLDER_ROOT).getSubfolderHierarchy()) {
                     if (!(f instanceof Mountpoint) && !(f instanceof SearchFolder)) {
@@ -152,7 +152,7 @@ public class DBQueryOperation extends QueryOperation {
                         if (!mpt.isLocal()) {
                             // add remote folder ref
                             DBQueryOperation db = new DBQueryOperation();
-                            db.addInRemoteFolderClause(mpt.getTarget(), "", true, true);
+                            db.addInRemoteFolder(mpt.getTarget(), "", true, true);
                             toRet.add(db);
                             added = true;
                         }
@@ -237,20 +237,16 @@ public class DBQueryOperation extends QueryOperation {
      * A bit weird -- basically we want to AND a new constraint: but since the constraints object could potentially be
      * a tree, we need a function to find the right place in the tree to add the new constraint
      */
-    DbLeafNode getTopANDedConstraint() {
-        switch (constraints.getNodeType()) {
-            case LEAF:
-                return (DbLeafNode) constraints;
-            case AND:
-                DbAndNode and = (DbAndNode) constraints;
-                return and.getLeafChild();
-            case OR:
-                IConstraints top = new DbAndNode();
-                constraints = top.andIConstraints(constraints);
-                return ((DbAndNode) constraints).getLeafChild();
-            default:
-                assert false : constraints.getNodeType();
-                return null;
+    DbSearchConstraints.Leaf getTopLeafConstraint() {
+        if (constraints instanceof DbSearchConstraints.Intersection) {
+            DbSearchConstraints.Intersection and = (DbSearchConstraints.Intersection) constraints;
+            return and.getLeafChild();
+        } else if (constraints instanceof DbSearchConstraints.Union) {
+            DbSearchConstraints top = new DbSearchConstraints.Intersection();
+            constraints = top.and(constraints);
+            return ((DbSearchConstraints.Intersection) constraints).getLeafChild();
+        } else {
+            return (DbSearchConstraints.Leaf) constraints;
         }
     }
 
@@ -271,60 +267,60 @@ public class DBQueryOperation extends QueryOperation {
     public void addItemIdClause(Mailbox mbox, ItemId itemId, boolean truth) {
         allResultsQuery = false;
         if (itemId.belongsTo(mbox)) { // LOCAL
-            assert queryTarget.isCompatibleLocal() : getTopANDedConstraint() + "," + itemId;
+            assert queryTarget.isCompatibleLocal() : getTopLeafConstraint() + "," + itemId;
             queryTarget = QueryTarget.LOCAL;
-            getTopANDedConstraint().addItemIdClause(itemId.getId(), truth);
+            getTopLeafConstraint().addItemIdClause(itemId.getId(), truth);
         } else { // REMOTE
-            assert queryTarget != QueryTarget.LOCAL : getTopANDedConstraint() + "," + itemId;
+            assert queryTarget != QueryTarget.LOCAL : getTopLeafConstraint() + "," + itemId;
             queryTarget = new QueryTarget(itemId.getAccountId());
-            getTopANDedConstraint().addRemoteItemIdClause(itemId, truth);
+            getTopLeafConstraint().addRemoteItemIdClause(itemId, truth);
         }
     }
 
-    public void addDateClause(long lowestDate, boolean lowestEq, long highestDate, boolean highestEq, boolean truth)  {
+    public void addDateRange(long min, boolean minInclusive, long max, boolean maxInclusive, boolean bool) {
         allResultsQuery = false;
-        getTopANDedConstraint().addDateClause(lowestDate, lowestEq, highestDate, highestEq, truth);
+        getTopLeafConstraint().addDateRange(min, minInclusive, max, maxInclusive, bool);
     }
 
-    public void addCalStartDateClause(long lowestDate, boolean lowestEq, long highestDate, boolean highestEq, boolean truth)  {
+    public void addCalStartDateRange(long min, boolean minInclusive, long max, boolean maxInclusive, boolean bool) {
         allResultsQuery = false;
-        getTopANDedConstraint().addCalStartDateClause(lowestDate, lowestEq, highestDate, highestEq, truth);
+        getTopLeafConstraint().addCalStartDateRange(min, minInclusive, max, maxInclusive, bool);
     }
 
-    public void addCalEndDateClause(long lowestDate, boolean lowestEq, long highestDate, boolean highestEq, boolean truth)  {
+    public void addCalEndDateRange(long min, boolean minInclusive, long max, boolean maxInclusive, boolean bool) {
         allResultsQuery = false;
-        getTopANDedConstraint().addCalEndDateClause(lowestDate, lowestEq, highestDate, highestEq, truth);
+        getTopLeafConstraint().addCalEndDateRange(min, minInclusive, max, maxInclusive, bool);
     }
 
-    public void addConvCountClause(long lowest, boolean lowestEq, long highest, boolean highestEq, boolean truth)  {
+    public void addConvCountRange(long min, boolean minInclusive, long max, boolean maxInclusive, boolean bool) {
         allResultsQuery = false;
-        getTopANDedConstraint().addConvCountClause(lowest, lowestEq, highest, highestEq, truth);
+        getTopLeafConstraint().addConvCountRange(min, minInclusive, max, maxInclusive, bool);
     }
 
-    public void addModSeqClause(long lowest, boolean lowestEq, long highest, boolean highestEq, boolean truth)  {
+    public void addModSeqRange(long min, boolean minInclusive, long max, boolean maxInclusive, boolean bool) {
         allResultsQuery = false;
-        getTopANDedConstraint().addModSeqClause(lowest, lowestEq, highest, highestEq, truth);
+        getTopLeafConstraint().addModSeqRange(min, minInclusive, max, maxInclusive, bool);
     }
 
-    public void addSizeClause(long lowestSize, long highestSize, boolean truth)  {
+    public void addSizeRange(long min, boolean minInclusive, long max, boolean maxInclusive, boolean bool) {
         allResultsQuery = false;
-        getTopANDedConstraint().addSizeClause(lowestSize, highestSize, truth);
+        getTopLeafConstraint().addSizeRange(min, minInclusive, max, maxInclusive, bool);
     }
 
-    public void addRelativeSubject(String lowestSubj, boolean lowerEqual, String highestSubj, boolean higherEqual, boolean truth)  {
+    public void addSubjectRange(String min, boolean minInclusive, String max, boolean maxInclusive, boolean bool) {
         allResultsQuery = false;
-        getTopANDedConstraint().addSubjectRelClause(lowestSubj, lowerEqual, highestSubj, higherEqual, truth);
+        getTopLeafConstraint().addSubjectRange(min, minInclusive, max, maxInclusive, bool);
     }
 
-    public void addRelativeSender(String lowestSubj, boolean lowerEqual, String highestSubj, boolean higherEqual, boolean truth)  {
+    public void addSenderRange(String min, boolean minInclusive, String max, boolean maxIncluisve, boolean bool) {
         allResultsQuery = false;
-        getTopANDedConstraint().addSenderRelClause(lowestSubj, lowerEqual, highestSubj, higherEqual, truth);
+        getTopLeafConstraint().addSenderRange(min, minInclusive, max, maxIncluisve, bool);
     }
 
     public void setFromContact(boolean bool) {
         allResultsQuery = false;
         queryTarget = QueryTarget.LOCAL;
-        getTopANDedConstraint().setFromContact(bool);
+        getTopLeafConstraint().setFromContact(bool);
     }
 
     public void addConvId(Mailbox mbox, ItemId convId, boolean truth) {
@@ -335,14 +331,14 @@ public class DBQueryOperation extends QueryOperation {
                         "Cannot addConvId w/ local target b/c DBQueryOperation already has a remote target");
             }
             queryTarget = QueryTarget.LOCAL;
-            getTopANDedConstraint().addConvId(convId.getId(), truth);
+            getTopLeafConstraint().addConvId(convId.getId(), truth);
         } else { // REMOTE
             if (queryTarget != QueryTarget.UNSPECIFIED && !queryTarget.toString().equals(convId.getAccountId())) {
                 throw new IllegalArgumentException(
                         "Cannot addConvId w/ remote target b/c DBQueryOperation already has an incompatible remote target");
             }
             queryTarget = new QueryTarget(convId.getAccountId());
-            getTopANDedConstraint().addRemoteConvId(convId, truth);
+            getTopLeafConstraint().addRemoteConvId(convId, truth);
         }
     }
 
@@ -379,24 +375,22 @@ public class DBQueryOperation extends QueryOperation {
     /**
      * Handles query clause that resolves to a remote folder.
      */
-    public void addInRemoteFolderClause(ItemId remoteFolderId, String subfolderPath,
-            boolean includeSubfolders, boolean truth) {
+    public void addInRemoteFolder(ItemId remoteFolderId, String subfolderPath,
+            boolean includeSubfolders, boolean bool) {
         allResultsQuery = false;
-
         if (queryTarget != QueryTarget.UNSPECIFIED && !queryTarget.toString().equals(remoteFolderId.getAccountId())) {
             throw new IllegalArgumentException(
                     "Cannot addInClause b/c DBQueryOperation already has an incompatible remote target");
         }
-
         queryTarget = new QueryTarget(remoteFolderId.getAccountId());
-        getTopANDedConstraint().addInRemoteFolderClause(remoteFolderId, subfolderPath, includeSubfolders, truth);
+        getTopLeafConstraint().addInRemoteFolder(remoteFolderId, subfolderPath, includeSubfolders, bool);
     }
 
-    public void addInClause(Folder folder, boolean truth) {
+    public void addInFolder(Folder folder, boolean bool) {
         assert !(folder instanceof Mountpoint) || ((Mountpoint)folder).isLocal() : folder;
 
         allResultsQuery = false;
-        if (truth) {
+        if (bool) {
             // EG: -in:trash is not necessarily a "local" target -- we only imply
             // a target when we're positive
             if (!queryTarget.isCompatibleLocal()) {
@@ -405,20 +399,19 @@ public class DBQueryOperation extends QueryOperation {
             }
             queryTarget = QueryTarget.LOCAL;
         }
-
-        getTopANDedConstraint().addInClause(folder, truth);
+        getTopLeafConstraint().addInFolder(folder, bool);
     }
 
-    public void addAnyFolderClause(boolean truth) {
-        getTopANDedConstraint().addAnyFolderClause(truth);
-        if (!truth) { // if they are weird enough to say "NOT is:anywhere" then we just make it a no-results-query.
+    public void addAnyFolder(boolean bool) {
+        getTopLeafConstraint().addAnyFolder(bool);
+        if (!bool) { // if they are weird enough to say "NOT is:anywhere" then we just make it a no-results-query.
             allResultsQuery = false;
         }
     }
 
-    public void addTagClause(Tag tag, boolean truth) {
+    public void addTag(Tag tag, boolean bool) {
         allResultsQuery = false;
-        getTopANDedConstraint().addTagClause(tag, truth);
+        getTopLeafConstraint().addTag(tag, bool);
     }
 
     @Override
@@ -649,8 +642,8 @@ public class DBQueryOperation extends QueryOperation {
 
     private boolean shouldExecuteDbFirst() throws ServiceException {
         // look for item-id or conv-id query parts, if those are set, then we'll execute DB-FIRST
-        DbLeafNode toplevel = getTopANDedConstraint();
-        if (toplevel.convId > 0 || toplevel.itemIds.size() > 0) {
+        DbSearchConstraints.Leaf top = getTopLeafConstraint();
+        if (top.convId > 0 || !top.itemIds.isEmpty()) {
             return true;
         }
 
@@ -679,7 +672,7 @@ public class DBQueryOperation extends QueryOperation {
         ZimbraLog.search.debug("Fetching a DB-FIRST chunk");
 
         // we want only indexed items from db
-        DbLeafNode sc = getTopANDedConstraint();
+        DbSearchConstraints.Leaf sc = getTopLeafConstraint();
         sc.hasIndexId = Boolean.TRUE;
 
         do {
@@ -762,7 +755,7 @@ public class DBQueryOperation extends QueryOperation {
             // limit in clause based on Db capabilities - bug 15511
             luceneChunk = luceneOp.getNextResultsChunk(Math.min(Db.getINClauseBatchSize(), hitsPerChunk));
 
-            DbLeafNode sc = getTopANDedConstraint();
+            DbSearchConstraints.Leaf sc = getTopLeafConstraint();
             sc.indexIds = luceneChunk.getIndexIds();
 
             ZimbraLog.search.debug("Fetched Lucene Chunk of %d hits in %d ms",
@@ -876,7 +869,7 @@ public class DBQueryOperation extends QueryOperation {
     }
 
     private long calcTotalHitCount() throws ServiceException {
-        Folder folder = getTopANDedConstraint().getOnlyFolder();
+        Folder folder = getTopLeafConstraint().getOnlyFolder();
         if (folder != null) {
             if (context.getResults().getTypes().contains(MailItem.Type.CONVERSATION)) {
                 return folder.getConversationCount();
@@ -898,7 +891,7 @@ public class DBQueryOperation extends QueryOperation {
             return;
         }
         boolean calcOffset = cursor.isIncludeOffset();
-        DbLeafNode offsetConstraints = null; // to calculate the cursor offset
+        DbSearchConstraints.Leaf offsetConstraints = null; // to calculate the cursor offset
         SortBy sort = context.getParams().getSortBy();
         // in some cases we cannot use cursors, even if they are requested.
         // - Task-sorts cannot be used with cursors (bug 23427) at all.
@@ -922,89 +915,89 @@ public class DBQueryOperation extends QueryOperation {
             case DATE_ASC: {
                 long low = Long.parseLong(cursor.getSortValue());
                 long high = cursor.getEndSortValue() != null ? Long.parseLong(cursor.getEndSortValue()) : -1;
-                DbLeafNode top = getTopANDedConstraint();
+                DbSearchConstraints.Leaf top = getTopLeafConstraint();
                 if (calcOffset) {
-                    offsetConstraints = (DbLeafNode) top.clone();
-                    offsetConstraints.addDateClause(-1, false, low, false, true);
+                    offsetConstraints = top.clone();
+                    offsetConstraints.addDateRange(-1, false, low, false, true);
                 }
-                top.addDateClause(low, true, high, false, true);
+                top.addDateRange(low, true, high, false, true);
                 break;
             }
             case DATE_DESC: {
                 long high = Long.parseLong(cursor.getSortValue());
                 long low = cursor.getEndSortValue() != null ? Long.parseLong(cursor.getEndSortValue()) : -1;
-                DbLeafNode top = getTopANDedConstraint();
+                DbSearchConstraints.Leaf top = getTopLeafConstraint();
                 if (calcOffset) {
-                    offsetConstraints = (DbLeafNode) top.clone();
-                    offsetConstraints.addDateClause(high, false, -1, false, true);
+                    offsetConstraints = top.clone();
+                    offsetConstraints.addDateRange(high, false, -1, false, true);
                 }
-                top.addDateClause(low, false, high, true, true);
+                top.addDateRange(low, false, high, true, true);
                 break;
             }
             case SUBJ_ASC: {
                 String low = cursor.getSortValue();
                 String high = cursor.getEndSortValue();
-                DbLeafNode top = getTopANDedConstraint();
+                DbSearchConstraints.Leaf top = getTopLeafConstraint();
                 if (calcOffset) {
-                    offsetConstraints = (DbLeafNode) top.clone();
-                    offsetConstraints.addSubjectRelClause(null, false, low, false, true);
+                    offsetConstraints = top.clone();
+                    offsetConstraints.addSubjectRange(null, false, low, false, true);
                 }
-                top.addSubjectRelClause(low, true, high, false, true);
+                top.addSubjectRange(low, true, high, false, true);
                 break;
             }
             case SUBJ_DESC: {
                 String high = cursor.getSortValue();
                 String low = cursor.getEndSortValue();
-                DbLeafNode top = getTopANDedConstraint();
+                DbSearchConstraints.Leaf top = getTopLeafConstraint();
                 if (calcOffset) {
-                    offsetConstraints = (DbLeafNode) top.clone();
-                    offsetConstraints.addSubjectRelClause(high, false, null, false, true);
+                    offsetConstraints = top.clone();
+                    offsetConstraints.addSubjectRange(high, false, null, false, true);
                 }
-                top.addSubjectRelClause(low, false, high, true, true);
+                top.addSubjectRange(low, false, high, true, true);
                 break;
             }
             case SIZE_ASC: {
-                long low = Long.parseLong(cursor.getSortValue()) - 1;
+                long low = Long.parseLong(cursor.getSortValue());
                 long high = cursor.getEndSortValue() != null ? Long.parseLong(cursor.getEndSortValue()) : -1;
-                DbLeafNode top = getTopANDedConstraint();
+                DbSearchConstraints.Leaf top = getTopLeafConstraint();
                 if (calcOffset) {
-                    offsetConstraints = (DbLeafNode) top.clone();
-                    offsetConstraints.addSizeClause(-1, low, true);
+                    offsetConstraints = top.clone();
+                    offsetConstraints.addSizeRange(-1, false, low, false, true);
                 }
-                top.addSizeClause(low, high, true);
+                top.addSizeRange(low, true, high, false, true);
                 break;
             }
             case SIZE_DESC: {
-                long high = Long.parseLong(cursor.getSortValue()) + 1;
+                long high = Long.parseLong(cursor.getSortValue());
                 long low = cursor.getEndSortValue() != null ? Long.parseLong(cursor.getEndSortValue()) : -1;
-                DbLeafNode top = getTopANDedConstraint();
+                DbSearchConstraints.Leaf top = getTopLeafConstraint();
                 if (calcOffset) {
-                    offsetConstraints = (DbLeafNode) top.clone();
-                    offsetConstraints.addSizeClause(high, -1, true);
+                    offsetConstraints = top.clone();
+                    offsetConstraints.addSizeRange(high, false, -1, false, true);
                 }
-                top.addSizeClause(low, high, true);
+                top.addSizeRange(low, false, high, true, true);
                 break;
             }
             case NAME_ASC: {
                 String low = cursor.getSortValue();
                 String high = cursor.getEndSortValue();
-                DbLeafNode top = getTopANDedConstraint();
+                DbSearchConstraints.Leaf top = getTopLeafConstraint();
                 if (calcOffset)  {
-                    offsetConstraints = (DbLeafNode) top.clone();
-                    offsetConstraints.addSenderRelClause(null, false, low, false, true);
+                    offsetConstraints = top.clone();
+                    offsetConstraints.addSenderRange(null, false, low, false, true);
                 }
-                top.addSenderRelClause(low, true, high, false, true);
+                top.addSenderRange(low, true, high, false, true);
                 break;
             }
             case NAME_DESC: {
                 String high = cursor.getSortValue();
                 String low = cursor.getEndSortValue();
-                DbLeafNode top = getTopANDedConstraint();
+                DbSearchConstraints.Leaf top = getTopLeafConstraint();
                 if (calcOffset) {
-                    offsetConstraints = (DbLeafNode) top.clone();
-                    offsetConstraints.addSenderRelClause(high, false, null, false, true);
+                    offsetConstraints = top.clone();
+                    offsetConstraints.addSenderRange(high, false, null, false, true);
                 }
-                top.addSenderRelClause(low, false, high, true, true);
+                top.addSenderRange(low, false, high, true, true);
                 break;
             }
             default:
@@ -1073,7 +1066,7 @@ public class DBQueryOperation extends QueryOperation {
         assert(luceneChunk == null);
 
         DBQueryOperation result = (DBQueryOperation) super.clone();
-        result.constraints = (IConstraints) constraints.clone();
+        result.constraints = (DbSearchConstraints) constraints.clone();
         result.excludeTypes.addAll(excludeTypes);
         result.nextHits = new ArrayList<ZimbraHit>();
         return result;
@@ -1134,7 +1127,7 @@ public class DBQueryOperation extends QueryOperation {
                 if (queryTarget == null) {
                     queryTarget = dbOther.queryTarget;
                 }
-                constraints = constraints.orIConstraints(dbOther.constraints);
+                constraints = constraints.or(dbOther.constraints);
                 return this;
             } else {
                 return null;
@@ -1187,7 +1180,7 @@ public class DBQueryOperation extends QueryOperation {
                 allResultsQuery = false;
             }
 
-            constraints = constraints.andIConstraints(dbOther.constraints);
+            constraints = constraints.and(dbOther.constraints);
 
             return this;
         }

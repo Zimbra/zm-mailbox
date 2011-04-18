@@ -91,7 +91,7 @@ public final class ModseqQuery extends Query {
                 break;
         }
 
-        op.addModSeqClause(lowest, lowestEq, highest, highestEq, evalBool(bool));
+        op.addModSeqRange(lowest, lowestEq, highest, highestEq, evalBool(bool));
         return op;
     }
 

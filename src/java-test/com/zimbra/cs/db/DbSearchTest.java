@@ -22,16 +22,16 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool.DbConnection;
-import com.zimbra.cs.index.DbLeafNode;
+import com.zimbra.cs.index.DbSearchConstraints;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
 
 /**
  * Unit test for {@link DbSearch}.
@@ -42,19 +42,14 @@ public final class DbSearchTest {
 
     @BeforeClass
     public static void init() throws Exception {
-        Provisioning prov = new MockProvisioning();
+        MailboxTestUtil.initServer();
+        Provisioning prov = Provisioning.getInstance();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
-        Provisioning.setInstance(prov);
-
-        LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
-        DbPool.startup();
-        HSQLDB.createDatabase();
     }
 
     @Before
     public void setUp() throws Exception {
-        HSQLDB.clearDatabase();
-        MailboxManager.getInstance().clearCache();
+        MailboxTestUtil.clearData();
     }
 
     @Test
@@ -75,8 +70,8 @@ public final class DbSearchTest {
                 "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0)", mbox.getId(), 102, MailItem.Type.MESSAGE.toByte(),
                 Flag.BITMASK_REPLIED);
 
-        List<DbSearch.Result> result = DbSearch.search(conn, mbox, new DbLeafNode(), SortBy.ATTACHMENT_ASC,
-                0, 100, DbSearch.FetchMode.ID, false);
+        List<DbSearch.Result> result = DbSearch.search(conn, mbox, new DbSearchConstraints.Leaf(),
+                SortBy.ATTACHMENT_ASC, 0, 100, DbSearch.FetchMode.ID, false);
         Assert.assertEquals(3, result.size());
         Assert.assertEquals(100, result.get(0).getId());
         Assert.assertEquals(0, result.get(0).getSortValue());
@@ -85,7 +80,7 @@ public final class DbSearchTest {
         Assert.assertEquals(101, result.get(2).getId());
         Assert.assertEquals(1, result.get(2).getSortValue());
 
-        result = DbSearch.search(conn, mbox, new DbLeafNode(), SortBy.ATTACHMENT_DESC,
+        result = DbSearch.search(conn, mbox, new DbSearchConstraints.Leaf(), SortBy.ATTACHMENT_DESC,
                 0, 100, DbSearch.FetchMode.ID, false);
         Assert.assertEquals(3, result.size());
         Assert.assertEquals(101, result.get(0).getId());
@@ -116,7 +111,7 @@ public final class DbSearchTest {
                 "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0)", mbox.getId(), 102, MailItem.Type.MESSAGE.toByte(),
                 Flag.BITMASK_REPLIED);
 
-        List<DbSearch.Result> result = DbSearch.search(conn, mbox, new DbLeafNode(), SortBy.FLAG_ASC,
+        List<DbSearch.Result> result = DbSearch.search(conn, mbox, new DbSearchConstraints.Leaf(), SortBy.FLAG_ASC,
                 0, 100, DbSearch.FetchMode.ID, false);
         Assert.assertEquals(3, result.size());
         Assert.assertEquals(100, result.get(0).getId());
@@ -126,7 +121,7 @@ public final class DbSearchTest {
         Assert.assertEquals(101, result.get(2).getId());
         Assert.assertEquals(1, result.get(2).getSortValue());
 
-        result = DbSearch.search(conn, mbox, new DbLeafNode(), SortBy.FLAG_DESC,
+        result = DbSearch.search(conn, mbox, new DbSearchConstraints.Leaf(), SortBy.FLAG_DESC,
                 0, 100, DbSearch.FetchMode.ID, false);
         Assert.assertEquals(3, result.size());
         Assert.assertEquals(101, result.get(0).getId());
@@ -157,7 +152,7 @@ public final class DbSearchTest {
                 "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0)", mbox.getId(), 102, MailItem.Type.MESSAGE.toByte(),
                 Flag.BITMASK_REPLIED);
 
-        List<DbSearch.Result> result = DbSearch.search(conn, mbox, new DbLeafNode(), SortBy.PRIORITY_ASC,
+        List<DbSearch.Result> result = DbSearch.search(conn, mbox, new DbSearchConstraints.Leaf(), SortBy.PRIORITY_ASC,
                 0, 100, DbSearch.FetchMode.ID, false);
         Assert.assertEquals(3, result.size());
         Assert.assertEquals(100, result.get(0).getId());
@@ -167,7 +162,7 @@ public final class DbSearchTest {
         Assert.assertEquals(101, result.get(2).getId());
         Assert.assertEquals(1, result.get(2).getSortValue());
 
-        result = DbSearch.search(conn, mbox, new DbLeafNode(), SortBy.PRIORITY_DESC,
+        result = DbSearch.search(conn, mbox, new DbSearchConstraints.Leaf(), SortBy.PRIORITY_DESC,
                 0, 100, DbSearch.FetchMode.ID, false);
         Assert.assertEquals(3, result.size());
         Assert.assertEquals(101, result.get(0).getId());
