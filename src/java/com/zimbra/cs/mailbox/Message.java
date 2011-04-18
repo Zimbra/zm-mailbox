@@ -1115,7 +1115,9 @@ public class Message extends MailItem {
             copy.setDraftAutoSendTime(0);
 
         Conversation parent = (Conversation) getParent();
-        if (parent instanceof VirtualConversation && parent.getId() == newParent.mId && !isDraft() && inSpam() == folder.inSpam()) {
+        if (parent instanceof VirtualConversation &&
+                parent.getId() == (newParent == null ? -1 : newParent.mId) &&
+                !isDraft() && inSpam() == folder.inSpam()) {
             Conversation conv = mMailbox.createConversation(Mailbox.ID_AUTO_INCREMENT, this, copy);
             DbMailItem.changeOpenTargets(this, conv.getId());
             parent.removeChild(this);
