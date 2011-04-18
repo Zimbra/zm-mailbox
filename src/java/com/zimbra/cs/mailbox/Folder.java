@@ -154,11 +154,13 @@ public class Folder extends MailItem {
      */
     public long getConversationCount() throws ServiceException {
         if (conversationCount < 0) {
-            DbConnection conn = DbPool.getConnection(getMailbox());
-            try {
-                conversationCount = DbMailItem.getConversationCount(conn, this);
-            } finally {
-                DbPool.quietClose(conn);
+            synchronized (getMailbox()) {
+                DbConnection conn = DbPool.getConnection(getMailbox());
+                try {
+                    conversationCount = DbMailItem.getConversationCount(conn, this);
+                } finally {
+                    DbPool.quietClose(conn);
+                }
             }
         }
         return conversationCount;
