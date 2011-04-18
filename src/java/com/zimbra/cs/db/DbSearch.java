@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ListUtil;
@@ -585,7 +586,7 @@ public final class DbSearch {
             case RCPT:
             case NAME:
             case NAME_NATURAL_ORDER:
-                return rs.getString(SORT_COLUMN_ALIAS);
+                return Strings.nullToEmpty(rs.getString(SORT_COLUMN_ALIAS));
             case SIZE:
                 return new Long(rs.getInt(SORT_COLUMN_ALIAS));
             case ATTACHMENT:
