@@ -17,7 +17,7 @@ package com.zimbra.cs.prov.ldap.entry;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ldap.LdapException;
-import com.zimbra.cs.ldap.ZSearchResultEntry;
+import com.zimbra.cs.ldap.ZAttributes;
 
 /**
  * 
@@ -28,11 +28,11 @@ public class LdapConfig extends Config implements LdapEntry {
     
     private String mDn;
     
-    LdapConfig(ZSearchResultEntry entry, Provisioning provisioning) throws LdapException {
-        super(entry.getAttributes().getAttrs(), provisioning);
-        mDn = entry.getDN();
+    public LdapConfig(String dn, ZAttributes attrs, Provisioning provisioning) throws LdapException {
+        super(attrs.getAttrs(), provisioning);
+        mDn = dn;
     }
-
+    
     public String getDN() {
         return mDn;
     }

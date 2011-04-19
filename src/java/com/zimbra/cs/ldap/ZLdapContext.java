@@ -1,5 +1,7 @@
 package com.zimbra.cs.ldap;
 
+import javax.naming.directory.Attributes;
+
 import com.zimbra.common.service.ServiceException;
 
 public abstract class ZLdapContext extends ZLdapElement implements ILdapContext {
@@ -9,6 +11,8 @@ public abstract class ZLdapContext extends ZLdapElement implements ILdapContext 
     public abstract ZModificationList createModiftcationList();
     
     public abstract void deleteChildren(String dn) throws ServiceException;
+    
+    public abstract  ZAttributes getAttributes(String dn) throws LdapException;
     
     public abstract void modifyAttributes(String dn, ZModificationList modList) throws LdapException;
     

@@ -47,8 +47,8 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
-import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.qa.unittest.TestProvisioningUtil.IDNName;
 
 import junit.framework.AssertionFailedError;
@@ -386,7 +386,7 @@ public class TestRenameDomain  extends TestCase {
     private void createIdentities(Account acct, String[] sigIds) throws Exception {
         for (int i = 0; i < NUM_IDENTITIES; i++) {
             Map<String, Object> attrs = new HashMap<String, Object>();
-            attrs.put(Provisioning.A_zimbraPrefDefaultSignatureId, LegacyLdapUtil.generateUUID());  // just some random id, not used anywhere
+            attrs.put(Provisioning.A_zimbraPrefDefaultSignatureId, LdapUtilCommon.generateUUID());  // just some random id, not used anywhere
             attrs.put(Provisioning.A_zimbraPrefFromAddress, "micky.mouse@zimbra,com");
             attrs.put(Provisioning.A_zimbraPrefFromDisplay, "Micky Mouse");
             attrs.put(Provisioning.A_zimbraPrefReplyToEnabled, "TRUE");
@@ -410,7 +410,7 @@ public class TestRenameDomain  extends TestCase {
             attrs.put(Provisioning.A_zimbraDataSourcePort, "9999");
             attrs.put(Provisioning.A_zimbraDataSourceUsername, "mickymouse");
             attrs.put(Provisioning.A_zimbraDataSourceEmailAddress, "micky@google.com");
-            attrs.put(Provisioning.A_zimbraPrefDefaultSignatureId, LegacyLdapUtil.generateUUID()); // just some random id, not used anywhere
+            attrs.put(Provisioning.A_zimbraPrefDefaultSignatureId, LdapUtilCommon.generateUUID()); // just some random id, not used anywhere
             attrs.put(Provisioning.A_zimbraPrefFromDisplay, "Micky Mouse");
             attrs.put(Provisioning.A_zimbraPrefReplyToAddress, "goofy@yahoo.com");
             attrs.put(Provisioning.A_zimbraPrefReplyToDisplay, "Micky");

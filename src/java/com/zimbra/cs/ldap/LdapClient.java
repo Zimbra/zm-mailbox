@@ -5,15 +5,11 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.ZSearchControls.ZSearchControlsFactory;
 import com.zimbra.cs.ldap.ZSearchScope.ZSearchScopeFactory;
-import com.zimbra.cs.ldap.jndi.JNDILdapContext;
-import com.zimbra.cs.ldap.jndi.JNDISearchControls;
-import com.zimbra.cs.ldap.jndi.JNDISearchScope;
-import com.zimbra.cs.ldap.LdapTODO.*;
-import com.zimbra.cs.ldap.unboundid.UBIDLdapContext;
-import com.zimbra.cs.ldap.unboundid.UBIDSearchControls;
-import com.zimbra.cs.ldap.unboundid.UBIDSearchScope;
+import com.zimbra.cs.ldap.jndi.JNDILdapClient;
+import com.zimbra.cs.ldap.unboundid.UBIDLdapClient;
 import com.zimbra.cs.util.Zimbra;
 
 public abstract class LdapClient {
@@ -99,115 +95,52 @@ public abstract class LdapClient {
      * ========================================================
      */
     public static ZLdapContext getContext() throws ServiceException {
-        return getInstance().getCtxt();
+        return getInstance().getContextImpl();
     }
     
     public static ZLdapContext getContext(LdapServerType serverType) throws ServiceException {
-        return getInstance().getCtxt(serverType);
+        return getInstance().getContextImpl(serverType);
     }
     
     public static ZLdapContext getContext(LdapServerType serverType, boolean useConnPool) throws ServiceException {
-        return getInstance().getCtxt(serverType, useConnPool);
+        return getInstance().getContextImpl(serverType, useConnPool);
     }
     
     public static void closeContext(ZLdapContext lctxt) {
-        getInstance().closeCtxt(lctxt);
+        getInstance().closeContextImpl(lctxt);
     }
     
+    public static ZTransientEntry newTransientEntry() {
+        return getInstance().newTransientEntryImpl();
+    }
     
     ////////////////////////////////////////////////////////////////
-    void init() throws LdapException {
-        ZSearchScope.init(getSearchScopeFactory());
-        ZSearchControls.init(getSearchControlsFactory());
+    protected void init() throws LdapException {
+        ZSearchScope.init(getSearchScopeFactoryImpl());
+        ZSearchControls.init(getSearchControlsFactoryImpl());
     }
     
-    protected abstract ZSearchScopeFactory getSearchScopeFactory(); 
+    protected abstract ZSearchScopeFactory getSearchScopeFactoryImpl(); 
     
-    protected abstract ZSearchControlsFactory getSearchControlsFactory(); 
+    protected abstract ZSearchControlsFactory getSearchControlsFactoryImpl(); 
     
-    protected ZLdapContext getCtxt() throws ServiceException {
-        return getCtxt(LdapServerType.REPLICA);
+    protected ZLdapContext getContextImpl() throws ServiceException {
+        return getContext(LdapServerType.REPLICA);
     }
     
-    protected abstract ZLdapContext getCtxt(LdapServerType serverType) throws ServiceException;
+    protected abstract ZLdapContext getContextImpl(LdapServerType serverType) throws ServiceException;
     
-    protected abstract ZLdapContext getCtxt(LdapServerType serverType, boolean useConnPool) throws ServiceException;
+    protected abstract ZLdapContext getContextImpl(LdapServerType serverType, boolean useConnPool) throws ServiceException;
     
-    private void closeCtxt(ZLdapContext lctxt) {
+    private void closeContextImpl(ZLdapContext lctxt) {
         if (lctxt != null) {
             lctxt.closeContext();
         }
     }
     
-    /**
-     * =========
-     * Unboundid
-     * =========
-     */
-    public static class UBIDLdapClient extends LdapClient {
-        @Override
-        void init() throws LdapException {
-            super.init();
-            UBIDLdapContext.init();
-        }
-        
-        @Override 
-        protected ZSearchScopeFactory getSearchScopeFactory() {
-            return new UBIDSearchScope.UBIDSearchScopeFactory();
-        }
-        
-        @Override 
-        protected ZSearchControlsFactory getSearchControlsFactory() {
-            return new UBIDSearchControls.UBIDSearchControlsFactory();
-        }
-        
-        @Override
-        protected ZLdapContext getCtxt(LdapServerType serverType) throws ServiceException {
-            return new UBIDLdapContext(serverType);
-        }
-        
-        /**
-         * useConnPool is always ignored
-         */
-        @Override
-        protected ZLdapContext getCtxt(LdapServerType serverType, boolean useConnPool) throws ServiceException {
-            return getCtxt(serverType);
-        }
-
-    }
+    protected abstract ZTransientEntry newTransientEntryImpl();
     
-    /**
-     * ====
-     * JNDI
-     * ====
-     */
-    public static class JNDILdapClient extends LdapClient {
-        @Override
-        void init() throws LdapException {
-            super.init();
-        }
-        
-        @Override 
-        protected ZSearchScopeFactory getSearchScopeFactory() {
-            return new JNDISearchScope.JNDISearchScopeFactory();
-        }
-        
-        @Override
-        protected ZSearchControlsFactory getSearchControlsFactory() {
-            return new JNDISearchControls.JNDISearchControlsFactory();
-        }
-        
-        @Override
-        protected ZLdapContext getCtxt(LdapServerType serverType) throws ServiceException {
-            return new JNDILdapContext(serverType);
-        }
-        
-        @Override
-        protected ZLdapContext getCtxt(LdapServerType serverType, boolean useConnPool) throws ServiceException {
-            return new JNDILdapContext(serverType, useConnPool);
-        }
 
-    }
     
     public static void main(String[] args) throws ServiceException {
         CliUtil.toolSetup(); // to get logs printed to console

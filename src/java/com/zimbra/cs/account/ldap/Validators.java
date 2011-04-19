@@ -47,13 +47,13 @@ import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.prov.ldap.LdapFilter;
 
-final class Validators {
+final public class Validators {
 
     private Validators() {
     }
 
     // cache the result for 1 min unless the count is within 5 of the limit.
-    static class DomainAccountValidator implements Provisioning.ProvisioningValidator {
+    public static class DomainAccountValidator implements Provisioning.ProvisioningValidator {
         private static final long LDAP_CHECK_INTERVAL  = 60 * 1000;  // 1 min
         private static final long NUM_ACCT_THRESHOLD = 5;
 
@@ -167,7 +167,7 @@ final class Validators {
      *
      * @author pfnguyen
      */
-    static class DomainMaxAccountsValidator implements Provisioning.ProvisioningValidator {
+    public static class DomainMaxAccountsValidator implements Provisioning.ProvisioningValidator {
 
         @Override
         public void refresh() {

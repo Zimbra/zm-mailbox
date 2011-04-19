@@ -23,6 +23,7 @@ import com.zimbra.cs.ldap.LdapException.LdapNameNotFoundException;
 import com.zimbra.cs.ldap.LdapTODO;
 import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.SearchLdapOptions;
+import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.ZModificationList;
 import com.zimbra.cs.ldap.ZSearchControls;
@@ -80,6 +81,16 @@ public class JNDILdapContext extends ZLdapContext {
     @Override
     public void deleteChildren(String dn) throws ServiceException {
         zlc.deleteChildren(dn);
+    }
+    
+    @Override
+    public ZAttributes getAttributes(String dn) throws LdapException {
+        try {
+            Attributes attributes = zlc.getAttributes(dn);
+            return new JNDIAttributes(attributes);
+        } catch (NamingException e) {
+            throw mapToLdapException(e);
+        }
     }
     
     @Override
@@ -154,6 +165,7 @@ public class JNDILdapContext extends ZLdapContext {
             throw LdapException.LDAP_ERROR(e);
         }
     }
+
 
 
 

@@ -23,14 +23,6 @@ public class UBIDModificationList extends ZModificationList {
         
     }
     
-    private ASN1OctetString newASN1OctetString(boolean isBinary, String value) {
-        if (isBinary) {
-            return new ASN1OctetString(ByteUtil.decodeLDAPBase64(value));
-        } else {
-            return new ASN1OctetString(value);
-        }
-    }
-    
     List<Modification> getModList() {
         return modList;
     }
@@ -48,7 +40,7 @@ public class UBIDModificationList extends ZModificationList {
             if (valuesToAdd == null) {
                 valuesToAdd = new ArrayList<ASN1OctetString>();
             }
-            valuesToAdd.add(newASN1OctetString(containsBinaryData, value[i]));
+            valuesToAdd.add(UBIDUtil.newASN1OctetString(containsBinaryData, value[i]));
         }
         if (valuesToAdd != null) {
             String transferAttrName = LdapUtilCommon.attrNameToBinaryTransferAttrName(isBinaryTransfer, name);
@@ -84,7 +76,7 @@ public class UBIDModificationList extends ZModificationList {
         
         List<ASN1OctetString> valuesToMod = new ArrayList<ASN1OctetString>();
         for (int i=0; i < value.length; i++) {
-            valuesToMod.add(newASN1OctetString(containsBinaryData, value[i]));
+            valuesToMod.add(UBIDUtil.newASN1OctetString(containsBinaryData, value[i]));
         }
         
         String transferAttrName = LdapUtilCommon.attrNameToBinaryTransferAttrName(isBinaryTransfer, name);
@@ -117,7 +109,7 @@ public class UBIDModificationList extends ZModificationList {
             if (valuesToRemove == null) {
                 valuesToRemove = new ArrayList<ASN1OctetString>();
             }
-            valuesToRemove.add(newASN1OctetString(containsBinaryData, value[i]));
+            valuesToRemove.add(UBIDUtil.newASN1OctetString(containsBinaryData, value[i]));
         }
         if (valuesToRemove != null) {
             String transferAttrName = LdapUtilCommon.attrNameToBinaryTransferAttrName(isBinaryTransfer, name);

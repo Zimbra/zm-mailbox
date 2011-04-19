@@ -25,7 +25,7 @@ import com.zimbra.cs.ldap.ZSearchResultEntry;
  */
 public class LdapMimeType extends LdapMimeTypeBase {
        
-    LdapMimeType(ZSearchResultEntry entry, Provisioning prov) throws LdapException {
+    public LdapMimeType(ZSearchResultEntry entry, Provisioning prov) throws LdapException {
         super(entry.getAttributes().getAttrs(), null, prov);
         mDn = entry.getDN();
     }

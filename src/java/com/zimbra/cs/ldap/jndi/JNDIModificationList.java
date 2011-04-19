@@ -30,11 +30,6 @@ public class JNDIModificationList extends ZModificationList {
         return modList.toArray(mods);
     }
     
-    private static BasicAttribute newBasicAttribute(boolean isBinaryTransfer, String attrName) {
-        String transferAttrName = LdapUtilCommon.attrNameToBinaryTransferAttrName(isBinaryTransfer, attrName);
-        return new BasicAttribute(transferAttrName);
-    }
-    
     @Override
     public void addAttr(String name, String value[], Entry entry, 
             boolean containsBinaryData, boolean isBinaryTransfer) {
@@ -46,7 +41,7 @@ public class JNDIModificationList extends ZModificationList {
                 continue;
             }
             if (ba == null) {
-                ba = newBasicAttribute(isBinaryTransfer, name);
+                ba = JNDIUtil.newAttribute(isBinaryTransfer, name);
             }
             ba.add(LdapUtilCommon.decodeBase64IfBinary(containsBinaryData, value[i]));
         }
@@ -77,7 +72,7 @@ public class JNDIModificationList extends ZModificationList {
     @Override
     public void modifyAttr(String name, String[] value, 
             boolean containsBinaryData, boolean isBinaryTransfer) {
-        BasicAttribute ba = newBasicAttribute(isBinaryTransfer, name);
+        BasicAttribute ba = JNDIUtil.newAttribute(isBinaryTransfer, name);
         for (int i=0; i < value.length; i++) {
             ba.add(LdapUtilCommon.decodeBase64IfBinary(containsBinaryData, value[i]));
         }
@@ -98,7 +93,7 @@ public class JNDIModificationList extends ZModificationList {
                 continue;
             }
             if (ba == null) {
-                ba = newBasicAttribute(isBinaryTransfer, name);
+                ba = JNDIUtil.newAttribute(isBinaryTransfer, name);
             }
             ba.add(LdapUtilCommon.decodeBase64IfBinary(containsBinaryData, value[i]));
         }

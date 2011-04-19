@@ -18,6 +18,17 @@ import com.zimbra.cs.ldap.LdapTODO.SDKDONE;
 
 public class LdapUtil {
     
+    public static String formatMultipleMatchedEntries(ZSearchResultEntry first, ZSearchResultEnumeration rest) 
+    throws LdapException {
+        StringBuffer dups = new StringBuffer();
+        dups.append("[" + first.getDN() + "] ");
+        while (rest.hasMore()) {
+            ZSearchResultEntry dup = rest.next();
+            dups.append("[" + dup.getDN() + "] ");
+        }
+        
+        return new String(dups);
+    }
     
     /**
      * Modifies the specified entry.  <code>attrs</code> is a <code>Map</code> consisting of

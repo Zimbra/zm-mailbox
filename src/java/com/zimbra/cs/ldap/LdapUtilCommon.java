@@ -88,7 +88,6 @@ public class LdapUtilCommon {
         return UUID.randomUUID().toString();
     }
     
-    
     /*
      * we want to throw the IllegalArgumentException instead of catching it so the cause
      * can be logged with the callers catcher.
@@ -110,4 +109,6 @@ public class LdapUtilCommon {
         
         return true;
     }
+
+
 }

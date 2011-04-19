@@ -50,6 +50,7 @@ import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.account.auth.AuthContext;
+import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 import com.zimbra.qa.unittest.TestProvisioningUtil.IDNName;
 
@@ -434,7 +435,7 @@ public class TestAlias {
         try {
             zlc = new ZimbraLdapContext(true);
             Map<String, Object> attributes = new HashMap<String, Object>();
-            attributes.put(Provisioning.A_zimbraAliasTargetId, LegacyLdapUtil.generateUUID());
+            attributes.put(Provisioning.A_zimbraAliasTargetId, LdapUtilCommon.generateUUID());
             
             List<NamedEntry> aliases = searchAliasesInDomain(domain);
             assertEquals(aliases.size(), 1);
@@ -666,7 +667,7 @@ public class TestAlias {
         try {
             zlc = new ZimbraLdapContext(true);
             Map<String, Object> attributes = new HashMap<String, Object>();
-            attributes.put(Provisioning.A_zimbraAliasTargetId, LegacyLdapUtil.generateUUID());
+            attributes.put(Provisioning.A_zimbraAliasTargetId, LdapUtilCommon.generateUUID());
             
             List<NamedEntry> aliases = searchAliasesInDomain(domain);
             assertEquals(aliases.size(), 1);

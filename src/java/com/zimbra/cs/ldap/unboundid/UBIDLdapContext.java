@@ -32,6 +32,7 @@ import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil.SearchLdapVisitor;
 import com.zimbra.cs.ldap.LdapConfig;
 import com.zimbra.cs.ldap.LdapConnType;
 import com.zimbra.cs.ldap.SearchLdapOptions;
+import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.ZModificationList;
 import com.zimbra.cs.ldap.ZSearchControls;
@@ -131,6 +132,16 @@ public class UBIDLdapContext extends ZLdapContext {
     }
     
     @Override
+    public ZAttributes getAttributes(String dn) throws LdapException {
+        try {
+            SearchResultEntry entry = conn.getEntry(dn);
+            return new UBIDAttributes(entry);
+        } catch (LDAPException e) {
+            throw mapToLdapException(e);
+        }
+    }
+    
+    @Override
     @TODO
     public void modifyAttributes(String dn, ZModificationList modList) throws LdapException {
         try {
@@ -215,6 +226,8 @@ public class UBIDLdapContext extends ZLdapContext {
     public void unbindEntry(String dn) throws LdapException {
         LdapTODO.TODO();
     }
+
+
 
 
     
