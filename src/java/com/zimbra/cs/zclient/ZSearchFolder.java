@@ -23,6 +23,7 @@ import com.zimbra.cs.zclient.ZMailbox.SearchSortBy;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.event.ZModifySearchFolderEvent;
 import com.zimbra.soap.mail.type.SearchFolder;
+import com.zimbra.soap.type.SrchSortBy;
 
 import org.json.JSONException;
 
@@ -50,7 +51,7 @@ public class ZSearchFolder extends ZFolder {
         mTypes = f.getTypes();
         try {
             mSortBy = SearchSortBy.fromString(
-                SystemUtil.coalesce(f.getSortBy(), SearchFolder.SortBy.dateDesc).toString());
+                SystemUtil.coalesce(f.getSortBy(), SrchSortBy.dateDesc).toString());
         } catch (ServiceException se) {
             mSortBy = SearchSortBy.dateDesc;
         }

@@ -37,9 +37,9 @@ import com.zimbra.soap.admin.type.DistributionListSelector;
 import com.zimbra.soap.admin.type.DomainSelector;
 import com.zimbra.soap.admin.type.EffectiveRightsTargetSelector;
 import com.zimbra.soap.admin.type.GranteeSelector;
-import com.zimbra.soap.admin.type.NamedElement;
 import com.zimbra.soap.admin.type.ServerSelector;
 import com.zimbra.soap.admin.type.ShareInfoSelector;
+import com.zimbra.soap.type.NamedElement;
 
 import javax.mail.internet.InternetAddress;
 

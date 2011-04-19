@@ -55,9 +55,9 @@ import com.zimbra.soap.admin.type.EffectiveRightsTarget;
 import com.zimbra.soap.admin.type.EffectiveRightsTargetInfo;
 import com.zimbra.soap.admin.type.GranteeInfo;
 import com.zimbra.soap.admin.type.InDomainInfo;
-import com.zimbra.soap.admin.type.NamedElement;
 import com.zimbra.soap.admin.type.RightWithName;
 import com.zimbra.soap.admin.type.RightsEntriesInfo;
+import com.zimbra.soap.type.NamedElement;
 
 public class RightCommand {
     
