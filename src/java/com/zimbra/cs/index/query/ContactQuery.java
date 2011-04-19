@@ -20,12 +20,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.tokenattributes.TermAttribute;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.search.MultiPhraseQuery;
 import org.apache.lucene.search.PrefixQuery;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.io.Closeables;
 import com.zimbra.common.service.ServiceException;
@@ -49,11 +50,11 @@ public final class ContactQuery extends Query {
 
     public ContactQuery(String text) {
         TokenStream stream = new ContactTokenFilter(new AddrCharTokenizer(new StringReader(text)));
-        TermAttribute termAttr = stream.addAttribute(TermAttribute.class);
+        CharTermAttribute termAttr = stream.addAttribute(CharTermAttribute.class);
         try {
             stream.reset();
             while (stream.incrementToken()) {
-                tokens.add(termAttr.term().replace("*", "")); // remove wildcard characters
+                tokens.add(CharMatcher.is('*').removeFrom(termAttr)); // remove wildcard characters
             }
             stream.end();
             stream.close();

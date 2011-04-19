@@ -16,6 +16,7 @@ package com.zimbra.cs.index;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.lucene.store.Directory;
@@ -95,8 +96,8 @@ public final class LuceneDirectory extends Directory {
         wcount.set(0);
     }
 
-    public File getFile() {
-        return directory.getFile();
+    public File getDirectory() {
+        return directory.getDirectory();
     }
 
     @Override
@@ -136,8 +137,8 @@ public final class LuceneDirectory extends Directory {
     }
 
     @Override
-    public void sync(String name) throws IOException {
-        directory.sync(name);
+    public void sync(Collection<String> names) throws IOException {
+        directory.sync(names);
     }
 
     @Override
@@ -166,7 +167,7 @@ public final class LuceneDirectory extends Directory {
     }
 
     @Override
-    public void setLockFactory(LockFactory lockFactory) {
+    public void setLockFactory(LockFactory lockFactory) throws IOException {
         directory.setLockFactory(lockFactory);
     }
 

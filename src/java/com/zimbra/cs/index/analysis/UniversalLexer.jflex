@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -14,7 +14,7 @@
  */
 package com.zimbra.cs.index.analysis;
 
-import org.apache.lucene.analysis.tokenattributes.TermAttribute;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 
 %%
 
@@ -30,12 +30,12 @@ import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 
 int yychar() { return yychar; }
 
-void getTerm(TermAttribute t) {
-    t.setTermBuffer(zzBuffer, zzStartRead, zzMarkedPos - zzStartRead);
+void getTerm(CharTermAttribute t) {
+    t.copyBuffer(zzBuffer, zzStartRead, zzMarkedPos - zzStartRead);
 }
 
-void getTerm(TermAttribute t, int offset, int len) {
-    t.setTermBuffer(zzBuffer, zzStartRead + offset, len);
+void getTerm(CharTermAttribute t, int offset, int len) {
+    t.copyBuffer(zzBuffer, zzStartRead + offset, len);
 }
 
 %}

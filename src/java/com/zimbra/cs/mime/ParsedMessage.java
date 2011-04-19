@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
@@ -45,6 +44,7 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.lucene.document.Document;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.Sets;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
@@ -68,6 +68,7 @@ import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.index.analysis.FieldTokenStream;
+import com.zimbra.cs.index.analysis.MimeTypeTokenStream;
 import com.zimbra.cs.index.analysis.RFC822AddressTokenStream;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Flag;
@@ -883,29 +884,24 @@ public class ParsedMessage {
 
 
     private IndexDocument getMainBodyLuceneDocument(StringBuilder fullContent)
-        throws MessagingException, ServiceException {
+            throws MessagingException, ServiceException {
 
         IndexDocument doc = new IndexDocument(new Document());
-        doc.addMimeType("message/rfc822");
+        doc.addMimeType(new MimeTypeTokenStream("message/rfc822"));
         doc.addPartName(LuceneFields.L_PARTNAME_TOP);
         doc.addFrom(getFromTokenStream());
         doc.addTo(getToTokenStream());
         doc.addCc(getCcTokenStream());
         try {
-            doc.addEnvFrom(new RFC822AddressTokenStream(
-                    getMimeMessage().getHeader("X-Envelope-From", ",")));
+            doc.addEnvFrom(new RFC822AddressTokenStream(getMimeMessage().getHeader("X-Envelope-From", ",")));
         } catch (MessagingException ignore) {
         }
         try {
-            doc.addEnvTo(new RFC822AddressTokenStream(
-                    getMimeMessage().getHeader("X-Envelope-To", ",")));
+            doc.addEnvTo(new RFC822AddressTokenStream(getMimeMessage().getHeader("X-Envelope-To", ",")));
         } catch (MessagingException ignore) {
         }
 
-        String msgId = Mime.getHeader(getMimeMessage(), "message-id");
-        if (msgId == null) {
-            msgId = "";
-        }
+        String msgId = Strings.nullToEmpty(Mime.getHeader(getMimeMessage(), "message-id"));
         if (msgId.length() > 0) {
             if (msgId.charAt(0) == '<') {
                 msgId = msgId.substring(1);
@@ -952,12 +948,9 @@ public class ParsedMessage {
         StringBuilder contentPrepend = new StringBuilder(subject);
 
         // Bug 583: add all of the TOKENIZED versions of the email addresses to our CONTENT field...
-        appendToContent(contentPrepend, StringUtil.join(" ",
-                getFromTokenStream().getAllTokens()));
-        appendToContent(contentPrepend, StringUtil.join(" ",
-                getToTokenStream().getAllTokens()));
-        appendToContent(contentPrepend, StringUtil.join(" ",
-                getCcTokenStream().getAllTokens()));
+        appendToContent(contentPrepend, StringUtil.join(" ", getFromTokenStream().getAllTokens()));
+        appendToContent(contentPrepend, StringUtil.join(" ", getToTokenStream().getAllTokens()));
+        appendToContent(contentPrepend, StringUtil.join(" ", getCcTokenStream().getAllTokens()));
 
         // bug 33461: add filenames to our CONTENT field
         for (String fn : mFilenames) {
@@ -973,22 +966,12 @@ public class ParsedMessage {
         } catch (ObjectHandlerException e) {
             String msgid = getMessageID();
             String sbj = getSubject();
-            sLog.warn("Unable to recognize searchable objects in message (Message-ID: " +
-                msgid + ", Subject: " + sbj + ")", e);
+            ZimbraLog.index.warn("Unable to recognize searchable objects in message: msgid=%s,subject=%s",
+                    msgid, sbj, e);
         }
 
-        // Get the list of attachment content types from this message and any
-        // TNEF attachments
-        Set<String> contentTypes = Mime.getAttachmentTypeList(mMessageParts);
-
-        // Assemble a comma-separated list of attachment content types
-        String attachments = StringUtil.join(",", contentTypes);
-        if (attachments == null || attachments.equals("")) {
-            attachments = LuceneFields.L_ATTACHMENT_NONE;
-        } else {
-            attachments = attachments + "," + LuceneFields.L_ATTACHMENT_ANY;
-        }
-        doc.addAttachments(attachments);
+        // Get the list of attachment content types from this message and any TNEF attachments
+        doc.addAttachments(new MimeTypeTokenStream(Mime.getAttachmentTypeList(mMessageParts)));
         return doc;
     }
 
@@ -1169,7 +1152,7 @@ public class ParsedMessage {
         }
 
         IndexDocument doc = new IndexDocument(new Document());
-        doc.addMimeType(mpi.getContentType());
+        doc.addMimeType(new MimeTypeTokenStream(mpi.getContentType()));
         doc.addPartName(mpi.getPartName());
         doc.addFilename(mpi.getFilename());
         try {
@@ -1186,11 +1169,8 @@ public class ParsedMessage {
     }
 
     // default set of complex subject prefix strings to ignore when normalizing
-    private static final Set<String> SYSTEM_PREFIXES = new HashSet<String>(Arrays.asList(
-        "accept:", "accepted:", "decline:", "declined:",
-        "tentative:", "cancelled:", "new time proposed:",
-        "read-receipt:", "share created:", "share accepted:"
-    ));
+    private static final Set<String> SYSTEM_PREFIXES = Sets.newHashSet("accept:", "accepted:", "decline:", "declined:",
+            "tentative:", "cancelled:", "new time proposed:", "read-receipt:", "share created:", "share accepted:");
 
     static {
         // installed locale-specific complex subject prefix strings to ignore when normalizing
@@ -1205,9 +1185,9 @@ public class ParsedMessage {
     private static final int MAX_PREFIX_LENGTH = 3;
 
     private static Pair<String, Boolean> trimPrefixes(String subject) {
-        if (subject == null || subject.length() == 0)
+        if (Strings.isNullOrEmpty(subject)) {
             return new Pair<String, Boolean>("", false);
-
+        }
         boolean trimmed = false;
         while (true) {
             subject = subject.trim();

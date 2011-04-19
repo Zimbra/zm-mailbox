@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -32,6 +32,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.convert.AttachmentInfo;
 import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.index.IndexDocument;
+import com.zimbra.cs.index.analysis.MimeTypeTokenStream;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.object.MatchedObject;
@@ -140,17 +141,11 @@ public abstract class MimeHandler {
     /**
      * Adds the indexed fields to the Lucene document for search. Each handler determines
      * a set of fields that it deems important for the type of documents it handles.
-     *
-     * @param doc
-     * @throws MimeHandlerException
      */
     protected abstract void addFields(Document doc) throws MimeHandlerException;
 
     /**
      * Gets the text content of the document.
-     *
-     * @return
-     * @throws MimeHandlerException
      */
     public final String getContent() throws MimeHandlerException {
         if (!DebugConfig.disableMimePartExtraction) {
@@ -240,7 +235,7 @@ public abstract class MimeHandler {
         throws MimeHandlerException, ObjectHandlerException, ServiceException {
 
         IndexDocument doc = new IndexDocument(new Document());
-        doc.addMimeType(getContentType());
+        doc.addMimeType(new MimeTypeTokenStream(getContentType()));
 
         addFields(doc.toDocument());
         String content = getContent();

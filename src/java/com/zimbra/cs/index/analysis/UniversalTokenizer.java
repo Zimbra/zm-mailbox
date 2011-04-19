@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -18,9 +18,9 @@ import java.io.IOException;
 import java.io.Reader;
 
 import org.apache.lucene.analysis.Tokenizer;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
-import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 import org.apache.lucene.analysis.tokenattributes.TypeAttribute;
 
 /**
@@ -38,12 +38,10 @@ final class UniversalTokenizer extends Tokenizer {
     }
 
     private final UniversalLexer lexer;
-    private final TermAttribute termAttr = addAttribute(TermAttribute.class);
+    private final CharTermAttribute termAttr = addAttribute(CharTermAttribute.class);
     private final TypeAttribute typeAttr = addAttribute(TypeAttribute.class);
-    private final OffsetAttribute offsetAttr =
-        addAttribute(OffsetAttribute.class);
-    private final PositionIncrementAttribute posIncAttr =
-        addAttribute(PositionIncrementAttribute.class);
+    private final OffsetAttribute offsetAttr = addAttribute(OffsetAttribute.class);
+    private final PositionIncrementAttribute posIncAttr = addAttribute(PositionIncrementAttribute.class);
     private int cjk = -1;
 
     UniversalTokenizer(Reader in) {
@@ -81,12 +79,12 @@ final class UniversalTokenizer extends Tokenizer {
                     lexer.getTerm(termAttr, 0, 2);
                     cjk = 1;
                 }
-                setOffset(lexer.yychar(), termAttr.termLength());
+                setOffset(lexer.yychar(), termAttr.length());
                 posIncAttr.setPositionIncrement(1);
                 typeAttr.setType(type.name());
             } else {
                 lexer.getTerm(termAttr);
-                setOffset(lexer.yychar(), termAttr.termLength());
+                setOffset(lexer.yychar(), termAttr.length());
                 posIncAttr.setPositionIncrement(1);
                 typeAttr.setType(type.name());
             }

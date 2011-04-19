@@ -24,8 +24,11 @@ import org.apache.lucene.analysis.StopFilter;
 import org.apache.lucene.analysis.TokenFilter;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Tokenizer;
-import org.apache.lucene.analysis.tokenattributes.TermAttribute;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.TypeAttribute;
+
+import com.google.common.base.CharMatcher;
+import com.zimbra.cs.index.LuceneIndex;
 
 /**
  * Hybrid {@link Analyzer} of {@code StandardAnalyzer} and {@code CJKAnalyzer}.
@@ -68,12 +71,12 @@ public final class UniversalAnalyzer extends Analyzer {
     private TokenStream createTokenStream(Tokenizer tokenizer) {
         TokenStream result = new UniversalTokenFilter(tokenizer);
         // disable position increment for backward compatibility
-        result = new StopFilter(false, result, StopAnalyzer.ENGLISH_STOP_WORDS_SET);
+        result = new StopFilter(LuceneIndex.VERSION, result, StopAnalyzer.ENGLISH_STOP_WORDS_SET);
         return result;
     }
 
     private static class UniversalTokenFilter extends TokenFilter {
-        private TermAttribute termAttr = addAttribute(TermAttribute.class);
+        private CharTermAttribute termAttr = addAttribute(CharTermAttribute.class);
         private TypeAttribute typeAttr = addAttribute(TypeAttribute.class);
 
         UniversalTokenFilter(TokenStream in) {
@@ -88,13 +91,16 @@ public final class UniversalAnalyzer extends Analyzer {
 
             String type = typeAttr.type();
             if (type == UniversalTokenizer.TokenType.APOSTROPHE.name()) {
-                if (termAttr.term().endsWith("'s")) {
+                // endsWith "'s"
+                int len = termAttr.length();
+                if (len >= 2 && termAttr.charAt(len - 1) == 's' && termAttr.charAt(len - 2) == '\'') {
                     // remove 's from possessions
-                    termAttr.setTermLength(termAttr.termLength() - 2);
+                    termAttr.setLength(len - 2);
                 }
             } else if (type == UniversalTokenizer.TokenType.ACRONYM.name()) {
                 // remove dots from acronyms
-                termAttr.setTermBuffer(termAttr.term().replace(".", ""));
+                String replace = CharMatcher.is('.').removeFrom(termAttr);
+                termAttr.setEmpty().append(replace);
             }
 
             return true;

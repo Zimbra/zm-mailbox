@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -20,9 +20,9 @@ import java.io.StringReader;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.cjk.CJKAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
-import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 import org.apache.lucene.util.Version;
 import org.junit.Assert;
 import org.junit.Before;
@@ -36,12 +36,11 @@ import com.google.common.io.ByteStreams;
  *
  * @author ysasaki
  */
-public class UniversalAnalyzerTest {
+public final class UniversalAnalyzerTest {
     private UniversalAnalyzer universalAnalyzer = new UniversalAnalyzer();
     // for backward compatibility
-    private StandardAnalyzer standardAnalyzer = new StandardAnalyzer(
-            Version.LUCENE_24);
-    private CJKAnalyzer cjkAnalyzer = new CJKAnalyzer(Version.LUCENE_30);
+    private StandardAnalyzer standardAnalyzer = new StandardAnalyzer(Version.LUCENE_24);
+    private CJKAnalyzer cjkAnalyzer = new CJKAnalyzer(Version.LUCENE_31);
     // See https://issues.apache.org/jira/browse/LUCENE-1068
     private boolean assertOffset = true;
 
@@ -186,8 +185,7 @@ public class UniversalAnalyzerTest {
 
     @Test
     public void wikipedia() throws Exception {
-        String src = new String(ByteStreams.toByteArray(
-                getClass().getResourceAsStream("wikipedia-zimbra.txt")),
+        String src = new String(ByteStreams.toByteArray(getClass().getResourceAsStream("wikipedia-zimbra.txt")),
                 Charsets.ISO_8859_1);
         assertOffset = false;
         testSTD(src);
@@ -216,16 +214,14 @@ public class UniversalAnalyzerTest {
 
     private void testSTD(String src) throws IOException {
         TokenStream std = standardAnalyzer.tokenStream(null, new StringReader(src));
-        TermAttribute stdTermAttr = std.addAttribute(TermAttribute.class);
+        CharTermAttribute stdTermAttr = std.addAttribute(CharTermAttribute.class);
         OffsetAttribute stdOffsetAttr = std.addAttribute(OffsetAttribute.class);
-        PositionIncrementAttribute stdPosIncAttr = std.addAttribute(
-                PositionIncrementAttribute.class);
+        PositionIncrementAttribute stdPosIncAttr = std.addAttribute(PositionIncrementAttribute.class);
 
         TokenStream uni = universalAnalyzer.tokenStream(null, new StringReader(src));
-        TermAttribute uniTermAttr = uni.addAttribute(TermAttribute.class);
+        CharTermAttribute uniTermAttr = uni.addAttribute(CharTermAttribute.class);
         OffsetAttribute uniOffsetAttr = uni.addAttribute(OffsetAttribute.class);
-        PositionIncrementAttribute uniPosIncAttr = uni.addAttribute(
-                PositionIncrementAttribute.class);
+        PositionIncrementAttribute uniPosIncAttr = uni.addAttribute(PositionIncrementAttribute.class);
 
         while (true) {
             boolean result = std.incrementToken();
@@ -233,7 +229,7 @@ public class UniversalAnalyzerTest {
             if (!result) {
                 break;
             }
-            String term = stdTermAttr.term();
+            String term = stdTermAttr.toString();
             Assert.assertEquals(stdTermAttr, uniTermAttr);
             if (assertOffset) {
                 Assert.assertEquals(term, stdOffsetAttr, uniOffsetAttr);
@@ -244,16 +240,14 @@ public class UniversalAnalyzerTest {
 
     private void testCJK(String src) throws IOException {
         TokenStream cjk = cjkAnalyzer.tokenStream(null, new StringReader(src));
-        TermAttribute cjkTermAttr = cjk.addAttribute(TermAttribute.class);
+        CharTermAttribute cjkTermAttr = cjk.addAttribute(CharTermAttribute.class);
         OffsetAttribute cjkOffsetAttr = cjk.addAttribute(OffsetAttribute.class);
-        PositionIncrementAttribute cjkPosIncAttr = cjk.addAttribute(
-                PositionIncrementAttribute.class);
+        PositionIncrementAttribute cjkPosIncAttr = cjk.addAttribute(PositionIncrementAttribute.class);
 
         TokenStream uni = universalAnalyzer.tokenStream(null, new StringReader(src));
-        TermAttribute uniTermAttr = uni.addAttribute(TermAttribute.class);
+        CharTermAttribute uniTermAttr = uni.addAttribute(CharTermAttribute.class);
         OffsetAttribute uniOffsetAttr = uni.addAttribute(OffsetAttribute.class);
-        PositionIncrementAttribute uniPosIncAttr = uni.addAttribute(
-                PositionIncrementAttribute.class);
+        PositionIncrementAttribute uniPosIncAttr = uni.addAttribute(PositionIncrementAttribute.class);
 
         while (true) {
             boolean result = cjk.incrementToken();
@@ -261,7 +255,7 @@ public class UniversalAnalyzerTest {
             if (!result) {
                 break;
             }
-            String term = cjkTermAttr.term();
+            String term = cjkTermAttr.toString();
             Assert.assertEquals(cjkTermAttr, uniTermAttr);
             if (assertOffset) {
                 Assert.assertEquals(term, cjkOffsetAttr, uniOffsetAttr);

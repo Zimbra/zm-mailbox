@@ -18,6 +18,8 @@ import java.io.Reader;
 
 import org.apache.lucene.analysis.CharTokenizer;
 
+import com.zimbra.cs.index.LuceneIndex;
+
 /**
  * Split by comma, space, CR, LF, dot.
  *
@@ -27,7 +29,7 @@ import org.apache.lucene.analysis.CharTokenizer;
 public final class FilenameTokenizer extends CharTokenizer {
 
     public FilenameTokenizer(Reader reader) {
-        super(reader);
+        super(LuceneIndex.VERSION, reader);
     }
 
     @Override

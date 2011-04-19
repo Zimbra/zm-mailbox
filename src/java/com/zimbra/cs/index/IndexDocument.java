@@ -20,6 +20,7 @@ import org.apache.lucene.document.Field;
 
 import com.google.common.base.Strings;
 import com.zimbra.cs.index.analysis.FieldTokenStream;
+import com.zimbra.cs.index.analysis.MimeTypeTokenStream;
 import com.zimbra.cs.index.analysis.RFC822AddressTokenStream;
 
 /**
@@ -42,8 +43,8 @@ public final class IndexDocument {
         return document;
     }
 
-    public void addMimeType(String value) {
-        document.add(new Field(LuceneFields.L_MIMETYPE, value, Field.Store.YES, Field.Index.ANALYZED));
+    public void addMimeType(MimeTypeTokenStream stream) {
+        document.add(new Field(LuceneFields.L_MIMETYPE, stream));
     }
 
     public void addPartName(String value) {
@@ -138,8 +139,8 @@ public final class IndexDocument {
         document.add(new Field(LuceneFields.L_CONTENT, value, Field.Store.NO, Field.Index.ANALYZED));
     }
 
-    public void addAttachments(String value) {
-        document.add(new Field(LuceneFields.L_ATTACHMENTS, value, Field.Store.NO, Field.Index.ANALYZED));
+    public void addAttachments(MimeTypeTokenStream stream) {
+        document.add(new Field(LuceneFields.L_ATTACHMENTS, stream));
     }
 
     public void addMailboxBlobId(int value) {

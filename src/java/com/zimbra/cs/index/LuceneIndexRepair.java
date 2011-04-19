@@ -16,6 +16,7 @@ package com.zimbra.cs.index;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Date;
 
 import org.apache.lucene.document.DateTools;
@@ -92,7 +93,7 @@ final class LuceneIndexRepair {
             return repaired;
         }
 
-        directory.sync(nextSegsFilename);
+        directory.sync(Collections.singleton(nextSegsFilename));
         try {
             commit(gen);
         } catch (IOException e) {
@@ -116,7 +117,7 @@ final class LuceneIndexRepair {
         } finally {
             output.close();
         }
-        directory.sync(SEGMENTS_GEN);
+        directory.sync(Collections.singleton(SEGMENTS_GEN));
     }
 
     private void convert(ChecksumIndexInput input, ChecksumIndexOutput output)
@@ -242,9 +243,9 @@ final class LuceneIndexRepair {
     private void rename(String from, String to) {
         File dir;
         if (directory instanceof LuceneDirectory) {
-            dir = ((LuceneDirectory) directory).getFile();
+            dir = ((LuceneDirectory) directory).getDirectory();
         } else if (directory instanceof FSDirectory) {
-            dir = ((FSDirectory) directory).getFile();
+            dir = ((FSDirectory) directory).getDirectory();
         } else {
             return;
         }

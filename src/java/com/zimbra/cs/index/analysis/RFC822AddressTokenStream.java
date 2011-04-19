@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -28,7 +28,7 @@ import javax.mail.internet.MimeUtility;
 
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Tokenizer;
-import org.apache.lucene.analysis.tokenattributes.TermAttribute;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 
 import com.google.common.base.Strings;
 import com.google.common.net.InternetDomainName;
@@ -61,7 +61,7 @@ public final class RFC822AddressTokenStream extends TokenStream {
 
     private final List<String> tokens = new LinkedList<String>();
     private Iterator<String> itr;
-    private final TermAttribute termAttr = addAttribute(TermAttribute.class);
+    private final CharTermAttribute termAttr = addAttribute(CharTermAttribute.class);
 
     public RFC822AddressTokenStream(String raw) {
         if (Strings.isNullOrEmpty(raw)) {
@@ -78,12 +78,11 @@ public final class RFC822AddressTokenStream extends TokenStream {
         // casually parse addresses, then tokenize them
         Set<String> emails = new HashSet<String>();
         Tokenizer tokenizer = new AddrCharTokenizer(new StringReader(decoded));
-        TermAttribute term = tokenizer.addAttribute(TermAttribute.class);
+        CharTermAttribute term = tokenizer.addAttribute(CharTermAttribute.class);
         try {
             while (tokenizer.incrementToken()) {
-                String token = term.term();
-                if (token.length() > 1) { // ignore short term text
-                    tokenize(token, emails);
+                if (term.length() > 1) { // ignore short term text
+                    tokenize(term.toString(), emails);
                 }
             }
             tokenizer.close();
@@ -155,7 +154,7 @@ public final class RFC822AddressTokenStream extends TokenStream {
     @Override
     public boolean incrementToken() throws IOException {
         if (itr.hasNext()) {
-            termAttr.setTermBuffer(itr.next());
+            termAttr.setEmpty().append(itr.next());
             return true;
         } else {
             return false;

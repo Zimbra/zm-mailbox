@@ -21,7 +21,7 @@ import java.util.List;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.tokenattributes.TermAttribute;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.search.MultiPhraseQuery;
@@ -64,10 +64,10 @@ public class TextQuery extends Query {
         this.text = text;
 
         try {
-            TermAttribute termAttr = stream.addAttribute(TermAttribute.class);
+            CharTermAttribute termAttr = stream.addAttribute(CharTermAttribute.class);
             stream.reset();
             while (stream.incrementToken()) {
-                tokens.add(termAttr.term());
+                tokens.add(termAttr.toString());
             }
             stream.end();
             stream.close();

@@ -29,6 +29,7 @@ import org.apache.lucene.index.CheckIndex;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.LogByteSizeMergePolicy;
 import org.apache.lucene.index.LogDocMergePolicy;
 import org.apache.lucene.index.SerialMergeScheduler;
@@ -66,7 +67,9 @@ public final class LuceneIndex implements IndexStore {
     /**
      * We don't want to enable StopFilter preserving position increments, which is enabled on or after 2.9, because we
      * want phrases to match across removed stop words.
+     * TODO: LUCENE_2* are oboslete as of Lucene 3.1.
      */
+    @SuppressWarnings("deprecation")
     public static final Version VERSION = Version.LUCENE_24;
 
     private static final Semaphore READER_THROTTLE = new Semaphore(LC.zimbra_index_max_readers.intValue());
@@ -204,10 +207,9 @@ public final class LuceneIndex implements IndexStore {
         }
     }
 
-    private IndexWriter openIndexWriter(boolean create, boolean tryRepair) throws IOException {
+    private IndexWriter openIndexWriter(IndexWriterConfig.OpenMode mode, boolean tryRepair) throws IOException {
         try {
-            IndexWriter writer = new IndexWriter(luceneDirectory, mailbox.index.getAnalyzer(),
-                    create, IndexWriter.MaxFieldLength.LIMITED) {
+            IndexWriter writer = new IndexWriter(luceneDirectory, getWriterConfig().setOpenMode(mode)) {
                 /**
                  * Redirect Lucene's logging to ZimbraLog.
                  */
@@ -227,14 +229,14 @@ public final class LuceneIndex implements IndexStore {
                 throw e;
             }
             repair(e);
-            return openIndexWriter(false, false);
+            return openIndexWriter(mode, false);
         } catch (CorruptIndexException e) {
             unlockIndexWriter();
             if (!tryRepair) {
                 throw e;
             }
             repair(e);
-            return openIndexWriter(false, false);
+            return openIndexWriter(mode, false);
         }
     }
 
@@ -302,10 +304,10 @@ public final class LuceneIndex implements IndexStore {
         } catch (IOException e) {
             // Handle the special case of trying to open a not-yet-created index, by opening for write and immediately
             // closing. Index directory should get initialized as a result.
-            File indexDir = luceneDirectory.getFile();
-            if (isEmptyDirectory(indexDir)) {
+            if (isEmptyDirectory(luceneDirectory.getDirectory())) {
                 // create an empty index
-                IndexWriter writer = new IndexWriter(luceneDirectory, null, true, IndexWriter.MaxFieldLength.LIMITED);
+                IndexWriter writer = new IndexWriter(luceneDirectory,
+                        getWriterConfig().setOpenMode(IndexWriterConfig.OpenMode.CREATE));
                 writer.close();
                 reader = openIndexReader(false);
             } else {
@@ -375,51 +377,21 @@ public final class LuceneIndex implements IndexStore {
     private IndexWriterRef openWriter() throws IOException {
         assert(Thread.holdsLock(this));
 
-        LuceneConfig config = new LuceneConfig();
-
         IndexWriter writer;
         try {
-            writer = openIndexWriter(false, true);
+            writer = openIndexWriter(IndexWriterConfig.OpenMode.APPEND, true);
         } catch (IOException e) {
             // the index (the segments* file in particular) probably didn't exist
             // when new IndexWriter was called in the try block, we would get a
             // FileNotFoundException for that case. If the directory is empty,
             // this is the very first index write for this this mailbox (or the
             // index might be deleted), the FileNotFoundException is benign.
-            if (isEmptyDirectory(luceneDirectory.getFile())) {
-                writer = openIndexWriter(true, false);
+            if (isEmptyDirectory(luceneDirectory.getDirectory())) {
+                writer = openIndexWriter(IndexWriterConfig.OpenMode.CREATE, false);
             } else {
                 throw e;
             }
         }
-
-        writer.setMergeScheduler(new MergeScheduler());
-        writer.setMaxBufferedDocs(config.maxBufferedDocs);
-        writer.setRAMBufferSizeMB(config.ramBufferSizeKB / 1024.0);
-        writer.setMergeFactor(config.mergeFactor);
-
-        if (config.mergePolicy) {
-            LogDocMergePolicy policy = new LogDocMergePolicy(writer);
-            writer.setMergePolicy(policy);
-            policy.setUseCompoundDocStore(config.useCompoundFile);
-            policy.setUseCompoundFile(config.useCompoundFile);
-            policy.setMergeFactor(config.mergeFactor);
-            policy.setMinMergeDocs((int) config.minMerge);
-            if (config.maxMerge != Integer.MAX_VALUE) {
-                policy.setMaxMergeDocs((int) config.maxMerge);
-            }
-        } else {
-            LogByteSizeMergePolicy policy = new LogByteSizeMergePolicy(writer);
-            writer.setMergePolicy(policy);
-            policy.setUseCompoundDocStore(config.useCompoundFile);
-            policy.setUseCompoundFile(config.useCompoundFile);
-            policy.setMergeFactor(config.mergeFactor);
-            policy.setMinMergeMB(config.minMerge / 1024.0);
-            if (config.maxMerge != Integer.MAX_VALUE) {
-                policy.setMaxMergeMB(config.maxMerge / 1024.0);
-            }
-        }
-
         return new IndexWriterRef(this, writer);
     }
 
@@ -583,7 +555,7 @@ public final class LuceneIndex implements IndexStore {
         public void exec() throws IOException {
             IndexWriter writer = ref.get();
             try {
-                if (((MergeScheduler) writer.getMergeScheduler()).tryLock()) {
+                if (((MergeScheduler) writer.getConfig().getMergeScheduler()).tryLock()) {
                     int dels = writer.maxDoc() - writer.numDocs();
                     if (dels >= LC.zimbra_index_max_pending_deletes.intValue()) {
                         ZimbraLog.index.debug("Expunge deletes %d", dels);
@@ -608,32 +580,37 @@ public final class LuceneIndex implements IndexStore {
             } catch (IOException e) {
                 ZimbraLog.index.error("Failed to merge IndexWriter", e);
             } finally {
-                ((MergeScheduler) ref.get().getMergeScheduler()).release();
+                ((MergeScheduler) ref.get().getConfig().getMergeScheduler()).release();
                 ref.dec();
             }
         }
     }
 
-    private static final class LuceneConfig {
-
-        final boolean mergePolicy;
-        final long minMerge;
-        final long maxMerge;
-        final int mergeFactor;
-        final boolean useCompoundFile;
-        final int maxBufferedDocs;
-        final int ramBufferSizeKB;
-
-        LuceneConfig() {
-            mergePolicy = LC.zimbra_index_lucene_merge_policy.booleanValue();
-            minMerge = LC.zimbra_index_lucene_min_merge.longValue();
-            maxMerge = LC.zimbra_index_lucene_max_merge.longValue();
-            mergeFactor = LC.zimbra_index_lucene_merge_factor.intValue();
-            useCompoundFile = LC.zimbra_index_lucene_use_compound_file.booleanValue();
-            maxBufferedDocs = LC.zimbra_index_lucene_max_buffered_docs.intValue();
-            ramBufferSizeKB = LC.zimbra_index_lucene_ram_buffer_size_kb.intValue();
+    private IndexWriterConfig getWriterConfig() {
+        IndexWriterConfig config = new IndexWriterConfig(VERSION, mailbox.index.getAnalyzer());
+        config.setMergeScheduler(new MergeScheduler());
+        config.setMaxBufferedDocs(LC.zimbra_index_lucene_max_buffered_docs.intValue());
+        config.setRAMBufferSizeMB(LC.zimbra_index_lucene_ram_buffer_size_kb.intValue() / 1024.0);
+        if (LC.zimbra_index_lucene_merge_policy.booleanValue()) {
+            LogDocMergePolicy policy = new LogDocMergePolicy();
+            config.setMergePolicy(policy);
+            policy.setUseCompoundFile(LC.zimbra_index_lucene_use_compound_file.booleanValue());
+            policy.setMergeFactor(LC.zimbra_index_lucene_merge_factor.intValue());
+            policy.setMinMergeDocs(LC.zimbra_index_lucene_min_merge.intValue());
+            if (LC.zimbra_index_lucene_max_merge.intValue() != Integer.MAX_VALUE) {
+                policy.setMaxMergeDocs(LC.zimbra_index_lucene_max_merge.intValue());
+            }
+        } else {
+            LogByteSizeMergePolicy policy = new LogByteSizeMergePolicy();
+            config.setMergePolicy(policy);
+            policy.setUseCompoundFile(LC.zimbra_index_lucene_use_compound_file.booleanValue());
+            policy.setMergeFactor(LC.zimbra_index_lucene_merge_factor.intValue());
+            policy.setMinMergeMB(LC.zimbra_index_lucene_min_merge.intValue() / 1024.0);
+            if (LC.zimbra_index_lucene_max_merge.intValue() != Integer.MAX_VALUE) {
+                policy.setMaxMergeMB(LC.zimbra_index_lucene_max_merge.intValue() / 1024.0);
+            }
         }
-
+        return config;
     }
 
     public static ZimbraQueryResults search(ZimbraQuery zq) throws ServiceException {

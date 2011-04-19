@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -18,8 +18,8 @@ import java.io.IOException;
 import java.io.Reader;
 
 import org.apache.lucene.analysis.Tokenizer;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
-import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 
 /**
  * Numbers separated by ' ' or '\t'.
@@ -29,8 +29,8 @@ import org.apache.lucene.analysis.tokenattributes.TermAttribute;
  */
 public final class NumberTokenizer extends Tokenizer {
 
-    private int mEndPos = 0;
-    private TermAttribute termAttr = addAttribute(TermAttribute.class);
+    private int endPos = 0;
+    private CharTermAttribute termAttr = addAttribute(CharTermAttribute.class);
     private OffsetAttribute offsetAttr = addAttribute(OffsetAttribute.class);
 
     public NumberTokenizer(Reader reader) {
@@ -41,12 +41,12 @@ public final class NumberTokenizer extends Tokenizer {
     public boolean incrementToken() throws IOException {
         clearAttributes();
 
-        int startPos = mEndPos;
+        int startPos = endPos;
         StringBuilder buf = new StringBuilder(10);
 
         while (true) {
             int c = input.read();
-            mEndPos++;
+            endPos++;
             switch (c) {
                 case -1:
                     if (buf.length() == 0) {
@@ -56,8 +56,8 @@ public final class NumberTokenizer extends Tokenizer {
                 case ' ':
                 case '\t':
                     if (buf.length() != 0) {
-                        termAttr.setTermBuffer(buf.toString());
-                        offsetAttr.setOffset(startPos, mEndPos - 1);
+                        termAttr.setEmpty().append(buf);
+                        offsetAttr.setOffset(startPos, endPos - 1);
                         return true;
                     }
                     break;
