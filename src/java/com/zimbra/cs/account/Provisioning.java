@@ -39,6 +39,7 @@ import com.zimbra.soap.admin.type.EffectiveRightsTargetSelector;
 import com.zimbra.soap.admin.type.GranteeSelector;
 import com.zimbra.soap.admin.type.ServerSelector;
 import com.zimbra.soap.admin.type.ShareInfoSelector;
+import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.NamedElement;
 
 import javax.mail.internet.InternetAddress;
@@ -949,6 +950,46 @@ public abstract class Provisioning extends ZAttrProvisioning {
      */
     public NamedEntry getAliasTarget(Alias alias, boolean mustFind) throws ServiceException {
         return searchAliasTarget(alias, mustFind);
+    }
+
+    /**
+     * @param server
+     * @return may return null
+     */
+    public static ServerSelector getSelector(Server server) {
+        if (server == null) 
+            return null;
+        return ServerSelector.fromId(server.getId());
+    }
+
+    /**
+     * @param domain
+     * @return may return null
+     */
+    public static DomainSelector getSelector(Domain domain) {
+        if (domain == null) 
+            return null;
+        return DomainSelector.fromId(domain.getId());
+    }
+
+    /**
+     * @param acct
+     * @return may return null
+     */
+    public static AccountSelector getSelector(Account acct) {
+        if (acct == null) 
+            return null;
+        return AccountSelector.fromId(acct.getId());
+    }
+
+    /**
+     * @param dl
+     * @return may return null
+     */
+    public static DistributionListSelector getSelector(DistributionList dl) {
+        if (dl == null) 
+            return null;
+        return DistributionListSelector.fromId(dl.getId());
     }
 
     /**

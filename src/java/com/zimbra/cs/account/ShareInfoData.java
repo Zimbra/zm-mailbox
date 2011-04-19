@@ -237,7 +237,7 @@ public class ShareInfoData {
         sid.setFolderPath(sInfo.getFolderPath());
         sid.setFolderDefaultView(MailItem.Type.of(sInfo.getDefaultView()));
         sid.setRights(ACL.stringToRights(sInfo.getRights()));
-        sid.setGranteeType(ACL.stringToType(sInfo.getGranteeId()));
+        sid.setGranteeType(ACL.stringToType(sInfo.getGranteeType()));
         sid.setGranteeId(sInfo.getGranteeId());
         sid.setGranteeName(sInfo.getGranteeName());
         sid.setGranteeDisplayName(sInfo.getGranteeDisplayName());
@@ -284,23 +284,39 @@ public class ShareInfoData {
             eShare.addAttribute(AccountConstants.A_MOUNTPOINT_ID, mptId.toString());
     }
 
-    public void dump() {
+    public String toString() {
         String format = "    %15s : %s\n";
+        StringBuffer sb = new StringBuffer();
+        sb.append(String.format(
+                format, "owner id",        getOwnerAcctId()));
+        sb.append(String.format(
+                format, "owner email",     getOwnerAcctEmail()));
+        sb.append(String.format(
+                format, "owner display",   getOwnerAcctDisplayName()));
+        sb.append(String.format(
+                format, "folder id",       String.valueOf(getFolderId())));
+        sb.append(String.format(
+                format, "folder path",     getFolderPath()));
+        sb.append(String.format(
+                format, "view",            getFolderDefaultView()));
+        sb.append(String.format(
+                format, "rights",          getRights()));
+        sb.append(String.format(
+                format, "mountpoint id",   getMountpointId_zmprov_only()));
+        sb.append(String.format(
+                format, "grantee type",    getGranteeType()));
+        sb.append(String.format(
+                format, "grantee id",      getGranteeId()));
+        sb.append(String.format(
+                format, "grantee email",   getGranteeName()));
+        sb.append(String.format(
+                format, "grantee display", getGranteeDisplayName()));
+        return sb.toString();
+    }
 
+    public void dump() {
         System.out.println();
-        System.out.printf(format, "owner id",        getOwnerAcctId());
-        System.out.printf(format, "owner email",     getOwnerAcctEmail());
-        System.out.printf(format, "owner display",   getOwnerAcctDisplayName());
-        System.out.printf(format, "folder id",       String.valueOf(getFolderId()));
-        System.out.printf(format, "folder path",     getFolderPath());
-        System.out.printf(format, "view",            getFolderDefaultView());
-        System.out.printf(format, "rights",          getRights());
-        System.out.printf(format, "mountpoint id",   getMountpointId_zmprov_only());
-        System.out.printf(format, "grantee type",    getGranteeType());
-        System.out.printf(format, "grantee id",      getGranteeId());
-        System.out.printf(format, "grantee email",   getGranteeName());
-        System.out.printf(format, "grantee display", getGranteeDisplayName());
+        System.out.println(this.toString());
         System.out.println();
-
     }
 }

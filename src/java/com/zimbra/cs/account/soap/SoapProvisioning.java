@@ -65,7 +65,6 @@ import com.zimbra.soap.account.message.DeleteIdentityRequest;
 import com.zimbra.soap.account.message.GetIdentitiesRequest;
 import com.zimbra.soap.account.message.GetIdentitiesResponse;
 import com.zimbra.soap.account.message.ModifyIdentityRequest;
-import com.zimbra.soap.account.message.ModifyIdentityResponse;
 import com.zimbra.soap.account.type.NameId;
 import com.zimbra.soap.admin.message.*;
 import com.zimbra.soap.admin.type.AccountInfo;
@@ -805,11 +804,10 @@ public class SoapProvisioning extends Provisioning {
         if (server == null) {
             server = getServer(account).getName();
         }
-        AccountSelector acctSel = AccountSelector.fromId(account.getId());
         LoggerInfo logger = new LoggerInfo(category, level);
         AddAccountLoggerResponse resp =
-                invokeJaxb(new AddAccountLoggerRequest(acctSel, logger),
-                        server);
+                invokeJaxb(new AddAccountLoggerRequest(
+                        getSelector(account), logger), server);
         return accountLoggersFromLoggerInfos(resp.getLoggers(),
                 account.getName());
     }
@@ -834,9 +832,9 @@ public class SoapProvisioning extends Provisioning {
         if (server == null) {
             server = getServer(account).getName();
         }
-        AccountSelector acctSel = AccountSelector.fromId(account.getId());
         GetAccountLoggersResponse resp =
-                invokeJaxb(new GetAccountLoggersRequest(acctSel), server);
+                invokeJaxb(new GetAccountLoggersRequest(
+                        getSelector(account)), server);
         return accountLoggersFromLoggerInfos(resp.getLoggers(),
                 account.getName());
     }
@@ -871,7 +869,9 @@ public class SoapProvisioning extends Provisioning {
      * @param category the log category, or {@code null} for all log categories
      * @param server the server name, or {@code null} for the local server
      */
-    public void removeAccountLoggers(Account account, String category, String server) throws ServiceException {
+    public void removeAccountLoggers(Account account, String category,
+            String server)
+    throws ServiceException {
         if (server == null) {
             if (account == null) {
                 server = getLocalServer().getName();
@@ -879,13 +879,11 @@ public class SoapProvisioning extends Provisioning {
                 server = getServer(account).getName();
             }
         }
-        AccountSelector acctSel = null;
-        if (account != null)
-            acctSel = AccountSelector.fromId(account.getId());
         LoggerInfo logger = null;
         if (category != null)
             logger = new LoggerInfo(category, null);
-        invokeJaxb(new RemoveAccountLoggerRequest(acctSel, logger), server);
+        invokeJaxb(new RemoveAccountLoggerRequest(
+                getSelector(account), logger), server);
     }
 
     public static class MailboxInfo {
@@ -1379,8 +1377,7 @@ public class SoapProvisioning extends Provisioning {
     throws ServiceException {
         ArrayList<DistributionList> result = new ArrayList<DistributionList>();
         GetAccountMembershipResponse resp = invokeJaxb(
-            new GetAccountMembershipRequest(
-                    AccountSelector.fromId(acct.getId())));
+            new GetAccountMembershipRequest(getSelector(acct)));
         for (DLInfo dlInfo : resp.getDlList()) {
             String viaList = dlInfo.getVia();
             if (directOnly && viaList != null) continue;
@@ -1404,7 +1401,7 @@ public class SoapProvisioning extends Provisioning {
         ArrayList<DistributionList> result = new ArrayList<DistributionList>();
         GetDistributionListMembershipRequest req =
             new GetDistributionListMembershipRequest(
-                    DistributionListSelector.fromId(list.getId()), null, null);
+                    getSelector(list), null, null);
         GetDistributionListMembershipResponse resp = invokeJaxb(req);
         for (DistributionListMembershipInfo dlMemInfo : resp.getDls()) {
             String viaList = dlMemInfo.getVia();
@@ -1421,16 +1418,10 @@ public class SoapProvisioning extends Provisioning {
 
     private List <AccountInfo> getAllAccountsInfo(Domain d, Server s)
     throws ServiceException {
-        DomainSelector domSel = null;
-        if (d != null)
-            domSel = new DomainSelector(DomainSelector.DomainBy.id, d.getId());
-        ServerSelector svrSel = null;
-        if (s != null)
-            svrSel = new ServerSelector(ServerSelector.ServerBy.id, s.getId());
         GetAllAccountsResponse resp =
-                invokeJaxb(new GetAllAccountsRequest(svrSel, domSel));
+                invokeJaxb(new GetAllAccountsRequest(
+                        getSelector(s), getSelector(d)));
         return resp.getAccountList();
-
     }
 
     @Override
@@ -1465,14 +1456,9 @@ public class SoapProvisioning extends Provisioning {
     private List <CalendarResourceInfo> getAllCalendarResourcesInfo(
             Domain d, Server s)
     throws ServiceException {
-        DomainSelector domSel = null;
-        if (d != null)
-            domSel = new DomainSelector(DomainSelector.DomainBy.id, d.getId());
-        ServerSelector svrSel = null;
-        if (s != null)
-            svrSel = new ServerSelector(ServerSelector.ServerBy.id, s.getId());
         GetAllCalendarResourcesResponse resp =
-                invokeJaxb(new GetAllCalendarResourcesRequest(svrSel, domSel));
+                invokeJaxb(new GetAllCalendarResourcesRequest(
+                        getSelector(s), getSelector(d)));
         return resp.getCalendarResourceList();
     }
 
@@ -1509,10 +1495,8 @@ public class SoapProvisioning extends Provisioning {
     public List <DistributionList> getAllDistributionLists(Domain d)
     throws ServiceException {
         ArrayList<DistributionList> result = new ArrayList<DistributionList>();
-        DomainSelector domSel = new DomainSelector(
-                DomainSelector.DomainBy.id, d.getId());
         GetAllDistributionListsResponse resp =
-                invokeJaxb(new GetAllDistributionListsRequest(domSel));
+                invokeJaxb(new GetAllDistributionListsRequest(getSelector(d)));
         for (DistributionListInfo dl : resp.getDls()) {
             result.add(new SoapDistributionList(dl, this));
         }
@@ -2232,9 +2216,8 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public CountAccountResult countAccount(Domain domain) throws ServiceException {
-        DomainSelector domSel = new DomainSelector(
-                DomainSelector.DomainBy.id, domain.getId());
-        CountAccountResponse resp = invokeJaxb(new CountAccountRequest(domSel));
+        CountAccountResponse resp = invokeJaxb(new CountAccountRequest(
+                getSelector(domain)));
         CountAccountResult result = new CountAccountResult();
         for (CosCountInfo cosInfo :resp.getCos()) {
             result.addCountAccountByCosResult(cosInfo.getId(),
@@ -2281,13 +2264,11 @@ public class SoapProvisioning extends Provisioning {
             PublishShareInfoAction action, Account ownerAcct,
             String folderIdOrPath)
     throws ServiceException {
-        DistributionListSelector dlSel =
-                DistributionListSelector.fromId(dl.getId());
         ShareInfoSelector shareSel = new ShareInfoSelector(
                 PublishShareInfoAction.toJaxb(action),
                 PublishFolderInfo.fromPathOrId(folderIdOrPath),
-                AccountSelector.fromId(ownerAcct.getId()));
-        invokeJaxb(new PublishShareInfoRequest(dlSel, shareSel));
+                getSelector(ownerAcct));
+        invokeJaxb(new PublishShareInfoRequest(getSelector(dl), shareSel));
     }
 
     @Override
@@ -2295,8 +2276,7 @@ public class SoapProvisioning extends Provisioning {
             PublishedShareInfoVisitor visitor) throws ServiceException {
         GetPublishedShareInfoResponse rsp = invokeJaxb(
                 new GetPublishedShareInfoRequest(
-                        DistributionListSelector.fromId(dl.getId()),
-                        AccountSelector.fromId(ownerAcct.getId())));
+                        getSelector(dl), getSelector(ownerAcct)));
         for (com.zimbra.soap.type.ShareInfo sInfo : rsp.getShareInfos()) {
             ShareInfoData sid = ShareInfoData.fromJaxbShareInfo(sInfo);
             visitor.visit(sid);
@@ -2308,8 +2288,7 @@ public class SoapProvisioning extends Provisioning {
             PublishedShareInfoVisitor visitor)
     throws ServiceException {
         GetShareInfoResponse rsp = invokeJaxb(
-                new GetShareInfoRequest(
-                        AccountSelector.fromId(ownerAcct.getId())));
+                new GetShareInfoRequest(getSelector(ownerAcct)));
         for (com.zimbra.soap.type.ShareInfo sInfo : rsp.getShareInfos()) {
             ShareInfoData sid = ShareInfoData.fromJaxbShareInfo(sInfo);
             visitor.visit(sid);

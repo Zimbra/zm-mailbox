@@ -15,7 +15,6 @@
 
 package com.zimbra.qa.unittest;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -56,6 +55,10 @@ import com.zimbra.cs.account.soap.SoapProvisioning.MailboxInfo;
 import com.zimbra.cs.account.soap.SoapProvisioning.QuotaUsage;
 import com.zimbra.cs.account.soap.SoapProvisioning.ReIndexInfo;
 import com.zimbra.cs.account.soap.SoapProvisioning.VerifyIndexResult;
+import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.zclient.ZFolder;
+import com.zimbra.cs.zclient.ZGrant;
+import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.soap.admin.message.GetLicenseInfoRequest;
 import com.zimbra.soap.admin.message.GetLicenseInfoResponse;
 import com.zimbra.soap.admin.message.GetServerNIfsRequest;
@@ -405,22 +408,55 @@ public class TestJaxbProvisioning extends TestCase {
         prov.deleteCalendarResource(calRes.getId());
     }
 
+    /*
+     * create a folder and grant the rights to a distribution list
+     */
+    private int createFolderAndGrantRight(Account owner,
+            DistributionList grantee, String folderPath, String rights) 
+        throws ServiceException {
+        ZMailbox ownerMbox = TestUtil.getZMailbox(owner.getName());
+        ZFolder folder = TestUtil.createFolder(ownerMbox, folderPath);
+        ownerMbox.modifyFolderGrant(folder.getId(), ZGrant.GranteeType.grp,
+                grantee.getName(), rights, null);
+        return Integer.valueOf(folder.getId());
+    }
+
     // Very simple visitor that does nothing...
     private static class SimplePublishedVisitor implements PublishedShareInfoVisitor {
+        private int visitCount;
+        SimplePublishedVisitor() {
+            setVisitCount(0);
+        }
         @Override
         public void visit(ShareInfoData sid) throws ServiceException {
+            setVisitCount(getVisitCount() + 1);
+            ZimbraLog.test.debug("visit " + getVisitCount() + ":\n" + sid.toString());
         }
+        public void setVisitCount(int visitCount) {
+            this.visitCount = visitCount;
+        }
+        public int getVisitCount() { return visitCount; }
     }
 
     public void testPublishedShares() throws Exception {
         ZimbraLog.test.debug("Starting testPublishedShares");
         Account acct = ensureMailboxExists(testAcctEmail);
+        ensureMailboxExists(testNewAcctEmail);
         DistributionList dl = ensureDlExists(testDl);
-        prov.publishShareInfo(dl, PublishShareInfoAction.add, acct, "/Inbox");
+        dl.addMembers(new String[]{testNewAcctEmail});
+        String folderPath = "/testPubShares";
+        short rights = ACL.RIGHT_READ | ACL.RIGHT_WRITE;
+        int folderId = createFolderAndGrantRight(acct, dl, folderPath, ACL.rightsToString(rights));
+        prov.publishShareInfo(dl, PublishShareInfoAction.add, acct, folderPath);
         SimplePublishedVisitor visitor = new SimplePublishedVisitor();
         prov.getPublishedShareInfo(dl, acct, visitor);
+        assertEquals("visit count with owner specified", 1, visitor.getVisitCount());
+        visitor.setVisitCount(0);
+        // Bug 59076 owner acct is optional
+        prov.getPublishedShareInfo(dl, null, visitor);
+        assertEquals("visit count with null owner", 1, visitor.getVisitCount());
         prov.getShareInfo(acct, visitor);
-        prov.publishShareInfo(dl, PublishShareInfoAction.remove, acct, "/Inbox");
+        prov.publishShareInfo(dl, PublishShareInfoAction.remove, acct, folderPath);
     }
 
     public void testQuotaUsage() throws Exception {
