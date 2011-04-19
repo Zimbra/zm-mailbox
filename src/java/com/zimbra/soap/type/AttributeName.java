@@ -31,7 +31,7 @@ public class AttributeName {
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private AttributeName() {
+    protected AttributeName() {
         this((String) null);
     }
 

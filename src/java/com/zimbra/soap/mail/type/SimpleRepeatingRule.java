@@ -70,6 +70,10 @@ public class SimpleRepeatingRule implements RecurRuleBase {
     @XmlElement(name=MailConstants.E_CAL_RULE_WKST, required=false)
     private WkstRule weekStart;
 
+    // TODO:Should support multiple XNames but that would make the JAXB more complex
+    @XmlElement(name=MailConstants.E_CAL_RULE_XNAME, required=false)
+    private XNameRule xName;
+
     /**
      * no-argument constructor wanted by JAXB
      */
@@ -101,6 +105,7 @@ public class SimpleRepeatingRule implements RecurRuleBase {
     public void setByMonth(ByMonthRule byMonth) { this.byMonth = byMonth; }
     public void setBySetPos(BySetPosRule bySetPos) { this.bySetPos = bySetPos; }
     public void setWeekStart(WkstRule weekStart) { this.weekStart = weekStart; }
+    public void setXName(XNameRule xName) { this.xName = xName; }
     public String getFrequency() { return frequency; }
     public DateTimeStringAttr getUntil() { return until; }
     public NumAttr getCount() { return count; }
@@ -115,10 +120,11 @@ public class SimpleRepeatingRule implements RecurRuleBase {
     public ByMonthRule getByMonth() { return byMonth; }
     public BySetPosRule getBySetPos() { return bySetPos; }
     public WkstRule getWeekStart() { return weekStart; }
+    public XNameRule getXName() { return xName; }
 
-    @Override
-    public String toString() {
-        return Objects.toStringHelper(this)
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        return helper
             .add("frequency", frequency)
             .add("until", until)
             .add("count", count)
@@ -133,6 +139,12 @@ public class SimpleRepeatingRule implements RecurRuleBase {
             .add("byMonth", byMonth)
             .add("bySetPos", bySetPos)
             .add("weekStart", weekStart)
-            .toString();
+            .add("xName", xName);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }

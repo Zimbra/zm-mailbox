@@ -13,31 +13,31 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
+package com.zimbra.soap.mail.type;
 
+import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
-import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class Id {
+public class FilterTestHeaderExists extends FilterTestInfo {
 
-    @XmlAttribute(name=AdminConstants.A_ID, required=true)
-    private final String id;
+    @XmlAttribute(name=MailConstants.A_HEADER, required=false)
+    private String header;
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private Id() {
-        this((String) null);
+    public FilterTestHeaderExists() {
     }
 
-    public Id(String id) {
-        this.id = id;
-    }
+    public void setHeader(String header) { this.header = header; }
+    public String getHeader() { return header; }
 
-    public String getId() { return id; }
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this)
+            .add("header", header)
+            .toString();
+    }
 }

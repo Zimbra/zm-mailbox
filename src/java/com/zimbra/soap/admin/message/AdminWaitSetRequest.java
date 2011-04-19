@@ -30,8 +30,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.admin.type.Id;
 import com.zimbra.soap.admin.type.WaitSetAddSpec;
+import com.zimbra.soap.type.Id;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_ADMIN_WAIT_SET_REQUEST)

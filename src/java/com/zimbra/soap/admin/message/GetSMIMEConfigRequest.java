@@ -22,7 +22,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.DomainSelector;
-import com.zimbra.soap.admin.type.NamedElement;
+import com.zimbra.soap.type.NamedElement;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_GET_SMIME_CONFIG_REQUEST)

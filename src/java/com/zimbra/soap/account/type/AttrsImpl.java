@@ -83,10 +83,15 @@ abstract public class AttrsImpl implements Attrs {
         return StringUtil.toOldMultimap(getAttrsMultimap());
     }
 
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        return helper
+            .add(AdminConstants.E_A, attrs);
+    }
+
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
-            .add(AdminConstants.E_A, attrs)
-            .toString();
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }

@@ -60,7 +60,7 @@ public class ActionSelector {
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private ActionSelector() {
+    protected ActionSelector() {
         this((String) null, (String) null);
     }
 

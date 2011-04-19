@@ -30,6 +30,8 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ContactAttr;
+import com.zimbra.soap.type.CustomMetadata;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(propOrder = {"metadatas", "attrs"})
@@ -84,7 +86,7 @@ public class AutoCompleteGalContactInfo {
     private String dlist;
 
     @XmlElement(name=MailConstants.E_METADATA, required=false)
-    private List<ContactMetaData> metadatas = Lists.newArrayList();
+    private List<CustomMetadata> metadatas = Lists.newArrayList();
 
     @XmlElement(name=MailConstants.E_A, required=false)
     private List<ContactAttr> attrs = Lists.newArrayList();
@@ -116,14 +118,14 @@ public class AutoCompleteGalContactInfo {
     public void setEmail3(String email3) { this.email3 = email3; }
     public void setType(String type) { this.type = type; }
     public void setDlist(String dlist) { this.dlist = dlist; }
-    public void setMetadatas(Iterable <ContactMetaData> metadatas) {
+    public void setMetadatas(Iterable <CustomMetadata> metadatas) {
         this.metadatas.clear();
         if (metadatas != null) {
             Iterables.addAll(this.metadatas,metadatas);
         }
     }
 
-    public AutoCompleteGalContactInfo addMetadata(ContactMetaData metadata) {
+    public AutoCompleteGalContactInfo addMetadata(CustomMetadata metadata) {
         this.metadatas.add(metadata);
         return this;
     }
@@ -156,7 +158,7 @@ public class AutoCompleteGalContactInfo {
     public String getEmail3() { return email3; }
     public String getType() { return type; }
     public String getDlist() { return dlist; }
-    public List<ContactMetaData> getMetadatas() {
+    public List<CustomMetadata> getMetadatas() {
         return Collections.unmodifiableList(metadatas);
     }
     public List<ContactAttr> getAttrs() {

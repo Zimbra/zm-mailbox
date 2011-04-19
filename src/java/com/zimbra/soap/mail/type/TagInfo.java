@@ -16,6 +16,12 @@
 package com.zimbra.soap.mail.type;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
+import java.util.Collections;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -58,7 +64,7 @@ public class TagInfo {
     private Integer modifiedSequence;
 
     @XmlElement(name=MailConstants.E_METADATA, required=false)
-    private CustomMetadata metadatas;
+    private List<CustomMetadata> metadatas = Lists.newArrayList();
 
     /**
      * no-argument constructor wanted by JAXB
@@ -82,12 +88,19 @@ public class TagInfo {
     public void setDate(Long date) { this.date = date; }
     public void setRevision(Integer revision) { this.revision = revision; }
     public void setChangeDate(Long changeDate) { this.changeDate = changeDate; }
-    public void setModifiedSequence(Integer modifiedSequence) {
-        this.modifiedSequence = modifiedSequence;
+    public void setModifiedSequence(Integer modifiedSequence) { this.modifiedSequence = modifiedSequence; }
+    public void setMetadatas(Iterable <CustomMetadata> metadatas) {
+        this.metadatas.clear();
+        if (metadatas != null) {
+            Iterables.addAll(this.metadatas,metadatas);
+        }
     }
-    public void setMetadatas(CustomMetadata metadatas) {
-        this.metadatas = metadatas;
+
+    public TagInfo addMetadata(CustomMetadata metadata) {
+        this.metadatas.add(metadata);
+        return this;
     }
+
     public String getId() { return id; }
     public String getName() { return name; }
     public Byte getColor() { return color; }
@@ -98,7 +111,9 @@ public class TagInfo {
     public Integer getRevision() { return revision; }
     public Long getChangeDate() { return changeDate; }
     public Integer getModifiedSequence() { return modifiedSequence; }
-    public CustomMetadata getMetadatas() { return metadatas; }
+    public List<CustomMetadata> getMetadatas() {
+        return Collections.unmodifiableList(metadatas);
+    }
 
     @Override
     public String toString() {

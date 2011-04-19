@@ -219,7 +219,7 @@ public class JaxbToElementTest {
         id.setAttrs(attrs);
         CreateIdentityRequest request = new CreateIdentityRequest(id);
         Assert.assertEquals("toString output", 
-            "CreateIdentityRequest{identity=Identity{name=hello, id=null, attrs=[Attr{name=key2, value=value2 wonderful}, Attr{name=key1, value=value1}]}}",
+            "CreateIdentityRequest{identity=Identity{a=[Attr{name=key2, value=value2 wonderful}, Attr{name=key1, value=value1}], name=hello, id=null}}",
             request.toString());
     }
 

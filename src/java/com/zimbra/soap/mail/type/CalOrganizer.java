@@ -32,11 +32,11 @@ import com.zimbra.common.soap.MailConstants;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class CalOrganizer {
 
-    @XmlAttribute(name=MailConstants.A_ADDRESS, required=true)
-    private final String address;
+    @XmlAttribute(name=MailConstants.A_ADDRESS, required=false)
+    private String address;
 
-    @XmlAttribute(name=MailConstants.A_URL, required=true)
-    private final String url;
+    @XmlAttribute(name=MailConstants.A_URL, required=false)
+    private String url;
 
     @XmlAttribute(name=MailConstants.A_DISPLAY, required=false)
     private String displayName;
@@ -53,23 +53,14 @@ public class CalOrganizer {
     @XmlElement(name=MailConstants.E_CAL_XPARAM, required=false)
     private List<XParam> xParams = Lists.newArrayList();
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private CalOrganizer() {
-        this((String) null, (String) null);
+    public CalOrganizer() {
     }
 
-    public CalOrganizer(String address, String url) {
-        this.address = address;
-        this.url = url;
-    }
-
+    public void setAddress(String address) { this.address = address; }
+    public void setUrl(String url) { this.url = url; }
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
     }
-
     public void setSentBy(String sentBy) { this.sentBy = sentBy; }
     public void setDir(String dir) { this.dir = dir; }
     public void setLanguage(String language) { this.language = language; }
@@ -95,16 +86,21 @@ public class CalOrganizer {
         return Collections.unmodifiableList(xParams);
     }
 
-    @Override
-    public String toString() {
-        return Objects.toStringHelper(this)
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        return helper
             .add("address", address)
             .add("url", url)
             .add("displayName", displayName)
             .add("sentBy", sentBy)
             .add("dir", dir)
             .add("language", language)
-            .add("xParams", xParams)
-            .toString();
+            .add("xParams", xParams);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }

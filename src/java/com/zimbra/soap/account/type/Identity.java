@@ -15,12 +15,12 @@
 
 package com.zimbra.soap.account.type;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
-
-import com.google.common.base.Objects;
-import com.google.common.collect.Lists;
 
 import com.zimbra.common.soap.AccountConstants;
 
@@ -34,6 +34,8 @@ import com.zimbra.common.soap.AccountConstants;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Identity extends AttrsImpl {
+
+    // TODO:Want constructor for old style Identity
 
     @XmlAttribute(name=AccountConstants.A_NAME, required=false)
     private final String name;
@@ -63,13 +65,17 @@ public class Identity extends AttrsImpl {
     public String getName() { return name; }
     public String getId() { return id; }
 
-    @Override
-    public String toString() {
-        return Objects.toStringHelper(this)
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        helper = super.addToStringInfo(helper);
+        return helper
             .add("name", name)
-            .add("id", id)
-            .add("attrs", super.getAttrs())
-            .toString();
+            .add("id", id);
     }
 
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
+    }
 }

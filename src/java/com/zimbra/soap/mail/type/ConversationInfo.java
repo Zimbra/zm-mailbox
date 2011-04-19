@@ -51,8 +51,8 @@ public class ConversationInfo {
     @XmlAttribute(name=MailConstants.A_TAGS, required=false)
     private String tags;
 
-    @XmlElement(name=MailConstants.E_METADATA, required=true)
-    private final CustomMetadata metadatas;
+    @XmlElement(name=MailConstants.E_METADATA, required=false)
+    private List<CustomMetadata> metadatas = Lists.newArrayList();
 
     @XmlElement(name=MailConstants.E_SUBJECT, required=false)
     private String subject;
@@ -71,18 +71,29 @@ public class ConversationInfo {
      */
     @SuppressWarnings("unused")
     private ConversationInfo() {
-        this((String) null, (CustomMetadata) null);
+        this((String) null);
     }
 
-    public ConversationInfo(String id, CustomMetadata metadatas) {
+    public ConversationInfo(String id) {
         this.id = id;
-        this.metadatas = metadatas;
     }
 
     public void setNum(Integer num) { this.num = num; }
     public void setTotalSize(Integer totalSize) { this.totalSize = totalSize; }
     public void setFlags(String flags) { this.flags = flags; }
     public void setTags(String tags) { this.tags = tags; }
+    public void setMetadatas(Iterable <CustomMetadata> metadatas) {
+        this.metadatas.clear();
+        if (metadatas != null) {
+            Iterables.addAll(this.metadatas,metadatas);
+        }
+    }
+
+    public ConversationInfo addMetadata(CustomMetadata metadata) {
+        this.metadatas.add(metadata);
+        return this;
+    }
+
     public void setSubject(String subject) { this.subject = subject; }
     public void setMessages(Iterable <MessageInfo> messages) {
         this.messages.clear();
@@ -101,7 +112,9 @@ public class ConversationInfo {
     public Integer getTotalSize() { return totalSize; }
     public String getFlags() { return flags; }
     public String getTags() { return tags; }
-    public CustomMetadata getMetadatas() { return metadatas; }
+    public List<CustomMetadata> getMetadatas() {
+        return Collections.unmodifiableList(metadatas);
+    }
     public String getSubject() { return subject; }
     public List<MessageInfo> getMessages() {
         return Collections.unmodifiableList(messages);

@@ -47,7 +47,7 @@ public class GetInfoResponseTest {
     private void checkAsserts(GetInfoResponse result) {
         List<Identity> identities =  result.getIdentities();
         Assert.assertEquals(1, identities.size());
-        Assert.assertEquals("Identity{name=DEFAULT, id=add0c6cd-7d8a-467b-ae6e-67b9644d9c2a, attrs=[" +
+        Assert.assertEquals("Identity{a=[" +
                 "Attr{name=zimbraPrefIdentityId, value=add0c6cd-7d8a-467b-ae6e-67b9644d9c2a}, " +
                 "Attr{name=zimbraPrefForwardReplyPrefixChar, value=>}, " +
                 "Attr{name=zimbraPrefSaveToSent, value=TRUE}, " +
@@ -59,7 +59,8 @@ public class GetInfoResponseTest {
                 "Attr{name=zimbraPrefIdentityName, value=DEFAULT}, " +
                 "Attr{name=zimbraPrefReplyIncludeOriginalText, value=includeBody}, " +
                 "Attr{name=zimbraCreateTimestamp, value=20101007221807Z}, " +
-                "Attr{name=zimbraPrefFromAddress, value=user1@ysasaki.local}]}",
+                "Attr{name=zimbraPrefFromAddress, value=user1@ysasaki.local}], " + 
+                "name=DEFAULT, id=add0c6cd-7d8a-467b-ae6e-67b9644d9c2a}",
                 identities.get(0).toString());
         Collection<String> sigHtml = result.getPrefsMultimap().get("zimbraPrefMailSignatureHTML");
         Assert.assertNotNull(sigHtml);

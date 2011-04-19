@@ -35,7 +35,7 @@ public class IdAndOperation {
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private IdAndOperation() {
+    protected IdAndOperation() {
         this((String) null, (String) null);
     }
 

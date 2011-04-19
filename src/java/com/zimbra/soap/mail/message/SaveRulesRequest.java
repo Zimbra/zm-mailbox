@@ -13,8 +13,9 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
+package com.zimbra.soap.mail.message;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -23,39 +24,44 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.mail.type.RuleInfo;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class ContactMetaData {
+@XmlRootElement(name=MailConstants.E_SAVE_RULES_REQUEST)
+public class SaveRulesRequest {
 
-    @XmlAttribute(name=MailConstants.A_SECTION, required=false)
-    private String section;
+    // API replaced by ModifyFilterRulesRequest in ZCS 6.0
 
-    @XmlElement(name=AdminConstants.E_A, required=false)
-    private List<Attr> attrs = Lists.newArrayList();
+    @XmlElement(name=MailConstants.E_RULE, required=false)
+    private List<RuleInfo> rules = Lists.newArrayList();
 
-    public ContactMetaData() {
+    public SaveRulesRequest() {
     }
 
-    public void setSection(String section) { this.section = section; }
-    public void setAttrs(Iterable <Attr> attrs) {
-        this.attrs.clear();
-        if (attrs != null) {
-            Iterables.addAll(this.attrs,attrs);
+    public void setRules(Iterable <RuleInfo> rules) {
+        this.rules.clear();
+        if (rules != null) {
+            Iterables.addAll(this.rules,rules);
         }
     }
 
-    public ContactMetaData addAttr(Attr attr) {
-        this.attrs.add(attr);
+    public SaveRulesRequest addRul(RuleInfo rul) {
+        this.rules.add(rul);
         return this;
     }
 
-    public String getSection() { return section; }
-    public List<Attr> getAttrs() {
-        return Collections.unmodifiableList(attrs);
+    public List<RuleInfo> getRules() {
+        return Collections.unmodifiableList(rules);
+    }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this)
+            .add("rules", rules)
+            .toString();
     }
 }

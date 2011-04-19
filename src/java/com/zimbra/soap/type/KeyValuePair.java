@@ -47,7 +47,7 @@ public class KeyValuePair {
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private KeyValuePair() {
+    protected KeyValuePair() {
         this.key = null;
         this.value = null;
     }

@@ -13,31 +13,13 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.account.type;
+package com.zimbra.soap.mail.type;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
 
-import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class NamedElement {
-
-    @XmlAttribute(name=AccountConstants.A_NAME, required=true)
-    private final String name;
-
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private NamedElement() {
-        this((String) null);
-    }
-
-    public NamedElement(String name) {
-        this.name = name;
-    }
-
-    public String getName() { return name; }
+public class FilterTestAttachment extends FilterTestInfo {
 }

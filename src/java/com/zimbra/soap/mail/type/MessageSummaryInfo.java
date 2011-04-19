@@ -69,7 +69,7 @@ public class MessageSummaryInfo {
     private Long draftAutoSendTime;
 
     @XmlElement(name=MailConstants.E_METADATA, required=false)
-    private CustomMetadata metadatas;
+    private List<CustomMetadata> metadatas = Lists.newArrayList();
 
     @XmlElement(name=MailConstants.E_EMAIL, required=false)
     private List<EmailInfo> emails = Lists.newArrayList();
@@ -108,12 +108,23 @@ public class MessageSummaryInfo {
     public void setModifiedSequence(Integer modifiedSequence) {
         this.modifiedSequence = modifiedSequence;
     }
+
     public void setDraftAutoSendTime(Long draftAutoSendTime) {
         this.draftAutoSendTime = draftAutoSendTime;
     }
-    public void setMetadatas(CustomMetadata metadatas) {
-        this.metadatas = metadatas;
+
+    public void setMetadatas(Iterable <CustomMetadata> metadatas) {
+        this.metadatas.clear();
+        if (metadatas != null) {
+            Iterables.addAll(this.metadatas,metadatas);
+        }
     }
+
+    public MessageSummaryInfo addMetadata(CustomMetadata metadata) {
+        this.metadatas.add(metadata);
+        return this;
+    }
+
     public void setEmails(Iterable <EmailInfo> emails) {
         this.emails.clear();
         if (emails != null) {
@@ -140,7 +151,9 @@ public class MessageSummaryInfo {
     public Long getChangeDate() { return changeDate; }
     public Integer getModifiedSequence() { return modifiedSequence; }
     public Long getDraftAutoSendTime() { return draftAutoSendTime; }
-    public CustomMetadata getMetadatas() { return metadatas; }
+    public List<CustomMetadata> getMetadatas() {
+        return Collections.unmodifiableList(metadatas);
+    }
     public List<EmailInfo> getEmails() {
         return Collections.unmodifiableList(emails);
     }

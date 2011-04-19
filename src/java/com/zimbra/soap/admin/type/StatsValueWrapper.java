@@ -27,6 +27,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.type.NamedElement;
 
 // XmlRootElement is needed for classes referenced via @XmlElementRef
 @XmlRootElement(name=AdminConstants.E_VALUES)

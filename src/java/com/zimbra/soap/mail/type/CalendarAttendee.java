@@ -32,12 +32,12 @@ import com.zimbra.common.soap.MailConstants;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class CalendarAttendee {
 
-    @XmlAttribute(name=MailConstants.A_ADDRESS, required=true)
-    private final String address;
+    @XmlAttribute(name=MailConstants.A_ADDRESS, required=false)
+    private String address;
 
     // For backwards compatibility
-    @XmlAttribute(name=MailConstants.A_URL, required=true)
-    private final String url;
+    @XmlAttribute(name=MailConstants.A_URL, required=false)
+    private String url;
 
     @XmlAttribute(name=MailConstants.A_DISPLAY, required=false)
     private String displayName;
@@ -75,23 +75,14 @@ public class CalendarAttendee {
     @XmlElement(name=MailConstants.E_CAL_XPARAM, required=false)
     private List<XParam> xParams = Lists.newArrayList();
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private CalendarAttendee() {
-        this((String) null, (String) null);
+    public CalendarAttendee() {
     }
 
-    public CalendarAttendee(String address, String url) {
-        this.address = address;
-        this.url = url;
-    }
-
+    public void setAddress(String address) { this.address = address; }
+    public void setUrl(String url) { this.url = url; }
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
     }
-
     public void setSentBy(String sentBy) { this.sentBy = sentBy; }
     public void setDir(String dir) { this.dir = dir; }
     public void setLanguage(String language) { this.language = language; }
@@ -137,9 +128,9 @@ public class CalendarAttendee {
         return Collections.unmodifiableList(xParams);
     }
 
-    @Override
-    public String toString() {
-        return Objects.toStringHelper(this)
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        return helper
             .add("address", address)
             .add("url", url)
             .add("displayName", displayName)
@@ -153,7 +144,12 @@ public class CalendarAttendee {
             .add("member", member)
             .add("delegatedTo", delegatedTo)
             .add("delegatedFrom", delegatedFrom)
-            .add("xParams", xParams)
-            .toString();
+            .add("xParams", xParams);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }

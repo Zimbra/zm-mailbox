@@ -96,7 +96,7 @@ public class MessageInfo {
     private String part;
 
     @XmlElement(name=MailConstants.E_METADATA, required=false)
-    private CustomMetadata metadatas;
+    private List<CustomMetadata> metadatas = Lists.newArrayList();
 
     @XmlElement(name=MailConstants.E_FRAG, required=false)
     private String fragment;
@@ -180,11 +180,19 @@ public class MessageInfo {
         this.resentDate = resentDate;
     }
 
-    public void setMetadatas(CustomMetadata metadatas) {
-        this.metadatas = metadatas;
+    public void setPart(String part) { this.part = part; }
+    public void setMetadatas(Iterable <CustomMetadata> metadatas) {
+        this.metadatas.clear();
+        if (metadatas != null) {
+            Iterables.addAll(this.metadatas,metadatas);
+        }
     }
 
-    public void setPart(String part) { this.part = part; }
+    public MessageInfo addMetadata(CustomMetadata metadata) {
+        this.metadatas.add(metadata);
+        return this;
+    }
+
     public void setFragment(String fragment) { this.fragment = fragment; }
     public void setEmails(Iterable <EmailInfo> emails) {
         this.emails.clear();
@@ -246,8 +254,10 @@ public class MessageInfo {
     public Long getDraftAutoSendTime() { return draftAutoSendTime; }
     public Long getSentDate() { return sentDate; }
     public Long getResentDate() { return resentDate; }
-    public CustomMetadata getMetadatas() { return metadatas; }
     public String getPart() { return part; }
+    public List<CustomMetadata> getMetadatas() {
+        return Collections.unmodifiableList(metadatas);
+    }
     public String getFragment() { return fragment; }
     public List<EmailInfo> getEmails() {
         return Collections.unmodifiableList(emails);
@@ -284,8 +294,8 @@ public class MessageInfo {
             .add("draftAutoSendTime", draftAutoSendTime)
             .add("sentDate", sentDate)
             .add("resentDate", resentDate)
-            .add("metadatas", metadatas)
             .add("part", part)
+            .add("metadatas", metadatas)
             .add("fragment", fragment)
             .add("emails", emails)
             .add("subject", subject)

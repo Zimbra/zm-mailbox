@@ -29,7 +29,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.EffectiveRightsTarget.TargetType;
-import com.zimbra.soap.admin.type.NamedElement;
+import com.zimbra.soap.type.NamedElement;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_GET_DELEGATED_ADMIN_CONSTRAINTS_REQUEST)
