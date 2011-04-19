@@ -32,8 +32,30 @@ I. SPNEGO SSO
 
    Important notes:
        If you enable SPNEGO SSO on a domain, you must inform/instruct all users to configure 
-       their browsers properly.  Improperly configured browser will  behave differently depending 
-       on the browser.  The fix being to properly configure the browser.
+       their browsers properly.  Improperly configured browser will behave differently depending 
+       on the browser.  The fix is to properly configure the browser.
+       
+       This is also required for users loggon to the local domain and not intend to
+       use SPNEGO SSO.
+       
+       This is because of the way SPNEGO challenge sequence works.  
+       1. browser sends a vanilla request to ZCS
+
+       2. since domain is configured to do SPNEGO, server will redirect the request to a
+          SPNEGO protected area if the browser UA matches one of the supported browsers.  
+          This vanilla request does not carry any indication whether the user is logged 
+          on as local user or domain user.
+
+       3. Server send a 401 to challenge for a SPNEGO token.
+
+       4. Now, if browser is not properly configured, it will *not* respond to the challenge
+          and will just give up there.  The user experience is a 401 HTTP error.
+
+       If The browser is properly configured, it will respond to the challenge.  If the user is
+       logged on as a local user, the SPNEGO token in the response will not be accepted by the server.
+       At this point, server will redirect the request to the regular username/password 
+       login page, and user can log in by entering their Zimbra username/password.
+       
 
 
 II. Zimbra UI Flow
