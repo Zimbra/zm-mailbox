@@ -17,7 +17,8 @@ package com.zimbra.cs.prov.ldap.entry;
 import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ldap.LdapException;
-import com.zimbra.cs.ldap.ZSearchResultEntry;
+import com.zimbra.cs.ldap.ZAttributes;
+import com.zimbra.cs.ldap.ZEntry;
 
 /**
  * 
@@ -28,9 +29,16 @@ public class LdapGlobalGrant extends GlobalGrant implements LdapEntry {
     
     private String mDn;
     
+    /*
     LdapGlobalGrant(ZSearchResultEntry entry, Provisioning provisioning) throws LdapException {
         super(entry.getAttributes().getAttrs(), provisioning);
         mDn = entry.getDN();
+    }
+    */
+    
+    public LdapGlobalGrant(String dn, ZAttributes attrs, Provisioning provisioning) throws LdapException {
+        super(attrs.getAttrs(), provisioning);
+        mDn = dn;
     }
 
     public String getDN() {
