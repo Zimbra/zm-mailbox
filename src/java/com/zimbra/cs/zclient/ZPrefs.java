@@ -193,14 +193,14 @@ public class ZPrefs {
     public String getReplyIncludeOriginalText() { return get(Provisioning.A_zimbraPrefReplyIncludeOriginalText); }
 
     public boolean getReplyIncludeAsAttachment() { return "includeAsAttachment".equals(getReplyIncludeOriginalText()); }
-    public boolean getReplyIncludeBody() { return "includeBody".equals(getReplyIncludeOriginalText()); }
+    public boolean getReplyIncludeBody() { return "includeBody".equals(getReplyIncludeOriginalText()) || "includeBodyAndHeaders".equals(getReplyIncludeOriginalText()); }
     public boolean getReplyIncludeBodyWithPrefx() { return "includeBodyWithPrefix".equals(getReplyIncludeOriginalText()); }
     public boolean getReplyIncludeNone() { return "includeNone".equals(getReplyIncludeOriginalText()); }
     public boolean getReplyIncludeSmart() { return "includeSmart".equals(getReplyIncludeOriginalText()); }
     
     public String getForwardIncludeOriginalText() { return get(Provisioning.A_zimbraPrefForwardIncludeOriginalText); }
     public boolean getForwardIncludeAsAttachment() { return "includeAsAttachment".equals(getForwardIncludeOriginalText()); }
-    public boolean getForwardIncludeBody() { return "includeBody".equals(getForwardIncludeOriginalText()); }
+    public boolean getForwardIncludeBody() { return "includeBody".equals(getForwardIncludeOriginalText()) || "includeBodyAndHeaders".equals(getReplyIncludeOriginalText()); }
     public boolean getForwardIncludeBodyWithPrefx() { return "includeBodyWithPrefix".equals(getForwardIncludeOriginalText()); }
     
     public String getForwardReplyFormat() { return get(Provisioning.A_zimbraPrefForwardReplyFormat); }
