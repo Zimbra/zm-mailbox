@@ -22,7 +22,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
+import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -105,7 +107,7 @@ public interface DbSearchConstraints extends Cloneable {
      * Outputs the constraints tree in a format that is parsable via our QueryParser. This is used when we have to send
      * a query to a remote server.
      */
-    String toQueryString();
+    StringBuilder toQueryString(StringBuilder out);
 
     /**
      * Returns the list of ANDed or ORed sub nodes, or NULL if this is a LEAF node.
@@ -142,9 +144,6 @@ public interface DbSearchConstraints extends Cloneable {
 
         /** optional - ALL listed tags must be NOT present. */
         public Set<Tag> excludeTags = new HashSet<Tag>();
-
-        /** optional. */
-        public Boolean hasTags = null;
 
         /** optional - ANY of these folders are OK. */
         public Set<Folder> folders = new HashSet<Folder>();
@@ -250,7 +249,7 @@ public interface DbSearchConstraints extends Cloneable {
         public Folder getOnlyFolder() {
             if (folders.size() == 1 && excludeFolders.isEmpty() &&
                     types.contains(MailItem.Type.MESSAGE) && !excludeTypes.contains(MailItem.Type.MESSAGE) &&
-                    hasTags == null && excludeTags.isEmpty() && tags.isEmpty() && convId == 0 &&
+                    tags.isEmpty() && excludeTags.isEmpty() && convId == 0 &&
                     prohibitedConvIds.isEmpty() && itemIds.isEmpty() && prohibitedItemIds.isEmpty() &&
                     indexIds.isEmpty() && dateRanges.isEmpty() && calStartDateRanges.isEmpty() &&
                     calEndDateRanges.isEmpty() && modSeqRanges.isEmpty() && sizeRanges.isEmpty() &&
@@ -327,120 +326,137 @@ public interface DbSearchConstraints extends Cloneable {
         public DbSearch.TagConstraints tagConstraints;
 
         @Override
-        public String toString() {
-            Objects.ToStringHelper helper = Objects.toStringHelper(this);
+        public StringBuilder toQueryString(StringBuilder out) {
             if (noResults) {
-                helper.add("NoResults", true);
+                out.append("-IS:anywhere ");
+                return out;
             }
             if (!tags.isEmpty()) {
+                out.append("TAG:(");
                 List<String> list = new ArrayList<String>(tags.size());
                 for (Tag tag : tags) {
                     list.add(tag.getName());
                 }
-                helper.add("Tag", list);
+                Joiner.on(' ').appendTo(out, list);
+                out.append(") ");
             }
             if (!excludeTags.isEmpty()) {
+                out.append("-TAG:(");
                 List<String> list = new ArrayList<String>(excludeTags.size());
                 for (Tag tag : excludeTags) {
                     list.add(tag.getName());
                 }
-                helper.add("-Tag", list);
+                Joiner.on(' ').appendTo(out, list);
+                out.append(") ");
             }
-            if (hasTags != null) {
-                helper.add("HasTag", hasTags);
-            }
-            if (!folders.isEmpty()) {
-                List<String> list = new ArrayList<String>(folders.size());
-                for (Folder folder : folders) {
-                    if (folder instanceof Mountpoint) {
-                        list.add(String.valueOf(((Mountpoint) folder).getRemoteId()));
-                    } else {
-                        list.add(folder.getPath());
-                    }
+            for (Folder folder : folders) {
+                if (folder instanceof Mountpoint) {
+                    out.append("INID:").append(((Mountpoint) folder).getRemoteId()).append(' ');
+                } else {
+                    out.append("IN:").append(folder.getPath()).append(' ');
                 }
-                helper.add("Folder", list);
             }
-            if (!folders.isEmpty()) {
-                List<String> list = new ArrayList<String>(folders.size());
-                for (Folder folder : folders) {
-                    if (folder instanceof Mountpoint) {
-                        list.add(String.valueOf(((Mountpoint) folder).getRemoteId()));
-                    } else {
-                        list.add(folder.getPath());
-                    }
+            for (Folder folder : excludeFolders) {
+                if (folder instanceof Mountpoint) {
+                    out.append("-INID:").append(((Mountpoint) folder).getRemoteId()).append(' ');
+                } else {
+                    out.append("-ID:").append(folder.getPath()).append(' ');
                 }
-                helper.add("-Folder", list);
             }
-            if (!remoteFolders.isEmpty()) {
-                helper.add("RemoteFolder", remoteFolders);
+            for (RemoteFolderDescriptor folder : remoteFolders) {
+                out.append(folder.includeSubfolders ? "UNDERID:\"" : "INID:\"");
+                out.append(folder.getFolderId());
+                if (!Strings.isNullOrEmpty(folder.getSubfolderPath())) {
+                    out.append('/').append(folder.getSubfolderPath());
+                }
+                out.append("\" ");
             }
-            if (!excludeRemoteFolders.isEmpty()) {
-                helper.add("-RemoteFolder", excludeRemoteFolders);
+            for (RemoteFolderDescriptor folder : excludeRemoteFolders) {
+                out.append(folder.includeSubfolders ? "UNDERID:\"" : "INID:\"");
+                out.append(folder.getFolderId());
+                if (!Strings.isNullOrEmpty(folder.getSubfolderPath())) {
+                    out.append('/').append(folder.getSubfolderPath());
+                }
+                out.append("\" ");
             }
             if (convId != 0) {
-                helper.add("Conv", convId);
+                out.append("CONV:").append(convId).append(' ');
             }
             if (!prohibitedConvIds.isEmpty()) {
-                helper.add("-Conv", prohibitedConvIds);
+                out.append("-CONV:(");
+                Joiner.on(' ').appendTo(out, prohibitedConvIds);
+                out.append(") ");
             }
             if (remoteConvId != null) {
-                helper.add("RemoteConv", remoteConvId);
+                out.append("CONV:").append(remoteConvId).append(' ');
             }
             if (!prohibitedRemoteConvIds.isEmpty()) {
-                helper.add("-RemoteConv", prohibitedRemoteConvIds);
+                out.append("-CONV:(");
+                Joiner.on(' ').appendTo(out, prohibitedRemoteConvIds);
+                out.append(") ");
             }
             if (!itemIds.isEmpty()) {
-                helper.add("Item", itemIds);
+                out.append("ITEM:(");
+                Joiner.on(' ').appendTo(out, itemIds);
+                out.append(") ");
             }
             if (!prohibitedItemIds.isEmpty()) {
-                helper.add("-Item", prohibitedItemIds);
+                out.append("-ITEM:(");
+                Joiner.on(' ').appendTo(out, prohibitedItemIds);
+                out.append(") ");
             }
-            if (!remoteItemIds.isEmpty()) {
-                helper.add("RemoteItem", remoteItemIds);
+            for (ItemId id : remoteItemIds) {
+                out.append("ITEM:\"").append(id).append("\" ");
             }
-            if (!prohibitedRemoteItemIds.isEmpty()) {
-                helper.add("-RemoteItem", prohibitedRemoteItemIds);
+            for (ItemId id : prohibitedRemoteItemIds) {
+                out.append("-ITEM:\"").append(id).append("\" ");
             }
-            if (!indexIds.isEmpty()) {
-                helper.add("IndexId", indexIds);
+            if (!indexIds.isEmpty()) { // not in the query language
+                out.append("INDEXID:(");
+                Joiner.on(' ').appendTo(out, indexIds);
+                out.append(") ");
             }
-            if (hasIndexId != null) {
-                helper.add("Indexed", hasIndexId);
+            if (hasIndexId != null) { // not in the query language
+                out.append(hasIndexId ? "HAS_INDEXID" : "-HAS_INDEXID");
             }
-            if (!types.isEmpty()) {
-                helper.add("Type", types);
+            if (!types.isEmpty()) { // not in the query language
+                out.append("ITEM_TYPE:(");
+                Joiner.on(' ').appendTo(out, types);
+                out.append(") ");
             }
-            if (!excludeTypes.isEmpty()) {
-                helper.add("-Type", excludeTypes);
+            if (!excludeTypes.isEmpty()) { // not in the query language
+                out.append("-ITEM_TYPE:(");
+                Joiner.on(' ').appendTo(out, excludeTypes);
+                out.append(") ");
             }
-            if (!dateRanges.isEmpty()) {
-                helper.add("Date", dateRanges);
+            for (NumericRange range : dateRanges) {
+                range.toQueryString("DATE", out).append(' ');
             }
-            if (!calStartDateRanges.isEmpty()) {
-                helper.add("AppStart", calStartDateRanges);
+            for (NumericRange range : calStartDateRanges) {
+                range.toQueryString("APPT-START", out).append(' ');
             }
-            if (!calEndDateRanges.isEmpty()) {
-                helper.add("AppEnd", calEndDateRanges);
+            for (NumericRange range : calEndDateRanges) {
+                range.toQueryString("APPT-END", out).append(' ');
             }
-            if (!modSeqRanges.isEmpty()) {
-                helper.add("ModSeq", modSeqRanges);
+            for (NumericRange range : modSeqRanges) {
+                range.toQueryString("MODSEQ", out).append(' ');
             }
-            if (!sizeRanges.isEmpty()) {
-                helper.add("Size", sizeRanges);
+            for (NumericRange range : sizeRanges) {
+                range.toQueryString("SIZE", out).append(' ');
             }
-            if (!convCountRanges.isEmpty()) {
-                helper.add("ConvCount", convCountRanges);
+            for (NumericRange range : convCountRanges) {
+                range.toQueryString("CONV-COUNT", out).append(' ');
             }
-            if (!subjectRanges.isEmpty()) {
-                helper.add("Subject", subjectRanges);
+            for (StringRange range : subjectRanges) {
+                range.toQueryString("SUBJECT", out).append(' ');
             }
-            if (!senderRanges.isEmpty()) {
-                helper.add("Sender", senderRanges);
+            for (StringRange range : senderRanges) {
+                range.toQueryString("FROM", out).append(' ');
             }
             if (fromContact != null) {
-                helper.add("FromContact", fromContact);
+                out.append(fromContact ? "IS:fromcontact" : "-IS:fromcontact");
             }
-            return helper.toString();
+            return out;
         }
 
         /**
@@ -458,17 +474,6 @@ public interface DbSearchConstraints extends Cloneable {
             if (!Collections.disjoint(tags, excludeTags)) {
                 noResults = true;
                 return;
-            }
-
-            // has tags
-            if (hasTags == null) {
-                hasTags = other.hasTags;
-            } else if (other.hasTags != null) {
-                if (!hasTags.equals(other.hasTags)) {
-                    noResults = true;
-                    ZimbraLog.index.debug("Adding a HAS_NO_TAGS constraint to a HAS_TAGS one, this is a NO_RESULTS result");
-                    return;
-                }
             }
 
             // these we have to intersect:
@@ -609,13 +614,6 @@ public interface DbSearchConstraints extends Cloneable {
             }
         }
 
-        public boolean automaticEmptySet() {
-            if (Boolean.FALSE.equals(hasTags) && tags != null && !tags.isEmpty()) {
-                return true;
-            }
-            return false;
-        }
-
         public void validate() {
             validate(dateRanges);
             validate(calStartDateRanges);
@@ -707,14 +705,6 @@ public interface DbSearchConstraints extends Cloneable {
             if (types.isEmpty()) {
                 noResults = true;
             }
-        }
-
-        @Override
-        public String toQueryString() {
-            if (noResults)
-                return "-is:anywhere";
-
-            return toString();
         }
 
         void addItemIdClause(Integer itemId, boolean truth) {
@@ -1038,26 +1028,23 @@ public interface DbSearchConstraints extends Cloneable {
         }
 
         @Override
-        public String toQueryString() {
-            StringBuilder result = new StringBuilder("(");
+        public StringBuilder toQueryString(StringBuilder out) {
             boolean first = true;
             for (DbSearchConstraints child : children) {
                 if (!first) {
-                    result.append(" AND ");
+                    out.append(" AND ");
                 }
-                result.append(child.toQueryString());
-                first = true;
+                out.append('(');
+                child.toQueryString(out);
+                out.append(')');
+                first = false;
             }
-            return result.append(')').toString();
+            return out;
         }
 
         @Override
         public String toString() {
-            StringBuilder result = new StringBuilder("AND(");
-            for (DbSearchConstraints child : children) {
-                result.append(child).append(' ');
-            }
-            return result.append(')').toString();
+            return toQueryString(new StringBuilder()).toString();
         }
     }
 
@@ -1167,26 +1154,23 @@ public interface DbSearchConstraints extends Cloneable {
         }
 
         @Override
-        public String toQueryString() {
-            StringBuilder result = new StringBuilder("(");
+        public StringBuilder toQueryString(StringBuilder out) {
             boolean first = true;
             for (DbSearchConstraints child : children) {
                 if (!first) {
-                   result.append(" OR ");
+                    out.append(" OR ");
                 }
-                result.append(child.toQueryString());
+                out.append('(');
+                child.toQueryString(out);
+                out.append(')');
                 first = false;
             }
-            return result.append(')').toString();
+            return out;
         }
 
         @Override
         public String toString() {
-            StringBuilder result = new StringBuilder("OR(");
-            for (DbSearchConstraints child : children) {
-                result.append(child).append(' ');
-            }
-            return result.append(')').toString();
+            return toQueryString(new StringBuilder()).toString();
         }
     }
 
@@ -1216,30 +1200,35 @@ public interface DbSearchConstraints extends Cloneable {
             }
         }
 
-        @Override
-        public String toString() {
-            StringBuilder result = new StringBuilder();
+        private StringBuilder toQueryString(String name, StringBuilder out) {
             if (!bool) {
-                result.append("NOT (");
+                out.append('-');
             }
+            out.append(name).append(":(");
             if (min != null) {
-                result.append('>');
+                out.append('>');
                 if (minInclusive) {
-                    result.append('=');
+                    out.append('=');
                 }
-                result.append('"').append(min).append('"');
+                out.append('"').append(min).append('"');
             }
             if (max != null) {
-                result.append('<');
-                if (maxInclusive) {
-                    result.append('=');
+                if (min != null) {
+                    out.append(' ');
                 }
-                result.append('"').append(max).append('"');
+                out.append('<');
+                if (maxInclusive) {
+                    out.append('=');
+                }
+                out.append('"').append(max).append('"');
             }
-            if (!bool) {
-                result.append(")");
-            }
-            return result.toString();
+            out.append(')');
+            return out;
+        }
+
+        @Override
+        public String toString() {
+            return toQueryString("RANGE", new StringBuilder()).toString();
         }
 
         boolean isValid() {
@@ -1277,35 +1266,41 @@ public interface DbSearchConstraints extends Cloneable {
             return min >= 0 || max >= 0;
         }
 
-        @Override
-        public String toString() {
-            StringBuilder result = new StringBuilder();
+        private StringBuilder toQueryString(String name, StringBuilder out) {
             if (!bool) {
-                result.append("NOT (");
+                out.append('-');
             }
+            out.append(name).append(':');
             // special-case ">=N AND <=N" to be "=N"
             if (min >= 0 && minInclusive && maxInclusive && min == max) {
-                result.append(min);
+                out.append(min);
             } else {
+                out.append('(');
                 if (min >= 0) {
-                    result.append('>');
+                    out.append('>');
                     if (minInclusive) {
-                        result.append('=');
+                        out.append('=');
                     }
-                    result.append(min);
+                    out.append(min);
                 }
                 if (max >= 0) {
-                    result.append('<');
-                    if (maxInclusive) {
-                        result.append('=');
+                    if (min >= 0) {
+                        out.append(' ');
                     }
-                    result.append(max);
+                    out.append('<');
+                    if (maxInclusive) {
+                        out.append('=');
+                    }
+                    out.append(max);
                 }
+                out.append(')');
             }
-            if (!bool) {
-                result.append(')');
-            }
-            return result.toString();
+            return out;
+        }
+
+        @Override
+        public String toString() {
+            return toQueryString("RANGE", new StringBuilder()).toString();
         }
     }
 

@@ -1023,13 +1023,12 @@ public class DBQueryOperation extends QueryOperation {
 
     @Override
     String toQueryString() {
-        StringBuilder ret = new StringBuilder("(");
+        StringBuilder out = new StringBuilder("(");
         if (luceneOp != null) {
-            ret.append(luceneOp.toQueryString()).append(" AND ");
+            out.append(luceneOp.toQueryString()).append(" AND ");
         }
-        ret.append(constraints.toQueryString());
-        ret.append(')');
-        return ret.toString();
+        constraints.toQueryString(out);
+        return out.append(')').toString();
     }
 
     @Override

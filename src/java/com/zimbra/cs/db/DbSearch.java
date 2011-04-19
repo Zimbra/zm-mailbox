@@ -293,7 +293,7 @@ public final class DbSearch {
 
         // if there are no possible matches, short-circuit here...
         TagConstraints tc = TagConstraints.getTagConstraints(mbox, constraint, conn);
-        if (constraint.automaticEmptySet() || tc.noMatches) {
+        if (tc.noMatches) {
             out.append(Db.supports(Db.Capability.BOOLEAN_DATATYPE) ? "FALSE" : "0=1");
             return num;
         }
@@ -310,18 +310,6 @@ public final class DbSearch {
 
         num += encode(out, "mi.type", false, constraint.excludeTypes);
         num += encode(out, "mi.type", inCalTable, calTypes);
-
-        // if hasTags is NULL then nothing
-        // if hasTags is TRUE then !=0
-        // if hasTags is FALSE then = 0
-        if (constraint.hasTags != null) {
-            if (constraint.hasTags.booleanValue()) {
-                out.append(" AND mi.tags != 0");
-            } else {
-                out.append(" AND mi.tags = 0");
-            }
-        }
-
         num += encode(out, "mi.tags", true, tc.searchTagsets);
         num += encode(out, "mi.flags", true, tc.searchFlagsets);
         num += encode(out, "unread", true, tc.unread);
@@ -934,7 +922,7 @@ public final class DbSearch {
         assert(node instanceof DbSearchConstraints.Leaf && leaf != null);
 
         // if there are no possible matches, short-circuit here...
-        if (leaf.automaticEmptySet() || leaf.tagConstraints.noMatches) {
+        if (leaf.tagConstraints.noMatches) {
             return param;
         }
         for (MailItem.Type type : leaf.types) {
