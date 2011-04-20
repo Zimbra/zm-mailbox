@@ -76,10 +76,10 @@ public final class MailboxTest {
         Assert.assertEquals("sub2.zimbra.com", terms.get(1).getText());
         Assert.assertEquals("sub3.zimbra.com", terms.get(2).getText());
         Assert.assertEquals("sub4.zimbra.com", terms.get(3).getText());
-        Assert.assertEquals(8, terms.get(0).getFreq());
-        Assert.assertEquals(6, terms.get(1).getFreq());
-        Assert.assertEquals(4, terms.get(2).getFreq());
-        Assert.assertEquals(2, terms.get(3).getFreq());
+        Assert.assertEquals(4, terms.get(0).getFreq());
+        Assert.assertEquals(3, terms.get(1).getFreq());
+        Assert.assertEquals(2, terms.get(2).getFreq());
+        Assert.assertEquals(1, terms.get(3).getFreq());
     }
 
     private ParsedMessage generateMessage(String subject) throws Exception {

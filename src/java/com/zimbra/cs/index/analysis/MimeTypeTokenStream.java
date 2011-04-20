@@ -32,6 +32,8 @@ import com.zimbra.cs.index.LuceneFields;
  */
 public final class MimeTypeTokenStream extends TokenStream {
     private static final int MIN_TOKEN_LEN = 3;
+    private static final int MAX_TOKEN_LEN = 256;
+    private static final int MAX_TOKEN_COUNT = 100;
 
     private final List<String> tokens = new LinkedList<String>();
     private Iterator<String> itr;
@@ -54,8 +56,11 @@ public final class MimeTypeTokenStream extends TokenStream {
     }
 
     private void add(String src) {
+        if (tokens.size() >= MAX_TOKEN_COUNT) {
+            return;
+        }
         String token = src.trim();
-        if (token.length() < MIN_TOKEN_LEN) {
+        if (token.length() < MIN_TOKEN_LEN || token.length() > MAX_TOKEN_LEN) {
             return;
         }
         token = token.toLowerCase();

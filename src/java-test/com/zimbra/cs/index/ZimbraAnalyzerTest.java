@@ -76,7 +76,6 @@ public final class ZimbraAnalyzerTest {
             result.add(termAttr.toString());
         }
         stream.end();
-        stream.close();
         return result;
     }
 
