@@ -591,7 +591,7 @@ public final class MailboxIndex {
             // Fetch the item and generate the list of Lucene documents to index. Do this without holding the Mailbox
             // lock. Once we've accumulated a "chunk" of items, do a mailbox transaction to actually add them to the
             // index.
-
+            ZimbraLog.index.debug("Tokenizing id=%d", id);
             MailItem item = null;
             try {
                 item = mailbox.getItemById(null, id, MailItem.Type.UNKNOWN);
@@ -730,7 +730,7 @@ public final class MailboxIndex {
                     continue;
                 }
 
-                ZimbraLog.mailbox.debug("index item=%s", entry);
+                ZimbraLog.index.debug("Indexing id=%d", entry.item.getId());
 
                 try {
                     indexer.addDocument(entry.item, entry.documents);
