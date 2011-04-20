@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -27,8 +27,6 @@ import java.util.concurrent.RejectedExecutionException;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ThreadPool;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbMailItem;
@@ -50,8 +48,6 @@ import com.zimbra.cs.util.Zimbra;
  * to try to keep it all in one place
  */
 public class IndexHelper {
-    private static final Log sLogger = LogFactory.getLog(IndexHelper.class);
-
     private static final long sBatchIndexMaxBytesPerTransaction = LC.zimbra_index_max_transaction_bytes.longValue();
     private static final int sBatchIndexMaxItemsPerTransaction = LC.zimbra_index_max_transaction_items.intValue();
 
@@ -295,9 +291,7 @@ public class IndexHelper {
         assert(!Thread.holdsLock(mIndexingDeferredItemsLock));
         assert (mIndexingDeferredItems);
 
-        long start = 0;
-        if (ZimbraLog.mailbox.isInfoEnabled())
-            start = System.currentTimeMillis();
+        long start = System.currentTimeMillis();
 
         ///////////////////////////////
         // Get the list of deferred items to index
@@ -329,20 +323,19 @@ public class IndexHelper {
                     int deferredCount = getMailbox().getIndexDeferredCount();
                     int numInProgress = mNumIndexingInProgress;
 
-                    if ((items.size()+mNumIndexingInProgress) != deferredCount) {
-                        if (ZimbraLog.mailbox.isInfoEnabled())
-                            ZimbraLog.mailbox.info("IndexDeferredItems("+mHighestSubmittedToIndex
-                                                   +", "+nr.lowest
-                                                   +"): Deferred count out of sync - found="+items.size()+" " +
-                                                   "in progress="+numInProgress+" (deferred count="+getMailbox().getIndexDeferredCount()+")");
+                    if ((items.size() + mNumIndexingInProgress) != deferredCount) {
+                        if (ZimbraLog.index.isInfoEnabled()) {
+                            ZimbraLog.index.info("IndexDeferredItems(" + mHighestSubmittedToIndex + ", " + nr.lowest +
+                                    "): Deferred count out of sync - found=" + items.size() + " in progress=" +
+                                    numInProgress + " (deferred count=" + getMailbox().getIndexDeferredCount() + ")");
+                        }
                         getMailbox().setCurrentChangeIndexDeferredCount(items.size()+mNumIndexingInProgress);
                     } else {
-                        if (ZimbraLog.mailbox.isDebugEnabled())
-                            ZimbraLog.mailbox.debug("IndexDeferredItems("+mHighestSubmittedToIndex
-                                                    +", "+nr.lowest
-                                                    +"): found="+items.size()+" "
-                                                    +"in progress="+numInProgress
-                                                    +" (deferred count="+getMailbox().getIndexDeferredCount()+")");
+                        if (ZimbraLog.index.isDebugEnabled()) {
+                            ZimbraLog.index.debug("IndexDeferredItems(" + mHighestSubmittedToIndex + ", " + nr.lowest +
+                                    "): found="+items.size()+ " " + "in progress=" + numInProgress +
+                                    " (deferred count=" + getMailbox().getIndexDeferredCount() + ")");
+                        }
                     }
 
                     success = true;
@@ -350,7 +343,7 @@ public class IndexHelper {
                     getMailbox().endTransaction(success);
                 }
             } catch (ServiceException e) {
-                ZimbraLog.mailbox.info("Unable to index deferred items due to exception in step 1", e);
+                ZimbraLog.index.info("Unable to index deferred items due to exception in step 1", e);
                 return;
             }
         }
@@ -360,17 +353,16 @@ public class IndexHelper {
         try {
             indexItemList(items, status, false);
         } catch (ServiceException e) {
-            ZimbraLog.mailbox.info("Exception from Mailbox.indexItemList", e);
+            ZimbraLog.index.info("Exception from Mailbox.indexItemList", e);
         }
 
-        if (ZimbraLog.mailbox.isInfoEnabled()) {
+        if (ZimbraLog.index.isInfoEnabled()) {
             long elapsed = System.currentTimeMillis() - start;
             String itemsPerSec = String.format("%.2f", (1000.0*(status.mNumProcessed-status.mNumFailed)) / elapsed);
             int successful = status.mNumProcessed - status.mNumFailed;
-            if (ZimbraLog.mailbox.isInfoEnabled())
-                ZimbraLog.mailbox.info("Deferred Indexing: submitted "+successful+" items in "+elapsed+"ms ("+itemsPerSec+"/sec). ("+
-                                       (status.mNumFailed)+ " items failed to index).  IndexDeferredCount now at "+getMailbox().getIndexDeferredCount()+
-                                       " NumNotSubmitted= "+this.getNumNotSubmittedToIndex());
+            ZimbraLog.index.info("Deferred Indexing: submitted " + successful + " items in " + elapsed + "ms (" +
+                    itemsPerSec + "/sec). (" + status.mNumFailed + " items failed to index). IndexDeferredCount now at " +
+                    getMailbox().getIndexDeferredCount() + " NumNotSubmitted= " + getNumNotSubmittedToIndex());
         }
     }
 
@@ -423,13 +415,13 @@ public class IndexHelper {
                 ZimbraLog.removeAccountFromContext();
             } catch (ServiceException e) {
                 if (!e.getCode().equals(ServiceException.INTERRUPTED)) {
-                    ZimbraLog.mailbox.warn("Background reindexing failed for Mailbox "+getMailbox().getId()+" reindexing will not be completed.  " +
-                                           "The mailbox must be manually reindexed", e);
+                    ZimbraLog.index.warn("Background reindexing failed for Mailbox " + getMailbox().getId() +
+                            " reindexing will not be completed. The mailbox must be manually reindexed.", e);
                 }
             } catch (OutOfMemoryError e) {
                 Zimbra.halt("out of memory", e);
             } catch (Throwable t) {
-                ZimbraLog.index_add.warn("Caught exception in Async Reindex task", t);
+                ZimbraLog.index.warn("Caught exception in Async Reindex task", t);
             } finally {
                 if (mUseGlobalStatus) {
                     synchronized(getMailbox()) {
@@ -459,9 +451,7 @@ public class IndexHelper {
                 // special case for reindexing WHOLE mailbox.  We do this differently so that we lean
                 // on the existing high-water-mark system (allows us to restart where we left off even
                 // if server restarts)
-                long start = 0;
-                if (ZimbraLog.mailbox.isInfoEnabled())
-                    start = System.currentTimeMillis();
+                long start = System.currentTimeMillis();
                 try {
                     synchronized(getMailbox()) {
                         boolean success = false;
@@ -492,10 +482,10 @@ public class IndexHelper {
                         mFullReindexInProgress = false;
                     }
                 }
-                if (ZimbraLog.mailbox.isInfoEnabled()) {
+                if (ZimbraLog.index.isInfoEnabled()) {
                     long end = System.currentTimeMillis();
                     getMailboxIndex().flush();
-                    ZimbraLog.mailbox.info("Re-Indexing: Mailbox %d COMPLETED in %d ms",
+                    ZimbraLog.index.info("Re-Indexing: Mailbox %d COMPLETED in %d ms",
                             getMailbox().getId(), end - start);
                 }
                 return;
@@ -508,9 +498,7 @@ public class IndexHelper {
                 // passed empty set.  do nothing
                 return;
 
-            long start = 0;
-            if (ZimbraLog.mailbox.isInfoEnabled())
-                start = System.currentTimeMillis();
+            long start = System.currentTimeMillis();
 
             if (typesOrNull != null && itemIdsOrNull != null)
                 throw ServiceException.INVALID_REQUEST("Must only specify one of Types, ItemIds to Mailbox.reIndex", null);
@@ -562,20 +550,20 @@ public class IndexHelper {
 
                 indexItemList(msgs, mStatus, true);
 
-                if (ZimbraLog.mailbox.isInfoEnabled()) {
+                if (ZimbraLog.index.isInfoEnabled()) {
                     long end = System.currentTimeMillis();
                     long avg = 0;
                     long mps = 0;
-                    if (mStatus.mNumProcessed>0) {
+                    if (mStatus.mNumProcessed > 0) {
                         avg = (end - start) / mStatus.mNumProcessed;
                         mps = avg > 0 ? 1000 / avg : 0;
                     }
-                    if (getMailboxIndex() != null)
+                    if (getMailboxIndex() != null) {
                         getMailboxIndex().flush();
-                    ZimbraLog.mailbox.info("Re-Indexing: Mailbox " + getMailbox().getId() + " COMPLETED.  Re-indexed "+
-                                           mStatus.mNumProcessed
-                                           +" items in " + (end-start) + "ms.  (avg "+avg+"ms/item= "+mps+" items/sec)"
-                                           +" ("+mStatus.mNumFailed+" failed)");
+                    }
+                    ZimbraLog.index.info("Re-Indexing: Mailbox " + getMailbox().getId() + " COMPLETED.  Re-indexed "+
+                            mStatus.mNumProcessed + " items in " + (end-start) + "ms.  (avg " + avg + "ms/item= " +
+                            mps + " items/sec) (" + mStatus.mNumFailed + " failed)");
                 }
             } finally {
                 if (getMailboxIndex() != null)
@@ -688,12 +676,12 @@ public class IndexHelper {
                     boolean success = false;
                     try {
                         getMailbox().beginTransaction("indexingCompleted", null);
-                        ZimbraLog.index_add.debug("IndexingCompletedTask("+count+","+newHighestModContent+","+succeeded+")"
-                                                  +" numInProgress="+mNumIndexingInProgress
-                                                  +" curIdxDeferred="+getMailbox().getIndexDeferredCount());
+                        ZimbraLog.index.debug("IndexingCompletedTask(" + count + "," + newHighestModContent + "," +
+                                succeeded +") numInProgress=" + mNumIndexingInProgress + " curIdxDeferred=" +
+                                getMailbox().getIndexDeferredCount());
                         if (count > mNumIndexingInProgress) {
-                            ZimbraLog.mailbox.warn("IndexingCompleted called with "+count+" but only "+
-                                                   mNumIndexingInProgress+"in progress.");
+                            ZimbraLog.index.warn("IndexingCompleted called with " + count + " but only " +
+                                    mNumIndexingInProgress + "in progress.");
                             count = mNumIndexingInProgress;
                         }
 
@@ -703,9 +691,8 @@ public class IndexHelper {
                         SyncToken highestFlushedToIndex = getMailbox().getHighestFlushedToIndex();
                         assert(newHighestModContent.after(highestFlushedToIndex));
                         if (!newHighestModContent.after(highestFlushedToIndex)) {
-                            ZimbraLog.mailbox.warn("invalid set for HighestModContentIndex --" +
-                                                   " highestFlushedToIndex="+highestFlushedToIndex+
-                                                   " requested="+newHighestModContent);
+                            ZimbraLog.index.warn("invalid set for HighestModContentIndex highestFlushedToIndex=" +
+                                    highestFlushedToIndex + " requested=" + newHighestModContent);
                         } else {
                             // DB index high water mark
                             getMailbox().setCurrentChangeHighestModContentIndexed(newHighestModContent);
@@ -714,17 +701,17 @@ public class IndexHelper {
                         // update indexDeferredCount in DB row
                         int curIdxDeferred = getMailbox().getIndexDeferredCount(); // current count
                         int newCount = curIdxDeferred - count; // new value to set
-                        if (newCount < 0)
-                            ZimbraLog.index_add.info("Count out of whack during indexingCompleted " +
-                                                     "- completed "+count+" entries but current " +
-                                                     "indexDeferred is only "+curIdxDeferred
-                                                     +" in progress="+mNumIndexingInProgress);
+                        if (newCount < 0) {
+                            ZimbraLog.index.info("Count out of whack during indexingCompleted - completed " + count +
+                                    " entries but current indexDeferred is only " + curIdxDeferred + " in progress=" +
+                                    mNumIndexingInProgress);
+                        }
                         getMailbox().setCurrentChangeIndexDeferredCount(Math.max(0, newCount));
 
                         // in-memory count of indexing in progress
                         mNumIndexingInProgress -= count;
                         if (mNumIndexingInProgress < 0) {
-                            ZimbraLog.index_add.info("IndexingInProgress count out of whack during indexingCompleted");
+                            ZimbraLog.index.info("IndexingInProgress count out of whack during indexingCompleted");
                             mNumIndexingInProgress = 0;
                         }
                         if (mNumIndexingInProgress == 0)
@@ -734,11 +721,11 @@ public class IndexHelper {
                         getMailbox().endTransaction(success);
                     }
                 } catch (ServiceException e) {
-                    ZimbraLog.mailbox.info("Caught exception in indexingCompleted: "+e, e);
+                    ZimbraLog.index.info("Caught exception in indexingCompleted: " + e, e);
                 } catch (OutOfMemoryError e) {
                     Zimbra.halt("out of memory", e);
                 } catch (Throwable t) {
-                    ZimbraLog.index_add.warn("Caught exception in async IndexingCompletedTask", t);
+                    ZimbraLog.index.warn("Caught exception in async IndexingCompletedTask", t);
                 }
             }
             ZimbraLog.removeMboxFromContext();
@@ -760,8 +747,8 @@ public class IndexHelper {
         try {
             sIndexingCompletedThreadPool.execute(new IndexingCompletedTask(count, newHighestModContent, succeeded));
         } catch (RejectedExecutionException e) {
-            ZimbraLog.index_add.warn("Unable to submit IndexingCompletedTask("+count+","
-                                     +newHighestModContent+","+succeeded+")");
+            ZimbraLog.index.warn("Unable to submit IndexingCompletedTask(" + count + "," + newHighestModContent + "," +
+                    succeeded + ")");
         }
     }
 
@@ -779,9 +766,8 @@ public class IndexHelper {
     private void indexItemList(List<SearchResult> items, BatchedIndexStatus status,
                                boolean dontTrackIndexing) throws ServiceException {
         assert(!Thread.holdsLock(getMailbox()));
-        if (ZimbraLog.mailbox.isDebugEnabled()) {
-            ZimbraLog.mailbox.debug("indexItemList("+items.size()+" items, "+
-                                    (dontTrackIndexing ? "TRUE" : "FALSE"));
+        if (ZimbraLog.index.isDebugEnabled()) {
+            ZimbraLog.index.debug("indexItemList(" + items.size() + " items, " + (dontTrackIndexing ? "TRUE" : "FALSE"));
         }
         if (items.size() == 0)
             return;
@@ -826,16 +812,14 @@ public class IndexHelper {
             // Do this without holding the Mailbox lock.  Once we've accumulated a "chunk"
             // of items, do a mailbox transaction to actually add them to the index
             //
-
+            ZimbraLog.index.debug("Tokenizing id=%d", sr.id);
             MailItem item = null;
             try {
                 item = getMailbox().getItemById(null, sr.id, sr.type);
             } catch(ServiceException  e) {
-                if (ZimbraLog.index_add.isDebugEnabled())
-                    ZimbraLog.index_add.debug("Error fetching deferred item id = " + sr.id + ".  Item will not be indexed.", e);
+                ZimbraLog.index.debug("Error fetching deferred item id = %d. Item will not be indexed.", sr.id, e);
             } catch(java.lang.RuntimeException e) {
-                if (ZimbraLog.index_add.isDebugEnabled())
-                    ZimbraLog.index_add.debug("Error fetching deferred item id = " + sr.id + ".  Item will not be indexed.", e);
+                ZimbraLog.index.debug("Error fetching deferred item id = %d. Item will not be indexed.", sr.id, e);
             }
             if (item != null) {
                 chunkSizeBytes += item.getSize();
@@ -845,18 +829,15 @@ public class IndexHelper {
                 } catch (MailItem.TemporaryIndexingException e) {
                     // temporary error
                     if (!dontTrackIndexing) {
-                        if (ZimbraLog.index_add.isInfoEnabled())
-                            ZimbraLog.index_add.info("Temporary error generating index data for item ID: " + item.getId() + ".  Indexing will be retried", e);
+                        ZimbraLog.index.info("Temporary error generating index data for item ID: %d. Indexing will be retried", item.getId(), e);
                         mLastIndexingFailureTimestamp = System.currentTimeMillis();
                         throw ServiceException.FAILURE("Temporary indexing exception", e);
                     } else {
-                        if (ZimbraLog.index_add.isInfoEnabled())
-                            ZimbraLog.index_add.info("Temporary error generating index data for item ID: " + item.getId() + ".  Indexing will be skipped", e);
+                        ZimbraLog.index.info("Temporary error generating index data for item ID: %d. Indexing will be skipped", item.getId(), e);
                     }
                 }
             } else {
-                if (ZimbraLog.index_add.isDebugEnabled())
-                    ZimbraLog.index_add.debug("SKIPPING indexing of item " + sr.id + " ptr=" + item);
+                ZimbraLog.index.debug("SKIPPING indexing of item %d ptr=%s", sr.id, item);
             }
 
             int chunkSizeToUse = sBatchIndexMaxItemsPerTransaction;
@@ -872,12 +853,12 @@ public class IndexHelper {
                 // Second step: we have a chunk of items and their corresponding index data -- add them to the index
                 //
                 try {
-                    if (sLogger.isDebugEnabled()) {
+                    if (ZimbraLog.index.isDebugEnabled()) {
                         StringBuilder sb = new StringBuilder();
                         for (Mailbox.IndexItemEntry ie : chunk) {
                             sb.append(ie.mMailItem.getId()).append('-').append(ie.mModContent).append('-').append(ie.mMailItem.getType()).append(',');
                         }
-                        sLogger.debug("Batch Indexing: Mailbox "+
+                        ZimbraLog.index.debug("Batch Indexing: Mailbox "+
                                 getMailbox().getId() + "(" + getMailbox().getAccountId() + ")" +
                                 ", batchedIndexingCount=" + getBatchedIndexingCount() +
                                 ", indexing " + chunk.size() +" items: " + sb.toString());
@@ -885,9 +866,9 @@ public class IndexHelper {
 
                     synchronized(getMailbox()) {
                         if (status.mCancel) {
-                            ZimbraLog.mailbox.warn("CANCELLING batch index of Mailbox "+getMailbox().getId()
-                                                   +" before it is complete.  ("+status.mNumProcessed+
-                                                   " processed out of "+items.size()+")");
+                            ZimbraLog.index.warn("CANCELLING batch index of Mailbox " + getMailbox().getId() +
+                                    " before it is complete. (" + status.mNumProcessed + " processed out of " +
+                                    items.size() + ")");
                             throw ServiceException.INTERRUPTED("ReIndexing Canceled");
                         }
                         try {
@@ -904,12 +885,12 @@ public class IndexHelper {
                                 getMailbox().endTransaction(success);
                             }
                         } catch (ServiceException e) {
-                            if (ZimbraLog.index_add.isInfoEnabled()) {
+                            if (ZimbraLog.index.isInfoEnabled()) {
                                 StringBuilder sb = new StringBuilder();
                                 for (Mailbox.IndexItemEntry ie : chunk) {
                                     sb.append(ie.mMailItem.getId()).append('-').append(ie.mModContent).append(',');
                                 }
-                                ZimbraLog.index_add.info("Error deferred-indexing one chunk: "+sb.toString()+" skipping it (will retry)", e);
+                                ZimbraLog.index.info("Error deferred-indexing one chunk: "+sb.toString()+" skipping it (will retry)", e);
                             }
                         }
                         status.mNumProcessed = itemsAttempted;
@@ -919,9 +900,9 @@ public class IndexHelper {
                     chunkSizeBytes = 0;
                 }
             }
-            if (ZimbraLog.mailbox.isInfoEnabled() && ((itemsAttempted % 2000) == 0) && getMailbox().isReIndexInProgress()) {
-                ZimbraLog.mailbox.info("Batch Indexing: Mailbox "+getMailbox().getId()+
-                                       " on item "+itemsAttempted+" out of "+items.size());
+            if (ZimbraLog.index.isInfoEnabled() && ((itemsAttempted % 2000) == 0) && getMailbox().isReIndexInProgress()) {
+                ZimbraLog.index.info("Batch Indexing: Mailbox " + getMailbox().getId() + " on item " + itemsAttempted +
+                        " out of " + items.size());
             }
         }
     }
@@ -961,7 +942,7 @@ public class IndexHelper {
         try {
             getMailboxIndex().indexMailItem(getMailbox(), deleteFirst, docList, item, NO_CHANGE);
         } catch (Exception e) {
-            ZimbraLog.index_add.info("Skipping indexing; Unable to parse message " + itemId + ": " + e.toString(), e);
+            ZimbraLog.index.info("Skipping indexing; Unable to parse message " + itemId + ": " + e.toString(), e);
         }
     }
 
@@ -970,14 +951,14 @@ public class IndexHelper {
             try {
                 getMailboxIndex().deleteDocuments(itemsToDelete);
             } catch (IOException e) {
-                ZimbraLog.index_add.warn("Failed to delete index entries", e);
+                ZimbraLog.index.warn("Failed to delete index entries", e);
             }
         }
 
         try {
             getMailboxIndex().beginWriteOperation();
         } catch (IOException e) {
-            ZimbraLog.index_add.warn("Failed to open IndexWriter", e);
+            ZimbraLog.index.warn("Failed to open IndexWriter", e);
             mLastIndexingFailureTimestamp = System.currentTimeMillis();
             return;
         }
@@ -988,14 +969,13 @@ public class IndexHelper {
                 MailItem item = entry.mMailItem;
                 lastMailItemId = item.getId();
                 if (entry.mDocuments == null) {
-                    ZimbraLog.index_add.warn("Got NULL index data. Item %d will not be indexed.",
-                            item.getId());
+                    ZimbraLog.index.warn("Got NULL index data. Item %d will not be indexed.", item.getId());
                     continue;
                 }
 
                 // 2. Index the item before committing the main transaction.
-                if (ZimbraLog.mailbox.isDebugEnabled()) {
-                    ZimbraLog.mailbox.debug("indexMailItem(changeId=" + getMailbox().getLastChangeID() + ", "
+                if (ZimbraLog.index.isDebugEnabled()) {
+                    ZimbraLog.index.debug("indexMailItem(changeId=" + getMailbox().getLastChangeID() + ", "
                             + "token=" + entry.mModContent + "-" + entry.mMailItem.getId() + ")");
                 }
                 SyncToken old = mHighestSubmittedToIndex;
@@ -1023,7 +1003,7 @@ public class IndexHelper {
                 mLastIndexingFailureTimestamp = 0;
             }
         } catch (ServiceException e) {
-            ZimbraLog.index_add.warn("Failed to index message-id %d - indexing blocked. Possibly corrupt index?",
+            ZimbraLog.index.warn("Failed to index message-id %d - indexing blocked. Possibly corrupt index?",
                     lastMailItemId, e);
             mLastIndexingFailureTimestamp = System.currentTimeMillis();
         } finally {
