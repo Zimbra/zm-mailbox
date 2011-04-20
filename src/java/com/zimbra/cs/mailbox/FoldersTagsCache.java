@@ -12,13 +12,14 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-
 package com.zimbra.cs.mailbox;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimerTask;
 
 import com.zimbra.common.service.ServiceException;
@@ -51,7 +52,7 @@ public class FoldersTagsCache {
     private static FoldersTagsCache sTheInstance = new FoldersTagsCache();
 
     private MemcachedMap<FoldersTagsCacheKey, FoldersTags> mMemcachedLookup;
-    private Map<Integer, Mailbox> mDirtyMailboxes;
+    Map<Integer, Mailbox> mDirtyMailboxes;
 
     public static FoldersTagsCache getInstance() { return sTheInstance; }
 
@@ -60,8 +61,9 @@ public class FoldersTagsCache {
         FoldersTagsSerializer serializer = new FoldersTagsSerializer();
         mMemcachedLookup = new MemcachedMap<FoldersTagsCacheKey, FoldersTags>(memcachedClient, serializer, false);
         mDirtyMailboxes = new HashMap<Integer, Mailbox>(100);
-        if (!DebugConfig.disableFoldersTagsCache)
+        if (!DebugConfig.disableFoldersTagsCache) {
             Zimbra.sTimer.schedule(new DirtyMailboxesTask(), SWEEP_INTERVAL_MSEC, SWEEP_INTERVAL_MSEC);
+        }
     }
 
     static class FoldersTags {
@@ -131,11 +133,14 @@ public class FoldersTagsCache {
     }
 
     private static class FoldersTagsSerializer implements MemcachedSerializer<FoldersTags> {
+        FoldersTagsSerializer() { }
 
+        @Override
         public Object serialize(FoldersTags value) {
             return value.encode().toString();
         }
 
+        @Override
         public FoldersTags deserialize(Object obj) throws ServiceException {
             Metadata meta = new Metadata((String) obj);
             return FoldersTags.decode(meta);
@@ -155,9 +160,11 @@ public class FoldersTagsCache {
         mMemcachedLookup.put(key, foldersTags);
     }
 
-    public void purgeMailbox(Mailbox mbox) throws ServiceException {
+    public void purgeMailbox(Mailbox mbox) {
         // nothing to do
     }
+
+    private static Set<MailItem.Type> FOLDER_AND_TAG_TYPES = EnumSet.of(MailItem.Type.TAG, MailItem.Type.FOLDER, MailItem.Type.SEARCHFOLDER, MailItem.Type.MOUNTPOINT);
 
     public void notifyCommittedChanges(PendingModifications mods, int changeId) {
         if (DebugConfig.disableFoldersTagsCache)
@@ -185,18 +192,14 @@ public class FoldersTagsCache {
             }
         }
         if (mods.deleted != null) {
-            for (Map.Entry<ModificationKey, Object> entry : mods.deleted.entrySet()) {
-                Object deletedObj = entry.getValue();
-                if (deletedObj instanceof Folder || deletedObj instanceof Tag) {
-                    MailItem mi = (MailItem) deletedObj;
-                    Mailbox mbox = mi.getMailbox();
-                    mboxesToUpdate.put(mbox.getAccountId(), mbox);
-                } else if (deletedObj instanceof Integer) {
-                    // We only have item id.  It could be a folder or a tag.  Let's just assume it is.
+            for (Map.Entry<ModificationKey, MailItem.Type> entry : mods.deleted.entrySet()) {
+                if (FOLDER_AND_TAG_TYPES.contains(entry.getValue())) {
                     String acctId = entry.getKey().getAccountId();
-                    if (acctId == null) continue;  // just to be safe
-                    if (!mboxesToUpdate.containsKey(acctId))
+                    if (acctId == null)
+                        continue;  // just to be safe
+                    if (!mboxesToUpdate.containsKey(acctId)) {
                         mboxesToUpdate.put(acctId, null);  // Look up Mailbox later.
+                    }
                 }
             }
         }
@@ -204,8 +207,9 @@ public class FoldersTagsCache {
             for (Map.Entry<String, Mailbox> entry : mboxesToUpdate.entrySet()) {
                 String acctId = entry.getKey();
                 Mailbox mbox = entry.getValue();
-                if (mbox == null)
+                if (mbox == null) {
                     mbox = MailboxManager.getInstance().getMailboxByAccountId(acctId, false);
+                }
                 if (mbox != null) {
                     // Don't update memcached yet.  Just queue it so we can aggregate memcached puts for
                     // the same mailbox.
@@ -221,6 +225,9 @@ public class FoldersTagsCache {
 
     // periodic task that updates memcached for modified mailboxes
     private final class DirtyMailboxesTask extends TimerTask {
+        DirtyMailboxesTask() { }
+
+        @Override
         public void run() {
             try {
                 List<Mailbox> dirty;

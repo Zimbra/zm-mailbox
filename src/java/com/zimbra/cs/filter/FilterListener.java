@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.filter;
 
+import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.ImmutableSet;
@@ -21,12 +22,13 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailboxListener;
 import com.zimbra.cs.mailbox.MailboxOperation;
-import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.session.PendingModifications.ModificationKey;
 
 public class FilterListener extends MailboxListener {
     
@@ -36,8 +38,8 @@ public class FilterListener extends MailboxListener {
             MailboxOperation.RenameTag
     );
     
-    public static final ImmutableSet<Type> ITEMTYPES = ImmutableSet.of(
-            Type.FOLDER, Type.TAG
+    public static final ImmutableSet<MailItem.Type> ITEMTYPES = ImmutableSet.of(
+            MailItem.Type.FOLDER, MailItem.Type.TAG
     );
     
     @Override
@@ -47,8 +49,7 @@ public class FilterListener extends MailboxListener {
                 if (!EVENTS.contains(change.op))
                     continue;
                 if (change.what instanceof Folder) {
-                    if ((change.why & Change.MODIFIED_PARENT) == 0 &&
-                            (change.why & Change.MODIFIED_NAME) == 0)
+                    if ((change.why & Change.MODIFIED_PARENT) == 0 && (change.why & Change.MODIFIED_NAME) == 0)
                         continue;
                     Folder folder = (Folder) change.what;
                     Folder oldFolder = (Folder)notification.mods.preModifyItems.get(folder.getId());
@@ -71,24 +72,24 @@ public class FilterListener extends MailboxListener {
             }
         }
         if (notification.mods.deleted != null && notification.mods.preModifyItems != null) {
-            for (Object value : notification.mods.deleted.values()) {
-                if (value instanceof Folder) {
-                    Folder folder = (Folder) value;
-                    Folder oldFolder = (Folder)notification.mods.preModifyItems.get(folder.getId());
+            for (Map.Entry<ModificationKey, MailItem.Type> entry : notification.mods.deleted.entrySet()) {
+                if (entry.getValue() == MailItem.Type.FOLDER) {
+                    Folder oldFolder = (Folder) notification.mods.preModifyItems.get(entry.getKey().getItemId());
                     if (oldFolder == null) {
-                        ZimbraLog.filter.warn("Cannot determine the old folder name for %s.", folder.getName());
+                        ZimbraLog.filter.warn("Cannot determine the old folder name for %s.", entry.getKey());
                         continue;
                     }
-                    updateFilterRules(notification.mailboxAccount, folder, oldFolder.getPath());
-                } else if (value instanceof Tag) {
-                    updateFilterRules(notification.mailboxAccount, (Tag)value);
+                    updateFilterRules(notification.mailboxAccount, oldFolder, oldFolder.getPath());
+                } else if (entry.getValue() == MailItem.Type.TAG) {
+                    Tag oldTag = (Tag) notification.mods.preModifyItems.get(entry.getKey().getItemId());
+                    updateFilterRules(notification.mailboxAccount, oldTag);
                 }
             }
         }
     }
 
     @Override
-    public Set<Type> registerForItemTypes() {
+    public Set<MailItem.Type> registerForItemTypes() {
         return ITEMTYPES;
     }
 

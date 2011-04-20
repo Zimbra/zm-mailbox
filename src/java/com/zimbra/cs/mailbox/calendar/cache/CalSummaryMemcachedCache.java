@@ -48,6 +48,8 @@ public class CalSummaryMemcachedCache {
     }
 
     private static class CalSummarySerializer implements ByteArraySerializer<CalendarData> {
+        CalSummarySerializer() { }
+
         @Override
         public byte[] serialize(CalendarData value) {
             try {
@@ -117,28 +119,16 @@ public class CalSummaryMemcachedCache {
             }
         }
         if (mods.deleted != null) {
-            // This code gets called even for non-calendar items, for example it's called for every email
-            // being emptied from Trash.  But there's no way to short circuit out of here because the delete
-            // notification doesn't tell us the item type of what's being deleted.  Oh well.
-            for (Map.Entry<ModificationKey, Object> entry : mods.deleted.entrySet()) {
-                Object deletedObj = entry.getValue();
-                if (deletedObj instanceof Folder) {
-                    Folder folder = (Folder) deletedObj;
-                    MailItem.Type viewType = folder.getDefaultView();
-                    if (viewType == MailItem.Type.APPOINTMENT || viewType == MailItem.Type.TASK) {
-                        CalSummaryKey key = new CalSummaryKey(folder.getMailbox().getAccountId(), folder.getId());
-                        keysToInvalidate.add(key);
-                    }
-                } else if (deletedObj instanceof Integer) {
+            for (Map.Entry<ModificationKey, MailItem.Type> entry : mods.deleted.entrySet()) {
+                if (entry.getValue() == MailItem.Type.FOLDER) {
                     // We only have item id.  Assume it's a folder id and issue a delete.
                     String acctId = entry.getKey().getAccountId();
-                    if (acctId == null) continue;  // just to be safe
-                    int itemId = ((Integer) deletedObj).intValue();
-                    CalSummaryKey key = new CalSummaryKey(acctId, itemId);
+                    if (acctId == null)
+                        continue;  // just to be safe
+                    CalSummaryKey key = new CalSummaryKey(acctId, entry.getKey().getItemId());
                     keysToInvalidate.add(key);
                 }
                 // Let's not worry about hard deletes of invite/reply emails.  It has no practical benefit.
-                // Besides, when deletedObj is an Integer, we can't tell if it's a calendaring Message.
             }
         }
         try {

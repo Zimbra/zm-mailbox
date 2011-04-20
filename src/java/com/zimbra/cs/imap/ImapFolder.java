@@ -890,12 +890,11 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
         dirtyTag(tag.getId(), changeId);
     }
 
-    @Override public void handleItemDelete(int changeId, int itemId) {
+    @Override public void handleItemDelete(int changeId, int itemId, MailItem.Type type) {
         ImapMessage i4msg = getById(itemId);
         if (i4msg != null) {
             markMessageExpunged(i4msg);
-            if (ZimbraLog.imap.isDebugEnabled())
-                ZimbraLog.imap.debug("  ** deleted (ntfn): " + i4msg.msgId);
+            ZimbraLog.imap.debug("  ** deleted (ntfn): %d", i4msg.msgId);
         }
     }
 
@@ -908,8 +907,7 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
         if (i4msg == null)
             added.add(item);
 
-        if (ZimbraLog.imap.isDebugEnabled())
-            ZimbraLog.imap.debug("  ** created (ntfn): " + msgId);
+        ZimbraLog.imap.debug("  ** created (ntfn): %d", msgId);
     }
 
     @Override public void handleFolderRename(int changeId, Folder folder, Change chg) {
@@ -928,8 +926,7 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
         if (i4msg == null) {
             if (inFolder && !isVirtual()) {
                 added.add(item);
-                if (ZimbraLog.imap.isDebugEnabled())
-                    ZimbraLog.imap.debug("  ** moved (ntfn): " + item.getId());
+                ZimbraLog.imap.debug("  ** moved (ntfn): %d", item.getId());
             }
         } else if (!inFolder && !isVirtual()) {
             markMessageExpunged(i4msg);

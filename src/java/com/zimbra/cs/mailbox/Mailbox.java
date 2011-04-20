@@ -1062,12 +1062,9 @@ public class Mailbox {
 
     /**
      * Adds the item ids to the current change's list of items deleted during the transaction.
-     *
-     * @param types set of all MailItem types listed in itemIds
-     * @param itemIds  The list of deleted items' ids
      */
-    void markItemDeleted(Set<MailItem.Type> types, List<Integer> itemIds) {
-        mCurrentChange.mDirty.recordDeleted(mData.accountId, itemIds, types);
+    void markItemDeleted(TypedIdList idlist) {
+        mCurrentChange.mDirty.recordDeleted(mData.accountId, idlist);
     }
 
     /** Adds the item to the current change's list of items modified during
@@ -1092,15 +1089,17 @@ public class Mailbox {
      * @see #commitCache(Mailbox.MailboxChange)
      * @see #rollbackCache(Mailbox.MailboxChange) */
     void markOtherItemDirty(Object obj) {
-        if (obj instanceof PendingDelete)
+        if (obj instanceof PendingDelete) {
             mCurrentChange.addPendingDelete((PendingDelete) obj);
-        else
+        } else {
             mCurrentChange.mOtherDirtyStuff.add(obj);
+        }
     }
 
     public synchronized DbConnection getOperationConnection() throws ServiceException {
-        if (!mCurrentChange.isActive())
+        if (!mCurrentChange.isActive()) {
             throw ServiceException.FAILURE("cannot fetch Connection outside transaction", new Exception());
+        }
         return mCurrentChange.getConnection();
     }
 
@@ -1956,7 +1955,7 @@ public class Mailbox {
         PendingModifications snapshot = new PendingModifications();
 
         if (pms.deleted != null && !pms.deleted.isEmpty()) {
-            snapshot.recordDeleted(pms.deleted.keySet(), pms.changedTypes);
+            snapshot.recordDeleted(pms.deleted);
         }
 
         if (pms.created != null && !pms.created.isEmpty()) {
@@ -7722,9 +7721,9 @@ public class Mailbox {
                             obj = ((Change) obj).what;
                         }
 
-                        if (obj instanceof Tag) {
+                        if (obj instanceof Tag || obj == MailItem.Type.TAG) {
                             purge(MailItem.Type.TAG);
-                        } else if (obj instanceof Folder) {
+                        } else if (obj instanceof Folder || FOLDER_TYPES.contains(obj)) {
                             purge(MailItem.Type.FOLDER);
                         } else if (obj instanceof MailItem && cache != null) {
                             cache.remove(new Integer(((MailItem) obj).getId()));

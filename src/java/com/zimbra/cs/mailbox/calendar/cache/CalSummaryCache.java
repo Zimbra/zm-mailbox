@@ -748,20 +748,10 @@ public class CalSummaryCache {
             }
         }
         if (mods.deleted != null) {
-            // This code gets called even for non-calendar items, for example it's called for every email
-            // being emptied from Trash.  But there's no way to short circuit out of here because the delete
-            // notification doesn't tell us the item type of what's being deleted.  Oh well.
             String lastAcctId = null;
             Mailbox lastMbox = null;
-            for (Map.Entry<ModificationKey, Object> entry : mods.deleted.entrySet()) {
-                Object deletedObj = entry.getValue();
-                if (deletedObj instanceof CalendarItem) {
-                    CalendarItem item = (CalendarItem) deletedObj;
-                    Mailbox mbox = item.getMailbox();
-                    invalidateItem(mbox, item.getFolderId(), item.getId());
-                    lastAcctId = mbox.getAccountId();
-                    lastMbox = mbox;
-                } else if (deletedObj instanceof Integer) {
+            for (Map.Entry<ModificationKey, MailItem.Type> entry : mods.deleted.entrySet()) {
+                if (entry.getValue() == MailItem.Type.APPOINTMENT || entry.getValue() == MailItem.Type.TASK) {
                     // We only have item id.  Look up the folder id of the item in the cache.
                     Mailbox mbox = null;
                     String acctId = entry.getKey().getAccountId();
@@ -781,29 +771,32 @@ public class CalSummaryCache {
                     if (mbox != null) {
                         lastAcctId = acctId;
                         lastMbox = mbox;
-                        int itemId = ((Integer) deletedObj).intValue();
+                        int itemId = entry.getKey().getItemId();
                         String accountId = mbox.getAccountId();
                         int folderId;
                         synchronized (mSummaryCache) {
                             folderId = mSummaryCache.getFolderForItem(accountId, itemId);
                         }
-                        if (folderId != SummaryLRU.FOLDER_NOT_FOUND)
+                        if (folderId != SummaryLRU.FOLDER_NOT_FOUND) {
                             invalidateItem(mbox, folderId, itemId);
+                        }
                     }
                 }
             }
         }
 
-        if (MemcachedConnector.isConnected())
+        if (MemcachedConnector.isConnected()) {
             mMemcachedCache.notifyCommittedChanges(mods, changeId);
+        }
     }
 
     void purgeMailbox(Mailbox mbox) throws ServiceException {
         synchronized (mSummaryCache) {
             mSummaryCache.removeAccount(mbox.getAccountId());
         }
-        if (MemcachedConnector.isConnected())
+        if (MemcachedConnector.isConnected()) {
             mMemcachedCache.purgeMailbox(mbox);
+        }
         FileStore.removeMailbox(mbox.getId());
     }
 }

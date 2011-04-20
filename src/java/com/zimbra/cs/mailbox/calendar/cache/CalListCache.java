@@ -12,7 +12,6 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-
 package com.zimbra.cs.mailbox.calendar.cache;
 
 import java.util.HashMap;
@@ -49,6 +48,8 @@ public class CalListCache {
     }
 
     private static class CalListSerializer implements MemcachedSerializer<CalList> {
+        CalListSerializer() { }
+
         @Override
         public Object serialize(CalList value) {
             return value.encodeMetadata().toString();
@@ -167,27 +168,14 @@ public class CalListCache {
             }
         }
         if (mods.deleted != null) {
-            // This code gets called even for non-calendar items, for example it's called for every email
-            // being emptied from Trash.  But there's no way to short circuit out of here because the delete
-            // notification doesn't tell us the item type of what's being deleted.  Oh well.
-            for (Map.Entry<ModificationKey, Object> entry : mods.deleted.entrySet()) {
-                Object deletedObj = entry.getValue();
-                if (deletedObj instanceof Folder) {
-                    Folder folder = (Folder) deletedObj;
-                    MailItem.Type viewType = folder.getDefaultView();
-                    if (viewType == MailItem.Type.APPOINTMENT || viewType == MailItem.Type.TASK) {
-                        ChangedFolders changedFolders = changeMap.getAccount(entry.getKey().getAccountId());
-                        changedFolders.deleted.add(folder.getId());
-                    }
-                } else if (deletedObj instanceof Integer) {
+            for (Map.Entry<ModificationKey, MailItem.Type> entry : mods.deleted.entrySet()) {
+                if (entry.getValue() == MailItem.Type.FOLDER) {
                     // We only have item id.  Let's just assume it's a calendar folder id and check
                     // against the cached list.
                     ChangedFolders changedFolders = changeMap.getAccount(entry.getKey().getAccountId());
-                    int itemId = ((Integer) deletedObj).intValue();
-                    changedFolders.deleted.add(itemId);
+                    changedFolders.deleted.add(entry.getKey().getItemId());
                 }
                 // Let's not worry about hard deletes of invite/reply emails.  It has no practical benefit.
-                // Besides, when deletedObj is an Integer, we can't tell if it's a calendaring Message.
             }
         }
 

@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import com.zimbra.common.auth.ZAuthToken;
@@ -34,6 +35,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
@@ -60,10 +62,14 @@ public class CtagInfoCache {
 
     private static class CtagInfoSerializer implements MemcachedSerializer<CtagInfo> {
 
+        public CtagInfoSerializer() { }
+
+        @Override
         public Object serialize(CtagInfo value) {
             return value.encodeMetadata().toString();
         }
 
+        @Override
         public CtagInfo deserialize(Object obj) throws ServiceException {
             Metadata meta = new Metadata((String) obj);
             return new CtagInfo(meta);
@@ -257,28 +263,16 @@ public class CtagInfoCache {
             }
         }
         if (mods.deleted != null) {
-            // This code gets called even for non-calendar items, for example it's called for every email
-            // being emptied from Trash.  But there's no way to short circuit out of here because the delete
-            // notification doesn't tell us the item type of what's being deleted.  Oh well.
-            for (Map.Entry<ModificationKey, Object> entry : mods.deleted.entrySet()) {
-                Object deletedObj = entry.getValue();
-                if (deletedObj instanceof Folder) {
-                    Folder folder = (Folder) deletedObj;
-                    MailItem.Type viewType = folder.getDefaultView();
-                    if (viewType == MailItem.Type.APPOINTMENT || viewType == MailItem.Type.TASK) {
-                        CalendarKey key = new CalendarKey(folder.getMailbox().getAccountId(), folder.getId());
-                        keysToInvalidate.add(key);
-                    }
-                } else if (deletedObj instanceof Integer) {
+            for (Entry<ModificationKey, Type> entry : mods.deleted.entrySet()) {
+                if (entry.getValue() == MailItem.Type.FOLDER) {
                     // We only have item id.  Assume it's a folder id and issue a delete.
                     String acctId = entry.getKey().getAccountId();
-                    if (acctId == null) continue;  // just to be safe
-                    int itemId = ((Integer) deletedObj).intValue();
-                    CalendarKey key = new CalendarKey(acctId, itemId);
+                    if (acctId == null)
+                        continue;  // just to be safe
+                    CalendarKey key = new CalendarKey(acctId, entry.getKey().getItemId());
                     keysToInvalidate.add(key);
                 }
                 // Let's not worry about hard deletes of invite/reply emails.  It has no practical benefit.
-                // Besides, when deletedObj is an Integer, we can't tell if it's a calendaring Message.
             }
         }
         try {

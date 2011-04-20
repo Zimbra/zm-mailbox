@@ -2685,7 +2685,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (info.itemIds.isEmpty())
             return;
 
-        mbox.markItemDeleted(info.itemIds.types(), info.itemIds.getAll());
+        mbox.markItemDeleted(info.itemIds);
 
         MailItem parent = null;
         // when applicable, record the deleted MailItem (rather than just its id)
@@ -2785,7 +2785,9 @@ public abstract class MailItem implements Comparable<MailItem> {
             } catch (ServiceException se) {
                 MailboxErrorUtil.handleCascadeFailure(mbox, info.cascadeIds, se);
             }
-            mbox.markItemDeleted(EnumSet.of(Type.CONVERSATION), info.cascadeIds);
+            for (Integer convId : info.cascadeIds) {
+                mbox.markItemDeleted(Type.CONVERSATION, convId);
+            }
             info.itemIds.add(Type.CONVERSATION, info.cascadeIds);
         }
 

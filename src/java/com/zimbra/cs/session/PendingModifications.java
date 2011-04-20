@@ -18,16 +18,18 @@
  */
 package com.zimbra.cs.session;
 
-import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.util.Pair;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxOperation;
+import com.zimbra.cs.mailbox.util.TypedIdList;
 
 public final class PendingModifications {
     public static final class Change {
@@ -141,9 +143,9 @@ public final class PendingModifications {
     public Set<MailItem.Type> changedTypes = EnumSet.noneOf(MailItem.Type.class);
 
     public LinkedHashMap<ModificationKey, MailItem> created;
-    public HashMap<ModificationKey, Change> modified;
-    public HashMap<ModificationKey, Object> deleted;
-    public HashMap<Integer, MailItem> preModifyItems;
+    public Map<ModificationKey, Change> modified;
+    public Map<ModificationKey, MailItem.Type> deleted;
+    public Map<Integer, MailItem> preModifyItems;
 
     public PendingModifications() { }
 
@@ -177,8 +179,9 @@ public final class PendingModifications {
         }
         if (modified != null) {
             for (ModificationKey mkey : modified.keySet()) {
-                if (mkey.getAccountId().equals(accountId))
+                if (mkey.getAccountId().equals(accountId)) {
                     return true;
+                }
             }
         }
         return false;
@@ -197,39 +200,45 @@ public final class PendingModifications {
             changedTypes.add(type);
         }
         ModificationKey key = new ModificationKey(accountId, id);
-        delete(key, key.getItemId());
+        delete(key, type);
     }
 
-    public void recordDeleted(String accountId, Collection<Integer> ids, Set<MailItem.Type> types) {
-        changedTypes.addAll(types);
-        for (Integer id : ids) {
-            ModificationKey key = new ModificationKey(accountId, id);
-            delete(key, id);
+    public void recordDeleted(String accountId, TypedIdList idlist) {
+        changedTypes.addAll(idlist.types());
+        for (Map.Entry<MailItem.Type, List<Integer>> entry : idlist) {
+            MailItem.Type type = entry.getKey();
+            for (Integer id : entry.getValue()) {
+                delete(new ModificationKey(accountId, id), type);
+            }
         }
     }
 
     public void recordDeleted(MailItem item) {
         changedTypes.add(item.getType());
-        delete(new ModificationKey(item), item);
+        delete(new ModificationKey(item), item.getType());
     }
 
-    public void recordDeleted(Collection<ModificationKey> keys, Set<MailItem.Type> types) {
-        changedTypes.addAll(types);
-        for (ModificationKey key : keys) {
-            delete(key, key.getItemId());
+    public void recordDeleted(Map<ModificationKey, MailItem.Type> deletes) {
+        if (deletes != null && !deletes.isEmpty()) {
+            for (Map.Entry<ModificationKey, MailItem.Type> entry : deletes.entrySet()) {
+                MailItem.Type type = entry.getValue();
+                changedTypes.add(type);
+                delete(entry.getKey(), type);
+            }
         }
     }
 
-    private void delete(ModificationKey key, Object value) {
+    private void delete(ModificationKey key, MailItem.Type type) {
         if (created != null && created.remove(key) != null)
             return;
+
         if (modified != null) {
             modified.remove(key);
         }
         if (deleted == null) {
-            deleted = new HashMap<ModificationKey, Object>();
+            deleted = new HashMap<ModificationKey, MailItem.Type>();
         }
-        deleted.put(key, value);
+        deleted.put(key, type);
     }
 
     public void recordModified(ModificationKey mkey, Change chg) {
@@ -283,14 +292,15 @@ public final class PendingModifications {
 
         if (other.deleted != null) {
             // note that deleted MailItems are just added as IDs for concision
-            for (ModificationKey key : other.deleted.keySet()) {
-                delete(key, key.getItemId());
+            for (Map.Entry<ModificationKey, MailItem.Type> entry : other.deleted.entrySet()) {
+                delete(entry.getKey(), entry.getValue());
             }
         }
 
         if (other.created != null) {
-            for (MailItem item : other.created.values())
+            for (MailItem item : other.created.values()) {
                 recordCreated(item);
+            }
         }
 
         if (other.modified != null) {

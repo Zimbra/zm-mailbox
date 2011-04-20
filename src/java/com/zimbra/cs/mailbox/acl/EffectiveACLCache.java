@@ -29,6 +29,7 @@ import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.memcached.MemcachedConnector;
@@ -52,10 +53,14 @@ public class EffectiveACLCache {
 
     private static class ACLSerializer implements MemcachedSerializer<ACL> {
         
+        public ACLSerializer() { }
+
+        @Override
         public Object serialize(ACL value) {
             return value.encode().toString();
         }
 
+        @Override
         public ACL deserialize(Object obj) throws ServiceException {
             MetadataList meta = new MetadataList((String) obj);
             return new ACL(meta);
@@ -117,21 +122,12 @@ public class EffectiveACLCache {
             }
         }
         if (mods.deleted != null) {
-            // This code gets called even for non-folder items, for example it's called for every email
-            // being emptied from Trash.  But there's no way to short circuit out of here because the delete
-            // notification doesn't tell us the item type of what's being deleted.  Oh well.
-            for (Map.Entry<ModificationKey, Object> entry : mods.deleted.entrySet()) {
-                Object deletedObj = entry.getValue();
-                if (deletedObj instanceof Folder) {
-                    Folder folder = (Folder) deletedObj;
-                    EffectiveACLCacheKey key = new EffectiveACLCacheKey(folder.getMailbox().getAccountId(), folder.getId());
-                    keysToInvalidate.add(key);
-                } else if (deletedObj instanceof Integer) {
-                    // We only have item id.  Assume it's a folder id and issue a delete.
+            for (Map.Entry<ModificationKey, MailItem.Type> entry : mods.deleted.entrySet()) {
+                if (entry.getValue() == MailItem.Type.FOLDER) {
                     String acctId = entry.getKey().getAccountId();
-                    if (acctId == null) continue;  // just to be safe
-                    int itemId = ((Integer) deletedObj).intValue();
-                    EffectiveACLCacheKey key = new EffectiveACLCacheKey(acctId, itemId);
+                    if (acctId == null)
+                        continue;  // just to be safe
+                    EffectiveACLCacheKey key = new EffectiveACLCacheKey(acctId, entry.getKey().getItemId());
                     keysToInvalidate.add(key);
                 }
             }

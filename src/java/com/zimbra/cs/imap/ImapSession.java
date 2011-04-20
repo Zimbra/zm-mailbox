@@ -40,6 +40,7 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.session.PendingModifications.ModificationKey;
 import com.zimbra.cs.session.Session;
 
 public class ImapSession extends Session {
@@ -57,7 +58,7 @@ public class ImapSession extends Session {
         void handleTagDelete(int changeId, int tagId);
         void handleTagCreate(int changeId, Tag tag);
         void handleTagRename(int changeId, Tag tag, Change chg);
-        void handleItemDelete(int changeId, int itemId);
+        void handleItemDelete(int changeId, int itemId, MailItem.Type type);
         void handleItemCreate(int changeId, MailItem item, AddedItems added);
         void handleFolderRename(int changeId, Folder folder, Change chg);
         void handleItemUpdate(int changeId, Change chg, AddedItems added);
@@ -319,8 +320,8 @@ public class ImapSession extends Session {
             synchronized (this) {
                 AddedItems added = new AddedItems();
                 if (pns.deleted != null) {
-                    for (Object obj : pns.deleted.values()) {
-                        handleDelete(changeId, obj instanceof MailItem ? ((MailItem) obj).getId() : ((Integer) obj).intValue());
+                    for (Map.Entry<ModificationKey, MailItem.Type> entry : pns.deleted.entrySet()) {
+                        handleDelete(changeId, entry.getKey().getItemId(), entry.getValue());
                     }
                 }
                 if (pns.created != null) {
@@ -355,10 +356,10 @@ public class ImapSession extends Session {
         }
     }
 
-    void handleDelete(int changeId, int id) {
+    void handleDelete(int changeId, int id, MailItem.Type type) {
         if (id <= 0) {
             return;
-        } else if (Tag.validateId(id)) {
+        } else if (type == MailItem.Type.TAG) {
             mFolder.handleTagDelete(changeId, id);
         } else if (id == mFolderId) {
             // Once the folder's gone, there's no point in keeping an IMAP Session listening on it around.
@@ -370,9 +371,8 @@ public class ImapSession extends Session {
             if (mHandler != null) {
                 mHandler.dropConnection(true);
             }
-        } else {
-            // XXX: would be helpful to have the item type here
-            mFolder.handleItemDelete(changeId, id);
+        } else if (ImapMessage.SUPPORTED_TYPES.contains(type)) {
+            mFolder.handleItemDelete(changeId, id, type);
         }
     }
 
@@ -517,8 +517,8 @@ public class ImapSession extends Session {
             return pns;
         }
 
-        private synchronized void queueDelete(int changeId, int itemId) {
-            getQueuedNotifications(changeId).recordDeleted(getTargetAccountId(), itemId, MailItem.Type.UNKNOWN);
+        private synchronized void queueDelete(int changeId, int itemId, MailItem.Type type) {
+            getQueuedNotifications(changeId).recordDeleted(getTargetAccountId(), itemId, type);
         }
 
         private synchronized void queueCreate(int changeId, MailItem item) {
@@ -545,7 +545,7 @@ public class ImapSession extends Session {
         }
 
         @Override public void handleTagDelete(int changeId, int tagId) {
-            queueDelete(changeId, tagId);
+            queueDelete(changeId, tagId, MailItem.Type.TAG);
         }
 
         @Override public void handleTagCreate(int changeId, Tag tag) {
@@ -556,8 +556,8 @@ public class ImapSession extends Session {
             queueModify(changeId, chg);
         }
 
-        @Override public void handleItemDelete(int changeId, int itemId) {
-            queueDelete(changeId, itemId);
+        @Override public void handleItemDelete(int changeId, int itemId, MailItem.Type type) {
+            queueDelete(changeId, itemId, type);
         }
 
         @Override public void handleItemCreate(int changeId, MailItem item, AddedItems added) {
