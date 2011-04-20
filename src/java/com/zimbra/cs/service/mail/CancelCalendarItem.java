@@ -173,7 +173,7 @@ public class CancelCalendarItem extends CalendarRequest {
             iCal.addDescription(desc, html);
 
             MimeBodyPart[] mbps = new MimeBodyPart[1];
-            mbps[0] = CalendarMailSender.makeICalIntoMimePart(inv.getUid(), iCal);
+            mbps[0] = CalendarMailSender.makeICalIntoMimePart(iCal);
 
             // the <inv> element is *NOT* allowed -- we always build it manually
             // based on the params to the <CancelCalendarItem> and stick it in the 
@@ -223,7 +223,7 @@ public class CancelCalendarItem extends CalendarRequest {
             iCal.addDescription(desc, html);
 
             MimeBodyPart[] mbps = new MimeBodyPart[1];
-            mbps[0] = CalendarMailSender.makeICalIntoMimePart(inv.getUid(), iCal);
+            mbps[0] = CalendarMailSender.makeICalIntoMimePart(iCal);
             
             // the <inv> element is *NOT* allowed -- we always build it manually
             // based on the params to the <CancelCalendarItem> and stick it in the 

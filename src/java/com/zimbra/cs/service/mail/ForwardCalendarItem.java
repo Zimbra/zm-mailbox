@@ -543,7 +543,7 @@ public class ForwardCalendarItem extends CalendarRequest {
                 if (!mCalendarPartReplaced) {
                     // This message either had text/calendar at top level or none at all.
                     // In both cases, set the new calendar as top level content.
-                    setCalendarContent(mm, mUid, mCalNew);
+                    setCalendarContent(mm, mCalNew);
                 }
                 return true;
             } else {
@@ -551,9 +551,9 @@ public class ForwardCalendarItem extends CalendarRequest {
             }
         }
 
-        private static void setCalendarContent(Part part, String uid, ZVCalendar cal) throws MessagingException {
+        private static void setCalendarContent(Part part, ZVCalendar cal) throws MessagingException {
             String filename = "meeting.ics";
-            part.setDataHandler(new DataHandler(new CalendarDataSource(cal, uid, filename)));
+            part.setDataHandler(new DataHandler(new CalendarDataSource(cal, filename)));
         }
 
         @Override
@@ -586,7 +586,7 @@ public class ForwardCalendarItem extends CalendarRequest {
                     // a child of this multipart.
                     if (mp.removeBodyPart(mCalendarPart)) {
                         MimeBodyPart newCalendarPart = new JavaMailMimeBodyPart();
-                        setCalendarContent(newCalendarPart, mUid, mCalNew);
+                        setCalendarContent(newCalendarPart, mCalNew);
                         mp.addBodyPart(newCalendarPart);
                         mCalendarPartReplaced = true;
                     } else {

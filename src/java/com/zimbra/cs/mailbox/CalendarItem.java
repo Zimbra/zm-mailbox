@@ -2394,7 +2394,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
                     updated = true;
                     multi.removeBodyPart(icalPartNum);
                     ZVCalendar cal = inv.newToICalendar(allowPrivateAccess);
-                    MimeBodyPart icalPart = CalendarMailSender.makeICalIntoMimePart(inv.getUid(), cal);
+                    MimeBodyPart icalPart = CalendarMailSender.makeICalIntoMimePart(cal);
                     multi.addBodyPart(icalPart, icalPartNum);
                     // Courtesy of JavaMail.  All three lines are necessary.
                     // Reasons unclear from JavaMail docs.
