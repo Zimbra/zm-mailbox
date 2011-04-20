@@ -24,10 +24,10 @@ import org.junit.Test;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.HeaderUtils.ByteBuilder;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.appliance.util.ByteUtil;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 
 public class FileUploadServletTest {
