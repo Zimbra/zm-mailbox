@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -20,6 +20,7 @@ import org.apache.lucene.analysis.TokenStream;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.google.common.base.Strings;
 import com.zimbra.cs.index.ZimbraAnalyzerTest;
 
 /**
@@ -27,20 +28,17 @@ import com.zimbra.cs.index.ZimbraAnalyzerTest;
  *
  * @author ysasaki
  */
-public class RFC822AddressTokenStreamTest {
+public final class RFC822AddressTokenStreamTest {
 
     @Test
     public void single() throws Exception {
         TokenStream stream = new RFC822AddressTokenStream("user@domain.com");
-        Assert.assertEquals(Arrays.asList("user@domain.com", "user",
-                "@domain.com", "domain.com", "domain", "@domain"),
+        Assert.assertEquals(Arrays.asList("user@domain.com", "user", "@domain.com", "domain.com", "domain", "@domain"),
                 ZimbraAnalyzerTest.toTokens(stream));
 
         stream = new RFC822AddressTokenStream("\"Tim Brown\" <first.last@sub.domain.com>");
-        Assert.assertEquals(Arrays.asList("tim", "brown",
-                "first.last@sub.domain.com", "first.last", "first", "last",
-                "@sub.domain.com", "sub.domain.com", "domain", "@domain"),
-                ZimbraAnalyzerTest.toTokens(stream));
+        Assert.assertEquals(Arrays.asList("tim", "brown", "first.last@sub.domain.com", "first.last", "first", "last",
+                "@sub.domain.com", "sub.domain.com", "domain", "@domain"), ZimbraAnalyzerTest.toTokens(stream));
     }
 
     @Test
@@ -61,23 +59,19 @@ public class RFC822AddressTokenStreamTest {
     public void comment() throws Exception {
         TokenStream stream = new RFC822AddressTokenStream(
                 "Pete(A wonderful \\) chap) <pete(his account)@silly.test(his host)>");
-        Assert.assertEquals(Arrays.asList("pete", "wonderful", "chap", "pete",
-                "his", "account", "@silly.test", "his", "host",
-                "pete@silly.test", "pete", "@silly.test", "silly.test"),
-                ZimbraAnalyzerTest.toTokens(stream));
+        Assert.assertEquals(Arrays.asList("pete", "wonderful", "chap", "pete", "his", "account", "@silly.test", "his",
+                "host", "pete@silly.test", "pete", "@silly.test", "silly.test"), ZimbraAnalyzerTest.toTokens(stream));
     }
 
     @Test
     public void topPrivateDomain() throws Exception {
         TokenStream stream = new RFC822AddressTokenStream("support@zimbra.com");
-        Assert.assertEquals(Arrays.asList("support@zimbra.com", "support",
-                "@zimbra.com", "zimbra.com", "zimbra", "@zimbra"),
-                ZimbraAnalyzerTest.toTokens(stream));
+        Assert.assertEquals(Arrays.asList("support@zimbra.com", "support", "@zimbra.com", "zimbra.com", "zimbra",
+                "@zimbra"), ZimbraAnalyzerTest.toTokens(stream));
 
         stream = new RFC822AddressTokenStream("support@zimbra.vmware.co.jp");
-        Assert.assertEquals(Arrays.asList("support@zimbra.vmware.co.jp",
-                "support", "@zimbra.vmware.co.jp", "zimbra.vmware.co.jp",
-                "vmware", "@vmware"), ZimbraAnalyzerTest.toTokens(stream));
+        Assert.assertEquals(Arrays.asList("support@zimbra.vmware.co.jp", "support", "@zimbra.vmware.co.jp",
+                "zimbra.vmware.co.jp", "vmware", "@vmware"), ZimbraAnalyzerTest.toTokens(stream));
 
         stream = new RFC822AddressTokenStream("test@co.jp");
         Assert.assertEquals(Arrays.asList("test@co.jp", "test", "@co.jp", "co.jp"),
@@ -88,13 +82,17 @@ public class RFC822AddressTokenStreamTest {
     public void reset() throws Exception {
         TokenStream stream = new RFC822AddressTokenStream("user@domain.com");
         stream.reset();
-        Assert.assertEquals(Arrays.asList("user@domain.com", "user",
-                "@domain.com", "domain.com", "domain", "@domain"),
+        Assert.assertEquals(Arrays.asList("user@domain.com", "user", "@domain.com", "domain.com", "domain", "@domain"),
                 ZimbraAnalyzerTest.toTokens(stream));
         stream.reset();
-        Assert.assertEquals(Arrays.asList("user@domain.com", "user",
-                "@domain.com", "domain.com", "domain", "@domain"),
+        Assert.assertEquals(Arrays.asList("user@domain.com", "user", "@domain.com", "domain.com", "domain", "@domain"),
                 ZimbraAnalyzerTest.toTokens(stream));
+    }
+
+    @Test
+    public void limit() throws Exception {
+        TokenStream stream = new RFC822AddressTokenStream("<" + Strings.repeat("x.", 200) + "x@zimbra.com>");
+        Assert.assertEquals(100, ZimbraAnalyzerTest.toTokens(stream).size());
     }
 
 }

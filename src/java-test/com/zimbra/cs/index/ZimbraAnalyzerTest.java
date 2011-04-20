@@ -120,7 +120,6 @@ public class ZimbraAnalyzerTest {
             result.add(termAttr.term());
         }
         stream.end();
-        stream.close();
         return result;
     }
 

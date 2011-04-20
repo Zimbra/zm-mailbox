@@ -58,6 +58,8 @@ import com.zimbra.common.mime.InternetAddress;
  * @author ysasaki
  */
 public final class RFC822AddressTokenStream extends TokenStream {
+    private static final int MAX_TOKEN_LEN = 256;
+    private static final int MAX_TOKEN_COUNT = 100;
 
     private final List<String> tokens = new LinkedList<String>();
     private Iterator<String> itr;
@@ -100,7 +102,7 @@ public final class RFC822AddressTokenStream extends TokenStream {
     }
 
     private void tokenize(String src, Set<String> emails) {
-        tokens.add(src);
+        add(src);
         int at = src.lastIndexOf('@');
         if (at <= 0) { // not an email address
             return;
@@ -109,12 +111,12 @@ public final class RFC822AddressTokenStream extends TokenStream {
 
         // split on @
         String localpart = src.substring(0, at);
-        tokens.add(localpart);
+        add(localpart);
 
         // now, split the local-part on the "."
         if (localpart.indexOf('.') > 0) {
             for (String part : localpart.split("\\.")) {
-                tokens.add(part);
+                add(part);
             }
         }
 
@@ -122,13 +124,13 @@ public final class RFC822AddressTokenStream extends TokenStream {
             return;
         }
         String domain = src.substring(at + 1);
-        tokens.add("@" + domain);
-        tokens.add(domain);
+        add("@" + domain);
+        add(domain);
 
         try {
             String top = InternetDomainName.from(domain).topPrivateDomain().parts().get(0);
-            tokens.add(top);
-            tokens.add("@" + top); // for backward compatibility
+            add(top);
+            add("@" + top); // for backward compatibility
         } catch (IllegalArgumentException ignore) {
         } catch (IllegalStateException ignore) {
             // skip unless it's a valid domain
@@ -152,6 +154,12 @@ public final class RFC822AddressTokenStream extends TokenStream {
         }
     }
 
+    private void add(String token) {
+        if (token.length() <= MAX_TOKEN_LEN && tokens.size() < MAX_TOKEN_COUNT) {
+            tokens.add(token);
+        }
+    }
+
     @Override
     public boolean incrementToken() throws IOException {
         if (itr.hasNext()) {
@@ -165,6 +173,11 @@ public final class RFC822AddressTokenStream extends TokenStream {
     @Override
     public void reset() {
         itr = tokens.iterator();
+    }
+
+    @Override
+    public void close() {
+        tokens.clear();
     }
 
     public List<String> getAllTokens() {
