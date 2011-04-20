@@ -423,7 +423,7 @@ public class SendMsg extends MailDocumentHandler {
                 String filename = bp.getFileName();
                 if (filename == null)
                     filename = "meeting.ics";
-                bp.setDataHandler(new DataHandler(new CalendarDataSource(ical, "fixup", filename)));
+                bp.setDataHandler(new DataHandler(new CalendarDataSource(ical, filename)));
             }
 
             return modified;

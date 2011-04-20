@@ -344,7 +344,7 @@ public class SendInviteReply extends CalendarRequest {
                         iCal.addDescription(text, html);
     
                         MimeBodyPart[] mbps = new MimeBodyPart[1];
-                        mbps[0] = CalendarMailSender.makeICalIntoMimePart(oldInv.getUid(), iCal);
+                        mbps[0] = CalendarMailSender.makeICalIntoMimePart(iCal);
     
                         // the <inv> element is *NOT* allowed -- we always build it manually
                         // based on the params to the <SendInviteReply> and stick it in the 

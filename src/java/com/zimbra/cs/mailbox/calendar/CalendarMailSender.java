@@ -425,7 +425,7 @@ public class CalendarMailSender {
 
             // ///////
             // CALENDAR part
-            MimeBodyPart icalPart = makeICalIntoMimePart(uid, cal);
+            MimeBodyPart icalPart = makeICalIntoMimePart(cal);
             mmp.addBodyPart(icalPart);
 
             // ///////
@@ -490,7 +490,7 @@ public class CalendarMailSender {
                 if (!mReplaced) {
                     // This message either had text/calendar at top level or none at all.
                     // In both cases, set the new calendar as top level content.
-                    setCalendarContent(mm, mUid, mCal);
+                    setCalendarContent(mm, mCal);
                 }
                 return true;
             } else {
@@ -506,7 +506,7 @@ public class CalendarMailSender {
                     // a child of this multipart.
                     if (mp.removeBodyPart(mCalendarPart)) {
                         MimeBodyPart newCalendarPart = new JavaMailMimeBodyPart();
-                        setCalendarContent(newCalendarPart, mUid, mCal);
+                        setCalendarContent(newCalendarPart, mCal);
                         mp.addBodyPart(newCalendarPart);
                         mReplaced = true;
                         return true;
@@ -947,15 +947,15 @@ public class CalendarMailSender {
         return reply;
     }
 
-    private static void setCalendarContent(Part part, String uid, ZVCalendar cal) throws MessagingException {
+    private static void setCalendarContent(Part part, ZVCalendar cal) throws MessagingException {
         String filename = "meeting.ics";
-        part.setDataHandler(new DataHandler(new CalendarDataSource(cal, uid, filename)));
+        part.setDataHandler(new DataHandler(new CalendarDataSource(cal, filename)));
     }
 
-    public static MimeBodyPart makeICalIntoMimePart(String uid, ZVCalendar cal) throws ServiceException {
+    public static MimeBodyPart makeICalIntoMimePart(ZVCalendar cal) throws ServiceException {
         try {
             MimeBodyPart mbp = new JavaMailMimeBodyPart();
-            setCalendarContent(mbp, uid, cal);
+            setCalendarContent(mbp, cal);
             return mbp;
         } catch (MessagingException e) {
             throw ServiceException.FAILURE("Failure creating MimeBodyPart from calendar", e);

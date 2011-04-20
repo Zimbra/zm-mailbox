@@ -347,7 +347,7 @@ public class ParseMimeMessage {
                         }
                     }
                 }
-                MimeBodyPart mbp = CalendarMailSender.makeICalIntoMimePart(result.mUid, result.mCal);
+                MimeBodyPart mbp = CalendarMailSender.makeICalIntoMimePart(result.mCal);
                 alternatives[curAltPart++] = mbp;
 
                 if (additionalParts != null) {

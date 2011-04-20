@@ -28,7 +28,6 @@ import java.io.OutputStreamWriter;
 import javax.activation.DataSource;
 import javax.mail.internet.ContentType;
 
-import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.mime.MimeConstants;
 
@@ -42,14 +41,12 @@ import com.zimbra.common.mime.MimeConstants;
 public class CalendarDataSource implements DataSource
 {
     private ZCalendar.ZVCalendar mICal;
-    private String mUid;
     private String mMethod;
     private String mAttachName; // NULL if we want a text/calendar part, or set if we want an attached file
     private byte[] mBuf = null;
 
-    public CalendarDataSource(ZCalendar.ZVCalendar iCal, String uid, String attachmentName) {
+    public CalendarDataSource(ZCalendar.ZVCalendar iCal, String attachmentName) {
         mICal = iCal;
-        mUid = uid != null && uid.length() > 0 ? uid : LdapUtil.generateUUID();
         mAttachName = attachmentName;
         if (mAttachName == null || mAttachName.equals("")) {
             mAttachName = "meeting.ics";
@@ -101,7 +98,11 @@ public class CalendarDataSource implements DataSource
      * @see javax.activation.DataSource#getName()
      */
     public String getName() {
-        return mUid;
+        //Bug: 58971
+        //JavaMailMimeMessage.setDataSource() adds the Content-Disposition header w/disposition type attachment if a value is returned.
+        //This causes external mail systems (exchange or, gmail) renders the text/calendar part as an attachment.
+        //Hence, just return a null value.
+        return null;
     }
 
     /* (non-Javadoc)
