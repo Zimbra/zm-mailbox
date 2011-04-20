@@ -18,69 +18,75 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.Enumeration;
-import java.util.List;
-import java.util.Set;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpState;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
-import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.HttpException;
-import com.zimbra.cs.appliance.httpclient.HttpProxyUtil;
+import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
-//import com.zimbra.common.localconfig.LC;
+
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.appliance.httpclient.HttpProxyUtil;
+import com.zimbra.cs.servlet.ZimbraServlet;
 
 /**
  * @author pjoseph
  */
 @SuppressWarnings("serial")
-public class ApplianceProxyServlet extends HttpServlet {
+public class ApplianceProxyServlet extends ZimbraServlet {
     private static final String TARGET_PARAM = "target";
-    private static final String USER_PARAM = "cimuser";
-    private static final String PASS_PARAM = "cimpass";
-    private static final String FORMAT_PARAM = "fmt";
-    private static final String FILENAME_PARAM = "filename";
-    private static final String AUTH_PARAM = "cimauth";
-    private static final String AUTH_BASIC = "basic";
-    private static final int MAX_PROXY_HOPCOUNT = 3;
-    //public static final String COOKIE_ZCA_VAMI_AUTH_TOKEN       = "ZCA_VAMI_AUTH_TOKEN";	  
-	
+    private static final String DEFAULT_CTYPE = "text/xml";
     
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        doProxy(req, resp);
+    }
+
     private boolean canProxyHeader(String header) {
         if (header == null) return false;
         header = header.toLowerCase();
         if (header.startsWith("accept") ||
-            header.equals("content-length") ||
-            header.equals("connection") ||
-            header.equals("keep-alive") ||
-            header.equals("expires") ||
-            header.equals("pragma") ||
-            header.equals("host") ||
-            //header.equals("user-agent") ||
-            header.equals("cache-control") ||
-            header.equals("cookie") ||
-            header.equals("transfer-encoding")) {
+            header.equalsIgnoreCase("content-length") ||
+            header.equalsIgnoreCase("connection") ||
+            header.equalsIgnoreCase("keep-alive") ||
+            header.equalsIgnoreCase("pragma") ||
+            header.equalsIgnoreCase("host") ||
+            header.equalsIgnoreCase("Cache-Control") ||
+            header.equalsIgnoreCase("Expires") ||
+            header.equalsIgnoreCase("cookie") ||
+            header.equalsIgnoreCase("transfer-encoding")) {
             return false;
         }
         return true;
     }
     
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        doProxy(req, resp);
+    }
+
+    protected boolean isAdminRequest(HttpServletRequest req) {
+        return req.getServerPort() == LC.zimbra_admin_service_port.intValue();
+    }
+    
+    
+
     private byte[] copyPostedData(HttpServletRequest req) throws IOException {
         int size = req.getContentLength();
         if (req.getMethod().equalsIgnoreCase("GET") || size <= 0) {
@@ -99,44 +105,33 @@ public class ApplianceProxyServlet extends HttpServlet {
             }
             return baos.toByteArray();
         } finally {
-            com.zimbra.cs.appliance.util.ByteUtil.closeStream(baos);
+           ByteUtil.closeStream(baos);
         }
     }
-
-
-    /*private static boolean hasZCAAuthCookie(HttpState state) {
-        Cookie[] cookies = state.getCookies();
-        if (cookies == null)
-            return false;
-
-        for (Cookie c: cookies) {
-            if (c.getName().equals(COOKIE_ZCA_VAMI_AUTH_TOKEN))
-                return true;
-        }
-        return false;
-    }*/
-
-    /*protected boolean isAdminRequest(HttpServletRequest req) {
-        return req.getServerPort() == LC.zimbra_admin_service_port.intValue();
-    }*/
-
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        doProxy(req, resp);
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        doProxy(req, resp);
-    }
-
-    private static final String DEFAULT_CTYPE = "text/xml";
-
+    
     private void doProxy(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-	//boolean isAdmin = isAdminRequest(req);
-        //if (!isAdmin)
-          //  return;
-
+        ZimbraLog.clearContext();
+        boolean isAdmin = isAdminRequest(req);
+        if (!isAdmin) {
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
+        AuthToken authToken =  getAdminAuthTokenFromCookie(req, resp);      
+        if (authToken == null) {
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
+        
+        try {
+			Account adminAcct = Provisioning.getInstance().get(AccountBy.id, authToken.getAccountId(),authToken);
+			if(adminAcct == null) {
+				resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+			}
+		} catch (ServiceException e) {
+			ZimbraLog.extensions.info("exception while proxying ", e);
+			resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+		}
+		
         // get the posted body before the server read and parse them.
         byte[] body = copyPostedData(req);
 
@@ -148,11 +143,12 @@ public class ApplianceProxyServlet extends HttpServlet {
         }
 
         URL url = new URL(target);
- 
+
+
         HttpMethod method = null;
         try {
             HttpClient client = new HttpClient();
-            com.zimbra.cs.appliance.httpclient.HttpProxyUtil.configureProxy(client,url.toString());
+            HttpProxyUtil.configureProxy(client,url.toString());
             String reqMethod = req.getMethod();
             if (reqMethod.equalsIgnoreCase("GET"))
                 method = new GetMethod(target);
@@ -178,22 +174,6 @@ public class ApplianceProxyServlet extends HttpServlet {
                 return;
             }
 
-            // handle basic auth
-            String auth, user, pass;
-            auth = req.getHeader(AUTH_PARAM);
-            user = req.getHeader(USER_PARAM);
-            pass = req.getHeader(PASS_PARAM);
-            if (auth != null && user != null && pass != null) {
-                if (!auth.equals(AUTH_BASIC)) {
-                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
-                    return;
-                }
-                HttpState state = client.getState();
-                client.getParams().setAuthenticationPreemptive(true);
-                AuthScope authScope = new AuthScope(url.getHost(),url.getPort());
-                state.setCredentials(authScope, new UsernamePasswordCredentials(user, pass));
-            }
-            
             Enumeration headers = req.getHeaderNames();
             while (headers.hasMoreElements()) {
                 String hdr = (String) headers.nextElement();
@@ -205,6 +185,17 @@ public class ApplianceProxyServlet extends HttpServlet {
                 }
             }
             
+            /** Authenticate to VAMI **/
+            String cimuser = LC.zimbra_vami_user.value();
+            String cimpass = LC.zimbra_vami_password.value();
+    		method.addRequestHeader("cimuser", cimuser);
+    		method.addRequestHeader("cimpass", cimpass);
+    		Cookie cookie = new Cookie("127.0.0.1","ZCA_VAMI_AUTH",cimuser+":"+cimpass,"/",null,false);
+    		client.getState().addCookie(cookie);
+            client.getParams().setAuthenticationPreemptive(true);
+            AuthScope authScope = new AuthScope(url.getHost(),url.getPort());
+            client.getState().setCredentials(authScope, new UsernamePasswordCredentials(cimuser, cimpass));
+            
             try {
                 client.executeMethod(method);
             } catch (HttpException ex) {
@@ -214,7 +205,6 @@ public class ApplianceProxyServlet extends HttpServlet {
 
             int status = method.getStatusLine() == null ? HttpServletResponse.SC_INTERNAL_SERVER_ERROR : method.getStatusCode();
 
-            // workaround for Alexa Thumbnails paid web service, which doesn't bother to return a content-type line
             Header ctHeader = method.getResponseHeader("Content-Type");
             String contentType = ctHeader == null || ctHeader.getValue() == null ? DEFAULT_CTYPE : ctHeader.getValue();
 
@@ -228,14 +218,14 @@ public class ApplianceProxyServlet extends HttpServlet {
             resp.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
             // Set standard HTTP/1.0 no-cache header.
             resp.setHeader("Pragma", "no-cache");
-            
+    		
             for (Header h : method.getResponseHeaders()) {
                 if (canProxyHeader(h.getName())) {
                 	resp.addHeader(h.getName(), h.getValue());
                 }
             }
             if (targetResponseBody != null) {
-            	com.zimbra.cs.appliance.util.ByteUtil.copy(targetResponseBody, true, resp.getOutputStream(), true);
+            	ByteUtil.copy(targetResponseBody, true, resp.getOutputStream(), true);
             }
         } finally {
             if (method != null)
