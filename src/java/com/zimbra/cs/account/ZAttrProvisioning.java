@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110408-1047 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110421-1557 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -7467,6 +7467,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1041)
     public static final String A_zimbraPrefSpellDictionary = "zimbraPrefSpellDictionary";
+
+    /**
+     * If TRUE, the spell checker ignores words that contain only upper-case
+     * letters.
+     *
+     * @since ZCS 8.0
+     */
+    @ZAttr(id=1207)
+    public static final String A_zimbraPrefSpellIgnoreAllCaps = "zimbraPrefSpellIgnoreAllCaps";
 
     /**
      * List of words to ignore when checking spelling. The word list of an
