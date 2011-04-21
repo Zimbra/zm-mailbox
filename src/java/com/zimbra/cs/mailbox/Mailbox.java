@@ -2524,7 +2524,7 @@ public class Mailbox {
     /** returns the list of IDs of items of the given type in the given folder
      * @param octxt TODO*/
     public synchronized List<Integer> listItemIds(OperationContext octxt, MailItem.Type type, int folderId)
-            throws ServiceException {
+    throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("listItemIds", octxt);
@@ -2895,7 +2895,7 @@ public class Mailbox {
 
     /** Returns the folder with the specified id.
      * @throws NoSuchItemException if the folder does not exist */
-    public Folder getFolderById(int id) throws ServiceException {
+    Folder getFolderById(int id) throws ServiceException {
         return (Folder) getItemById(id, MailItem.Type.FOLDER);
     }
 
@@ -2906,10 +2906,11 @@ public class Mailbox {
         try {
             beginTransaction("getFolderByName", octxt);
             Folder folder = getFolderById(parentId).findSubfolder(name);
-            if (folder == null)
+            if (folder == null) {
                 throw MailServiceException.NO_SUCH_FOLDER(name);
-            if (!folder.canAccess(ACL.RIGHT_READ))
+            } else if (!folder.canAccess(ACL.RIGHT_READ)) {
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions on folder " + name);
+            }
             success = true;
             return folder;
         } finally {
@@ -2920,12 +2921,16 @@ public class Mailbox {
     /** Returns the folder with the specified path, delimited by slashes (<tt>/</tt>).
      * @throws {@link NoSuchItemException} if the folder does not exist */
     public synchronized Folder getFolderByPath(OperationContext octxt, String path) throws ServiceException {
-        if (path == null)
+        if (path == null) {
             throw MailServiceException.NO_SUCH_FOLDER(path);
-        while (path.startsWith("/"))
+        }
+
+        while (path.startsWith("/")) {
             path = path.substring(1);                         // strip off the optional leading "/"
-        while (path.endsWith("/"))
+        }
+        while (path.endsWith("/")) {
             path = path.substring(0, path.length() - 1);      // strip off the optional trailing "/"
+        }
 
         Folder folder = getFolderById(null, ID_FOLDER_USER_ROOT);
 
@@ -2933,15 +2938,17 @@ public class Mailbox {
         try {
             beginTransaction("getFolderByPath", octxt);
             if (!path.equals("")) {
-                for (String segment : path.split("/"))
+                for (String segment : path.split("/")) {
                     if ((folder = folder.findSubfolder(segment)) == null)
                         break;
+                }
             }
 
-            if (folder == null)
+            if (folder == null) {
                 throw MailServiceException.NO_SUCH_FOLDER("/" + path);
-            if (!folder.canAccess(ACL.RIGHT_READ))
+            } else if (!folder.canAccess(ACL.RIGHT_READ)) {
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions on folder /" + path);
+            }
             success = true;
             return folder;
         } finally {

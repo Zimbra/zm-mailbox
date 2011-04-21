@@ -105,12 +105,15 @@ public class CalItemEmailReminderTask extends CalItemReminderTaskBase {
 
         String organizer = null;
         ZOrganizer zOrganizer = invite.getOrganizer();
-        if (zOrganizer != null)
+        if (zOrganizer != null) {
             organizer = zOrganizer.hasCn() ? zOrganizer.getCn() : zOrganizer.getAddress();
-        if (organizer == null) organizer = "";
+        }
+        if (organizer == null) {
+            organizer = "";
+        }
 
 
-        String folder = calItem.getMailbox().getFolderById(calItem.getFolderId()).getName();
+        String folder = calItem.getMailbox().getFolderById(null, calItem.getFolderId()).getName();
 
         String description = html ? invite.getDescriptionHtml() : invite.getDescription();
         if (description == null) description = "";

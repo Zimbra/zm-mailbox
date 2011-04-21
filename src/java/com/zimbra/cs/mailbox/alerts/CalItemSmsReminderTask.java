@@ -83,7 +83,7 @@ public class CalItemSmsReminderTask extends CalItemReminderTaskBase {
             organizer = zOrganizer.hasCn() ? zOrganizer.getCn() : zOrganizer.getAddress();
         if (organizer == null) organizer = "";
 
-        String folder = calItem.getMailbox().getFolderById(calItem.getFolderId()).getName();
+        String folder = calItem.getMailbox().getFolderById(null, calItem.getFolderId()).getName();
 
         return L10nUtil.getMessage(calItem.getType() == MailItem.Type.APPOINTMENT ?
                                            L10nUtil.MsgKey.apptReminderSmsText : L10nUtil.MsgKey.taskReminderSmsText,

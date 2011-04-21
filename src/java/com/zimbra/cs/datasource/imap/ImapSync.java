@@ -187,7 +187,7 @@ public class ImapSync extends MailItemImport {
             return true; // Always force full sync for ZCS import
         }
         DataSourceManager dsm = DataSourceManager.getInstance();
-        Folder inbox = dsm.getMailbox(dataSource).getFolderById(Mailbox.ID_FOLDER_INBOX);
+        Folder inbox = dsm.getMailbox(dataSource).getFolderById(null, Mailbox.ID_FOLDER_INBOX);
         return dsm.isSyncEnabled(dataSource, inbox) && getFolderSyncState(inbox.getId()) == null;
     }
 
@@ -202,8 +202,7 @@ public class ImapSync extends MailItemImport {
     public ImapFolder createFolderTracker(int itemId, String localPath,
                                           String remotePath, long uidValidity)
         throws ServiceException {
-        ImapFolder tracker = new ImapFolder(dataSource, itemId, remotePath,
-            localPath, uidValidity);
+        ImapFolder tracker = new ImapFolder(dataSource, itemId, remotePath, localPath, uidValidity);
         tracker.add();
         trackedFolders.add(tracker);
         removeSyncState(itemId);
@@ -224,7 +223,7 @@ public class ImapSync extends MailItemImport {
         if (dataSource.isImportOnly() || (dataSource.isOffline() && fullSync)) {
             SyncUtil.setSyncEnabled(mbox, Mailbox.ID_FOLDER_INBOX, true);
         }
-        localRootFolder = getMailbox().getFolderById(dataSource.getFolderId());
+        localRootFolder = getMailbox().getFolderById(null, dataSource.getFolderId());
         trackedFolders = ImapFolder.getFolders(dataSource);
         delimiter = connection.getDelimiter();
         syncRemoteFolders(ImapUtil.listFolders(connection, "*"));
@@ -241,10 +240,11 @@ public class ImapSync extends MailItemImport {
     private List<Folder> getLocalFolders() {
         List<Folder> folders = localRootFolder.getSubfolderHierarchy();
         List<Folder> mailFolders = new ArrayList<Folder>(folders.size());
-        for (Folder f : folders)
+        for (Folder f : folders) {
             if (f.getDefaultView() == MailItem.Type.MESSAGE) {
                 mailFolders.add(f);
             }
+        }
         // Reverse order of local folders to ensure that children are
         // processed before parent folders. This avoids problems when
         // deleting folders.

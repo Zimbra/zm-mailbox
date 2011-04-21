@@ -516,7 +516,7 @@ final class ImapSessionManager {
             mbox = MailboxManager.getInstance().getMailboxByAccountId(session.getTargetAccountId());
         }
 
-        String cachekey = cacheKey(mbox.getFolderById(session.getFolderId()), mem);
+        String cachekey = cacheKey(mbox.getFolderById(null, session.getFolderId()), mem);
         // if there are unnotified expunges, *don't* use the default cache key
         //   ('+' is a good separator because it alpha-sorts before the '.' of the filename extension)
         return session.hasExpunges() ? cachekey + "+" + session.getQualifiedSessionId() : cachekey;

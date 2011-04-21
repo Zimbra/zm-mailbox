@@ -97,7 +97,7 @@ public class DbMailItemTest {
     public void getConversationCount() throws Exception {
         Account account = Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-        Folder folder = mbox.getFolderById(Mailbox.ID_FOLDER_INBOX);
+        Folder folder = mbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX);
 
         DbConnection conn = DbPool.getConnection(mbox);
         Assert.assertEquals(0, DbMailItem.getConversationCount(conn, folder));
