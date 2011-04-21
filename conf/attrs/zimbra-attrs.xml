@@ -5638,7 +5638,7 @@ TODO: delete them permerntly from here
   <desc>whether account archiving is enabled</desc>
 </attr>
 
-<attr id="1207" name="zimbraPrefSpellIgnoreAllCaps" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.0">
+<attr id="1207" name="zimbraPrefSpellIgnoreAllCaps" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.0.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>If TRUE, the spell checker ignores words that contain only upper-case letters.</desc>
 </attr>
