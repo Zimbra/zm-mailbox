@@ -25,15 +25,18 @@ import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.ldap.IAttributes;
+import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.prov.ldap.LdapProv;
 import com.zimbra.cs.prov.ldap.LdapFilter;
+import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
+
 
 public class Groups {
     
     private LdapProv mProv;
     private Set<String> mAllDLs = null; // email addresses of all distribution lists on the system
     
-    private static class GetAllDLsVisitor implements LegacyLdapUtil.SearchLdapVisitor {
+    private static class GetAllDLsVisitor implements SearchLdapVisitor {
         Set<String> allDLs = new HashSet<String>();
         
         @Override

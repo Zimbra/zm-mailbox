@@ -19,6 +19,7 @@ import java.util.Map;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.ldap.LdapException;
+import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
 
 /**
@@ -30,11 +31,11 @@ public class LdapServer extends Server implements LdapEntry {
 
     private String mDn;
 
-    LdapServer(ZSearchResultEntry entry, Map<String,Object> defaults, Provisioning prov) throws LdapException {
-        super(entry.getAttributes().getAttrString(Provisioning.A_cn), 
-                entry.getAttributes().getAttrString(Provisioning.A_zimbraId), 
-                entry.getAttributes().getAttrs(), defaults, prov);
-        mDn = entry.getDN();
+    public LdapServer(String dn, ZAttributes attrs, Map<String,Object> defaults, Provisioning prov) throws LdapException {
+        super(attrs.getAttrString(Provisioning.A_cn), 
+                attrs.getAttrString(Provisioning.A_zimbraId), 
+                attrs.getAttrs(), defaults, prov);
+        mDn = dn;
     }
 
     public String getDN() {

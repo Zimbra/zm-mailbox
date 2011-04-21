@@ -15,6 +15,7 @@
 package com.zimbra.cs.prov.ldap;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.ldap.ILdapContext;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 
 public abstract class LdapHelper {
@@ -29,5 +30,6 @@ public abstract class LdapHelper {
         return ldapProv;
     }
     
-    public abstract void searchLdap(SearchLdapOptions searchOptions) throws ServiceException;
+    public abstract void searchLdap(ILdapContext ldapContext, SearchLdapOptions searchOptions) 
+    throws ServiceException;
 }

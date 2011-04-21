@@ -17,7 +17,7 @@ package com.zimbra.cs.prov.ldap.entry;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ldap.LdapException;
-import com.zimbra.cs.ldap.ZSearchResultEntry;
+import com.zimbra.cs.ldap.ZAttributes;
 
 /**
  * 
@@ -27,10 +27,10 @@ import com.zimbra.cs.ldap.ZSearchResultEntry;
 public class LdapDistributionList extends DistributionList implements LdapEntry {
     private String mDn;
 
-    LdapDistributionList(String email, ZSearchResultEntry entry, Provisioning prov) throws LdapException {
-        super(email, entry.getAttributes().getAttrString(Provisioning.A_zimbraId), 
-                entry.getAttributes().getAttrs(), prov);
-        mDn = entry.getDN();
+    public LdapDistributionList(String dn, String email, ZAttributes attrs, Provisioning prov) throws LdapException {
+        super(email, attrs.getAttrString(Provisioning.A_zimbraId), 
+                attrs.getAttrs(), prov);
+        mDn = dn;
     }
     
     public String getDN() {
