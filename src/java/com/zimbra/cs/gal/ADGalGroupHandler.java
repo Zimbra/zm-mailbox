@@ -22,12 +22,12 @@ import java.util.TreeSet;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil.SearchLdapVisitor;
 import com.zimbra.cs.prov.ldap.LdapHelper;
 import com.zimbra.cs.prov.ldap.LdapProv;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.ILdapContext;
 import com.zimbra.cs.ldap.SearchLdapOptions;
+import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
 
 public class ADGalGroupHandler extends GalGroupHandler {
 
@@ -86,8 +86,8 @@ public class ADGalGroupHandler extends GalGroupHandler {
             
             try {
                 LdapHelper ldapHelper = LdapProv.getInst().getHelper();
-                SearchLdapOptions searchOptions = new SearchLdapOptions(zlc, searchBase, query, returnAttrs, null, this);
-                ldapHelper.searchLdap(searchOptions);
+                SearchLdapOptions searchOptions = new SearchLdapOptions(searchBase, query, returnAttrs, null, this);
+                ldapHelper.searchLdap(zlc, searchOptions);
             } catch (ServiceException e) {
                 // log and continue
                 ZimbraLog.gal.warn("unable to search group members", e);

@@ -10,31 +10,60 @@ import com.zimbra.cs.account.AttributeManager;
 public abstract class ZAttributes extends ZLdapElement implements IAttributes {
     
     /**
-     * - if a method does not have a CheckBinary parameter, it will check for binary data 
-     *   and binary transfer based on AttributeManager.
+     * exception for getAttrs(),
+     * 
+     * - If a method does not have a CheckBinary parameter, it will *not* check 
+     *   for binary data and binary transfer based on AttributeManager.
+     *   It will assume all attributes are *not* binary.
      *   
-     * - if a method has a CheckBinary parameter, it will check for binary data 
+     * - If a method has a CheckBinary parameter, it will check for binary data 
      *   and binary transfer based on AttributeManager if CheckBinary is CHECK.
      *   It will assume all attributes are *not* binary if CheckBinary is NOCHECK.
-     *   
      */
     
     @Override
     public String getAttrString(String attrName) throws LdapException {
-        AttributeManager attrMgr = AttributeManager.getInst();
-        boolean containsBinaryData = attrMgr == null ? false : attrMgr.containsBinaryData(attrName);
-        boolean isBinaryTransfer = attrMgr == null ? false : attrMgr.isBinaryTransfer(attrName);
+        return getAttrString(attrName, CheckBinary.NOCHECK);
+    }
+    
+    // make public if necessary
+    private String getAttrString(String attrName, CheckBinary checkBinary) throws LdapException {
+        boolean containsBinaryData;
+        String transferAttrName;
         
-        String transferAttrName = LdapUtilCommon.attrNameToBinaryTransferAttrName(isBinaryTransfer, attrName);
+        if (checkBinary == CheckBinary.NOCHECK) {
+            containsBinaryData = false;
+            transferAttrName = attrName;
+        } else {
+            AttributeManager attrMgr = AttributeManager.getInst();
+            containsBinaryData = attrMgr == null ? false : attrMgr.containsBinaryData(attrName);
+            boolean isBinaryTransfer = attrMgr == null ? false : attrMgr.isBinaryTransfer(attrName);
+            
+            transferAttrName = LdapUtilCommon.attrNameToBinaryTransferAttrName(isBinaryTransfer, attrName);
+        }
         
         return getAttrString(transferAttrName, containsBinaryData);
     }
     
     @Override
     public String[] getMultiAttrString(String attrName) throws LdapException {
-        AttributeManager attrMgr = AttributeManager.getInst();
-        boolean containsBinaryData = attrMgr == null ? false : attrMgr.containsBinaryData(attrName);
-        boolean isBinaryTransfer = attrMgr == null ? false : attrMgr.isBinaryTransfer(attrName);
+        return getMultiAttrString(attrName, CheckBinary.NOCHECK);
+    }
+    
+    // make public if necessary
+    private String[] getMultiAttrString(String attrName, CheckBinary checkBinary) throws LdapException {
+        boolean containsBinaryData;
+        boolean isBinaryTransfer;
+        
+        if (checkBinary == CheckBinary.NOCHECK) {
+            containsBinaryData = false;
+            isBinaryTransfer = false;
+        } else {
+            AttributeManager attrMgr = AttributeManager.getInst();
+            containsBinaryData = attrMgr == null ? false : attrMgr.containsBinaryData(attrName);
+            isBinaryTransfer = attrMgr == null ? false : attrMgr.isBinaryTransfer(attrName);
+        }
+        
         return getMultiAttrString(attrName, containsBinaryData, isBinaryTransfer);
     }
     
@@ -55,9 +84,12 @@ public abstract class ZAttributes extends ZLdapElement implements IAttributes {
     }
     
     /**
-     * Enumerates over the specified attributes and populates the specified map. The key in the map is the
-     * attribute ID. For attrs with a single value, the value is a String, and for attrs with multiple values
-     * the value is an array of Strings.
+     * Enumerates over the specified attributes and populates the specified map. 
+     * The key in the map is the attribute ID. For attrs with a single value, 
+     * the value is a String, and for attrs with multiple values the value is an 
+     * array of Strings.
+     * 
+     * Note: this method always *check* binary.
      */
     public Map<String, Object> getAttrs() throws LdapException {
         return getAttrs(null);
@@ -75,8 +107,10 @@ public abstract class ZAttributes extends ZLdapElement implements IAttributes {
      * Retrieves the value for this attribute as a string. 
      * If this attribute has multiple values, then the first value will be returned.
      */
-    protected abstract String getAttrString(String transferAttrName, boolean containsBinaryData) throws LdapException;
+    protected abstract String getAttrString(String transferAttrName, boolean containsBinaryData) 
+    throws LdapException;
     
-    protected abstract String[] getMultiAttrString(String transferAttrName, boolean containsBinaryData) throws LdapException;
+    protected abstract String[] getMultiAttrString(String transferAttrName, boolean containsBinaryData) 
+    throws LdapException;
     
 }

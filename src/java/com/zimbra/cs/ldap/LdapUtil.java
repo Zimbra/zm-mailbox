@@ -13,10 +13,33 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Entry;
-import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil.SearchLdapVisitor;
-import com.zimbra.cs.ldap.LdapTODO.SDKDONE;
+import com.zimbra.cs.account.GalContact;
+import com.zimbra.cs.account.Provisioning.SearchGalResult;
+import com.zimbra.cs.account.gal.GalOp;
+import com.zimbra.cs.account.gal.GalParams;
+import com.zimbra.cs.account.ldap.LdapGalMapRules;
+import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.gal.GalSearchConfig;
+import com.zimbra.cs.ldap.LdapTODO.*;
+import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
 
 public class LdapUtil {
+    
+    //
+    // Escape rdn value defined in:
+    // http://www.ietf.org/rfc/rfc2253.txt?number=2253
+    //
+    @TODO   // see impl in LegacyLdapUtil, do we need to for unboundid?
+    public static String escapeRDNValue(String rdn) {
+        LdapTODO.TODO();
+        return null;
+    }
+    
+    @TODO
+    public static String unescapeRDNValue(String rdn) {
+        LdapTODO.TODO();
+        return null;
+    }
     
     public static String formatMultipleMatchedEntries(ZSearchResultEntry first, ZSearchResultEnumeration rest) 
     throws LdapException {
@@ -112,5 +135,65 @@ public class LdapUtil {
         }
         zlc.modifyAttributes(dn, modList);
     }
+    
+    public static void searchLdapOnMaster(String base, String query, String[] returnAttrs, 
+            SearchLdapVisitor visitor) throws ServiceException {
+        searchZimbraLdap(base, query, returnAttrs, true, visitor);
+    }
 
+    public static void searchLdapOnReplica(String base, String query, String[] returnAttrs, 
+            SearchLdapVisitor visitor) throws ServiceException {
+        searchZimbraLdap(base, query, returnAttrs, false, visitor);
+    }
+      
+    private static void searchZimbraLdap(String base, String query, String[] returnAttrs, 
+            boolean useMaster, SearchLdapVisitor visitor) throws ServiceException {
+        
+        SearchLdapOptions searchOptions = new SearchLdapOptions(base, query, returnAttrs, null, visitor);
+        
+        ZLdapContext zlc = null;
+        try {
+            zlc = LdapClient.getContext(LdapServerType.get(useMaster));
+            zlc.searchPaged(searchOptions);
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
+    }
+
+    @TODO // see impl in LegacyLdapUtil
+    public static void searchGal(ZLdapContext zlc,
+            GalSearchConfig.GalType galType,
+            int pageSize,
+            String base, 
+            String query, 
+            int maxResults,
+            LdapGalMapRules rules,
+            String token,
+            SearchGalResult result) throws ServiceException {
+        LdapTODO.TODO();
+    }
+    
+    @TODO // see impl in LegacyLdapUtil
+    public static SearchGalResult searchLdapGal(
+            GalParams.ExternalGalParams galParams, 
+            GalOp galOp,
+            String n,
+            int maxResults,
+            LdapGalMapRules rules,
+            String token,
+            GalContact.Visitor visitor) throws ServiceException {
+        LdapTODO.TODO();
+        return null;
+    }
+    
+    @TODO // see impl in LegacyLdapUtil
+    public static void ldapAuthenticate(String urls[], boolean requireStartTLS, String principal, String password) {
+        LdapTODO.TODO();
+    }
+    
+    @TODO // see impl in LegacyLdapUtil
+    public static void ldapAuthenticate(String url[], boolean requireStartTLS, String password, String searchBase, 
+            String searchFilter, String searchDn, String searchPassword) throws ServiceException {
+        
+    }
 }

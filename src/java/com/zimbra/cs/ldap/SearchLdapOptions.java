@@ -1,32 +1,31 @@
 package com.zimbra.cs.ldap;
 
+import java.util.Map;
 import java.util.Set;
 
-import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil.SearchLdapVisitor;
 
 public class SearchLdapOptions {
+    
+    public static interface SearchLdapVisitor {
+          public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs);
+    }
+
     private static final int DEFAULT_RESULT_PAGE_SIZE = 1000;
     
-    private ILdapContext ldapContext;
     private String searchBase;
     private String query;
     private String[] returnAttrs;
     private Set<String> binaryAttrs;
     private int resultPageSize  = DEFAULT_RESULT_PAGE_SIZE; // hardcoded for now, add setter API when needed
-    private SearchLdapVisitor visitor;
+    private SearchLdapOptions.SearchLdapVisitor visitor;
     
-    public SearchLdapOptions(ILdapContext ldapContext, String searchbase, String query, 
-            String[] returnAttrs, Set<String> binaryAttrs, SearchLdapVisitor visitor) {
-        setILdapContext(ldapContext);
+    public SearchLdapOptions(String searchbase, String query, String[] returnAttrs, Set<String> binaryAttrs, 
+            SearchLdapOptions.SearchLdapVisitor visitor) {
         setSearchBase(searchbase);
         setQuery(query);
         setReturnAttrs(returnAttrs);
         setBinaryAttrs(binaryAttrs);
         setVisitor(visitor);
-    }
-    
-    public ILdapContext getILdapContext() {
-        return ldapContext;
     }
     
     public String getSearchBase() {
@@ -48,12 +47,8 @@ public class SearchLdapOptions {
         return resultPageSize;
     }
 
-    public SearchLdapVisitor getVisitor() {
+    public SearchLdapOptions.SearchLdapVisitor getVisitor() {
         return visitor;
-    }
-    
-    public void setILdapContext(ILdapContext ldapContext) {
-        this.ldapContext = ldapContext;
     }
     
     public void setSearchBase(String searchBase) {
@@ -72,7 +67,7 @@ public class SearchLdapOptions {
         this.binaryAttrs = binaryAttrs;
     }
     
-    public void setVisitor(SearchLdapVisitor visitor) {
+    public void setVisitor(SearchLdapOptions.SearchLdapVisitor visitor) {
         this.visitor = visitor;
     }
 }

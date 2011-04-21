@@ -10,8 +10,10 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
-import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil.SearchLdapVisitor;
 import com.zimbra.cs.ldap.IAttributes;
+import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.SearchLdapOptions;
+import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
 import com.zimbra.cs.prov.ldap.LdapFilter;
 
 public class DisableBriefcase extends LdapUpgrade {
@@ -47,13 +49,13 @@ public class DisableBriefcase extends LdapUpgrade {
             
             try {
                 if (ldapAttrs.getAttrString( ATTR_SPREADSHEET) != null)
-                    modAttrs.put(ATTR_SPREADSHEET, LegacyLdapUtil.LDAP_FALSE);
+                    modAttrs.put(ATTR_SPREADSHEET, LdapUtilCommon.LDAP_FALSE);
                 
                 if (ldapAttrs.getAttrString(ATTR_SLIDES) != null)
-                    modAttrs.put(ATTR_SLIDES, LegacyLdapUtil.LDAP_FALSE);
+                    modAttrs.put(ATTR_SLIDES, LdapUtilCommon.LDAP_FALSE);
                 
                 if (ldapAttrs.getAttrString(ATTR_NOTEBOOK) != null)
-                    modAttrs.put(ATTR_NOTEBOOK, LegacyLdapUtil.LDAP_FALSE);
+                    modAttrs.put(ATTR_NOTEBOOK, LdapUtilCommon.LDAP_FALSE);
                 
                 if (modAttrs.size() > 0) {
                     System.out.println("Modifying " + dn);
@@ -72,7 +74,7 @@ public class DisableBriefcase extends LdapUpgrade {
     }
     
     private void upgrade(ZimbraLdapContext modZlc, String bases[], String query) {
-        SearchLdapVisitor visitor = new DisableBriefcaseVisitor(modZlc);
+        SearchLdapOptions.SearchLdapVisitor visitor = new DisableBriefcaseVisitor(modZlc);
 
         String attrs[] = new String[] {ATTR_SPREADSHEET, ATTR_SLIDES, ATTR_NOTEBOOK};
         
@@ -88,9 +90,9 @@ public class DisableBriefcase extends LdapUpgrade {
     }
     
     private String query() {
-        return "(|(" + ATTR_SPREADSHEET + "=" + LegacyLdapUtil.LDAP_TRUE + ")" + 
-                 "(" + ATTR_SLIDES + "=" + LegacyLdapUtil.LDAP_TRUE + ")" + 
-                 "(" + ATTR_NOTEBOOK + "=" + LegacyLdapUtil.LDAP_TRUE + ")" +
+        return "(|(" + ATTR_SPREADSHEET + "=" + LdapUtilCommon.LDAP_TRUE + ")" + 
+                 "(" + ATTR_SLIDES + "=" + LdapUtilCommon.LDAP_TRUE + ")" + 
+                 "(" + ATTR_NOTEBOOK + "=" + LdapUtilCommon.LDAP_TRUE + ")" +
                ")";
     }
     

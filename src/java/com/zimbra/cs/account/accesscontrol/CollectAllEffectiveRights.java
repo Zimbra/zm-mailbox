@@ -30,6 +30,8 @@ import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.account.ldap.legacy.entry.LdapDomain;
 import com.zimbra.cs.ldap.IAttributes;
+import com.zimbra.cs.ldap.SearchLdapOptions;
+import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
 import com.zimbra.cs.prov.ldap.LdapFilter;
 
 public class CollectAllEffectiveRights {
@@ -170,7 +172,7 @@ public class CollectAllEffectiveRights {
         }
     }
     
-    private static class Visitor implements LegacyLdapUtil.SearchLdapVisitor {
+    private static class Visitor implements SearchLdapVisitor {
         private LdapProvisioning mProv;
         private LdapDIT mLdapDIT;
         
@@ -517,7 +519,7 @@ public class CollectAllEffectiveRights {
         return subDomains;
     }
     
-    private static class SearchSubDomainVisitor implements LegacyLdapUtil.SearchLdapVisitor {
+    private static class SearchSubDomainVisitor implements SearchLdapVisitor {
         List<String> mDomainIds = new ArrayList<String>();
 
         public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs) {

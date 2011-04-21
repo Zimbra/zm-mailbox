@@ -23,6 +23,7 @@ import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ldap.LdapException;
+import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.IAttributes.CheckBinary;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
 
@@ -35,21 +36,21 @@ public class LdapDataSource extends DataSource implements LdapEntry {
 
 	private String mDn;
 
-	LdapDataSource(Account acct, ZSearchResultEntry entry, Provisioning prov) 
+	public LdapDataSource(Account acct, String dn, ZAttributes attrs, Provisioning prov) 
 	throws LdapException, ServiceException {
-		super(acct, getObjectType(entry),
-		        entry.getAttributes().getAttrString(Provisioning.A_zimbraDataSourceName),
-		        entry.getAttributes().getAttrString(Provisioning.A_zimbraDataSourceId),                
-		        entry.getAttributes().getAttrs(), 
+		super(acct, getObjectType(attrs),
+		        attrs.getAttrString(Provisioning.A_zimbraDataSourceName),
+		        attrs.getAttrString(Provisioning.A_zimbraDataSourceId),                
+		        attrs.getAttrs(), 
 		        prov);
-		mDn = entry.getDN();
+		mDn = dn;
 	}
 	
 	public String getDN() {
 		return mDn;
 	}
 
-    static String getObjectClass(Type type) {
+    public static String getObjectClass(Type type) {
         switch (type) {
             case pop3:
                 return AttributeClass.OC_zimbraPop3DataSource;
@@ -64,16 +65,16 @@ public class LdapDataSource extends DataSource implements LdapEntry {
         }
     }
 
-    static Type getObjectType(ZSearchResultEntry entry) throws ServiceException {
+    static Type getObjectType(ZAttributes attrs) throws ServiceException {
         try {
-            String dsType = entry.getAttributes().getAttrString(Provisioning.A_zimbraDataSourceType);
+            String dsType = attrs.getAttrString(Provisioning.A_zimbraDataSourceType);
             if (dsType != null)
                 return Type.fromString(dsType);
         } catch (LdapException e) {
             ZimbraLog.datasource.error("cannot get DataSource type", e);
         }
         
-        List<String> attr = entry.getAttributes().getMultiAttrStringAsList(Provisioning.A_objectClass, CheckBinary.NOCHECK);
+        List<String> attr = attrs.getMultiAttrStringAsList(Provisioning.A_objectClass, CheckBinary.NOCHECK);
         if (attr.contains(AttributeClass.OC_zimbraPop3DataSource)) 
             return Type.pop3;
         else if (attr.contains(AttributeClass.OC_zimbraImapDataSource))

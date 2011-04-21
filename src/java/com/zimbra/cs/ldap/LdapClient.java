@@ -6,7 +6,6 @@ import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.ldap.LdapTODO.*;
-import com.zimbra.cs.ldap.ZSearchControls.ZSearchControlsFactory;
 import com.zimbra.cs.ldap.ZSearchScope.ZSearchScopeFactory;
 import com.zimbra.cs.ldap.jndi.JNDILdapClient;
 import com.zimbra.cs.ldap.unboundid.UBIDLdapClient;
@@ -16,7 +15,7 @@ public abstract class LdapClient {
     
     private static LdapClient ldapClient;
     
-    private synchronized static LdapClient getInstance() {
+    synchronized static LdapClient getInstance() {
         if (ldapClient == null) {
             String className = LC.zimbra_class_ldap_client.value();
             if (className != null && !className.equals("")) {
@@ -110,19 +109,16 @@ public abstract class LdapClient {
         getInstance().closeContextImpl(lctxt);
     }
     
-    public static ZTransientEntry newTransientEntry() {
-        return getInstance().newTransientEntryImpl();
+    public static ZMutableEntry createMutableEntry() {
+        return getInstance().createMutableEntryImpl();
     }
     
     ////////////////////////////////////////////////////////////////
     protected void init() throws LdapException {
         ZSearchScope.init(getSearchScopeFactoryImpl());
-        ZSearchControls.init(getSearchControlsFactoryImpl());
     }
     
     protected abstract ZSearchScopeFactory getSearchScopeFactoryImpl(); 
-    
-    protected abstract ZSearchControlsFactory getSearchControlsFactoryImpl(); 
     
     protected ZLdapContext getContextImpl() throws ServiceException {
         return getContext(LdapServerType.REPLICA);
@@ -138,9 +134,9 @@ public abstract class LdapClient {
         }
     }
     
-    protected abstract ZTransientEntry newTransientEntryImpl();
+    protected abstract ZMutableEntry createMutableEntryImpl();
     
-
+    protected abstract ZSearchControls createSearchControlsImpl(ZSearchScope searchScope, int sizeLimit, String[] returnAttrs);
     
     public static void main(String[] args) throws ServiceException {
         CliUtil.toolSetup(); // to get logs printed to console

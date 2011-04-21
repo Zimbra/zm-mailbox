@@ -29,12 +29,12 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.filter.RuleRewriter;
 import com.zimbra.cs.filter.SieveToSoap;
 import com.zimbra.cs.filter.SoapToSieve;
+import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.zclient.ZEmailAddress;
@@ -316,13 +316,13 @@ extends TestCase {
         saveIncomingRules(mMbox, rules);
 
         // Set "apply user rules" attribute to TRUE and make sure the message gets filed into folder1
-        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraSpamApplyUserFilters, LegacyLdapUtil.LDAP_TRUE);
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraSpamApplyUserFilters, LdapUtilCommon.LDAP_TRUE);
         TestUtil.addMessageLmtp(recipients, sender, message);
         msg = TestUtil.waitForMessage(mbox, "in:" + FOLDER1_PATH + " subject:testSpam");
         mbox.deleteMessage(msg.getId());
 
         // Set "apply user rules" attribute to FALSE and make sure the message gets filed into junk
-        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraSpamApplyUserFilters, LegacyLdapUtil.LDAP_FALSE);
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraSpamApplyUserFilters, LdapUtilCommon.LDAP_FALSE);
         TestUtil.addMessageLmtp(recipients, sender, message);
         TestUtil.waitForMessage(mbox, "in:junk subject:testSpam");
     }

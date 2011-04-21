@@ -52,6 +52,7 @@ import com.zimbra.cs.index.ResultsPager;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -422,7 +423,7 @@ public class GalSearchControl {
                     if (folderMapping.md == null)
                         continue;
                     folderIds.add(fid);
-                    syncToken = LegacyLdapUtil.getEarlierTimestamp(syncToken, folderMapping.md.get(GalImport.SYNCTOKEN));
+                    syncToken = LdapUtilCommon.getEarlierTimestamp(syncToken, folderMapping.md.get(GalImport.SYNCTOKEN));
                     if (mParams.isIdOnly() && token.doMailboxSync()) {
                         int changeId = token.getChangeId(galAcct.getId());
                         Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, changeId,
@@ -461,7 +462,7 @@ public class GalSearchControl {
                 if (folderMapping.md == null)
                     continue;
                 folderIds.add(fid);
-                syncToken = LegacyLdapUtil.getEarlierTimestamp(syncToken, folderMapping.md.get(GalImport.SYNCTOKEN));
+                syncToken = LdapUtilCommon.getEarlierTimestamp(syncToken, folderMapping.md.get(GalImport.SYNCTOKEN));
             }
             if (mParams.isIdOnly() && token.doMailboxSync()) {
                 int changeId = token.getChangeId(galAcct.getId());
@@ -626,7 +627,7 @@ public class GalSearchControl {
                 throw ServiceException.FAILURE("ldap search failed", e);
             }
             hadMore |= mParams.getResult().getHadMore();
-            newToken = LegacyLdapUtil.getLaterTimestamp(newToken, mParams.getResult().getToken());
+            newToken = LdapUtilCommon.getLaterTimestamp(newToken, mParams.getResult().getToken());
             if (mParams.getResult().getTokenizeKey() != null)
                 hadMore = true;
         }

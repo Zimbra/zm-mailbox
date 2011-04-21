@@ -1,6 +1,7 @@
 package com.zimbra.cs.prov.ldap;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.ldap.ILdapContext;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.SearchLdapOptions;
@@ -19,10 +20,11 @@ public class ZLdapHelper extends LdapHelper {
     }
 
     @Override
-    public void searchLdap(SearchLdapOptions searchOptions) throws ServiceException {
+    public void searchLdap(ILdapContext ldapContext, SearchLdapOptions searchOptions) 
+    throws ServiceException {
         
-        ZLdapContext zlc = LdapClient.toZLdapContext(getProv(), searchOptions.getILdapContext());
-        zlc.search(searchOptions);
+        ZLdapContext zlc = LdapClient.toZLdapContext(getProv(), ldapContext);
+        zlc.searchPaged(searchOptions);
     }
 
 }

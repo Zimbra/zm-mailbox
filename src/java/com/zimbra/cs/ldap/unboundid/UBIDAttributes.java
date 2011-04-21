@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.unboundid.ldap.sdk.Attribute;
+import com.unboundid.ldap.sdk.Entry;
 import com.unboundid.ldap.sdk.SearchResultEntry;
 
 import com.zimbra.common.util.ByteUtil;
@@ -17,15 +18,19 @@ import com.zimbra.cs.ldap.ZAttributes;
 public class UBIDAttributes extends ZAttributes {
 
     //
-    // The wrapped object here is actually the SearchResultEntry object.
-    // Unlike JNDI, unboundid handles attributes on the SearchResultEntry object.
+    // The wrapped object here is actually the SearchResultEntry or Entry object.
+    // Unlike JNDI, unboundid handles attributes on the (SearchResult)Entry object.
     // For consistency with our existing coding pattern, the UBIDAttributes 
-    // implementation just delegate all operations on the wrapped SearchResultEntry 
+    // implementation just delegate all operations on the wrapped (SearchResult)Entry 
     // object.
     //
-    private SearchResultEntry entry;
+    private Entry entry;
     
     UBIDAttributes(SearchResultEntry entry) {
+        this.entry = entry;
+    }
+    
+    UBIDAttributes(Entry entry) {
         this.entry = entry;
     }
     
@@ -68,8 +73,8 @@ public class UBIDAttributes extends ZAttributes {
     }
 
     @Override
-    protected String getAttrString(String transferAttrName, 
-            boolean containsBinaryData) throws LdapException {
+    protected String getAttrString(String transferAttrName, boolean containsBinaryData) 
+    throws LdapException {
         Attribute attr = entry.getAttribute(transferAttrName);
         
         if (attr != null) {
@@ -80,8 +85,8 @@ public class UBIDAttributes extends ZAttributes {
     }
     
     @Override
-    protected String[] getMultiAttrString(String transferAttrName,
-            boolean containsBinaryData) throws LdapException {
+    protected String[] getMultiAttrString(String transferAttrName, boolean containsBinaryData) 
+    throws LdapException {
         Attribute attr = entry.getAttribute(transferAttrName);
         
         if (attr != null) {

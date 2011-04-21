@@ -10,8 +10,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
-import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil.SearchLdapVisitor;
 import com.zimbra.cs.ldap.IAttributes;
+import com.zimbra.cs.ldap.SearchLdapOptions;
+import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
 import com.zimbra.cs.prov.ldap.LdapFilter;
 
 public class Bug53745 extends LdapUpgrade {
@@ -77,7 +78,7 @@ public class Bug53745 extends LdapUpgrade {
     }
     
     private void upgrade(ZimbraLdapContext modZlc, String bases[], String query) {
-        SearchLdapVisitor visitor = new Bug53745Visitor(modZlc);
+        SearchLdapOptions.SearchLdapVisitor visitor = new Bug53745Visitor(modZlc);
 
         String attrs[] = new String[] {ATTR_IMPORTEXPORT, ATTR_IMPORT, ATTR_EXPORT};
         

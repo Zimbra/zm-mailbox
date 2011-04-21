@@ -20,7 +20,6 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeManager;
-import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
@@ -33,10 +32,9 @@ import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.ldap.legacy.LegacyJNDIAttributes;
 import com.zimbra.cs.account.ldap.legacy.entry.LdapConfig;
-import com.zimbra.cs.account.ldap.legacy.entry.LdapDomain;
 import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.gal.GalSearchParams;
-import com.zimbra.cs.ldap.IAttributes;
+import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.prov.ldap.LdapGalCredential;
@@ -79,11 +77,6 @@ import java.util.UUID;
  */
 public class LegacyLdapUtil {
         
-    public final static String LDAP_TRUE  = "TRUE";
-    public final static String LDAP_FALSE = "FALSE";
-
-    final static String EARLIEST_SYNC_TOKEN = "19700101000000Z";
-
     private static String[] sEmptyMulti = new String[0];
 
     static final SearchControls sSubtreeSC = new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, null, false, false);
@@ -98,15 +91,16 @@ public class LegacyLdapUtil {
         }
     }
     
-    public static void ldapAuthenticate(String urls[], boolean requireStartTLS, String principal, String password) throws NamingException, IOException {
+    public static void ldapAuthenticate(String urls[], boolean requireStartTLS, String principal, String password) 
+    throws NamingException, IOException {
         if (password == null || password.equals("")) 
             throw new AuthenticationException("empty password");
         
         ZimbraLdapContext.ldapAuthenticate(urls, requireStartTLS, principal, password, "external LDAP auth");
     }
 
-    public static void ldapAuthenticate(String url[], boolean requireStartTLS, String password, String searchBase, String searchFilter, String searchDn, String searchPassword) 
-        throws ServiceException, NamingException, IOException {
+    public static void ldapAuthenticate(String url[], boolean requireStartTLS, String password, String searchBase, 
+            String searchFilter, String searchDn, String searchPassword) throws ServiceException, NamingException, IOException {
         
         if (password == null || password.equals("")) 
             throw new AuthenticationException("empty password");
@@ -592,75 +586,18 @@ public class LegacyLdapUtil {
         }
     }
     
-    public static String getBooleanString(boolean b) {
-        if (b) {
-            return LDAP_TRUE;
-        }
-        return LDAP_FALSE;
+    @SDKDONE
+    public static void searchLdapOnMaster(String base, String query, String[] returnAttrs, SearchLdapOptions.SearchLdapVisitor visitor) throws ServiceException {
+        searchZimbraLdap(base, query, returnAttrs, true, visitor);
     }
 
-    /*
-      * expansions for bind dn string:
-      * 
-      * %n = username with @ (or without, if no @ was specified)
-      * %u = username with @ removed
-      * %d = domain as foo.com
-      * %D = domain as dc=foo,dc=com
-      * 
-      * exchange example, where the exchange domian is different than the zimbra one
-      * 
-      * zimbraAuthMech      ldap
-      * zimbraAuthLdapURL   ldap://exch1/
-      * zimbraAuthLdapDn    %n@example.zimbra.com
-      * 
-      * our own LDAP example:
-      * 
-      * zimbraAuthMech       ldap
-      * zimbraAuthLdapURL    ldap://server.example.zimbra.com/
-      * zimbraAuthLdapUserDn uid=%u,ou=people,%D
-      */
-      public static String computeAuthDn(String name, String bindDnRule) {
-         if (bindDnRule == null || bindDnRule.equals("") || bindDnRule.equals("%n"))
-             return name;
-    
-         int at = name.indexOf("@");
-    
-         Map<String, String> vars = new HashMap<String, String>();
-         vars.put("n", name);         
-    
-         if (at  == -1) {
-             vars.put("u", name);
-         } else {
-             vars.put("u", name.substring(0, at));
-             String d = name.substring(at+1);
-             vars.put("d", d);
-             vars.put("D", domainToDN(d));
-         }
-         
-         return LdapProvisioning.expandStr(bindDnRule, vars);
-      }
+    @SDKDONE
+    public static void searchLdapOnReplica(String base, String query, String[] returnAttrs, SearchLdapOptions.SearchLdapVisitor visitor) throws ServiceException {
+        searchZimbraLdap(base, query, returnAttrs, false, visitor);
+    }
       
-      // TODO: move to LdapUtilCommon? 
-      // Be careful that com.zimbra.cs.license.LicenseManager uses it (also LdapDIT, see bug 58898).
-      // During upgrade, "com.zimbra.cs.license.LicenseCLI --ping" is invoked.  And in that context 
-      // only zimbra-license-tools.jar(LicenseManager lives in there) is new, all other libs are old 
-      // (could be 5.x, 6.x, 7.x).  If we do move SearchLdapVisitor to LdapUtilCommon, we will have 
-      // to fix "com.zimbra.cs.license.LicenseCLI --ping" to *not* do the ldap search - it should not 
-      // anyway.
-      //
-      public static interface SearchLdapVisitor {
-          public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs);
-      }
-      
-      public static void searchLdapOnMaster(String base, String query, String[] returnAttrs, SearchLdapVisitor visitor) throws ServiceException {
-          searchZimbraLdap(base, query, returnAttrs, true, visitor);
-      }
-
-      public static void searchLdapOnReplica(String base, String query, String[] returnAttrs, SearchLdapVisitor visitor) throws ServiceException {
-          searchZimbraLdap(base, query, returnAttrs, false, visitor);
-      }
-      
-      private static void searchZimbraLdap(String base, String query, String[] returnAttrs, boolean useMaster, SearchLdapVisitor visitor) 
+    @SDKDONE
+      private static void searchZimbraLdap(String base, String query, String[] returnAttrs, boolean useMaster, SearchLdapOptions.SearchLdapVisitor visitor) 
       throws ServiceException {
           ZimbraLdapContext zlc = null;
           try {
@@ -676,7 +613,7 @@ public class LegacyLdapUtil {
        */
       @SDKDONE
       public static void searchLdap(ZimbraLdapContext zlc, String base, String query, String[] returnAttrs, 
-              Set<String> binaryAttrs, SearchLdapVisitor visitor) 
+              Set<String> binaryAttrs, SearchLdapOptions.SearchLdapVisitor visitor) 
       throws ServiceException {
           
           int maxResults = 0; // no limit
@@ -724,7 +661,7 @@ public class LegacyLdapUtil {
                                    String token,
                                    SearchGalResult result) throws ServiceException {
 
-        String tk = token != null && !token.equals("")? token : EARLIEST_SYNC_TOKEN;
+        String tk = token != null && !token.equals("")? token : LdapUtilCommon.EARLIEST_SYNC_TOKEN;
         result.setToken(tk);
         
         if (pageSize > 0)
@@ -790,9 +727,9 @@ public class LegacyLdapUtil {
                         
                         GalContact lgc = new GalContact(galType, dn, rules.apply(zlc, base, dn, attrs));
                         String mts = (String) lgc.getAttrs().get("modifyTimeStamp");
-                        result.setToken(getLaterTimestamp(result.getToken(), mts));
+                        result.setToken(LdapUtilCommon.getLaterTimestamp(result.getToken(), mts));
                         String cts = (String) lgc.getAttrs().get("createTimeStamp");
-                        result.setToken(getLaterTimestamp(result.getToken(), cts));
+                        result.setToken(LdapUtilCommon.getLaterTimestamp(result.getToken(), cts));
                         result.addMatch(lgc);
                         ZimbraLog.gal.debug("dn=" + dn + ", mts=" + mts + ", cts=" + cts);
                     
@@ -840,7 +777,7 @@ public class LegacyLdapUtil {
              */
             boolean gotNewToken = true;
             String newToken = result.getToken();
-            if (newToken == null || (token != null && token.equals(newToken)) || newToken.equals(LegacyLdapUtil.EARLIEST_SYNC_TOKEN))
+            if (newToken == null || (token != null && token.equals(newToken)) || newToken.equals(LdapUtilCommon.EARLIEST_SYNC_TOKEN))
                 gotNewToken = false;
             
             if (gotNewToken) {
@@ -1072,32 +1009,6 @@ public class LegacyLdapUtil {
     }
     
 
-    /**
-     * Return the later (more recent) of two LDAP timestamps.  Timestamp
-     * format is YYYYMMDDhhmmssZ. (e.g. 20060315023000Z)
-     * @param timeA
-     * @param timeB
-     * @return later of the two timestamps; a non-null timestamp is considered
-     *         later than a null timestamp; null is returned if both timestamps
-     *         are null
-     */
-    public static String getLaterTimestamp(String timeA, String timeB) {
-        if (timeA == null) {
-            return timeB;
-        } else if (timeB == null) {
-            return timeA;
-        }
-        return timeA.compareTo(timeB) > 0 ? timeA : timeB;
-    }
-    public static String getEarlierTimestamp(String timeA, String timeB) {
-        if (timeA == null) {
-            return timeB;
-        } else if (timeB == null) {
-            return timeA;
-        }
-        return timeA.compareTo(timeB) < 0 ? timeA : timeB;
-    }
-    
     //
     // Escape rdn value defined in:
     // http://www.ietf.org/rfc/rfc2253.txt?number=2253
@@ -1138,26 +1049,6 @@ public class LegacyLdapUtil {
             return pageSize - 1;
         else
             return pageSize;
-    }
-    
-    public static String getZimbraSearchBase(Domain domain, GalOp galOp) {
-        String sb;
-        if (galOp == GalOp.sync) {
-            sb = domain.getAttr(Provisioning.A_zimbraGalSyncInternalSearchBase);
-            if (sb == null)
-                sb = domain.getAttr(Provisioning.A_zimbraGalInternalSearchBase, "DOMAIN");
-        } else {
-            sb = domain.getAttr(Provisioning.A_zimbraGalInternalSearchBase, "DOMAIN");
-        }
-        LdapDomain ld = (LdapDomain) domain;
-        if (sb.equalsIgnoreCase("DOMAIN"))
-            return ld.getDN();
-            //mSearchBase = mDIT.domainDNToAccountSearchDN(ld.getDN());
-        else if (sb.equalsIgnoreCase("SUBDOMAINS"))
-            return ld.getDN();
-        else if (sb.equalsIgnoreCase("ROOT"))
-            return "";
-        return "";
     }
     
     @SDKDONE

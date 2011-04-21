@@ -19,6 +19,8 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.mime.MimeTypeInfo;
@@ -78,5 +80,8 @@ public abstract class LdapProv extends Provisioning {
     
     public abstract List<MimeTypeInfo> getAllMimeTypesByQuery() throws ServiceException;
     public abstract List<MimeTypeInfo> getMimeTypesByQuery(String mimeType) throws ServiceException;
+    
+    public abstract void externalLdapAuth(Domain d, String authMech, Account acct, String password, 
+            Map<String, Object> authCtxt) throws ServiceException;
 
 }

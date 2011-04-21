@@ -5,8 +5,9 @@ import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.ZLdapContext;
-import com.zimbra.cs.ldap.ZTransientEntry;
-import com.zimbra.cs.ldap.ZSearchControls.ZSearchControlsFactory;
+import com.zimbra.cs.ldap.ZMutableEntry;
+import com.zimbra.cs.ldap.ZSearchControls;
+import com.zimbra.cs.ldap.ZSearchScope;
 import com.zimbra.cs.ldap.ZSearchScope.ZSearchScopeFactory;
 
 public class JNDILdapClient extends LdapClient {
@@ -21,11 +22,6 @@ public class JNDILdapClient extends LdapClient {
     }
     
     @Override
-    protected ZSearchControlsFactory getSearchControlsFactoryImpl() {
-        return new JNDISearchControls.JNDISearchControlsFactory();
-    }
-    
-    @Override
     protected ZLdapContext getContextImpl(LdapServerType serverType) throws ServiceException {
         return new JNDILdapContext(serverType);
     }
@@ -36,8 +32,13 @@ public class JNDILdapClient extends LdapClient {
     }
 
     @Override
-    protected ZTransientEntry newTransientEntryImpl() {
-        return new JNDITransientEntry();
+    protected ZMutableEntry createMutableEntryImpl() {
+        return new JNDIMutableEntry();
+    }
+
+    @Override
+    protected ZSearchControls createSearchControlsImpl(ZSearchScope searchScope, int sizeLimit, String[] returnAttrs) {
+        return new JNDISearchControls(searchScope, sizeLimit, returnAttrs);
     }
 
 }

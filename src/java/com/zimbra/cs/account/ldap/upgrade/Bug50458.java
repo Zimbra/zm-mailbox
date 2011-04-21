@@ -10,8 +10,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
-import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil.SearchLdapVisitor;
 import com.zimbra.cs.ldap.IAttributes;
+import com.zimbra.cs.ldap.SearchLdapOptions;
+import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
 import com.zimbra.cs.prov.ldap.LdapFilter;
 
 public class Bug50458  extends LdapUpgrade {
@@ -42,7 +43,7 @@ public class Bug50458  extends LdapUpgrade {
     
    
     private void upgrade(ZimbraLdapContext modZlc, String bases[], String query) {
-        SearchLdapVisitor visitor = new Bug50458Visitor(modZlc);
+        SearchLdapOptions.SearchLdapVisitor visitor = new Bug50458Visitor(modZlc);
 
         String attrs[] = new String[] {Provisioning.A_zimbraPasswordChangeListener};
         

@@ -26,8 +26,9 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
-import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil.SearchLdapVisitor;
 import com.zimbra.cs.ldap.IAttributes;
+import com.zimbra.cs.ldap.SearchLdapOptions;
+import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
 
 public class GalSyncAccountContactLimit extends LdapUpgrade {
 
@@ -50,7 +51,7 @@ public class GalSyncAccountContactLimit extends LdapUpgrade {
     private Set<String> getAllGalSyncAcctIds() throws ServiceException {
         final Set<String> galSyncAcctIds = new HashSet<String>();
         
-        SearchLdapVisitor visitor = new SearchLdapVisitor() {
+        SearchLdapOptions.SearchLdapVisitor visitor = new SearchLdapVisitor() {
             public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs) {
                 System.out.println("Domain " + attrs.get(Provisioning.A_zimbraDomainName));
                 

@@ -2,6 +2,7 @@ package com.zimbra.cs.ldap.unboundid;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import com.unboundid.asn1.ASN1OctetString;
 import com.unboundid.ldap.sdk.Modification;
@@ -25,6 +26,23 @@ public class UBIDModificationList extends ZModificationList {
     
     List<Modification> getModList() {
         return modList;
+    }
+    
+    void replaceAll(Map<String, Object> attrs) {
+        
+        for (Map.Entry<String, Object> attr : attrs.entrySet()) {
+            String attrName = attr.getKey();
+            Object attrValue = attr.getValue();
+            
+            Modification mod = null;
+            if (attrValue instanceof String) {
+                mod = new Modification(ModificationType.REPLACE, attrName, (String) attrValue);
+            } else if (attrValue instanceof String[]) {
+                mod = new Modification(ModificationType.REPLACE, attrName, (String[]) attrValue);
+            }
+            
+            modList.add(mod);
+        }
     }
     
     @Override
@@ -119,6 +137,6 @@ public class UBIDModificationList extends ZModificationList {
         
     }
 
-
+    
 
 }

@@ -32,10 +32,10 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.krb5.Krb5Login;
 import com.zimbra.cs.account.krb5.Krb5Principal;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.account.auth.AuthContext;
+import com.zimbra.cs.prov.ldap.LdapProv;
 import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
@@ -77,7 +77,9 @@ public abstract class AuthMechanism {
         }
     }
     
-    public static void doZimbraAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException {
+    public static void doZimbraAuth(LdapProv prov, Domain domain, Account acct, String password, 
+            Map<String, Object> authCtxt) 
+    throws ServiceException {
         ZimbraAuth zimbraAuth = new ZimbraAuth(Provisioning.AM_ZIMBRA);
         zimbraAuth.doAuth(prov, domain, acct, password, authCtxt);
     }
@@ -88,7 +90,9 @@ public abstract class AuthMechanism {
     
     public abstract boolean checkPasswordAging() throws ServiceException;
     
-    public abstract void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException;
+    public abstract void doAuth(LdapProv prov, Domain domain, Account acct, String password, 
+            Map<String, Object> authCtxt) 
+    throws ServiceException;
 
     public String getMechanism() {
         return mAuthMech;
@@ -117,7 +121,7 @@ public abstract class AuthMechanism {
             return true;
         }
         
-        public void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException {
+        public void doAuth(LdapProv prov, Domain domain, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException {
             
             String encodedPassword = acct.getAttr(Provisioning.A_userPassword);
 
@@ -161,7 +165,7 @@ public abstract class AuthMechanism {
             super(authMech);
         }
         
-        public void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException {
+        public void doAuth(LdapProv prov, Domain domain, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException {
             prov.externalLdapAuth(domain, mAuthMech, acct, password, authCtxt);
         }
         
@@ -178,7 +182,7 @@ public abstract class AuthMechanism {
             super(authMech);
         }
         
-        public void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException {
+        public void doAuth(LdapProv prov, Domain domain, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException {
             String principal = Krb5Principal.getKrb5Principal(domain, acct);
             
             if (principal == null)
@@ -251,7 +255,7 @@ public abstract class AuthMechanism {
             }
         }
         
-        public void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException {
+        public void doAuth(LdapProv prov, Domain domain, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException {
             
             if (mHandler == null)
                 throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt), "handler " + mHandlerName + " for custom auth for domain " + domain.getName() + " not found");

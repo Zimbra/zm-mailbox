@@ -45,6 +45,7 @@ import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.CountObjectsType;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.ldap.IAttributes;
+import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
 import com.zimbra.cs.prov.ldap.LdapFilter;
 
 final public class Validators {
@@ -390,7 +391,7 @@ final public class Validators {
             map.put(parts[0], max);
         }
 
-        private static class BuildDomainCounts implements LegacyLdapUtil.SearchLdapVisitor {
+        private static class BuildDomainCounts implements SearchLdapVisitor {
             
             private Provisioning prov;
             private String domain;

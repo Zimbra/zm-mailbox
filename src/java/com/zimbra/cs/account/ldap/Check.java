@@ -41,6 +41,7 @@ import com.zimbra.cs.account.gal.GalParams;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.fb.ExchangeEWSFreeBusyProvider;
 import com.zimbra.cs.fb.ExchangeFreeBusyProvider;
+import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ExceptionToString;
 import com.zimbra.common.util.ZimbraLog;
@@ -165,7 +166,7 @@ public class Check {
                 String searchDn = (String) attrs.get(Provisioning.A_zimbraAuthLdapSearchBindDn);
                 String searchBase = (String) attrs.get(Provisioning.A_zimbraAuthLdapSearchBase);
                 if (searchBase == null) searchBase = "";
-                searchFilter = LegacyLdapUtil.computeAuthDn(name, searchFilter);
+                searchFilter = LdapUtilCommon.computeAuthDn(name, searchFilter);
                 if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with search filter of "+searchFilter);
                 LegacyLdapUtil.ldapAuthenticate(url, requireStartTLS, password, searchBase, searchFilter, searchDn, searchPassword);
                 return new Result(STATUS_OK, "", searchFilter);                
@@ -173,7 +174,7 @@ public class Check {
         
             String bindDn = (String) attrs.get(Provisioning.A_zimbraAuthLdapBindDn);
             if (bindDn != null) {
-                String dn = LegacyLdapUtil.computeAuthDn(name, bindDn);
+                String dn = LdapUtilCommon.computeAuthDn(name, bindDn);
                 if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with bind dn template of "+dn);
                 LegacyLdapUtil.ldapAuthenticate(url, requireStartTLS, dn, password);
                 return new Result(STATUS_OK, "", dn);

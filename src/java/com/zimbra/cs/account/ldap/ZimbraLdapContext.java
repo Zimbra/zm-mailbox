@@ -770,7 +770,7 @@ public class ZimbraLdapContext implements ILdapContext {
         }
     }
     
-    void simpleCreate(String dn, Object objectClass, String[] attrs) throws NamingException {
+    public void simpleCreate(String dn, Object objectClass, String[] attrs) throws NamingException {
         Attributes battrs = new BasicAttributes(true);
         if (objectClass instanceof String) {
             battrs.put(Provisioning.A_objectClass, objectClass);

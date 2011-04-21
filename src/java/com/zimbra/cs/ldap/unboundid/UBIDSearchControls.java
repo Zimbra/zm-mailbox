@@ -1,5 +1,6 @@
 package com.zimbra.cs.ldap.unboundid;
 
+import java.util.Arrays;
 import java.util.List;
 
 import com.unboundid.ldap.sdk.DereferencePolicy;
@@ -11,10 +12,17 @@ import com.zimbra.cs.ldap.ZSearchScope;
 
 public class UBIDSearchControls extends ZSearchControls {
 
-    final private SearchScope searchScope;
+    private SearchScope searchScope;
+    private int sizeLimit;
+    private List<String> returnAttrs;
     
-    private UBIDSearchControls(UBIDSearchScope searchScope) {
-        this.searchScope = searchScope.get();
+    UBIDSearchControls(ZSearchScope searchScope, int sizeLimit, String[] returnAttrs) {
+        this.searchScope = ((UBIDSearchScope) searchScope).get();
+        this.sizeLimit = sizeLimit;
+        
+        if (returnAttrs != null) {
+            this.returnAttrs = Arrays.asList(returnAttrs);
+        }
     }
     
     SearchScope getSearchScope() {
@@ -22,11 +30,11 @@ public class UBIDSearchControls extends ZSearchControls {
     }
     
     int getSizeLimit() {
-        return 0;
+        return sizeLimit;
     }
     
     int getTimeLimit() {
-        return 0;
+        return TIME_UNLIMITED;
     }
     
     boolean getTypesOnly() {
@@ -34,16 +42,11 @@ public class UBIDSearchControls extends ZSearchControls {
     }
     
     List<String> getReturnAttrs() {
-        return null;
+        return returnAttrs;
     }
     
     DereferencePolicy getDerefPolicy() {
         return DereferencePolicy.NEVER;
     }
-    
-    public static class UBIDSearchControlsFactory extends ZSearchControlsFactory {
-        protected ZSearchControls getSearchControl(ZSearchScope searchScope) {
-            return new UBIDSearchControls((UBIDSearchScope)searchScope);
-        }
-    }
+
 }

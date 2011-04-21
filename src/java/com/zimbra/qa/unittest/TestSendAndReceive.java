@@ -36,7 +36,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
+import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -188,14 +188,14 @@ public class TestSendAndReceive extends TestCase {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         
         // X-Authenticated-User not sent.
-        TestUtil.setConfigAttr(Provisioning.A_zimbraSmtpSendAddAuthenticatedUser, LegacyLdapUtil.LDAP_FALSE);
+        TestUtil.setConfigAttr(Provisioning.A_zimbraSmtpSendAddAuthenticatedUser, LdapUtilCommon.LDAP_FALSE);
         String subject = NAME_PREFIX + " testAuthenticatedUserHeader false";
         TestUtil.sendMessage(mbox, USER_NAME, subject);
         ZMessage msg = TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");
         assertNull(TestUtil.getHeaderValue(mbox, msg, MailSender.X_AUTHENTICATED_USER));
         
         // X-Authenticated-User sent.
-        TestUtil.setConfigAttr(Provisioning.A_zimbraSmtpSendAddAuthenticatedUser, LegacyLdapUtil.LDAP_TRUE);
+        TestUtil.setConfigAttr(Provisioning.A_zimbraSmtpSendAddAuthenticatedUser, LdapUtilCommon.LDAP_TRUE);
         subject = NAME_PREFIX + " testAuthenticatedUserHeader true";
         TestUtil.sendMessage(mbox, USER_NAME, subject);
         msg = TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");

@@ -24,7 +24,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.DataSource.Type;
-import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
+import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.soap.type.DataSources;
 import com.zimbra.soap.type.RssDataSource;
 
@@ -58,7 +58,7 @@ public class ZRssDataSource implements ZDataSource, ToZJSONObject {
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraDataSourceId, getId());
         attrs.put(Provisioning.A_zimbraDataSourceName, getName());
-        attrs.put(Provisioning.A_zimbraDataSourceEnabled, isEnabled() ? LegacyLdapUtil.LDAP_TRUE : LegacyLdapUtil.LDAP_FALSE);
+        attrs.put(Provisioning.A_zimbraDataSourceEnabled, isEnabled() ? LdapUtilCommon.LDAP_TRUE : LdapUtilCommon.LDAP_FALSE);
         attrs.put(Provisioning.A_zimbraDataSourceFolderId, getFolderId());
         return attrs;
     }

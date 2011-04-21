@@ -16,11 +16,13 @@ import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.ldap.ZAttributes;
-import com.zimbra.cs.ldap.ZTransientEntry;
+import com.zimbra.cs.ldap.ZMutableEntry;
 
-public class JNDITransientEntry extends ZTransientEntry {
+public class JNDIMutableEntry extends ZMutableEntry {
 
-    private Attributes attributes;
+    private String dn;
+    private Attributes jndiAttrs;
+    private ZAttributes zAttrs;
     
     @Override
     public void debug() {
@@ -28,36 +30,39 @@ public class JNDITransientEntry extends ZTransientEntry {
         
     }
     
-    public JNDITransientEntry() {
-        attributes = new BasicAttributes(true);
+    public JNDIMutableEntry() {
+        jndiAttrs = new BasicAttributes(true);
+        zAttrs = new JNDIAttributes(jndiAttrs);
     }
     
     @Override  // ZEntry
     public ZAttributes getAttributes() {
-        // TODO Auto-generated method stub
-        return null;
+        return zAttrs;
+    }
+    
+    Attributes getNativeAttributes() {
+        return jndiAttrs;
     }
 
     @Override  // ZEntry
     public String getDN() {
-        // TODO Auto-generated method stub
-        return null;
+        return dn;
     }
     
 
-    @Override  // ZTransientEntry
+    @Override  // ZMutableEntry
     public void addAttr(String attrName, String value) {
         BasicAttribute attr = new BasicAttribute(attrName);
         attr.add(value);
-        attributes.put(attr);
+        jndiAttrs.put(attr);
     }
     
-    @Override  // ZTransientEntry
+    @Override  // ZMutableEntry
     public void addAttr(String attrName, Set<String> values) {
-        Attribute attr = attributes.get(attrName);
+        Attribute attr = jndiAttrs.get(attrName);
         if (attr == null) {
             attr = new BasicAttribute(attrName);
-            attributes.put(attr);
+            jndiAttrs.put(attr);
         }
         
         for (String value : values) {
@@ -66,9 +71,9 @@ public class JNDITransientEntry extends ZTransientEntry {
     }
     
 
-    @Override  // ZTransientEntry
+    @Override  // ZMutableEntry
     public String getAttrString(String attrName) throws LdapException {
-        Attribute attr = attributes.get(attrName);
+        Attribute attr = jndiAttrs.get(attrName);
         if (attr == null) {
             return null;
         } else {
@@ -80,12 +85,12 @@ public class JNDITransientEntry extends ZTransientEntry {
         }
     }
     
-    @Override  // ZTransientEntry
+    @Override  // ZMutableEntry
     public boolean hasAttribute(String attrName) {
-        return attributes.get(attrName) != null;
+        return jndiAttrs.get(attrName) != null;
     }
 
-    @Override  // ZTransientEntry
+    @Override  // ZMutableEntry
     public void mapToAttrs(Map<String, Object> mapAttrs) {
         AttributeManager attrMgr = AttributeManager.getInst();
         
@@ -100,23 +105,28 @@ public class JNDITransientEntry extends ZTransientEntry {
             if (v instanceof String) {
                 BasicAttribute a = JNDIUtil.newAttribute(isBinaryTransfer, attrName);
                 a.add(LdapUtilCommon.decodeBase64IfBinary(containsBinaryData, (String)v));
-                attributes.put(a);
+                jndiAttrs.put(a);
             } else if (v instanceof String[]) {
                 String[] sa = (String[]) v;
                 BasicAttribute a = JNDIUtil.newAttribute(isBinaryTransfer, attrName);
                 for (int i=0; i < sa.length; i++) {
                     a.add(LdapUtilCommon.decodeBase64IfBinary(containsBinaryData, sa[i]));
                 }
-                attributes.put(a);
+                jndiAttrs.put(a);
             } else if (v instanceof Collection) {
                 Collection c = (Collection) v;
                 BasicAttribute a = JNDIUtil.newAttribute(isBinaryTransfer, attrName);
                 for (Object o : c) {
                     a.add(LdapUtilCommon.decodeBase64IfBinary(containsBinaryData, o.toString()));
                 }
-                attributes.put(a);
+                jndiAttrs.put(a);
             }
         }
+    }
+
+    @Override
+    public void setDN(String dn) {
+        this.dn = dn;
     }
 
 

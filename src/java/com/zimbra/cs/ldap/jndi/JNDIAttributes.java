@@ -35,6 +35,10 @@ public class JNDIAttributes extends ZAttributes {
         }
     }
     
+    Attributes get() {
+        return wrapped;
+    }
+    
     // attr must not be null
     private String getAttrStringInternal(Attribute attr, boolean containsBinaryData) throws NamingException {
         Object o = attr.get();

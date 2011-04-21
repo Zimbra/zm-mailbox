@@ -3,29 +3,36 @@ package com.zimbra.cs.ldap.jndi;
 import java.io.IOException;
 import java.util.Set;
 
+import javax.naming.ContextNotEmptyException;
 import javax.naming.InvalidNameException;
+import javax.naming.NameAlreadyBoundException;
 import javax.naming.NameNotFoundException;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
+import javax.naming.SizeLimitExceededException;
 import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
-import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil.SearchLdapVisitor;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapException.LdapInvalidNameException;
+import com.zimbra.cs.ldap.LdapException.LdapNameAlreadyExistException;
 import com.zimbra.cs.ldap.LdapException.LdapNameNotFoundException;
 import com.zimbra.cs.ldap.LdapTODO;
 import com.zimbra.cs.ldap.LdapTODO.*;
+import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.ZModificationList;
+import com.zimbra.cs.ldap.ZMutableEntry;
 import com.zimbra.cs.ldap.ZSearchControls;
 import com.zimbra.cs.ldap.ZSearchResultEnumeration;
 import com.zimbra.cs.ldap.LdapServerType;
@@ -57,10 +64,10 @@ public class JNDILdapContext extends ZLdapContext {
     private LdapException mapToLdapException(NamingException e) {
         if (e instanceof NameNotFoundException) {
             LdapTODO.FAIL(FailCode.NameNotFoundExceptionShouldNeverBeThrown);
-            return new LdapNameNotFoundException(e);
+            return LdapException.NAME_NOT_FOUND(e);
         } else if (e instanceof InvalidNameException) {
             LdapTODO.FAIL(FailCode.LdapInvalidNameExceptionShouldNeverBeThrown);
-            return new LdapInvalidNameException(e);
+            return LdapException.INVALID_NAME(e);
         } else {
             // anything else is mapped to a generic LDAP error
             return LdapException.LDAP_ERROR(e);
@@ -71,6 +78,43 @@ public class JNDILdapContext extends ZLdapContext {
     @Override
     public void closeContext() {
         ZimbraLdapContext.closeContext(zlc);
+    }
+    
+
+    @Override
+    @TODO // what to do with the method param to zlc.createEntry? see impl in zlc.createEntry, log the methods somewhere wlse?
+    public void createEntry(ZMutableEntry entry) throws ServiceException {
+        try {
+            zlc.createEntry(entry.getDN(), ((JNDIMutableEntry)entry).getNativeAttributes(), "");
+        } catch (NameAlreadyBoundException e) {
+            throw LdapException.NAME_ALREADY_EXIST(e);
+        } catch (ServiceException e) {
+            throw e;  // just rethrow
+        }
+    }
+
+    @Override
+    public void createEntry(String dn, String objectClass, String[] attrs)
+            throws ServiceException {
+        try {
+            zlc.simpleCreate(dn, objectClass, attrs);
+        } catch (NameAlreadyBoundException e) {
+            throw LdapException.NAME_ALREADY_EXIST(e);
+        } catch (NamingException e) {
+            throw mapToLdapException(e);
+        }
+    }
+
+    @Override
+    public void createEntry(String dn, String[] objectClasses, String[] attrs)
+            throws ServiceException {
+        try {
+            zlc.simpleCreate(dn, objectClasses, attrs);
+        } catch (NameAlreadyBoundException e) {
+            throw LdapException.NAME_ALREADY_EXIST(e);
+        } catch (NamingException e) {
+            throw mapToLdapException(e);
+        }
     }
     
     @Override
@@ -102,13 +146,39 @@ public class JNDILdapContext extends ZLdapContext {
         }
     }
     
+
     @Override
-    public void search(SearchLdapOptions searchOptions) throws LdapException {
+    public void moveChildren(String oldDn, String newDn)
+            throws ServiceException {
+        zlc.moveChildren(oldDn, newDn);
+    }
+    
+    @Override
+    public void renameEntry(String oldDn, String newDn) throws LdapException {
+        try {
+            zlc.renameEntry(oldDn, newDn);
+        } catch (NamingException e) {
+            throw mapToLdapException(e);
+        }
+        
+    }
+    
+    @Override
+    public void replaceAttributes(String dn, ZAttributes attrs) throws LdapException {
+        try {
+            zlc.replaceAttributes(dn, ((JNDIAttributes) attrs).get());
+        } catch (NamingException e) {
+            throw mapToLdapException(e);
+        }
+    }
+    
+    @Override
+    public void searchPaged(SearchLdapOptions searchOptions) throws ServiceException {
         int maxResults = 0; // no limit
         String base = searchOptions.getSearchBase();
         String query = searchOptions.getQuery();
         Set<String> binaryAttrs = searchOptions.getBinaryAttrs();
-        SearchLdapVisitor visitor = searchOptions.getVisitor();
+        SearchLdapOptions.SearchLdapVisitor visitor = searchOptions.getVisitor();
         
         try {
             SearchControls searchControls =
@@ -137,6 +207,8 @@ public class JNDILdapContext extends ZLdapContext {
             } finally {
                 if (ne != null) ne.close();
             }
+        } catch (SizeLimitExceededException e) {
+            throw AccountServiceException.TOO_MANY_SEARCH_RESULTS("too many search results returned", e);
         } catch (NamingException e) {
             throw LdapException.LDAP_ERROR("unable to search ldap", e);
         } catch (IOException e) {
@@ -161,12 +233,12 @@ public class JNDILdapContext extends ZLdapContext {
     public void unbindEntry(String dn) throws LdapException {
         try {
             zlc.unbindEntry(dn);
+        } catch (ContextNotEmptyException e) {
+            throw LdapException.CONTEXT_NOT_EMPTY(e);
         } catch (NamingException e) {
-            throw LdapException.LDAP_ERROR(e);
+            throw LdapException.LDAP_ERROR("unable to search ldap", e);
         }
     }
-
-
 
 
 }

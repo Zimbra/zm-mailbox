@@ -22,6 +22,12 @@ public class LdapTODO {
     public @interface TODO {
     }
     
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface TODOEXCEPTIONMAPPING {
+        // verify if the exception mapping is indeed needed, and if so fix it.
+        // test shows even in JNDI the exceptions cannot be thrown.
+    }
+    
     public static void TODO() {
         TODO(null);
     }

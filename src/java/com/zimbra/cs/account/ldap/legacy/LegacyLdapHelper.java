@@ -18,6 +18,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.prov.ldap.LdapHelper;
 import com.zimbra.cs.prov.ldap.LdapProv;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.ldap.ILdapContext;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 
@@ -34,8 +35,9 @@ public class LegacyLdapHelper extends LdapHelper {
     }
 
     @Override
-    public void searchLdap(SearchLdapOptions searchOptions) throws ServiceException {
-        ZimbraLdapContext zlc = LdapClient.toZimbraLdapContext(getProv(), searchOptions.getILdapContext());
+    public void searchLdap(ILdapContext ldapContext, SearchLdapOptions searchOptions) 
+    throws ServiceException {
+        ZimbraLdapContext zlc = LdapClient.toZimbraLdapContext(getProv(), ldapContext);
         LegacyLdapUtil.searchLdap(zlc, 
                 searchOptions.getSearchBase(), 
                 searchOptions.getQuery(),

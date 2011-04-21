@@ -26,7 +26,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.junit.*;
-import org.junit.Assert.*;
+import static org.junit.Assert.*;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;

@@ -14,15 +14,14 @@ import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.ldap.ZAttributes;
-import com.zimbra.cs.ldap.ZTransientEntry;
+import com.zimbra.cs.ldap.ZMutableEntry;
 
 
-public class UBIDTransientEntry extends ZTransientEntry {
+public class UBIDMutableEntry extends ZMutableEntry {
 
     private Entry entry;
     
-    public UBIDTransientEntry() {
-        
+    public UBIDMutableEntry() {
     }
     
     @Override
@@ -31,10 +30,13 @@ public class UBIDTransientEntry extends ZTransientEntry {
         
     }
     
+    Entry get() {
+        return entry;
+    }
+    
     @Override  // ZEntry
     public ZAttributes getAttributes() {
-        // TODO Auto-generated method stub
-        return null;
+        return new UBIDAttributes(entry);
     }
 
     @Override  // ZEntry
@@ -43,7 +45,7 @@ public class UBIDTransientEntry extends ZTransientEntry {
         return null;
     }
     
-    @Override  // ZTransientEntry
+    @Override  // ZMutableEntry
     @TODO // verify replacement
     public void addAttr(String attrName, String value) {
         if (hasAttribute(attrName)) {
@@ -52,7 +54,7 @@ public class UBIDTransientEntry extends ZTransientEntry {
         entry.addAttribute(attrName, value);
     }
 
-    @Override  // ZTransientEntry
+    @Override  // ZMutableEntry
     @TODO // verify adding(merging)
     public void addAttr(String attrName, Set<String> values) {
         for (String value : values) {
@@ -60,17 +62,17 @@ public class UBIDTransientEntry extends ZTransientEntry {
         }
     }
     
-    @Override  // ZTransientEntry
+    @Override  // ZMutableEntry
     public String getAttrString(String attrName)  throws LdapException {
         return entry.getAttributeValue(attrName);
     }
     
-    @Override  // ZTransientEntry
+    @Override  // ZMutableEntry
     public boolean hasAttribute(String attrName) {
         return entry.hasAttribute(attrName);
     }
 
-    @Override  // ZTransientEntry
+    @Override  // ZMutableEntry
     public void mapToAttrs(Map<String, Object> mapAttrs) {
         AttributeManager attrMgr = AttributeManager.getInst();
         
@@ -106,6 +108,11 @@ public class UBIDTransientEntry extends ZTransientEntry {
                 entry.addAttribute(a);
             }
         }
+    }
+
+    @Override
+    public void setDN(String dn) {
+        entry.setDN(dn);
     }
 
 }
