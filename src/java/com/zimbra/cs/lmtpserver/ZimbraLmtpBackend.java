@@ -325,11 +325,13 @@ public class ZimbraLmtpBackend implements LmtpBackend {
             BufferStream bs = cis.getBufferStream();
             byte[] data = bs.isPartial() ? null : bs.getBuffer();
 
+            BlobInputStream bis = null;
             MimeMessage mm = null;
             if (mpis != null) {
                 try {
                     if (data == null) {
-                        mpis.setSource(new BlobInputStream(blob));
+                        bis = new BlobInputStream(blob);
+                        mpis.setSource(bis);
                     } else {
                         mpis.setSource(data);
                     }
@@ -341,7 +343,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
             }
 
             try {
-                deliverMessageToLocalMailboxes(blob, mm, data, env);
+                deliverMessageToLocalMailboxes(blob, bis, data, mm, env);
             } catch (Exception e) {
                 ZimbraLog.lmtp.warn("Exception delivering mail (temporary failure)", e);
                 setDeliveryStatuses(env.getLocalRecipients(), LmtpReply.TEMPORARY_FAILURE);
@@ -373,7 +375,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         }
     }
 
-    private void deliverMessageToLocalMailboxes(Blob blob, MimeMessage mm, byte[] data, LmtpEnvelope env)
+    private void deliverMessageToLocalMailboxes(Blob blob, BlobInputStream bis, byte[] data, MimeMessage mm, LmtpEnvelope env)
         throws ServiceException, IOException {
 
         List<LmtpAddress> recipients = env.getLocalRecipients();
@@ -628,21 +630,22 @@ public class ZimbraLmtpBackend implements LmtpBackend {
             }
 
             // If this message is being streamed from disk, cache it
-            ParsedMessage mimeSource = pmAttachIndex;
-            if (mimeSource == null) {
-                mimeSource = pmNoAttachIndex;
-            }
+            ParsedMessage mimeSource = pmAttachIndex != null ? pmAttachIndex : pmNoAttachIndex;
             MailboxBlob mblob = sharedDeliveryCtxt.getMailboxBlob();
-            if (mblob != null && mimeSource != null && mimeSource.isStreamedFromDisk()) {
-                try {
-                    // Update the MimeMessage with the blob that's stored inside the mailbox,
-                    // since the incoming blob will be deleted.
-                    BlobInputStream bis = mimeSource.getBlobInputStream();
-                    Blob storedBlob = mblob.getLocalBlob();
-                    bis.fileMoved(storedBlob.getFile());
-                    MessageCache.cacheMessage(mblob.getDigest(), mimeSource.getOriginalMessage(), mimeSource.getMimeMessage());
-                } catch (IOException e) {
-                    ZimbraLog.lmtp.warn("Unable to cache message for " + mblob, e);
+            if (mblob != null && mimeSource != null) {
+                if (bis == null) {
+                    bis = mimeSource.getBlobInputStream();
+                }
+                if (bis != null) {
+                    try {
+                        // Update the MimeMessage with the blob that's stored inside the mailbox,
+                        // since the incoming blob will be deleted.
+                            Blob storedBlob = mblob.getLocalBlob();
+                            bis.fileMoved(storedBlob.getFile());
+                            MessageCache.cacheMessage(mblob.getDigest(), mimeSource.getOriginalMessage(), mimeSource.getMimeMessage());
+                    } catch (IOException e) {
+                        ZimbraLog.lmtp.warn("Unable to cache message for " + mblob, e);
+                    }
                 }
             }
         } finally {
