@@ -58,9 +58,6 @@ import com.zimbra.cs.object.ObjectHandlerException;
 import com.zimbra.cs.util.JMSession;
 
 public class ParsedContact {
-    private static final int MAX_FIELD_NAME_LEN = 100;
-    private static final int MAX_FIELD_VALUE_LEN = 1000;
-    private static final int MAX_FIELD_COUNT = 1000;
 
     private Map<String, String> contactFields;
     private List<Attachment> contactAttachments;
@@ -159,9 +156,9 @@ public class ParsedContact {
                 value = StringUtil.stripControlCharacters((String) entry.getValue());
             }
             if (key != null && !key.trim().isEmpty() && !Strings.isNullOrEmpty(value)) {
-                if (key.length() > MAX_FIELD_NAME_LEN) {
+                if (key.length() > ContactConstants.MAX_FIELD_NAME_LENGTH) {
                     throw ServiceException.INVALID_REQUEST("too big filed name", null);
-                } else if (value.length() > MAX_FIELD_VALUE_LEN) {
+                } else if (value.length() > ContactConstants.MAX_FIELD_VALUE_LENGTH) {
                     throw ServiceException.INVALID_REQUEST("too big field value", null);
                 }
                 map.put(key, value);
@@ -169,7 +166,7 @@ public class ParsedContact {
         }
         if (map.isEmpty()) {
             throw ServiceException.INVALID_REQUEST("contact must have fields", null);
-        } else if (map.size() > MAX_FIELD_COUNT) {
+        } else if (map.size() > ContactConstants.MAX_FIELD_COUNT) {
             throw ServiceException.INVALID_REQUEST("too many fields", null);
         }
         contactFields = map;
