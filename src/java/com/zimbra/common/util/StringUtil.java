@@ -859,6 +859,13 @@ public class StringUtil {
      * aren't recompiled.
      */
     public static Matcher newMatcher(String regex, CharSequence s) {
+        return getCachedPattern(regex).matcher(s);
+    }
+
+    /**
+     * Returns a precompiled {@link Pattern} for the given regular expression.
+     */
+    public static Pattern getCachedPattern(String regex) {
         Pattern pattern = null;
         synchronized (patternCache) {
             pattern = patternCache.get(regex);
@@ -870,7 +877,7 @@ public class StringUtil {
                 patternCache.put(regex, pattern);
             }
         }
-        return pattern.matcher(s);
+        return pattern;
     }
     
     /**
