@@ -15,15 +15,20 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.StringUtil;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class MisSpelledWord {
+public class Misspelling {
 
     @XmlAttribute(name=MailConstants.A_WORD, required=true)
     private final String word;
@@ -36,17 +41,27 @@ public class MisSpelledWord {
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private MisSpelledWord() {
+    private Misspelling() {
         this((String) null, (String) null);
     }
 
-    public MisSpelledWord(String word, String suggestions) {
+    public Misspelling(String word, String suggestions) {
         this.word = word;
         this.suggestions = suggestions;
     }
 
     public String getWord() { return word; }
     public String getSuggestions() { return suggestions; }
+    
+    /**
+     * Returns the list of suggestions, or an empty list.
+     */
+    public List<String> getSuggestionsList() {
+        if (suggestions == null) {
+            return Collections.emptyList();
+        }
+        return Arrays.asList(StringUtil.getCachedPattern(",").split(suggestions));
+    }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {

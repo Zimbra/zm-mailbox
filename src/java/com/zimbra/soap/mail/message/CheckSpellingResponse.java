@@ -29,37 +29,37 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.mail.type.MisSpelledWord;
+import com.zimbra.soap.mail.type.Misspelling;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=MailConstants.E_CHECK_SPELLING_RESPONSE)
 public class CheckSpellingResponse {
 
-    @XmlAttribute(name=MailConstants.A_AVAILABLE, required=false)
-    private Boolean available;
+    @XmlAttribute(name=MailConstants.A_AVAILABLE, required=true)
+    private boolean available;
 
     @XmlElement(name=MailConstants.E_MISSPELLED, required=false)
-    private List<MisSpelledWord> misspelledWords = Lists.newArrayList();
+    private List<Misspelling> misspelledWords = Lists.newArrayList();
 
     public CheckSpellingResponse() {
     }
 
-    public void setAvailable(Boolean available) { this.available = available; }
-    public void setMisspelledWords(Iterable <MisSpelledWord> misspelledWords) {
+    public void setAvailable(boolean available) { this.available = available; }
+    public void setMisspelledWords(Iterable<Misspelling> misspelledWords) {
         this.misspelledWords.clear();
         if (misspelledWords != null) {
             Iterables.addAll(this.misspelledWords,misspelledWords);
         }
     }
 
-    public CheckSpellingResponse addMisspelledWord(
-                            MisSpelledWord misspelledWord) {
+    public CheckSpellingResponse addMisspelledWord(Misspelling misspelledWord) {
         this.misspelledWords.add(misspelledWord);
         return this;
     }
 
-    public Boolean getAvailable() { return available; }
-    public List<MisSpelledWord> getMisspelledWords() {
+    public boolean isAvailable() { return available; }
+    
+    public List<Misspelling> getMisspelledWords() {
         return Collections.unmodifiableList(misspelledWords);
     }
 
