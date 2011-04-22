@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -15,7 +15,10 @@
 
 package com.zimbra.cs.service.formatter;
 
+import com.google.common.base.Objects;
+import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.service.ServiceException;
@@ -46,27 +49,27 @@ import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.QName;
 
-public class ContactCSV {
+public final class ContactCSV {
 
-    private static Log sLog = ZimbraLog.misc;
-    public static final char DEFAULT_FIELD_SEPARATOR = ',';
+    private static Log LOG = ZimbraLog.misc;
+    private static final char DEFAULT_FIELD_SEPARATOR = ',';
     // CSV files intended for use in locales where ',' as the decimal separator
     // sometimes use ';' as a field separator instead of ','.
-    public static final char[] SUPPORTED_SEPARATORS = { DEFAULT_FIELD_SEPARATOR, ';' };
-    enum ColType { SIMPLE, MULTIVALUE, NAME, TAG, DATE };
+    private static final char[] SUPPORTED_SEPARATORS = { DEFAULT_FIELD_SEPARATOR, ';' };
+    private enum ColType { SIMPLE, MULTIVALUE, NAME, TAG, DATE };
 
-    private int mLineNumber;
-    private int mCurrContactStartLineNum;
-    private ArrayList<String> mFields;            // Names of fields from first line in CSV file
-    private boolean mDetectFieldSeparator;
-    private boolean mKnowFieldSeparator;
-    private char mFieldSeparator;
-    
-    private static Set<String>            mKnownFields;
-    private static Set<CsvFormat>         mKnownFormats;
-    private static Map <String,Character> mDelimiterInfo;
-    private static Map <String,String>    mDateOrderInfo;
-    private static CsvFormat              mDefaultFormat;
+    private int lineNumber;
+    private int currContactStartLineNum;
+    private ArrayList<String> fieldNames; // Names of fields from first line in CSV file
+    private boolean detectFieldSeparator;
+    private boolean knowFieldSeparator;
+    private char fieldSeparator;
+
+    private static Set<String> knownFields;
+    private static Set<CsvFormat> knownFormats;
+    private static Map <String,Character> delimiterInfo;
+    private static Map <String,String> dateOrderInfo;
+    private static CsvFormat defaultFormat;
 
     private static final QName DATEFORMATS = QName.get("dateformats");
     private static final QName DATEFORMAT = QName.get("dateformat");
@@ -76,7 +79,7 @@ public class ContactCSV {
     private static final QName FIELD  = QName.get("field");
     private static final QName FORMAT = QName.get("format");
     private static final QName COLUMN = QName.get("column");
-    
+
     private static final String ATTR_CHAR  = "char";
     private static final String ATTR_NAME  = "name";
     private static final String ATTR_LOCALE  = "locale";
@@ -91,26 +94,24 @@ public class ContactCSV {
     }
 
     public ContactCSV(char defaultFieldSeparator, boolean detectFieldSeparator) {
-        mFieldSeparator = defaultFieldSeparator;
-        mDetectFieldSeparator = detectFieldSeparator;
+        this.fieldSeparator = defaultFieldSeparator;
+        this.detectFieldSeparator = detectFieldSeparator;
         // If we are not doing auto-detect, defaultFieldSeparator MUST be the separator
-        mKnowFieldSeparator = !detectFieldSeparator;
+        this.knowFieldSeparator = !detectFieldSeparator;
     }
 
     /**
-     * Implicit assumption, the first field name will not contain any of the supported separators
-     * @param testChar
-     * @return
+     * Implicit assumption, the first field name will not contain any of the supported separators.
      */
     private boolean isFieldSeparator(int testChar) {
-        if (mKnowFieldSeparator)
-            return (testChar == mFieldSeparator);
+        if (knowFieldSeparator) {
+            return (testChar == fieldSeparator);
+        }
         for (char possSep : SUPPORTED_SEPARATORS) {
             if (possSep == testChar) {
-                if ((sLog.isDebugEnabled()) && (possSep != DEFAULT_FIELD_SEPARATOR))
-                    sLog.debug("CSV Separator character used='%c'", possSep);
-                mKnowFieldSeparator = true;
-                mFieldSeparator = possSep;
+                LOG.debug("CSV Separator character used='%c'", possSep);
+                knowFieldSeparator = true;
+                fieldSeparator = possSep;
                 return true;
             }
         }
@@ -118,12 +119,14 @@ public class ContactCSV {
     }
 
     /**
-     * read a line of fields into an array list. blank fields (,, or ,"",) will be null. 
+     * read a line of fields into an array list. blank fields (,, or ,"",) will be null.
      */
-    private boolean parseLine(BufferedReader reader, List<String> result, boolean parsingHeader) throws IOException, ParseException {
-        mCurrContactStartLineNum = mLineNumber;
-        if (parsingHeader && mDetectFieldSeparator)
-            mKnowFieldSeparator = false;
+    private boolean parseLine(BufferedReader reader, List<String> result, boolean parsingHeader)
+            throws IOException, ParseException {
+        currContactStartLineNum = lineNumber;
+        if (parsingHeader && detectFieldSeparator) {
+            knowFieldSeparator = false;
+        }
         result.clear();
         int ch;
         boolean inField = false;
@@ -131,51 +134,60 @@ public class ContactCSV {
             switch (ch) {
                 case '"':
                     inField = true;
-                    result.add(parseField(reader, true, -1, parsingHeader, result.size()));
+                    result.add(parseField(reader, true, -1));
                     break;
                 case '\n':
-                    mLineNumber++;
-                    if (result.size() > 0)
-                        return true;
-                    else
+                    lineNumber++;
+                    if (result.isEmpty()) {
                         break;
+                    } else {
+                        return true;
+                    }
                 case '\r':
-                    mLineNumber++;
+                    lineNumber++;
                     // peek for \n
                     reader.mark(1);
                     ch = reader.read();
-                    if (ch != '\n') reader.reset();
-                    if(result.size() > 0)
-                        return true;
-                    else
+                    if (ch != '\n') {
+                        reader.reset();
+                    }
+                    if (result.isEmpty()) {
                         break;
+                    } else {
+                        return true;
+                    }
                 default:
                     if (isFieldSeparator(ch)) {
-                        if (inField) inField = false;
-                        else result.add(null);
+                        if (inField) {
+                            inField = false;
+                        } else {
+                            result.add(null);
+                        }
                     } else {
                         // start of field
-                        result.add(parseField(reader, false, ch, parsingHeader, result.size())); // eats trailing field separator
+                        result.add(parseField(reader, false, ch)); // eats trailing field separator
                         inField = false;
                     }
                     break;
             }
         }
-        return result.size() > 0;
+        return !result.isEmpty();
     }
 
     /**
      * parse a field. It is assumed the leading '"' is already read. we stop at the first '"' that isn't followed by a '"'.
-     * 
-     * @param reader
+     *
      * @return the field, or null if the field was blank ("")
      * @throws IOException IOException from the reader.
      * @throws ParseException if we reach the end of file while parsing
      */
-    private String parseField(BufferedReader reader, boolean doubleQuotes, int firstChar, boolean parsingHeader, int size) throws IOException, ParseException {
-        StringBuffer sb = new StringBuffer();
+    private String parseField(BufferedReader reader, boolean doubleQuotes, int firstChar)
+            throws IOException, ParseException {
+        StringBuilder result = new StringBuilder();
 
-        if (firstChar != -1) sb.append((char)firstChar);
+        if (firstChar != -1) {
+            result.append((char) firstChar);
+        }
         int ch;
         reader.mark(1);
         while ((ch = reader.read()) != -1) {
@@ -184,66 +196,79 @@ public class ContactCSV {
                 ch = reader.read();
                 if (ch != '"') {
                     reader.reset();
-                    if (sb.length() == 0) return null;
-                    else return sb.toString();
+                    if (result.length() == 0) {
+                        return null;
+                    } else {
+                        return result.toString();
+                    }
                 }
-                sb.append((char)ch);
-            } else if (ch == mFieldSeparator && !doubleQuotes) {
+                result.append((char) ch);
+            } else if (ch == fieldSeparator && !doubleQuotes) {
                 //reader.reset();
-                return sb.toString();
+                return result.toString();
             } else if ((ch == '\r' || ch == '\n') && !doubleQuotes) {
-                    reader.reset();
-                    return sb.toString();
+                reader.reset();
+                return result.toString();
             } else {
-                sb.append((char)ch);
+                result.append((char) ch);
                 if (ch == '\r') {
                     // peek for \n
                     reader.mark(1);
                     ch = reader.read();
-                    if (ch == '\n')
-                        sb.append((char)ch);
-                    else
+                    if (ch == '\n') {
+                        result.append((char) ch);
+                    } else {
                         reader.reset();
+                    }
                 }
-                if ((ch == '\r') || (ch == '\n'))
-                    mLineNumber++;
+                if ((ch == '\r') || (ch == '\n')) {
+                    lineNumber++;
+                }
             }
             reader.mark(1);
         }
-        if (doubleQuotes)
+        if (doubleQuotes) {
             throw new ParseException("End of stream reached while parsing field.\nCurrent contact definition started at line "
-                    + mCurrContactStartLineNum);
-        else 
-            return sb.toString();
+                    + currContactStartLineNum);
+        } else {
+            return result.toString();
+        }
     }
 
     /**
-     * Reads the first line of .CSV data and use this information to perform some
-     * initialisations.
+     * Reads the first line of .CSV data and use this information to perform some initializations.
+     *
      * @param reader is the stream of .CSV data
-     * @throws IOException
-     * @throws ParseException
      */
     private void initFields(BufferedReader reader) throws IOException, ParseException {
-        mLineNumber = 1;
-        mCurrContactStartLineNum = 1;
-        mFields = new ArrayList<String>();
+        lineNumber = 1;
+        currContactStartLineNum = 1;
+        fieldNames = new ArrayList<String>();
 
-        if (!parseLine(reader, mFields, true))
+        if (!parseLine(reader, fieldNames, true)) {
             throw new ParseException("no column name definitions");
+        }
 
         // Remove Byte-order information if present
-        String firstField = mFields.get(0);
-        if  (   (firstField != null) && (firstField.length() >= 1) &&
-                (firstField.charAt(0) == 0xfeff) ) {
-            mFields.set(0, firstField.substring(1));
+        String firstField = fieldNames.get(0);
+        if  ((firstField != null) && (firstField.length() >= 1) && (firstField.charAt(0) == 0xfeff)) {
+            fieldNames.set(0, firstField.substring(1));
+        }
+
+        if (fieldNames.size() > ContactConstants.MAX_FIELD_COUNT) {
+            throw new ParseException("too many columns: " + fieldNames.size());
         }
 
         // check that there are no missing column names
-        for (int i = 0; i < mFields.size(); i++) {
-            String fieldName = mFields.get(i);
-            if (fieldName == null || fieldName.equals(""))
-                throw new ParseException("missing column name for column " + i);
+        for (int i = 0; i < fieldNames.size(); i++) {
+            String field = fieldNames.get(i);
+            if (Strings.isNullOrEmpty(field)) {
+                throw new ParseException("missing column name for column[" + i + "]");
+            }
+            if (field.length() > ContactConstants.MAX_FIELD_NAME_LENGTH) {
+                // doesn't look a CSV file
+                throw new ParseException("invalid format");
+            }
         }
     }
 
@@ -252,13 +277,15 @@ public class ContactCSV {
         for (String n : col.names) {
             String v = fieldMap.get(n.toLowerCase());
             if (v != null) {
-                if (buf.length() > 0)
+                if (buf.length() > 0) {
                     buf.append("\n");
+                }
                 buf.append(v);
             }
         }
-        if (buf.length() > 0)
+        if (buf.length() > 0) {
             contact.put(col.field, buf.toString());
+        }
     }
 
     /**
@@ -301,8 +328,9 @@ public class ContactCSV {
      * @param contact
      */
     private void addDateField(String value, String field, String dateOrderKey, ContactMap contact) {
-        if (field == null || value == null || value.length() == 0)
+        if (field == null || value == null || value.length() == 0) {
             return;
+        }
         // If we successfully parse "value" as a date, zimbraDateValue will be set.
         String zimbraDateValue = null;
         try {
@@ -314,28 +342,31 @@ public class ContactCSV {
                 dateFs[0] = Integer.parseInt(splitFields[0]);
                 dateFs[1] = Integer.parseInt(splitFields[1]);
                 dateFs[2] = Integer.parseInt(splitFields[2]);
-                zimbraDateValue = populateDateFieldsIfUnambiguous(
-                        dateFs[0], dateFs[1], dateFs[2], false);   // e.g. 2005/25/12
-                if (zimbraDateValue == null)
-                    zimbraDateValue = populateDateFieldsIfUnambiguous(
-                            dateFs[2], dateFs[0], dateFs[1], false); // e.g. 12/25/2005
-                if (zimbraDateValue == null)
-                    zimbraDateValue = populateDateFieldsIfUnambiguous(
-                            dateFs[2], dateFs[1], dateFs[0], false); // e.g. 25/12/2005
-                if (zimbraDateValue == null)
-                    zimbraDateValue = populateDateFieldsIfUnambiguous(
-                            dateFs[1], dateFs[2], dateFs[0], false); // e.g. 25/2005/12
-                if (zimbraDateValue == null)
-                    zimbraDateValue = populateDateFieldsIfUnambiguous(
-                            dateFs[0], dateFs[2], dateFs[1], false); // e.g. 2005/25/12
-                if (zimbraDateValue == null)
-                    zimbraDateValue = populateDateFieldsIfUnambiguous(
-                            dateFs[1], dateFs[0], dateFs[2], false); // e.g. 12/2005/25
+                // e.g. 2005/25/12
+                zimbraDateValue = populateDateFieldsIfUnambiguous(dateFs[0], dateFs[1], dateFs[2], false);
                 if (zimbraDateValue == null) {
-                    String dateOrder = mDateOrderInfo.get(dateOrderKey);
+                    // e.g. 12/25/2005
+                    zimbraDateValue = populateDateFieldsIfUnambiguous(dateFs[2], dateFs[0], dateFs[1], false);
+                }
+                if (zimbraDateValue == null) {
+                    // e.g. 25/12/2005
+                    zimbraDateValue = populateDateFieldsIfUnambiguous(dateFs[2], dateFs[1], dateFs[0], false);
+                }
+                if (zimbraDateValue == null) {
+                    // e.g. 25/2005/12
+                    zimbraDateValue = populateDateFieldsIfUnambiguous(dateFs[1], dateFs[2], dateFs[0], false);
+                }
+                if (zimbraDateValue == null) {
+                    // e.g. 2005/25/12
+                    zimbraDateValue = populateDateFieldsIfUnambiguous(dateFs[0], dateFs[2], dateFs[1], false);
+                }
+                if (zimbraDateValue == null) {
+                    // e.g. 12/2005/25
+                    zimbraDateValue = populateDateFieldsIfUnambiguous(dateFs[1], dateFs[0], dateFs[2], false);
+                }
+                if (zimbraDateValue == null) {
+                    String dateOrder = dateOrderInfo.get(dateOrderKey);
                     if (dateOrder != null) {
-                        ICalTimeZone tzUTC = ICalTimeZone.getUTC();
-                        GregorianCalendar cal = new GregorianCalendar(tzUTC);
                         int yNdx = dateOrder.indexOf('y');
                         int mNdx = dateOrder.indexOf('m');
                         int dNdx = dateOrder.indexOf('d');
@@ -348,15 +379,16 @@ public class ContactCSV {
             }
         } catch (NumberFormatException ioe) {
         }
-        if (zimbraDateValue != null)
+        if (zimbraDateValue != null) {
             contact.put(field, zimbraDateValue);
-        else {
+        } else {
             // We were unable to recognise the date format for this value :-(
-            if (Character.isDigit(value.charAt(0)))
+            if (Character.isDigit(value.charAt(0))) {
                 // Avoid later corruption from trying to process as a valid date.
-                contact.put(field, new StringBuffer("'").append(value).append("'").toString());
-            else
+                contact.put(field, "'" + value + "'");
+            } else {
                 contact.put(field, value);
+            }
         }
     }
 
@@ -370,9 +402,9 @@ public class ContactCSV {
             return;
 
         String middleNameField = null, lastNameField = null;
-        if (nameFields.length == 2)       // firstName,lastName
+        if (nameFields.length == 2) { // firstName,lastName
             lastNameField = nameFields[1];
-        else if (nameFields.length == 3) {  // firstName,middleName,lastName
+        } else if (nameFields.length == 3) {  // firstName,middleName,lastName
             middleNameField = nameFields[1];
             lastNameField = nameFields[2];
         } else {
@@ -381,14 +413,14 @@ public class ContactCSV {
             return;
         }
 
-        int comma = value.indexOf(mFieldSeparator);
+        int comma = value.indexOf(fieldSeparator);
         if (comma > 0) {
             // Brown, James
             contact.put(lastNameField, value.substring(0, comma).trim());
             contact.put(firstNameField, value.substring(comma+1).trim());
             return;
         }
-        
+
         int space = value.indexOf(' ');
         if (space == -1) {
             contact.put(firstNameField, value);
@@ -403,20 +435,21 @@ public class ContactCSV {
                 space = anotherSpace + 1;
             }
         }
-        if (space < value.length())
+        if (space < value.length()) {
             contact.put(lastNameField, value.substring(space).trim());
+        }
     }
 
-private static final String TAG = "__tag";
+    private static final String TAG = "__tag";
 
-public static String getTags(Map<String,String> csv) {
-    	return csv.remove(TAG);
+    public static String getTags(Map<String,String> csv) {
+        return csv.remove(TAG);
     }
 
     /**
-     * 
+     *
      * @param csv is the list of fields in a record from a CSV file
-     * @param formats is the list of CsvFormats to be considered applicable 
+     * @param formats is the list of CsvFormats to be considered applicable
      * @return a map from field to value
      * @throws ParseException
      */
@@ -425,65 +458,68 @@ public static String getTags(Map<String,String> csv) {
 
         // NOTE: If there isn't a mapping for a field name defined in "format"
         // NOTE: a user defined attribute with that field name will be used.
-        if (csv == null )
+        if (csv == null) {
             return contactMap.getContacts();
+        }
         if (format.allFields()) {
             int end = csv.size();
-            end = (end > mFields.size()) ? mFields.size() : end;
-            for (int i = 0; i < end; i++)
-                contactMap.put(mFields.get(i), csv.get(i));
-        }
-        else if (format.hasNoHeaders()) {
+            end = (end > fieldNames.size()) ? fieldNames.size() : end;
+            for (int i = 0; i < end; i++) {
+                contactMap.put(fieldNames.get(i), csv.get(i));
+            }
+        } else if (format.hasNoHeaders()) {
             int end = csv.size();
             end = (end > format.columns.size()) ? format.columns.size() : end;
-            for (int i = 0; i < end; i++)
+            for (int i = 0; i < end; i++) {
                 contactMap.put(format.columns.get(i).field, csv.get(i));
-        }
-        else {
-            /* Many CSV formats are output in a specific order and sometimes 
+            }
+        } else {
+            /* Many CSV formats are output in a specific order and sometimes
              * contain duplicate field names with mappings to different
              * Zimbra contact fields.
              */
             Map <CsvColumn, Map <String, String>> pendMV = new HashMap <CsvColumn, Map <String, String>>();
             List<CsvColumn> unseenColumns = new ArrayList<CsvColumn>();
             unseenColumns.addAll(format.columns);
-            for (int ndx = 0;ndx < mFields.size();ndx++) {
-                String csvFieldName = mFields.get(ndx);
+            for (int ndx = 0; ndx < fieldNames.size(); ndx++) {
+                String csvFieldName = fieldNames.get(ndx);
                 String fieldValue = (ndx >= csv.size()) ? null : csv.get(ndx );
                 CsvColumn matchingCol = null;
                 String matchingFieldLc = null;
                 for (CsvColumn unseenC : unseenColumns) {
                     matchingFieldLc = unseenC.matchingLcCsvFieldName(csvFieldName);
-                    if (matchingFieldLc == null)
+                    if (matchingFieldLc == null) {
                         continue;
+                    }
                     if (unseenC.colType == ColType.MULTIVALUE) {
                         Map <String, String> currMV = pendMV.get(matchingCol);
-                        if ((currMV != null) && currMV.get(matchingFieldLc) != null)
+                        if ((currMV != null) && currMV.get(matchingFieldLc) != null) {
                             // already have field with this name that matches this column
                             continue;
+                        }
                     }
                     matchingCol = unseenC;
                     break;
                 }
                 if (matchingCol == null) {
                     // unknown field - setup for adding as a user defined attribute
-                    sLog.debug("Adding CSV contact attribute [%s=%s] - assuming is user defined.", csvFieldName, fieldValue);
+                    LOG.debug("Adding CSV contact attribute [%s=%s] - assuming is user defined.", csvFieldName, fieldValue);
                     contactMap.put(csvFieldName, fieldValue);
                     continue;
                 }
                 switch (matchingCol.colType) {
-                    case NAME: 
+                    case NAME:
                         addNameField(fieldValue, matchingCol.field, contactMap);
                         unseenColumns.remove(matchingCol);
                         break;
-                    case DATE: 
+                    case DATE:
                         addDateField(fieldValue, matchingCol.field, format.key(), contactMap);
                         unseenColumns.remove(matchingCol);
                         break;
-                    case TAG: 
+                    case TAG:
                         contactMap.put(TAG, fieldValue);
                         break;
-                    case MULTIVALUE: 
+                    case MULTIVALUE:
                         for ( String cname : matchingCol.names) {
                             if (cname.toLowerCase().equals(matchingFieldLc)) {
                                 Map <String, String> currMV = pendMV.get(matchingCol);
@@ -538,13 +574,14 @@ public static String getTags(Map<String,String> csv) {
         try {
             CsvFormat format = null;
             initFields(reader);
-            
-            if (fmt == null)
-                format = guessFormat(mFields);
-            else
-                format = getFormat(fmt, locale);
 
-            sLog.debug("getContactsInternal requested format/locale=[%s/%s]: using %s", fmt, locale, format.toString());
+            if (fmt == null) {
+                format = guessFormat(fieldNames);
+            } else {
+                format = getFormat(fmt, locale);
+            }
+
+            LOG.debug("getContactsInternal requested format/locale=[%s/%s]: using %s", fmt, locale, format);
             List<Map<String, String>> result = new ArrayList<Map<String, String>>();
             List<String> fields = new ArrayList<String>();
 
@@ -554,19 +591,14 @@ public static String getTags(Map<String,String> csv) {
                     result.add(contact);
             }
             return result;
-        } catch (IOException ioe) {
-            sLog.debug("Encountered IOException", ioe);
-            throw new ParseException(ioe.getMessage() + " at line number " + mLineNumber, ioe);
+        } catch (IOException e) {
+            LOG.debug("Encountered IOException", e);
+            throw new ParseException(e.getMessage() + " at line number " + lineNumber, e);
         }
     }
 
     /**
      * return a list of maps, representing contacts
-     * @param reader
-     * @param fmt
-     * @return
-     * @throws ParseException 
-     * @throws IOException 
      */
     public static List<Map<String, String>> getContacts(BufferedReader reader, String fmt, String locale) throws ParseException {
         ContactCSV csv = new ContactCSV();
@@ -582,70 +614,74 @@ public static String getTags(Map<String,String> csv) {
         ParseException(String msg) {
             super(msg);
         }
-        
+
         ParseException(String msg, Throwable cause) {
             super(msg, cause);
-        }        
-    }
-
-//    <delimiters default=","> 
-//        <delimiter locale="fr" format="outlook-2003-csv" char=";" /> 
-//        ...
-//    </delimiters>
-
-    private static void populateDelimiterInfo(Element delimiters) {
-        mDelimiterInfo = new HashMap<String,Character>();
-        
-        for (Iterator elements = delimiters.elementIterator(DELIMITER); elements.hasNext(); ) {
-            Element field = (Element) elements.next();
-            String delim = field.attributeValue(ATTR_CHAR);
-            if (delim == null || delim.isEmpty())
-                continue;
-            String format = field.attributeValue(ATTR_FORMAT);
-            if (format == null || format.isEmpty())
-                continue;
-            String myLocale  = field.attributeValue(ATTR_LOCALE);
-            if (myLocale != null && !myLocale.isEmpty())
-                format = new StringBuffer(format).append("/").append(myLocale).toString();
-            mDelimiterInfo.put(format, delim.charAt(0));
         }
     }
 
-//    <dateformats> 
-//        <dateformat format="yahoo-csv" order="mdy" /> 
-//        ...
-//    </dateformats>
+    // <delimiters default=",">
+    //   <delimiter locale="fr" format="outlook-2003-csv" char=";" />
+    //    ...
+    // </delimiters>
+    private static void populateDelimiterInfo(Element delimiters) {
+        delimiterInfo = new HashMap<String,Character>();
 
+        for (Iterator elements = delimiters.elementIterator(DELIMITER); elements.hasNext(); ) {
+            Element field = (Element) elements.next();
+            String delim = field.attributeValue(ATTR_CHAR);
+            if (delim == null || delim.isEmpty()) {
+                continue;
+            }
+            String format = field.attributeValue(ATTR_FORMAT);
+            if (format == null || format.isEmpty()) {
+                continue;
+            }
+            String myLocale  = field.attributeValue(ATTR_LOCALE);
+            if (myLocale != null && !myLocale.isEmpty()) {
+                format = format + "/" + myLocale;
+            }
+            delimiterInfo.put(format, delim.charAt(0));
+        }
+    }
+
+    // <dateformats>
+    //   <dateformat format="yahoo-csv" order="mdy" />
+    //   ...
+    // </dateformats>
     private static void populateDateFormatInfo(Element dateFormats) {
-        mDateOrderInfo = new HashMap<String,String>();
+        dateOrderInfo = new HashMap<String,String>();
 
         for (Iterator elements = dateFormats.elementIterator(DATEFORMAT); elements.hasNext(); ) {
             Element dateFormat = (Element) elements.next();
             String origOrder = dateFormat.attributeValue(ATTR_ORDER);
-            if (origOrder == null || origOrder.isEmpty())
+            if (origOrder == null || origOrder.isEmpty()) {
                 continue;
+            }
             String order = origOrder.toLowerCase();
             if (! (order.equals("ymd") || order.equals("ydm") || order.equals("myd") ||
                     order.equals("mdy") || order.equals("dmy") || order.equals("dym")) ) {
-                sLog.debug("invalid \"order\" %s in zimbra-contact-fields.xml", origOrder);
+                LOG.debug("invalid \"order\" %s in zimbra-contact-fields.xml", origOrder);
                 continue;
             }
             String format = dateFormat.attributeValue(ATTR_FORMAT);
-            if (format == null || format.isEmpty())
+            if (format == null || format.isEmpty()) {
                 continue;
+            }
             String myLocale  = dateFormat.attributeValue(ATTR_LOCALE);
-            if (myLocale != null && !myLocale.isEmpty())
-                format = new StringBuffer(format).append("/").append(myLocale).toString();
-            mDateOrderInfo.put(format, order);
+            if (myLocale != null && !myLocale.isEmpty()) {
+                format = format + "/" + myLocale;
+            }
+            dateOrderInfo.put(format, order);
         }
     }
 
     private static void populateFields(Element fields) {
-        mKnownFields = new HashSet<String>();
-        
+        knownFields = new HashSet<String>();
+
         for (Iterator elements = fields.elementIterator(FIELD); elements.hasNext(); ) {
             Element field = (Element) elements.next();
-            mKnownFields.add(field.attributeValue(ATTR_NAME));
+            knownFields.add(field.attributeValue(ATTR_NAME));
         }
     }
 
@@ -710,21 +746,18 @@ public static String getTags(Map<String,String> csv) {
             }
         }
 
+        @Override
         public String toString() {
-            StringBuffer sb = new StringBuffer();
-            sb.append(name).append(": ").append(field);
-            switch (colType) {
-            case NAME: sb.append(" (name)"); break;
-            case TAG: sb.append(" (tag)"); break;
-            case DATE: sb.append(" (date)"); break;
-            case MULTIVALUE: 
-                sb.append(" ").append("(multivalue cols=").append(names.toString()).append(")");break;
+            Objects.ToStringHelper helper = Objects.toStringHelper(this)
+                .add("name", name).add("field", field).add("type", colType);
+            if (colType == ColType.MULTIVALUE) {
+                helper.add("cols", names);
             }
-            return sb.toString();
+            return helper.toString();
         }
 
         /**
-         * 
+         *
          * @param fieldName is a field name from the first line of a .csv file
          * @return if <code>fieldName</code> matches this column, return the
          * lowercase version of the matching string, otherwise return null.
@@ -752,7 +785,7 @@ public static String getTags(Map<String,String> csv) {
         List<CsvColumn> columns;
         Map<String,String> forwardMapping;
         Map<String,String> reverseMapping;
-        
+
         CsvFormat(Element fmt) {
             name = fmt.attributeValue(ATTR_NAME);
             locale = fmt.attributeValue(ATTR_LOCALE);
@@ -780,17 +813,16 @@ public static String getTags(Map<String,String> csv) {
             return hasFlag("allfields");
         }
 
+        @Override
         public String toString() {
-            StringBuffer sb = new StringBuffer(name);
-            if (locale != null) sb.append(" locale=").append(locale);
-            if (!flags.isEmpty()) sb.append(" flags=").append(flags);
-            return sb.toString();
+            return Objects.toStringHelper(this).add("name", name).add("locale", locale).add("flags", flags).toString();
         }
 
         public String key() {
             String myKey = name;
-            if (locale != null)
-                myKey = new StringBuffer(myKey).append("/").append(locale).toString();
+            if (locale != null) {
+                myKey = myKey + "/" + locale;
+            }
             return myKey;
         }
 
@@ -816,124 +848,128 @@ public static String getTags(Map<String,String> csv) {
             }
         }
     }
-    
+
     private static void addFormat(Element format) {
         CsvFormat fmt = new CsvFormat(format);
-        
+
         for (Iterator elements = format.elementIterator(COLUMN); elements.hasNext(); ) {
             Element col = (Element) elements.next();
             fmt.add(col);
         }
-        
-        if (mKnownFormats == null)
-            mKnownFormats = new HashSet<CsvFormat>();
 
-        mKnownFormats.add(fmt);
-        if (fmt.hasFlag("default"))
-            mDefaultFormat = fmt;
+        if (knownFormats == null) {
+            knownFormats = new HashSet<CsvFormat>();
+        }
+        knownFormats.add(fmt);
+        if (fmt.hasFlag("default")) {
+            defaultFormat = fmt;
+        }
     }
-    
+
     static {
         try {
             readMappingFile(LC.zimbra_csv_mapping_file.value());
         } catch (Exception e) {
-            sLog.error("error initializing csv mapping file", e);
+            LOG.error("error initializing csv mapping file", e);
         }
     }
-    
+
     private static void readMappingFile(String mappingFile) throws IOException, DocumentException {
         readMapping(new FileInputStream(mappingFile));
     }
-    
-    private static void readMapping(InputStream is) throws IOException, DocumentException {
-        mDelimiterInfo = new HashMap<String,Character>();
-        mDateOrderInfo = new HashMap<String,String>();
+
+    private static void readMapping(InputStream is) throws DocumentException {
+        delimiterInfo = new HashMap<String,Character>();
+        dateOrderInfo = new HashMap<String,String>();
         Element root = com.zimbra.common.soap.Element.getSAXReader().read(is).getRootElement();
         for (Iterator elements = root.elementIterator(); elements.hasNext(); ) {
             Element elem = (Element) elements.next();
-            if (elem.getQName().equals(FIELDS))
+            if (elem.getQName().equals(FIELDS)) {
                 populateFields(elem);
-            else if (elem.getQName().equals(FORMAT))
+            } else if (elem.getQName().equals(FORMAT)) {
                 addFormat(elem);
-            else if (elem.getQName().equals(DELIMITERS))
+            } else if (elem.getQName().equals(DELIMITERS)) {
                 populateDelimiterInfo(elem);
-            else if (elem.getQName().equals(DATEFORMATS))
+            } else if (elem.getQName().equals(DATEFORMATS)) {
                 populateDateFormatInfo(elem);
+            }
         }
     }
 
     private static CsvFormat guessFormat(List<String> keys) throws ParseException {
-        if (mKnownFormats == null || mDefaultFormat == null)
-            throw new ParseException("missing config file "+LC.zimbra_csv_mapping_file.value());
-        
-        int numMatchedFields, numBestMatch;
-        CsvFormat bestMatch;
-        
-        numBestMatch = 0;
-        bestMatch = mDefaultFormat;
-        
-        for (CsvFormat f : mKnownFormats) {
+        if (knownFormats == null || defaultFormat == null) {
+            throw new ParseException("missing config file " + LC.zimbra_csv_mapping_file.value());
+        }
+
+        int numMatchedFields;
+        int numBestMatch = 0;
+        CsvFormat bestMatch = defaultFormat;
+
+        for (CsvFormat f : knownFormats) {
             numMatchedFields = 0;
-            for (CsvColumn col : f.columns)
-                if (keys.contains(col.name))
+            for (CsvColumn col : f.columns) {
+                if (keys.contains(col.name)) {
                     numMatchedFields++;
+                }
+            }
             if (numMatchedFields > numBestMatch) {
                 numBestMatch = numMatchedFields;
                 bestMatch = f;
             }
         }
-        if (sLog.isDebugEnabled())
-            sLog.debug("Best matching format='%s'", bestMatch.toString());
+        LOG.debug("Best matching format='%s'", bestMatch);
         return bestMatch;
     }
-    
+
     /**
      * Will try to match both <code>fmt</code> and <code>locale</code> first
      * If no match found, will try to match just <code>fmt</code>
      * If still no match found, returns the default format.
-     * 
-     * @param fmt
-     * @param locale
+     *
      * @return the best matching format
-     * @throws ParseException
      */
     private static CsvFormat getFormat(String fmt, String locale) throws ParseException {
-        if (mKnownFormats == null || mDefaultFormat == null)
-            throw new ParseException("missing config file "+LC.zimbra_csv_mapping_file.value());
-        
-        if (locale != null) {
-            for (CsvFormat f : mKnownFormats)
-                if ((f.locale != null) && f.name.equals(fmt) && (f.locale.equals(locale)))
-                    return f;
+        if (knownFormats == null || defaultFormat == null) {
+            throw new ParseException("missing config file " + LC.zimbra_csv_mapping_file.value());
         }
-        for (CsvFormat f : mKnownFormats)
-            if (f.name.equals(fmt) && (f.locale == null))
+
+        if (locale != null) {
+            for (CsvFormat f : knownFormats) {
+                if ((f.locale != null) && f.name.equals(fmt) && (f.locale.equals(locale))) {
+                    return f;
+                }
+            }
+        }
+        for (CsvFormat f : knownFormats) {
+            if (f.name.equals(fmt) && (f.locale == null)) {
                 return f;
-        
-        return mDefaultFormat;
+            }
+        }
+        return defaultFormat;
     }
 
-    public void toCSV(String format, String locale, Character separator, Iterator<? extends MailItem> contacts, StringBuffer sb) throws ParseException {
-        if (mKnownFormats == null)
+    public void toCSV(String format, String locale, Character separator, Iterator<? extends MailItem> contacts,
+            StringBuilder sb) throws ParseException {
+        if (knownFormats == null) {
             return;
+        }
 
         CsvFormat fmt = getFormat(format, locale);
         if (separator != null) {
-            mFieldSeparator = separator;
+            fieldSeparator = separator;
         } else {
             String delimKey = fmt.key();
-            Character formatDefaultDelim = mDelimiterInfo.get(delimKey);
+            Character formatDefaultDelim = delimiterInfo.get(delimKey);
             if (formatDefaultDelim != null) {
-                sLog.debug("toCSV choosing %c from <delimiter> matching %s", formatDefaultDelim, delimKey);
-                mFieldSeparator = formatDefaultDelim;
+                LOG.debug("toCSV choosing %c from <delimiter> matching %s", formatDefaultDelim, delimKey);
+                fieldSeparator = formatDefaultDelim;
             }
         }
-        sLog.debug("toCSV Requested=[format=\"%s\" locale=\"%s\" delim=\"%c\"] Actual=[%s delim=\"%c\"]",
-                format, locale, separator, fmt.toString(), mFieldSeparator);
-
-        if (fmt == null)
+        LOG.debug("toCSV Requested=[format=\"%s\" locale=\"%s\" delim=\"%c\"] Actual=[%s delim=\"%c\"]",
+                format, locale, separator, fmt, fieldSeparator);
+        if (fmt == null) {
             return;
-        
+        }
         if (fmt.allFields()) {
             ArrayList<Map <String, String>> allContacts = new ArrayList<Map <String, String>>();
             HashSet<String> fields = new HashSet<String>();
@@ -949,136 +985,141 @@ public static String getTags(Map<String,String> csv) {
             allFields.addAll(fields);
             Collections.sort(allFields);
             addFieldDef(allFields, sb);
-            for (Map <String, String> contactMap : allContacts)
+            for (Map <String, String> contactMap : allContacts) {
                 toCSVContact(allFields, contactMap, sb);
+            }
             return;
         }
-        
-        if (!fmt.hasNoHeaders())
-            addFieldDef(fmt, sb);
 
+        if (!fmt.hasNoHeaders()) {
+            addFieldDef(fmt, sb);
+        }
         while (contacts.hasNext()) {
             Object c = contacts.next();
-            if (c instanceof Contact)
-                toCSVContact(fmt, (Contact)c, sb);
+            if (c instanceof Contact) {
+                toCSVContact(fmt, (Contact) c, sb);
+            }
         }
-        
     }
 
-    private static void addFieldValue(Map <String, String> contact, String name, String field, StringBuffer sb) {
-        String value = (String) contact.get((field == null) ? name : field);
-        if (value == null) value = "";
-        sb.append('"');
-        sb.append(value.replaceAll("\"", "\"\""));
-        sb.append('"');
+    private static void addFieldValue(Map <String, String> contact, String name, String field, StringBuilder sb) {
+        String value = contact.get((field == null) ? name : field);
+        if (value == null) {
+            value = "";
+        }
+        sb.append('"').append(value.replaceAll("\"", "\"\"")).append('"');
     }
 
-    private void toCSVContact(List<String> fields, Map <String,String> contact, StringBuffer sb) {
+    private void toCSVContact(List<String> fields, Map <String,String> contact, StringBuilder sb) {
         boolean first = true;
         for (String f : fields) {
-            if (!first)
-                sb.append(mFieldSeparator);
+            if (!first) {
+                sb.append(fieldSeparator);
+            }
             addFieldValue(contact, f, f, sb);
             first = false;
         }
         sb.append("\n");
     }
 
-    private void toCSVContact(CsvFormat fmt, Contact c, StringBuffer sb) {
+    private void toCSVContact(CsvFormat fmt, Contact c, StringBuilder sb) {
         boolean first = true;
         for (CsvColumn col : fmt.columns) {
-            if (!first)
-                sb.append(mFieldSeparator);
+            if (!first) {
+                sb.append(fieldSeparator);
+            }
             if (col.colType == ColType.TAG) {
-            	try {
-            		boolean firstTag = true;
-                	sb.append('"');
-                	for (Tag t : c.getTagList()) {
-                		if (!firstTag)
-                			sb.append(mFieldSeparator);
-                		sb.append(t.getName());
-                		firstTag = false;
-                	}
-                	sb.append('"');
-            	} catch (ServiceException se) {
-            	}
-            } else
-            	addFieldValue(c.getFields(), col.name, col.field, sb);
+                try {
+                    boolean firstTag = true;
+                    sb.append('"');
+                    for (Tag t : c.getTagList()) {
+                        if (!firstTag) {
+                            sb.append(fieldSeparator);
+                        }
+                        sb.append(t.getName());
+                        firstTag = false;
+                    }
+                    sb.append('"');
+                } catch (ServiceException se) {
+                }
+            } else {
+                addFieldValue(c.getFields(), col.name, col.field, sb);
+            }
             first = false;
         }
         sb.append("\n");
     }
-    
-    private void addFieldDef(List<String> fields, StringBuffer sb) {
+
+    private void addFieldDef(List<String> fields, StringBuilder sb) {
         boolean first = true;
         for (String f : fields) {
-            if (!first)
-                sb.append(mFieldSeparator);
-            sb.append('"');
-            sb.append(f);
-            sb.append('"');
+            if (!first) {
+                sb.append(fieldSeparator);
+            }
+            sb.append('"').append(f).append('"');
             first = false;
         }
         sb.append("\n");
     }
-    
-    private void addFieldDef(CsvFormat fmt, StringBuffer sb) {
+
+    private void addFieldDef(CsvFormat fmt, StringBuilder sb) {
         boolean first = true;
         for (CsvColumn col : fmt.columns) {
-            if (!first)
-                sb.append(mFieldSeparator);
-            sb.append('"');
-            sb.append(col.name);
-            sb.append('"');
+            if (!first) {
+                sb.append(fieldSeparator);
+            }
+            sb.append('"').append(col.name).append('"');
             first = false;
         }
         sb.append("\n");
     }
-    
+
     private static void writeLine(OutputStream out, String line) throws IOException {
         out.write(line.getBytes());
         out.write('\n');
     }
-    
+
     private static void dump(OutputStream out) throws IOException {
         writeLine(out, "=== Fields ===");
-        for (String f : new TreeSet <String> (mKnownFields))
+        for (String f : new TreeSet<String>(knownFields)) {
             writeLine(out, f);
-        for (CsvFormat fmt : new TreeSet <CsvFormat>(mKnownFormats)) {
-            StringBuffer sb = new StringBuffer("=== Mapping ");
-            sb.append(fmt.toString());
-            sb.append(" ===");
+        }
+        for (CsvFormat fmt : new TreeSet<CsvFormat>(knownFormats)) {
+            StringBuilder sb = new StringBuilder("=== Mapping ");
+            sb.append(fmt.toString()).append(" ===");
             writeLine(out, sb.toString());
             for (CsvColumn col : fmt.columns) {
                 if (col.field != null) {
-                    if (!mKnownFields.contains(col.field)) {
-                        sLog.debug("Mapping '%s' references unknown field='%s'\n", fmt.name, col.field);
+                    if (!knownFields.contains(col.field)) {
+                        LOG.debug("Mapping '%s' references unknown field='%s'\n", fmt.name, col.field);
                     }
                 }
                 writeLine(out, col.toString());
             }
         }
     }
-    
+
     public static String[] getAllFormatNames() {
         Set<String> formats = new HashSet<String>();
-        for (CsvFormat f : mKnownFormats)
+        for (CsvFormat f : knownFormats) {
             formats.add(f.name);
+        }
         return formats.toArray(new String[0]);
     }
-    
-    public static void main(String args[]) throws IOException, ParseException, DocumentException {
+
+    public static void main(String args[]) throws IOException, DocumentException {
         ZimbraLog.toolSetupLog4jConsole("INFO", true, false);
         //String mappingFile = LC.zimbra_csv_mapping_file.value();
         if (args.length > 0) {
-            mKnownFormats = new HashSet<CsvFormat>();
+            knownFormats = new HashSet<CsvFormat>();
             readMappingFile(args[0]);
         }
         dump(System.out);
         writeLine(System.out, "");
         System.out.print("All Format Names:");
-        for (String fmtName : getAllFormatNames())
+        for (String fmtName : getAllFormatNames()) {
             System.out.print(" " + fmtName);
+        }
         System.out.println();
     }
 }

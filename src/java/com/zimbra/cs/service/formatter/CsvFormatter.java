@@ -59,7 +59,7 @@ public class CsvFormatter extends Formatter {
     @Override
     public void formatCallback(UserServletContext context) throws IOException, ServiceException {
         Iterator<? extends MailItem> iterator = null;
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         try {
             iterator = getMailItems(context, -1, -1, Integer.MAX_VALUE);
             String format = context.req.getParameter(UserServlet.QP_CSVFORMAT);

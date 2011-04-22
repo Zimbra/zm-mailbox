@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -33,12 +33,21 @@ import com.zimbra.soap.ZimbraSoapContext;
 /**
  * @author schemers
  */
-public class ExportContacts extends MailDocumentHandler  {
+public final class ExportContacts extends MailDocumentHandler  {
 
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.A_FOLDER };
-    protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }
-    protected boolean checkMountpointProxy(Element request)  { return true; }
 
+    @Override
+    protected String[] getProxiedIdPath(Element request) {
+        return TARGET_FOLDER_PATH;
+    }
+
+    @Override
+    protected boolean checkMountpointProxy(Element request) {
+        return true;
+    }
+
+    @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
@@ -50,20 +59,20 @@ public class ExportContacts extends MailDocumentHandler  {
         String ct = request.getAttribute(MailConstants.A_CONTENT_TYPE);
         if (!ct.equals("csv"))
             throw ServiceException.INVALID_REQUEST("unsupported content type: " + ct, null);
-        
+
         String format = request.getAttribute(MailConstants.A_CSVFORMAT, null);
         String locale = request.getAttribute(MailConstants.A_CSVLOCALE, null);
         String separator = request.getAttribute(MailConstants.A_CSVSEPARATOR, null);
         Character sepChar = null;
         if ((separator != null) && (separator.length() > 0))
             sepChar = separator.charAt(0);
-        
+
         List<Contact> contacts = mbox.getContactList(octxt, iidFolder != null ? iidFolder.getId() : -1);
-        
-        StringBuffer sb = new StringBuffer();
+
+        StringBuilder sb = new StringBuilder();
         if (contacts == null)
-        	contacts = new ArrayList<Contact>();
-        
+            contacts = new ArrayList<Contact>();
+
         try {
             ContactCSV contactCSV = new ContactCSV();
             contactCSV.toCSV(format, locale, sepChar, contacts.iterator(), sb);
