@@ -62,6 +62,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.JSONElement;
+import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
@@ -70,8 +72,6 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.VoiceConstants;
 import com.zimbra.common.soap.ZimbraNamespace;
-import com.zimbra.common.soap.Element.JSONElement;
-import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.util.MapUtil;
@@ -90,32 +90,7 @@ import com.zimbra.cs.zclient.ZGrant.GranteeType;
 import com.zimbra.cs.zclient.ZInvite.ZTimeZone;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.AttachedMessagePart;
 import com.zimbra.cs.zclient.ZSearchParams.Cursor;
-import com.zimbra.cs.zclient.event.ZCreateAppointmentEvent;
-import com.zimbra.cs.zclient.event.ZCreateContactEvent;
-import com.zimbra.cs.zclient.event.ZCreateConversationEvent;
-import com.zimbra.cs.zclient.event.ZCreateEvent;
-import com.zimbra.cs.zclient.event.ZCreateFolderEvent;
-import com.zimbra.cs.zclient.event.ZCreateMessageEvent;
-import com.zimbra.cs.zclient.event.ZCreateMountpointEvent;
-import com.zimbra.cs.zclient.event.ZCreateSearchFolderEvent;
-import com.zimbra.cs.zclient.event.ZCreateTagEvent;
-import com.zimbra.cs.zclient.event.ZCreateTaskEvent;
-import com.zimbra.cs.zclient.event.ZDeleteEvent;
-import com.zimbra.cs.zclient.event.ZEventHandler;
-import com.zimbra.cs.zclient.event.ZModifyAppointmentEvent;
-import com.zimbra.cs.zclient.event.ZModifyContactEvent;
-import com.zimbra.cs.zclient.event.ZModifyConversationEvent;
-import com.zimbra.cs.zclient.event.ZModifyEvent;
-import com.zimbra.cs.zclient.event.ZModifyFolderEvent;
-import com.zimbra.cs.zclient.event.ZModifyMailboxEvent;
-import com.zimbra.cs.zclient.event.ZModifyMessageEvent;
-import com.zimbra.cs.zclient.event.ZModifyMountpointEvent;
-import com.zimbra.cs.zclient.event.ZModifySearchFolderEvent;
-import com.zimbra.cs.zclient.event.ZModifyTagEvent;
-import com.zimbra.cs.zclient.event.ZModifyTaskEvent;
-import com.zimbra.cs.zclient.event.ZModifyVoiceMailItemEvent;
-import com.zimbra.cs.zclient.event.ZModifyVoiceMailItemFolderEvent;
-import com.zimbra.cs.zclient.event.ZRefreshEvent;
+import com.zimbra.cs.zclient.event.*;
 import com.zimbra.cs.zimlet.ZimletUserProperties;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.account.message.AuthRequest;
@@ -132,6 +107,8 @@ import com.zimbra.soap.account.message.ModifyPropertiesRequest;
 import com.zimbra.soap.account.type.Account;
 import com.zimbra.soap.account.type.InfoSection;
 import com.zimbra.soap.account.type.Prop;
+import com.zimbra.soap.mail.message.CheckSpellingRequest;
+import com.zimbra.soap.mail.message.CheckSpellingResponse;
 import com.zimbra.soap.mail.message.GetDataSourcesRequest;
 import com.zimbra.soap.mail.message.GetDataSourcesResponse;
 import com.zimbra.soap.mail.message.GetFolderRequest;
@@ -3539,60 +3516,20 @@ public class ZMailbox implements ToZJSONObject {
         return new ZMessage(invoke(req, requestedAccountId).getElement(MailConstants.E_MSG), this);
     }
 
-    public static class CheckSpellingResult {
-        private boolean mAvailable;
-        private List<Misspelling> mMisspellings;
-
-        public CheckSpellingResult(Element response) throws ServiceException  {
-            mAvailable = response.getAttributeBool(MailConstants.A_AVAILABLE);
-            List<Element> list = response.listElements(MailConstants.E_MISSPELLED);
-            mMisspellings = new ArrayList<Misspelling>(list.size());
-            for (Element misspelled : list) {
-                mMisspellings.add(new Misspelling(misspelled));
-            }
-        }
-
-        public boolean getIsAvailable() { return mAvailable; }
-        public List<Misspelling> getMisspellings() { return mMisspellings; }
-    }
-    
-    public static class Misspelling {
-        private String mWord;
-        private String[] mSuggestions;
-        public Misspelling(Element element) throws ServiceException {
-            mWord = element.getAttribute(MailConstants.A_WORD);
-            String suggestions = element.getAttribute(MailConstants.A_SUGGESTIONS);
-            mSuggestions = suggestions.length() > 0 ? sCOMMA.split(suggestions) : new String[0];
-        }
-        public String getWord() {
-            return mWord;
-        }
-        public String[] getSuggestions() {
-            return mSuggestions;
-        }
-    }
-
-    public synchronized CheckSpellingResult checkSpelling(String text) throws ServiceException {
+    public synchronized CheckSpellingResponse checkSpelling(String text) throws ServiceException {
         return checkSpelling(text, null, null);
     }
 
-    public synchronized CheckSpellingResult checkSpelling(String text, String dictionary)
+    public synchronized CheckSpellingResponse checkSpelling(String text, String dictionary)
     throws ServiceException {
         return checkSpelling(text, dictionary, null);
     }
     
-    public synchronized CheckSpellingResult checkSpelling(String text, String dictionary, List<String> ignore)
+    public synchronized CheckSpellingResponse checkSpelling(String text, String dictionary, List<String> ignore)
     throws ServiceException {
-        Element req = newRequestElement(MailConstants.CHECK_SPELLING_REQUEST);
-        if (dictionary != null) {
-            req.addAttribute(MailConstants.A_DICTIONARY, dictionary);
-        }
-        if (!ListUtil.isEmpty(ignore)) {
-            req.addAttribute(MailConstants.A_IGNORE, StringUtil.join(",", ignore));
-        }
-        req.setText(text);
-        Element response = invoke(req);
-        return new CheckSpellingResult(response);
+        String ignoreList = (ignore == null ? null : StringUtil.join(",", ignore));
+        CheckSpellingRequest req = new CheckSpellingRequest(dictionary, ignoreList, text);
+        return invokeJaxb(req);
     }
 
     public void createIdentity(ZIdentity identity) throws ServiceException {

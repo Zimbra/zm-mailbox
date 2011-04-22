@@ -18,6 +18,7 @@ package com.zimbra.qa.unittest;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -30,8 +31,8 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZMailbox.CheckSpellingResult;
-import com.zimbra.cs.zclient.ZMailbox.Misspelling;
+import com.zimbra.soap.mail.message.CheckSpellingResponse;
+import com.zimbra.soap.mail.type.Misspelling;
 
 /**
  * @author bburtin
@@ -48,33 +49,35 @@ public class TestSpellCheck extends TestCase {
         "whole thing, the whole experience, is nevr removed from immediate\n" +
         "consciousness.";
         
-    private String[] mOriginalDictionaries;
-    private boolean mAvailable = false;
-    private String[] mOriginalAccountIgnoreWords;
-    private String[] mOriginalDomainIgnoreWords;
-    private String[] mOriginalCosIgnoreWords;
+    private String[] originalDictionaries;
+    private boolean available = false;
+    private String[] originalAccountIgnoreWords;
+    private String[] originalDomainIgnoreWords;
+    private String[] originalCosIgnoreWords;
+    private String originalIgnoreAllCaps;
     
     public void setUp()
     throws Exception {
         Provisioning prov = Provisioning.getInstance();
-        mOriginalDictionaries = prov.getLocalServer().getSpellAvailableDictionary();
+        originalDictionaries = prov.getLocalServer().getSpellAvailableDictionary();
         
         Account account = TestUtil.getAccount(USER_NAME);
-        mOriginalAccountIgnoreWords = account.getPrefSpellIgnoreWord();
-        mOriginalDomainIgnoreWords = prov.getDomain(account).getPrefSpellIgnoreWord();
-        mOriginalCosIgnoreWords = prov.getCOS(account).getPrefSpellIgnoreWord();
+        originalAccountIgnoreWords = account.getPrefSpellIgnoreWord();
+        originalDomainIgnoreWords = prov.getDomain(account).getPrefSpellIgnoreWord();
+        originalCosIgnoreWords = prov.getCOS(account).getPrefSpellIgnoreWord();
+        originalIgnoreAllCaps = account.getAttr(Provisioning.A_zimbraPrefSpellIgnoreAllCaps);
         
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        CheckSpellingResult result = mbox.checkSpelling("test");
-        mAvailable = result.getIsAvailable();
-        if (!mAvailable) {
+        CheckSpellingResponse result = mbox.checkSpelling("test");
+        available = result.isAvailable();
+        if (!available) {
             ZimbraLog.test.info("Spell checking service is not available.  Skipping tests.");
         }
     }
     
 
     public void testCheckSpelling() throws Exception {
-        if (!mAvailable) {
+        if (!available) {
             return;
         }
         
@@ -86,13 +89,13 @@ public class TestSpellCheck extends TestCase {
         prov.getCOS(account).setPrefSpellIgnoreWord(new String[] { "concret" });
         
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        CheckSpellingResult result = mbox.checkSpelling(TEXT);
-        assertTrue(result.getIsAvailable());
+        CheckSpellingResponse result = mbox.checkSpelling(TEXT);
+        assertTrue(result.isAvailable());
         
         // Verify the response
-        Map<String, String[]> map = new HashMap<String, String[]>();
-        for (Misspelling mis : result.getMisspellings()) {
-            map.put(mis.getWord(), mis.getSuggestions());
+        Map<String, List<String>> map = new HashMap<String, List<String>>();
+        for (Misspelling mis : result.getMisspelledWords()) {
+            map.put(mis.getWord(), mis.getSuggestionsList());
         }
         
         assertEquals("Number of misspelled words", 4, getNumMisspellings(result));
@@ -108,24 +111,24 @@ public class TestSpellCheck extends TestCase {
      */
     public void testIgnore()
     throws Exception {
-        if (!mAvailable) {
+        if (!available) {
             return;
         }
         
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        CheckSpellingResult result = mbox.checkSpelling("one twi thre forr", null, Arrays.asList("twi", "thre"));
+        CheckSpellingResponse result = mbox.checkSpelling("one twi thre forr", null, Arrays.asList("twi", "thre"));
         assertEquals("Number of misspelled words", 1, getNumMisspellings(result));
         assertTrue(hasSuggestion(result, "forr", "four"));
     }
     
-    private int getNumMisspellings(CheckSpellingResult result) {
-        return result.getMisspellings().size();
+    private int getNumMisspellings(CheckSpellingResponse result) {
+        return result.getMisspelledWords().size();
     }
     
-    private boolean hasSuggestion(CheckSpellingResult result, String misspelled, String expectedSuggestion) {
-        for (Misspelling mis : result.getMisspellings()) {
+    private boolean hasSuggestion(CheckSpellingResponse result, String misspelled, String expectedSuggestion) {
+        for (Misspelling mis : result.getMisspelledWords()) {
             if (mis.getWord().equals(misspelled)) {
-                for (String suggestion : mis.getSuggestions()) {
+                for (String suggestion : mis.getSuggestionsList()) {
                     if (suggestion.equals(expectedSuggestion)) {
                         return true;
                     }
@@ -167,14 +170,14 @@ public class TestSpellCheck extends TestCase {
      */
     public void testUnexpectedCharacters()
     throws Exception {
-        if (!mAvailable) {
+        if (!available) {
             return;
         }
         
         // bug 41760 - non-breaking space
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        CheckSpellingResult result = mbox.checkSpelling("one \u00a0tuo two");
-        assertEquals(1, result.getMisspellings().size());
+        CheckSpellingResponse result = mbox.checkSpelling("one \u00a0tuo two");
+        assertEquals(1, result.getMisspelledWords().size());
     }
     
     /**
@@ -182,22 +185,16 @@ public class TestSpellCheck extends TestCase {
      */
     public void testReceiveSpanish()
     throws Exception {
-        if (!mAvailable) {
+        if (!available) {
             return;
         }
         
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        CheckSpellingResult result = mbox.checkSpelling("reunion", "es");
-        assertEquals(1, result.getMisspellings().size());
-        Misspelling misspelling = result.getMisspellings().get(0);
+        CheckSpellingResponse result = mbox.checkSpelling("reunion", "es");
+        assertEquals(1, result.getMisspelledWords().size());
+        Misspelling misspelling = result.getMisspelledWords().get(0);
         assertEquals("reunion", misspelling.getWord());
-        String expected = "reuni\u00f3n";
-        for (String suggestion : misspelling.getSuggestions()) {
-            if (suggestion.equals(expected)) {
-                return;
-            }
-        }
-        fail("Could not find expected suggestion '" + expected + "'");
+        assertTrue(misspelling.getSuggestionsList().contains("reuni\u00f3n"));
     }
     
     /**
@@ -205,27 +202,21 @@ public class TestSpellCheck extends TestCase {
      */
     public void testSendSpanish()
     throws Exception {
-        if (!mAvailable) {
+        if (!available) {
             return;
         }
         
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        CheckSpellingResult result = mbox.checkSpelling("\u00faltimos esst\u00e1", "es");
-        assertEquals(1, result.getMisspellings().size());
-        Misspelling misspelling = result.getMisspellings().get(0);
+        CheckSpellingResponse result = mbox.checkSpelling("\u00faltimos esst\u00e1", "es");
+        assertEquals(1, result.getMisspelledWords().size());
+        Misspelling misspelling = result.getMisspelledWords().get(0);
         assertEquals("esst\u00e1", misspelling.getWord());
-        String expected = "est\u00e1";
-        for (String suggestion : misspelling.getSuggestions()) {
-            if (suggestion.equals(expected)) {
-                return;
-            }
-        }
-        fail("Could not find expected suggestion '" + expected + "'");
+        assertTrue(misspelling.getSuggestionsList().contains("est\u00e1"));
     }
     
     public void testRussian()
     throws Exception {
-        if (!mAvailable) {
+        if (!available) {
             return;
         }
         
@@ -234,27 +225,41 @@ public class TestSpellCheck extends TestCase {
         String cherepaha = "\u0427\u0435\u0440\u0435\u043f\u0430\u0445\u0430";
         
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        CheckSpellingResult result = mbox.checkSpelling(krokodilMisspelled + " " + cherepaha, "ru");
-        assertEquals(1, result.getMisspellings().size());
-        Misspelling misspelling = result.getMisspellings().get(0);
+        CheckSpellingResponse result = mbox.checkSpelling(krokodilMisspelled + " " + cherepaha, "ru");
+        assertEquals(1, result.getMisspelledWords().size());
+        Misspelling misspelling = result.getMisspelledWords().get(0);
         assertEquals(krokodilMisspelled, misspelling.getWord());
-        for (String suggestion : misspelling.getSuggestions()) {
-            if (suggestion.equals(krokodil)) {
-                return;
-            }
+        assertTrue(misspelling.getSuggestionsList().contains(krokodil));
+    }
+    
+    public void testAllCaps()
+    throws Exception {
+        if (!available) {
+            return;
         }
         
-        fail("Could not find expected suggestion '" + krokodil + "'");
+        Account account = TestUtil.getAccount(USER_NAME);
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        
+        account.setPrefSpellIgnoreAllCaps(false);
+        CheckSpellingResponse result = mbox.checkSpelling("XYZ");
+        assertEquals(1, result.getMisspelledWords().size());
+        
+        account.setPrefSpellIgnoreAllCaps(true);
+        result = mbox.checkSpelling("XYZ");
+        assertEquals(0, result.getMisspelledWords().size());
     }
+    
     public void tearDown()
     throws Exception {
         Provisioning prov = Provisioning.getInstance();
-        prov.getLocalServer().setSpellAvailableDictionary(mOriginalDictionaries);
+        prov.getLocalServer().setSpellAvailableDictionary(originalDictionaries);
         
         Account account = TestUtil.getAccount(USER_NAME);
-        account.setPrefSpellIgnoreWord(mOriginalAccountIgnoreWords);
-        prov.getDomain(account).setPrefSpellIgnoreWord(mOriginalDomainIgnoreWords);
-        prov.getCOS(account).setPrefSpellIgnoreWord(mOriginalCosIgnoreWords);
+        account.setPrefSpellIgnoreWord(originalAccountIgnoreWords);
+        prov.getDomain(account).setPrefSpellIgnoreWord(originalDomainIgnoreWords);
+        prov.getCOS(account).setPrefSpellIgnoreWord(originalCosIgnoreWords);
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraPrefSpellIgnoreAllCaps, originalIgnoreAllCaps);
     }
 
     public static void main(String[] args)

@@ -102,8 +102,10 @@ public class CheckSpelling extends MailDocumentHandler {
         for (int i = 0; i < urls.length; i++) {
             String url = urls[i];
             try {
-                sLog.debug("Checking spelling: url=%s, dictionary=%s, text=%s, ignore=%s", url, dictionary, text, ignoreWords);
-                spellResponse = checkSpelling(url, dictionary, ignoreWords, text);
+                boolean ignoreAllCaps = account.isPrefSpellIgnoreAllCaps();
+                sLog.debug("Checking spelling: url=%s, dictionary=%s, text=%s, ignore=%s, ignoreAllCaps=%b",
+                    url, dictionary, text, ignoreWords, ignoreAllCaps);
+                spellResponse = checkSpelling(url, dictionary, ignoreWords, text, ignoreAllCaps);
                 if (spellResponse.statusCode == 200) {
                     break; // Successful request.  No need to check the other servers.
                 }
@@ -166,7 +168,7 @@ public class CheckSpelling extends MailDocumentHandler {
         }
     }
     
-    private ServerResponse checkSpelling(String url, String dictionary, List<String> ignoreWords, String text)
+    private ServerResponse checkSpelling(String url, String dictionary, List<String> ignoreWords, String text, boolean ignoreAllCaps)
     throws IOException {
         PostMethod post = new PostMethod(url);
         post.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
@@ -178,6 +180,9 @@ public class CheckSpelling extends MailDocumentHandler {
         }
         if (!ListUtil.isEmpty(ignoreWords)) {
             post.addParameter("ignore", StringUtil.join(",", ignoreWords));
+        }
+        if (ignoreAllCaps) {
+            post.addParameter("ignoreAllCaps", "on");
         }
         HttpClient http = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
         ServerResponse response = new ServerResponse();
