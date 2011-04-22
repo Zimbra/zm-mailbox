@@ -280,11 +280,15 @@ public final class QueryParserTest {
     @Test
     public void braced() throws Exception {
         String src = "item:{1,2,3}";
-        Assert.assertEquals("Q(ITEMID,0-0-0:1,0-0-0:2,0-0-0:3)", Query.toString(parser.parse(src)));
+        Assert.assertEquals("Q(ITEMID," + MockProvisioning.DEFAULT_ACCOUNT_ID + ":1," +
+                MockProvisioning.DEFAULT_ACCOUNT_ID + ":2," + MockProvisioning.DEFAULT_ACCOUNT_ID + ":3)",
+                Query.toString(parser.parse(src)));
 
         src = "item:({1,2,3} or {4,5,6})";
-        Assert.assertEquals("(Q(ITEMID,0-0-0:1,0-0-0:2,0-0-0:3) || Q(ITEMID,0-0-0:4,0-0-0:5,0-0-0:6))",
-                Query.toString(parser.parse(src)));
+        Assert.assertEquals("(Q(ITEMID," + MockProvisioning.DEFAULT_ACCOUNT_ID + ":1," +
+                MockProvisioning.DEFAULT_ACCOUNT_ID + ":2," + MockProvisioning.DEFAULT_ACCOUNT_ID + ":3) || Q(ITEMID," +
+                MockProvisioning.DEFAULT_ACCOUNT_ID + ":4," + MockProvisioning.DEFAULT_ACCOUNT_ID + ":5," +
+                MockProvisioning.DEFAULT_ACCOUNT_ID + ":6))", Query.toString(parser.parse(src)));
     }
 
     @Test

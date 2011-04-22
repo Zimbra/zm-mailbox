@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.DataSource.Type;
@@ -35,7 +36,7 @@ import com.zimbra.cs.redolog.MockRedoLogProvider;
  * @author ysasaki
  */
 public final class MockProvisioning extends Provisioning {
-    public static final String DEFAULT_ACCOUNT_ID = "0-0-0";
+    public static final String DEFAULT_ACCOUNT_ID = new UUID(0L, 0L).toString();
 
     private final Map<String, Account> id2account = new HashMap<String, Account>();
     private final Map<String, Account> name2account = new HashMap<String, Account>();

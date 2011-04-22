@@ -51,10 +51,10 @@ public final class InQueryTest {
     public void inAnyFolder() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 
-        Query query = InQuery.create(mbox, new ItemId("0-0-0", 1), null, true);
+        Query query = InQuery.create(mbox, new ItemId(MockProvisioning.DEFAULT_ACCOUNT_ID, 1), null, true);
         Assert.assertEquals("Q(UNDER:ANY_FOLDER)", query.toString());
 
-        query = InQuery.create(mbox, new ItemId("0-0-0", 1), null, false);
+        query = InQuery.create(mbox, new ItemId(MockProvisioning.DEFAULT_ACCOUNT_ID, 1), null, false);
         Assert.assertEquals("Q(IN:USER_ROOT)", query.toString());
 
         query = InQuery.create(mbox, new ItemId("1-1-1", 1), null, true);
