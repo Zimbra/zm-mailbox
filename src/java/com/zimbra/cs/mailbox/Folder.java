@@ -637,7 +637,7 @@ public class Folder extends MailItem {
         markItemModified(Change.INTERNAL_ONLY);
         mImapRECENT = 0;
         mImapRECENTCutoff = mMailbox.getLastItemId();
-        saveMetadata();
+        saveFolderCounts(false);
     }
 
     /** Persists the folder's current unread/message counts and IMAP UIDNEXT

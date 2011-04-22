@@ -202,5 +202,23 @@ public class FolderTest {
         Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox, "test1@zimbra.com"));
         conn.closeQuietly();
     }
+    
+    @Test
+    public void checkpointRECENT() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        int changeId = mbox.getLastChangeID();
+        Folder inbox = mbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX);
+        int modMetadata = inbox.getModifiedSequence();
+        int modContent = inbox.getSavedSequence();
+        Assert.assertEquals(0, inbox.getImapRECENTCutoff());
+
+        mbox.recordImapSession(Mailbox.ID_FOLDER_INBOX);
+
+        inbox = mbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX);
+        Assert.assertEquals(changeId, mbox.getLastChangeID());
+        Assert.assertEquals(modMetadata, inbox.getModifiedSequence());
+        Assert.assertEquals(modContent, inbox.getSavedSequence());
+        Assert.assertEquals(mbox.getLastItemId(), inbox.getImapRECENTCutoff());
+    }
 
 }
