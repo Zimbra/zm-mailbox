@@ -3260,7 +3260,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <globalConfigValue>SSL_RSA_EXPORT_WITH_DES40_CBC_SHA</globalConfigValue> 
   <globalConfigValue>SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA</globalConfigValue> 
   <globalConfigValue>SSL_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA</globalConfigValue>
-  <desc>space separated list of excluded cipher suites</desc>
+  <desc>excluded cipher suites</desc>
 </attr>
 
 <attr id="640" name="zimbraReverseProxySSLCiphers" type="string" cardinality="single" optionalIn="globalConfig" requiresRestart="nginxproxy" since="5.0.5">
