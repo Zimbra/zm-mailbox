@@ -203,25 +203,29 @@ public final class MailboxTest {
         MockListener ml = new MockListener();
         MailboxListener.register(ml);
 
-        Folder f = mbox.createFolder(null, "foo", (byte) 0, MailItem.Type.MESSAGE);
-        ModificationKey fkey = new ModificationKey(f);
-        Assert.assertNull("no deletes after create", ml.pms.deleted);
-        Assert.assertNotNull("creates aren't null", ml.pms.created);
-        Assert.assertEquals("one created folder", 1, ml.pms.created.size());
-        Assert.assertNotNull("created folder has created entry", ml.pms.created.get(fkey));
-        Assert.assertEquals("created folder matches created entry", f.getId(), ml.pms.created.get(fkey).getId());
+        try {
+            Folder f = mbox.createFolder(null, "foo", (byte) 0, MailItem.Type.MESSAGE);
+            ModificationKey fkey = new ModificationKey(f);
+            Assert.assertNull("no deletes after create", ml.pms.deleted);
+            Assert.assertNotNull("creates aren't null", ml.pms.created);
+            Assert.assertEquals("one created folder", 1, ml.pms.created.size());
+            Assert.assertNotNull("created folder has created entry", ml.pms.created.get(fkey));
+            Assert.assertEquals("created folder matches created entry", f.getId(), ml.pms.created.get(fkey).getId());
 
-        DeliveryOptions dopt = new DeliveryOptions().setFolderId(f.getId());
-        Message m = mbox.addMessage(null, generateMessage("test subject"), dopt);
-        ModificationKey mkey = new ModificationKey(m);
+            DeliveryOptions dopt = new DeliveryOptions().setFolderId(f.getId());
+            Message m = mbox.addMessage(null, generateMessage("test subject"), dopt);
+            ModificationKey mkey = new ModificationKey(m);
 
-        mbox.delete(null, f.getId(), MailItem.Type.FOLDER);
-        Assert.assertNull("no creates after delete", ml.pms.created);
-        Assert.assertNotNull("deletes aren't null", ml.pms.deleted);
-        Assert.assertEquals("one deleted folder, one deleted message, one deleted vconv", 3, ml.pms.deleted.size());
-        Assert.assertNotNull("deleted folder has deleted entry", ml.pms.deleted.get(fkey));
-        Assert.assertNotNull("deleted message has deleted entry", ml.pms.deleted.get(mkey));
-        Assert.assertEquals("deleted folder matches deleted entry", f.getType(), ml.pms.deleted.get(fkey));
-        Assert.assertEquals("deleted message matches deleted entry", m.getType(), ml.pms.deleted.get(mkey));
+            mbox.delete(null, f.getId(), MailItem.Type.FOLDER);
+            Assert.assertNull("no creates after delete", ml.pms.created);
+            Assert.assertNotNull("deletes aren't null", ml.pms.deleted);
+            Assert.assertEquals("one deleted folder, one deleted message, one deleted vconv", 3, ml.pms.deleted.size());
+            Assert.assertNotNull("deleted folder has deleted entry", ml.pms.deleted.get(fkey));
+            Assert.assertNotNull("deleted message has deleted entry", ml.pms.deleted.get(mkey));
+            Assert.assertEquals("deleted folder matches deleted entry", f.getType(), ml.pms.deleted.get(fkey));
+            Assert.assertEquals("deleted message matches deleted entry", m.getType(), ml.pms.deleted.get(mkey));
+        } finally {
+            MailboxListener.unregister(ml);
+        }
     }
 }

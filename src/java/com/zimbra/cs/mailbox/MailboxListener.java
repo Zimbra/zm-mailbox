@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.mailbox;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.fb.FreeBusyProvider;
 import com.zimbra.cs.filter.FilterListener;
@@ -89,6 +90,13 @@ public abstract class MailboxListener {
     public static void register(MailboxListener listener) {
         synchronized (sListeners) {
             sListeners.add(listener);
+        }
+    }
+
+    @VisibleForTesting
+    static void unregister(MailboxListener listener) {
+        synchronized (sListeners) {
+            sListeners.remove(listener);
         }
     }
 
