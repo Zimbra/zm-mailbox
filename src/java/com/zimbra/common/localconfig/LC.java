@@ -300,6 +300,8 @@ public final class LC {
     @Supported
     public static final KnownKey servlet_max_concurrent_requests_per_session = KnownKey.newKey(0);
 
+    public static final KnownKey cassandra_host = KnownKey.newKey("localhost:9160");
+
     @Supported
     public static final KnownKey ldap_host = KnownKey.newKey("");
 
@@ -623,7 +625,7 @@ public final class LC {
 
     @Supported
     public static final KnownKey mailboxd_truststore_password = KnownKey.newKey("changeit");
-    
+
     public static final KnownKey mailboxd_output_filename = KnownKey.newKey("zmmailboxd.out");
 
     @Supported
@@ -745,8 +747,8 @@ public final class LC {
     public static final KnownKey zimbra_class_attrmanager = KnownKey.newKey("com.zimbra.cs.account.AttributeManager");
     public static final KnownKey zimbra_class_soapsessionfactory = KnownKey.newKey("com.zimbra.soap.SoapSessionFactory");
     public static final KnownKey zimbra_class_dbconnfactory = KnownKey.newKey("com.zimbra.cs.db.ZimbraConnectionFactory");
-    public static final KnownKey zimbra_class_customproxyselector = KnownKey.newKey(""); //intentionally has no value; set one if u want to use a custom proxy selector 
-    public static final KnownKey zimbra_class_galgroupinfoprovider = KnownKey.newKey("com.zimbra.cs.gal.GalGroupInfoProvider"); 
+    public static final KnownKey zimbra_class_customproxyselector = KnownKey.newKey(""); //intentionally has no value; set one if u want to use a custom proxy selector
+    public static final KnownKey zimbra_class_galgroupinfoprovider = KnownKey.newKey("com.zimbra.cs.gal.GalGroupInfoProvider");
 
     // XXX REMOVE AND RELEASE NOTE
     public static final KnownKey data_source_trust_self_signed_certs = KnownKey.newKey(false);
@@ -784,7 +786,7 @@ public final class LC {
     // we should re-evaluate/remove these settings and the code that uses them
     public static final KnownKey zimbra_archive_formatter_disable_timeout = KnownKey.newKey(true);
     public static final KnownKey zimbra_gal_sync_disable_timeout = KnownKey.newKey(true);
-    
+
     public static final KnownKey zimbra_admin_waitset_default_request_timeout = KnownKey.newKey(300);
     public static final KnownKey zimbra_admin_waitset_min_request_timeout = KnownKey.newKey(0);
     public static final KnownKey zimbra_admin_waitset_max_request_timeout = KnownKey.newKey(3600);
@@ -987,7 +989,7 @@ public final class LC {
     public static final KnownKey data_source_eas_sync_tasks = KnownKey.newKey(true);
     public static final KnownKey data_source_eas_window_size = KnownKey.newKey(50);
     public static final KnownKey data_source_eas_mime_truncation = KnownKey.newKey(4);
-    
+
     public static final KnownKey zimbra_activesync_contact_image_size = KnownKey.newKey(2*1024*1024);
 
     public static final KnownKey zimbra_slow_logging_enabled = KnownKey.newKey(false);
@@ -1062,7 +1064,7 @@ public final class LC {
     public static final KnownKey ldap_dit_naming_rdn_attr_zimlet       = KnownKey.newKey("");
     // LDAP Custom DIT base DN for LDAP admin entries
     public static final KnownKey ldap_dit_base_dn_admin         = KnownKey.newKey("");
-    
+
     @Supported
     public static final KnownKey zmprov_tmp_directory = KnownKey.newKey("${zimbra_tmp_directory}/zmprov");
 
@@ -1073,11 +1075,11 @@ public final class LC {
 
     // Remove this in 8.0.
     public static final KnownKey filter_null_env_sender_for_dsn_redirect = KnownKey.newKey(true);
-    
+
     //appliance
     public static final KnownKey zimbra_vami_user = KnownKey.newKey("vmware");
     public static final KnownKey zimbra_vami_password = KnownKey.newKey("vmware").protect();
-    
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
