@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -22,6 +22,10 @@ import com.zimbra.common.service.ServiceException;
 public final class ContactConstants {
     private ContactConstants() {
     }
+
+    public static final int MAX_FIELD_NAME_LENGTH = 100;
+    public static final int MAX_FIELD_VALUE_LENGTH = 1000;
+    public static final int MAX_FIELD_COUNT = 1000;
 
     /** "File as" setting: &nbsp;<tt>Last, First</tt> */
     public static final int FA_LAST_C_FIRST = 1;
@@ -111,7 +115,7 @@ public final class ContactConstants {
     public static final String A_imAddress2 = Attr.imAddress2.name();
     public static final String A_imAddress3 = Attr.imAddress3.name();
     public static final String A_zimbraId = Attr.zimbraId.name();
-    
+
     // Comcast specific fields
     public static final String A_homeAddress = Attr.homeAddress.name();
     public static final String A_workAddress = Attr.workAddress.name();
