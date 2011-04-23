@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -167,7 +167,7 @@ class ImapProxy {
                     boolean success = false;
                     try {
                         // the standard aggressive read timeout is inappropriate for IDLE
-                        conn.setReadTimeout(ImapFolder.IMAP_IDLE_TIMEOUT_SEC);
+                        conn.setReadTimeout(mHandler.getConfig().getAuthenticatedMaxIdleSeconds());
                         // send the IDLE command; this call waits until the subsequent DONE is acknowledged
                         boolean ok = proxyCommand(req.getTag(), payload, true, true);
                         // restore the old read timeout
