@@ -40,7 +40,6 @@ final class TcpPop3Handler extends ProtocolHandler {
     @Override
     protected boolean setupConnection(Socket connection) throws IOException {
         remoteAddress = connection.getInetAddress().getHostAddress();
-        connection.setSoTimeout(delegate.config.getMaxIdleTime() * 1000);
         input = new TcpServerInputStream(connection.getInputStream());
         delegate.output = new BufferedOutputStream(connection.getOutputStream());
         if (delegate.startConnection(connection.getInetAddress())) {

@@ -115,6 +115,7 @@ public abstract class ProtocolHandler implements Runnable {
         ZimbraLog.clearContext();
 
         try {
+            mConnection.setSoTimeout(mServer.getConfigMaxIdleMilliSeconds()); // must be set before any traffic
             if (mConnection instanceof SSLSocket) {
                 startHandshake((SSLSocket) mConnection);
             }
