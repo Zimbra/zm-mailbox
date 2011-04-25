@@ -49,19 +49,31 @@ import com.zimbra.cs.ldap.jndi.JNDIAttributes;
 import com.zimbra.cs.ldap.LdapServerType;
 
 public class UBIDLdapContext extends ZLdapContext {
+    
+    private static boolean initialized = false;
 
     private static LdapConfig zimbraConfig;
     
-    private static LdapHost replicaHosts;
-    private static LdapHost masterHosts;
+    private static LdapServerPool replicaHosts;
+    private static LdapServerPool masterHosts;
     
     private static LDAPConnectionPool replicaConnPool;
     private static LDAPConnectionPool masterConnPool;
     
     private LDAPConnectionPool connPool;
     private LDAPConnection conn;
+    private boolean isZimbra;  // whether this context is zimbra LDAP
+    private DereferencePolicy derefAliasPolicy;
     
     public static synchronized void init() throws LdapException {
+        assert(!initialized);
+        
+        if (initialized) {
+            return;
+        }
+        
+        initialized = true;
+        
         zimbraConfig = LdapConfig.loadZimbraConfig();
         
         LdapConnType replicaConnType = LdapConnType.getConnType(
@@ -69,23 +81,21 @@ public class UBIDLdapContext extends ZLdapContext {
         LdapConnType masterConnType = LdapConnType.getConnType(
                 zimbraConfig.getMasterURL(), zimbraConfig.wantStartTLS());
         
-        SocketFactory replicaSocketFactory = LdapConnUtils.getSocketFactory(replicaConnType, zimbraConfig.sslAllowUntrustedCerts());
-        SocketFactory masterSocketFactory = LdapConnUtils.getSocketFactory(masterConnType, zimbraConfig.sslAllowUntrustedCerts());
+        replicaHosts = new LdapServerPool(zimbraConfig.getReplicaURL(), LdapServerType.REPLICA, 
+                replicaConnType, zimbraConfig);
+        masterHosts = new LdapServerPool(zimbraConfig.getMasterURL(), LdapServerType.MASTER, 
+                masterConnType, zimbraConfig);
         
-        replicaHosts = new LdapHost(zimbraConfig.getReplicaURL(), LdapServerType.REPLICA, replicaConnType, replicaSocketFactory);
-        masterHosts = new LdapHost(zimbraConfig.getMasterURL(), LdapServerType.MASTER, masterConnType, masterSocketFactory);
-        
-        try {
-            replicaConnPool = LdapConnUtils.createConnectionPool(zimbraConfig, replicaHosts);
-            masterConnPool = LdapConnUtils.createConnectionPool(zimbraConfig, masterHosts);
-        } catch (LDAPException e) {
-            throw LdapException.LDAP_ERROR(e);
-        }
+        replicaConnPool = ConnectionPool.createConnectionPool(
+                ConnectionPool.CP_ZIMBRA_REPLICA, zimbraConfig, replicaHosts);
+        masterConnPool = ConnectionPool.createConnectionPool(
+                ConnectionPool.CP_ZIMBRA_MASTER, zimbraConfig, masterHosts);
     }
     
     public UBIDLdapContext(LdapServerType serverType) throws LdapException {
         connPool = getConnectionPool(serverType);
         conn = getConnection(connPool);
+        setIsZimbra(true);
     }
     
     @Override
@@ -93,7 +103,38 @@ public class UBIDLdapContext extends ZLdapContext {
         // TODO Auto-generated method stub
         
     }
+    
+    // for unittest
+    public LDAPConnection getNative() {
+        return conn;
+    }
 
+    private void setIsZimbra(boolean isZimbraInternal) {
+        isZimbra = isZimbraInternal;
+        
+        if (isZimbra) {
+            derefAliasPolicy = DereferencePolicy.NEVER;
+        } else {
+            String derefAliasPolity = zimbraConfig.getDerefAliasPolicy();
+
+            if (derefAliasPolity == null) {
+                derefAliasPolicy = DereferencePolicy.NEVER;
+            } if ("always".equalsIgnoreCase(derefAliasPolity)) {
+                derefAliasPolicy = DereferencePolicy.ALWAYS;
+            } else if ("never".equalsIgnoreCase(derefAliasPolity)) {
+                derefAliasPolicy = DereferencePolicy.NEVER;
+            } else if ("finding".equalsIgnoreCase(derefAliasPolity)) {
+                derefAliasPolicy = DereferencePolicy.FINDING;
+            } else if ("searching".equalsIgnoreCase(derefAliasPolity)) {
+                derefAliasPolicy = DereferencePolicy.SEARCHING;
+            } else {
+                ZimbraLog.ldap.warn("invalid deref alias policy: " + derefAliasPolity +
+                        ", default to never");
+                derefAliasPolicy = DereferencePolicy.NEVER;
+            }
+        }
+    }
+    
     private LDAPConnectionPool getConnectionPool(LdapServerType serverType) {
         if (serverType.isMaster()) {
             return masterConnPool;
@@ -110,6 +151,15 @@ public class UBIDLdapContext extends ZLdapContext {
         }
     }
     
+    public LDAPConnectionPool getConnectionPool() {
+        String connPoolName = conn.getConnectionPoolName();
+        return ConnectionPool.getConnPoolByName(connPoolName);
+    }
+    
+    public String getConnectionName() {
+        return conn.getConnectionName();
+    }
+    
     @TODO
     private LdapException mapToLdapException(LDAPException e) {
         return LdapException.LDAP_ERROR(e);
@@ -123,6 +173,7 @@ public class UBIDLdapContext extends ZLdapContext {
         //       Just release it to the pool.
         // 
         connPool.releaseConnection(conn);
+        conn = null;
         // TODO check out this creature releaseConnectionAfterException
     }
     
@@ -242,7 +293,7 @@ public class UBIDLdapContext extends ZLdapContext {
         try {
             SearchRequest searchRequest = new SearchRequest(base, 
                     SearchScope.SUB,
-                    DereferencePolicy.NEVER,
+                    derefAliasPolicy,
                     maxResults,
                     0,
                     false,
@@ -287,7 +338,7 @@ public class UBIDLdapContext extends ZLdapContext {
         try {
             SearchRequest searchRequest = new SearchRequest(baseDN, 
                     sc.getSearchScope(),
-                    sc.getDerefPolicy(),
+                    derefAliasPolicy,
                     sc.getSizeLimit(),
                     sc.getTimeLimit(),
                     sc.getTypesOnly(),

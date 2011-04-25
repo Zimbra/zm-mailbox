@@ -16,6 +16,11 @@ public class JNDILdapClient extends LdapClient {
         super.init();
     }
     
+    @Override
+    protected void terminate() {
+        // do nothing
+    }
+    
     @Override 
     protected ZSearchScopeFactory getSearchScopeFactoryImpl() {
         return new JNDISearchScope.JNDISearchScopeFactory();
@@ -40,5 +45,6 @@ public class JNDILdapClient extends LdapClient {
     protected ZSearchControls createSearchControlsImpl(ZSearchScope searchScope, int sizeLimit, String[] returnAttrs) {
         return new JNDISearchControls(searchScope, sizeLimit, returnAttrs);
     }
+
 
 }

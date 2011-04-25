@@ -32,7 +32,7 @@ public class LdapSuite {
         }
     }
     
-    private static void addTests(JUnitCore junit) {
+    private static void runTests(JUnitCore junit) {
         junit.run(TestAccountLockout.class);
         junit.run(TestACPermissionCache.class);
         junit.run(TestACUserRights.class);
@@ -42,6 +42,7 @@ public class LdapSuite {
         junit.run(TestCos.class);
         junit.run(TestIDN.class);
         junit.run(TestLdapBinary.class);
+        junit.run(TestLdapSDK.class);
         junit.run(TestLdapUtil.class);
         junit.run(TestProvCallback.class);
         junit.run(TestProvGroup.class);
@@ -69,6 +70,7 @@ public class LdapSuite {
          * zmsoap -v -z RunUnitTestsRequest/test=com.zimbra.qa.unittest.TestGalGroupMembers
          */
         // TestGalGroupMembers (has to be run in the server)
+        
     }
     
     /*
@@ -92,7 +94,7 @@ public class LdapSuite {
         JUnitCore junit = new JUnitCore();
         junit.addListener(new ConsoleListener());
         
-        addTests(junit);
+        runTests(junit);
         
         System.out.println();
         System.out.println("=== Finished ===");

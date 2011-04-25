@@ -45,8 +45,9 @@ public class UBIDSearchControls extends ZSearchControls {
         return returnAttrs;
     }
     
+    /*
     DereferencePolicy getDerefPolicy() {
         return DereferencePolicy.NEVER;
     }
-
+    */
 }

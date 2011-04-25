@@ -17,6 +17,11 @@ public class UBIDLdapClient extends LdapClient {
         UBIDLdapContext.init();
     }
     
+    @Override
+    protected void terminate() {
+        ConnectionPool.closeAll();
+    }
+    
     @Override 
     protected ZSearchScopeFactory getSearchScopeFactoryImpl() {
         return new UBIDSearchScope.UBIDSearchScopeFactory();
@@ -45,5 +50,6 @@ public class UBIDLdapClient extends LdapClient {
             ZSearchScope searchScope, int sizeLimit, String[] returnAttrs) {
         return new UBIDSearchControls(searchScope, sizeLimit, returnAttrs);
     }
+
 
 }

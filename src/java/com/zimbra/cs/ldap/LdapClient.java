@@ -39,6 +39,16 @@ public abstract class LdapClient {
         return ldapClient;
     }
     
+    // for unittest only
+    public static void initialize() {
+        LdapClient.getInstance();
+    }
+    
+    @TODO  // called from unittest for now, call it from Zimbra
+    public static void shutdown() {
+        LdapClient.getInstance().terminate();
+    }
+    
     /* 
      * Bridging the legacy ZimbraLdapContext and the new ZLdapContext classes.
      */
@@ -106,7 +116,9 @@ public abstract class LdapClient {
     }
     
     public static void closeContext(ZLdapContext lctxt) {
-        getInstance().closeContextImpl(lctxt);
+        if (lctxt != null) {
+            lctxt.closeContext();
+        }
     }
     
     public static ZMutableEntry createMutableEntry() {
@@ -118,6 +130,8 @@ public abstract class LdapClient {
         ZSearchScope.init(getSearchScopeFactoryImpl());
     }
     
+    protected abstract void terminate();
+    
     protected abstract ZSearchScopeFactory getSearchScopeFactoryImpl(); 
     
     protected ZLdapContext getContextImpl() throws ServiceException {
@@ -127,12 +141,6 @@ public abstract class LdapClient {
     protected abstract ZLdapContext getContextImpl(LdapServerType serverType) throws ServiceException;
     
     protected abstract ZLdapContext getContextImpl(LdapServerType serverType, boolean useConnPool) throws ServiceException;
-    
-    private void closeContextImpl(ZLdapContext lctxt) {
-        if (lctxt != null) {
-            lctxt.closeContext();
-        }
-    }
     
     protected abstract ZMutableEntry createMutableEntryImpl();
     

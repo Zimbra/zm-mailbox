@@ -11,16 +11,26 @@ import com.unboundid.ldap.sdk.LDAPURL;
 import com.unboundid.ldap.sdk.ServerSet;
 import com.unboundid.ldap.sdk.SingleServerSet;
 
+import com.zimbra.cs.ldap.LdapConfig;
 import com.zimbra.cs.ldap.LdapConnType;
 import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.LdapException;
 
-
-public class LdapHost {
+/**
+ * Represent a list of LDAP servers.  ZCS will attempt to establish 
+ * connections in the order they are provided for failover. 
+ * If the first server is unavailable, then it will attempt to connect 
+ * to the second, then to the third, etc
+ * 
+ * @author pshao
+ *
+ */
+public class LdapServerPool {
     List<LDAPURL> urls;
     LdapServerType serverType;  // do we need this?
     LdapConnType connType;
+    LDAPConnectionOptions connOpts;
     
     ServerSet serverSet;
 
@@ -29,9 +39,8 @@ public class LdapHost {
      * @param serverType
      * @param urls space separated urls
      */
-    public LdapHost(String urls, LdapServerType serverType, LdapConnType connType,
-            SocketFactory socketFactory) 
-    throws LdapException {
+    public LdapServerPool(String urls, LdapServerType serverType, 
+            LdapConnType connType, LdapConfig config) throws LdapException {
         this.urls = new ArrayList<LDAPURL>();
         
         String[] ldapUrls = urls.split(" ");
@@ -47,6 +56,10 @@ public class LdapHost {
         
         this.serverType = serverType;
         this.connType = connType;
+        this.connOpts = LdapConnUtil.getConnectionOptions(config);
+        
+        SocketFactory socketFactory = 
+            LdapConnUtil.getSocketFactory(connType, config.sslAllowUntrustedCerts());
         
         this.serverSet = createServerSet(socketFactory);
     }
@@ -67,15 +80,7 @@ public class LdapHost {
         return serverSet;
     }
     
-    @TODO // get value from LdapConfig
-    private LDAPConnectionOptions getConnectionOptions() {
-        return new LDAPConnectionOptions();
-    }
-    
-    @TODO
     private ServerSet createServerSet(SocketFactory socketFactory){
-        
-        LDAPConnectionOptions connOpts = getConnectionOptions();
         
         if (urls.size() == 1) {
             LDAPURL url = urls.get(0);

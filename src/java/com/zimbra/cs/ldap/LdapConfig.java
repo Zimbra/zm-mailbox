@@ -14,6 +14,10 @@ public class LdapConfig {
     private boolean sslAllowUntrustedCerts;
     private int connPoolInitSize;
     private int connPoolMaxSize;
+    private int connPoolTimeoutMillis;
+    private int connectTimeoutMillis;
+    private int readTimeoutMillis;
+    private String derefAliasPolicy;
     
     public static LdapConfig loadZimbraConfig() {
         LdapConfig config = new LdapConfig();
@@ -72,8 +76,14 @@ public class LdapConfig {
         config.connPoolInitSize = LC.ldap_connect_pool_initsize.intValue();
         config.connPoolMaxSize = LC.ldap_connect_pool_maxsize.intValue();
         // System.setProperty("com.sun.jndi.ldap.connect.pool.prefsize", LC.ldap_connect_pool_prefsize.value());
-        // System.setProperty("com.sun.jndi.ldap.connect.pool.timeout", LC.ldap_connect_pool_timeout.value());
+        config.connPoolTimeoutMillis = LC.ldap_connect_pool_timeout.intValue();
         
+        // timeout setting
+        config.connectTimeoutMillis = LC.ldap_connect_timeout.intValue();
+        config.readTimeoutMillis = LC.ldap_read_timeout.intValue();
+        
+        // misc
+        config.derefAliasPolicy = LC.ldap_deref_aliases.value();
         
         return config;
     }
@@ -108,5 +118,21 @@ public class LdapConfig {
     
     public int getConnPoolMaxSize() {
         return connPoolMaxSize;
+    }
+    
+    public int getConnPoolTimeoutMillis() {
+        return connPoolTimeoutMillis;
+    }
+    
+    public int getConnectTimeoutMillis() {
+        return connectTimeoutMillis;
+    }
+    
+    public int getReadTimeoutMillis() {
+        return readTimeoutMillis;
+    }
+    
+    public String getDerefAliasPolicy() {
+        return derefAliasPolicy;
     }
 }
