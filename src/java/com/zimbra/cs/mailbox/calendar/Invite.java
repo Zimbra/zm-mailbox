@@ -2073,7 +2073,7 @@ public class Invite {
                 case Recurrence.TYPE_SINGLE_DATES:
                     Recurrence.SingleDates sd = (Recurrence.SingleDates) cur;
                     RdateExdate rdate = sd.getRdateExdate();
-                    component.addProperty(rdate.toZProperty());
+                    rdate.addAsSeparateProperties(component);
                     break;
                 case Recurrence.TYPE_REPEATING:
                     Recurrence.SimpleRepeatingRule srr = (Recurrence.SimpleRepeatingRule)cur;
@@ -2089,7 +2089,7 @@ public class Invite {
                 case Recurrence.TYPE_SINGLE_DATES:
                     Recurrence.SingleDates sd = (Recurrence.SingleDates) cur;
                     RdateExdate exdate = sd.getRdateExdate();
-                    component.addProperty(exdate.toZProperty());
+                    exdate.addAsSeparateProperties(component);
                     break;
                 case Recurrence.TYPE_REPEATING:
                     Recurrence.SimpleRepeatingRule srr = (Recurrence.SimpleRepeatingRule)cur;
