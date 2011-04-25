@@ -17,6 +17,9 @@ package com.zimbra.cs.index;
 import java.io.IOException;
 import java.io.PrintStream;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+
 /**
  * Abstraction of index store backend.
  *
@@ -48,5 +51,10 @@ public interface IndexStore {
      * Runs a sanity check for the index data.
      */
     boolean verify(PrintStream out) throws IOException;
+
+    interface Factory {
+        IndexStore getInstance(Mailbox mbox) throws ServiceException;
+        void destroy();
+    }
 
 }

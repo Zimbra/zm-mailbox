@@ -28,6 +28,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.io.Files;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
@@ -56,6 +57,7 @@ public final class CassandraIndexTest {
         cassandra = new CassandraDaemon();
         cassandra.init(null);
         cassandra.start();
+        LC.cassandra_host.setDefault("localhost:7160");
 
         MailboxTestUtil.initServer();
         Provisioning prov = Provisioning.getInstance();
@@ -80,7 +82,7 @@ public final class CassandraIndexTest {
 
         CassandraIndex.Factory factory = new CassandraIndex.Factory();
         factory.createSchema();
-        CassandraIndex index = factory.createIndex(mbox);
+        CassandraIndex index = factory.getInstance(mbox);
         index.deleteIndex();
         Indexer indexer = index.openIndexer();
         indexer.addDocument(contact, contact.generateIndexData());
@@ -91,6 +93,7 @@ public final class CassandraIndexTest {
                 null, null, 100);
         Assert.assertEquals(0, result.size());
 
+        Assert.assertEquals(1, searcher.getTotal());
         result = searcher.search(new TermQuery(new Term(LuceneFields.L_CONTACT_DATA, "test@zimbra.com")),
                 null, null, 100);
         Assert.assertEquals(1, result.size());

@@ -27,7 +27,7 @@ import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.HSQLDB;
-import com.zimbra.cs.index.LuceneIndex;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mime.MockMimeTypeInfo;
 import com.zimbra.cs.mime.handler.MessageRFC822Handler;
 import com.zimbra.cs.mime.handler.TextHtmlHandler;
@@ -51,12 +51,13 @@ public final class MailboxTestUtil {
         }
         Provisioning.setInstance(prov);
 
+        DebugConfig.numMailboxGroups = 1;
         LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
         DbPool.startup();
         HSQLDB.createDatabase();
 
         MailboxManager.setInstance(null);
-        LuceneIndex.startup();
+        MailboxIndex.setIndexStoreFactory("lucene");
 
         LC.zimbra_class_store.setDefault(MockStoreManager.class.getName());
         StoreManager.getInstance().startup();

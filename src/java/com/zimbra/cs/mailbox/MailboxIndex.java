@@ -54,6 +54,7 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.index.BrowseTerm;
+import com.zimbra.cs.index.CassandraIndex;
 import com.zimbra.cs.index.DbSearchConstraints;
 import com.zimbra.cs.index.Indexer;
 import com.zimbra.cs.index.LuceneFields;
@@ -90,6 +91,10 @@ public final class MailboxIndex {
     private static final ExecutorService REINDEX_EXECUTOR = new ThreadPoolExecutor(
             0, LC.zimbra_reindex_threads.intValue(), 0L, TimeUnit.SECONDS,
             new SynchronousQueue<Runnable>(), new IndexThreadFactory("ReIndex"));
+    private static IndexStore.Factory indexStoreFactory;
+    static {
+        setIndexStoreFactory(LC.index_store.value());
+    }
 
     private volatile long lastFailedTime = -1;
     // Only one thread may run index at a time.
@@ -112,11 +117,24 @@ public final class MailboxIndex {
         analyzer = ZimbraAnalyzer.getAnalyzer(analyzerName);
     }
 
+    @VisibleForTesting
+    static void setIndexStoreFactory(String name) {
+        if ("cassandra".equals(name)) {
+            indexStoreFactory = new CassandraIndex.Factory();
+        } else {
+            indexStoreFactory = new LuceneIndex.Factory();
+        }
+    }
+
     /**
      * Starts all index threads.
      */
-    static void startup() {
+    public static void startup() {
         INDEX_EXECUTOR.prestartAllCoreThreads();
+    }
+
+    public static void shutdown() {
+        indexStoreFactory.destroy();
     }
 
     public Analyzer getAnalyzer() {
@@ -131,7 +149,7 @@ public final class MailboxIndex {
     }
 
     void open() throws ServiceException {
-        indexStore = new LuceneIndex(mailbox);
+        indexStore = indexStoreFactory.getInstance(mailbox);
     }
 
     public final IndexStore getIndexStore() {

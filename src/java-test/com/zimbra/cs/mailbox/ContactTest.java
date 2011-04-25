@@ -22,19 +22,14 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailAddress;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbUtil;
-import com.zimbra.cs.db.HSQLDB;
 import com.zimbra.cs.db.DbPool.DbConnection;
-import com.zimbra.cs.index.LuceneIndex;
 import com.zimbra.cs.mime.ParsedContact;
-import com.zimbra.cs.store.MockStoreManager;
-import com.zimbra.cs.store.StoreManager;
 
 /**
  * Unit test for {@link Contact}.
@@ -45,25 +40,14 @@ public final class ContactTest {
 
     @BeforeClass
     public static void init() throws Exception {
-        MockProvisioning prov = new MockProvisioning();
+        MailboxTestUtil.initServer();
+        Provisioning prov = Provisioning.getInstance();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
-        Provisioning.setInstance(prov);
-
-        LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
-        DbPool.startup();
-        HSQLDB.createDatabase();
-
-        MailboxManager.setInstance(null);
-        LuceneIndex.startup();
-
-        LC.zimbra_class_store.setDefault(MockStoreManager.class.getName());
-        StoreManager.getInstance().startup();
     }
 
     @Before
     public void setUp() throws Exception {
-        HSQLDB.clearDatabase();
-        MailboxManager.getInstance().clearCache();
+        MailboxTestUtil.clearData();
     }
 
     @Test

@@ -75,26 +75,14 @@ public final class LuceneIndex implements IndexStore {
     private static final Semaphore READER_THROTTLE = new Semaphore(LC.zimbra_index_max_readers.intValue());
     private static final Semaphore WRITER_THROTTLE = new Semaphore(LC.zimbra_index_max_writers.intValue());
 
-    private static IndexReadersCache readersCache;
-
     private final Mailbox mailbox;
     private final LuceneDirectory luceneDirectory;
     private IndexWriterRef writerRef;
+    private final IndexReadersCache readersCache;
 
-    public static void startup() {
-        BooleanQuery.setMaxClauseCount(LC.zimbra_index_lucene_max_terms_per_query.intValue());
-        readersCache = new IndexReadersCache(
-                LC.zimbra_index_reader_cache_size.intValue(),
-                LC.zimbra_index_reader_cache_ttl.longValue() * 1000,
-                LC.zimbra_index_reader_cache_sweep_frequency.longValue() * 1000);
-    }
-
-    public static void shutdown() {
-        readersCache.shutdown();
-    }
-
-    public LuceneIndex(Mailbox mbox) throws ServiceException {
+    private LuceneIndex(Mailbox mbox, IndexReadersCache cache) throws ServiceException {
         mailbox = mbox;
+        readersCache = cache;
         Volume vol = Volume.getById(mbox.getIndexVolume());
         String dir = vol.getMailboxDir(mailbox.getId(), Volume.TYPE_INDEX);
 
@@ -185,7 +173,7 @@ public final class LuceneIndex implements IndexStore {
      */
     @Override
     public Searcher openSearcher() throws IOException {
-        return new LuceneSearcher(getIndexReaderRef());
+        return new SearcherImpl(getIndexReaderRef());
     }
 
     private IndexReader openIndexReader(boolean tryRepair) throws IOException {
@@ -371,7 +359,7 @@ public final class LuceneIndex implements IndexStore {
                 }
             }
         }
-        return new LuceneIndexer(writerRef);
+        return new IndexerImpl(writerRef);
     }
 
     private IndexWriterRef openWriter() throws IOException {
@@ -668,17 +656,39 @@ public final class LuceneIndex implements IndexStore {
         return results;
     }
 
-    private static final class LuceneIndexer implements Indexer {
+    public static final class Factory implements IndexStore.Factory {
+        private final IndexReadersCache readersCache;
+
+        public Factory() {
+            BooleanQuery.setMaxClauseCount(LC.zimbra_index_lucene_max_terms_per_query.intValue());
+            readersCache = new IndexReadersCache(
+                    LC.zimbra_index_reader_cache_size.intValue(),
+                    LC.zimbra_index_reader_cache_ttl.longValue() * 1000L,
+                    LC.zimbra_index_reader_cache_sweep_frequency.longValue() * 1000L);
+        }
+
+        @Override
+        public LuceneIndex getInstance(Mailbox mbox) throws ServiceException {
+            return new LuceneIndex(mbox, readersCache);
+        }
+
+        @Override
+        public void destroy() {
+            readersCache.shutdown();
+        }
+    }
+
+    private static final class IndexerImpl implements Indexer {
         private final IndexWriterRef writer;
 
-        LuceneIndexer(IndexWriterRef writer) {
+        IndexerImpl(IndexWriterRef writer) {
             this.writer = writer;
         }
 
         @Override
         public void close() throws IOException {
             writer.index.commitWriter();
-            readersCache.stale(writer.index); // let the reader reopen
+            writer.getIndex().readersCache.stale(writer.index); // let the reader reopen
         }
 
         /**
@@ -747,11 +757,11 @@ public final class LuceneIndex implements IndexStore {
         }
     }
 
-    private static final class LuceneSearcher implements Searcher {
+    private static final class SearcherImpl implements Searcher {
         private final IndexSearcher searcher;
         private final IndexReaderRef reader;
 
-        LuceneSearcher(IndexReaderRef reader) {
+        SearcherImpl(IndexReaderRef reader) {
             this.reader = reader;
             searcher = new IndexSearcher(reader.get());
         }

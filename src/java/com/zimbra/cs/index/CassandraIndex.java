@@ -139,7 +139,7 @@ public final class CassandraIndex implements IndexStore {
         return true;
     }
 
-    public static final class Factory {
+    public static final class Factory implements IndexStore.Factory {
         private final Cluster cluster;
         private final Keyspace keyspace;
 
@@ -148,8 +148,13 @@ public final class CassandraIndex implements IndexStore {
             keyspace = HFactory.createKeyspace(KEYSPACE, cluster);
         }
 
-        CassandraIndex createIndex(Mailbox mbox) {
+        @Override
+        public CassandraIndex getInstance(Mailbox mbox) {
             return new CassandraIndex(mbox, keyspace);
+        }
+
+        @Override
+        public void destroy() {
         }
 
         public void createSchema() {
@@ -274,7 +279,7 @@ public final class CassandraIndex implements IndexStore {
         @Override
         public int getTotal() {
             return HFactory.createSuperCountQuery(keyspace, UUIDSerializer.get(), IntegerSerializer.get())
-                .setKey(key).setColumnFamily(CF_DOCUMENT).execute().get();
+                .setKey(key).setColumnFamily(CF_DOCUMENT).setRange(null, null, Integer.MAX_VALUE).execute().get();
         }
 
         @Override

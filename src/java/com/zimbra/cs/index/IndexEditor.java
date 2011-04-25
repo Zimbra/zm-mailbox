@@ -46,6 +46,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxIndex;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mailbox.SearchResultMode;
 import com.zimbra.cs.server.ProtocolHandler;
@@ -782,10 +783,10 @@ public class IndexEditor {
     public static void main(String[] args) {
         CliUtil.toolSetup("DEBUG");
 
-        LuceneIndex.startup();
+        MailboxIndex.startup();
         IndexEditor editor = new IndexEditor();
         editor.run();
-        LuceneIndex.shutdown();
+        MailboxIndex.shutdown();
     }
 
     void getSize(int mailboxId) throws ServiceException {

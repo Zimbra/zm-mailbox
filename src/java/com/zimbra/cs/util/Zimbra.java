@@ -38,7 +38,7 @@ import com.zimbra.cs.db.Versions;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.im.IMRouter;
 import com.zimbra.cs.im.ZimbraIM;
-import com.zimbra.cs.index.LuceneIndex;
+import com.zimbra.cs.mailbox.MailboxIndex;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.PurgeThread;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
@@ -58,7 +58,7 @@ import com.zimbra.znative.Util;
  * by any process that adds mail items.  Services under control include redo
  * logging and indexing.
  */
-public class Zimbra {
+public final class Zimbra {
     private static boolean sInited = false;
     private static boolean sIsMailboxd = false;
 
@@ -210,7 +210,7 @@ public class Zimbra {
 
         // ZimletUtil.loadZimlets();
 
-        LuceneIndex.startup();
+        MailboxIndex.startup();
 
         RedoLogProvider redoLog = RedoLogProvider.getInstance();
         if (sIsMailboxd) {
@@ -311,7 +311,7 @@ public class Zimbra {
             SessionCache.shutdown();
         }
 
-        LuceneIndex.shutdown();
+        MailboxIndex.shutdown();
 
         if (sIsMailboxd) {
             if (app.supports(IMRouter.class.getName())) {
