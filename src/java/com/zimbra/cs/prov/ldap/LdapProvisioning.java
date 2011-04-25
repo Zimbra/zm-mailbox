@@ -144,7 +144,7 @@ import com.zimbra.cs.zimlet.ZimletUtil;
  * @since Sep 23, 2004
  * @author schemers
  */
-class LdapProvisioning extends LdapProv {
+public class LdapProvisioning extends LdapProv {
     
     private static final Log mLog = LogFactory.getLog(LdapProvisioning.class);
 
