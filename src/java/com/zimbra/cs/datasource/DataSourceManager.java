@@ -443,23 +443,21 @@ public class DataSourceManager {
         }
 
         ZimbraLog.datasource.info("Updating schedule for data source %s", ds.getName());
-        synchronized (DbMailbox.getSynchronizer()) {
-            DbConnection conn = null;
-            try {
-                conn = DbPool.getConnection();
-                ScheduledTaskManager.cancel(conn, DataSourceTask.class.getName(), ds.getId(), mboxId, false);
-                if (ds.isScheduled()) {
-                    DataSourceTask task = new DataSourceTask(mboxId, accountId, dsId, ds.getPollingInterval());
-                    ZimbraLog.datasource.debug("Scheduling %s", task);
-                    ScheduledTaskManager.schedule(conn, task);
-                }
-                conn.commit();
-            } catch (ServiceException e) {
-                ZimbraLog.datasource.warn("Unable to schedule data source %s", ds.getName(), e);
-                DbPool.quietRollback(conn);
-            } finally {
-                DbPool.quietClose(conn);
+        DbConnection conn = null;
+        try {
+            conn = DbPool.getConnection();
+            ScheduledTaskManager.cancel(conn, DataSourceTask.class.getName(), ds.getId(), mboxId, false);
+            if (ds.isScheduled()) {
+                DataSourceTask task = new DataSourceTask(mboxId, accountId, dsId, ds.getPollingInterval());
+                ZimbraLog.datasource.debug("Scheduling %s", task);
+                ScheduledTaskManager.schedule(conn, task);
             }
+            conn.commit();
+        } catch (ServiceException e) {
+            ZimbraLog.datasource.warn("Unable to schedule data source %s", ds.getName(), e);
+            DbPool.quietRollback(conn);
+        } finally {
+            DbPool.quietClose(conn);
         }
     }
 }

@@ -70,14 +70,12 @@ public class ScheduledTaskManager {
     public static void schedule(ScheduledTask task)
     throws ServiceException {
         DbConnection conn = null;
-        synchronized (DbMailbox.getSynchronizer()) {
-            try {
-                conn = DbPool.getConnection();
-                schedule(conn, task);
-                conn.commit();
-            } finally {
-                DbPool.quietClose(conn);
-            }
+        try {
+            conn = DbPool.getConnection();
+            schedule(conn, task);
+            conn.commit();
+        } finally {
+            DbPool.quietClose(conn);
         }
     }
 
@@ -125,14 +123,12 @@ public class ScheduledTaskManager {
     throws ServiceException {
         DbConnection conn = null;
         ScheduledTask task = null;
-        synchronized (DbMailbox.getSynchronizer()) {
-            try {
-                conn = DbPool.getConnection();
-                task = cancel(conn, className, taskName, mailboxId, mayInterruptIfRunning);
-                conn.commit();
-            } finally {
-                DbPool.quietClose(conn);
-            }
+        try {
+            conn = DbPool.getConnection();
+            task = cancel(conn, className, taskName, mailboxId, mayInterruptIfRunning);
+            conn.commit();
+        } finally {
+            DbPool.quietClose(conn);
         }
         return task;
     }
@@ -182,16 +178,14 @@ public class ScheduledTaskManager {
                 return;
             }
 
-            synchronized (DbMailbox.getSynchronizer()) {
-                try {
-                    conn = DbPool.getConnection();
-                    DbScheduledTask.deleteTask(conn, task.getClass().getName(), task.getName());
-                    conn.commit();
-                } catch (ServiceException e) {
-                    ZimbraLog.scheduler.warn("Unable to clean up %s", task, e);
-                } finally {
-                    DbPool.quietClose(conn);
-                }
+            try {
+                conn = DbPool.getConnection();
+                DbScheduledTask.deleteTask(conn, task.getClass().getName(), task.getName());
+                conn.commit();
+            } catch (ServiceException e) {
+                ZimbraLog.scheduler.warn("Unable to clean up %s", task, e);
+            } finally {
+                DbPool.quietClose(conn);
             }
         }
     }

@@ -1649,9 +1649,7 @@ public class Mailbox {
                 // remove all the relevant entries from the database
                 DbConnection conn = getOperationConnection();
                 DbMailbox.clearMailboxContent(this);
-                synchronized (DbMailbox.getSynchronizer()) {
-                    DbMailbox.deleteMailbox(conn, this);
-                }
+                DbMailbox.deleteMailbox(conn, this);
 
                 // Remove all data related to this mailbox from memcached, so the data doesn't
                 // get used by another user later by mistake if/when mailbox id gets reused.

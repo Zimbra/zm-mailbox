@@ -53,8 +53,6 @@ public class DbOutOfOffice {
      */
     public static boolean alreadySent(DbConnection conn, Mailbox mbox, String sentTo, long cacheDurationMillis)
     throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(DbMailbox.getZimbraSynchronizer(mbox)));
-
         sentTo = sentTo.toLowerCase();
         boolean result = false;
         Timestamp cutoff = new Timestamp(System.currentTimeMillis() - cacheDurationMillis);
@@ -113,8 +111,6 @@ public class DbOutOfOffice {
      * @throws ServiceException if a database error occurred
      */
     public static void setSentTime(DbConnection conn, Mailbox mbox, String sentTo, long sentOn) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(DbMailbox.getZimbraSynchronizer(mbox)));
-
         Timestamp ts = new Timestamp(sentOn);
 
         PreparedStatement stmt = null;
@@ -172,8 +168,6 @@ public class DbOutOfOffice {
      * @throws ServiceException if a database error occurred
      */
     public static void clear(DbConnection conn, Mailbox mbox) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(DbMailbox.getZimbraSynchronizer(mbox)));
-
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -196,8 +190,6 @@ public class DbOutOfOffice {
         // there's no centralized OoO table to prune in the DB-per-user case
         if (DebugConfig.disableMailboxGroups)
             return;
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
 
         PreparedStatement stmt = null;
         try {

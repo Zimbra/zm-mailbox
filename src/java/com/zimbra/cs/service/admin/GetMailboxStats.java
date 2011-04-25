@@ -81,15 +81,13 @@ public class GetMailboxStats extends AdminDocumentHandler {
     }
 
     private List<Mailbox.MailboxData> doSearch() throws ServiceException {
-        List <Mailbox.MailboxData> result = null;
-        synchronized (DbMailbox.getSynchronizer()) {
-            DbConnection conn = null;
-            try {
-                conn = DbPool.getConnection();
-                result = DbMailbox.getMailboxRawData(conn);
-            } finally {
-                DbPool.quietClose(conn);
-            }
+        List<Mailbox.MailboxData> result = null;
+        DbConnection conn = null;
+        try {
+            conn = DbPool.getConnection();
+            result = DbMailbox.getMailboxRawData(conn);
+        } finally {
+            DbPool.quietClose(conn);
         }
         return result;
     }

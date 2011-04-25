@@ -146,8 +146,6 @@ public final class DbSearch {
 
     public static int countResults(DbConnection conn, DbSearchConstraints node, Mailbox mbox, boolean inDumpster)
             throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         // Assemble the search query
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM ");
         sql.append(DbMailItem.getMailItemTableName(mbox, "mi", inDumpster));
@@ -400,8 +398,6 @@ public final class DbSearch {
 
     public static List<Result> search(DbConnection conn, Mailbox mbox, DbSearchConstraints node, SortBy sort,
             int offset, int limit, FetchMode fetch, boolean inDumpster) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         if (!Db.supports(Db.Capability.AVOID_OR_IN_WHERE_CLAUSE) ||
                 (sort.getKey() != SortBy.Key.DATE && sort.getKey() != SortBy.Key.SIZE) ||
                 !(node instanceof DbSearchConstraints.Union)) {
@@ -428,8 +424,6 @@ public final class DbSearch {
     private static List<Result> searchInternal(DbConnection conn, Mailbox mbox, DbSearchConstraints node,
             SortBy sort, int offset, int limit, FetchMode fetch, boolean inDumpster)
             throws SQLException, ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         boolean hasValidLIMIT = offset >= 0 && limit >= 0;
         PreparedStatement stmt = null;
         ResultSet rs = null;

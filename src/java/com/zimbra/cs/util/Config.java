@@ -57,23 +57,21 @@ public class Config {
     private static Timestamp mYoungest;
 
     private static void init(Timestamp ts) throws ServiceException {
-        synchronized (DbMailbox.getSynchronizer()) {
-            DbConnection conn = null;
-            try {
-                conn = DbPool.getConnection();
-                mConfigMap = DbConfig.getAll(conn, ts);
-                for (Iterator<DbConfig> it = mConfigMap.values().iterator(); it.hasNext();) {
-                    DbConfig c = it.next();
-                    if (mYoungest == null) {
-                        mYoungest = c.getModified();
-                    } else if (c.getModified().after(mYoungest)) {
-                        mYoungest = c.getModified();
-                    }
+        DbConnection conn = null;
+        try {
+            conn = DbPool.getConnection();
+            mConfigMap = DbConfig.getAll(conn, ts);
+            for (Iterator<DbConfig> it = mConfigMap.values().iterator(); it.hasNext();) {
+                DbConfig c = it.next();
+                if (mYoungest == null) {
+                    mYoungest = c.getModified();
+                } else if (c.getModified().after(mYoungest)) {
+                    mYoungest = c.getModified();
                 }
-            } finally {
-                if (conn != null)
-                    DbPool.quietClose(conn);
             }
+        } finally {
+            if (conn != null)
+                DbPool.quietClose(conn);
         }
 
         Server serverConfig = Provisioning.getInstance().getLocalServer();
@@ -107,16 +105,14 @@ public class Config {
     public static synchronized void setString(String name, String value)
     throws ServiceException {
         initConfig();
-        synchronized (DbMailbox.getSynchronizer()) {
-            DbConnection conn = null;
-            try {
-                conn = DbPool.getConnection();
-                DbConfig c = DbConfig.set(conn, name, value);
-                mConfigMap.put(name, c);
-                conn.commit();
-            } finally {
-                DbPool.quietClose(conn);
-            }
+        DbConnection conn = null;
+        try {
+            conn = DbPool.getConnection();
+            DbConfig c = DbConfig.set(conn, name, value);
+            mConfigMap.put(name, c);
+            conn.commit();
+        } finally {
+            DbPool.quietClose(conn);
         }
     }
 

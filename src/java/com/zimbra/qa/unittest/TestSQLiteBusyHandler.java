@@ -7,12 +7,14 @@ import java.sql.SQLException;
 
 import junit.framework.TestCase;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.AbstractRetry;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.RetryConnectionFactory;
+import com.zimbra.cs.db.SQLite;
 
 /**
  * Unit test to exercise busy handler
@@ -184,7 +186,7 @@ public class TestSQLiteBusyHandler extends TestCase {
     
     public void testNoBusy()
     {
-        
+        LC.zimbra_class_database.setDefault(SQLite.class.getName());
         try {
             Thread t = new Thread("Update Zimbra") {
                 public void run() {

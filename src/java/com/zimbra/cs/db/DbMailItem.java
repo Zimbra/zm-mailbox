@@ -141,7 +141,6 @@ public class DbMailItem {
 
 
     public void create(UnderlyingData data) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mailbox));
         if (data.id <= 0 || data.folderId <= 0 || data.parentId == 0) {
             throw ServiceException.FAILURE("invalid data for DB item create", null);
         }
@@ -272,8 +271,6 @@ public class DbMailItem {
         if (id <= 0 || folder == null || parentId == 0)
             throw ServiceException.FAILURE("invalid data for DB item copy", null);
 
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         checkNamingConstraint(mbox, folder.getId(), item.getName(), id);
 
         DbConnection conn = mbox.getOperationConnection();
@@ -335,8 +332,6 @@ public class DbMailItem {
         if (newId <= 0)
             throw ServiceException.FAILURE("invalid data for DB item copy", null);
 
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
@@ -371,8 +366,6 @@ public class DbMailItem {
         Mailbox mbox = revision.getMailbox();
         if (newId <= 0)
             throw ServiceException.FAILURE("invalid data for DB item copy", null);
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -417,9 +410,6 @@ public class DbMailItem {
         Mailbox mbox = source.getMailbox();
         if (data == null || data.id <= 0 || data.folderId <= 0 || data.parentId == 0)
             throw ServiceException.FAILURE("invalid data for DB item i-copy", null);
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         checkNamingConstraint(mbox, data.folderId, source.getName(), data.id);
 
         DbConnection conn = mbox.getOperationConnection();
@@ -505,7 +495,6 @@ public class DbMailItem {
         Mailbox mbox = item.getMailbox();
 
         assert(version >= 1);
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -540,9 +529,6 @@ public class DbMailItem {
         if (revision <= 0)
             return;
         Mailbox mbox = item.getMailbox();
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
@@ -563,8 +549,6 @@ public class DbMailItem {
 
     public static void changeType(MailItem item, byte type) throws ServiceException {
         Mailbox mbox = item.getMailbox();
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -587,9 +571,6 @@ public class DbMailItem {
         Mailbox mbox = item.getMailbox();
         if (mbox != folder.getMailbox())
             throw MailServiceException.WRONG_MAILBOX();
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         checkNamingConstraint(mbox, folder.getId(), item.getName(), item.getId());
 
         DbConnection conn = mbox.getOperationConnection();
@@ -642,9 +623,6 @@ public class DbMailItem {
         if (msgs == null || msgs.isEmpty())
             return;
         Mailbox mbox = folder.getMailbox();
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
@@ -700,8 +678,6 @@ public class DbMailItem {
 
     public static SetMultimap<MailItem.Type, Integer> getIndexDeferredIds(DbConnection conn, Mailbox mbox)
             throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         try {
             PreparedStatement stmt = conn.prepareStatement("SELECT type, id FROM " + getMailItemTableName(mbox) +
                     " WHERE " + IN_THIS_MAILBOX_AND + "index_id <= 1"); // 0: deferred, 1: stale
@@ -732,8 +708,6 @@ public class DbMailItem {
     }
 
     public static List<Integer> getReIndexIds(Mailbox mbox, Set<MailItem.Type> types) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = DbPool.getConnection(mbox);
         try {
             PreparedStatement stmt = conn.prepareStatement("SELECT id FROM " + getMailItemTableName(mbox) +
@@ -767,9 +741,6 @@ public class DbMailItem {
     public static void setIndexIds(Mailbox mbox, List<MailItem> items) throws ServiceException {
         if (items == null || items.isEmpty())
             return;
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
@@ -830,9 +801,6 @@ public class DbMailItem {
         Mailbox mbox = children[0].getMailbox();
         if (parent != null && mbox != parent.getMailbox())
             throw MailServiceException.WRONG_MAILBOX();
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
@@ -868,9 +836,6 @@ public class DbMailItem {
         Mailbox mbox = oldParent.getMailbox();
         if (mbox != newParent.getMailbox())
             throw MailServiceException.WRONG_MAILBOX();
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
@@ -899,9 +864,6 @@ public class DbMailItem {
 
     public static void saveMetadata(MailItem item, String metadata) throws ServiceException {
         Mailbox mbox = item.getMailbox();
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
@@ -927,9 +889,6 @@ public class DbMailItem {
 
     public static void persistCounts(MailItem item, Metadata metadata) throws ServiceException {
         Mailbox mbox = item.getMailbox();
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
@@ -959,9 +918,6 @@ public class DbMailItem {
     // need to kill the Note class sooner rather than later
     public static void saveSubject(Note note) throws ServiceException {
         Mailbox mbox = note.getMailbox();
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
@@ -988,9 +944,6 @@ public class DbMailItem {
     public static void saveName(MailItem item, int folderId, Metadata metadata) throws ServiceException {
         Mailbox mbox = item.getMailbox();
         String name = item.getName().equals("") ? null : item.getName();
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         checkNamingConstraint(mbox, folderId, name, item.getId());
 
         DbConnection conn = mbox.getOperationConnection();
@@ -1031,7 +984,6 @@ public class DbMailItem {
     }
 
     public void update(MailItem item, Metadata metadata) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mailbox));
         String name = item.getName().equals("") ? null : item.getName();
         checkNamingConstraint(mailbox, item.getFolderId(), name, item.getId());
 
@@ -1105,9 +1057,6 @@ public class DbMailItem {
 
     public static void saveBlobInfo(MailItem item) throws ServiceException {
         Mailbox mbox = item.getMailbox();
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
@@ -1133,9 +1082,6 @@ public class DbMailItem {
 
     public static void openConversation(String hash, MailItem item) throws ServiceException {
         Mailbox mbox = item.getMailbox();
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
@@ -1175,8 +1121,6 @@ public class DbMailItem {
     public static void closeConversation(String hash, MailItem item) throws ServiceException {
         Mailbox mbox = item.getMailbox();
 
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
@@ -1202,8 +1146,6 @@ public class DbMailItem {
      * @param beforeDate the cutoff date in seconds
      */
     public static void closeOldConversations(Mailbox mbox, int beforeDate) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ZimbraLog.purge.debug("Closing conversations dated before %d.", beforeDate);
@@ -1233,8 +1175,6 @@ public class DbMailItem {
         Mailbox mbox = oldTarget.getMailbox();
         int oldTargetId = oldTarget instanceof VirtualConversation ? ((VirtualConversation) oldTarget).getMessageId() : oldTarget.getId();
 
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
@@ -1254,9 +1194,6 @@ public class DbMailItem {
 
     public static void saveDate(MailItem item) throws ServiceException {
         Mailbox mbox = item.getMailbox();
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
@@ -1278,9 +1215,6 @@ public class DbMailItem {
 
     public static void saveImapUid(MailItem item) throws ServiceException {
         Mailbox mbox = item.getMailbox();
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
@@ -1309,8 +1243,6 @@ public class DbMailItem {
         if (tag.getId() == Flag.ID_UNREAD) {
             throw ServiceException.FAILURE("unread state must be updated with alterUnread()", null);
         }
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
@@ -1377,8 +1309,6 @@ public class DbMailItem {
         }
         Mailbox mbox = tag.getMailbox();
 
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
@@ -1429,8 +1359,6 @@ public class DbMailItem {
     public static void clearTag(Tag tag) throws ServiceException {
         Mailbox mbox = tag.getMailbox();
 
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
@@ -1462,8 +1390,6 @@ public class DbMailItem {
      */
     public static void alterUnread(MailItem item, boolean unread) throws ServiceException {
         Mailbox mbox = item.getMailbox();
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -1513,8 +1439,6 @@ public class DbMailItem {
         if (itemIDs == null || itemIDs.isEmpty())
             return;
 
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
@@ -1556,9 +1480,6 @@ public class DbMailItem {
      */
     public static List<Integer> markDeletionTargets(Folder folder, Set<Integer> candidates) throws ServiceException {
         Mailbox mbox = folder.getMailbox();
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -1639,9 +1560,6 @@ public class DbMailItem {
     public static List<Integer> markDeletionTargets(Mailbox mbox, List<Integer> ids, Set<Integer> candidates) throws ServiceException {
         if (ids == null)
             return null;
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -1717,9 +1635,6 @@ public class DbMailItem {
         if (candidates == null || candidates.isEmpty())
             return null;
         List<Integer> purgedConvs = new ArrayList<Integer>();
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -1779,8 +1694,6 @@ public class DbMailItem {
         if (targets.size() == 0)
             return;
 
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = mbox.getOperationConnection();
         for (int offset = 0; offset < targets.size(); offset += Db.getINClauseBatchSize()) {
             PreparedStatement stmt = null;
@@ -1805,8 +1718,6 @@ public class DbMailItem {
 
     public static void deleteContents(MailItem item, boolean fromDumpster) throws ServiceException {
         Mailbox mbox = item.getMailbox();
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
         String target;
         if (item instanceof VirtualConversation)  target = "id = ?";
@@ -1949,9 +1860,6 @@ public class DbMailItem {
     public static void writeTombstones(Mailbox mbox, TypedIdList tombstones) throws ServiceException {
         if (tombstones == null || tombstones.isEmpty())
             return;
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         for (Map.Entry<MailItem.Type, List<Integer>> entry : tombstones) {
             MailItem.Type type = entry.getKey();
             switch (type) {
@@ -2001,8 +1909,6 @@ public class DbMailItem {
     }
 
     public static TypedIdList readTombstones(Mailbox mbox, long lastSync) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         TypedIdList tombstones = new TypedIdList();
 
         DbConnection conn = mbox.getOperationConnection();
@@ -2049,8 +1955,6 @@ public class DbMailItem {
      */
     public static int purgeTombstones(Mailbox mbox, int beforeDate)
     throws ServiceException {
-        assert Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox);
-
         int cutoff = 0;
 
         DbConnection conn = mbox.getOperationConnection();
@@ -2150,8 +2054,6 @@ public class DbMailItem {
 
     public static Mailbox.MailboxData getFoldersAndTags(Mailbox mbox, FolderTagMap folderData, FolderTagMap tagData, boolean reload)
     throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -2306,8 +2208,6 @@ public class DbMailItem {
         }
         ArrayList<UnderlyingData> result = new ArrayList<UnderlyingData>();
 
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -2345,8 +2245,6 @@ public class DbMailItem {
     public static List<UnderlyingData> getByParent(MailItem parent, SortBy sort, boolean fromDumpster) throws ServiceException {
         Mailbox mbox = parent.getMailbox();
 
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         ArrayList<UnderlyingData> result = new ArrayList<UnderlyingData>();
 
         DbConnection conn = mbox.getOperationConnection();
@@ -2382,9 +2280,6 @@ public class DbMailItem {
 
     public static List<UnderlyingData> getUnreadMessages(MailItem relativeTo) throws ServiceException {
         Mailbox mbox = relativeTo.getMailbox();
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         ArrayList<UnderlyingData> result = new ArrayList<UnderlyingData>();
 
         DbConnection conn = mbox.getOperationConnection();
@@ -2445,8 +2340,6 @@ public class DbMailItem {
         }
         Mailbox mbox = folder.getMailbox();
 
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         List<UnderlyingData> result = new ArrayList<UnderlyingData>();
 
         DbConnection conn = mbox.getOperationConnection();
@@ -2480,8 +2373,6 @@ public class DbMailItem {
             throws ServiceException {
         if (Mailbox.isCachedType(type))
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -2518,8 +2409,6 @@ public class DbMailItem {
     }
 
     public static UnderlyingData getByImapId(Mailbox mbox, int imapId, int folderId) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -2553,8 +2442,6 @@ public class DbMailItem {
             throws ServiceException {
         if (Mailbox.isCachedType(type))
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
         List<UnderlyingData> result = new ArrayList<UnderlyingData>();
         if (ids.isEmpty())
@@ -2609,8 +2496,6 @@ public class DbMailItem {
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
         }
 
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -2650,8 +2535,6 @@ public class DbMailItem {
     }
 
     public static List<UnderlyingData> getByHashes(Mailbox mbox, List<String> hashes) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         if (ListUtil.isEmpty(hashes))
             return null;
 
@@ -2692,9 +2575,6 @@ public class DbMailItem {
         if (Mailbox.isCachedType(type)) {
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
         }
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         List<Integer> modified = new ArrayList<Integer>();
         TypedIdList missed = new TypedIdList();
 
@@ -2744,8 +2624,6 @@ public class DbMailItem {
                 throw ServiceException.FAILURE("attempting to complete a non-conversation", null);
             }
         }
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
         Map<Integer, UnderlyingData> conversations = new HashMap<Integer, UnderlyingData>(Db.getINClauseBatchSize() * 3 / 2);
 
@@ -2807,8 +2685,6 @@ public class DbMailItem {
     public static PendingDelete getLeafNodes(Folder folder) throws ServiceException {
         Mailbox mbox = folder.getMailbox();
 
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         PendingDelete info = new PendingDelete();
         int folderId = folder.getId();
 
@@ -2848,8 +2724,6 @@ public class DbMailItem {
     public static PendingDelete getLeafNodes(Mailbox mbox, List<Folder> folders, int before, boolean globalMessages,
                                              Boolean unread, boolean useChangeDate, Integer maxItems)
     throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         PendingDelete info = new PendingDelete();
 
         DbConnection conn = mbox.getOperationConnection();
@@ -2914,8 +2788,6 @@ public class DbMailItem {
     }
 
     public static PendingDelete getImapDeleted(Mailbox mbox, Set<Folder> folders) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         PendingDelete info = new PendingDelete();
         if (folders != null && folders.isEmpty())
             return info;
@@ -3128,8 +3000,6 @@ public class DbMailItem {
      * if either the id doesn't exist in the table or there is no associated blob.
      */
     public static String getBlobDigest(Mailbox mbox, int itemId) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -3154,9 +3024,6 @@ public class DbMailItem {
     public static void resolveSharedIndex(Mailbox mbox, PendingDelete info) throws ServiceException {
         if (info.sharedIndex == null || info.sharedIndex.isEmpty())
             return;
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         List<Integer> indexIDs = new ArrayList<Integer>(info.sharedIndex);
 
         DbConnection conn = mbox.getOperationConnection();
@@ -3198,9 +3065,6 @@ public class DbMailItem {
 
     public static List<ImapMessage> loadImapFolder(Folder folder) throws ServiceException {
         Mailbox mbox = folder.getMailbox();
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         List<ImapMessage> result = new ArrayList<ImapMessage>();
 
         DbConnection conn = mbox.getOperationConnection();
@@ -3234,8 +3098,6 @@ public class DbMailItem {
     public static int countImapRecent(Folder folder, int uidCutoff) throws ServiceException {
         Mailbox mbox = folder.getMailbox();
 
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -3261,8 +3123,6 @@ public class DbMailItem {
     public static List<Pop3Message> loadPop3Folder(Set<Folder> folders, Date popSince) throws ServiceException {
         assert !folders.isEmpty() : folders;
         Mailbox mbox = Iterables.get(folders, 0).getMailbox();
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         long popDate = popSince == null ? -1 : Math.max(popSince.getTime(), -1);
         List<Pop3Message> result = new ArrayList<Pop3Message>();
 
@@ -3306,9 +3166,6 @@ public class DbMailItem {
 
     public static List<UnderlyingData> getRevisionInfo(MailItem item, boolean fromDumpster) throws ServiceException {
         Mailbox mbox = item.getMailbox();
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         List<UnderlyingData> dlist = new ArrayList<UnderlyingData>();
         if (!item.isTagged(Flag.ID_VERSIONED)) {
             return dlist;
@@ -3338,9 +3195,6 @@ public class DbMailItem {
 
     public static List<Integer> listByFolder(Folder folder, MailItem.Type type, boolean descending) throws ServiceException {
         Mailbox mbox = folder.getMailbox();
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         boolean allTypes = type == MailItem.Type.UNKNOWN;
         List<Integer> result = new ArrayList<Integer>();
 
@@ -3376,8 +3230,6 @@ public class DbMailItem {
 
     public static TypedIdList listByFolder(Folder folder, boolean descending) throws ServiceException {
         Mailbox mbox = folder.getMailbox();
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         TypedIdList result = new TypedIdList();
 
         DbConnection conn = mbox.getOperationConnection();
@@ -3522,8 +3374,6 @@ public class DbMailItem {
     //////////////////////////////////////
 
     public static UnderlyingData getCalendarItem(Mailbox mbox, String uid) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -3559,8 +3409,6 @@ public class DbMailItem {
      */
     public static List<UnderlyingData> getCalendarItems(Mailbox mbox, MailItem.Type type, long start, long end,
             int folderId, int[] excludeFolderIds) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -3581,8 +3429,6 @@ public class DbMailItem {
     }
 
     public static List<UnderlyingData> getCalendarItems(Mailbox mbox, List<String> uids) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -3616,8 +3462,6 @@ public class DbMailItem {
 
     public static TypedIdList listCalendarItems(Mailbox mbox, MailItem.Type type, long start, long end, int folderId,
             int[] excludeFolderIds) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -3675,8 +3519,6 @@ public class DbMailItem {
 
     public static List<Integer> getItemListByDates(Mailbox mbox, MailItem.Type type, long start, long end, int folderId,
             boolean descending) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         boolean allTypes = type == MailItem.Type.UNKNOWN;
         List<Integer> result = new ArrayList<Integer>();
 
@@ -3773,8 +3615,6 @@ public class DbMailItem {
      */
     public static Set<Integer> getIds(Mailbox mbox, DbConnection conn, QueryParams params, boolean fromDumpster)
     throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         PreparedStatement stmt = null;
         ResultSet rs = null;
         Set<Integer> ids = new HashSet<Integer>();
@@ -3846,8 +3686,6 @@ public class DbMailItem {
     public static void addToCalendarItemTable(CalendarItem calItem) throws ServiceException {
         Mailbox mbox = calItem.getMailbox();
 
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         long end = calItem.getEndTime();
         Timestamp startTs = new Timestamp(calItem.getStartTime());
         Timestamp endTs = new Timestamp(end <= 0 ? MAX_DATE : end);
@@ -3877,9 +3715,6 @@ public class DbMailItem {
 
     public static void updateInCalendarItemTable(CalendarItem calItem) throws ServiceException {
         Mailbox mbox = calItem.getMailbox();
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         long end = calItem.getEndTime();
         Timestamp startTs = new Timestamp(calItem.getStartTime());
         Timestamp endTs = new Timestamp(end <= 0 ? MAX_DATE : end);
@@ -3927,8 +3762,6 @@ public class DbMailItem {
     public static List<CalendarItem.CalendarMetadata> getCalendarItemMetadata(Folder folder, long start, long end) throws ServiceException {
         Mailbox mbox = folder.getMailbox();
 
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         ArrayList<CalendarItem.CalendarMetadata> result = new ArrayList<CalendarItem.CalendarMetadata>();
 
         DbConnection conn = mbox.getOperationConnection();
@@ -3975,8 +3808,6 @@ public class DbMailItem {
         if (item.getId() <= 0)
             return;
         Mailbox mbox = item.getMailbox();
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -4215,17 +4046,6 @@ public class DbMailItem {
     public static String getTombstoneTableName(Mailbox mbox) {
         return DbMailbox.qualifyTableName(mbox, TABLE_TOMBSTONE);
     }
-
-
-    /** If the database doesn't support row-level locking, try to synchronize
-     *  database accesses on the Mailbox object to avoid having read/write
-     *  conflicts with Mailbox write transactions.  In the case where the DB
-     *  <u>does</u> support row-level locking, synchronizing on a local
-     *  <code>Object</code> shouldn't add problematic overhead. */
-    public static Object getSynchronizer(Mailbox mbox) {
-        return Db.supports(Db.Capability.ROW_LEVEL_LOCKING) ? new Object() : mbox;
-    }
-
 
     private static boolean areTagsetsLoaded(Mailbox mbox) {
         synchronized (sTagsetCache) {

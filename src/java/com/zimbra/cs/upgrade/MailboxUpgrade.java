@@ -116,7 +116,6 @@ public final class MailboxUpgrade {
     }
 
     public static void upgradeTo2_0(Mailbox mbox) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
         migrateHighestIndexed(mbox);
     }
 

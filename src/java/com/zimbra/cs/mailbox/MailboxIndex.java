@@ -913,13 +913,11 @@ public final class MailboxIndex {
 
     private synchronized SetMultimap<MailItem.Type, Integer> getDeferredIds() throws ServiceException {
         if (deferredIds == null) {
-            synchronized (mailbox) { //TODO remove after bug 59208 is fixed
-                DbConnection conn = DbPool.getConnection(mailbox);
-                try {
-                    deferredIds = DbMailItem.getIndexDeferredIds(conn, mailbox);
-                } finally {
-                    conn.closeQuietly();
-                }
+            DbConnection conn = DbPool.getConnection(mailbox);
+            try {
+                deferredIds = DbMailItem.getIndexDeferredIds(conn, mailbox);
+            } finally {
+                conn.closeQuietly();
             }
         }
         return deferredIds;

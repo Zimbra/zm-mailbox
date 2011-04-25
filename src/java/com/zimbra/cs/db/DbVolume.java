@@ -52,8 +52,6 @@ public class DbVolume {
                                              short fileGroupBits, short fileBits,
                                              boolean compressBlobs, long compressionThreshold)
     throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
-
         short nextId = id;
         if (nextId == Volume.ID_AUTO_INCREMENT)
             nextId = getNextVolumeID(conn);
@@ -98,8 +96,6 @@ public class DbVolume {
                                 short fileGroupBits, short fileBits,
                                 boolean compressBlobs, long compressionThreshold)
     throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
-
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement(
@@ -140,8 +136,6 @@ public class DbVolume {
      * @throws SQLException
      */
     public static boolean delete(DbConnection conn, short id) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
-
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("DELETE FROM volume WHERE id=?");
@@ -159,8 +153,6 @@ public class DbVolume {
     }
 
     private static short getNextVolumeID(DbConnection conn) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
-
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -187,8 +179,6 @@ public class DbVolume {
      * @throws SQLException
      */
     public static Volume get(DbConnection conn, short id) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
-
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -215,8 +205,6 @@ public class DbVolume {
      * @throws SQLException
      */
     public static Map<Short, Volume> getAll(DbConnection conn) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
-
         PreparedStatement stmt = null;
         ResultSet rs = null;
         Map<Short, Volume> result = new HashMap<Short, Volume>();
@@ -243,8 +231,6 @@ public class DbVolume {
     }
 
     public static CurrentVolumes getCurrentVolumes(DbConnection conn) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
-
         CurrentVolumes currVols = new CurrentVolumes();
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -272,8 +258,6 @@ public class DbVolume {
 
     public static void updateCurrentVolume(DbConnection conn, short volType, short volumeId)
     throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
-
         String colName;
         if (volType == Volume.TYPE_MESSAGE)
             colName = "message_volume_id";

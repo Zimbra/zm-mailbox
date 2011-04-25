@@ -455,17 +455,15 @@ public class MailboxManager {
         if (mbox == null) { // not found in cache
             ZimbraPerf.COUNTER_MBOX_CACHE.increment(0);
             MailboxData data;
-            synchronized (DbMailbox.getSynchronizer()) {
-                DbConnection conn = DbPool.getConnection();
-                try {
-                    // fetch the Mailbox data from the database
-                    data = DbMailbox.getMailboxStats(conn, mailboxId);
-                    if (data == null) {
-                        throw MailServiceException.NO_SUCH_MBOX(mailboxId);
-                    }
-                } finally {
-                    conn.closeQuietly();
+            DbConnection conn = DbPool.getConnection();
+            try {
+                // fetch the Mailbox data from the database
+                data = DbMailbox.getMailboxStats(conn, mailboxId);
+                if (data == null) {
+                    throw MailServiceException.NO_SUCH_MBOX(mailboxId);
                 }
+            } finally {
+                conn.closeQuietly();
             }
 
             mbox = instantiateMailbox(data);
@@ -741,15 +739,13 @@ public class MailboxManager {
             }
         }
 
-        synchronized (DbMailbox.getSynchronizer()) {
-            DbConnection conn = null;
-            try {
-                conn = DbPool.getConnection();
-                return DbMailbox.getMailboxSizes(conn, requested);
-            } finally {
-                if (conn != null)
-                    DbPool.quietClose(conn);
-            }
+        DbConnection conn = null;
+        try {
+            conn = DbPool.getConnection();
+            return DbMailbox.getMailboxSizes(conn, requested);
+        } finally {
+            if (conn != null)
+                DbPool.quietClose(conn);
         }
     }
 

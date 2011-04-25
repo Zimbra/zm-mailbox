@@ -183,14 +183,12 @@ public class DataSourceCallback extends AttributeCallback {
         Set<String> accountIds = null;
         List<Account> accts = new ArrayList<Account>();
 
-        synchronized (DbMailbox.getSynchronizer()) {
-            DbConnection conn = null;
-            try {
-                conn = DbPool.getConnection();
-                accountIds = DbMailbox.listAccountIds(conn);
-            } finally {
-                DbPool.quietClose(conn);
-            }
+        DbConnection conn = null;
+        try {
+            conn = DbPool.getConnection();
+            accountIds = DbMailbox.listAccountIds(conn);
+        } finally {
+            DbPool.quietClose(conn);
         }
 
         for (String accountId : accountIds) {

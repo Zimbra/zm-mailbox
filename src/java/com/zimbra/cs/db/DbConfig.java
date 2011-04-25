@@ -54,7 +54,6 @@ public class DbConfig {
     private Timestamp mDbModified;
 
     public static DbConfig set(DbConnection conn, String name, String value) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
 
         Timestamp modified = new Timestamp(System.currentTimeMillis());
 
@@ -96,7 +95,6 @@ public class DbConfig {
      * @throws SQLException
      */
     public static boolean delete(DbConnection conn, String name) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
 
         PreparedStatement stmt = null;
         try {
@@ -119,7 +117,6 @@ public class DbConfig {
      * @throws SQLException
      */
     public static DbConfig get(DbConnection conn, String name) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
 
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -148,7 +145,6 @@ public class DbConfig {
      * @throws SQLException
      */
     public static Map<String, DbConfig> getAll(DbConnection conn, Timestamp ts) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
 
         PreparedStatement stmt = null;
         ResultSet rs = null;

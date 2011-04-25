@@ -816,21 +816,19 @@ public class DBQueryOperation extends QueryOperation {
             dbHits = new ArrayList<DbSearch.Result>();
 
             Mailbox mbox = context.getMailbox();
-            synchronized (DbMailItem.getSynchronizer(mbox)) {
-                switch (executeMode) {
-                    case NO_RESULTS:
-                        assert(false); // notreached
-                        break;
-                    case NO_LUCENE:
-                        noLuceneGetNextChunk(sort);
-                        break;
-                    case DB_FIRST:
-                        dbFirstGetNextChunk(sort);
-                        break;
-                    case LUCENE_FIRST:
-                        luceneFirstGetNextChunk(sort);
-                        break;
-                }
+            switch (executeMode) {
+                case NO_RESULTS:
+                    assert(false); // notreached
+                    break;
+                case NO_LUCENE:
+                    noLuceneGetNextChunk(sort);
+                    break;
+                case DB_FIRST:
+                    dbFirstGetNextChunk(sort);
+                    break;
+                case LUCENE_FIRST:
+                    luceneFirstGetNextChunk(sort);
+                    break;
             }
 
             if (dbHits.size() == 0) {
@@ -1207,13 +1205,11 @@ public class DBQueryOperation extends QueryOperation {
     int getDbHitCount() throws ServiceException {
         if (dbHitCount < 0) {
             Mailbox mbox = context.getMailbox();
-            synchronized (DbMailItem.getSynchronizer(mbox)) {
-                DbConnection conn = DbPool.getConnection(mbox);
-                try {
-                    dbHitCount = DbSearch.countResults(conn, constraints, mbox, context.getParams().inDumpster());
-                } finally {
-                    conn.closeQuietly();
-                }
+            DbConnection conn = DbPool.getConnection(mbox);
+            try {
+                dbHitCount = DbSearch.countResults(conn, constraints, mbox, context.getParams().inDumpster());
+            } finally {
+                conn.closeQuietly();
             }
         }
         return dbHitCount;

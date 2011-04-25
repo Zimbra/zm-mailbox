@@ -39,7 +39,10 @@ public abstract class Db {
         FOREIGN_KEY_NO_PARENT,
         NO_SUCH_DATABASE,
         NO_SUCH_TABLE,
-        TOO_MANY_SQL_PARAMS;
+        TOO_MANY_SQL_PARAMS,
+        BUSY,
+        LOCKED,
+        CANTOPEN;
     }
 
     public static enum Capability {
@@ -128,6 +131,20 @@ public abstract class Db {
      *  the pool and returned to the user. */
     void postOpen(DbConnection conn) throws SQLException {
         // default is to do nothing
+    }
+
+    /**
+     * Called before opening a connection; used to enforce any preconditions the database may require
+     */
+    void preOpen(Integer mboxId) {
+        //default do nothing
+    }
+    
+    /**
+     * Called when connection attempt is aborted, so shared resources can be released
+     */
+    void abortOpen(Integer mboxId) {
+        //default do nothing
     }
 
     /** optimize and optionally compact a database

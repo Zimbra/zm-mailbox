@@ -42,8 +42,7 @@ public class RetryConnectionFactory extends DriverManagerConnectionFactory {
 
             @Override
             protected boolean retryException(SQLException sqle) {
-                //TODO: add new error codes in Db and consult those instead. Currently tightly coupled to SQLite
-                return (super.retryException(sqle) || sqle.getMessage().contains("SQLITE_CANTOPEN"));
+                return (super.retryException(sqle) || Db.errorMatches(sqle, Db.Error.CANTOPEN));
             }
 
         };

@@ -138,7 +138,6 @@ public final class DbMailbox {
      */
     public synchronized static MailboxIdentifier getNextMailboxId(DbConnection conn, int mailboxId)
     throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
 
         boolean explicitId = (mailboxId != Mailbox.ID_AUTO_INCREMENT);
         ZimbraLog.mailbox.debug("Getting next mailbox id.  requested mailboxId=%d.", mailboxId);
@@ -182,7 +181,6 @@ public final class DbMailbox {
     public synchronized static Mailbox.MailboxData createMailbox(DbConnection conn, int requestedMailboxId, String accountId,
                                                                  String comment, int lastBackupAt)
     throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
 
         String limitClause = Db.supports(Db.Capability.LIMIT_CLAUSE) ? " ORDER BY index_volume_id LIMIT 1" : "";
 
@@ -400,8 +398,6 @@ public final class DbMailbox {
         if (DebugConfig.externalMailboxDirectory)
             return;
 
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
-
         int mailboxId = mbox.getId();
         ZimbraLog.mailbox.info("Renaming email/comment of mailbox " + mailboxId + " to " + newName);
 
@@ -423,7 +419,6 @@ public final class DbMailbox {
     }
 
     public static void clearMailboxContactCount(Mailbox mbox) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(getZimbraSynchronizer(mbox)));
 
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -440,7 +435,6 @@ public final class DbMailbox {
     }
 
     public static void recordLastSoapAccess(Mailbox mbox) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(getZimbraSynchronizer(mbox)));
 
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -458,7 +452,6 @@ public final class DbMailbox {
     }
 
     public static void updateMailboxStats(Mailbox mbox) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(getZimbraSynchronizer(mbox)));
 
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -486,7 +479,6 @@ public final class DbMailbox {
     }
 
     public static void setSyncCutoff(Mailbox mbox, int cutoff) throws ServiceException {
-        assert Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(getZimbraSynchronizer(mbox));
 
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -505,7 +497,6 @@ public final class DbMailbox {
     }
 
     public static void startTrackingImap(Mailbox mbox) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(getZimbraSynchronizer(mbox)));
 
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -522,7 +513,6 @@ public final class DbMailbox {
     }
 
     public static String getConfig(Mailbox mbox, String section) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(getZimbraSynchronizer(mbox)));
 
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -547,8 +537,6 @@ public final class DbMailbox {
     }
 
     public static void updateConfig(Mailbox mbox, String section, Metadata config) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(getZimbraSynchronizer(mbox)));
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
@@ -615,7 +603,6 @@ public final class DbMailbox {
     }
 
     public static Map<String, Integer> listMailboxes(DbConnection conn, MailboxManager mmgr) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mmgr));
 
         HashMap<String, Integer> result = new HashMap<String, Integer>();
         if (DebugConfig.externalMailboxDirectory)
@@ -651,8 +638,6 @@ public final class DbMailbox {
      *    <li><code>service.FAILURE</code> - an error occurred while accessing
      *        the database; a SQLException is encapsulated</ul> */
     public static Map<String, Long> getMailboxSizes(DbConnection conn, List<Integer> mailboxIds) throws ServiceException {
-        // FIXME: wrong locking check for DB-per-user case
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
 
         HashMap<String, Long> sizes = new HashMap<String, Long>();
         if (DebugConfig.externalMailboxDirectory)
@@ -667,7 +652,6 @@ public final class DbMailbox {
                 while (rs.next())
                     sizes.put(rs.getString(1).toLowerCase(), rs.getLong(2));
             } else {
-                // FIXME: not taking mailbox locks in the non-ROW_LEVEL_LOCKING case
                 for (int mailboxId : mailboxIds) {
                     // note that if groups are disabled, mailboxId == groupId
                     Db.getInstance().registerDatabaseInterest(conn, getDatabaseName(mailboxId));
@@ -771,24 +755,6 @@ public final class DbMailbox {
         }
     }
 
-
-    /** Returns the object to synchronize all accesses to tables in the ZIMBRA
-     *  database on.  When the underlying database supports row-level locking,
-     *  this will be a new <code>Object</code> -- that is, effectively no
-     *  synchronization, since none is necessary.  If synchronization is needed
-     *  but the code is not encapsulated in a
-     *     <code>synchronized (DbMailbox.getSynchronizer()) { }</code>
-     *  block, calls to DbMailbox methods will assert.
-     * @see Db.Capability#ROW_LEVEL_LOCKING */
-    public static Object getSynchronizer() {
-        try {
-            if (!Db.supports(Db.Capability.ROW_LEVEL_LOCKING))
-                return MailboxManager.getInstance();
-        } catch (ServiceException e) { }
-
-        return new Object();
-    }
-
     public static Object getZimbraSynchronizer(Mailbox mbox) throws ServiceException {
         return DebugConfig.disableMailboxGroups ? mbox : MailboxManager.getInstance();
     }
@@ -852,7 +818,6 @@ public final class DbMailbox {
     }
 
     private static void addToDeletedAccount(DbConnection conn, Mailbox mbox) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
 
         if (DebugConfig.externalMailboxDirectory)
             return;
@@ -910,7 +875,6 @@ public final class DbMailbox {
      */
     public static DeletedAccount getDeletedAccount(DbConnection conn, String email)
     throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
 
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -962,8 +926,6 @@ public final class DbMailbox {
      * @throws ServiceException if the database operation failed
      */
     public static void deleteMailbox(DbConnection conn, Mailbox mbox) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(getZimbraSynchronizer(mbox)));
 
         addToDeletedAccount(conn, mbox);
 
@@ -1041,7 +1003,6 @@ public final class DbMailbox {
      * Returns the account id's for the current server.
      */
     public static Set<String> listAccountIds(DbConnection conn) throws ServiceException {
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
 
         Set<String> accountIds = new HashSet<String>();
         if (DebugConfig.externalMailboxDirectory)
@@ -1073,7 +1034,6 @@ public final class DbMailbox {
         ResultSet rs = null;
         try {
             if (!DebugConfig.disableMailboxGroups) {
-                assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
 
                 stmt = conn.prepareStatement(
                         "SELECT id, group_id, account_id, index_volume_id, item_id_checkpoint," +

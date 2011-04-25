@@ -65,41 +65,39 @@ public class Volume {
     private static Volume sCurrIndexVolume;
 
     public static void reloadVolumes() throws ServiceException {
-        synchronized (DbMailbox.getSynchronizer()) {
-            DbConnection conn = null;
-            try {
-                conn = DbPool.getConnection();
-                Map<Short, Volume> volumes = DbVolume.getAll(conn);
-                DbVolume.CurrentVolumes currVols = DbVolume.getCurrentVolumes(conn);
-                if (currVols == null)
-                    throw VolumeServiceException.BAD_CURRVOL_CONFIG("Missing current volumes info from configuration");
+        DbConnection conn = null;
+        try {
+            conn = DbPool.getConnection();
+            Map<Short, Volume> volumes = DbVolume.getAll(conn);
+            DbVolume.CurrentVolumes currVols = DbVolume.getCurrentVolumes(conn);
+            if (currVols == null)
+                throw VolumeServiceException.BAD_CURRVOL_CONFIG("Missing current volumes info from configuration");
 
-                Volume currMsgVol = volumes.get(new Short(currVols.msgVolId));
-                if (currMsgVol == null)
-                    throw VolumeServiceException.BAD_CURRVOL_CONFIG("Unknown current message volume " + currVols.msgVolId);
-                Volume currSecondaryMsgVol = null;
-                if (currVols.secondaryMsgVolId != ID_NONE) {
-                    currSecondaryMsgVol = volumes.get(new Short(currVols.secondaryMsgVolId));
-                    if (currSecondaryMsgVol == null)
-                        throw VolumeServiceException.BAD_CURRVOL_CONFIG("Unknown current secondary message volume " + currVols.secondaryMsgVolId);
-                }
-                Volume currIndexVol = volumes.get(new Short(currVols.indexVolId));
-                if (currIndexVol == null)
-                    throw VolumeServiceException.BAD_CURRVOL_CONFIG("Unknown current index volume " + currVols.indexVolId);
-
-                // All looks good.  Update current values.
-                synchronized (sVolumeGuard) {
-                    sVolumeMap.clear();
-                    sVolumeMap.putAll(volumes);
-                    sCurrMsgVolume = currMsgVol;
-                    sCurrSecondaryMsgVolume = currSecondaryMsgVol;
-                    sCurrIndexVolume = currIndexVol;
-                    updateSweptDirectories();
-                }
-            } finally {
-                if (conn != null)
-                    DbPool.quietClose(conn);
+            Volume currMsgVol = volumes.get(new Short(currVols.msgVolId));
+            if (currMsgVol == null)
+                throw VolumeServiceException.BAD_CURRVOL_CONFIG("Unknown current message volume " + currVols.msgVolId);
+            Volume currSecondaryMsgVol = null;
+            if (currVols.secondaryMsgVolId != ID_NONE) {
+                currSecondaryMsgVol = volumes.get(new Short(currVols.secondaryMsgVolId));
+                if (currSecondaryMsgVol == null)
+                    throw VolumeServiceException.BAD_CURRVOL_CONFIG("Unknown current secondary message volume " + currVols.secondaryMsgVolId);
             }
+            Volume currIndexVol = volumes.get(new Short(currVols.indexVolId));
+            if (currIndexVol == null)
+                throw VolumeServiceException.BAD_CURRVOL_CONFIG("Unknown current index volume " + currVols.indexVolId);
+
+            // All looks good.  Update current values.
+            synchronized (sVolumeGuard) {
+                sVolumeMap.clear();
+                sVolumeMap.putAll(volumes);
+                sCurrMsgVolume = currMsgVol;
+                sCurrSecondaryMsgVolume = currSecondaryMsgVol;
+                sCurrIndexVolume = currIndexVol;
+                updateSweptDirectories();
+            }
+        } finally {
+            if (conn != null)
+                DbPool.quietClose(conn);
         }
     }
 
@@ -218,29 +216,27 @@ public class Volume {
 
         Short key = null;
         Volume vol = null;
-        synchronized (DbMailbox.getSynchronizer()) {
-            boolean success = false;
-            DbConnection conn = null;
-            try {
-                conn = DbPool.getConnection();
-                vol = DbVolume.create(conn, id, type, name, path,
-                                      mboxGroupBits, mboxBits,
-                                      fileGroupBits, fileBits,
-                                      compressBlobs, compressionThreshold);
-                success = true;
-                if (!noRedo) {
-                    redoRecorder.setId(vol.getId());
-                    redoRecorder.log();
-                }
-                key = new Short(vol.getId());
-                return vol;
-            } finally {
-                endTransaction(success, conn, redoRecorder);
-                if (success) {
-                    synchronized (sVolumeGuard) {
-                        sVolumeMap.put(key, vol);
-                        updateSweptDirectories();
-                    }
+        boolean success = false;
+        DbConnection conn = null;
+        try {
+            conn = DbPool.getConnection();
+            vol = DbVolume.create(conn, id, type, name, path,
+                                  mboxGroupBits, mboxBits,
+                                  fileGroupBits, fileBits,
+                                  compressBlobs, compressionThreshold);
+            success = true;
+            if (!noRedo) {
+                redoRecorder.setId(vol.getId());
+                redoRecorder.log();
+            }
+            key = new Short(vol.getId());
+            return vol;
+        } finally {
+            endTransaction(success, conn, redoRecorder);
+            if (success) {
+                synchronized (sVolumeGuard) {
+                    sVolumeMap.put(key, vol);
+                    updateSweptDirectories();
                 }
             }
         }
@@ -299,27 +295,25 @@ public class Volume {
             redoRecorder.start(System.currentTimeMillis());
         }
 
-        synchronized (DbMailbox.getSynchronizer()) {
-            boolean success = false;
-            DbConnection conn = null;
-            try {
-                conn = DbPool.getConnection();
-                vol = DbVolume.update(conn, id, type, name, path,
-                                      mboxGroupBits, mboxBits,
-                                      fileGroupBits, fileBits,
-                                      compressBlobs, compressionThreshold);
-                success = true;
-                if (!noRedo)
-                    redoRecorder.log();
-                return vol;
-            } finally {
-                endTransaction(success, conn, redoRecorder);
-                if (success) {
-                    Short key = new Short(id);
-                    synchronized (sVolumeGuard) {
-                        sVolumeMap.put(key, vol);
-                        updateSweptDirectories();
-                    }
+        boolean success = false;
+        DbConnection conn = null;
+        try {
+            conn = DbPool.getConnection();
+            vol = DbVolume.update(conn, id, type, name, path,
+                                  mboxGroupBits, mboxBits,
+                                  fileGroupBits, fileBits,
+                                  compressBlobs, compressionThreshold);
+            success = true;
+            if (!noRedo)
+                redoRecorder.log();
+            return vol;
+        } finally {
+            endTransaction(success, conn, redoRecorder);
+            if (success) {
+                Short key = new Short(id);
+                synchronized (sVolumeGuard) {
+                    sVolumeMap.put(key, vol);
+                    updateSweptDirectories();
                 }
             }
         }
@@ -364,24 +358,22 @@ public class Volume {
             updateSweptDirectories();
         }
 
-        synchronized (DbMailbox.getSynchronizer()) {
-            boolean success = false;
-            DbConnection conn = null;
-            try {
-                conn = DbPool.getConnection();
-                boolean deleted = DbVolume.delete(conn, id);
-                success = true;
-                if (!noRedo)
-                    redoRecorder.log();
-                return deleted;
-            } finally {
-                endTransaction(success, conn, redoRecorder);
-                if (vol != null && !success) {
-                    // Ran into database error.  Undo map entry removal.
-                    synchronized (sVolumeGuard) {
-                        sVolumeMap.put(key, vol);
-                        updateSweptDirectories();
-                    }
+        boolean success = false;
+        DbConnection conn = null;
+        try {
+            conn = DbPool.getConnection();
+            boolean deleted = DbVolume.delete(conn, id);
+            success = true;
+            if (!noRedo)
+                redoRecorder.log();
+            return deleted;
+        } finally {
+            endTransaction(success, conn, redoRecorder);
+            if (vol != null && !success) {
+                // Ran into database error.  Undo map entry removal.
+                synchronized (sVolumeGuard) {
+                    sVolumeMap.put(key, vol);
+                    updateSweptDirectories();
                 }
             }
         }
@@ -409,23 +401,21 @@ public class Volume {
             return v;
 
         // Look up from db.
-        synchronized (DbMailbox.getSynchronizer()) {
-            DbConnection conn = null;
-            try {
-                conn = DbPool.getConnection();
-                v = DbVolume.get(conn, id);
-                if (v != null) {
-                    synchronized (sVolumeGuard) {
-                        sVolumeMap.put(key, v);
-                    }
-                    return v;
-                } else {
-                    throw VolumeServiceException.NO_SUCH_VOLUME(id);
+        DbConnection conn = null;
+        try {
+            conn = DbPool.getConnection();
+            v = DbVolume.get(conn, id);
+            if (v != null) {
+                synchronized (sVolumeGuard) {
+                    sVolumeMap.put(key, v);
                 }
-            } finally {
-                if (conn != null)
-                    DbPool.quietClose(conn);
+                return v;
+            } else {
+                throw VolumeServiceException.NO_SUCH_VOLUME(id);
             }
+        } finally {
+            if (conn != null)
+                DbPool.quietClose(conn);
         }
     }
 
@@ -518,28 +508,26 @@ public class Volume {
                 throw VolumeServiceException.WRONG_TYPE_CURRVOL(id, volType);
         }
 
-        synchronized (DbMailbox.getSynchronizer()) {
-            boolean success = false;
-            DbConnection conn = null;
-            try {
-                conn = DbPool.getConnection();
-                DbVolume.updateCurrentVolume(conn, volType, id);
+        boolean success = false;
+        DbConnection conn = null;
+        try {
+            conn = DbPool.getConnection();
+            DbVolume.updateCurrentVolume(conn, volType, id);
 
-                synchronized (sVolumeGuard) {
-                    if (volType == TYPE_MESSAGE)
-                        sCurrMsgVolume = vol;
-                    else if (volType == TYPE_MESSAGE_SECONDARY)
-                        sCurrSecondaryMsgVolume = vol;
-                    else
-                        sCurrIndexVolume = vol;
-                }
-
-                success = true;
-                if (!noRedo)
-                    redoRecorder.log();
-            } finally {
-                endTransaction(success, conn, redoRecorder);
+            synchronized (sVolumeGuard) {
+                if (volType == TYPE_MESSAGE)
+                    sCurrMsgVolume = vol;
+                else if (volType == TYPE_MESSAGE_SECONDARY)
+                    sCurrSecondaryMsgVolume = vol;
+                else
+                    sCurrIndexVolume = vol;
             }
+
+            success = true;
+            if (!noRedo)
+                redoRecorder.log();
+        } finally {
+            endTransaction(success, conn, redoRecorder);
         }
     }
 

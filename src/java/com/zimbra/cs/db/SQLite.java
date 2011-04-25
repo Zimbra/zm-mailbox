@@ -28,10 +28,16 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.dbcp.DelegatingConnection;
+import org.apache.commons.pool.impl.GenericObjectPool;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -57,6 +63,9 @@ public final class SQLite extends Db {
         mErrorCodes.put(Db.Error.FOREIGN_KEY_CHILD_EXISTS, "foreign key");
         mErrorCodes.put(Db.Error.FOREIGN_KEY_NO_PARENT, "foreign key");
         mErrorCodes.put(Db.Error.TOO_MANY_SQL_PARAMS, "too many SQL variables");
+        mErrorCodes.put(Db.Error.BUSY, "SQLITE_BUSY");
+        mErrorCodes.put(Db.Error.LOCKED, "database is locked");
+        mErrorCodes.put(Db.Error.CANTOPEN, "SQLITE_CANTOPEN");
     }
 
     @Override
@@ -90,7 +99,7 @@ public final class SQLite extends Db {
     boolean compareError(SQLException e, Error error) {
         // XXX: the SQLite JDBC driver doesn't yet expose SQLite error codes, which sucks
         String code = mErrorCodes.get(error);
-        return code != null && e.getMessage().contains(code);
+        return code != null && e.getMessage() != null && e.getMessage().contains(code);
     }
 
     @Override
@@ -292,17 +301,69 @@ public final class SQLite extends Db {
         }
     }
 
-//    @Override void preClose(Connection conn) {
-//        LinkedHashMap<String, String> attachedDBs = getAttachedDatabases(conn);
-//        if (attachedDBs == null)
-//            return;
-//
-//        // simplest solution it to just detach all the active databases every time we close the connection
-//        for (Iterator<String> it = attachedDBs.keySet().iterator(); it.hasNext(); ) {
-//            if (detachDatabase(conn, it.next()))
-//                it.remove();
-//        }
-//    }
+    private void releaseMboxDbLock(Integer mboxId) {
+        if (mboxId != null) {
+            ReentrantLock lock = null;
+            lock = lockMap.get(mboxId);
+            if (lock != null && lock.isHeldByCurrentThread()) {
+                lock.unlock();
+                ZimbraLog.dbconn.trace("unlocked mbox %d",mboxId);
+            }
+        }
+    }
+
+    @Override
+    void preClose(DbConnection conn) {
+        releaseMboxDbLock(conn.mboxId);
+    }
+
+
+    private static ConcurrentMap<Integer, ReentrantLock> lockMap = new ConcurrentHashMap<Integer, ReentrantLock>();
+
+    private boolean checkLockMap(int mboxId) {
+        for (Entry<Integer, ReentrantLock> entry : lockMap.entrySet()) {
+            if (entry.getKey().intValue() != mboxId && entry.getValue().isHeldByCurrentThread()) {
+                ZimbraLog.dbconn.debug("already holding db lock for mbox %d",entry.getKey());
+                if (entry.getKey().intValue() != -1) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    @Override
+    void preOpen(Integer mboxId) {
+        ZimbraLog.dbconn.trace("trying to lock mbox %d",mboxId);
+        assert(checkLockMap(mboxId));
+        ReentrantLock lock = lockMap.get(mboxId);
+        if (lock == null) {
+            lock = new ReentrantLock();
+            ReentrantLock added = lockMap.putIfAbsent(mboxId, lock);
+            if (added != null) {
+                lock = added;
+            }
+        }
+        boolean locked = false;
+        long timeoutSecs = 180;
+        //lock with timeout in case external call sites cause a deadlock
+        //(e.g. one site locks some object before opening connection; another incorrectly locks same object after opening connection)
+        //in case of timeout we'll fall through and let sqlite_busy retry handler sort it out
+        try {
+            locked = lock.tryLock(timeoutSecs, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+        }
+        if (!locked) {
+            ZimbraLog.dbconn.warn("Unable to get db lock for mbox %d",mboxId);
+        } else {
+            ZimbraLog.dbconn.trace("locked mbox %d",mboxId);
+        }
+    }
+
+    @Override
+    void abortOpen(Integer mboxId) {
+        releaseMboxDbLock(mboxId);
+    }
 
     @Override
     public boolean databaseExists(DbConnection conn, String dbname) throws ServiceException {
@@ -358,6 +419,7 @@ public final class SQLite extends Db {
             mLoggerUrl = null;
             mSupportsStatsCallback = false;
             mDatabaseProperties = getSQLiteProperties();
+            whenExhaustedAction = GenericObjectPool.WHEN_EXHAUSTED_GROW; //we use a small pool. we can easily starve when any code requires more than one connection to complete a single operation
 
             // override pool size if specified in prefs
             mPoolSize = readConfigInt("sqlite_pool_size", "connection pool size", DEFAULT_CONNECTION_POOL_SIZE);
