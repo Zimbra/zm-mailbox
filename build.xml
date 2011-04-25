@@ -568,6 +568,7 @@
           <include name="commons-fileupload*.jar"/>
           <include name="commons-httpclient*.jar"/>
           <include name="commons-io*.jar"/>
+          <include name="commons-lang-*.jar"/>
           <include name="commons-logging.jar"/>
           <include name="commons-pool*.jar"/>
           <include name="concurrent*.jar"/>
@@ -609,6 +610,11 @@
           <include name="icu4j-*.jar"/>
           <include name="mina-*.jar"/>
           <include name="ews.jar"/>
+          <include name="cassandra-*.jar"/>
+          <include name="hector-*.jar"/>
+          <include name="perf4j-*.jar"/>
+          <include name="libthrift-*.jar"/>
+          <include name="high-scale-lib-*.jar"/>
         </lib>
         <lib dir="${im.jars.dir}" includes="*.jar"/>
         <classes dir="${config.dir}" includes="sieveConfig.xml"/>
@@ -1084,6 +1090,7 @@
         <include name="commons-fileupload*.jar"/>
         <include name="commons-httpclient*.jar"/>
         <include name="commons-io*.jar"/>
+        <include name="commons-lang-*.jar"/>
         <include name="commons-logging.jar"/>
         <include name="commons-pool*.jar"/>
         <include name="yuicompressor*jar"/>
