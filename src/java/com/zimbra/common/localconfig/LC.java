@@ -300,6 +300,7 @@ public final class LC {
     @Supported
     public static final KnownKey servlet_max_concurrent_requests_per_session = KnownKey.newKey(0);
 
+    public static final KnownKey index_store = KnownKey.newKey("lucene");
     public static final KnownKey cassandra_host = KnownKey.newKey("localhost:9160");
 
     @Supported
