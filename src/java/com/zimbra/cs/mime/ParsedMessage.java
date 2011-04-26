@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -111,9 +111,9 @@ public class ParsedMessage {
     private List<MPartInfo> mMessageParts;
     private String mRecipients;
     private String mSender;
-    private RFC822AddressTokenStream mFromTokenStream;
-    private RFC822AddressTokenStream mToTokenStream;
-    private RFC822AddressTokenStream mCcTokenStream;
+    private RFC822AddressTokenStream fromTokenStream;
+    private RFC822AddressTokenStream toTokenStream;
+    private RFC822AddressTokenStream ccTokenStream;
 
     private ParsedAddress mParsedSender;
     private boolean mHasAttachments = false;
@@ -643,45 +643,47 @@ public class ParsedMessage {
     }
 
     private RFC822AddressTokenStream getFromTokenStream() {
-        if (mFromTokenStream == null) {
-            String from = null;
+        if (fromTokenStream != null) {
+            return new RFC822AddressTokenStream(fromTokenStream);
+        }
+
+        String from = null;
+        try {
+            from = getMimeMessage().getHeader("From", null);
+        } catch (MessagingException ignore) {
+        }
+        if (from == null) {
             try {
-                from = getMimeMessage().getHeader("From", null);
+                from = getMimeMessage().getHeader("Sender", null);
             } catch (MessagingException ignore) {
             }
-            if (from == null) {
-                try {
-                    from = getMimeMessage().getHeader("Sender", null);
-                } catch (MessagingException ignore) {
-                }
-            }
-            mFromTokenStream = new RFC822AddressTokenStream(from);
         }
-        return mFromTokenStream;
+        return fromTokenStream = new RFC822AddressTokenStream(from);
     }
 
     private RFC822AddressTokenStream getToTokenStream() {
-        if (mToTokenStream == null) {
-            String to = null;
-            try {
-                to = getMimeMessage().getHeader("To", ",");
-            } catch (MessagingException ignore) {
-            }
-            mToTokenStream = new RFC822AddressTokenStream(to);
+        if (toTokenStream != null) {
+            return new RFC822AddressTokenStream(toTokenStream);
         }
-        return mToTokenStream;
+
+        String to = null;
+        try {
+            to = getMimeMessage().getHeader("To", ",");
+        } catch (MessagingException ignore) {
+        }
+        return toTokenStream = new RFC822AddressTokenStream(to);
     }
 
     private RFC822AddressTokenStream getCcTokenStream() {
-        if (mCcTokenStream == null) {
-            String cc = null;
-            try {
-                cc = getMimeMessage().getHeader("Cc", ",");
-            } catch (MessagingException ignore) {
-            }
-            mCcTokenStream = new RFC822AddressTokenStream(cc);
+        if (ccTokenStream != null) {
+            return new RFC822AddressTokenStream(ccTokenStream);
         }
-        return mCcTokenStream;
+        String cc = null;
+        try {
+            cc = getMimeMessage().getHeader("Cc", ",");
+        } catch (MessagingException ignore) {
+        }
+        return ccTokenStream = new RFC822AddressTokenStream(cc);
     }
 
     /**
