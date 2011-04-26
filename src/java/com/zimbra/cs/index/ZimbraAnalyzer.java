@@ -24,6 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.KeywordTokenizer;
 import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 
 import com.google.common.base.Strings;
@@ -47,6 +48,9 @@ import com.zimbra.cs.index.analysis.UniversalAnalyzer;
 public final class ZimbraAnalyzer extends Analyzer {
     private static final ZimbraAnalyzer SINGLETON = new ZimbraAnalyzer();
     private static final Map<String, Analyzer> ANALYZERS = new ConcurrentHashMap<String, Analyzer>();
+    static {
+        ANALYZERS.put("StandardAnalyzer", new StandardAnalyzer(LuceneIndex.VERSION));
+    }
 
     private final Analyzer defaultAnalyzer = new UniversalAnalyzer();
 
