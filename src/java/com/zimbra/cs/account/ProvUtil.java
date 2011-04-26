@@ -4614,7 +4614,7 @@ public class ProvUtil implements HttpDebugListener {
     private void doPushFreeBusyForDomain(String[] args) throws ServiceException, IOException {
         lookupDomain(args[1]);
         FbCli fbcli = new FbCli();
-        for (Server server : prov.getAllServers()) {
+        for (Server server : prov.getAllServers(Provisioning.SERVICE_MAILBOX)) {
             console.println("pushing to server " + server.getName());
             fbcli.setServer(server.getName());
             fbcli.pushFreeBusyForDomain(args[1]);
