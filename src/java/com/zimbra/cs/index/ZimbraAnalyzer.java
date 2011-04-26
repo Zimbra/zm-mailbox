@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -24,6 +24,7 @@ import java.util.Map;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.KeywordTokenizer;
 import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 
 import com.zimbra.common.service.ServiceException;
@@ -47,8 +48,10 @@ import com.zimbra.cs.index.analysis.UniversalAnalyzer;
  */
 public class ZimbraAnalyzer extends Analyzer {
     private static final ZimbraAnalyzer SINGLETON = new ZimbraAnalyzer();
-    private static final Map<String, Analyzer> sAnalyzerMap =
-        new HashMap<String, Analyzer>();
+    private static final Map<String, Analyzer> ANALYZERS = new HashMap<String, Analyzer>();
+    static {
+        ANALYZERS.put("StandardAnalyzer", new StandardAnalyzer(LuceneIndex.VERSION));
+    }
 
     private final Analyzer defaultAnalyzer = new UniversalAnalyzer();
 
@@ -65,7 +68,7 @@ public class ZimbraAnalyzer extends Analyzer {
      * @return analyzer
      */
     public static Analyzer getAnalyzer(String name) {
-        Analyzer toRet = sAnalyzerMap.get(name);
+        Analyzer toRet = ANALYZERS.get(name);
         if (toRet == null) {
             return getInstance();
         }
@@ -102,13 +105,13 @@ public class ZimbraAnalyzer extends Analyzer {
     public static void registerAnalyzer(String name, Analyzer analyzer)
         throws ServiceException {
 
-        if (sAnalyzerMap.containsKey(name)) {
+        if (ANALYZERS.containsKey(name)) {
             throw ServiceException.FAILURE("Cannot register analyzer: " +
                     name + " because there is one already registered with that name.",
                     null);
         }
 
-        sAnalyzerMap.put(name, analyzer);
+        ANALYZERS.put(name, analyzer);
     }
 
     /**
@@ -117,7 +120,7 @@ public class ZimbraAnalyzer extends Analyzer {
      * @param name
      */
     public static void unregisterAnalyzer(String name) {
-        sAnalyzerMap.remove(name);
+        ANALYZERS.remove(name);
     }
 
     public static String getAllTokensConcatenated(String fieldName, String text) {
