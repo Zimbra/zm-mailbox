@@ -23,6 +23,7 @@ import org.junit.Test;
 
 import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.mailbox.MailServiceException;
 
 /**
  * Unit test for {@link ParsedContact}.
@@ -41,10 +42,10 @@ public final class ParsedContactTest {
         }
 
         try {
-            new ParsedContact(Collections.singletonMap("k", Strings.repeat("v", 1001)));
+            new ParsedContact(Collections.singletonMap("k", Strings.repeat("v", 10000001)));
             Assert.fail();
-        } catch (ServiceException e) {
-            Assert.assertEquals(ServiceException.INVALID_REQUEST, e.getCode());
+        } catch (MailServiceException e) {
+            Assert.assertEquals(MailServiceException.CONTACT_TOO_BIG, e.getCode());
         }
 
         Map<String, String> fields = new HashMap<String, String>();

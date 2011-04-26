@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -91,6 +91,7 @@ public class MailServiceException extends ServiceException {
     public static final String SEND_FAILURE = "mail.SEND_FAILURE";
     public static final String TOO_MANY_QUERY_TERMS_EXPANDED = "mail.TOO_MANY_QUERY_TERMS_EXPANDED";
     public static final String MESSAGE_TOO_BIG = "mail.MESSAGE_TOO_BIG";
+    public static final String CONTACT_TOO_BIG = "mail.CONTACT_TOO_BIG";
     public static final String TEXT_INDEX_OUT_OF_SYNC = "mail.TEXT_INDEX_OUT_OF_SYNC";
     
     public static final String INVALID_COMMIT_ID = "mail.INVALID_COMMIT_ID";
@@ -490,11 +491,16 @@ public class MailServiceException extends ServiceException {
         Argument arg = new Argument("maxSize", maxSize, Argument.Type.NUM);
         return new MailServiceException("Message of size " + actualSize + " exceeded allowed size", MESSAGE_TOO_BIG, false, arg);
     }
-    
+
+    public static MailServiceException CONTACT_TOO_BIG(long max, long actual) {
+        Argument arg = new Argument("maxSize", max, Argument.Type.NUM);
+        return new MailServiceException("Contact of size " + actual + " exceeded allowed size", CONTACT_TOO_BIG, false, arg);
+    }
+
     public static MailServiceException TEXT_INDEX_OUT_OF_SYNC() {
         return new MailServiceException("Text index is not up to date and query has a text part.", MailServiceException.TEXT_INDEX_OUT_OF_SYNC, RECEIVERS_FAULT); 
     }
-    
+
     public static MailServiceException TEMPORARY_ANALYSIS_ERROR() {
         return new MailServiceException("Temporary Analysis Error", MailServiceException.TEMPORARY_ANALYSIS_ERROR, RECEIVERS_FAULT);
     }

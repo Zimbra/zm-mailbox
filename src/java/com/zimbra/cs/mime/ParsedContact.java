@@ -159,7 +159,7 @@ public class ParsedContact {
                 if (key.length() > ContactConstants.MAX_FIELD_NAME_LENGTH) {
                     throw ServiceException.INVALID_REQUEST("too big filed name", null);
                 } else if (value.length() > ContactConstants.MAX_FIELD_VALUE_LENGTH) {
-                    throw ServiceException.INVALID_REQUEST("too big field value", null);
+                    throw MailServiceException.CONTACT_TOO_BIG(ContactConstants.MAX_FIELD_VALUE_LENGTH, value.length());
                 }
                 map.put(key, value);
             }
