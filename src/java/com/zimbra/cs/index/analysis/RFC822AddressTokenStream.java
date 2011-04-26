@@ -100,6 +100,11 @@ public final class RFC822AddressTokenStream extends TokenStream {
         itr = tokens.iterator();
     }
 
+    public RFC822AddressTokenStream(RFC822AddressTokenStream stream) {
+        tokens.addAll(stream.tokens);
+        itr = tokens.iterator();
+    }
+
     private void tokenize(String src, Set<String> emails) {
         add(src);
         int at = src.lastIndexOf('@');

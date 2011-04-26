@@ -50,15 +50,6 @@ public final class LuceneFields {
     public static final String L_SORT_SIZE = "l.size";
 
     /**
-     * "ALL" field, workaround for lucene's inability to do naked not queries.
-     * <p>
-     * This field will automatically be populated with one term, "all" for all documents.
-     */
-    public static final String L_ALL = "ALL";
-
-    public static final String L_ALL_VALUE = "yes";
-
-    /**
      * The "index id" this document -- maps to one or more rows in the DB's mail_item table (index_id column).
      * <p>
      * This field will automatically be populated with the index ID

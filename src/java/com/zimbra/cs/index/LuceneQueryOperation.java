@@ -59,7 +59,7 @@ public final class LuceneQueryOperation extends QueryOperation {
     private int curHitNo = 0; // our offset into the hits
     private boolean haveRunSearch = false;
     private String queryString = "";
-    private BooleanQuery luceneQuery = new BooleanQuery();
+    private Query luceneQuery;
 
     /**
      * Used for doing DB-joins: the list of terms for the filter one of the
@@ -93,36 +93,39 @@ public final class LuceneQueryOperation extends QueryOperation {
     public void addClause(String queryStr, Query query, boolean bool) {
         assert(!haveRunSearch);
 
+        // ignore empty BooleanQuery
+        if (query instanceof BooleanQuery && ((BooleanQuery) query).clauses().isEmpty()) {
+            return;
+        }
+
         queryString = queryString + " " + (bool ? "" : "-") + queryStr;
         if (bool) {
-            luceneQuery.add(new BooleanClause(query, BooleanClause.Occur.MUST));
+            if (luceneQuery == null) {
+                luceneQuery = query;
+            } else if (luceneQuery instanceof BooleanQuery) {
+                ((BooleanQuery) luceneQuery).add(query, BooleanClause.Occur.MUST);
+            } else if (query instanceof BooleanQuery) {
+                ((BooleanQuery) query).add(luceneQuery, BooleanClause.Occur.MUST);
+                luceneQuery = query;
+            } else {
+                BooleanQuery combined = new BooleanQuery();
+                combined.add(luceneQuery, BooleanClause.Occur.MUST);
+                combined.add(query, BooleanClause.Occur.MUST);
+                luceneQuery = combined;
+            }
         } else {
-            // Why do we add this here?  Because lucene won't allow naked "NOT" queries.
-            // Why do we check against Partname=TOP instead of against "All"?  Well, it is a simple case
-            // of "do mostly what the user wants" --->
-            //
-            // Imagine a message with two parts.  The message is from "Ross" and the toplevel part contains
-            // the word "roland" and the attachment doesn't.
-            //           Now a query "from:ross and not roland" WOULD match this message: since the second part
-            //           of the message does indeed match these criteria!
-            //
-            // Basically the problem stems because we play games: sometimes treating the message like multiple
-            // separate parts, but also sometimes treating it like a single part.
-            //
-            // Anyway....that's the problem, and for right now we just fix it by constraining the NOT to the
-            // TOPLEVEL of the message....98% of the time that's going to be good enough.
-            //
-
-            // Parname:TOP now expanded to be (TOP or CONTACT or NOTE) to deal with extended partname assignemtns during indexing
-            BooleanQuery top = new BooleanQuery();
-            top.add(new BooleanClause(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_TOP)),
-                    BooleanClause.Occur.SHOULD));
-            top.add(new BooleanClause(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_CONTACT)),
-                    BooleanClause.Occur.SHOULD));
-            top.add(new BooleanClause(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_NOTE)),
-                    BooleanClause.Occur.SHOULD));
-            luceneQuery.add(new BooleanClause(top, BooleanClause.Occur.MUST));
-            luceneQuery.add(new BooleanClause(query, BooleanClause.Occur.MUST_NOT));
+            if (luceneQuery == null) {
+                BooleanQuery negate = new BooleanQuery();
+                negate.add(query, BooleanClause.Occur.MUST_NOT);
+                luceneQuery = negate;
+            } else if (luceneQuery instanceof BooleanQuery) {
+                ((BooleanQuery) luceneQuery).add(query, BooleanClause.Occur.MUST_NOT);
+            } else {
+                BooleanQuery combined = new BooleanQuery();
+                combined.add(luceneQuery, BooleanClause.Occur.MUST);
+                combined.add(query, BooleanClause.Occur.MUST_NOT);
+                luceneQuery = combined;
+            }
         }
     }
 
@@ -183,16 +186,6 @@ public final class LuceneQueryOperation extends QueryOperation {
         queryString = value;
     }
 
-    /**
-     * Used by a wrapping {@link DBQueryOperation}, when it is running a DB-FIRST plan.
-     *
-     * @return the current query
-     */
-    BooleanQuery getCurrentQuery() {
-        assert(!haveRunSearch);
-        return luceneQuery;
-    }
-
     @Override
     String toQueryString() {
         StringBuilder ret = new StringBuilder("(");
@@ -204,47 +197,41 @@ public final class LuceneQueryOperation extends QueryOperation {
      * Returns {@code true} if we think this query is best evaluated DB-FIRST.
      */
     boolean shouldExecuteDbFirst() {
-        if (searcher == null) {
+        if (searcher == null || luceneQuery == null) {
             return true;
         }
 
-        BooleanClause[] clauses = luceneQuery.getClauses();
-        if (clauses.length <= 1) {
-            Query q = clauses[0].getQuery();
-
-            if (q instanceof TermQuery) {
-                TermQuery tq = (TermQuery)q;
-                Term term = tq.getTerm();
-                try {
-                    int freq = searcher.getCount(term);
-                    int docsCutoff = (int) (searcher.getTotal() * DB_FIRST_TERM_FREQ_PERC);
-                    ZimbraLog.search.debug("Term matches %d docs. DB-First cutoff (%d%%) is %d docs",
-                            freq, (int) (100 * DB_FIRST_TERM_FREQ_PERC), docsCutoff);
-                    if (freq > docsCutoff) {
-                        return true;
-                    }
-                } catch (IOException e) {
-                    return false;
+        if (luceneQuery instanceof TermQuery) {
+            TermQuery query = (TermQuery) luceneQuery;
+            Term term = query.getTerm();
+            try {
+                int freq = searcher.getCount(term);
+                int docsCutoff = (int) (searcher.getTotal() * DB_FIRST_TERM_FREQ_PERC);
+                ZimbraLog.search.debug("Term matches %d docs. DB-First cutoff (%d%%) is %d docs",
+                        freq, (int) (100 * DB_FIRST_TERM_FREQ_PERC), docsCutoff);
+                if (freq > docsCutoff) {
+                    return true;
                 }
+            } catch (IOException e) {
+                return false;
             }
         }
 
         try {
+            //TODO count results using TotalHitCountCollector
             fetchFirstResults(1000); // some arbitrarily large initial size to fetch
             ZimbraLog.search.debug("Lucene part has %d hits", getTotalHitCount());
             if (getTotalHitCount() > 1000) { // also arbitrary, just to make very small searches run w/o extra DB check
                 int dbHitCount = dbOp.getDbHitCount();
                 ZimbraLog.search.debug("Lucene part has %d hits, db part has %d", getTotalHitCount(), dbHitCount);
-
                 if (dbHitCount < getTotalHitCount()) {
                     return true; // run DB-FIRST
                 }
             }
+            return false;
         } catch (ServiceException e) {
             return false;
         }
-
-        return false;
     }
 
     @Override
@@ -328,31 +315,51 @@ public final class LuceneQueryOperation extends QueryOperation {
         }
     }
 
+    private boolean isMustNotOnly(BooleanQuery query) {
+        for (BooleanClause clause : query.clauses()) {
+            if (clause.getOccur() != BooleanClause.Occur.MUST_NOT) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /**
      * Execute the actual search via Lucene
      */
     private void runSearch() {
         haveRunSearch = true;
 
-        try {
-            if (searcher != null) { // this can happen if the Searcher couldn't be opened, e.g. index does not exist
-                BooleanQuery outerQuery = new BooleanQuery();
-                outerQuery.add(new BooleanClause(new TermQuery(
-                        new Term(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE)), Occur.MUST));
-                outerQuery.add(new BooleanClause(luceneQuery, Occur.MUST));
-                ZimbraLog.search.debug("Executing Lucene Query: %s", outerQuery);
+        if (searcher == null) { // this can happen if the Searcher couldn't be opened, e.g. index does not exist
+            hits = null;
+            return;
+        }
 
-                TermsFilter filter = null;
-                if (filterTerms != null) {
-                    filter = new TermsFilter();
-                    for (Term t : filterTerms) {
-                        filter.addTerm(t);
-                    }
+        try {
+            if (luceneQuery instanceof BooleanQuery) {
+                BooleanQuery booleanQuery = (BooleanQuery) luceneQuery;
+                // It is not possible to search for queries that only consist of a MUST_NOT clause. Combining with
+                // MatchAllDocsQuery works in general, but we generate more than one documents per item for multipart
+                // messages. If we match including non top level parts, negative queries will end up matching
+                // everything. Therefore we only match the top level part for negative queries.
+                if (isMustNotOnly(booleanQuery)) {
+                    booleanQuery.add(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_TOP)),
+                            BooleanClause.Occur.SHOULD);
+                    booleanQuery.add(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_CONTACT)),
+                            BooleanClause.Occur.SHOULD);
+                    booleanQuery.add(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_NOTE)),
+                            BooleanClause.Occur.SHOULD);
                 }
-                hits = searcher.search(outerQuery, filter, sort, topDocsLen);
-            } else {
-                hits = null;
             }
+            ZimbraLog.search.debug("Executing Lucene Query: %s", luceneQuery);
+            TermsFilter filter = null;
+            if (filterTerms != null) {
+                filter = new TermsFilter();
+                for (Term t : filterTerms) {
+                    filter.addTerm(t);
+                }
+            }
+            hits = searcher.search(luceneQuery, filter, sort, topDocsLen);
         } catch (IOException e) {
             ZimbraLog.search.error("Failed to search", e);
             Closeables.closeQuietly(searcher);

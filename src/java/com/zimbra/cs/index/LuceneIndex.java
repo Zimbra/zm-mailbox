@@ -722,7 +722,6 @@ public final class LuceneIndex implements IndexStore {
 
                     doc.removeSortSize();
                     doc.addSortSize(item.getSize());
-                    doc.addAll();
 
                     switch (item.getIndexStatus()) {
                         case STALE:

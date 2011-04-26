@@ -170,13 +170,6 @@ public final class IndexDocument {
         document.add(new Field(LuceneFields.L_OBJECTS, value, Field.Store.NO, Field.Index.ANALYZED));
     }
 
-    public void addAll() {
-        if (document.get(LuceneFields.L_ALL) == null) {
-            document.add(new Field(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE,
-                    Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS, Field.TermVector.NO));
-        }
-    }
-
     public void addVersion(int value) {
         document.add(new Field(LuceneFields.L_VERSION, String.valueOf(value),
                 Field.Store.YES, Field.Index.NOT_ANALYZED));

@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.index;
 
+import java.util.EnumSet;
 import java.util.HashMap;
 
 import org.junit.Assert;
@@ -25,10 +26,14 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.DeliveryOptions;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
+import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mime.ParsedMessage;
 
 /**
  * Unit test for {@link ZimbraQuery}.
@@ -87,6 +92,29 @@ public final class ZimbraQueryTest {
         } catch (ServiceException e) {
             Assert.assertEquals(ServiceException.INVALID_REQUEST, e.getCode());
         }
+    }
+
+    @Test
+    public void notClause() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
+        mbox.addMessage(null, new ParsedMessage("From: test1@zimbra.com".getBytes(), false), dopt);
+        Message msg2 = mbox.addMessage(null, new ParsedMessage("From: test2@zimbra.com".getBytes(), false), dopt);
+        Message msg3 = mbox.addMessage(null, new ParsedMessage("From: test3@zimbra.com".getBytes(), false), dopt);
+        mbox.index.indexDeferredItems();
+
+        SearchParams params = new SearchParams();
+        params.setQueryStr("-from:test1@zimbra.com");
+        params.setTypes(EnumSet.of(MailItem.Type.MESSAGE));
+        params.setSortBy(SortBy.NONE);
+        ZimbraQuery query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
+        ZimbraQueryResults results = query.execute();
+        Assert.assertTrue(results.hasNext());
+        Assert.assertEquals(msg2.getId(), results.getNext().getItemId());
+        Assert.assertTrue(results.hasNext());
+        Assert.assertEquals(msg3.getId(), results.getNext().getItemId());
+        Assert.assertFalse(results.hasNext());
+        results.doneWithSearchResults();
     }
 
 }

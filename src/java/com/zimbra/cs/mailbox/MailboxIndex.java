@@ -365,7 +365,7 @@ public final class MailboxIndex {
     }
 
     @VisibleForTesting
-    void indexDeferredItems() throws ServiceException {
+    public void indexDeferredItems() throws ServiceException {
         indexDeferredItems(EnumSet.noneOf(MailItem.Type.class), new BatchStatus(), true);
     }
 
