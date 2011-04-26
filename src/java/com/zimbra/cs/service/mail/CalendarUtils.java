@@ -121,6 +121,7 @@ public class CalendarUtils {
             tzMap = new TimeZoneMap(ICalTimeZone.getAccountTimeZone(account));
         }
         Invite create = new Invite(ICalTok.PUBLISH.toString(), tzMap, false);
+        create.setSentByMe(true);
 
         CalendarUtils.parseInviteElementCommon(
                 account, itemType, inviteElem, create, recurrenceIdAllowed, recurAllowed);
@@ -171,6 +172,7 @@ public class CalendarUtils {
             tzMap = new TimeZoneMap(ICalTimeZone.getAccountTimeZone(account));
         }
         Invite create = new Invite(ICalTok.PUBLISH.toString(), tzMap, false);
+        create.setSentByMe(true);
 
         CalendarUtils.parseInviteElementCommon(
                 account, itemType, inviteElem, create, true, false);
@@ -227,6 +229,7 @@ public class CalendarUtils {
             boolean recurAllowed)
             throws ServiceException {
         Invite mod = new Invite(ICalTok.PUBLISH.toString(), oldInv.getTimeZoneMap(), false);
+        mod.setSentByMe(true);
 
         CalendarUtils.parseInviteElementCommon(
                 account, itemType, inviteElem, mod, oldInv.hasRecurId(), recurAllowed);
@@ -296,6 +299,7 @@ public class CalendarUtils {
             tzMap = new TimeZoneMap(ICalTimeZone.getAccountTimeZone(account));
         }
         Invite cancel = new Invite(ICalTok.CANCEL.toString(), tzMap, false);
+        cancel.setSentByMe(true);
 
         CalendarUtils.parseInviteElementCommon(
                 account, itemType, inviteElem, cancel, recurrenceIdAllowed, recurAllowed);

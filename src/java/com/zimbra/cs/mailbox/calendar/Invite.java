@@ -1398,7 +1398,7 @@ public class Invite {
     public void setMethod(String methodStr) { mMethod = lookupMethod(methodStr); }
     
     public boolean sentByMe() { return mSentByMe; }
-    void setSentByMe(boolean sentByMe) { mSentByMe = sentByMe; }
+    public void setSentByMe(boolean sentByMe) { mSentByMe = sentByMe; }
     
     /**
      * @param acct
