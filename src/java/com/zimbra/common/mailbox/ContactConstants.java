@@ -24,7 +24,7 @@ public final class ContactConstants {
     }
 
     public static final int MAX_FIELD_NAME_LENGTH = 100;
-    public static final int MAX_FIELD_VALUE_LENGTH = 1000;
+    public static final int MAX_FIELD_VALUE_LENGTH = 10000000; // 10M
     public static final int MAX_FIELD_COUNT = 1000;
 
     /** "File as" setting: &nbsp;<tt>Last, First</tt> */
