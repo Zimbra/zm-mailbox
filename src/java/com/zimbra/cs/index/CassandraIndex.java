@@ -47,6 +47,7 @@ import me.prettyprint.hector.api.Cluster;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.beans.HSuperColumn;
+import me.prettyprint.hector.api.beans.SuperSlice;
 import me.prettyprint.hector.api.ddl.ColumnFamilyDefinition;
 import me.prettyprint.hector.api.ddl.ColumnType;
 import me.prettyprint.hector.api.ddl.ComparatorType;
@@ -67,9 +68,9 @@ import com.zimbra.cs.mailbox.Mailbox;
  *
  * <pre>
  * Keyspace: "Zimbra"
- *  ColumnFamily: "IndexField"
+ *  ColumnFamily: "IndexTerm"
  *   Key: AccountUUID
- *    SuperColumn: Term
+ *    SuperColumn: FieldPrefix + Term
  *     Column: ItemID
  *      Value: TermInfo
  *  ColumnFamily: "IndexDocument"
@@ -83,23 +84,23 @@ import com.zimbra.cs.mailbox.Mailbox;
  */
 public final class CassandraIndex implements IndexStore {
     private static final String KEYSPACE = "Zimbra";
-    private static final String CF_FIELD = "IndexField";
+    private static final String CF_TERM = "IndexTerm";
     private static final String CF_DOCUMENT = "IndexDocument";
-    private static final Map<String, String> FIELD2PREFIX = ImmutableMap.<String, String>builder()
-        .put(LuceneFields.L_CONTENT, "Content:")
-        .put(LuceneFields.L_CONTACT_DATA, "Contact:")
-        .put(LuceneFields.L_MIMETYPE, "MimeType:")
-        .put(LuceneFields.L_ATTACHMENTS, "Attach:")
-        .put(LuceneFields.L_FILENAME, "Filename:")
-        .put(LuceneFields.L_OBJECTS, "Object:")
-        .put(LuceneFields.L_H_FROM, "From:")
-        .put(LuceneFields.L_H_TO, "To:")
-        .put(LuceneFields.L_H_CC, "Cc:")
-        .put(LuceneFields.L_H_X_ENV_FROM, "EnvFrom:")
-        .put(LuceneFields.L_H_X_ENV_TO, "EnvTo:")
-        .put(LuceneFields.L_H_MESSAGE_ID, "MsgId:")
-        .put(LuceneFields.L_H_SUBJECT, "Subject:")
-        .put(LuceneFields.L_FIELD, "Field:")
+    private static final Map<String, Character> FIELD2PREFIX = ImmutableMap.<String, Character>builder()
+        .put(LuceneFields.L_CONTENT, 'A')
+        .put(LuceneFields.L_CONTACT_DATA, 'B')
+        .put(LuceneFields.L_MIMETYPE, 'C')
+        .put(LuceneFields.L_ATTACHMENTS, 'D')
+        .put(LuceneFields.L_FILENAME, 'E')
+        .put(LuceneFields.L_OBJECTS, 'F')
+        .put(LuceneFields.L_H_FROM, 'G')
+        .put(LuceneFields.L_H_TO, 'H')
+        .put(LuceneFields.L_H_CC, 'I')
+        .put(LuceneFields.L_H_X_ENV_FROM, 'J')
+        .put(LuceneFields.L_H_X_ENV_TO, 'K')
+        .put(LuceneFields.L_H_MESSAGE_ID, 'L')
+        .put(LuceneFields.L_H_SUBJECT, 'M')
+        .put(LuceneFields.L_FIELD, 'N')
         .build();
 
     private final Mailbox mailbox;
@@ -125,7 +126,7 @@ public final class CassandraIndex implements IndexStore {
     @Override
     public void deleteIndex() {
         HFactory.createMutator(keyspace, UUIDSerializer.get())
-            .addDeletion(key, CF_FIELD, null, null)
+            .addDeletion(key, CF_TERM, null, null)
             .addDeletion(key, CF_DOCUMENT, null, null)
             .execute();
     }
@@ -162,12 +163,12 @@ public final class CassandraIndex implements IndexStore {
                 cluster.dropKeyspace(KEYSPACE);
             } catch (HInvalidRequestException ignore) {
             }
-            BasicColumnFamilyDefinition fieldCF = new BasicColumnFamilyDefinition();
-            fieldCF.setKeyspaceName(KEYSPACE);
-            fieldCF.setName(CF_FIELD);
-            fieldCF.setColumnType(ColumnType.SUPER);
-            fieldCF.setComparatorType(ComparatorType.UTF8TYPE);
-            fieldCF.setSubComparatorType(ComparatorType.INTEGERTYPE);
+            BasicColumnFamilyDefinition termCF = new BasicColumnFamilyDefinition();
+            termCF.setKeyspaceName(KEYSPACE);
+            termCF.setName(CF_TERM);
+            termCF.setColumnType(ColumnType.SUPER);
+            termCF.setComparatorType(ComparatorType.UTF8TYPE);
+            termCF.setSubComparatorType(ComparatorType.INTEGERTYPE);
 
             BasicColumnFamilyDefinition docCF = new BasicColumnFamilyDefinition();
             docCF.setKeyspaceName(KEYSPACE);
@@ -176,7 +177,7 @@ public final class CassandraIndex implements IndexStore {
             docCF.setComparatorType(ComparatorType.INTEGERTYPE);
 
             KeyspaceDefinition ks = HFactory.createKeyspaceDefinition(KEYSPACE, SimpleStrategy.class.getName(), 1,
-                    Arrays.<ColumnFamilyDefinition>asList(new ThriftCfDef(fieldCF), new ThriftCfDef(docCF)));
+                    Arrays.<ColumnFamilyDefinition>asList(new ThriftCfDef(termCF), new ThriftCfDef(docCF)));
             cluster.addKeyspace(ks);
         }
     }
@@ -188,7 +189,7 @@ public final class CassandraIndex implements IndexStore {
         public void addDocument(MailItem item, List<IndexDocument> docs) throws IOException {
             for (IndexDocument doc : docs) {
                 for (Fieldable field : doc.toDocument().getFields()) {
-                    String prefix = FIELD2PREFIX.get(field.name());
+                    Character prefix = FIELD2PREFIX.get(field.name());
                     if (prefix != null && field.isIndexed() && field.isTokenized()) {
                         TokenStream stream = field.tokenStreamValue();
                         if (stream == null) {
@@ -204,7 +205,7 @@ public final class CassandraIndex implements IndexStore {
                             String term = prefix + termAttr.toString();
                             List<HColumn<Integer, String>> cols = Collections.singletonList(HFactory.createColumn(
                                     item.getId(), "", IntegerSerializer.get(), StringSerializer.get()));
-                            mutator.addInsertion(key, CF_FIELD, HFactory.createSuperColumn(term, cols,
+                            mutator.addInsertion(key, CF_TERM, HFactory.createSuperColumn(term, cols,
                                     StringSerializer.get(), IntegerSerializer.get(), StringSerializer.get()));
                         }
                     }
@@ -215,6 +216,10 @@ public final class CassandraIndex implements IndexStore {
                     IntegerSerializer.get(), StringSerializer.get(), StringSerializer.get()));
         }
 
+        /**
+         * Deleting a document only removes the super column from Document CF leaving orphans in Term CF. The orphans
+         * are lazily removed next time they are read. This is because we don't want to maintain doc-to-term mappings.
+         */
         @Override
         public void deleteDocument(List<Integer> ids) {
             for (int id : ids) {
@@ -222,6 +227,9 @@ public final class CassandraIndex implements IndexStore {
             }
         }
 
+        /**
+         * All changes are executed as a batch.
+         */
         @Override
         public void close() {
             mutator.execute();
@@ -237,14 +245,14 @@ public final class CassandraIndex implements IndexStore {
                 if (Strings.isNullOrEmpty(term.text())) {
                     return Collections.emptyList();
                 }
-                String prefix = FIELD2PREFIX.get(term.field());
+                Character prefix = FIELD2PREFIX.get(term.field());
                 if (prefix == null) {
                     return Collections.emptyList();
                 }
                 String termText = prefix + term.text();
                 QueryResult<HSuperColumn<String, Integer, String>> result = HFactory.createSuperColumnQuery(keyspace,
                         UUIDSerializer.get(), StringSerializer.get(), IntegerSerializer.get(), StringSerializer.get())
-                        .setKey(key).setColumnFamily(CF_FIELD).setSuperName(termText).execute();
+                        .setKey(key).setColumnFamily(CF_TERM).setSuperName(termText).execute();
                 HSuperColumn<String, Integer, String> scol = result.get();
                 if (scol == null) {
                     return Collections.emptyList();
@@ -253,10 +261,37 @@ public final class CassandraIndex implements IndexStore {
                 for (HColumn<Integer, String> col : result.get().getColumns()) {
                     ids.add(col.getName());
                 }
-                return ids;
+                return validate(termText, ids);
             } else {
                 return Collections.emptyList();
             }
+        }
+
+        /**
+         * Validates the results by checking if each doc IDs exists in Document CF. Orphans are removed from Term CF.
+         *
+         * @param term term text used in search
+         * @param ids document IDs to validate
+         * @return document IDs which actually exist
+         */
+        private List<Integer> validate(String term, List<Integer> ids) {
+            QueryResult<SuperSlice<Integer, String, String>> qs = HFactory.createSuperSliceQuery(keyspace,
+                    UUIDSerializer.get(), IntegerSerializer.get(), StringSerializer.get(), StringSerializer.get())
+                    .setKey(key).setColumnFamily(CF_DOCUMENT).setColumnNames(ids.toArray(new Integer[ids.size()]))
+                    .execute();
+            List<Integer> result = new ArrayList<Integer>();
+            for (HSuperColumn<Integer, String, String> scol : qs.get().getSuperColumns()) {
+                result.add(scol.getName());
+            }
+            ids.removeAll(result);
+            if (!ids.isEmpty()) { // remove orphan
+                Mutator<UUID> mutator = HFactory.createMutator(keyspace, UUIDSerializer.get());
+                for (Integer id : ids) {
+                    mutator.addSubDelete(key, CF_TERM, term, id, StringSerializer.get(), IntegerSerializer.get());
+                }
+                mutator.execute();
+            }
+            return result;
         }
 
         @Override

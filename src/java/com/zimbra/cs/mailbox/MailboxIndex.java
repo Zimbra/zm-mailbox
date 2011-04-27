@@ -124,6 +124,7 @@ public final class MailboxIndex {
         } else {
             indexStoreFactory = new LuceneIndex.Factory();
         }
+        ZimbraLog.index.info("Using %s", indexStoreFactory.getClass().getDeclaringClass().getSimpleName());
     }
 
     /**

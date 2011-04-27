@@ -19,5 +19,5 @@
 
 create keyspace Zimbra with replication_factor = 1 and placement_strategy = 'org.apache.cassandra.locator.SimpleStrategy';
 use Zimbra;
-create column family IndexField with column_type = 'Super' and comparator = 'UTF8Type' and subcomparator = 'IntegerType';
+create column family IndexTerm with column_type = 'Super' and comparator = 'UTF8Type' and subcomparator = 'IntegerType';
 create column family IndexDocument with column_type = 'Super' and comparator = 'IntegerType';

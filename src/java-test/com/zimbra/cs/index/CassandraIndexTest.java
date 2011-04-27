@@ -15,6 +15,7 @@
 package com.zimbra.cs.index;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +25,7 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.search.TermQuery;
 import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -45,6 +47,7 @@ import com.zimbra.cs.mime.ParsedContact;
  */
 public final class CassandraIndexTest {
     private static CassandraDaemon cassandra;
+    private static final CassandraIndex.Factory FACTORY = new CassandraIndex.Factory();
 
     @BeforeClass
     public static void init() throws Exception {
@@ -62,6 +65,8 @@ public final class CassandraIndexTest {
         MailboxTestUtil.initServer();
         Provisioning prov = Provisioning.getInstance();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
+
+        FACTORY.createSchema();
     }
 
     @AfterClass
@@ -69,6 +74,11 @@ public final class CassandraIndexTest {
         if (cassandra != null) {
             cassandra.destroy();
         }
+    }
+
+    @Before
+    public void setup() throws Exception {
+        MailboxTestUtil.clearData();
     }
 
     @Test
@@ -80,9 +90,7 @@ public final class CassandraIndexTest {
         fields.put(ContactConstants.A_email, "test@zimbra.com");
         Contact contact = mbox.createContact(null, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
 
-        CassandraIndex.Factory factory = new CassandraIndex.Factory();
-        factory.createSchema();
-        CassandraIndex index = factory.getInstance(mbox);
+        CassandraIndex index = FACTORY.getInstance(mbox);
         index.deleteIndex();
         Indexer indexer = index.openIndexer();
         indexer.addDocument(contact, contact.generateIndexData());
@@ -98,6 +106,39 @@ public final class CassandraIndexTest {
                 null, null, 100);
         Assert.assertEquals(1, result.size());
         Assert.assertEquals(contact.getId(), result.get(0).intValue());
+        searcher.close();
+    }
+
+    @Test
+    public void deleteDocument() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Contact contact1 = mbox.createContact(null, new ParsedContact(Collections.singletonMap(ContactConstants.A_email,
+                "test1@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
+        Contact contact2 = mbox.createContact(null, new ParsedContact(Collections.singletonMap(ContactConstants.A_email,
+                "test2@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
+
+        CassandraIndex index = FACTORY.getInstance(mbox);
+        index.deleteIndex();
+        Indexer indexer = index.openIndexer();
+        indexer.addDocument(contact1, contact1.generateIndexData());
+        indexer.addDocument(contact2, contact2.generateIndexData());
+        indexer.close();
+
+        Searcher searcher = index.openSearcher();
+        Assert.assertEquals(2, searcher.getTotal());
+        List<Integer> result = searcher.search(new TermQuery(new Term(LuceneFields.L_CONTACT_DATA, "@zimbra.com")),
+                null, null, 100);
+        Assert.assertEquals(2, result.size());
+
+        indexer = index.openIndexer();
+        indexer.deleteDocument(Collections.singletonList(contact1.getId()));
+        indexer.close();
+
+        Assert.assertEquals(1, searcher.getTotal());
+        result = searcher.search(new TermQuery(new Term(LuceneFields.L_CONTACT_DATA, "@zimbra.com")),
+                null, null, 100);
+        Assert.assertEquals(1, result.size());
+
         searcher.close();
     }
 
