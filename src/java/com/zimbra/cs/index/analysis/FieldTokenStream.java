@@ -25,6 +25,7 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.util.NumericUtils;
 
 import com.google.common.base.Strings;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.LuceneFields;
 
 /**
@@ -96,6 +97,8 @@ public final class FieldTokenStream extends TokenStream {
     private void add(String token) {
         if (token.length() <= MAX_TOKEN_LEN && tokens.size() < MAX_TOKEN_COUNT) {
             tokens.add(token);
+        } else {
+            ZimbraLog.index.warn("Unable to index: %.30s", token);
         }
     }
 
