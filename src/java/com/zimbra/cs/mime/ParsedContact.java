@@ -458,9 +458,8 @@ public class ParsedContact {
 
         FieldTokenStream fields = new FieldTokenStream();
         for (Map.Entry<String, String> entry : getFields().entrySet()) {
-
-            // do not index SMIME certificate fields
-            if (Contact.isSMIMECertField(entry.getKey())) {
+            // Ignore these fields as they can be too big.
+            if (Contact.isSMIMECertField(entry.getKey()) || ContactConstants.A_member.equals(entry.getKey())) {
                 continue;
             }
 
