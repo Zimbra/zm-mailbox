@@ -36,6 +36,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.cs.mailbox.CalendarItem;
+import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -235,7 +236,8 @@ public class SyncFormatter extends Formatter {
         try {
             Mailbox mbox = folder.getMailbox();
             ParsedMessage pm = new ParsedMessage(body, mbox.attachmentsIndexingEnabled());
-            mbox.addMessage(context.opContext, pm, folder.getId(), true, 0, null);
+            DeliveryOptions dopt = new DeliveryOptions().setFolderId(folder).setNoICal(true);
+            mbox.addMessage(context.opContext, pm, dopt, null);
         } catch (ServiceException e) {
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "error parsing message");
         }

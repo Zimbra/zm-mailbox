@@ -25,7 +25,7 @@ public class DeliveryOptions {
     private int mFolderId = -1;
     private boolean mNoICal = false;
     private int mFlags = 0;
-    private String mTagString = null;
+    private String mTags = null;
     private int mConversationId = Mailbox.ID_AUTO_INCREMENT;
     private String mRecipientEmail = ":API:";
     private Message.DraftInfo mDraftInfo = null;
@@ -34,14 +34,19 @@ public class DeliveryOptions {
     public int getFolderId() { return mFolderId; }
     public boolean getNoICal() { return mNoICal; }
     public int getFlags() { return mFlags; }
-    public String getTagString() { return mTagString; }
+    public String getTags() { return mTags; }
     public int getConversationId() { return mConversationId; }
     public String getRecipientEmail() { return mRecipientEmail; }
     public Message.DraftInfo getDraftInfo() { return mDraftInfo; }
     public CustomMetadata getCustomMetadata() { return mCustomMetadata; }
-    
+
     public DeliveryOptions setFolderId(int folderId) {
         mFolderId = folderId;
+        return this;
+    }
+
+    public DeliveryOptions setFolderId(Folder folder) {
+        mFolderId = folder.getId();
         return this;
     }
     
@@ -55,8 +60,8 @@ public class DeliveryOptions {
         return this;
     }
     
-    public DeliveryOptions setTagString(String tagString) {
-        mTagString = tagString;
+    public DeliveryOptions setTags(String tagString) {
+        mTags = tagString;
         return this;
     }
     

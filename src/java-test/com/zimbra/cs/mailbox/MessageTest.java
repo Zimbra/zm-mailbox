@@ -63,7 +63,7 @@ public final class MessageTest {
         opt.setFolderId(Mailbox.ID_FOLDER_INBOX);
         byte[] raw = ByteStreams.toByteArray(getClass().getResourceAsStream("raw-jis-msg.txt"));
         ParsedMessage pm = new ParsedMessage(raw, false);
-        Message message = mbox.addMessage(null, pm, opt);
+        Message message = mbox.addMessage(null, pm, opt, null);
         Assert.assertEquals("\u65e5\u672c\u8a9e", pm.getFragment());
         List<IndexDocument> docs = message.generateIndexData();
         Assert.assertEquals(2, docs.size());
@@ -78,9 +78,9 @@ public final class MessageTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         DeliveryOptions opt = new DeliveryOptions();
         opt.setFolderId(Mailbox.ID_FOLDER_INBOX);
-        Message msg1 = mbox.addMessage(null, new ParsedMessage("From: test1@zimbra.com".getBytes(), false), opt);
-        Message msg2 = mbox.addMessage(null, new ParsedMessage("From: test2@zimbra.com".getBytes(), false), opt);
-        Message msg3 = mbox.addMessage(null, new ParsedMessage("From: test3@zimbra.com".getBytes(), false), opt);
+        Message msg1 = mbox.addMessage(null, new ParsedMessage("From: test1@zimbra.com".getBytes(), false), opt, null);
+        Message msg2 = mbox.addMessage(null, new ParsedMessage("From: test2@zimbra.com".getBytes(), false), opt, null);
+        Message msg3 = mbox.addMessage(null, new ParsedMessage("From: test3@zimbra.com".getBytes(), false), opt, null);
 
         DbConnection conn = DbPool.getConnection(mbox);
         int senderId1 = DbUtil.executeQuery(conn,
@@ -107,12 +107,12 @@ public final class MessageTest {
         DeliveryOptions opt = new DeliveryOptions();
         opt.setFolderId(Mailbox.ID_FOLDER_INBOX);
         Message msg1 = mbox.addMessage(null, new ParsedMessage(
-                "From: from1@zimbra.com\r\nTo: to1@zimbra.com".getBytes(), false), opt);
+                "From: from1@zimbra.com\r\nTo: to1@zimbra.com".getBytes(), false), opt, null);
         Message msg2 = mbox.addMessage(null, new ParsedMessage(
-                "From: from2@zimbra.com\r\nTo: to2 <to2@zimbra.com>".getBytes(), false), opt);
+                "From: from2@zimbra.com\r\nTo: to2 <to2@zimbra.com>".getBytes(), false), opt, null);
         Message msg3 = mbox.addMessage(null, new ParsedMessage(
                 "From: from3@zimbra.com\r\nTo: to3-1 <to3-1@zimbra.com>, to3-2 <to3-2@zimbra.com>".getBytes(),
-                false), opt);
+                false), opt, null);
 
         Assert.assertEquals("to1@zimbra.com", msg1.getSortRecipients());
         Assert.assertEquals("to2", msg2.getSortRecipients());

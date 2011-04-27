@@ -42,7 +42,9 @@ import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Document;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -301,7 +303,8 @@ public class NativeFormatter extends Formatter {
         if (filename == null) {
             try {
                 ParsedMessage pm = new ParsedMessage(context.getPostBody(), mbox.attachmentsIndexingEnabled());
-                item = mbox.addMessage(context.opContext, pm, folder.getId(), true, 0, null);
+                DeliveryOptions dopt = new DeliveryOptions().setFolderId(folder).setNoICal(true);
+                item = mbox.addMessage(context.opContext, pm, dopt, null);
                 return;
             } catch (ServiceException e) {
                 throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "error parsing message");

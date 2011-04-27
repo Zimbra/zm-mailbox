@@ -18,6 +18,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
 import com.zimbra.cs.mailbox.DeliveryContext;
+import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -120,8 +121,9 @@ extends FilterHandler {
     private Message addMessage(int folderId, Collection<ActionFlag> flagActions, String tags)
     throws ServiceException {
         try {
-            return mailbox.addMessage(octxt, parsedMessage, folderId,
-                noICal, FilterUtil.getFlagBitmask(flagActions, Flag.BITMASK_UNREAD, mailbox), tags, recipientAddress, dctxt);
+            DeliveryOptions dopt = new DeliveryOptions().setFolderId(folderId).setNoICal(noICal).setRecipientEmail(recipientAddress);
+            dopt.setFlags(FilterUtil.getFlagBitmask(flagActions, Flag.BITMASK_UNREAD, mailbox)).setTags(tags);
+            return mailbox.addMessage(octxt, parsedMessage, dopt, dctxt);
         } catch (IOException e) {
             throw ServiceException.FAILURE("Unable to add incoming message", e);
         }

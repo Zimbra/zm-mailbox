@@ -4474,44 +4474,7 @@ public class Mailbox {
         }
     }
 
-    public Message addMessage(OperationContext octxt, ParsedMessage pm, DeliveryOptions dopt)
-    throws IOException, ServiceException {
-        return addMessage(octxt, pm, dopt.getFolderId(), dopt.getNoICal(), dopt.getFlags(), dopt.getTagString(),
-                          dopt.getConversationId(), dopt.getRecipientEmail(), dopt.getCustomMetadata(), null);
-    }
-
-    public Message addMessage(OperationContext octxt, InputStream in, int sizeHint, Long receivedDate, DeliveryOptions dopt)
-    throws IOException, ServiceException {
-        return addMessage(octxt, in, sizeHint, receivedDate, dopt.getFolderId(), dopt.getNoICal(),
-                          dopt.getFlags(), dopt.getTagString(), dopt.getConversationId(), dopt.getRecipientEmail(),
-                          dopt.getCustomMetadata(), null);
-    }
-
-    public Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags, String tags, int conversationId)
-    throws IOException, ServiceException {
-        return addMessage(octxt, pm, folderId, noICal, flags, tags, conversationId, ":API:", null, new DeliveryContext());
-    }
-
-    public Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags, String tags)
-    throws IOException, ServiceException {
-        return addMessage(octxt, pm, folderId, noICal, flags, tags, ID_AUTO_INCREMENT, ":API:", null, new DeliveryContext());
-    }
-
-    public Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags, String tags,
-                              String rcptEmail, DeliveryContext dctxt)
-    throws IOException, ServiceException {
-        return addMessage(octxt, pm, folderId, noICal, flags, tags, ID_AUTO_INCREMENT, rcptEmail, null, dctxt);
-    }
-
-    public Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags, String tags,
-                              String rcptEmail, CustomMetadata customData, DeliveryContext dctxt)
-    throws IOException, ServiceException {
-        return addMessage(octxt, pm, folderId, noICal, flags, tags, ID_AUTO_INCREMENT, rcptEmail, customData, dctxt);
-    }
-
-    public Message addMessage(OperationContext octxt, InputStream in, int sizeHint, Long receivedDate, int folderId, boolean noIcal,
-                              int flags, String tagStr, int conversationId, String rcptEmail,
-                              CustomMetadata customData, DeliveryContext dctxt)
+    public Message addMessage(OperationContext octxt, InputStream in, int sizeHint, Long receivedDate, DeliveryOptions dopt, DeliveryContext dctxt)
     throws IOException, ServiceException {
         int bufLen = Provisioning.getInstance().getLocalServer().getMailDiskStreamingThreshold();
         CopyInputStream cs = new CopyInputStream(in, sizeHint, bufLen, bufLen);
@@ -4540,19 +4503,17 @@ public class Mailbox {
             if (dctxt == null)
                 dctxt = new DeliveryContext();
             dctxt.setIncomingBlob(blob);
-            return addMessage(octxt, pm, folderId, noIcal, flags, tagStr, conversationId, rcptEmail,
-                              customData, dctxt);
+            return addMessage(octxt, pm, dopt, dctxt);
         } finally {
             cs.release();
             StoreManager.getInstance().quietDelete(blob);
         }
     }
 
-    public Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal,
-                              int flags, String tagStr, int conversationId, String rcptEmail,
-                              CustomMetadata customData, DeliveryContext dctxt)
+    public Message addMessage(OperationContext octxt, ParsedMessage pm, DeliveryOptions dopt, DeliveryContext dctxt)
     throws IOException, ServiceException {
-        return addMessage(octxt, pm, folderId, noICal, flags, tagStr, conversationId, rcptEmail, null, customData, dctxt);
+        return addMessage(octxt, pm, dopt.getFolderId(), dopt.getNoICal(), dopt.getFlags(), dopt.getTags(),
+                          dopt.getConversationId(), dopt.getRecipientEmail(), null, dopt.getCustomMetadata(), dctxt);
     }
 
     private Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags,
@@ -6547,7 +6508,8 @@ public class Mailbox {
                         ZimbraLog.calendar.warn("Skipping bad iCalendar object during import: uid=" + inv.getUid(), e);
                     }
                 } else if (obj instanceof ParsedMessage) {
-                    addMessage(octxtNoConflicts, (ParsedMessage) obj, folder.getId(), true, Flag.BITMASK_UNREAD, null);
+                    DeliveryOptions dopt = new DeliveryOptions().setFolderId(folder).setNoICal(true).setFlags(Flag.BITMASK_UNREAD);
+                    addMessage(octxtNoConflicts, (ParsedMessage) obj, dopt, null);
                 }
             } catch (IOException e) {
                 throw ServiceException.FAILURE("IOException", e);

@@ -60,7 +60,7 @@ public class TagTest {
         checkInboxCounts("empty folder", mbox, 0, 0, 0, 0);
 
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX).setFlags(Flag.BITMASK_UNREAD);
-        int msgId = mbox.addMessage(null, ThreaderTest.getRootMessage(), dopt).getId();
+        int msgId = mbox.addMessage(null, ThreaderTest.getRootMessage(), dopt, null).getId();
         checkInboxCounts("added message", mbox, 1, 1, 0, 0);
 
         mbox.alterTag(null, msgId, MailItem.Type.MESSAGE, Flag.ID_DELETED, true);

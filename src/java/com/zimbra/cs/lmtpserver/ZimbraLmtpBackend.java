@@ -17,6 +17,7 @@ package com.zimbra.cs.lmtpserver;
 
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
 import com.google.common.collect.Multimap;
 import com.zimbra.common.localconfig.LC;
@@ -38,6 +39,7 @@ import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.lmtpserver.utils.LmtpClient;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.DeliveryContext;
+import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -540,9 +542,10 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                     if (recipient.getFlags() != null) {
                                         flags = Flag.toBitmask(recipient.getFlags());
                                     }
-                                    Message msg = mbox.addMessage(null, pm, folderId, false, flags, recipient.getTags(), rcptEmail, sharedDeliveryCtxt);
-                                    addedMessageIds = new ArrayList<ItemId>(1);
-                                    addedMessageIds.add(new ItemId(msg));
+                                    DeliveryOptions dopt = new DeliveryOptions().setFolderId(folderId);
+                                    dopt.setFlags(flags).setTags(recipient.getTags()).setRecipientEmail(rcptEmail);
+                                    Message msg = mbox.addMessage(null, pm, dopt, sharedDeliveryCtxt);
+                                    addedMessageIds = Lists.newArrayList(new ItemId(msg));
                                 } else if (!DebugConfig.disableIncomingFilter) {
                                     // Get msgid first, to avoid having to reopen and reparse the blob
                                     // file if Mailbox.addMessageInternal() closes it.
@@ -552,10 +555,10 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                             Mailbox.ID_FOLDER_INBOX, false);
                                 } else {
                                     pm.getMessageID();
-                                    Message msg = mbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX, false, Flag.BITMASK_UNREAD, null,
-                                                                  rcptEmail, sharedDeliveryCtxt);
-                                    addedMessageIds = new ArrayList<ItemId>(1);
-                                    addedMessageIds.add(new ItemId(msg));
+                                    DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
+                                    dopt.setFlags(Flag.BITMASK_UNREAD).setRecipientEmail(rcptEmail);
+                                    Message msg = mbox.addMessage(null, pm, dopt, sharedDeliveryCtxt);
+                                    addedMessageIds = Lists.newArrayList(new ItemId(msg));
                                 }
                                 success = true;
                                 if (addedMessageIds != null && addedMessageIds.size() > 0) {

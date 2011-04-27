@@ -9,6 +9,7 @@ import javax.mail.internet.MimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
+import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -71,9 +72,10 @@ public class OutgoingMessageHandler extends FilterHandler {
     public Message explicitKeep(Collection<ActionFlag> flagActions, String tags)
     throws ServiceException {
         try {
-            return mailbox.addMessage(octxt, parsedMessage, defaultFolderId, noICal,
-                                       FilterUtil.getFlagBitmask(flagActions, defaultFlags, mailbox),
-                                       FilterUtil.getTagsUnion(tags, defaultTags), convId);
+            DeliveryOptions dopt = new DeliveryOptions().setFolderId(defaultFolderId).setConversationId(convId);
+            dopt.setFlags(FilterUtil.getFlagBitmask(flagActions, defaultFlags, mailbox));
+            dopt.setTags(FilterUtil.getTagsUnion(tags, defaultTags));
+            return mailbox.addMessage(octxt, parsedMessage, dopt, null);
         } catch (IOException e) {
             throw ServiceException.FAILURE("Unable to add sent message", e);
         }

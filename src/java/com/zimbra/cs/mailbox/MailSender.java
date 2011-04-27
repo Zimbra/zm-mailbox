@@ -529,7 +529,8 @@ public class MailSender {
                     // save it to the requested folder
                     int sentFolderId = getSentFolderId(mboxSave, mIdentity);
                     if (DebugConfig.disableOutgoingFilter) {
-                        Message msg = mboxSave.addMessage(octxt, pm, sentFolderId, true, flags, null, convId);
+                        DeliveryOptions dopt = new DeliveryOptions().setFolderId(sentFolderId).setNoICal(true).setFlags(flags).setConversationId(convId);
+                        Message msg = mboxSave.addMessage(octxt, pm, dopt, null);
                         RollbackData rollback = new RollbackData(msg);
                         rollbacks.add(rollback);
                         returnItemId = rollback.msgId;
@@ -568,7 +569,8 @@ public class MailSender {
                 }
                 int sentFolderId = getSentFolderId(mbox, Provisioning.getInstance().getDefaultIdentity(acct));
                 if (DebugConfig.disableOutgoingFilter) {
-                    Message msg = mbox.addMessage(octxtTarget, pm, sentFolderId, true, flags, null, convId);
+                    DeliveryOptions dopt = new DeliveryOptions().setFolderId(sentFolderId).setNoICal(true).setFlags(flags).setConversationId(convId);
+                    Message msg = mbox.addMessage(octxt, pm, dopt, null);
                     rollbacks.add(new RollbackData(msg));
                 } else {
                     List<ItemId> addedItemIds =

@@ -34,6 +34,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.DeliveryContext;
+import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -444,18 +445,29 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         }
     }
 
+    DeliveryOptions getDeliveryOptions() {
+        return new DeliveryOptions()
+            .setFolderId(mFolderId)
+            .setNoICal(mNoICal)
+            .setFlags(mFlags)
+            .setTags(mTags)
+            .setConversationId(mConvId)
+            .setRecipientEmail(mRcptEmail)
+            .setCustomMetadata(mExtendedData);
+    }
+
     @Override
     public void redo() throws Exception {
         int mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
-        DeliveryContext deliveryCtxt = new DeliveryContext(mShared, Arrays.asList(mboxId));
+        DeliveryContext dcxtxt = new DeliveryContext(mShared, Arrays.asList(mboxId));
         
         if (mMsgBodyType == MSGBODY_LINK) {
             Blob blob = StoreIncomingBlob.fetchBlob(mPath); 
             if (blob == null)
                 throw new RedoException("Missing link source blob " + mPath + " (digest=" + mDigest + ")", this);
-            deliveryCtxt.setIncomingBlob(blob);
+            dcxtxt.setIncomingBlob(blob);
 
             ParsedMessage pm = null;
             try {
@@ -466,8 +478,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
                     .setSize(mMsgSize)
                     .setDigest(mDigest);
                 pm = new ParsedMessage(opt);
-                mbox.addMessage(getOperationContext(), pm, mFolderId, mNoICal, mFlags,
-                                mTags, mConvId, mRcptEmail, mExtendedData, deliveryCtxt);
+                mbox.addMessage(getOperationContext(), pm, getDeliveryOptions(), dcxtxt);
             } catch (MailServiceException e) {
                 if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
                     mLog.info("Message " + mMsgId + " is already in mailbox " + mboxId);
@@ -488,8 +499,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
                 if (mData.getLength() != mMsgSize) {
                     in = new GZIPInputStream(in);
                 }
-                mbox.addMessage(getOperationContext(), in, mMsgSize, mReceivedDate, mFolderId, mNoICal, mFlags,
-                    mTags, mConvId, mRcptEmail, mExtendedData, deliveryCtxt); 
+                mbox.addMessage(getOperationContext(), in, mMsgSize, mReceivedDate, getDeliveryOptions(), dcxtxt); 
             } catch (MailServiceException e) {
                 if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
                     mLog.info("Message " + mMsgId + " is already in mailbox " + mboxId);

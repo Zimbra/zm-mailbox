@@ -65,7 +65,7 @@ public class ThreaderTest {
         return Provisioning.getInstance().getAccount("test@zimbra.com");
     }
 
-    static ParsedMessage getRootMessage() throws Exception {
+    public static ParsedMessage getRootMessage() throws Exception {
         MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
         mm.setHeader("From", "Bob Evans <bob@example.com>");
         mm.setHeader("To", "Jimmy Dean <jdean@example.com>");
@@ -102,7 +102,7 @@ public class ThreaderTest {
     @Test
     public void unrelated() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(getAccount());
-        mbox.addMessage(null, getRootMessage(), Mailbox.ID_FOLDER_INBOX, false, 0, null);
+        mbox.addMessage(null, getRootMessage(), MailboxTest.STANDARD_DELIVERY_OPTIONS, null);
 
         // unrelated, not a reply
         MimeMessage mm = getSecondMessage();
@@ -132,7 +132,7 @@ public class ThreaderTest {
     @Test
     public void followup() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(getAccount());
-        Message msg = mbox.addMessage(null, getRootMessage(), Mailbox.ID_FOLDER_INBOX, false, 0, null);
+        Message msg = mbox.addMessage(null, getRootMessage(), MailboxTest.STANDARD_DELIVERY_OPTIONS, null);
         List<Integer> match = Arrays.asList(msg.getConversationId());
 
         // References and In-Reply-To set
@@ -176,7 +176,7 @@ public class ThreaderTest {
     @Test
     public void missingHeaders() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(getAccount());
-        Message msg = mbox.addMessage(null, getRootMessage(), Mailbox.ID_FOLDER_INBOX, false, 0, null);
+        Message msg = mbox.addMessage(null, getRootMessage(), MailboxTest.STANDARD_DELIVERY_OPTIONS, null);
         List<Integer> match = Arrays.asList(msg.getConversationId());
 
         // reply without any of the threading headers
@@ -194,7 +194,7 @@ public class ThreaderTest {
     @Test
     public void nonreply() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(getAccount());
-        Message msg = mbox.addMessage(null, getRootMessage(), Mailbox.ID_FOLDER_INBOX, false, 0, null);
+        Message msg = mbox.addMessage(null, getRootMessage(), MailboxTest.STANDARD_DELIVERY_OPTIONS, null);
         List<Integer> match = Arrays.asList(msg.getConversationId());
 
         // not a reply, but matching Subject
@@ -212,7 +212,7 @@ public class ThreaderTest {
     @Test
     public void changedSubject() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(getAccount());
-        Message msg = mbox.addMessage(null, getRootMessage(), Mailbox.ID_FOLDER_INBOX, false, 0, null);
+        Message msg = mbox.addMessage(null, getRootMessage(), MailboxTest.STANDARD_DELIVERY_OPTIONS, null);
         List<Integer> match = Arrays.asList(msg.getConversationId());
 
         // reply with different Subject
@@ -232,7 +232,7 @@ public class ThreaderTest {
     @Test
     public void crossedThread() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(getAccount());
-        Message msg = mbox.addMessage(null, getRootMessage(), Mailbox.ID_FOLDER_INBOX, false, 0, null);
+        Message msg = mbox.addMessage(null, getRootMessage(), MailboxTest.STANDARD_DELIVERY_OPTIONS, null);
         List<Integer> match = Arrays.asList(msg.getConversationId());
 
         // reply with the same normalized subject, but not the same thread as the original message
@@ -252,7 +252,7 @@ public class ThreaderTest {
     @Test
     public void outlook() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(getAccount());
-        Message msg = mbox.addMessage(null, getRootMessage(), Mailbox.ID_FOLDER_INBOX, false, 0, null);
+        Message msg = mbox.addMessage(null, getRootMessage(), MailboxTest.STANDARD_DELIVERY_OPTIONS, null);
         List<Integer> match = Arrays.asList(msg.getConversationId());
 
         // reply from Outlook (no In-Reply-To or References header)

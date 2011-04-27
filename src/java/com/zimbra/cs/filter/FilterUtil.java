@@ -48,6 +48,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
 import com.zimbra.cs.mailbox.DeliveryContext;
+import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailSender;
@@ -307,7 +308,9 @@ public class FilterUtil {
                 folder = mbox.createFolder(octxt, folderPath, (byte) 0, MailItem.Type.MESSAGE);
             }
             try {
-                Message msg = mbox.addMessage(octxt, pm, folder.getId(), noICal, flags, tags, convId, recipient, null, context);
+                DeliveryOptions dopt = new DeliveryOptions().setFolderId(folder).setNoICal(noICal);
+                dopt.setFlags(flags).setTags(tags).setConversationId(convId).setRecipientEmail(recipient);
+                Message msg = mbox.addMessage(octxt, pm, dopt, context);
                 if (msg == null) {
                     return null;
                 } else {

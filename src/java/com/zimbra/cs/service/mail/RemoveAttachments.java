@@ -82,11 +82,11 @@ public class RemoveAttachments extends MailDocumentHandler {
             } else {
                 DeliveryOptions dopt = new DeliveryOptions();
                 dopt.setFolderId(msg.getFolderId()).setNoICal(true);
-                dopt.setFlags(msg.getFlagBitmask()).setTagString(msg.getTagString());
+                dopt.setFlags(msg.getFlagBitmask()).setTags(msg.getTagString());
                 if (msg.getConversationId() > 0)
                     dopt.setConversationId(msg.getConversationId());
                 // FIXME: copy custom metadata to new item
-                msg = mbox.addMessage(octxt, pm, dopt);
+                msg = mbox.addMessage(octxt, pm, dopt, null);
                 // and clean up the existing message...
                 mbox.delete(octxt, iid.getId(), MailItem.Type.MESSAGE);
             }

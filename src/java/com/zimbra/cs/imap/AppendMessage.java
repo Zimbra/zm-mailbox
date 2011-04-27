@@ -17,6 +17,7 @@ package com.zimbra.cs.imap;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.BlobBuilder;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -157,7 +158,8 @@ class AppendMessage {
             }
         } catch (Exception e) { }
 
-        Message msg = mbox.addMessage(handler.getContext(), pm, folder.getId(), true, flags, Tag.bitmaskToTags(tags));
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(folder).setNoICal(true).setFlags(flags).setTags(Tag.bitmaskToTags(tags));
+        Message msg = mbox.addMessage(handler.getContext(), pm, dopt, null);
         if (msg != null && sflags != 0 && handler.getState() == ImapHandler.State.SELECTED) {
             ImapFolder selectedFolder = handler.getSelectedFolder();
             // remember, selected folder may be on another host (i.e. mProxy != null)

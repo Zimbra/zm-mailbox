@@ -26,12 +26,12 @@ import junit.framework.TestCase;
 
 import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.util.JMSession;
-
 
 public class TestParsedMessage
 extends TestCase {
@@ -282,7 +282,8 @@ extends TestCase {
     private void runAddMessageTest(String originalMsg, ParsedMessage pm)
     throws Exception {
         Mailbox mbox = TestUtil.getMailbox(SENDER_NAME);
-        Message msg = mbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX, false, 0, null);
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
+        Message msg = mbox.addMessage(null, pm, dopt, null);
         assertEquals(originalMsg, new String(ByteUtil.getContent(msg.getContentStream(), 0)));
     }
     
@@ -293,6 +294,7 @@ extends TestCase {
         return new String(buf.toByteArray());
     }
     
+    @Override
     public void tearDown()
     throws Exception {
         if (mFile != null) {

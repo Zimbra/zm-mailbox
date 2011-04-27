@@ -29,6 +29,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.localconfig.DebugConfig;
+import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailSender;
@@ -135,7 +136,8 @@ public class AddMsg extends MailDocumentHandler {
                             octxt, mbox, pm, folderId, noICal, flagsBitMask, tagsStr, Mailbox.ID_AUTO_INCREMENT);
                 msg = addedItemIds.isEmpty() ? null : mbox.getMessageById(octxt, addedItemIds.get(0).getId());
             } else {
-                msg = mbox.addMessage(octxt, pm, folderId, noICal, flagsBitMask, tagsStr);
+                DeliveryOptions dopt = new DeliveryOptions().setFolderId(folderId).setNoICal(noICal).setFlags(flagsBitMask).setTags(tagsStr);
+                msg = mbox.addMessage(octxt, pm, dopt, null);
             }
         } catch(IOException ioe) {
             throw ServiceException.FAILURE("Error While Delivering Message", ioe);

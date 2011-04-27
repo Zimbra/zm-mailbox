@@ -1258,9 +1258,9 @@ public abstract class ArchiveFormatter extends Formatter {
                     DeliveryOptions opt = new DeliveryOptions().
                         setFolderId(fldr.getId()).setNoICal(true).
                         setFlags(msg.getFlagBitmask()).
-                        setTagString(msg.getTagString());
+                        setTags(msg.getTagString());
                     newItem = mbox.addMessage(oc, ais.getInputStream(),
-                        (int)aie.getSize(), msg.getDate(), opt);
+                        (int)aie.getSize(), msg.getDate(), opt, null);
                 }
                 break;
             case MOUNTPOINT:
@@ -1545,7 +1545,7 @@ public abstract class ArchiveFormatter extends Formatter {
                     setFolderId(fldr.getId()).setNoICal(true).setFlags(flags);
 
                 mbox.addMessage(oc, ais.getInputStream(), (int)aie.getSize(),
-                    timestamp ? aie.getModTime() : ParsedMessage.DATE_HEADER, opt);
+                    timestamp ? aie.getModTime() : ParsedMessage.DATE_HEADER, opt, null);
                 break;
             }
         } catch (Exception e) {

@@ -73,6 +73,7 @@ import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.lmtpserver.utils.LmtpClient;
+import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -156,10 +157,11 @@ extends Assert {
 
     public static String getAddress(String userName)
     throws ServiceException {
-        if (userName.contains("@"))
+        if (userName.contains("@")) {
             return userName;
-        else
+        } else {
             return userName + "@" + getDomain();
+        }
     }
 
     public static String getAddress(String userName, String domainName) {
@@ -230,7 +232,8 @@ extends Assert {
     throws Exception {
         String message = getTestMessage(subject, null, null, new Date(timestamp));
         ParsedMessage pm = new ParsedMessage(message.getBytes(), timestamp, false);
-        return mbox.addMessage(null, pm, folderId, false, Flag.BITMASK_UNREAD, null);
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(folderId).setFlags(Flag.BITMASK_UNREAD);
+        return mbox.addMessage(null, pm, dopt, null);
     }
 
     private static String getTestMessage(String subject)

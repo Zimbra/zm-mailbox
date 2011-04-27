@@ -55,21 +55,23 @@ public final class MailboxTest {
         MailboxTestUtil.clearData();
     }
 
+    public static final DeliveryOptions STANDARD_DELIVERY_OPTIONS = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
+
     @Test
     public void browse() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
-        mbox.addMessage(null, new ParsedMessage("From: test1-1@sub1.zimbra.com".getBytes(), false), dopt);
-        mbox.addMessage(null, new ParsedMessage("From: test1-2@sub1.zimbra.com".getBytes(), false), dopt);
-        mbox.addMessage(null, new ParsedMessage("From: test1-3@sub1.zimbra.com".getBytes(), false), dopt);
-        mbox.addMessage(null, new ParsedMessage("From: test1-4@sub1.zimbra.com".getBytes(), false), dopt);
-        mbox.addMessage(null, new ParsedMessage("From: test2-1@sub2.zimbra.com".getBytes(), false), dopt);
-        mbox.addMessage(null, new ParsedMessage("From: test2-2@sub2.zimbra.com".getBytes(), false), dopt);
-        mbox.addMessage(null, new ParsedMessage("From: test2-3@sub2.zimbra.com".getBytes(), false), dopt);
-        mbox.addMessage(null, new ParsedMessage("From: test3-1@sub3.zimbra.com".getBytes(), false), dopt);
-        mbox.addMessage(null, new ParsedMessage("From: test3-2@sub3.zimbra.com".getBytes(), false), dopt);
-        mbox.addMessage(null, new ParsedMessage("From: test4-1@sub4.zimbra.com".getBytes(), false), dopt);
+        mbox.addMessage(null, new ParsedMessage("From: test1-1@sub1.zimbra.com".getBytes(), false), dopt, null);
+        mbox.addMessage(null, new ParsedMessage("From: test1-2@sub1.zimbra.com".getBytes(), false), dopt, null);
+        mbox.addMessage(null, new ParsedMessage("From: test1-3@sub1.zimbra.com".getBytes(), false), dopt, null);
+        mbox.addMessage(null, new ParsedMessage("From: test1-4@sub1.zimbra.com".getBytes(), false), dopt, null);
+        mbox.addMessage(null, new ParsedMessage("From: test2-1@sub2.zimbra.com".getBytes(), false), dopt, null);
+        mbox.addMessage(null, new ParsedMessage("From: test2-2@sub2.zimbra.com".getBytes(), false), dopt, null);
+        mbox.addMessage(null, new ParsedMessage("From: test2-3@sub2.zimbra.com".getBytes(), false), dopt, null);
+        mbox.addMessage(null, new ParsedMessage("From: test3-1@sub3.zimbra.com".getBytes(), false), dopt, null);
+        mbox.addMessage(null, new ParsedMessage("From: test3-2@sub3.zimbra.com".getBytes(), false), dopt, null);
+        mbox.addMessage(null, new ParsedMessage("From: test4-1@sub4.zimbra.com".getBytes(), false), dopt, null);
         mbox.index.indexDeferredItems();
 
         List<BrowseTerm> terms = mbox.browse(null, Mailbox.BrowseBy.domains, null, 100);
@@ -103,7 +105,7 @@ public final class MailboxTest {
         // setup: add the root message
         ParsedMessage pm = generateMessage("test subject");
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
-        int rootId = mbox.addMessage(null, pm, dopt).getId();
+        int rootId = mbox.addMessage(null, pm, dopt, null).getId();
 
         // first draft explicitly references the parent by item ID (how ZWC does it)
         pm = generateMessage("Re: test subject");
@@ -126,7 +128,7 @@ public final class MailboxTest {
         // third draft is like second draft, but goes via Mailbox.addMessage (how IMAP does it)
         pm = generateMessage("Re: test subject");
         dopt = new DeliveryOptions().setFlags(Flag.BITMASK_DRAFT).setFolderId(Mailbox.ID_FOLDER_DRAFTS);
-        draft = mbox.addMessage(null, pm, dopt);
+        draft = mbox.addMessage(null, pm, dopt, null);
         parent = mbox.getMessageById(null, rootId);
         Assert.assertEquals("threaded implicitly [addMessage]", parent.getConversationId(), draft.getConversationId());
 
@@ -150,7 +152,7 @@ public final class MailboxTest {
         // add a message
         int changeId1 = mbox.getLastChangeID();
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
-        int msgId = mbox.addMessage(null, generateMessage("foo"), dopt).getId();
+        int msgId = mbox.addMessage(null, generateMessage("foo"), dopt, null).getId();
 
         // turn on sync tracking -- tombstone table should be empty
         mbox.beginTrackingSync();
@@ -213,7 +215,7 @@ public final class MailboxTest {
             Assert.assertEquals("created folder matches created entry", f.getId(), ml.pms.created.get(fkey).getId());
 
             DeliveryOptions dopt = new DeliveryOptions().setFolderId(f.getId());
-            Message m = mbox.addMessage(null, generateMessage("test subject"), dopt);
+            Message m = mbox.addMessage(null, generateMessage("test subject"), dopt, null);
             ModificationKey mkey = new ModificationKey(m);
 
             mbox.delete(null, f.getId(), MailItem.Type.FOLDER);

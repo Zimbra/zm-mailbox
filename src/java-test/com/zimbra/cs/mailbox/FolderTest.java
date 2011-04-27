@@ -66,7 +66,7 @@ public class FolderTest {
 
         // add a message to the folder
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(folderId).setFlags(Flag.BITMASK_UNREAD);
-        int msgId = mbox.addMessage(null, ThreaderTest.getRootMessage(), dopt).getId();
+        int msgId = mbox.addMessage(null, ThreaderTest.getRootMessage(), dopt, null).getId();
         modseq = checkMODSEQ("message add", mbox, folderId, modseq);
 
         // mark message read

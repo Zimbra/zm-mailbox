@@ -18,6 +18,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.filter.RuleManager;
+import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -91,7 +92,7 @@ public abstract class MailItemImport implements DataSource.DataImport {
             break;
         }
         if (msg == null) {
-            msg = mbox.addMessage(octxt, pm, folderId, false, flags, null);
+            msg = mbox.addMessage(octxt, pm, new DeliveryOptions().setFolderId(folderId).setFlags(flags), null);
         }
         return msg;
     }

@@ -47,6 +47,7 @@ public class QuotaWarning implements LmtpCallback {
         return sInstance;
     }
     
+    @Override
     public void afterDelivery(Account account, Mailbox mbox, String envelopeSender,
                               String recipientEmail, Message newMessage){
         try {
@@ -95,8 +96,8 @@ public class QuotaWarning implements LmtpCallback {
 
             String msgBody = StringUtil.fillTemplate(template, vars);
             ParsedMessage pm = new ParsedMessage(msgBody.getBytes(), now.getTime(), false);
-            mbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX, false,
-                Flag.BITMASK_UNREAD | Flag.BITMASK_HIGH_PRIORITY, null);
+            DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX).setFlags(Flag.BITMASK_UNREAD | Flag.BITMASK_HIGH_PRIORITY);
+            mbox.addMessage(null, pm, dopt, null);
             
             // Update last sent date
             Map<String, String> attrs = new HashMap<String, String>();
