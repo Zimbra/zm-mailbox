@@ -5514,4 +5514,12 @@ TODO: delete them permerntly from here
   <desc>CA certificate for authenticating client certificates in nginx proxy (https only)</desc>
 </attr>
 
+<attr id="1208" name="zimbraMailEmptyFolderSleepInterval" type="duration" cardinality="single" min="0" optionalIn="globalConfig,server" flags="serverInherited,domainAdminModifiable" since="6.0.13">
+  <globalConfigValue>2s</globalConfigValue>
+  <desc>
+    Sleep time between batches of deletes when emptying a large folder.  See zimbraMailEmptyFolderBatchSize.
+  </desc>
+</attr>
+
+
 </attrs>
