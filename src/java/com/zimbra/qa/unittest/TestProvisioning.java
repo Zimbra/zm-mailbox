@@ -426,7 +426,7 @@ public class TestProvisioning extends TestCase {
         System.out.println("Testing config");
 
         Config entry = mProv.getConfig();
-        assertNotNull(entry != null);
+        assertNotNull(entry);
 
         return entry;
     }

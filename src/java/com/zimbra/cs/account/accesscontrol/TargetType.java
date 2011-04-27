@@ -49,10 +49,10 @@ import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.Provisioning.XMPPComponentBy;
 import com.zimbra.cs.account.Provisioning.ZimletBy;
 import com.zimbra.cs.account.ldap.LdapDIT;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.prov.ldap.LdapProv;
 import com.zimbra.soap.admin.type.EffectiveRightsTarget;
 
 
@@ -380,7 +380,7 @@ public enum TargetType {
     }
     
     static String getSearchBase(Provisioning prov, TargetType tt) throws ServiceException {
-        LdapDIT dit = ((LdapProvisioning)prov).getDIT();
+        LdapDIT dit = ((LdapProv)prov).getDIT();
         
         String base;
         
@@ -476,7 +476,7 @@ public enum TargetType {
         }
         
         // optimize
-        LdapDIT dit = ((LdapProvisioning)prov).getDIT();
+        LdapDIT dit = ((LdapProv)prov).getDIT();
         String configBranchBase = dit.configBranchBaseDN();
         Set<String> mailBranchOCs = new HashSet<String>();
         Set<String> configBranchOCs = new HashSet<String>();

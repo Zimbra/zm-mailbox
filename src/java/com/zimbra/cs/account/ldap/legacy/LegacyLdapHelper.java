@@ -21,6 +21,9 @@ import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.ldap.ILdapContext;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.SearchLdapOptions;
+import com.zimbra.cs.ldap.ZLdapContext;
+import com.zimbra.cs.ldap.ZSearchResultEntry;
+import com.zimbra.cs.ldap.LdapException.LdapMultipleEntriesMatchedException;
 
 /**
  * An LdapHelper tied to ZimbraLdapContext and the legacy ldapUtil methods.
@@ -44,6 +47,13 @@ public class LegacyLdapHelper extends LdapHelper {
                 searchOptions.getReturnAttrs(), 
                 searchOptions.getBinaryAttrs(), 
                 searchOptions.getVisitor());
+    }
+
+    @Override
+    public ZSearchResultEntry searchForEntry(String base, String query,
+            ZLdapContext initZlc, boolean useMaster)
+            throws LdapMultipleEntriesMatchedException, ServiceException {
+        throw new UnsupportedOperationException();
     }
 
 }

@@ -60,4 +60,13 @@ public class LdapTODO {
         ZimbraLog.ldap.error("assertion failure: " + code.name());
         assert(false);
     }
+    
+    
+    /*
+     * TODO: 
+     * 
+     * 1. search all occurrences of casting the LdapProvisioing.
+     *    they should be cast to LdapProv.  Move methods to ldapProv
+     *    when necessary.
+     */
 }

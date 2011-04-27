@@ -42,7 +42,6 @@ public class LdapSuite {
         junit.run(TestCos.class);
         junit.run(TestIDN.class);
         junit.run(TestLdapBinary.class);
-        junit.run(TestLdapSDK.class);
         junit.run(TestLdapUtil.class);
         junit.run(TestProvCallback.class);
         junit.run(TestProvGroup.class);
@@ -70,6 +69,10 @@ public class LdapSuite {
          * zmsoap -v -z RunUnitTestsRequest/test=com.zimbra.qa.unittest.TestGalGroupMembers
          */
         // TestGalGroupMembers (has to be run in the server)
+        
+        /*
+         * merge in tests in TestLdap
+         */
         
     }
     

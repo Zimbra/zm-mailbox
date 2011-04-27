@@ -11,14 +11,16 @@ public class TestLdapProvGlobalConfig {
     private static Provisioning prov;
     
     @BeforeClass
-    public static void init() {
+    public static void init() throws Exception {
+        TestLdap.manualInit();
+        
         prov = Provisioning.getInstance();
     }
     
     @Test
     public void getGlobalConfig() throws Exception {
         Config config = prov.getConfig();
-        assertNotNull(config != null);
+        assertNotNull(config);
     }
 
 }

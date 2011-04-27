@@ -3,12 +3,9 @@ package com.zimbra.qa.unittest;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.net.ssl.SSLSocketFactory;
-
 import org.junit.*;
 import static org.junit.Assert.*;
 
-import com.unboundid.ldap.sdk.LDAPConnection;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
 import com.unboundid.ldap.sdk.LDAPConnectionPoolStatistics;
 
@@ -24,45 +21,6 @@ import com.zimbra.cs.ldap.unboundid.UBIDLdapContext;
 
 
 public class TestLdapSDK extends TestLdap {
-    
-    /* 
-     * 
-     * Test plain ldap:
-     zmlocalconfig -e ldap_url=ldap://localhost:389
-     zmlocalconfig -e ldap_master_url=ldap://localhost:389
-     zmlocalconfig -e ldap_starttls_supported=0
-     *
-     * 
-     * Test ldaps:
-     zmlocalconfig -e ldap_url=ldaps://localhost:636
-     zmlocalconfig -e ldap_master_url=ldaps://localhost:636
-     
-     ssl_allow_untrusted_certs true/false
-     ssl_allow_mismatched_certs true/false
-     
-     * 
-     * 
-     * Test startTLS:
-     zmlocalconfig -e ldap_url=ldap://localhost:389
-     zmlocalconfig -e ldap_master_url=ldap://localhost:389
-     zmlocalconfig -e ldap_starttls_supported=1
-     zmlocalconfig -e ldap_starttls_required=true
-     zmlocalconfig -e zimbra_require_interprocess_security=1
-     
-     ssl_allow_untrusted_certs true/false
-     ssl_allow_mismatched_certs true/false
-     
-     * 
-     * QA To test:
-     * ldaps
-     * STARTTLS
-     * unmatched cert
-     * self-signed cert
-     * not self-signed cert
-     * multiple servers in ldap url and fallback
-     * follow referral
-     * 
-     */
     
     /*
      * For testConnectivity:
@@ -107,7 +65,7 @@ public class TestLdapSDK extends TestLdap {
      *       This issue should not be that bad because ssl_allow_mismatched_certs is default to true.
      *        
      */
-    private static ConnectionConfig connConfig = ConnectionConfig.LDAPS_F_UNTRUSTED_F_MISMATCHED;
+    private static ConnectionConfig connConfig = ConnectionConfig.LDAP;
     
     /*
      * for testConnectivity 
@@ -167,13 +125,6 @@ public class TestLdapSDK extends TestLdap {
         }
         
         void setLocalConfig() throws Exception {
-            /*
-            LC.ldap_url.setDefault(ldap_url);
-            LC.ldap_master_url.setDefault(ldap_master_url);
-            LC.ldap_starttls_supported.setDefault(ldap_starttls_supported);
-            LC.ssl_allow_untrusted_certs.setDefault(ssl_allow_untrusted_certs);
-            LC.ssl_allow_mismatched_certs.setDefault(ssl_allow_mismatched_certs);
-            */
             TestLdap.modifyLocalConfig(LC.ldap_url.key(), ldap_url);
             TestLdap.modifyLocalConfig(LC.ldap_master_url.key(), ldap_master_url);
             TestLdap.modifyLocalConfig(LC.ldap_starttls_supported.key(), ldap_starttls_supported);
@@ -186,7 +137,7 @@ public class TestLdapSDK extends TestLdap {
     
     @BeforeClass
     public static void init() throws Exception {
-        // only needed for ldaps when not running inside the server.
+        // these two lines are only needed for ldaps when not running inside the server,
         // because CustomTrustManafer is not used when running in CLI
         //
         // these two lines are not needed for starttls

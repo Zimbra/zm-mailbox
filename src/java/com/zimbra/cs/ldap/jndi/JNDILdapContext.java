@@ -23,7 +23,7 @@ import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapException.LdapInvalidNameException;
-import com.zimbra.cs.ldap.LdapException.LdapNameAlreadyExistException;
+import com.zimbra.cs.ldap.LdapException.LdapEntryAlreadyExistException;
 import com.zimbra.cs.ldap.LdapException.LdapNameNotFoundException;
 import com.zimbra.cs.ldap.LdapTODO;
 import com.zimbra.cs.ldap.LdapTODO.*;
@@ -59,22 +59,6 @@ public class JNDILdapContext extends ZLdapContext {
         
     }
     
-    
-    @TODO // check all call sites see if this mapping is proper for all call sites
-    private LdapException mapToLdapException(NamingException e) {
-        if (e instanceof NameNotFoundException) {
-            LdapTODO.FAIL(FailCode.NameNotFoundExceptionShouldNeverBeThrown);
-            return LdapException.NAME_NOT_FOUND(e);
-        } else if (e instanceof InvalidNameException) {
-            LdapTODO.FAIL(FailCode.LdapInvalidNameExceptionShouldNeverBeThrown);
-            return LdapException.INVALID_NAME(e);
-        } else {
-            // anything else is mapped to a generic LDAP error
-            return LdapException.LDAP_ERROR(e);
-        }
-    }
-    
-    
     @Override
     public void closeContext() {
         ZimbraLdapContext.closeContext(zlc);
@@ -87,9 +71,9 @@ public class JNDILdapContext extends ZLdapContext {
         try {
             zlc.createEntry(entry.getDN(), ((JNDIMutableEntry)entry).getNativeAttributes(), "");
         } catch (NameAlreadyBoundException e) {
-            throw LdapException.NAME_ALREADY_EXIST(e);
+            throw JNDILdapException.mapToLdapException(e);
         } catch (ServiceException e) {
-            throw e;  // just rethrow
+            throw JNDILdapException.mapToLdapException(e);
         }
     }
 
@@ -98,10 +82,8 @@ public class JNDILdapContext extends ZLdapContext {
             throws ServiceException {
         try {
             zlc.simpleCreate(dn, objectClass, attrs);
-        } catch (NameAlreadyBoundException e) {
-            throw LdapException.NAME_ALREADY_EXIST(e);
         } catch (NamingException e) {
-            throw mapToLdapException(e);
+            throw JNDILdapException.mapToLdapException(e);
         }
     }
 
@@ -110,10 +92,8 @@ public class JNDILdapContext extends ZLdapContext {
             throws ServiceException {
         try {
             zlc.simpleCreate(dn, objectClasses, attrs);
-        } catch (NameAlreadyBoundException e) {
-            throw LdapException.NAME_ALREADY_EXIST(e);
         } catch (NamingException e) {
-            throw mapToLdapException(e);
+            throw JNDILdapException.mapToLdapException(e);
         }
     }
     
@@ -133,7 +113,7 @@ public class JNDILdapContext extends ZLdapContext {
             Attributes attributes = zlc.getAttributes(dn);
             return new JNDIAttributes(attributes);
         } catch (NamingException e) {
-            throw mapToLdapException(e);
+            throw JNDILdapException.mapToLdapException(e);
         }
     }
     
@@ -142,7 +122,7 @@ public class JNDILdapContext extends ZLdapContext {
         try {
             zlc.modifyAttributes(dn, ((JNDIModificationList)modList).getModListAsArray());
         } catch (NamingException e) {
-            throw mapToLdapException(e);
+            throw JNDILdapException.mapToLdapException(e);
         }
     }
     
@@ -158,7 +138,7 @@ public class JNDILdapContext extends ZLdapContext {
         try {
             zlc.renameEntry(oldDn, newDn);
         } catch (NamingException e) {
-            throw mapToLdapException(e);
+            throw JNDILdapException.mapToLdapException(e);
         }
         
     }
@@ -168,7 +148,7 @@ public class JNDILdapContext extends ZLdapContext {
         try {
             zlc.replaceAttributes(dn, ((JNDIAttributes) attrs).get());
         } catch (NamingException e) {
-            throw mapToLdapException(e);
+            throw JNDILdapException.mapToLdapException(e);
         }
     }
     
@@ -210,9 +190,9 @@ public class JNDILdapContext extends ZLdapContext {
         } catch (SizeLimitExceededException e) {
             throw AccountServiceException.TOO_MANY_SEARCH_RESULTS("too many search results returned", e);
         } catch (NamingException e) {
-            throw LdapException.LDAP_ERROR("unable to search ldap", e);
+            throw JNDILdapException.mapToLdapException(e);
         } catch (IOException e) {
-            throw LdapException.LDAP_ERROR("unable to search ldap", e);
+            throw JNDILdapException.mapToLdapException(e);
         }
     }
     
@@ -225,7 +205,7 @@ public class JNDILdapContext extends ZLdapContext {
                     ((JNDISearchControls)searchControls).get());
             return new JNDISearchResultEnumeration(result);
         } catch (NamingException e) {
-            throw mapToLdapException(e);
+            throw JNDILdapException.mapToLdapException(e);
         } 
     }
     
@@ -233,10 +213,8 @@ public class JNDILdapContext extends ZLdapContext {
     public void unbindEntry(String dn) throws LdapException {
         try {
             zlc.unbindEntry(dn);
-        } catch (ContextNotEmptyException e) {
-            throw LdapException.CONTEXT_NOT_EMPTY(e);
         } catch (NamingException e) {
-            throw LdapException.LDAP_ERROR("unable to search ldap", e);
+            throw JNDILdapException.mapToLdapException(e);
         }
     }
 

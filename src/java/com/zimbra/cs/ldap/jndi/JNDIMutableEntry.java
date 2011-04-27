@@ -51,7 +51,7 @@ public class JNDIMutableEntry extends ZMutableEntry {
     
 
     @Override  // ZMutableEntry
-    public void addAttr(String attrName, String value) {
+    public void setAttr(String attrName, String value) {
         BasicAttribute attr = new BasicAttribute(attrName);
         attr.add(value);
         jndiAttrs.put(attr);
@@ -80,7 +80,7 @@ public class JNDIMutableEntry extends ZMutableEntry {
             try {
                 return (String) attr.get();
             } catch (NamingException e) {
-                throw LdapException.LDAP_ERROR(e);
+                throw JNDILdapException.mapToLdapException(e);
             }
         }
     }

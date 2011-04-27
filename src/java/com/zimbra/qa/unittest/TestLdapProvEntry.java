@@ -1,0 +1,352 @@
+package com.zimbra.qa.unittest;
+
+import static org.junit.Assert.assertNotNull;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.json.JSONException;
+
+import org.junit.*;
+import static org.junit.Assert.*;
+
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.DateUtil;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AttributeFlag;
+import com.zimbra.cs.account.AttributeInfo;
+import com.zimbra.cs.account.AttributeManager;
+import com.zimbra.cs.account.AttributeManager.IDNType;
+import com.zimbra.cs.account.AttributeClass;
+import com.zimbra.cs.account.Cos;
+import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.EntryCacheDataKey;
+import com.zimbra.cs.account.IDNUtil;
+import com.zimbra.cs.account.NamedEntry;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.ZAttrProvisioning;
+import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.prov.ldap.LdapObjectClass;
+import com.zimbra.cs.zclient.ZJSONObject;
+import com.zimbra.qa.unittest.TestLdap.TestConfig;
+
+public class TestLdapProvEntry {
+    private static final String DOMAIN_NAME = "\u4e2d\u6587";  // an IDN domain name
+    private static final String ACCTNAME_LOCAL_PART = "test-ldap-prov-entry";
+    
+    private static final TestLdapBinary.Content binaryData = TestLdapBinary.Content.generateContent(1024);
+    
+    private static Provisioning prov;
+    private static Domain domain;
+    private static Cos cos;
+    private static Server server;
+    private static Account account;
+    private static Account entry;
+    
+    @BeforeClass
+    public static void init() throws Exception {
+        TestLdap.manualInit();
+        
+        prov = Provisioning.getInstance();
+        
+        domain = prov.get(Provisioning.DomainBy.name, DOMAIN_NAME);
+        assertNull(domain);  // TODO: uncomment after deletedomain is fixed
+        domain = prov.createDomain(DOMAIN_NAME, new HashMap<String, Object>());  // // TODO: uncomment after deletedomain is fixed
+        assertNotNull(domain);
+        
+        cos = prov.get(Provisioning.CosBy.name, Provisioning.DEFAULT_COS_NAME);
+        
+        server = prov.getLocalServer();
+        
+        String accountName = TestUtil.getAddress(ACCTNAME_LOCAL_PART, DOMAIN_NAME);
+        TestLdapBinary.Content content = TestLdapBinary.Content.generateContent(1024);
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_userSMIMECertificate, binaryData.getString());
+        
+        account = prov.createAccount(accountName, "test123", attrs);
+        // account = prov.get(Provisioning.AccountBy.name, accountName);  // TODO: CHANEG TO CREATE after the delete is fixed.
+        
+        entry = prov.get(Provisioning.AccountBy.name, accountName);
+    }
+    
+    @AfterClass
+    public static void cleanup() throws Exception {
+        // prov.deleteAccount(account.getId());  // TODO: uncomment after delete is fixed.
+        // prov.deleteDomain(domain.getId());  // TODO: uncomment after delete is fixed.
+    }
+    
+    @Test
+    public void getLabel() throws Exception {
+        assertEquals(account.getName(), entry.getLabel());
+    }
+    
+    @Test
+    public void getAttrDefault() throws Exception {
+        String ATTRNAME_NO_DEFAULT = Provisioning.A_zimbraId;
+        String ATTRNAME_HAS_DEFAULT = Provisioning.A_zimbraFeatureContactsEnabled;
+        
+        assertNull(entry.getAttrDefault(ATTRNAME_NO_DEFAULT));
+        assertEquals(cos.getAttr(ATTRNAME_HAS_DEFAULT), entry.getAttrDefault(ATTRNAME_HAS_DEFAULT));
+    }
+    
+    @Test
+    public void getAttr() throws Exception {
+        assertEquals(account.getId(), entry.getAttr(Provisioning.A_zimbraId));
+        assertEquals(account.getName(), entry.getAttr(Provisioning.A_mail));
+        assertEquals(account.getName(), entry.getAttr(Provisioning.A_zimbraMailDeliveryAddress));
+        assertEquals(ACCTNAME_LOCAL_PART, entry.getAttr(Provisioning.A_uid));
+        assertEquals(server.getName(), entry.getAttr(Provisioning.A_zimbraMailHost));
+        assertEquals(ZAttrProvisioning.AccountStatus.active.name(), entry.getAttr(Provisioning.A_zimbraAccountStatus));
+        assertEquals(ZAttrProvisioning.MailStatus.enabled.name(), entry.getAttr(Provisioning.A_zimbraMailStatus));
+    }
+    
+    @Test
+    public void getAttrWithWithoutDefaults() throws Exception {
+        String ATTR = Provisioning.A_zimbraFeatureMailEnabled;
+        
+        // apply defaults
+        String value = entry.getAttr(ATTR, true);
+        assertEquals(LdapUtilCommon.LDAP_TRUE, value);
+        
+        // do not apply defaults
+        value = entry.getAttr(ATTR, false);
+        assertNull(value);
+    }
+    
+    @Test
+    public void getAttrWithProvidedDefaultValue() throws Exception {
+        String ATTR = Provisioning.A_zimbraACE;
+        String DEFAULT_VALUE_PROVIDED = "blah";
+        
+        // make sure there is no value on the entry or inherited
+        String value = entry.getAttr(ATTR, false);
+        assertNull(value);
+        
+        value = entry.getAttr(ATTR, DEFAULT_VALUE_PROVIDED);
+        assertEquals(DEFAULT_VALUE_PROVIDED, value);
+    }
+    
+    @Test
+    public void getAttrs() throws Exception {
+        Map<String, Object> attrs = entry.getAttrs();
+        
+        Object value = attrs.get(Provisioning.A_objectClass);
+        assertTrue(value instanceof String[]);
+        List<String> values = Arrays.asList((String[]) value);
+        assertEquals(3, values.size());
+        assertTrue(values.contains(LdapObjectClass.ZIMBRA_DEFAULT_PERSON_OC));
+        assertTrue(values.contains(AttributeClass.account.getOCName()));
+        assertTrue(values.contains("amavisAccount"));
+        
+        value = attrs.get(Provisioning.A_zimbraId);
+        assertTrue(value instanceof String);
+        assertEquals(entry.getId(), (String) value);
+    }
+    
+    @Test
+    public void getAttrsWithWithoutDefaults() throws Exception {
+        String ATTR = Provisioning.A_zimbraFeatureMailEnabled;
+        
+        // apply defaults
+        Map<String, Object> attrs = entry.getAttrs(true);
+        Object value = attrs.get(ATTR);
+        assertTrue(value instanceof String);
+        assertEquals(LdapUtilCommon.LDAP_TRUE, value);
+        
+        // do not apply defaults
+        attrs = entry.getAttrs(false);
+        value = attrs.get(ATTR);
+        assertNull(value);
+    }
+    
+    @Test
+    public void getUnicodeAttrs() throws Exception {
+        Map<String, Object> attrs = entry.getUnicodeAttrs();
+        
+        Object value = attrs.get(Provisioning.A_zimbraMailDeliveryAddress);
+        assertTrue(value instanceof String);
+        String parts[] = ((String) value).split("@");
+        assertEquals(ACCTNAME_LOCAL_PART, parts[0]);
+        assertEquals(DOMAIN_NAME, parts[1]);
+    }
+    
+    @Test
+    public void getUnicodeAttrsWithWithoutDefaults() throws Exception {
+        Map<String, Object> attrs = entry.getUnicodeAttrs(true);
+        
+        // can't find a good test case, not important.
+        
+        attrs = entry.getUnicodeAttrs(false);
+    }
+    
+    @Test
+    public void getBooleanAttr()  throws Exception {
+        String ATTR = Provisioning.A_zimbraFeatureMailEnabled;
+        
+        boolean value = entry.getBooleanAttr(ATTR, false);
+        assertTrue(value);  // becasue cos already has a value, default provided here will not be effective
+    }
+    
+    @Test
+    public void getBinaryAttr() throws Exception {
+        byte[] value = entry.getBinaryAttr(Provisioning.A_userSMIMECertificate);
+        assertTrue(binaryData.equals(value));
+    }
+    
+    @Test
+    public void getGeneralizedTimeAttr() throws Exception {
+        String ATTR = Provisioning.A_zimbraCreateTimestamp;
+        
+        Date now = new Date();
+        Date value = entry.getGeneralizedTimeAttr(ATTR, null);
+        
+        // check roughly the time should be within one minute. i.e. since the beginning of the test
+        assertTrue(now.getTime() - value.getTime() < 60000);
+    }
+    
+    @Test
+    public void getIntAttr() throws Exception {
+        String ATTR = Provisioning.A_zimbraContactAutoCompleteMaxResults;
+        
+        int value = entry.getIntAttr(ATTR, 0);
+        assertEquals(20, value);
+    }
+    
+    
+    @Test
+    public void getLocale() throws Exception {
+        Locale locale = entry.getLocale();
+        
+        assertEquals(Locale.US, locale);
+    }
+    
+    @Test
+    public void getLongAttr() throws Exception {
+        
+    }
+    
+    @Test
+    public void getMultiAttr() throws Exception {
+        String[] value = entry.getMultiAttr(Provisioning.A_objectClass);
+        
+        assertTrue(value instanceof String[]);
+        List<String> values = Arrays.asList((String[]) value);
+        assertEquals(3, values.size());
+        assertTrue(values.contains(LdapObjectClass.ZIMBRA_DEFAULT_PERSON_OC));
+        assertTrue(values.contains(AttributeClass.account.getOCName()));
+        assertTrue(values.contains("amavisAccount"));
+    }
+    
+    @Test
+    public void getMultiBinaryAttr() throws Exception {
+        List<byte[]> value = entry.getMultiBinaryAttr(Provisioning.A_userSMIMECertificate);
+        assertEquals(1, value.size());
+        assertTrue(binaryData.equals(value.get(0)));
+    }
+    
+    @Test
+    public void getUnicodeMultiAttr() throws Exception {
+        String[] value = entry.getUnicodeMultiAttr(Provisioning.A_zimbraMailDeliveryAddress);
+        assertEquals(1, value.length);
+        assertEquals(TestUtil.getAddress(ACCTNAME_LOCAL_PART, DOMAIN_NAME), value[0]);
+    }
+    
+    @Test
+    public void getMultiAttrWithWithoutDefaults() throws Exception {
+        String ATTR = Provisioning.A_zimbraFeatureMailEnabled;
+        
+        // apply defaults
+        String[] value = entry.getMultiAttr(ATTR, true);
+        assertEquals(1, value.length);
+        assertEquals(LdapUtilCommon.LDAP_TRUE, value[0]);
+        
+        // do not apply defaults
+        value = entry.getMultiAttr(ATTR, false);
+        assertEquals(0, value.length);
+    }
+    
+    @Test
+    public void getMultiBinaryAttrWithWithoutDefaults() throws Exception {
+        // List<byte[]> getMultiBinaryAttr(String name, boolean applyDefaults)
+    }
+    
+    @Test
+    public void getMultiAttrSet() throws Exception {
+        String ATTR = Provisioning.A_objectClass;
+        
+        Set<String> values = entry.getMultiAttrSet(ATTR);
+        assertEquals(3, values.size());
+        assertTrue(values.contains(LdapObjectClass.ZIMBRA_DEFAULT_PERSON_OC));
+        assertTrue(values.contains(AttributeClass.account.getOCName()));
+        assertTrue(values.contains("amavisAccount"));
+    }
+    
+    @Test 
+    public void getMultiBinaryAttrSet() throws Exception {
+        Set<byte[]> value = entry.getMultiBinaryAttrSet(Provisioning.A_userSMIMECertificate);
+        assertEquals(1, value.size());
+        for (byte[] val : value) {
+            assertTrue(binaryData.equals(val));
+        }
+    }
+    
+    @Test 
+    public void getTimeInterval() throws Exception {
+        String ATTR = Provisioning.A_zimbraMailTrashLifetime;
+        long value = entry.getTimeInterval(ATTR, 0);
+        long expected = 30 * Constants.MILLIS_PER_DAY;
+        System.out.println(value);
+        System.out.println(expected);
+        assertEquals(expected, value);
+    }
+    
+    @Test 
+    public void getTimeIntervalSecs() throws Exception {
+        String ATTR = Provisioning.A_zimbraMailTrashLifetime;
+        long value = entry.getTimeIntervalSecs(ATTR, 0);
+        long expected = 30 * Constants.SECONDS_PER_DAY;
+        assertEquals(expected, value);
+    }
+    
+    @Test 
+    public void setCachedDataString() throws Exception {
+        String KEY = EntryCacheDataKey.PERMISSION.name();
+        String DATA = "123";
+        entry.setCachedData(KEY, DATA);
+        Object dataCached = entry.getCachedData(KEY);
+        assertEquals(DATA, dataCached);
+    }
+    
+    @Test 
+    public void setCachedData() throws Exception {
+        EntryCacheDataKey KEY = EntryCacheDataKey.PERMISSION;
+        String DATA = "abc";
+        entry.setCachedData(KEY, DATA);
+        Object dataCached = entry.getCachedData(KEY);
+        assertEquals(DATA, dataCached);
+    }
+    
+    @Test 
+    public void getCachedDataString() throws Exception {
+        // tested in setCachedDataString
+    }
+    
+    @Test 
+    public void getCachedData() throws Exception {
+        // tested in setCachedData
+    }
+
+}

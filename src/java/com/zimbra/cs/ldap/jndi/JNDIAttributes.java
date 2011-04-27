@@ -103,7 +103,7 @@ public class JNDIAttributes extends ZAttributes {
                 return null;
             }
         } catch (NamingException e) {
-            throw LdapException.LDAP_ERROR(e);
+            throw JNDILdapException.mapToLdapException(e);
         }
     }
     
@@ -117,7 +117,7 @@ public class JNDIAttributes extends ZAttributes {
                 return EMPTY_STRING_ARRAY;
             }
         } catch (NamingException e) {
-            throw LdapException.LDAP_ERROR(e);
+            throw JNDILdapException.mapToLdapException(e);
         }
     }
 
@@ -126,7 +126,7 @@ public class JNDIAttributes extends ZAttributes {
         try {
             return getAttrsInternal(extraBinaryAttrs);
         } catch (NamingException e) {
-            throw LdapException.LDAP_ERROR(e);
+            throw JNDILdapException.mapToLdapException(e);
         }
     }
     

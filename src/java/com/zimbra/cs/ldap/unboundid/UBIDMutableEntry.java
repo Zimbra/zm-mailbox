@@ -22,6 +22,9 @@ public class UBIDMutableEntry extends ZMutableEntry {
     private Entry entry;
     
     public UBIDMutableEntry() {
+        // give a bogus dn ("") since unboundid requires it
+        // call site should set a real DN later
+        this.entry = new Entry("");
     }
     
     @Override
@@ -41,13 +44,11 @@ public class UBIDMutableEntry extends ZMutableEntry {
 
     @Override  // ZEntry
     public String getDN() {
-     // TODO Auto-generated method stub
-        return null;
+        return entry.getDN();
     }
     
     @Override  // ZMutableEntry
-    @TODO // verify replacement
-    public void addAttr(String attrName, String value) {
+    public void setAttr(String attrName, String value) {
         if (hasAttribute(attrName)) {
             entry.removeAttribute(attrName);
         }
@@ -55,7 +56,6 @@ public class UBIDMutableEntry extends ZMutableEntry {
     }
 
     @Override  // ZMutableEntry
-    @TODO // verify adding(merging)
     public void addAttr(String attrName, Set<String> values) {
         for (String value : values) {
             entry.addAttribute(attrName, value);

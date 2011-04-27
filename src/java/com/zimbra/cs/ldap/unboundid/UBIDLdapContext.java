@@ -19,6 +19,7 @@ import com.unboundid.ldap.sdk.LDAPResult;
 import com.unboundid.ldap.sdk.Modification;
 import com.unboundid.ldap.sdk.ModificationType;
 import com.unboundid.ldap.sdk.PostConnectProcessor;
+import com.unboundid.ldap.sdk.ResultCode;
 import com.unboundid.ldap.sdk.SearchScope;
 import com.unboundid.ldap.sdk.StartTLSPostConnectProcessor;
 import com.unboundid.ldap.sdk.SearchRequest;
@@ -147,7 +148,7 @@ public class UBIDLdapContext extends ZLdapContext {
         try {
             return pool.getConnection();
         } catch (LDAPException e) {
-            throw LdapException.LDAP_ERROR(e);
+            throw UBIDLdapException.mapToLdapException(e);
         }
     }
     
@@ -159,12 +160,7 @@ public class UBIDLdapContext extends ZLdapContext {
     public String getConnectionName() {
         return conn.getConnectionName();
     }
-    
-    @TODO
-    private LdapException mapToLdapException(LDAPException e) {
-        return LdapException.LDAP_ERROR(e);
-    }
-    
+  
     
     @Override
     public void closeContext() {
@@ -183,7 +179,7 @@ public class UBIDLdapContext extends ZLdapContext {
         try {
             conn.add(((UBIDMutableEntry) entry).get());
         } catch (LDAPException e) {
-            throw mapToLdapException(e);
+            throw UBIDLdapException.mapToLdapException(e);
         }
         
     }
@@ -197,10 +193,10 @@ public class UBIDLdapContext extends ZLdapContext {
         // we don't want to use Provisioning.A_objectClass here since the 
         // ldap package should not have any dependency on the account package.
         // TODO: define it somewhere else
-        entry.addAttr("objectClass", objectClass);
+        entry.setAttr("objectClass", objectClass);
         
         for (int i=0; i < attrs.length; i += 2) {
-            entry.addAttr(attrs[i], attrs[i+1]);
+            entry.setAttr(attrs[i], attrs[i+1]);
         }
         
         createEntry(entry);
@@ -219,7 +215,7 @@ public class UBIDLdapContext extends ZLdapContext {
         entry.addAttr("objectClass", ocs);
         
         for (int i=0; i < attrs.length; i += 2) {
-            entry.addAttr(attrs[i], attrs[i+1]);
+            entry.setAttr(attrs[i], attrs[i+1]);
         }
         
         createEntry(entry);
@@ -241,7 +237,7 @@ public class UBIDLdapContext extends ZLdapContext {
             SearchResultEntry entry = conn.getEntry(dn);
             return new UBIDAttributes(entry);
         } catch (LDAPException e) {
-            throw mapToLdapException(e);
+            throw UBIDLdapException.mapToLdapException(e);
         }
     }
     
@@ -252,7 +248,7 @@ public class UBIDLdapContext extends ZLdapContext {
             // TODO: need to check result? or can rely on the exception?
             LDAPResult result = conn.modify(dn, ((UBIDModificationList)modList).getModList());
         } catch (LDAPException e) {
-            throw mapToLdapException(e);
+            throw UBIDLdapException.mapToLdapException(e);
         }
     }
     
@@ -325,7 +321,7 @@ public class UBIDLdapContext extends ZLdapContext {
             } while ((cookie != null) && (cookie.getValueLength() > 0));
             
         } catch (LDAPException e) {
-            throw LdapException.LDAP_ERROR("unable to search ldap", e);
+            throw UBIDLdapException.mapToLdapException("unable to search ldap", e);
         }
     }
     
@@ -349,7 +345,7 @@ public class UBIDLdapContext extends ZLdapContext {
             
             return new UBIDSearchResultEnumeration(result);
         } catch (LDAPException e) {
-            throw mapToLdapException(e);
+            throw UBIDLdapException.mapToLdapException(e);
         }
     }
     

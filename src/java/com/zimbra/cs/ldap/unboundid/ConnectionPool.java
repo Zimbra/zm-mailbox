@@ -53,7 +53,7 @@ public class ConnectionPool {
             connPool = new LDAPConnectionPool(serverSet, bindRequest, config.getConnPoolInitSize(), 
                     config.getConnPoolMaxSize(), postConnectProcessor);
         } catch (LDAPException e) {
-            throw LdapException.LDAP_ERROR(e);
+            throw UBIDLdapException.mapToLdapException(e);
         }
         
         connPool.setConnectionPoolName(connPoolName);

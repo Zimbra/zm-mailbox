@@ -3,8 +3,6 @@ package com.zimbra.cs.ldap;
 import java.util.Map;
 import java.util.Set;
 
-import com.zimbra.cs.ldap.LdapTODO.*;
-
 /**
  * Represents a transient, mutable entry in memory.
  * 
@@ -16,12 +14,11 @@ import com.zimbra.cs.ldap.LdapTODO.*;
 public abstract class ZMutableEntry extends ZEntry {
 
     /**
-     * Adds the provided attribute to this entry. 
+     * Sets the provided attribute to this entry. 
      * If this entry already contains an attribute with the same name, 
-     * then the current value will be *replace* by the new value.
+     * then the current value will be *replaced* by the new value.
      */
-    @TODO
-    public abstract void addAttr(String attrName, String value);
+    public abstract void setAttr(String attrName, String value);
     
     /**
      * Adds the provided attribute to this entry. 
