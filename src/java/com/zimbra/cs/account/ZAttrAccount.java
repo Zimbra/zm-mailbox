@@ -35,7 +35,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110421-1557 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110427-1233 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -36629,7 +36629,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraPrefSpellIgnoreAllCaps, or true if unset
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1207)
     public boolean isPrefSpellIgnoreAllCaps() {
@@ -36643,7 +36643,7 @@ public class ZAttrAccount  extends MailTarget {
      * @param zimbraPrefSpellIgnoreAllCaps new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1207)
     public void setPrefSpellIgnoreAllCaps(boolean zimbraPrefSpellIgnoreAllCaps) throws com.zimbra.common.service.ServiceException {
@@ -36660,7 +36660,7 @@ public class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1207)
     public Map<String,Object> setPrefSpellIgnoreAllCaps(boolean zimbraPrefSpellIgnoreAllCaps, Map<String,Object> attrs) {
@@ -36675,7 +36675,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1207)
     public void unsetPrefSpellIgnoreAllCaps() throws com.zimbra.common.service.ServiceException {
@@ -36691,7 +36691,7 @@ public class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1207)
     public Map<String,Object> unsetPrefSpellIgnoreAllCaps(Map<String,Object> attrs) {

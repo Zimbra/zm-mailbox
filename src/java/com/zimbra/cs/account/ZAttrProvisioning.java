@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110421-1557 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110427-1233 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -4805,6 +4805,18 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailEmptyFolderBatchSize = "zimbraMailEmptyFolderBatchSize";
 
     /**
+     * Sleep time between batches of deletes when emptying a large folder.
+     * See zimbraMailEmptyFolderBatchSize. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @since ZCS 6.0.13
+     */
+    @ZAttr(id=1208)
+    public static final String A_zimbraMailEmptyFolderSleepInterval = "zimbraMailEmptyFolderSleepInterval";
+
+    /**
      * Number of bytes to buffer in memory per file descriptor in the cache.
      * Larger values result in fewer disk reads, but increase memory
      * consumption.
@@ -7472,7 +7484,7 @@ public class ZAttrProvisioning {
      * If TRUE, the spell checker ignores words that contain only upper-case
      * letters.
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1207)
     public static final String A_zimbraPrefSpellIgnoreAllCaps = "zimbraPrefSpellIgnoreAllCaps";
@@ -8858,7 +8870,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSSLCertificate = "zimbraSSLCertificate";
 
     /**
-     * space separated list of excluded cipher suites
+     * excluded cipher suites
      *
      * @since ZCS 5.0.5
      */

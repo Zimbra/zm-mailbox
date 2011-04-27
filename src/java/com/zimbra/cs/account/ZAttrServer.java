@@ -40,7 +40,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110421-1557 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110427-1233 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -7000,6 +7000,118 @@ public class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetMailEmptyFolderBatchSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailEmptyFolderBatchSize, "");
+        return attrs;
+    }
+
+    /**
+     * Sleep time between batches of deletes when emptying a large folder.
+     * See zimbraMailEmptyFolderBatchSize. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * <p>Use getMailEmptyFolderSleepIntervalAsString to access value as a string.
+     *
+     * @see #getMailEmptyFolderSleepIntervalAsString()
+     *
+     * @return zimbraMailEmptyFolderSleepInterval in millseconds, or 2000 (2s)  if unset
+     *
+     * @since ZCS 6.0.13
+     */
+    @ZAttr(id=1208)
+    public long getMailEmptyFolderSleepInterval() {
+        return getTimeInterval(Provisioning.A_zimbraMailEmptyFolderSleepInterval, 2000L);
+    }
+
+    /**
+     * Sleep time between batches of deletes when emptying a large folder.
+     * See zimbraMailEmptyFolderBatchSize. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @return zimbraMailEmptyFolderSleepInterval, or "2s" if unset
+     *
+     * @since ZCS 6.0.13
+     */
+    @ZAttr(id=1208)
+    public String getMailEmptyFolderSleepIntervalAsString() {
+        return getAttr(Provisioning.A_zimbraMailEmptyFolderSleepInterval, "2s");
+    }
+
+    /**
+     * Sleep time between batches of deletes when emptying a large folder.
+     * See zimbraMailEmptyFolderBatchSize. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @param zimbraMailEmptyFolderSleepInterval new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.13
+     */
+    @ZAttr(id=1208)
+    public void setMailEmptyFolderSleepInterval(String zimbraMailEmptyFolderSleepInterval) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailEmptyFolderSleepInterval, zimbraMailEmptyFolderSleepInterval);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Sleep time between batches of deletes when emptying a large folder.
+     * See zimbraMailEmptyFolderBatchSize. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @param zimbraMailEmptyFolderSleepInterval new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.13
+     */
+    @ZAttr(id=1208)
+    public Map<String,Object> setMailEmptyFolderSleepInterval(String zimbraMailEmptyFolderSleepInterval, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailEmptyFolderSleepInterval, zimbraMailEmptyFolderSleepInterval);
+        return attrs;
+    }
+
+    /**
+     * Sleep time between batches of deletes when emptying a large folder.
+     * See zimbraMailEmptyFolderBatchSize. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.13
+     */
+    @ZAttr(id=1208)
+    public void unsetMailEmptyFolderSleepInterval() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailEmptyFolderSleepInterval, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Sleep time between batches of deletes when emptying a large folder.
+     * See zimbraMailEmptyFolderBatchSize. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.13
+     */
+    @ZAttr(id=1208)
+    public Map<String,Object> unsetMailEmptyFolderSleepInterval(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailEmptyFolderSleepInterval, "");
         return attrs;
     }
 

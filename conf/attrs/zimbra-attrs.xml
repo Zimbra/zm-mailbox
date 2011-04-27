@@ -5643,4 +5643,12 @@ TODO: delete them permerntly from here
   <desc>If TRUE, the spell checker ignores words that contain only upper-case letters.</desc>
 </attr>
 
+<attr id="1208" name="zimbraMailEmptyFolderSleepInterval" type="duration" cardinality="single" min="0" optionalIn="globalConfig,server" flags="serverInherited,domainAdminModifiable" since="6.0.13">
+  <globalConfigValue>2s</globalConfigValue>
+  <desc>
+    Sleep time between batches of deletes when emptying a large folder.  See zimbraMailEmptyFolderBatchSize.
+  </desc>
+</attr>
+
+
 </attrs>
