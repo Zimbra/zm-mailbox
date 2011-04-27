@@ -39,7 +39,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 jylee 20110211-1747 */
+    /* build: 6.0.2_BETA1_1111 pshao 20110427-1322 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -6553,6 +6553,100 @@ public class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetMailEmptyFolderBatchSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailEmptyFolderBatchSize, "");
+        return attrs;
+    }
+
+    /**
+     * Sleep time between batches of deletes when emptying a large folder.
+     * See zimbraMailEmptyFolderBatchSize.
+     *
+     * <p>Use getMailEmptyFolderSleepIntervalAsString to access value as a string.
+     *
+     * @see #getMailEmptyFolderSleepIntervalAsString()
+     *
+     * @return zimbraMailEmptyFolderSleepInterval in millseconds, or 2000 (2s)  if unset
+     *
+     * @since ZCS 6.0.13
+     */
+    @ZAttr(id=1208)
+    public long getMailEmptyFolderSleepInterval() {
+        return getTimeInterval(Provisioning.A_zimbraMailEmptyFolderSleepInterval, 2000L);
+    }
+
+    /**
+     * Sleep time between batches of deletes when emptying a large folder.
+     * See zimbraMailEmptyFolderBatchSize.
+     *
+     * @return zimbraMailEmptyFolderSleepInterval, or "2s" if unset
+     *
+     * @since ZCS 6.0.13
+     */
+    @ZAttr(id=1208)
+    public String getMailEmptyFolderSleepIntervalAsString() {
+        return getAttr(Provisioning.A_zimbraMailEmptyFolderSleepInterval, "2s");
+    }
+
+    /**
+     * Sleep time between batches of deletes when emptying a large folder.
+     * See zimbraMailEmptyFolderBatchSize.
+     *
+     * @param zimbraMailEmptyFolderSleepInterval new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.13
+     */
+    @ZAttr(id=1208)
+    public void setMailEmptyFolderSleepInterval(String zimbraMailEmptyFolderSleepInterval) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailEmptyFolderSleepInterval, zimbraMailEmptyFolderSleepInterval);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Sleep time between batches of deletes when emptying a large folder.
+     * See zimbraMailEmptyFolderBatchSize.
+     *
+     * @param zimbraMailEmptyFolderSleepInterval new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.13
+     */
+    @ZAttr(id=1208)
+    public Map<String,Object> setMailEmptyFolderSleepInterval(String zimbraMailEmptyFolderSleepInterval, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailEmptyFolderSleepInterval, zimbraMailEmptyFolderSleepInterval);
+        return attrs;
+    }
+
+    /**
+     * Sleep time between batches of deletes when emptying a large folder.
+     * See zimbraMailEmptyFolderBatchSize.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.13
+     */
+    @ZAttr(id=1208)
+    public void unsetMailEmptyFolderSleepInterval() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailEmptyFolderSleepInterval, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Sleep time between batches of deletes when emptying a large folder.
+     * See zimbraMailEmptyFolderBatchSize.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.13
+     */
+    @ZAttr(id=1208)
+    public Map<String,Object> unsetMailEmptyFolderSleepInterval(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailEmptyFolderSleepInterval, "");
         return attrs;
     }
 

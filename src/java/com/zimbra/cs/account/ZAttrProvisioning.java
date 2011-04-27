@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 jylee 20110211-1747 */
+    /* build: 6.0.2_BETA1_1111 pshao 20110427-1322 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -4146,6 +4146,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailEmptyFolderBatchSize = "zimbraMailEmptyFolderBatchSize";
 
     /**
+     * Sleep time between batches of deletes when emptying a large folder.
+     * See zimbraMailEmptyFolderBatchSize.
+     *
+     * @since ZCS 6.0.13
+     */
+    @ZAttr(id=1208)
+    public static final String A_zimbraMailEmptyFolderSleepInterval = "zimbraMailEmptyFolderSleepInterval";
+
+    /**
      * Number of bytes to buffer in memory per file descriptor in the cache.
      * Larger values result in fewer disk reads, but increase memory
      * consumption.
@@ -4528,8 +4537,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMessageCacheSize = "zimbraMessageCacheSize";
 
     /**
-     * Size of cache for delivery time dedupe based on Message-Id header. Set
-     * to 0 to disable this type of deduping.
+     * Number of Message-Id header values to keep in the LMTP dedupe cache.
+     * Subsequent attempts to deliver a message with a matching Message-Id to
+     * the same mailbox will be ignored. A value of 0 disables deduping.
      */
     @ZAttr(id=334)
     public static final String A_zimbraMessageIdDedupeCacheSize = "zimbraMessageIdDedupeCacheSize";
@@ -7473,7 +7483,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSSLCertificate = "zimbraSSLCertificate";
 
     /**
-     * space separated list of excluded cipher suites
+     * excluded cipher suites
      *
      * @since ZCS 5.0.5
      */
