@@ -558,7 +558,7 @@
           <include name="mysql-connector-java*.jar"/>
           <include name="mail.jar"/>
           <include name="zimbra-native.jar"/>
-          <include name="bouncycastle.jar"/>
+          <include name="bcprov-jdk15-146.jar"/>
           <include name="commons-beanutils*.jar"/>
           <include name="commons-cli*.jar"/>
           <include name="commons-codec*.jar"/>
@@ -1083,7 +1083,7 @@
         <include name="${db.driver.jar}"/>
         <include name="mail.jar"/>
         <include name="zimbra-native.jar"/>
-        <include name="bouncycastle.jar"/>
+        <include name="bcprov-jdk15-146.jar"/>
         <include name="commons-cli*.jar"/>
         <include name="commons-codec*.jar"/>
         <include name="commons-dbcp*.jar"/>
