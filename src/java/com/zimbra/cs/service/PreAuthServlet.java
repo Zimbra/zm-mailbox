@@ -268,7 +268,7 @@ public class PreAuthServlet extends ZimbraServlet {
             StringBuilder sb = new StringBuilder();
             addQueryParams(req, sb, true, true);
             Provisioning prov = Provisioning.getInstance();
-            Server server = prov.getLocalServer();
+            Server server = prov.getServer(authToken.getAccount());
             String redirectUrl;
 
             if (isAdmin) {
