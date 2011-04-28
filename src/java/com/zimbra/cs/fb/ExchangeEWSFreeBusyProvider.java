@@ -877,8 +877,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
     }
 
     public static void registerResolver(ExchangeUserResolver r, int priority) {
-        synchronized (sRESOLVERS) {
-            ZimbraLog.fb.error("entering registerResolver");
+        synchronized (sRESOLVERS) {         
             sRESOLVERS.ensureCapacity(priority + 1);
             sRESOLVERS.add(priority, r);
         }
@@ -919,7 +918,6 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
     }
 
     public ServerInfo getServerInfo(String emailAddr) {
-        ZimbraLog.fb.error("entering getServerInfo " + emailAddr);
         ServerInfo serverInfo = null;
         for (ExchangeUserResolver r : sRESOLVERS) {
             serverInfo = r.getServerInfo(emailAddr);
