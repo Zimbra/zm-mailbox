@@ -22,6 +22,8 @@ import java.util.Map;
 
 import org.apache.cassandra.thrift.CassandraDaemon;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.index.TermEnum;
+import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.TermQuery;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -47,7 +49,7 @@ import com.zimbra.cs.mime.ParsedContact;
  */
 public final class CassandraIndexTest {
     private static CassandraDaemon cassandra;
-    private static final CassandraIndex.Factory FACTORY = new CassandraIndex.Factory();
+    private static CassandraIndex.Factory factory;
 
     @BeforeClass
     public static void init() throws Exception {
@@ -66,7 +68,8 @@ public final class CassandraIndexTest {
         Provisioning prov = Provisioning.getInstance();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
 
-        FACTORY.createSchema();
+        factory = new CassandraIndex.Factory();
+        factory.createSchema();
     }
 
     @AfterClass
@@ -82,7 +85,7 @@ public final class CassandraIndexTest {
     }
 
     @Test
-    public void search() throws Exception {
+    public void searchByTermQuery() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Map<String, Object> fields = new HashMap<String, Object>();
         fields.put(ContactConstants.A_firstName, "First");
@@ -90,7 +93,7 @@ public final class CassandraIndexTest {
         fields.put(ContactConstants.A_email, "test@zimbra.com");
         Contact contact = mbox.createContact(null, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
 
-        CassandraIndex index = FACTORY.getInstance(mbox);
+        CassandraIndex index = factory.getInstance(mbox);
         index.deleteIndex();
         Indexer indexer = index.openIndexer();
         indexer.addDocument(contact, contact.generateIndexData());
@@ -110,6 +113,36 @@ public final class CassandraIndexTest {
     }
 
     @Test
+    public void searchByPrefixQuery() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Contact contact1 = mbox.createContact(null, new ParsedContact(Collections.singletonMap(ContactConstants.A_email,
+                "abc@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
+        Contact contact2 = mbox.createContact(null, new ParsedContact(Collections.singletonMap(ContactConstants.A_email,
+                "abcd@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
+        Contact contact3 = mbox.createContact(null, new ParsedContact(Collections.singletonMap(ContactConstants.A_email,
+                "xy@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
+        Contact contact4 = mbox.createContact(null, new ParsedContact(Collections.singletonMap(ContactConstants.A_email,
+                "xyz@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
+
+        CassandraIndex index = factory.getInstance(mbox);
+        index.deleteIndex();
+        Indexer indexer = index.openIndexer();
+        indexer.addDocument(contact1, contact1.generateIndexData());
+        indexer.addDocument(contact2, contact2.generateIndexData());
+        indexer.addDocument(contact3, contact3.generateIndexData());
+        indexer.addDocument(contact4, contact4.generateIndexData());
+        indexer.close();
+
+        Searcher searcher = index.openSearcher();
+        List<Integer> result = searcher.search(new PrefixQuery(new Term(LuceneFields.L_CONTACT_DATA, "ab")),
+                null, null, 100);
+        Assert.assertEquals(2, result.size());
+        Assert.assertEquals(contact1.getId(), (int) result.get(0));
+        Assert.assertEquals(contact2.getId(), (int) result.get(1));
+        searcher.close();
+    }
+
+    @Test
     public void deleteDocument() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Contact contact1 = mbox.createContact(null, new ParsedContact(Collections.singletonMap(ContactConstants.A_email,
@@ -117,7 +150,7 @@ public final class CassandraIndexTest {
         Contact contact2 = mbox.createContact(null, new ParsedContact(Collections.singletonMap(ContactConstants.A_email,
                 "test2@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
 
-        CassandraIndex index = FACTORY.getInstance(mbox);
+        CassandraIndex index = factory.getInstance(mbox);
         index.deleteIndex();
         Indexer indexer = index.openIndexer();
         indexer.addDocument(contact1, contact1.generateIndexData());
@@ -139,6 +172,70 @@ public final class CassandraIndexTest {
                 null, null, 100);
         Assert.assertEquals(1, result.size());
 
+        searcher.close();
+    }
+
+    @Test
+    public void getCount() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Contact contact1 = mbox.createContact(null, new ParsedContact(Collections.singletonMap(ContactConstants.A_email,
+                "test1@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
+        Contact contact2 = mbox.createContact(null, new ParsedContact(Collections.singletonMap(ContactConstants.A_email,
+                "test2@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
+        Contact contact3 = mbox.createContact(null, new ParsedContact(Collections.singletonMap(ContactConstants.A_email,
+                "test3@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
+        Contact contact4 = mbox.createContact(null, new ParsedContact(Collections.singletonMap(ContactConstants.A_email,
+                "test4@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
+
+        CassandraIndex index = factory.getInstance(mbox);
+        index.deleteIndex();
+        Indexer indexer = index.openIndexer();
+        indexer.addDocument(contact1, contact1.generateIndexData());
+        indexer.addDocument(contact2, contact2.generateIndexData());
+        indexer.addDocument(contact3, contact3.generateIndexData());
+        indexer.addDocument(contact4, contact4.generateIndexData());
+        indexer.close();
+
+        Searcher searcher = index.openSearcher();
+        Assert.assertEquals(4, searcher.getTotal());
+        Assert.assertEquals(1, searcher.getCount(new Term(LuceneFields.L_CONTACT_DATA, "test1")));
+        Assert.assertEquals(4, searcher.getCount(new Term(LuceneFields.L_CONTACT_DATA, "@zimbra.com")));
+        searcher.close();
+    }
+
+    @Test
+    public void termEnum() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Contact contact1 = mbox.createContact(null, new ParsedContact(Collections.singletonMap(ContactConstants.A_email,
+                "test1@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
+        Contact contact2 = mbox.createContact(null, new ParsedContact(Collections.singletonMap(ContactConstants.A_email,
+                "test2@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
+
+        CassandraIndex index = factory.getInstance(mbox);
+        index.deleteIndex();
+        Indexer indexer = index.openIndexer();
+        indexer.addDocument(contact1, contact1.generateIndexData());
+        indexer.addDocument(contact2, contact2.generateIndexData());
+        indexer.close();
+
+        Searcher searcher = index.openSearcher();
+        TermEnum terms = searcher.getTerms(new Term(LuceneFields.L_CONTACT_DATA, ""));
+        Assert.assertEquals(new Term(LuceneFields.L_CONTACT_DATA, "@zimbra"), terms.term());
+        Assert.assertTrue(terms.next());
+        Assert.assertEquals(new Term(LuceneFields.L_CONTACT_DATA, "@zimbra.com"), terms.term());
+        Assert.assertTrue(terms.next());
+        Assert.assertEquals(new Term(LuceneFields.L_CONTACT_DATA, "test1"), terms.term());
+        Assert.assertTrue(terms.next());
+        Assert.assertEquals(new Term(LuceneFields.L_CONTACT_DATA, "test1@zimbra.com"), terms.term());
+        Assert.assertTrue(terms.next());
+        Assert.assertEquals(new Term(LuceneFields.L_CONTACT_DATA, "test2"), terms.term());
+        Assert.assertTrue(terms.next());
+        Assert.assertEquals(new Term(LuceneFields.L_CONTACT_DATA, "test2@zimbra.com"), terms.term());
+        Assert.assertTrue(terms.next());
+        Assert.assertEquals(new Term(LuceneFields.L_CONTACT_DATA, "zimbra"), terms.term());
+        Assert.assertTrue(terms.next());
+        Assert.assertEquals(new Term(LuceneFields.L_CONTACT_DATA, "zimbra.com"), terms.term());
+        Assert.assertFalse(terms.next());
         searcher.close();
     }
 

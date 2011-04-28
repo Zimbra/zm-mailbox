@@ -20,8 +20,12 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
 import java.util.UUID;
 
 import org.apache.cassandra.locator.SimpleStrategy;
@@ -33,6 +37,7 @@ import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.search.Filter;
+import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.TermQuery;
@@ -60,6 +65,7 @@ import me.prettyprint.hector.api.query.QueryResult;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 
@@ -241,30 +247,62 @@ public final class CassandraIndex implements IndexStore {
         @Override
         public List<Integer> search(Query query, Filter filter, Sort sort, int max) {
             if (query instanceof TermQuery) {
-                Term term = ((TermQuery) query).getTerm();
-                if (Strings.isNullOrEmpty(term.text())) {
-                    return Collections.emptyList();
-                }
-                Character prefix = FIELD2PREFIX.get(term.field());
-                if (prefix == null) {
-                    return Collections.emptyList();
-                }
-                String termText = prefix + term.text();
-                QueryResult<HSuperColumn<String, Integer, String>> result = HFactory.createSuperColumnQuery(keyspace,
-                        UUIDSerializer.get(), StringSerializer.get(), IntegerSerializer.get(), StringSerializer.get())
-                        .setKey(key).setColumnFamily(CF_TERM).setSuperName(termText).execute();
-                HSuperColumn<String, Integer, String> scol = result.get();
-                if (scol == null) {
-                    return Collections.emptyList();
-                }
-                List<Integer> ids = new ArrayList<Integer>(scol.getSize());
-                for (HColumn<Integer, String> col : result.get().getColumns()) {
-                    ids.add(col.getName());
-                }
-                return validate(termText, ids);
+                return search((TermQuery) query);
+            } else if (query instanceof PrefixQuery) {
+                return search((PrefixQuery) query, max);
             } else {
+                ZimbraLog.search.warn("NotImplementedYet query=%s:%s", query.getClass().getSimpleName(), query);
                 return Collections.emptyList();
             }
+        }
+
+        private List<Integer> search(TermQuery query) {
+            Term term = query.getTerm();
+            if (Strings.isNullOrEmpty(term.text())) {
+                return Collections.emptyList();
+            }
+            Character prefix = FIELD2PREFIX.get(term.field());
+            if (prefix == null) {
+                return Collections.emptyList();
+            }
+            String termText = prefix + term.text();
+            QueryResult<HSuperColumn<String, Integer, String>> result = HFactory.createSuperColumnQuery(keyspace,
+                    UUIDSerializer.get(), StringSerializer.get(), IntegerSerializer.get(), StringSerializer.get())
+                    .setKey(key).setColumnFamily(CF_TERM).setSuperName(termText).execute();
+            HSuperColumn<String, Integer, String> scol = result.get();
+            if (scol == null) {
+                return Collections.emptyList();
+            }
+            List<Integer> ids = new ArrayList<Integer>(scol.getSize());
+            for (HColumn<Integer, String> col : result.get().getColumns()) {
+                ids.add(col.getName());
+            }
+            return validate(termText, ids);
+        }
+
+        private List<Integer> search(PrefixQuery query, int max) {
+            Term term = query.getPrefix();
+            if (Strings.isNullOrEmpty(term.text())) {
+                return Collections.emptyList();
+            }
+            Character prefix = FIELD2PREFIX.get(term.field());
+            if (prefix == null) {
+                return Collections.emptyList();
+            }
+            String termText = prefix + term.text();
+            QueryResult<SuperSlice<String, Integer, String>> qresult = HFactory.createSuperSliceQuery(keyspace,
+                    UUIDSerializer.get(), StringSerializer.get(), IntegerSerializer.get(), StringSerializer.get())
+                    .setKey(key).setColumnFamily(CF_TERM).setRange(termText, termText + '\uFFFF', false, max)
+                    .execute();
+            Set<Integer> result = new LinkedHashSet<Integer>(); // remove duplicate IDs which may appear across terms
+            for (HSuperColumn<String, Integer, String> scol : qresult.get().getSuperColumns()) {
+                List<Integer> ids = new ArrayList<Integer>();
+                for (HColumn<Integer, String> col : scol.getColumns()) {
+                    ids.add(col.getName());
+                }
+                result.addAll(validate(scol.getName(), ids));
+            }
+            return new ArrayList<Integer>(result);
         }
 
         /**
@@ -275,12 +313,12 @@ public final class CassandraIndex implements IndexStore {
          * @return document IDs which actually exist
          */
         private List<Integer> validate(String term, List<Integer> ids) {
-            QueryResult<SuperSlice<Integer, String, String>> qs = HFactory.createSuperSliceQuery(keyspace,
+            QueryResult<SuperSlice<Integer, String, String>> qresult = HFactory.createSuperSliceQuery(keyspace,
                     UUIDSerializer.get(), IntegerSerializer.get(), StringSerializer.get(), StringSerializer.get())
                     .setKey(key).setColumnFamily(CF_DOCUMENT).setColumnNames(ids.toArray(new Integer[ids.size()]))
                     .execute();
-            List<Integer> result = new ArrayList<Integer>();
-            for (HSuperColumn<Integer, String, String> scol : qs.get().getSuperColumns()) {
+            List<Integer> result = new ArrayList<Integer>(ids.size());
+            for (HSuperColumn<Integer, String, String> scol : qresult.get().getSuperColumns()) {
                 result.add(scol.getName());
             }
             ids.removeAll(result);
@@ -303,12 +341,22 @@ public final class CassandraIndex implements IndexStore {
 
         @Override
         public TermEnum getTerms(Term term) {
-            return new TermEnumImpl();
+            return new TermEnumImpl(term);
         }
 
         @Override
         public int getCount(Term term) {
-            return 0;
+            if (Strings.isNullOrEmpty(term.text())) {
+                return 0;
+            }
+            Character prefix = FIELD2PREFIX.get(term.field());
+            if (prefix == null) {
+                return 0;
+            }
+            String termText = prefix + term.text();
+            return HFactory.createSubCountQuery(keyspace, UUIDSerializer.get(), StringSerializer.get(),
+                    IntegerSerializer.get()).setColumnFamily(CF_TERM).setKey(key).setSuperColumn(termText)
+                    .setRange(null, null, Integer.MAX_VALUE).execute().get();
         }
 
         @Override
@@ -322,16 +370,34 @@ public final class CassandraIndex implements IndexStore {
         }
     }
 
-    private static final class TermEnumImpl extends TermEnum {
+    private final class TermEnumImpl extends TermEnum {
+        private final Queue<Term> terms = new LinkedList<Term>();
+
+        private TermEnumImpl(Term term) {
+            Character prefix = FIELD2PREFIX.get(term.field());
+            if (prefix == null) {
+                return;
+            }
+            String start = prefix + term.text();
+            String end = String.valueOf(prefix) + '\uFFFF';
+            QueryResult<SuperSlice<String, Integer, String>> qresult = HFactory.createSuperSliceQuery(keyspace,
+                    UUIDSerializer.get(), StringSerializer.get(), IntegerSerializer.get(), StringSerializer.get())
+                    .setKey(key).setColumnFamily(CF_TERM).setRange(start, end, false, 1000)
+                    .execute();
+            for (HSuperColumn<String, Integer, String> scol : qresult.get().getSuperColumns()) {
+                terms.add(term.createTerm(scol.getName().substring(1))); // remove prefix
+            }
+        }
 
         @Override
         public boolean next() {
-            return false;
+            terms.poll();
+            return !terms.isEmpty();
         }
 
         @Override
         public Term term() {
-            return null;
+            return terms.peek();
         }
 
         @Override
@@ -341,6 +407,7 @@ public final class CassandraIndex implements IndexStore {
 
         @Override
         public void close() {
+            terms.clear();
         }
     }
 
