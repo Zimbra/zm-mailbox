@@ -6037,7 +6037,7 @@ public class Mailbox {
         return calItem;
     }
 
-    public Contact createContact(OperationContext octxt, ParsedContact pc, int folderId, String tags) throws ServiceException {
+    public Contact createContact(OperationContext octxt, ParsedContact pc, int folderId, String tags, final boolean isBatch) throws ServiceException {
         StoreManager sm = StoreManager.getInstance();
         StagedBlob staged = null;
         if (pc.hasAttachment()) {
@@ -6057,7 +6057,9 @@ public class Mailbox {
 
             boolean success = false;
             try {
-                beginTransaction("createContact", octxt, redoRecorder);
+                if (!isBatch) {
+                    beginTransaction("createContact", octxt, redoRecorder);
+                }
                 CreateContact redoPlayer = (CreateContact) mCurrentChange.getRedoPlayer();
                 boolean isRedo = redoPlayer != null;
 
@@ -6082,14 +6084,24 @@ public class Mailbox {
                 success = true;
                 return con;
             } finally {
-                endTransaction(success);
+                if (!isBatch) {
+                    endTransaction(success);
+                }
 
                 sm.quietDelete(staged);
             }
         }
     }
 
+    public Contact createContact(OperationContext octxt, ParsedContact pc, int folderId, String tags) throws ServiceException {
+        return createContact(octxt, pc, folderId, tags, false);
+    }
+
     public void modifyContact(OperationContext octxt, int contactId, ParsedContact pc) throws ServiceException {
+        modifyContact(octxt, contactId, pc, false);
+    }
+    
+    public void modifyContact(OperationContext octxt, int contactId, ParsedContact pc, final boolean isBatch) throws ServiceException {
         StoreManager sm = StoreManager.getInstance();
         StagedBlob staged = null;
         if (pc.hasAttachment()) {
@@ -6109,7 +6121,9 @@ public class Mailbox {
 
             boolean success = false;
             try {
-                beginTransaction("modifyContact", octxt, redoRecorder);
+                if (!isBatch) {
+                    beginTransaction("modifyContact", octxt, redoRecorder);    
+                }
 
                 Contact con = getContactById(contactId);
                 if (!checkItemChangeID(con))
@@ -6125,7 +6139,9 @@ public class Mailbox {
                 index.add(con);
                 success = true;
             } finally {
-                endTransaction(success);
+                if (!isBatch) {
+                    endTransaction(success);    
+                }
 
                 sm.quietDelete(staged);
             }
