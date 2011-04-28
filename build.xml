@@ -76,7 +76,6 @@
 
     <property name="jars.dir" location="jars"/>
     <property name="lib.dir" location="lib"/>
-    <property name="tools.lib.dir" location="tools/lib"/>
     <property name="src.dir" location="src"/>
     <property name="src.java.dir" location="${src.dir}/java"/>
     <property name="test.dir" location="${build.dir}/test"/>
@@ -110,8 +109,6 @@
     <property name="lmtpinject.numthreads" value="2"/>
 
     <property name="zimbra.home.dir" location="/opt/zimbra"/>
-
-    <property name="zimbra.derby.dir" location="${zimbra.home.dir}/derby"/>
     <property name="zimbra.index.dir" location="${zimbra.home.dir}/index"/>
     <property name="zimbra.store.dir" location="${zimbra.home.dir}/store"/>
     <property name="zimbra.sqlite.dir" location="${zimbra.home.dir}/sqlite"/>
@@ -129,21 +126,8 @@
     <condition property="db-sqlite">
         <isset property="env.ZIMBRA_USE_SQLITE"/>
     </condition>
-    <condition property="db-derby">
-        <and>
-            <isset property="env.ZIMBRA_USE_DERBY"/>
-            <not><isset property="db-sqlite"/></not>
-        </and>
-    </condition>
     <condition property="db-mysql">
-        <and>
-            <not><isset property="db-sqlite"/></not>
-            <not><isset property="db-derby"/></not>
-        </and>
-    </condition>
-
-    <condition property="db.driver.jar" value="derby*.jar">
-        <isset property="db-derby"/>
+      <not><isset property="db-sqlite"/></not>
     </condition>
     <condition property="db.driver.jar" value="mysql-connector-java*.jar">
         <isset property="db-mysql"/>
@@ -245,22 +229,19 @@
     </taskdef>
 
     <path id="class.path">
-        <pathelement location="${common.classes.dir}"/>
+      <pathelement location="${common.classes.dir}"/>
       <pathelement location="${soap.classes.dir}"/>
-        <pathelement location="${im.classes.dir}"/>
-        <pathelement location="${build.classes.dir}"/>
-        <fileset dir="${jars.dir}">
-            <include name="**/*.jar"/>
-        </fileset>
-        <fileset dir="${common.jars.dir}">
-            <include name="**/*.jar"/>
-        </fileset>
-        <fileset dir="${im.jars.dir}">
-            <include name="**/*.jar"/>
-        </fileset>
-        <fileset dir="${tools.lib.dir}">
-            <include name="**/*.jar"/>
-        </fileset>
+      <pathelement location="${im.classes.dir}"/>
+      <pathelement location="${build.classes.dir}"/>
+      <fileset dir="${jars.dir}">
+        <include name="**/*.jar"/>
+      </fileset>
+      <fileset dir="${common.jars.dir}">
+        <include name="**/*.jar"/>
+      </fileset>
+      <fileset dir="${im.jars.dir}">
+        <include name="**/*.jar"/>
+      </fileset>
     </path>
 
     <taskdef name="deploy" classname="org.apache.catalina.ant.DeployTask" classpathref="class.path"/>
@@ -516,12 +497,6 @@
         </java>
     </target>
 
-    <target name="derby-versions-init" if="db-derby">
-        <java classname="com.zimbra.cs.db.Derby" fork="true" classpathref="class.path" failonerror="true">
-            <arg line="-o ${build.dir}"/>
-        </java>
-    </target>
-
     <target name="mysql-versions-init" if="db-mysql">
         <java classname="com.zimbra.cs.db.MySQL" fork="true" classpathref="class.path" failonerror="true">
             <arg line="-o ${build.dir}"/>
@@ -534,7 +509,7 @@
         </java>
     </target>
 
-    <target name="db-versions-init" depends="mysql-versions-init,sqlite-versions-init,derby-versions-init"/>
+    <target name="db-versions-init" depends="mysql-versions-init,sqlite-versions-init"/>
 
     <target name="compile" depends="build-init">
         <ant dir="${common.dir}" target="jar" inheritAll="false"/>
@@ -575,7 +550,47 @@
       <delete dir="${zimbra.home.dir}/zimlets-deployed" failonerror="false"/>
       <delete dir="${zimbra.home.dir}/zimlets-properties" failonerror="false"/>
       <delete failonerror="false">
-        <fileset dir="${jetty.home.dir}/common/lib" includes="${ical4j.jar},${ziputil.jar},${memcached.jar},${db.driver.jar},mysql-connector-java*.jar,mail.jar,zimbra-native.jar,bcprov-jdk15-146.jar,commons-beanutils*.jar,commons-cli*.jar,commons-codec*.jar,commons-collections*.jar,commons-dbcp*.jar,commons-digester*.jar,commons-fileupload*.jar,commons-httpclient*.jar,commons-io*.jar,commons-logging.jar,commons-pool*.jar,concurrent*.jar,yuicompressor*.jar,dom4j*.jar,ganymed-ssh2*.jar,jakarta-oro*.jar,jaxen*.jar,jcommon*.jar,jfreechart*.jar,junit*.jar,jzlib.jar,mina*.jar,nekohtml.jar,tnef*.jar,xercesImpl*.jar,xpp3.jar,libidn*.jar,jdom*.jar,json.jar,testng*.jar,jython*.jar"/>
+        <fileset dir="${jetty.home.dir}/common/lib">
+          <include name="${ical4j.jar}"/>
+          <include name="${ziputil.jar}"/>
+          <include name="${memcached.jar}"/>
+          <include name="${db.driver.jar}"/>
+          <include name="mysql-connector-java*.jar"/>
+          <include name="mail.jar"/>
+          <include name="zimbra-native.jar"/>
+          <include name="bcprov-jdk15-146.jar"/>
+          <include name="commons-beanutils*.jar"/>
+          <include name="commons-cli*.jar"/>
+          <include name="commons-codec*.jar"/>
+          <include name="commons-collections*.jar"/>
+          <include name="commons-dbcp*.jar"/>
+          <include name="commons-digester*.jar"/>
+          <include name="commons-fileupload*.jar"/>
+          <include name="commons-httpclient*.jar"/>
+          <include name="commons-io*.jar"/>
+          <include name="commons-lang-*.jar"/>
+          <include name="commons-logging.jar"/>
+          <include name="commons-pool*.jar"/>
+          <include name="concurrent*.jar"/>
+          <include name="yuicompressor*.jar"/>
+          <include name="dom4j*.jar"/>
+          <include name="ganymed-ssh2*.jar"/>
+          <include name="jakarta-oro*.jar"/>
+          <include name="jaxen*.jar"/>
+          <include name="jcommon*.jar"/>
+          <include name="jfreechart*.jar"/>
+          <include name="junit*.jar"/>
+          <include name="jzlib.jar"/>
+          <include name="nekohtml.jar"/>
+          <include name="tnef*.jar"/>
+          <include name="xercesImpl*.jar"/>
+          <include name="xpp3.jar"/>
+          <include name="libidn*.jar"/>
+          <include name="jdom*.jar"/>
+          <include name="json.jar"/>
+          <include name="testng*.jar"/>
+          <include name="jython*.jar"/>
+        </fileset>
       </delete>
     </target>
 
@@ -593,7 +608,13 @@
           <include name="lucene*.jar"/>
           <include name="ant-tar*.jar"/>
           <include name="icu4j-*.jar"/>
-          <include name="ews.jar"/>  
+          <include name="mina-*.jar"/>
+          <include name="ews.jar"/>
+          <include name="cassandra-*.jar"/>
+          <include name="hector-*.jar"/>
+          <include name="perf4j-*.jar"/>
+          <include name="libthrift-*.jar"/>
+          <include name="high-scale-lib-*.jar"/>
         </lib>
         <lib dir="${im.jars.dir}" includes="*.jar"/>
         <classes dir="${config.dir}" includes="sieveConfig.xml"/>
@@ -610,81 +631,81 @@
         <!--
             Setup the service principal name registered with setspn and ktpass
             it has to be a real routable name to reach the jetty server.
-            
-            This name is also used to create a zimbra server and provisioning a 
+
+            This name is also used to create a zimbra server and provisioning a
             user on the server.
-            Note: such server and user is not needed if the test client box can 
+            Note: such server and user is not needed if the test client box can
                   DNS resolve the home server of the user.
-                  But in dev env the server name is usually not a resolvble real 
-                  hostanme, but a simple name like myserver.local, which cannot 
+                  But in dev env the server name is usually not a resolvble real
+                  hostanme, but a simple name like myserver.local, which cannot
                   be resolved from the test client. (Windows 7 VM on jj-esx.spnego.local)
         -->
-        
+
         <!-- <property name="SERVICE_PRINCIPAL_NAME"     value="jj-server.spnego.local"/> -->
         <!-- <property name="SERVICE_PRINCIPAL_NAME"     value="prome-2s-dhcp141.eng.vmware.com"/> -->
         <exec executable="hostname" outputproperty="hostname-FQDN">
             <arg value="-f"/>
         </exec>
         <property name="SERVICE_PRINCIPAL_NAME"     value="${hostname-FQDN}"/>
-        
-        <!-- 
-            Again, could've used just ${zimbra.server.hostname} for spnego.server.name if the 
+
+        <!--
+            Again, could've used just ${zimbra.server.hostname} for spnego.server.name if the
             test client box can DNS resolve the home server for the user.
         -->
-        <property name="spnego.server.name"         value="${SERVICE_PRINCIPAL_NAME}"/>  
+        <property name="spnego.server.name"         value="${SERVICE_PRINCIPAL_NAME}"/>
     </target>
 
     <target name="spnego-inject" depends="spnego-service-name">
-        <!-- 
+        <!--
             Create a server with real hostname so it can be resolved from the test client box.
             Create a user homed on this server.
             (Calling this target is not required if the dev server hostname can be resolved on the test client box)
         -->
         <antcall target="zmprov">
-            <param name="args" value="-l cs ${spnego.server.name} 
-                                            zimbraSmtpHostname ${zimbra.smtp.host} 
-                                            zimbraSmtpPort 7024 
-                                            zimbraMailPort 7070 
-                                            zimbraMailSSLPort 7443 
-                                            zimbraMailMode http 
-                                            zimbraImapCleartextLoginEnabled TRUE 
-                                            zimbraPop3CleartextLoginEnabled TRUE 
-                                            zimbraServiceInstalled ldap 
-                                            zimbraServiceInstalled mta 
-                                            zimbraServiceInstalled mailbox 
-                                            zimbraServiceEnabled ldap 
-                                            zimbraServiceEnabled mta 
-                                            zimbraServiceEnabled mailbox 
+            <param name="args" value="-l cs ${spnego.server.name}
+                                            zimbraSmtpHostname ${zimbra.smtp.host}
+                                            zimbraSmtpPort 7024
+                                            zimbraMailPort 7070
+                                            zimbraMailSSLPort 7443
+                                            zimbraMailMode http
+                                            zimbraImapCleartextLoginEnabled TRUE
+                                            zimbraPop3CleartextLoginEnabled TRUE
+                                            zimbraServiceInstalled ldap
+                                            zimbraServiceInstalled mta
+                                            zimbraServiceInstalled mailbox
+                                            zimbraServiceEnabled ldap
+                                            zimbraServiceEnabled mta
+                                            zimbraServiceEnabled mailbox
                                             zimbraMailPurgeSleepInterval 0"/>
       </antcall>
-        
+
       <antcall target="zmprov">
-          <param name="args" value="-l ca spnego@${defaultdomain.name} test123 
-                                            zimbraMailHost ${spnego.server.name} 
-                                            cn 'Spnego Demo User' 
-                                            displayName 'Spnego Demo User' 
+          <param name="args" value="-l ca spnego@${defaultdomain.name} test123
+                                            zimbraMailHost ${spnego.server.name}
+                                            cn 'Spnego Demo User'
+                                            displayName 'Spnego Demo User'
                                             zimbraForeignPrincipal kerberos5:spnego@${zimbra.kerberos.realm}"/>
       </antcall>
-        
-      <!-- 
-          note: after done with spnego testing, remember to set the LC key zimbra_server_hostname 
+
+      <!--
+          note: after done with spnego testing, remember to set the LC key zimbra_server_hostname
                 back to your default server
-      -->     
+      -->
       <antcall target="zmlocalconfig">
           <param name="localconfig-args" value="-e zimbra_server_hostname=${spnego.server.name}"/>
       </antcall>
-        
-    </target>	
+
+    </target>
 
     <!--
         To test spnego:
         - ant reset-all
         - [ant spnego-inject]
         - ant spnego-dev-deploy
-        
+
         If you run service-deploy after this point, you need to retun spnego-dev-deploy,
         but not spnego-inject.  spnego-inject only needs to be run once after reset-all.
-        
+
     -->
     <target name="spnego-dev-deploy" depends="spnego-war, spnego-service-name">
       <antcall target="stop-webserver"/>
@@ -720,7 +741,7 @@
       <property name="zimbraWebClientLogoutURL"    value="../?sso=1"/>
       <property name="zimbraAuthKerberos5Realm"    value="${zimbraSpnegoAuthRealm}"/>
 
-      
+
       <!-- modify ldap -->
       <antcall target="zmprov">
         <param name="args" value="-l mcf zimbraSpnegoAuthEnabled ${zimbraSpnegoAuthEnabled}"/>
@@ -768,8 +789,8 @@
       </antcall>
       <antcall target="zmprov">
         <param name="args" value="-l md ${defaultdomain.name} +zimbraWebClientLogoutURLAllowedUA '.*Windows NT.*Chrome.*'"/>
-      </antcall>    	
-      	
+      </antcall>
+
       <!-- copy spnego config files to jetty/etc -->
       <echo/>
       <echo>----- copying files -----</echo>
@@ -1007,18 +1028,6 @@
         </copy>
 
         <if>
-          <isset property="db-derby"/>
-          <then>
-            <copy todir="${dist.dir}/conf" file="${config.dir}/derby.properties" overwrite="true"/>
-            <copy todir="${dist.dir}/lib" file="../ZimbraServer/tools/lib/derbytools.jar" overwrite="true"/>
-            <copy todir="${dist.dir}/jetty/common/lib" file="${common.jars.dir}/derby.jar" overwrite="true"/>
-            <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
-              <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
-              <arg line="-e zimbra_class_database=com.zimbra.cs.db.Derby -f"/>
-            </java>
-          </then>
-        </if>
-        <if>
           <isset property="db-sqlite"/>
           <then>
             <copy todir="${dist.dir}/jetty/common/lib" overwrite="true">
@@ -1051,33 +1060,66 @@
     </target>
 
   <target name="dev-dist-jetty">
-        <copy todir="${dist.jetty.dir}/webapps" file="${warfile}" overwrite="true"/>
-        <copy todir="${dist.jetty.dir}/webapps" file="${spnego-warfile}" overwrite="true"/>
-        <copy tofile="${dist.jetty.dir}/etc/jettyrc" file="${config.dir}/jetty-6.1/jettyrc" overwrite="true"/>
-        <copy tofile="${dist.jetty.dir}/etc/jetty.xml" file="${jetty.xml.file}" overwrite="true"/>
-        <copy tofile="${dist.jetty.dir}/etc/start.config" file="${config.dir}/jetty-6.1/start.config" overwrite="true"/>
-        <copy tofile="${dist.jetty.dir}/etc/webdefault.xml"
-              file="${config.dir}/jetty-6.1/webdefault.xml${production.suffix}" overwrite="true"/>
-        <if>
-            <isset property="is-windows"/>
-            <then>
-                <copy todir="${dist.jetty.dir}/etc" file="tools/jetty/wrapper.conf"/>
-            </then>
-        </if>
-        <copy tofile="${dist.jetty.dir}/resources/log4j.properties"
-              file="${config.dir}/jetty-6.1/log4j.properties${production.suffix}" overwrite="true"/>
-        <copy todir="${dist.jetty.dir}/common/lib" overwrite="true">
-            <fileset dir="${common.jars.dir}"
-                     includes="${ical4j.jar},${ziputil.jar},${memcached.jar},${db.driver.jar},mail.jar,zimbra-native.jar,bcprov-jdk15-146.jar,commons-cli*.jar,commons-codec*.jar,commons-dbcp*.jar,commons-fileupload*.jar,commons-httpclient*.jar,commons-io*.jar,commons-logging.jar,commons-pool*.jar,yuicompressor*jar,dom4j*.jar,ganymed-ssh2*.jar,jaxen*.jar,jcommon*.jar,jfreechart*.jar,junit*.jar,jzlib.jar,mina*.jar,nekohtml.jar,tnef*.jar,xercesImpl*.jar,xpp3.jar,libidn*.jar,jdom*.jar,json.jar,testng*.jar,guava*.jar"/>
-        </copy>
-        <copy todir="${dist.jetty.dir}/common/endorsed" overwrite="true">
-            <fileset dir="${common.jars.dir}" includes="zimbra-charset.jar"/>
-        </copy>
-        <copy todir="${dist.jetty.dir}/common/lib" file="${common.jarfile}" overwrite="true"/>
-        <copy todir="${dist.jetty.dir}/lib" overwrite="true">
-    <fileset dir="${common.jars.dir}" includes="log4j*.jar,apache-log4j-extras-1.0.jar"/>
-        </copy>
-    </target>
+    <copy todir="${dist.jetty.dir}/webapps" file="${warfile}" overwrite="true"/>
+    <copy todir="${dist.jetty.dir}/webapps" file="${spnego-warfile}" overwrite="true"/>
+    <copy tofile="${dist.jetty.dir}/etc/jettyrc" file="${config.dir}/jetty-6.1/jettyrc" overwrite="true"/>
+    <copy tofile="${dist.jetty.dir}/etc/jetty.xml" file="${jetty.xml.file}" overwrite="true"/>
+    <copy tofile="${dist.jetty.dir}/etc/start.config" file="${config.dir}/jetty-6.1/start.config" overwrite="true"/>
+    <copy tofile="${dist.jetty.dir}/etc/webdefault.xml"
+          file="${config.dir}/jetty-6.1/webdefault.xml${production.suffix}" overwrite="true"/>
+    <if>
+      <isset property="is-windows"/>
+      <then>
+        <copy todir="${dist.jetty.dir}/etc" file="tools/jetty/wrapper.conf"/>
+      </then>
+    </if>
+    <copy tofile="${dist.jetty.dir}/resources/log4j.properties"
+          file="${config.dir}/jetty-6.1/log4j.properties${production.suffix}" overwrite="true"/>
+    <copy todir="${dist.jetty.dir}/common/lib" overwrite="true">
+      <fileset dir="${common.jars.dir}">
+        <include name="${ical4j.jar}"/>
+        <include name="${ziputil.jar}"/>
+        <include name="${memcached.jar}"/>
+        <include name="${db.driver.jar}"/>
+        <include name="mail.jar"/>
+        <include name="zimbra-native.jar"/>
+        <include name="bcprov-jdk15-146.jar"/>
+        <include name="commons-cli*.jar"/>
+        <include name="commons-codec*.jar"/>
+        <include name="commons-dbcp*.jar"/>
+        <include name="commons-fileupload*.jar"/>
+        <include name="commons-httpclient*.jar"/>
+        <include name="commons-io*.jar"/>
+        <include name="commons-lang-*.jar"/>
+        <include name="commons-logging.jar"/>
+        <include name="commons-pool*.jar"/>
+        <include name="yuicompressor*jar"/>
+        <include name="dom4j*.jar"/>
+        <include name="ganymed-ssh2*.jar"/>
+        <include name="jaxen*.jar"/>
+        <include name="jcommon*.jar"/>
+        <include name="jfreechart*.jar"/>
+        <include name="junit*.jar"/>
+        <include name="jzlib.jar"/>
+        <include name="nekohtml.jar"/>
+        <include name="tnef*.jar"/>
+        <include name="xercesImpl*.jar"/>
+        <include name="xpp3.jar"/>
+        <include name="libidn*.jar"/>
+        <include name="jdom*.jar"/>
+        <include name="json.jar"/>
+        <include name="testng*.jar"/>
+        <include name="guava*.jar"/>
+      </fileset>
+    </copy>
+    <copy todir="${dist.jetty.dir}/common/endorsed" overwrite="true">
+      <fileset dir="${common.jars.dir}" includes="zimbra-charset.jar"/>
+    </copy>
+    <copy todir="${dist.jetty.dir}/common/lib" file="${common.jarfile}" overwrite="true"/>
+    <copy todir="${dist.jetty.dir}/lib" overwrite="true">
+      <fileset dir="${common.jars.dir}" includes="log4j*.jar,apache-log4j-extras-1.0.jar"/>
+    </copy>
+  </target>
 
     <target name="init-jetty" depends="build-init" description="Initializes the jetty directory structure">
         <delete dir="${zimbra.home.dir}/data/tmp/jetty"/>
@@ -1099,7 +1141,7 @@
           <antcall target="stop-webserver"/>
           <antcall target="stop-ldap"/>
           <exec failonerror="true" executable="../ZimbraServer/src/perl/install-thirdparty">
-	    <arg line="HELIX"/>
+      <arg line="main"/>
           </exec>
         </then>
       </if>
@@ -1132,12 +1174,13 @@
              3. start web server
              4. run the target "reset-the-world-stage2" -->
     <target name="reset-the-world" description="Reset the world">
+      <!-- do not add any other ant calls in between reset-the-world-stage1 and stage2.
+           instead add them as a dependency of stage1 and stage2 targets. -->
         <antcall target="reset-the-world-stage1"/>
-      <antcall target="upgrade-domain-admin"/>
         <antcall target="reset-the-world-stage2"/>
     </target>
 
-    <target name="reset-the-world-stage1" depends="clean-opt-zimbra,clean,init"
+    <target name="reset-the-world-stage1" depends="clean-opt-zimbra,clean,init,upgrade-domain-admin"
       description="Cleans deployed files, compiles, and initializes /opt/zimbra."/>
 
     <target name="reset-the-world-stage2" depends="deploy-war,init-unittest"
@@ -1253,8 +1296,8 @@
                 <param name="CN" value="localhost"/>
                 <param name="OU" value="Engineering"/>
                 <param name="O" value="Zimbra Systems"/>
-            	<param name="L" value="Palo Alto"/>
-            	<param name="S" value="California"/>
+              <param name="L" value="Palo Alto"/>
+              <param name="S" value="California"/>
                 <param name="C" value="US"/>
             </dname>
         </genkey>
@@ -1337,23 +1380,13 @@
         <condition property="db.schema.dir" value="src/db/sqlite">
             <isset property="db-sqlite"/>
         </condition>
-        <condition property="db.schema.dir" value="src/db/derby">
-            <isset property="db-derby"/>
-        </condition>
         <condition property="db.schema.dir" value="src/db/mysql">
             <isset property="db-mysql"/>
         </condition>
         <echo>Using database schema in ${db.schema.dir}</echo>
     </target>
 
-    <target name="db-init" depends="choose-db-schema,mysql-init,sqlite-init,derby-init"/>
-
-    <target name="derby-init" if="db-derby">
-        <delete dir="${zimbra.derby.dir}"/>
-        <java classname="org.apache.derby.tools.ij" fork="true" classpathref="class.path" failonerror="true">
-            <arg file="${dist.db.dir}/init.sql" />
-        </java>
-    </target>
+    <target name="db-init" depends="choose-db-schema,mysql-init,sqlite-init"/>
 
     <target name="mysql-init" if="db-mysql">
         <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
@@ -1517,9 +1550,9 @@
             zimbraSmtpHostname ${zimbra.smtp.host} \
             zimbraSmtpPort 7024 \
             zimbraMailPort 7070 \
-        	zimbraMailSSLPort 7443 \
+          zimbraMailSSLPort 7443 \
             zimbraMailSSLClientCertPort 9443 \
-        	zimbraMailMode http \
+          zimbraMailMode http \
             zimbraMailSSLClientCertMode WantClientAuth \
             zimbraImapCleartextLoginEnabled TRUE \
             zimbraPop3CleartextLoginEnabled TRUE
@@ -1533,8 +1566,8 @@
             zimbraServiceEnabled mailbox
             ModifyServer ${zimbra.server.hostname} zimbraMailPurgeSleepInterval 0
             cd ${defaultdomain.name} \
-        	zimbraGalInternalSearchBase ROOT
-        	mcf zimbraDefaultDomainName ${defaultdomain.name}
+            zimbraGalInternalSearchBase ROOT
+            mcf zimbraDefaultDomainName ${defaultdomain.name}
             mc default zimbraFeatureIMEnabled FALSE
             ca admin@${defaultdomain.name} test123 \
             zimbraMailHost ${zimbra.server.hostname} \
@@ -1611,8 +1644,8 @@
             zimbraCalResAutoAcceptDecline TRUE \
             zimbraCalResAutoDeclineIfBusy TRUE \
             zimbraCalResAutoDeclineRecurring FALSE \
-          zimbraCalResMaxNumConflictsAllowed 3 \
-          zimbraCalResMaxPercentConflictsAllowed 10 \
+            zimbraCalResMaxNumConflictsAllowed 3 \
+            zimbraCalResMaxPercentConflictsAllowed 10 \
             zimbraCalResLocationDisplayName 'Site: HQ, Building: A, Floor: 11, Room 1101' \
             zimbraCalResSite HQ \
             zimbraCalResBuilding A \
@@ -1703,12 +1736,12 @@
             zimbraCalResContactPhone '(650)555-1212' \
             zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
             zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
-        	cd example.com
-        	cdl admin-team@example.com
-        	cdl client-team@example.com
-    	    cdl qa-team@example.com
-	        cdl server-team@example.com
-        	grr domain example.com dom ${defaultdomain.name} viewDistList
+            cd example.com
+            cdl admin-team@example.com
+            cdl client-team@example.com
+            cdl qa-team@example.com
+            cdl server-team@example.com
+            grr domain example.com dom ${defaultdomain.name} viewDistList
          </echo>
     </target>
 
@@ -2111,11 +2144,11 @@
       <arg line="-a genMessageProperties -i conf/rights -r conf/msgs/ZsMsgRights.properties"/>
     </java>
   </target>
-	
+
   <target name="generate-rights">
     <antcall target="generate-domainadmin-rights-xml"/>
     <antcall target="generate-rights-java"/>
-  	<antcall target="generate-rights-message-properties"/>
+    <antcall target="generate-rights-message-properties"/>
   </target>
 
   <target name="generate-rights-txt">
@@ -2232,9 +2265,10 @@
     <delete dir="${test.dir}" quiet="true"/>
     <mkdir dir="${test.dir}/output"/>
     <mkdir dir="${test.dir}/report"/>
-    <junit printsummary="on" haltonfailure="on" tempdir="${test.dir}">
+    <junit printsummary="on" failureproperty="junit.failure" tempdir="${test.dir}">
       <classpath refid="class.path"/>
       <classpath path="${test.classes.dir}"/>
+      <assertions><enable/></assertions>
       <formatter type="xml"/>
       <batchtest todir="${test.dir}/output">
         <fileset dir="${test.src.dir}">
@@ -2247,6 +2281,7 @@
       <report todir="${test.dir}/report"/>
     </junitreport>
     <echo>Test Report: ${test.dir}/report/index.html</echo>
+    <fail if="junit.failure" message="Unit test failed"/>
   </target>
 
 </project>
