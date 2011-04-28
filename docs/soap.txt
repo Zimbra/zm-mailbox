@@ -3477,7 +3477,7 @@ Ajax client can use this request to ask the server for help in generating a prop
 
 -----------------------------
 
-<GetDistributionListMembersRequest [memberLimit="{limit}"] [memberOffset="{offset}"]>
+<GetDistributionListMembersRequest [limit="{limit}"] [offset="{offset}"]>
   <dl>{dl-name}</dl>
 </GetDistributionListMembersRequest>
 
@@ -3486,8 +3486,8 @@ Ajax client can use this request to ask the server for help in generating a prop
 </GetDistributionListMembersResponse>
 
 Notes:
-    memberLimit - the number of members to return (0 is default and means all)
-    memberOffset - the starting offset (0, 25, etc)
+    limit - the number of members to return (0 is default and means all)
+    offset - the starting offset (0, 25, etc)
 
     more-flag = true if more members left to return
     total = total number of distribution lists (not affected by limit/offset)
