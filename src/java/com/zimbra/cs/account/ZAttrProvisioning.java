@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110427-1233 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110427-2207 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -8516,6 +8516,31 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1179)
     public static final String A_zimbraSMIMELdapBindPassword = "zimbraSMIMELdapBindPassword";
+
+    /**
+     * Whether or not to discover search base DNs if
+     * zimbraSMIMELdapSearchBase is not set. Allowed values are TRUE or
+     * FALSE. If zimbraSMIMELdapSearchBase is set for a config, this
+     * attribute is ignored for the config. If not set, default for the
+     * config is FALSE. In that case, if zimbraSMIMELdapSearchBase is not
+     * set, the search will default to the rootDSE. If multiple DNs are
+     * discovered, the ldap search will use them one by one until a hit is
+     * returned. All SMIME attributes are in the format of
+     * {config-name}:{value}. A &#039;SMIME config&#039; is a set of SMIME
+     * attribute values with the same {config-name}. Multiple SMIME configs
+     * can be configured on a domain or on globalconfig. Note: SMIME
+     * attributes on domains do not inherited values from globalconfig, they
+     * are not domain-inherited attributes. During SMIME public key lookup,
+     * if there are any SMIME config on the domain of the account, they are
+     * used. SMIME configs on globalconfig will be used only when there is no
+     * SMIME config on the domain. SMIME attributes cannot be modified
+     * directly with zmprov md/mcf commands. Use zmprov
+     * gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=1209)
+    public static final String A_zimbraSMIMELdapDiscoverSearchBaseEnabled = "zimbraSMIMELdapDiscoverSearchBaseEnabled";
 
     /**
      * LDAP search filter for public key lookup for S/MIME via external LDAP.

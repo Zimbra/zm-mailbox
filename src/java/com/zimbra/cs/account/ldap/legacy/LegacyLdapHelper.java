@@ -14,6 +14,8 @@
  */
 package com.zimbra.cs.account.ldap.legacy;
 
+import javax.naming.directory.SearchControls;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.prov.ldap.LdapHelper;
 import com.zimbra.cs.prov.ldap.LdapProv;
@@ -46,6 +48,7 @@ public class LegacyLdapHelper extends LdapHelper {
                 searchOptions.getQuery(),
                 searchOptions.getReturnAttrs(), 
                 searchOptions.getBinaryAttrs(), 
+                SearchControls.SUBTREE_SCOPE,
                 searchOptions.getVisitor());
     }
 

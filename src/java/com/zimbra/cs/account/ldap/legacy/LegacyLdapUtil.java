@@ -34,6 +34,7 @@ import com.zimbra.cs.account.ldap.legacy.LegacyJNDIAttributes;
 import com.zimbra.cs.account.ldap.legacy.entry.LdapConfig;
 import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.gal.GalSearchParams;
+import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.LdapUtilCommon;
@@ -602,7 +603,7 @@ public class LegacyLdapUtil {
           ZimbraLdapContext zlc = null;
           try {
               zlc = new ZimbraLdapContext(useMaster);
-              searchLdap(zlc, base, query, returnAttrs, null, visitor);
+              searchLdap(zlc, base, query, returnAttrs, null, SearchControls.SUBTREE_SCOPE, visitor);
           } finally {
               ZimbraLdapContext.closeContext(zlc);
           }
@@ -613,14 +614,14 @@ public class LegacyLdapUtil {
        */
       @SDKDONE
       public static void searchLdap(ZimbraLdapContext zlc, String base, String query, String[] returnAttrs, 
-              Set<String> binaryAttrs, SearchLdapOptions.SearchLdapVisitor visitor) 
+              Set<String> binaryAttrs, int searchScope, SearchLdapOptions.SearchLdapVisitor visitor) 
       throws ServiceException {
           
           int maxResults = 0; // no limit
           
           try {
               SearchControls searchControls =
-                  new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, returnAttrs, false, false);
+                  new SearchControls(searchScope, maxResults, 0, returnAttrs, false, false);
 
               //Set the page size and initialize the cookie that we pass back in subsequent pages
               int pageSize = LegacyLdapUtil.adjustPageSize(maxResults, 1000);
@@ -661,7 +662,7 @@ public class LegacyLdapUtil {
                                    String token,
                                    SearchGalResult result) throws ServiceException {
 
-        String tk = token != null && !token.equals("")? token : LdapUtilCommon.EARLIEST_SYNC_TOKEN;
+        String tk = token != null && !token.equals("")? token : LdapConstants.EARLIEST_SYNC_TOKEN;
         result.setToken(tk);
         
         if (pageSize > 0)
@@ -777,7 +778,7 @@ public class LegacyLdapUtil {
              */
             boolean gotNewToken = true;
             String newToken = result.getToken();
-            if (newToken == null || (token != null && token.equals(newToken)) || newToken.equals(LdapUtilCommon.EARLIEST_SYNC_TOKEN))
+            if (newToken == null || (token != null && token.equals(newToken)) || newToken.equals(LdapConstants.EARLIEST_SYNC_TOKEN))
                 gotNewToken = false;
             
             if (gotNewToken) {
