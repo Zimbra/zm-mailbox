@@ -101,7 +101,7 @@ public final class ZimbraQueryTest {
         mbox.addMessage(null, new ParsedMessage("From: test1@zimbra.com".getBytes(), false), dopt, null);
         Message msg2 = mbox.addMessage(null, new ParsedMessage("From: test2@zimbra.com".getBytes(), false), dopt, null);
         Message msg3 = mbox.addMessage(null, new ParsedMessage("From: test3@zimbra.com".getBytes(), false), dopt, null);
-        mbox.index.indexDeferredItems();
+        MailboxTestUtil.index(mbox);
 
         SearchParams params = new SearchParams();
         params.setQueryStr("-from:test1@zimbra.com");

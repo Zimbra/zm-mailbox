@@ -44,6 +44,12 @@ public final class MailboxTestUtil {
      * Initializes the database, index, store manager, and provisioning.
      */
     public static void initServer() throws Exception {
+        // Don't load from /opt/zimbra/conf
+        System.setProperty("zimbra.config", "src/java-test/localconfig-test.xml");
+        LC.reload();
+        LC.zimbra_attrs_directory.setDefault("conf/attrs");
+        LC.zimbra_rights_directory.setDefault("conf/rights");
+
         // Initialize provisioning and set up default MIME handlers for indexing.
         MockProvisioning prov = new MockProvisioning();
         for (Map.Entry<String, MockMimeTypeInfo> entry : getMimeHandlers().entrySet()) {
