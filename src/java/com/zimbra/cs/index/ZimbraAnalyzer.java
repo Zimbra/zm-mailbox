@@ -50,7 +50,7 @@ public class ZimbraAnalyzer extends Analyzer {
     private static final ZimbraAnalyzer SINGLETON = new ZimbraAnalyzer();
     private static final Map<String, Analyzer> ANALYZERS = new HashMap<String, Analyzer>();
     static {
-        ANALYZERS.put("StandardAnalyzer", new StandardAnalyzer(LuceneIndex.VERSION));
+        ANALYZERS.put("StandardAnalyzer", new ForwardingAnalyzer(new StandardAnalyzer(LuceneIndex.VERSION)));
     }
 
     private final Analyzer defaultAnalyzer = new UniversalAnalyzer();
@@ -150,6 +150,10 @@ public class ZimbraAnalyzer extends Analyzer {
 
     @Override
     public TokenStream tokenStream(String field, Reader reader) {
+        return tokenStream(field, reader, defaultAnalyzer);
+    }
+
+    private TokenStream tokenStream(String field, Reader reader, Analyzer analyzer) {
         if (field.equals(LuceneFields.L_H_MESSAGE_ID)) {
             return new KeywordTokenizer(reader);
         } else if (field.equals(LuceneFields.L_ATTACHMENTS) || field.equals(LuceneFields.L_MIMETYPE)) {
@@ -170,13 +174,26 @@ public class ZimbraAnalyzer extends Analyzer {
         } else if (field.equals(LuceneFields.L_FILENAME)) {
             return new FilenameTokenizer(reader);
         } else {
-            return defaultAnalyzer.tokenStream(field, reader);
+            return analyzer.tokenStream(field, reader);
         }
     }
 
     @Override
     public TokenStream reusableTokenStream(String field, Reader reader) {
         return tokenStream(field, reader);
+    }
+
+    private static final class ForwardingAnalyzer extends Analyzer {
+        private final Analyzer forwarding;
+
+        ForwardingAnalyzer(Analyzer analyzer) {
+            forwarding = analyzer;
+        }
+
+        @Override
+        public TokenStream tokenStream(String field, Reader reader) {
+            return SINGLETON.tokenStream(field, reader, forwarding);
+        }
     }
 
 }
