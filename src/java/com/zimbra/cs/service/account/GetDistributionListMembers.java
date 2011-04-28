@@ -26,12 +26,12 @@ public class GetDistributionListMembers extends GalDocumentHandler {
         
         Provisioning prov = Provisioning.getInstance();
         
-        int limit = (int) request.getAttributeLong(AdminConstants.A_LIMIT, 0);
+        int limit = (int) request.getAttributeLong(AccountConstants.A_MEMBER_LIMIT, 0);
         if (limit < 0) {
             throw ServiceException.INVALID_REQUEST("limit" + limit + " is negative", null);
         }
         
-        int offset = (int) request.getAttributeLong(AdminConstants.A_OFFSET, 0);
+        int offset = (int) request.getAttributeLong(AccountConstants.A_MEMBER_OFFSET, 0);
         if (offset < 0) {
             throw ServiceException.INVALID_REQUEST("offset" + offset + " is negative", null);
         }
