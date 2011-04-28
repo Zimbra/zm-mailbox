@@ -275,6 +275,8 @@ public class AccountConstants {
     public static final String A_NEED_SMIME_CERTS = "needSMIMECerts";
     public static final String A_GAL_ACCOUNT_ID = "galAcctId";
     public static final String A_PAGINATION_SUPPORTED = "paginationSupported";
+    public static final String A_MEMBER_OFFSET = "memberOffset"; // for internal use only 
+    public static final String A_MEMBER_LIMIT = "memberLimit";   // for internal use only 
     
     // share info
     public static final String A_FOLDER_ID = "folderId";
