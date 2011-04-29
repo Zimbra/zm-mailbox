@@ -223,6 +223,28 @@ public final class DbMailAddress {
         }
     }
 
+    /**
+     * Deletes orphan rows. Orphans are 1) contact_count = 0 and 2) referred by no MAIL_ITEM.SENDER_ID.
+     *
+     * @return number of rows deleted
+     */
+    public static int purge(DbConnection conn, Mailbox mbox) throws ServiceException {
+        PreparedStatement stmt = null;
+        try {
+            stmt = conn.prepareStatement(new SQL(mbox).add("DELETE FROM ").mailAddressTable().add(" AS ma WHERE ")
+                    .addIf("mailbox_id = ? AND ").add("contact_count = ? AND NOT EXISTS (SELECT * FROM ")
+                    .mailItemTable().add(" WHERE ").addIf("mailbox_id = ma.mailbox_id AND ").add("sender_id = ma.id)")
+                    .build());
+            int pos = SQL.setIf(stmt, 1, mbox.getId());
+            stmt.setInt(pos, 0);
+            return stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Failed to purge", e);
+        } finally {
+            conn.closeQuietly(stmt);
+        }
+    }
+
     public static int rebuild(DbConnection conn, Mailbox mbox, int lastAddressId) throws ServiceException {
         String[] emailFields = Contact.getEmailFields(mbox.getAccount());
         PreparedStatement stmt = null;

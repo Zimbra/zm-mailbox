@@ -6101,7 +6101,7 @@ public class Mailbox {
     public void modifyContact(OperationContext octxt, int contactId, ParsedContact pc) throws ServiceException {
         modifyContact(octxt, contactId, pc, false);
     }
-    
+
     public void modifyContact(OperationContext octxt, int contactId, ParsedContact pc, final boolean isBatch) throws ServiceException {
         StoreManager sm = StoreManager.getInstance();
         StagedBlob staged = null;
@@ -6123,7 +6123,7 @@ public class Mailbox {
             boolean success = false;
             try {
                 if (!isBatch) {
-                    beginTransaction("modifyContact", octxt, redoRecorder);    
+                    beginTransaction("modifyContact", octxt, redoRecorder);
                 }
 
                 Contact con = getContactById(contactId);
@@ -6141,7 +6141,7 @@ public class Mailbox {
                 success = true;
             } finally {
                 if (!isBatch) {
-                    endTransaction(success);    
+                    endTransaction(success);
                 }
 
                 sm.quietDelete(staged);
@@ -6882,6 +6882,11 @@ public class Mailbox {
                     mCurrentChange.sync = largestTrimmed;
                     DbMailbox.setSyncCutoff(this, mCurrentChange.sync);
                 }
+            }
+
+            if (LC.purge_mail_address_table_enabled.booleanValue()) {
+                int numPurgedMailAddrs = DbMailAddress.purge(getOperationConnection(), this);
+                ZimbraLog.purge.debug("Purged %d mail addresses", numPurgedMailAddrs);
             }
 
             success = true;
@@ -7832,16 +7837,16 @@ public class Mailbox {
 
     public synchronized Comment createComment(OperationContext octxt, int parentId, String text, String creatorId) throws ServiceException {
         CreateComment redoRecorder = new CreateComment(mId, parentId, text, creatorId);
-        
+
         boolean success = false;
         try {
             beginTransaction("createComment", octxt, redoRecorder);
-            
+
             MailItem parent = getItemById(octxt, parentId, Type.UNKNOWN);
             if (parent.getType() != Type.DOCUMENT) {
                 throw MailServiceException.CANNOT_PARENT();
             }
-            
+
             CreateComment redoPlayer = (CreateComment)mCurrentChange.getRedoPlayer();
 
             int itemId = (redoPlayer == null) ?
@@ -7849,7 +7854,7 @@ public class Mailbox {
 
             Comment comment = Comment.create(this, parent, itemId, text, creatorId, null);
             redoRecorder.setItemId(itemId);
-            
+
             index.add(comment);
             success = true;
             return comment;
@@ -7868,7 +7873,7 @@ public class Mailbox {
             endTransaction(success);
         }
     }
-    
+
     protected void migrateWikiFolders() throws ServiceException {
         MigrateToDocuments migrate = new MigrateToDocuments();
         try {

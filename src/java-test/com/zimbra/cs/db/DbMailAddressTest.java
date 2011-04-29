@@ -150,6 +150,34 @@ public final class DbMailAddressTest {
     }
 
     @Test
+    public void purge() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId("0-0-1");
+
+        DbConnection conn = DbPool.getConnection();
+
+        int id11 = new DbMailAddress(mbox).setId(1).setAddress("test1@zimbra.com").create(conn);
+        new DbMailAddress(mbox).setId(2).setAddress("test2@zimbra.com").create(conn);
+
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, sender_id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", mbox.getId(), 100, id11, 0, 0, 0, 0, 0, 0, 0, 0);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, sender_id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", mbox.getId(), 101, id11, 0, 0, 0, 0, 0, 0, 0, 0);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, sender_id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", mbox.getId(), 102, id11, 0, 0, 0, 0, 0, 0, 0, 0);
+
+        Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox, "test1@zimbra.com"));
+        Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox, "test2@zimbra.com"));
+        Assert.assertEquals(1, DbMailAddress.purge(conn, mbox));
+        Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox, "test1@zimbra.com"));
+        Assert.assertEquals(-1, DbMailAddress.getCount(conn, mbox, "test2@zimbra.com"));
+
+        conn.closeQuietly();
+    }
+
+    @Test
     public void rebuild() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId("0-0-1");
         Map<String, Object> fields = new HashMap<String, Object>();
