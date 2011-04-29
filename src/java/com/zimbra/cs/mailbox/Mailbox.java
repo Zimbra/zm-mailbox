@@ -4954,6 +4954,13 @@ public class Mailbox {
     }
 
     /**
+     * Ensures that we don't attempt multiple
+     * SaveDraft operations for the same mailbox at the same time (bug 59287).  We can
+     * remove this synchronization after bug 59512 is fixed.
+     */
+    private final Object saveDraftGuard = new Object();
+    
+    /**
      * Saves draft.
      *
      * @param autoSendTime time at which the draft needs to be auto-sent. Note that this method does not schedule
@@ -4962,6 +4969,14 @@ public class Mailbox {
      */
     public Message saveDraft(OperationContext octxt, ParsedMessage pm, int id, String origId, String replyType,
             String identityId, String accountId, long autoSendTime)
+    throws IOException, ServiceException {
+        synchronized (saveDraftGuard) {
+            return saveDraftInternal(octxt, pm, id, origId, replyType, identityId, accountId, autoSendTime);
+        }
+    }
+    
+    public Message saveDraftInternal(OperationContext octxt, ParsedMessage pm, int id,
+                             String origId, String replyType, String identityId, String accountId, long autoSendTime)
     throws IOException, ServiceException {
         Message.DraftInfo dinfo = null;
         if ((replyType != null && origId != null) || !StringUtil.isNullOrEmpty(identityId) ||
