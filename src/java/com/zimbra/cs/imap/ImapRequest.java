@@ -1,23 +1,20 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-
-/*
- * Created on Apr 30, 2005
- */
 package com.zimbra.cs.imap;
 
+import com.google.common.base.Charsets;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.imap.ImapSearch.AllSearch;
 import com.zimbra.cs.imap.ImapSearch.AndOperation;
@@ -36,7 +33,6 @@ import org.apache.commons.codec.binary.Base64;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -50,6 +46,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * @since Apr 30, 2005
+ */
 abstract class ImapRequest {
     private static final boolean[] TAG_CHARS      = new boolean[128];
     private static final boolean[] ATOM_CHARS     = new boolean[128];
@@ -157,7 +156,7 @@ abstract class ImapRequest {
 
         @Override public String toString() {
             try {
-                return new String(lit.getBytes(), "US-ASCII");
+                return new String(lit.getBytes(), Charsets.US_ASCII);
             } catch (IOException e) {
                 return "???";
             }
@@ -324,9 +323,18 @@ abstract class ImapRequest {
     String readAtom() throws ImapParseException  { return readContent(ATOM_CHARS); }
     String readATOM() throws ImapParseException  { return readContent(ATOM_CHARS).toUpperCase(); }
 
+    String readQuoted(Charset charset) throws ImapParseException {
+        String result = readQuoted();
+        if (charset == null || Charsets.ISO_8859_1.equals(charset) || Charsets.US_ASCII.equals(charset)) {
+            return result;
+        } else {
+            return new String(result.getBytes(Charsets.ISO_8859_1), charset);
+        }
+    }
+
     String readQuoted() throws ImapParseException {
         String content = getCurrentLine();
-        StringBuffer result = null;
+        StringBuilder result = null;
 
         skipChar('"');
         int backslash = mOffset - 1;
@@ -336,8 +344,9 @@ abstract class ImapRequest {
             if (c > 0x7F || c == 0x00 || c == '\r' || c == '\n' || (escaped && c != '\\' && c != '"')) {
                 throw new ImapParseException(mTag, "illegal character '" + c + "' in quoted string");
             } else if (!escaped && c == '\\') {
-                if (result == null)
-                    result = new StringBuffer();
+                if (result == null) {
+                    result = new StringBuilder();
+                }
                 result.append(content.substring(backslash + 1, i));
                 backslash = i;
                 escaped = true;
@@ -354,12 +363,8 @@ abstract class ImapRequest {
 
     abstract Literal readLiteral() throws IOException, ImapParseException;
 
-    private String readLiteral(String charset) throws IOException, ImapParseException {
-        try {
-            return new String(readLiteral().getBytes(), charset);
-        } catch (UnsupportedEncodingException e) {
-            throw new ImapParseException(mTag, "BADCHARSET", "could not convert string to charset \"" + charset + '"', true);
-        }
+    private String readLiteral(Charset charset) throws IOException, ImapParseException {
+        return new String(readLiteral().getBytes(), charset);
     }
 
     Literal readLiteral8() throws IOException, ImapParseException {
@@ -372,16 +377,21 @@ abstract class ImapRequest {
         return readAstring(null);
     }
 
-    String readAstring(String charset) throws IOException, ImapParseException {
+    String readAstring(Charset charset) throws IOException, ImapParseException {
         return readAstring(charset, ASTRING_CHARS);
     }
 
-    private String readAstring(String charset, boolean[] acceptable) throws IOException, ImapParseException {
+    private String readAstring(Charset charset, boolean[] acceptable) throws IOException, ImapParseException {
         int c = peekChar();
-        if (c == -1)        throw new ImapParseException(mTag, "unexpected end of line");
-        else if (c == '{')  return readLiteral(charset != null ? charset : "utf-8");
-        else if (c != '"')  return readContent(acceptable);
-        else                return readQuoted();
+        if (c == -1) {
+            throw new ImapParseException(mTag, "unexpected end of line");
+        } else if (c == '{') {
+            return readLiteral(charset != null ? charset : Charsets.UTF_8);
+        } else if (c != '"') {
+            return readContent(acceptable);
+        } else {
+            return readQuoted(charset);
+        }
     }
 
     private String readAquoted() throws ImapParseException {
@@ -391,19 +401,29 @@ abstract class ImapRequest {
         else                return readQuoted();
     }
 
-    private String readString(String charset) throws IOException, ImapParseException {
+    private String readString(Charset charset) throws IOException, ImapParseException {
         int c = peekChar();
-        if (c == -1)        throw new ImapParseException(mTag, "unexpected end of line");
-        else if (c == '{')  return readLiteral(charset != null ? charset : "utf-8");
-        else                return readQuoted();
+        if (c == -1) {
+            throw new ImapParseException(mTag, "unexpected end of line");
+        } else if (c == '{') {
+            return readLiteral(charset != null ? charset : Charsets.UTF_8);
+        } else {
+            return readQuoted(charset);
+        }
     }
 
-    private String readNstring(String charset) throws IOException, ImapParseException {
+    private String readNstring(Charset charset) throws IOException, ImapParseException {
         int c = peekChar();
-        if (c == -1)        throw new ImapParseException(mTag, "unexpected end of line");
-        else if (c == '{')  return readLiteral(charset != null ? charset : "utf-8");
-        else if (c != '"')  { skipNIL();  return null; }
-        else                return readQuoted();
+        if (c == -1) {
+            throw new ImapParseException(mTag, "unexpected end of line");
+        } else if (c == '{') {
+            return readLiteral(charset != null ? charset : Charsets.UTF_8);
+        } else if (c != '"') {
+            skipNIL();
+            return null;
+        } else {
+            return readQuoted(charset);
+        }
     }
 
 
@@ -451,11 +471,7 @@ abstract class ImapRequest {
         while (padding-- > 0) {
             skipChar('=');  encoded += "=";
         }
-        try {
-            return new Base64().decode(encoded.getBytes("us-ascii"));
-        } catch (UnsupportedEncodingException e) {
-            throw new ImapParseException(mTag, "invalid base64-encoded content");
-        }
+        return new Base64().decode(encoded.getBytes(Charsets.US_ASCII));
     }
 
 
@@ -514,7 +530,7 @@ abstract class ImapRequest {
         if (raw == null || raw.indexOf("&") == -1)
             return raw;
         try {
-            return ImapPath.FOLDER_ENCODING_CHARSET.decode(ByteBuffer.wrap(raw.getBytes("US-ASCII"))).toString();
+            return ImapPath.FOLDER_ENCODING_CHARSET.decode(ByteBuffer.wrap(raw.getBytes(Charsets.US_ASCII))).toString();
         } catch (Exception e) {
             ZimbraLog.imap.debug("ignoring error while decoding folder name: " + raw, e);
             return raw;
@@ -655,10 +671,12 @@ abstract class ImapRequest {
         Map<String, String> params = new HashMap<String, String>();
         skipChar('(');
         do {
-            String name = readString("utf-8");
+            String name = readString(Charsets.UTF_8);
             skipSpace();
-            params.put(name, readNstring("utf-8"));
-            if (peekChar() == ')')  break;
+            params.put(name, readNstring(Charsets.UTF_8));
+            if (peekChar() == ')') {
+                break;
+            }
             skipSpace();
         } while (true);
         skipChar(')');
@@ -788,8 +806,8 @@ abstract class ImapRequest {
     private static final boolean SINGLE_CLAUSE = true, MULTIPLE_CLAUSES = false;
     private static final String SUBCLAUSE = "";
 
-    private ImapSearch readSearchClause(String charset, boolean single, LogicalOperation parent)
-    throws IOException, ImapParseException {
+    private ImapSearch readSearchClause(Charset charset, boolean single, LogicalOperation parent)
+            throws IOException, ImapParseException {
         boolean first = true;
         int nots = 0;
         do {
@@ -866,16 +884,17 @@ abstract class ImapRequest {
         return parent;
     }
 
-    ImapSearch readSearch(String charset) throws IOException, ImapParseException {
+    ImapSearch readSearch(Charset charset) throws IOException, ImapParseException {
         return readSearchClause(charset, MULTIPLE_CLAUSES, new AndOperation());
     }
 
-    String readCharset() throws IOException, ImapParseException {
+    Charset readCharset() throws IOException, ImapParseException {
         String charset = readAstring();
         try {
-            if (Charset.isSupported(charset))
-                return charset;
-        } catch (Exception e) { }
-        throw new ImapParseException(mTag, "BADCHARSET", "unknown charset: " + charset.replace('\r', ' ').replace('\n', ' '), true);
+            return Charset.forName(charset);
+        } catch (Exception e) {
+        }
+        throw new ImapParseException(mTag, "BADCHARSET", "unknown charset: " +
+                charset.replace('\r', ' ').replace('\n', ' '), true);
     }
 }
