@@ -109,6 +109,7 @@ import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
 import com.zimbra.cs.ldap.ILdapContext;
+import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapTODO;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZAttributes;
@@ -4300,7 +4301,7 @@ public class LdapProvisioning extends LdapProv {
         try {
             zlc = LdapClient.getContext();
 
-            String hasKeyword = LdapUtilCommon.LDAP_FALSE;
+            String hasKeyword = LdapConstants.LDAP_FALSE;
             if (zimletAttrs.containsKey(A_zimbraZimletKeyword)) {
                 hasKeyword = Provisioning.TRUE;
             }
