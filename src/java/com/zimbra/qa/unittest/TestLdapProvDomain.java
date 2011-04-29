@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.junit.*;
+import static org.junit.Assert.*;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
@@ -32,15 +33,12 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ZAttrProvisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.ldap.IAttributes;
-import com.zimbra.cs.ldap.ILdapContext;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.prov.ldap.LdapHelper;
 import com.zimbra.cs.prov.ldap.LdapProv;
-
-import static org.junit.Assert.*;
 
 public class TestLdapProvDomain {
     
@@ -74,15 +72,27 @@ public class TestLdapProvDomain {
             return prefix.toLowerCase() + "." + baseDomainName;
         }
     }
+    
+    private Domain createDomain(String domainName) throws Exception {
+        return createDomain(domainName, null);
+    }
+    
+    private Domain createDomain(String domainName, Map<String, Object> attrs) throws Exception {
+        if (attrs == null) {
+            attrs = new HashMap<String, Object>();
+        }
+        
+        Domain domain = prov.get(DomainBy.name, domainName);
+        assertNull(domain);
+        domain = prov.createDomain(domainName, attrs);
+        assertNotNull(domain);
+        return domain;
+    }
 
     @Test
     public void createTopDomain() throws Exception {
         String DOMAIN_NAME = makeDomainName(null);
-        Domain domain = prov.get(DomainBy.name, DOMAIN_NAME);
-        assertNull(domain);
-        
-        domain = prov.createDomain(DOMAIN_NAME, new HashMap<String, Object>());
-        assertNotNull(domain);
+        Domain domain = createDomain(DOMAIN_NAME);
         
         prov.deleteDomain(domain.getId());
     }
@@ -90,23 +100,34 @@ public class TestLdapProvDomain {
     @Test
     public void createSubDomain() throws Exception {
         String DOMAIN_NAME = makeDomainName("createSubDomain.sub1.sub2");
-        Domain domain = prov.get(DomainBy.name, DOMAIN_NAME);
-        assertNull(domain);
-        
-        domain = prov.createDomain(DOMAIN_NAME, new HashMap<String, Object>());
-        assertNotNull(domain);
+        Domain domain = createDomain(DOMAIN_NAME);
         
         prov.deleteDomain(domain.getId());
     }
     
     @Test
+    public void createDomainAlreadyExists() throws Exception {
+        String DOMAIN_NAME = makeDomainName("createDomainAlreadyExists");
+        Domain domain = createDomain(DOMAIN_NAME);
+        
+        boolean caughtException = false;
+        try {
+            prov.createDomain(DOMAIN_NAME, new HashMap<String, Object>());
+        } catch (AccountServiceException e) {
+            if (AccountServiceException.DOMAIN_EXISTS.equals(e.getCode())) {
+                caughtException = true;
+            }
+        }
+        assertTrue(caughtException);
+        
+        prov.deleteDomain(domain.getId());
+    }
+    
+    
+    @Test
     public void deleteNonEmptyDomain() throws Exception {
         String DOMAIN_NAME = makeDomainName("deleteNonEmptyDomain");
-        Domain domain = prov.get(DomainBy.name, DOMAIN_NAME);
-        assertNull(domain);
-        
-        domain = prov.createDomain(DOMAIN_NAME, new HashMap<String, Object>());
-        assertNotNull(domain);
+        Domain domain = createDomain(DOMAIN_NAME);
         
         String ACCT_NAME = TestUtil.getAddress("acct", DOMAIN_NAME);
         Account acct = prov.createAccount(ACCT_NAME, "test123", null);
@@ -209,12 +230,12 @@ public class TestLdapProvDomain {
         Domain aliasDomain = prov.get(DomainBy.name, ALIAS_DOMAIN_NAME);
         assertNull(aliasDomain);
         
-        targetDomain = prov.createDomain(TARGET_DOMAIN_NAME, new HashMap<String, Object>());
+        targetDomain = createDomain(TARGET_DOMAIN_NAME);
         
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraDomainType, ZAttrProvisioning.DomainType.alias.name());
         attrs.put(Provisioning.A_zimbraDomainAliasTargetId, targetDomain.getId());
-        aliasDomain = prov.createDomain(ALIAS_DOMAIN_NAME, attrs);
+        aliasDomain = createDomain(ALIAS_DOMAIN_NAME, attrs);
         
         String realEmail = prov.getEmailAddrByDomainAlias(TestUtil.getAddress(USER_LOCAL_PART, ALIAS_DOMAIN_NAME));
         assertEquals(TestUtil.getAddress(USER_LOCAL_PART, TARGET_DOMAIN_NAME), realEmail);
@@ -269,8 +290,7 @@ public class TestLdapProvDomain {
         attrs.put(Provisioning.A_zimbraAuthKerberos5Realm, KRB5_REALM);
         attrs.put(Provisioning.A_zimbraForeignName, FOREIGN_NAME);
         
-        domain = prov.createDomain(DOMAIN_NAME, attrs);
-        assertNotNull(domain);
+        domain = createDomain(DOMAIN_NAME, attrs);
         
         String domainId = domain.getId();
         

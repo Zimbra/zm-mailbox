@@ -180,6 +180,7 @@ public class TestLdapProvEntry {
     
     @Test
     public void getUnicodeAttrsWithWithoutDefaults() throws Exception {
+        @SuppressWarnings("unused")
         Map<String, Object> attrs = entry.getUnicodeAttrs(true);
         
         // can't find a good test case, not important.

@@ -43,6 +43,10 @@ class UBIDLdapException {
         
         if (ResultCode.ENTRY_ALREADY_EXISTS == rc) {
             return LdapException.ENTRY_ALREADY_EXIST(message, e);
+        /*
+        } else if (ResultCode.??? == rc) {
+            return LdapException.ENTRY_NOT_FOUND(message, e);  // TODO: which code should be mapped to this ?
+        */    
         } else if (ResultCode.NOT_ALLOWED_ON_NONLEAF == rc) {
             return LdapException.CONTEXT_NOT_EMPTY(message, e);
         }

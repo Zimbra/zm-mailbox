@@ -67,7 +67,7 @@ public abstract class LdapClient {
      * Bridging the legacy ZimbraLdapContext and the new ZLdapContext classes.
      */
     @TODO
-    public static ZimbraLdapContext toZimbraLdapContext(com.zimbra.cs.account.Provisioning prov, ILdapContext ldapContext) {
+    public static ZimbraLdapContext toLegacyZimbraLdapContext(com.zimbra.cs.account.Provisioning prov, ILdapContext ldapContext) {
         if (!prov.getClass().equals(com.zimbra.cs.account.ldap.LdapProvisioning.class) &&
             !prov.getClass().equals(com.zimbra.cs.account.ldap.custom.CustomLdapProvisioning.class)) { // TODO: what to do with CustomLdapProvisioning?
             Zimbra.halt("Provisioning instance is not LdapProvisioning", 
@@ -90,12 +90,10 @@ public abstract class LdapClient {
     
     @TODO
     public static ZLdapContext toZLdapContext(com.zimbra.cs.account.Provisioning prov, ILdapContext ldapContext) {
-        /*
         if (!prov.getClass().equals(com.zimbra.cs.prov.ldap.LdapProvisioning.class)) {
             Zimbra.halt("Provisioning instance is not XXXLdapProvisioning",  // TODO, what would be the name?
                     ServiceException.FAILURE("internal error, wrong ldap context instance", null));
         }
-        */
         
         if (!(getInstance() instanceof UBIDLdapClient)) {
             Zimbra.halt("LdapClient instance is not UBIDLdapClient", 

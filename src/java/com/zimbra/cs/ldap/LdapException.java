@@ -34,8 +34,8 @@ public class LdapException extends ServiceException {
     public static final String ENTRY_ALREADY_EXIST = 
         LdapEntryAlreadyExistException.ENTRY_ALREADY_EXIST;
     
-    public static final String NAME_NOT_FOUND = 
-        LdapNameNotFoundException.NAME_NOT_FOUND;
+    public static final String ENTRY_NOT_FOUND = 
+        LdapEntryNotFoundException.ENTRY_NOT_FOUND;
     
     public static final String MULTIPLE_ENTRIES_MATCHED = 
         LdapMultipleEntriesMatchedException.MULTIPLE_ENTRIES_MATCHED;
@@ -86,8 +86,8 @@ public class LdapException extends ServiceException {
         return new LdapEntryAlreadyExistException(message, cause);
     }
     
-    public static LdapException NAME_NOT_FOUND(String message, Throwable cause) {
-        return new LdapNameNotFoundException(message, cause);
+    public static LdapException ENTRY_NOT_FOUND(String message, Throwable cause) {
+        return new LdapEntryNotFoundException(message, cause);
     }
     
     public static LdapException MULTIPLE_ENTRIES_MATCHED(String base, 
@@ -106,11 +106,11 @@ public class LdapException extends ServiceException {
         }
     }
     
-    public static class LdapNameNotFoundException extends LdapException {
-        public static final String NAME_NOT_FOUND = "ldap.NAME_NOT_FOUND";
+    public static class LdapEntryNotFoundException extends LdapException {
+        public static final String ENTRY_NOT_FOUND = "ldap.ENTRY_NOT_FOUND";
         
-        private LdapNameNotFoundException(String message, Throwable cause) {
-            super(format("name not found", message), NAME_NOT_FOUND, cause);
+        private LdapEntryNotFoundException(String message, Throwable cause) {
+            super(format("entry not found", message), ENTRY_NOT_FOUND, cause);
         }
     }
 

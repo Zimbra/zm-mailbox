@@ -18,20 +18,24 @@ import org.junit.*;
 import static org.junit.Assert.*;
 
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.ldap.LdapException.LdapEntryNotFoundException;
 import com.zimbra.cs.ldap.LdapException.LdapMultipleEntriesMatchedException;
+import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
 import com.zimbra.cs.prov.ldap.LdapHelper;
 import com.zimbra.cs.prov.ldap.LdapProv;
 
 public class TestLdapHelper {
 
+    private static LdapProv prov;
     private static LdapHelper ldapHelper;
     
     @BeforeClass
     public static void init() throws Exception {
         TestLdap.manualInit();
         
-        ldapHelper = ((LdapProv) Provisioning.getInstance()).getHelper();
+        prov = ((LdapProv) Provisioning.getInstance());
+        ldapHelper = prov.getHelper();
     }
     
     @Test
@@ -56,6 +60,37 @@ public class TestLdapHelper {
                     base, query, null, false);
             assertNotNull(entry);
         } catch (LdapMultipleEntriesMatchedException e) {
+            caughtException = true;
+        }
+        assertTrue(caughtException);
+    }
+    
+    @Test
+    public void searchForEntryNotFound() throws Exception {
+        String base = "cn=zimbra";
+        String query = "(cn=bogus)";
+        
+        ZSearchResultEntry sr = ldapHelper.searchForEntry(
+                base, query, null, false);
+        assertNull(sr);
+    }
+    
+    @Test
+    public void getAttributes() throws Exception {
+        String dn = prov.getDIT().configDN();
+        ZAttributes attrs = ldapHelper.getAttributes(dn);
+        assertEquals("config", attrs.getAttrString(Provisioning.A_cn));
+    }
+    
+    @Test
+    public void getAttributesEntryNotFound() throws Exception {
+        String dn = prov.getDIT().configDN() + "-not";
+        
+        boolean caughtException = false;
+        try {
+            ZAttributes attrs = ldapHelper.getAttributes(dn);
+            
+        } catch (LdapEntryNotFoundException e) {
             caughtException = true;
         }
         assertTrue(caughtException);

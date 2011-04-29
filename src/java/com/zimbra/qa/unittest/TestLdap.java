@@ -14,34 +14,23 @@
  */
 package com.zimbra.qa.unittest;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import java.io.IOException;
 
+import static org.junit.Assert.*;
 import org.junit.runner.JUnitCore;
 
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.LdapClient;
-import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapServerType;
-import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.ZSearchControls;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
 import com.zimbra.cs.ldap.ZSearchResultEnumeration;
 import com.zimbra.cs.ldap.ZSearchScope;
-import com.zimbra.cs.prov.ldap.LdapHelper;
-import com.zimbra.cs.prov.ldap.LdapProv;
-import com.zimbra.cs.prov.ldap.entry.LdapCos;
 import com.zimbra.qa.unittest.LdapSuite.ConsoleListener;
 
 public class TestLdap {
@@ -108,23 +97,18 @@ public class TestLdap {
         TestConfig.useConfig(testConfig);
         
         if (testConfig == TestConfig.UBID) {
-            junit.run(TestLdapSDK.class);
+            // junit.run(TestLdapSDK.class);
         }
         junit.run(TestLdapHelper.class);
+        junit.run(TestLdapProvCos.class);
         junit.run(TestLdapProvDomain.class);
         junit.run(TestLdapProvEntry.class);
         junit.run(TestLdapProvGlobalConfig.class);
+        junit.run(TestLdapProvGlobalGrant.class);
+        junit.run(TestLdapProvMisc.class);
+        junit.run(TestLdapProvServer.class);
         junit.run(TestLdapUtil.class);
         junit.run(TestLdapZMutableEntry.class);
-    }
-    
-    // so tests can be called directly, without running from TestLdap.
-    static void manualInit() throws Exception {
-        
-        CliUtil.toolSetup();
-        // TestConfig.useConfig(TestConfig.UBID);
-        // TestConfig.useConfig(TestConfig.JNDI);
-        // TestConfig.useConfig(TestConfig.LEGACY);
     }
     
     static void deleteEntireBranchInDIT(String dn) throws Exception {
@@ -175,7 +159,7 @@ public class TestLdap {
                 ZSearchScope.SEARCH_SCOPE_ONELEVEL, 
                 ZSearchControls.SIZE_UNLIMITED, new String[]{"objectClass"});
         
-        ZSearchResultEnumeration sr = zlc.searchDir(dn, "(objectClass=*)", searchControls);
+        ZSearchResultEnumeration sr = zlc.searchDir(dn, query, searchControls);
         while (sr.hasMore()) {
             ZSearchResultEntry entry = sr.next();
             childrenDNs.add(entry.getDN());
@@ -183,6 +167,16 @@ public class TestLdap {
         sr.close();
         
         return childrenDNs;
+    }
+    
+    
+    // so tests can be called directly, without running from TestLdap.
+    static void manualInit() throws Exception {
+        
+        CliUtil.toolSetup();
+        TestConfig.useConfig(TestConfig.UBID);
+        // TestConfig.useConfig(TestConfig.JNDI);
+        // TestConfig.useConfig(TestConfig.LEGACY);
     }
     
     public static void main(String[] args) throws Exception {

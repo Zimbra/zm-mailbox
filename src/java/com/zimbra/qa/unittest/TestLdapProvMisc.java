@@ -2,31 +2,37 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- *
+ * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- *
+ * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.ldap;
+package com.zimbra.qa.unittest;
 
-import com.zimbra.cs.ldap.LdapTODO.*;
+import org.junit.*;
+import static org.junit.Assert.*;
 
-/*
- * migration path for javax.naming.NamingEnumeration interface
- * 
- * TODO: delete this eventually and do everything the pure unboundid way
- * 
- * try to gather all searchDir calls to LdapHelper.searchDir
- */
-@TODO
-public interface ZSearchResultEnumeration {
-    public ZSearchResultEntry next() throws LdapException;
-    public boolean hasMore() throws LdapException;
-    public void close() throws LdapException;
+import com.zimbra.cs.account.Provisioning;
+
+
+public class TestLdapProvMisc {
+
+    private static Provisioning prov;
+    
+    @BeforeClass
+    public static void init() throws Exception {
+        TestLdap.manualInit();
+        
+        prov = Provisioning.getInstance();
+    }
+    
+    @Test
+    public void healthCheck() throws Exception {
+        prov.healthCheck();
+    }
 }
-

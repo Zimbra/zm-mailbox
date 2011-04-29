@@ -28,8 +28,7 @@ public class JNDILdapException {
     
     static LdapException mapToLdapException(Throwable e) {
         if (e instanceof NameNotFoundException) {
-            LdapTODO.FAIL(FailCode.NameNotFoundExceptionShouldNeverBeThrown);
-            return LdapException.NAME_NOT_FOUND(null, e);
+            return LdapException.ENTRY_NOT_FOUND(null, e);
         } else if (e instanceof InvalidNameException) {
             LdapTODO.FAIL(FailCode.LdapInvalidNameExceptionShouldNeverBeThrown);
             return LdapException.INVALID_NAME(null, e);

@@ -26,6 +26,7 @@ import javax.net.SocketFactory;
 import com.unboundid.asn1.ASN1OctetString;
 import com.unboundid.ldap.sdk.Control;
 import com.unboundid.ldap.sdk.DereferencePolicy;
+import com.unboundid.ldap.sdk.DN;
 import com.unboundid.ldap.sdk.Filter;
 import com.unboundid.ldap.sdk.LDAPConnection;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
@@ -267,6 +268,9 @@ public class UBIDLdapContext extends ZLdapContext {
     public ZAttributes getAttributes(String dn) throws LdapException {
         try {
             SearchResultEntry entry = conn.getEntry(dn);
+            if (entry == null) {
+                throw LdapException.ENTRY_NOT_FOUND("entry not found at " + dn, null);
+            }
             return new UBIDAttributes(entry);
         } catch (LDAPException e) {
             throw UBIDLdapException.mapToLdapException(e);
@@ -292,11 +296,16 @@ public class UBIDLdapContext extends ZLdapContext {
     }
     
     @Override
-    @TODO
     public void renameEntry(String oldDn, String newDn) throws LdapException {
-        // TODO:  seperate newDn to newRDN and new newSuperiorDN
-        // conn.modifyDN(dn, newRDN, true, newSuperiorDN);
-        LdapTODO.TODO();
+        try {
+            DN newDN = new DN(newDn);
+            String newRDN = newDN.getRDNString();
+            String newSuperiorDN = newDN.getParentString();
+            conn.modifyDN(oldDn, newRDN, true, newSuperiorDN);
+        } catch (LDAPException e) {
+            throw UBIDLdapException.mapToLdapException("unable to rename entry", e);
+        }
+        
     }
     
     @Override

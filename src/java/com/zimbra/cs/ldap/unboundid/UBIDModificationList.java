@@ -22,7 +22,6 @@ import com.unboundid.asn1.ASN1OctetString;
 import com.unboundid.ldap.sdk.Modification;
 import com.unboundid.ldap.sdk.ModificationType;
 
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.ldap.LdapUtilCommon;
@@ -147,6 +146,7 @@ public class UBIDModificationList extends ZModificationList {
             String transferAttrName = LdapUtilCommon.attrNameToBinaryTransferAttrName(isBinaryTransfer, name);
             Modification mod = new Modification(ModificationType.DELETE, transferAttrName, 
                     valuesToRemove.toArray(new ASN1OctetString[valuesToRemove.size()]));
+            modList.add(mod);
         }
         
     }

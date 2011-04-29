@@ -38,7 +38,7 @@ import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapException.LdapInvalidNameException;
 import com.zimbra.cs.ldap.LdapException.LdapEntryAlreadyExistException;
-import com.zimbra.cs.ldap.LdapException.LdapNameNotFoundException;
+import com.zimbra.cs.ldap.LdapException.LdapEntryNotFoundException;
 import com.zimbra.cs.ldap.LdapTODO;
 import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
