@@ -3113,6 +3113,13 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         }
     }
 
+    /**
+     * Returns a Pair containing a MimeMessage object and its estimated size for the requested sub part id.
+     * The size returned is not exact and should not be used in such context.
+     * @param subId
+     * @return
+     * @throws ServiceException
+     */
     public Pair<MimeMessage,Integer> getSubpartMessageData(int subId) throws ServiceException {
         try {
             MimeBodyPart mbp = findBodyBySubId(subId);
