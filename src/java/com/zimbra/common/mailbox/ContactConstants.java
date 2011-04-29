@@ -51,6 +51,7 @@ public final class ContactConstants {
     // these are the "well known attrs". keep in sync with Attr enum below
     public static final String A_assistantPhone = Attr.assistantPhone.name();
     public static final String A_birthday = Attr.birthday.name();
+    public static final String A_anniversary = Attr.anniversary.name();
     public static final String A_callbackPhone = Attr.callbackPhone.name();
     public static final String A_canExpand = Attr.canExpand.name();
     public static final String A_carPhone = Attr.callbackPhone.name();
@@ -152,6 +153,7 @@ public final class ContactConstants {
     public enum Attr {
         assistantPhone,
         birthday,
+        anniversary,
         callbackPhone,
         canExpand,
         carPhone,
