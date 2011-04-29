@@ -24,6 +24,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.CalendarItem.Instance;
@@ -197,7 +198,8 @@ public class Recurrence
             case RULE_RECURRENCE_RULE:
                 return new RecurrenceRule(meta, tzmap);
             case RULE_SINGLE_DATES:
-                return new SingleDates(meta, tzmap);
+                SingleDates sdates = new SingleDates(meta, tzmap);
+                return sdates.getRdateExdate().isEXDATE() || DebugConfig.enableRdate ? sdates : null;
             }
         } catch (ParseException e) {
             throw ServiceException.FAILURE("Parse excetion on metadata: " + meta, e);
@@ -251,7 +253,10 @@ public class Recurrence
             mRules = new ArrayList<IRecurrence>(numRules);
             for (int i = 0; i < numRules; i++) {
                 try {
-                    mRules.add(Recurrence.decodeMetadata(meta.getMap(FN_RULE + i), tzmap));
+                    IRecurrence recurrence = Recurrence.decodeMetadata(meta.getMap(FN_RULE + i), tzmap);
+                    if (recurrence != null) {
+                        mRules.add(recurrence);
+                    }
                 } catch(Exception e) {}
             }
         }
@@ -391,16 +396,18 @@ public class Recurrence
 
         public List<Instance> expandInstances(int calItemId, long start, long end) {
             List<Instance> list = new ArrayList<Instance>();
-            for (DateValue val : mDates) {
-                ParsedDateTime valStart = val.getStartTime();
-                ParsedDateTime valEnd = val.getEndTime();
-                boolean allDay = !valStart.hasTime() || (valStart.hasZeroTime() && mDefaultDuration != null && mDefaultDuration.isMultipleOfDays());
-                list.add(new Instance(calItemId, mInvId, true, true,
-                                      valStart.getUtcTime(), valEnd.getUtcTime(),
-                                      allDay, valStart.getOffset(), valEnd.getOffset(),
-                                      true, true));
+            if (mRdateExdate.isEXDATE() || DebugConfig.enableRdate) {
+                for (DateValue val : mDates) {
+                    ParsedDateTime valStart = val.getStartTime();
+                    ParsedDateTime valEnd = val.getEndTime();
+                    boolean allDay = !valStart.hasTime() || (valStart.hasZeroTime() && mDefaultDuration != null && mDefaultDuration.isMultipleOfDays());
+                    list.add(new Instance(calItemId, mInvId, true, true,
+                                          valStart.getUtcTime(), valEnd.getUtcTime(),
+                                          allDay, valStart.getOffset(), valEnd.getOffset(),
+                                          true, true));
+                }
+                Collections.sort(list);
             }
-            Collections.sort(list);
             return list;
         }
 
