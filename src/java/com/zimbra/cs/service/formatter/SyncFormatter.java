@@ -132,7 +132,7 @@ public class SyncFormatter extends Formatter {
         if (context.itemId.hasSubpart()) {
             Pair<MimeMessage,Integer> calItemMsgData = calItem.getSubpartMessageData(context.itemId.getSubpartId());
             if (calItemMsgData != null) {
-                addXZimbraHeaders(context, calItem, calItemMsgData.getSecond());
+                addXZimbraHeaders(context, calItem, -1);
                 calItemMsgData.getFirst().writeTo(context.resp.getOutputStream());
             } else {
                 // Backward compatibility for pre-5.0.16 ZCO/ZCB: Build a MIME message on the fly.
@@ -156,7 +156,7 @@ public class SyncFormatter extends Formatter {
                 }
             }
         } else {
-            addXZimbraHeaders(context, calItem, calItem.getSize());
+            addXZimbraHeaders(context, calItem, -1);
             InputStream is = calItem.getRawMessage();
             if (is != null)
                 ByteUtil.copy(is, true, context.resp.getOutputStream(), false);
