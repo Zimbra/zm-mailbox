@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.mailbox;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -120,5 +121,19 @@ public class Comment extends MailItem {
         if (meta == null)
             return;
         mCreatorId = meta.get(Metadata.FN_CREATOR);
+    }
+
+    @Override
+    public String toString() {
+        Objects.ToStringHelper helper = Objects.toStringHelper(this);
+        appendCommonMembers(helper);
+        helper.add("type", getType());
+        helper.add("creator", mCreatorId);
+        helper.add("text", getSubject());
+        try {
+            helper.add("parent", getParent());
+        } catch (ServiceException e) {
+        }
+        return helper.toString();
     }
 }

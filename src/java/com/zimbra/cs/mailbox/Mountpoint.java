@@ -167,7 +167,7 @@ public class Mountpoint extends Folder {
     void delete(DeleteScope scope, boolean writeTombstones) throws ServiceException {
         if (!getFolder().canAccess(ACL.RIGHT_DELETE))
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on the parent folder");
-        deleteSingleFolder(writeTombstones);
+        super.delete(scope, writeTombstones);
     }
 
 

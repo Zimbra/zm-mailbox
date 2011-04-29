@@ -1193,35 +1193,22 @@ public class Folder extends MailItem {
     /** Deletes this folder and all its subfolders. */
     @Override void delete(DeleteScope scope, boolean writeTombstones) throws ServiceException {
         if (scope == DeleteScope.CONTENTS_ONLY) {
-            deleteSingleFolder(writeTombstones);
-        } else {
+            throw ServiceException.INVALID_REQUEST("Use empty folder instead", null);
+        }
+        
+        if (hasSubfolders()) {
             List<Folder> subfolders = getSubfolderHierarchy();
-            for (int i = subfolders.size() - 1; i >= 0; i--) {
+            // walking the list in the reverse order
+            // so that the leaf folders are deleted first.
+            // the loop stops shorts of deleting the first
+            // item which is the current folder.
+            for (int i = subfolders.size() - 1; i > 0; i--) {
                 Folder subfolder = subfolders.get(i);
-                subfolder.deleteSingleFolder(writeTombstones);
+                subfolder.delete(DeleteScope.ENTIRE_ITEM, writeTombstones);
             }
         }
-    }
-
-    void empty(boolean includeSubfolders) throws ServiceException {
-        // kill all subfolders, if so requested
-        if (includeSubfolders) {
-            List<Folder> subfolders = getSubfolderHierarchy();
-            // we DO NOT include *this* folder, the first in the list...
-            for (int i = subfolders.size() - 1; i >= 1; i--) {
-                Folder subfolder = subfolders.get(i);
-                subfolder.deleteSingleFolder(true);
-            }
-        }
-
-        // now we can empty *this* folder
-        super.delete(DeleteScope.CONTENTS_ONLY, true);
-    }
-
-    /** Deletes just this folder without affecting its subfolders. */
-    void deleteSingleFolder(boolean writeTombstones) throws ServiceException {
         ZimbraLog.mailbox.info("deleting folder id=%d,path=%s", getId(), getPath());
-        super.delete(hasSubfolders() ? DeleteScope.CONTENTS_ONLY : DeleteScope.ENTIRE_ITEM, writeTombstones);
+        super.delete(scope, writeTombstones);
     }
 
     /** Determines the set of items to be deleted.  Assembles a new

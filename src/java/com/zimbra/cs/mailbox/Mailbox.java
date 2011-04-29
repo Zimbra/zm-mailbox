@@ -6594,44 +6594,7 @@ public class Mailbox {
 
     public void emptyFolder(OperationContext octxt, int folderId, boolean removeSubfolders)
     throws ServiceException {
-        Folder root = getFolderById(octxt, folderId);
-        long itemCount = 0;
-        if (!removeSubfolders) {
-            itemCount = root.getItemCount();
-        } else {
-            for (Folder folder : getFolderById(folderId).getSubfolderHierarchy()) {
-                itemCount += folder.getItemCount();
-            }
-        }
-        ZimbraLog.mailbox.info("Emptying %d items from %s, removeSubfolders=%b.", itemCount, root.getPath(), removeSubfolders);
-
         int batchSize = Provisioning.getInstance().getLocalServer().getMailEmptyFolderBatchSize();
-        if (itemCount <= batchSize) {
-            emptySmallFolder(octxt, folderId, removeSubfolders);
-        } else {
-            emptyLargeFolder(octxt, folderId, removeSubfolders, batchSize);
-        }
-    }
-
-    private synchronized void emptySmallFolder(OperationContext octxt, int folderId, boolean removeSubfolders)
-    throws ServiceException {
-        ZimbraLog.mailbox.debug("Emptying small folder %s, removeSubfolders=%b", folderId, removeSubfolders);
-        EmptyFolder redoRecorder = new EmptyFolder(mId, folderId, removeSubfolders);
-
-        boolean success = false;
-        try {
-            beginTransaction("emptyFolder", octxt, redoRecorder);
-
-            Folder folder = getFolderById(folderId);
-            folder.empty(removeSubfolders);
-            success = true;
-        } finally {
-            endTransaction(success);
-        }
-    }
-
-    private void emptyLargeFolder(OperationContext octxt, int folderId, boolean removeSubfolders, int batchSize)
-    throws ServiceException {
         ZimbraLog.mailbox.debug("Emptying large folder %s, removeSubfolders=%b, batchSize=%d",
             folderId, removeSubfolders, batchSize);
 
@@ -6680,8 +6643,10 @@ public class Mailbox {
             }
         }
 
-        if (removeSubfolders) {
-            emptySmallFolder(octxt, folderId, removeSubfolders);
+        if (removeSubfolders && folderIds.size() > 1) {
+            // delete the subfolders
+            folderIds.remove(0);   // 0th position is the folder being emptied which we do not want to delete
+            delete(octxt, ArrayUtil.toIntArray(folderIds), MailItem.Type.FOLDER, null);
         }
     }
 

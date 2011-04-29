@@ -29,6 +29,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailAddress;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
+import com.zimbra.cs.mailbox.MailItem.DeleteScope;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedMessage;
 
@@ -221,4 +222,40 @@ public class FolderTest {
         Assert.assertEquals(mbox.getLastItemId(), inbox.getImapRECENTCutoff());
     }
 
+    @Test
+    public void deleteFolder() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Folder root = mbox.createFolder(null, "/Root", (byte) 0, MailItem.Type.DOCUMENT);
+        mbox.createFolder(null, "/Root/test1", (byte) 0, MailItem.Type.DOCUMENT);
+        mbox.createFolder(null, "/Root/test2", (byte) 0, MailItem.Type.DOCUMENT);
+
+        Exception ex = null;
+        try {
+            mbox.getFolderByPath(null, "/Root");
+            mbox.getFolderByPath(null, "/Root/test1");
+            mbox.getFolderByPath(null, "/Root/test2");
+        } catch (Exception e) {
+            ex = e;
+        }
+        Assert.assertNull(ex);
+        mbox.delete(null, root.mId, MailItem.Type.FOLDER);
+        try {
+            mbox.getFolderByPath(null, "/Root");
+        } catch (Exception e) {
+            ex = e;
+        }
+        Assert.assertNotNull(ex);
+        try {
+            mbox.getFolderByPath(null, "/Root/test1");
+        } catch (Exception e) {
+            ex = e;
+        }
+        Assert.assertNotNull(ex);
+        try {
+            mbox.getFolderByPath(null, "/Root/test2");
+        } catch (Exception e) {
+            ex = e;
+        }
+        Assert.assertNotNull(ex);
+    }
 }
