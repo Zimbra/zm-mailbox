@@ -43,6 +43,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbOutOfOffice;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
+import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.util.JMSession;
@@ -165,7 +166,7 @@ extends TestCase {
         // Turn on legal intercept for recipient account
         String interceptorAddress = TestUtil.getAddress(INTERCEPTOR_NAME);
         TestUtil.setAccountAttr(TAPPED_NAME, Provisioning.A_zimbraInterceptAddress, interceptorAddress);
-        TestUtil.setAccountAttr(TAPPED_NAME, Provisioning.A_zimbraInterceptSendHeadersOnly, LdapUtilCommon.LDAP_FALSE);
+        TestUtil.setAccountAttr(TAPPED_NAME, Provisioning.A_zimbraInterceptSendHeadersOnly, LdapConstants.LDAP_FALSE);
 
         // Send message to recipient account and make sure it's intercepted
         ZMailbox interceptorMbox = TestUtil.getZMailbox(INTERCEPTOR_NAME);
@@ -205,7 +206,7 @@ extends TestCase {
         compareContent(tappedMbox, tappedMsg, interceptorMbox, interceptMsg);
 
         // Send message with save-to-sent turned on.
-        TestUtil.setAccountAttr(TAPPED_NAME, Provisioning.A_zimbraPrefSaveToSent, LdapUtilCommon.LDAP_TRUE);
+        TestUtil.setAccountAttr(TAPPED_NAME, Provisioning.A_zimbraPrefSaveToSent, LdapConstants.LDAP_TRUE);
         subject = NAME_PREFIX + " testIntercept-send-1";
         TestUtil.sendMessage(tappedMbox, INTERCEPTOR_NAME, subject);
         tappedMsg = TestUtil.waitForMessage(tappedMbox, "in:sent subject:\"" + subject + "\"");
@@ -214,14 +215,14 @@ extends TestCase {
         compareContent(tappedMbox, tappedMsg, interceptorMbox, interceptMsg);
 
         // Send message with save-to-sent turned off.
-        TestUtil.setAccountAttr(TAPPED_NAME, Provisioning.A_zimbraPrefSaveToSent, LdapUtilCommon.LDAP_FALSE);
+        TestUtil.setAccountAttr(TAPPED_NAME, Provisioning.A_zimbraPrefSaveToSent, LdapConstants.LDAP_FALSE);
         subject = NAME_PREFIX + " testIntercept-send-2";
         TestUtil.sendMessage(tappedMbox, INTERCEPTOR_NAME, subject);
         interceptMsg = TestUtil.waitForMessage(interceptorMbox, "subject:intercepted subject:\"" + subject + "\"");
         verifyInterceptMessage(interceptMsg, "send message", "none", "none");
 
         // Check intercepting headers only.
-        TestUtil.setAccountAttr(TAPPED_NAME, Provisioning.A_zimbraInterceptSendHeadersOnly, LdapUtilCommon.LDAP_TRUE);
+        TestUtil.setAccountAttr(TAPPED_NAME, Provisioning.A_zimbraInterceptSendHeadersOnly, LdapConstants.LDAP_TRUE);
         subject = NAME_PREFIX + " testIntercept-headers-only";
         TestUtil.sendMessage(interceptorMbox, TAPPED_NAME, subject);
         tappedMsg = TestUtil.waitForMessage(tappedMbox, "in:inbox subject:\"" + subject + "\"");
@@ -242,7 +243,7 @@ extends TestCase {
         String[] interceptorAddresses = new String[] { interceptor1Address, interceptor2Address };
 
         TestUtil.setAccountAttr(TAPPED_NAME, Provisioning.A_zimbraInterceptAddress, interceptorAddresses);
-        TestUtil.setAccountAttr(TAPPED_NAME, Provisioning.A_zimbraInterceptSendHeadersOnly, LdapUtilCommon.LDAP_FALSE);
+        TestUtil.setAccountAttr(TAPPED_NAME, Provisioning.A_zimbraInterceptSendHeadersOnly, LdapConstants.LDAP_FALSE);
 
         // Send message to recipient account.
         ZMailbox tappedMbox = TestUtil.getZMailbox(TAPPED_NAME);

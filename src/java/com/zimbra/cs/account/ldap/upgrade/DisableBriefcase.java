@@ -11,7 +11,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.ldap.IAttributes;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
 import com.zimbra.cs.prov.ldap.LdapFilter;
@@ -49,13 +49,13 @@ public class DisableBriefcase extends LdapUpgrade {
             
             try {
                 if (ldapAttrs.getAttrString( ATTR_SPREADSHEET) != null)
-                    modAttrs.put(ATTR_SPREADSHEET, LdapUtilCommon.LDAP_FALSE);
+                    modAttrs.put(ATTR_SPREADSHEET, LdapConstants.LDAP_FALSE);
                 
                 if (ldapAttrs.getAttrString(ATTR_SLIDES) != null)
-                    modAttrs.put(ATTR_SLIDES, LdapUtilCommon.LDAP_FALSE);
+                    modAttrs.put(ATTR_SLIDES, LdapConstants.LDAP_FALSE);
                 
                 if (ldapAttrs.getAttrString(ATTR_NOTEBOOK) != null)
-                    modAttrs.put(ATTR_NOTEBOOK, LdapUtilCommon.LDAP_FALSE);
+                    modAttrs.put(ATTR_NOTEBOOK, LdapConstants.LDAP_FALSE);
                 
                 if (modAttrs.size() > 0) {
                     System.out.println("Modifying " + dn);
@@ -90,9 +90,9 @@ public class DisableBriefcase extends LdapUpgrade {
     }
     
     private String query() {
-        return "(|(" + ATTR_SPREADSHEET + "=" + LdapUtilCommon.LDAP_TRUE + ")" + 
-                 "(" + ATTR_SLIDES + "=" + LdapUtilCommon.LDAP_TRUE + ")" + 
-                 "(" + ATTR_NOTEBOOK + "=" + LdapUtilCommon.LDAP_TRUE + ")" +
+        return "(|(" + ATTR_SPREADSHEET + "=" + LdapConstants.LDAP_TRUE + ")" + 
+                 "(" + ATTR_SLIDES + "=" + LdapConstants.LDAP_TRUE + ")" + 
+                 "(" + ATTR_NOTEBOOK + "=" + LdapConstants.LDAP_TRUE + ")" +
                ")";
     }
     

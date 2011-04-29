@@ -28,7 +28,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbResults;
 import com.zimbra.cs.db.DbUtil;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -157,7 +157,7 @@ public class TestPurge extends TestCase {
     public void testTrashUser()
     throws Exception {
         // Use the item date for purge.
-        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailPurgeUseChangeDateForTrash, LdapUtilCommon.LDAP_FALSE);
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailPurgeUseChangeDateForTrash, LdapConstants.LDAP_FALSE);
 
         // Set retention policy
         Account account = TestUtil.getAccount(USER_NAME);
@@ -187,7 +187,7 @@ public class TestPurge extends TestCase {
     public void testTrashSystem()
     throws Exception {
         // Use the item date for purge.
-        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailPurgeUseChangeDateForTrash, LdapUtilCommon.LDAP_FALSE);
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailPurgeUseChangeDateForTrash, LdapConstants.LDAP_FALSE);
 
         // Set retention policy
         Account account = TestUtil.getAccount(USER_NAME);
@@ -216,7 +216,7 @@ public class TestPurge extends TestCase {
      */
     public void testJunkUser()
     throws Exception {
-        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailPurgeUseChangeDateForSpam, LdapUtilCommon.LDAP_FALSE);
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailPurgeUseChangeDateForSpam, LdapConstants.LDAP_FALSE);
 
         // Set retention policy
         Account account = TestUtil.getAccount(USER_NAME);
@@ -245,7 +245,7 @@ public class TestPurge extends TestCase {
      */
     public void testJunkSystem()
     throws Exception {
-        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailPurgeUseChangeDateForSpam, LdapUtilCommon.LDAP_FALSE);
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailPurgeUseChangeDateForSpam, LdapConstants.LDAP_FALSE);
 
         // Set retention policy
         Account account = TestUtil.getAccount(USER_NAME);
@@ -328,7 +328,7 @@ public class TestPurge extends TestCase {
     throws Exception {
         // Set retention policy
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraPrefJunkLifetime, "24h");
-        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailPurgeUseChangeDateForSpam, LdapUtilCommon.LDAP_TRUE);
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailPurgeUseChangeDateForSpam, LdapConstants.LDAP_TRUE);
 
         // Insert message
         String subject = NAME_PREFIX + " testSpamChangeDate";
@@ -357,7 +357,7 @@ public class TestPurge extends TestCase {
     throws Exception {
         // Set retention policy
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraPrefTrashLifetime, "24h");
-        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailPurgeUseChangeDateForTrash, LdapUtilCommon.LDAP_TRUE);
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailPurgeUseChangeDateForTrash, LdapConstants.LDAP_TRUE);
 
         // Insert message
         String subject = NAME_PREFIX + " testTrashChangeDate";
@@ -475,7 +475,7 @@ public class TestPurge extends TestCase {
     public void testBatchSize()
     throws Exception {
         // Use the item date for purge.
-        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailPurgeUseChangeDateForTrash, LdapUtilCommon.LDAP_FALSE);
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailPurgeUseChangeDateForTrash, LdapConstants.LDAP_FALSE);
 
         // Set retention policy
         Account account = TestUtil.getAccount(USER_NAME);

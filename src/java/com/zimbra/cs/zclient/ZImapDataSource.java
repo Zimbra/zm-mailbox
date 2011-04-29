@@ -25,7 +25,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.soap.account.type.AccountImapDataSource;
 import com.zimbra.soap.type.DataSources;
 import com.zimbra.soap.type.ImapDataSource;
@@ -139,7 +139,7 @@ public class ZImapDataSource implements ZDataSource, ToZJSONObject {
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraDataSourceId, getId());
         attrs.put(Provisioning.A_zimbraDataSourceName, getName());
-        attrs.put(Provisioning.A_zimbraDataSourceEnabled, isEnabled() ? LdapUtilCommon.LDAP_TRUE : LdapUtilCommon.LDAP_FALSE);
+        attrs.put(Provisioning.A_zimbraDataSourceEnabled, isEnabled() ? LdapConstants.LDAP_TRUE : LdapConstants.LDAP_FALSE);
         attrs.put(Provisioning.A_zimbraDataSourceUsername, getUsername());
         attrs.put(Provisioning.A_zimbraDataSourceHost, getHost());
         attrs.put(Provisioning.A_zimbraDataSourceConnectionType, getConnectionType().toString());

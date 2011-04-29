@@ -45,7 +45,7 @@ import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext.LdapConfig;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapConstants;
 
 public class AdminRights extends LdapUpgrade {
     
@@ -177,9 +177,9 @@ public class AdminRights extends LdapUpgrade {
         String isDomainAdmin = LegacyLdapUtil.getAttrString(attrs, Provisioning.A_zimbraIsDomainAdminAccount);
         String isDelegatedAdmin = LegacyLdapUtil.getAttrString(attrs, Provisioning.A_zimbraIsDelegatedAdminAccount);
         
-        if (LdapUtilCommon.LDAP_TRUE.equals(isDomainAdmin) &&
-            !LdapUtilCommon.LDAP_TRUE.equals(isAdmin) &&         // is a global admin, don't touch it
-            !LdapUtilCommon.LDAP_TRUE.equals(isDelegatedAdmin))  // already migrated, don't touch it
+        if (LdapConstants.LDAP_TRUE.equals(isDomainAdmin) &&
+            !LdapConstants.LDAP_TRUE.equals(isAdmin) &&         // is a global admin, don't touch it
+            !LdapConstants.LDAP_TRUE.equals(isDelegatedAdmin))  // already migrated, don't touch it
             return LegacyLdapUtil.getAttrString(attrs, Provisioning.A_zimbraId);
         else
             return null;
@@ -188,7 +188,7 @@ public class AdminRights extends LdapUpgrade {
     String getZimbraIdIfGlobalAdmin(Attributes attrs) throws NamingException {
         String isAdmin = LegacyLdapUtil.getAttrString(attrs, Provisioning.A_zimbraIsAdminAccount);
         
-        if (LdapUtilCommon.LDAP_TRUE.equals(isAdmin))
+        if (LdapConstants.LDAP_TRUE.equals(isAdmin))
             return LegacyLdapUtil.getAttrString(attrs, Provisioning.A_zimbraId);
         else
             return null;

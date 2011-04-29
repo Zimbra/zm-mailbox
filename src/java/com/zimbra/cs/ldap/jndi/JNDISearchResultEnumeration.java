@@ -1,3 +1,17 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2011 Zimbra, Inc.
+ *
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.cs.ldap.jndi;
 
 import javax.naming.NamingEnumeration;
@@ -13,10 +27,10 @@ import com.zimbra.cs.ldap.ZSearchResultEnumeration;
 public class JNDISearchResultEnumeration implements ZSearchResultEnumeration {
 
     // wrapped JNDI NamingEnumeration<SearchResult>
-    private NamingEnumeration<SearchResult> wrapped;
+    private NamingEnumeration<SearchResult> searchResult;
     
     JNDISearchResultEnumeration(NamingEnumeration<SearchResult> searchResult) {
-        wrapped = searchResult;
+        this.searchResult = searchResult;
     }
     
     @TODO
@@ -28,7 +42,7 @@ public class JNDISearchResultEnumeration implements ZSearchResultEnumeration {
     @Override
     public void close() throws LdapException {
         try {
-            wrapped.close();
+            searchResult.close();
         } catch (NamingException e) {
             throw mapToLdapException(e);
         }
@@ -39,7 +53,7 @@ public class JNDISearchResultEnumeration implements ZSearchResultEnumeration {
     public boolean hasMore() throws LdapException {
         boolean result;
         try {
-            result = wrapped.hasMore();
+            result = searchResult.hasMore();
         } catch (NamingException e) {
             throw mapToLdapException(e);
             
@@ -51,8 +65,8 @@ public class JNDISearchResultEnumeration implements ZSearchResultEnumeration {
     public ZSearchResultEntry next() throws LdapException {
         JNDISearchResultEntry result;
         try {
-            SearchResult searchResult = wrapped.next();
-            result = new JNDISearchResultEntry(searchResult);
+            SearchResult sr = searchResult.next();
+            result = new JNDISearchResultEntry(sr);
         } catch (NamingException e) {
             throw mapToLdapException(e);
         }

@@ -1,47 +1,43 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2011 Zimbra, Inc.
+ * 
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.qa.unittest;
 
 import static org.junit.Assert.assertNotNull;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.json.JSONException;
 
 import org.junit.*;
 import static org.junit.Assert.*;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.DateUtil;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AttributeFlag;
-import com.zimbra.cs.account.AttributeInfo;
-import com.zimbra.cs.account.AttributeManager;
-import com.zimbra.cs.account.AttributeManager.IDNType;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.EntryCacheDataKey;
-import com.zimbra.cs.account.IDNUtil;
-import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ZAttrProvisioning;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.prov.ldap.LdapObjectClass;
-import com.zimbra.cs.zclient.ZJSONObject;
-import com.zimbra.qa.unittest.TestLdap.TestConfig;
 
 public class TestLdapProvEntry {
     private static final String DOMAIN_NAME = "\u4e2d\u6587";  // an IDN domain name
@@ -63,8 +59,8 @@ public class TestLdapProvEntry {
         prov = Provisioning.getInstance();
         
         domain = prov.get(Provisioning.DomainBy.name, DOMAIN_NAME);
-        assertNull(domain);  // TODO: uncomment after deletedomain is fixed
-        domain = prov.createDomain(DOMAIN_NAME, new HashMap<String, Object>());  // // TODO: uncomment after deletedomain is fixed
+        assertNull(domain);
+        domain = prov.createDomain(DOMAIN_NAME, new HashMap<String, Object>());
         assertNotNull(domain);
         
         cos = prov.get(Provisioning.CosBy.name, Provisioning.DEFAULT_COS_NAME);
@@ -77,15 +73,14 @@ public class TestLdapProvEntry {
         attrs.put(Provisioning.A_userSMIMECertificate, binaryData.getString());
         
         account = prov.createAccount(accountName, "test123", attrs);
-        // account = prov.get(Provisioning.AccountBy.name, accountName);  // TODO: CHANEG TO CREATE after the delete is fixed.
         
         entry = prov.get(Provisioning.AccountBy.name, accountName);
     }
     
     @AfterClass
     public static void cleanup() throws Exception {
-        // prov.deleteAccount(account.getId());  // TODO: uncomment after delete is fixed.
-        // prov.deleteDomain(domain.getId());  // TODO: uncomment after delete is fixed.
+        prov.deleteAccount(account.getId());
+        prov.deleteDomain(domain.getId());
     }
     
     @Test
@@ -119,7 +114,7 @@ public class TestLdapProvEntry {
         
         // apply defaults
         String value = entry.getAttr(ATTR, true);
-        assertEquals(LdapUtilCommon.LDAP_TRUE, value);
+        assertEquals(LdapConstants.LDAP_TRUE, value);
         
         // do not apply defaults
         value = entry.getAttr(ATTR, false);
@@ -164,7 +159,7 @@ public class TestLdapProvEntry {
         Map<String, Object> attrs = entry.getAttrs(true);
         Object value = attrs.get(ATTR);
         assertTrue(value instanceof String);
-        assertEquals(LdapUtilCommon.LDAP_TRUE, value);
+        assertEquals(LdapConstants.LDAP_TRUE, value);
         
         // do not apply defaults
         attrs = entry.getAttrs(false);
@@ -271,7 +266,7 @@ public class TestLdapProvEntry {
         // apply defaults
         String[] value = entry.getMultiAttr(ATTR, true);
         assertEquals(1, value.length);
-        assertEquals(LdapUtilCommon.LDAP_TRUE, value[0]);
+        assertEquals(LdapConstants.LDAP_TRUE, value[0]);
         
         // do not apply defaults
         value = entry.getMultiAttr(ATTR, false);
@@ -308,8 +303,6 @@ public class TestLdapProvEntry {
         String ATTR = Provisioning.A_zimbraMailTrashLifetime;
         long value = entry.getTimeInterval(ATTR, 0);
         long expected = 30 * Constants.MILLIS_PER_DAY;
-        System.out.println(value);
-        System.out.println(expected);
         assertEquals(expected, value);
     }
     

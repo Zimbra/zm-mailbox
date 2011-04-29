@@ -1,8 +1,23 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2011 Zimbra, Inc.
+ *
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.cs.ldap.unboundid;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -11,6 +26,7 @@ import javax.net.SocketFactory;
 import com.unboundid.asn1.ASN1OctetString;
 import com.unboundid.ldap.sdk.Control;
 import com.unboundid.ldap.sdk.DereferencePolicy;
+import com.unboundid.ldap.sdk.Filter;
 import com.unboundid.ldap.sdk.LDAPConnection;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
 import com.unboundid.ldap.sdk.LDAPException;
@@ -35,6 +51,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.ldap.LdapConfig;
 import com.zimbra.cs.ldap.LdapConnType;
+import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
@@ -44,6 +61,7 @@ import com.zimbra.cs.ldap.ZSearchControls;
 import com.zimbra.cs.ldap.ZSearchResultEnumeration;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapTODO;
+import com.zimbra.cs.ldap.ZSearchScope;
 import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
 import com.zimbra.cs.ldap.jndi.JNDIAttributes;
@@ -177,7 +195,7 @@ public class UBIDLdapContext extends ZLdapContext {
     @TODOEXCEPTIONMAPPING
     public void createEntry(ZMutableEntry entry) throws ServiceException {
         try {
-            conn.add(((UBIDMutableEntry) entry).get());
+            conn.add(((UBIDMutableEntry) entry).getNative());
         } catch (LDAPException e) {
             throw UBIDLdapException.mapToLdapException(e);
         }
@@ -190,10 +208,7 @@ public class UBIDLdapContext extends ZLdapContext {
         UBIDMutableEntry entry = new UBIDMutableEntry();
         entry.setDN(dn);
         
-        // we don't want to use Provisioning.A_objectClass here since the 
-        // ldap package should not have any dependency on the account package.
-        // TODO: define it somewhere else
-        entry.setAttr("objectClass", objectClass);
+        entry.setAttr(LdapConstants.ATTR_OBJECTCLASS, objectClass);
         
         for (int i=0; i < attrs.length; i += 2) {
             entry.setAttr(attrs[i], attrs[i+1]);
@@ -208,11 +223,8 @@ public class UBIDLdapContext extends ZLdapContext {
         UBIDMutableEntry entry = new UBIDMutableEntry();
         entry.setDN(dn);
         
-        // we don't want to use Provisioning.A_objectClass here since the 
-        // ldap package should not have any dependency on the account package.
-        // TODO: define it somewhere else
         Set<String> ocs = new HashSet<String>(Arrays.asList(objectClasses));
-        entry.addAttr("objectClass", ocs);
+        entry.addAttr(LdapConstants.ATTR_OBJECTCLASS, ocs);
         
         for (int i=0; i < attrs.length; i += 2) {
             entry.setAttr(attrs[i], attrs[i+1]);
@@ -228,7 +240,27 @@ public class UBIDLdapContext extends ZLdapContext {
 
     @Override
     public void deleteChildren(String dn) throws ServiceException {
-        LdapTODO.TODO();
+        
+        try {
+            SearchRequest searchRequest = new SearchRequest(dn, 
+                    SearchScope.ONE,
+                    derefAliasPolicy,
+                    0,  // size limit
+                    0,  // time limit
+                    false, // getTypesOnly
+                    Filter.createPresenceFilter(LdapConstants.ATTR_OBJECTCLASS)  // (objectclass=*)
+                    ); 
+                    
+            searchRequest.setAttributes("dn");
+            SearchResult result = conn.search(searchRequest);
+            
+            List<SearchResultEntry> entries = result.getSearchEntries();
+            for (SearchResultEntry entry : entries) {
+                unbindEntry(entry.getDN());
+            }
+        } catch (LDAPException e) {
+            throw UBIDLdapException.mapToLdapException(e);
+        }
     }
     
     @Override
@@ -352,7 +384,11 @@ public class UBIDLdapContext extends ZLdapContext {
     @Override
     @TODO // must throw LdapContextNotEmptyException
     public void unbindEntry(String dn) throws LdapException {
-        LdapTODO.TODO();
+        try {
+            conn.delete(dn);
+        } catch (LDAPException e) {
+            throw UBIDLdapException.mapToLdapException(e);
+        }
     }
 
     

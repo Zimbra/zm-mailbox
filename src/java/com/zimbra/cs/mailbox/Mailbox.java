@@ -88,6 +88,7 @@ import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraQuery;
+import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
@@ -6386,7 +6387,7 @@ public class Mailbox {
             // URL is not null or empty.  Create data source if necessary.
             if (ds == null) {
                 Map<String, Object> attrs = new HashMap<String, Object>();
-                attrs.put(Provisioning.A_zimbraDataSourceEnabled, LdapUtilCommon.LDAP_TRUE);
+                attrs.put(Provisioning.A_zimbraDataSourceEnabled, LdapConstants.LDAP_TRUE);
                 attrs.put(Provisioning.A_zimbraDataSourceFolderId, Integer.toString(folder.getId()));
 
                 DataSource.Type type;

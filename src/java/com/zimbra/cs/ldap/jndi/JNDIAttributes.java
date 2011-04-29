@@ -1,3 +1,17 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2011 Zimbra, Inc.
+ *
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.cs.ldap.jndi;
 
 import java.util.HashMap;
@@ -17,16 +31,16 @@ import com.zimbra.cs.ldap.ZAttributes;
 
 public class JNDIAttributes extends ZAttributes {
     
-    private Attributes wrapped;
+    private Attributes attributes;
     private static String[] EMPTY_STRING_ARRAY = new String[0];
     
     JNDIAttributes(Attributes attributes) {
-        wrapped = attributes;
+        this.attributes = attributes;
     }
     
     public void debug() {
         try {
-            for (NamingEnumeration ne = wrapped.getAll(); ne.hasMore(); ) {
+            for (NamingEnumeration ne = attributes.getAll(); ne.hasMore(); ) {
                 Attribute attr = (Attribute) ne.next();
                 println(attr.toString());
             }
@@ -35,8 +49,8 @@ public class JNDIAttributes extends ZAttributes {
         }
     }
     
-    Attributes get() {
-        return wrapped;
+    Attributes getNative() {
+        return attributes;
     }
     
     // attr must not be null
@@ -72,7 +86,7 @@ public class JNDIAttributes extends ZAttributes {
         
         AttributeManager attrMgr = AttributeManager.getInst();
         
-        for (NamingEnumeration ne = wrapped.getAll(); ne.hasMore(); ) {
+        for (NamingEnumeration ne = attributes.getAll(); ne.hasMore(); ) {
             Attribute attr = (Attribute) ne.next();
             String transferAttrName = attr.getID();
             
@@ -96,7 +110,7 @@ public class JNDIAttributes extends ZAttributes {
     @Override  // IAttributes
     protected String getAttrString(String transferAttrName, boolean containsBinaryData) throws LdapException {
         try {
-            Attribute attr = wrapped.get(transferAttrName);
+            Attribute attr = attributes.get(transferAttrName);
             if (attr != null) {
                 return getAttrStringInternal(attr, containsBinaryData);
             } else {
@@ -110,7 +124,7 @@ public class JNDIAttributes extends ZAttributes {
     @Override  // IAttributes
     protected String[] getMultiAttrString(String transferAttrName, boolean containsBinaryData) throws LdapException {
         try {
-            Attribute attr = wrapped.get(transferAttrName);
+            Attribute attr = attributes.get(transferAttrName);
             if (attr != null) {
                 return getMultiAttrStringInternal(attr, containsBinaryData); 
             } else {

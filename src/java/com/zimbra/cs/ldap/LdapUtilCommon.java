@@ -1,3 +1,17 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2011 Zimbra, Inc.
+ *
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.cs.ldap;
 
 import java.util.HashMap;
@@ -17,25 +31,6 @@ import com.zimbra.cs.account.ldap.legacy.entry.LdapDomain;
  * and the new com.zimbra.cs.ldap.LdapUtil
  */
 public class LdapUtilCommon {
-    
-    public final static String LDAP_TRUE  = "TRUE";
-    public final static String LDAP_FALSE = "FALSE";
-    
-    public final static String EARLIEST_SYNC_TOKEN = "19700101000000Z";
-
-    /*
-    public static String getAttrString(Map<String, Object> attrs, String name) {
-        Object v = attrs.get(name);
-        if (v instanceof String) {
-            return (String) v;
-        } else if (v instanceof String[]) {
-            String[] a = (String[]) v;
-            return a.length > 0 ? a[0] : null;
-        } else {
-            return null;
-        }
-    }
-    */
     
     public static boolean contains(String[] values, String val) {
         if (values == null) {
@@ -191,9 +186,9 @@ public class LdapUtilCommon {
 
     public static String getBooleanString(boolean b) {
         if (b) {
-            return LDAP_TRUE;
+            return LdapConstants.LDAP_TRUE;
         }
-        return LDAP_FALSE;
+        return LdapConstants.LDAP_FALSE;
     }
 
     public static String getZimbraSearchBase(Domain domain, GalOp galOp) {

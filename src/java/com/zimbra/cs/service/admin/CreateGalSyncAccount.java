@@ -30,7 +30,7 @@ import com.zimbra.cs.account.ZAttrProvisioning.GalMode;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.TargetType;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -105,8 +105,8 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
             // XXX revisit
             checkDomainRightByEmail(zsc, acctValue, Admin.R_createAccount);
             Map<String,Object> accountAttrs = new HashMap<String,Object>();
-            StringUtil.addToMultiMap(accountAttrs, Provisioning.A_zimbraIsSystemResource, LdapUtilCommon.LDAP_TRUE);
-            StringUtil.addToMultiMap(accountAttrs, Provisioning.A_zimbraHideInGal, LdapUtilCommon.LDAP_TRUE);
+            StringUtil.addToMultiMap(accountAttrs, Provisioning.A_zimbraIsSystemResource, LdapConstants.LDAP_TRUE);
+            StringUtil.addToMultiMap(accountAttrs, Provisioning.A_zimbraHideInGal, LdapConstants.LDAP_TRUE);
             StringUtil.addToMultiMap(accountAttrs, Provisioning.A_zimbraContactMaxNumEntries, "0");
             checkSetAttrsOnCreate(zsc, TargetType.account, acctValue, accountAttrs);
             account = prov.createAccount(acctValue, password, accountAttrs);
@@ -156,7 +156,7 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
             attrs.put(Provisioning.A_zimbraGalType, type.name());
             attrs.put(Provisioning.A_zimbraDataSourceFolderId, "" + folderId);
             if (!attrs.containsKey(Provisioning.A_zimbraDataSourceEnabled))
-                attrs.put(Provisioning.A_zimbraDataSourceEnabled, LdapUtilCommon.LDAP_TRUE);
+                attrs.put(Provisioning.A_zimbraDataSourceEnabled, LdapConstants.LDAP_TRUE);
             if (!attrs.containsKey(Provisioning.A_zimbraGalStatus))
                 attrs.put(Provisioning.A_zimbraGalStatus, "enabled");
             prov.createDataSource(account, DataSource.Type.gal, name, attrs);
