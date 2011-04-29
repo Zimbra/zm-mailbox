@@ -5049,6 +5049,13 @@ public class Mailbox {
     }
 
     /**
+     * Ensures that we don't attempt multiple
+     * SaveDraft operations for the same mailbox at the same time (bug 59287).  We can
+     * remove this synchronization after bug 59512 is fixed.
+     */
+    private final Object saveDraftGuard = new Object();
+    
+    /**
      * Saves draft.
      *
      * @param octxt
@@ -5066,6 +5073,14 @@ public class Mailbox {
      * @see com.zimbra.cs.service.mail.SaveDraft#handle(com.zimbra.common.soap.Element, java.util.Map)
      */
     public Message saveDraft(OperationContext octxt, ParsedMessage pm, int id,
+                             String origId, String replyType, String identityId, String accountId, long autoSendTime)
+    throws IOException, ServiceException {
+        synchronized (saveDraftGuard) {
+            return saveDraftInternal(octxt, pm, id, origId, replyType, identityId, accountId, autoSendTime);
+        }
+    }
+    
+    public Message saveDraftInternal(OperationContext octxt, ParsedMessage pm, int id,
                              String origId, String replyType, String identityId, String accountId, long autoSendTime)
     throws IOException, ServiceException {
         Message.DraftInfo dinfo = null;
