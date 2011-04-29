@@ -682,7 +682,7 @@ public class LdapUtil {
           ZimbraLdapContext zlc = null;
           try {
               zlc = new ZimbraLdapContext(useMaster);
-              searchLdap(zlc, base, query, returnAttrs, null, visitor);
+              searchLdap(zlc, base, query, returnAttrs, null, SearchControls.SUBTREE_SCOPE, visitor);
           } finally {
               ZimbraLdapContext.closeContext(zlc);
           }
@@ -692,14 +692,14 @@ public class LdapUtil {
        * Important Note: caller is responsible to close the ZimbraLdapContext
        */
       public static void searchLdap(ZimbraLdapContext zlc, String base, String query, String[] returnAttrs, 
-              Set<String> binaryAttrs, SearchLdapVisitor visitor) 
+              Set<String> binaryAttrs, int searchScope, SearchLdapVisitor visitor) 
       throws ServiceException {
           
           int maxResults = 0; // no limit
           
           try {
               SearchControls searchControls =
-                  new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, returnAttrs, false, false);
+                  new SearchControls(searchScope, maxResults, 0, returnAttrs, false, false);
 
               //Set the page size and initialize the cookie that we pass back in subsequent pages
               int pageSize = LdapUtil.adjustPageSize(maxResults, 1000);
