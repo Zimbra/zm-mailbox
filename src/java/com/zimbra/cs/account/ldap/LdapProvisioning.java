@@ -120,6 +120,7 @@ import com.zimbra.cs.account.ldap.legacy.entry.*;
 import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.SearchLdapOptions;
@@ -4241,7 +4242,7 @@ public class LdapProvisioning extends LdapProv {
             zlc = new ZimbraLdapContext();
 
             Attributes attrs = new BasicAttributes(true);
-            String hasKeyword = LdapUtilCommon.LDAP_FALSE;
+            String hasKeyword = LdapConstants.LDAP_FALSE;
             if (zimletAttrs.containsKey(A_zimbraZimletKeyword)) {
                 hasKeyword = Provisioning.TRUE;
             }
