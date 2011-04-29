@@ -70,6 +70,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.InetSocketAddress;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -610,7 +611,7 @@ abstract class ImapHandler {
                     if ("RETURN".equals(req.peekATOM()) && extensionEnabled("ESEARCH")) {
                         options = parseSearchOptions(req);  req.skipSpace();
                     }
-                    String charset = null;
+                    Charset charset = null;
                     if ("CHARSET".equals(req.peekATOM())) {
                         req.skipAtom("CHARSET");  req.skipSpace();
                         charset = req.readCharset();  req.skipSpace();
@@ -662,8 +663,10 @@ abstract class ImapHandler {
                         order.add(sort);  desc = false;
                     } while (desc || req.peekChar() != ')');
                     req.skipChar(')');
-                    req.skipSpace();  String charset = req.readCharset();
-                    req.skipSpace();  ImapSearch i4search = req.readSearch(charset);
+                    req.skipSpace();
+                    Charset charset = req.readCharset();
+                    req.skipSpace();
+                    ImapSearch i4search = req.readSearch(charset);
                     checkEOF(tag, req);
                     return isProxied ? imapProxy.proxy(req) : doSORT(tag, i4search, byUID, options, order);
                 } else if (command.equals("SUBSCRIBE")) {
@@ -698,9 +701,12 @@ abstract class ImapHandler {
                 break;
             case 'T':
                 if (command.equals("THREAD") && extensionEnabled("THREAD=ORDEREDSUBJECT")) {
-                    req.skipSpace();  req.skipAtom("ORDEREDSUBJECT");
-                    req.skipSpace();  String charset = req.readCharset();
-                    req.skipSpace();  ImapSearch i4search = req.readSearch(charset);
+                    req.skipSpace();
+                    req.skipAtom("ORDEREDSUBJECT");
+                    req.skipSpace();
+                    Charset charset = req.readCharset();
+                    req.skipSpace();
+                    ImapSearch i4search = req.readSearch(charset);
                     checkEOF(tag, req);
                     return isProxied ? imapProxy.proxy(req) : doTHREAD(tag, i4search, byUID);
                 }
