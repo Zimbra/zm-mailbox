@@ -16,9 +16,14 @@ package com.zimbra.cs.prov.ldap;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.ldap.ILdapContext;
+import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.SearchLdapOptions;
+import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
+import com.zimbra.cs.ldap.ZSearchControls;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
+import com.zimbra.cs.ldap.ZSearchResultEnumeration;
+import com.zimbra.cs.ldap.LdapException.LdapEntryNotFoundException;
 import com.zimbra.cs.ldap.LdapException.LdapMultipleEntriesMatchedException;
 
 public abstract class LdapHelper {
@@ -37,28 +42,66 @@ public abstract class LdapHelper {
     throws ServiceException;
     
     /**
-     * Processes a search operation with the provided information. 
-     * It is expected that at most one entry will be returned from the search
-     *
-     * @param base            search base
-     * @param query           search query
-     * @param initZlc         initial ZLdapContext
+     * Search for an entry by search base and query.
+     * At most one entry will be returned from the search.
+     * 
+     * @param base        search base
+     * 
+     * @param query       search query
+     * 
+     * @param initZlc     initial ZLdapContext
      *                        - if null, a new one will be created to be used for the search, 
      *                          and then closed
      *                        - if not null, it will be used for the search, this API will 
      *                          *not* close it, it is the responsibility of callsite to close 
      *                          it when it i no longer needed.
-     * @param loadFromMaster  if initZlc is null, whether to do the search on LDAP master.
-     * @return                a ZSearchResultEnumeration is an entry is found
-     *                        null if the search does not find any matching entry.
+     *                          
+     * @param useMaster   if initZlc is null, whether to do the search on LDAP master.
      *
-     * @throws                LdapMultipleEntriesMatchedException if more than one entries is 
-     *                        matched.
-     *                        ServiceException for other error.
+     * @return            a ZSearchResultEnumeration is an entry is found
+     *                    null if the search does not find any matching entry.
      *                        
+     * @throws LdapMultipleEntriesMatchedException  if more than one entries is matched
+     * 
+     * @throws ServiceException                     all other errors
      */
     public abstract ZSearchResultEntry searchForEntry(String base, String query, 
             ZLdapContext initZlc, boolean useMaster) 
     throws LdapMultipleEntriesMatchedException, ServiceException;
     
+    /**
+     * Get all attributes of the LDAP entry at the specified DN.
+     * 
+     * @param dn
+     * @param initZlc
+     * @param useMaster
+     * 
+     * @return a ZAttributes objects
+     *         Note: this API never returns null.  If an entry is not found at the specified 
+     *         DN, LdapEntryNotFoundException will be thrown.
+     * 
+     * @throws LdapEntryNotFoundException  if the entry is not found
+     * @throws ServiceException            all other errors
+     */
+    public abstract ZAttributes getAttributes(String dn, ZLdapContext initZlc, boolean useMaster) 
+    throws LdapEntryNotFoundException, ServiceException;
+    
+    public ZAttributes getAttributes(String dn) throws LdapEntryNotFoundException, ServiceException {
+        return getAttributes(dn, null, false);
+    }
+    
+    /**
+     * A convenient wrapper for ZldapContext.searchDir.
+     * Saves callsites the burden of having to get and close ZldapContext
+     * 
+     * @param baseDN
+     * @param query
+     * @param searchControls
+     * @return
+     * @throws LdapException
+     */
+    public abstract ZSearchResultEnumeration searchDir(String baseDN, String query, 
+            ZSearchControls searchControls) 
+    throws ServiceException;
+        
 }

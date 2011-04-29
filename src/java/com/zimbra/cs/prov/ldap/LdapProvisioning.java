@@ -100,8 +100,9 @@ import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.IAttributes.CheckBinary;
 import com.zimbra.cs.ldap.LdapException.LdapContextNotEmptyException;
-import com.zimbra.cs.ldap.LdapException.LdapMultipleEntriesMatchedException;
 import com.zimbra.cs.ldap.LdapException.LdapEntryAlreadyExistException;
+import com.zimbra.cs.ldap.LdapException.LdapEntryNotFoundException;
+import com.zimbra.cs.ldap.LdapException.LdapMultipleEntriesMatchedException;
 import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.LdapUtil;
@@ -451,15 +452,12 @@ public class LdapProvisioning extends LdapProv {
     @Override
     public boolean healthCheck() throws ServiceException {
         boolean result = false;
-        ZLdapContext zlc = null;
+        
         try {
-            zlc = LdapClient.getContext();
-            ZAttributes attrs = zlc.getAttributes(mDIT.configDN());
-            result = attrs != null;
+            ZAttributes attrs = helper.getAttributes(mDIT.configDN());
+            result = attrs != null; // not really needed, getAttributes should never return null
         } catch (ServiceException e) {
             mLog.warn("LDAP health check error", e);
-        } finally {
-            LdapClient.closeContext(zlc);
         }
         return result;
     }
@@ -470,16 +468,12 @@ public class LdapProvisioning extends LdapProv {
         if (sConfig == null) {
             synchronized(LdapProvisioning.class) {
                 if (sConfig == null) {
-                    ZLdapContext zlc = null;
+                    String configDn = mDIT.configDN();
                     try {
-                        String configDn = mDIT.configDN();
-                        zlc = LdapClient.getContext();
-                        ZAttributes attrs = zlc.getAttributes(configDn);
+                        ZAttributes attrs = helper.getAttributes(configDn);
                         sConfig = new LdapConfig(configDn, attrs, this);
                     } catch (ServiceException e) {
                         throw ServiceException.FAILURE("unable to get config", e);
-                    } finally {
-                        LdapClient.closeContext(zlc);
                     }
                 }
             }
@@ -493,16 +487,12 @@ public class LdapProvisioning extends LdapProv {
         if (sGlobalGrant == null) {
             synchronized(LdapProvisioning.class) {
                 if (sGlobalGrant == null) {
-                    ZLdapContext zlc = null;
+                    String globalGrantDn = mDIT.globalGrantDN();
                     try {
-                        String globalGrantDn = mDIT.globalGrantDN();
-                        zlc = LdapClient.getContext();
-                        ZAttributes attrs = zlc.getAttributes(globalGrantDn);
+                        ZAttributes attrs = helper.getAttributes(globalGrantDn);
                         sGlobalGrant = new LdapGlobalGrant(globalGrantDn, attrs, this);
                     } catch (ServiceException e) {
                         throw ServiceException.FAILURE("unable to get globalgrant", e);
-                    } finally {
-                        LdapClient.closeContext(zlc);
                     }
                 }
             }
@@ -585,7 +575,6 @@ public class LdapProvisioning extends LdapProv {
 
     private Account getAccountByQuery(String base, String query, ZLdapContext initZlc, boolean loadFromMaster) 
     throws ServiceException {
-        
         try {
             ZSearchResultEntry sr = helper.searchForEntry(base, query, initZlc, loadFromMaster);
             if (sr != null) {
@@ -594,7 +583,7 @@ public class LdapProvisioning extends LdapProv {
                 return null;
             }
         } catch (LdapMultipleEntriesMatchedException e) {
-            throw AccountServiceException.MULTIPLE_ACCOUNTS_MATCHED(e.getMessage());
+            throw AccountServiceException.MULTIPLE_ACCOUNTS_MATCHED("getAccountByQuery: " + e.getMessage());
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to lookup account via query: "+query+" message: "+e.getMessage(), e);
         }
@@ -1829,7 +1818,7 @@ public class LdapProvisioning extends LdapProv {
         ZLdapContext zlc = null;
         try {
             zlc = LdapClient.getContext(LdapServerType.MASTER);
-
+            
             LdapDomain d = (LdapDomain) getDomainByAsciiName(name, zlc);
             if (d != null)
                 throw AccountServiceException.DOMAIN_EXISTS(name);
@@ -1916,42 +1905,30 @@ public class LdapProvisioning extends LdapProv {
         } catch (LdapEntryAlreadyExistException nabe) {
             throw AccountServiceException.DOMAIN_EXISTS(name);
         } catch (ServiceException e) {
-            //if (e instanceof )
+            // do not eat up the AccountServiceException.DOMAIN_EXISTS thrown
+            // from the try block
+            if (e instanceof AccountServiceException) {
+                throw e; 
+            }
             throw ServiceException.FAILURE("unable to create domain: "+name, e);
         } finally {
             LdapClient.closeContext(zlc);
         }
     }
 
-    @TODOEXCEPTIONMAPPING
     private LdapDomain getDomainByQuery(String query, ZLdapContext initZlc) throws ServiceException {
-        ZLdapContext zlc = initZlc;
         try {
-            if (zlc == null)
-                zlc = LdapClient.getContext();
-            ZSearchResultEnumeration ne = zlc.searchDir(mDIT.domainBaseDN(), query, ZSearchControls.SEARCH_CTLS_SUBTREE());
-            if (ne.hasMore()) {
-                ZSearchResultEntry sr = ne.next();
-                if (ne.hasMore()) {
-                    String dups = LdapUtil.formatMultipleMatchedEntries(sr, ne);
-                    throw AccountServiceException.MULTIPLE_DOMAINS_MATCHED("getDomainByQuery: "+query+" returned multiple entries at "+dups);
-                }
-                ne.close();
+            ZSearchResultEntry sr = helper.searchForEntry(mDIT.domainBaseDN(), query, initZlc, false);
+            if (sr != null) {
                 return new LdapDomain(sr.getDN(), sr.getAttributes(), getConfig().getDomainDefaults(), this);
+            } else {
+                return null;
             }
-        /*    
-        } catch (NameNotFoundException e) {
-            return null;
-        } catch (InvalidNameException e) {
-            return null;
-        } catch (NamingException e) {
+        } catch (LdapMultipleEntriesMatchedException e) {
+            throw AccountServiceException.MULTIPLE_DOMAINS_MATCHED("getDomainByQuery: " + e.getMessage());
+        } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to lookup domain via query: "+query+" message:"+e.getMessage(), e);
-        */
-        } finally {
-            if (initZlc == null)
-                LdapClient.closeContext(zlc);
         }
-        return null;
     }
 
     @Override
@@ -2312,43 +2289,30 @@ public class LdapProvisioning extends LdapProv {
         }
     }
 
-    @TODOEXCEPTIONMAPPING
     private Cos getCosByName(String name, ZLdapContext initZlc) throws ServiceException {
-        ZLdapContext zlc = initZlc;
         LdapCos cos = sCosCache.getByName(name);
         if (cos != null)
             return cos;
-
+        
         try {
-            if (zlc == null)
-                zlc = LdapClient.getContext();
             String dn = mDIT.cosNametoDN(name);
-            ZAttributes attrs = zlc.getAttributes(dn);
-            cos  = new LdapCos(dn, attrs, this);
+            ZAttributes attrs = helper.getAttributes(dn, initZlc, false);
+            cos = new LdapCos(dn, attrs, this);
             sCosCache.put(cos);
             return cos;
-        /*    
-        } catch (NameNotFoundException e) {
+        } catch (LdapEntryNotFoundException e) {
             return null;
-        } catch (InvalidNameException e) {
-            return null;
-        } catch (NamingException e) {
+        } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to lookup COS by name: "+name+" message: "+e.getMessage(), e);
-        */
-        } finally {
-            if (initZlc == null)
-                LdapClient.closeContext(zlc);
         }
     }
 
     @Override
-    @TODOEXCEPTIONMAPPING
     public List<Cos> getAllCos() throws ServiceException {
         List<Cos> result = new ArrayList<Cos>();
-        ZLdapContext zlc = null;
+        
         try {
-            zlc = LdapClient.getContext();
-            ZSearchResultEnumeration ne = zlc.searchDir(mDIT.cosBaseDN(),
+            ZSearchResultEnumeration ne = helper.searchDir(mDIT.cosBaseDN(),
                     LdapFilter.allCoses(), ZSearchControls.SEARCH_CTLS_SUBTREE());
             while (ne.hasMore()) {
                 ZSearchResultEntry sr = ne.next();
@@ -2357,8 +2321,6 @@ public class LdapProvisioning extends LdapProv {
             ne.close();
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to list all COS", e);
-        } finally {
-            LdapClient.closeContext(zlc);
         }
 
         Collections.sort(result);
@@ -2534,7 +2496,6 @@ public class LdapProvisioning extends LdapProv {
     }
 
     @Override
-    @TODO  // test LdapContextNotEmptyException
     public void deleteDomain(String zimbraId) throws ServiceException {
         // TODO: should only allow a domain delete to succeed if there are no people
         // if there aren't, we need to delete the people trees first, then delete the domain.
@@ -2778,34 +2739,26 @@ public class LdapProvisioning extends LdapProv {
         return getServerByName(name, false);
     }
 
-    @TODOEXCEPTIONMAPPING
     private Server getServerByName(String name, boolean nocache) throws ServiceException {
         if (!nocache) {
             Server s = sServerCache.getByName(name);
             if (s != null)
                 return s;
         }
-        ZLdapContext zlc = null;
+        
         try {
-            zlc = LdapClient.getContext();
             String dn = mDIT.serverNametoDN(name);
-            ZAttributes attrs = zlc.getAttributes(dn);
+            ZAttributes attrs = helper.getAttributes(dn);
             LdapServer s = new LdapServer(dn, attrs, getConfig().getServerDefaults(), this);
             sServerCache.put(s);
             return s;
-        /*    
-        } catch (NameNotFoundException e) {
+        } catch (LdapEntryNotFoundException e) {
             return null;
-        } catch (InvalidNameException e) {
-            return null;
-        */
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to lookup server by name: "+name+" message: "+e.getMessage(), e);
-        } finally {
-            LdapClient.closeContext(zlc);
         }
     }
-
+    
     @Override
     public List<Server> getAllServers() throws ServiceException {
         return getAllServers(null);
@@ -2814,16 +2767,17 @@ public class LdapProvisioning extends LdapProv {
     @Override
     public List<Server> getAllServers(String service) throws ServiceException {
         List<Server> result = new ArrayList<Server>();
-        ZLdapContext zlc = null;
+        
+        String filter;
+        if (service != null) {
+            filter = LdapFilter.serverByService(LdapUtilCommon.escapeSearchFilterArg(service));
+        } else {
+            filter = LdapFilter.allServers();
+        }
+        
         try {
-            zlc = LdapClient.getContext();
-            String filter;
-            if (service != null) {
-                filter = LdapFilter.serverByService(LdapUtilCommon.escapeSearchFilterArg(service));
-            } else {
-                filter = LdapFilter.allServers();
-            }
-            ZSearchResultEnumeration ne = zlc.searchDir(mDIT.serverBaseDN(), filter, ZSearchControls.SEARCH_CTLS_SUBTREE());
+            ZSearchResultEnumeration ne = helper.searchDir(mDIT.serverBaseDN(), 
+                    filter, ZSearchControls.SEARCH_CTLS_SUBTREE());
             while (ne.hasMore()) {
                 ZSearchResultEntry sr = ne.next();
                 LdapServer s = new LdapServer(sr.getDN(), sr.getAttributes(), getConfig().getServerDefaults(), this);
@@ -2832,9 +2786,8 @@ public class LdapProvisioning extends LdapProv {
             ne.close();
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to list all servers", e);
-        } finally {
-            LdapClient.closeContext(zlc);
         }
+
         if (result.size() > 0)
             sServerCache.put(result, true);
         Collections.sort(result);
