@@ -718,7 +718,9 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             Metadata metaRecur = meta.getMap(FN_CALITEM_RECURRENCE, true);
             if (metaRecur != null) {
                 mRecurrence = Recurrence.decodeMetadata(metaRecur, mTzMap);
-                tzids.addAll(Recurrence.getReferencedTZIDs(mRecurrence));
+                if (mRecurrence != null) {
+                    tzids.addAll(Recurrence.getReferencedTZIDs(mRecurrence));
+                }
             }
 
             if (meta.containsKey(Metadata.FN_REPLY_LIST)) {

@@ -166,6 +166,9 @@ public final class DebugConfig {
     // For QA only. bug 57279
     public static boolean allowModifyingDeprecatedAttributes;
 
+    public static boolean enableRdate;
+    public static boolean enableThisAndFuture;
+
     static {
         calendarAllowProcedureAlarms = booleanValue("debug_calendar_allow_procedure_alarms", false);
         calendarConvertNonDisplayAlarm = booleanValue("debug_calendar_convert_non_display_alarms", true);
@@ -233,6 +236,9 @@ public final class DebugConfig {
         disableCalendarReminderEmail = booleanValue("debug_disable_calendar_reminder_email", false);
 
         allowModifyingDeprecatedAttributes = booleanValue("allow_modifying_deprecated_attributes", true);
+
+        enableRdate = booleanValue("debug_enable_calendar_rdate", false);
+        enableThisAndFuture = booleanValue("debug_enable_calendar_thisandfuture", false);
     }
 
     protected static boolean booleanValue(String key, boolean defaultValue) {
