@@ -76,11 +76,11 @@ public abstract class MimeHandler {
         mimeTypeInfo = value;
     }
 
-    protected String getContentType() {
+    public String getContentType() {
         return Strings.nullToEmpty(contentType);
     }
 
-    protected void setContentType(String value) {
+    public void setContentType(String value) {
         contentType = value;
     }
 
@@ -118,7 +118,7 @@ public abstract class MimeHandler {
         return partName;
     }
 
-    void setFilename(String value) {
+    public void setFilename(String value) {
         filename = value;
     }
 
