@@ -73,12 +73,10 @@ public final class DbMailAddress {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement("INSERT INTO " + getTableName(mailbox) +
-                    " (" + (DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ") + "id, address, contact_count) VALUES (" + (DebugConfig.disableMailboxGroups ? "" : "?, ") + " ?, ?, ?)");
-            int pos = 1;
-            if (!DebugConfig.disableMailboxGroups) {
-                stmt.setInt(pos++, mailbox.getId());
-            }
+            stmt = conn.prepareStatement(new SQL(mailbox).add("INSERT INTO ").mailAddressTable()
+                    .add(" (").addIf("mailbox_id, ").add("id, address, contact_count) VALUES (")
+                    .addIf("?, ").add("?, ?, ?)").build());
+            int pos = SQL.setIf(stmt, 1, mailbox.getId());
             stmt.setInt(pos++, id);
             stmt.setString(pos++, address);
             stmt.setInt(pos, contactCount);
@@ -95,10 +93,9 @@ public final class DbMailAddress {
     public static int delete(DbConnection conn, Mailbox mbox) throws ServiceException {
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement("DELETE FROM " + getTableName(mbox) + (DebugConfig.disableMailboxGroups ? "" : " WHERE mailbox_id = ?"));
-            if (!DebugConfig.disableMailboxGroups) {
-                stmt.setInt(1, mbox.getId());
-            }
+            stmt = conn.prepareStatement(new SQL(mbox).add("DELETE FROM ").mailAddressTable()
+                    .addIf(" WHERE mailbox_id = ?").build());
+            SQL.setIf(stmt, 1, mbox.getId());
             return stmt.executeUpdate();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("Failed to delete all", e);
@@ -111,10 +108,9 @@ public final class DbMailAddress {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement("SELECT MAX(id) FROM " + getTableName(mbox) + (DebugConfig.disableMailboxGroups ? "" : " WHERE mailbox_id = ?"));
-            if (!DebugConfig.disableMailboxGroups) {
-                stmt.setInt(1, mbox.getId());
-            }
+            stmt = conn.prepareStatement(new SQL(mbox).add("SELECT MAX(id) FROM ").mailAddressTable()
+                    .addIf(" WHERE mailbox_id = ?").build());
+            SQL.setIf(stmt, 1, mbox.getId());
             rs = stmt.executeQuery();
             if (rs.next()) {
                 return rs.getInt(1);
@@ -133,12 +129,9 @@ public final class DbMailAddress {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement("SELECT id FROM " + getTableName(mbox) +
-                    " WHERE " + (DebugConfig.disableMailboxGroups ? "" : "mailbox_id = ? AND ") + "address = ?");
-            int pos = 1;
-            if (!DebugConfig.disableMailboxGroups) {
-                stmt.setInt(pos++, mbox.getId());
-            }
+            stmt = conn.prepareStatement(new SQL(mbox).add("SELECT id FROM ").mailAddressTable()
+                    .add(" WHERE ").addIf("mailbox_id = ? AND ").add("address = ?").build());
+            int pos = SQL.setIf(stmt, 1, mbox.getId());
             stmt.setString(pos, addr);
             rs = stmt.executeQuery();
             if (rs.next()) {
@@ -157,12 +150,10 @@ public final class DbMailAddress {
     public static void incCount(DbConnection conn, Mailbox mbox, int id) throws ServiceException {
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement("UPDATE " + getTableName(mbox) +
-                    " SET contact_count = contact_count + 1 WHERE " + (DebugConfig.disableMailboxGroups ? "" : "mailbox_id = ? AND ") + "id = ?");
-            int pos = 1;
-            if (!DebugConfig.disableMailboxGroups) {
-                stmt.setInt(pos++, mbox.getId());
-            }
+            stmt = conn.prepareStatement(new SQL(mbox).add("UPDATE ").mailAddressTable()
+                    .add(" SET contact_count = contact_count + 1 WHERE ").addIf("mailbox_id = ? AND ")
+                    .add("id = ?").build());
+            int pos = SQL.setIf(stmt, 1, mbox.getId());
             stmt.setInt(pos, id);
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -175,12 +166,10 @@ public final class DbMailAddress {
     public static void decCount(DbConnection conn, Mailbox mbox, String addr) throws ServiceException {
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement("UPDATE " + getTableName(mbox) +
-                    " SET contact_count = contact_count - 1 WHERE " + (DebugConfig.disableMailboxGroups ? "" : "mailbox_id = ? AND ") + "address = ?");
-            int pos = 1;
-            if (!DebugConfig.disableMailboxGroups) {
-                stmt.setInt(pos++, mbox.getId());
-            }
+            stmt = conn.prepareStatement(new SQL(mbox).add("UPDATE ").mailAddressTable()
+                    .add(" SET contact_count = contact_count - 1 WHERE ").addIf("mailbox_id = ? AND ")
+                    .add("address = ?").build());
+            int pos = SQL.setIf(stmt, 1, mbox.getId());
             stmt.setString(pos, addr);
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -194,12 +183,9 @@ public final class DbMailAddress {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement("SELECT contact_count FROM " + getTableName(mbox) +
-                    " WHERE " + (DebugConfig.disableMailboxGroups ? "" : "mailbox_id = ? AND ") + "id = ?");
-            int pos = 1;
-            if (!DebugConfig.disableMailboxGroups) {
-                stmt.setInt(pos++, mbox.getId());
-            }
+            stmt = conn.prepareStatement(new SQL(mbox).add("SELECT contact_count FROM ").mailAddressTable()
+                    .add(" WHERE ").addIf("mailbox_id = ? AND ").add("id = ?").build());
+            int pos = SQL.setIf(stmt, 1, mbox.getId());
             stmt.setInt(pos, id);
             rs = stmt.executeQuery();
             if (rs.next()) {
@@ -219,12 +205,9 @@ public final class DbMailAddress {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement("SELECT contact_count FROM " + getTableName(mbox) +
-                    " WHERE " + (DebugConfig.disableMailboxGroups ? "" : "mailbox_id = ? AND ") + "address = ?");
-            int pos = 1;
-            if (!DebugConfig.disableMailboxGroups) {
-                stmt.setInt(pos++, mbox.getId());
-            }
+            stmt = conn.prepareStatement(new SQL(mbox).add("SELECT contact_count FROM ").mailAddressTable()
+                    .add(" WHERE ").addIf("mailbox_id = ? AND ").add("address = ?").build());
+            int pos = SQL.setIf(stmt, 1, mbox.getId());
             stmt.setString(pos, addr);
             rs = stmt.executeQuery();
             if (rs.next()) {
@@ -246,23 +229,18 @@ public final class DbMailAddress {
         ResultSet rs = null;
         try {
             // reset all counts
-            stmt = conn.prepareStatement("UPDATE " + getTableName(mbox) +
-                    " SET contact_count = ?" + (DebugConfig.disableMailboxGroups ? "" : " WHERE mailbox_id = ?"));
+            stmt = conn.prepareStatement(new SQL(mbox).add("UPDATE ").mailAddressTable()
+                    .add(" SET contact_count = ?").addIf(" WHERE mailbox_id = ?").build());
             int pos = 1;
             stmt.setInt(pos++, 0);
-            if (!DebugConfig.disableMailboxGroups) {
-                stmt.setInt(pos, mbox.getId());
-            }
+            pos = SQL.setIf(stmt, pos, mbox.getId());
             stmt.executeUpdate();
             stmt.close();
 
             // extract email addresses from all contacts, and put them into mail_address
-            stmt = conn.prepareStatement("SELECT metadata FROM " + DbMailItem.getMailItemTableName(mbox) +
-                    " WHERE " + (DebugConfig.disableMailboxGroups ? "" : "mailbox_id = ? AND ") + "type = ?");
-            pos = 1;
-            if (!DebugConfig.disableMailboxGroups) {
-                stmt.setInt(pos++, mbox.getId());
-            }
+            stmt = conn.prepareStatement(new SQL(mbox).add("SELECT metadata FROM ").mailItemTable()
+                    .add(" WHERE ").addIf("mailbox_id = ? AND ").add("type = ?").build());
+            pos = SQL.setIf(stmt, 1, mbox.getId());
             stmt.setByte(pos, MailItem.Type.CONTACT.toByte());
             rs = stmt.executeQuery();
             while (rs.next()) {
@@ -290,6 +268,48 @@ public final class DbMailAddress {
         } finally {
             conn.closeQuietly(rs);
             conn.closeQuietly(stmt);
+        }
+    }
+
+    private static final class SQL {
+        private final StringBuilder out = new StringBuilder();
+        private final Mailbox mailbox;
+
+        SQL(Mailbox mbox) {
+            mailbox = mbox;
+        }
+
+        SQL add(String str) {
+            out.append(str);
+            return this;
+        }
+
+        SQL addIf(String str) {
+            if (!DebugConfig.disableMailboxGroups) {
+                out.append(str);
+            }
+            return this;
+        }
+
+        SQL mailItemTable() {
+            out.append(DbMailItem.getMailItemTableName(mailbox));
+            return this;
+        }
+
+        SQL mailAddressTable() {
+            out.append(getTableName(mailbox));
+            return this;
+        }
+
+        String build() {
+            return out.toString();
+        }
+
+        static int setIf(PreparedStatement stmt, int pos, int value) throws SQLException {
+            if (!DebugConfig.disableMailboxGroups) {
+                stmt.setInt(pos++, value);
+            }
+            return pos;
         }
     }
 
