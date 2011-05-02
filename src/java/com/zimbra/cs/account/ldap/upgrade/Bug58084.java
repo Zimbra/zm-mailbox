@@ -12,7 +12,6 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
-import com.zimbra.cs.ldap.LdapConstants;
 
 public class Bug58084 extends LdapUpgrade {
 
