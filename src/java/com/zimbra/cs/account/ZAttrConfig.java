@@ -41,7 +41,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 jhahm 20110428-1007 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110502-1103 */
 
     /**
      * RFC2256: descriptive information
@@ -13875,24 +13875,24 @@ public class ZAttrConfig extends Entry {
 
     /**
      * Maximum number of messages to delete during a single transaction when
-     * emptying a folder. If the limit is exceeded, the folder is emptied in
-     * multiple transactions. Each transaction deletes this number of
-     * messages.
+     * emptying a large folder. When a folder is emptied and it contains more
+     * than zimbraMailEmptyFolderBatchThreshold messages, the operation is
+     * performed in multiple transactions.
      *
-     * @return zimbraMailEmptyFolderBatchSize, or 100000 if unset
+     * @return zimbraMailEmptyFolderBatchSize, or 1000 if unset
      *
      * @since ZCS 6.0.8
      */
     @ZAttr(id=1097)
     public int getMailEmptyFolderBatchSize() {
-        return getIntAttr(Provisioning.A_zimbraMailEmptyFolderBatchSize, 100000);
+        return getIntAttr(Provisioning.A_zimbraMailEmptyFolderBatchSize, 1000);
     }
 
     /**
      * Maximum number of messages to delete during a single transaction when
-     * emptying a folder. If the limit is exceeded, the folder is emptied in
-     * multiple transactions. Each transaction deletes this number of
-     * messages.
+     * emptying a large folder. When a folder is emptied and it contains more
+     * than zimbraMailEmptyFolderBatchThreshold messages, the operation is
+     * performed in multiple transactions.
      *
      * @param zimbraMailEmptyFolderBatchSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -13908,9 +13908,9 @@ public class ZAttrConfig extends Entry {
 
     /**
      * Maximum number of messages to delete during a single transaction when
-     * emptying a folder. If the limit is exceeded, the folder is emptied in
-     * multiple transactions. Each transaction deletes this number of
-     * messages.
+     * emptying a large folder. When a folder is emptied and it contains more
+     * than zimbraMailEmptyFolderBatchThreshold messages, the operation is
+     * performed in multiple transactions.
      *
      * @param zimbraMailEmptyFolderBatchSize new value
      * @param attrs existing map to populate, or null to create a new map
@@ -13927,9 +13927,9 @@ public class ZAttrConfig extends Entry {
 
     /**
      * Maximum number of messages to delete during a single transaction when
-     * emptying a folder. If the limit is exceeded, the folder is emptied in
-     * multiple transactions. Each transaction deletes this number of
-     * messages.
+     * emptying a large folder. When a folder is emptied and it contains more
+     * than zimbraMailEmptyFolderBatchThreshold messages, the operation is
+     * performed in multiple transactions.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -13944,9 +13944,9 @@ public class ZAttrConfig extends Entry {
 
     /**
      * Maximum number of messages to delete during a single transaction when
-     * emptying a folder. If the limit is exceeded, the folder is emptied in
-     * multiple transactions. Each transaction deletes this number of
-     * messages.
+     * emptying a large folder. When a folder is emptied and it contains more
+     * than zimbraMailEmptyFolderBatchThreshold messages, the operation is
+     * performed in multiple transactions.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -13961,6 +13961,83 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
+     * Folders that contain more than this many messages will be emptied in
+     * batches of size zimbraMailEmptyFolderBatchSize.
+     *
+     * @return zimbraMailEmptyFolderBatchThreshold, or 100000 if unset
+     *
+     * @since ZCS 6.0.13
+     */
+    @ZAttr(id=1209)
+    public int getMailEmptyFolderBatchThreshold() {
+        return getIntAttr(Provisioning.A_zimbraMailEmptyFolderBatchThreshold, 100000);
+    }
+
+    /**
+     * Folders that contain more than this many messages will be emptied in
+     * batches of size zimbraMailEmptyFolderBatchSize.
+     *
+     * @param zimbraMailEmptyFolderBatchThreshold new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.13
+     */
+    @ZAttr(id=1209)
+    public void setMailEmptyFolderBatchThreshold(int zimbraMailEmptyFolderBatchThreshold) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailEmptyFolderBatchThreshold, Integer.toString(zimbraMailEmptyFolderBatchThreshold));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Folders that contain more than this many messages will be emptied in
+     * batches of size zimbraMailEmptyFolderBatchSize.
+     *
+     * @param zimbraMailEmptyFolderBatchThreshold new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.13
+     */
+    @ZAttr(id=1209)
+    public Map<String,Object> setMailEmptyFolderBatchThreshold(int zimbraMailEmptyFolderBatchThreshold, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailEmptyFolderBatchThreshold, Integer.toString(zimbraMailEmptyFolderBatchThreshold));
+        return attrs;
+    }
+
+    /**
+     * Folders that contain more than this many messages will be emptied in
+     * batches of size zimbraMailEmptyFolderBatchSize.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.13
+     */
+    @ZAttr(id=1209)
+    public void unsetMailEmptyFolderBatchThreshold() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailEmptyFolderBatchThreshold, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Folders that contain more than this many messages will be emptied in
+     * batches of size zimbraMailEmptyFolderBatchSize.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.13
+     */
+    @ZAttr(id=1209)
+    public Map<String,Object> unsetMailEmptyFolderBatchThreshold(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailEmptyFolderBatchThreshold, "");
+        return attrs;
+    }
+
+    /**
      * Sleep time between batches of deletes when emptying a large folder.
      * See zimbraMailEmptyFolderBatchSize. . Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
@@ -13971,13 +14048,13 @@ public class ZAttrConfig extends Entry {
      *
      * @see #getMailEmptyFolderSleepIntervalAsString()
      *
-     * @return zimbraMailEmptyFolderSleepInterval in millseconds, or 2000 (2s)  if unset
+     * @return zimbraMailEmptyFolderSleepInterval in millseconds, or 1 (1ms)  if unset
      *
      * @since ZCS 6.0.13
      */
     @ZAttr(id=1208)
     public long getMailEmptyFolderSleepInterval() {
-        return getTimeInterval(Provisioning.A_zimbraMailEmptyFolderSleepInterval, 2000L);
+        return getTimeInterval(Provisioning.A_zimbraMailEmptyFolderSleepInterval, 1L);
     }
 
     /**
@@ -13987,13 +14064,13 @@ public class ZAttrConfig extends Entry {
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
      *
-     * @return zimbraMailEmptyFolderSleepInterval, or "2s" if unset
+     * @return zimbraMailEmptyFolderSleepInterval, or "1ms" if unset
      *
      * @since ZCS 6.0.13
      */
     @ZAttr(id=1208)
     public String getMailEmptyFolderSleepIntervalAsString() {
-        return getAttr(Provisioning.A_zimbraMailEmptyFolderSleepInterval, "2s");
+        return getAttr(Provisioning.A_zimbraMailEmptyFolderSleepInterval, "1ms");
     }
 
     /**
@@ -29105,7 +29182,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=1209)
+    @ZAttr(id=1210)
     public String[] getSMIMELdapDiscoverSearchBaseEnabled() {
         return getMultiAttr(Provisioning.A_zimbraSMIMELdapDiscoverSearchBaseEnabled);
     }
@@ -29135,7 +29212,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=1209)
+    @ZAttr(id=1210)
     public void setSMIMELdapDiscoverSearchBaseEnabled(String[] zimbraSMIMELdapDiscoverSearchBaseEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSMIMELdapDiscoverSearchBaseEnabled, zimbraSMIMELdapDiscoverSearchBaseEnabled);
@@ -29168,7 +29245,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=1209)
+    @ZAttr(id=1210)
     public Map<String,Object> setSMIMELdapDiscoverSearchBaseEnabled(String[] zimbraSMIMELdapDiscoverSearchBaseEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSMIMELdapDiscoverSearchBaseEnabled, zimbraSMIMELdapDiscoverSearchBaseEnabled);
@@ -29200,7 +29277,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=1209)
+    @ZAttr(id=1210)
     public void addSMIMELdapDiscoverSearchBaseEnabled(String zimbraSMIMELdapDiscoverSearchBaseEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraSMIMELdapDiscoverSearchBaseEnabled, zimbraSMIMELdapDiscoverSearchBaseEnabled);
@@ -29233,7 +29310,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=1209)
+    @ZAttr(id=1210)
     public Map<String,Object> addSMIMELdapDiscoverSearchBaseEnabled(String zimbraSMIMELdapDiscoverSearchBaseEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraSMIMELdapDiscoverSearchBaseEnabled, zimbraSMIMELdapDiscoverSearchBaseEnabled);
@@ -29265,7 +29342,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=1209)
+    @ZAttr(id=1210)
     public void removeSMIMELdapDiscoverSearchBaseEnabled(String zimbraSMIMELdapDiscoverSearchBaseEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraSMIMELdapDiscoverSearchBaseEnabled, zimbraSMIMELdapDiscoverSearchBaseEnabled);
@@ -29298,7 +29375,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=1209)
+    @ZAttr(id=1210)
     public Map<String,Object> removeSMIMELdapDiscoverSearchBaseEnabled(String zimbraSMIMELdapDiscoverSearchBaseEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraSMIMELdapDiscoverSearchBaseEnabled, zimbraSMIMELdapDiscoverSearchBaseEnabled);
@@ -29329,7 +29406,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=1209)
+    @ZAttr(id=1210)
     public void unsetSMIMELdapDiscoverSearchBaseEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSMIMELdapDiscoverSearchBaseEnabled, "");
@@ -29361,7 +29438,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=1209)
+    @ZAttr(id=1210)
     public Map<String,Object> unsetSMIMELdapDiscoverSearchBaseEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSMIMELdapDiscoverSearchBaseEnabled, "");

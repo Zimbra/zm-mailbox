@@ -4999,8 +4999,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="1097" name="zimbraMailEmptyFolderBatchSize" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.8">
-  <globalConfigValue>100000</globalConfigValue>
-  <desc>Maximum number of messages to delete during a single transaction when emptying a folder.  If the limit is exceeded, the folder is emptied in multiple transactions.  Each transaction deletes this number of messages.</desc>
+  <globalConfigValue>1000</globalConfigValue>
+  <desc>
+    Maximum number of messages to delete during a single transaction when emptying a large folder. 
+    When a folder is emptied and it contains more than zimbraMailEmptyFolderBatchThreshold messages, 
+    the operation is performed in multiple transactions.
+  </desc>
 </attr>
 
 <attr id="1098" name="zimbraBasicAuthRealm"  type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="7.0.0">
@@ -5644,13 +5648,20 @@ TODO: delete them permerntly from here
 </attr>
 
 <attr id="1208" name="zimbraMailEmptyFolderSleepInterval" type="duration" cardinality="single" min="0" optionalIn="globalConfig,server" flags="serverInherited,domainAdminModifiable" since="6.0.13">
-  <globalConfigValue>2s</globalConfigValue>
+  <globalConfigValue>1ms</globalConfigValue>
   <desc>
     Sleep time between batches of deletes when emptying a large folder.  See zimbraMailEmptyFolderBatchSize.
   </desc>
 </attr>
 
-<attr id="1209" name="zimbraSMIMELdapDiscoverSearchBaseEnabled"  type="string" max="32" cardinality="multi" optionalIn="domain,globalConfig" immutable="1" since="7.1.1">
+<attr id="1209" name="zimbraMailEmptyFolderBatchThreshold" type="integer" cardinality="single" min="0" optionalIn="globalConfig,server" flags="serverInherited,domainAdminModifiable" since="6.0.13">
+  <globalConfigValue>100000</globalConfigValue>
+  <desc>
+    Folders that contain more than this many messages will be emptied in batches of size zimbraMailEmptyFolderBatchSize.
+  </desc>
+</attr>
+
+<attr id="1210" name="zimbraSMIMELdapDiscoverSearchBaseEnabled"  type="string" max="32" cardinality="multi" optionalIn="domain,globalConfig" immutable="1" since="7.1.1">
   <desc>
     Whether or not to discover search base DNs if zimbraSMIMELdapSearchBase is not set. Allowed values are TRUE or FALSE.
     If zimbraSMIMELdapSearchBase is set for a config, this attribute is ignored for the config.
