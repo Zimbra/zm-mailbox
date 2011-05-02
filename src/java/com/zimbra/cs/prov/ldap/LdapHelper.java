@@ -14,9 +14,13 @@
  */
 package com.zimbra.cs.prov.ldap;
 
+import java.util.Map;
+
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.ldap.ILdapContext;
 import com.zimbra.cs.ldap.LdapException;
+import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
@@ -40,6 +44,21 @@ public abstract class LdapHelper {
     
     public abstract void searchLdap(ILdapContext ldapContext, SearchLdapOptions searchOptions) 
     throws ServiceException;
+    
+    /**
+     * Modifies the specified entry.  <code>attrs</code> is a <code>Map</code> consisting of
+     * keys that are <code>String</code>s, and values that are either
+     * <ul>
+     *   <li><code>null</code>, in which case the attr is removed</li>
+     *   <li>a single <code>Object</code>, in which case the attr is modified
+     *     based on the object's <code>toString()</code> value</li>
+     *   <li>an <code>Object</code> array or <code>Collection</code>,
+     *     in which case a multi-valued attr is updated</li>
+     * </ul>
+     */
+    public abstract void modifyAttrs(ZLdapContext zlc, String dn, Map<String, ? extends Object> attrs, 
+            Entry entry) throws ServiceException;
+    
     
     /**
      * Search for an entry by search base and query.
@@ -83,11 +102,11 @@ public abstract class LdapHelper {
      * @throws LdapEntryNotFoundException  if the entry is not found
      * @throws ServiceException            all other errors
      */
-    public abstract ZAttributes getAttributes(String dn, ZLdapContext initZlc, boolean useMaster) 
+    public abstract ZAttributes getAttributes(String dn, ZLdapContext initZlc, LdapServerType ldapServerType) 
     throws LdapEntryNotFoundException, ServiceException;
     
     public ZAttributes getAttributes(String dn) throws LdapEntryNotFoundException, ServiceException {
-        return getAttributes(dn, null, false);
+        return getAttributes(dn, null, LdapServerType.REPLICA);
     }
     
     /**
@@ -101,7 +120,12 @@ public abstract class LdapHelper {
      * @throws LdapException
      */
     public abstract ZSearchResultEnumeration searchDir(String baseDN, String query, 
-            ZSearchControls searchControls) 
+            ZSearchControls searchControls, ZLdapContext initZlc, LdapServerType ldapServerType) 
     throws ServiceException;
         
+    public ZSearchResultEnumeration searchDir(String baseDN, String query, 
+            ZSearchControls searchControls) 
+    throws ServiceException {
+        return searchDir(baseDN, query, searchControls, null, LdapServerType.REPLICA);
+    }
 }

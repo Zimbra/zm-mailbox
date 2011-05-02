@@ -31,6 +31,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ZAttrProvisioning;
+import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.LdapClient;
@@ -54,10 +55,7 @@ public class TestLdapProvDomain {
     @AfterClass
     public static void cleanup() throws Exception {
         String baseDomainName = baseDomainName();
-        String parts[] = baseDomainName.split("\\.");
-        String[] dns = ((LdapProv) prov).getDIT().domainToDNs(parts);
-        String topMostRDN = dns[dns.length-1];
-        TestLdap.deleteEntireBranchInDIT(topMostRDN);
+        TestLdap.deleteEntireBranch(baseDomainName);
     }
     
     private static String baseDomainName() {
@@ -88,13 +86,20 @@ public class TestLdapProvDomain {
         assertNotNull(domain);
         return domain;
     }
+    
+    private void deleteDomain(Domain domain) throws Exception {
+        String domainId = domain.getId();
+        prov.deleteDomain(domainId);
+        domain = prov.get(DomainBy.id, domainId);
+        assertNull(domain);
+    }
 
     @Test
     public void createTopDomain() throws Exception {
         String DOMAIN_NAME = makeDomainName(null);
         Domain domain = createDomain(DOMAIN_NAME);
         
-        prov.deleteDomain(domain.getId());
+        deleteDomain(domain);
     }
     
     @Test
@@ -102,7 +107,7 @@ public class TestLdapProvDomain {
         String DOMAIN_NAME = makeDomainName("createSubDomain.sub1.sub2");
         Domain domain = createDomain(DOMAIN_NAME);
         
-        prov.deleteDomain(domain.getId());
+        deleteDomain(domain);
     }
     
     @Test
@@ -120,7 +125,7 @@ public class TestLdapProvDomain {
         }
         assertTrue(caughtException);
         
-        prov.deleteDomain(domain.getId());
+        deleteDomain(domain);
     }
     
     
@@ -144,7 +149,7 @@ public class TestLdapProvDomain {
         
         // now should able to delete domain
         prov.deleteAccount(acct.getId());
-        prov.deleteDomain(domain.getId());
+        deleteDomain(domain);
     }
     
     private void verifyAllDomains(List<Domain> allDomains) throws Exception {
@@ -240,8 +245,8 @@ public class TestLdapProvDomain {
         String realEmail = prov.getEmailAddrByDomainAlias(TestUtil.getAddress(USER_LOCAL_PART, ALIAS_DOMAIN_NAME));
         assertEquals(TestUtil.getAddress(USER_LOCAL_PART, TARGET_DOMAIN_NAME), realEmail);
         
-        prov.deleteDomain(aliasDomain.getId());
-        prov.deleteDomain(targetDomain.getId());
+        deleteDomain(aliasDomain);
+        deleteDomain(targetDomain);
     }
     
     @Test
@@ -250,27 +255,32 @@ public class TestLdapProvDomain {
     }
     
     private void getDomainById(String id) throws Exception {
+        prov.flushCache(CacheEntryType.domain, null);
         Domain domain = prov.get(DomainBy.id, id);
         assertEquals(id, domain.getId());
     }
     
     private void getDomainByName(String name) throws Exception {
+        prov.flushCache(CacheEntryType.domain, null);
         Domain domain = prov.get(DomainBy.name, name);
         assertEquals(name, domain.getName());
     }
     
     private void getDomainByVirtualHostname(String virtualHostname, String expectedDomainId) 
     throws Exception {
+        prov.flushCache(CacheEntryType.domain, null);
         Domain domain = prov.get(DomainBy.virtualHostname, virtualHostname);
         assertEquals(expectedDomainId, domain.getId());
     }
     
     private void getDomainByKrb5Realm(String krb5Realm, String expectedDomainId) throws Exception {
+        prov.flushCache(CacheEntryType.domain, null);
         Domain domain = prov.get(DomainBy.krb5Realm, krb5Realm);
         assertEquals(expectedDomainId, domain.getId());
     }
     
     private void getDomainByForeignName(String foreignName, String expectedDomainId) throws Exception {
+        prov.flushCache(CacheEntryType.domain, null);
         Domain domain = prov.get(DomainBy.foreignName, foreignName);
         assertEquals(expectedDomainId, domain.getId());
     }
@@ -278,8 +288,6 @@ public class TestLdapProvDomain {
     @Test
     public void getDomain() throws Exception {
         String DOMAIN_NAME = makeDomainName("getDomain");
-        Domain domain = prov.get(DomainBy.name, DOMAIN_NAME);
-        assertNull(domain);
         
         String VIRTUAL_HOSTNAME = "virtual.com";
         String KRB5_REALM = "KRB5.REALM";
@@ -290,7 +298,7 @@ public class TestLdapProvDomain {
         attrs.put(Provisioning.A_zimbraAuthKerberos5Realm, KRB5_REALM);
         attrs.put(Provisioning.A_zimbraForeignName, FOREIGN_NAME);
         
-        domain = createDomain(DOMAIN_NAME, attrs);
+        Domain domain = createDomain(DOMAIN_NAME, attrs);
         
         String domainId = domain.getId();
         
@@ -300,7 +308,13 @@ public class TestLdapProvDomain {
         getDomainByKrb5Realm(KRB5_REALM, domainId);
         getDomainByForeignName(FOREIGN_NAME, domainId);
         
-        prov.deleteDomain(domainId);
+        deleteDomain(domain);
     }
     
+    @Test
+    public void getDomainNotExist() throws Exception {
+        String DOMAIN_NAME = makeDomainName("getDomainNotExist");
+        Domain domain = prov.get(DomainBy.name, DOMAIN_NAME);
+        assertNull(domain);
+    }
 }

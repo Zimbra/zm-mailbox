@@ -1164,14 +1164,6 @@ public class SoapProvisioning extends Provisioning {
         throw new UnsupportedOperationException();
     }
 
-    /**
-     * Unsupported
-     */
-    @Override
-    public List<Zimlet> getObjectTypes() throws ServiceException {
-        throw new UnsupportedOperationException();
-    }
-
     @Override
     public Server get(ServerBy keyType, String key) throws ServiceException {
         return get(keyType, key, true);

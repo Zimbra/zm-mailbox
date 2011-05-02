@@ -50,9 +50,9 @@ public class LdapDIT {
      */
     
     /*
-     * the provisioning instance that uses thie DIT
+     * the Ldap provisioning instance that uses this DIT
      */
-    protected Provisioning mProv;
+    protected LdapProv mProv;
     
     /*
      * Variable Naming Conventions:

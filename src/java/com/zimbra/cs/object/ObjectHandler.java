@@ -70,7 +70,7 @@ public class ObjectHandler {
             return mHandlerList;
         
         mHandlerList = new ArrayList<ObjectHandler>();
-        List dots = Provisioning.getInstance().getObjectTypes();
+        List dots = Provisioning.getInstance().listAllZimlets();
         for (Iterator it=dots.iterator(); it.hasNext();) {
             Zimlet dot = (Zimlet) it.next();
             ObjectHandler handler = loadHandler(dot);

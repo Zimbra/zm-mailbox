@@ -24,6 +24,7 @@ import static org.junit.Assert.*;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Provisioning.CosBy;
 
 public class TestLdapProvCos {
@@ -45,11 +46,18 @@ public class TestLdapProvCos {
         return cos;
     }
     
+    private void deleteCos(Cos cos) throws Exception {
+        String codId = cos.getId();
+        prov.deleteCos(codId);
+        cos = prov.get(CosBy.id, codId);
+        assertNull(cos);
+    }
+    
     @Test
     public void createCos() throws Exception {
         String COS_NAME = "createCos";
         Cos cos = createCos(COS_NAME);
-        prov.deleteCos(cos.getId());
+        deleteCos(cos);
     }
     
     @Test
@@ -67,7 +75,7 @@ public class TestLdapProvCos {
         }
         assertTrue(caughtException);
         
-        prov.deleteCos(cos.getId());
+        deleteCos(cos);
     }
     
     @Test
@@ -82,13 +90,22 @@ public class TestLdapProvCos {
         Cos cos = createCos(COS_NAME);
         String cosId = cos.getId();
         
+        prov.flushCache(CacheEntryType.cos, null);
         cos = prov.get(CosBy.id, cosId);
         assertEquals(cosId, cos.getId());
         
+        prov.flushCache(CacheEntryType.cos, null);
         cos = prov.get(CosBy.name, COS_NAME);
         assertEquals(cosId, cos.getId());
         
-        prov.deleteCos(cos.getId());
+        deleteCos(cos);
+    }
+    
+    @Test
+    public void getCosNotExist() throws Exception {
+        String COS_NAME = "getCosNotExist";
+        Cos cos = prov.get(CosBy.name, COS_NAME);
+        assertNull(cos);
     }
     
     @Test
@@ -131,7 +148,7 @@ public class TestLdapProvCos {
             }
         }
         
-        prov.deleteCos(copiedCos.getId());
+        deleteCos(copiedCos);
     }
     
     @Test
@@ -155,7 +172,7 @@ public class TestLdapProvCos {
         Cos renamedCos = prov.get(CosBy.name, NEW_COS_NAME);
         assertEquals(cosId, renamedCos.getId());
         
-        prov.deleteCos(cosId);
+        deleteCos(cos);
     }
     
     @Test
@@ -176,7 +193,7 @@ public class TestLdapProvCos {
         }
         assertTrue(caughtException);
         
-        prov.deleteCos(cosId);
+        deleteCos(cos);
     }
 
 }

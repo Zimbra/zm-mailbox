@@ -44,6 +44,13 @@ public class JNDIModificationList extends ZModificationList {
         return modList.toArray(mods);
     }
     
+
+    @Override
+    public boolean isEmpty() {
+        return modList.size() == 0;
+    }
+
+    
     @Override
     public void addAttr(String name, String value[], Entry entry, 
             boolean containsBinaryData, boolean isBinaryTransfer) {

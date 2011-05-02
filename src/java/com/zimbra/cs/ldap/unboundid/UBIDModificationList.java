@@ -59,6 +59,11 @@ public class UBIDModificationList extends ZModificationList {
     }
     
     @Override
+    public boolean isEmpty() {
+        return modList.size() == 0;
+    }
+    
+    @Override
     public void addAttr(String name, String[] value, Entry entry,
             boolean containsBinaryData, boolean isBinaryTransfer) {
         String[] currentValues = entry.getMultiAttr(name, false);
@@ -150,7 +155,5 @@ public class UBIDModificationList extends ZModificationList {
         }
         
     }
-
-    
 
 }

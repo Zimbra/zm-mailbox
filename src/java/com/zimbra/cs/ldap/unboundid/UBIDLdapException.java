@@ -49,6 +49,11 @@ class UBIDLdapException {
         */    
         } else if (ResultCode.NOT_ALLOWED_ON_NONLEAF == rc) {
             return LdapException.CONTEXT_NOT_EMPTY(message, e);
+        } else if (ResultCode.UNDEFINED_ATTRIBUTE_TYPE == rc) { 
+            return LdapException.INVALID_ATTR_NAME(message, e);
+        } else if (ResultCode.CONSTRAINT_VIOLATION == rc ||
+                ResultCode.INVALID_ATTRIBUTE_SYNTAX == rc) {
+            return LdapException.INVALID_ATTR_VALUE(message, e);
         }
         
         return LdapException.LDAP_ERROR(message, e);

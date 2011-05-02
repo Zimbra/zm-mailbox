@@ -112,11 +112,6 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public List<Zimlet> getObjectTypes() {
-        return Collections.emptyList();
-    }
-
-    @Override
     public void modifyAttrs(Entry entry, Map<String, ? extends Object> attrs, boolean checkImmutable) {
         Map<String, Object> map = entry.getAttrs(false);
         for (Map.Entry<String, ? extends Object> attr : attrs.entrySet()) {

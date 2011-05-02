@@ -99,17 +99,13 @@ import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.IAttributes.CheckBinary;
-import com.zimbra.cs.ldap.LdapException.LdapContextNotEmptyException;
-import com.zimbra.cs.ldap.LdapException.LdapEntryAlreadyExistException;
-import com.zimbra.cs.ldap.LdapException.LdapEntryNotFoundException;
-import com.zimbra.cs.ldap.LdapException.LdapMultipleEntriesMatchedException;
+import com.zimbra.cs.ldap.LdapException.*;
 import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
-import com.zimbra.cs.ldap.ILdapContext;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapTODO;
 import com.zimbra.cs.ldap.SearchLdapOptions;
@@ -301,7 +297,6 @@ public class LdapProvisioning extends LdapProv {
         modifyLdapAttrs(entry, initZlc, attrs);
     }
     
-    @TODOEXCEPTIONMAPPING
     private void modifyLdapAttrs(Entry entry, ZLdapContext initZlc, Map<String, ? extends Object> attrs)
             throws ServiceException {
         ZLdapContext zlc = initZlc;
@@ -309,25 +304,14 @@ public class LdapProvisioning extends LdapProv {
             if (zlc == null) {
                 zlc = LdapClient.getContext(LdapServerType.MASTER);
             }
-            LdapUtil.modifyAttrs(zlc, ((LdapEntry)entry).getDN(), attrs, entry);
+            helper.modifyAttrs(zlc, ((LdapEntry)entry).getDN(), attrs, entry);
             refreshEntry(entry, zlc);
-        /* TODO; map exceptions, should we?
-        } catch (InvalidAttributeIdentifierException e) {
+        } catch (LdapInvalidAttrNameException e) { 
             throw AccountServiceException.INVALID_ATTR_NAME(
                     "invalid attr name: " + e.getMessage(), e);
-        } catch (InvalidAttributeValueException e) {
+        } catch (LdapInvalidAttrValueException e) {
             throw AccountServiceException.INVALID_ATTR_VALUE(
                     "invalid attr value: " + e.getMessage(), e);
-        } catch (InvalidAttributesException e) {
-            throw ServiceException.INVALID_REQUEST(
-                    "invalid set of attributes: " + e.getMessage(), e);
-        } catch (SchemaViolationException e) {
-            throw ServiceException.INVALID_REQUEST("LDAP schema violation: "
-                    + e.getMessage(), e);
-        } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to modify attrs: "
-                    + e.getMessage(), e);
-        */  
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to modify attrs: "
                     + e.getMessage(), e);
@@ -360,12 +344,9 @@ public class LdapProvisioning extends LdapProv {
 
     void refreshEntry(Entry entry, ZLdapContext initZlc) throws ServiceException {
 
-        ZLdapContext zlc = initZlc;
         try {
-            if (zlc == null)
-                zlc = LdapClient.getContext();
             String dn = ((LdapEntry)entry).getDN();
-            ZAttributes attributes = zlc.getAttributes(dn);
+            ZAttributes attributes = helper.getAttributes(dn, initZlc, LdapServerType.REPLICA);
             
             Map<String, Object> attrs = attributes.getAttrs();
 
@@ -416,11 +397,7 @@ public class LdapProvisioning extends LdapProv {
             extendLifeInCache(entry);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to refresh entry", e);
-        } finally {
-            if (initZlc == null)
-                LdapClient.closeContext(zlc);
         }
-
     }
 
     public void extendLifeInCache(Entry entry) {
@@ -506,32 +483,22 @@ public class LdapProvisioning extends LdapProv {
     }
     
     @Override
-    @TODOEXCEPTIONMAPPING
     public List<MimeTypeInfo> getMimeTypesByQuery(String mimeType) throws ServiceException {
-        ZLdapContext zlc = null;
+        List<MimeTypeInfo> mimeTypes = new ArrayList<MimeTypeInfo>();
+        
         try {
-            zlc = LdapClient.getContext();
             mimeType = LdapUtilCommon.escapeSearchFilterArg(mimeType);
-            ZSearchResultEnumeration ne = zlc.searchDir(
-                    mDIT.mimeBaseDN(), LdapFilter.mimeEntryByMimeType(mimeType), ZSearchControls.SEARCH_CTLS_SUBTREE());
-            List<MimeTypeInfo> mimeTypes = new ArrayList<MimeTypeInfo>();
+            ZSearchResultEnumeration ne = helper.searchDir(mDIT.mimeBaseDN(), 
+                    LdapFilter.mimeEntryByMimeType(mimeType), ZSearchControls.SEARCH_CTLS_SUBTREE());
             while (ne.hasMore()) {
                 ZSearchResultEntry sr = ne.next();
                 mimeTypes.add(new LdapMimeType(sr, this));
             }
             ne.close();
-            return mimeTypes;
-        /*
-        } catch (NameNotFoundException e) {
-            return Collections.emptyList();
-        } catch (InvalidNameException e) {
-            return Collections.emptyList();
-        } catch (NamingException e) {
+        } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to get mime types for " + mimeType, e);
-        */    
-        } finally {
-            LdapClient.closeContext(zlc);
         }
+        return mimeTypes;
     }
     
     @Override
@@ -540,37 +507,21 @@ public class LdapProvisioning extends LdapProv {
     }
 
     @Override
-    @TODOEXCEPTIONMAPPING
     public List<MimeTypeInfo> getAllMimeTypesByQuery() throws ServiceException {
-        ZLdapContext zlc = null;
+        List<MimeTypeInfo> mimeTypes = new ArrayList<MimeTypeInfo>();
+        
         try {
-            zlc = LdapClient.getContext();
-            List<MimeTypeInfo> mimeTypes = new ArrayList<MimeTypeInfo>();
-            ZSearchResultEnumeration ne = zlc.searchDir(
+            ZSearchResultEnumeration ne = helper.searchDir(
                     mDIT.mimeBaseDN(), LdapFilter.allMimeEntries(), ZSearchControls.SEARCH_CTLS_SUBTREE());
             while (ne.hasMore()) {
                 ZSearchResultEntry sr = ne.next();
                 mimeTypes.add(new LdapMimeType(sr, this));
             }
             ne.close();
-            return mimeTypes;
-        /*    
-        } catch (NameNotFoundException e) {
-            return Collections.emptyList();
-        } catch (InvalidNameException e) {
-            return Collections.emptyList();
-        } catch (NamingException e) {
+        } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to get mime types", e);
-        */
-        } finally {
-            LdapClient.closeContext(zlc);
         }
-
-    }
-
-    @Override
-    public List<Zimlet> getObjectTypes() throws ServiceException {
-        return listAllZimlets();
+        return mimeTypes;
     }
 
     private Account getAccountByQuery(String base, String query, ZLdapContext initZlc, boolean loadFromMaster) 
@@ -579,14 +530,13 @@ public class LdapProvisioning extends LdapProv {
             ZSearchResultEntry sr = helper.searchForEntry(base, query, initZlc, loadFromMaster);
             if (sr != null) {
                 return makeAccount(sr.getDN(), sr.getAttributes());
-            } else {
-                return null;
             }
         } catch (LdapMultipleEntriesMatchedException e) {
             throw AccountServiceException.MULTIPLE_ACCOUNTS_MATCHED("getAccountByQuery: " + e.getMessage());
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to lookup account via query: "+query+" message: "+e.getMessage(), e);
         }
+        return null;
     }
     
     private Account getAccountById(String zimbraId, ZLdapContext zlc, boolean loadFromMaster) throws ServiceException {
@@ -806,7 +756,6 @@ public class LdapProvisioning extends LdapProv {
         return createAccount(emailAddress, password, attrs, mDIT.handleSpecialAttrs(attrs), null, true, origAttrs);
     }
 
-    @TODOEXCEPTIONMAPPING
     private Account createAccount(String emailAddress,
                                   String password,
                                   Map<String, Object> acctAttrs,
@@ -1606,7 +1555,7 @@ public class LdapProvisioning extends LdapProv {
                  * check if the alias is a dangling alias.  If so remove the dangling alias
                  * and create a new one.
                  */
-                ZAttributes attrs = zlc.getAttributes(aliasDn);
+                ZAttributes attrs = helper.getAttributes(aliasDn, zlc, LdapServerType.MASTER);
 
                 // see if the entry is an alias
                 if (!isEntryAlias(attrs))
@@ -1720,7 +1669,7 @@ public class LdapProvisioning extends LdapProv {
             ZAttributes aliasAttrs = null;
             Alias aliasEntry = null;
             try {
-                aliasAttrs = zlc.getAttributes(aliasDn);
+                aliasAttrs = helper.getAttributes(aliasDn, zlc, LdapServerType.MASTER);
 
                 // see if the entry is an alias
                 if (!isEntryAlias(aliasAttrs))
@@ -1921,14 +1870,13 @@ public class LdapProvisioning extends LdapProv {
             ZSearchResultEntry sr = helper.searchForEntry(mDIT.domainBaseDN(), query, initZlc, false);
             if (sr != null) {
                 return new LdapDomain(sr.getDN(), sr.getAttributes(), getConfig().getDomainDefaults(), this);
-            } else {
-                return null;
             }
         } catch (LdapMultipleEntriesMatchedException e) {
             throw AccountServiceException.MULTIPLE_DOMAINS_MATCHED("getDomainByQuery: " + e.getMessage());
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to lookup domain via query: "+query+" message:"+e.getMessage(), e);
         }
+        return null;
     }
 
     @Override
@@ -2103,27 +2051,19 @@ public class LdapProvisioning extends LdapProv {
                       0);
     }
 
-    @TODOEXCEPTIONMAPPING
-    private static boolean domainDnExists(ZLdapContext zlc, String dn) throws ServiceException {
+    private boolean domainDnExists(ZLdapContext zlc, String dn) throws ServiceException {
         try {
-            ZSearchResultEnumeration ne = zlc.searchDir(dn,
-                    LdapFilter.domainLabel(), ZSearchControls.SEARCH_CTLS_SUBTREE());
+            ZSearchResultEnumeration ne = helper.searchDir(dn, LdapFilter.domainLabel(), 
+                    ZSearchControls.SEARCH_CTLS_SUBTREE(), zlc, LdapServerType.MASTER);
             boolean result = ne.hasMore();
             ne.close();
             return result;
-        /*    
-        } catch (InvalidNameException e) {
-            return false;
-        } catch (NameNotFoundException nnfe) {
-            return false;
-        }
-        */
         } catch (ServiceException e) {  // or should we throw?  TODO
             return false;
         }
     }
 
-    private static void createParentDomains(ZLdapContext zlc, String parts[], String dns[]) throws ServiceException {
+    private void createParentDomains(ZLdapContext zlc, String parts[], String dns[]) throws ServiceException {
         for (int i=dns.length-1; i > 0; i--) {
             if (!domainDnExists(zlc, dns[i])) {
                 String dn = dns[i];
@@ -2225,30 +2165,17 @@ public class LdapProvisioning extends LdapProv {
             LdapClient.closeContext(zlc);
         }
     }
-
-    @TODOEXCEPTIONMAPPING
+    
     private LdapCos getCOSByQuery(String query, ZLdapContext initZlc) throws ServiceException {
-        ZLdapContext zlc = initZlc;
         try {
-            if (zlc == null)
-                zlc = LdapClient.getContext();
-            ZSearchResultEnumeration ne = zlc.searchDir(mDIT.cosBaseDN(), query, ZSearchControls.SEARCH_CTLS_SUBTREE());
-            if (ne.hasMore()) {
-                ZSearchResultEntry sr = ne.next();
-                ne.close();
+            ZSearchResultEntry sr = helper.searchForEntry(mDIT.cosBaseDN(), query, initZlc, false);
+            if (sr != null) {
                 return new LdapCos(sr.getDN(), sr.getAttributes(), this);
             }
-        /*    
-        } catch (NameNotFoundException e) {
-            return null;
-        } catch (InvalidNameException e) {
-            return null;
-        } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to lookup cos via query: "+query+ " message: "+e.getMessage(), e);
-        */
-        } finally {
-            if (initZlc == null)
-                LdapClient.closeContext(zlc);
+        } catch (LdapMultipleEntriesMatchedException e) {
+            throw AccountServiceException.MULTIPLE_ENTRIES_MATCHED("getCOSByQuery", e);
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE("unable to lookup cos via query: "+query+" message:"+e.getMessage(), e);
         }
         return null;
     }
@@ -2296,7 +2223,7 @@ public class LdapProvisioning extends LdapProv {
         
         try {
             String dn = mDIT.cosNametoDN(name);
-            ZAttributes attrs = helper.getAttributes(dn, initZlc, false);
+            ZAttributes attrs = helper.getAttributes(dn, initZlc, LdapServerType.REPLICA);
             cos = new LdapCos(dn, attrs, this);
             sCosCache.put(cos);
             return cos;
@@ -2457,9 +2384,10 @@ public class LdapProvisioning extends LdapProv {
             }
 
             try {
-                if (dnChanged)
+                if (dnChanged) {
                     zlc.moveChildren(oldDn, newDn);
-
+                }
+                
                 // rename the account and all it's renamed aliases to the new name in all distribution lists
                 // doesn't throw exceptions, just logs
                 renameAddressesInAllDistributionLists(oldEmail, newName, replacedAliases);
@@ -2553,9 +2481,11 @@ public class LdapProvisioning extends LdapProv {
             try {
                 int maxEntriesToGet = 5;
                 ZSearchControls searchControls = ZSearchControls.createSearchControls(
-                        ZSearchScope.SEARCH_SCOPE_SUBTREE, maxEntriesToGet, new String[]{Provisioning.A_objectClass});
+                        ZSearchScope.SEARCH_SCOPE_SUBTREE, maxEntriesToGet, 
+                        new String[]{Provisioning.A_objectClass});
                 
-                ZSearchResultEnumeration ne = zlc.searchDir(acctBaseDn, "(objectClass=*)", searchControls);
+                ZSearchResultEnumeration ne = helper.searchDir(acctBaseDn, "(objectClass=*)", 
+                        searchControls, zlc, LdapServerType.MASTER);
                 while (ne.hasMore()) {
                     ZSearchResultEntry sr = ne.next();
                     // don't show the dn itself
@@ -2669,29 +2599,16 @@ public class LdapProvisioning extends LdapProv {
         }
     }
 
-    @TODOEXCEPTIONMAPPING
     private Server getServerByQuery(String query, ZLdapContext initZlc) throws ServiceException {
-        ZLdapContext zlc = initZlc;
         try {
-            if (zlc == null)
-                zlc = LdapClient.getContext();
-            ZSearchResultEnumeration ne = zlc.searchDir(mDIT.serverBaseDN(), query, ZSearchControls.SEARCH_CTLS_SUBTREE());
-            if (ne.hasMore()) {
-                ZSearchResultEntry sr = ne.next();
-                ne.close();
+            ZSearchResultEntry sr = helper.searchForEntry(mDIT.serverBaseDN(), query, initZlc, false);
+            if (sr != null) {
                 return new LdapServer(sr.getDN(), sr.getAttributes(), getConfig().getServerDefaults(), this);
             }
-        /*    
-        } catch (NameNotFoundException e) {
-            return null;
-        } catch (InvalidNameException e) {
-            return null;
-        } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to lookup server via query: "+query+" message: "+e.getMessage(), e);
-        */
-        } finally {
-            if (initZlc == null)
-                LdapClient.closeContext(zlc);
+        } catch (LdapMultipleEntriesMatchedException e) {
+            throw AccountServiceException.MULTIPLE_ENTRIES_MATCHED("getServerByQuery", e);
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE("unable to lookup server via query: "+query+" message:"+e.getMessage(), e);
         }
         return null;
     }
@@ -2794,30 +2711,18 @@ public class LdapProvisioning extends LdapProv {
         return result;
     }
 
-    @TODOEXCEPTIONMAPPING
     private List<Cos> searchCOS(String query, ZLdapContext initZlc) throws ServiceException {
         List<Cos> result = new ArrayList<Cos>();
-        ZLdapContext zlc = initZlc;
         try {
-            if (zlc == null)
-                zlc = LdapClient.getContext();
-            ZSearchResultEnumeration ne = zlc.searchDir(mDIT.cosBaseDN(), query, ZSearchControls.SEARCH_CTLS_SUBTREE());
+            ZSearchResultEnumeration ne = helper.searchDir(mDIT.cosBaseDN(), query, 
+                    ZSearchControls.SEARCH_CTLS_SUBTREE(), initZlc, LdapServerType.REPLICA);
             while (ne.hasMore()) {
                 ZSearchResultEntry sr = ne.next();
                 result.add(new LdapCos(sr.getDN(), sr.getAttributes(), this));
             }
             ne.close();
-        /*    
-        } catch (NameNotFoundException e) {
-            return null;
-        } catch (InvalidNameException e) {
-            return null;
-        */
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to lookup cos via query: "+query+ " message: "+e.getMessage(), e);
-        } finally {
-            if (initZlc == null)
-                LdapClient.closeContext(zlc);
         }
         return result;
     }
@@ -2976,35 +2881,25 @@ public class LdapProvisioning extends LdapProv {
         return getGroups(list, directOnly, via);
     }
 
-    @TODOEXCEPTIONMAPPING
-    private DistributionList getDistributionListByQuery(String base, String query, ZLdapContext initZlc, String[] returnAttrs) throws ServiceException {
-        ZLdapContext zlc = initZlc;
+    private DistributionList getDistributionListByQuery(String base, String query, 
+            ZLdapContext initZlc, String[] returnAttrs) throws ServiceException {
+        DistributionList dl = null;
         try {
-            if (zlc == null)
-                zlc = LdapClient.getContext();
-
             ZSearchControls searchControls = ZSearchControls.createSearchControls(
                     ZSearchScope.SEARCH_SCOPE_SUBTREE, ZSearchControls.SIZE_UNLIMITED, returnAttrs);
                     
-            ZSearchResultEnumeration ne = zlc.searchDir(base, query, searchControls);
+            ZSearchResultEnumeration ne = helper.searchDir(base, query, 
+                    searchControls, initZlc, LdapServerType.REPLICA);
             if (ne.hasMore()) {
                 ZSearchResultEntry sr = ne.next();
-                ne.close();
-                return makeDistributionList(sr.getDN(), sr.getAttributes());
+                dl = makeDistributionList(sr.getDN(), sr.getAttributes());
             }
-        /*    
-        } catch (NameNotFoundException e) {
-            return null;
-        } catch (InvalidNameException e) {
-            return null;
-        */    
+            ne.close();
         } catch (ServiceException e) {
-            throw ServiceException.FAILURE("unable to lookup distribution list via query: "+query+ " message: "+e.getMessage(), e);
-        } finally {
-            if (initZlc == null)
-                LdapClient.closeContext(zlc);
+            throw ServiceException.FAILURE("unable to lookup distribution list via query: "+
+                    query+ " message: "+e.getMessage(), e);
         }
-        return null;
+        return dl;
     }
 
     @Override
@@ -4188,47 +4083,43 @@ public class LdapProvisioning extends LdapProv {
     Zimlet lookupZimlet(String name, ZLdapContext zlc) throws ServiceException {
         return getZimlet(name, zlc, false);
     }
-
-    @TODOEXCEPTIONMAPPING
+    
     private Zimlet getZimlet(String name, ZLdapContext initZlc, boolean useCache) throws ServiceException {
-        LdapZimlet zimlet = sZimletCache.getByName(name);
-        if (!useCache || zimlet == null) {
-            ZLdapContext zlc = initZlc;
-            try {
-                if (zlc == null) {
-                    zlc = LdapClient.getContext();
-                }
-                String dn = mDIT.zimletNameToDN(name);
-                ZAttributes attrs = zlc.getAttributes(dn);
-                zimlet = new LdapZimlet(dn, attrs, this);
-                if (useCache) {
-                    ZimletUtil.reloadZimlet(name);
-                    sZimletCache.put(zimlet);  // put LdapZimlet into the cache after successful ZimletUtil.reloadZimlet()
-                }
-            /*    
-            } catch (NameNotFoundException nnfe) {
-                return null;
-            */    
-            } catch (ServiceException ne) {
-                throw ServiceException.FAILURE("unable to get zimlet: "+name, ne);
-            } catch (ZimletException ze) {
-                throw ServiceException.FAILURE("unable to load zimlet: "+name, ze);
-            } finally {
-                if (initZlc == null) {
-                    LdapClient.closeContext(zlc);
-                }
-            }
+        
+        LdapZimlet zimlet = null;
+        if (useCache) {
+            zimlet = sZimletCache.getByName(name);
         }
-        return zimlet;
+        
+        if (zimlet != null) {
+            return zimlet;
+        }
+        
+        try {
+            String dn = mDIT.zimletNameToDN(name);
+            ZAttributes attrs = helper.getAttributes(dn, initZlc, LdapServerType.REPLICA);
+            zimlet = new LdapZimlet(dn, attrs, this);
+            if (useCache) {
+                ZimletUtil.reloadZimlet(name);
+                sZimletCache.put(zimlet);  // put LdapZimlet into the cache after successful ZimletUtil.reloadZimlet()
+            }
+            return zimlet;
+        } catch (LdapEntryNotFoundException e) {
+            return null;
+        } catch (ServiceException ne) {
+            throw ServiceException.FAILURE("unable to get zimlet: "+name, ne);
+        } catch (ZimletException ze) {
+            throw ServiceException.FAILURE("unable to load zimlet: "+name, ze);
+        }
     }
 
     @Override
     public List<Zimlet> listAllZimlets() throws ServiceException {
         List<Zimlet> result = new ArrayList<Zimlet>();
-        ZLdapContext zlc = null;
+        
         try {
-            zlc = LdapClient.getContext();
-            ZSearchResultEnumeration ne = zlc.searchDir(mDIT.zimletBaseDN(), LdapFilter.allZimlets(), ZSearchControls.SEARCH_CTLS_SUBTREE());
+            ZSearchResultEnumeration ne = helper.searchDir(mDIT.zimletBaseDN(), 
+                    LdapFilter.allZimlets(), ZSearchControls.SEARCH_CTLS_SUBTREE());
             while (ne.hasMore()) {
                 ZSearchResultEntry sr = ne.next();
              result.add(new LdapZimlet(sr.getDN(), sr.getAttributes(), this));
@@ -4236,9 +4127,8 @@ public class LdapProvisioning extends LdapProv {
             ne.close();
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to list all zimlets", e);
-        } finally {
-            LdapClient.closeContext(zlc);
         }
+        
         Collections.sort(result);
         return result;
     }
@@ -4275,7 +4165,7 @@ public class LdapProvisioning extends LdapProv {
             AttributeManager.getInstance().postModify(zimletAttrs, zimlet, attrManagerContext, true);
             return zimlet;
         } catch (LdapEntryAlreadyExistException nabe) {
-            throw ServiceException.FAILURE("zimlet already exists: "+name, nabe);
+            throw AccountServiceException.ZIMLET_EXISTS(name);
         } catch (ServiceException se) {
             throw se;
         } finally {
@@ -5499,34 +5389,22 @@ public class LdapProvisioning extends LdapProv {
                
         return addrs;
     }
-
-    @TODOEXCEPTIONMAPPING
-    private List<Identity> getIdentitiesByQuery(LdapEntry entry, String query, ZLdapContext initZlc) throws ServiceException {
-        ZLdapContext zlc = initZlc;
+    
+    private List<Identity> getIdentitiesByQuery(LdapEntry entry, String query, ZLdapContext initZlc) 
+    throws ServiceException {
         List<Identity> result = new ArrayList<Identity>();
+        
         try {
-            if (zlc == null)
-                zlc = LdapClient.getContext();
             String base = entry.getDN();
-            ZSearchResultEnumeration ne = zlc.searchDir(base, query, ZSearchControls.SEARCH_CTLS_SUBTREE());
+            ZSearchResultEnumeration ne = helper.searchDir(base, query, 
+                    ZSearchControls.SEARCH_CTLS_SUBTREE(), initZlc, LdapServerType.REPLICA);
             while(ne.hasMore()) {
                 ZSearchResultEntry sr = ne.next();
                 result.add(new LdapIdentity((Account)entry, sr.getDN(), sr.getAttributes(), this));
             }
             ne.close();
-        /*    
-        } catch (NameNotFoundException e) {
-            ZimbraLog.account.warn("caught NameNotFoundException", e);
-            return result;
-        } catch (InvalidNameException e) {
-            ZimbraLog.account.warn("caught InvalidNameException", e);
-            return result;
-        */
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to lookup identity via query: "+query+ " message: "+e.getMessage(), e);
-        } finally {
-            if (initZlc == null)
-                LdapClient.closeContext(zlc);
         }
         return result;
     }
@@ -5592,6 +5470,7 @@ public class LdapProvisioning extends LdapProv {
             String dn = getIdentityDn(ldapEntry, identityName);
 
             ZMutableEntry entry = LdapClient.createMutableEntry();
+            entry.setDN(dn);
             entry.mapToAttrs(identityAttrs);
             
             entry.setAttr(A_objectClass, "zimbraIdentity");
@@ -5757,34 +5636,23 @@ public class LdapProvisioning extends LdapProv {
         }
     }
 
-    @TODOEXCEPTIONMAPPING
-    private List<Signature> getSignaturesByQuery(Account acct, LdapEntry entry, String query, ZLdapContext initZlc, List<Signature> result) throws ServiceException {
-        ZLdapContext zlc = initZlc;
-        if (result == null)
+    private List<Signature> getSignaturesByQuery(Account acct, LdapEntry entry, String query, 
+            ZLdapContext initZlc, List<Signature> result) throws ServiceException {
+        if (result == null) {
             result = new ArrayList<Signature>();
+        }
+        
         try {
-            if (zlc == null)
-                zlc = LdapClient.getContext();
             String base = entry.getDN();
-            ZSearchResultEnumeration ne = zlc.searchDir(base, query, ZSearchControls.SEARCH_CTLS_SUBTREE());
+            ZSearchResultEnumeration ne = helper.searchDir(base, query, 
+                    ZSearchControls.SEARCH_CTLS_SUBTREE(), initZlc, LdapServerType.REPLICA);
             while(ne.hasMore()) {
                 ZSearchResultEntry sr = ne.next();
                 result.add(new LdapSignature(acct, sr.getDN(), sr.getAttributes(), this));
             }
             ne.close();
-        /*    
-        } catch (NameNotFoundException e) {
-            ZimbraLog.account.warn("caught NameNotFoundException", e);
-            return result;
-        } catch (InvalidNameException e) {
-            ZimbraLog.account.warn("caught InvalidNameException", e);
-            return result;
-        */    
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to lookup signature via query: "+query+ " message: "+e.getMessage(), e);
-        } finally {
-            if (initZlc == null)
-                LdapClient.closeContext(zlc);
         }
         return result;
     }
@@ -6058,33 +5926,21 @@ public class LdapProvisioning extends LdapProv {
 
     private static final String DATA_SOURCE_LIST_CACHE_KEY = "LdapProvisioning.DATA_SOURCE_CACHE";
 
-    @TODOEXCEPTIONMAPPING
-    private List<DataSource> getDataSourcesByQuery(LdapEntry entry, String query, ZLdapContext initZlc) throws ServiceException {
-        ZLdapContext zlc = initZlc;
+    private List<DataSource> getDataSourcesByQuery(LdapEntry entry, String query, ZLdapContext initZlc) 
+    throws ServiceException {
         List<DataSource> result = new ArrayList<DataSource>();
+    
         try {
-            if (zlc == null)
-                zlc = LdapClient.getContext();
             String base = entry.getDN();
-            ZSearchResultEnumeration ne = zlc.searchDir(base, query, ZSearchControls.SEARCH_CTLS_SUBTREE());
+            ZSearchResultEnumeration ne = helper.searchDir(base, query, 
+                    ZSearchControls.SEARCH_CTLS_SUBTREE(), initZlc, LdapServerType.REPLICA);
             while(ne.hasMore()) {
                 ZSearchResultEntry sr = ne.next();
                 result.add(new LdapDataSource((Account)entry, sr.getDN(), sr.getAttributes(), this));
             }
             ne.close();
-        /*    
-        } catch (NameNotFoundException e) {
-            ZimbraLog.account.warn("caught NameNotFoundException", e);
-            return result;
-        } catch (InvalidNameException e) {
-            ZimbraLog.account.warn("caught InvalidNameException", e);
-            return result;
-        */    
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to lookup data source via query: "+query+ " message: "+e.getMessage(), e);
-        } finally {
-            if (initZlc == null)
-                LdapClient.closeContext(zlc);
         }
         return result;
     }
@@ -6147,22 +6003,19 @@ public class LdapProvisioning extends LdapProv {
         }
         query.append(")");
 
+        boolean exists = false;
         try {
-            ZSearchResultEnumeration ne = zlc.searchDir(baseDN, query.toString(), ZSearchControls.SEARCH_CTLS_SUBTREE());
-            if (ne.hasMore())
-                return true;
-            else
-                return false;
-        /*    
-        } catch (NameNotFoundException e) {
-            return false;
-        } catch (InvalidNameException e) {
-            throw ServiceException.FAILURE("unable to lookup account via query: "+query.toString()+" message: "+e.getMessage(), e);
-        */
+            ZSearchResultEnumeration ne = helper.searchDir(baseDN, query.toString(), 
+                    ZSearchControls.SEARCH_CTLS_SUBTREE(), zlc, LdapServerType.MASTER);
+            if (ne.hasMore()) {
+                exists = true;
+            }
+            ne.close();
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to lookup account via query: "+query.toString()+" message: "+e.getMessage(), e);
-        } finally {
         }
+        
+        return exists;
     }
 
     // MOVE OVER ALL aliases. doesn't throw an exception, just logs
@@ -6249,6 +6102,7 @@ public class LdapProvisioning extends LdapProv {
             String dn = getDataSourceDn(ldapEntry, dsName);
 
             ZMutableEntry entry = LdapClient.createMutableEntry();
+            entry.setDN(dn);
             entry.mapToAttrs(dataSourceAttrs);
             
             entry.setAttr(A_objectClass, "zimbraDataSource");
@@ -6402,59 +6256,38 @@ public class LdapProvisioning extends LdapProv {
                 return null;
         }
     }
-
-    @TODOEXCEPTIONMAPPING
+    
     private XMPPComponent getXMPPComponentByQuery(String query, ZLdapContext initZlc) throws ServiceException {
-        ZLdapContext zlc = initZlc;
         try {
-            if (zlc == null)
-                zlc = LdapClient.getContext();
-            ZSearchResultEnumeration ne = zlc.searchDir(mDIT.xmppcomponentBaseDN(), query, ZSearchControls.SEARCH_CTLS_SUBTREE());
-            if (ne.hasMore()) {
-                ZSearchResultEntry sr = ne.next();
-                ne.close();
+            ZSearchResultEntry sr = helper.searchForEntry(mDIT.xmppcomponentBaseDN(), query, initZlc, false);
+            if (sr != null) {
                 return new LdapXMPPComponent(sr.getDN(), sr.getAttributes(), this);
             }
-        /* 
-        } catch (NameNotFoundException e) {
-            return null;
-        } catch (InvalidNameException e) {
-            return null;
-        */
+        } catch (LdapMultipleEntriesMatchedException e) {
+            throw AccountServiceException.MULTIPLE_ENTRIES_MATCHED("getXMPPComponentByQuery", e);
         } catch (ServiceException e) {
-            throw ServiceException.FAILURE("unable to lookup XMPPComponent via query: "+query+" message: "+e.getMessage(), e);
-        } finally {
-            if (initZlc == null)
-                LdapClient.closeContext(zlc);
+            throw ServiceException.FAILURE("unable to lookup XMPP component via query: "+query+" message:"+e.getMessage(), e);
         }
         return null;
     }
 
-    @TODOEXCEPTIONMAPPING
     private XMPPComponent getXMPPComponentByName(String name, boolean nocache) throws ServiceException {
         if (!nocache) {
             XMPPComponent x = sXMPPComponentCache.getByName(name);
             if (x != null)
                 return x;
         }
-        ZLdapContext zlc = null;
+        
         try {
-            zlc = LdapClient.getContext();
             String dn = mDIT.xmppcomponentNameToDN(name);
-            ZAttributes attrs = zlc.getAttributes(dn);
+            ZAttributes attrs = helper.getAttributes(dn);
             XMPPComponent x = new LdapXMPPComponent(dn, attrs, this);
             sXMPPComponentCache.put(x);
             return x;
-        /*    
-        } catch (NameNotFoundException e) {
+        } catch (LdapEntryNotFoundException e) {
             return null;
-        } catch (InvalidNameException e) {
-            return null;
-        */
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to lookup xmpp component by name: "+name+" message: "+e.getMessage(), e);
-        } finally {
-            LdapClient.closeContext(zlc);
         }
     }
 
@@ -6475,13 +6308,12 @@ public class LdapProvisioning extends LdapProv {
     @Override
     public List<XMPPComponent> getAllXMPPComponents() throws ServiceException {
         List<XMPPComponent> result = new ArrayList<XMPPComponent>();
-        ZLdapContext zlc = null;
+        
         try {
-            zlc = LdapClient.getContext();
-            String filter;
-            filter = LdapFilter.allXMPPComponents();
+            String base = mDIT.xmppcomponentBaseDN();
+            String filter = LdapFilter.allXMPPComponents();
 
-            ZSearchResultEnumeration ne = zlc.searchDir(mDIT.xmppcomponentBaseDN(), filter, ZSearchControls.SEARCH_CTLS_SUBTREE());
+            ZSearchResultEnumeration ne = helper.searchDir(base, filter, ZSearchControls.SEARCH_CTLS_SUBTREE());
             while (ne.hasMore()) {
                 ZSearchResultEntry sr = ne.next();
                 LdapXMPPComponent x = new LdapXMPPComponent(sr.getDN(), sr.getAttributes(), this);
@@ -6489,12 +6321,12 @@ public class LdapProvisioning extends LdapProv {
             }
             ne.close();
         } catch (ServiceException e) {
-            throw ServiceException.FAILURE("unable to list all servers", e);
-        } finally {
-            LdapClient.closeContext(zlc);
+            throw ServiceException.FAILURE("unable to list all XMPPComponents", e);
         }
-        if (result.size() > 0)
+        
+        if (result.size() > 0) {
             sXMPPComponentCache.put(result, true);
+        }
         Collections.sort(result);
         return result;
     }
@@ -6525,7 +6357,8 @@ public class LdapProvisioning extends LdapProv {
             entry.setAttr(A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
             entry.setAttr(A_cn, name);
             String dn = mDIT.xmppcomponentNameToDN(name);
-
+            entry.setDN(dn);
+            
             entry.setAttr(A_zimbraDomainId, domain.getId());
             entry.setAttr(A_zimbraServerId, server.getId());
 

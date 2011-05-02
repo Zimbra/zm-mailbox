@@ -14,14 +14,18 @@
  */
 package com.zimbra.cs.account.ldap.legacy;
 
+import java.util.Map;
+
 import javax.naming.directory.SearchControls;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.prov.ldap.LdapHelper;
 import com.zimbra.cs.prov.ldap.LdapProv;
+import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.ldap.ILdapContext;
 import com.zimbra.cs.ldap.LdapClient;
+import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
@@ -55,6 +59,13 @@ public class LegacyLdapHelper extends LdapHelper {
                 SearchControls.SUBTREE_SCOPE,
                 searchOptions.getVisitor());
     }
+    
+    @Override
+    public void modifyAttrs(ZLdapContext zlc, String dn,
+            Map<String, ? extends Object> attrs, Entry entry)
+            throws ServiceException {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public ZSearchResultEntry searchForEntry(String base, String query,
@@ -64,14 +75,15 @@ public class LegacyLdapHelper extends LdapHelper {
     }
 
     @Override
-    public ZAttributes getAttributes(String dn, ZLdapContext initZlc, boolean useMaster) 
+    public ZAttributes getAttributes(String dn, ZLdapContext initZlc, LdapServerType ldapServerType) 
     throws LdapEntryNotFoundException, ServiceException {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public ZSearchResultEnumeration searchDir(String baseDN, String query,
-            ZSearchControls searchControls) throws ServiceException {
+            ZSearchControls searchControls, ZLdapContext initZlc, LdapServerType ldapServerType) 
+    throws ServiceException {
         throw new UnsupportedOperationException();
     }
 

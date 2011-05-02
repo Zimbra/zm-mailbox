@@ -24,6 +24,7 @@ import org.junit.runner.JUnitCore;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.CliUtil;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.ZLdapContext;
@@ -31,6 +32,7 @@ import com.zimbra.cs.ldap.ZSearchControls;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
 import com.zimbra.cs.ldap.ZSearchResultEnumeration;
 import com.zimbra.cs.ldap.ZSearchScope;
+import com.zimbra.cs.prov.ldap.LdapProv;
 import com.zimbra.qa.unittest.LdapSuite.ConsoleListener;
 
 public class TestLdap {
@@ -100,18 +102,37 @@ public class TestLdap {
             // junit.run(TestLdapSDK.class);
         }
         junit.run(TestLdapHelper.class);
+        junit.run(TestLdapProvAccount.class);
         junit.run(TestLdapProvCos.class);
+        junit.run(TestLdapProvDataSource.class);
         junit.run(TestLdapProvDomain.class);
         junit.run(TestLdapProvEntry.class);
         junit.run(TestLdapProvGlobalConfig.class);
         junit.run(TestLdapProvGlobalGrant.class);
+        junit.run(TestLdapProvIdentity.class);
+        junit.run(TestLdapProvMimeType.class);
         junit.run(TestLdapProvMisc.class);
+        junit.run(TestLdapProvModifyAttrs.class);
         junit.run(TestLdapProvServer.class);
+        junit.run(TestLdapProvSignature.class);
+        junit.run(TestLdapProvXMPPComponent.class);
+        junit.run(TestLdapProvZimlet.class);
         junit.run(TestLdapUtil.class);
         junit.run(TestLdapZMutableEntry.class);
     }
     
-    static void deleteEntireBranchInDIT(String dn) throws Exception {
+    /*
+     * given a domain name like test.com, delete the entire tree under 
+     * dc=com in LDAP
+     */
+    static void deleteEntireBranch(String domainName) throws Exception {
+        String parts[] = domainName.split("\\.");
+        String[] dns = ((LdapProv) Provisioning.getInstance()).getDIT().domainToDNs(parts);
+        String topMostRDN = dns[dns.length-1];
+        TestLdap.deleteEntireBranchByDN(topMostRDN);
+    }
+    
+    static void deleteEntireBranchByDN(String dn) throws Exception {
         ZLdapContext zlc = null;
         
         try {
@@ -187,6 +208,9 @@ public class TestLdap {
         
         // runTests(junit, TestConfig.UBID);
         // runTests(junit, TestConfig.JNDI);
-        // runTests(junit, TestConfig.LEGACY);
+        runTests(junit, TestConfig.LEGACY);
+        
+        System.out.println();
+        System.out.println("=== Finished ===");
     }
 }

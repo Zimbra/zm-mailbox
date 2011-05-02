@@ -25,21 +25,14 @@ public class LdapException extends ServiceException {
     // generic LDAP error that is not mapped to a subclass of LdapException
     public static final String LDAP_ERROR = "ldap.LDAP_ERROR";
     
-    public static final String CONTEXT_NOT_EMPTY = 
-        LdapContextNotEmptyException.CONTEXT_NOT_EMPTY;
-    
-    public static final String INVALID_NAME = 
-        LdapInvalidNameException.INVALID_NAME;
-    
-    public static final String ENTRY_ALREADY_EXIST = 
-        LdapEntryAlreadyExistException.ENTRY_ALREADY_EXIST;
-    
-    public static final String ENTRY_NOT_FOUND = 
-        LdapEntryNotFoundException.ENTRY_NOT_FOUND;
-    
-    public static final String MULTIPLE_ENTRIES_MATCHED = 
-        LdapMultipleEntriesMatchedException.MULTIPLE_ENTRIES_MATCHED;
-    
+    public static final String CONTEXT_NOT_EMPTY        = "ldap.CONTEXT_NOT_EMPTY";
+    public static final String ENTRY_ALREADY_EXIST      = "ldap.ENTRY_ALREADY_EXIST";
+    public static final String ENTRY_NOT_FOUND          = "ldap.ENTRY_NOT_FOUND";
+    public static final String INVALID_ATTR_NAME        = "ldap.INVALID_ATTR_NAME";
+    public static final String INVALID_ATTR_VALUE       = "ldap.INVALID_ATTR_VALUE";
+    public static final String INVALID_NAME             = "ldap.INVALID_NAME";
+    public static final String MULTIPLE_ENTRIES_MATCHED = "ldap.MULTIPLE_ENTRIES_MATCHED";
+        
     
     private static String format(String msg1, String msg2) {
         if (msg2 == null) {
@@ -82,6 +75,14 @@ public class LdapException extends ServiceException {
         return new LdapInvalidNameException(message, cause);
     }
     
+    public static LdapException INVALID_ATTR_NAME(String message, Throwable cause) {
+        return new LdapInvalidAttrNameException(message, cause);
+    }
+    
+    public static LdapException INVALID_ATTR_VALUE(String message, Throwable cause) {
+        return new LdapInvalidAttrValueException(message, cause);
+    }
+    
     public static LdapException ENTRY_ALREADY_EXIST(String message, Throwable cause) {
         return new LdapEntryAlreadyExistException(message, cause);
     }
@@ -95,46 +96,49 @@ public class LdapException extends ServiceException {
         return new LdapMultipleEntriesMatchedException(base, query, dups);
     }
     
+    
     //
     // Subclasses mapped to native(JNDI/UBID) ldap exceptions
     //
-    public static class LdapInvalidNameException extends LdapException {
-        public static final String INVALID_NAME = "ldap.INVALID_NAME";
-        
-        private LdapInvalidNameException(String message, Throwable cause) {
-            super(format("invalid name", message), INVALID_NAME, cause);
-        }
-    }
-    
-    public static class LdapEntryNotFoundException extends LdapException {
-        public static final String ENTRY_NOT_FOUND = "ldap.ENTRY_NOT_FOUND";
-        
-        private LdapEntryNotFoundException(String message, Throwable cause) {
-            super(format("entry not found", message), ENTRY_NOT_FOUND, cause);
-        }
-    }
-
-    public static class LdapEntryAlreadyExistException extends LdapException {
-        public static final String ENTRY_ALREADY_EXIST = "ldap.ENTRY_ALREADY_EXIST";
-        
-        private LdapEntryAlreadyExistException(String message, Throwable cause) {
-            super(format("entry already exist", message), ENTRY_ALREADY_EXIST, cause);
-        }
-    }
     
     public static class LdapContextNotEmptyException extends LdapException {
-        public static final String CONTEXT_NOT_EMPTY = "ldap.CONTEXT_NOT_EMPTY";
-        
         private LdapContextNotEmptyException(String message, Throwable cause) {
             super(format("context not empty", message), CONTEXT_NOT_EMPTY, cause);
         }
     }
     
+    public static class LdapEntryAlreadyExistException extends LdapException {
+        private LdapEntryAlreadyExistException(String message, Throwable cause) {
+            super(format("entry already exist", message), ENTRY_ALREADY_EXIST, cause);
+        }
+    }
+    
+    public static class LdapEntryNotFoundException extends LdapException {
+        private LdapEntryNotFoundException(String message, Throwable cause) {
+            super(format("entry not found", message), ENTRY_NOT_FOUND, cause);
+        }
+    }
+    
+    public static class LdapInvalidAttrNameException extends LdapException {
+        private LdapInvalidAttrNameException(String message, Throwable cause) {
+            super(format("invalid attr name", message), INVALID_ATTR_NAME, cause);
+        }
+    }
+    
+    public static class LdapInvalidAttrValueException extends LdapException {
+        private LdapInvalidAttrValueException(String message, Throwable cause) {
+            super(format("invalid attr value", message), INVALID_ATTR_VALUE, cause);
+        }
+    }
+    
+    public static class LdapInvalidNameException extends LdapException {
+        private LdapInvalidNameException(String message, Throwable cause) {
+            super(format("invalid name", message), INVALID_NAME, cause);
+        }
+    }
+    
     public static class LdapMultipleEntriesMatchedException extends LdapException {
-        public static final String MULTIPLE_ENTRIES_MATCHED = "ldap.MULTIPLE_ENTRIES_MATCHED";
-        
-        private LdapMultipleEntriesMatchedException(String base, String query, 
-                String dups) {
+        private LdapMultipleEntriesMatchedException(String base, String query, String dups) {
             super(String.format("multiple entries matched: base=%s, query=%s, entries=%s",
                     base, query, dups), MULTIPLE_ENTRIES_MATCHED, null);
         }

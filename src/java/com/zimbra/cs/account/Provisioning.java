@@ -587,8 +587,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
      */
     public abstract List<MimeTypeInfo> getAllMimeTypes() throws ServiceException;
 
-    public abstract List<Zimlet> getObjectTypes() throws ServiceException;
-
     /**
      * Creates the specified account. The A_uid attribute is automatically
      * created and should not be passed in.

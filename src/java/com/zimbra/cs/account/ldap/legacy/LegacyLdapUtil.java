@@ -528,26 +528,6 @@ public class LegacyLdapUtil {
         String domain = email.substring(index+1);
         return domainToDN(domain.split("\\."), 0);
     }
-
-    /**
-     * given a dn like "uid=foo,ou=people,dc=widgets,dc=com", return the string "widgets.com".
-     * 
-     * @param dn
-     * @return
-     */
-    public static String dnToDomain(String dn) {
-        String[] parts = dn.split(",");
-        StringBuffer sb = new StringBuffer();
-
-        	for (int i=0; i < parts.length; i++) {
-        	    if (parts[i].startsWith("dc=")) {
-        	        if (sb.length() > 0)
-        	            sb.append(".");
-        	        sb.append(unescapeRDNValue(parts[i].substring(3)));
-        	    }
-        	}
-        return sb.toString();
-    }
     
     /**
      * given a dn like "uid=foo,ou=people,dc=widgets,dc=com", return the String[]

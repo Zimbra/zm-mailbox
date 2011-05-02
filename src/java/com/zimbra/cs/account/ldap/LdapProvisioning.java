@@ -583,11 +583,6 @@ public class LdapProvisioning extends LdapProv {
 
     }
 
-    @Override
-    public List<Zimlet> getObjectTypes() throws ServiceException {
-        return listAllZimlets();
-    }
-
     private Account getAccountByQuery(String base, String query, ZimbraLdapContext initZlc, boolean loadFromMaster) throws ServiceException {
         ZimbraLdapContext zlc = initZlc;
         try {
@@ -2974,7 +2969,9 @@ public class LdapProvisioning extends LdapProv {
         return getGroups(list, directOnly, via);
     }
 
-    private DistributionList getDistributionListByQuery(String base, String query, ZimbraLdapContext initZlc, String[] returnAttrs) throws ServiceException {
+    private DistributionList getDistributionListByQuery(String base, String query, ZimbraLdapContext initZlc, String[] returnAttrs) 
+    throws ServiceException {
+        DistributionList dl = null;
         ZimbraLdapContext zlc = initZlc;
         try {
             if (zlc == null)
@@ -2986,9 +2983,9 @@ public class LdapProvisioning extends LdapProv {
             NamingEnumeration<SearchResult> ne = zlc.searchDir(base, query, searchControls);
             if (ne.hasMore()) {
                 SearchResult sr = ne.next();
-                ne.close();
-                return makeDistributionList(sr.getNameInNamespace(), sr.getAttributes());
+                dl = makeDistributionList(sr.getNameInNamespace(), sr.getAttributes());
             }
+            ne.close();
         } catch (NameNotFoundException e) {
             return null;
         } catch (InvalidNameException e) {
@@ -2999,7 +2996,7 @@ public class LdapProvisioning extends LdapProv {
             if (initZlc == null)
                 ZimbraLdapContext.closeContext(zlc);
         }
-        return null;
+        return dl;
     }
 
     @Override
@@ -6114,12 +6111,13 @@ public class LdapProvisioning extends LdapProv {
         }
         query.append(")");
 
+        boolean exists = false;
         try {
             NamingEnumeration<SearchResult> ne = zlc.searchDir(baseDN, query.toString(), sSubtreeSC);
-            if (ne.hasMore())
-                return true;
-            else
-                return false;
+            if (ne.hasMore()) {
+                exists = true;
+            }
+            ne.close();
         } catch (NameNotFoundException e) {
             return false;
         } catch (InvalidNameException e) {
@@ -6128,6 +6126,8 @@ public class LdapProvisioning extends LdapProv {
             throw ServiceException.FAILURE("unable to lookup account via query: "+query.toString()+" message: "+e.getMessage(), e);
         } finally {
         }
+        
+        return exists;
     }
 
     // MOVE OVER ALL aliases. doesn't throw an exception, just logs

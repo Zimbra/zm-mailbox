@@ -51,4 +51,24 @@ public class TestLdapUtil {
         assertEquals("n(schemers@example.zimbra.com)u(schemers)d(example.zimbra.com)D(dc=example,dc=zimbra,dc=com)(%)",
                 LdapUtilCommon.computeAuthDn("schemers@example.zimbra.com", "n(%n)u(%u)d(%d)D(%D)(%%)"));
     }
+    
+    @Test
+    public void rdnUBID() throws Exception {
+        com.unboundid.ldap.sdk.RDN rdn = new com.unboundid.ldap.sdk.RDN("cn", "foo+/+/ \u4e2d\u6587");
+        String minStr = rdn.toMinimallyEncodedString();
+        String rdnStr = rdn.toNormalizedString();
+        System.out.println(minStr);
+        System.out.println(rdnStr);
+        
+        /*
+        String rdn = "cn=foo, bar";
+        String norm = com.unboundid.ldap.sdk.RDN.normalize(rdn);
+        com.unboundid.ldap.sdk.RDN RDN = new com.unboundid.ldap.sdk.RDN(norm);
+        String min = RDN.toMinimallyEncodedString();
+        System.out.println(rdn);
+        System.out.println(norm);
+        System.out.println(min);
+        */
+        
+    }
 }

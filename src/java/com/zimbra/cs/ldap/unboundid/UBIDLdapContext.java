@@ -289,10 +289,32 @@ public class UBIDLdapContext extends ZLdapContext {
     }
     
     @Override
-    @TODO
-    public void moveChildren(String oldDn, String newDn)
-            throws ServiceException {
-        LdapTODO.TODO();
+    public void moveChildren(String oldDn, String newDn) throws ServiceException {
+        try {
+            SearchRequest searchRequest = new SearchRequest(oldDn, 
+                    SearchScope.ONE,
+                    derefAliasPolicy,
+                    0,  // size limit
+                    0,  // time limit
+                    false, // getTypesOnly
+                    Filter.createPresenceFilter(LdapConstants.ATTR_OBJECTCLASS)
+                    ); 
+                    
+            searchRequest.setAttributes("dn");
+            SearchResult result = conn.search(searchRequest);
+            
+            DN newDN = new DN(newDn);
+            
+            List<SearchResultEntry> entries = result.getSearchEntries();
+            for (SearchResultEntry entry : entries) {
+                DN entryDN = entry.getParsedDN();
+                String childDn = entryDN.toNormalizedString();
+                String childRdn = entryDN.getRDNString();
+                conn.modifyDN(childDn, childRdn, true, newDn);
+            }
+        } catch (LDAPException e) {
+            throw UBIDLdapException.mapToLdapException(e);
+        }
     }
     
     @Override

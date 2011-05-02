@@ -25,6 +25,7 @@ import static org.junit.Assert.*;
 
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.Server;
 
@@ -53,11 +54,18 @@ public class TestLdapProvServer {
         return server;
     }
     
+    private void deleteServer(Server server) throws Exception {
+        String serverId = server.getId();
+        prov.deleteServer(serverId);
+        server = prov.get(ServerBy.id, serverId);
+        assertNull(server);
+    }
+    
     @Test
     public void createServer() throws Exception {
         String SERVER_NAME = "createServer";
         Server server = createServer(SERVER_NAME);
-        prov.deleteServer(server.getId());
+        deleteServer(server);
     }
     
     @Test
@@ -75,7 +83,7 @@ public class TestLdapProvServer {
         }
         assertTrue(caughtException);
         
-        prov.deleteServer(server.getId());
+        deleteServer(server);
     }
     
     @Test
@@ -110,8 +118,31 @@ public class TestLdapProvServer {
         assertEquals(1, allServersByService.size());
         assertEquals(server1.getId(), allServersByService.get(0).getId());
         
-        prov.deleteServer(server1.getId());
-        prov.deleteServer(server2.getId());
+        deleteServer(server1);
+        deleteServer(server2);
+    }
+    
+    @Test
+    public void getServer() throws Exception {
+        String SERVER_NAME = "getServer";
+        Server server = createServer(SERVER_NAME);
+        String serverId = server.getId();
+        
+        prov.flushCache(CacheEntryType.server, null);
+        server = prov.get(ServerBy.id, serverId);
+        assertEquals(serverId, server.getId());
+        
+        prov.flushCache(CacheEntryType.server, null);
+        server = prov.get(ServerBy.name, SERVER_NAME);
+        assertEquals(serverId, server.getId());
+        
+        deleteServer(server);
     }
 
+    @Test
+    public void getServerNotExist() throws Exception {
+        String SERVER_NAME = "getServer";
+        Server server = prov.get(ServerBy.name, SERVER_NAME);
+        assertNull(server);
+    }
 }

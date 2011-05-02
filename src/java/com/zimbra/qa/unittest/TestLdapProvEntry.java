@@ -73,7 +73,6 @@ public class TestLdapProvEntry {
         attrs.put(Provisioning.A_userSMIMECertificate, binaryData.getString());
         
         account = prov.createAccount(accountName, "test123", attrs);
-        
         entry = prov.get(Provisioning.AccountBy.name, accountName);
     }
     
