@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20110427-1322 */
+    /* build: 6.0.2_BETA1_1111 pshao 20110502-1459 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -4136,9 +4136,9 @@ public class ZAttrProvisioning {
 
     /**
      * Maximum number of messages to delete during a single transaction when
-     * emptying a folder. If the limit is exceeded, the folder is emptied in
-     * multiple transactions. Each transaction deletes this number of
-     * messages.
+     * emptying a large folder. When a folder is emptied and it contains more
+     * than zimbraMailEmptyFolderBatchThreshold messages, the operation is
+     * performed in multiple transactions.
      *
      * @since ZCS 6.0.8
      */
@@ -4146,13 +4146,13 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailEmptyFolderBatchSize = "zimbraMailEmptyFolderBatchSize";
 
     /**
-     * Sleep time between batches of deletes when emptying a large folder.
-     * See zimbraMailEmptyFolderBatchSize.
+     * Folders that contain more than this many messages will be emptied in
+     * batches of size zimbraMailEmptyFolderBatchSize.
      *
      * @since ZCS 6.0.13
      */
     @ZAttr(id=1208)
-    public static final String A_zimbraMailEmptyFolderSleepInterval = "zimbraMailEmptyFolderSleepInterval";
+    public static final String A_zimbraMailEmptyFolderBatchThreshold = "zimbraMailEmptyFolderBatchThreshold";
 
     /**
      * Number of bytes to buffer in memory per file descriptor in the cache.
