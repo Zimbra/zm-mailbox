@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110502-1103 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110502-1545 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -4810,20 +4810,8 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 6.0.13
      */
-    @ZAttr(id=1209)
-    public static final String A_zimbraMailEmptyFolderBatchThreshold = "zimbraMailEmptyFolderBatchThreshold";
-
-    /**
-     * Sleep time between batches of deletes when emptying a large folder.
-     * See zimbraMailEmptyFolderBatchSize. . Must be in valid duration
-     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
-     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
-     * unit is not specified, the default is s(seconds).
-     *
-     * @since ZCS 6.0.13
-     */
     @ZAttr(id=1208)
-    public static final String A_zimbraMailEmptyFolderSleepInterval = "zimbraMailEmptyFolderSleepInterval";
+    public static final String A_zimbraMailEmptyFolderBatchThreshold = "zimbraMailEmptyFolderBatchThreshold";
 
     /**
      * Number of bytes to buffer in memory per file descriptor in the cache.
@@ -8548,7 +8536,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=1210)
+    @ZAttr(id=1209)
     public static final String A_zimbraSMIMELdapDiscoverSearchBaseEnabled = "zimbraSMIMELdapDiscoverSearchBaseEnabled";
 
     /**

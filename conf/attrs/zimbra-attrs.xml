@@ -5647,21 +5647,14 @@ TODO: delete them permerntly from here
   <desc>If TRUE, the spell checker ignores words that contain only upper-case letters.</desc>
 </attr>
 
-<attr id="1208" name="zimbraMailEmptyFolderSleepInterval" type="duration" cardinality="single" min="0" optionalIn="globalConfig,server" flags="serverInherited,domainAdminModifiable" since="6.0.13">
-  <globalConfigValue>1ms</globalConfigValue>
-  <desc>
-    Sleep time between batches of deletes when emptying a large folder.  See zimbraMailEmptyFolderBatchSize.
-  </desc>
-</attr>
-
-<attr id="1209" name="zimbraMailEmptyFolderBatchThreshold" type="integer" cardinality="single" min="0" optionalIn="globalConfig,server" flags="serverInherited,domainAdminModifiable" since="6.0.13">
+<attr id="1208" name="zimbraMailEmptyFolderBatchThreshold" type="integer" cardinality="single" min="0" optionalIn="globalConfig,server" flags="serverInherited,domainAdminModifiable" since="6.0.13">
   <globalConfigValue>100000</globalConfigValue>
   <desc>
     Folders that contain more than this many messages will be emptied in batches of size zimbraMailEmptyFolderBatchSize.
   </desc>
 </attr>
 
-<attr id="1210" name="zimbraSMIMELdapDiscoverSearchBaseEnabled"  type="string" max="32" cardinality="multi" optionalIn="domain,globalConfig" immutable="1" since="7.1.1">
+<attr id="1209" name="zimbraSMIMELdapDiscoverSearchBaseEnabled"  type="string" max="32" cardinality="multi" optionalIn="domain,globalConfig" immutable="1" since="7.1.1">
   <desc>
     Whether or not to discover search base DNs if zimbraSMIMELdapSearchBase is not set. Allowed values are TRUE or FALSE.
     If zimbraSMIMELdapSearchBase is set for a config, this attribute is ignored for the config.
