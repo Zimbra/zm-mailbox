@@ -41,7 +41,7 @@ public class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110502-1432 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110502-1530 */
 
     /**
      * RFC2256: descriptive information
@@ -11557,7 +11557,7 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=1210)
+    @ZAttr(id=1209)
     public String[] getSMIMELdapDiscoverSearchBaseEnabled() {
         return getMultiAttr(Provisioning.A_zimbraSMIMELdapDiscoverSearchBaseEnabled);
     }
@@ -11587,7 +11587,7 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=1210)
+    @ZAttr(id=1209)
     public void setSMIMELdapDiscoverSearchBaseEnabled(String[] zimbraSMIMELdapDiscoverSearchBaseEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSMIMELdapDiscoverSearchBaseEnabled, zimbraSMIMELdapDiscoverSearchBaseEnabled);
@@ -11620,7 +11620,7 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=1210)
+    @ZAttr(id=1209)
     public Map<String,Object> setSMIMELdapDiscoverSearchBaseEnabled(String[] zimbraSMIMELdapDiscoverSearchBaseEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSMIMELdapDiscoverSearchBaseEnabled, zimbraSMIMELdapDiscoverSearchBaseEnabled);
@@ -11652,7 +11652,7 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=1210)
+    @ZAttr(id=1209)
     public void addSMIMELdapDiscoverSearchBaseEnabled(String zimbraSMIMELdapDiscoverSearchBaseEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraSMIMELdapDiscoverSearchBaseEnabled, zimbraSMIMELdapDiscoverSearchBaseEnabled);
@@ -11685,7 +11685,7 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=1210)
+    @ZAttr(id=1209)
     public Map<String,Object> addSMIMELdapDiscoverSearchBaseEnabled(String zimbraSMIMELdapDiscoverSearchBaseEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraSMIMELdapDiscoverSearchBaseEnabled, zimbraSMIMELdapDiscoverSearchBaseEnabled);
@@ -11717,7 +11717,7 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=1210)
+    @ZAttr(id=1209)
     public void removeSMIMELdapDiscoverSearchBaseEnabled(String zimbraSMIMELdapDiscoverSearchBaseEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraSMIMELdapDiscoverSearchBaseEnabled, zimbraSMIMELdapDiscoverSearchBaseEnabled);
@@ -11750,7 +11750,7 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=1210)
+    @ZAttr(id=1209)
     public Map<String,Object> removeSMIMELdapDiscoverSearchBaseEnabled(String zimbraSMIMELdapDiscoverSearchBaseEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraSMIMELdapDiscoverSearchBaseEnabled, zimbraSMIMELdapDiscoverSearchBaseEnabled);
@@ -11781,7 +11781,7 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=1210)
+    @ZAttr(id=1209)
     public void unsetSMIMELdapDiscoverSearchBaseEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSMIMELdapDiscoverSearchBaseEnabled, "");
@@ -11813,7 +11813,7 @@ public class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 7.1.1
      */
-    @ZAttr(id=1210)
+    @ZAttr(id=1209)
     public Map<String,Object> unsetSMIMELdapDiscoverSearchBaseEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSMIMELdapDiscoverSearchBaseEnabled, "");
