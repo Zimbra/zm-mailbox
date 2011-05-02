@@ -34,7 +34,8 @@ public enum UpgradeTask {
     BUG_46297(ZimbraContactHiddenAttributes.class),
     BUG_46883(ZimbraContactRankingTableSize.class),
     BUG_46961(zimbraGalLdapAttrMap_fullName.class),
-    BUG_50458(Bug50458.class);
+    BUG_50458(Bug50458.class),
+    BUG_58084(Bug58084.class);
     
     
     private Class mUpgradeClass;
