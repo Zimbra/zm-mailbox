@@ -15,6 +15,7 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.Assert;
@@ -22,7 +23,9 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.ContactConstants;
+import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailAddress;
@@ -127,6 +130,23 @@ public final class ContactTest {
                 mbox.getId(), contact.getId()).getString(1));
 
         conn.closeQuietly();
+    }
+
+    @Test
+    public void createAutoContact() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        List<Contact> contacts = mbox.createAutoContact(null, Sets.newHashSet(
+                new InternetAddress("Test 1", "TEST1@zimbra.com"), new InternetAddress("Test 2", "TEST2@zimbra.com")));
+
+        Assert.assertEquals(2, contacts.size());
+        Assert.assertEquals("1, Test", contacts.get(0).getFileAsString());
+        Assert.assertEquals("TEST1@zimbra.com", contacts.get(0).getFields().get(ContactConstants.A_email));
+        Assert.assertEquals("2, Test", contacts.get(1).getFileAsString());
+        Assert.assertEquals("TEST2@zimbra.com", contacts.get(1).getFields().get(ContactConstants.A_email));
+
+        contacts = mbox.createAutoContact(null, Sets.newHashSet(
+                new InternetAddress("Test 1", "test1@zimbra.com"), new InternetAddress("Test 2", "test2@zimbra.com")));
+        Assert.assertEquals(0, contacts.size());
     }
 
 }

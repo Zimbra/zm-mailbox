@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -357,13 +357,15 @@ public abstract class CalendarRequest extends MailDocumentHandler {
 
                 // First, update my own appointment.  It is important that this happens BEFORE the call to sendMimeMessage,
                 // because sendMimMessage will delete uploaded attachments as a side-effect.
-                if (updateOwnAppointment)
+                if (updateOwnAppointment) {
                     aid = mbox.addInvite(octxt, csd.mInvite, apptFolderId, pm);
+                }
                 // Next, notify any attendees.
-                if (!csd.mDontNotifyAttendees)
+                if (!csd.mDontNotifyAttendees) {
                     // All calendar-related emails are sent in sendpartial mode.
-                    msgId = CalendarMailSender.sendPartial(octxt, mbox, csd.mMm, csd.newContacts, csd.uploads,
-                            csd.mOrigId, csd.mReplyType, csd.mIdentityId, false);
+                    msgId = CalendarMailSender.sendPartial(octxt, mbox, csd.mMm, csd.uploads, csd.mOrigId,
+                            csd.mReplyType, csd.mIdentityId, false);
+                }
             } else {
                 // But if we're sending a cancel request, send emails first THEN update the local mailbox.
                 // This makes a difference if MTA is not running.  We'll avoid canceling organizer's copy
@@ -373,14 +375,16 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                 // have an attachment, so we're okay.
                 // Before sending email, make sure the requester has permission to cancel.
                 CalendarItem calItem = mbox.getCalendarItemByUid(octxt, csd.mInvite.getUid());
-                if (calItem != null)
+                if (calItem != null) {
                     calItem.checkCancelPermission(octxt.getAuthenticatedUser(), octxt.isUsingAdminPrivileges(), csd.mInvite);
-
-                if (!csd.mDontNotifyAttendees)
-                    msgId = CalendarMailSender.sendPartial(octxt, mbox, csd.mMm, csd.newContacts, csd.uploads,
-                            csd.mOrigId, csd.mReplyType, csd.mIdentityId, false);
-                if (updateOwnAppointment)
+                }
+                if (!csd.mDontNotifyAttendees) {
+                    msgId = CalendarMailSender.sendPartial(octxt, mbox, csd.mMm, csd.uploads, csd.mOrigId,
+                            csd.mReplyType, csd.mIdentityId, false);
+                }
+                if (updateOwnAppointment) {
                     aid = mbox.addInvite(octxt, csd.mInvite, apptFolderId, pm);
+                }
             }
         } finally {
             // Delete the temp file after we're done sending email.
@@ -582,7 +586,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                     // Compose email using the existing MimeMessage as template and send it.
                     MimeMessage mmInv = calItem.getSubpartMessage(inv.getMailItemId());
                     MimeMessage mmModify = CalendarMailSender.createCalendarMessage(from, sender, rcpts, mmInv, inv, cal, true);
-                    CalendarMailSender.sendPartial(octxt, mbox, mmModify, null, null,
+                    CalendarMailSender.sendPartial(octxt, mbox, mmModify, null,
                             new ItemId(mbox, inv.getMailItemId()), null, null, false);
                 }
             }

@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -155,15 +155,13 @@ public class BounceMsg extends MailDocumentHandler {
      * @param msender  The {@link MailSender} to be used to send the message.
      * @return a {@link MessageAddresses} element encapsulating all the
      *         addresses specified by {@code <e>} subelements. */
-    MessageAddresses getResentAddressees(Element msgElem, Account acct, MailSender msender)
-    throws ServiceException {
+    MessageAddresses getResentAddressees(Element msgElem, Account acct, MailSender msender) throws ServiceException {
         String defaultCharset = acct.getPrefMailDefaultCharset();
         if (Strings.isNullOrEmpty(defaultCharset)) {
             defaultCharset = MimeConstants.P_CHARSET_UTF8;
         }
 
-        List<InternetAddress> newContacts = new ArrayList<InternetAddress>(5);
-        MessageAddresses maddrs = new MessageAddresses(newContacts);
+        MessageAddresses maddrs = new MessageAddresses();
         for (Element e : msgElem.listElements(MailConstants.E_EMAIL)) {
             try {
                 maddrs.add(e, defaultCharset);
@@ -171,12 +169,9 @@ public class BounceMsg extends MailDocumentHandler {
                 throw ServiceException.FAILURE("error generating addressees", ioe);
             }
         }
-        if (maddrs.isEmpty())
+        if (maddrs.isEmpty()) {
             throw ServiceException.INVALID_REQUEST("no recipients specified", null);
-
-        // if the caller specified "save-to-address-book", update the MailSender appropriately
-        msender.setSaveContacts(newContacts);
-
+        }
         return maddrs;
     }
 

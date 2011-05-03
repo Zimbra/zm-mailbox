@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -21,7 +21,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.AutoSendDraftTask;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
@@ -147,11 +146,6 @@ public class SaveDraft extends MailDocumentHandler {
             } catch (ServiceException e) {
                 ZimbraLog.soap.warn("error setting metadata for draft " + msg.getId() + "; skipping that operation", e);
             }
-        }
-
-        // for an auto-send-draft, save the new contacts now
-        if (autoSendTime != 0) {
-            MailSender.saveNewContacts(mimeData.newContacts, octxt, mbox);
         }
 
         if (schedulesAutoSendTask()) {

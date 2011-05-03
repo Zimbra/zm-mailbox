@@ -16,12 +16,14 @@ package com.zimbra.cs.db;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool.DbConnection;
@@ -73,6 +75,22 @@ public final class DbMailAddressTest {
         Assert.assertEquals(id21, DbMailAddress.getId(conn, mbox2, "test1@zimbra.com"));
         Assert.assertEquals(id22, DbMailAddress.getId(conn, mbox2, "test2@zimbra.com"));
         Assert.assertEquals(-1, DbMailAddress.getId(conn, mbox2, "unknown@zimbra.com"));
+
+        conn.closeQuietly();
+    }
+
+    @Test
+    public void existsInContacts() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId("0-0-1");
+
+        DbConnection conn = DbPool.getConnection();
+        new DbMailAddress(mbox).setId(1).setAddress("test1@zimbra.com").setContactCount(0).create(conn);
+        new DbMailAddress(mbox).setId(2).setAddress("test2@zimbra.com").setContactCount(1).create(conn);
+        new DbMailAddress(mbox).setId(3).setAddress("test3@zimbra.com").setContactCount(2).create(conn);
+
+        Set<String> result = DbMailAddress.existsInContacts(conn, mbox,
+                Sets.newHashSet("test1@zimbra.com", "test2@zimbra.com", "test3@zimbra.com"));
+        Assert.assertEquals(Sets.newHashSet("test2@zimbra.com", "test3@zimbra.com"), result);
 
         conn.closeQuietly();
     }

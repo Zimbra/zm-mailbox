@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -57,13 +57,13 @@ public class TestSendAndReceive extends TestCase {
     private static final String REMOTE_USER_NAME = "user2";
     private static final Pattern PAT_RECEIVED = Pattern.compile("Received: .*from.*LHLO.*");
     private static final Pattern PAT_RETURN_PATH = Pattern.compile("Return-Path: (.*)");
-    
+
     private String mOriginalSmtpSendAddAuthenticatedUser;
     private String mOriginalDomainSmtpPort;
     private String[] mOriginalSmtpHostname;
-    
-    public void setUp()
-    throws Exception {
+
+    @Override
+    public void setUp() throws Exception {
         cleanUp();
         mOriginalSmtpSendAddAuthenticatedUser = TestUtil.getConfigAttr(Provisioning.A_zimbraSmtpSendAddAuthenticatedUser);
         mOriginalDomainSmtpPort = TestUtil.getDomainAttr(USER_NAME, Provisioning.A_zimbraSmtpPort);
@@ -81,7 +81,7 @@ public class TestSendAndReceive extends TestCase {
         String senderAddr = TestUtil.getAddress(USER_NAME);
         addrs.add(new ZEmailAddress(senderAddr, null, null, ZEmailAddress.EMAIL_TYPE_FROM));
         String rcptAddr = TestUtil.getAddress(REMOTE_USER_NAME);
-        addrs.add(new ZEmailAddress(rcptAddr, null, NAME_PREFIX + " testAutoSendDraft", ZEmailAddress.EMAIL_TYPE_TO, true));
+        addrs.add(new ZEmailAddress(rcptAddr, null, NAME_PREFIX + " testAutoSendDraft", ZEmailAddress.EMAIL_TYPE_TO));
         outgoingMsg.setAddresses(addrs);
         String subject = NAME_PREFIX + " autoSendDraft";
         outgoingMsg.setSubject(subject);
@@ -105,7 +105,7 @@ public class TestSendAndReceive extends TestCase {
                      TestUtil.search(mbox, "in:\"Emailed Contacts\" " + rcptAddr, ZSearchParams.TYPE_CONTACT).size(),
                      numEmailedContacts + 1);
     }
-    
+
     /**
      * Verifies that we set the Return-Path and Received headers
      * for incoming messages.
@@ -116,19 +116,19 @@ public class TestSendAndReceive extends TestCase {
         String sender = TestUtil.getAddress("user2");
         String recipient = TestUtil.getAddress(USER_NAME);
         TestUtil.addMessageLmtp(NAME_PREFIX + " testReceivedHeaders()", recipient, sender);
-        
+
         // Search
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         List<ZMessage> messages = TestUtil.search(mbox, NAME_PREFIX);
         assertEquals("Unexpected message count", 1, messages.size());
-        
+
         // Get the message content, since a search won't return the content
         ZGetMessageParams params = new ZGetMessageParams();
         params.setId(messages.get(0).getId());
         params.setRawContent(true);
         ZMessage message = mbox.getMessage(params);
         String content = message.getContent();
-        
+
         // Check headers
         boolean foundReceived = false;
         boolean foundReturnPath = false;
@@ -140,7 +140,7 @@ public class TestSendAndReceive extends TestCase {
                 ZimbraLog.test.debug("Found " + line);
                 foundReceived = true;
             }
-            
+
             matcher = PAT_RETURN_PATH.matcher(line);
             if (matcher.matches()) {
                 foundReturnPath = true;
@@ -150,11 +150,11 @@ public class TestSendAndReceive extends TestCase {
             line = reader.readLine();
         }
         reader.close();
-        
+
         assertTrue("Received header not found.  Content=\n" + content, foundReceived);
         assertTrue("Return-Path header not found.  Content=\n" + content, foundReturnPath);
     }
-    
+
     /**
      * Confirms that the message received date is set to the value of the
      * <tt>X-Zimbra-Received</tt> header.
@@ -167,7 +167,7 @@ public class TestSendAndReceive extends TestCase {
         String msgContent = new String(ByteUtil.getContent(new File(
             LC.zimbra_home.value() + "/unittest/testZimbraReceivedHeader.msg")));
         TestUtil.addMessageLmtp(new String[] { USER_NAME }, USER_NAME, msgContent);
-        
+
         // Test date.
         List<ZMessage> messages = TestUtil.search(mbox, "subject:testZimbraReceivedHeader");
         assertEquals("Unexpected message count", 1, messages.size());
@@ -178,7 +178,7 @@ public class TestSendAndReceive extends TestCase {
         assertEquals(1, cal.get(Calendar.MONTH));
         assertEquals(27, cal.get(Calendar.DAY_OF_MONTH));
     }
-    
+
     /**
      * Confirms that <tt>X-Authenticated-User</tt> is set on outgoing messages when
      * <tt>zimbraSmtpSendAddAuthenticatedUser</tt> is set to <tt>TRUE</tt>.
@@ -186,14 +186,14 @@ public class TestSendAndReceive extends TestCase {
     public void testAuthenticatedUserHeader()
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        
+
         // X-Authenticated-User not sent.
         TestUtil.setConfigAttr(Provisioning.A_zimbraSmtpSendAddAuthenticatedUser, LdapConstants.LDAP_FALSE);
         String subject = NAME_PREFIX + " testAuthenticatedUserHeader false";
         TestUtil.sendMessage(mbox, USER_NAME, subject);
         ZMessage msg = TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");
         assertNull(TestUtil.getHeaderValue(mbox, msg, MailSender.X_AUTHENTICATED_USER));
-        
+
         // X-Authenticated-User sent.
         TestUtil.setConfigAttr(Provisioning.A_zimbraSmtpSendAddAuthenticatedUser, LdapConstants.LDAP_TRUE);
         subject = NAME_PREFIX + " testAuthenticatedUserHeader true";
@@ -201,7 +201,7 @@ public class TestSendAndReceive extends TestCase {
         msg = TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");
         assertEquals(mbox.getName(), TestUtil.getHeaderValue(mbox, msg, MailSender.X_AUTHENTICATED_USER));
     }
-    
+
     /**
      * Confirms that domain SMTP settings override server settings (bug 28442).
      */
@@ -212,7 +212,7 @@ public class TestSendAndReceive extends TestCase {
         String subject = NAME_PREFIX + " testDomainSmtpSettings 1";
         TestUtil.sendMessage(mbox, USER_NAME, subject);
         TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");
-        
+
         // Set domain SMTP port to a bogus value and confirm that the send fails.
         TestUtil.setDomainAttr(USER_NAME, Provisioning.A_zimbraSmtpPort, "35");
         subject = NAME_PREFIX + " testDomainSmtpSettings 2";
@@ -225,7 +225,7 @@ public class TestSendAndReceive extends TestCase {
         }
         assertTrue("Message send should have failed", sendFailed);
     }
-    
+
     public void testBogusSmtpHostname()
     throws Exception {
         // Create a list that contains the original valid SMTP host
@@ -238,14 +238,14 @@ public class TestSendAndReceive extends TestCase {
         String[] hostsArray = new String[smtpHosts.size()];
         smtpHosts.toArray(hostsArray);
         Provisioning.getInstance().getLocalServer().setSmtpHostname(hostsArray);
-        
+
         // Send a message and make sure it arrives.
         String subject = NAME_PREFIX + " testBogusSmtpHostname";
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         TestUtil.sendMessage(mbox, USER_NAME, subject);
         TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");
     }
-    
+
     /**
      * Confirms that we can forward attachments with a malformed content type (bug 42452).
      */
@@ -255,7 +255,7 @@ public class TestSendAndReceive extends TestCase {
         String subject = NAME_PREFIX + " testMalformedContentType";
         MessageBuilder builder = new MessageBuilder().withFrom(USER_NAME).withToRecipient(USER_NAME)
             .withSubject(subject).withAttachment("This is an attachment", "test.txt", MimeConstants.CT_TEXT_PLAIN);
-        
+
         // Hack Content-Type so that it's invalid.
         BufferedReader reader = new BufferedReader(new StringReader(builder.create()));
         StringBuilder msgBuf = new StringBuilder();
@@ -271,16 +271,16 @@ public class TestSendAndReceive extends TestCase {
             line = reader.readLine();
         }
         assertTrue("Could not find text/plain attachment.", replaced);
-        
+
         // Add message to the mailbox.
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         TestUtil.addMessageLmtp(new String[] { USER_NAME }, USER_NAME, msgBuf.toString());
-        
+
         // Forward the attachment in a new message.
         ZMessage srcMsg = TestUtil.getMessage(mbox, "subject:\"" + subject + "\"");
         ZMimePart srcAttachPart = srcMsg.getMimeStructure().getChildren().get(1);
         assertEquals("test.txt", srcAttachPart.getFileName());
-        
+
         ZOutgoingMessage outgoing = new ZOutgoingMessage();
         outgoing.setMessagePart(new MessagePart(MimeConstants.CT_TEXT_PLAIN, "Forwarding attachment."));
         outgoing.setMessagePartsToAttach(Arrays.asList(new AttachedMessagePart(srcMsg.getId(), srcAttachPart.getPartName(), null)));
@@ -291,13 +291,13 @@ public class TestSendAndReceive extends TestCase {
         String fwdSubject = NAME_PREFIX + " testMalformedContentType forward";
         outgoing.setSubject(fwdSubject);
         mbox.sendMessage(outgoing, null, false);
-        
+
         // Make sure the forwarded message arrives.
         ZMessage fwd = TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + fwdSubject + "\"");
         ZMimePart fwdAttachPart = fwd.getMimeStructure().getChildren().get(1);
         assertEquals("test.txt", fwdAttachPart.getFileName());
     }
-    
+
     /**
      * Confirms that we preserve line endings of attached text files (bugs 45858 and 53405).
      */
@@ -315,12 +315,12 @@ public class TestSendAndReceive extends TestCase {
         private String subject;
         private String attachId;
         private Throwable error;
-        
+
         SenderThread(String subject, String attachId) {
             this.subject = subject;
             this.attachId = attachId;
         }
-        
+
         @Override
         public void run() {
             try {
@@ -331,7 +331,7 @@ public class TestSendAndReceive extends TestCase {
             }
         }
     }
-    
+
     /**
      * Confirms that the server gracefully handles the case where multiple threads
      * simultaneously send a message, using the same attachment upload id (bug 57222).
@@ -342,7 +342,7 @@ public class TestSendAndReceive extends TestCase {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String attachContent = "The leaves that are green turn to brown.";
         String attachId = mbox.uploadAttachment("lyrics.txt", attachContent.getBytes(), "text/plain", 0);
-        
+
         // Run 5 threads that all send with the same upload id.
         SenderThread[] threads = new SenderThread[5];
         String subject = NAME_PREFIX + " testReuseUploadId";
@@ -353,7 +353,7 @@ public class TestSendAndReceive extends TestCase {
         for (int i = 0; i < threads.length; i++) {
             threads[i].join();
         }
-        
+
         // Make sure only 1 succeeded.
         int numFailures = 0;
         for (SenderThread sender : threads) {
@@ -372,7 +372,7 @@ public class TestSendAndReceive extends TestCase {
         }
         assertEquals(threads.length - 1, numFailures);
     }
-    
+
     private void verifyTextAttachmentLineEnding(ZMailbox mbox, String content, String contentType)
     throws Exception {
         // Test simple send.
@@ -384,7 +384,7 @@ public class TestSendAndReceive extends TestCase {
         InputStream in = mbox.getRESTResource("?id=" + msg.getId() + "&part=2");
         String attachContent = new String(ByteUtil.getContent(in, content.length()));
         assertEquals(content, attachContent);
-        
+
         // Test save draft and send.
         attachId = mbox.uploadAttachment("text.txt", content.getBytes(), contentType, 5000);
         subject = NAME_PREFIX + " testTextAttachmentLineEnding " + contentType + " 2";
@@ -395,15 +395,15 @@ public class TestSendAndReceive extends TestCase {
         attachContent = new String(ByteUtil.getContent(in, content.length()));
         assertEquals(content, attachContent);
     }
-    
-    public void tearDown()
-    throws Exception {
+
+    @Override
+    public void tearDown() throws Exception {
         cleanUp();
         TestUtil.setConfigAttr(Provisioning.A_zimbraSmtpSendAddAuthenticatedUser, mOriginalSmtpSendAddAuthenticatedUser);
         TestUtil.setDomainAttr(USER_NAME, Provisioning.A_zimbraSmtpPort, mOriginalDomainSmtpPort);
         Provisioning.getInstance().getLocalServer().setSmtpHostname(mOriginalSmtpHostname);
     }
-    
+
     private void cleanUp()
     throws Exception {
         TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);

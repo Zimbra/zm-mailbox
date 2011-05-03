@@ -73,7 +73,7 @@ public final class DbMailAddress {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement(new SQL(mailbox).add("INSERT INTO ").mailAddressTable()
+            stmt = conn.prepareStatement(new SQL(mailbox).add("INSERT INTO ").mail_address()
                     .add(" (").addIf("mailbox_id, ").add("id, address, contact_count) VALUES (")
                     .addIf("?, ").add("?, ?, ?)").build());
             int pos = SQL.setIf(stmt, 1, mailbox.getId());
@@ -93,7 +93,7 @@ public final class DbMailAddress {
     public static int delete(DbConnection conn, Mailbox mbox) throws ServiceException {
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement(new SQL(mbox).add("DELETE FROM ").mailAddressTable()
+            stmt = conn.prepareStatement(new SQL(mbox).add("DELETE FROM ").mail_address()
                     .addIf(" WHERE mailbox_id = ?").build());
             SQL.setIf(stmt, 1, mbox.getId());
             return stmt.executeUpdate();
@@ -108,7 +108,7 @@ public final class DbMailAddress {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement(new SQL(mbox).add("SELECT MAX(id) FROM ").mailAddressTable()
+            stmt = conn.prepareStatement(new SQL(mbox).add("SELECT MAX(id) FROM ").mail_address()
                     .addIf(" WHERE mailbox_id = ?").build());
             SQL.setIf(stmt, 1, mbox.getId());
             rs = stmt.executeQuery();
@@ -129,7 +129,7 @@ public final class DbMailAddress {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement(new SQL(mbox).add("SELECT id FROM ").mailAddressTable()
+            stmt = conn.prepareStatement(new SQL(mbox).add("SELECT id FROM ").mail_address()
                     .add(" WHERE ").addIf("mailbox_id = ? AND ").add("address = ?").build());
             int pos = SQL.setIf(stmt, 1, mbox.getId());
             stmt.setString(pos, addr);
@@ -147,10 +147,51 @@ public final class DbMailAddress {
         }
     }
 
+    /**
+     * Returns a subset of the specified email addresses. Each email address in the returned set is referred by at least
+     * one contact.
+     */
+    public static Set<String> existsInContacts(DbConnection conn, Mailbox mbox, Set<String> addrs)
+            throws ServiceException {
+        if (addrs.isEmpty()) {
+            return addrs;
+        }
+
+        SQL sql = new SQL(mbox).add("SELECT address FROM ").mail_address().add(" WHERE ").addIf("mailbox_id = ? AND ");
+        sql.add("contact_count > ? AND ");
+        if (addrs.size() == 1) {
+            sql.add("address = ?");
+        } else {
+            sql.add("address IN (").add(Strings.repeat("?, ", addrs.size() - 1)).add("?)");
+        }
+
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement(sql.build());
+            int pos = SQL.setIf(stmt, 1, mbox.getId());
+            stmt.setInt(pos++, 0);
+            for (String addr : addrs) {
+                stmt.setString(pos++, addr);
+            }
+            rs = stmt.executeQuery();
+            Set<String> result = new HashSet<String>();
+            while (rs.next()) {
+                result.add(rs.getString(1));
+            }
+            return result;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Failed to search addresses", e);
+        } finally {
+            conn.closeQuietly(rs);
+            conn.closeQuietly(stmt);
+        }
+    }
+
     public static void incCount(DbConnection conn, Mailbox mbox, int id) throws ServiceException {
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement(new SQL(mbox).add("UPDATE ").mailAddressTable()
+            stmt = conn.prepareStatement(new SQL(mbox).add("UPDATE ").mail_address()
                     .add(" SET contact_count = contact_count + 1 WHERE ").addIf("mailbox_id = ? AND ")
                     .add("id = ?").build());
             int pos = SQL.setIf(stmt, 1, mbox.getId());
@@ -166,7 +207,7 @@ public final class DbMailAddress {
     public static void decCount(DbConnection conn, Mailbox mbox, String addr) throws ServiceException {
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement(new SQL(mbox).add("UPDATE ").mailAddressTable()
+            stmt = conn.prepareStatement(new SQL(mbox).add("UPDATE ").mail_address()
                     .add(" SET contact_count = contact_count - 1 WHERE ").addIf("mailbox_id = ? AND ")
                     .add("address = ?").build());
             int pos = SQL.setIf(stmt, 1, mbox.getId());
@@ -183,7 +224,7 @@ public final class DbMailAddress {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement(new SQL(mbox).add("SELECT contact_count FROM ").mailAddressTable()
+            stmt = conn.prepareStatement(new SQL(mbox).add("SELECT contact_count FROM ").mail_address()
                     .add(" WHERE ").addIf("mailbox_id = ? AND ").add("id = ?").build());
             int pos = SQL.setIf(stmt, 1, mbox.getId());
             stmt.setInt(pos, id);
@@ -205,7 +246,7 @@ public final class DbMailAddress {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement(new SQL(mbox).add("SELECT contact_count FROM ").mailAddressTable()
+            stmt = conn.prepareStatement(new SQL(mbox).add("SELECT contact_count FROM ").mail_address()
                     .add(" WHERE ").addIf("mailbox_id = ? AND ").add("address = ?").build());
             int pos = SQL.setIf(stmt, 1, mbox.getId());
             stmt.setString(pos, addr);
@@ -231,9 +272,9 @@ public final class DbMailAddress {
     public static int purge(DbConnection conn, Mailbox mbox) throws ServiceException {
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement(new SQL(mbox).add("DELETE FROM ").mailAddressTable().add(" AS ma WHERE ")
+            stmt = conn.prepareStatement(new SQL(mbox).add("DELETE FROM ").mail_address().add(" AS ma WHERE ")
                     .addIf("mailbox_id = ? AND ").add("contact_count = ? AND NOT EXISTS (SELECT * FROM ")
-                    .mailItemTable().add(" WHERE ").addIf("mailbox_id = ma.mailbox_id AND ").add("sender_id = ma.id)")
+                    .mail_item().add(" WHERE ").addIf("mailbox_id = ma.mailbox_id AND ").add("sender_id = ma.id)")
                     .build());
             int pos = SQL.setIf(stmt, 1, mbox.getId());
             stmt.setInt(pos, 0);
@@ -251,7 +292,7 @@ public final class DbMailAddress {
         ResultSet rs = null;
         try {
             // reset all counts
-            stmt = conn.prepareStatement(new SQL(mbox).add("UPDATE ").mailAddressTable()
+            stmt = conn.prepareStatement(new SQL(mbox).add("UPDATE ").mail_address()
                     .add(" SET contact_count = ?").addIf(" WHERE mailbox_id = ?").build());
             int pos = 1;
             stmt.setInt(pos++, 0);
@@ -260,7 +301,7 @@ public final class DbMailAddress {
             stmt.close();
 
             // extract email addresses from all contacts, and put them into mail_address
-            stmt = conn.prepareStatement(new SQL(mbox).add("SELECT metadata FROM ").mailItemTable()
+            stmt = conn.prepareStatement(new SQL(mbox).add("SELECT metadata FROM ").mail_item()
                     .add(" WHERE ").addIf("mailbox_id = ? AND ").add("type = ?").build());
             pos = SQL.setIf(stmt, 1, mbox.getId());
             stmt.setByte(pos, MailItem.Type.CONTACT.toByte());
@@ -313,12 +354,12 @@ public final class DbMailAddress {
             return this;
         }
 
-        SQL mailItemTable() {
+        SQL mail_item() {
             out.append(DbMailItem.getMailItemTableName(mailbox));
             return this;
         }
 
-        SQL mailAddressTable() {
+        SQL mail_address() {
             out.append(getTableName(mailbox));
             return this;
         }

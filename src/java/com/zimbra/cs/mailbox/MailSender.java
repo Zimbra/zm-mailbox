@@ -58,17 +58,11 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.IdentityBy;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.filter.RuleManager;
-import com.zimbra.cs.index.ContactHit;
-import com.zimbra.cs.index.SortBy;
-import com.zimbra.cs.index.ZimbraHit;
-import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Threader.ThreadIndex;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeVisitor;
-import com.zimbra.cs.mime.ParsedAddress;
-import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FileUploadServlet;
@@ -78,11 +72,7 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.cs.zclient.ZContactHit;
 import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZSearchHit;
-import com.zimbra.cs.zclient.ZSearchParams;
-import com.zimbra.cs.zclient.ZSearchResult;
 
 public class MailSender {
 
@@ -90,7 +80,6 @@ public class MailSender {
     public static final String MSGTYPE_FORWARD = String.valueOf(Flag.toChar(Flag.ID_FORWARDED));
 
     private Boolean mSaveToSent;
-    private Collection<InternetAddress> mSaveContacts;
     private Collection<Upload> mUploads;
     private ItemId mOriginalMessageId;
     private String mReplyType;
@@ -107,15 +96,6 @@ public class MailSender {
     private String mEnvelopeFrom;
 
     public MailSender()  { }
-
-    /**
-     * Specifies the contacts to save in the <tt>Emailed Contacts</tt> folder.
-     * @param savedContacts contacts or <tt>null</tt>
-     */
-    public MailSender setSaveContacts(Collection<InternetAddress> saveContacts) {
-        mSaveContacts = saveContacts;
-        return this;
-    }
 
     /**
      * Specifies the uploads to attach to the outgoing message.
@@ -285,13 +265,6 @@ public class MailSender {
     }
 
     /**
-     * Getter for Collection of contacts to save - exposed for OfflineMailSender
-     */
-    protected Collection<InternetAddress> getSaveContacts() {
-        return mSaveContacts;
-    }
-
-    /**
      * Getter for original message Id - exposed for OfflineMailSender
      */
     protected ItemId getOriginalMessageId() {
@@ -377,19 +350,17 @@ public class MailSender {
     /**
      * Sets member variables and sends the message.
      */
-    public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, MimeMessage mm,
-                                  List<InternetAddress> newContacts, List<Upload> uploads,
-                                  ItemId origMsgId, String replyType, String identityId,
-                                  boolean replyToSender)
-    throws ServiceException {
+    public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, MimeMessage mm, List<Upload> uploads,
+            ItemId origMsgId, String replyType, String identityId, boolean replyToSender) throws ServiceException {
         Account authuser = octxt == null ? null : octxt.getAuthenticatedUser();
-        if (authuser == null)
+        if (authuser == null) {
             authuser = mbox.getAccount();
+        }
         Identity identity = null;
-        if (identityId != null)
+        if (identityId != null) {
             identity = Provisioning.getInstance().get(authuser, IdentityBy.id, identityId);
-
-        return sendMimeMessage(octxt, mbox, null, mm, newContacts, uploads, origMsgId, replyType, identity, replyToSender);
+        }
+        return sendMimeMessage(octxt, mbox, null, mm, uploads, origMsgId, replyType, identity, replyToSender);
     }
 
     protected static class RollbackData {
@@ -426,11 +397,9 @@ public class MailSender {
      * Sets member variables and sends the message.
      */
     public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, Boolean saveToSent, MimeMessage mm,
-                                  Collection<InternetAddress> saveContacts, Collection<Upload> uploads,
-                                  ItemId origMsgId, String replyType, Identity identity, boolean replyToSender)
-    throws ServiceException {
+            Collection<Upload> uploads, ItemId origMsgId, String replyType, Identity identity, boolean replyToSender)
+            throws ServiceException {
         mSaveToSent = saveToSent;
-        mSaveContacts = saveContacts;
         mUploads = uploads;
         mOriginalMessageId = origMsgId;
         mReplyType = replyType;
@@ -612,19 +581,28 @@ public class MailSender {
             // save new contacts and update rankings
             // skip this step if this is a delegate request (bug 44329)
             if (!isDelegatedRequest && !sentAddresses.isEmpty() && octxt != null) {
+                assert(authMailbox == mbox);
                 try {
                     ContactRankings.increment(octxt.getAuthenticatedUser().getId(), sentAddresses);
                 } catch (Exception e) {
-                    ZimbraLog.smtp.error("unable to update contact rankings", e);
+                    ZimbraLog.smtp.error("Failed to update contact rankings", e);
                 }
-                if (mSaveContacts != null) {
-                    saveNewContacts(mSaveContacts, octxt, authMailbox);
-                }
-
-                // disable server side detection of new contacts
-                if (false && authuser.getBooleanAttr(Provisioning.A_zimbraPrefAutoAddAddressEnabled, false)) {
-                    Collection<InternetAddress> newContacts = getNewContacts(sentAddresses, authuser, octxt, authMailbox);
-                    saveNewContacts(newContacts, octxt, authMailbox);
+                if (authuser.isPrefAutoAddAddressEnabled()) {
+                    // convert JavaMail Address to Zimbra InternetAddress
+                    List<com.zimbra.common.mime.InternetAddress> iaddrs =
+                        new ArrayList<com.zimbra.common.mime.InternetAddress>(sentAddresses.size());
+                    for (Address addr : sentAddresses) {
+                        if (addr instanceof InternetAddress) {
+                            InternetAddress iaddr = (InternetAddress) addr;
+                            iaddrs.add(new com.zimbra.common.mime.InternetAddress(
+                                    iaddr.getPersonal(), iaddr.getAddress()));
+                        }
+                    }
+                    try {
+                        mbox.createAutoContact(octxt, iaddrs);
+                    } catch (ServiceException e) {
+                        ZimbraLog.smtp.warn("Failed to auto-add contact addrs=%s", iaddrs, e);
+                    }
                 }
             }
 
@@ -1028,117 +1006,6 @@ public class MailSender {
             transport.sendMessage(mm, rcptAddresses);
         } finally {
             transport.close();
-        }
-    }
-
-    public List<InternetAddress> getNewContacts(Collection<Address> contacts, Account authuser, OperationContext octxt, Object authmbox) {
-        if (contacts.isEmpty())
-            return Collections.emptyList();
-
-        HashMap<String,InternetAddress> newContacts = new HashMap<String,InternetAddress>();
-        Collection<String> emailKeys = new ContactAutoComplete(authuser).getEmailKeys();
-        StringBuilder buf = new StringBuilder();
-        boolean first = true;
-        for (Address addr : contacts) {
-            if (addr instanceof InternetAddress) {
-                InternetAddress iaddr = (InternetAddress)addr;
-                String email = iaddr.getAddress();
-                newContacts.put(email, iaddr);
-                for (String emailKey : emailKeys) {
-                    if (first) {
-                        first = false;
-                    } else {
-                        buf.append(" OR ");
-                    }
-                    buf.append("#").append(emailKey).append(":").append(email);
-                }
-            }
-        }
-
-        String query = buf.toString();
-        try {
-            if (authmbox instanceof Mailbox) {
-                Mailbox mbox = (Mailbox) authmbox;
-                ZimbraQueryResults qres = null;
-                try {
-                    qres = mbox.index.search(octxt, query, Collections.singleton(MailItem.Type.CONTACT),
-                                             SortBy.NONE, contacts.size());
-                    while (qres.hasNext()) {
-                        ZimbraHit hit = qres.getNext();
-                        if (hit instanceof ContactHit) {
-                            Contact c = ((ContactHit) hit).getContact();
-                            for (String emailKey : emailKeys) {
-                                String v = c.get(emailKey);
-                                if (v != null) {
-                                    newContacts.remove(v);
-                                }
-                            }
-                        }
-                    }
-                } finally {
-                    if (qres != null) {
-                        try { qres.doneWithSearchResults(); } catch (Exception e) {}
-                    }
-                }
-            } else if (authmbox instanceof ZMailbox) {
-                ZMailbox zmbox = (ZMailbox) authmbox;
-                ZSearchResult res = zmbox.search(new ZSearchParams(query));
-                for (ZSearchHit hit: res.getHits()) {
-                    if (hit instanceof ZContactHit) {
-                        ZContactHit c = (ZContactHit)hit;
-                        String v = c.getEmail();
-                        if (v != null) {
-                            newContacts.remove(v);
-                        }
-                        v = c.getEmail2();
-                        if (v != null) {
-                            newContacts.remove(v);
-                        }
-                        v = c.getEmail3();
-                        if (v != null) {
-                            newContacts.remove(v);
-                        }
-                        v = c.getWorkEmail1();
-                        if (v != null) {
-                            newContacts.remove(v);
-                        }
-                        v = c.getWorkEmail2();
-                        if (v != null) {
-                            newContacts.remove(v);
-                        }
-                        v = c.getWorkEmail3();
-                        if (v != null) {
-                            newContacts.remove(v);
-                        }
-                    }
-                }
-            }
-        } catch (ServiceException e) {
-            ZimbraLog.smtp.warn("ignoring error while auto-adding contact", e);
-            newContacts.clear();
-        }
-
-        List<InternetAddress> ret = new ArrayList<InternetAddress>();
-        if (!newContacts.isEmpty()) {
-            ret.addAll(newContacts.values());
-        }
-        return ret;
-    }
-
-    public static void saveNewContacts(Collection<InternetAddress> newContacts, OperationContext octxt, Object authMailbox) {
-        for (InternetAddress inetaddr : newContacts) {
-            ZimbraLog.smtp.debug("adding new contact: " + inetaddr);
-            Map<String, String> fields = new ParsedAddress(inetaddr).getAttributes();
-            try {
-                if (authMailbox instanceof Mailbox) {
-                    ParsedContact pc = new ParsedContact(fields);
-                    ((Mailbox) authMailbox).createContact(octxt, pc, Mailbox.ID_FOLDER_AUTO_CONTACTS, null);
-                } else if (authMailbox instanceof ZMailbox) {
-                    ((ZMailbox) authMailbox).createContact("" + Mailbox.ID_FOLDER_AUTO_CONTACTS, null, fields);
-                }
-            } catch (ServiceException e) {
-                ZimbraLog.smtp.warn("ignoring error while auto-adding contact", e);
-            }
         }
     }
 

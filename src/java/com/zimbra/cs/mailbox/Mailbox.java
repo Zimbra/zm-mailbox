@@ -49,6 +49,7 @@ import com.zimbra.cs.upgrade.MailboxUpgrade;
 import com.zimbra.common.util.MapUtil;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.mime.Rfc822ValidationInputStream;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
@@ -119,6 +120,7 @@ import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache.CalendarDataResult;
 import com.zimbra.cs.mailbox.calendar.tzfixup.TimeZoneFixupRules;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.mime.ParsedAddress;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -4959,7 +4961,7 @@ public class Mailbox {
      * remove this synchronization after bug 59512 is fixed.
      */
     private final Object saveDraftGuard = new Object();
-    
+
     /**
      * Saves draft.
      *
@@ -4974,7 +4976,7 @@ public class Mailbox {
             return saveDraftInternal(octxt, pm, id, origId, replyType, identityId, accountId, autoSendTime);
         }
     }
-    
+
     public Message saveDraftInternal(OperationContext octxt, ParsedMessage pm, int id,
                              String origId, String replyType, String identityId, String accountId, long autoSendTime)
     throws IOException, ServiceException {
@@ -6162,6 +6164,52 @@ public class Mailbox {
                 sm.quietDelete(staged);
             }
         }
+    }
+
+    /**
+     * Creates new contacts in AUTO_CONTACTS folder. Email addresses that already exist in any contacts folder are
+     * ignored.
+     *
+     * @param octxt operation context
+     * @param addrs email addresses
+     * @return newly created contacts
+     */
+    public List<Contact> createAutoContact(OperationContext octxt, Collection<InternetAddress> addrs)
+            throws ServiceException {
+        if (addrs.isEmpty()) {
+            return Collections.emptyList();
+        }
+        // normalize before DB query
+        Map<String, InternetAddress> norm2addr = new HashMap<String, InternetAddress>();
+        for (InternetAddress iaddr : addrs) {
+            if (Strings.isNullOrEmpty(iaddr.getAddress())) {
+                continue;
+            }
+            norm2addr.put(iaddr.getAddress().trim().toLowerCase(), iaddr);
+        }
+        Set<String> exist;
+        DbConnection conn = DbPool.getConnection(this);
+        try {
+            exist = DbMailAddress.existsInContacts(conn, this, norm2addr.keySet());
+        } finally {
+            conn.closeQuietly();
+        }
+        norm2addr.keySet().removeAll(exist);
+        if (norm2addr.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Contact> result = new ArrayList<Contact>(exist.size());
+        for (InternetAddress iaddr : norm2addr.values()) {
+            ZimbraLog.mailbox.debug("Auto-adding new contact addr=%s", iaddr);
+            try {
+                result.add(createContact(octxt, new ParsedContact(new ParsedAddress(iaddr).getAttributes()),
+                        Mailbox.ID_FOLDER_AUTO_CONTACTS, null));
+            } catch (ServiceException e) {
+                ZimbraLog.mailbox.warn("Failed to auto-add contact addr=%s", iaddr, e);
+            }
+        }
+        return result;
     }
 
     synchronized void rebuildMailAddressTable() throws ServiceException {

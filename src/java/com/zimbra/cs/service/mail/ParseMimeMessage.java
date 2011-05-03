@@ -184,18 +184,21 @@ public class ParseMimeMessage {
 
     /** Wrapper class for data parsed out of the mime message */
     public static class MimeMessageData {
-        public List<InternetAddress> newContacts = new ArrayList<InternetAddress>();
-        public List<Upload> fetches = null;    // NULL unless we fetched messages from another server
-        public List<Upload> uploads = null;    // NULL unless there are uploaded attachments
-        public String iCalUUID = null;         // NULL unless there is an iCal part
+        public List<Upload> fetches; // NULL unless we fetched messages from another server
+        public List<Upload> uploads; // NULL unless there are uploaded attachments
+        public String iCalUUID; // NULL unless there is an iCal part
 
         void addUpload(Upload up) {
-            if (uploads == null)  uploads = new ArrayList<Upload>(4);
+            if (uploads == null) {
+                uploads = new ArrayList<Upload>(4);
+            }
             uploads.add(up);
         }
 
         void addFetch(Upload up) {
-            if (fetches == null)  fetches = new ArrayList<Upload>(4);
+            if (fetches == null) {
+                fetches = new ArrayList<Upload>(4);
+            }
             fetches.add(up);
         }
     }
@@ -372,7 +375,7 @@ public class ParseMimeMessage {
 
             // <m> attributes: id, f[lags], s[ize], d[ate], cid(conv-id), l(parent folder)
             // <m> child elements: <e> (email), <s> (subject), <f> (fragment), <mp>, <attach>
-            MessageAddresses maddrs = new MessageAddresses(out.newContacts);
+            MessageAddresses maddrs = new MessageAddresses();
             for (Element elem : msgElem.listElements()) {
                 String eName = elem.getName();
                 if (eName.equals(MailConstants.E_ATTACH)) {
@@ -845,27 +848,23 @@ public class ParseMimeMessage {
 
     static final class MessageAddresses {
         private final HashMap<String, Object> addrs = new HashMap<String, Object>();
-        private final List<InternetAddress> newContacts;
 
-        MessageAddresses(List<InternetAddress> contacts) {
-            newContacts = contacts;
-        }
-
-        @SuppressWarnings("unchecked")
         public void add(Element elem, String defaultCharset) throws ServiceException, UnsupportedEncodingException {
             String emailAddress = IDNUtil.toAscii(elem.getAttribute(MailConstants.A_ADDRESS));
             String personalName = elem.getAttribute(MailConstants.A_PERSONAL, null);
             String addressType = elem.getAttribute(MailConstants.A_ADDRESS_TYPE);
 
-            InternetAddress addr = new JavaMailInternetAddress(emailAddress, personalName, CharsetUtil.checkCharset(personalName, defaultCharset));
-            if (elem.getAttributeBool(MailConstants.A_ADD_TO_AB, false))
-                newContacts.add(addr);
+            InternetAddress addr = new JavaMailInternetAddress(emailAddress, personalName,
+                    CharsetUtil.checkCharset(personalName, defaultCharset));
 
             Object content = addrs.get(addressType);
-            if (content == null || addressType.equals(EmailType.FROM.toString()) || addressType.equals(EmailType.SENDER.toString())) {
+            if (content == null || addressType.equals(EmailType.FROM.toString()) ||
+                    addressType.equals(EmailType.SENDER.toString())) {
                 addrs.put(addressType, addr);
             } else if (content instanceof List) {
-                ((List<InternetAddress>) content).add(addr);
+                @SuppressWarnings("unchecked")
+                List<InternetAddress> list = (List<InternetAddress>) content;
+                list.add(addr);
             } else {
                 List<InternetAddress> list = new ArrayList<InternetAddress>();
                 list.add((InternetAddress) content);

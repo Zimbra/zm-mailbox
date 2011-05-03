@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -47,6 +47,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import com.google.common.io.Closeables;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
@@ -93,6 +94,7 @@ public class CalendarMailSender {
             mName = name;
             mPartStat = xmlPartStat;
         }
+        @Override
         public String toString() { return mName; }
         public String getXmlPartStat() { return mPartStat; }
     }
@@ -365,7 +367,7 @@ public class CalendarMailSender {
     /**
      * Builds the TO: list for calendar item updates by iterating over
      * the list of ATTENDEEs
-     * 
+     *
      * @param iter
      * @return
      */
@@ -413,7 +415,7 @@ public class CalendarMailSender {
             if (mmInv != null)
                 attachInviteSummary(sb, inv, mmInv, locale);
         }
-        
+
         Address from = AccountUtil.getFriendlyEmailAddress(fromAccount);
         Address sender = null;
         if (onBehalfOf)
@@ -595,7 +597,7 @@ public class CalendarMailSender {
                 }
 
                 mm.setSentDate(new Date());
-    
+
                 if (toAddrs != null) {
                     Address[] addrs = new Address[toAddrs.size()];
                     toAddrs.toArray(addrs);
@@ -613,11 +615,11 @@ public class CalendarMailSender {
                     if (replyToSender)
                         mm.setReplyTo(new Address[]{senderAddr});
                 }
-    
+
                 // Find and replace the existing calendar part with the new calendar object.
                 CalendarPartReplacingVisitor visitor = new CalendarPartReplacingVisitor(uid, cal);
                 visitor.accept(mm);
-    
+
                 mm.saveChanges();
                 return mm;
             } else {
@@ -632,8 +634,8 @@ public class CalendarMailSender {
         }
     }
 
-    public static MimeMessage createForwardedInviteMessage(MimeMessage mmOrig, String origSenderEmail, String forwarderEmail, String[] forwardTo)
-    throws ServiceException {
+    public static MimeMessage createForwardedInviteMessage(MimeMessage mmOrig, String origSenderEmail,
+            String forwarderEmail, String[] forwardTo) {
         List<Address> rcpts = new ArrayList<Address>();
         for (String to : forwardTo) {
             try {
@@ -742,10 +744,7 @@ public class CalendarMailSender {
             } catch (IOException e) {
                 throw ServiceException.FAILURE("Error writing iCalendar", e);
             } finally {
-                if (writer != null)
-                    try {
-                        writer.close();
-                    } catch (IOException e) {}
+                Closeables.closeQuietly(writer);
             }
             mm.setText(writer.toString());
 
@@ -770,7 +769,7 @@ public class CalendarMailSender {
 
         String sigText = getSignatureText(fromAccount, fromIdentity, Provisioning.A_zimbraPrefCalendarAutoDenySignatureId);
         if (sigText == null || sigText.length() < 1)
-            sigText = L10nUtil.getMessage(bodyTextKey, locale);        
+            sigText = L10nUtil.getMessage(bodyTextKey, locale);
         if (sigText != null && sigText.length() > 0)
             replyText.append(sigText).append("\r\n");
         attachInviteSummary(replyText, inv, null, locale);
@@ -812,9 +811,10 @@ public class CalendarMailSender {
 
         // Send in a separate thread to avoid nested transaction error when saving a copy to Sent folder.
         Runnable r = new Runnable() {
+            @Override
             public void run() {
                 try {
-                    mbox.getMailSender().setSendPartial(true).sendMimeMessage(octxt, mbox, true, mm, null, null,
+                    mbox.getMailSender().setSendPartial(true).sendMimeMessage(octxt, mbox, true, mm, null,
                             origMsgId, MailSender.MSGTYPE_REPLY, null, false);
                 } catch (ServiceException e) {
                     ZimbraLog.calendar.warn("Ignoring error while sending permission-denied auto reply", e);
@@ -829,10 +829,10 @@ public class CalendarMailSender {
     }
 
     public static void sendInviteForwardMessage(
-            final OperationContext octxt, final Mailbox mbox, final ItemId origMsgId, final MimeMessage mm)
-    throws ServiceException {
+            final OperationContext octxt, final Mailbox mbox, final ItemId origMsgId, final MimeMessage mm) {
         // Send in a separate thread to avoid nested transaction error when saving a copy to Sent folder.
         Runnable r = new Runnable() {
+            @Override
             public void run() {
                 try {
                     MailSender sender = mbox.getMailSender().setSaveToSent(true)
@@ -850,20 +850,16 @@ public class CalendarMailSender {
         senderThread.setDaemon(true);
         senderThread.start();
     }
-    
+
     /**
-     * Sends a message with partial send enabled.  If a partial send error occurs, logs an info
-     * message.
+     * Sends a message with partial send enabled.  If a partial send error occurs, logs an info message.
      */
-    public static ItemId sendPartial(OperationContext octxt, Mailbox mbox, MimeMessage mm,
-                                     List<InternetAddress> newContacts, List<Upload> uploads,
-                                     ItemId origMsgId, String replyType, String identityId,
-                                     boolean replyToSender)
-    throws ServiceException {
+    public static ItemId sendPartial(OperationContext octxt, Mailbox mbox, MimeMessage mm, List<Upload> uploads,
+            ItemId origMsgId, String replyType, String identityId, boolean replyToSender) throws ServiceException {
         ItemId id = null;
         try {
             id = mbox.getMailSender().setSendPartial(true).sendMimeMessage(
-                octxt, mbox, mm, newContacts, uploads, origMsgId, replyType, identityId, replyToSender);
+                octxt, mbox, mm, uploads, origMsgId, replyType, identityId, replyToSender);
         } catch (MailServiceException e) {
             if (e.getCode().equals(MailServiceException.SEND_PARTIAL_ADDRESS_FAILURE)) {
                 ZimbraLog.calendar.info("Unable to send to some addresses: " + e);
@@ -886,14 +882,14 @@ public class CalendarMailSender {
 
     /**
      * RFC2446 4.2.2:
-     * 
+     *
      * BEGIN:VCALENDAR PRODID:-//ACME/DesktopCalendar//EN METHOD:REPLY
      * VERSION:2.0 BEGIN:VEVENT ATTENDEE;PARTSTAT=ACCEPTED:Mailto:B@example.com
      * ORGANIZER:MAILTO:A@example.com
      * UID:calsrv.example.com-873970198738777@example.com SEQUENCE:0
      * REQUEST-STATUS:2.0;Success DTSTAMP:19970612T190000Z END:VEVENT
      * END:VCALENDAR
-     * 
+     *
      * @param acct replying account
      * @param identityId use this identity/persona in the reply
      * @param authAcct authenticated account acting on behalf of acct
@@ -1088,9 +1084,10 @@ public class CalendarMailSender {
 
         // Send in a separate thread to avoid nested transaction error when saving a copy to Sent folder.
         Runnable r = new Runnable() {
+            @Override
             public void run() {
                 try {
-                    mbox.getMailSender().setSendPartial(true).sendMimeMessage(octxt, mbox, saveToSent, mm, null, null,
+                    mbox.getMailSender().setSendPartial(true).sendMimeMessage(octxt, mbox, saveToSent, mm, null,
                             new ItemId(mbox, invId), replyType, null, false);
                 } catch (ServiceException e) {
                     ZimbraLog.calendar.warn("Ignoring error while sending auto accept/decline reply", e);
@@ -1153,10 +1150,12 @@ public class CalendarMailSender {
             mText = mText.replaceAll(">", "&gt;");
         }
 
+        @Override
         public String getContentType() {
             return CONTENT_TYPE;
         }
 
+        @Override
         public InputStream getInputStream() throws IOException {
             synchronized(this) {
                 if (mBuf == null) {
@@ -1173,10 +1172,12 @@ public class CalendarMailSender {
             return in;
         }
 
+        @Override
         public String getName() {
             return NAME;
         }
 
+        @Override
         public OutputStream getOutputStream() {
             throw new UnsupportedOperationException();
         }

@@ -1,20 +1,16 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/*
- * Created on Sep 17, 2004
  */
 package com.zimbra.cs.service.mail;
 
@@ -80,11 +76,12 @@ import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
- * Process the <SendMsg> request from the client and send an email message.
+ * Process the {@code <SendMsg>} request from the client and send an email message.
+ *
+ * @since Sep 17, 2004
  */
-public class SendMsg extends MailDocumentHandler {
-
-    static Log sLog = LogFactory.getLog(SendMsg.class);
+public final class SendMsg extends MailDocumentHandler {
+    private static final Log LOG = LogFactory.getLog(SendMsg.class);
 
     private enum SendState { NEW, SENT, PENDING };
 
@@ -93,7 +90,8 @@ public class SendMsg extends MailDocumentHandler {
 
     private static final ItemId NO_MESSAGE_SAVED_TO_SENT = new ItemId((String) null, -1);
 
-    @Override public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+    @Override
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
         Account account = getRequestedAccount(zsc);
@@ -159,8 +157,8 @@ public class SendMsg extends MailDocumentHandler {
                     mm = ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, mbox, msgElem, null, mimeData);
                 }
 
-                savedMsgId = doSendMessage(octxt, mbox, mm, mimeData.newContacts, mimeData.uploads, iidOrigId,
-                                           replyType, identityId, noSaveToSent, needCalendarSentByFixup, iidDraft);
+                savedMsgId = doSendMessage(octxt, mbox, mm, mimeData.uploads, iidOrigId, replyType, identityId,
+                        noSaveToSent, needCalendarSentByFixup);
 
                 // (need to make sure that *something* gets recorded, because caching
                 //   a null ItemId makes the send appear to still be PENDING)
@@ -193,20 +191,19 @@ public class SendMsg extends MailDocumentHandler {
         return response;
     }
 
-    public static ItemId doSendMessage(OperationContext oc, Mailbox mbox, MimeMessage mm, List<InternetAddress> newContacts,
-                                       List<Upload> uploads, ItemId origMsgId, String replyType, String identityId,
-                                       boolean noSaveToSent, boolean needCalendarSentByFixup, ItemId draftId)
-    throws ServiceException {
-        
+    public static ItemId doSendMessage(OperationContext oc, Mailbox mbox, MimeMessage mm, List<Upload> uploads,
+            ItemId origMsgId, String replyType, String identityId, boolean noSaveToSent,
+            boolean needCalendarSentByFixup) throws ServiceException {
+
         if (needCalendarSentByFixup) {
             fixupICalendarFromOutlook(mbox, mm);
         }
 
         MailSender sender = mbox.getMailSender();
         if (noSaveToSent) {
-            return sender.sendMimeMessage(oc, mbox, false, mm, newContacts, uploads, origMsgId, replyType, null, false);
+            return sender.sendMimeMessage(oc, mbox, false, mm, uploads, origMsgId, replyType, null, false);
         } else {
-            return sender.sendMimeMessage(oc, mbox, mm, newContacts, uploads, origMsgId, replyType, identityId, false);
+            return sender.sendMimeMessage(oc, mbox, mm, uploads, origMsgId, replyType, identityId, false);
         }
     }
 
@@ -336,7 +333,7 @@ public class SendMsg extends MailDocumentHandler {
      * but the iCalendar object doesn't set SENT-BY parameter on ORGANIZER or
      * ATTENDEE property of VEVENT/VTODO components.  These need to be fixed
      * up.
-     * 
+     *
      * @author jhahm
      *
      */
@@ -443,13 +440,13 @@ public class SendMsg extends MailDocumentHandler {
             String method = ical.getPropVal(ICalTok.METHOD, ICalTok.REQUEST.toString());
             boolean isReply = method.equalsIgnoreCase(ICalTok.REPLY.toString());
 
-            if (!isReply)
+            if (!isReply) {
                 modified = fixupRequest(ical);
-            else {
+            } else {
                 try {
                     modified = fixupReply(ical);
                 } catch (ServiceException e) {
-                    sLog.warn("Unable perform fixup of calendar reply from Outlook for mailbox " + mMailbox.getId() +
+                    LOG.warn("Unable perform fixup of calendar reply from Outlook for mailbox " + mMailbox.getId() +
                               "; ignoring error", e);
                 }
             }
