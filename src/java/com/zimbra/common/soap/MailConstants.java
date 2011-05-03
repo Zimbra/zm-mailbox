@@ -623,7 +623,6 @@ public final class MailConstants {
     public static final String A_PERSONAL = "p";
     public static final String A_DISPLAY = "d";
     public static final String A_ADDRESS_TYPE = "t";
-    public static final String A_ADD_TO_AB = "add";
 
     // group info in addresses
     public static final String A_IS_GROUP = "isGroup";
