@@ -626,7 +626,7 @@ public class LC {
     public static final KnownKey zimbra_archive_formatter_disable_timeout = new KnownKey("zimbra_archive_formatter_disable_timeout", Boolean.TRUE.toString());
     public static final KnownKey zimbra_gal_sync_disable_timeout = new KnownKey("zimbra_gal_sync_disable_timeout", Boolean.TRUE.toString());
 
-
+    public static final KnownKey empty_folder_batch_sleep_ms = new KnownKey("empty_folder_batch_sleep_ms", "1");
 
     static {
         @SuppressWarnings("unused")
