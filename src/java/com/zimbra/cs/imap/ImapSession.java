@@ -155,10 +155,10 @@ public class ImapSession extends Session {
             snapshotRECENT();
         }
 
-        mHandler = null;
         mFolder.endSelect();
         // removes this session from the global SessionCache, *not* from ImapSessionManager
         removeFromSessionCache();
+        mHandler = null;
     }
 
     /** If the folder is selected READ-WRITE, updates its high-water RECENT
