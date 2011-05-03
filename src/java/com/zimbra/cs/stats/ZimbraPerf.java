@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.management.MBeanServer;
@@ -202,7 +203,7 @@ public class ZimbraPerf {
     private static int mailboxCacheSize;
     private static long mailboxCacheSizeTimestamp = 0;
     private static JmxServerStats jmxServerStats;
-    private static Map<String, String> descriptions = Maps.newTreeMap(String.CASE_INSENSITIVE_ORDER);
+    private static Map<String, String> descriptions = new TreeMap(String.CASE_INSENSITIVE_ORDER);
     
     public static String getDescription(String statName) {
         return descriptions.get(statName);
