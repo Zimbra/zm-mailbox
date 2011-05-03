@@ -386,7 +386,7 @@ public final class LC {
     public static final KnownKey ldap_overlay_syncprov_sessionlog = KnownKey.newKey(500);
     public static final KnownKey ldap_overlay_accesslog_logpurge = KnownKey.newKey("01+00:00  00+04:00");
 
-
+    public static final KnownKey empty_folder_batch_sleep_ms = new KnownKey("empty_folder_batch_sleep_ms", "1");
     @Supported
     public static final KnownKey ldap_cache_account_maxsize = KnownKey.newKey(20000);
 
