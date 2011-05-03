@@ -3486,7 +3486,7 @@ public class LdapProvisioning extends LdapProv {
                 if (lastChange != null) {
                     long last = lastChange.getTime();
                     long curr = System.currentTimeMillis();
-                    if ((last+(ONE_DAY_IN_MILLIS * maxAge)) < curr)
+                    if ((last+(Constants.MILLIS_PER_DAY * maxAge)) < curr)
                         throw AccountServiceException.CHANGE_PASSWORD();
                 }
             }
@@ -3687,45 +3687,6 @@ public class LdapProvisioning extends LdapProv {
         // fall back to zimbra default auth
         AuthMechanism.doZimbraAuth(this, domain, acct, password, context);
     }
-
-     /**
-       * Takes the specified format string, and replaces any % followed by a single character
-       * with the value in the specified vars hash. If the value isn't found in the hash, uses
-       * a default value of "".
-       * @param fmt the format string
-       * @param vars should have a key which is a String, and a value which is also a String.
-       * @return the formatted string
-       */
-      public static String expandStr(String fmt, Map<String, String> vars) {
-         if (fmt == null || fmt.equals(""))
-             return fmt;
-
-         if (fmt.indexOf('%') == -1)
-             return fmt;
-
-         StringBuffer sb = new StringBuffer(fmt.length()+32);
-         for (int i=0; i < fmt.length(); i++) {
-             char ch = fmt.charAt(i);
-             if (ch == '%') {
-                 i++;
-                 if (i > fmt.length())
-                     return sb.toString();
-                 ch = fmt.charAt(i);
-                 if (ch != '%') {
-                     String val = vars.get(Character.toString(ch));
-                     if (val != null)
-                         sb.append(val);
-                     else
-                         sb.append(ch);
-                 } else {
-                     sb.append(ch);
-                 }
-             } else {
-                 sb.append(ch);
-             }
-         }
-         return sb.toString();
-     }
 
     @Override
     public void changePassword(Account acct, String currentPassword, String newPassword) throws ServiceException {
@@ -4018,7 +3979,7 @@ public class LdapProvisioning extends LdapProv {
                     if (lastChange != null) {
                         long last = lastChange.getTime();
                         long curr = System.currentTimeMillis();
-                        if ((last+(ONE_DAY_IN_MILLIS * minAge)) > curr)
+                        if ((last+(Constants.MILLIS_PER_DAY * minAge)) > curr)
                             throw AccountServiceException.PASSWORD_CHANGE_TOO_SOON();
                     }
                 }
@@ -5416,7 +5377,7 @@ public class LdapProvisioning extends LdapProv {
     }
 
     private String getIdentityDn(LdapEntry entry, String name) {
-        return A_zimbraPrefIdentityName + "=" + LdapUtil.escapeRDNValue(name) + "," + entry.getDN();
+        return A_zimbraPrefIdentityName + "=" + LdapUtilCommon.escapeRDNValue(name) + "," + entry.getDN();
     }
 
     private void validateIdentityAttrs(Map<String, Object> attrs) throws ServiceException {
@@ -5664,7 +5625,7 @@ public class LdapProvisioning extends LdapProv {
     }
 
     private String getSignatureDn(LdapEntry entry, String name) {
-        return A_zimbraSignatureName + "=" + LdapUtil.escapeRDNValue(name) + "," + entry.getDN();
+        return A_zimbraSignatureName + "=" + LdapUtilCommon.escapeRDNValue(name) + "," + entry.getDN();
     }
 
     private void validateSignatureAttrs(Map<String, Object> attrs) throws ServiceException {
@@ -5952,7 +5913,7 @@ public class LdapProvisioning extends LdapProv {
     }
 
     private String getDataSourceDn(LdapEntry entry, String name) {
-        return A_zimbraDataSourceName + "=" + LdapUtil.escapeRDNValue(name) + "," + entry.getDN();
+        return A_zimbraDataSourceName + "=" + LdapUtilCommon.escapeRDNValue(name) + "," + entry.getDN();
     }
 
     protected ReplaceAddressResult replaceMailAddresses(Entry entry, String attrName, String oldAddr, String newAddr) throws ServiceException {
