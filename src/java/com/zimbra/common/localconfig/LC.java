@@ -385,8 +385,8 @@ public final class LC {
     public static final KnownKey ldap_overlay_syncprov_checkpoint = KnownKey.newKey("20 10");
     public static final KnownKey ldap_overlay_syncprov_sessionlog = KnownKey.newKey(500);
     public static final KnownKey ldap_overlay_accesslog_logpurge = KnownKey.newKey("01+00:00  00+04:00");
-	
-    public static final KnownKey empty_folder_batch_sleep_ms = new KnownKey("empty_folder_batch_sleep_ms", "1");
+
+    public static final KnownKey empty_folder_batch_sleep_ms = KnownKey.newKey(1L);
 
     @Supported
     public static final KnownKey ldap_cache_account_maxsize = KnownKey.newKey(20000);
@@ -705,7 +705,7 @@ public final class LC {
     public static final KnownKey pop3_write_timeout = KnownKey.newKey(10);
     public static final KnownKey pop3_thread_keep_alive_time = KnownKey.newKey(60);
     public static final KnownKey pop3_max_idle_time = KnownKey.newKey(60);
-    
+
     public static final KnownKey milter_bind_port = KnownKey.newKey(0);
     public static final KnownKey milter_bind_address = KnownKey.newKey(null);
     public static final KnownKey milter_max_idle_time = KnownKey.newKey(120);
