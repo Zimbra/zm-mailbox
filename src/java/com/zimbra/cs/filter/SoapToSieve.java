@@ -158,7 +158,9 @@ public class SoapToSieve {
             String time = test.getAttribute(MailConstants.A_TIME);
             // validate time value
             try {
-                new SimpleDateFormat("HHmm").parse(time);
+                SimpleDateFormat dateFormat = new SimpleDateFormat("HHmm");
+                dateFormat.setLenient(false);
+                dateFormat.parse(time);
             } catch (ParseException e) {
                 throw ServiceException.INVALID_REQUEST("Invalid time: " + time, e);
             }
