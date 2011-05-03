@@ -367,6 +367,8 @@ public final class LC {
     @Supported
     public static final KnownKey ldap_connect_pool_debug = KnownKey.newKey(false);
 
+    public static final KnownKey empty_folder_batch_sleep_ms = new KnownKey("empty_folder_batch_sleep_ms", "1");
+
     @Supported
     public static final KnownKey ldap_connect_pool_initsize = KnownKey.newKey(1);
 
