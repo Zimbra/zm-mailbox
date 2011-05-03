@@ -385,8 +385,9 @@ public final class LC {
     public static final KnownKey ldap_overlay_syncprov_checkpoint = KnownKey.newKey("20 10");
     public static final KnownKey ldap_overlay_syncprov_sessionlog = KnownKey.newKey(500);
     public static final KnownKey ldap_overlay_accesslog_logpurge = KnownKey.newKey("01+00:00  00+04:00");
-
+	
     public static final KnownKey empty_folder_batch_sleep_ms = new KnownKey("empty_folder_batch_sleep_ms", "1");
+
     @Supported
     public static final KnownKey ldap_cache_account_maxsize = KnownKey.newKey(20000);
 
@@ -515,7 +516,6 @@ public final class LC {
     public static final KnownKey logger_mysql_bind_address = KnownKey.newKey("localhost");
     public static final KnownKey logger_mysql_port = KnownKey.newKey(7307);
     public static final KnownKey zimbra_logger_mysql_password = KnownKey.newKey("zimbra").protect();
-
 
     public static final KnownKey postfix_alias_maps = KnownKey.newKey("hash:/etc/aliases");
     public static final KnownKey postfix_always_add_missing_headers = KnownKey.newKey("yes");
@@ -705,7 +705,7 @@ public final class LC {
     public static final KnownKey pop3_write_timeout = KnownKey.newKey(10);
     public static final KnownKey pop3_thread_keep_alive_time = KnownKey.newKey(60);
     public static final KnownKey pop3_max_idle_time = KnownKey.newKey(60);
-
+    
     public static final KnownKey milter_bind_port = KnownKey.newKey(0);
     public static final KnownKey milter_bind_address = KnownKey.newKey(null);
     public static final KnownKey milter_max_idle_time = KnownKey.newKey(120);
@@ -734,7 +734,6 @@ public final class LC {
 
     @Supported
     public static final KnownKey zimbra_mailbox_groups = KnownKey.newKey(100);
-
 
     public static final KnownKey zimbra_class_ldap_client = KnownKey.newKey("com.zimbra.cs.ldap.LdapClient$JNDILdapClient");
     public static final KnownKey zimbra_class_provisioning = KnownKey.newKey("com.zimbra.cs.account.ldap.LdapProvisioning");
@@ -1081,6 +1080,7 @@ public final class LC {
     //appliance
     public static final KnownKey zimbra_vami_user = KnownKey.newKey("vmware");
     public static final KnownKey zimbra_vami_password = KnownKey.newKey("vmware").protect();
+    public static final KnownKey zimbra_vami_installmode = KnownKey.newKey("single");
 
     static {
         // Automatically set the key name with the variable name.
