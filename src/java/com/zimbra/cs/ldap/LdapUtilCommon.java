@@ -18,13 +18,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.naming.ldap.Rdn;
+
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.gal.GalOp;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
-import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.account.ldap.legacy.entry.LdapDomain;
+import com.zimbra.cs.ldap.LdapTODO.*;
+
 
 /**
  * Utils methods shared by both the legacy com.zimbra.cs.account.ldap.LdapUtil
@@ -178,10 +180,10 @@ public class LdapUtilCommon {
              vars.put("u", name.substring(0, at));
              String d = name.substring(at+1);
              vars.put("d", d);
-             vars.put("D", LegacyLdapUtil.domainToDN(d));
+             vars.put("D", LdapUtilCommon.domainToDN(d));
          }
          
-         return LdapProvisioning.expandStr(bindDnRule, vars);
+         return LdapUtilCommon.expandStr(bindDnRule, vars);
       }
 
     public static String getBooleanString(boolean b) {
@@ -209,6 +211,104 @@ public class LdapUtilCommon {
         else if (sb.equalsIgnoreCase("ROOT"))
             return "";
         return "";
+    }
+
+    //
+    // Escape rdn value defined in:
+    // http://www.ietf.org/rfc/rfc2253.txt?number=2253
+    //
+    @TODO  // replace with unboundid's impl, or make this SDK neutral
+    public static String escapeRDNValue(String rdn) {
+        return (String)Rdn.escapeValue(rdn);
+    }
+
+    @TODO  // replace with unboundid's impl, or make this SDK neutral
+    public static String unescapeRDNValue(String rdn) {
+        return (String)Rdn.unescapeValue(rdn);
+    }
+
+    public static String domainToDN(String parts[], int offset) {
+        StringBuffer sb = new StringBuffer(128);
+        for (int i=offset; i < parts.length; i++) {
+            if (i-offset > 0) sb.append(",");
+            sb.append("dc=").append(escapeRDNValue(parts[i]));
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Given a domain like foo.com, return the dn: dc=foo,dc=com
+     * @param domain
+     * @return the dn
+     */
+    public static String domainToDN(String domain) {
+        return domainToDN(domain.split("\\."), 0);
+    }
+
+    /**
+     * given a dn like "uid=foo,ou=people,dc=widgets,dc=com", return the String[]
+     * [0] = uid=foo
+     * [1] = ou=people,dc=widgets,dc=com
+     * 
+     * if the dn cannot be split into rdn and dn:
+     * [0] = the input dn
+     * [1] = the input dn
+     * 
+     * @param dn
+     * @return
+     */
+    public static String[] dnToRdnAndBaseDn(String dn) {
+        String[] values = new String[2];
+        int baseDnIdx = dn.indexOf(",");
+        
+        if (baseDnIdx!=-1 && dn.length()>baseDnIdx+1) {
+            values[0] = dn.substring(0, baseDnIdx);
+            values[1] = dn.substring(baseDnIdx+1);
+        } else {
+            values[0] = dn;
+            values[1] = dn;
+        }
+        
+        return values;
+    }
+
+    /**
+       * Takes the specified format string, and replaces any % followed by a single character
+       * with the value in the specified vars hash. If the value isn't found in the hash, uses
+       * a default value of "".
+       * @param fmt the format string
+       * @param vars should have a key which is a String, and a value which is also a String.
+       * @return the formatted string
+       */
+    public static String expandStr(String fmt, Map<String, String> vars) {
+        if (fmt == null || fmt.equals(""))
+            return fmt;
+    
+        if (fmt.indexOf('%') == -1)
+            return fmt;
+    
+        StringBuffer sb = new StringBuffer(fmt.length()+32);
+        for (int i=0; i < fmt.length(); i++) {
+            char ch = fmt.charAt(i);
+            if (ch == '%') {
+                i++;
+                if (i > fmt.length())
+                    return sb.toString();
+                ch = fmt.charAt(i);
+                if (ch != '%') {
+                    String val = vars.get(Character.toString(ch));
+                    if (val != null)
+                        sb.append(val);
+                    else
+                        sb.append(ch);
+                } else {
+                    sb.append(ch);
+                }
+            } else {
+                sb.append(ch);
+            }
+        }
+        return sb.toString();
     }
 
 }

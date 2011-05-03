@@ -31,8 +31,6 @@ public abstract class LdapProv extends Provisioning {
     protected LdapDIT mDIT;
     protected LdapHelper helper;
     
-    protected static final long ONE_DAY_IN_MILLIS = 1000*60*60*24;
-    
     protected static final String[] sInvalidAccountCreateModifyAttrs = {
             Provisioning.A_zimbraMailAlias,
             Provisioning.A_zimbraMailDeliveryAddress,

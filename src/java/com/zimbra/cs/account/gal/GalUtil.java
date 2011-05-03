@@ -18,7 +18,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 
 public class GalUtil {
@@ -88,7 +87,7 @@ public class GalUtil {
                 for (String t : tokens) {
                     vars.clear();
                     vars.put("s", t);
-                    q = q + LdapProvisioning.expandStr(filterTemplate, vars);
+                    q = q + LdapUtilCommon.expandStr(filterTemplate, vars);
                 }
                 q = q + ")";
                 query = q;
@@ -97,7 +96,7 @@ public class GalUtil {
         
         if (query == null) {
             vars.put("s", key);
-            query = LdapProvisioning.expandStr(filterTemplate, vars);
+            query = LdapUtilCommon.expandStr(filterTemplate, vars);
         }
         
         return query;

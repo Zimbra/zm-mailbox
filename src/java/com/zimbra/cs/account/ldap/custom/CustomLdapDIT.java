@@ -26,8 +26,8 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
-import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.ldap.IAttributes;
+import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.prov.ldap.SpecialAttrs;
 
 /*
@@ -181,7 +181,7 @@ public class CustomLdapDIT extends LdapDIT {
         
         validateMailBranchEntryDN(baseDn);
 
-        return rdnAttr + "=" + LegacyLdapUtil.escapeRDNValue(rdnValue) + "," + baseDn;
+        return rdnAttr + "=" + LdapUtilCommon.escapeRDNValue(rdnValue) + "," + baseDn;
     }
     
     /*
@@ -273,8 +273,8 @@ public class CustomLdapDIT extends LdapDIT {
         /*
          * alias is placed under the same dn as the target
          */
-        String[] parts = LegacyLdapUtil.dnToRdnAndBaseDn(targetDn);
-        return NAMING_RDN_ATTR_USER + "=" + LegacyLdapUtil.escapeRDNValue(aliasLocalPart) + "," + parts[1];
+        String[] parts = LdapUtilCommon.dnToRdnAndBaseDn(targetDn);
+        return NAMING_RDN_ATTR_USER + "=" + LdapUtilCommon.escapeRDNValue(aliasLocalPart) + "," + parts[1];
     }
     
     @Override

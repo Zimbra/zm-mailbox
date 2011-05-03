@@ -34,25 +34,6 @@ import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
 
 public class LdapUtil {
     
-    //
-    // Escape rdn value defined in:
-    // http://www.ietf.org/rfc/rfc2253.txt?number=2253
-    //
-    @TODO   // see impl in LegacyLdapUtil, do we need to for unboundid?
-    public static String escapeRDNValue(String rdn) {
-        /*
-        LdapTODO.TODO();
-        return null;
-        */
-        return rdn;
-    }
-    
-    @TODO
-    public static String unescapeRDNValue(String rdn) {
-        LdapTODO.TODO();
-        return null;
-    }
-    
     public static String formatMultipleMatchedEntries(ZSearchResultEntry first, ZSearchResultEnumeration rest) 
     throws LdapException {
         StringBuffer dups = new StringBuffer();

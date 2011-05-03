@@ -52,7 +52,6 @@ import javax.naming.directory.DirContext;
 import javax.naming.directory.ModificationItem;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
-import javax.naming.ldap.Rdn;
 import javax.security.auth.login.LoginException;
 
 import java.io.IOException;
@@ -496,67 +495,7 @@ public class LegacyLdapUtil {
             }
         }
     }
-
-    public static String domainToDN(String parts[], int offset) {
-        StringBuffer sb = new StringBuffer(128);
-        for (int i=offset; i < parts.length; i++) {
-            if (i-offset > 0) sb.append(",");
-            sb.append("dc=").append(escapeRDNValue(parts[i]));
-        }
-        return sb.toString();
-    }
-
-    /**
-     * Given a domain like foo.com, return the dn: dc=foo,dc=com
-     * @param domain
-     * @return the dn
-     */
-    public static String domainToDN(String domain) {
-        return domainToDN(domain.split("\\."), 0);
-    }
-
-
-    /**
-     * Given an email like blah@foo.com, return the domain dn: dc=foo,dc=com
-     * @return the dn
-     * @throws ServiceException 
-     */
-    public static String emailToDomainDN(String email) throws ServiceException {
-        int index = email.indexOf('@');
-        if (index == -1) 
-            throw ServiceException.INVALID_REQUEST("must be an email address: "+email, null);
-        String domain = email.substring(index+1);
-        return domainToDN(domain.split("\\."), 0);
-    }
     
-    /**
-     * given a dn like "uid=foo,ou=people,dc=widgets,dc=com", return the String[]
-     * [0] = uid=foo
-     * [1] = ou=people,dc=widgets,dc=com
-     * 
-     * if the dn cannot be split into rdn and dn:
-     * [0] = the input dn
-     * [1] = the input dn
-     * 
-     * @param dn
-     * @return
-     */
-    public static String[] dnToRdnAndBaseDn(String dn) {
-        String[] values = new String[2];
-        int baseDnIdx = dn.indexOf(",");
-        
-        if (baseDnIdx!=-1 && dn.length()>baseDnIdx+1) {
-            values[0] = dn.substring(0, baseDnIdx);
-            values[1] = dn.substring(baseDnIdx+1);
-        } else {
-            values[0] = dn;
-            values[1] = dn;
-        }
-        
-        return values;
-    }
-
-
     public static String[] removeMultiValue(String values[], String value) {
         List<String> list = new ArrayList<String>(Arrays.asList(values));
         boolean updated = list.remove(value);
@@ -989,18 +928,6 @@ public class LegacyLdapUtil {
         }
     }
     
-
-    //
-    // Escape rdn value defined in:
-    // http://www.ietf.org/rfc/rfc2253.txt?number=2253
-    //
-    public static String escapeRDNValue(String rdn) {
-        return (String)Rdn.escapeValue(rdn);
-    }
-    
-    public static String unescapeRDNValue(String rdn) {
-        return (String)Rdn.unescapeValue(rdn);
-    }
 
     @SDKDONE
     public static String formatMultipleMatchedEntries(SearchResult first, NamingEnumeration rest) throws NamingException {
