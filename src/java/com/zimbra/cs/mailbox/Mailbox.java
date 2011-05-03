@@ -6621,6 +6621,7 @@ public class Mailbox {
         QueryParams params = new QueryParams();
         params.setFolderIds(folderIds).setModifiedSequenceBefore(lastChangeID + 1).setRowLimit(batchSize);
         params.setExcludedTypes(EnumSet.of(MailItem.Type.FOLDER, MailItem.Type.MOUNTPOINT, MailItem.Type.SEARCHFOLDER));
+        boolean firstTime = true;
 
         while (true) {
             Set<Integer> itemIds = null;
@@ -6638,6 +6639,18 @@ public class Mailbox {
 
                 if (itemIds.isEmpty()) {
                     break;
+                }
+
+                if (firstTime) {
+                    firstTime = false;
+                } else {
+                    long sleepMillis = LC.empty_folder_batch_sleep_ms.longValue();
+                    try {
+                        ZimbraLog.mailbox.debug("emptyLargeFolder() sleeping for %dms", sleepMillis);
+                        Thread.sleep(sleepMillis);
+                    } catch (InterruptedException e) {
+                        ZimbraLog.mailbox.warn("Sleep was interrupted", e);
+                    }
                 }
                 delete(octxt, ArrayUtil.toIntArray(itemIds), MailItem.Type.UNKNOWN, null);
             }
