@@ -6167,6 +6167,32 @@ public class Mailbox {
     }
 
     /**
+     * Returns true if any of the specified email addresses exists in contacts, otherwise false.
+     */
+    public boolean existsInContacts(Collection<InternetAddress> addrs) throws ServiceException {
+        if (addrs.isEmpty()) {
+            return false;
+        }
+        // normalize before DB query
+        Set<String> normalized = new HashSet<String>();
+        for (InternetAddress addr : addrs) {
+            if (Strings.isNullOrEmpty(addr.getAddress())) {
+                continue;
+            }
+            normalized.add(addr.getAddress().trim().toLowerCase());
+        }
+        if (normalized.isEmpty()) {
+            return false;
+        }
+        DbConnection conn = DbPool.getConnection(this);
+        try {
+            return !DbMailAddress.existsInContacts(conn, this, normalized).isEmpty();
+        } finally {
+            conn.closeQuietly();
+        }
+    }
+
+    /**
      * Creates new contacts in AUTO_CONTACTS folder. Email addresses that already exist in any contacts folder are
      * ignored.
      *

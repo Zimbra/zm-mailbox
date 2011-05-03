@@ -14,6 +14,8 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -130,6 +132,18 @@ public final class ContactTest {
                 mbox.getId(), contact.getId()).getString(1));
 
         conn.closeQuietly();
+    }
+
+    @Test
+    public void existsInContacts() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        mbox.createContact(null, new ParsedContact(Collections.singletonMap(
+                ContactConstants.A_email, "test1@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
+
+        Assert.assertTrue(mbox.existsInContacts(Arrays.asList(new InternetAddress("Test <test1@zimbra.com>"),
+                new InternetAddress("Test <test2@zimbra.com>"))));
+        Assert.assertFalse(mbox.existsInContacts(Arrays.asList(new InternetAddress("Test <test2@zimbra.com>"),
+                new InternetAddress("Test <test3@zimbra.com>"))));
     }
 
     @Test

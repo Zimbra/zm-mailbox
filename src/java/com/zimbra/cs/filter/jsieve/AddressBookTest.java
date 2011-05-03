@@ -14,14 +14,11 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
-import java.util.EnumSet;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
-
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
 
 import org.apache.jsieve.Argument;
 import org.apache.jsieve.Arguments;
@@ -33,56 +30,43 @@ import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
 
-import com.zimbra.common.mime.shim.JavaMailInternetAddress;
+import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
-import com.zimbra.cs.index.SortBy;
-import com.zimbra.cs.index.ZimbraQueryResults;
-import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.OperationContext;
 
 /**
  * @since Nov 11, 2004
  */
-public class AddressBookTest extends AbstractTest {
-
-    static final String IN = ":in";
-    static final String CONTACTS = "contacts";
-    static final String GAL = "GAL";
-    static final Set<MailItem.Type> SEARCH_TYPE = EnumSet.of(MailItem.Type.CONTACT);
-    private static Log mLog = LogFactory.getLog(AddressBookTest.class);
+public final class AddressBookTest extends AbstractTest {
+    private static final String IN = ":in";
+    private static final String CONTACTS = "contacts";
+    private static final String GAL = "GAL";
 
     @Override
-    protected boolean executeBasic(MailAdapter mail, Arguments arguments, SieveContext context)
-            throws SieveException {
+    protected boolean executeBasic(MailAdapter mail, Arguments arguments, SieveContext context) throws SieveException {
         String comparator = null;
-        Set<String> abooks = null;
         ListIterator<Argument> argumentsIter = arguments.getArgumentList().listIterator();
 
         // First argument MUST be a tag of ":in"
-        if (argumentsIter.hasNext())
-        {
+        if (argumentsIter.hasNext()) {
             Object argument = argumentsIter.next();
-            if (argument instanceof TagArgument)
-            {
+            if (argument instanceof TagArgument) {
                 String tag = ((TagArgument) argument).getTag();
-                if (tag.equals(IN))
+                if (tag.equals(IN)) {
                     comparator = tag;
-                else
-                    throw new SyntaxException(
-                        "Found unexpected: \"" + tag + "\"");
+                } else {
+                    throw new SyntaxException("Found unexpected: \"" + tag + "\"");
+                }
             }
         }
-        if (null == comparator)
+        if (null == comparator) {
             throw new SyntaxException("Expecting \":in\"");
-
+        }
         // Second argument MUST be header names
         String[] headers = null;
-        if (argumentsIter.hasNext())
-        {
+        if (argumentsIter.hasNext()) {
             Object argument = argumentsIter.next();
             if (argument instanceof StringListArgument) {
                 StringListArgument strList = (StringListArgument) argument;
@@ -95,75 +79,54 @@ public class AddressBookTest extends AbstractTest {
         if (headers == null) {
             throw new SyntaxException("No headers are found");
         }
+        Set<String> abooks = null;
         // Third argument MUST be either contacts or GAL
-        if (argumentsIter.hasNext())
-        {
+        if (argumentsIter.hasNext()) {
             Object argument = argumentsIter.next();
             if (argument instanceof StringListArgument) {
                 StringListArgument strList = (StringListArgument) argument;
                 abooks = new HashSet<String>();
                 for (int i=0; i< strList.getList().size(); i++) {
                     String abookName = strList.getList().get(i);
-                    if (!CONTACTS.equals(abookName) && !GAL.equals(abookName))
+                    if (!CONTACTS.equals(abookName) && !GAL.equals(abookName)) {
                         throw new SyntaxException("Unknown address book name: " + abookName);
+                    }
                     // eliminate duplicates by adding it to the set
                     abooks.add(abookName);
                 }
             }
         }
-        if (abooks == null || abooks.isEmpty())
+        if (abooks == null || abooks.isEmpty()) {
             throw new SyntaxException("Expecting address book name(s)");
-
+        }
         // There MUST NOT be any further arguments
-        if (argumentsIter.hasNext())
+        if (argumentsIter.hasNext()) {
             throw new SyntaxException("Found unexpected argument(s)");
-
-        if (! (mail instanceof ZimbraMailAdapter))
+        }
+        if (!(mail instanceof ZimbraMailAdapter)) {
             return false;
+        }
         return test(mail, headers, abooks);
     }
 
     private boolean test(MailAdapter mail, String[] headers, Set<String> abooks) throws SieveException {
-        ZimbraMailAdapter zimbraMail = (ZimbraMailAdapter) mail;
-        for (String abookName : abooks) {
-            if (CONTACTS.equals(abookName)) {
-                Mailbox mbox = zimbraMail.getMailbox();
-                // searching contacts
-                for (int i=0; i<headers.length; i++) {
-                    // get values for header that should contains address, like From, To, etc.
-                    List<String> headerVals = mail.getHeader(headers[i]);
-                    for (int k=0; k<headerVals.size(); k++) {
-                        // each header may contain multiple vaules; e.g., To: may contain many recipients
-                        String headerVal = (headerVals.get(k)).toLowerCase();
-                        ZimbraQueryResults results = null;
-                        try {
-                            String iaddrStr = headerVal;
-                            try {
-                                InternetAddress iaddr = new JavaMailInternetAddress(headerVal);
-                                iaddrStr = iaddr.getAddress();
-                            } catch (AddressException e1) {
-                            }
-                            results = mbox.index.search(new OperationContext(mbox), "To:" + iaddrStr,
-                                    SEARCH_TYPE, SortBy.DATE_ASC, 100);
-                            mLog.debug("searching for " + iaddrStr);
-                            if (results.hasNext()) {
-                                mLog.debug("found " + iaddrStr + " in contacts");
-                                return true;
-                            }
-                        } catch (ServiceException e) {
-                        } finally {
-                            if (results != null) {
-                                try {
-                                    results.doneWithSearchResults();
-                                } catch (ServiceException e) {
-                                }
-                            }
-                        }
-                    }
+        Mailbox mbox = ((ZimbraMailAdapter) mail).getMailbox();
+        if (abooks.contains(CONTACTS)) {
+            List<InternetAddress> addrs = new ArrayList<InternetAddress>();
+            // get values for header that should contains address, like From, To, etc.
+            for (String header : headers) {
+                // each header may contain multiple values; e.g., To: may contain many recipients
+                for (String value : mail.getHeader(header)) {
+                    addrs.add(new InternetAddress(value));
                 }
-
-            } // searching other address database like GAL
+            }
+            try {
+                return mbox.existsInContacts(addrs);
+            } catch (ServiceException e) {
+                ZimbraLog.filter.error("Failed to process AddressBookTest", e);
+            }
         }
+        //TODO searching other address database like GAL
         return false;
     }
 
