@@ -66,6 +66,7 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.db.DbMailItem;
@@ -6702,11 +6703,11 @@ public class Mailbox {
         }
         ZimbraLog.mailbox.info("Emptying %d items from %s, removeSubfolders=%b.", itemCount, root.getPath(), removeSubfolders);
 
-        int batchSize = Provisioning.getInstance().getLocalServer().getMailEmptyFolderBatchSize();
-        if (itemCount <= batchSize) {
+        Server server = Provisioning.getInstance().getLocalServer();
+        if (itemCount <= server.getMailEmptyFolderBatchThreshold()) {
             emptySmallFolder(octxt, folderId, removeSubfolders);
         } else {
-            emptyLargeFolder(octxt, folderId, removeSubfolders, batchSize);
+            emptyLargeFolder(octxt, folderId, removeSubfolders, server.getMailEmptyFolderBatchSize());
         }
     }
 
@@ -6755,7 +6756,8 @@ public class Mailbox {
         QueryParams params = new QueryParams();
         params.setFolderIds(folderIds).setModifiedSequenceBefore(lastChangeID + 1).setRowLimit(batchSize);
         params.setExcludedTypes(MailItem.TYPE_FOLDER, MailItem.TYPE_MOUNTPOINT, MailItem.TYPE_SEARCHFOLDER);
-
+        boolean firstTime = true;
+        
         while (true) {
             Set<Integer> itemIds = null;
             Connection conn = null;
@@ -6772,6 +6774,17 @@ public class Mailbox {
 
                 if (itemIds.isEmpty()) {
                     break;
+                }
+                if (firstTime) {
+                    firstTime = false;
+                } else {
+                    long sleepMillis = LC.empty_folder_batch_sleep_ms.longValue();
+                    try {
+                        ZimbraLog.mailbox.debug("emptyLargeFolder() sleeping for %dms", sleepMillis);
+                        Thread.sleep(sleepMillis);
+                    } catch (InterruptedException e) {
+                        ZimbraLog.mailbox.warn("Sleep was interrupted", e);
+                    }
                 }
                 delete(octxt, ArrayUtil.toIntArray(itemIds), MailItem.TYPE_UNKNOWN, null);
             }
