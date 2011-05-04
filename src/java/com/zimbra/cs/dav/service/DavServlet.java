@@ -30,6 +30,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpState;
@@ -478,13 +479,20 @@ public class DavServlet extends ZimbraServlet {
 	    }
 	}
 	
-	private static String[] PROXY_HEADERS = {
+	private static String[] PROXY_REQUEST_HEADERS = {
 		DavProtocol.HEADER_DAV,
 		DavProtocol.HEADER_DEPTH,
 		DavProtocol.HEADER_CONTENT_TYPE,
 		DavProtocol.HEADER_ETAG,
 		DavProtocol.HEADER_IF_MATCH,
         DavProtocol.HEADER_DESTINATION
+	};
+	
+	private static String[] PROXY_RESPONSE_HEADERS = {
+	    DavProtocol.HEADER_DAV,
+	    DavProtocol.HEADER_ALLOW,
+	    DavProtocol.HEADER_CONTENT_TYPE,
+	    DavProtocol.HEADER_ETAG
 	};
 	
 	private boolean isProxyRequest(DavContext ctxt, DavMethod m) throws IOException, DavException, ServiceException {
@@ -569,12 +577,17 @@ public class DavServlet extends ZimbraServlet {
         HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         client.setState(state);
         HttpMethod method = m.toHttpMethod(ctxt, url);
-        for (String h : PROXY_HEADERS) {
+        for (String h : PROXY_REQUEST_HEADERS) {
             String hval = ctxt.getRequest().getHeader(h);
             if (hval != null)
             	method.addRequestHeader(h, hval);
         }
         int statusCode = HttpClientUtil.executeMethod(client, method);
+        for (String h : PROXY_RESPONSE_HEADERS) {
+            for (Header hval : method.getResponseHeaders(h)) {
+                ctxt.getResponse().addHeader(h, hval.getValue());
+            }
+        }
         ctxt.getResponse().setStatus(statusCode);
         ctxt.setStatus(statusCode);
     	InputStream in = method.getResponseBodyAsStream();
