@@ -449,6 +449,14 @@
       <mime-type>audio/basic</mime-type>
   </mime-mapping>
   <mime-mapping>
+      <extension>js</extension>
+      <mime-type>application/x-javascript</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+      <extension>vbs</extension>
+      <mime-type>application/x-vbs</mime-type>
+  </mime-mapping>
+  <mime-mapping>
       <extension>vsd</extension>
       <mime-type>application/x-visio</mime-type>
   </mime-mapping>
