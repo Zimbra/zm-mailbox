@@ -34,6 +34,13 @@ import com.zimbra.cs.ldap.LdapTODO.*;
  */
 public class LdapUtilCommon {
     
+    public static String getLdapBooleanString(boolean b) {
+        if (b) {
+            return LdapConstants.LDAP_TRUE;
+        }
+        return LdapConstants.LDAP_FALSE;
+    }
+    
     public static boolean contains(String[] values, String val) {
         if (values == null) {
             return false;
@@ -165,32 +172,25 @@ public class LdapUtilCommon {
       * zimbraAuthLdapURL    ldap://server.example.zimbra.com/
       * zimbraAuthLdapUserDn uid=%u,ou=people,%D
       */
-      public static String computeAuthDn(String name, String bindDnRule) {
-         if (bindDnRule == null || bindDnRule.equals("") || bindDnRule.equals("%n"))
-             return name;
+    public static String computeAuthDn(String name, String bindDnRule) {
+       if (bindDnRule == null || bindDnRule.equals("") || bindDnRule.equals("%n"))
+           return name;
     
-         int at = name.indexOf("@");
+       int at = name.indexOf("@");
     
-         Map<String, String> vars = new HashMap<String, String>();
-         vars.put("n", name);         
+       Map<String, String> vars = new HashMap<String, String>();
+       vars.put("n", name);         
     
-         if (at  == -1) {
-             vars.put("u", name);
-         } else {
-             vars.put("u", name.substring(0, at));
-             String d = name.substring(at+1);
-             vars.put("d", d);
-             vars.put("D", LdapUtilCommon.domainToDN(d));
-         }
+       if (at  == -1) {
+           vars.put("u", name);
+       } else {
+           vars.put("u", name.substring(0, at));
+           String d = name.substring(at+1);
+           vars.put("d", d);
+           vars.put("D", LdapUtilCommon.domainToDN(d));
+       }
          
-         return LdapUtilCommon.expandStr(bindDnRule, vars);
-      }
-
-    public static String getBooleanString(boolean b) {
-        if (b) {
-            return LdapConstants.LDAP_TRUE;
-        }
-        return LdapConstants.LDAP_FALSE;
+       return LdapUtilCommon.expandStr(bindDnRule, vars);
     }
 
     public static String getZimbraSearchBase(Domain domain, GalOp galOp) {

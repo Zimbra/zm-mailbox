@@ -65,7 +65,7 @@ public class ModifyDataSource extends MailDocumentHandler {
         value = eDataSource.getAttribute(MailConstants.A_DS_IS_ENABLED, null);
         if (value != null)
             dsAttrs.put(Provisioning.A_zimbraDataSourceEnabled,
-                LdapUtilCommon.getBooleanString(eDataSource.getAttributeBool(MailConstants.A_DS_IS_ENABLED)));
+                LdapUtilCommon.getLdapBooleanString(eDataSource.getAttributeBool(MailConstants.A_DS_IS_ENABLED)));
         value = eDataSource.getAttribute(MailConstants.A_FOLDER, null);
         if (value != null) {
             Mailbox mbox = getRequestedMailbox(zsc);
@@ -104,7 +104,7 @@ public class ModifyDataSource extends MailDocumentHandler {
             boolean newValue = eDataSource.getAttributeBool(MailConstants.A_DS_LEAVE_ON_SERVER);
             if (newValue != ds.leaveOnServer()) {
                 dsAttrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer,
-                    LdapUtilCommon.getBooleanString(newValue));
+                    LdapUtilCommon.getLdapBooleanString(newValue));
                 Mailbox mbox = getRequestedMailbox(zsc);
                 DbPop3Message.deleteUids(mbox, ds.getId());
                 DbDataSource.deleteAllMappings(ds);
@@ -141,7 +141,7 @@ public class ModifyDataSource extends MailDocumentHandler {
         value = eDataSource.getAttribute(MailConstants.A_DS_USE_ADDRESS_FOR_FORWARD_REPLY, null);
         if (value != null)
             dsAttrs.put(Provisioning.A_zimbraDataSourceUseAddressForForwardReply,
-                    LdapUtilCommon.getBooleanString(eDataSource.getAttributeBool(MailConstants.A_DS_USE_ADDRESS_FOR_FORWARD_REPLY, false)));
+                    LdapUtilCommon.getLdapBooleanString(eDataSource.getAttributeBool(MailConstants.A_DS_USE_ADDRESS_FOR_FORWARD_REPLY, false)));
         
         value = eDataSource.getAttribute(MailConstants.A_DS_DEFAULT_SIGNATURE, null);
         if (value != null)

@@ -347,10 +347,10 @@ extends TestCase {
 
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraPrefOutOfOfficeReplyEnabled,
-            LdapUtilCommon.getBooleanString(mOriginalReplyEnabled));
+            LdapUtilCommon.getLdapBooleanString(mOriginalReplyEnabled));
         attrs.put(Provisioning.A_zimbraPrefOutOfOfficeReply, mOriginalReply);
         attrs.put(Provisioning.A_zimbraPrefNewMailNotificationEnabled,
-            LdapUtilCommon.getBooleanString(mOriginalNotificationEnabled));
+            LdapUtilCommon.getLdapBooleanString(mOriginalNotificationEnabled));
         attrs.put(Provisioning.A_zimbraPrefNewMailNotificationAddress, mOriginalNotificationAddress);
         attrs.put(Provisioning.A_zimbraNewMailNotificationSubject, mOriginalNotificationSubject);
         attrs.put(Provisioning.A_zimbraNewMailNotificationBody, mOriginalNotificationBody);

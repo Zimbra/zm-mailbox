@@ -127,7 +127,7 @@ public class ZPop3DataSource implements ZDataSource, ToZJSONObject {
             attrs.put(Provisioning.A_zimbraDataSourcePort, "" + getPort());
         if (data.getFolderId() != null)
             attrs.put(Provisioning.A_zimbraDataSourceFolderId, data.getFolderId());
-        attrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer, LdapUtilCommon.getBooleanString(leaveOnServer()));
+        attrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer, LdapUtilCommon.getLdapBooleanString(leaveOnServer()));
         return attrs;
     }
 

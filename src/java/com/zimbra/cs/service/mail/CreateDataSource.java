@@ -58,9 +58,9 @@ public class CreateDataSource extends MailDocumentHandler {
         String name = eDataSource.getAttribute(MailConstants.A_NAME);
         dsAttrs.put(Provisioning.A_zimbraDataSourceFolderId, eDataSource.getAttribute(MailConstants.A_FOLDER));
         dsAttrs.put(Provisioning.A_zimbraDataSourceEnabled,
-            LdapUtilCommon.getBooleanString(eDataSource.getAttributeBool(MailConstants.A_DS_IS_ENABLED)));
+            LdapUtilCommon.getLdapBooleanString(eDataSource.getAttributeBool(MailConstants.A_DS_IS_ENABLED)));
         dsAttrs.put(Provisioning.A_zimbraDataSourceImportOnly,
-                LdapUtilCommon.getBooleanString(eDataSource.getAttributeBool(MailConstants.A_DS_IS_IMPORTONLY,false)));
+                LdapUtilCommon.getLdapBooleanString(eDataSource.getAttributeBool(MailConstants.A_DS_IS_IMPORTONLY,false)));
         dsAttrs.put(Provisioning.A_zimbraDataSourceHost, eDataSource.getAttribute(MailConstants.A_DS_HOST));
         dsAttrs.put(Provisioning.A_zimbraDataSourcePort, eDataSource.getAttribute(MailConstants.A_DS_PORT));
         dsAttrs.put(Provisioning.A_zimbraDataSourceConnectionType, eDataSource.getAttribute(MailConstants.A_DS_CONNECTION_TYPE));
@@ -92,7 +92,7 @@ public class CreateDataSource extends MailDocumentHandler {
         // POP3-specific attributes
         if (type == DataSource.Type.pop3) {
             dsAttrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer,
-                LdapUtilCommon.getBooleanString(eDataSource.getAttributeBool(MailConstants.A_DS_LEAVE_ON_SERVER, true)));
+                LdapUtilCommon.getLdapBooleanString(eDataSource.getAttributeBool(MailConstants.A_DS_LEAVE_ON_SERVER, true)));
         }
         
         DataSource ds = prov.createDataSource(account, type, name, dsAttrs);
