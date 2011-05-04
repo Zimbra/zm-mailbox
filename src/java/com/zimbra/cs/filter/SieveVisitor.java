@@ -15,6 +15,7 @@
 package com.zimbra.cs.filter;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.FilterUtil.Comparator;
 import com.zimbra.cs.filter.FilterUtil.Condition;
@@ -22,6 +23,7 @@ import com.zimbra.cs.filter.FilterUtil.DateComparison;
 import com.zimbra.cs.filter.FilterUtil.Flag;
 import com.zimbra.cs.filter.FilterUtil.NumberComparison;
 import com.zimbra.cs.filter.FilterUtil.StringComparison;
+import org.apache.jsieve.TagArgument;
 import org.apache.jsieve.parser.SieveNode;
 import org.apache.jsieve.parser.generated.ASTcommand;
 import org.apache.jsieve.parser.generated.ASTtest;
@@ -55,14 +57,10 @@ public abstract class SieveVisitor {
     protected void visitAction(Node node, VisitPhase phase, RuleProperties props)
     throws ServiceException { }
     
-    protected void visitHeaderTest(Node node, VisitPhase phase, RuleProperties props,
+    protected void visitHeaderTest(String testEltName, Node node, VisitPhase phase, RuleProperties props,
                                    List<String> headers, StringComparison comparison, boolean caseSensitive, String value)
     throws ServiceException { }
-    
-    protected void visitMimeHeaderTest(Node node, VisitPhase phase, RuleProperties props,
-                                       String header, StringComparison comparison, boolean caseSensitive, String value)
-    throws ServiceException { }
-    
+
     protected void visitHeaderExistsTest(Node node, VisitPhase phase, RuleProperties props, String header)
     throws ServiceException { }
     
@@ -138,7 +136,6 @@ public abstract class SieveVisitor {
         boolean isEnabled = true;
         boolean isNegativeTest = false;
         Condition condition = Condition.allof;
-        Node testNode;
     }
     
     public void accept(Node node)
@@ -192,48 +189,48 @@ public abstract class SieveVisitor {
                 visitRule(node, VisitPhase.begin, props);
                 accept(node, props);
                 visitRule(node, VisitPhase.end, props);
-            } else if ("header".equalsIgnoreCase(nodeName)) {
-                String s = stripLeadingColon(getValue(node, 0, 0));
-                StringComparison comparison = StringComparison.fromString(s);
+            } else if ("header".equalsIgnoreCase(nodeName) || "mime_header".equalsIgnoreCase(nodeName)) {
+                StringComparison comparison = StringComparison.is;
                 boolean caseSensitive = false;
                 List<String> headers;
                 String value;
-                if (getNode(node, 0, 1).jjtGetNumChildren() == 0) {
-                    // must be :comparator
-                    if (!":comparator".equals(getValue(node, 0, 1)))
-                        throw ServiceException.PARSE_ERROR("Expected :comparator argument", null);
-                    caseSensitive = Comparator.ioctet == Comparator.fromString(getValue(node, 0, 2, 0, 0));
-                    headers = getMultiValue(node, 0, 3, 0);
-                    value = getValue(node, 0, 4, 0, 0);
-                } else {
-                    headers = getMultiValue(node, 0, 1, 0);
-                    value = getValue(node, 0, 2, 0, 0);
+
+                int headersArgIndex = 0;
+                // There can be up to two tag arguments
+                SieveNode firstTagArgNode, secondTagArgNode;
+                firstTagArgNode = (SieveNode) getNode(node, 0, 0);
+                if (firstTagArgNode.getValue() instanceof TagArgument) {
+                    String argStr = stripLeadingColon(firstTagArgNode.getValue().toString());
+                    try {
+                        // assume that the first tag arg is match-type arg
+                        comparison = StringComparison.valueOf(argStr);
+                        headersArgIndex ++;
+                        secondTagArgNode = (SieveNode) getNode(node, 0 , 1);
+                        if (secondTagArgNode.getValue() instanceof TagArgument) {
+                            caseSensitive = Comparator.ioctet == Comparator.fromString(getValue(node, 0, 2, 0, 0));
+                            headersArgIndex += 2;
+                        }
+                    } catch (IllegalArgumentException e) {
+                        // so the first tag arg is not match-type arg, it must be :comparator arg then
+                        caseSensitive = Comparator.ioctet == Comparator.fromString(getValue(node, 0, 1, 0, 0));
+                        headersArgIndex += 2;
+                        secondTagArgNode = (SieveNode) getNode(node, 0 , 2);
+                        if (secondTagArgNode.getValue() instanceof TagArgument) {
+                            argStr = stripLeadingColon(secondTagArgNode.getValue().toString());
+                            comparison = StringComparison.fromString(argStr);
+                            headersArgIndex ++;
+                        }
+                    }
                 }
 
-                visitHeaderTest(node, VisitPhase.begin, props, headers, comparison, caseSensitive, value);
-                accept(node, props);
-                visitHeaderTest(node, VisitPhase.end, props, headers, comparison, caseSensitive, value);
-            } else if ("mime_header".equalsIgnoreCase(nodeName)) {
-                String s = stripLeadingColon(getValue(node, 0, 0));
-                StringComparison comparison = StringComparison.fromString(s);
-                boolean caseSensitive = false;
-                String header;
-                String value;
-                if (getNode(node, 0, 1).jjtGetNumChildren() == 0) {
-                    // must be :comparator
-                    if (!":comparator".equals(getValue(node, 0, 1)))
-                        throw ServiceException.PARSE_ERROR("Expected :comparator argument", null);
-                    caseSensitive = Comparator.ioctet == Comparator.fromString(getValue(node, 0, 2, 0, 0));
-                    header = getValue(node, 0, 3, 0, 0);
-                    value = getValue(node, 0, 4, 0, 0);
-                } else {
-                    header = getValue(node, 0, 1, 0, 0);
-                    value = getValue(node, 0, 2, 0, 0);
-                }
+                headers = getMultiValue(node, 0, headersArgIndex, 0);
+                value = getValue(node, 0, headersArgIndex + 1, 0, 0);
 
-                visitMimeHeaderTest(node, VisitPhase.begin, props, header, comparison, caseSensitive, value);
+                String testEltName = "header".equalsIgnoreCase(nodeName) ?
+                        MailConstants.E_HEADER_TEST : MailConstants.E_MIME_HEADER_TEST;
+                visitHeaderTest(testEltName, node, VisitPhase.begin, props, headers, comparison, caseSensitive, value);
                 accept(node, props);
-                visitMimeHeaderTest(node, VisitPhase.end, props, header, comparison, caseSensitive, value);
+                visitHeaderTest(testEltName, node, VisitPhase.end, props, headers, comparison, caseSensitive, value);
             } else if ("exists".equalsIgnoreCase(nodeName)) {
                 String header = getValue(node, 0, 0, 0, 0);
 
