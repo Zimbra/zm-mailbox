@@ -266,7 +266,7 @@ class ImapFolderSync {
 
         // Get remote folder UIDNEXT and UIDVALIDITY
         if (mailboxInfo == null) {
-            mailboxInfo = fullSync ? remoteFolder.select() : remoteFolder.status();
+            mailboxInfo = fullSync || remoteFolder.isSelected() ? remoteFolder.select() : remoteFolder.status();
         }
 
         // Refresh folder state and force full sync if UIDVALIDITY changed

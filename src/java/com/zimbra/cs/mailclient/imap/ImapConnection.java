@@ -708,4 +708,11 @@ public final class ImapConnection extends MailConnection {
         fmt.format(TAG_FORMAT, tagCount.incrementAndGet());
         return fmt.toString();
     }
+    
+    @Override
+    public String toString() {
+        return String.format("{host=%s,port=%d,type=%s,state=%s,folder=%s}",
+            config.getHost(), config.getPort(), config.getSecurity(), state, mailbox == null ? "null" : mailbox.getName());
+    }
+
 }

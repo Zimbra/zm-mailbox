@@ -163,6 +163,10 @@ public final class MailboxInfo implements ResponseHandler {
         this.uidValidity = uidValidity;
     }
 
+    public void setExists(int exists) {
+        this.exists = exists;
+    }
+
     @Override
     public String toString() {
         return Objects.toStringHelper(this)
