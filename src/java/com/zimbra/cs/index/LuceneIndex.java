@@ -46,7 +46,9 @@ import org.apache.lucene.store.NoSuchDirectoryException;
 import org.apache.lucene.store.SingleInstanceLockFactory;
 import org.apache.lucene.util.Version;
 
+import com.google.common.base.Function;
 import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
 import com.google.common.io.NullOutputStream;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -775,7 +777,7 @@ public final class LuceneIndex implements IndexStore {
         }
 
         @Override
-        public List<Integer> search(Query query, Filter filter, Sort sort, int max) throws IOException {
+        public List<Document> search(Query query, Filter filter, Sort sort, int max) throws IOException {
             TopDocs docs;
             if (sort != null) {
                 docs = searcher.search(query, filter, max, sort);
@@ -786,7 +788,17 @@ public final class LuceneIndex implements IndexStore {
             for (ScoreDoc hit : docs.scoreDocs) {
                 result.add(hit.doc);
             }
-            return result;
+            return Lists.transform(result, new Function<Integer, Document>() {
+                @Override
+                public Document apply(Integer docID) {
+                    try {
+                        return searcher.doc(docID);
+                    } catch (IOException e) {
+                        ZimbraLog.search.error("Failed to retrieve Lucene document", e);
+                        return null;
+                    }
+                }
+            });
         }
 
         /**
@@ -795,11 +807,6 @@ public final class LuceneIndex implements IndexStore {
         @Override
         public TermEnum getTerms(Term term) throws IOException {
             return reader.get().terms(term);
-        }
-
-        @Override
-        public Document getDocument(int id) throws IOException {
-            return searcher.doc(id);
         }
 
         @Override

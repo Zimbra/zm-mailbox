@@ -40,14 +40,9 @@ public interface Searcher extends Closeable {
      * @param filter if non-null, used to permit documents to be collected
      * @param sort sort order
      * @param max max hits
-     * @return document IDs
+     * @return documents
      */
-    List<Integer> search(Query query, Filter filter, Sort sort, int max) throws IOException;
-
-    /**
-     * Returns the stored document.
-     */
-    Document getDocument(int id) throws IOException;
+    List<Document> search(Query query, Filter filter, Sort sort, int max) throws IOException;
 
     /**
      * Returns an enumeration of all terms starting at a given term. If the given term does not exist, the enumeration

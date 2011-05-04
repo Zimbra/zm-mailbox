@@ -75,7 +75,7 @@ public final class LuceneQueryOperation extends QueryOperation {
     private List<QueryInfo> queryInfo = new ArrayList<QueryInfo>();
     private boolean hasSpamTrashSetting = false;
 
-    private List<Integer> hits;
+    private List<Document> hits;
     private int topDocsLen = 0; // number of hits fetched
     private int topDocsChunkSize = 2000; // how many hits to fetch per step in Lucene
     private Searcher searcher;
@@ -257,62 +257,44 @@ public final class LuceneQueryOperation extends QueryOperation {
      * Called by a {@link DBQueryOperation} that is wrapping us in a DB-First query plan: gets a chunk of results that
      * it feeds into a SQL query.
      */
-    LuceneResultsChunk getNextResultsChunk(int maxChunkSize) throws ServiceException {
-        try {
-            if (!haveRunSearch) {
-                fetchFirstResults(maxChunkSize);
+    LuceneResultsChunk getNextResultsChunk(int max) {
+        if (!haveRunSearch) {
+            fetchFirstResults(max);
+        }
+
+        LuceneResultsChunk result = new LuceneResultsChunk();
+        int luceneLen = hits != null ? hits.size() : 0;
+        while ((result.size() < max) && (curHitNo < luceneLen)) {
+            if (topDocsLen <= curHitNo) {
+                topDocsLen += topDocsChunkSize;
+                topDocsChunkSize *= 4;
+                if (topDocsChunkSize > 1000000) {
+                    topDocsChunkSize = 1000000;
+                }
+                if (topDocsLen > luceneLen) {
+                    topDocsLen = luceneLen;
+                }
+                long start = System.currentTimeMillis();
+                runSearch();
+                ZimbraLog.search.debug("Fetched %d search results from Lucene in %d ms",
+                        topDocsLen, System.currentTimeMillis() - start);
             }
 
-            LuceneResultsChunk toRet = new LuceneResultsChunk();
-            int luceneLen = hits != null ? hits.size() : 0;
-            long timeUsed = 0;
-            long start = 0;
-            long fetchFromLucene1 = 0;
-            long fetchFromLucene2 = 0;
-
-            while ((toRet.size() < maxChunkSize) && (curHitNo < luceneLen)) {
-                if (topDocsLen <= curHitNo) {
-                    topDocsLen += topDocsChunkSize;
-                    topDocsChunkSize *= 4;
-                    if (topDocsChunkSize > 1000000) {
-                        topDocsChunkSize = 1000000;
-                    }
-                    if (topDocsLen > luceneLen) {
-                        topDocsLen = luceneLen;
-                    }
-                    start = System.currentTimeMillis();
-                    runSearch();
-                    ZimbraLog.search.debug("Fetched %d search results from Lucene in %d ms",
-                            topDocsLen, System.currentTimeMillis() - start);
-                }
-
-                start = System.currentTimeMillis();
-                Document doc = searcher.getDocument(hits.get(curHitNo));
-                long now = System.currentTimeMillis();
-                fetchFromLucene1 += (now - start);
-                start = now;
-                fetchFromLucene2 += (System.currentTimeMillis() - start);
-                curHitNo++;
-                String mbid = doc.get(LuceneFields.L_MAILBOX_BLOB_ID);
+            Document doc = hits.get(curHitNo);
+            if (doc == null) { // error while retrieving document
+                return result;
+            }
+            curHitNo++;
+            String mbid = doc.get(LuceneFields.L_MAILBOX_BLOB_ID);
+            if (mbid != null) {
                 try {
-                    if (mbid != null) {
-                        start = System.currentTimeMillis();
-                        toRet.addHit(Integer.parseInt(mbid), doc);
-                        long end = System.currentTimeMillis();
-                        timeUsed += (end-start);
-                    }
+                    result.addHit(Integer.parseInt(mbid), doc);
                 } catch (NumberFormatException e) {
                     ZimbraLog.search.error("Invalid MAILBOX_BLOB_ID: " + mbid, e);
                 }
             }
-
-            ZimbraLog.search.debug("FetchFromLucene1=%d FetchFromLucene2=%d", fetchFromLucene1, fetchFromLucene2);
-
-            return toRet;
-
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("Caught IOException getting lucene results", e);
         }
+        return result;
     }
 
     private boolean isMustNotOnly(BooleanQuery query) {

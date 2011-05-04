@@ -43,6 +43,7 @@ import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.TermQuery;
 
 import me.prettyprint.cassandra.model.BasicColumnFamilyDefinition;
+import me.prettyprint.cassandra.serializers.BytesArraySerializer;
 import me.prettyprint.cassandra.serializers.IntegerSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.serializers.UUIDSerializer;
@@ -62,8 +63,10 @@ import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.QueryResult;
 
+import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
@@ -77,11 +80,11 @@ import com.zimbra.cs.mailbox.Mailbox;
  *  ColumnFamily: "IndexTerm"
  *   Key: AccountUUID
  *    SuperColumn: FieldPrefix + Term
- *     Column: ItemID
+ *     Column: DocumentUUID
  *      Value: TermInfo
  *  ColumnFamily: "IndexDocument"
  *   Key: AccountUUID
- *    SuperColumn: ItemID
+ *    SuperColumn: DocumentUUID
  *     Column: FieldName
  *      Value: FieldValue
  * </pre>
@@ -92,6 +95,8 @@ public final class CassandraIndex implements IndexStore {
     private static final String KEYSPACE = "Zimbra";
     private static final String CF_TERM = "IndexTerm";
     private static final String CF_DOCUMENT = "IndexDocument";
+    private static final String CN_ITEM = "Item";
+    private static final String ITEM_ID = "x"; // term prefix for ItemID
     private static final Map<String, Character> FIELD2PREFIX = ImmutableMap.<String, Character>builder()
         .put(LuceneFields.L_CONTENT, 'A')
         .put(LuceneFields.L_CONTACT_DATA, 'B')
@@ -174,13 +179,11 @@ public final class CassandraIndex implements IndexStore {
             termCF.setName(CF_TERM);
             termCF.setColumnType(ColumnType.SUPER);
             termCF.setComparatorType(ComparatorType.UTF8TYPE);
-            termCF.setSubComparatorType(ComparatorType.INTEGERTYPE);
 
             BasicColumnFamilyDefinition docCF = new BasicColumnFamilyDefinition();
             docCF.setKeyspaceName(KEYSPACE);
             docCF.setName(CF_DOCUMENT);
             docCF.setColumnType(ColumnType.SUPER);
-            docCF.setComparatorType(ComparatorType.INTEGERTYPE);
 
             KeyspaceDefinition ks = HFactory.createKeyspaceDefinition(KEYSPACE, SimpleStrategy.class.getName(), 1,
                     Arrays.<ColumnFamilyDefinition>asList(new ThriftCfDef(termCF), new ThriftCfDef(docCF)));
@@ -194,6 +197,9 @@ public final class CassandraIndex implements IndexStore {
         @Override
         public void addDocument(MailItem item, List<IndexDocument> docs) throws IOException {
             for (IndexDocument doc : docs) {
+                UUID docID = UUID.randomUUID(); //TODO use time-based (type 1) UUID
+                List<HColumn<UUID, byte[]>> cols = Collections.singletonList(HFactory.createColumn(
+                        docID, new byte[0], UUIDSerializer.get(), BytesArraySerializer.get()));
                 for (Fieldable field : doc.toDocument().getFields()) {
                     Character prefix = FIELD2PREFIX.get(field.name());
                     if (prefix != null && field.isIndexed() && field.isTokenized()) {
@@ -209,17 +215,18 @@ public final class CassandraIndex implements IndexStore {
                                 continue;
                             }
                             String term = prefix + termAttr.toString();
-                            List<HColumn<Integer, String>> cols = Collections.singletonList(HFactory.createColumn(
-                                    item.getId(), "", IntegerSerializer.get(), StringSerializer.get()));
                             mutator.addInsertion(key, CF_TERM, HFactory.createSuperColumn(term, cols,
-                                    StringSerializer.get(), IntegerSerializer.get(), StringSerializer.get()));
+                                    StringSerializer.get(), UUIDSerializer.get(), null));
                         }
                     }
                 }
+                mutator.addInsertion(key, CF_TERM, HFactory.createSuperColumn(ITEM_ID + item.getId(),
+                        cols, StringSerializer.get(), UUIDSerializer.get(), null));
+                List<HColumn<String, Integer>> docCols = Collections.singletonList(HFactory.createColumn(
+                        CN_ITEM, item.getId(), StringSerializer.get(), IntegerSerializer.get()));
+                mutator.addInsertion(key, CF_DOCUMENT, HFactory.createSuperColumn(docID, docCols,
+                        UUIDSerializer.get(), StringSerializer.get(), IntegerSerializer.get()));
             }
-            List<HColumn<String, String>> cols = Collections.singletonList(HFactory.createStringColumn("k", "v"));
-            mutator.addInsertion(key, CF_DOCUMENT, HFactory.createSuperColumn(item.getId(), cols,
-                    IntegerSerializer.get(), StringSerializer.get(), StringSerializer.get()));
         }
 
         /**
@@ -228,8 +235,19 @@ public final class CassandraIndex implements IndexStore {
          */
         @Override
         public void deleteDocument(List<Integer> ids) {
-            for (int id : ids) {
-                mutator.addSuperDelete(key, CF_DOCUMENT, id, IntegerSerializer.get());
+            List<String> terms = new ArrayList<String>(ids.size());
+            for (Integer id : ids) {
+                terms.add(ITEM_ID + id);
+            }
+            QueryResult<SuperSlice<String, UUID, byte[]>> qresult = HFactory.createSuperSliceQuery(keyspace,
+                    UUIDSerializer.get(), StringSerializer.get(), UUIDSerializer.get(), BytesArraySerializer.get())
+                    .setKey(key).setColumnFamily(CF_TERM).setColumnNames(terms.toArray(new String[terms.size()]))
+                    .execute();
+            for (HSuperColumn<String, UUID, byte[]> scol : qresult.get().getSuperColumns()) {
+                mutator.addSuperDelete(key, CF_TERM, scol.getName(), StringSerializer.get());
+                for (HColumn<UUID, byte[]> col : scol.getColumns()) {
+                    mutator.addSuperDelete(key, CF_DOCUMENT, col.getName(), UUIDSerializer.get());
+                }
             }
         }
 
@@ -245,15 +263,26 @@ public final class CassandraIndex implements IndexStore {
     private final class SearcherImpl implements Searcher {
 
         @Override
-        public List<Integer> search(Query query, Filter filter, Sort sort, int max) {
+        public List<Document> search(Query query, Filter filter, Sort sort, int max) {
+            List<Integer> itemIDs;
             if (query instanceof TermQuery) {
-                return search((TermQuery) query);
+                itemIDs = search((TermQuery) query);
             } else if (query instanceof PrefixQuery) {
-                return search((PrefixQuery) query, max);
+                itemIDs = search((PrefixQuery) query, max);
             } else {
                 ZimbraLog.search.warn("NotImplementedYet query=%s:%s", query.getClass().getSimpleName(), query);
                 return Collections.emptyList();
             }
+
+            return Lists.transform(itemIDs, new Function<Integer, Document>() {
+                @Override
+                public Document apply(Integer itemID) {
+                    Document doc = new Document();
+                    doc.add(new Field(LuceneFields.L_MAILBOX_BLOB_ID, String.valueOf(itemID),
+                            Field.Store.YES, Field.Index.NO));
+                    return doc;
+                }
+            });
         }
 
         private List<Integer> search(TermQuery query) {
@@ -266,18 +295,18 @@ public final class CassandraIndex implements IndexStore {
                 return Collections.emptyList();
             }
             String termText = prefix + term.text();
-            QueryResult<HSuperColumn<String, Integer, String>> result = HFactory.createSuperColumnQuery(keyspace,
-                    UUIDSerializer.get(), StringSerializer.get(), IntegerSerializer.get(), StringSerializer.get())
+            QueryResult<HSuperColumn<String, UUID, byte[]>> result = HFactory.createSuperColumnQuery(keyspace,
+                    UUIDSerializer.get(), StringSerializer.get(), UUIDSerializer.get(), BytesArraySerializer.get())
                     .setKey(key).setColumnFamily(CF_TERM).setSuperName(termText).execute();
-            HSuperColumn<String, Integer, String> scol = result.get();
+            HSuperColumn<String, UUID, byte[]> scol = result.get();
             if (scol == null) {
                 return Collections.emptyList();
             }
-            List<Integer> ids = new ArrayList<Integer>(scol.getSize());
-            for (HColumn<Integer, String> col : result.get().getColumns()) {
+            List<UUID> ids = new ArrayList<UUID>(scol.getSize());
+            for (HColumn<UUID, byte[]> col : result.get().getColumns()) {
                 ids.add(col.getName());
             }
-            return validate(termText, ids);
+            return toItemID(termText, ids);
         }
 
         private List<Integer> search(PrefixQuery query, int max) {
@@ -290,53 +319,51 @@ public final class CassandraIndex implements IndexStore {
                 return Collections.emptyList();
             }
             String termText = prefix + term.text();
-            QueryResult<SuperSlice<String, Integer, String>> qresult = HFactory.createSuperSliceQuery(keyspace,
-                    UUIDSerializer.get(), StringSerializer.get(), IntegerSerializer.get(), StringSerializer.get())
+            QueryResult<SuperSlice<String, UUID, Integer>> qresult = HFactory.createSuperSliceQuery(keyspace,
+                    UUIDSerializer.get(), StringSerializer.get(), UUIDSerializer.get(), IntegerSerializer.get())
                     .setKey(key).setColumnFamily(CF_TERM).setRange(termText, termText + '\uFFFF', false, max)
                     .execute();
             Set<Integer> result = new LinkedHashSet<Integer>(); // remove duplicate IDs which may appear across terms
-            for (HSuperColumn<String, Integer, String> scol : qresult.get().getSuperColumns()) {
-                List<Integer> ids = new ArrayList<Integer>();
-                for (HColumn<Integer, String> col : scol.getColumns()) {
+            for (HSuperColumn<String, UUID, Integer> scol : qresult.get().getSuperColumns()) {
+                List<UUID> ids = new ArrayList<UUID>();
+                for (HColumn<UUID, Integer> col : scol.getColumns()) {
                     ids.add(col.getName());
                 }
-                result.addAll(validate(scol.getName(), ids));
+                result.addAll(toItemID(scol.getName(), ids));
             }
             return new ArrayList<Integer>(result);
         }
 
         /**
-         * Validates the results by checking if each doc IDs exists in Document CF. Orphans are removed from Term CF.
+         * Converts doc IDs to item IDs. Orphans are removed from Term CF.
          *
          * @param term term text used in search
          * @param ids document IDs to validate
-         * @return document IDs which actually exist
+         * @return item IDs
          */
-        private List<Integer> validate(String term, List<Integer> ids) {
-            QueryResult<SuperSlice<Integer, String, String>> qresult = HFactory.createSuperSliceQuery(keyspace,
-                    UUIDSerializer.get(), IntegerSerializer.get(), StringSerializer.get(), StringSerializer.get())
-                    .setKey(key).setColumnFamily(CF_DOCUMENT).setColumnNames(ids.toArray(new Integer[ids.size()]))
+        private List<Integer> toItemID(String term, List<UUID> docIDs) {
+            QueryResult<SuperSlice<UUID, String, Integer>> qresult = HFactory.createSuperSliceQuery(keyspace,
+                    UUIDSerializer.get(), UUIDSerializer.get(), StringSerializer.get(), IntegerSerializer.get())
+                    .setKey(key).setColumnFamily(CF_DOCUMENT).setColumnNames(docIDs.toArray(new UUID[docIDs.size()]))
                     .execute();
-            List<Integer> result = new ArrayList<Integer>(ids.size());
-            for (HSuperColumn<Integer, String, String> scol : qresult.get().getSuperColumns()) {
-                result.add(scol.getName());
+            List<Integer> result = new ArrayList<Integer>(docIDs.size());
+            for (HSuperColumn<UUID, String, Integer> scol : qresult.get().getSuperColumns()) {
+                docIDs.remove(scol.getName());
+                for (HColumn<String, Integer> col : scol.getColumns()) {
+                    if (CN_ITEM.equals(col.getName())) {
+                        result.add(col.getValue());
+                        break;
+                    }
+                }
             }
-            ids.removeAll(result);
-            if (!ids.isEmpty()) { // remove orphan
+            if (!docIDs.isEmpty()) { // remove orphan
                 Mutator<UUID> mutator = HFactory.createMutator(keyspace, UUIDSerializer.get());
-                for (Integer id : ids) {
-                    mutator.addSubDelete(key, CF_TERM, term, id, StringSerializer.get(), IntegerSerializer.get());
+                for (UUID id : docIDs) {
+                    mutator.addSubDelete(key, CF_TERM, term, id, StringSerializer.get(), UUIDSerializer.get());
                 }
                 mutator.execute();
             }
             return result;
-        }
-
-        @Override
-        public Document getDocument(int id) {
-            Document doc = new Document();
-            doc.add(new Field(LuceneFields.L_MAILBOX_BLOB_ID, String.valueOf(id), Field.Store.YES, Field.Index.NO));
-            return doc;
         }
 
         @Override

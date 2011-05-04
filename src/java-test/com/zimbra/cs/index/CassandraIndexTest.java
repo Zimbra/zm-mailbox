@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.cassandra.thrift.CassandraDaemon;
+import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.search.PrefixQuery;
@@ -100,7 +101,7 @@ public final class CassandraIndexTest {
         indexer.close();
 
         Searcher searcher = index.openSearcher();
-        List<Integer> result = searcher.search(new TermQuery(new Term(LuceneFields.L_CONTACT_DATA, "none@zimbra.com")),
+        List<Document> result = searcher.search(new TermQuery(new Term(LuceneFields.L_CONTACT_DATA, "none@zimbra.com")),
                 null, null, 100);
         Assert.assertEquals(0, result.size());
 
@@ -108,7 +109,7 @@ public final class CassandraIndexTest {
         result = searcher.search(new TermQuery(new Term(LuceneFields.L_CONTACT_DATA, "test@zimbra.com")),
                 null, null, 100);
         Assert.assertEquals(1, result.size());
-        Assert.assertEquals(contact.getId(), result.get(0).intValue());
+        Assert.assertEquals(String.valueOf(contact.getId()), result.get(0).get(LuceneFields.L_MAILBOX_BLOB_ID));
         searcher.close();
     }
 
@@ -134,11 +135,11 @@ public final class CassandraIndexTest {
         indexer.close();
 
         Searcher searcher = index.openSearcher();
-        List<Integer> result = searcher.search(new PrefixQuery(new Term(LuceneFields.L_CONTACT_DATA, "ab")),
+        List<Document> result = searcher.search(new PrefixQuery(new Term(LuceneFields.L_CONTACT_DATA, "ab")),
                 null, null, 100);
         Assert.assertEquals(2, result.size());
-        Assert.assertEquals(contact1.getId(), (int) result.get(0));
-        Assert.assertEquals(contact2.getId(), (int) result.get(1));
+        Assert.assertEquals(String.valueOf(contact1.getId()), result.get(0).get(LuceneFields.L_MAILBOX_BLOB_ID));
+        Assert.assertEquals(String.valueOf(contact2.getId()), result.get(1).get(LuceneFields.L_MAILBOX_BLOB_ID));
         searcher.close();
     }
 
@@ -159,7 +160,7 @@ public final class CassandraIndexTest {
 
         Searcher searcher = index.openSearcher();
         Assert.assertEquals(2, searcher.getTotal());
-        List<Integer> result = searcher.search(new TermQuery(new Term(LuceneFields.L_CONTACT_DATA, "@zimbra.com")),
+        List<Document> result = searcher.search(new TermQuery(new Term(LuceneFields.L_CONTACT_DATA, "@zimbra.com")),
                 null, null, 100);
         Assert.assertEquals(2, result.size());
 
