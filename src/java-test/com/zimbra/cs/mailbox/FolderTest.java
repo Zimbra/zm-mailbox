@@ -29,14 +29,13 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailAddress;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
-import com.zimbra.cs.mailbox.MailItem.DeleteScope;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedMessage;
 
 /**
  * Unit test for {@link Folder}.
  */
-public class FolderTest {
+public final class FolderTest {
 
     @BeforeClass
     public static void init() throws Exception {
@@ -203,7 +202,7 @@ public class FolderTest {
         Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox, "test1@zimbra.com"));
         conn.closeQuietly();
     }
-    
+
     @Test
     public void checkpointRECENT() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
@@ -257,5 +256,15 @@ public class FolderTest {
             ex = e;
         }
         Assert.assertNotNull(ex);
+    }
+
+    @Test
+    public void defaultFolderFlags() throws Exception {
+        Provisioning prov = Provisioning.getInstance();
+        Account account = prov.getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        account.setDefaultFolderFlags("*");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Folder inbox = mbox.getFolderById(Mailbox.ID_FOLDER_INBOX);
+        Assert.assertTrue(inbox.isFlagSet(Flag.BITMASK_SUBSCRIBED));
     }
 }

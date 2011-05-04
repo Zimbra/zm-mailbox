@@ -819,7 +819,7 @@ public class Folder extends MailItem {
         data.folderId = (id == Mailbox.ID_FOLDER_ROOT ? id : parent.getId());
         data.parentId = data.folderId;
         data.date = mbox.getOperationTimestamp();
-        data.setFlags(flags & Flag.FLAGS_FOLDER);
+        data.setFlags((flags | Flag.toBitmask(mbox.getAccount().getDefaultFolderFlags())) & Flag.FLAGS_FOLDER);
         data.name = name;
         data.setSubject(name);
         data.metadata = encodeMetadata(color, 1, custom, attributes, view, null, new SyncData(url), id + 1, 0,
@@ -1195,7 +1195,7 @@ public class Folder extends MailItem {
         if (scope == DeleteScope.CONTENTS_ONLY) {
             throw ServiceException.INVALID_REQUEST("Use empty folder instead", null);
         }
-        
+
         if (hasSubfolders()) {
             List<Folder> subfolders = getSubfolderHierarchy();
             // walking the list in the reverse order

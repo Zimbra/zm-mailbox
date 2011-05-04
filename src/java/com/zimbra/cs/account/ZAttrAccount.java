@@ -35,7 +35,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110502-1545 */
+    /* build: 7.0.0_BETA1_1111 ysasaki 20110504-1502 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -7544,6 +7544,93 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetDebugInfo(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDebugInfo, "");
+        return attrs;
+    }
+
+    /**
+     * Default flags on folder. These are set when a new folder is created,
+     * has no effect on existing folders. Possible values are: * -
+     * \Subscribed b - \ExcludeFB # - \Checked i - \NoInherit y - \SyncFolder
+     * ~ - \Sync o - \Noinferiors g - \Global
+     *
+     * @return zimbraDefaultFolderFlags, or null if unset
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=1210)
+    public String getDefaultFolderFlags() {
+        return getAttr(Provisioning.A_zimbraDefaultFolderFlags, null);
+    }
+
+    /**
+     * Default flags on folder. These are set when a new folder is created,
+     * has no effect on existing folders. Possible values are: * -
+     * \Subscribed b - \ExcludeFB # - \Checked i - \NoInherit y - \SyncFolder
+     * ~ - \Sync o - \Noinferiors g - \Global
+     *
+     * @param zimbraDefaultFolderFlags new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=1210)
+    public void setDefaultFolderFlags(String zimbraDefaultFolderFlags) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDefaultFolderFlags, zimbraDefaultFolderFlags);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Default flags on folder. These are set when a new folder is created,
+     * has no effect on existing folders. Possible values are: * -
+     * \Subscribed b - \ExcludeFB # - \Checked i - \NoInherit y - \SyncFolder
+     * ~ - \Sync o - \Noinferiors g - \Global
+     *
+     * @param zimbraDefaultFolderFlags new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=1210)
+    public Map<String,Object> setDefaultFolderFlags(String zimbraDefaultFolderFlags, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDefaultFolderFlags, zimbraDefaultFolderFlags);
+        return attrs;
+    }
+
+    /**
+     * Default flags on folder. These are set when a new folder is created,
+     * has no effect on existing folders. Possible values are: * -
+     * \Subscribed b - \ExcludeFB # - \Checked i - \NoInherit y - \SyncFolder
+     * ~ - \Sync o - \Noinferiors g - \Global
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=1210)
+    public void unsetDefaultFolderFlags() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDefaultFolderFlags, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Default flags on folder. These are set when a new folder is created,
+     * has no effect on existing folders. Possible values are: * -
+     * \Subscribed b - \ExcludeFB # - \Checked i - \NoInherit y - \SyncFolder
+     * ~ - \Sync o - \Noinferiors g - \Global
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=1210)
+    public Map<String,Object> unsetDefaultFolderFlags(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDefaultFolderFlags, "");
         return attrs;
     }
 

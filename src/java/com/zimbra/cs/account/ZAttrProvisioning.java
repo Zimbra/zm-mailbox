@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110502-1545 */
+    /* build: 7.0.0_BETA1_1111 ysasaki 20110504-1502 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -2805,6 +2805,17 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=172)
     public static final String A_zimbraDefaultDomainName = "zimbraDefaultDomainName";
+
+    /**
+     * Default flags on folder. These are set when a new folder is created,
+     * has no effect on existing folders. Possible values are: * -
+     * \Subscribed b - \ExcludeFB # - \Checked i - \NoInherit y - \SyncFolder
+     * ~ - \Sync o - \Noinferiors g - \Global
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=1210)
+    public static final String A_zimbraDefaultFolderFlags = "zimbraDefaultFolderFlags";
 
     /**
      * Email address to put in from header for the share info email. If not

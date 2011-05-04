@@ -136,7 +136,7 @@ public class SearchFolder extends Folder {
         data.folderId = parent.getId();
         data.parentId = parent.getId();
         data.date = mbox.getOperationTimestamp();
-        data.setFlags(flags);
+        data.setFlags(flags | Flag.toBitmask(mbox.getAccount().getDefaultFolderFlags()));
         data.name = name;
         data.setSubject(name);
         data.metadata = encodeMetadata(color, 1, custom, query, types, sort);

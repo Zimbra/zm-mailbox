@@ -5671,5 +5671,19 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
+<attr id="1210" name="zimbraDefaultFolderFlags" type="string" cardinality="single" min="0" max="32" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="7.1.1">
+  <desc>
+    Default flags on folder. These are set when a new folder is created, has no effect on existing folders.
+    Possible values are:
+     * - \Subscribed
+     b - \ExcludeFB
+     # - \Checked
+     i - \NoInherit
+     y - \SyncFolder
+     ~ - \Sync
+     o - \Noinferiors
+     g - \Global
+  </desc>
+</attr>
 
 </attrs>
