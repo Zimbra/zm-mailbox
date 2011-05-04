@@ -163,26 +163,12 @@ public class SieveToSoap extends SieveVisitor {
     }
 
     @Override
-    protected void visitHeaderTest(Node node, VisitPhase phase, RuleProperties props,
+    protected void visitHeaderTest(String testEltName, Node node, VisitPhase phase, RuleProperties props,
                                    List<String> headers, StringComparison comparison, boolean caseSensitive, String value)
     throws ServiceException {
         if (phase == VisitPhase.begin) {
-            Element test = addTest(MailConstants.E_HEADER_TEST, props);
+            Element test = addTest(testEltName, props);
             test.addAttribute(MailConstants.A_HEADER, StringUtil.join(",", headers));
-            test.addAttribute(MailConstants.A_STRING_COMPARISON, comparison.toString());
-            if (caseSensitive)
-                test.addAttribute(MailConstants.A_CASE_SENSITIVE, caseSensitive);
-            test.addAttribute(MailConstants.A_VALUE, value);
-        }
-    }
-
-    @Override
-    protected void visitMimeHeaderTest(Node node, VisitPhase phase, RuleProperties props,
-                                       String header, StringComparison comparison, boolean caseSensitive, String value)
-    throws ServiceException {
-        if (phase == VisitPhase.begin) {
-            Element test = addTest(MailConstants.E_MIME_HEADER_TEST, props);
-            test.addAttribute(MailConstants.A_HEADER, header);
             test.addAttribute(MailConstants.A_STRING_COMPARISON, comparison.toString());
             if (caseSensitive)
                 test.addAttribute(MailConstants.A_CASE_SENSITIVE, caseSensitive);
