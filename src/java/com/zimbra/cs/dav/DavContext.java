@@ -231,8 +231,7 @@ public class DavContext {
 		mOpCtxt.setUserAgent(req.getHeader("User-Agent"));
 		mDavCompliance = DavProtocol.getDefaultComplianceString();
 		String overwrite = mReq.getHeader(DavProtocol.HEADER_OVERWRITE);
-		if (overwrite != null && overwrite.equals("T"))
-		    mOverwrite = true;
+		mOverwrite = (overwrite != null && overwrite.equals("F")) ? false : true;
 	}
 	
 	/* Returns HttpServletRequest object containing the current DAV request. */
@@ -523,8 +522,8 @@ public class DavContext {
 		}
 	}
 
-    @SuppressWarnings("unchecked")
 	public boolean isGzipAccepted() {
+        @SuppressWarnings("rawtypes")
         Enumeration acceptEncHdrs = mReq.getHeaders(DavProtocol.HEADER_ACCEPT_ENCODING);
         while (acceptEncHdrs.hasMoreElements()) {
             String acceptEnc = (String) acceptEncHdrs.nextElement();
