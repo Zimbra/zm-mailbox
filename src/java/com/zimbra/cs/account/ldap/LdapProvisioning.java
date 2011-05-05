@@ -2397,7 +2397,7 @@ public class LdapProvisioning extends LdapProv {
             if (domain == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(newDomain);
             
-            domainChanged = !oldDomain.equals(newDomain);
+            domainChanged = !newDomain.equals(oldDomain);
             
             if (domainChanged) {
                 validate(ProvisioningValidator.RENAME_ACCOUNT, newName, acct.getMultiAttr(Provisioning.A_objectClass, false), acct.getAttrs(false));

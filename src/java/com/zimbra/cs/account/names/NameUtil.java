@@ -17,7 +17,6 @@ package com.zimbra.cs.account.names;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
-import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
@@ -56,9 +55,7 @@ public class NameUtil {
     
     public static void validEmailAddress(String addr) throws ServiceException {
         try {
-            InternetAddress ia = new JavaMailInternetAddress(addr, true);
-            // is this even needed?
-            // ia.validate();
+            InternetAddress ia = new InternetAddress(addr, true);
             if (ia.getPersonal() != null && !ia.getPersonal().equals(""))
                 throw ServiceException.INVALID_REQUEST("invalid email address", null);
         } catch (AddressException e) {
