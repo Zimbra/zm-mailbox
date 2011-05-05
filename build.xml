@@ -87,9 +87,6 @@
     <property name="jetty.xml.file" location='${config.dir}/jetty-6.1/jetty.xml' />
 
     <property name="spnego.dir" location="${config.dir}/jetty-6.1/spnego"/>
-    <property name="spnego-war.web.xml" location="${spnego.dir}/web.xml"/>
-    <property name="spnego-warfilename" value="spnego.war"/>
-    <property name="spnego-warfile" location="${build.dir}/${spnego-warfilename}"/>
 
     <property name="deploy.war" value="${warfile}"/>
     <property name="deploy.host" value="127.0.0.1"/>
@@ -137,7 +134,7 @@
     </condition>
     <condition property="db-mysql">
         <and>
-            <not><isset property="db-sqlite"/></not>
+      <not><isset property="db-sqlite"/></not>
             <not><isset property="db-derby"/></not>
         </and>
     </condition>
@@ -245,19 +242,19 @@
     </taskdef>
 
     <path id="class.path">
-        <pathelement location="${common.classes.dir}"/>
+      <pathelement location="${common.classes.dir}"/>
       <pathelement location="${soap.classes.dir}"/>
-        <pathelement location="${im.classes.dir}"/>
-        <pathelement location="${build.classes.dir}"/>
-        <fileset dir="${jars.dir}">
-            <include name="**/*.jar"/>
-        </fileset>
-        <fileset dir="${common.jars.dir}">
-            <include name="**/*.jar"/>
-        </fileset>
-        <fileset dir="${im.jars.dir}">
-            <include name="**/*.jar"/>
-        </fileset>
+      <pathelement location="${im.classes.dir}"/>
+      <pathelement location="${build.classes.dir}"/>
+      <fileset dir="${jars.dir}">
+        <include name="**/*.jar"/>
+      </fileset>
+      <fileset dir="${common.jars.dir}">
+        <include name="**/*.jar"/>
+      </fileset>
+      <fileset dir="${im.jars.dir}">
+        <include name="**/*.jar"/>
+      </fileset>
         <fileset dir="${tools.lib.dir}">
             <include name="**/*.jar"/>
         </fileset>
@@ -593,109 +590,100 @@
           <include name="lucene*.jar"/>
           <include name="ant-tar*.jar"/>
           <include name="icu4j-*.jar"/>
-          <include name="ews.jar"/>  
+          <include name="ews.jar"/>
         </lib>
         <lib dir="${im.jars.dir}" includes="*.jar"/>
         <classes dir="${config.dir}" includes="sieveConfig.xml"/>
       </war>
     </target>
 
-    <target name="spnego-war">
-        <war warfile="${spnego-warfile}" webxml="${spnego-war.web.xml}">
-            <fileset dir="${spnego.dir}" includes="*.jsp"/>
-        </war>
-    </target>
-
     <target name="spnego-service-name">
         <!--
             Setup the service principal name registered with setspn and ktpass
             it has to be a real routable name to reach the jetty server.
-            
-            This name is also used to create a zimbra server and provisioning a 
+
+            This name is also used to create a zimbra server and provisioning a
             user on the server.
-            Note: such server and user is not needed if the test client box can 
+            Note: such server and user is not needed if the test client box can
                   DNS resolve the home server of the user.
-                  But in dev env the server name is usually not a resolvble real 
-                  hostanme, but a simple name like myserver.local, which cannot 
+                  But in dev env the server name is usually not a resolvble real
+                  hostanme, but a simple name like myserver.local, which cannot
                   be resolved from the test client. (Windows 7 VM on jj-esx.spnego.local)
         -->
-        
+
         <!-- <property name="SERVICE_PRINCIPAL_NAME"     value="jj-server.spnego.local"/> -->
         <!-- <property name="SERVICE_PRINCIPAL_NAME"     value="prome-2s-dhcp141.eng.vmware.com"/> -->
         <exec executable="hostname" outputproperty="hostname-FQDN">
             <arg value="-f"/>
         </exec>
         <property name="SERVICE_PRINCIPAL_NAME"     value="${hostname-FQDN}"/>
-        
-        <!-- 
-            Again, could've used just ${zimbra.server.hostname} for spnego.server.name if the 
+
+        <!--
+            Again, could've used just ${zimbra.server.hostname} for spnego.server.name if the
             test client box can DNS resolve the home server for the user.
         -->
-        <property name="spnego.server.name"         value="${SERVICE_PRINCIPAL_NAME}"/>  
+        <property name="spnego.server.name"         value="${SERVICE_PRINCIPAL_NAME}"/>
     </target>
 
     <target name="spnego-inject" depends="spnego-service-name">
-        <!-- 
+        <!--
             Create a server with real hostname so it can be resolved from the test client box.
             Create a user homed on this server.
             (Calling this target is not required if the dev server hostname can be resolved on the test client box)
         -->
         <antcall target="zmprov">
-            <param name="args" value="-l cs ${spnego.server.name} 
-                                            zimbraSmtpHostname ${zimbra.smtp.host} 
-                                            zimbraSmtpPort 7024 
-                                            zimbraMailPort 7070 
-                                            zimbraMailSSLPort 7443 
-                                            zimbraMailMode http 
-                                            zimbraImapCleartextLoginEnabled TRUE 
-                                            zimbraPop3CleartextLoginEnabled TRUE 
-                                            zimbraServiceInstalled ldap 
-                                            zimbraServiceInstalled mta 
-                                            zimbraServiceInstalled mailbox 
-                                            zimbraServiceEnabled ldap 
-                                            zimbraServiceEnabled mta 
-                                            zimbraServiceEnabled mailbox 
+            <param name="args" value="-l cs ${spnego.server.name}
+                                            zimbraSmtpHostname ${zimbra.smtp.host}
+                                            zimbraSmtpPort 7024
+                                            zimbraMailPort 7070
+                                            zimbraMailSSLPort 7443
+                                            zimbraMailMode http
+                                            zimbraImapCleartextLoginEnabled TRUE
+                                            zimbraPop3CleartextLoginEnabled TRUE
+                                            zimbraServiceInstalled ldap
+                                            zimbraServiceInstalled mta
+                                            zimbraServiceInstalled mailbox
+                                            zimbraServiceEnabled ldap
+                                            zimbraServiceEnabled mta
+                                            zimbraServiceEnabled mailbox
                                             zimbraMailPurgeSleepInterval 0"/>
       </antcall>
-        
+
       <antcall target="zmprov">
-          <param name="args" value="-l ca spnego@${defaultdomain.name} test123 
-                                            zimbraMailHost ${spnego.server.name} 
-                                            cn 'Spnego Demo User' 
-                                            displayName 'Spnego Demo User' 
+          <param name="args" value="-l ca spnego@${defaultdomain.name} test123
+                                            zimbraMailHost ${spnego.server.name}
+                                            cn 'Spnego Demo User'
+                                            displayName 'Spnego Demo User'
                                             zimbraForeignPrincipal kerberos5:spnego@${zimbra.kerberos.realm}"/>
       </antcall>
-        
-      <!-- 
-          note: after done with spnego testing, remember to set the LC key zimbra_server_hostname 
+
+      <!--
+          note: after done with spnego testing, remember to set the LC key zimbra_server_hostname
                 back to your default server
-      -->     
+      -->
       <antcall target="zmlocalconfig">
           <param name="localconfig-args" value="-e zimbra_server_hostname=${spnego.server.name}"/>
       </antcall>
-        
-    </target>	
+
+    </target>
 
     <!--
         To test spnego:
         - ant reset-all
         - [ant spnego-inject]
         - ant spnego-dev-deploy
-        
+
         If you run service-deploy after this point, you need to retun spnego-dev-deploy,
         but not spnego-inject.  spnego-inject only needs to be run once after reset-all.
-        
+
     -->
-    <target name="spnego-dev-deploy" depends="spnego-war, spnego-service-name">
+    <target name="spnego-dev-deploy" depends="spnego-service-name">
       <antcall target="stop-webserver"/>
 
       <delete file="${jetty.home.dir}/webapps/spnego.war"/>
       <delete dir="${jetty.home.dir}/webapps/spnego"/>
       <mkdir dir='${jetty.home.dir}/webapps/spnego'/>
       <mkdir dir="${jetty.home.dir}/work/spnego"/>
-
-      <copy file="${spnego-warfile}" todir="${jetty.home.dir}/webapps"/>
-      <unzip dest="${jetty.home.dir}/webapps/spnego" src="${jetty.home.dir}/webapps/${spnego-warfilename}"/>
 
       <!--
           ==========================
@@ -720,7 +708,7 @@
       <property name="zimbraWebClientLogoutURL"    value="../?sso=1"/>
       <property name="zimbraAuthKerberos5Realm"    value="${zimbraSpnegoAuthRealm}"/>
 
-      
+
       <!-- modify ldap -->
       <antcall target="zmprov">
         <param name="args" value="-l mcf zimbraSpnegoAuthEnabled ${zimbraSpnegoAuthEnabled}"/>
@@ -768,8 +756,8 @@
       </antcall>
       <antcall target="zmprov">
         <param name="args" value="-l md ${defaultdomain.name} +zimbraWebClientLogoutURLAllowedUA '.*Windows NT.*Chrome.*'"/>
-      </antcall>    	
-      	
+      </antcall>
+
       <!-- copy spnego config files to jetty/etc -->
       <echo/>
       <echo>----- copying files -----</echo>
@@ -885,7 +873,7 @@
     </target>
 
   <!-- target called by the production build -->
-    <target name="dev-dist" depends="war,spnego-war,dev-dist-unix,dev-dist-jetty,choose-db-schema,generate-ldap-config" description="Initializes build/dist">
+    <target name="dev-dist" depends="war,dev-dist-unix,dev-dist-jetty,choose-db-schema,generate-ldap-config" description="Initializes build/dist">
         <!-- bin, libexec -->
         <copy todir="${dist.dir}/bin" overwrite="true">
             <fileset dir="${src.dir}/bin" excludes="*.production,zmmailboxdctl,jetty"/>
@@ -1051,33 +1039,32 @@
     </target>
 
   <target name="dev-dist-jetty">
-        <copy todir="${dist.jetty.dir}/webapps" file="${warfile}" overwrite="true"/>
-        <copy todir="${dist.jetty.dir}/webapps" file="${spnego-warfile}" overwrite="true"/>
-        <copy tofile="${dist.jetty.dir}/etc/jettyrc" file="${config.dir}/jetty-6.1/jettyrc" overwrite="true"/>
-        <copy tofile="${dist.jetty.dir}/etc/jetty.xml" file="${jetty.xml.file}" overwrite="true"/>
-        <copy tofile="${dist.jetty.dir}/etc/start.config" file="${config.dir}/jetty-6.1/start.config" overwrite="true"/>
-        <copy tofile="${dist.jetty.dir}/etc/webdefault.xml"
-              file="${config.dir}/jetty-6.1/webdefault.xml${production.suffix}" overwrite="true"/>
-        <if>
-            <isset property="is-windows"/>
-            <then>
-                <copy todir="${dist.jetty.dir}/etc" file="tools/jetty/wrapper.conf"/>
-            </then>
-        </if>
-        <copy tofile="${dist.jetty.dir}/resources/log4j.properties"
-              file="${config.dir}/jetty-6.1/log4j.properties${production.suffix}" overwrite="true"/>
-        <copy todir="${dist.jetty.dir}/common/lib" overwrite="true">
+    <copy todir="${dist.jetty.dir}/webapps" file="${warfile}" overwrite="true"/>
+    <copy tofile="${dist.jetty.dir}/etc/jettyrc" file="${config.dir}/jetty-6.1/jettyrc" overwrite="true"/>
+    <copy tofile="${dist.jetty.dir}/etc/jetty.xml" file="${jetty.xml.file}" overwrite="true"/>
+    <copy tofile="${dist.jetty.dir}/etc/start.config" file="${config.dir}/jetty-6.1/start.config" overwrite="true"/>
+    <copy tofile="${dist.jetty.dir}/etc/webdefault.xml"
+          file="${config.dir}/jetty-6.1/webdefault.xml${production.suffix}" overwrite="true"/>
+    <if>
+      <isset property="is-windows"/>
+      <then>
+        <copy todir="${dist.jetty.dir}/etc" file="tools/jetty/wrapper.conf"/>
+      </then>
+    </if>
+    <copy tofile="${dist.jetty.dir}/resources/log4j.properties"
+          file="${config.dir}/jetty-6.1/log4j.properties${production.suffix}" overwrite="true"/>
+    <copy todir="${dist.jetty.dir}/common/lib" overwrite="true">
             <fileset dir="${common.jars.dir}"
                      includes="${ical4j.jar},${ziputil.jar},${memcached.jar},${db.driver.jar},mail.jar,zimbra-native.jar,bcprov-jdk15-146.jar,commons-cli*.jar,commons-codec*.jar,commons-dbcp*.jar,commons-fileupload*.jar,commons-httpclient*.jar,commons-io*.jar,commons-logging.jar,commons-pool*.jar,yuicompressor*jar,dom4j*.jar,ganymed-ssh2*.jar,jaxen*.jar,jcommon*.jar,jfreechart*.jar,junit*.jar,jzlib.jar,mina*.jar,nekohtml.jar,tnef*.jar,xercesImpl*.jar,xpp3.jar,libidn*.jar,jdom*.jar,json.jar,testng*.jar,guava*.jar"/>
-        </copy>
-        <copy todir="${dist.jetty.dir}/common/endorsed" overwrite="true">
-            <fileset dir="${common.jars.dir}" includes="zimbra-charset.jar"/>
-        </copy>
-        <copy todir="${dist.jetty.dir}/common/lib" file="${common.jarfile}" overwrite="true"/>
-        <copy todir="${dist.jetty.dir}/lib" overwrite="true">
-    <fileset dir="${common.jars.dir}" includes="log4j*.jar,apache-log4j-extras-1.0.jar"/>
-        </copy>
-    </target>
+    </copy>
+    <copy todir="${dist.jetty.dir}/common/endorsed" overwrite="true">
+      <fileset dir="${common.jars.dir}" includes="zimbra-charset.jar"/>
+    </copy>
+    <copy todir="${dist.jetty.dir}/common/lib" file="${common.jarfile}" overwrite="true"/>
+    <copy todir="${dist.jetty.dir}/lib" overwrite="true">
+      <fileset dir="${common.jars.dir}" includes="log4j*.jar,apache-log4j-extras-1.0.jar"/>
+    </copy>
+  </target>
 
     <target name="init-jetty" depends="build-init" description="Initializes the jetty directory structure">
         <delete dir="${zimbra.home.dir}/data/tmp/jetty"/>
@@ -1253,8 +1240,8 @@
                 <param name="CN" value="localhost"/>
                 <param name="OU" value="Engineering"/>
                 <param name="O" value="Zimbra Systems"/>
-            	<param name="L" value="Palo Alto"/>
-            	<param name="S" value="California"/>
+              <param name="L" value="Palo Alto"/>
+              <param name="S" value="California"/>
                 <param name="C" value="US"/>
             </dname>
         </genkey>
@@ -1517,9 +1504,9 @@
             zimbraSmtpHostname ${zimbra.smtp.host} \
             zimbraSmtpPort 7024 \
             zimbraMailPort 7070 \
-        	zimbraMailSSLPort 7443 \
+          zimbraMailSSLPort 7443 \
             zimbraMailSSLClientCertPort 9443 \
-        	zimbraMailMode http \
+          zimbraMailMode http \
             zimbraMailSSLClientCertMode WantClientAuth \
             zimbraImapCleartextLoginEnabled TRUE \
             zimbraPop3CleartextLoginEnabled TRUE
@@ -1533,8 +1520,8 @@
             zimbraServiceEnabled mailbox
             ModifyServer ${zimbra.server.hostname} zimbraMailPurgeSleepInterval 0
             cd ${defaultdomain.name} \
-        	zimbraGalInternalSearchBase ROOT
-        	mcf zimbraDefaultDomainName ${defaultdomain.name}
+            zimbraGalInternalSearchBase ROOT
+            mcf zimbraDefaultDomainName ${defaultdomain.name}
             mc default zimbraFeatureIMEnabled FALSE
             ca admin@${defaultdomain.name} test123 \
             zimbraMailHost ${zimbra.server.hostname} \
@@ -1611,8 +1598,8 @@
             zimbraCalResAutoAcceptDecline TRUE \
             zimbraCalResAutoDeclineIfBusy TRUE \
             zimbraCalResAutoDeclineRecurring FALSE \
-          zimbraCalResMaxNumConflictsAllowed 3 \
-          zimbraCalResMaxPercentConflictsAllowed 10 \
+            zimbraCalResMaxNumConflictsAllowed 3 \
+            zimbraCalResMaxPercentConflictsAllowed 10 \
             zimbraCalResLocationDisplayName 'Site: HQ, Building: A, Floor: 11, Room 1101' \
             zimbraCalResSite HQ \
             zimbraCalResBuilding A \
@@ -1703,12 +1690,12 @@
             zimbraCalResContactPhone '(650)555-1212' \
             zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
             zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
-        	cd example.com
-        	cdl admin-team@example.com
-        	cdl client-team@example.com
-    	    cdl qa-team@example.com
-	        cdl server-team@example.com
-        	grr domain example.com dom ${defaultdomain.name} viewDistList
+            cd example.com
+            cdl admin-team@example.com
+            cdl client-team@example.com
+            cdl qa-team@example.com
+            cdl server-team@example.com
+            grr domain example.com dom ${defaultdomain.name} viewDistList
          </echo>
     </target>
 
@@ -2042,8 +2029,6 @@
 
     <antcall target="server2-war"/>
 
-    <antcall target="spnego-war"/>
-
     <antcall target="dev-dist-jetty">
       <param name="dist.jetty.dir" value="${dist.jetty.alt.dir}"/>
     </antcall>
@@ -2111,11 +2096,11 @@
       <arg line="-a genMessageProperties -i conf/rights -r conf/msgs/ZsMsgRights.properties"/>
     </java>
   </target>
-	
+
   <target name="generate-rights">
     <antcall target="generate-domainadmin-rights-xml"/>
     <antcall target="generate-rights-java"/>
-  	<antcall target="generate-rights-message-properties"/>
+    <antcall target="generate-rights-message-properties"/>
   </target>
 
   <target name="generate-rights-txt">
