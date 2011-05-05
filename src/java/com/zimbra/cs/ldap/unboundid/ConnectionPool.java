@@ -15,13 +15,18 @@
 package com.zimbra.cs.ldap.unboundid;
 
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 
 import com.unboundid.ldap.sdk.BindRequest;
+import com.unboundid.ldap.sdk.LDAPConnection;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
 import com.unboundid.ldap.sdk.LDAPConnectionPoolStatistics;
 import com.unboundid.ldap.sdk.LDAPException;
@@ -49,7 +54,8 @@ public class ConnectionPool {
     // for unittest and dump stats
     private static final Map<String, LDAPConnectionPool> connPools = 
         new HashMap<String, LDAPConnectionPool>();
-
+    
+    
     static LDAPConnectionPool createConnectionPool(String connPoolName, 
             LdapConfig config, LdapServerPool ldapHost) throws LdapException {
         
@@ -116,5 +122,128 @@ public class ConnectionPool {
             return null;
         }
         */
+    }
+    
+    
+    
+    static void debugCheckOut(LDAPConnectionPool connPool, LDAPConnection conn) {
+        DebugConnPool.checkOut(connPool, conn);
+    }
+    
+    static void debugCheckIn(LDAPConnectionPool connPool, LDAPConnection conn) {
+        ConnectionPool.DebugConnPool.checkIn(connPool, conn);
+    }
+    
+    @TODO  // have a way to trigger dumping the DebugConnPool
+    public static void dump() {
+        ConnectionPool.DebugConnPool.dump();
+    }
+    
+    @TODO  //  integrate with log4j debug
+    private static class DebugConnPool {
+        
+        private static final Map<String /* connection pool name */, DebugConnPool> 
+            checkedOutByPoolName = new HashMap<String, DebugConnPool>();
+        
+        private List<CheckedOutInfo> checkedOutConns = new ArrayList<CheckedOutInfo>();
+       
+        private static void output(String msg) {
+            System.out.println(msg);
+        }
+        
+        private void dumpDebugConnPool(long now) {
+            DebugConnPool.output("Number of checked out connections: " + checkedOutConns.size() + "\n");
+            
+            for (CheckedOutInfo checkedOutConn : checkedOutConns) {
+                checkedOutConn.dump(now);
+            }
+        }
+        
+        private static class CheckedOutInfo {
+            
+            private CheckedOutInfo(LDAPConnection conn) {
+                connId = conn.getConnectionID();
+                connPoolName = conn.getConnectionPoolName();
+                checkedOutTimestamp = System.currentTimeMillis();
+                
+                Thread currentThread = Thread.currentThread();
+                stackTrace = currentThread.getStackTrace();
+            }
+            
+            private void dump(long now) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("connId: " + connId + " (" + connPoolName + ")" + "\n");
+                sb.append("elapsed milli secs: " + (now - checkedOutTimestamp) + "\n");
+                sb.append("\n");
+                for (StackTraceElement element : stackTrace) {
+                    sb.append(element.toString() + "\n");
+                }
+                sb.append("\n");
+                
+                DebugConnPool.output("--------------------");
+                DebugConnPool.output(sb.toString());
+                
+            }
+            
+            long connId;
+            String connPoolName;
+            long checkedOutTimestamp;
+            StackTraceElement[] stackTrace;
+        }
+        
+        private static synchronized void checkOut(LDAPConnectionPool connPool, LDAPConnection conn) {
+            String connPoolName = connPool.getConnectionPoolName();
+            DebugConnPool checkedOutFromPool = checkedOutByPoolName.get(connPoolName);
+            
+            if (checkedOutFromPool == null) {
+                checkedOutFromPool = new DebugConnPool();
+                checkedOutByPoolName.put(connPoolName, checkedOutFromPool);
+            } else {
+                // sanity check, see if the connection is already checked out
+                for (CheckedOutInfo checkedOutConn : checkedOutFromPool.checkedOutConns) {
+                    long connId = conn.getConnectionID();
+                    if (connId == checkedOutConn.connId) {
+                        DebugConnPool.output("connection " + connId + " is already checked out.");
+                        checkedOutConn.dump(System.currentTimeMillis());
+                        assert(false);
+                    }
+                }
+            }
+            
+            CheckedOutInfo checkedOutConn = new CheckedOutInfo(conn);
+            checkedOutFromPool.checkedOutConns.add(checkedOutConn);
+        }
+        
+        private static synchronized void checkIn(LDAPConnectionPool connPool, LDAPConnection conn) {
+            String connPoolName = connPool.getConnectionPoolName();
+            DebugConnPool checkedOutFromPool = checkedOutByPoolName.get(connPoolName);
+            
+            assert(checkedOutFromPool != null);
+            
+            boolean checkedIn = false;
+            for (Iterator<CheckedOutInfo> it = checkedOutFromPool.checkedOutConns.iterator(); it.hasNext();) {
+                CheckedOutInfo checkedOutConn = it.next();
+                long connId = conn.getConnectionID();
+                if (connId == checkedOutConn.connId) {
+                    checkedOutFromPool.checkedOutConns.remove(checkedOutConn);
+                    checkedIn = true;
+                    break;
+                }
+            }
+            
+            assert(checkedIn);
+        }
+        
+        private static synchronized void dump() {
+            long now = System.currentTimeMillis();
+            for (Map.Entry<String, DebugConnPool> checkedOutFromPool : checkedOutByPoolName.entrySet()) {
+                String poolName = checkedOutFromPool.getKey();
+                DebugConnPool checkedOutConns = checkedOutFromPool.getValue();
+                DebugConnPool.output("====================");
+                DebugConnPool.output("Pool " + poolName);
+                DebugConnPool.output("====================");
+                checkedOutConns.dumpDebugConnPool(now);
+            }
+        }
     }
 }
