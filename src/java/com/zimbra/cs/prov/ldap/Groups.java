@@ -23,11 +23,11 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapFilter;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.prov.ldap.LdapProv;
-import com.zimbra.cs.prov.ldap.LdapFilter;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
 
 
@@ -63,7 +63,7 @@ public class Groups {
         if (mAllDLs == null) {
             try {
                 GetAllDLsVisitor visitor = new GetAllDLsVisitor();
-                LegacyLdapUtil.searchLdapOnReplica(mProv.getDIT().mailBranchBaseDN(), LdapFilter.allDistributionLists(),
+                LegacyLdapUtil.searchLdapOnReplica(mProv.getDIT().mailBranchBaseDN(), LegacyLdapFilter.allDistributionLists(),
                         new String[] {Provisioning.A_mail}, visitor);
                 
                 // all is well, swap in the result Set and cache it

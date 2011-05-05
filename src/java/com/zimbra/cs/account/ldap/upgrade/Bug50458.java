@@ -9,11 +9,11 @@ import javax.naming.directory.BasicAttributes;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapFilter;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
-import com.zimbra.cs.prov.ldap.LdapFilter;
 
 public class Bug50458  extends LdapUpgrade {
     
@@ -35,7 +35,7 @@ public class Bug50458  extends LdapUpgrade {
     
     private void doDomain(ZimbraLdapContext modZlc) {
         String bases[] = mProv.getSearchBases(Provisioning.SA_DOMAIN_FLAG);
-        String query = "(&" + LdapFilter.allDomains() + 
+        String query = "(&" + LegacyLdapFilter.allDomains() + 
             "(" + Provisioning.A_zimbraPasswordChangeListener + "=" + VALUE_TO_REMOVE + ")"+ ")";
         
         upgrade(modZlc, bases, query);

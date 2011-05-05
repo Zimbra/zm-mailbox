@@ -9,12 +9,12 @@ import javax.naming.directory.BasicAttributes;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapFilter;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
-import com.zimbra.cs.prov.ldap.LdapFilter;
 
 public class DisableBriefcase extends LdapUpgrade {
 
@@ -98,13 +98,13 @@ public class DisableBriefcase extends LdapUpgrade {
     
     private void doCos(ZimbraLdapContext modZlc) {
         String bases[] = mProv.getSearchBases(Provisioning.SD_COS_FLAG);
-        String query = "(&" + LdapFilter.allCoses() + query() + ")";
+        String query = "(&" + LegacyLdapFilter.allCoses() + query() + ")";
         upgrade(modZlc, bases, query);
     }
     
     private void doAccount(ZimbraLdapContext modZlc) {
         String bases[] = mProv.getSearchBases(Provisioning.SA_ACCOUNT_FLAG);
-        String query = "(&" + LdapFilter.allAccounts() + query() + ")";
+        String query = "(&" + LegacyLdapFilter.allAccounts() + query() + ")";
         upgrade(modZlc, bases, query);
     }
 }

@@ -27,12 +27,12 @@ import com.zimbra.cs.account.accesscontrol.RightCommand.EffectiveRights;
 import com.zimbra.cs.account.accesscontrol.SearchGrants.GrantsOnTarget;
 import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapFilter;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.account.ldap.legacy.entry.LdapDomain;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
-import com.zimbra.cs.prov.ldap.LdapFilter;
 
 public class CollectAllEffectiveRights {
 
@@ -392,7 +392,7 @@ public class CollectAllEffectiveRights {
     private Set<String> getAllGroups() throws ServiceException {
         LdapDIT ldapDIT = ((LdapProvisioning)mProv).getDIT();
         String base = ldapDIT.mailBranchBaseDN();
-        String query = LdapFilter.allDistributionLists();
+        String query = LegacyLdapFilter.allDistributionLists();
         
         // hack, see LDAPDIT.dnToEmail, for now we get naming rdn for both default and possible custom DIT
         String[] returnAttrs = new String[] {Provisioning.A_cn, Provisioning.A_uid}; 
@@ -405,7 +405,7 @@ public class CollectAllEffectiveRights {
     private Set<String> getAllCalendarResources() throws ServiceException {
         LdapDIT ldapDIT = ((LdapProvisioning)mProv).getDIT();
         String base = ldapDIT.mailBranchBaseDN();
-        String query = LdapFilter.allCalendarResources();
+        String query = LegacyLdapFilter.allCalendarResources();
         
         // hack, see LDAPDIT.dnToEmail, for now we get naming rdn for both default and possible custom DIT
         String[] returnAttrs = new String[] {Provisioning.A_cn, Provisioning.A_uid}; 
@@ -495,7 +495,7 @@ public class CollectAllEffectiveRights {
         }
                 
         String base = ((LdapDomain)domain).getDN();
-        String query = LdapFilter.allDomains();
+        String query = LegacyLdapFilter.allDomains();
         String returnAttrs[] = new String[] {Provisioning.A_zimbraId};
         SearchSubDomainVisitor visitor = new SearchSubDomainVisitor();
         

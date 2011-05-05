@@ -43,10 +43,10 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.CountObjectsType;
+import com.zimbra.cs.account.ldap.legacy.LegacyLdapFilter;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
-import com.zimbra.cs.prov.ldap.LdapFilter;
 
 final public class Validators {
 
@@ -413,7 +413,7 @@ final public class Validators {
             
             void search() throws ServiceException {
                 String searchBaseDN = ((LdapProvisioning) prov).getDIT().domainToAccountSearchDN(domain);
-                String query = LdapFilter.allNonSystemAccounts();
+                String query = LegacyLdapFilter.allNonSystemAccounts();
                 
                 LegacyLdapUtil.searchLdapOnReplica(searchBaseDN, query, null, this);
                 ZimbraLog.account.debug("COS/Feature counts: %s + %s", cosCount, featureCount);

@@ -12,13 +12,13 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.prov.ldap;
+package com.zimbra.cs.account.ldap.legacy;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 
-public class LdapFilter {
+public class LegacyLdapFilter {
 
     private static final String FILTER_ACCOUNT_OBJECTCLASS = "(objectclass=zimbraAccount)";
     private static final String FILTER_CALENDAR_RESOURCE_OBJECTCLASS = "(objectclass=zimbraCalendarResource)";
@@ -89,9 +89,9 @@ public class LdapFilter {
     }
     
     public static String accountsOnServerOnCosHasSubordinates(Server server, String cosId) {
-        return "(&" + LdapFilter.allAccounts() +
-        LdapFilter.homedOnServer(server) +
-        LdapFilter.hasSubordinates() +
+        return "(&" + LegacyLdapFilter.allAccounts() +
+        LegacyLdapFilter.homedOnServer(server) +
+        LegacyLdapFilter.hasSubordinates() +
         "(|(!(" + Provisioning.A_zimbraCOSId + "=*))" + "(" + Provisioning.A_zimbraCOSId + "=" + cosId + ")))";
     }
     
