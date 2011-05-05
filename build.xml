@@ -86,9 +86,6 @@
     <property name="jetty.xml.file" location='${config.dir}/jetty-6.1/jetty.xml' />
 
     <property name="spnego.dir" location="${config.dir}/jetty-6.1/spnego"/>
-    <property name="spnego-war.web.xml" location="${spnego.dir}/web.xml"/>
-    <property name="spnego-warfilename" value="spnego.war"/>
-    <property name="spnego-warfile" location="${build.dir}/${spnego-warfilename}"/>
 
     <property name="deploy.war" value="${warfile}"/>
     <property name="deploy.host" value="127.0.0.1"/>
@@ -621,12 +618,6 @@
       </war>
     </target>
 
-    <target name="spnego-war">
-        <war warfile="${spnego-warfile}" webxml="${spnego-war.web.xml}">
-            <fileset dir="${spnego.dir}" includes="*.jsp"/>
-        </war>
-    </target>
-
     <target name="spnego-service-name">
         <!--
             Setup the service principal name registered with setspn and ktpass
@@ -707,16 +698,13 @@
         but not spnego-inject.  spnego-inject only needs to be run once after reset-all.
 
     -->
-    <target name="spnego-dev-deploy" depends="spnego-war, spnego-service-name">
+    <target name="spnego-dev-deploy" depends="spnego-service-name">
       <antcall target="stop-webserver"/>
 
       <delete file="${jetty.home.dir}/webapps/spnego.war"/>
       <delete dir="${jetty.home.dir}/webapps/spnego"/>
       <mkdir dir='${jetty.home.dir}/webapps/spnego'/>
       <mkdir dir="${jetty.home.dir}/work/spnego"/>
-
-      <copy file="${spnego-warfile}" todir="${jetty.home.dir}/webapps"/>
-      <unzip dest="${jetty.home.dir}/webapps/spnego" src="${jetty.home.dir}/webapps/${spnego-warfilename}"/>
 
       <!--
           ==========================
@@ -906,7 +894,7 @@
     </target>
 
   <!-- target called by the production build -->
-    <target name="dev-dist" depends="war,spnego-war,dev-dist-unix,dev-dist-jetty,choose-db-schema,generate-ldap-config" description="Initializes build/dist">
+    <target name="dev-dist" depends="war,dev-dist-unix,dev-dist-jetty,choose-db-schema,generate-ldap-config" description="Initializes build/dist">
         <!-- bin, libexec -->
         <copy todir="${dist.dir}/bin" overwrite="true">
             <fileset dir="${src.dir}/bin" excludes="*.production,zmmailboxdctl,jetty"/>
@@ -1061,7 +1049,6 @@
 
   <target name="dev-dist-jetty">
     <copy todir="${dist.jetty.dir}/webapps" file="${warfile}" overwrite="true"/>
-    <copy todir="${dist.jetty.dir}/webapps" file="${spnego-warfile}" overwrite="true"/>
     <copy tofile="${dist.jetty.dir}/etc/jettyrc" file="${config.dir}/jetty-6.1/jettyrc" overwrite="true"/>
     <copy tofile="${dist.jetty.dir}/etc/jetty.xml" file="${jetty.xml.file}" overwrite="true"/>
     <copy tofile="${dist.jetty.dir}/etc/start.config" file="${config.dir}/jetty-6.1/start.config" overwrite="true"/>
@@ -2074,8 +2061,6 @@
     </antcall>
 
     <antcall target="server2-war"/>
-
-    <antcall target="spnego-war"/>
 
     <antcall target="dev-dist-jetty">
       <param name="dist.jetty.dir" value="${dist.jetty.alt.dir}"/>
