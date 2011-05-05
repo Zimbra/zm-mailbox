@@ -19,6 +19,7 @@ import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.ZLdapContext;
+import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.ZMutableEntry;
 import com.zimbra.cs.ldap.ZSearchControls;
 import com.zimbra.cs.ldap.ZSearchScope;
@@ -36,8 +37,13 @@ public class JNDILdapClient extends LdapClient {
     }
     
     @Override 
-    protected ZSearchScopeFactory getSearchScopeFactoryImpl() {
+    protected ZSearchScopeFactory getSearchScopeFactoryInstance() {
         return new JNDISearchScope.JNDISearchScopeFactory();
+    }
+
+    @Override
+    protected ZLdapFilterFactory getLdapFilterFactoryInstance() throws LdapException {
+        return new JNDILdapFilterFactory();
     }
     
     @Override
@@ -59,6 +65,5 @@ public class JNDILdapClient extends LdapClient {
     protected ZSearchControls createSearchControlsImpl(ZSearchScope searchScope, int sizeLimit, String[] returnAttrs) {
         return new JNDISearchControls(searchScope, sizeLimit, returnAttrs);
     }
-
 
 }

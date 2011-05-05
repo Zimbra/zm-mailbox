@@ -46,11 +46,13 @@ public class LdapUtil {
         return new String(dups);
     }
     
+    @TODO  // support ZLdapFilter
     public static void searchLdapOnMaster(String base, String query, String[] returnAttrs, 
             SearchLdapVisitor visitor) throws ServiceException {
         searchZimbraLdap(base, query, returnAttrs, true, visitor);
     }
 
+    @TODO // support ZLdapFilter
     public static void searchLdapOnReplica(String base, String query, String[] returnAttrs, 
             SearchLdapVisitor visitor) throws ServiceException {
         searchZimbraLdap(base, query, returnAttrs, false, visitor);

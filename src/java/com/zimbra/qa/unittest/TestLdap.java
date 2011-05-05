@@ -28,6 +28,8 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.ZLdapContext;
+import com.zimbra.cs.ldap.ZLdapFilter;
+import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.ZSearchControls;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
 import com.zimbra.cs.ldap.ZSearchResultEnumeration;
@@ -118,6 +120,7 @@ public class TestLdap {
         junit.run(TestLdapProvXMPPComponent.class);
         junit.run(TestLdapProvZimlet.class);
         junit.run(TestLdapUtil.class);
+        junit.run(TestLdapZLdapFilter.class);
         junit.run(TestLdapZMutableEntry.class);
     }
     
@@ -174,13 +177,13 @@ public class TestLdap {
     private static List<String> getDirectChildrenDNs(ZLdapContext zlc, String dn) throws Exception {
         final List<String> childrenDNs = new ArrayList<String>();
 
-        String query = "(objectClass=*)";
+        ZLdapFilter filter = ZLdapFilterFactory.getInstance().anyEntry();
         
         ZSearchControls searchControls = ZSearchControls.createSearchControls(
                 ZSearchScope.SEARCH_SCOPE_ONELEVEL, 
                 ZSearchControls.SIZE_UNLIMITED, new String[]{"objectClass"});
         
-        ZSearchResultEnumeration sr = zlc.searchDir(dn, query, searchControls);
+        ZSearchResultEnumeration sr = zlc.searchDir(dn, filter, searchControls);
         while (sr.hasMore()) {
             ZSearchResultEntry entry = sr.next();
             childrenDNs.add(entry.getDN());
@@ -190,6 +193,66 @@ public class TestLdap {
         return childrenDNs;
     }
     
+    /**
+     * Given a name (which is to be turn into a DN), mix in chars 
+     * defined in rfc2253.txt that need to be escaped in RDN value.
+     * 
+     * http://www.ietf.org/rfc/rfc2253.txt?number=2253
+     * 
+     * - a space or "#" character occurring at the beginning of the
+     *   string
+     *
+     * - a space character occurring at the end of the string
+     *
+     * - one of the characters ",", "+", """, "\", "<", ">" or ";"
+     * 
+     * Implementations MAY escape other characters.
+     *
+     * If a character to be escaped is one of the list shown above, then it
+     * is prefixed by a backslash ('\' ASCII 92).
+     *
+     * Otherwise the character to be escaped is replaced by a backslash and
+     * two hex digits, which form a single byte in the code of the
+     * character.
+     * 
+     * @param name
+     * @return
+     */
+    static String makeRFC2253Name(String name) {
+        return makeRFC2253Name(name, false, false);
+    }
+    
+    static String makeRFC2253NameEmailLocalPart(String name) {
+        return makeRFC2253Name(name, true, false);
+    }
+    
+    static String makeRFC2253NameDomainName(String name) {
+        return makeRFC2253Name(name, false, true);
+    }
+    
+    private static String makeRFC2253Name(String name, boolean isEmailLocalPart, boolean isDomainName) {
+        assertTrue(!(isEmailLocalPart && isDomainName));  // only one of them can be true
+        
+        String LEADING_CHARS = "#";
+        String TRAILING_CHARS = " ";
+        String BACKSLASH_ESCAPED_CHARS = "# ,+\"\\<>;";
+        String UNICODE_CHARS = "\u4e2d\u6587";
+        
+        if (isEmailLocalPart) {
+            LEADING_CHARS = "";
+            TRAILING_CHARS = "";
+            BACKSLASH_ESCAPED_CHARS = ",+\"<>;";
+            UNICODE_CHARS = "";
+        }
+        
+        if (isDomainName) {
+            LEADING_CHARS = "";
+            TRAILING_CHARS = "";
+            BACKSLASH_ESCAPED_CHARS = "+\"<>;";
+        }
+        
+        return LEADING_CHARS + BACKSLASH_ESCAPED_CHARS + UNICODE_CHARS + "---" + name + TRAILING_CHARS;
+    }
     
     // so tests can be called directly, without running from TestLdap.
     static void manualInit() throws Exception {
@@ -200,15 +263,20 @@ public class TestLdap {
         // TestConfig.useConfig(TestConfig.LEGACY);
     }
     
+    /*
+     * zmjava -ea com.zimbra.qa.unittest.TestLdap > ~/temp/out.txt
+     */
     public static void main(String[] args) throws Exception {
         CliUtil.toolSetup();
         
         JUnitCore junit = new JUnitCore();
         junit.addListener(new ConsoleListener());
         
-        // runTests(junit, TestConfig.UBID);
+        // TestConfig.useConfig(TestConfig.LEGACY);
+        
+        runTests(junit, TestConfig.UBID);
         // runTests(junit, TestConfig.JNDI);
-        runTests(junit, TestConfig.LEGACY);
+        // runTests(junit, TestConfig.LEGACY);
         
         System.out.println();
         System.out.println("=== Finished ===");

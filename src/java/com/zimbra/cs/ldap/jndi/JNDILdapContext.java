@@ -39,17 +39,19 @@ import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapException.LdapInvalidNameException;
 import com.zimbra.cs.ldap.LdapException.LdapEntryAlreadyExistException;
 import com.zimbra.cs.ldap.LdapException.LdapEntryNotFoundException;
+import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.LdapTODO;
 import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
+import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZModificationList;
 import com.zimbra.cs.ldap.ZMutableEntry;
 import com.zimbra.cs.ldap.ZSearchControls;
 import com.zimbra.cs.ldap.ZSearchResultEnumeration;
-import com.zimbra.cs.ldap.LdapServerType;
+
 
 /**
  * Wraps a legacy ZimbraLdapContext
@@ -212,11 +214,13 @@ public class JNDILdapContext extends ZLdapContext {
     
     
     @Override
-    public ZSearchResultEnumeration searchDir(String baseDN, String filter, ZSearchControls searchControls) 
-    throws LdapException {
+    public ZSearchResultEnumeration searchDir(String baseDN, ZLdapFilter filter, 
+            ZSearchControls searchControls) throws LdapException {
         try {
-            NamingEnumeration<SearchResult> result = zlc.searchDir(baseDN, filter, 
+            NamingEnumeration<SearchResult> result = zlc.searchDir(baseDN, 
+                    ((JNDILdapFilter) filter).getNative(), 
                     ((JNDISearchControls)searchControls).getNative());
+            
             return new JNDISearchResultEnumeration(result);
         } catch (NamingException e) {
             throw JNDILdapException.mapToLdapException(e);

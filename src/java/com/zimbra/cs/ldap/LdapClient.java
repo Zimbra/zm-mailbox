@@ -139,12 +139,15 @@ public abstract class LdapClient {
     
     ////////////////////////////////////////////////////////////////
     protected void init() throws LdapException {
-        ZSearchScope.init(getSearchScopeFactoryImpl());
+        ZSearchScope.init(getSearchScopeFactoryInstance());
+        ZLdapFilterFactory.setInstance(getLdapFilterFactoryInstance());
     }
     
     protected abstract void terminate();
     
-    protected abstract ZSearchScopeFactory getSearchScopeFactoryImpl(); 
+    protected abstract ZSearchScopeFactory getSearchScopeFactoryInstance(); 
+    
+    protected abstract ZLdapFilterFactory getLdapFilterFactoryInstance() throws LdapException;
     
     protected ZLdapContext getContextImpl() throws ServiceException {
         return getContext(LdapServerType.REPLICA);

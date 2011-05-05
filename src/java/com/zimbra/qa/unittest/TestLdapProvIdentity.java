@@ -116,7 +116,7 @@ public class TestLdapProvIdentity {
     @Test
     public void createIdentity() throws Exception {
         String ACCT_NAME = "createIdentity";
-        String IDENTITY_NAME = "createIdentity";
+        String IDENTITY_NAME = TestLdap.makeRFC2253Name("createIdentity");
         
         Account acct = createAccount(ACCT_NAME);
         Identity identity = createIdentity(acct, IDENTITY_NAME);

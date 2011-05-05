@@ -19,6 +19,7 @@ import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.ZLdapContext;
+import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.ZMutableEntry;
 import com.zimbra.cs.ldap.ZSearchControls;
 import com.zimbra.cs.ldap.ZSearchScope;
@@ -37,8 +38,14 @@ public class UBIDLdapClient extends LdapClient {
     }
     
     @Override 
-    protected ZSearchScopeFactory getSearchScopeFactoryImpl() {
+    protected ZSearchScopeFactory getSearchScopeFactoryInstance() {
         return new UBIDSearchScope.UBIDSearchScopeFactory();
+    }
+    
+    @Override
+    protected ZLdapFilterFactory getLdapFilterFactoryInstance() throws LdapException {
+        UBIDLdapFilterFactory.initialize();
+        return new UBIDLdapFilterFactory();
     }
     
     @Override

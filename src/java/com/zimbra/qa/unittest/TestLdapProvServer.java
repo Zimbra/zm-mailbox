@@ -63,7 +63,7 @@ public class TestLdapProvServer {
     
     @Test
     public void createServer() throws Exception {
-        String SERVER_NAME = "createServer";
+        String SERVER_NAME = TestLdap.makeRFC2253Name("createServer");
         Server server = createServer(SERVER_NAME);
         deleteServer(server);
     }

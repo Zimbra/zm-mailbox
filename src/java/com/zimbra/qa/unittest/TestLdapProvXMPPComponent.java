@@ -73,7 +73,7 @@ public class TestLdapProvXMPPComponent {
     
     @Test
     public void createXMPPComponent() throws Exception {
-        String XMPPCPNT_NAME = "createXMPPComponent";
+        String XMPPCPNT_NAME = TestLdap.makeRFC2253Name("createXMPPComponent");
         XMPPComponent xmppCpnt = createXMPPComponent(XMPPCPNT_NAME);
         
         deleteXMPPComponent(xmppCpnt);

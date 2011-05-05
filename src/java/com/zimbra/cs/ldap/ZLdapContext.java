@@ -61,7 +61,7 @@ public abstract class ZLdapContext extends ZLdapElement implements ILdapContext 
     throws ServiceException;
     
     public abstract ZSearchResultEnumeration searchDir(
-            String baseDN, String query, ZSearchControls searchControls) 
+            String baseDN, ZLdapFilter filter, ZSearchControls searchControls) 
     throws LdapException;
    
     public abstract void unbindEntry(String dn) throws LdapException;

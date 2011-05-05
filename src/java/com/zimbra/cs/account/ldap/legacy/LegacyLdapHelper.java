@@ -25,15 +25,16 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.ldap.ILdapContext;
 import com.zimbra.cs.ldap.LdapClient;
+import com.zimbra.cs.ldap.LdapException.LdapEntryNotFoundException;
+import com.zimbra.cs.ldap.LdapException.LdapMultipleEntriesMatchedException;
 import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
+import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZSearchControls;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
 import com.zimbra.cs.ldap.ZSearchResultEnumeration;
-import com.zimbra.cs.ldap.LdapException.LdapEntryNotFoundException;
-import com.zimbra.cs.ldap.LdapException.LdapMultipleEntriesMatchedException;
 
 /**
  * An LdapHelper tied to ZimbraLdapContext and the legacy ldapUtil methods.
@@ -68,7 +69,7 @@ public class LegacyLdapHelper extends LdapHelper {
     }
 
     @Override
-    public ZSearchResultEntry searchForEntry(String base, String query,
+    public ZSearchResultEntry searchForEntry(String base, ZLdapFilter filter,
             ZLdapContext initZlc, boolean useMaster)
     throws LdapMultipleEntriesMatchedException, ServiceException {
         throw new UnsupportedOperationException();
@@ -81,7 +82,7 @@ public class LegacyLdapHelper extends LdapHelper {
     }
 
     @Override
-    public ZSearchResultEnumeration searchDir(String baseDN, String query,
+    public ZSearchResultEnumeration searchDir(String baseDN, ZLdapFilter filter,
             ZSearchControls searchControls, ZLdapContext initZlc, LdapServerType ldapServerType) 
     throws ServiceException {
         throw new UnsupportedOperationException();

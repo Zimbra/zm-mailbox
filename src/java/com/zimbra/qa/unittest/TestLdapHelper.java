@@ -21,6 +21,8 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ldap.LdapException.LdapEntryNotFoundException;
 import com.zimbra.cs.ldap.LdapException.LdapMultipleEntriesMatchedException;
 import com.zimbra.cs.ldap.ZAttributes;
+import com.zimbra.cs.ldap.ZLdapFilter;
+import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
 import com.zimbra.cs.prov.ldap.LdapHelper;
 import com.zimbra.cs.prov.ldap.LdapProv;
@@ -41,10 +43,10 @@ public class TestLdapHelper {
     @Test
     public void searchForEntry() throws Exception {
         String base = "cn=zimbra";
-        String query = "(cn=config)";
+        ZLdapFilter filter = ZLdapFilterFactory.getInstance().fromFilterString("(cn=config)");
         
         ZSearchResultEntry sr = ldapHelper.searchForEntry(
-                base, query, null, false);
+                base, filter, null, false);
         assertNotNull(sr);
         assertEquals("cn=config,cn=zimbra", sr.getDN());
     }
@@ -52,12 +54,12 @@ public class TestLdapHelper {
     @Test
     public void searchForEntryMultipleMatchedEntries() throws Exception {
         String base = "cn=zimbra";
-        String query = "(objectClass=zimbraAccount)";
+        ZLdapFilter filter = ZLdapFilterFactory.getInstance().allAccounts();
         
         boolean caughtException = false;
         try {
             ZSearchResultEntry entry = ldapHelper.searchForEntry(
-                    base, query, null, false);
+                    base, filter, null, false);
             assertNotNull(entry);
         } catch (LdapMultipleEntriesMatchedException e) {
             caughtException = true;
@@ -68,10 +70,10 @@ public class TestLdapHelper {
     @Test
     public void searchForEntryNotFound() throws Exception {
         String base = "cn=zimbra";
-        String query = "(cn=bogus)";
+        ZLdapFilter filter = ZLdapFilterFactory.getInstance().fromFilterString("(cn=bogus)");
         
         ZSearchResultEntry sr = ldapHelper.searchForEntry(
-                base, query, null, false);
+                base, filter, null, false);
         assertNull(sr);
     }
     

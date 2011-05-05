@@ -38,6 +38,7 @@ import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.SearchLdapOptions;
+import com.zimbra.cs.ldap.unboundid.ConnectionPool;
 import com.zimbra.cs.prov.ldap.LdapHelper;
 import com.zimbra.cs.prov.ldap.LdapProv;
 
@@ -84,6 +85,11 @@ public class TestLdapProvDomain {
         assertNull(domain);
         domain = prov.createDomain(domainName, attrs);
         assertNotNull(domain);
+        
+        prov.flushCache(CacheEntryType.domain, null);
+        domain = prov.get(DomainBy.name, domainName);
+        assertNotNull(domain);
+        
         return domain;
     }
     
@@ -96,7 +102,7 @@ public class TestLdapProvDomain {
 
     @Test
     public void createTopDomain() throws Exception {
-        String DOMAIN_NAME = makeDomainName(null);
+        String DOMAIN_NAME = TestLdap.makeRFC2253NameDomainName(makeDomainName(null));
         Domain domain = createDomain(DOMAIN_NAME);
         
         deleteDomain(domain);
@@ -104,7 +110,7 @@ public class TestLdapProvDomain {
     
     @Test
     public void createSubDomain() throws Exception {
-        String DOMAIN_NAME = makeDomainName("createSubDomain.sub1.sub2");
+        String DOMAIN_NAME = TestLdap.makeRFC2253NameDomainName(makeDomainName("createSubDomain.sub1.sub2"));
         Domain domain = createDomain(DOMAIN_NAME);
         
         deleteDomain(domain);

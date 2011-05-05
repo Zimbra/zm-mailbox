@@ -115,7 +115,7 @@ public class TestLdapProvSignature {
     @Test
     public void createSignature() throws Exception {
         String ACCT_NAME = "createSignature";
-        String SIGNATURE_NAME = "createSignature";
+        String SIGNATURE_NAME = TestLdap.makeRFC2253Name("createSignature");
         
         Account acct = createAccount(ACCT_NAME);
         Signature signature = createSignature(acct, SIGNATURE_NAME);

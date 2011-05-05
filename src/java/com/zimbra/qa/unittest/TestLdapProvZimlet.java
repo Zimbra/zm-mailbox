@@ -56,7 +56,7 @@ private static Provisioning prov;
     
     @Test
     public void createZimlet() throws Exception {
-        String ZIMLET_NAME = "createZimlet";
+        String ZIMLET_NAME = TestLdap.makeRFC2253Name("createZimlet");
         Zimlet zimlet = createZimlet(ZIMLET_NAME);
         
         deleteZimlet(zimlet);

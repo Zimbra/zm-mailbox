@@ -227,15 +227,15 @@ public class LdapProvisioning extends LdapProv {
     private static final Random sPoolRandom = new Random();
     private Groups mAllDLs; // email addresses of all distribution lists on the system
     
-    private static LdapProvisioning theOnlyInstance = null;
+    private static LdapProvisioning SINGLETON = null;
     
     private static synchronized void ensureSingleton(LdapProvisioning prov) {
-        if (theOnlyInstance != null) {
+        if (SINGLETON != null) {
             // pass an exception to have the stack logged
             Zimbra.halt("Only one instance of LdapProvisioning can be created", 
                     ServiceException.FAILURE("failed to instantiate LdapProvisioning", null));
         }
-        theOnlyInstance = prov;
+        SINGLETON = prov;
     }
     
     public LdapProvisioning() {

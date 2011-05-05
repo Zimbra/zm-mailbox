@@ -103,8 +103,10 @@ public class TestLdapProvDataSource {
         DataSource dataSource = prov.get(acct, DataSourceBy.name, dataSourceName);
         assertNull(dataSource);
         
-        createDataSourceRaw(acct, dataSourceName);
+        dataSource = createDataSourceRaw(acct, dataSourceName);
+        assertNotNull(dataSource);
         
+        getFresh(acct);
         dataSource = prov.get(acct, DataSourceBy.name, dataSourceName);
         assertNotNull(dataSource);
         
@@ -119,7 +121,7 @@ public class TestLdapProvDataSource {
     @Test
     public void createDataSource() throws Exception {
         String ACCT_NAME = "createDataSource";
-        String DATA_SOURCE_NAME = "createDataSource";
+        String DATA_SOURCE_NAME = TestLdap.makeRFC2253Name("createDataSource");
         
         Account acct = createAccount(ACCT_NAME);
         DataSource dataSource = createDataSource(acct, DATA_SOURCE_NAME);

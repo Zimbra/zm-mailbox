@@ -43,6 +43,9 @@ public class TestLdapProvCos {
         assertNull(cos);
         cos = prov.createCos(cosName, new HashMap<String, Object>());
         assertNotNull(cos);
+        prov.flushCache(CacheEntryType.cos, null);
+        cos = prov.get(CosBy.name, cosName);
+        assertNotNull(cos);
         return cos;
     }
     
@@ -55,7 +58,7 @@ public class TestLdapProvCos {
     
     @Test
     public void createCos() throws Exception {
-        String COS_NAME = "createCos";
+        String COS_NAME = TestLdap.makeRFC2253Name("createCos");
         Cos cos = createCos(COS_NAME);
         deleteCos(cos);
     }

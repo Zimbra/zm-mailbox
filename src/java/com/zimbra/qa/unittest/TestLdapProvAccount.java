@@ -36,6 +36,7 @@ import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.ldap.LdapConstants;
 
 public class TestLdapProvAccount {
+    
     private static Provisioning prov;
     private static Domain domain;
     
@@ -81,7 +82,7 @@ public class TestLdapProvAccount {
     
     @Test
     public void createAccount() throws Exception {
-        String ACCT_NAME = "createAccount";
+        String ACCT_NAME = TestLdap.makeRFC2253NameEmailLocalPart("createAccount");
         Account acct = createAccount(ACCT_NAME);
         deleteAccount(acct);
     }

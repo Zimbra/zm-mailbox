@@ -54,12 +54,32 @@ public class TestLdapUtil {
     
     @Test
     public void rdnUBID() throws Exception {
-        com.unboundid.ldap.sdk.RDN rdn = new com.unboundid.ldap.sdk.RDN("cn", "foo+/+/ \u4e2d\u6587");
+        // com.unboundid.ldap.sdk.RDN rdn = new com.unboundid.ldap.sdk.RDN("cn", "foo+/+/ \u4e2d\u6587");
+        String rawValue = "## ,+\"\\<>;\u4e2d\u6587---createIdentity ";
+        
+        com.unboundid.ldap.sdk.RDN rdn = new com.unboundid.ldap.sdk.RDN("cn", rawValue);
         String minStr = rdn.toMinimallyEncodedString();
         String rdnStr = rdn.toNormalizedString();
         System.out.println(minStr);
         System.out.println(rdnStr);
         
+        
+        
+        String escapedValue = com.unboundid.ldap.sdk.Filter.encodeValue(rawValue);
+        System.out.println(escapedValue);
+        
+        /*
+        String raw = "(&(objectclass=zimbraIdentity)(zimbraPrefIdentityName=## ,+\"\\<>;\u4e2d\u6587---createIdentity ))";
+        String escaped = com.unboundid.ldap.sdk.Filter.encodeValue(raw);
+        System.out.println(escaped);
+        */
+        
+        /*
+        com.unboundid.ldap.sdk.Filter filter = 
+            com.unboundid.ldap.sdk.Filter.create("(&(objectclass=zimbraIdentity)(zimbraPrefIdentityName=## ,+\"\\<>;\u4e2d\u6587---createIdentity ))");
+        String norm = filter.toNormalizedString();
+        System.out.println(norm);
+        */
         /*
         String rdn = "cn=foo, bar";
         String norm = com.unboundid.ldap.sdk.RDN.normalize(rdn);

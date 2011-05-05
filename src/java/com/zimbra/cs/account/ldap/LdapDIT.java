@@ -276,10 +276,10 @@ public class LdapDIT {
     }
     
     /*
-     * returns the search filter for get all accounts in a domain
+     * returns the search filter for getting all accounts on a domain
      * 
      * if includeObjectClass is true, the filter will include objectclass,
-     * if includeObjectClass is false, the filter will notinclude objectclass
+     * if includeObjectClass is false, the filter will not include objectclass
      * 
      * false should be passed for searches that already specifies a flag, so 
      * the objectclass will be automatically computed by getObjectClassQuery 

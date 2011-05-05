@@ -53,20 +53,20 @@ import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.ldap.LdapConfig;
 import com.zimbra.cs.ldap.LdapConnType;
 import com.zimbra.cs.ldap.LdapConstants;
+import com.zimbra.cs.ldap.LdapException;
+import com.zimbra.cs.ldap.LdapServerType;
+import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
+import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZModificationList;
 import com.zimbra.cs.ldap.ZMutableEntry;
 import com.zimbra.cs.ldap.ZSearchControls;
 import com.zimbra.cs.ldap.ZSearchResultEnumeration;
-import com.zimbra.cs.ldap.LdapException;
-import com.zimbra.cs.ldap.LdapTODO;
 import com.zimbra.cs.ldap.ZSearchScope;
-import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
-import com.zimbra.cs.ldap.jndi.JNDIAttributes;
-import com.zimbra.cs.ldap.LdapServerType;
+
 
 public class UBIDLdapContext extends ZLdapContext {
     
@@ -115,6 +115,9 @@ public class UBIDLdapContext extends ZLdapContext {
     public UBIDLdapContext(LdapServerType serverType) throws LdapException {
         connPool = getConnectionPool(serverType);
         conn = getConnection(connPool);
+        
+        ConnectionPool.debugCheckOut(connPool, conn);
+        
         setIsZimbra(true);
     }
     
@@ -127,6 +130,31 @@ public class UBIDLdapContext extends ZLdapContext {
     // for unittest
     public LDAPConnection getNative() {
         return conn;
+    }
+    
+    private LDAPConnectionPool getConnectionPool(LdapServerType serverType) {
+        if (serverType.isMaster()) {
+            return masterConnPool;
+        } else {
+            return replicaConnPool;
+        }
+    }
+    
+    private LDAPConnection getConnection(LDAPConnectionPool pool) throws LdapException {
+        try {
+            return pool.getConnection();
+        } catch (LDAPException e) {
+            throw UBIDLdapException.mapToLdapException(e);
+        }
+    }
+    
+    public LDAPConnectionPool getConnectionPool() {
+        String connPoolName = conn.getConnectionPoolName();
+        return ConnectionPool.getConnPoolByName(connPoolName);
+    }
+    
+    public String getConnectionName() {
+        return conn.getConnectionName();
     }
 
     private void setIsZimbra(boolean isZimbraInternal) {
@@ -154,35 +182,13 @@ public class UBIDLdapContext extends ZLdapContext {
             }
         }
     }
-    
-    private LDAPConnectionPool getConnectionPool(LdapServerType serverType) {
-        if (serverType.isMaster()) {
-            return masterConnPool;
-        } else {
-            return replicaConnPool;
-        }
-    }
-    
-    private LDAPConnection getConnection(LDAPConnectionPool pool) throws LdapException {
-        try {
-            return pool.getConnection();
-        } catch (LDAPException e) {
-            throw UBIDLdapException.mapToLdapException(e);
-        }
-    }
-    
-    public LDAPConnectionPool getConnectionPool() {
-        String connPoolName = conn.getConnectionPoolName();
-        return ConnectionPool.getConnPoolByName(connPoolName);
-    }
-    
-    public String getConnectionName() {
-        return conn.getConnectionName();
-    }
   
     
     @Override
     public void closeContext() {
+        
+        ConnectionPool.debugCheckIn(connPool, conn);
+        
         // NOTE: do NOT call conn.close() because it will unbind from the server 
         //       and close the connection and defunt the connection from the pool.
         //       Just release it to the pool.
@@ -389,7 +395,7 @@ public class UBIDLdapContext extends ZLdapContext {
     }
     
     @Override
-    public ZSearchResultEnumeration searchDir(String baseDN, String filter, 
+    public ZSearchResultEnumeration searchDir(String baseDN, ZLdapFilter filter, 
             ZSearchControls searchControls) throws LdapException {
         
         UBIDSearchControls sc = (UBIDSearchControls)searchControls;
@@ -401,7 +407,7 @@ public class UBIDLdapContext extends ZLdapContext {
                     sc.getSizeLimit(),
                     sc.getTimeLimit(),
                     sc.getTypesOnly(),
-                    filter);
+                    ((UBIDLdapFilter) filter).getNative());
             
             searchRequest.setAttributes(sc.getReturnAttrs());
             SearchResult result = conn.search(searchRequest);
