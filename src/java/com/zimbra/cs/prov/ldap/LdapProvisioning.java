@@ -111,6 +111,8 @@ import com.zimbra.cs.ldap.LdapTODO;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
+import com.zimbra.cs.ldap.ZLdapFilter;
+import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.ZSearchControls;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
 import com.zimbra.cs.ldap.ZSearchResultEnumeration;
@@ -213,24 +215,32 @@ public class LdapProvisioning extends LdapProv {
     private static GlobalGrant sGlobalGrant = null;
     private static final Random sPoolRandom = new Random();
     private Groups mAllDLs; // email addresses of all distribution lists on the system
+    private ZLdapFilterFactory filterFactory;
     
-    private static LdapProvisioning theOnlyInstance = null;
+    private static LdapProvisioning SINGLETON = null;
     
     private static synchronized void ensureSingleton(LdapProvisioning prov) {
-        if (theOnlyInstance != null) {
+        if (SINGLETON != null) {
             // pass an exception to have the stack logged
             Zimbra.halt("Only one instance of LdapProvisioning can be created", 
                     ServiceException.FAILURE("failed to instantiate LdapProvisioning", null));
         }
-        theOnlyInstance = prov;
+        SINGLETON = prov;
     }
     
+    @TODO
     public LdapProvisioning() {
         ensureSingleton(this);
         
         setDIT();
         setHelper(new ZLdapHelper(this));
         mAllDLs = new Groups(this);
+        
+        //to get LdapClient initialized so the filterFactory instance is set
+        // TODO: move to Zimbra.java
+        LdapClient.initialize();
+        
+        filterFactory = ZLdapFilterFactory.getInstance();
         
         register(new Validators.DomainAccountValidator());
         register(new Validators.DomainMaxAccountsValidator());
@@ -489,7 +499,7 @@ public class LdapProvisioning extends LdapProv {
         try {
             mimeType = LdapUtilCommon.escapeSearchFilterArg(mimeType);
             ZSearchResultEnumeration ne = helper.searchDir(mDIT.mimeBaseDN(), 
-                    LdapFilter.mimeEntryByMimeType(mimeType), ZSearchControls.SEARCH_CTLS_SUBTREE());
+                    filterFactory.mimeEntryByMimeType(mimeType), ZSearchControls.SEARCH_CTLS_SUBTREE());
             while (ne.hasMore()) {
                 ZSearchResultEntry sr = ne.next();
                 mimeTypes.add(new LdapMimeType(sr, this));
@@ -512,7 +522,7 @@ public class LdapProvisioning extends LdapProv {
         
         try {
             ZSearchResultEnumeration ne = helper.searchDir(
-                    mDIT.mimeBaseDN(), LdapFilter.allMimeEntries(), ZSearchControls.SEARCH_CTLS_SUBTREE());
+                    mDIT.mimeBaseDN(), filterFactory.allMimeEntries(), ZSearchControls.SEARCH_CTLS_SUBTREE());
             while (ne.hasMore()) {
                 ZSearchResultEntry sr = ne.next();
                 mimeTypes.add(new LdapMimeType(sr, this));
@@ -524,17 +534,18 @@ public class LdapProvisioning extends LdapProv {
         return mimeTypes;
     }
 
-    private Account getAccountByQuery(String base, String query, ZLdapContext initZlc, boolean loadFromMaster) 
+    private Account getAccountByQuery(String base, ZLdapFilter filter, ZLdapContext initZlc, boolean loadFromMaster) 
     throws ServiceException {
         try {
-            ZSearchResultEntry sr = helper.searchForEntry(base, query, initZlc, loadFromMaster);
+            ZSearchResultEntry sr = helper.searchForEntry(base, filter, initZlc, loadFromMaster);
             if (sr != null) {
                 return makeAccount(sr.getDN(), sr.getAttributes());
             }
         } catch (LdapMultipleEntriesMatchedException e) {
             throw AccountServiceException.MULTIPLE_ACCOUNTS_MATCHED("getAccountByQuery: " + e.getMessage());
         } catch (ServiceException e) {
-            throw ServiceException.FAILURE("unable to lookup account via query: "+query+" message: "+e.getMessage(), e);
+            throw ServiceException.FAILURE("unable to lookup account via query: " + 
+                    filter.toFilterString() + " message: "+e.getMessage(), e);
         }
         return null;
     }
@@ -545,13 +556,13 @@ public class LdapProvisioning extends LdapProv {
         Account a = sAccountCache.getById(zimbraId);
         if (a == null) {
             zimbraId = LdapUtilCommon.escapeSearchFilterArg(zimbraId);
-            String query = LdapFilter.accountById(zimbraId);
+            ZLdapFilter filter = filterFactory.accountById(zimbraId);
 
-            a = getAccountByQuery(mDIT.mailBranchBaseDN(), query, zlc, loadFromMaster);
+            a = getAccountByQuery(mDIT.mailBranchBaseDN(), filter, zlc, loadFromMaster);
 
             // search again under the admin base if not found and admin base is not under mail base
             if (a == null && !mDIT.isUnder(mDIT.mailBranchBaseDN(), mDIT.adminBaseDN()))
-                a = getAccountByQuery(mDIT.adminBaseDN(), query, zlc, loadFromMaster);
+                a = getAccountByQuery(mDIT.adminBaseDN(), filter, zlc, loadFromMaster);
 
             sAccountCache.put(a);
         }
@@ -607,7 +618,7 @@ public class LdapProvisioning extends LdapProv {
         foreignPrincipal = LdapUtilCommon.escapeSearchFilterArg(foreignPrincipal);
         Account acct = getAccountByQuery(
                 mDIT.mailBranchBaseDN(),
-                LdapFilter.accountByForeignPrincipal(foreignPrincipal),
+                filterFactory.accountByForeignPrincipal(foreignPrincipal),
                 null, loadFromMaster);
 
         // all is well, put the account in cache if it was not in cache
@@ -626,7 +637,7 @@ public class LdapProvisioning extends LdapProv {
             name = LdapUtilCommon.escapeSearchFilterArg(name);
             a = getAccountByQuery(
                     mDIT.adminBaseDN(),
-                    LdapFilter.adminAccountByRDN(mDIT.accountNamingRdnAttr(), name),
+                    filterFactory.adminAccountByRDN(mDIT.accountNamingRdnAttr(), name),
                     null, loadFromMaster);
             sAccountCache.put(a);
         }
@@ -639,7 +650,7 @@ public class LdapProvisioning extends LdapProv {
             name = LdapUtilCommon.escapeSearchFilterArg(name);
             a = getAccountByQuery(
                     mDIT.appAdminBaseDN(),
-                    LdapFilter.adminAccountByRDN(mDIT.accountNamingRdnAttr(), name),
+                    filterFactory.adminAccountByRDN(mDIT.accountNamingRdnAttr(), name),
                     null, loadFromMaster);
             sAccountCache.put(a);
         }
@@ -692,7 +703,7 @@ public class LdapProvisioning extends LdapProv {
             emailAddress = LdapUtilCommon.escapeSearchFilterArg(emailAddress);
             account = getAccountByQuery(
                     mDIT.mailBranchBaseDN(),
-                    LdapFilter.accountByName(emailAddress),
+                    filterFactory.accountByName(emailAddress),
                     null, loadFromMaster);
             sAccountCache.put(account);
         }
@@ -1103,17 +1114,20 @@ public class LdapProvisioning extends LdapProv {
     @SuppressWarnings("unchecked")
     @Override
     public List<Account> getAllAdminAccounts() throws ServiceException {
-        return (List<Account>) searchAccountsInternal(LdapFilter.adminAccountByAdminFlag(), null, null, true, Provisioning.SA_ACCOUNT_FLAG);
+        return (List<Account>) searchAccountsInternal(filterFactory.adminAccountByAdminFlag().toFilterString(), 
+                null, null, true, Provisioning.SA_ACCOUNT_FLAG);
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public List<NamedEntry> searchAccounts(String query, String returnAttrs[], final String sortAttr, final boolean sortAscending, int flags) throws ServiceException {
+    public List<NamedEntry> searchAccounts(String query, String returnAttrs[], final String sortAttr, 
+            final boolean sortAscending, int flags) throws ServiceException {
         return (List<NamedEntry>) searchAccountsInternal(query, returnAttrs, sortAttr, sortAscending, flags);
     }
 
     @Override
-    public void searchAccountsOnServer(Server server, SearchOptions opts, NamedEntry.Visitor visitor) throws ServiceException {
+    public void searchAccountsOnServer(Server server, SearchOptions opts, NamedEntry.Visitor visitor) 
+    throws ServiceException {
         String base = getDIT().mailBranchBaseDN();
 
         // searchObjects put the caller's query before objectClass.
@@ -1865,16 +1879,17 @@ public class LdapProvisioning extends LdapProv {
         }
     }
 
-    private LdapDomain getDomainByQuery(String query, ZLdapContext initZlc) throws ServiceException {
+    private LdapDomain getDomainByQuery(ZLdapFilter filter, ZLdapContext initZlc) throws ServiceException {
         try {
-            ZSearchResultEntry sr = helper.searchForEntry(mDIT.domainBaseDN(), query, initZlc, false);
+            ZSearchResultEntry sr = helper.searchForEntry(mDIT.domainBaseDN(), filter, initZlc, false);
             if (sr != null) {
                 return new LdapDomain(sr.getDN(), sr.getAttributes(), getConfig().getDomainDefaults(), this);
             }
         } catch (LdapMultipleEntriesMatchedException e) {
             throw AccountServiceException.MULTIPLE_DOMAINS_MATCHED("getDomainByQuery: " + e.getMessage());
         } catch (ServiceException e) {
-            throw ServiceException.FAILURE("unable to lookup domain via query: "+query+" message:"+e.getMessage(), e);
+            throw ServiceException.FAILURE("unable to lookup domain via query: " + 
+                    filter.toFilterString() + " message:"+e.getMessage(), e);
         }
         return null;
     }
@@ -1939,7 +1954,7 @@ public class LdapProvisioning extends LdapProv {
         LdapDomain domain = (LdapDomain)d;
         if (domain == null) {
             zimbraId = LdapUtilCommon.escapeSearchFilterArg(zimbraId);
-            domain = getDomainByQuery(LdapFilter.domainById(zimbraId), zlc);
+            domain = getDomainByQuery(filterFactory.domainById(zimbraId), zlc);
             sDomainCache.put(DomainBy.id, zimbraId, domain);
         }
         return domain;
@@ -1962,7 +1977,7 @@ public class LdapProvisioning extends LdapProv {
         LdapDomain domain = (LdapDomain)d;
         if (domain == null) {
             name = LdapUtilCommon.escapeSearchFilterArg(name);
-            domain = getDomainByQuery(LdapFilter.domainByName(name), zlc);
+            domain = getDomainByQuery(filterFactory.domainByName(name), zlc);
             sDomainCache.put(DomainBy.name, name, domain);
         }
         return domain;
@@ -1976,7 +1991,7 @@ public class LdapProvisioning extends LdapProv {
         LdapDomain domain = (LdapDomain)d;
         if (domain == null) {
             virtualHostname = LdapUtilCommon.escapeSearchFilterArg(virtualHostname);
-            domain = getDomainByQuery(LdapFilter.domainByVirtualHostame(virtualHostname), null);
+            domain = getDomainByQuery(filterFactory.domainByVirtualHostame(virtualHostname), null);
             sDomainCache.put(DomainBy.virtualHostname, virtualHostname, domain);
         }
         return domain;
@@ -1990,7 +2005,7 @@ public class LdapProvisioning extends LdapProv {
         LdapDomain domain = (LdapDomain)d;
         if (domain == null) {
             foreignName = LdapUtilCommon.escapeSearchFilterArg(foreignName);
-            domain = getDomainByQuery(LdapFilter.domainByForeignName(foreignName), null);
+            domain = getDomainByQuery(filterFactory.domainByForeignName(foreignName), null);
             sDomainCache.put(DomainBy.foreignName, foreignName, domain);
         }
         return domain;
@@ -2004,7 +2019,7 @@ public class LdapProvisioning extends LdapProv {
         LdapDomain domain = (LdapDomain)d;
         if (domain == null) {
             krb5Realm = LdapUtilCommon.escapeSearchFilterArg(krb5Realm);
-            domain = getDomainByQuery(LdapFilter.domainByKrb5Realm(krb5Realm), null);
+            domain = getDomainByQuery(filterFactory.domainByKrb5Realm(krb5Realm), null);
             sDomainCache.put(DomainBy.krb5Realm, krb5Realm, domain);
         }
         return domain;
@@ -2053,7 +2068,7 @@ public class LdapProvisioning extends LdapProv {
 
     private boolean domainDnExists(ZLdapContext zlc, String dn) throws ServiceException {
         try {
-            ZSearchResultEnumeration ne = helper.searchDir(dn, LdapFilter.domainLabel(), 
+            ZSearchResultEnumeration ne = helper.searchDir(dn, filterFactory.domainLabel(), 
                     ZSearchControls.SEARCH_CTLS_SUBTREE(), zlc, LdapServerType.MASTER);
             boolean result = ne.hasMore();
             ne.close();
@@ -2166,16 +2181,17 @@ public class LdapProvisioning extends LdapProv {
         }
     }
     
-    private LdapCos getCOSByQuery(String query, ZLdapContext initZlc) throws ServiceException {
+    private LdapCos getCOSByQuery(ZLdapFilter filter, ZLdapContext initZlc) throws ServiceException {
         try {
-            ZSearchResultEntry sr = helper.searchForEntry(mDIT.cosBaseDN(), query, initZlc, false);
+            ZSearchResultEntry sr = helper.searchForEntry(mDIT.cosBaseDN(), filter, initZlc, false);
             if (sr != null) {
                 return new LdapCos(sr.getDN(), sr.getAttributes(), this);
             }
         } catch (LdapMultipleEntriesMatchedException e) {
             throw AccountServiceException.MULTIPLE_ENTRIES_MATCHED("getCOSByQuery", e);
         } catch (ServiceException e) {
-            throw ServiceException.FAILURE("unable to lookup cos via query: "+query+" message:"+e.getMessage(), e);
+            throw ServiceException.FAILURE("unable to lookup cos via query: "+
+                    filter.toFilterString() + " message:" + e.getMessage(), e);
         }
         return null;
     }
@@ -2187,7 +2203,7 @@ public class LdapProvisioning extends LdapProv {
         LdapCos cos = sCosCache.getById(zimbraId);
         if (cos == null) {
             zimbraId = LdapUtilCommon.escapeSearchFilterArg(zimbraId);
-            cos = getCOSByQuery(LdapFilter.cosById(zimbraId), zlc);
+            cos = getCOSByQuery(filterFactory.cosById(zimbraId), zlc);
             sCosCache.put(cos);
         }
         return cos;
@@ -2240,7 +2256,7 @@ public class LdapProvisioning extends LdapProv {
         
         try {
             ZSearchResultEnumeration ne = helper.searchDir(mDIT.cosBaseDN(),
-                    LdapFilter.allCoses(), ZSearchControls.SEARCH_CTLS_SUBTREE());
+                    filterFactory.allCoses(), ZSearchControls.SEARCH_CTLS_SUBTREE());
             while (ne.hasMore()) {
                 ZSearchResultEntry sr = ne.next();
                 result.add(new LdapCos(sr.getDN(), sr.getAttributes(), this));
@@ -2324,7 +2340,7 @@ public class LdapProvisioning extends LdapProv {
             if (domain == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(newDomain);
             
-            domainChanged = !oldDomain.equals(newDomain);
+            domainChanged = !newDomain.equals(oldDomain);
             
             if (domainChanged) {
                 validate(ProvisioningValidator.RENAME_ACCOUNT, newName, acct.getMultiAttr(Provisioning.A_objectClass, false), acct.getAttrs(false));
@@ -2484,7 +2500,7 @@ public class LdapProvisioning extends LdapProv {
                         ZSearchScope.SEARCH_SCOPE_SUBTREE, maxEntriesToGet, 
                         new String[]{Provisioning.A_objectClass});
                 
-                ZSearchResultEnumeration ne = helper.searchDir(acctBaseDn, "(objectClass=*)", 
+                ZSearchResultEnumeration ne = helper.searchDir(acctBaseDn, filterFactory.anyEntry(), 
                         searchControls, zlc, LdapServerType.MASTER);
                 while (ne.hasMore()) {
                     ZSearchResultEntry sr = ne.next();
@@ -2599,16 +2615,17 @@ public class LdapProvisioning extends LdapProv {
         }
     }
 
-    private Server getServerByQuery(String query, ZLdapContext initZlc) throws ServiceException {
+    private Server getServerByQuery(ZLdapFilter filter, ZLdapContext initZlc) throws ServiceException {
         try {
-            ZSearchResultEntry sr = helper.searchForEntry(mDIT.serverBaseDN(), query, initZlc, false);
+            ZSearchResultEntry sr = helper.searchForEntry(mDIT.serverBaseDN(), filter, initZlc, false);
             if (sr != null) {
                 return new LdapServer(sr.getDN(), sr.getAttributes(), getConfig().getServerDefaults(), this);
             }
         } catch (LdapMultipleEntriesMatchedException e) {
             throw AccountServiceException.MULTIPLE_ENTRIES_MATCHED("getServerByQuery", e);
         } catch (ServiceException e) {
-            throw ServiceException.FAILURE("unable to lookup server via query: "+query+" message:"+e.getMessage(), e);
+            throw ServiceException.FAILURE("unable to lookup server via query: "+
+                    filter.toFilterString() + " message:" + e.getMessage(), e);
         }
         return null;
     }
@@ -2621,7 +2638,7 @@ public class LdapProvisioning extends LdapProv {
             s = sServerCache.getById(zimbraId);
         if (s == null) {
             zimbraId = LdapUtilCommon.escapeSearchFilterArg(zimbraId);
-            s = getServerByQuery(LdapFilter.serverById(zimbraId), zlc);
+            s = getServerByQuery(filterFactory.serverById(zimbraId), zlc);
             sServerCache.put(s);
         }
         return s;
@@ -2685,11 +2702,11 @@ public class LdapProvisioning extends LdapProv {
     public List<Server> getAllServers(String service) throws ServiceException {
         List<Server> result = new ArrayList<Server>();
         
-        String filter;
+        ZLdapFilter filter;
         if (service != null) {
-            filter = LdapFilter.serverByService(LdapUtilCommon.escapeSearchFilterArg(service));
+            filter = filterFactory.serverByService(LdapUtilCommon.escapeSearchFilterArg(service));
         } else {
-            filter = LdapFilter.allServers();
+            filter = filterFactory.allServers();
         }
         
         try {
@@ -2711,10 +2728,10 @@ public class LdapProvisioning extends LdapProv {
         return result;
     }
 
-    private List<Cos> searchCOS(String query, ZLdapContext initZlc) throws ServiceException {
+    private List<Cos> searchCOS(ZLdapFilter filter, ZLdapContext initZlc) throws ServiceException {
         List<Cos> result = new ArrayList<Cos>();
         try {
-            ZSearchResultEnumeration ne = helper.searchDir(mDIT.cosBaseDN(), query, 
+            ZSearchResultEnumeration ne = helper.searchDir(mDIT.cosBaseDN(), filter, 
                     ZSearchControls.SEARCH_CTLS_SUBTREE(), initZlc, LdapServerType.REPLICA);
             while (ne.hasMore()) {
                 ZSearchResultEntry sr = ne.next();
@@ -2722,7 +2739,8 @@ public class LdapProvisioning extends LdapProv {
             }
             ne.close();
         } catch (ServiceException e) {
-            throw ServiceException.FAILURE("unable to lookup cos via query: "+query+ " message: "+e.getMessage(), e);
+            throw ServiceException.FAILURE("unable to lookup cos via query: "+
+                    filter.toFilterString() + " message: " + e.getMessage(), e);
         }
         return result;
     }
@@ -2730,7 +2748,7 @@ public class LdapProvisioning extends LdapProv {
     private void removeServerFromAllCOSes(String serverId, String serverName, ZLdapContext initZlc) {
         List<Cos> coses = null;
         try {
-            coses = searchCOS(LdapFilter.cosesByMailHostPool(serverId), initZlc);
+            coses = searchCOS(filterFactory.cosesByMailHostPool(serverId), initZlc);
             for (Cos cos: coses) {
                 Map<String, String> attrs = new HashMap<String, String>();
                 attrs.put("-"+Provisioning.A_zimbraMailHostPool, serverId);
@@ -2759,13 +2777,16 @@ public class LdapProvisioning extends LdapProv {
         }
     };
         
+    @TODO
     private long getNumAccountsOnServer(Server server) throws ServiceException {        
-        String query = LdapFilter.accountsHomedOnServer(server);
+        ZLdapFilter filter = filterFactory.accountsHomedOnServer(server);
         String base = mDIT.mailBranchBaseDN();
         String attrs[] = new String[] {Provisioning.A_zimbraId};
         
         CountingVisitor visitor = new CountingVisitor();
-        LdapUtil.searchLdapOnMaster(base, query, attrs, visitor);
+        
+        // TODO: pass filter directly when searchLdapOnMaster supports it.
+        LdapUtil.searchLdapOnMaster(base, filter.toFilterString(), attrs, visitor);
         
         return visitor.getNumAccts();
     }
@@ -2881,14 +2902,14 @@ public class LdapProvisioning extends LdapProv {
         return getGroups(list, directOnly, via);
     }
 
-    private DistributionList getDistributionListByQuery(String base, String query, 
+    private DistributionList getDistributionListByQuery(String base, ZLdapFilter filter, 
             ZLdapContext initZlc, String[] returnAttrs) throws ServiceException {
         DistributionList dl = null;
         try {
             ZSearchControls searchControls = ZSearchControls.createSearchControls(
                     ZSearchScope.SEARCH_SCOPE_SUBTREE, ZSearchControls.SIZE_UNLIMITED, returnAttrs);
                     
-            ZSearchResultEnumeration ne = helper.searchDir(base, query, 
+            ZSearchResultEnumeration ne = helper.searchDir(base, filter, 
                     searchControls, initZlc, LdapServerType.REPLICA);
             if (ne.hasMore()) {
                 ZSearchResultEntry sr = ne.next();
@@ -2897,7 +2918,7 @@ public class LdapProvisioning extends LdapProv {
             ne.close();
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to lookup distribution list via query: "+
-                    query+ " message: "+e.getMessage(), e);
+                    filter.toFilterString() + " message: "+e.getMessage(), e);
         }
         return dl;
     }
@@ -3024,7 +3045,7 @@ public class LdapProvisioning extends LdapProv {
     private DistributionList getDistributionListById(String zimbraId, ZLdapContext zlc) throws ServiceException {
         //zimbraId = LegacyLdapUtil.escapeSearchFilterArg(zimbraId);
         return getDistributionListByQuery(mDIT.mailBranchBaseDN(),
-                                          LdapFilter.distributionListById(zimbraId),
+                                          filterFactory.distributionListById(zimbraId),
                                           zlc, null);
     }
 
@@ -3084,8 +3105,7 @@ public class LdapProvisioning extends LdapProv {
 
         listAddress = LdapUtilCommon.escapeSearchFilterArg(listAddress);
         return getDistributionListByQuery(mDIT.mailBranchBaseDN(),
-                                          LdapFilter.distributionListByName(listAddress),
-                                          null, null);
+                filterFactory.distributionListByName(listAddress), null, null);
     }
     
     @Override
@@ -3157,7 +3177,7 @@ public class LdapProvisioning extends LdapProv {
         DistributionList dl = sAclGroupCache.getById(groupId);
         if (dl == null) {
             dl = getDistributionListByQuery(mDIT.mailBranchBaseDN(),
-                    LdapFilter.distributionListById(groupId),
+                    filterFactory.distributionListById(groupId),
                     null, sMinimalDlAttrs);
             if (dl != null) {
                 // while we have the members, compute upward membership and cache it
@@ -3179,8 +3199,7 @@ public class LdapProvisioning extends LdapProv {
         DistributionList dl = sAclGroupCache.getByName(groupName);
         if (dl == null) {
             dl = getDistributionListByQuery(mDIT.mailBranchBaseDN(),
-                                            LdapFilter.distributionListByName(groupName),
-                                            null, sMinimalDlAttrs);
+                    filterFactory.distributionListByName(groupName), null, sMinimalDlAttrs);
             if (dl != null) {
                 // while we have the members, compute upward membership and cache it
                 AclGroups groups = computeUpwardMembership(dl);
@@ -4080,7 +4099,7 @@ public class LdapProvisioning extends LdapProv {
         
         try {
             ZSearchResultEnumeration ne = helper.searchDir(mDIT.zimletBaseDN(), 
-                    LdapFilter.allZimlets(), ZSearchControls.SEARCH_CTLS_SUBTREE());
+                    filterFactory.allZimlets(), ZSearchControls.SEARCH_CTLS_SUBTREE());
             while (ne.hasMore()) {
                 ZSearchResultEntry sr = ne.next();
              result.add(new LdapZimlet(sr.getDN(), sr.getAttributes(), this));
@@ -4214,7 +4233,7 @@ public class LdapProvisioning extends LdapProv {
             zimbraId = LdapUtilCommon.escapeSearchFilterArg(zimbraId);
             resource = (LdapCalendarResource) getAccountByQuery(
                 mDIT.mailBranchBaseDN(),
-                LdapFilter.calendarResourceById(zimbraId),
+                filterFactory.calendarResourceById(zimbraId),
                 null, loadFromMaster);
             sAccountCache.put(resource);
         }
@@ -4232,7 +4251,7 @@ public class LdapProvisioning extends LdapProv {
             emailAddress = LdapUtilCommon.escapeSearchFilterArg(emailAddress);
             resource = (LdapCalendarResource) getAccountByQuery(
                 mDIT.mailBranchBaseDN(),
-                LdapFilter.calendarResourceByName(emailAddress),
+                filterFactory.calendarResourceByName(emailAddress),
                 null, loadFromMaster);
             sAccountCache.put(resource);
         }
@@ -4245,7 +4264,7 @@ public class LdapProvisioning extends LdapProv {
         LdapCalendarResource resource =
             (LdapCalendarResource) getAccountByQuery(
                 mDIT.mailBranchBaseDN(),
-                LdapFilter.calendarResourceByForeignPrincipal(foreignPrincipal),
+                filterFactory.calendarResourceByForeignPrincipal(foreignPrincipal),
                 null, loadFromMaster);
         sAccountCache.put(resource);
         return resource;
@@ -4578,8 +4597,7 @@ public class LdapProvisioning extends LdapProv {
         if (group == null) {
             // fetch from LDAP
             group = getDistributionListByQuery(mDIT.mailBranchBaseDN(),
-                        LdapFilter.distributionListById(groupId),
-                        null, sMinimalDlAttrs);
+                    filterFactory.distributionListById(groupId), null, sMinimalDlAttrs);
             if (group != null)
                 sDLCache.put(group);
         }
@@ -4592,8 +4610,7 @@ public class LdapProvisioning extends LdapProv {
         if (group == null) {
             // fetch from LDAP
             group = getDistributionListByQuery(mDIT.mailBranchBaseDN(),
-                        LdapFilter.distributionListByName(groupName),
-                        null, sMinimalDlAttrs);
+                    filterFactory.distributionListByName(groupName), null, sMinimalDlAttrs);
             if (group != null)
                 sDLCache.put(group);
         }
@@ -4713,7 +4730,7 @@ public class LdapProvisioning extends LdapProv {
         LdapDomain ld = (LdapDomain) d;
         String filter = mDIT.filterAccountsByDomain(d, false);
         if (s != null) {
-            String serverFilter = LdapFilter.homedOnServer(s);
+            String serverFilter = filterFactory.homedOnServer(s).toFilterString();
             if (StringUtil.isNullOrEmpty(filter))
                 filter = serverFilter;
             else
@@ -5351,13 +5368,13 @@ public class LdapProvisioning extends LdapProv {
         return addrs;
     }
     
-    private List<Identity> getIdentitiesByQuery(LdapEntry entry, String query, ZLdapContext initZlc) 
+    private List<Identity> getIdentitiesByQuery(LdapEntry entry, ZLdapFilter filter, ZLdapContext initZlc) 
     throws ServiceException {
         List<Identity> result = new ArrayList<Identity>();
         
         try {
             String base = entry.getDN();
-            ZSearchResultEnumeration ne = helper.searchDir(base, query, 
+            ZSearchResultEnumeration ne = helper.searchDir(base, filter, 
                     ZSearchControls.SEARCH_CTLS_SUBTREE(), initZlc, LdapServerType.REPLICA);
             while(ne.hasMore()) {
                 ZSearchResultEntry sr = ne.next();
@@ -5365,14 +5382,15 @@ public class LdapProvisioning extends LdapProv {
             }
             ne.close();
         } catch (ServiceException e) {
-            throw ServiceException.FAILURE("unable to lookup identity via query: "+query+ " message: "+e.getMessage(), e);
+            throw ServiceException.FAILURE("unable to lookup identity via query: "+
+                    filter.toFilterString() + " message: "+e.getMessage(), e);
         }
         return result;
     }
 
     private Identity getIdentityByName(LdapEntry entry, String name,  ZLdapContext zlc) throws ServiceException {
         name = LdapUtilCommon.escapeSearchFilterArg(name);
-        List<Identity> result = getIdentitiesByQuery(entry, LdapFilter.identityByName(name), zlc);
+        List<Identity> result = getIdentitiesByQuery(entry, filterFactory.identityByName(name), zlc);
         return result.isEmpty() ? null : result.get(0);
     }
 
@@ -5554,7 +5572,7 @@ public class LdapProvisioning extends LdapProv {
             return result;
         }
 
-        result = getIdentitiesByQuery(ldapEntry, LdapFilter.allIdentities(), null);
+        result = getIdentitiesByQuery(ldapEntry, filterFactory.allIdentities(), null);
         for (Identity identity: result) {
             // gross hack for 4.5beta. should be able to remove post 4.5
             if (identity.getId() == null) {
@@ -5597,7 +5615,7 @@ public class LdapProvisioning extends LdapProv {
         }
     }
 
-    private List<Signature> getSignaturesByQuery(Account acct, LdapEntry entry, String query, 
+    private List<Signature> getSignaturesByQuery(Account acct, LdapEntry entry, ZLdapFilter filter, 
             ZLdapContext initZlc, List<Signature> result) throws ServiceException {
         if (result == null) {
             result = new ArrayList<Signature>();
@@ -5605,7 +5623,7 @@ public class LdapProvisioning extends LdapProv {
         
         try {
             String base = entry.getDN();
-            ZSearchResultEnumeration ne = helper.searchDir(base, query, 
+            ZSearchResultEnumeration ne = helper.searchDir(base, filter, 
                     ZSearchControls.SEARCH_CTLS_SUBTREE(), initZlc, LdapServerType.REPLICA);
             while(ne.hasMore()) {
                 ZSearchResultEntry sr = ne.next();
@@ -5613,14 +5631,15 @@ public class LdapProvisioning extends LdapProv {
             }
             ne.close();
         } catch (ServiceException e) {
-            throw ServiceException.FAILURE("unable to lookup signature via query: "+query+ " message: "+e.getMessage(), e);
+            throw ServiceException.FAILURE("unable to lookup signature via query: "+
+                    filter.toFilterString() + " message: " + e.getMessage(), e);
         }
         return result;
     }
 
     private Signature getSignatureById(Account acct, LdapEntry entry, String id,  ZLdapContext zlc) throws ServiceException {
         id = LdapUtilCommon.escapeSearchFilterArg(id);
-        List<Signature> result = getSignaturesByQuery(acct, entry, LdapFilter.signatureById(id), zlc, null);
+        List<Signature> result = getSignaturesByQuery(acct, entry, filterFactory.signatureById(id), zlc, null);
         return result.isEmpty() ? null : result.get(0);
     }
 
@@ -5856,7 +5875,7 @@ public class LdapProvisioning extends LdapProv {
         if (acctSig != null)
             result.add(acctSig);
 
-        result = getSignaturesByQuery(account, ldapEntry, LdapFilter.allSignatures(), null, result);
+        result = getSignaturesByQuery(account, ldapEntry, filterFactory.allSignatures(), null, result);
 
         result = Collections.unmodifiableList(result);
         account.setCachedData(SIGNATURE_LIST_CACHE_KEY, result);
@@ -5887,13 +5906,13 @@ public class LdapProvisioning extends LdapProv {
 
     private static final String DATA_SOURCE_LIST_CACHE_KEY = "LdapProvisioning.DATA_SOURCE_CACHE";
 
-    private List<DataSource> getDataSourcesByQuery(LdapEntry entry, String query, ZLdapContext initZlc) 
+    private List<DataSource> getDataSourcesByQuery(LdapEntry entry, ZLdapFilter filter, ZLdapContext initZlc) 
     throws ServiceException {
         List<DataSource> result = new ArrayList<DataSource>();
     
         try {
             String base = entry.getDN();
-            ZSearchResultEnumeration ne = helper.searchDir(base, query, 
+            ZSearchResultEnumeration ne = helper.searchDir(base, filter, 
                     ZSearchControls.SEARCH_CTLS_SUBTREE(), initZlc, LdapServerType.REPLICA);
             while(ne.hasMore()) {
                 ZSearchResultEntry sr = ne.next();
@@ -5901,14 +5920,15 @@ public class LdapProvisioning extends LdapProv {
             }
             ne.close();
         } catch (ServiceException e) {
-            throw ServiceException.FAILURE("unable to lookup data source via query: "+query+ " message: "+e.getMessage(), e);
+            throw ServiceException.FAILURE("unable to lookup data source via query: "+
+                    filter.toFilterString() + " message: " + e.getMessage(), e);
         }
         return result;
     }
 
     private DataSource getDataSourceById(LdapEntry entry, String id,  ZLdapContext zlc) throws ServiceException {
         id= LdapUtilCommon.escapeSearchFilterArg(id);
-        List<DataSource> result = getDataSourcesByQuery(entry, LdapFilter.dataSourceById(id), zlc);
+        List<DataSource> result = getDataSourcesByQuery(entry, filterFactory.dataSourceById(id), zlc);
         return result.isEmpty() ? null : result.get(0);
     }
 
@@ -5963,10 +5983,12 @@ public class LdapProvisioning extends LdapProv {
             query.append(String.format("(%s=%s)", Provisioning.A_zimbraMailAlias, addrs[i]));
         }
         query.append(")");
+        
+        ZLdapFilter filter = filterFactory.fromFilterString(query.toString());
 
         boolean exists = false;
         try {
-            ZSearchResultEnumeration ne = helper.searchDir(baseDN, query.toString(), 
+            ZSearchResultEnumeration ne = helper.searchDir(baseDN, filter, 
                     ZSearchControls.SEARCH_CTLS_SUBTREE(), zlc, LdapServerType.MASTER);
             if (ne.hasMore()) {
                 exists = true;
@@ -6135,7 +6157,7 @@ public class LdapProvisioning extends LdapProv {
         LdapEntry ldapEntry = (LdapEntry) (account instanceof LdapEntry ? account : getAccountById(account.getId()));
         if (ldapEntry == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
-        result = getDataSourcesByQuery(ldapEntry, LdapFilter.allDataSources(), null);
+        result = getDataSourcesByQuery(ldapEntry, filterFactory.allDataSources(), null);
         result = Collections.unmodifiableList(result);
         account.setCachedData(DATA_SOURCE_LIST_CACHE_KEY, result);
         return result;
@@ -6218,16 +6240,17 @@ public class LdapProvisioning extends LdapProv {
         }
     }
     
-    private XMPPComponent getXMPPComponentByQuery(String query, ZLdapContext initZlc) throws ServiceException {
+    private XMPPComponent getXMPPComponentByQuery(ZLdapFilter filter, ZLdapContext initZlc) throws ServiceException {
         try {
-            ZSearchResultEntry sr = helper.searchForEntry(mDIT.xmppcomponentBaseDN(), query, initZlc, false);
+            ZSearchResultEntry sr = helper.searchForEntry(mDIT.xmppcomponentBaseDN(), filter, initZlc, false);
             if (sr != null) {
                 return new LdapXMPPComponent(sr.getDN(), sr.getAttributes(), this);
             }
         } catch (LdapMultipleEntriesMatchedException e) {
             throw AccountServiceException.MULTIPLE_ENTRIES_MATCHED("getXMPPComponentByQuery", e);
         } catch (ServiceException e) {
-            throw ServiceException.FAILURE("unable to lookup XMPP component via query: "+query+" message:"+e.getMessage(), e);
+            throw ServiceException.FAILURE("unable to lookup XMPP component via query: "+
+                    filter.toFilterString() + " message:" + e.getMessage(), e);
         }
         return null;
     }
@@ -6260,7 +6283,7 @@ public class LdapProvisioning extends LdapProv {
             x = sXMPPComponentCache.getById(zimbraId);
         if (x == null) {
             zimbraId = LdapUtilCommon.escapeSearchFilterArg(zimbraId);
-            x = getXMPPComponentByQuery(LdapFilter.xmppComponentById(zimbraId), zlc);
+            x = getXMPPComponentByQuery(filterFactory.xmppComponentById(zimbraId), zlc);
             sXMPPComponentCache.put(x);
         }
         return x;
@@ -6272,7 +6295,7 @@ public class LdapProvisioning extends LdapProv {
         
         try {
             String base = mDIT.xmppcomponentBaseDN();
-            String filter = LdapFilter.allXMPPComponents();
+            ZLdapFilter filter = filterFactory.allXMPPComponents();
 
             ZSearchResultEnumeration ne = helper.searchDir(base, filter, ZSearchControls.SEARCH_CTLS_SUBTREE());
             while (ne.hasMore()) {
@@ -6717,7 +6740,7 @@ public class LdapProvisioning extends LdapProv {
     public long countObjects(CountObjectsType type, Domain domain) throws ServiceException {
 
         String[] bases = null;
-        String query = null;
+        ZLdapFilter filter = null;
         String[] attrs = null;
 
         // figure out bases, query, and attrs for each supported counting type
@@ -6730,7 +6753,7 @@ public class LdapProvisioning extends LdapProv {
             } else
                 bases = getSearchBases(Provisioning.SA_ACCOUNT_FLAG);
 
-            query = LdapFilter.allNonSystemAccounts();
+            filter = filterFactory.allNonSystemAccounts();
             attrs = new String[] {"zimbraId"};
             break;
         default:
@@ -6739,7 +6762,7 @@ public class LdapProvisioning extends LdapProv {
 
         long num = 0;
         for (String base : bases) {
-            num += countObjects(base, query, attrs);
+            num += countObjects(base, filter, attrs);
         }
 
         return num;
@@ -6759,9 +6782,10 @@ public class LdapProvisioning extends LdapProv {
         }
     }
     
-    private long countObjects(String base, String query, String[] attrs) throws ServiceException {
+    @TODO
+    private long countObjects(String base, ZLdapFilter filter, String[] attrs) throws ServiceException {
         CountObjectsVisitor visitor = new CountObjectsVisitor();
-        LdapUtil.searchLdapOnReplica(base, query, attrs, visitor);
+        LdapUtil.searchLdapOnReplica(base, filter.toFilterString(), attrs, visitor);  // TODO: pass filter directly when searchLdapOnReplica supports it
         return visitor.getCount();
     }
 

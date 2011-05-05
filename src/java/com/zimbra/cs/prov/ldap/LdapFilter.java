@@ -32,6 +32,13 @@ public class LdapFilter {
     }
     
     /*
+     * general
+     */
+    public static String anyEntry() {
+        return "(objectclass=*)";
+    }
+    
+    /*
      * account
      */
     public static String allAccounts() {
@@ -71,6 +78,7 @@ public class LdapFilter {
     public static String accountsHomedOnServer(Server server) {
         return "(&" + FILTER_ACCOUNT_OBJECTCLASS + homedOnServer(server) + ")";
     }
+    
     public static String homedOnServer(Server server) {
     	String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname);
     	return homedOnServer(serverName);
@@ -78,6 +86,13 @@ public class LdapFilter {
     
     public static String homedOnServer(String serverName) {
     	return "(" + Provisioning.A_zimbraMailHost + "=" + serverName + ")";
+    }
+    
+    public static String accountsOnServerOnCosHasSubordinates(Server server, String cosId) {
+        return "(&" + LdapFilter.allAccounts() +
+        LdapFilter.homedOnServer(server) +
+        LdapFilter.hasSubordinates() +
+        "(|(!(" + Provisioning.A_zimbraCOSId + "=*))" + "(" + Provisioning.A_zimbraCOSId + "=" + cosId + ")))";
     }
     
     /*
@@ -129,13 +144,6 @@ public class LdapFilter {
         return "(&(objectclass=zimbraDataSource)(zimbraDataSourceName=" + name + "))";
     }
     
-    /* 
-     * XMPPComponent
-     */
-    public static String imComponentById(String id) {
-        return "(&(objectclass=zimbraXMPPComponent)(zimbraXMPPComponentId=" + id + "))";
-    }
-    
     /*
      * distribution list
      */
@@ -179,7 +187,7 @@ public class LdapFilter {
     }
     
     public static String domainLabel() {
-        return "objectclass=dcObject";
+        return "(objectclass=dcObject)";
     }
     
     /*
@@ -229,22 +237,29 @@ public class LdapFilter {
     public static String signatureById(String id) {
         return "(&(objectclass=zimbraSignature)(zimbraSignatureId=" + id +"))";
     }
+
+    
+    /* 
+     * XMPPComponent
+     */
+    public static String allXMPPComponents() {
+        return "(objectclass=zimbraXMPPComponent)";
+    }
+    
+    public static String imComponentById(String id) {
+        return "(&(objectclass=zimbraXMPPComponent)(zimbraXMPPComponentId=" + id + "))";
+    }
+    
+    public static String xmppComponentById(String id) {
+        return "(&(zimbraId=" + id + ")(objectclass=zimbraXMPPComponent))";
+    }
+    
     
     /*
      * zimlet
      */
     public static String allZimlets() {
         return "(objectclass=zimbraZimletEntry)";
-    }
-    
-    /*
-     * xmppcomponent
-     */
-    public static String xmppComponentById(String id) {
-        return "(&(zimbraId=" + id + ")(objectclass=zimbraXMPPComponent))";
-    }
-    public static String allXMPPComponents() {
-        return "(objectclass=zimbraXMPPComponent)";
     }
     
     

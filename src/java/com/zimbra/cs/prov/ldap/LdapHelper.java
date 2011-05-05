@@ -24,6 +24,7 @@ import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
+import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZSearchControls;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
 import com.zimbra.cs.ldap.ZSearchResultEnumeration;
@@ -66,7 +67,7 @@ public abstract class LdapHelper {
      * 
      * @param base        search base
      * 
-     * @param query       search query
+     * @param filter      search filter
      * 
      * @param initZlc     initial ZLdapContext
      *                        - if null, a new one will be created to be used for the search, 
@@ -84,7 +85,7 @@ public abstract class LdapHelper {
      * 
      * @throws ServiceException                     all other errors
      */
-    public abstract ZSearchResultEntry searchForEntry(String base, String query, 
+    public abstract ZSearchResultEntry searchForEntry(String base, ZLdapFilter filter, 
             ZLdapContext initZlc, boolean useMaster) 
     throws LdapMultipleEntriesMatchedException, ServiceException;
     
@@ -114,18 +115,18 @@ public abstract class LdapHelper {
      * Saves callsites the burden of having to get and close ZldapContext
      * 
      * @param baseDN
-     * @param query
+     * @param filter
      * @param searchControls
      * @return
      * @throws LdapException
      */
-    public abstract ZSearchResultEnumeration searchDir(String baseDN, String query, 
+    public abstract ZSearchResultEnumeration searchDir(String baseDN, ZLdapFilter filter, 
             ZSearchControls searchControls, ZLdapContext initZlc, LdapServerType ldapServerType) 
     throws ServiceException;
         
-    public ZSearchResultEnumeration searchDir(String baseDN, String query, 
+    public ZSearchResultEnumeration searchDir(String baseDN, ZLdapFilter filter, 
             ZSearchControls searchControls) 
     throws ServiceException {
-        return searchDir(baseDN, query, searchControls, null, LdapServerType.REPLICA);
+        return searchDir(baseDN, filter, searchControls, null, LdapServerType.REPLICA);
     }
 }
