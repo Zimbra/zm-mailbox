@@ -99,7 +99,7 @@ public class CreateMountpoint extends MailDocumentHandler {
 
         Element response = zsc.createElement(MailConstants.CREATE_MOUNTPOINT_RESPONSE);
         if (mpt != null) {
-            Element eMount = ToXML.encodeMountpoint(response, ifmt, mpt);
+            Element eMount = ToXML.encodeMountpoint(response, ifmt, octxt, mpt);
             // transfer folder counts and subfolders to the serialized mountpoint from the serialized target folder
             SoapSession.transferMountpointContents(eMount, remote);
         }

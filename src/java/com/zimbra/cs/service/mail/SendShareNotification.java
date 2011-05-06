@@ -69,7 +69,7 @@ public class SendShareNotification extends MailDocumentHandler {
         Account authAccount = getAuthenticatedAccount(zsc);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(authAccount, false);
         
-        // validate the share shecpfied in the request and build a share info if all is valid 
+        // validate the share specified in the request and build a share info if all is valid 
         ShareInfoData sid = validateRequest(zsc, context, octxt, authAccount, mbox, request);
         
         // grab notes if there is one
