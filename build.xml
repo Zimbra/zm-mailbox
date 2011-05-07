@@ -644,6 +644,22 @@
             test client box can DNS resolve the home server for the user.
         -->
         <property name="spnego.server.name"         value="${SERVICE_PRINCIPAL_NAME}"/>
+        
+        
+        <!-- 
+            SPNEGO auth realm.  Use SPNEGO_AUTH_REALM environment variable if set.  
+            Exit if the environment variable is not set.
+        -->
+        <condition property="SPNEGO_AUTH_REALM" value="${env.SPNEGO_AUTH_REALM}">
+            <isset property="env.SPNEGO_AUTH_REALM"/>
+        </condition>
+        <fail message="SPNEGO_AUTH_REALM environment variable is not set.">
+            <condition>
+                <not><isset property="SPNEGO_AUTH_REALM"/></not>
+            </condition>
+        </fail>
+        <echo>===== Spnego auth realm: ${SPNEGO_AUTH_REALM} =====</echo>
+        
     </target>
 
     <target name="spnego-inject" depends="spnego-service-name">
@@ -716,14 +732,13 @@
       <echo>===== hostname for spnego: ${SERVICE_PRINCIPAL_NAME} =====</echo>
 
       <property name="zimbraSpnegoAuthEnabled"     value="TRUE"/>
-      <property name="zimbraSpnegoAuthRealm"       value="SPNEGO.LOCAL"/>
+      <property name="zimbraSpnegoAuthRealm"       value="${SPNEGO_AUTH_REALM}"/>
 
       <!-- server -->
-      <property name="zimbraSpnegoAuthPrincipal"   value="HTTP/${SERVICE_PRINCIPAL_NAME}@SPNEGO.LOCAL"/>
+      <property name="zimbraSpnegoAuthPrincipal"   value="HTTP/${SERVICE_PRINCIPAL_NAME}@${SPNEGO_AUTH_REALM}"/>
       <property name="zimbraSpnegoAuthTargetName"  value="HTTP/${SERVICE_PRINCIPAL_NAME}"/>
 
       <!-- domain -->
-      <property name="zimbraPreAuthKey"            value="4e2816f16c44fab20ecdee39fb850c3b0bb54d03f1d8e073aaea376a4f407f0c"/>
       <property name="zimbraVirtualHostname"       value="${spnego.server.name}"/>
       <property name="zimbraWebClientLoginURL"     value="../../service/spnego"/>
       <property name="zimbraWebClientLogoutURL"    value="../?sso=1"/>
