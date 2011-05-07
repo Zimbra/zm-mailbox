@@ -14,7 +14,34 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
+import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
+import java.io.Writer;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.ContentDisposition;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimePart;
+import javax.mail.internet.MimeUtility;
+
+import org.json.JSONException;
+
 import com.zimbra.common.mailbox.ContactConstants;
+import com.zimbra.common.mime.ContentType;
+import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.MimeDetect;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
@@ -28,9 +55,6 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.TruncatingWriter;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.mime.ContentType;
-import com.zimbra.common.mime.MimeConstants;
-import com.zimbra.common.mime.MimeDetect;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
@@ -48,19 +72,35 @@ import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.SearchParams.ExpandResults;
 import com.zimbra.cs.localconfig.DebugConfig;
-import com.zimbra.cs.mailbox.*;
+import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.CalendarItem;
+import com.zimbra.cs.mailbox.Chat;
+import com.zimbra.cs.mailbox.Comment;
+import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.Conversation;
+import com.zimbra.cs.mailbox.Document;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Mountpoint;
+import com.zimbra.cs.mailbox.Note;
+import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.OperationContextData;
+import com.zimbra.cs.mailbox.SearchFolder;
+import com.zimbra.cs.mailbox.SenderList;
+import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
 import com.zimbra.cs.mailbox.CalendarItem.Instance;
-import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.Contact.Attachment;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
-import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
+import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.calendar.Alarm;
 import com.zimbra.cs.mailbox.calendar.Geo;
+import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteChanges;
@@ -71,6 +111,11 @@ import com.zimbra.cs.mailbox.calendar.Recurrence;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
+import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
+import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedAddress;
@@ -79,25 +124,6 @@ import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.ContentDisposition;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimePart;
-import javax.mail.internet.MimeUtility;
-
-import java.io.*;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.json.JSONException;
 
 /**
  * Class containing static methods for encoding various MailItem-derived
@@ -170,7 +196,7 @@ public class ToXML {
         if (folder instanceof SearchFolder)
             return encodeSearchFolder(parent, ifmt, (SearchFolder) folder, fields);
         else if (folder instanceof Mountpoint)
-            return encodeMountpoint(parent, ifmt, (Mountpoint) folder, fields);
+            return encodeMountpoint(parent, ifmt, octxt, (Mountpoint) folder, fields);
 
         Element elem = parent.addElement(MailConstants.E_FOLDER);
         encodeFolderCommon(elem, ifmt, folder, fields);
@@ -192,6 +218,7 @@ public class ToXML {
 
         Mailbox mbox = folder.getMailbox();
         boolean remote = octxt != null && octxt.isDelegatedRequest(mbox);
+        
         boolean canAdminister = !remote;
         if (remote) {
             // return effective permissions only for remote folders
@@ -207,6 +234,17 @@ public class ToXML {
                     encodeACL(octxt, elem, folder.getEffectiveACL(), exposeAclAccessKey);
                 }
             }
+        }
+        
+        try {
+            if(!folder.getAccount().equals(octxt.getAuthenticatedUser())){
+                String url = UserServlet.getExternalRestUrl(octxt, folder);
+                if(url != null ){
+                    elem.addAttribute(MailConstants.A_URL, url);
+                }
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.soap.warn("Error encoding external rest url for folder", e);
         }
         return elem;
     }
@@ -367,12 +405,27 @@ public class ToXML {
         return elem;
     }
 
-    public static Element encodeMountpoint(Element parent, ItemIdFormatter ifmt, Mountpoint mpt) {
-        return encodeMountpoint(parent, ifmt, mpt, NOTIFY_FIELDS);
+    public static Element encodeMountpoint(Element parent, ItemIdFormatter ifmt, OperationContext octx, Mountpoint mpt) {
+        return encodeMountpoint(parent, ifmt, octx, mpt, NOTIFY_FIELDS);
     }
 
-    public static Element encodeMountpoint(Element parent, ItemIdFormatter ifmt, Mountpoint mpt, int fields) {
+    public static Element encodeMountpoint(Element parent, ItemIdFormatter ifmt, OperationContext octx, Mountpoint mpt, int fields) {
+        
         Element elem = parent.addElement(MailConstants.E_MOUNT);
+                
+        // Add the original rest url to the responds if this mount point
+        // is from another user's mailbox
+        try {
+            String remoteUrl = UserServlet.getExternalRestUrl(octx, mpt);
+            if(remoteUrl != null) {
+                elem.addAttribute(MailConstants.A_URL, remoteUrl);
+            }
+        }
+         catch (ServiceException e) {
+            ZimbraLog.soap.warn("unable to create rest url for remote mountpoint", e);
+        }
+         
+
         encodeFolderCommon(elem, ifmt, mpt, fields);
         if (needToOutput(fields, Change.MODIFIED_CONTENT)) {
             elem.addAttribute(MailConstants.A_ZIMBRA_ID, mpt.getOwnerId());

@@ -58,11 +58,13 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ZimbraAuthTokenEncoded;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
@@ -76,6 +78,9 @@ import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.UserServletUtil;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.zclient.ZFolder;
+import com.zimbra.cs.zclient.ZMailbox;
 
 /**
  *
@@ -351,6 +356,86 @@ public class UserServlet extends ZimbraServlet {
         return false;
     }
 
+    /**
+     * Constructs the exteral url for a mount point. This gets the link back to the correct server without need for proxying it
+     * @param authToken 
+     * @param mpt The mount point to create the url for
+     * @return The url for the mountpoint/share that goes back to the original user/share/server
+     * @throws ServiceException 
+     */
+    public static String getExternalRestUrl(OperationContext octxt, Mountpoint mpt) throws ServiceException {
+        // check to see if it is a local mount point, if it is there's 
+        // no need to do anything
+        if(mpt.isLocal()) {
+            return null;
+        }
+        
+        
+        String folderPath = null;
+        
+        // Figure out the target server from the target user's account.
+        // This will let us get the correct server/port
+        Provisioning prov = Provisioning.getInstance();
+        Account targetAccount = prov.get(AccountBy.id, mpt.getOwnerId());
+        Server targetServer = prov.getServer(targetAccount);
+        
+        // Avoid the soap call if its a local mailbox
+        if (Provisioning.onLocalServer(targetAccount)) {
+            Mailbox mailbox = MailboxManager.getInstance().getMailboxByAccountId(octxt.getAuthToken().getAccount().getId());
+            if(mailbox == null){
+                // no mailbox (shouldn't happen normally)
+                return null;
+            }
+            // Get the folder from the mailbox
+            Folder folder = mailbox.getFolderById(octxt, mpt.getFolderId());
+            if(folder == null) {
+                return null;
+            }
+            folderPath = folder.getPath();
+        } else {
+            // The remote server case
+            // Get the target user's mailbox.. 
+            ZMailbox.Options zoptions = new ZMailbox.Options(octxt.getAuthToken().toZAuthToken(), AccountUtil.getSoapUri(targetAccount));
+            zoptions.setTargetAccount(mpt.getOwnerId());
+            zoptions.setTargetAccountBy(AccountBy.id);
+            zoptions.setNoSession(true);
+            ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
+            if(zmbx == null) {
+                // we didn't manage to get a mailbox
+                return null;
+            }
+            
+            // Get an instance of their folder so we can build the path correctly
+            ZFolder folder = zmbx.getFolder(mpt.getTarget().toString(octxt.getAuthToken().getAccount().getId()));
+            // if for some reason we can't find the folder, return null
+            if(folder == null){
+                return null;
+            }
+            folderPath = folder.getPath();
+        }
+        // For now we'll always use SSL
+        return URLUtil.getServiceURL(targetServer, SERVLET_PATH + HttpUtil.urlEscape(getAccountPath(targetAccount) +folderPath) , true);
+    }
+    
+    /**
+     * Constructs the exteral url for a mount point. This gets the link back to the correct server without need for proxying it
+     * @param authToken 
+     * @param mpt The mount point to create the url for
+     * @return The url for the mountpoint/share that goes back to the original user/share/server
+     * @throws ServiceException 
+     */
+    public static String getExternalRestUrl(OperationContext octxt, Folder folder) throws ServiceException {
+        // Figure out the target server from the target user's account.
+        // This will let us get the correct server/port
+        Provisioning prov = Provisioning.getInstance();
+        Account targetAccount = folder.getAccount(); 
+            
+        Server targetServer = prov.getServer(targetAccount);
+        
+        // For now we'll always use SSL
+        return URLUtil.getServiceURL(targetServer, SERVLET_PATH + HttpUtil.urlEscape(getAccountPath(targetAccount) +folder.getPath()) , true);
+    }
+    
     private void doAuthGet(HttpServletRequest req, HttpServletResponse resp, UserServletContext context)
     throws ServletException, IOException, ServiceException, UserServletException {
         if (ZimbraLog.mailbox.isDebugEnabled()) {
