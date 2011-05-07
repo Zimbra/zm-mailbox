@@ -64,6 +64,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
@@ -362,27 +363,52 @@ public class UserServlet extends ZimbraServlet {
         if(mpt.isLocal()) {
             return null;
         }
+        
+        
+        String folderPath = null;
+        
         // Figure out the target server from the target user's account.
         // This will let us get the correct server/port
         Provisioning prov = Provisioning.getInstance();
         Account targetAccount = prov.get(AccountBy.id, mpt.getOwnerId());
         Server targetServer = prov.getServer(targetAccount);
         
-        // Get the target user's mailbox.. Note this could be on another server
-        ZMailbox.Options zoptions = new ZMailbox.Options(authToken.toZAuthToken(), AccountUtil.getSoapUri(targetAccount));
-        zoptions.setTargetAccount(mpt.getOwnerId());
-        zoptions.setTargetAccountBy(AccountBy.id);
-        zoptions.setNoSession(true);
-        ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
-        
-        // Get an instance of their folder so we can build the path correctly
-        ZFolder folder = zmbx.getFolder(mpt.getTarget().toString(authToken.getAccount().getId()));
-        // if for some reason we can't find the folder, return null
-        if(folder == null){
-            return null;
+        // Avoid the soap call if its a local mailbox
+        if (Provisioning.onLocalServer(targetAccount)) {
+            Mailbox mailbox = MailboxManager.getInstance().getMailboxByAccountId(authToken.getAccount().getId());
+            if(mailbox == null){
+                // no mailbox (shouldn't happen normally)
+                return null;
+            }
+            // Get the folder from the mailbox
+            Folder folder = mailbox.getFolderById(mpt.getFolderId());
+            if(folder == null) {
+                return null;
+            }
+            folderPath = folder.getPath();
+        } else {
+            // The remote server case
+            // Get the target user's mailbox.. 
+            ZMailbox.Options zoptions = new ZMailbox.Options(authToken.toZAuthToken(), AccountUtil.getSoapUri(targetAccount));
+            zoptions.setTargetAccount(mpt.getOwnerId());
+            zoptions.setTargetAccountBy(AccountBy.id);
+            zoptions.setNoSession(true);
+            ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
+            if(zmbx == null) {
+                // we didn't manage to get a mailbox
+                return null;
+            }
+            
+            // Get an instance of their folder so we can build the path correctly
+            ZFolder folder = zmbx.getFolder(mpt.getTarget().toString(authToken.getAccount().getId()));
+            // if for some reason we can't find the folder, return null
+            if(folder == null){
+                return null;
+            }
+            folderPath = folder.getPath();
         }
         // For now we'll always use SSL
-        return URLUtil.getServiceURL(targetServer, SERVLET_PATH + HttpUtil.urlEscape(getAccountPath(targetAccount) +folder.getPath()) , true);
+        return URLUtil.getServiceURL(targetServer, SERVLET_PATH + HttpUtil.urlEscape(getAccountPath(targetAccount) +folderPath) , true);
     }
     
     /**
