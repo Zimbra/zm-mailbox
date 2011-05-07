@@ -1747,16 +1747,16 @@ public class DbMailItem {
         // from appointment and revision tables to their dumpster counterparts.  They are copied here,
         // just before cascaded deletes following mail_item deletion.
         String command = Db.supports(Db.Capability.REPLACE_INTO) ? "REPLACE" : "INSERT";
-        String whereIdIn = DbUtil.whereIn("id", count);
-        String whereItemIdIn = DbUtil.whereIn("item_id", count);
-        String notSpam = !mbox.useDumpsterForSpam() ? " AND folder_id != " + Mailbox.ID_FOLDER_SPAM : "";
-        String notDraft = " AND folder_id != " + Mailbox.ID_FOLDER_DRAFTS;
+        String miWhere = DbUtil.whereIn("id", count) +
+                         " AND type IN " + DUMPSTER_TYPES +
+                         (!mbox.useDumpsterForSpam() ? " AND folder_id != " + Mailbox.ID_FOLDER_SPAM : "") +
+                         " AND folder_id != " + Mailbox.ID_FOLDER_DRAFTS;
         PreparedStatement miCopyStmt = null;
         try {
             miCopyStmt = conn.prepareStatement(command + " INTO " + dumpsterMiTableName +
                     " (" + MAIL_ITEM_DUMPSTER_COPY_DEST_FIELDS + ")" +
                     " SELECT " + MAIL_ITEM_DUMPSTER_COPY_SRC_FIELDS + " FROM " + miTableName +
-                    " WHERE " + IN_THIS_MAILBOX_AND + whereIdIn + " AND type IN " + DUMPSTER_TYPES + notSpam + notDraft);
+                    " WHERE " + IN_THIS_MAILBOX_AND + miWhere);
             int pos = 1;
             miCopyStmt.setInt(pos++, mbox.getOperationTimestamp());
             pos = setMailboxId(miCopyStmt, mbox, pos);
@@ -1771,8 +1771,10 @@ public class DbMailItem {
         try {
             ciCopyStmt = conn.prepareStatement(command + " INTO " + dumpsterCiTableName +
                     " SELECT * FROM " + ciTableName +
-                    " WHERE " + IN_THIS_MAILBOX_AND + whereItemIdIn);
+                    " WHERE " + IN_THIS_MAILBOX_AND + "item_id IN" +
+                    " (SELECT id FROM " + miTableName + " WHERE " + IN_THIS_MAILBOX_AND + miWhere + ")");
             int pos = 1;
+            pos = setMailboxId(ciCopyStmt, mbox, pos);
             pos = setMailboxId(ciCopyStmt, mbox, pos);
             for (int i = offset; i < offset + count; ++i)
                 ciCopyStmt.setInt(pos++, ids.get(i));
@@ -1785,8 +1787,10 @@ public class DbMailItem {
         try {
             revCopyStmt = conn.prepareStatement(command + " INTO " + dumpsterRevTableName +
                     " SELECT * FROM " + revTableName +
-                    " WHERE " + IN_THIS_MAILBOX_AND + whereItemIdIn);
+                    " WHERE " + IN_THIS_MAILBOX_AND + "item_id IN" +
+                    " (SELECT id FROM " + miTableName + " WHERE " + IN_THIS_MAILBOX_AND + miWhere + ")");
             int pos = 1;
+            pos = setMailboxId(revCopyStmt, mbox, pos);
             pos = setMailboxId(revCopyStmt, mbox, pos);
             for (int i = offset; i < offset + count; ++i)
                 revCopyStmt.setInt(pos++, ids.get(i));
