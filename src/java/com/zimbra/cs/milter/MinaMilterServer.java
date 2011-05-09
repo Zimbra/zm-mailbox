@@ -14,17 +14,22 @@
  */
 package com.zimbra.cs.milter;
 
+import java.util.Observable;
 import java.util.concurrent.ExecutorService;
 
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolDecoder;
 import org.apache.mina.filter.codec.ProtocolEncoder;
 
+import sun.misc.Signal;
+import sun.misc.SignalHandler;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.PermissionCache;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.mina.MinaCodecFactory;
@@ -97,14 +102,60 @@ public class MinaMilterServer extends MinaServer implements MilterServer {
             MilterConfig config = new MilterConfig();
             milterNioHandlerPool = ServerManager.newNioHandlerPool(config);
             milterServer = new MinaMilterServer(config, milterNioHandlerPool);
+
+            // register the signal handler
+            ClearCacheSignalHandler.register();
             
             MilterShutdownHook shutdownHook = new MilterShutdownHook(milterServer);
             Runtime.getRuntime().addShutdownHook(shutdownHook);
+            
+
             
             ZimbraLog.milter.info("Starting milter server");
             milterServer.start();
         } catch (ServiceException e) {
             ZimbraLog.milter.error("Unable to start milter server: " + e.getMessage());
         }
+    }
+    
+    /**
+     * The signal handler for SIGCONT that triggers the 
+     * invalidation of the Permission cache
+     * @author jpowers
+     *
+     */
+    static class ClearCacheSignalHandler implements SignalHandler {
+
+        /**
+         * Handles the signal, resets the cache
+         */
+        @Override
+        public void handle(Signal signal) {
+            ZimbraLog.milter.info("Received Signal:" + signal.getName());
+            ZimbraLog.milter.info("Begin ACL cache invalidation");
+            PermissionCache.invalidateCache();
+            ZimbraLog.milter.info("ACL cache successfully cleared");
+        }
+        
+        
+        /**
+         * Creates the signal handler and registers it with the vm
+         */
+        public static void register() {
+            try{
+                Signal hup = new Signal("CONT"); 
+                ClearCacheSignalHandler handler = new ClearCacheSignalHandler();
+                // register it
+                Signal.handle(hup, handler);
+                ZimbraLog.milter.info("Registered handler:" + hup.getName() + ":" + hup.getNumber());
+            }
+            catch(Throwable t){
+                // in case we're running on an os that doesn't have a HUP. Need to make sure 
+                // milter will still start
+                ZimbraLog.milter.error("Exception while registering signal handler CONT/19 and script refresh will not work", t);
+            }
+            
+        }
+        
     }
 }
