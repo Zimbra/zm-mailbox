@@ -57,22 +57,15 @@ public class ModifyContact extends MailDocumentHandler  {
         ItemId iid = new ItemId(cn.getAttribute(MailConstants.A_ID), zsc);
 
         Contact contact = mbox.getContactById(octxt, iid.getId());
-        Pair<Map<String,Object>, List<Attachment>> cdata = CreateContact.parseContact(cn, zsc, octxt, contact);
+        
         ParsedContact pc;
-        if (replace)
+        if (replace) {
+            Pair<Map<String,Object>, List<Attachment>> cdata = CreateContact.parseContact(cn, zsc, octxt, contact);
             pc = new ParsedContact(cdata.getFirst(), cdata.getSecond());
-        else {
-        	// for non-replace mode, support only single value per field
-        	Map<String,String> fields = new HashMap<String,String>();
-        	for (Map.Entry<String, Object> field : cdata.getFirst().entrySet()) {
-        		String key = field.getKey();
-        		Object value = field.getValue();
-        		if (value instanceof String[]) {
-        			throw ServiceException.INVALID_REQUEST("multi-valued field is only supported in replace mode", null);
-        		}
-        		fields.put(key, (String)value);
-        	}
-            pc = new ParsedContact(contact).modify(fields, cdata.getSecond());
+        } else {
+            Pair<ParsedContact.FieldDeltaList, List<Attachment>> cdata = 
+                CreateContact.parseContactMergeMode(cn, zsc, octxt, contact);
+            pc = new ParsedContact(contact).modify(cdata.getFirst(), cdata.getSecond());
         }
         
         mbox.modifyContact(octxt, iid.getId(), pc);
