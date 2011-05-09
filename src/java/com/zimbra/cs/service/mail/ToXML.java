@@ -2463,23 +2463,7 @@ public class ToXML {
 
     private static void encodeAddrsWithGroupInfo(Provisioning prov, Element eParent,
             String emailElem, Account requestedAcct, Account authedAcct) {
-        for (Element eEmail : eParent.listElements(emailElem)) {
-            String addr = eEmail.getAttribute(MailConstants.A_ADDRESS, null);
-            if (addr != null) {
-                // shortcut the check if the email address is the authed or requested account - it cannot be a group
-                if (addr.equalsIgnoreCase(requestedAcct.getName()) || addr.equalsIgnoreCase(authedAcct.getName()))
-                    continue;
-
-                GroupInfo groupInfo = GalGroupInfoProvider.getInstance().getGroupInfo(addr, true, requestedAcct, authedAcct);
-                if (GroupInfo.IS_GROUP == groupInfo) {
-                    eEmail.addAttribute(MailConstants.A_IS_GROUP, true);
-                    eEmail.addAttribute(MailConstants.A_EXP, false);
-                } else if (GroupInfo.CAN_EXPAND == groupInfo) {
-                    eEmail.addAttribute(MailConstants.A_IS_GROUP, true);
-                    eEmail.addAttribute(MailConstants.A_EXP, true);
-                }
-            }
-        }
+        GalGroupInfoProvider.getInstance().encodeAddrsWithGroupInfo(prov, eParent, emailElem, requestedAcct, authedAcct);
     }
 
     public static void encodeMsgAddrsWithGroupInfo(Element response, Account requestedAcct, Account authedAcct) {
