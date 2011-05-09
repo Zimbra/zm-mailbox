@@ -114,7 +114,9 @@ public class CreateContact extends MailDocumentHandler  {
         return parseContact(cn, zsc, octxt, null);
     }
 
-    static Pair<Map<String,Object>, List<Attachment>> parseContact(Element cn, ZimbraSoapContext zsc, OperationContext octxt, Contact existing) throws ServiceException {
+    static Pair<Map<String,Object>, List<Attachment>> parseContact(
+            Element cn, ZimbraSoapContext zsc, OperationContext octxt, Contact existing) 
+    throws ServiceException {
         Map<String, Object> fields = new HashMap<String, Object>();
         List<Attachment> attachments = new ArrayList<Attachment>();
 
@@ -125,6 +127,12 @@ public class CreateContact extends MailDocumentHandler  {
 
             Attachment attach = parseAttachment(elt, name, zsc, octxt, existing);
             if (attach == null) {
+                String opStr = elt.getAttribute(MailConstants.A_OPERATION, null);
+                if (opStr != null) {
+                    throw ServiceException.INVALID_REQUEST(MailConstants.A_OPERATION + 
+                            " is not allowed", null);
+                }
+                
                 StringUtil.addToMultiMap(fields, name, elt.getText());
             } else {
                 attachments.add(attach);
@@ -132,6 +140,29 @@ public class CreateContact extends MailDocumentHandler  {
         }
 
         return new Pair<Map<String,Object>, List<Attachment>>(fields, attachments);
+    }
+    
+    static Pair<ParsedContact.FieldDeltaList, List<Attachment>> parseContactMergeMode(
+            Element cn, ZimbraSoapContext zsc, OperationContext octxt, Contact existing) 
+    throws ServiceException {
+        ParsedContact.FieldDeltaList deltaList = new ParsedContact.FieldDeltaList();
+        List<Attachment> attachments = new ArrayList<Attachment>();
+
+        for (Element elt : cn.listElements(MailConstants.E_ATTRIBUTE)) {
+            String name = elt.getAttribute(MailConstants.A_ATTRIBUTE_NAME);
+            if (name.trim().equals(""))
+                throw ServiceException.INVALID_REQUEST("at least one contact field name is blank", null);
+
+            Attachment attach = parseAttachment(elt, name, zsc, octxt, existing);
+            if (attach == null) {
+                String opStr = elt.getAttribute(MailConstants.A_OPERATION, null);
+                deltaList.addDelta(name, elt.getText(), opStr);
+            } else {
+                attachments.add(attach);
+            }
+        }
+
+        return new Pair<ParsedContact.FieldDeltaList, List<Attachment>>(deltaList, attachments);
     }
 
     private static Attachment parseAttachment(Element elt, String name, ZimbraSoapContext zsc, OperationContext octxt, Contact existing) throws ServiceException {

@@ -2361,7 +2361,7 @@ END:VCARD]
 
 <ModifyContactRequest [replace="{replace-mode}"] [verbose="0|1"]>
   <cn id="...">
-    <a>{attr-value}</a>+
+    <a n="{name}" op="{op}">{attr-value}</a>+
   </cn>
 </ModifyContactRequest>
 
@@ -2371,6 +2371,22 @@ END:VCARD]
 
   if replace-mode is 1, all attrs in the specified contact are replaced with specified attrs, otherwise
   the attrs are merged with the existing contact.
+  
+ {op} = + | -
+        + : add the value
+        - : remvoe the value
+        
+        {op} is not allowed if replace-mode is 1, if specified when replace=1, INVALID_REQUEST will be thrown
+        
+        When replace=0:
+        (1) if op is not present:
+               if {attr-value} is empty, remove the field
+               otherwise, replace the field with this value
+
+        (2) if op is present:
+               if {attr-value} is empty, throw INVALID_REQUEST
+               - otherwise, add/remove the specified value.
+  
 
 <ModifyContactResponse>
    <cn ...>
