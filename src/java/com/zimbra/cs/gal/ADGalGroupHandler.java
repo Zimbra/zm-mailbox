@@ -86,7 +86,8 @@ public class ADGalGroupHandler extends GalGroupHandler {
             
             try {
                 LdapHelper ldapHelper = LdapProv.getInst().getHelper();
-                SearchLdapOptions searchOptions = new SearchLdapOptions(searchBase, query, returnAttrs, null, this);
+                SearchLdapOptions searchOptions = new SearchLdapOptions(searchBase, query, 
+                        returnAttrs, SearchLdapOptions.SIZE_UNLIMITED, null, this);
                 ldapHelper.searchLdap(zlc, searchOptions);
             } catch (ServiceException e) {
                 // log and continue

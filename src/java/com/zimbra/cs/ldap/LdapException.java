@@ -32,6 +32,7 @@ public class LdapException extends ServiceException {
     public static final String INVALID_ATTR_VALUE       = "ldap.INVALID_ATTR_VALUE";
     public static final String INVALID_NAME             = "ldap.INVALID_NAME";
     public static final String MULTIPLE_ENTRIES_MATCHED = "ldap.MULTIPLE_ENTRIES_MATCHED";
+    public static final String SIZE_LIMIT_EXCEEDED      = "ldap.SIZE_LIMIT_EXCEEDED";
         
     
     private static String format(String msg1, String msg2) {
@@ -96,6 +97,10 @@ public class LdapException extends ServiceException {
         return new LdapMultipleEntriesMatchedException(base, query, dups);
     }
     
+    public static LdapException SIZE_LIMIT_EXCEEDED(String message, Throwable cause) {
+        return new LdapSizeLimitExceededException(message, cause);
+    }
+    
     
     //
     // Subclasses mapped to native(JNDI/UBID) ldap exceptions
@@ -142,6 +147,11 @@ public class LdapException extends ServiceException {
             super(String.format("multiple entries matched: base=%s, query=%s, entries=%s",
                     base, query, dups), MULTIPLE_ENTRIES_MATCHED, null);
         }
-    }    
+    }
     
+    public static class LdapSizeLimitExceededException extends LdapException {
+        private LdapSizeLimitExceededException(String message, Throwable cause) {
+            super(format("size limit exceeded", message), INVALID_NAME, cause);
+        }
+    }
 }

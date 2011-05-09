@@ -20,6 +20,9 @@ import java.util.Set;
 
 public class SearchLdapOptions {
     
+    public static final int SIZE_UNLIMITED  = 0;
+    public static final String[] RETURN_ALL_ATTRS = null;
+    
     public static interface SearchLdapVisitor {
           public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs);
     }
@@ -28,16 +31,19 @@ public class SearchLdapOptions {
     
     private String searchBase;
     private String query;
-    private String[] returnAttrs;
+    private String[] returnAttrs = RETURN_ALL_ATTRS;
+    private int maxResults = SIZE_UNLIMITED;
     private Set<String> binaryAttrs;
     private int resultPageSize  = DEFAULT_RESULT_PAGE_SIZE; // hardcoded for now, add setter API when needed
     private SearchLdapOptions.SearchLdapVisitor visitor;
     
-    public SearchLdapOptions(String searchbase, String query, String[] returnAttrs, 
-            Set<String> binaryAttrs, SearchLdapOptions.SearchLdapVisitor visitor) {
+    public SearchLdapOptions(String searchbase, String query, 
+            String[] returnAttrs, int maxResults, Set<String> binaryAttrs, 
+            SearchLdapOptions.SearchLdapVisitor visitor) {
         setSearchBase(searchbase);
         setQuery(query);
         setReturnAttrs(returnAttrs);
+        setMaxResults(maxResults);
         setBinaryAttrs(binaryAttrs);
         setVisitor(visitor);
     }
@@ -51,6 +57,10 @@ public class SearchLdapOptions {
     
     public String[] getReturnAttrs() {
         return returnAttrs;
+    }
+    
+    public int getMaxResults() {
+        return maxResults;
     }
     
     public Set<String> getBinaryAttrs() {
@@ -75,6 +85,10 @@ public class SearchLdapOptions {
     
     public void setReturnAttrs(String[] returnAttrs) {
         this.returnAttrs = returnAttrs;
+    }
+    
+    public void setMaxResults(int maxResults) {
+        this.maxResults = maxResults;
     }
     
     public void setBinaryAttrs(Set<String> binaryAttrs) {

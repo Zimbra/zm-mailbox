@@ -61,7 +61,8 @@ public class LdapUtil {
     private static void searchZimbraLdap(String base, String query, String[] returnAttrs, 
             boolean useMaster, SearchLdapVisitor visitor) throws ServiceException {
         
-        SearchLdapOptions searchOptions = new SearchLdapOptions(base, query, returnAttrs, null, visitor);
+        SearchLdapOptions searchOptions = new SearchLdapOptions(base, query, 
+                returnAttrs, SearchLdapOptions.SIZE_UNLIMITED, null, visitor);
         
         ZLdapContext zlc = null;
         try {

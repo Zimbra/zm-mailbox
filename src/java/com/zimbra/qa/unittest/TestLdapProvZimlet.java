@@ -44,6 +44,12 @@ private static Provisioning prov;
         attrs.put(Provisioning.A_zimbraZimletVersion, "1.0");
         zimlet = prov.createZimlet(zimletName, attrs);
         assertNotNull(zimlet);
+        
+        prov.flushCache(CacheEntryType.zimlet, null);
+        zimlet = prov.getZimlet(zimletName);
+        assertNotNull(zimlet);
+        assertEquals(zimletName.toLowerCase(), zimlet.getName().toLowerCase());
+        
         return zimlet;
     }
     
@@ -56,7 +62,7 @@ private static Provisioning prov;
     
     @Test
     public void createZimlet() throws Exception {
-        String ZIMLET_NAME = TestLdap.makeRFC2253Name("createZimlet");
+        String ZIMLET_NAME = TestLdap.makeZimletName("createZimlet");
         Zimlet zimlet = createZimlet(ZIMLET_NAME);
         
         deleteZimlet(zimlet);
@@ -64,7 +70,7 @@ private static Provisioning prov;
     
     @Test
     public void createZimletAlreadyExists() throws Exception {
-        String ZIMLET_NAME = "createZimletAlreadyExists";
+        String ZIMLET_NAME = TestLdap.makeZimletName("createZimletAlreadyExists");
         Zimlet zimlet = createZimlet(ZIMLET_NAME);
         
         boolean caughtException = false;
@@ -90,7 +96,7 @@ private static Provisioning prov;
     
     @Test
     public void getZimlet() throws Exception {
-        String ZIMLET_NAME = "getZimlet";
+        String ZIMLET_NAME = TestLdap.makeZimletName("getZimlet");
         Zimlet zimlet = createZimlet(ZIMLET_NAME);
         
         prov.flushCache(CacheEntryType.zimlet, null);
@@ -102,7 +108,7 @@ private static Provisioning prov;
     
     @Test
     public void getZimletNotExist() throws Exception {
-        String ZIMLET_NAME = "getZimletNotExist";
+        String ZIMLET_NAME = TestLdap.makeZimletName("getZimletNotExist");
         Zimlet zimlet = prov.getZimlet(ZIMLET_NAME);
         assertNull(zimlet);
     }

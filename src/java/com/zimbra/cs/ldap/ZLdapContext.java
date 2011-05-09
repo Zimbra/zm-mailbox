@@ -39,6 +39,8 @@ public abstract class ZLdapContext extends ZLdapElement implements ILdapContext 
     
     public abstract ZAttributes getAttributes(String dn) throws LdapException;
     
+    public abstract ZLdapSchema getSchema() throws LdapException;
+    
     public abstract void modifyAttributes(String dn, ZModificationList modList) 
     throws LdapException;
     

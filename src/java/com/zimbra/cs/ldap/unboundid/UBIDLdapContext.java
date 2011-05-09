@@ -21,8 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.net.SocketFactory;
-
 import com.unboundid.asn1.ASN1OctetString;
 import com.unboundid.ldap.sdk.Control;
 import com.unboundid.ldap.sdk.DereferencePolicy;
@@ -43,13 +41,10 @@ import com.unboundid.ldap.sdk.SearchRequest;
 import com.unboundid.ldap.sdk.SearchResult;
 import com.unboundid.ldap.sdk.SearchResultEntry;
 import com.unboundid.ldap.sdk.controls.SimplePagedResultsControl;
+import com.unboundid.ldap.sdk.schema.Schema;
 
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.net.SocketFactories;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.ldap.LdapConfig;
 import com.zimbra.cs.ldap.LdapConnType;
 import com.zimbra.cs.ldap.LdapConstants;
@@ -60,13 +55,11 @@ import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.ZLdapFilter;
+import com.zimbra.cs.ldap.ZLdapSchema;
 import com.zimbra.cs.ldap.ZModificationList;
 import com.zimbra.cs.ldap.ZMutableEntry;
 import com.zimbra.cs.ldap.ZSearchControls;
 import com.zimbra.cs.ldap.ZSearchResultEnumeration;
-import com.zimbra.cs.ldap.ZSearchScope;
-import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
-
 
 public class UBIDLdapContext extends ZLdapContext {
     
@@ -284,6 +277,16 @@ public class UBIDLdapContext extends ZLdapContext {
     }
     
     @Override
+    public ZLdapSchema getSchema() throws LdapException {
+        try {
+            Schema schema = conn.getSchema();
+            return new UBIDLdapSchema(schema);
+        } catch (LDAPException e) {
+            throw UBIDLdapException.mapToLdapException(e);
+        }
+    }
+    
+    @Override
     @TODO
     public void modifyAttributes(String dn, ZModificationList modList) throws LdapException {
         try {
@@ -347,9 +350,8 @@ public class UBIDLdapContext extends ZLdapContext {
     
     
     @Override
-    @TODO  // figure out how to throw TOO_MANY_SEARCH_RESULTS (the equivalent of JNDI SizeLimitExceededException)
     public void searchPaged(SearchLdapOptions searchOptions) throws ServiceException {
-        int maxResults = 0; // no limit
+        int maxResults = searchOptions.getMaxResults();
         String base = searchOptions.getSearchBase();
         String query = searchOptions.getQuery();
         Set<String> binaryAttrs = searchOptions.getBinaryAttrs();
@@ -419,7 +421,6 @@ public class UBIDLdapContext extends ZLdapContext {
     }
     
     @Override
-    @TODO // must throw LdapContextNotEmptyException
     public void unbindEntry(String dn) throws LdapException {
         try {
             conn.delete(dn);
@@ -427,6 +428,8 @@ public class UBIDLdapContext extends ZLdapContext {
             throw UBIDLdapException.mapToLdapException(e);
         }
     }
+
+
 
     
 }

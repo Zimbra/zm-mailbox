@@ -45,8 +45,7 @@ public class TestLdapProvAccount {
         TestLdap.manualInit();
         
         prov = Provisioning.getInstance();
-        domain = prov.createDomain(baseDomainName(), new HashMap<String, Object>());
-        assertNotNull(domain);
+        domain = TestLdapProvDomain.createDomain(prov, baseDomainName(), null);
     }
     
     @AfterClass
@@ -59,38 +58,56 @@ public class TestLdapProvAccount {
         return TestLdapProvAccount.class.getName().toLowerCase();
     }
     
-    private Account createAccount(String localPart) throws Exception {
-        return createAccount(localPart, null);
-    }
-    
-    private Account createAccount(String localPart, Map<String, Object> attrs) throws Exception {
+    static Account createAccount(Provisioning prov, String localPart, Domain domain, Map<String, Object> attrs)
+    throws Exception {
         String acctName = TestUtil.getAddress(localPart, domain.getName());
+        prov.flushCache(CacheEntryType.account, null);
         Account acct = prov.get(AccountBy.name, acctName);
         assertNull(acct);
                 
         acct = prov.createAccount(acctName, "test123", attrs);
         assertNotNull(acct);
+        
+        prov.flushCache(CacheEntryType.account, null);
+        acct = prov.get(AccountBy.name, acctName);
+        assertNotNull(acct);
+        assertEquals(acctName.toLowerCase(), acct.getName().toLowerCase());
+        
         return acct;
     }
     
-    private void deleteAccount(Account acct) throws Exception {
+    static void deleteAccount(Provisioning prov, Account acct) throws Exception {
         String acctId = acct.getId();
         prov.deleteAccount(acctId);
+        prov.flushCache(CacheEntryType.account, null);
         acct = prov.get(AccountBy.id, acctId);
         assertNull(acct);
+    }
+
+    
+    private Account createAccount(String localPart) throws Exception {
+        return createAccount(localPart, null);
+    }
+    
+    private Account createAccount(String localPart, Map<String, Object> attrs) throws Exception {
+        return createAccount(prov, localPart, domain, attrs);
+    }
+    
+    private void deleteAccount(Account acct) throws Exception {
+        deleteAccount(prov, acct);
     }
     
     @Test
     public void createAccount() throws Exception {
-        String ACCT_NAME = TestLdap.makeRFC2253NameEmailLocalPart("createAccount");
-        Account acct = createAccount(ACCT_NAME);
+        String ACCT_NAME_LOCALPART = TestLdap.makeAccountNameLocalPart("createAccount");
+        Account acct = createAccount(ACCT_NAME_LOCALPART);
         deleteAccount(acct);
     }
     
     @Test
     public void createAccountAlreadyExists() throws Exception {
-        String ACCT_NAME = "createAccountAlreadyExists";
-        Account acct = createAccount(ACCT_NAME);
+        String ACCT_NAME_LOCALPART = TestLdap.makeAccountNameLocalPart("createAccountAlreadyExists");
+        Account acct = createAccount(ACCT_NAME_LOCALPART);
         
         boolean caughtException = false;
         try {
@@ -201,18 +218,24 @@ public class TestLdapProvAccount {
         return ds;
     }
     
+    /*
+     * This test does not work with JNDI.  The trailing space in data source name 
+     * got stripped after the rename.
+     */
     @Test
     public void renameAccount() throws Exception {
-        String ACCT_NAME = "renameAccount";
-        String ACCT_NEW_NAME = TestUtil.getAddress("renameAccount-new", domain.getName()).toLowerCase();
+        String ACCT_NAME_LOCALPART = TestLdap.makeAccountNameLocalPart("renameAccount");
+        String ACCT_NEW_NAME = TestUtil.getAddress(
+                TestLdap.makeAccountNameLocalPart("renameAccount-new"), 
+                domain.getName()).toLowerCase();
         
-        Account acct = createAccount(ACCT_NAME);
+        Account acct = createAccount(ACCT_NAME_LOCALPART);
         String acctId = acct.getId();
         
         // create some children
-        String DATA_SOURCE_NAME_1 = "ds1";
-        String DATA_SOURCE_NAME_2 = "ds2";
-        String DATA_SOURCE_NAME_3 = "ds3";
+        String DATA_SOURCE_NAME_1 = TestLdap.makeDataSourceName("ds1");
+        String DATA_SOURCE_NAME_2 = TestLdap.makeDataSourceName("ds2");
+        String DATA_SOURCE_NAME_3 = TestLdap.makeDataSourceName("ds3");
         DataSource ds1 = createDataSource(acct, DATA_SOURCE_NAME_1);
         DataSource ds2 = createDataSource(acct, DATA_SOURCE_NAME_2);
         DataSource ds3 = createDataSource(acct, DATA_SOURCE_NAME_3);
@@ -232,25 +255,27 @@ public class TestLdapProvAccount {
         assertEquals(DATA_SOURCE_ID_1, prov.get(renamedAcct, DataSourceBy.name, DATA_SOURCE_NAME_1).getId());
         assertEquals(DATA_SOURCE_ID_2, prov.get(renamedAcct, DataSourceBy.name, DATA_SOURCE_NAME_2).getId());
         assertEquals(DATA_SOURCE_ID_3, prov.get(renamedAcct, DataSourceBy.name, DATA_SOURCE_NAME_3).getId());
+        
+        deleteAccount(renamedAcct);
     }
     
     @Test
     public void renameAccountDomainChanged() throws Exception {
-        String ACCT_NAME = "renameAccountDomainChanged";
+        String ACCT_NAME_LOCALPART = TestLdap.makeAccountNameLocalPart("renameAccountDomainChanged");
         
         String NEW_DOMAIN_NAME = "renameAccountDomainChanged." + baseDomainName();
-        Domain newDomain = prov.createDomain(NEW_DOMAIN_NAME, new HashMap<String, Object>());
-        String ACCT_NEW_NAME_LOCALPART = "renameAccountDomainChanged-new";
+        Domain newDomain = TestLdapProvDomain.createDomain(prov, NEW_DOMAIN_NAME, null);
+        String ACCT_NEW_NAME_LOCALPART = TestLdap.makeAccountNameLocalPart("renameAccountDomainChanged-new");
         String ACCT_NEW_NAME =  
             TestUtil.getAddress(ACCT_NEW_NAME_LOCALPART, NEW_DOMAIN_NAME).toLowerCase();
         
-        Account acct = createAccount(ACCT_NAME);
+        Account acct = createAccount(ACCT_NAME_LOCALPART);
         String acctId = acct.getId();
         
         // create some children
-        String DATA_SOURCE_NAME_1 = "ds1";
-        String DATA_SOURCE_NAME_2 = "ds2";
-        String DATA_SOURCE_NAME_3 = "ds3";
+        String DATA_SOURCE_NAME_1 = TestLdap.makeDataSourceName("ds1");
+        String DATA_SOURCE_NAME_2 = TestLdap.makeDataSourceName("ds2");
+        String DATA_SOURCE_NAME_3 = TestLdap.makeDataSourceName("ds3");
         DataSource ds1 = createDataSource(acct, DATA_SOURCE_NAME_1);
         DataSource ds2 = createDataSource(acct, DATA_SOURCE_NAME_2);
         DataSource ds3 = createDataSource(acct, DATA_SOURCE_NAME_3);
@@ -270,5 +295,33 @@ public class TestLdapProvAccount {
         assertEquals(DATA_SOURCE_ID_1, prov.get(renamedAcct, DataSourceBy.name, DATA_SOURCE_NAME_1).getId());
         assertEquals(DATA_SOURCE_ID_2, prov.get(renamedAcct, DataSourceBy.name, DATA_SOURCE_NAME_2).getId());
         assertEquals(DATA_SOURCE_ID_3, prov.get(renamedAcct, DataSourceBy.name, DATA_SOURCE_NAME_3).getId());
+        
+        deleteAccount(renamedAcct);
+        TestLdapProvDomain.deleteDomain(prov, newDomain);
+    }
+    
+    @Test
+    public void renameAccountAlreadyExists() throws Exception {
+        String ACCT_NAME_LOCALPART = TestLdap.makeAccountNameLocalPart("renameAccountAlreadyExists");
+        String ACCT_NAME_EXISTS_LOCALPART = TestLdap.makeAccountNameLocalPart("renameAccountAlreadyExists-exists");
+        
+        Account acct = createAccount(ACCT_NAME_LOCALPART);
+        Account acctExists = createAccount(ACCT_NAME_EXISTS_LOCALPART);
+        String acctId = acct.getId();
+        
+        String ACCT_NEW_NAME = acctExists.getName();
+        
+        boolean caughtException = false;
+        try {
+            prov.renameAccount(acctId, ACCT_NEW_NAME);
+        } catch (AccountServiceException e) {
+            if (AccountServiceException.ACCOUNT_EXISTS.equals(e.getCode())) {
+                caughtException = true;
+            }
+        }
+        assertTrue(caughtException);
+        
+        deleteAccount(acct);
+        deleteAccount(acctExists);
     }
 }

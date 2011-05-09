@@ -14,18 +14,26 @@
  */
 package com.zimbra.qa.unittest;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.junit.*;
 import static org.junit.Assert.*;
 
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.ldap.LdapException.LdapEntryNotFoundException;
 import com.zimbra.cs.ldap.LdapException.LdapMultipleEntriesMatchedException;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
+import com.zimbra.cs.ldap.ZSearchControls;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
+import com.zimbra.cs.ldap.ZSearchResultEnumeration;
+import com.zimbra.cs.ldap.ZSearchScope;
 import com.zimbra.cs.prov.ldap.LdapHelper;
 import com.zimbra.cs.prov.ldap.LdapProv;
+import com.zimbra.cs.prov.ldap.entry.LdapCos;
 
 public class TestLdapHelper {
 
@@ -42,7 +50,8 @@ public class TestLdapHelper {
     
     @Test
     public void searchForEntry() throws Exception {
-        String base = "cn=zimbra";
+        LdapDIT dit = prov.getDIT();
+        String base = dit.configBranchBaseDN();
         ZLdapFilter filter = ZLdapFilterFactory.getInstance().fromFilterString("(cn=config)");
         
         ZSearchResultEntry sr = ldapHelper.searchForEntry(
@@ -53,7 +62,8 @@ public class TestLdapHelper {
     
     @Test
     public void searchForEntryMultipleMatchedEntries() throws Exception {
-        String base = "cn=zimbra";
+        LdapDIT dit = prov.getDIT();
+        String base = dit.configBranchBaseDN();
         ZLdapFilter filter = ZLdapFilterFactory.getInstance().allAccounts();
         
         boolean caughtException = false;
@@ -69,7 +79,8 @@ public class TestLdapHelper {
     
     @Test
     public void searchForEntryNotFound() throws Exception {
-        String base = "cn=zimbra";
+        LdapDIT dit = prov.getDIT();
+        String base = dit.configBranchBaseDN();
         ZLdapFilter filter = ZLdapFilterFactory.getInstance().fromFilterString("(cn=bogus)");
         
         ZSearchResultEntry sr = ldapHelper.searchForEntry(
@@ -97,4 +108,63 @@ public class TestLdapHelper {
         }
         assertTrue(caughtException);
     }
+    
+    @Test
+    public void searchDir() throws Exception {
+        LdapDIT dit = prov.getDIT();
+        String base = dit.configBranchBaseDN();
+        ZLdapFilter filter = ZLdapFilterFactory.getInstance().anyEntry();
+        
+        ZSearchControls searchControls = ZSearchControls.createSearchControls(
+                ZSearchScope.SEARCH_SCOPE_ONELEVEL, 
+                ZSearchControls.SIZE_UNLIMITED, new String[]{"objectClass"});
+        
+        ZSearchResultEnumeration ne = ldapHelper.searchDir(base, filter, searchControls);
+        
+        Set<String> expected = new HashSet<String>();
+        
+        expected.add(dit.adminBaseDN());
+        expected.add(dit.appAdminBaseDN());
+        expected.add(dit.zimletBaseDN());
+        expected.add(dit.cosBaseDN());
+        expected.add(dit.serverBaseDN());
+        expected.add(dit.xmppcomponentBaseDN());
+        expected.add(dit.globalGrantDN());
+        expected.add(dit.configDN());
+        
+        int numFound = 0;
+        while (ne.hasMore()) {
+            ZSearchResultEntry sr = ne.next();
+            assertTrue(expected.contains(sr.getDN()));
+            numFound++;
+        }
+        ne.close();
+        
+        assertEquals(expected.size(), numFound);
+    }
+    
+    @Test
+    public void searchDirNotFound() throws Exception {
+        LdapDIT dit = prov.getDIT();
+        String base = dit.configBranchBaseDN();
+        ZLdapFilter filter = ZLdapFilterFactory.getInstance().allSignatures();
+        
+        ZSearchControls searchControls = ZSearchControls.createSearchControls(
+                ZSearchScope.SEARCH_SCOPE_ONELEVEL, 
+                ZSearchControls.SIZE_UNLIMITED, new String[]{"objectClass"});
+        
+        ZSearchResultEnumeration ne = 
+            ldapHelper.searchDir(base, filter, searchControls);
+        
+        int numFound = 0;
+        while (ne.hasMore()) {
+            ZSearchResultEntry sr = ne.next();
+            numFound++;
+        }
+        ne.close();
+        
+        assertEquals(0, numFound);
+    }
+    
+    
 }

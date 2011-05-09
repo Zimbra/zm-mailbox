@@ -105,8 +105,10 @@ public class TestLdap {
         }
         junit.run(TestLdapHelper.class);
         junit.run(TestLdapProvAccount.class);
+        junit.run(TestLdapProvAlias.class);
         junit.run(TestLdapProvCos.class);
         junit.run(TestLdapProvDataSource.class);
+        junit.run(TestLdapProvDistributionList.class);
         junit.run(TestLdapProvDomain.class);
         junit.run(TestLdapProvEntry.class);
         junit.run(TestLdapProvGlobalConfig.class);
@@ -217,41 +219,82 @@ public class TestLdap {
      * 
      * @param name
      * @return
-     */
-    static String makeRFC2253Name(String name) {
-        return makeRFC2253Name(name, false, false);
-    }
-    
-    static String makeRFC2253NameEmailLocalPart(String name) {
-        return makeRFC2253Name(name, true, false);
-    }
-    
-    static String makeRFC2253NameDomainName(String name) {
-        return makeRFC2253Name(name, false, true);
-    }
-    
-    private static String makeRFC2253Name(String name, boolean isEmailLocalPart, boolean isDomainName) {
-        assertTrue(!(isEmailLocalPart && isDomainName));  // only one of them can be true
-        
+     */    
+    private static String makeRFC2253Name(String name, boolean wantTrailingBlank) {
         String LEADING_CHARS = "#";
         String TRAILING_CHARS = " ";
         String BACKSLASH_ESCAPED_CHARS = "# ,+\"\\<>;";
         String UNICODE_CHARS = "\u4e2d\u6587";
         
-        if (isEmailLocalPart) {
-            LEADING_CHARS = "";
-            TRAILING_CHARS = "";
-            BACKSLASH_ESCAPED_CHARS = ",+\"<>;";
-            UNICODE_CHARS = "";
+        if (wantTrailingBlank) {
+            return LEADING_CHARS + BACKSLASH_ESCAPED_CHARS + DOT_ATOM_CHARS + UNICODE_CHARS + "---" + name + TRAILING_CHARS;
+        } else {
+            return LEADING_CHARS + BACKSLASH_ESCAPED_CHARS + DOT_ATOM_CHARS + UNICODE_CHARS + "---" + name;
         }
+    }
+    
+    // RFC 2822
+    private static final String ATOM_CHARS = "!#$%&'*+-/=?^_`{|}~";   
+    private static final String DOT_ATOM_CHARS = "." + ATOM_CHARS;
+    
+    private static String makeRFC2253NameEmailLocalPart(String name) {
+        String LEADING_CHAR = "#";
+        return LEADING_CHAR + DOT_ATOM_CHARS + "---" + name;
+    }
+    
+    private static String makeRFC2253NameDomainName(String name) {
+        String UNICODE_CHARS = "\u4e2d\u6587";
         
-        if (isDomainName) {
-            LEADING_CHARS = "";
-            TRAILING_CHARS = "";
-            BACKSLASH_ESCAPED_CHARS = "+\"<>;";
-        }
-        
-        return LEADING_CHARS + BACKSLASH_ESCAPED_CHARS + UNICODE_CHARS + "---" + name + TRAILING_CHARS;
+        // hmm, javamail does not like any of the ATOM_CHARS 
+        return /* ATOM_CHARS + */ UNICODE_CHARS + "---" + name;
+    }
+
+    static String makeAccountNameLocalPart(String localPart) {
+        return makeRFC2253NameEmailLocalPart(localPart);
+    }
+
+    static String makeAliasNameLocalPart(String localPart) {
+        return makeRFC2253NameEmailLocalPart(localPart);
+    }
+
+    static String makeCosName(String name) {
+        return makeRFC2253Name(name, false);
+    }
+
+    static String makeDataSourceName(String name) {
+        // historically we allow trailing blank in data source name
+        // should probably make it consistent across the board.
+        return makeRFC2253Name(name, true);
+    }
+    
+    static String makeDLNameLocalPart(String localPart) {
+        return makeRFC2253NameEmailLocalPart(localPart);
+    }
+    
+    static String makeDomainName(String name) {
+        return TestLdap.makeRFC2253NameDomainName(name);
+    }
+    
+    static String makeIdentityName(String name) {
+        // historically we allow trailing blank in identity name
+        // should probably make it consistent across the board.
+        return makeRFC2253Name(name, true);
+    }
+    
+    static String makeServerName(String name) {
+        return makeRFC2253Name(name, false);
+    }
+    
+    static String makeSignatureName(String name) {
+        return makeRFC2253Name(name, false);
+    }
+    
+    static String makeXMPPName(String name) {
+        return makeRFC2253Name(name, false);
+    }
+    
+    static String makeZimletName(String name) {
+        return makeRFC2253Name(name, false);
     }
     
     // so tests can be called directly, without running from TestLdap.
@@ -281,4 +324,5 @@ public class TestLdap {
         System.out.println();
         System.out.println("=== Finished ===");
     }
+
 }

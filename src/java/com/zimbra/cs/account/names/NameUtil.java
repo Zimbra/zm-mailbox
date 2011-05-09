@@ -81,7 +81,7 @@ public class NameUtil {
         try {
             validEmailAddress(email); 
         } catch (ServiceException e) {
-            throw ServiceException.INVALID_REQUEST("invalid domain name " + domain, null);
+            throw ServiceException.INVALID_REQUEST("invalid domain name " + domain, e);
         }
         
         Config config = Provisioning.getInstance().getConfig();

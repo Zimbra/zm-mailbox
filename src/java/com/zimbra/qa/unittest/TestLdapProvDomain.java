@@ -28,6 +28,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ZAttrProvisioning;
@@ -38,7 +39,6 @@ import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.SearchLdapOptions;
-import com.zimbra.cs.ldap.unboundid.ConnectionPool;
 import com.zimbra.cs.prov.ldap.LdapHelper;
 import com.zimbra.cs.prov.ldap.LdapProv;
 
@@ -63,20 +63,8 @@ public class TestLdapProvDomain {
         return TestLdapProvDomain.class.getName().toLowerCase();
     }
     
-    private static String makeDomainName(String prefix) {
-        String baseDomainName = baseDomainName();
-        if (prefix == null) {
-            return baseDomainName;
-        } else {
-            return prefix.toLowerCase() + "." + baseDomainName;
-        }
-    }
-    
-    private Domain createDomain(String domainName) throws Exception {
-        return createDomain(domainName, null);
-    }
-    
-    private Domain createDomain(String domainName, Map<String, Object> attrs) throws Exception {
+    static Domain createDomain(Provisioning prov, String domainName, Map<String, Object> attrs) 
+    throws Exception {
         if (attrs == null) {
             attrs = new HashMap<String, Object>();
         }
@@ -89,20 +77,46 @@ public class TestLdapProvDomain {
         prov.flushCache(CacheEntryType.domain, null);
         domain = prov.get(DomainBy.name, domainName);
         assertNotNull(domain);
+        assertEquals(IDNUtil.toAsciiDomainName(domainName).toLowerCase(), 
+                domain.getName().toLowerCase());
         
         return domain;
     }
     
-    private void deleteDomain(Domain domain) throws Exception {
+    static void deleteDomain(Provisioning prov, Domain domain) throws Exception {
         String domainId = domain.getId();
         prov.deleteDomain(domainId);
         domain = prov.get(DomainBy.id, domainId);
         assertNull(domain);
     }
+    
+    private static String makeDomainName(String prefix) {
+        String baseDomainName = baseDomainName();
+        String domainName;
+        if (prefix == null) {
+            domainName = baseDomainName;
+        } else {
+            domainName = prefix.toLowerCase() + "." + baseDomainName;
+        }
+        
+        return TestLdap.makeDomainName(domainName);
+    }
+    
+    private Domain createDomain(String domainName) throws Exception {
+        return createDomain(domainName, null);
+    }
+    
+    private Domain createDomain(String domainName, Map<String, Object> attrs) throws Exception {
+        return createDomain(prov, domainName, attrs);
+    }
+    
+    private void deleteDomain(Domain domain) throws Exception {
+        deleteDomain(prov, domain);
+    }
 
     @Test
     public void createTopDomain() throws Exception {
-        String DOMAIN_NAME = TestLdap.makeRFC2253NameDomainName(makeDomainName(null));
+        String DOMAIN_NAME = makeDomainName(null);
         Domain domain = createDomain(DOMAIN_NAME);
         
         deleteDomain(domain);
@@ -110,7 +124,7 @@ public class TestLdapProvDomain {
     
     @Test
     public void createSubDomain() throws Exception {
-        String DOMAIN_NAME = TestLdap.makeRFC2253NameDomainName(makeDomainName("createSubDomain.sub1.sub2"));
+        String DOMAIN_NAME = makeDomainName("createSubDomain.sub1.sub2");
         Domain domain = createDomain(DOMAIN_NAME);
         
         deleteDomain(domain);
@@ -191,7 +205,8 @@ public class TestLdapProvDomain {
         };
         
         SearchLdapOptions searchOpts = new SearchLdapOptions(LdapConstants.DN_ROOT_DSE, 
-                "(objectclass=zimbraDomain)", new String[]{Provisioning.A_zimbraId}, null, visitor);
+                "(objectclass=zimbraDomain)", new String[]{Provisioning.A_zimbraId}, 
+                SearchLdapOptions.SIZE_UNLIMITED, null, visitor);
         
         ZLdapContext zlc = null;
         try {
@@ -249,7 +264,8 @@ public class TestLdapProvDomain {
         aliasDomain = createDomain(ALIAS_DOMAIN_NAME, attrs);
         
         String realEmail = prov.getEmailAddrByDomainAlias(TestUtil.getAddress(USER_LOCAL_PART, ALIAS_DOMAIN_NAME));
-        assertEquals(TestUtil.getAddress(USER_LOCAL_PART, TARGET_DOMAIN_NAME), realEmail);
+        assertEquals(IDNUtil.toAscii(TestUtil.getAddress(USER_LOCAL_PART, TARGET_DOMAIN_NAME)), 
+                realEmail);
         
         deleteDomain(aliasDomain);
         deleteDomain(targetDomain);
@@ -269,7 +285,7 @@ public class TestLdapProvDomain {
     private void getDomainByName(String name) throws Exception {
         prov.flushCache(CacheEntryType.domain, null);
         Domain domain = prov.get(DomainBy.name, name);
-        assertEquals(name, domain.getName());
+        assertEquals(IDNUtil.toAsciiDomainName(name), domain.getName());
     }
     
     private void getDomainByVirtualHostname(String virtualHostname, String expectedDomainId) 

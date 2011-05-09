@@ -41,31 +41,36 @@ public class TestLdapProvCos {
     private Cos createCos(String cosName) throws Exception {
         Cos cos = prov.get(CosBy.name, cosName);
         assertNull(cos);
+        
         cos = prov.createCos(cosName, new HashMap<String, Object>());
         assertNotNull(cos);
+        
         prov.flushCache(CacheEntryType.cos, null);
         cos = prov.get(CosBy.name, cosName);
         assertNotNull(cos);
+        assertEquals(cosName.toLowerCase(), cos.getName().toLowerCase());
+        
         return cos;
     }
     
     private void deleteCos(Cos cos) throws Exception {
         String codId = cos.getId();
         prov.deleteCos(codId);
+        prov.flushCache(CacheEntryType.cos, null);
         cos = prov.get(CosBy.id, codId);
         assertNull(cos);
     }
     
     @Test
     public void createCos() throws Exception {
-        String COS_NAME = TestLdap.makeRFC2253Name("createCos");
+        String COS_NAME = TestLdap.makeCosName("createCos");
         Cos cos = createCos(COS_NAME);
         deleteCos(cos);
     }
     
     @Test
     public void createCosAlreadyExists() throws Exception {
-        String COS_NAME = "createCosAlreadyExists";
+        String COS_NAME = TestLdap.makeCosName("createCosAlreadyExists");
         Cos cos = createCos(COS_NAME);
                 
         boolean caughtException = false;
@@ -89,7 +94,7 @@ public class TestLdapProvCos {
     
     @Test
     public void getCos() throws Exception {
-        String COS_NAME = "getCos";
+        String COS_NAME = TestLdap.makeCosName("getCos");
         Cos cos = createCos(COS_NAME);
         String cosId = cos.getId();
         
@@ -106,14 +111,15 @@ public class TestLdapProvCos {
     
     @Test
     public void getCosNotExist() throws Exception {
-        String COS_NAME = "getCosNotExist";
+        String COS_NAME = TestLdap.makeCosName("getCosNotExist");
+        prov.flushCache(CacheEntryType.cos, null);
         Cos cos = prov.get(CosBy.name, COS_NAME);
         assertNull(cos);
     }
     
     @Test
     public void copyCos() throws Exception {
-        String COS_NAME = "copyCos";
+        String COS_NAME = TestLdap.makeCosName("copyCos");
         Cos defaultCos = prov.get(Provisioning.CosBy.name, Provisioning.DEFAULT_COS_NAME);
         Cos copiedCos = prov.copyCos(defaultCos.getId(), COS_NAME);
         
@@ -165,8 +171,8 @@ public class TestLdapProvCos {
     
     @Test
     public void renameCos() throws Exception {
-        String OLD_COS_NAME = "renameCos-old";
-        String NEW_COS_NAME = "renameCos-NEW";
+        String OLD_COS_NAME = TestLdap.makeCosName("renameCos-old");
+        String NEW_COS_NAME = TestLdap.makeCosName("renameCos-NEW");
         
         Cos cos = createCos(OLD_COS_NAME);
         String cosId = cos.getId();
@@ -180,7 +186,7 @@ public class TestLdapProvCos {
     
     @Test
     public void renameCosToExisting() throws Exception {
-        String OLD_COS_NAME = "renameCosToExisting-old";
+        String OLD_COS_NAME = TestLdap.makeCosName("renameCosToExisting-old");
         String NEW_COS_NAME = Provisioning.DEFAULT_COS_NAME;
         
         Cos cos = createCos(OLD_COS_NAME);

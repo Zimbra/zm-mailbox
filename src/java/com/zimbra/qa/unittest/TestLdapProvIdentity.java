@@ -66,20 +66,11 @@ public class TestLdapProvIdentity {
     }
     
     private Account createAccount(String localPart, Map<String, Object> attrs) throws Exception {
-        String acctName = TestUtil.getAddress(localPart, domain.getName());
-        Account acct = prov.get(AccountBy.name, acctName);
-        assertNull(acct);
-                
-        acct = prov.createAccount(acctName, "test123", attrs);
-        assertNotNull(acct);
-        return acct;
+        return TestLdapProvAccount.createAccount(prov, localPart, domain, attrs);
     }
     
     private void deleteAccount(Account acct) throws Exception {
-        String acctId = acct.getId();
-        prov.deleteAccount(acctId);
-        acct = prov.get(AccountBy.id, acctId);
-        assertNull(acct);
+        TestLdapProvAccount.deleteAccount(prov, acct);
     }
     
     private void deleteIdentity(Account acct, Identity identity) throws Exception {
@@ -104,6 +95,7 @@ public class TestLdapProvIdentity {
         
         identity = prov.get(acct, IdentityBy.name, identityName);
         assertNotNull(identity);
+        assertEquals(identityName, identity.getName());
         
         return identity;
     }
@@ -115,10 +107,10 @@ public class TestLdapProvIdentity {
     
     @Test
     public void createIdentity() throws Exception {
-        String ACCT_NAME = "createIdentity";
-        String IDENTITY_NAME = TestLdap.makeRFC2253Name("createIdentity");
+        String ACCT_NAME_LOCALPART = TestLdap.makeAccountNameLocalPart("createIdentity");
+        String IDENTITY_NAME = TestLdap.makeIdentityName("createIdentity");
         
-        Account acct = createAccount(ACCT_NAME);
+        Account acct = createAccount(ACCT_NAME_LOCALPART);
         Identity identity = createIdentity(acct, IDENTITY_NAME);
         
         assertEquals(acct.getId(), identity.getAccount().getId());
@@ -129,10 +121,10 @@ public class TestLdapProvIdentity {
     
     @Test
     public void createIdentityAlreadyExists() throws Exception {
-        String ACCT_NAME = "createIdentityAlreadyExists";
-        String IDENTITY_NAME = "createIdentityAlreadyExists";
+        String ACCT_NAME_LOCALPART = TestLdap.makeAccountNameLocalPart("createIdentityAlreadyExists");
+        String IDENTITY_NAME = TestLdap.makeIdentityName("createIdentityAlreadyExists");
         
-        Account acct = createAccount(ACCT_NAME);
+        Account acct = createAccount(ACCT_NAME_LOCALPART);
         Identity identity = createIdentity(acct, IDENTITY_NAME);
         
         boolean caughtException = false;
@@ -151,10 +143,10 @@ public class TestLdapProvIdentity {
     
     @Test
     public void modifyIdentity() throws Exception {
-        String ACCT_NAME = "modifyIdentity";
-        String IDENTITYE_NAME = "modifyIdentity";
+        String ACCT_NAME_LOCALPART = TestLdap.makeAccountNameLocalPart("modifyIdentity");
+        String IDENTITYE_NAME = TestLdap.makeIdentityName("modifyIdentity");
         
-        Account acct = createAccount(ACCT_NAME);
+        Account acct = createAccount(ACCT_NAME_LOCALPART);
         Identity identity = createIdentity(acct, IDENTITYE_NAME);
         
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -173,10 +165,10 @@ public class TestLdapProvIdentity {
     
     @Test
     public void renameIdentity() throws Exception {
-        String ACCT_NAME = "renameIdentity";
-        String IDENTITYE_NAME = "renameIdentity";
+        String ACCT_NAME_LOCALPART = TestLdap.makeAccountNameLocalPart("renameIdentity");
+        String IDENTITYE_NAME = TestLdap.makeIdentityName("renameIdentity");
         
-        Account acct = createAccount(ACCT_NAME);
+        Account acct = createAccount(ACCT_NAME_LOCALPART);
         Identity identity = createIdentity(acct, IDENTITYE_NAME);
         
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -197,12 +189,12 @@ public class TestLdapProvIdentity {
     
     @Test
     public void getAllIdentitys() throws Exception {
-        String ACCT_NAME = "getAllIdentitys";
-        String IDENTITYE_NAME_1 = "getAllIdentitys-1";
-        String IDENTITYE_NAME_2 = "getAllIdentitys-2";
-        String IDENTITYE_NAME_3 = "getAllIdentitys-3";
+        String ACCT_NAME_LOCALPART = TestLdap.makeAccountNameLocalPart("getAllIdentitys");
+        String IDENTITYE_NAME_1 = TestLdap.makeIdentityName("getAllIdentitys-1");
+        String IDENTITYE_NAME_2 = TestLdap.makeIdentityName("getAllIdentitys-2");
+        String IDENTITYE_NAME_3 = TestLdap.makeIdentityName("getAllIdentitys-3");
         
-        Account acct = createAccount(ACCT_NAME);
+        Account acct = createAccount(ACCT_NAME_LOCALPART);
         Identity identity1 = createIdentity(acct, IDENTITYE_NAME_1);
         Identity identity2 = createIdentity(acct, IDENTITYE_NAME_2);
         Identity identity3 = createIdentity(acct, IDENTITYE_NAME_3);
@@ -228,10 +220,10 @@ public class TestLdapProvIdentity {
     
     @Test
     public void getIdentity() throws Exception {
-        String ACCT_NAME = "getIdentity";
-        String IDENTITYE_NAME = "getIdentity";
+        String ACCT_NAME_LOCALPART = TestLdap.makeAccountNameLocalPart("getIdentity");
+        String IDENTITYE_NAME = TestLdap.makeIdentityName("getIdentity");
         
-        Account acct = createAccount(ACCT_NAME);
+        Account acct = createAccount(ACCT_NAME_LOCALPART);
         Identity identity = createIdentity(acct, IDENTITYE_NAME);
         String identityId = identity.getId();
         

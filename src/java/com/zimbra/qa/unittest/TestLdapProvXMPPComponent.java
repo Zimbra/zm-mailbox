@@ -26,9 +26,10 @@ import static org.junit.Assert.*;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.XMPPComponentBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.XMPPComponent;
-import com.zimbra.cs.account.Provisioning.XMPPComponentBy;
+
 
 public class TestLdapProvXMPPComponent {
     private static Provisioning prov;
@@ -61,6 +62,10 @@ public class TestLdapProvXMPPComponent {
         xmppCpnt = prov.createXMPPComponent(xmppCpntName, domain, server, attrs);
         assertNotNull(xmppCpnt);
         
+        xmppCpnt = prov.get(XMPPComponentBy.name, xmppCpntName);
+        assertNotNull(xmppCpnt);
+        assertEquals(xmppCpntName.toLowerCase(), xmppCpnt.getName().toLowerCase());
+        
         return xmppCpnt;
     }
     
@@ -73,7 +78,7 @@ public class TestLdapProvXMPPComponent {
     
     @Test
     public void createXMPPComponent() throws Exception {
-        String XMPPCPNT_NAME = TestLdap.makeRFC2253Name("createXMPPComponent");
+        String XMPPCPNT_NAME = TestLdap.makeXMPPName("createXMPPComponent");
         XMPPComponent xmppCpnt = createXMPPComponent(XMPPCPNT_NAME);
         
         deleteXMPPComponent(xmppCpnt);
@@ -81,7 +86,7 @@ public class TestLdapProvXMPPComponent {
     
     @Test
     public void createXMPPComponentAlreadyExists() throws Exception {
-        String XMPPCPNT_NAME = "createXMPPComponent";
+        String XMPPCPNT_NAME = TestLdap.makeXMPPName("createXMPPComponentAlreadyExists");
         XMPPComponent xmppCpnt = createXMPPComponent(XMPPCPNT_NAME);
         
         boolean caughtException = false;
@@ -103,7 +108,7 @@ public class TestLdapProvXMPPComponent {
     
     @Test 
     public void getXMPPComponent() throws Exception {
-        String XMPPCPNT_NAME = "getXMPPComponent";
+        String XMPPCPNT_NAME = TestLdap.makeXMPPName("getXMPPComponent");
         XMPPComponent xmppCpnt = createXMPPComponent(XMPPCPNT_NAME);
         String xmppCpntId = xmppCpnt.getId();
         
@@ -122,17 +127,17 @@ public class TestLdapProvXMPPComponent {
     
     @Test 
     public void getXMPPComponentNotExist() throws Exception {
-        String XMPPCPNT_NAME = "getXMPPComponent";
+        String XMPPCPNT_NAME = TestLdap.makeXMPPName("getXMPPComponentNotExist");
         XMPPComponent xmppCpnt = prov.get(XMPPComponentBy.name, XMPPCPNT_NAME); 
         assertNull(xmppCpnt);
     }
     
     @Test
     public void getAllXMPPComponents() throws Exception {
-        String XMPPCPNT_NAME_1 = "createXMPPComponent-1";
+        String XMPPCPNT_NAME_1 = TestLdap.makeXMPPName("getAllXMPPComponents-1");
         XMPPComponent xmppCpnt1 = createXMPPComponent(XMPPCPNT_NAME_1);
         
-        String XMPPCPNT_NAME_2 = "createXMPPComponent-2";
+        String XMPPCPNT_NAME_2 = TestLdap.makeXMPPName("getAllXMPPComponents-2");
         XMPPComponent xmppCpnt2 = createXMPPComponent(XMPPCPNT_NAME_2);
         
         List<XMPPComponent> allXMPPCpnts = prov.getAllXMPPComponents();

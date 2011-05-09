@@ -54,6 +54,8 @@ class UBIDLdapException {
         } else if (ResultCode.CONSTRAINT_VIOLATION == rc ||
                 ResultCode.INVALID_ATTRIBUTE_SYNTAX == rc) {
             return LdapException.INVALID_ATTR_VALUE(message, e);
+        } else if (ResultCode.SIZE_LIMIT_EXCEEDED == rc) {
+            return LdapException.SIZE_LIMIT_EXCEEDED(message, e);
         }
         
         return LdapException.LDAP_ERROR(message, e);

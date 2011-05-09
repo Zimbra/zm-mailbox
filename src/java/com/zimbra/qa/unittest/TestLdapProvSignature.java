@@ -66,20 +66,11 @@ public class TestLdapProvSignature {
     }
     
     private Account createAccount(String localPart, Map<String, Object> attrs) throws Exception {
-        String acctName = TestUtil.getAddress(localPart, domain.getName());
-        Account acct = prov.get(AccountBy.name, acctName);
-        assertNull(acct);
-                
-        acct = prov.createAccount(acctName, "test123", attrs);
-        assertNotNull(acct);
-        return acct;
+        return TestLdapProvAccount.createAccount(prov, localPart, domain, attrs);
     }
     
     private void deleteAccount(Account acct) throws Exception {
-        String acctId = acct.getId();
-        prov.deleteAccount(acctId);
-        acct = prov.get(AccountBy.id, acctId);
-        assertNull(acct);
+        TestLdapProvAccount.deleteAccount(prov, acct);
     }
     
     private void deleteSignature(Account acct, Signature signature) throws Exception {
@@ -103,6 +94,7 @@ public class TestLdapProvSignature {
         
         signature = prov.get(acct, SignatureBy.name, signatureName);
         assertNotNull(signature);
+        assertEquals(signatureName, signature.getName());
         
         return signature;
     }
@@ -114,10 +106,10 @@ public class TestLdapProvSignature {
     
     @Test
     public void createSignature() throws Exception {
-        String ACCT_NAME = "createSignature";
-        String SIGNATURE_NAME = TestLdap.makeRFC2253Name("createSignature");
+        String ACCT_NAME_LOCALPART = TestLdap.makeAccountNameLocalPart("createSignature");
+        String SIGNATURE_NAME = TestLdap.makeSignatureName("createSignature");
         
-        Account acct = createAccount(ACCT_NAME);
+        Account acct = createAccount(ACCT_NAME_LOCALPART);
         Signature signature = createSignature(acct, SIGNATURE_NAME);
         
         assertEquals(acct.getId(), signature.getAccount().getId());
@@ -128,10 +120,10 @@ public class TestLdapProvSignature {
     
     @Test
     public void createSignatureAlreadyExists() throws Exception {
-        String ACCT_NAME = "createSignatureAlreadyExists";
-        String SIGNATURE_NAME = "createSignatureAlreadyExists";
+        String ACCT_NAME_LOCALPART = TestLdap.makeAccountNameLocalPart("createSignatureAlreadyExists");
+        String SIGNATURE_NAME = TestLdap.makeSignatureName("createSignatureAlreadyExists");
         
-        Account acct = createAccount(ACCT_NAME);
+        Account acct = createAccount(ACCT_NAME_LOCALPART);
         Signature signature = createSignature(acct, SIGNATURE_NAME);
         
         boolean caughtException = false;
@@ -150,10 +142,10 @@ public class TestLdapProvSignature {
     
     @Test
     public void modifySignature() throws Exception {
-        String ACCT_NAME = "modifySignature";
-        String SIGNATURE_NAME = "modifySignature";
+        String ACCT_NAME_LOCALPART = TestLdap.makeAccountNameLocalPart("modifySignature");
+        String SIGNATURE_NAME = TestLdap.makeSignatureName("modifySignature");
         
-        Account acct = createAccount(ACCT_NAME);
+        Account acct = createAccount(ACCT_NAME_LOCALPART);
         Signature signature = createSignature(acct, SIGNATURE_NAME);
         
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -172,17 +164,37 @@ public class TestLdapProvSignature {
     
     @Test
     public void renameSignature() throws Exception {
-        String ACCT_NAME = "renameSignature";
-        String SIGNATURE_NAME = "renameSignature";
+        String ACCT_NAME_LOCALPART = TestLdap.makeAccountNameLocalPart("renameSignature");
+        String SIGNATURE_NAME_ON_ACCOUNT_ENTRY = TestLdap.makeSignatureName("renameSignature-sig-on-account-entry");
+        String SIGNATURE_NAME = TestLdap.makeSignatureName("renameSignature");
         
-        Account acct = createAccount(ACCT_NAME);
+        Account acct = createAccount(ACCT_NAME_LOCALPART);
+        Signature signatureOnAccountEntry = createSignature(acct, SIGNATURE_NAME_ON_ACCOUNT_ENTRY);
         Signature signature = createSignature(acct, SIGNATURE_NAME);
         
+        /*
+         * rename the signature on account entry
+         */
         Map<String, Object> attrs = new HashMap<String, Object>();
         // modifying zimbraSignatureName will rename the signature and trigger a LDAP moddn
         String MODIFIED_ATTR_NAME = Provisioning.A_zimbraSignatureName;
-        String NEW_SIGNATURE_NAME = "renameSignature-new";  
+        String NEW_SIGNATURE_NAME = TestLdap.makeSignatureName("renameSignature-sig-on-account-entry-new");  
         String MODIFIED_ATTR_VALUE = NEW_SIGNATURE_NAME;
+        attrs.put(MODIFIED_ATTR_NAME, MODIFIED_ATTR_VALUE);
+        prov.modifySignature(acct, signatureOnAccountEntry.getId(), attrs);
+        
+        acct = getFresh(acct);
+        signatureOnAccountEntry = prov.get(acct, SignatureBy.name, NEW_SIGNATURE_NAME);
+        assertEquals(MODIFIED_ATTR_VALUE, signatureOnAccountEntry.getAttr(MODIFIED_ATTR_NAME));
+        
+        /*
+         * rename the signature on signature entry
+         */
+        attrs = new HashMap<String, Object>();
+        // modifying zimbraSignatureName will rename the signature and trigger a LDAP moddn
+        MODIFIED_ATTR_NAME = Provisioning.A_zimbraSignatureName;
+        NEW_SIGNATURE_NAME = TestLdap.makeSignatureName("renameSignature-new");  
+        MODIFIED_ATTR_VALUE = NEW_SIGNATURE_NAME;
         attrs.put(MODIFIED_ATTR_NAME, MODIFIED_ATTR_VALUE);
         prov.modifySignature(acct, signature.getId(), attrs);
         
@@ -190,18 +202,19 @@ public class TestLdapProvSignature {
         signature = prov.get(acct, SignatureBy.name, NEW_SIGNATURE_NAME);
         assertEquals(MODIFIED_ATTR_VALUE, signature.getAttr(MODIFIED_ATTR_NAME));
         
+        deleteSignature(acct,signatureOnAccountEntry);
         deleteSignature(acct,signature);
         deleteAccount(acct);
     }
     
     @Test
     public void getAllSignatures() throws Exception {
-        String ACCT_NAME = "getAllSignatures";
-        String SIGNATURE_NAME_1 = "getAllSignatures-1";
-        String SIGNATURE_NAME_2 = "getAllSignatures-2";
-        String SIGNATURE_NAME_3 = "getAllSignatures-3";
+        String ACCT_NAME_LOCALPART = TestLdap.makeAccountNameLocalPart("getAllSignatures");
+        String SIGNATURE_NAME_1 = TestLdap.makeSignatureName("getAllSignatures-1");
+        String SIGNATURE_NAME_2 = TestLdap.makeSignatureName("getAllSignatures-2");
+        String SIGNATURE_NAME_3 = TestLdap.makeSignatureName("getAllSignatures-3");
         
-        Account acct = createAccount(ACCT_NAME);
+        Account acct = createAccount(ACCT_NAME_LOCALPART);
         Signature signature1 = createSignature(acct, SIGNATURE_NAME_1);
         Signature signature2 = createSignature(acct, SIGNATURE_NAME_2);
         Signature signature3 = createSignature(acct, SIGNATURE_NAME_3);
@@ -227,10 +240,10 @@ public class TestLdapProvSignature {
     
     @Test
     public void getSignature() throws Exception {
-        String ACCT_NAME = "getSignature";
-        String SIGNATURE_NAME = "getSignature";
+        String ACCT_NAME_LOCALPART = TestLdap.makeAccountNameLocalPart("getSignature");
+        String SIGNATURE_NAME = TestLdap.makeSignatureName("getSignature");
         
-        Account acct = createAccount(ACCT_NAME);
+        Account acct = createAccount(ACCT_NAME_LOCALPART);
         Signature signature = createSignature(acct, SIGNATURE_NAME);
         String signatureId = signature.getId();
         

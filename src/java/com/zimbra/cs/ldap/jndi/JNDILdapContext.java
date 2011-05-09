@@ -26,6 +26,7 @@ import javax.naming.NamingException;
 import javax.naming.SizeLimitExceededException;
 import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
+import javax.naming.directory.DirContext;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 
@@ -47,6 +48,7 @@ import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.ZLdapFilter;
+import com.zimbra.cs.ldap.ZLdapSchema;
 import com.zimbra.cs.ldap.ZModificationList;
 import com.zimbra.cs.ldap.ZMutableEntry;
 import com.zimbra.cs.ldap.ZSearchControls;
@@ -128,6 +130,16 @@ public class JNDILdapContext extends ZLdapContext {
         try {
             Attributes attributes = zlc.getAttributes(dn);
             return new JNDIAttributes(attributes);
+        } catch (NamingException e) {
+            throw JNDILdapException.mapToLdapException(e);
+        }
+    }
+    
+    @Override
+    public ZLdapSchema getSchema() throws LdapException {
+        try {
+            DirContext schema = zlc.getSchema();
+            return new JNDILdapSchema(schema);
         } catch (NamingException e) {
             throw JNDILdapException.mapToLdapException(e);
         }
@@ -235,6 +247,5 @@ public class JNDILdapContext extends ZLdapContext {
             throw JNDILdapException.mapToLdapException(e);
         }
     }
-
 
 }
