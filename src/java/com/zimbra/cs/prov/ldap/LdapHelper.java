@@ -129,4 +129,5 @@ public abstract class LdapHelper {
     throws ServiceException {
         return searchDir(baseDN, filter, searchControls, null, LdapServerType.REPLICA);
     }
+    
 }
