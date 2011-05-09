@@ -562,6 +562,7 @@ public final class MailConstants {
     public static final String E_TRUE_TEST = "trueTest";
     public static final String E_HEADER_EXISTS_TEST = "headerExistsTest";
     public static final String E_MIME_HEADER_TEST = "mimeHeaderTest";
+    public static final String E_ADDRESS_TEST = "addressTest";
     public static final String E_SIZE_TEST = "sizeTest";
     public static final String E_DATE_TEST = "dateTest";
     public static final String E_CURRENT_TIME_TEST = "currentTimeTest";
@@ -583,6 +584,7 @@ public final class MailConstants {
     public static final String E_ACTION_NOTIFY = "actionNotify";
     public static final String E_ACTION_STOP = "actionStop";
 
+    public static final String A_ADDRESS_PART = "part";
     public static final String A_STRING_COMPARISON = "stringComparison";
     public static final String A_CASE_SENSITIVE = "caseSensitive";
     public static final String A_NUMBER_COMPARISON = "numberComparison";
