@@ -12,7 +12,7 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.account.ldap;
+package com.zimbra.cs.account.ldap.legacy;
 
 import java.io.IOException;
 import java.security.cert.Certificate;
@@ -76,7 +76,7 @@ import com.zimbra.cs.util.Zimbra;
  * @author pshao
  *
  */
-public class ZimbraLdapContext implements ILdapContext {
+public class LegacyZimbraLdapContext implements ILdapContext {
 
     private static String sLdapURL;
     private static String sLdapMasterURL;    
@@ -399,21 +399,21 @@ public class ZimbraLdapContext implements ILdapContext {
     /*
      * Zimbra LDAP
      */
-    public ZimbraLdapContext() throws ServiceException {
+    public LegacyZimbraLdapContext() throws ServiceException {
         this(false, null);
     }
 
     /*
      * Zimbra LDAP
      */
-    public ZimbraLdapContext(boolean master) throws ServiceException {
+    public LegacyZimbraLdapContext(boolean master) throws ServiceException {
         this(master, null);
     }
     
     /*
      * Zimbra LDAP
      */
-    public ZimbraLdapContext(boolean master, boolean useConnPool) throws ServiceException {
+    public LegacyZimbraLdapContext(boolean master, boolean useConnPool) throws ServiceException {
         // use custom ldap config if not using conn pool
         this(master, useConnPool? null : new LdapConfig(useConnPool, null, null));
     }
@@ -423,7 +423,7 @@ public class ZimbraLdapContext implements ILdapContext {
      * 
      * Used only for upgrade, not in server production.
      */
-    public ZimbraLdapContext(boolean master, LdapConfig ldapConfig) throws ServiceException {
+    public LegacyZimbraLdapContext(boolean master, LdapConfig ldapConfig) throws ServiceException {
         try {
             Hashtable<String, String> env = (ldapConfig==null)? getDefaultEnv(master) : getCustomEnv(master, ldapConfig);
             boolean startTLS = ConnType.isSTARTTLS(master);
@@ -463,7 +463,7 @@ public class ZimbraLdapContext implements ILdapContext {
     /*
      * External LDAP
      */
-    public ZimbraLdapContext(String urls[], boolean requireStartTLS, String bindDn, String bindPassword, String note) 
+    public LegacyZimbraLdapContext(String urls[], boolean requireStartTLS, String bindDn, String bindPassword, String note) 
     throws ServiceException, NamingException, IOException {
         this(urls, requireStartTLS, null, bindDn, bindPassword, null, note);
     }
@@ -471,7 +471,7 @@ public class ZimbraLdapContext implements ILdapContext {
     /*
      * External LDAP
      */
-    public ZimbraLdapContext(String urls[], boolean requireStartTLS, LdapGalCredential credential, Set<String> binaryAttrs, String note) 
+    public LegacyZimbraLdapContext(String urls[], boolean requireStartTLS, LdapGalCredential credential, Set<String> binaryAttrs, String note) 
     throws ServiceException, NamingException, IOException {
         this(urls, requireStartTLS, credential.getAuthMech(), credential.getBindDn(), credential.getBindPassword(), binaryAttrs, note);
     }
@@ -479,7 +479,7 @@ public class ZimbraLdapContext implements ILdapContext {
     /*
      * External LDAP
      */
-    public ZimbraLdapContext(String urls[], boolean requireStartTLS, String authMech, 
+    public LegacyZimbraLdapContext(String urls[], boolean requireStartTLS, String authMech, 
             String bindDn, String bindPassword, Set<String> binaryAttrs, String note)  
     throws ServiceException, NamingException, IOException {
         this(joinURLS(urls), requireStartTLS, authMech, bindDn, bindPassword, binaryAttrs, note); 
@@ -492,7 +492,7 @@ public class ZimbraLdapContext implements ILdapContext {
      * naming or IO exceptions are not caught then wrapped in a ServiceException.
      * Callsites of this method need to check Naming/IOExceptions and log/handle/throw accordingly.  
      */
-    public ZimbraLdapContext(String urls, boolean requireStartTLS, String authMech, 
+    public LegacyZimbraLdapContext(String urls, boolean requireStartTLS, String authMech, 
             String bindDn, String bindPassword, Set<String> binaryAttrs, String note)  
     throws ServiceException, NamingException, IOException {
         Hashtable<String, String> env = new Hashtable<String, String>();
@@ -598,7 +598,7 @@ public class ZimbraLdapContext implements ILdapContext {
         Hashtable<String, String> env = new Hashtable<String, String>();
         
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-        env.put(Context.PROVIDER_URL, ZimbraLdapContext.joinURLS(urls));
+        env.put(Context.PROVIDER_URL, LegacyZimbraLdapContext.joinURLS(urls));
         env.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());
         env.put("com.sun.jndi.ldap.read.timeout", LC.ldap_read_timeout.value());
         
@@ -685,7 +685,7 @@ public class ZimbraLdapContext implements ILdapContext {
         }
     }
     
-    public static void closeContext(ZimbraLdapContext zlc) {
+    public static void closeContext(LegacyZimbraLdapContext zlc) {
         if (zlc != null)
             zlc.closeContext();
     }
@@ -879,9 +879,9 @@ public class ZimbraLdapContext implements ILdapContext {
 
     public static void waitForServer() {
         while (true) {
-            ZimbraLdapContext zlc = null;
+            LegacyZimbraLdapContext zlc = null;
             try {
-                zlc = new ZimbraLdapContext();
+                zlc = new LegacyZimbraLdapContext();
                 break;
             } catch (ServiceException e) {
                 System.err.println(new Date() + ": error communicating with LDAP (will retry)");
@@ -891,7 +891,7 @@ public class ZimbraLdapContext implements ILdapContext {
                 } catch (InterruptedException ie) {
                 }
             } finally {
-                ZimbraLdapContext.closeContext(zlc);
+                LegacyZimbraLdapContext.closeContext(zlc);
             }
         }
     }

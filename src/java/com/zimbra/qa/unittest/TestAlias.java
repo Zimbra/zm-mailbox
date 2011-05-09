@@ -47,8 +47,8 @@ import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
-import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.prov.ldap.entry.LdapEntry;
@@ -333,9 +333,9 @@ public class TestAlias {
         
         // and hack the other account to also contain the alias in it's mail/zimbraMailAlias attrs
         // the hacked attrs should be removed after the removeAlais call
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
             Map<String, Object> attributes = new HashMap<String, Object>();
             attributes.put(Provisioning.A_mail, aliasName);
             attributes.put(Provisioning.A_zimbraMailAlias, aliasName);
@@ -351,7 +351,7 @@ public class TestAlias {
             assertTrue(values.contains(aliasName));
             
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
         
         // remove the alias, on the "other" account, which is *not* the target for the alias we are removing
@@ -431,9 +431,9 @@ public class TestAlias {
         mProv.addMembers(dl2, new String[]{aliasName});
         
         // now, hack it so the alias points to a non-existing entry
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
             Map<String, Object> attributes = new HashMap<String, Object>();
             attributes.put(Provisioning.A_zimbraAliasTargetId, LdapUtilCommon.generateUUID());
             
@@ -442,7 +442,7 @@ public class TestAlias {
             LdapEntry ldapAlias = (LdapEntry)aliases.get(0);
             LegacyLdapUtil.modifyAttrs(zlc, ldapAlias.getDN(), attributes, (Entry)ldapAlias);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
         
         // remove the alias
@@ -515,16 +515,16 @@ public class TestAlias {
         mProv.addMembers(dl2, new String[]{aliasName});
         
         // now, hack it to delete the alias entry
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
             List<NamedEntry> aliases = searchAliasesInDomain(domain);
             assertEquals(aliases.size(), 1);
             LdapEntry ldapAlias = (LdapEntry)aliases.get(0);
             String aliasDn = ldapAlias.getDN();
             zlc.unbindEntry(aliasDn);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
         
         // remove the alias
@@ -663,9 +663,9 @@ public class TestAlias {
         mProv.addMembers(dl2, new String[]{aliasName});
         
         // now, hack it so the alias points to a non-existing entry
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
             Map<String, Object> attributes = new HashMap<String, Object>();
             attributes.put(Provisioning.A_zimbraAliasTargetId, LdapUtilCommon.generateUUID());
             
@@ -674,7 +674,7 @@ public class TestAlias {
             LdapEntry ldapAlias = (LdapEntry)aliases.get(0);
             LegacyLdapUtil.modifyAttrs(zlc, ldapAlias.getDN(), attributes, (Entry)ldapAlias);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
         
         Account nonExistingAcct = null;
@@ -744,16 +744,16 @@ public class TestAlias {
         mProv.addMembers(dl2, new String[]{aliasName});
         
         // now, hack it to delete the alias entry
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
             List<NamedEntry> aliases = searchAliasesInDomain(domain);
             assertEquals(aliases.size(), 1);
             LdapEntry ldapAlias = (LdapEntry)aliases.get(0);
             String aliasDn = ldapAlias.getDN();
             zlc.unbindEntry(aliasDn);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
         
         Account nonExistingAcct = null;
@@ -885,13 +885,13 @@ public class TestAlias {
         mProv.addMembers(dl2, new String[]{aliasName});
         
         // now, hack it to delete the orig account entry
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
             LdapEntry ldapAccount = (LdapEntry)acct;
             zlc.unbindEntry(ldapAccount.getDN());
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
         
         // now , try to add the alias to another account

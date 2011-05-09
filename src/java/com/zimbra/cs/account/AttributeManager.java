@@ -28,8 +28,8 @@ import com.zimbra.common.util.Version;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.callback.IDNCallback;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
-import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.extension.ExtensionUtil;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -1254,9 +1254,9 @@ public class AttributeManager {
 
     private void getAttrsInOCs(String[] ocs, Set<String> attrsInOCs) throws ServiceException {
 
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
             DirContext schema = zlc.getSchema();
 
             Map<String, Object> attrs;
@@ -1291,7 +1291,7 @@ public class AttributeManager {
         } catch (NamingException e) {
             ZimbraLog.account.debug("unable to load LDAP schema extension", e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
 

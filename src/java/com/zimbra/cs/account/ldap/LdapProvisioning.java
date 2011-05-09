@@ -117,6 +117,7 @@ import com.zimbra.cs.account.ldap.legacy.LegacyLdapFilter;
 import com.zimbra.cs.account.ldap.legacy.LegacyJNDIAttributes;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapHelper;
+import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.account.ldap.legacy.entry.*;
 import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.gal.GalSearchConfig;
@@ -307,7 +308,7 @@ public class LdapProvisioning extends LdapProv {
      * @param attrs
      * @throws ServiceException
      */
-    protected void modifyAttrsInternal(Entry entry, ZimbraLdapContext initZlc, Map<String, ? extends Object> attrs)
+    protected void modifyAttrsInternal(Entry entry, LegacyZimbraLdapContext initZlc, Map<String, ? extends Object> attrs)
             throws ServiceException {
         if (entry instanceof Account && !(entry instanceof CalendarResource)) {
             Account acct = (Account) entry;
@@ -318,12 +319,12 @@ public class LdapProvisioning extends LdapProv {
         modifyLdapAttrs(entry, initZlc, attrs);
     }
     
-    private void modifyLdapAttrs(Entry entry, ZimbraLdapContext initZlc, Map<String, ? extends Object> attrs)
+    private void modifyLdapAttrs(Entry entry, LegacyZimbraLdapContext initZlc, Map<String, ? extends Object> attrs)
             throws ServiceException {
-        ZimbraLdapContext zlc = initZlc;
+        LegacyZimbraLdapContext zlc = initZlc;
         try {
             if (zlc == null)
-                zlc = new ZimbraLdapContext(true);
+                zlc = new LegacyZimbraLdapContext(true);
             LegacyLdapUtil.modifyAttrs(zlc, ((LdapEntry)entry).getDN(), attrs, entry);
             refreshEntry(entry, zlc);
         } catch (InvalidAttributeIdentifierException e) {
@@ -343,7 +344,7 @@ public class LdapProvisioning extends LdapProv {
                     + e.getMessage(), e);
         } finally {
             if (initZlc == null)
-                ZimbraLdapContext.closeContext(zlc);
+                LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
 
@@ -358,21 +359,21 @@ public class LdapProvisioning extends LdapProv {
     @Override
     public void reload(Entry e, boolean master) throws ServiceException {
 
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(master);
+            zlc = new LegacyZimbraLdapContext(master);
             refreshEntry(e, zlc);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
 
-    void refreshEntry(Entry entry, ZimbraLdapContext initZlc) throws ServiceException {
+    void refreshEntry(Entry entry, LegacyZimbraLdapContext initZlc) throws ServiceException {
 
-        ZimbraLdapContext zlc = initZlc;
+        LegacyZimbraLdapContext zlc = initZlc;
         try {
             if (zlc == null)
-                zlc = new ZimbraLdapContext();
+                zlc = new LegacyZimbraLdapContext();
             String dn = ((LdapEntry)entry).getDN();
             Attributes attributes = zlc.getAttributes(dn);
             Map<String, Object> attrs = LegacyLdapUtil.getAttrs(attributes);
@@ -426,7 +427,7 @@ public class LdapProvisioning extends LdapProv {
             throw ServiceException.FAILURE("unable to refresh entry", e);
         } finally {
             if (initZlc == null)
-                ZimbraLdapContext.closeContext(zlc);
+                LegacyZimbraLdapContext.closeContext(zlc);
         }
 
     }
@@ -460,9 +461,9 @@ public class LdapProvisioning extends LdapProv {
     @Override
     public boolean healthCheck() throws ServiceException {
         boolean result = false;
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext();
+            zlc = new LegacyZimbraLdapContext();
             Attributes attrs = zlc.getAttributes(mDIT.configDN());
             result = attrs != null;
         } catch (NamingException e) {
@@ -470,7 +471,7 @@ public class LdapProvisioning extends LdapProv {
         } catch (ServiceException e) {
             mLog.warn("LDAP health check error", e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
         return result;
     }
@@ -481,16 +482,16 @@ public class LdapProvisioning extends LdapProv {
         if (sConfig == null) {
             synchronized(LdapProvisioning.class) {
                 if (sConfig == null) {
-                    ZimbraLdapContext zlc = null;
+                    LegacyZimbraLdapContext zlc = null;
                     try {
                         String configDn = mDIT.configDN();
-                        zlc = new ZimbraLdapContext();
+                        zlc = new LegacyZimbraLdapContext();
                         Attributes attrs = zlc.getAttributes(configDn);
                         sConfig = new LdapConfig(configDn, attrs, this);
                     } catch (NamingException e) {
                         throw ServiceException.FAILURE("unable to get config", e);
                     } finally {
-                        ZimbraLdapContext.closeContext(zlc);
+                        LegacyZimbraLdapContext.closeContext(zlc);
                     }
                 }
             }
@@ -504,16 +505,16 @@ public class LdapProvisioning extends LdapProv {
         if (sGlobalGrant == null) {
             synchronized(LdapProvisioning.class) {
                 if (sGlobalGrant == null) {
-                    ZimbraLdapContext zlc = null;
+                    LegacyZimbraLdapContext zlc = null;
                     try {
                         String globalGrantDn = mDIT.globalGrantDN();
-                        zlc = new ZimbraLdapContext();
+                        zlc = new LegacyZimbraLdapContext();
                         Attributes attrs = zlc.getAttributes(globalGrantDn);
                         sGlobalGrant = new LdapGlobalGrant(globalGrantDn, attrs, this);
                     } catch (NamingException e) {
                         throw ServiceException.FAILURE("unable to get globalgrant", e);
                     } finally {
-                        ZimbraLdapContext.closeContext(zlc);
+                        LegacyZimbraLdapContext.closeContext(zlc);
                     }
                 }
             }
@@ -528,9 +529,9 @@ public class LdapProvisioning extends LdapProv {
     
     @Override
     public List<MimeTypeInfo> getMimeTypesByQuery(String mimeType) throws ServiceException {
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext();
+            zlc = new LegacyZimbraLdapContext();
             mimeType = LdapUtilCommon.escapeSearchFilterArg(mimeType);
             NamingEnumeration<SearchResult> ne = zlc.searchDir(
                     mDIT.mimeBaseDN(), LegacyLdapFilter.mimeEntryByMimeType(mimeType), sSubtreeSC);
@@ -548,7 +549,7 @@ public class LdapProvisioning extends LdapProv {
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to get mime types for " + mimeType, e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
     
@@ -559,9 +560,9 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public List<MimeTypeInfo> getAllMimeTypesByQuery() throws ServiceException {
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext();
+            zlc = new LegacyZimbraLdapContext();
             List<MimeTypeInfo> mimeTypes = new ArrayList<MimeTypeInfo>();
             NamingEnumeration<SearchResult> ne = zlc.searchDir(
                     mDIT.mimeBaseDN(), LegacyLdapFilter.allMimeEntries(), sSubtreeSC);
@@ -578,16 +579,16 @@ public class LdapProvisioning extends LdapProv {
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to get mime types", e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
 
     }
 
-    private Account getAccountByQuery(String base, String query, ZimbraLdapContext initZlc, boolean loadFromMaster) throws ServiceException {
-        ZimbraLdapContext zlc = initZlc;
+    private Account getAccountByQuery(String base, String query, LegacyZimbraLdapContext initZlc, boolean loadFromMaster) throws ServiceException {
+        LegacyZimbraLdapContext zlc = initZlc;
         try {
             if (zlc == null)
-                zlc = new ZimbraLdapContext(loadFromMaster);
+                zlc = new LegacyZimbraLdapContext(loadFromMaster);
             NamingEnumeration<SearchResult> ne = zlc.searchDir(base, query, sSubtreeSC);
             if (ne.hasMore()) {
                 SearchResult sr = ne.next();
@@ -606,12 +607,12 @@ public class LdapProvisioning extends LdapProv {
             throw ServiceException.FAILURE("unable to lookup account via query: "+query+" message: "+e.getMessage(), e);
         } finally {
             if (initZlc == null)
-                ZimbraLdapContext.closeContext(zlc);
+                LegacyZimbraLdapContext.closeContext(zlc);
         }
         return null;
     }
 
-    private Account getAccountById(String zimbraId, ZimbraLdapContext zlc, boolean loadFromMaster) throws ServiceException {
+    private Account getAccountById(String zimbraId, LegacyZimbraLdapContext zlc, boolean loadFromMaster) throws ServiceException {
         if (zimbraId == null)
             return null;
         Account a = sAccountCache.getById(zimbraId);
@@ -806,7 +807,7 @@ public class LdapProvisioning extends LdapProv {
         return get(AccountBy.name, acctName);
     }
     
-    private Cos lookupCos(String key, ZimbraLdapContext zlc) throws ServiceException {
+    private Cos lookupCos(String key, LegacyZimbraLdapContext zlc) throws ServiceException {
         Cos c = null;
         c = getCosById(key, zlc);
         if (c == null)
@@ -870,9 +871,9 @@ public class LdapProvisioning extends LdapProv {
         AttributeManager.getInstance().preModify(acctAttrs, null, attrManagerContext, true, true);
 
         String dn = null;
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
 
             Domain d = getDomainByAsciiName(domain, zlc);
             if (d == null) {
@@ -1051,16 +1052,16 @@ public class LdapProvisioning extends LdapProv {
         } catch (NamingException e) {
            throw ServiceException.FAILURE("unable to create account: "+emailAddress, e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
     
     @Override
     public void searchOCsForSuperClasses(Map<String, Set<String>> ocs) {
         
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
             DirContext schema = zlc.getSchema();
           
             Map<String, Object> attrs;
@@ -1101,7 +1102,7 @@ public class LdapProvisioning extends LdapProv {
         } catch (ServiceException e) {
             ZimbraLog.account.warn("unable to load LDAP schema", e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
 
@@ -1338,9 +1339,9 @@ public class LdapProvisioning extends LdapProv {
             NamedEntry.Visitor visitor, int maxResults,
             boolean useConnPool, boolean useMaster) throws ServiceException {
 
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(useMaster, useConnPool);
+            zlc = new LegacyZimbraLdapContext(useMaster, useConnPool);
 
             if ((flags & Provisioning.SO_NO_FIXUP_OBJECTCLASS) == 0) {
                 String objectClass = getObjectClassQuery(flags);
@@ -1421,7 +1422,7 @@ public class LdapProvisioning extends LdapProv {
         } catch (IOException e) {
             throw ServiceException.FAILURE("unable to list all objects", e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
 
@@ -1577,10 +1578,10 @@ public class LdapProvisioning extends LdapProv {
         String aliasName = parts[0];
         String aliasDomain = parts[1];
 
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         String aliasDn = null;
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
 
             Domain domain = getDomainByAsciiName(aliasDomain, zlc);
             if (domain == null)
@@ -1655,7 +1656,7 @@ public class LdapProvisioning extends LdapProv {
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to create alias: "+e.getMessage(), e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
 
@@ -1682,9 +1683,9 @@ public class LdapProvisioning extends LdapProv {
      */
     private void removeAliasInternal(NamedEntry entry, String alias) throws ServiceException {
 
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
 
             alias = alias.toLowerCase();
             alias = IDNUtil.toAsciiEmail(alias);
@@ -1767,7 +1768,7 @@ public class LdapProvisioning extends LdapProv {
                 throw AccountServiceException.NO_SUCH_ALIAS(alias);
 
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
 
 
@@ -1807,9 +1808,9 @@ public class LdapProvisioning extends LdapProv {
 
         NameUtil.validNewDomainName(name);
 
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
 
             LdapDomain d = (LdapDomain) getDomainByAsciiName(name, zlc);
             if (d != null)
@@ -1899,15 +1900,15 @@ public class LdapProvisioning extends LdapProv {
             //if (e instanceof )
             throw ServiceException.FAILURE("unable to create domain: "+name, e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
 
-    private LdapDomain getDomainByQuery(String query, ZimbraLdapContext initZlc) throws ServiceException {
-        ZimbraLdapContext zlc = initZlc;
+    private LdapDomain getDomainByQuery(String query, LegacyZimbraLdapContext initZlc) throws ServiceException {
+        LegacyZimbraLdapContext zlc = initZlc;
         try {
             if (zlc == null)
-                zlc = new ZimbraLdapContext();
+                zlc = new LegacyZimbraLdapContext();
             NamingEnumeration<SearchResult> ne = zlc.searchDir(mDIT.domainBaseDN(), query, sSubtreeSC);
             if (ne.hasMore()) {
                 SearchResult sr = ne.next();
@@ -1926,7 +1927,7 @@ public class LdapProvisioning extends LdapProv {
             throw ServiceException.FAILURE("unable to lookup domain via query: "+query+" message:"+e.getMessage(), e);
         } finally {
             if (initZlc == null)
-                ZimbraLdapContext.closeContext(zlc);
+                LegacyZimbraLdapContext.closeContext(zlc);
         }
         return null;
     }
@@ -1976,11 +1977,11 @@ public class LdapProvisioning extends LdapProv {
         }
     }
 
-    private Domain getDomainById(String zimbraId, ZimbraLdapContext zlc) throws ServiceException {
+    private Domain getDomainById(String zimbraId, LegacyZimbraLdapContext zlc) throws ServiceException {
         return getDomainByIdInternal(zimbraId, zlc, GetFromDomainCacheOption.POSITIVE);
     }
 
-    private Domain getDomainByIdInternal(String zimbraId, ZimbraLdapContext zlc, GetFromDomainCacheOption option) throws ServiceException {
+    private Domain getDomainByIdInternal(String zimbraId, LegacyZimbraLdapContext zlc, GetFromDomainCacheOption option) throws ServiceException {
         if (zimbraId == null)
             return null;
 
@@ -2002,11 +2003,11 @@ public class LdapProvisioning extends LdapProv {
         return getDomainByAsciiNameInternal(asciiName, null, option);
     }
 
-    private Domain getDomainByAsciiName(String name, ZimbraLdapContext zlc) throws ServiceException {
+    private Domain getDomainByAsciiName(String name, LegacyZimbraLdapContext zlc) throws ServiceException {
         return getDomainByAsciiNameInternal(name, zlc, GetFromDomainCacheOption.POSITIVE);
     }
 
-    private Domain getDomainByAsciiNameInternal(String name, ZimbraLdapContext zlc, GetFromDomainCacheOption option) throws ServiceException {
+    private Domain getDomainByAsciiNameInternal(String name, LegacyZimbraLdapContext zlc, GetFromDomainCacheOption option) throws ServiceException {
         Domain d = sDomainCache.getByName(name, option);
         if (d instanceof DomainCache.NonExistingDomain)
             return null;
@@ -2103,7 +2104,7 @@ public class LdapProvisioning extends LdapProv {
                       0);
     }
 
-    private static boolean domainDnExists(ZimbraLdapContext zlc, String dn) throws NamingException {
+    private static boolean domainDnExists(LegacyZimbraLdapContext zlc, String dn) throws NamingException {
         try {
             NamingEnumeration<SearchResult> ne = zlc.searchDir(dn,
                     LegacyLdapFilter.domainLabel(), sObjectSC);
@@ -2117,7 +2118,7 @@ public class LdapProvisioning extends LdapProv {
         }
     }
 
-    private static void createParentDomains(ZimbraLdapContext zlc, String parts[], String dns[]) throws NamingException {
+    private static void createParentDomains(LegacyZimbraLdapContext zlc, String parts[], String dns[]) throws NamingException {
         for (int i=dns.length-1; i > 0; i--) {
             if (!domainDnExists(zlc, dns[i])) {
                 String dn = dns[i];
@@ -2166,9 +2167,9 @@ public class LdapProvisioning extends LdapProv {
         Map<?, ?> attrManagerContext = new HashMap<Object, Object>();
         AttributeManager.getInstance().preModify(allAttrs, null, attrManagerContext, true, true);
 
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
 
             Attributes attrs = new BasicAttributes(true);
             LegacyLdapUtil.mapToAttrs(allAttrs, attrs);
@@ -2189,7 +2190,7 @@ public class LdapProvisioning extends LdapProv {
         } catch (NameAlreadyBoundException nabe) {
             throw AccountServiceException.COS_EXISTS(destCosName);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
 
@@ -2203,9 +2204,9 @@ public class LdapProvisioning extends LdapProv {
             throw ServiceException.INVALID_REQUEST("unable to rename default cos", null);
 
         newName = newName.toLowerCase().trim();
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
             String newDn = mDIT.cosNametoDN(newName);
             zlc.renameEntry(cos.getDN(), newDn);
             // remove old cos from cache
@@ -2215,15 +2216,15 @@ public class LdapProvisioning extends LdapProv {
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to rename cos: "+zimbraId, e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
 
-    private LdapCos getCOSByQuery(String query, ZimbraLdapContext initZlc) throws ServiceException {
-        ZimbraLdapContext zlc = initZlc;
+    private LdapCos getCOSByQuery(String query, LegacyZimbraLdapContext initZlc) throws ServiceException {
+        LegacyZimbraLdapContext zlc = initZlc;
         try {
             if (zlc == null)
-                zlc = new ZimbraLdapContext();
+                zlc = new LegacyZimbraLdapContext();
             NamingEnumeration<SearchResult> ne = zlc.searchDir(mDIT.cosBaseDN(), query, sSubtreeSC);
             if (ne.hasMore()) {
                 SearchResult sr = ne.next();
@@ -2238,12 +2239,12 @@ public class LdapProvisioning extends LdapProv {
             throw ServiceException.FAILURE("unable to lookup cos via query: "+query+ " message: "+e.getMessage(), e);
         } finally {
             if (initZlc == null)
-                ZimbraLdapContext.closeContext(zlc);
+                LegacyZimbraLdapContext.closeContext(zlc);
         }
         return null;
     }
 
-    private Cos getCosById(String zimbraId, ZimbraLdapContext zlc) throws ServiceException {
+    private Cos getCosById(String zimbraId, LegacyZimbraLdapContext zlc) throws ServiceException {
         if (zimbraId == null)
             return null;
 
@@ -2279,15 +2280,15 @@ public class LdapProvisioning extends LdapProv {
         }
     }
 
-    private Cos getCosByName(String name, ZimbraLdapContext initZlc) throws ServiceException {
-        ZimbraLdapContext zlc = initZlc;
+    private Cos getCosByName(String name, LegacyZimbraLdapContext initZlc) throws ServiceException {
+        LegacyZimbraLdapContext zlc = initZlc;
         LdapCos cos = sCosCache.getByName(name);
         if (cos != null)
             return cos;
 
         try {
             if (zlc == null)
-                zlc = new ZimbraLdapContext();
+                zlc = new LegacyZimbraLdapContext();
             String dn = mDIT.cosNametoDN(name);
             Attributes attrs = zlc.getAttributes(dn);
             cos  = new LdapCos(dn, attrs, this);
@@ -2301,16 +2302,16 @@ public class LdapProvisioning extends LdapProv {
             throw ServiceException.FAILURE("unable to lookup COS by name: "+name+" message: "+e.getMessage(), e);
         } finally {
             if (initZlc == null)
-                ZimbraLdapContext.closeContext(zlc);
+                LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
 
     @Override
     public List<Cos> getAllCos() throws ServiceException {
         List<Cos> result = new ArrayList<Cos>();
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext();
+            zlc = new LegacyZimbraLdapContext();
             NamingEnumeration<SearchResult> ne = zlc.searchDir(mDIT.cosBaseDN(),
                     LegacyLdapFilter.allCoses(), sSubtreeSC);
             while (ne.hasMore()) {
@@ -2321,7 +2322,7 @@ public class LdapProvisioning extends LdapProv {
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to list all COS", e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
 
         Collections.sort(result);
@@ -2352,9 +2353,9 @@ public class LdapProvisioning extends LdapProv {
             ZimbraLog.account.warn("cannot revoke grants", e);
         }
 
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
 
             zlc.deleteChildren(entry.getDN());
             zlc.unbindEntry(entry.getDN());
@@ -2362,7 +2363,7 @@ public class LdapProvisioning extends LdapProv {
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to purge account: "+zimbraId, e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
 
     }
@@ -2372,7 +2373,7 @@ public class LdapProvisioning extends LdapProv {
         newName = IDNUtil.toAsciiEmail(newName);
         validEmailAddress(newName);
 
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         Account acct = getAccountById(zimbraId, zlc, true);
         LdapEntry entry = (LdapEntry) acct;
         if (acct == null)
@@ -2381,7 +2382,7 @@ public class LdapProvisioning extends LdapProv {
 
         boolean domainChanged = false;
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
 
             String oldDn = entry.getDN();
             String oldDomain = EmailUtil.getValidDomainPart(oldEmail);
@@ -2484,7 +2485,7 @@ public class LdapProvisioning extends LdapProv {
         } finally {
             // prune cache
             sAccountCache.remove(acct);
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
 
         // reload it to cache using the master, bug 45736
@@ -2498,11 +2499,11 @@ public class LdapProvisioning extends LdapProv {
     public void deleteDomain(String zimbraId) throws ServiceException {
         // TODO: should only allow a domain delete to succeed if there are no people
         // if there aren't, we need to delete the people trees first, then delete the domain.
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         LdapDomain d = null;
         String acctBaseDn = null;
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
 
             d = (LdapDomain) getDomainById(zimbraId, zlc);
             if (d == null)
@@ -2571,7 +2572,7 @@ public class LdapProvisioning extends LdapProv {
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to purge domain: "+zimbraId, e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
 
@@ -2582,10 +2583,10 @@ public class LdapProvisioning extends LdapProv {
         newDomainName = IDNUtil.toAsciiDomainName(newDomainName);
         NameUtil.validNewDomainName(newDomainName);
 
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
 
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
 
             Domain oldDomain = getDomainById(zimbraId, zlc);
             if (oldDomain == null)
@@ -2594,7 +2595,7 @@ public class LdapProvisioning extends LdapProv {
             RenameDomain rd = new RenameDomain(zlc, this, oldDomain, newDomainName);
             rd.execute();
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
 
@@ -2608,15 +2609,15 @@ public class LdapProvisioning extends LdapProv {
             throw ServiceException.INVALID_REQUEST("unable to delete default cos", null);
 
         // TODO: should we go through all accounts with this cos and remove the zimbraCOSId attr?
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
             zlc.unbindEntry(c.getDN());
             sCosCache.remove(c);
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to purge cos: "+zimbraId, e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
 
@@ -2632,9 +2633,9 @@ public class LdapProvisioning extends LdapProv {
             serverAttrs.put(A_zimbraMtaAuthURL, URLUtil.getMtaAuthURL(authHost));
         }
 
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
 
             Attributes attrs = new BasicAttributes(true);
             LegacyLdapUtil.mapToAttrs(serverAttrs, attrs);
@@ -2662,15 +2663,15 @@ public class LdapProvisioning extends LdapProv {
         } catch (NameAlreadyBoundException nabe) {
             throw AccountServiceException.SERVER_EXISTS(name);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
 
-    private Server getServerByQuery(String query, ZimbraLdapContext initZlc) throws ServiceException {
-        ZimbraLdapContext zlc = initZlc;
+    private Server getServerByQuery(String query, LegacyZimbraLdapContext initZlc) throws ServiceException {
+        LegacyZimbraLdapContext zlc = initZlc;
         try {
             if (zlc == null)
-                zlc = new ZimbraLdapContext();
+                zlc = new LegacyZimbraLdapContext();
             NamingEnumeration<SearchResult> ne = zlc.searchDir(mDIT.serverBaseDN(), query, sSubtreeSC);
             if (ne.hasMore()) {
                 SearchResult sr = ne.next();
@@ -2685,12 +2686,12 @@ public class LdapProvisioning extends LdapProv {
             throw ServiceException.FAILURE("unable to lookup server via query: "+query+" message: "+e.getMessage(), e);
         } finally {
             if (initZlc == null)
-                ZimbraLdapContext.closeContext(zlc);
+                LegacyZimbraLdapContext.closeContext(zlc);
         }
         return null;
     }
 
-    private Server getServerById(String zimbraId, ZimbraLdapContext zlc, boolean nocache) throws ServiceException {
+    private Server getServerById(String zimbraId, LegacyZimbraLdapContext zlc, boolean nocache) throws ServiceException {
         if (zimbraId == null)
             return null;
         Server s = null;
@@ -2739,9 +2740,9 @@ public class LdapProvisioning extends LdapProv {
             if (s != null)
                 return s;
         }
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext();
+            zlc = new LegacyZimbraLdapContext();
             String dn = mDIT.serverNametoDN(name);
             Attributes attrs = zlc.getAttributes(dn);
             LdapServer s = new LdapServer(dn, attrs, getConfig().getServerDefaults(), this);
@@ -2754,7 +2755,7 @@ public class LdapProvisioning extends LdapProv {
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to lookup server by name: "+name+" message: "+e.getMessage(), e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
 
@@ -2766,9 +2767,9 @@ public class LdapProvisioning extends LdapProv {
     @Override
     public List<Server> getAllServers(String service) throws ServiceException {
         List<Server> result = new ArrayList<Server>();
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext();
+            zlc = new LegacyZimbraLdapContext();
             String filter;
             if (service != null) {
                 filter = LegacyLdapFilter.serverByService(LdapUtilCommon.escapeSearchFilterArg(service));
@@ -2785,7 +2786,7 @@ public class LdapProvisioning extends LdapProv {
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to list all servers", e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
         if (result.size() > 0)
             sServerCache.put(result, true);
@@ -2793,12 +2794,12 @@ public class LdapProvisioning extends LdapProv {
         return result;
     }
 
-    private List<Cos> searchCOS(String query, ZimbraLdapContext initZlc) throws ServiceException {
+    private List<Cos> searchCOS(String query, LegacyZimbraLdapContext initZlc) throws ServiceException {
         List<Cos> result = new ArrayList<Cos>();
-        ZimbraLdapContext zlc = initZlc;
+        LegacyZimbraLdapContext zlc = initZlc;
         try {
             if (zlc == null)
-                zlc = new ZimbraLdapContext();
+                zlc = new LegacyZimbraLdapContext();
             NamingEnumeration<SearchResult> ne = zlc.searchDir(mDIT.cosBaseDN(), query, sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = ne.next();
@@ -2813,12 +2814,12 @@ public class LdapProvisioning extends LdapProv {
             throw ServiceException.FAILURE("unable to lookup cos via query: "+query+ " message: "+e.getMessage(), e);
         } finally {
             if (initZlc == null)
-                ZimbraLdapContext.closeContext(zlc);
+                LegacyZimbraLdapContext.closeContext(zlc);
         }
         return result;
     }
 
-    private void removeServerFromAllCOSes(String serverId, String serverName, ZimbraLdapContext initZlc) {
+    private void removeServerFromAllCOSes(String serverId, String serverName, LegacyZimbraLdapContext initZlc) {
         List<Cos> coses = null;
         try {
             coses = searchCOS(LegacyLdapFilter.cosesByMailHostPool(serverId), initZlc);
@@ -2872,16 +2873,16 @@ public class LdapProvisioning extends LdapProv {
         if (numAcctsOnServer != 0)
             throw ServiceException.INVALID_REQUEST("There are " + numAcctsOnServer + " account(s) on this server.", null);
         
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
             removeServerFromAllCOSes(zimbraId, server.getName(), zlc);
             zlc.unbindEntry(server.getDN());
             sServerCache.remove(server);
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to purge server: "+zimbraId, e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
 
@@ -2911,9 +2912,9 @@ public class LdapProvisioning extends LdapProv {
         Map<?, ?> attrManagerContext = new HashMap<Object, Object>();
         AttributeManager.getInstance().preModify(listAttrs, null, attrManagerContext, true, true);
 
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
 
             Domain d = getDomainByAsciiName(domain, zlc);
             if (d == null)
@@ -2960,7 +2961,7 @@ public class LdapProvisioning extends LdapProv {
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to create distribution listt: "+listAddress, e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
 
@@ -2969,13 +2970,13 @@ public class LdapProvisioning extends LdapProv {
         return getGroups(list, directOnly, via);
     }
 
-    private DistributionList getDistributionListByQuery(String base, String query, ZimbraLdapContext initZlc, String[] returnAttrs) 
+    private DistributionList getDistributionListByQuery(String base, String query, LegacyZimbraLdapContext initZlc, String[] returnAttrs) 
     throws ServiceException {
         DistributionList dl = null;
-        ZimbraLdapContext zlc = initZlc;
+        LegacyZimbraLdapContext zlc = initZlc;
         try {
             if (zlc == null)
-                zlc = new ZimbraLdapContext();
+                zlc = new LegacyZimbraLdapContext();
 
             SearchControls searchControls =
                 new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, returnAttrs, false, false);
@@ -2994,7 +2995,7 @@ public class LdapProvisioning extends LdapProv {
             throw ServiceException.FAILURE("unable to lookup distribution list via query: "+query+ " message: "+e.getMessage(), e);
         } finally {
             if (initZlc == null)
-                ZimbraLdapContext.closeContext(zlc);
+                LegacyZimbraLdapContext.closeContext(zlc);
         }
         return dl;
     }
@@ -3005,9 +3006,9 @@ public class LdapProvisioning extends LdapProv {
         validEmailAddress(newEmail);
 
         boolean domainChanged = false;
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
 
             LdapDistributionList dl = (LdapDistributionList) getDistributionListById(zimbraId, zlc);
             if (dl == null)
@@ -3099,7 +3100,7 @@ public class LdapProvisioning extends LdapProv {
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to rename distribution list: " + zimbraId, e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
         
         if (domainChanged)
@@ -3118,7 +3119,7 @@ public class LdapProvisioning extends LdapProv {
         }
     }
 
-    private DistributionList getDistributionListById(String zimbraId, ZimbraLdapContext zlc) throws ServiceException {
+    private DistributionList getDistributionListById(String zimbraId, LegacyZimbraLdapContext zlc) throws ServiceException {
         //zimbraId = LegacyLdapUtil.escapeSearchFilterArg(zimbraId);
         return getDistributionListByQuery(mDIT.mailBranchBaseDN(),
                                           LegacyLdapFilter.distributionListById(zimbraId),
@@ -3162,15 +3163,15 @@ public class LdapProvisioning extends LdapProv {
             ZimbraLog.account.warn("cannot revoke grants", e);
         }
 
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
             zlc.unbindEntry(dl.getDN());
             mAllDLs.removeGroup(addrs);
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to purge distribution list: "+zimbraId, e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
         
         PermissionCache.invalidateCache();
@@ -4133,17 +4134,17 @@ public class LdapProvisioning extends LdapProv {
         }
     }
 
-    Zimlet lookupZimlet(String name, ZimbraLdapContext zlc) throws ServiceException {
+    Zimlet lookupZimlet(String name, LegacyZimbraLdapContext zlc) throws ServiceException {
         return getZimlet(name, zlc, false);
     }
 
-    private Zimlet getZimlet(String name, ZimbraLdapContext initZlc, boolean useCache) throws ServiceException {
+    private Zimlet getZimlet(String name, LegacyZimbraLdapContext initZlc, boolean useCache) throws ServiceException {
         LdapZimlet zimlet = sZimletCache.getByName(name);
         if (!useCache || zimlet == null) {
-            ZimbraLdapContext zlc = initZlc;
+            LegacyZimbraLdapContext zlc = initZlc;
             try {
                 if (zlc == null) {
-                    zlc = new ZimbraLdapContext();
+                    zlc = new LegacyZimbraLdapContext();
                 }
                 String dn = mDIT.zimletNameToDN(name);
                 Attributes attrs = zlc.getAttributes(dn);
@@ -4160,7 +4161,7 @@ public class LdapProvisioning extends LdapProv {
                 throw ServiceException.FAILURE("unable to load zimlet: "+name, ze);
             } finally {
                 if (initZlc == null) {
-                    ZimbraLdapContext.closeContext(zlc);
+                    LegacyZimbraLdapContext.closeContext(zlc);
                 }
             }
         }
@@ -4170,9 +4171,9 @@ public class LdapProvisioning extends LdapProv {
     @Override
     public List<Zimlet> listAllZimlets() throws ServiceException {
         List<Zimlet> result = new ArrayList<Zimlet>();
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext();
+            zlc = new LegacyZimbraLdapContext();
             NamingEnumeration<SearchResult> ne = zlc.searchDir(mDIT.zimletBaseDN(), LegacyLdapFilter.allZimlets(), sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = ne.next();
@@ -4182,7 +4183,7 @@ public class LdapProvisioning extends LdapProv {
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to list all zimlets", e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
         Collections.sort(result);
         return result;
@@ -4195,9 +4196,9 @@ public class LdapProvisioning extends LdapProv {
         Map<String, Object> attrManagerContext = new HashMap<String, Object>();
         AttributeManager.getInstance().preModify(zimletAttrs, null, attrManagerContext, true, true);
 
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext();
+            zlc = new LegacyZimbraLdapContext();
 
             Attributes attrs = new BasicAttributes(true);
             String hasKeyword = LdapConstants.LDAP_FALSE;
@@ -4221,15 +4222,15 @@ public class LdapProvisioning extends LdapProv {
         } catch (ServiceException se) {
             throw se;
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
 
     @Override
     public void deleteZimlet(String name) throws ServiceException {
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext();
+            zlc = new LegacyZimbraLdapContext();
             LdapZimlet zimlet = (LdapZimlet)getZimlet(name, zlc, true);
             if (zimlet != null) {
                 sZimletCache.remove(zimlet);
@@ -4238,7 +4239,7 @@ public class LdapProvisioning extends LdapProv {
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to delete zimlet: "+name, e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
 
@@ -5159,9 +5160,9 @@ public class LdapProvisioning extends LdapProv {
         // filter out hidden entries
         query = "(&("+query+")(!(zimbraHideInGal=TRUE)))";
 
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(false);
+            zlc = new LegacyZimbraLdapContext(false);
             LegacyLdapUtil.searchGal(zlc,
                                GalSearchConfig.GalType.zimbra,
                                galParams.pageSize(),
@@ -5172,7 +5173,7 @@ public class LdapProvisioning extends LdapProv {
                                token,
                                result);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
 
         //Collections.sort(result);
@@ -5443,12 +5444,12 @@ public class LdapProvisioning extends LdapProv {
         return addrs;
     }
 
-    private List<Identity> getIdentitiesByQuery(LdapEntry entry, String query, ZimbraLdapContext initZlc) throws ServiceException {
-        ZimbraLdapContext zlc = initZlc;
+    private List<Identity> getIdentitiesByQuery(LdapEntry entry, String query, LegacyZimbraLdapContext initZlc) throws ServiceException {
+        LegacyZimbraLdapContext zlc = initZlc;
         List<Identity> result = new ArrayList<Identity>();
         try {
             if (zlc == null)
-                zlc = new ZimbraLdapContext();
+                zlc = new LegacyZimbraLdapContext();
             String base = entry.getDN();
             NamingEnumeration<SearchResult> ne = zlc.searchDir(base, query, sSubtreeSC);
             while(ne.hasMore()) {
@@ -5466,12 +5467,12 @@ public class LdapProvisioning extends LdapProv {
             throw ServiceException.FAILURE("unable to lookup identity via query: "+query+ " message: "+e.getMessage(), e);
         } finally {
             if (initZlc == null)
-                ZimbraLdapContext.closeContext(zlc);
+                LegacyZimbraLdapContext.closeContext(zlc);
         }
         return result;
     }
 
-    private Identity getIdentityByName(LdapEntry entry, String name,  ZimbraLdapContext zlc) throws ServiceException {
+    private Identity getIdentityByName(LdapEntry entry, String name,  LegacyZimbraLdapContext zlc) throws ServiceException {
         name = LdapUtilCommon.escapeSearchFilterArg(name);
         List<Identity> result = getIdentitiesByQuery(entry, LegacyLdapFilter.identityByName(name), zlc);
         return result.isEmpty() ? null : result.get(0);
@@ -5525,9 +5526,9 @@ public class LdapProvisioning extends LdapProv {
         boolean checkImmutable = !restoring;
         AttributeManager.getInstance().preModify(identityAttrs, null, attrManagerContext, true, checkImmutable);
 
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
 
             String dn = getIdentityDn(ldapEntry, identityName);
 
@@ -5553,7 +5554,7 @@ public class LdapProvisioning extends LdapProv {
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to create identity", e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
 
@@ -5598,9 +5599,9 @@ public class LdapProvisioning extends LdapProv {
         if (identity.getName().equalsIgnoreCase(DEFAULT_IDENTITY_NAME))
             throw ServiceException.INVALID_REQUEST("can't rename default identity", null);
 
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
             String newDn = getIdentityDn(entry, newIdentityName);
             zlc.renameEntry(identity.getDN(), newDn);
         } catch (InvalidNameException e) {
@@ -5608,7 +5609,7 @@ public class LdapProvisioning extends LdapProv {
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to rename identity: "+newIdentityName, e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
 
@@ -5623,9 +5624,9 @@ public class LdapProvisioning extends LdapProv {
 
         account.setCachedData(IDENTITY_LIST_CACHE_KEY, null);
 
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
             Identity identity = getIdentityByName(ldapEntry, identityName, zlc);
             if (identity == null)
                 throw AccountServiceException.NO_SUCH_IDENTITY(identityName);
@@ -5634,7 +5635,7 @@ public class LdapProvisioning extends LdapProv {
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to delete identity: "+identityName, e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
 
@@ -5694,13 +5695,13 @@ public class LdapProvisioning extends LdapProv {
         }
     }
 
-    private List<Signature> getSignaturesByQuery(Account acct, LdapEntry entry, String query, ZimbraLdapContext initZlc, List<Signature> result) throws ServiceException {
-        ZimbraLdapContext zlc = initZlc;
+    private List<Signature> getSignaturesByQuery(Account acct, LdapEntry entry, String query, LegacyZimbraLdapContext initZlc, List<Signature> result) throws ServiceException {
+        LegacyZimbraLdapContext zlc = initZlc;
         if (result == null)
             result = new ArrayList<Signature>();
         try {
             if (zlc == null)
-                zlc = new ZimbraLdapContext();
+                zlc = new LegacyZimbraLdapContext();
             String base = entry.getDN();
             NamingEnumeration<SearchResult> ne = zlc.searchDir(base, query, sSubtreeSC);
             while(ne.hasMore()) {
@@ -5718,12 +5719,12 @@ public class LdapProvisioning extends LdapProv {
             throw ServiceException.FAILURE("unable to lookup signature via query: "+query+ " message: "+e.getMessage(), e);
         } finally {
             if (initZlc == null)
-                ZimbraLdapContext.closeContext(zlc);
+                LegacyZimbraLdapContext.closeContext(zlc);
         }
         return result;
     }
 
-    private Signature getSignatureById(Account acct, LdapEntry entry, String id,  ZimbraLdapContext zlc) throws ServiceException {
+    private Signature getSignatureById(Account acct, LdapEntry entry, String id,  LegacyZimbraLdapContext zlc) throws ServiceException {
         id = LdapUtilCommon.escapeSearchFilterArg(id);
         List<Signature> result = getSignaturesByQuery(acct, entry, LegacyLdapFilter.signatureById(id), zlc, null);
         return result.isEmpty() ? null : result.get(0);
@@ -5814,9 +5815,9 @@ public class LdapProvisioning extends LdapProv {
             return LdapSignature.getAccountSignature(this, account);
         }
 
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
 
             String dn = getSignatureDn(ldapEntry, signatureName);
 
@@ -5837,7 +5838,7 @@ public class LdapProvisioning extends LdapProv {
         } catch (NameAlreadyBoundException nabe) {
             throw AccountServiceException.SIGNATURE_EXISTS(signatureName);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
 
@@ -5896,9 +5897,9 @@ public class LdapProvisioning extends LdapProv {
     }
 
     private void renameSignature(LdapEntry entry, LdapSignature signature, String newSignatureName) throws ServiceException {
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
             String newDn = getSignatureDn(entry, newSignatureName);
             zlc.renameEntry(signature.getDN(), newDn);
         } catch (InvalidNameException e) {
@@ -5906,7 +5907,7 @@ public class LdapProvisioning extends LdapProv {
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to rename signature: "+newSignatureName, e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
 
@@ -5923,9 +5924,9 @@ public class LdapProvisioning extends LdapProv {
             return;
         }
 
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
             Signature signature = getSignatureById(account, ldapEntry, signatureId, zlc);
             if (signature == null)
                 throw AccountServiceException.NO_SUCH_SIGNATURE(signatureId);
@@ -5934,7 +5935,7 @@ public class LdapProvisioning extends LdapProv {
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to delete signarure: "+signatureId, e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
 
@@ -5987,12 +5988,12 @@ public class LdapProvisioning extends LdapProv {
 
     private static final String DATA_SOURCE_LIST_CACHE_KEY = "LdapProvisioning.DATA_SOURCE_CACHE";
 
-    private List<DataSource> getDataSourcesByQuery(LdapEntry entry, String query, ZimbraLdapContext initZlc) throws ServiceException {
-        ZimbraLdapContext zlc = initZlc;
+    private List<DataSource> getDataSourcesByQuery(LdapEntry entry, String query, LegacyZimbraLdapContext initZlc) throws ServiceException {
+        LegacyZimbraLdapContext zlc = initZlc;
         List<DataSource> result = new ArrayList<DataSource>();
         try {
             if (zlc == null)
-                zlc = new ZimbraLdapContext();
+                zlc = new LegacyZimbraLdapContext();
             String base = entry.getDN();
             NamingEnumeration<SearchResult> ne = zlc.searchDir(base, query, sSubtreeSC);
             while(ne.hasMore()) {
@@ -6010,12 +6011,12 @@ public class LdapProvisioning extends LdapProv {
             throw ServiceException.FAILURE("unable to lookup data source via query: "+query+ " message: "+e.getMessage(), e);
         } finally {
             if (initZlc == null)
-                ZimbraLdapContext.closeContext(zlc);
+                LegacyZimbraLdapContext.closeContext(zlc);
         }
         return result;
     }
 
-    private DataSource getDataSourceById(LdapEntry entry, String id,  ZimbraLdapContext zlc) throws ServiceException {
+    private DataSource getDataSourceById(LdapEntry entry, String id,  LegacyZimbraLdapContext zlc) throws ServiceException {
         id= LdapUtilCommon.escapeSearchFilterArg(id);
         List<DataSource> result = getDataSourcesByQuery(entry, LegacyLdapFilter.dataSourceById(id), zlc);
         return result.isEmpty() ? null : result.get(0);
@@ -6063,7 +6064,7 @@ public class LdapProvisioning extends LdapProv {
         return new ReplaceAddressResult(oldAddrs, newAddrs);
      }
 
-    protected boolean addressExists(ZimbraLdapContext zlc, String baseDN, String[] addrs) throws ServiceException {
+    protected boolean addressExists(LegacyZimbraLdapContext zlc, String baseDN, String[] addrs) throws ServiceException {
         StringBuilder query = new StringBuilder();
         query.append("(|");
         for (int i=0; i < addrs.length; i++) {
@@ -6095,7 +6096,7 @@ public class LdapProvisioning extends LdapProv {
     // There could be a race condition that the alias might get taken
     // in the new domain post the check.  Anyone who calls this API must
     // pay attention to the warning message
-    private void moveAliases(ZimbraLdapContext zlc, ReplaceAddressResult addrs, String newDomain, String primaryUid,
+    private void moveAliases(LegacyZimbraLdapContext zlc, ReplaceAddressResult addrs, String newDomain, String primaryUid,
                              String targetOldDn, String targetNewDn,
                              String targetOldDomain, String targetNewDomain)  throws ServiceException {
 
@@ -6168,9 +6169,9 @@ public class LdapProvisioning extends LdapProv {
         boolean checkImmutable = !restoring;
         AttributeManager.getInstance().preModify(dataSourceAttrs, null, attrManagerContext, true, checkImmutable);
 
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
 
             String dn = getDataSourceDn(ldapEntry, dsName);
 
@@ -6204,7 +6205,7 @@ public class LdapProvisioning extends LdapProv {
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to create data source", e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
 
@@ -6216,9 +6217,9 @@ public class LdapProvisioning extends LdapProv {
 
         account.setCachedData(DATA_SOURCE_LIST_CACHE_KEY, null);
 
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
             DataSource dataSource = getDataSourceById(ldapEntry, dataSourceId, zlc);
             if (dataSource == null)
                 throw AccountServiceException.NO_SUCH_DATA_SOURCE(dataSourceId);
@@ -6227,7 +6228,7 @@ public class LdapProvisioning extends LdapProv {
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to delete data source: "+dataSourceId, e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
 
@@ -6288,15 +6289,15 @@ public class LdapProvisioning extends LdapProv {
         if (newName) {
             // the datasoruce cache could've been loaded again if getAllDataSources were called in pre/poseModify callback, so we clear it again
             account.setCachedData(DATA_SOURCE_LIST_CACHE_KEY, null);
-            ZimbraLdapContext zlc = null;
+            LegacyZimbraLdapContext zlc = null;
             try {
-                zlc = new ZimbraLdapContext(true);
+                zlc = new LegacyZimbraLdapContext(true);
                 String newDn = getDataSourceDn(ldapEntry, name);
                 zlc.renameEntry(ds.getDN(), newDn);
             } catch (NamingException e) {
                 throw ServiceException.FAILURE("unable to rename datasource: "+name, e);
             } finally {
-                ZimbraLdapContext.closeContext(zlc);
+                LegacyZimbraLdapContext.closeContext(zlc);
             }
         }
     }
@@ -6328,11 +6329,11 @@ public class LdapProvisioning extends LdapProv {
         }
     }
 
-    private XMPPComponent getXMPPComponentByQuery(String query, ZimbraLdapContext initZlc) throws ServiceException {
-        ZimbraLdapContext zlc = initZlc;
+    private XMPPComponent getXMPPComponentByQuery(String query, LegacyZimbraLdapContext initZlc) throws ServiceException {
+        LegacyZimbraLdapContext zlc = initZlc;
         try {
             if (zlc == null)
-                zlc = new ZimbraLdapContext();
+                zlc = new LegacyZimbraLdapContext();
             NamingEnumeration<SearchResult> ne = zlc.searchDir(mDIT.xmppcomponentBaseDN(), query, sSubtreeSC);
             if (ne.hasMore()) {
                 SearchResult sr = ne.next();
@@ -6347,7 +6348,7 @@ public class LdapProvisioning extends LdapProv {
             throw ServiceException.FAILURE("unable to lookup XMPPComponent via query: "+query+" message: "+e.getMessage(), e);
         } finally {
             if (initZlc == null)
-                ZimbraLdapContext.closeContext(zlc);
+                LegacyZimbraLdapContext.closeContext(zlc);
         }
         return null;
     }
@@ -6358,9 +6359,9 @@ public class LdapProvisioning extends LdapProv {
             if (x != null)
                 return x;
         }
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext();
+            zlc = new LegacyZimbraLdapContext();
             String dn = mDIT.xmppcomponentNameToDN(name);
             Attributes attrs = zlc.getAttributes(dn);
             XMPPComponent x = new LdapXMPPComponent(dn, attrs, this);
@@ -6373,11 +6374,11 @@ public class LdapProvisioning extends LdapProv {
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to lookup xmpp component by name: "+name+" message: "+e.getMessage(), e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
 
-    private XMPPComponent getXMPPComponentById(String zimbraId, ZimbraLdapContext zlc, boolean nocache) throws ServiceException {
+    private XMPPComponent getXMPPComponentById(String zimbraId, LegacyZimbraLdapContext zlc, boolean nocache) throws ServiceException {
         if (zimbraId == null)
             return null;
         XMPPComponent x = null;
@@ -6394,9 +6395,9 @@ public class LdapProvisioning extends LdapProv {
     @Override
     public List<XMPPComponent> getAllXMPPComponents() throws ServiceException {
         List<XMPPComponent> result = new ArrayList<XMPPComponent>();
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext();
+            zlc = new LegacyZimbraLdapContext();
             String filter;
             filter = LegacyLdapFilter.allXMPPComponents();
 
@@ -6410,7 +6411,7 @@ public class LdapProvisioning extends LdapProv {
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to list all servers", e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
         if (result.size() > 0)
             sXMPPComponentCache.put(result, true);
@@ -6430,9 +6431,9 @@ public class LdapProvisioning extends LdapProv {
         Map<?, ?> attrManagerContext = new HashMap<Object, Object>();
         AttributeManager.getInstance().preModify(inAttrs, null, attrManagerContext, true, true);
 
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
 
             Attributes attrs = new BasicAttributes(true);
             LegacyLdapUtil.mapToAttrs(inAttrs, attrs);
@@ -6455,7 +6456,7 @@ public class LdapProvisioning extends LdapProv {
         } catch (NameAlreadyBoundException nabe) {
             throw AccountServiceException.IM_COMPONENT_EXISTS(name);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
 
@@ -6476,16 +6477,16 @@ public class LdapProvisioning extends LdapProv {
     @Override
     public void deleteXMPPComponent(XMPPComponent comp) throws ServiceException {
         String zimbraId = comp.getId();
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         LdapXMPPComponent l = (LdapXMPPComponent)get(XMPPComponentBy.id, zimbraId);
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
             zlc.unbindEntry(l.getDN());
             sXMPPComponentCache.remove(l);
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to purge XMPPComponent : "+zimbraId, e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
 
@@ -6496,9 +6497,9 @@ public class LdapProvisioning extends LdapProv {
             throw AccountServiceException.NO_SUCH_XMPP_COMPONENT(zimbraId);
 
         newName = newName.toLowerCase().trim();
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
             String newDn = mDIT.xmppcomponentNameToDN(newName);
             zlc.renameEntry(comp.getDN(), newDn);
             // remove old comp from cache
@@ -6508,7 +6509,7 @@ public class LdapProvisioning extends LdapProv {
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to rename XMPPComponent: "+zimbraId, e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
 
@@ -6872,9 +6873,9 @@ public class LdapProvisioning extends LdapProv {
     private long countObjects(String base, String query, String[] attrs) throws ServiceException {
         long num = 0;
 
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext();
+            zlc = new LegacyZimbraLdapContext();
 
             SearchControls searchControls =
                 new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, attrs, false, false);
@@ -6906,7 +6907,7 @@ public class LdapProvisioning extends LdapProv {
         } catch (IOException e) {
             throw ServiceException.FAILURE("unable to count users", e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
 
         return num;

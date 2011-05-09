@@ -24,7 +24,7 @@ import javax.naming.NamingException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 
 public class ZimbraMailQuota_constraint extends LdapUpgrade {
 
@@ -33,16 +33,16 @@ public class ZimbraMailQuota_constraint extends LdapUpgrade {
     
     @Override
     void doUpgrade() throws ServiceException {
-        ZimbraLdapContext zlc = new ZimbraLdapContext(true);
+        LegacyZimbraLdapContext zlc = new LegacyZimbraLdapContext(true);
         try {
             doAllCos(zlc);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
 
     }
     
-    private void setZimbraMailQuotaConstraint(ZimbraLdapContext zlc, Cos cos) {
+    private void setZimbraMailQuotaConstraint(LegacyZimbraLdapContext zlc, Cos cos) {
         
         String quotaLimitOnCosStr = cos.getAttr(Provisioning.A_zimbraDomainAdminMaxMailQuota);
         
@@ -98,7 +98,7 @@ public class ZimbraMailQuota_constraint extends LdapUpgrade {
         }
     }
     
-    private void doAllCos(ZimbraLdapContext zlc) throws ServiceException {
+    private void doAllCos(LegacyZimbraLdapContext zlc) throws ServiceException {
         List<Cos> coses = mProv.getAllCos();
         
         for (Cos cos : coses) {

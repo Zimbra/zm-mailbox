@@ -24,8 +24,8 @@ import javax.naming.NamingException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
@@ -40,11 +40,11 @@ public class GalSyncAccountContactLimit extends LdapUpgrade {
         
         Set<String> galSyncAcctIds = getAllGalSyncAcctIds();
         
-        ZimbraLdapContext zlc = new ZimbraLdapContext(true);
+        LegacyZimbraLdapContext zlc = new LegacyZimbraLdapContext(true);
         try {
             upgradeGalSyncAcct(zlc, galSyncAcctIds);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
     
@@ -80,7 +80,7 @@ public class GalSyncAccountContactLimit extends LdapUpgrade {
         return galSyncAcctIds;
     }
     
-    private void upgradeGalSyncAcct(ZimbraLdapContext zlc, Set<String> galSyncAcctIds) throws ServiceException {
+    private void upgradeGalSyncAcct(LegacyZimbraLdapContext zlc, Set<String> galSyncAcctIds) throws ServiceException {
         System.out.println();
         System.out.println("Upgrading zimbraContactMaxNumEntries on GAL sync accounts ...");
         System.out.println();

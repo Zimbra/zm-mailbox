@@ -24,7 +24,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
-import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 
 public class DomainObjectClassAmavisAccount extends LdapUpgrade {
 
@@ -34,7 +34,7 @@ public class DomainObjectClassAmavisAccount extends LdapUpgrade {
     static class AddDomainObjectClassAmavisAccountVisitor extends LdapUpgrade.UpgradeVisitor implements NamedEntry.Visitor {
         int mDomainsVisited;
     
-        AddDomainObjectClassAmavisAccountVisitor(LdapProvisioning prov, ZimbraLdapContext zlcForMod, boolean verbose) {
+        AddDomainObjectClassAmavisAccountVisitor(LdapProvisioning prov, LegacyZimbraLdapContext zlcForMod, boolean verbose) {
             super(prov, zlcForMod, verbose);
         }
         
@@ -89,11 +89,11 @@ public class DomainObjectClassAmavisAccount extends LdapUpgrade {
                                        Provisioning.A_zimbraId,
                                        Provisioning.A_zimbraDomainName};
                 
-        ZimbraLdapContext zlc = null; 
+        LegacyZimbraLdapContext zlc = null; 
         AddDomainObjectClassAmavisAccountVisitor visitor = null;
         
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
             
             visitor = new AddDomainObjectClassAmavisAccountVisitor(mProv, zlc,  mVerbose);
             
@@ -114,7 +114,7 @@ public class DomainObjectClassAmavisAccount extends LdapUpgrade {
              
             }
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
             if (visitor != null)
                 visitor.reportStat();
         }

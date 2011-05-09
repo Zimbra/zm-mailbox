@@ -42,9 +42,9 @@ import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.generated.RightConsts;
 import com.zimbra.cs.account.ldap.LdapDIT;
-import com.zimbra.cs.account.ldap.ZimbraLdapContext;
-import com.zimbra.cs.account.ldap.ZimbraLdapContext.LdapConfig;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
+import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext.LdapConfig;
 import com.zimbra.cs.ldap.LdapConstants;
 
 public class AdminRights extends LdapUpgrade {
@@ -118,11 +118,11 @@ public class AdminRights extends LdapUpgrade {
         String query = "(&(objectclass=zimbraAccount)(|(zimbraIsDomainAdminAccount=TRUE)(zimbraIsAdminAccount=TRUE)))";
         
         int maxResults = 0; // no limit
-        ZimbraLdapContext zlc = null; 
+        LegacyZimbraLdapContext zlc = null; 
         
         try {
             // use master, do not use connection pool, use infinite read timeout
-            zlc = new ZimbraLdapContext(true, new LdapConfig(Boolean.FALSE, null, LdapConfig.NO_TIMEOUT));  
+            zlc = new LegacyZimbraLdapContext(true, new LdapConfig(Boolean.FALSE, null, LdapConfig.NO_TIMEOUT));  
             
             SearchControls searchControls =
                 new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, returnAttrs, false, false);
@@ -168,7 +168,7 @@ public class AdminRights extends LdapUpgrade {
         } catch (IOException e) {
             throw ServiceException.FAILURE("unable to list all objects", e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
     

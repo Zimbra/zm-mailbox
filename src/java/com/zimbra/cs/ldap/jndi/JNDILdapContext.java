@@ -35,7 +35,7 @@ import com.zimbra.common.util.ZimbraLog;
 
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
-import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapException.LdapInvalidNameException;
 import com.zimbra.cs.ldap.LdapException.LdapEntryAlreadyExistException;
@@ -61,14 +61,14 @@ import com.zimbra.cs.ldap.ZSearchResultEnumeration;
  */
 public class JNDILdapContext extends ZLdapContext {
     
-    private ZimbraLdapContext zlc;
+    private LegacyZimbraLdapContext zlc;
     
     public JNDILdapContext(LdapServerType serverType) throws ServiceException {
-        zlc = new ZimbraLdapContext(serverType.isMaster());
+        zlc = new LegacyZimbraLdapContext(serverType.isMaster());
     }
     
     public JNDILdapContext(LdapServerType serverType, boolean useConnPool) throws ServiceException {
-        zlc = new ZimbraLdapContext(serverType.isMaster(), useConnPool);
+        zlc = new LegacyZimbraLdapContext(serverType.isMaster(), useConnPool);
     }
     
     @Override
@@ -79,7 +79,7 @@ public class JNDILdapContext extends ZLdapContext {
     
     @Override
     public void closeContext() {
-        ZimbraLdapContext.closeContext(zlc);
+        LegacyZimbraLdapContext.closeContext(zlc);
     }
     
 

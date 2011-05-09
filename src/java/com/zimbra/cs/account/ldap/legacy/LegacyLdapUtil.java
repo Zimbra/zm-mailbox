@@ -29,7 +29,6 @@ import com.zimbra.cs.account.gal.GalParams;
 import com.zimbra.cs.account.gal.GalUtil;
 import com.zimbra.cs.account.ldap.LdapGalMapRules;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
-import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.ldap.legacy.LegacyJNDIAttributes;
 import com.zimbra.cs.account.ldap.legacy.entry.LdapConfig;
 import com.zimbra.cs.gal.GalSearchConfig;
@@ -96,7 +95,7 @@ public class LegacyLdapUtil {
         if (password == null || password.equals("")) 
             throw new AuthenticationException("empty password");
         
-        ZimbraLdapContext.ldapAuthenticate(urls, requireStartTLS, principal, password, "external LDAP auth");
+        LegacyZimbraLdapContext.ldapAuthenticate(urls, requireStartTLS, principal, password, "external LDAP auth");
     }
 
     public static void ldapAuthenticate(String url[], boolean requireStartTLS, String password, String searchBase, 
@@ -105,12 +104,12 @@ public class LegacyLdapUtil {
         if (password == null || password.equals("")) 
             throw new AuthenticationException("empty password");
 
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         String resultDn = null;;
         String tooMany = null;
         NamingEnumeration ne = null;
         try {
-            zlc = new ZimbraLdapContext(url, requireStartTLS, searchDn, searchPassword, "external LDAP auth");
+            zlc = new LegacyZimbraLdapContext(url, requireStartTLS, searchDn, searchPassword, "external LDAP auth");
             ne = zlc.searchDir(searchBase, searchFilter, sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
@@ -122,7 +121,7 @@ public class LegacyLdapUtil {
                 }
             }
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
             closeEnumContext(ne);
         }
         
@@ -379,7 +378,7 @@ public class LegacyLdapUtil {
      * </ul>
      */
     @SDKDONE
-    public static void modifyAttrs(ZimbraLdapContext zlc, String dn, Map attrs, com.zimbra.cs.account.Entry entry) 
+    public static void modifyAttrs(LegacyZimbraLdapContext zlc, String dn, Map attrs, com.zimbra.cs.account.Entry entry) 
     throws NamingException, ServiceException {
         ArrayList<ModificationItem> modlist = new ArrayList<ModificationItem>();
         
@@ -519,12 +518,12 @@ public class LegacyLdapUtil {
     @SDKDONE
       private static void searchZimbraLdap(String base, String query, String[] returnAttrs, boolean useMaster, SearchLdapOptions.SearchLdapVisitor visitor) 
       throws ServiceException {
-          ZimbraLdapContext zlc = null;
+          LegacyZimbraLdapContext zlc = null;
           try {
-              zlc = new ZimbraLdapContext(useMaster);
+              zlc = new LegacyZimbraLdapContext(useMaster);
               searchLdap(zlc, base, query, returnAttrs, null, SearchControls.SUBTREE_SCOPE, visitor);
           } finally {
-              ZimbraLdapContext.closeContext(zlc);
+              LegacyZimbraLdapContext.closeContext(zlc);
           }
       }
              
@@ -532,7 +531,7 @@ public class LegacyLdapUtil {
        * Important Note: caller is responsible to close the ZimbraLdapContext
        */
       @SDKDONE
-      public static void searchLdap(ZimbraLdapContext zlc, String base, String query, String[] returnAttrs, 
+      public static void searchLdap(LegacyZimbraLdapContext zlc, String base, String query, String[] returnAttrs, 
               Set<String> binaryAttrs, int searchScope, SearchLdapOptions.SearchLdapVisitor visitor) 
       throws ServiceException {
           
@@ -571,7 +570,7 @@ public class LegacyLdapUtil {
           }
       }
 
-      public static void searchGal(ZimbraLdapContext zlc,
+      public static void searchGal(LegacyZimbraLdapContext zlc,
                                    GalSearchConfig.GalType galType,
                                    int pageSize,
                                    String base, 
@@ -774,9 +773,9 @@ public class LegacyLdapUtil {
             String token,
             SearchGalResult result) throws ServiceException, NamingException, IOException {
         
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(galParams.url(), galParams.requireStartTLS(), 
+            zlc = new LegacyZimbraLdapContext(galParams.url(), galParams.requireStartTLS(), 
                     galParams.credential(), rules.getBinaryLdapAttrs(), "external GAL");
             searchGal(zlc,
                       GalSearchConfig.GalType.ldap,
@@ -788,7 +787,7 @@ public class LegacyLdapUtil {
                       token,
                       result);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
     
@@ -869,15 +868,15 @@ public class LegacyLdapUtil {
     
     private static void doGalSearch(GalSearchParams params) throws ServiceException, NamingException, IOException {
         
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
             GalSearchConfig cfg = params.getConfig();
             GalSearchConfig.GalType galType =  params.getConfig().getGalType();
 
             if (galType == GalSearchConfig.GalType.zimbra) {
-                zlc = new ZimbraLdapContext(false);
+                zlc = new LegacyZimbraLdapContext(false);
             } else {
-            	zlc = new ZimbraLdapContext(cfg.getUrl(), cfg.getStartTlsEnabled(), cfg.getAuthMech(),
+            	zlc = new LegacyZimbraLdapContext(cfg.getUrl(), cfg.getStartTlsEnabled(), cfg.getAuthMech(),
                         cfg.getBindDn(), cfg.getBindPassword(), cfg.getRules().getBinaryLdapAttrs(), "external GAL");
             }
             
@@ -891,7 +890,7 @@ public class LegacyLdapUtil {
                       params.getSyncToken(),
                       params.getResult());
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
     
@@ -971,7 +970,7 @@ public class LegacyLdapUtil {
             com.zimbra.cs.account.Config config = Provisioning.getInstance().getConfig();
             String dn = ((LdapConfig)config).getDN();
             
-            ZimbraLdapContext zlc = new ZimbraLdapContext(true);
+            LegacyZimbraLdapContext zlc = new LegacyZimbraLdapContext(true);
             
             ArrayList<ModificationItem> modlist = new ArrayList<ModificationItem>();
             modifyAttr(modlist, Provisioning.A_description, null, config, false, false);

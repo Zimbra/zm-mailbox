@@ -8,9 +8,9 @@ import javax.naming.directory.BasicAttributes;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapFilter;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
@@ -26,20 +26,20 @@ public class Bug53745 extends LdapUpgrade {
     
     @Override
     void doUpgrade() throws ServiceException {
-        ZimbraLdapContext zlc = new ZimbraLdapContext(true);
+        LegacyZimbraLdapContext zlc = new LegacyZimbraLdapContext(true);
         try {
             doCos(zlc);
             doAccount(zlc);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
 
     }
     
     private static class Bug53745Visitor implements SearchLdapVisitor {
-        private ZimbraLdapContext mModZlc;
+        private LegacyZimbraLdapContext mModZlc;
         
-        Bug53745Visitor(ZimbraLdapContext modZlc) {
+        Bug53745Visitor(LegacyZimbraLdapContext modZlc) {
             mModZlc = modZlc;
         }
         
@@ -77,7 +77,7 @@ public class Bug53745 extends LdapUpgrade {
         }
     }
     
-    private void upgrade(ZimbraLdapContext modZlc, String bases[], String query) {
+    private void upgrade(LegacyZimbraLdapContext modZlc, String bases[], String query) {
         SearchLdapOptions.SearchLdapVisitor visitor = new Bug53745Visitor(modZlc);
 
         String attrs[] = new String[] {ATTR_IMPORTEXPORT, ATTR_IMPORT, ATTR_EXPORT};
@@ -97,13 +97,13 @@ public class Bug53745 extends LdapUpgrade {
         return "(" + ATTR_IMPORTEXPORT + "=*)";
     }
     
-    private void doCos(ZimbraLdapContext modZlc) {
+    private void doCos(LegacyZimbraLdapContext modZlc) {
         String bases[] = mProv.getSearchBases(Provisioning.SD_COS_FLAG);
         String query = "(&" + LegacyLdapFilter.allCoses() + query() + ")";
         upgrade(modZlc, bases, query);
     }
     
-    private void doAccount(ZimbraLdapContext modZlc) {
+    private void doAccount(LegacyZimbraLdapContext modZlc) {
         String bases[] = mProv.getSearchBases(Provisioning.SA_ACCOUNT_FLAG);
         String query = "(&" + LegacyLdapFilter.allAccounts() + query() + ")";
         upgrade(modZlc, bases, query);

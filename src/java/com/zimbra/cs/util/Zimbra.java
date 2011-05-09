@@ -32,7 +32,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
-import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.Versions;
 import com.zimbra.cs.extension.ExtensionUtil;
@@ -178,7 +178,7 @@ public final class Zimbra {
 
         Provisioning prov = Provisioning.getInstance();
         if (prov instanceof LdapProvisioning) {
-            ZimbraLdapContext.waitForServer();
+            LegacyZimbraLdapContext.waitForServer();
             if (forMailboxd) {
                 AttributeManager.loadLdapSchemaExtensionAttrs((LdapProvisioning)prov);
             }

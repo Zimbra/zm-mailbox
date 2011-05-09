@@ -37,8 +37,8 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
-import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 
 public class ZimbraCreateTimestamp extends LdapUpgrade {
@@ -195,13 +195,13 @@ public class ZimbraCreateTimestamp extends LdapUpgrade {
         query = "(&" + "(!(zimbraCreateTimestamp=*))" + query + ")";
         
         int maxResults = 0; // no limit
-        ZimbraLdapContext zlc = null; 
-        ZimbraLdapContext modZlc = null;
+        LegacyZimbraLdapContext zlc = null; 
+        LegacyZimbraLdapContext modZlc = null;
         int numModified = 0;
         
         try {
-            zlc = new ZimbraLdapContext(true, false);  // use master, do not use connection pool
-            modZlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true, false);  // use master, do not use connection pool
+            modZlc = new LegacyZimbraLdapContext(true);
             
             SearchControls searchControls =
                 new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, returnAttrs, false, false);
@@ -243,8 +243,8 @@ public class ZimbraCreateTimestamp extends LdapUpgrade {
         } catch (IOException e) {
             throw ServiceException.FAILURE("unable to list all objects", e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
-            ZimbraLdapContext.closeContext(modZlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(modZlc);
             
             System.out.println("\nModified " + numModified + " objects");
         }

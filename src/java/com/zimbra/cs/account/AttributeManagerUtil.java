@@ -43,7 +43,7 @@ import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeManager.ObjectClassInfo;
-import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 
 public class AttributeManagerUtil {
 
@@ -837,9 +837,9 @@ public class AttributeManagerUtil {
     }
     
     private static void dumpSchema(PrintWriter pw) throws ServiceException {
-        ZimbraLdapContext zlc = null;
+        LegacyZimbraLdapContext zlc = null;
         try {
-          zlc = new ZimbraLdapContext(true);
+          zlc = new LegacyZimbraLdapContext(true);
           DirContext schema = zlc.getSchema();
 
           // Enumerate over ClassDefinition, AttributeDefinition, MatchingRule, SyntaxDefinition
@@ -864,7 +864,7 @@ public class AttributeManagerUtil {
         } catch (NamingException ne) {
             ne.printStackTrace();
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
     

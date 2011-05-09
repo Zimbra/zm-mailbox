@@ -44,6 +44,7 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.account.ldap.legacy.entry.LdapDomain;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
@@ -54,14 +55,14 @@ class RenameDomain {
  
     private static final Log sRenameDomainLog = LogFactory.getLog("zimbra.provisioning.renamedomain");
     
-    private ZimbraLdapContext mZlc;
+    private LegacyZimbraLdapContext mZlc;
     private LdapProvisioning mProv;
     private Domain mOldDomain;
     private String mOldDomainId;   // save old domain id because we still need it after the old domain is deleted
     private String mOldDomainName; // save old domain name because we still need it after the old domain is deleted
     private String mNewDomainName;
     
-    RenameDomain(ZimbraLdapContext zlc, LdapProvisioning prov, Domain oldDomain, String newDomainName) {
+    RenameDomain(LegacyZimbraLdapContext zlc, LdapProvisioning prov, Domain oldDomain, String newDomainName) {
         mZlc = zlc;
         mProv = prov;
         mOldDomain = oldDomain;
@@ -410,7 +411,7 @@ class RenameDomain {
     
     static class RenameDomainVisitor implements NamedEntry.Visitor {
     
-        private ZimbraLdapContext mZlc;
+        private LegacyZimbraLdapContext mZlc;
         private LdapProvisioning mProv;
         private String mOldDomainName;
         private String mNewDomainName;
@@ -449,7 +450,7 @@ class RenameDomain {
             return (sAddrContainsDomainOnly.contains(addr));
         }
     
-        private RenameDomainVisitor(ZimbraLdapContext zlc, LdapProvisioning prov, String oldDomainName, String newDomainName, RenamePhase phase) {
+        private RenameDomainVisitor(LegacyZimbraLdapContext zlc, LdapProvisioning prov, String oldDomainName, String newDomainName, RenamePhase phase) {
             mZlc = zlc;
             mProv = prov;
             mOldDomainName = oldDomainName;

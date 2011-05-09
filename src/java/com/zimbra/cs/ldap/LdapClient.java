@@ -18,7 +18,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.ZSearchScope.ZSearchScopeFactory;
 import com.zimbra.cs.ldap.jndi.JNDILdapClient;
@@ -67,7 +67,7 @@ public abstract class LdapClient {
      * Bridging the legacy ZimbraLdapContext and the new ZLdapContext classes.
      */
     @TODO
-    public static ZimbraLdapContext toLegacyZimbraLdapContext(com.zimbra.cs.account.Provisioning prov, ILdapContext ldapContext) {
+    public static LegacyZimbraLdapContext toLegacyZimbraLdapContext(com.zimbra.cs.account.Provisioning prov, ILdapContext ldapContext) {
         if (!prov.getClass().equals(com.zimbra.cs.account.ldap.LdapProvisioning.class) &&
             !prov.getClass().equals(com.zimbra.cs.account.ldap.custom.CustomLdapProvisioning.class)) { // TODO: what to do with CustomLdapProvisioning?
             Zimbra.halt("Provisioning instance is not LdapProvisioning", 
@@ -80,12 +80,12 @@ public abstract class LdapClient {
         }
         
         // just a safety check, this should really not happen at thin point
-        if (ldapContext != null && !(ldapContext instanceof ZimbraLdapContext)) {
+        if (ldapContext != null && !(ldapContext instanceof LegacyZimbraLdapContext)) {
             Zimbra.halt("ILdapContext instance is not ZimbraLdapContext", 
                     ServiceException.FAILURE("internal error, wrong ldap context instance", null));
         }
         
-        return (ZimbraLdapContext)ldapContext;
+        return (LegacyZimbraLdapContext)ldapContext;
     }
     
     @TODO

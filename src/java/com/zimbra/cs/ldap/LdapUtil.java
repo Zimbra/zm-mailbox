@@ -27,7 +27,7 @@ import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.gal.GalParams;
 import com.zimbra.cs.account.ldap.LdapGalMapRules;
-import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;

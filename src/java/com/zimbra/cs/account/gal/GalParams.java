@@ -20,7 +20,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.account.ldap.legacy.entry.LdapDomain;
 import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.ldap.LdapUtilCommon;
@@ -167,7 +167,7 @@ public abstract class GalParams {
             }
             
             boolean startTLS = startTlsEnabled == null ? false : Provisioning.TRUE.equals(startTlsEnabled);
-            mRequireStartTLS = ZimbraLdapContext.requireStartTLS(mUrl,  startTLS);
+            mRequireStartTLS = LegacyZimbraLdapContext.requireStartTLS(mUrl,  startTLS);
             mCredential = new LdapGalCredential(authMech, bindDn, bindPassword, krb5Principal, krb5Keytab);
         }
         
@@ -238,7 +238,7 @@ public abstract class GalParams {
             }
                 
             boolean startTLS = startTlsEnabled == null ? false : Provisioning.TRUE.equals(startTlsEnabled);
-            mRequireStartTLS = ZimbraLdapContext.requireStartTLS(mUrl,  startTLS);
+            mRequireStartTLS = LegacyZimbraLdapContext.requireStartTLS(mUrl,  startTLS);
             mCredential = new LdapGalCredential(authMech, bindDn, bindPassword, krb5Principal, krb5Keytab);
         }
         

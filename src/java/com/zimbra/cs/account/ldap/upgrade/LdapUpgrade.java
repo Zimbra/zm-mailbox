@@ -32,8 +32,8 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
-import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 
 abstract class LdapUpgrade {
@@ -71,15 +71,15 @@ abstract class LdapUpgrade {
     boolean parseCommandLine(CommandLine cl) { return true; }
     void usage(HelpFormatter helpFormatter) {}
     
-    static void modifyAttrs(Entry entry, ZimbraLdapContext initZlc, Map attrs) throws NamingException, ServiceException {
-        ZimbraLdapContext zlc = initZlc;
+    static void modifyAttrs(Entry entry, LegacyZimbraLdapContext initZlc, Map attrs) throws NamingException, ServiceException {
+        LegacyZimbraLdapContext zlc = initZlc;
         try {
             if (zlc == null)
-                zlc = new ZimbraLdapContext(true);
+                zlc = new LegacyZimbraLdapContext(true);
             LegacyLdapUtil.modifyAttrs(zlc, ((LdapEntry)entry).getDN(), attrs, entry);
         } finally {
             if (initZlc == null)
-                ZimbraLdapContext.closeContext(zlc);
+                LegacyZimbraLdapContext.closeContext(zlc);
         }
     }  
     
@@ -108,9 +108,9 @@ abstract class LdapUpgrade {
     abstract static class UpgradeVisitor {
         boolean mVerbose;
         LdapProvisioning mProv;
-        ZimbraLdapContext mZlcForMod;
+        LegacyZimbraLdapContext mZlcForMod;
         
-        UpgradeVisitor(LdapProvisioning prov, ZimbraLdapContext zlcForMod, boolean verbose) {
+        UpgradeVisitor(LdapProvisioning prov, LegacyZimbraLdapContext zlcForMod, boolean verbose) {
             mVerbose = verbose;
             mProv = prov;
             mZlcForMod = zlcForMod;

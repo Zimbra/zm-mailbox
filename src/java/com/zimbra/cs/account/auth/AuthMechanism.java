@@ -32,8 +32,8 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.krb5.Krb5Login;
 import com.zimbra.cs.account.krb5.Krb5Principal;
-import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.prov.ldap.LdapProv;
 import com.zimbra.cs.prov.ldap.entry.LdapEntry;
@@ -137,7 +137,7 @@ public abstract class AuthMechanism {
             } else if (acct instanceof LdapEntry) {
                 // not SSHA, authenticate to Zimbra LDAP
                 try {
-                    ZimbraLdapContext.ldapAuthenticate(((LdapEntry)acct).getDN(), password);
+                    LegacyZimbraLdapContext.ldapAuthenticate(((LdapEntry)acct).getDN(), password);
                     return; // good password, RETURN                
                 } catch (AuthenticationException e) {
                     throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt), e.getMessage(), e);

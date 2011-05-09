@@ -26,8 +26,8 @@ import javax.naming.directory.SearchResult;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapDIT;
-import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 
 public class ZimbraPrefFromDisplay extends LdapUpgrade {    
     
@@ -51,13 +51,13 @@ public class ZimbraPrefFromDisplay extends LdapUpgrade {
         query = "(&(objectclass=zimbraAccount)(!(objectclass=zimbraCalendarResource)))";
         
         int maxResults = 0; // no limit
-        ZimbraLdapContext zlc = null; 
-        ZimbraLdapContext modZlc = null;
+        LegacyZimbraLdapContext zlc = null; 
+        LegacyZimbraLdapContext modZlc = null;
         int numModified = 0;
         
         try {
-            zlc = new ZimbraLdapContext(true, false);  // use master, do not use connection pool
-            modZlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true, false);  // use master, do not use connection pool
+            modZlc = new LegacyZimbraLdapContext(true);
             
             SearchControls searchControls =
                 new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, returnAttrs, false, false);
@@ -116,8 +116,8 @@ public class ZimbraPrefFromDisplay extends LdapUpgrade {
         } catch (IOException e) {
             throw ServiceException.FAILURE("unable to list all objects", e);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
-            ZimbraLdapContext.closeContext(modZlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(modZlc);
             
             System.out.println("\nModified " + numModified + " objects");
         }

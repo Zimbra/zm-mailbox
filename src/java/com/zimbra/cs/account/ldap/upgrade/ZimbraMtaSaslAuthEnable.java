@@ -12,7 +12,7 @@ import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.ldap.LdapConstants;
 
 public class ZimbraMtaSaslAuthEnable extends LdapUpgrade {
@@ -22,17 +22,17 @@ public class ZimbraMtaSaslAuthEnable extends LdapUpgrade {
     
     @Override
     void doUpgrade() throws ServiceException {
-        ZimbraLdapContext zlc = new ZimbraLdapContext(true);
+        LegacyZimbraLdapContext zlc = new LegacyZimbraLdapContext(true);
         try {
             doGlobalConfig(zlc);
             doAllServers(zlc);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
 
     }
     
-    private void doEntry(ZimbraLdapContext zlc, Entry entry, String entryName) throws ServiceException {
+    private void doEntry(LegacyZimbraLdapContext zlc, Entry entry, String entryName) throws ServiceException {
         
         String attrName = Provisioning.A_zimbraMtaSaslAuthEnable;
         
@@ -59,12 +59,12 @@ public class ZimbraMtaSaslAuthEnable extends LdapUpgrade {
         }
     }
     
-    private void doGlobalConfig(ZimbraLdapContext zlc) throws ServiceException {
+    private void doGlobalConfig(LegacyZimbraLdapContext zlc) throws ServiceException {
         Config config = mProv.getConfig();
         doEntry(zlc, config, "global config");
     }
     
-    private void doAllServers(ZimbraLdapContext zlc) throws ServiceException {
+    private void doAllServers(LegacyZimbraLdapContext zlc) throws ServiceException {
         List<Server> servers = mProv.getAllServers();
         
         for (Server server : servers)

@@ -28,7 +28,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.MailMode;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
-import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 
 class DomainPublicServiceProtocolAndPort extends LdapUpgrade {
     
@@ -76,7 +76,7 @@ class DomainPublicServiceProtocolAndPort extends LdapUpgrade {
         Map<String, ServerInfo> mServerMap; // map keyed by server.zimbraServiceHostname
         int mDomainsVisited;
         
-        DomainPuclicServiceProtocolAndPortVisitor(LdapProvisioning prov, ZimbraLdapContext zlcForMod, List<Server> servers, boolean verbose) {
+        DomainPuclicServiceProtocolAndPortVisitor(LdapProvisioning prov, LegacyZimbraLdapContext zlcForMod, List<Server> servers, boolean verbose) {
             super(prov, zlcForMod, verbose);
             
             mServerMap = new HashMap<String, ServerInfo>();
@@ -234,10 +234,10 @@ class DomainPublicServiceProtocolAndPort extends LdapUpgrade {
                                        Provisioning.A_zimbraPublicServiceProtocol,
                                        Provisioning.A_zimbraPublicServicePort};
         
-        ZimbraLdapContext zlc = null; 
+        LegacyZimbraLdapContext zlc = null; 
         DomainPuclicServiceProtocolAndPortVisitor visitor = null;
         try {
-            zlc = new ZimbraLdapContext(true);
+            zlc = new LegacyZimbraLdapContext(true);
             
             visitor = new DomainPuclicServiceProtocolAndPortVisitor(mProv, zlc, servers, mVerbose);
             
@@ -258,7 +258,7 @@ class DomainPublicServiceProtocolAndPort extends LdapUpgrade {
              
             }
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
             if (visitor != null)
                 visitor.reportStat();
         }

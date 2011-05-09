@@ -16,7 +16,7 @@ import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.util.BuildInfo;
 
 public class ZimbraContactRankingTableSize extends LdapUpgrade {
@@ -27,15 +27,15 @@ public class ZimbraContactRankingTableSize extends LdapUpgrade {
     
     @Override
     void doUpgrade() throws ServiceException {
-        ZimbraLdapContext zlc = new ZimbraLdapContext(true);
+        LegacyZimbraLdapContext zlc = new LegacyZimbraLdapContext(true);
         try {
             doAllCos(zlc);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
     
-    private void doEntry(ZimbraLdapContext zlc, Entry entry, String entryName, AttributeClass klass) throws ServiceException {
+    private void doEntry(LegacyZimbraLdapContext zlc, Entry entry, String entryName, AttributeClass klass) throws ServiceException {
         
         String attrName = Provisioning.A_zimbraContactRankingTableSize;
         String oldValue = "40";
@@ -66,7 +66,7 @@ public class ZimbraContactRankingTableSize extends LdapUpgrade {
 
     }
     
-    private void doAllCos(ZimbraLdapContext zlc) throws ServiceException {
+    private void doAllCos(LegacyZimbraLdapContext zlc) throws ServiceException {
         List<Cos> coses = mProv.getAllCos();
         
         for (Cos cos : coses) {

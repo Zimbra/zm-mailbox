@@ -8,9 +8,9 @@ import javax.naming.directory.BasicAttributes;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapFilter;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
@@ -24,16 +24,16 @@ public class Bug50458  extends LdapUpgrade {
     
     @Override
     void doUpgrade() throws ServiceException {
-        ZimbraLdapContext zlc = new ZimbraLdapContext(true);
+        LegacyZimbraLdapContext zlc = new LegacyZimbraLdapContext(true);
         try {
             doDomain(zlc);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
 
     }
     
-    private void doDomain(ZimbraLdapContext modZlc) {
+    private void doDomain(LegacyZimbraLdapContext modZlc) {
         String bases[] = mProv.getSearchBases(Provisioning.SA_DOMAIN_FLAG);
         String query = "(&" + LegacyLdapFilter.allDomains() + 
             "(" + Provisioning.A_zimbraPasswordChangeListener + "=" + VALUE_TO_REMOVE + ")"+ ")";
@@ -42,7 +42,7 @@ public class Bug50458  extends LdapUpgrade {
     }
     
    
-    private void upgrade(ZimbraLdapContext modZlc, String bases[], String query) {
+    private void upgrade(LegacyZimbraLdapContext modZlc, String bases[], String query) {
         SearchLdapOptions.SearchLdapVisitor visitor = new Bug50458Visitor(modZlc);
 
         String attrs[] = new String[] {Provisioning.A_zimbraPasswordChangeListener};
@@ -59,9 +59,9 @@ public class Bug50458  extends LdapUpgrade {
     }
     
     private static class Bug50458Visitor implements SearchLdapVisitor {
-        private ZimbraLdapContext mModZlc;
+        private LegacyZimbraLdapContext mModZlc;
         
-        Bug50458Visitor(ZimbraLdapContext modZlc) {
+        Bug50458Visitor(LegacyZimbraLdapContext modZlc) {
             mModZlc = modZlc;
         }
         

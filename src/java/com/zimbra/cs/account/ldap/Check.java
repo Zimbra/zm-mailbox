@@ -39,6 +39,7 @@ import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.gal.GalParams;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
+import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.fb.ExchangeEWSFreeBusyProvider;
 import com.zimbra.cs.fb.ExchangeFreeBusyProvider;
 import com.zimbra.cs.ldap.LdapUtilCommon;
@@ -157,7 +158,7 @@ public class Check {
         // TODO, need admin UI work for zimbraAuthLdapStartTlsEnabled
         String startTLSEnabled = (String) attrs.get(Provisioning.A_zimbraAuthLdapStartTlsEnabled);
         boolean startTLS = startTLSEnabled == null ? false : Provisioning.TRUE.equals(startTLSEnabled);
-        boolean requireStartTLS = ZimbraLdapContext.requireStartTLS(url,  startTLS);
+        boolean requireStartTLS = LegacyZimbraLdapContext.requireStartTLS(url,  startTLS);
         
         try {
             String searchFilter = (String) attrs.get(Provisioning.A_zimbraAuthLdapSearchFilter);

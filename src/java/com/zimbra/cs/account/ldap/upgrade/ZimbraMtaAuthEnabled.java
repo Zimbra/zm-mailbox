@@ -32,7 +32,7 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ZAttrProvisioning;
-import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.util.BuildInfo;
 
 public class ZimbraMtaAuthEnabled extends LdapUpgrade {
@@ -46,12 +46,12 @@ public class ZimbraMtaAuthEnabled extends LdapUpgrade {
     
     @Override
     void doUpgrade() throws ServiceException {
-        ZimbraLdapContext zlc = new ZimbraLdapContext(true);
+        LegacyZimbraLdapContext zlc = new LegacyZimbraLdapContext(true);
         try {
             doGlobalConfig(zlc);
             doAllServers(zlc);
         } finally {
-            ZimbraLdapContext.closeContext(zlc);
+            LegacyZimbraLdapContext.closeContext(zlc);
         }
 
     }
@@ -132,7 +132,7 @@ public class ZimbraMtaAuthEnabled extends LdapUpgrade {
             attrValues.put(Provisioning.A_zimbraMtaTlsSecurityLevel, value);
     }
     
-    private void doEntry(ZimbraLdapContext zlc, Entry entry, String entryName, AttributeClass klass) throws ServiceException {
+    private void doEntry(LegacyZimbraLdapContext zlc, Entry entry, String entryName, AttributeClass klass) throws ServiceException {
         
         System.out.println();
         System.out.println("------------------------------");
@@ -196,12 +196,12 @@ public class ZimbraMtaAuthEnabled extends LdapUpgrade {
         }
     }
 
-    private void doGlobalConfig(ZimbraLdapContext zlc) throws ServiceException {
+    private void doGlobalConfig(LegacyZimbraLdapContext zlc) throws ServiceException {
         Config config = mProv.getConfig();
         doEntry(zlc, config, "global config", AttributeClass.globalConfig);
     }
     
-    private void doAllServers(ZimbraLdapContext zlc) throws ServiceException {
+    private void doAllServers(LegacyZimbraLdapContext zlc) throws ServiceException {
         List<Server> servers = mProv.getAllServers();
         
         for (Server server : servers)
