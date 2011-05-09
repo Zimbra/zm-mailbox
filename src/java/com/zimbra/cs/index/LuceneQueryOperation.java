@@ -26,10 +26,12 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.TopDocs;
 
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
@@ -75,10 +77,10 @@ public final class LuceneQueryOperation extends QueryOperation {
     private List<QueryInfo> queryInfo = new ArrayList<QueryInfo>();
     private boolean hasSpamTrashSetting = false;
 
-    private List<Document> hits;
+    private TopDocs hits;
     private int topDocsLen = 0; // number of hits fetched
     private int topDocsChunkSize = 2000; // how many hits to fetch per step in Lucene
-    private Searcher searcher;
+    private IndexSearcher searcher;
     private Sort sort;
 
     /**
@@ -205,8 +207,8 @@ public final class LuceneQueryOperation extends QueryOperation {
             TermQuery query = (TermQuery) luceneQuery;
             Term term = query.getTerm();
             try {
-                int freq = searcher.getCount(term);
-                int docsCutoff = (int) (searcher.getTotal() * DB_FIRST_TERM_FREQ_PERC);
+                int freq = searcher.docFreq(term);
+                int docsCutoff = (int) (searcher.getIndexReader().numDocs() * DB_FIRST_TERM_FREQ_PERC);
                 ZimbraLog.search.debug("Term matches %d docs. DB-First cutoff (%d%%) is %d docs",
                         freq, (int) (100 * DB_FIRST_TERM_FREQ_PERC), docsCutoff);
                 if (freq > docsCutoff) {
@@ -247,7 +249,7 @@ public final class LuceneQueryOperation extends QueryOperation {
             long start= System.currentTimeMillis();
             runSearch();
             ZimbraLog.search.debug("Fetched Initial %d (out of %d total) search results from Lucene in %d ms",
-                    topDocsLen, hits != null ? hits.size() : 0, System.currentTimeMillis() - start);
+                    topDocsLen, hits != null ? hits.totalHits : 0, System.currentTimeMillis() - start);
         }
     }
 
@@ -263,7 +265,7 @@ public final class LuceneQueryOperation extends QueryOperation {
         }
 
         LuceneResultsChunk result = new LuceneResultsChunk();
-        int luceneLen = hits != null ? hits.size() : 0;
+        int luceneLen = hits != null ? hits.totalHits : 0;
         while ((result.size() < max) && (curHitNo < luceneLen)) {
             if (topDocsLen <= curHitNo) {
                 topDocsLen += topDocsChunkSize;
@@ -280,8 +282,11 @@ public final class LuceneQueryOperation extends QueryOperation {
                         topDocsLen, System.currentTimeMillis() - start);
             }
 
-            Document doc = hits.get(curHitNo);
-            if (doc == null) { // error while retrieving document
+            Document doc;
+            try {
+                doc = searcher.doc(hits.scoreDocs[curHitNo].doc);
+            } catch (Exception e) {
+                ZimbraLog.search.error("Failed to retrieve Lucene document: %d", hits.scoreDocs[curHitNo].doc, e);
                 return result;
             }
             curHitNo++;
@@ -341,7 +346,11 @@ public final class LuceneQueryOperation extends QueryOperation {
                     filter.addTerm(t);
                 }
             }
-            hits = searcher.search(luceneQuery, filter, sort, topDocsLen);
+            if (sort == null) {
+                hits = searcher.search(luceneQuery, filter, topDocsLen);
+            } else {
+                hits = searcher.search(luceneQuery, filter, topDocsLen, sort);
+            }
         } catch (IOException e) {
             ZimbraLog.search.error("Failed to search", e);
             Closeables.closeQuietly(searcher);
@@ -394,7 +403,7 @@ public final class LuceneQueryOperation extends QueryOperation {
      */
     @Override
     public long getTotalHitCount() {
-        return hits != null ? hits.size() : 0;
+        return hits != null ? hits.totalHits : 0;
     }
 
     @Override

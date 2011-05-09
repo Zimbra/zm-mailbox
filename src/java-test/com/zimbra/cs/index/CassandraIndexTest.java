@@ -17,15 +17,15 @@ package com.zimbra.cs.index;
 import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.cassandra.thrift.CassandraDaemon;
-import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
+import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.TopDocs;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
@@ -100,16 +100,15 @@ public final class CassandraIndexTest {
         indexer.addDocument(contact, contact.generateIndexData());
         indexer.close();
 
-        Searcher searcher = index.openSearcher();
-        List<Document> result = searcher.search(new TermQuery(new Term(LuceneFields.L_CONTACT_DATA, "none@zimbra.com")),
-                null, null, 100);
-        Assert.assertEquals(0, result.size());
+        IndexSearcher searcher = index.openSearcher();
+        TopDocs result = searcher.search(new TermQuery(new Term(LuceneFields.L_CONTACT_DATA, "none@zimbra.com")), 100);
+        Assert.assertEquals(0, result.totalHits);
 
-        Assert.assertEquals(1, searcher.getTotal());
-        result = searcher.search(new TermQuery(new Term(LuceneFields.L_CONTACT_DATA, "test@zimbra.com")),
-                null, null, 100);
-        Assert.assertEquals(1, result.size());
-        Assert.assertEquals(String.valueOf(contact.getId()), result.get(0).get(LuceneFields.L_MAILBOX_BLOB_ID));
+        Assert.assertEquals(1, searcher.getIndexReader().numDocs());
+        result = searcher.search(new TermQuery(new Term(LuceneFields.L_CONTACT_DATA, "test@zimbra.com")), 100);
+        Assert.assertEquals(1, result.totalHits);
+        Assert.assertEquals(String.valueOf(contact.getId()),
+                searcher.doc(result.scoreDocs[0].doc).get(LuceneFields.L_MAILBOX_BLOB_ID));
         searcher.close();
     }
 
@@ -134,12 +133,13 @@ public final class CassandraIndexTest {
         indexer.addDocument(contact4, contact4.generateIndexData());
         indexer.close();
 
-        Searcher searcher = index.openSearcher();
-        List<Document> result = searcher.search(new PrefixQuery(new Term(LuceneFields.L_CONTACT_DATA, "ab")),
-                null, null, 100);
-        Assert.assertEquals(2, result.size());
-        Assert.assertEquals(String.valueOf(contact1.getId()), result.get(0).get(LuceneFields.L_MAILBOX_BLOB_ID));
-        Assert.assertEquals(String.valueOf(contact2.getId()), result.get(1).get(LuceneFields.L_MAILBOX_BLOB_ID));
+        IndexSearcher searcher = index.openSearcher();
+        TopDocs result = searcher.search(new PrefixQuery(new Term(LuceneFields.L_CONTACT_DATA, "ab")), 100);
+        Assert.assertEquals(2, result.totalHits);
+        Assert.assertEquals(String.valueOf(contact1.getId()),
+                searcher.doc(result.scoreDocs[0].doc).get(LuceneFields.L_MAILBOX_BLOB_ID));
+        Assert.assertEquals(String.valueOf(contact2.getId()),
+                searcher.doc(result.scoreDocs[1].doc).get(LuceneFields.L_MAILBOX_BLOB_ID));
         searcher.close();
     }
 
@@ -158,21 +158,20 @@ public final class CassandraIndexTest {
         indexer.addDocument(contact2, contact2.generateIndexData());
         indexer.close();
 
-        Searcher searcher = index.openSearcher();
-        Assert.assertEquals(2, searcher.getTotal());
-        List<Document> result = searcher.search(new TermQuery(new Term(LuceneFields.L_CONTACT_DATA, "@zimbra.com")),
-                null, null, 100);
-        Assert.assertEquals(2, result.size());
+        IndexSearcher searcher = index.openSearcher();
+        Assert.assertEquals(2, searcher.getIndexReader().numDocs());
+        TopDocs result = searcher.search(new TermQuery(new Term(LuceneFields.L_CONTACT_DATA, "@zimbra.com")), 100);
+        Assert.assertEquals(2, result.totalHits);
+        searcher.close();
 
         indexer = index.openIndexer();
         indexer.deleteDocument(Collections.singletonList(contact1.getId()));
         indexer.close();
 
-        Assert.assertEquals(1, searcher.getTotal());
-        result = searcher.search(new TermQuery(new Term(LuceneFields.L_CONTACT_DATA, "@zimbra.com")),
-                null, null, 100);
-        Assert.assertEquals(1, result.size());
-
+        searcher = index.openSearcher();
+        Assert.assertEquals(1, searcher.getIndexReader().numDocs());
+        result = searcher.search(new TermQuery(new Term(LuceneFields.L_CONTACT_DATA, "@zimbra.com")), 100);
+        Assert.assertEquals(1, result.totalHits);
         searcher.close();
     }
 
@@ -197,10 +196,10 @@ public final class CassandraIndexTest {
         indexer.addDocument(contact4, contact4.generateIndexData());
         indexer.close();
 
-        Searcher searcher = index.openSearcher();
-        Assert.assertEquals(4, searcher.getTotal());
-        Assert.assertEquals(1, searcher.getCount(new Term(LuceneFields.L_CONTACT_DATA, "test1")));
-        Assert.assertEquals(4, searcher.getCount(new Term(LuceneFields.L_CONTACT_DATA, "@zimbra.com")));
+        IndexSearcher searcher = index.openSearcher();
+        Assert.assertEquals(4, searcher.getIndexReader().numDocs());
+        Assert.assertEquals(1, searcher.docFreq(new Term(LuceneFields.L_CONTACT_DATA, "test1")));
+        Assert.assertEquals(4, searcher.docFreq(new Term(LuceneFields.L_CONTACT_DATA, "@zimbra.com")));
         searcher.close();
     }
 
@@ -219,8 +218,8 @@ public final class CassandraIndexTest {
         indexer.addDocument(contact2, contact2.generateIndexData());
         indexer.close();
 
-        Searcher searcher = index.openSearcher();
-        TermEnum terms = searcher.getTerms(new Term(LuceneFields.L_CONTACT_DATA, ""));
+        IndexSearcher searcher = index.openSearcher();
+        TermEnum terms = searcher.getIndexReader().terms(new Term(LuceneFields.L_CONTACT_DATA, ""));
         Assert.assertEquals(new Term(LuceneFields.L_CONTACT_DATA, "@zimbra"), terms.term());
         Assert.assertTrue(terms.next());
         Assert.assertEquals(new Term(LuceneFields.L_CONTACT_DATA, "@zimbra.com"), terms.term());

@@ -37,6 +37,7 @@ import java.util.regex.Pattern;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
+import org.apache.lucene.search.IndexSearcher;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
@@ -62,7 +63,6 @@ import com.zimbra.cs.index.LuceneIndex;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.ReSortingQueryResults;
 import com.zimbra.cs.index.SearchParams;
-import com.zimbra.cs.index.Searcher;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.ZimbraAnalyzer;
@@ -824,9 +824,9 @@ public final class MailboxIndex {
         Pattern pattern = Strings.isNullOrEmpty(regex) ? null : Pattern.compile(
                 regex.startsWith("@") ? regex : "@" + regex);
         List<BrowseTerm> result = new ArrayList<BrowseTerm>();
-        Searcher searcher = indexStore.openSearcher();
+        IndexSearcher searcher = indexStore.openSearcher();
         try {
-            TermEnum terms = searcher.getTerms(new Term(field, ""));
+            TermEnum terms = searcher.getIndexReader().terms(new Term(field, ""));
             do {
                 Term term = terms.term();
                 if (term == null || !term.field().equals(field)) {
@@ -855,9 +855,9 @@ public final class MailboxIndex {
     public List<BrowseTerm> getAttachmentTypes(String regex) throws IOException {
         Pattern pattern = Strings.isNullOrEmpty(regex) ? null : Pattern.compile(regex);
         List<BrowseTerm> result = new ArrayList<BrowseTerm>();
-        Searcher searcher = indexStore.openSearcher();
+        IndexSearcher searcher = indexStore.openSearcher();
         try {
-            TermEnum terms = searcher.getTerms(new Term(LuceneFields.L_ATTACHMENTS, ""));
+            TermEnum terms = searcher.getIndexReader().terms(new Term(LuceneFields.L_ATTACHMENTS, ""));
             do {
                 Term term = terms.term();
                 if (term == null || !term.field().equals(LuceneFields.L_ATTACHMENTS)) {
@@ -883,9 +883,9 @@ public final class MailboxIndex {
     public List<BrowseTerm> getObjects(String regex) throws IOException {
         Pattern pattern = Strings.isNullOrEmpty(regex) ? null : Pattern.compile(regex);
         List<BrowseTerm> result = new ArrayList<BrowseTerm>();
-        Searcher searcher = indexStore.openSearcher();
+        IndexSearcher searcher = indexStore.openSearcher();
         try {
-            TermEnum terms = searcher.getTerms(new Term(LuceneFields.L_OBJECTS, ""));
+            TermEnum terms = searcher.getIndexReader().terms(new Term(LuceneFields.L_OBJECTS, ""));
             do {
                 Term term = terms.term();
                 if (term == null || !term.field().equals(LuceneFields.L_OBJECTS)) {

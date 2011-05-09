@@ -17,14 +17,12 @@ package com.zimbra.cs.index;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.lucene.document.Document;
 import org.apache.lucene.index.CheckIndex;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexReader;
@@ -34,21 +32,13 @@ import org.apache.lucene.index.LogByteSizeMergePolicy;
 import org.apache.lucene.index.LogDocMergePolicy;
 import org.apache.lucene.index.SerialMergeScheduler;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.Filter;
 import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.Sort;
-import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.NoSuchDirectoryException;
 import org.apache.lucene.store.SingleInstanceLockFactory;
 import org.apache.lucene.util.Version;
 
-import com.google.common.base.Function;
 import com.google.common.base.Objects;
-import com.google.common.collect.Lists;
 import com.google.common.io.NullOutputStream;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -174,8 +164,18 @@ public final class LuceneIndex implements IndexStore {
      * @throws IOException if opening an {@link IndexReader} failed
      */
     @Override
-    public Searcher openSearcher() throws IOException {
-        return new SearcherImpl(getIndexReaderRef());
+    public IndexSearcher openSearcher() throws IOException {
+        final IndexReaderRef ref = getIndexReaderRef();
+        return new IndexSearcher(ref.get()) {
+            @Override
+            public void close() throws IOException {
+                try {
+                    super.close();
+                } finally {
+                    ref.dec();
+                }
+            }
+        };
     }
 
     private IndexReader openIndexReader(boolean tryRepair) throws IOException {
@@ -755,68 +755,6 @@ public final class LuceneIndex implements IndexStore {
                 writer.get().deleteDocuments(term);
                 ZimbraLog.index.debug("Deleted documents id=%d", id);
             }
-        }
-    }
-
-    private static final class SearcherImpl implements Searcher {
-        private final IndexSearcher searcher;
-        private final IndexReaderRef reader;
-
-        SearcherImpl(IndexReaderRef reader) {
-            this.reader = reader;
-            searcher = new IndexSearcher(reader.get());
-        }
-
-        @Override
-        public void close() throws IOException {
-            try {
-                searcher.close();
-            } finally {
-                reader.dec();
-            }
-        }
-
-        @Override
-        public List<Document> search(Query query, Filter filter, Sort sort, int max) throws IOException {
-            TopDocs docs;
-            if (sort != null) {
-                docs = searcher.search(query, filter, max, sort);
-            } else {
-                docs = searcher.search(query, filter, max);
-            }
-            List<Integer> result = new ArrayList<Integer>(docs.scoreDocs.length);
-            for (ScoreDoc hit : docs.scoreDocs) {
-                result.add(hit.doc);
-            }
-            return Lists.transform(result, new Function<Integer, Document>() {
-                @Override
-                public Document apply(Integer docID) {
-                    try {
-                        return searcher.doc(docID);
-                    } catch (IOException e) {
-                        ZimbraLog.search.error("Failed to retrieve Lucene document", e);
-                        return null;
-                    }
-                }
-            });
-        }
-
-        /**
-         * TODO: This may include terms associated with deleted documents.
-         */
-        @Override
-        public TermEnum getTerms(Term term) throws IOException {
-            return reader.get().terms(term);
-        }
-
-        @Override
-        public int getCount(Term term) throws IOException {
-            return searcher.docFreq(term);
-        }
-
-        @Override
-        public int getTotal() throws IOException {
-            return searcher.maxDoc();
         }
     }
 

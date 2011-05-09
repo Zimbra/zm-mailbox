@@ -23,6 +23,7 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
+import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MultiPhraseQuery;
 import org.apache.lucene.search.PrefixQuery;
 
@@ -35,7 +36,6 @@ import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.LuceneQueryOperation;
 import com.zimbra.cs.index.NoTermQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
-import com.zimbra.cs.index.Searcher;
 import com.zimbra.cs.index.analysis.AddrCharTokenizer;
 import com.zimbra.cs.index.analysis.ContactTokenFilter;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -80,11 +80,11 @@ public final class ContactQuery extends Query {
         } else {
             MultiPhraseQuery query = new MultiPhraseQuery();
             int max = mbox.index.getMaxWildcardTerms();
-            Searcher searcher = null;
+            IndexSearcher searcher = null;
             try {
                 searcher = mbox.index.getIndexStore().openSearcher();
                 for (String token : tokens) {
-                    TermEnum itr = searcher.getTerms(new Term(LuceneFields.L_CONTACT_DATA, token));
+                    TermEnum itr = searcher.getIndexReader().terms(new Term(LuceneFields.L_CONTACT_DATA, token));
                     List<Term> terms = new ArrayList<Term>();
                     do {
                         Term term = itr.term();

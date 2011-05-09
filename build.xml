@@ -612,6 +612,7 @@
           <include name="perf4j-*.jar"/>
           <include name="libthrift-*.jar"/>
           <include name="high-scale-lib-*.jar"/>
+          <include name="jackson-*.jar"/>
         </lib>
         <lib dir="${im.jars.dir}" includes="*.jar"/>
         <classes dir="${config.dir}" includes="sieveConfig.xml"/>
@@ -644,10 +645,10 @@
             test client box can DNS resolve the home server for the user.
         -->
         <property name="spnego.server.name"         value="${SERVICE_PRINCIPAL_NAME}"/>
-        
-        
-        <!-- 
-            SPNEGO auth realm.  Use SPNEGO_AUTH_REALM environment variable if set.  
+
+
+        <!--
+            SPNEGO auth realm.  Use SPNEGO_AUTH_REALM environment variable if set.
             Exit if the environment variable is not set.
         -->
         <condition property="SPNEGO_AUTH_REALM" value="${env.SPNEGO_AUTH_REALM}">
@@ -659,7 +660,7 @@
             </condition>
         </fail>
         <echo>===== Spnego auth realm: ${SPNEGO_AUTH_REALM} =====</echo>
-        
+
     </target>
 
     <target name="spnego-inject" depends="spnego-service-name">

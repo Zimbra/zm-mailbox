@@ -17,6 +17,8 @@ package com.zimbra.cs.index;
 import java.io.IOException;
 import java.io.PrintStream;
 
+import org.apache.lucene.search.IndexSearcher;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 
@@ -33,9 +35,9 @@ public interface IndexStore {
     Indexer openIndexer() throws IOException;
 
     /**
-     * {@link Searcher#close()} must be called after use.
+     * {@link IndexSearcher#close()} must be called after use.
      */
-    Searcher openSearcher() throws IOException;
+    IndexSearcher openSearcher() throws IOException;
 
     /**
      * Removes from cache.
