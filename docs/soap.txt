@@ -2361,7 +2361,7 @@ END:VCARD]
 
 <ModifyContactRequest [replace="{replace-mode}"] [verbose="0|1"]>
   <cn id="...">
-    <a n="{name}" op="{op}">{attr-value}</a>+
+    <a n="{name}" [op="{op}"]>{attr-value}</a>+
   </cn>
 </ModifyContactRequest>
 
