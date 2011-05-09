@@ -105,7 +105,7 @@ import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.Right.RightType;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
-import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.MailboxInfo;
 import com.zimbra.cs.account.soap.SoapProvisioning.MemcachedClientConfig;
@@ -730,7 +730,7 @@ public class ProvUtil implements HttpDebugListener {
         if (useLdap) {
             prov = Provisioning.getInstance();
             if (useLdapMaster) {
-                ZimbraLdapContext.forceMasterURL();
+                LegacyZimbraLdapContext.forceMasterURL();
             }
         } else {
             SoapProvisioning sp = new SoapProvisioning();
