@@ -1207,7 +1207,10 @@ public class Mailbox {
         // we'll need folders and tags loaded in order to handle ACLs
         loadFoldersAndTags();
     }
-
+    
+    public synchronized Metadata getConfig(OperationContext octxt, String section) throws ServiceException {
+        return getConfig(octxt, section, false);
+    }
 
     /** Returns the set of configuration info for the given section.
      *  We segment the mailbox-level configuration data into "sections" to
@@ -1222,14 +1225,16 @@ public class Mailbox {
      *         configuration information, or <tt>null</tt> if none is
      *         found or if the caller does not have sufficient privileges
      *         to read the mailbox's config. */
-    public synchronized Metadata getConfig(OperationContext octxt, String section) throws ServiceException {
+    public synchronized Metadata getConfig(OperationContext octxt, String section, boolean isBatch) throws ServiceException {
         if (section == null || section.equals(""))
             return null;
 
         // note: defaulting to true, not false...
         boolean success = true;
         try {
-            beginTransaction("getConfig", octxt, null);
+            if (!isBatch) {
+                beginTransaction("getConfig", octxt, null);    
+            }
 
             // make sure they have sufficient rights to view the config
             if (!hasFullAccess())
@@ -1248,8 +1253,14 @@ public class Mailbox {
                 return null;
             }
         } finally {
-            endTransaction(success);
+            if (!isBatch) {
+                endTransaction(success);    
+            }
         }
+    }
+
+    public synchronized void setConfig(OperationContext octxt, String section, Metadata config) throws ServiceException {
+        setConfig(octxt, section, config, false);
     }
 
     /** Sets the configuration info for the given section.  We segment the
@@ -1265,14 +1276,16 @@ public class Mailbox {
      *    <li><tt>service.PERM_DENIED</tt> - if you don't have
      *        sufficient permissions</ul>
      * @see #getConfig(OperationContext, String) */
-    public synchronized void setConfig(OperationContext octxt, String section, Metadata config) throws ServiceException {
+    public synchronized void setConfig(OperationContext octxt, String section, Metadata config, boolean isBatch) throws ServiceException {
         if (section == null)
             throw new IllegalArgumentException();
 
         SetConfig redoPlayer = new SetConfig(mId, section, config);
         boolean success = false;
         try {
-            beginTransaction("setConfig", octxt, redoPlayer);
+            if (!isBatch) {
+                beginTransaction("setConfig", octxt, redoPlayer);    
+            }
 
             // make sure they have sufficient rights to view the config
             if (!hasFullAccess())
@@ -1283,7 +1296,9 @@ public class Mailbox {
             DbMailbox.updateConfig(this, section, config);
             success = true;
         } finally {
-            endTransaction(success);
+            if (!isBatch) {
+                endTransaction(success);    
+            }
         }
     }
 
