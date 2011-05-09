@@ -74,8 +74,10 @@ import com.google.common.base.Strings;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.util.SmileSerializer;
@@ -104,7 +106,6 @@ public final class CassandraIndex implements IndexStore {
     private static final String KEYSPACE = "Zimbra";
     private static final String CF_TERM = "IndexTerm";
     private static final String CF_DOCUMENT = "IndexDocument";
-    private static final String CN_ITEM = "Item";
     private static final String ITEM_ID = "x"; // term prefix for ItemID
     private static final Map<String, Character> FIELD2PREFIX = ImmutableMap.<String, Character>builder()
         .put(LuceneFields.L_CONTENT, 'A')
@@ -191,7 +192,7 @@ public final class CassandraIndex implements IndexStore {
         public void createSchema() {
             try {
                 cluster.dropKeyspace(KEYSPACE);
-            } catch (HInvalidRequestException ignore) {
+            } catch (HInvalidRequestException ignore) { // may not exist yet
             }
             BasicColumnFamilyDefinition termCF = new BasicColumnFamilyDefinition();
             termCF.setKeyspaceName(KEYSPACE);
@@ -216,8 +217,10 @@ public final class CassandraIndex implements IndexStore {
         @Override
         public void addDocument(MailItem item, List<IndexDocument> docs) throws IOException {
             for (IndexDocument doc : docs) {
+                setFields(item, doc);
                 UUID docID = UUID.randomUUID(); //TODO use time-based (type 1) UUID
                 Map<String, TermInfo> term2info = new HashMap<String, TermInfo>();
+                List<HColumn<String, String>> docCols = new ArrayList<HColumn<String, String>>();
                 int pos = 0;
                 for (Fieldable field : doc.toDocument().getFields()) {
                     Character prefix = FIELD2PREFIX.get(field.name());
@@ -244,6 +247,14 @@ public final class CassandraIndex implements IndexStore {
                             info.addPosition(pos);
                         }
                     }
+                    if (field.isStored()) {
+                        if (field.isBinary()) {
+                            ZimbraLog.index.warn("Binary fields are not supported name=%s", field.name());
+                        } else {
+                            docCols.add(HFactory.createColumn(field.name(), field.stringValue(),
+                                    StringSerializer.get(), StringSerializer.get()));
+                        }
+                    }
                 }
 
                 for (Map.Entry<String, TermInfo> entry : term2info.entrySet()) {
@@ -256,11 +267,22 @@ public final class CassandraIndex implements IndexStore {
                         docID, new TermInfo(), UUIDSerializer.get(), TERM_INFO_SERIALIZER));
                 mutator.addInsertion(key, CF_TERM, HFactory.createSuperColumn(ITEM_ID + item.getId(),
                         cols, StringSerializer.get(), UUIDSerializer.get(), TERM_INFO_SERIALIZER));
-                List<HColumn<String, Integer>> docCols = Collections.singletonList(HFactory.createColumn(
-                        CN_ITEM, item.getId(), StringSerializer.get(), IntegerSerializer.get()));
                 mutator.addInsertion(key, CF_DOCUMENT, HFactory.createSuperColumn(docID, docCols,
-                        UUIDSerializer.get(), StringSerializer.get(), IntegerSerializer.get()));
+                        UUIDSerializer.get(), StringSerializer.get(), StringSerializer.get()));
             }
+        }
+
+        private void setFields(MailItem item, IndexDocument doc) {
+            doc.removeMailboxBlobId();
+            doc.addMailboxBlobId(item.getId());
+            doc.removeSortDate();
+            doc.addSortDate(item.getDate());
+            doc.removeSortSize();
+            doc.addSortSize(item.getSize());
+            doc.removeSortName();
+            doc.addSortName(item.getSender());
+            doc.removeSortSubject();
+            doc.addSortSubject(item.getSortSubject());
         }
 
         /**
@@ -317,7 +339,8 @@ public final class CassandraIndex implements IndexStore {
 
     private final class IdMap {
         private int lastDocId = 0;
-        private BiMap<Integer, UUID> id2uuid = HashBiMap.create();
+        private BiMap<Integer, UUID> id2uuid = HashBiMap.create(100);
+        private final Map<UUID, Document> uuid2doc = Maps.newHashMapWithExpectedSize(100);
 
         int get(UUID uuid) {
             Integer id = id2uuid.inverse().get(uuid);
@@ -332,6 +355,11 @@ public final class CassandraIndex implements IndexStore {
             return id2uuid.get(id);
         }
 
+        Document doc(int id) {
+            UUID uuid = get(id);
+            return uuid != null ? uuid2doc.get(uuid) : null;
+        }
+
         /**
          * Validates document UUIDs. Orphans are removed from the collection as well as Term CF.
          *
@@ -344,12 +372,17 @@ public final class CassandraIndex implements IndexStore {
             if (orphan.isEmpty()) {
                 return;
             }
-            QueryResult<SuperSlice<UUID, String, Integer>> qresult = HFactory.createSuperSliceQuery(keyspace,
-                    UUIDSerializer.get(), UUIDSerializer.get(), StringSerializer.get(), IntegerSerializer.get())
+            QueryResult<SuperSlice<UUID, String, String>> qresult = HFactory.createSuperSliceQuery(keyspace,
+                    UUIDSerializer.get(), UUIDSerializer.get(), StringSerializer.get(), StringSerializer.get())
                     .setKey(key).setColumnFamily(CF_DOCUMENT)
                     .setColumnNames(orphan.toArray(new UUID[orphan.size()])).execute();
-            for (HSuperColumn<UUID, String, Integer> scol : qresult.get().getSuperColumns()) {
+            for (HSuperColumn<UUID, String, String> scol : qresult.get().getSuperColumns()) {
                 orphan.remove(scol.getName());
+                Document doc = new Document();
+                for (HColumn<String, String> col : scol.getColumns()) {
+                    doc.add(new Field(col.getName(), col.getValue(), Field.Store.YES, Field.Index.NO));
+                }
+                uuid2doc.put(scol.getName(), doc);
             }
             if (orphan.isEmpty()) {
                 return;
@@ -362,6 +395,7 @@ public final class CassandraIndex implements IndexStore {
             }
             mutator.execute();
         }
+
     }
 
     private final class IndexReaderImpl extends IndexReader {
@@ -413,25 +447,7 @@ public final class CassandraIndex implements IndexStore {
 
         @Override
         public Document document(int id, FieldSelector selector) {
-            UUID uuid = idMap.get(id);
-            if (uuid == null) {
-                return null;
-            }
-            QueryResult<HSuperColumn<UUID, String, Integer>> qresult = HFactory.createSuperColumnQuery(keyspace,
-                    UUIDSerializer.get(), UUIDSerializer.get(), StringSerializer.get(), IntegerSerializer.get())
-                    .setKey(key).setColumnFamily(CF_DOCUMENT).setSuperName(uuid).execute();
-            HSuperColumn<UUID, String, Integer> scol = qresult.get();
-            if (scol == null) {
-                return null;
-            }
-            Document doc = new Document();
-            for (HColumn<String, Integer> col : scol.getColumns()) {
-                if (CN_ITEM.equals(col.getName())) {
-                    doc.add(new Field(LuceneFields.L_MAILBOX_BLOB_ID, col.getValue().toString(),
-                            Field.Store.YES, Field.Index.NO));
-                }
-            }
-            return doc;
+            return idMap.doc(id);
         }
 
         @Override
@@ -531,7 +547,6 @@ public final class CassandraIndex implements IndexStore {
         public TermEnum terms(Term term) {
             return new TermEnumImpl(term);
         }
-
     }
 
     private static class TermDoc {
