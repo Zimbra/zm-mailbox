@@ -19,14 +19,15 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
+import com.zimbra.cs.filter.FilterUtil.AddressPart;
 import com.zimbra.cs.zclient.ZFilterAction.MarkOp;
 import com.zimbra.cs.zclient.ZFilterAction.ZDiscardAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZFileIntoAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZKeepAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZMarkAction;
+import com.zimbra.cs.zclient.ZFilterAction.ZNotifyAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZRedirectAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZReplyAction;
-import com.zimbra.cs.zclient.ZFilterAction.ZNotifyAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZStopAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZTagAction;
 import com.zimbra.cs.zclient.ZFilterCondition.AddressBookOp;
@@ -36,6 +37,7 @@ import com.zimbra.cs.zclient.ZFilterCondition.HeaderOp;
 import com.zimbra.cs.zclient.ZFilterCondition.SimpleOp;
 import com.zimbra.cs.zclient.ZFilterCondition.SizeOp;
 import com.zimbra.cs.zclient.ZFilterCondition.ZAddressBookCondition;
+import com.zimbra.cs.zclient.ZFilterCondition.ZAddressCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZAttachmentExistsCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZBodyCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZCurrentDayOfWeekCondition;
@@ -298,6 +300,20 @@ public class ZFilterRule implements ToZJSONObject {
                     nextArg = args[i++];
                 }
                 conditions.add(new ZMimeHeaderCondition(headerName, HeaderOp.fromString(op), caseSensitive, nextArg));
+            } else if (a.equals("address")) {
+                if (i + 4 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
+                String headerName = args[i++];
+                String part = args[i++];
+                String op = args[i++];
+                String nextArg = args[i++];
+                boolean caseSensitive = false;
+                if (ZFilterCondition.C_CASE_SENSITIVE.equals(nextArg)) {
+                    caseSensitive = true;
+                    if (i + 1 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
+                    nextArg = args[i++];
+                }
+                conditions.add(new ZAddressCondition(headerName, AddressPart.fromString(part),
+                                                     HeaderOp.fromString(op), caseSensitive, nextArg));
             } else if (a.equals("invite")) {
                 if (i + 1 > args.length) throw ZClientException.CLIENT_ERROR("missing exists arg", null);
                 ZInviteCondition cond = new ZInviteCondition(args[i++].equals("exists"));

@@ -123,27 +123,47 @@ public class FilterUtil {
         }
     }
 
-    public enum Comparator {
-        ioctet, iasciicasemap;
+    public enum AddressPart {
+        all, localpart, domain;
 
-        private static String VALUE_STR_CASE_SENSITIVE = "i;octet";
-        private static String VALUE_STR_CASE_INSENSITIVE = "i;ascii-casemap";
+        public static AddressPart fromString(String value)
+        throws ServiceException {
+            if (value == null) {
+                return null;
+            }
+            try {
+                return AddressPart.valueOf(value);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.PARSE_ERROR(
+                    "Invalid value: "+ value +", valid values: " + Arrays.asList(AddressPart.values()), e);
+            }
+        }
+    }
+
+    public enum Comparator {
+        ioctet("i;octet"),
+        iasciicasemap("i;ascii-casemap");
+
+        private String value;
+
+        private Comparator(String value) {
+            this.value = value;
+        }
 
         public static Comparator fromString(String value)
         throws ServiceException {
             if (value == null)
                 return null;
-            if (VALUE_STR_CASE_SENSITIVE.equals(value))
-                return ioctet;
-            else if (VALUE_STR_CASE_INSENSITIVE.equals(value))
-                return iasciicasemap;
-            else
-                throw ServiceException.PARSE_ERROR("Invalid Comparator value: " + value, null);
+            for (Comparator comparator : Comparator.values()) {
+                if (comparator.toString().equals(value))
+                    return comparator;
+            }
+            throw ServiceException.PARSE_ERROR("Invalid Comparator value: " + value, null);
         }
 
         @Override
         public String toString() {
-            return this == ioctet ? VALUE_STR_CASE_SENSITIVE : VALUE_STR_CASE_INSENSITIVE;
+            return value;
         }
     }
 
@@ -398,7 +418,7 @@ public class FilterUtil {
                 }
             }
             sender.setRecipients(destinationAddress);
-            sender.sendMimeMessage(null, sourceMbox, outgoingMsg);
+            sender.sendMimeMessage(octxt, sourceMbox, outgoingMsg);
         } catch (MessagingException e) {
             ZimbraLog.filter.warn("Envelope sender will be set to the default value.", e);
         }

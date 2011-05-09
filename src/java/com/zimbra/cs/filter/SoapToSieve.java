@@ -19,6 +19,8 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.filter.FilterUtil.AddressPart;
+import com.zimbra.cs.filter.FilterUtil.Comparator;
 import com.zimbra.cs.filter.FilterUtil.Condition;
 import com.zimbra.cs.filter.FilterUtil.DateComparison;
 import com.zimbra.cs.filter.FilterUtil.Flag;
@@ -116,6 +118,8 @@ public class SoapToSieve {
             snippet = generateHeaderTest(test, "header");
         } else if (name.equals(MailConstants.E_MIME_HEADER_TEST)) {
             snippet = generateHeaderTest(test, "mime_header");
+        } else if (name.equals(MailConstants.E_ADDRESS_TEST)) {
+            snippet = generateAddressTest(test);
         } else if (name.equals(MailConstants.E_HEADER_EXISTS_TEST)) {
             String header = test.getAttribute(MailConstants.A_HEADER);
             snippet = String.format("exists \"%s\"", FilterUtil.escape(header));
@@ -197,8 +201,41 @@ public class SoapToSieve {
         return snippet;
     }
     
-    private String generateHeaderTest(Element test, String testName)
-    throws ServiceException {
+    private static String generateHeaderTest(Element test, String testName) throws ServiceException {
+        String header = getSieveHeaderList(test);
+        StringComparison comparison =
+                StringComparison.fromString(test.getAttribute(MailConstants.A_STRING_COMPARISON).toLowerCase());
+        boolean caseSensitive = test.getAttributeBool(MailConstants.A_CASE_SENSITIVE, false);
+        String value = test.getAttribute(MailConstants.A_VALUE);
+        checkValue(comparison, value);
+        String snippetFormat =
+                caseSensitive ? "%s :%s :comparator \"" + Comparator.ioctet + "\" %s \"%s\"" : "%s :%s %s \"%s\"";
+        return String.format(snippetFormat, testName, comparison, header, FilterUtil.escape(value));
+    }
+
+    private static String generateAddressTest(Element test) throws ServiceException {
+        String header = getSieveHeaderList(test);
+        AddressPart part =
+                AddressPart.fromString(test.getAttribute(MailConstants.A_ADDRESS_PART, AddressPart.all.name()));
+        StringComparison comparison =
+                StringComparison.fromString(test.getAttribute(MailConstants.A_STRING_COMPARISON).toLowerCase());
+        boolean caseSensitive = test.getAttributeBool(MailConstants.A_CASE_SENSITIVE, false);
+        String value = test.getAttribute(MailConstants.A_VALUE);
+        checkValue(comparison, value);
+        return String.format("address :%s :%s :comparator \"%s\" %s \"%s\"", part, comparison,
+                             caseSensitive ? Comparator.ioctet : Comparator.iasciicasemap,
+                             header, FilterUtil.escape(value));
+    }
+
+    private static void checkValue(StringComparison comparison, String value) throws ServiceException {
+        // Bug 35983: disallow more than four asterisks in a row.
+        if (comparison == StringComparison.matches && value != null && value.contains("*****")) {
+            throw ServiceException.INVALID_REQUEST(
+                "Wildcard match value cannot contain more than four asterisks in a row.", null);
+        }
+    }
+
+    private static String getSieveHeaderList(Element test) throws ServiceException {
         String header = test.getAttribute(MailConstants.A_HEADER);
         if (!StringUtil.isNullOrEmpty(header)) {
             String[] headerNames = header.split(",");
@@ -207,23 +244,10 @@ public class SoapToSieve {
             }
             header = new StringBuilder().append('[').append(StringUtil.join(",", headerNames)).append(']').toString();
         }
-        String s = test.getAttribute(MailConstants.A_STRING_COMPARISON);
-        s = s.toLowerCase();
-        StringComparison comparison = StringComparison.fromString(s);
-        boolean caseSensitive = test.getAttributeBool(MailConstants.A_CASE_SENSITIVE, false);
-        String value = test.getAttribute(MailConstants.A_VALUE);
-        String snippetFormat = caseSensitive ? "%s :%s :comparator \"i;octet\" %s \"%s\"" : "%s :%s %s \"%s\"";
-        String snippet = String.format(snippetFormat, testName, comparison, header, FilterUtil.escape(value));
-        
-        // Bug 35983: disallow more than four asterisks in a row.
-        if (comparison == StringComparison.matches && value != null && value.contains("*****")) {
-            throw ServiceException.INVALID_REQUEST(
-                "Wildcard match value cannot contain more than four asterisks in a row.", null);
-        }
-        return snippet;
+        return header;
     }
-    
-    private String convertInviteTest(Element test) {
+
+    private static String convertInviteTest(Element test) {
         StringBuilder buf = new StringBuilder("invite");
         List<Element> methods = test.listElements(MailConstants.E_METHOD);
         if (!methods.isEmpty()) {
@@ -244,7 +268,7 @@ public class SoapToSieve {
         return buf.toString();
     }
     
-    private String handleAction(Element action)
+    private static String handleAction(Element action)
     throws ServiceException {
         String name = action.getName();
         if (name.equals(MailConstants.E_ACTION_KEEP)) {

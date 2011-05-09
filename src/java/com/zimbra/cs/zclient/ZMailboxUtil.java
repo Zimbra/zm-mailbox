@@ -245,6 +245,7 @@ public class ZMailboxUtil implements DebugListener {
                         "    header \"comma-separated-names\" is|not_is|contains|not_contains|matches|not_matches [case_sensitive] \"value\"\n" +
                         "    header \"comma-separated-names\" exists|not_exists\n" +
                         "    mime_header \"name\" is|not_is|contains|not_contains|matches|not_matches [case_sensitive] \"value\"\n" +
+                        "    address \"comma-separated-header-names\" all|localpart|domain is|not_is|contains|not_contains|matches|not_matches [case_sensitive] \"value\"\n" +
                         "    date before|not_before|after|not_after \"YYYYMMDD\"\n" +
                         "    size under|not_under|over|not_over \"1|1K|1M\"\n" +
                         "    body contains|not_contains [case_sensitive] \"text\"\n" +

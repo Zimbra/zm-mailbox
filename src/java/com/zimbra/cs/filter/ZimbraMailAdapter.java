@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
@@ -28,10 +29,10 @@ import java.util.StringTokenizer;
 import javax.mail.Header;
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 
+import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.cs.filter.jsieve.ActionNotify;
 import com.zimbra.cs.filter.jsieve.ActionReply;
 import org.apache.jsieve.SieveContext;
@@ -277,10 +278,7 @@ public class ZimbraMailAdapter implements MailAdapter
     throws ServiceException {
         Pair<Folder, String> pair = mbox.getFolderByPathLongestMatch(null, Mailbox.ID_FOLDER_USER_ROOT, folderPath);
         Folder f = pair.getFirst();
-        if (f != null && f instanceof Mountpoint) {
-            return true;
-        }
-        return false;
+        return f != null && f instanceof Mountpoint;
     }
     
     private List<Action> getDeliveryActions() {
@@ -427,7 +425,7 @@ public class ZimbraMailAdapter implements MailAdapter
                     String address = st.nextToken();
                     String delim = st.hasMoreTokens() ? st.nextToken() : "";
                     try {
-                        InternetAddress inetAddr = new JavaMailInternetAddress(address);
+                        javax.mail.internet.InternetAddress inetAddr = new JavaMailInternetAddress(address);
                         String addr = inetAddr.getAddress();
                         String unicodeAddr = IDNUtil.toUnicode(addr);
                         if (unicodeAddr.equalsIgnoreCase(addr)) {
@@ -561,16 +559,26 @@ public class ZimbraMailAdapter implements MailAdapter
             ZimbraLog.filter.warn("Unable to get MimeMessage.", e);
             return FilterAddress.EMPTY_ADDRESS_ARRAY;
         }
-        
-        String[] addresses = Mime.getHeaders(msg, headerName);
-        if (addresses == null) {
+
+        String[] hdrValues = null;
+        try {
+            hdrValues = msg.getHeader(headerName);
+        } catch (MessagingException e) {
+            ZimbraLog.filter.warn("Unable to get headers named '%s'", headerName, e);
+        }
+        if (hdrValues == null) {
             return FilterAddress.EMPTY_ADDRESS_ARRAY;
         }
-        Address[] retVal = new Address[addresses.length];
-        for (int i = 0; i < addresses.length; i++) {
-            retVal[i] = new FilterAddress(addresses[i]);
+
+        List<Address> retVal = new LinkedList<Address>();
+        for (String hdrValue : hdrValues) {
+            for (InternetAddress addr : InternetAddress.parseHeader(hdrValue)) {
+                String emailAddr = addr.getAddress();
+                if (emailAddr != null)
+                    retVal.add(new FilterAddress(emailAddr));
+            }
         }
-        return retVal;
+        return retVal.toArray(new Address[retVal.size()]);
     }
 
     // jSieve 0.4

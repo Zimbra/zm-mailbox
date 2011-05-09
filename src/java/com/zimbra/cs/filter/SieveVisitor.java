@@ -17,6 +17,7 @@ package com.zimbra.cs.filter;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.filter.FilterUtil.AddressPart;
 import com.zimbra.cs.filter.FilterUtil.Comparator;
 import com.zimbra.cs.filter.FilterUtil.Condition;
 import com.zimbra.cs.filter.FilterUtil.DateComparison;
@@ -59,6 +60,10 @@ public abstract class SieveVisitor {
     
     protected void visitHeaderTest(String testEltName, Node node, VisitPhase phase, RuleProperties props,
                                    List<String> headers, StringComparison comparison, boolean caseSensitive, String value)
+    throws ServiceException { }
+
+    protected void visitAddressTest(Node node, VisitPhase phase, RuleProperties props, List<String> headers,
+                                    AddressPart part, StringComparison comparison, boolean caseSensitive, String value)
     throws ServiceException { }
 
     protected void visitHeaderExistsTest(Node node, VisitPhase phase, RuleProperties props, String header)
@@ -231,6 +236,42 @@ public abstract class SieveVisitor {
                 visitHeaderTest(testEltName, node, VisitPhase.begin, props, headers, comparison, caseSensitive, value);
                 accept(node, props);
                 visitHeaderTest(testEltName, node, VisitPhase.end, props, headers, comparison, caseSensitive, value);
+            } else if ("address".equalsIgnoreCase(nodeName)) {
+                AddressPart part = AddressPart.all;
+                StringComparison comparison = StringComparison.is;
+                boolean caseSensitive = false;
+                List<String> headers;
+                String value;
+
+                int nextArgIndex = 0;
+                SieveNode argNode = (SieveNode) getNode(node, 0, nextArgIndex);
+                // There can be up to three tag arguments
+                for (int i = 0; i < 3 && argNode.getValue() instanceof TagArgument; i ++) {
+                    TagArgument tagArg = (TagArgument) argNode.getValue();
+                    if (tagArg.isComparator()) {
+                        caseSensitive =
+                                Comparator.ioctet == Comparator.fromString(getValue(node, 0, nextArgIndex + 1, 0, 0));
+                        nextArgIndex += 2;
+                    } else {
+                        String argStr = stripLeadingColon(argNode.getValue().toString());
+                        try {
+                            // first assume that the next tag arg is match-type arg
+                            comparison = StringComparison.valueOf(argStr);
+                        } catch (IllegalArgumentException e) {
+                            // so the next tag arg is not match-type arg, it must be address-part arg then
+                            part = AddressPart.fromString(argStr);
+                        }
+                        nextArgIndex ++;
+                    }
+                    argNode = (SieveNode) getNode(node, 0, nextArgIndex);
+                }
+
+                headers = getMultiValue(node, 0, nextArgIndex, 0);
+                value = getValue(node, 0, nextArgIndex + 1, 0, 0);
+
+                visitAddressTest(node, VisitPhase.begin, props, headers, part, comparison, caseSensitive, value);
+                accept(node, props);
+                visitAddressTest(node, VisitPhase.end, props, headers, part, comparison, caseSensitive, value);
             } else if ("exists".equalsIgnoreCase(nodeName)) {
                 String header = getValue(node, 0, 0, 0, 0);
 

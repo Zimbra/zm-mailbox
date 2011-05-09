@@ -14,20 +14,20 @@
  */
 package com.zimbra.cs.filter;
 
-import java.util.Date;
-import java.util.List;
-
-import com.zimbra.common.util.StringUtil;
-import org.apache.jsieve.parser.generated.Node;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element.ElementFactory;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.filter.FilterUtil.AddressPart;
 import com.zimbra.cs.filter.FilterUtil.DateComparison;
 import com.zimbra.cs.filter.FilterUtil.Flag;
 import com.zimbra.cs.filter.FilterUtil.NumberComparison;
 import com.zimbra.cs.filter.FilterUtil.StringComparison;
+import org.apache.jsieve.parser.generated.Node;
+
+import java.util.Date;
+import java.util.List;
 
 /**
  * Converts a Sieve node tree to the SOAP representation of
@@ -169,6 +169,21 @@ public class SieveToSoap extends SieveVisitor {
         if (phase == VisitPhase.begin) {
             Element test = addTest(testEltName, props);
             test.addAttribute(MailConstants.A_HEADER, StringUtil.join(",", headers));
+            test.addAttribute(MailConstants.A_STRING_COMPARISON, comparison.toString());
+            if (caseSensitive)
+                test.addAttribute(MailConstants.A_CASE_SENSITIVE, caseSensitive);
+            test.addAttribute(MailConstants.A_VALUE, value);
+        }
+    }
+
+    @Override
+    protected void visitAddressTest(Node node, VisitPhase phase, RuleProperties props, List<String> headers,
+                                    AddressPart part, StringComparison comparison, boolean caseSensitive, String value)
+    throws ServiceException {
+        if (phase == VisitPhase.begin) {
+            Element test = addTest(MailConstants.E_ADDRESS_TEST, props);
+            test.addAttribute(MailConstants.A_HEADER, StringUtil.join(",", headers));
+            test.addAttribute(MailConstants.A_PART, part.toString());
             test.addAttribute(MailConstants.A_STRING_COMPARISON, comparison.toString());
             if (caseSensitive)
                 test.addAttribute(MailConstants.A_CASE_SENSITIVE, caseSensitive);
