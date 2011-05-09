@@ -24,7 +24,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
-import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.server.NioHandler;
 import com.zimbra.cs.server.NioServer;
 import com.zimbra.cs.server.NioConnection;
@@ -100,7 +100,7 @@ public final class NioMilterServer extends NioServer implements MilterServer {
         try {
             Provisioning prov = Provisioning.getInstance();
             if (prov instanceof LdapProvisioning) {
-                ZimbraLdapContext.waitForServer();
+                LegacyZimbraLdapContext.waitForServer();
             }
 
             MilterConfig config = new MilterConfig();
