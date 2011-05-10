@@ -635,33 +635,63 @@ extends TestCase {
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
 
-        // first use header test address matching
+        // first use header test for address matching
         conditions.add(new ZFilterCondition.ZHeaderCondition("From", HeaderOp.IS, "john.doe@example.com"));
-        actions.add(new ZTagAction(mTag1.getName()));
-        rules.add(new ZFilterRule("testAddressTest", true, false, conditions, actions));
+        actions.add(new ZMarkAction(MarkOp.FLAGGED));
+        rules.add(new ZFilterRule("testAddressTest1", true, false, conditions, actions));
         saveIncomingRules(mMbox, new ZFilterRules(rules));
 
         String subject = NAME_PREFIX + " testAddressTest1";
         String mime = new MessageBuilder().withFrom("John Doe <john.doe@example.com>").withSubject(subject).create();
         TestUtil.addMessageLmtp(new String[] { USER_NAME }, USER_NAME, mime);
         ZMessage msg = TestUtil.getMessage(mMbox, "in:inbox subject:\"" + subject + "\"");
-        assertTrue("message should not have been tagged", msg.getTagIds() == null || msg.getTagIds().isEmpty());
+        assertFalse("Unexpected message flag state", msg.isFlagged());
 
         // now use the address test
         conditions.add(new ZFilterCondition.ZAddressCondition(
                 "From", FilterUtil.AddressPart.all, HeaderOp.IS, false, "john.doe@example.com"));
-        actions.add(new ZTagAction(mTag1.getName()));
-        rules.add(new ZFilterRule("testAddressTest", true, false, conditions, actions));
+        actions.add(new ZMarkAction(MarkOp.FLAGGED));
+        rules.add(new ZFilterRule("testAddressTest2", true, false, conditions, actions));
         saveIncomingRules(mMbox, new ZFilterRules(rules));
 
         subject = NAME_PREFIX + " testAddressTest2";
         mime = new MessageBuilder().withFrom("John Doe <john.doe@example.com>").withSubject(subject).create();
         TestUtil.addMessageLmtp(new String[] { USER_NAME }, USER_NAME, mime);
         msg = TestUtil.getMessage(mMbox, "in:inbox subject:\"" + subject + "\"");
-        assertNotNull("message should have been tagged", msg.getTagIds());
-        Set<String> tagIds = new HashSet<String>();
-        tagIds.addAll(Arrays.asList(msg.getTagIds().split(",")));
-        assertTrue("message should have been tagged with tag1", tagIds.contains(mTag1.getId()));
+        assertTrue("Unexpected message flag state", msg.isFlagged());
+    }
+
+    public void testAddressTestPart()
+    throws Exception {
+        List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
+        List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
+        List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
+
+        // use address test for address domain match
+        conditions.add(new ZFilterCondition.ZAddressCondition(
+                "From", FilterUtil.AddressPart.domain, HeaderOp.IS, false, "example.com"));
+        actions.add(new ZMarkAction(MarkOp.FLAGGED));
+        rules.add(new ZFilterRule("testAddressTestPart1", true, false, conditions, actions));
+        saveIncomingRules(mMbox, new ZFilterRules(rules));
+
+        String subject = NAME_PREFIX + " testAddressTestPart1";
+        String mime = new MessageBuilder().withFrom("John Doe <JOHN.DOE@EXAMPLE.COM>").withSubject(subject).create();
+        TestUtil.addMessageLmtp(new String[] { USER_NAME }, USER_NAME, mime);
+        ZMessage msg = TestUtil.getMessage(mMbox, "in:inbox subject:\"" + subject + "\"");
+        assertTrue("Unexpected message flag state", msg.isFlagged());
+
+        // use address test for address local-part match
+        conditions.add(new ZFilterCondition.ZAddressCondition(
+                "From", FilterUtil.AddressPart.localpart, HeaderOp.MATCHES, true, "j*doe"));
+        actions.add(new ZMarkAction(MarkOp.FLAGGED));
+        rules.add(new ZFilterRule("testAddressTestPart2", true, false, conditions, actions));
+        saveIncomingRules(mMbox, new ZFilterRules(rules));
+
+        subject = NAME_PREFIX + " testAddressTestPart2";
+        mime = new MessageBuilder().withFrom("John Doe <john.doe@example.com>").withSubject(subject).create();
+        TestUtil.addMessageLmtp(new String[] { USER_NAME }, USER_NAME, mime);
+        msg = TestUtil.getMessage(mMbox, "in:inbox subject:\"" + subject + "\"");
+        assertTrue("Unexpected message flag state", msg.isFlagged());
     }
 
     public void testReplyAction()
