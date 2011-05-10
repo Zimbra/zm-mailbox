@@ -377,6 +377,10 @@ public class UserServlet extends ZimbraServlet {
         // This will let us get the correct server/port
         Provisioning prov = Provisioning.getInstance();
         Account targetAccount = prov.get(AccountBy.id, mpt.getOwnerId());
+        if (targetAccount == null) {
+            // Remote owner account has been deleted.
+            return null;
+        }
         Server targetServer = prov.getServer(targetAccount);
         
         // Avoid the soap call if its a local mailbox
