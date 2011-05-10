@@ -21,7 +21,6 @@ import java.util.Date;
 import javax.activation.DataHandler;
 import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
-import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
@@ -38,17 +37,18 @@ import com.zimbra.cs.util.JMSession;
 
 public class MessageBuilder {
 
-    private String mSubject;
-    private String mFrom;
-    private String mSender;
-    private String mToRecipient;
-    private String mCcRecipient;
-    private String mBody;
-    private Date mDate;
-    private String mContentType;
-    private Object mAttachment;
-    private String mAttachmentFilename;
-    private String mAttachmentContentType;
+    private String subject;
+    private String from;
+    private String sender;
+    private String toRecipient;
+    private String ccRecipient;
+    private String body;
+    private Date date;
+    private String contentType;
+    private Object attachment;
+    private String attachmentFilename;
+    private String attachmentContentType;
+    private boolean addMessageIdHeader = false;
 
     static String DEFAULT_MESSAGE_BODY = "Dude,\r\n\r\nAll I need are some tasty waves, a cool buzz, and I'm fine.\r\n\r\nJeff";
 
@@ -67,42 +67,42 @@ public class MessageBuilder {
     }
 
     public MessageBuilder withSubject(String subject) {
-        mSubject = subject;
+        this.subject = subject;
         return this;
     }
 
     public MessageBuilder withFrom(String from) {
-        mFrom = from;
+        this.from = from;
         return this;
     }
 
     public MessageBuilder withSender(String address) {
-        mSender = address;
+        sender = address;
         return this;
     }
 
     public MessageBuilder withToRecipient(String recipient) {
-        mToRecipient = recipient;
+        toRecipient = recipient;
         return this;
     }
 
     public MessageBuilder withCcRecipient(String recipient) {
-        mCcRecipient = recipient;
+        ccRecipient = recipient;
         return this;
     }
 
     public MessageBuilder withBody(String body) {
-        mBody = body;
+        this.body = body;
         return this;
     }
 
     public MessageBuilder withDate(Date date) {
-        mDate = date;
+        this.date = date;
         return this;
     }
 
     public MessageBuilder withContentType(String contentType) {
-        mContentType = contentType;
+        this.contentType = contentType;
         return this;
     }
 
@@ -116,63 +116,68 @@ public class MessageBuilder {
         if (StringUtil.isNullOrEmpty(filename)) {
             throw new IllegalArgumentException("filename cannot be null or empty");
         }
-        mAttachment = content;
-        mAttachmentFilename = filename;
-        mAttachmentContentType = contentType;
+        attachment = content;
+        attachmentFilename = filename;
+        attachmentContentType = contentType;
+        return this;
+    }
+
+    public MessageBuilder withMessageIdHeader() {
+        this.addMessageIdHeader = true;
         return this;
     }
 
     public String create() throws MessagingException, ServiceException, IOException {
-        if (mToRecipient == null) {
-            mToRecipient = "user1";
+        if (toRecipient == null) {
+            toRecipient = "user1";
         }
-        if (mFrom == null) {
-            mFrom = "jspiccoli";
+        if (from == null) {
+            from = "jspiccoli";
         }
-        if (mDate == null) {
-            mDate = new Date();
+        if (date == null) {
+            date = new Date();
         }
-        if (mContentType == null) {
-            mContentType = MimeConstants.CT_TEXT_PLAIN;
+        if (contentType == null) {
+            contentType = MimeConstants.CT_TEXT_PLAIN;
         }
-        if (mBody == null) {
-            mBody = MessageBuilder.DEFAULT_MESSAGE_BODY;
+        if (body == null) {
+            body = MessageBuilder.DEFAULT_MESSAGE_BODY;
         }
-        mFrom = TestUtil.addDomainIfNecessary(mFrom);
-        mToRecipient = TestUtil.addDomainIfNecessary(mToRecipient);
-        mSender = TestUtil.addDomainIfNecessary(mSender);
+        from = TestUtil.addDomainIfNecessary(from);
+        toRecipient = TestUtil.addDomainIfNecessary(toRecipient);
+        sender = TestUtil.addDomainIfNecessary(sender);
 
-        MimeMessage msg = new MimeMessageWithNoId();
-        msg.setRecipient(RecipientType.TO, new JavaMailInternetAddress(mToRecipient));
-        if (mCcRecipient != null) {
-            mCcRecipient = TestUtil.addDomainIfNecessary(mCcRecipient);
-            msg.setRecipient(RecipientType.CC, new JavaMailInternetAddress(mCcRecipient));
+        MimeMessage msg =
+                addMessageIdHeader ? new JavaMailMimeMessage(JMSession.getSession()) : new MimeMessageWithNoId();
+        msg.setRecipient(RecipientType.TO, new JavaMailInternetAddress(toRecipient));
+        if (ccRecipient != null) {
+            ccRecipient = TestUtil.addDomainIfNecessary(ccRecipient);
+            msg.setRecipient(RecipientType.CC, new JavaMailInternetAddress(ccRecipient));
         }
-        msg.setFrom(new JavaMailInternetAddress(mFrom));
-        if (mSender != null) {
-            msg.setSender(new JavaMailInternetAddress(mSender));
+        msg.setFrom(new JavaMailInternetAddress(from));
+        if (sender != null) {
+            msg.setSender(new JavaMailInternetAddress(sender));
         }
-        msg.setSentDate(mDate);
-        msg.setSubject(mSubject);
+        msg.setSentDate(date);
+        msg.setSubject(subject);
 
-        if (mAttachment == null) {
+        if (attachment == null) {
             // Need to specify the data handler explicitly because JavaMail
             // doesn't know what to do with text/enriched.
-            msg.setDataHandler(new DataHandler(new ByteArrayDataSource(mBody.getBytes(), mContentType)));
+            msg.setDataHandler(new DataHandler(new ByteArrayDataSource(body.getBytes(), contentType)));
         } else {
             MimeMultipart multi = new JavaMailMimeMultipart("mixed");
             MimeBodyPart body = new JavaMailMimeBodyPart();
-            body.setDataHandler(new DataHandler(new ByteArrayDataSource(mBody.getBytes(), mContentType)));
+            body.setDataHandler(new DataHandler(new ByteArrayDataSource(this.body.getBytes(), contentType)));
             multi.addBodyPart(body);
 
             MimeBodyPart attachment = new JavaMailMimeBodyPart();
-            attachment.setContent(mAttachment, mAttachmentContentType);
-            attachment.setHeader("Content-Disposition", "attachment; filename=" + mAttachmentFilename);
+            attachment.setContent(this.attachment, attachmentContentType);
+            attachment.setHeader("Content-Disposition", "attachment; filename=" + attachmentFilename);
             multi.addBodyPart(attachment);
 
             msg.setContent(multi);
         }
-        msg.removeHeader("Message-ID");
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         msg.writeTo(out);

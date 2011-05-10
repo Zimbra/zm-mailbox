@@ -32,7 +32,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.lmtpserver.LmtpMessageInputStream;
-import com.zimbra.cs.lmtpserver.ZimbraLmtpBackend;
 import com.zimbra.cs.lmtpserver.utils.LmtpClient;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -102,7 +101,7 @@ extends TestCase {
     }
     
     /**
-     * Tests {@link ZimbraLmtpBackend#readData} with various valid/invalid
+     * Tests reading data with various valid/invalid
      * values for the size hint and disk threshold.
      */
     public void testReadLmtpData()
@@ -453,11 +452,11 @@ extends TestCase {
         for (int i = 0; i < threads.length; i++) {
             threads[i] = new Thread(new LmtpClientThread(USER_NAME, content));
         }
-        for (int i = 0; i < threads.length; i++) {
-            threads[i].start();
+        for (Thread thread : threads) {
+            thread.start();
         }
-        for (int i = 0; i < threads.length; i++) {
-            threads[i].join();
+        for (Thread thread : threads) {
+            thread.join();
         }
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         List<ZMessage> messages = TestUtil.search(mbox, "in:inbox subject:\"" + subject + "\"");
@@ -499,11 +498,12 @@ extends TestCase {
         String[] recipients = new String[] { USER_NAME };
         
         // Deliver initial message.
-        TestUtil.addMessageLmtp(subject, USER_NAME, USER_NAME);
+        String content = new MessageBuilder().withSubject(subject).withToRecipient(USER_NAME).withFrom(USER_NAME).
+                withMessageIdHeader().create();
+        TestUtil.addMessageLmtp(recipients, USER_NAME, content);
+
         String query = "in:inbox subject:\"" + subject + "\"";
-        ZMessage msg = TestUtil.getMessage(mbox, query);
-        String content = TestUtil.getContent(mbox, msg.getId());
-        
+
         // Redeliver with deduping enabled.
         account.setPrefMessageIdDedupingEnabled(true);
         TestUtil.addMessageLmtp(recipients, USER_NAME, content);
