@@ -76,10 +76,10 @@ public class FilterListener extends MailboxListener {
                 if (entry.getValue() == MailItem.Type.FOLDER) {
                     Folder oldFolder = (Folder) notification.mods.preModifyItems.get(entry.getKey().getItemId());
                     if (oldFolder == null) {
-                        ZimbraLog.filter.warn("Cannot determine the old folder name for %s.", entry.getKey());
+                        ZimbraLog.filter.info("Cannot determine the old folder name for %s.", entry.getKey());
                         continue;
                     }
-                    updateFilterRules(notification.mailboxAccount, oldFolder, oldFolder.getPath());
+                    updateFilterRules(notification.mailboxAccount, (Folder) null, oldFolder.getPath());
                 } else if (entry.getValue() == MailItem.Type.TAG) {
                     Tag oldTag = (Tag) notification.mods.preModifyItems.get(entry.getKey().getItemId());
                     updateFilterRules(notification.mailboxAccount, oldTag);
