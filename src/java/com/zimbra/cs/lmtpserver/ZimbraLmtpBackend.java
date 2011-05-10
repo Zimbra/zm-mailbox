@@ -179,7 +179,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 
     private boolean dedupe(ParsedMessage pm, Mailbox mbox)
     throws ServiceException {
-        if (pm == null || mbox == null || mbox.getAccount().isPrefMessageIdDedupingEnabled())
+        if (pm == null || mbox == null || !mbox.getAccount().isPrefMessageIdDedupingEnabled())
             return false;
 
         checkDedupeCacheSize();
