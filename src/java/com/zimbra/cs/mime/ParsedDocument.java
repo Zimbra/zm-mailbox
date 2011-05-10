@@ -90,7 +90,6 @@ public final class ParsedDocument {
      */
     private synchronized void performExtraction() {
         try {
-            Thread.dumpStack();
             MimeHandler handler = MimeHandlerManager.getMimeHandler(mContentType, mFilename);
             assert(handler != null);
 
