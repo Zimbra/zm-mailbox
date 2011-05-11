@@ -50,6 +50,8 @@ import com.zimbra.cs.account.AccountCache;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.DomainCache.GetFromDomainCacheOption;
+import com.zimbra.cs.account.Provisioning.GalMode;
+import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
@@ -92,6 +94,7 @@ import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.gal.GalParams;
 import com.zimbra.cs.account.gal.GalUtil;
 import com.zimbra.cs.account.krb5.Krb5Principal;
+import com.zimbra.cs.account.ldap.Check;
 import com.zimbra.cs.account.ldap.LdapGalMapRules;
 import com.zimbra.cs.account.ldap.Validators;
 import com.zimbra.cs.account.names.NameUtil;
@@ -107,6 +110,7 @@ import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
 import com.zimbra.cs.ldap.LdapConstants;
+import com.zimbra.cs.ldap.LdapTODO;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
@@ -1342,7 +1346,8 @@ public class LdapProvisioning extends LdapProv {
             new SearchObjectsVisitor(this, visitor, maxResults, flags);
         
         SearchLdapOptions searchObjectsOptions = new SearchLdapOptions(base, query, 
-                returnAttrs, maxResults, null, searchObjectsVisitor) ;
+                returnAttrs, maxResults, null, ZSearchScope.SEARCH_SCOPE_SUBTREE, 
+                searchObjectsVisitor) ;
                 
         ZLdapContext zlc = null;
         try {
@@ -1491,7 +1496,6 @@ public class LdapProvisioning extends LdapProv {
         return false;
     }
 
-    @TODOEXCEPTIONMAPPING
     private void addAliasInternal(NamedEntry entry, String alias) throws ServiceException {
 
         String targetDomainName = null;
@@ -1584,12 +1588,6 @@ public class LdapProvisioning extends LdapProv {
             modifyAttrsInternal(entry, zlc, attrs);
         } catch (LdapEntryAlreadyExistException nabe) {
             throw AccountServiceException.ACCOUNT_EXISTS(alias, aliasDn, nabe);
-        /*    
-        } catch (InvalidNameException e) {
-            throw ServiceException.INVALID_REQUEST("invalid alias name: "+e.getMessage(), e);
-        } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to create alias: "+e.getMessage(), e);
-        */
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to create alias: "+e.getMessage(), e);
         } finally {
@@ -3551,6 +3549,93 @@ public class LdapProvisioning extends LdapProv {
             }
         }
 
+    }
+    
+    @Override
+    @TODO
+    public Provisioning.Result checkAuthConfig(Map attrs, String name, String password) throws ServiceException {
+        LdapTODO.TODO();
+        return null;
+        
+        /*
+        String mech = Check.getRequiredAttr(attrs, Provisioning.A_zimbraAuthMech);
+        if (!(mech.equals(Provisioning.AM_LDAP) || mech.equals(Provisioning.AM_AD)))
+            throw ServiceException.INVALID_REQUEST("auth mech must be: "+Provisioning.AM_LDAP+" or "+Provisioning.AM_AD, null);
+
+        String url[] = Check.getRequiredMultiAttr(attrs, Provisioning.A_zimbraAuthLdapURL);
+        
+        // TODO, need admin UI work for zimbraAuthLdapStartTlsEnabled
+        String startTLSEnabled = (String) attrs.get(Provisioning.A_zimbraAuthLdapStartTlsEnabled);
+        boolean startTLS = startTLSEnabled == null ? false : Provisioning.TRUE.equals(startTLSEnabled);
+        boolean requireStartTLS = LegacyZimbraLdapContext.requireStartTLS(url,  startTLS);
+        
+        try {
+            String searchFilter = (String) attrs.get(Provisioning.A_zimbraAuthLdapSearchFilter);
+            if (searchFilter != null) {
+                String searchPassword = (String) attrs.get(Provisioning.A_zimbraAuthLdapSearchBindPassword);
+                String searchDn = (String) attrs.get(Provisioning.A_zimbraAuthLdapSearchBindDn);
+                String searchBase = (String) attrs.get(Provisioning.A_zimbraAuthLdapSearchBase);
+                if (searchBase == null) searchBase = "";
+                searchFilter = LdapUtilCommon.computeAuthDn(name, searchFilter);
+                if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with search filter of "+searchFilter);
+                LegacyLdapUtil.ldapAuthenticate(url, requireStartTLS, password, searchBase, searchFilter, searchDn, searchPassword);
+                return new Provisioning.Result(Check.STATUS_OK, "", searchFilter);                
+            }
+        
+            String bindDn = (String) attrs.get(Provisioning.A_zimbraAuthLdapBindDn);
+            if (bindDn != null) {
+                String dn = LdapUtilCommon.computeAuthDn(name, bindDn);
+                if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with bind dn template of "+dn);
+                LegacyLdapUtil.ldapAuthenticate(url, requireStartTLS, dn, password);
+                return new Provisioning.Result(Check.STATUS_OK, "", dn);
+            }
+            
+            throw ServiceException.INVALID_REQUEST("must specify "+Provisioning.A_zimbraAuthLdapSearchFilter + " or " + 
+                    Provisioning.A_zimbraAuthLdapBindDn, null);
+        } catch (NamingException e) {
+            return toResult(e, "");
+        } catch (IOException e) {
+            return Check.toResult(e, "");
+        } 
+        
+        */
+    }
+
+    @Override
+    @TODO
+    public Provisioning.Result checkGalConfig(Map attrs, String query, int limit, GalOp galOp) 
+    throws ServiceException {
+        LdapTODO.TODO();
+        return null;
+        
+        /*
+        GalMode mode = GalMode.fromString(Check.getRequiredAttr(attrs, Provisioning.A_zimbraGalMode));
+        if (mode != GalMode.ldap)
+            throw ServiceException.INVALID_REQUEST("gal mode must be: "+GalMode.ldap.toString(), null);
+
+        GalParams.ExternalGalParams galParams = new GalParams.ExternalGalParams(attrs, galOp);
+
+        LdapGalMapRules rules = new LdapGalMapRules(Provisioning.getInstance().getConfig(), false);
+
+        try {
+            SearchGalResult result = null;
+            if (galOp == GalOp.autocomplete)
+                result = LegacyLdapUtil.searchLdapGal(galParams, GalOp.autocomplete, query, limit, rules, null, null); 
+            else if (galOp == GalOp.search)
+                result = LegacyLdapUtil.searchLdapGal(galParams, GalOp.search, query, limit, rules, null, null); 
+            else if (galOp == GalOp.sync)
+                result = LegacyLdapUtil.searchLdapGal(galParams, GalOp.sync, query, limit, rules, "", null); 
+            else 
+                throw ServiceException.INVALID_REQUEST("invalid GAL op: "+galOp.toString(), null);
+            
+            return new Provisioning.GalResult(Check.STATUS_OK, "", result.getMatches());
+        } catch (NamingException e) {
+            return toResult(e, "");
+        } catch (IOException e) {
+            return Check.toResult(e, "");
+        }
+        
+        */
     }
 
     @Override

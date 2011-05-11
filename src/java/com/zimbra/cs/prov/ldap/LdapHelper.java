@@ -43,6 +43,13 @@ public abstract class LdapHelper {
         return ldapProv;
     }
     
+    /**
+     * === IMPORTANT:  caller is responsible to get and close the ILdapContext. ===
+     * 
+     * @param ldapContext
+     * @param searchOptions
+     * @throws ServiceException
+     */
     public abstract void searchLdap(ILdapContext ldapContext, SearchLdapOptions searchOptions) 
     throws ServiceException;
     
