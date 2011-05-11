@@ -355,11 +355,13 @@ public class FileUploadServlet extends ZimbraServlet {
     public static void deleteUpload(Upload upload) {
         if (upload == null)
             return;
-        Upload up = null;
+        Upload up;
         synchronized (mPending) {
             mLog.debug("deleteUpload(): removing %s", upload);
             up = mPending.remove(upload.uuid);
-            up.markDeleted();
+            if (up != null) {
+                up.markDeleted();
+            }
         }
         if (up == upload) {
             up.purge();
