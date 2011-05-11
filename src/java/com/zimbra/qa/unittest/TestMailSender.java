@@ -229,11 +229,18 @@ extends TestCase {
     
     public void tearDown()
     throws Exception {
+        cleanUp();
         TestUtil.setServerAttr(Provisioning.A_zimbraSmtpPort, mOriginalSmtpPort);
         TestUtil.setServerAttr(Provisioning.A_zimbraSmtpSendPartial, mOriginalSmtpSendPartial);
         TestUtil.setAccountAttr(SENDER_NAME, Provisioning.A_zimbraAllowAnyFromAddress, mOriginalAllowAnyFrom);
     }
     
+    private void cleanUp()
+    throws Exception {
+        TestUtil.deleteTestData(SENDER_NAME, NAME_PREFIX);
+        TestUtil.deleteTestData(RECIPIENT_NAME, NAME_PREFIX);
+    }
+
     public static void main(String[] args)
     throws Exception {
         // Simply starts the test SMTP server for ad-hoc testing.  Doesn't
