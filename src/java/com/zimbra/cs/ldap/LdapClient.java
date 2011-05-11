@@ -19,6 +19,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
+import com.zimbra.cs.ldap.LdapConfig.ExternalLdapConfig;
 import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.ZSearchScope.ZSearchScopeFactory;
 import com.zimbra.cs.ldap.jndi.JNDILdapClient;
@@ -119,12 +120,19 @@ public abstract class LdapClient {
         return getInstance().getContextImpl();
     }
     
-    public static ZLdapContext getContext(LdapServerType serverType) throws ServiceException {
+    public static ZLdapContext getContext(LdapServerType serverType) 
+    throws ServiceException {
         return getInstance().getContextImpl(serverType);
     }
     
-    public static ZLdapContext getContext(LdapServerType serverType, boolean useConnPool) throws ServiceException {
+    public static ZLdapContext getContext(LdapServerType serverType, boolean useConnPool) 
+    throws ServiceException {
         return getInstance().getContextImpl(serverType, useConnPool);
+    }
+    
+    public static ZLdapContext getExternalContext(ExternalLdapConfig ldapConfig) 
+    throws ServiceException {
+        return getInstance().getExternalContextImpl(ldapConfig);
     }
     
     public static void closeContext(ZLdapContext lctxt) {
@@ -137,7 +145,12 @@ public abstract class LdapClient {
         return getInstance().createMutableEntryImpl();
     }
     
-    ////////////////////////////////////////////////////////////////
+    
+    /*
+     * ========================================================
+     * abstract methods
+     * ========================================================
+     */
     protected void init() throws LdapException {
         ZSearchScope.init(getSearchScopeFactoryInstance());
         ZLdapFilterFactory.setInstance(getLdapFilterFactoryInstance());
@@ -153,25 +166,19 @@ public abstract class LdapClient {
         return getContext(LdapServerType.REPLICA);
     }
     
-    protected abstract ZLdapContext getContextImpl(LdapServerType serverType) throws ServiceException;
+    protected abstract ZLdapContext getContextImpl(LdapServerType serverType) 
+    throws ServiceException;
     
-    protected abstract ZLdapContext getContextImpl(LdapServerType serverType, boolean useConnPool) throws ServiceException;
+    protected abstract ZLdapContext getContextImpl(LdapServerType serverType, boolean useConnPool) 
+    throws ServiceException;
+    
+    protected abstract ZLdapContext getExternalContextImpl(ExternalLdapConfig ldapConfig) 
+    throws ServiceException;
     
     protected abstract ZMutableEntry createMutableEntryImpl();
     
-    protected abstract ZSearchControls createSearchControlsImpl(ZSearchScope searchScope, int sizeLimit, String[] returnAttrs);
-    
-    public static void main(String[] args) throws ServiceException {
-        CliUtil.toolSetup(); // to get logs printed to console
-        LC.zimbra_class_ldap_client.setDefault("com.zimbra.cs.ldap.LdapClient$UBIDLdapClient");
-        
-        /*
-        com.zimbra.cs.account.Provisioning prov = com.zimbra.cs.account.Provisioning.getInstance();
-        com.zimbra.cs.account.Provisioning prov = new com.zimbra.cs.account.ldap.UBIDLdapProvisioning();
-        ZimbraLdapContext zlc = LdapClient.toZimbraLdapContext((LdapProvisioning)prov, null);
-        */
-        
-        // ZLdapContext zlc = LdapClient.getContext(LdapServerType.MASTER);
-    }
+    protected abstract ZSearchControls createSearchControlsImpl(
+            ZSearchScope searchScope, int sizeLimit, String[] returnAttrs);
+
 
 }

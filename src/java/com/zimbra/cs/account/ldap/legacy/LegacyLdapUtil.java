@@ -90,51 +90,6 @@ public class LegacyLdapUtil {
         }
     }
     
-    public static void ldapAuthenticate(String urls[], boolean requireStartTLS, String principal, String password) 
-    throws NamingException, IOException {
-        if (password == null || password.equals("")) 
-            throw new AuthenticationException("empty password");
-        
-        LegacyZimbraLdapContext.ldapAuthenticate(urls, requireStartTLS, principal, password, "external LDAP auth");
-    }
-
-    public static void ldapAuthenticate(String url[], boolean requireStartTLS, String password, String searchBase, 
-            String searchFilter, String searchDn, String searchPassword) throws ServiceException, NamingException, IOException {
-        
-        if (password == null || password.equals("")) 
-            throw new AuthenticationException("empty password");
-
-        LegacyZimbraLdapContext zlc = null;
-        String resultDn = null;;
-        String tooMany = null;
-        NamingEnumeration ne = null;
-        try {
-            zlc = new LegacyZimbraLdapContext(url, requireStartTLS, searchDn, searchPassword, "external LDAP auth");
-            ne = zlc.searchDir(searchBase, searchFilter, sSubtreeSC);
-            while (ne.hasMore()) {
-                SearchResult sr = (SearchResult) ne.next();
-                if (resultDn == null) {
-                    resultDn = sr.getNameInNamespace();
-                } else {
-                    tooMany = sr.getNameInNamespace();
-                    break;
-                }
-            }
-        } finally {
-            LegacyZimbraLdapContext.closeContext(zlc);
-            closeEnumContext(ne);
-        }
-        
-        if (tooMany != null) {
-            ZimbraLog.account.warn(String.format("ldapAuthenticate searchFilter returned more then one result: (dn1=%s, dn2=%s, filter=%s)", resultDn, tooMany, searchFilter));
-            throw new AuthenticationException("too many results from search filter!");
-        } else if (resultDn == null) {
-            throw new AuthenticationException("empty search");
-        }
-        if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("search filter matched: "+resultDn);
-        ldapAuthenticate(url, requireStartTLS, resultDn, password); 
-    }
-    
     @SDKDONE
     public static String getAttrString(Attributes attrs, String name) throws NamingException {
         AttributeManager attrMgr = AttributeManager.getInst();

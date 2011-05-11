@@ -48,7 +48,7 @@ public class CheckExchangeAuth extends AdminDocumentHandler {
         sinfo.authPassword = auth.getAttribute(AdminConstants.A_PASS);
         String scheme = auth.getAttribute(AdminConstants.A_SCHEME);
         sinfo.scheme = AuthScheme.valueOf(scheme);
-        Check.Result r = Check.checkExchangeAuth(sinfo, authedAcct);
+        Provisioning.Result r = Check.checkExchangeAuth(sinfo, authedAcct);
 
 	    Element response = zsc.createElement(AdminConstants.CHECK_EXCHANGE_AUTH_RESPONSE);
         response.addElement(AdminConstants.E_CODE).addText(r.getCode());

@@ -34,6 +34,7 @@ import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZSearchControls;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
 import com.zimbra.cs.ldap.ZSearchResultEnumeration;
+import com.zimbra.cs.ldap.jndi.JNDISearchScope;
 
 /**
  * An LdapHelper tied to ZimbraLdapContext and the legacy ldapUtil methods.
@@ -56,7 +57,7 @@ public class LegacyLdapHelper extends LdapHelper {
                 searchOptions.getQuery(),
                 searchOptions.getReturnAttrs(), 
                 searchOptions.getBinaryAttrs(), 
-                SearchControls.SUBTREE_SCOPE,
+                ((JNDISearchScope) searchOptions.getSearchScope()).getNative(),
                 searchOptions.getVisitor());
     }
     

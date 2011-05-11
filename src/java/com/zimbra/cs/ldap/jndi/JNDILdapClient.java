@@ -14,10 +14,14 @@
  */
 package com.zimbra.cs.ldap.jndi;
 
+import java.util.Set;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.ldap.LdapClient;
+import com.zimbra.cs.ldap.LdapConfig.ExternalLdapConfig;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapServerType;
+import com.zimbra.cs.ldap.LdapTODO;
 import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.ZMutableEntry;
@@ -57,6 +61,12 @@ public class JNDILdapClient extends LdapClient {
     }
 
     @Override
+    protected ZLdapContext getExternalContextImpl(ExternalLdapConfig config)
+            throws ServiceException {
+        return new JNDILdapContext(config);
+    }
+    
+    @Override
     protected ZMutableEntry createMutableEntryImpl() {
         return new JNDIMutableEntry();
     }
@@ -65,5 +75,6 @@ public class JNDILdapClient extends LdapClient {
     protected ZSearchControls createSearchControlsImpl(ZSearchScope searchScope, int sizeLimit, String[] returnAttrs) {
         return new JNDISearchControls(searchScope, sizeLimit, returnAttrs);
     }
+
 
 }

@@ -357,16 +357,6 @@ public class LegacyZimbraLdapContext implements ILdapContext {
         return env;
     }
     
-    private static String joinURLS(String urls[]) {
-        if (urls.length == 1) return urls[0];
-        StringBuffer url = new StringBuffer();
-        for (int i=0; i < urls.length; i++) {
-            if (i > 0) url.append(' ');
-            url.append(urls[i]);
-        }
-        return url.toString();
-    }
-    
     private static class DummyHostVerifier implements HostnameVerifier {
         public boolean verify(String hostname, SSLSession session) {
             // System.out.println("Checking: " + hostname + " in");
@@ -482,7 +472,7 @@ public class LegacyZimbraLdapContext implements ILdapContext {
     public LegacyZimbraLdapContext(String urls[], boolean requireStartTLS, String authMech, 
             String bindDn, String bindPassword, Set<String> binaryAttrs, String note)  
     throws ServiceException, NamingException, IOException {
-        this(joinURLS(urls), requireStartTLS, authMech, bindDn, bindPassword, binaryAttrs, note); 
+        this(LdapUtilCommon.joinURLS(urls), requireStartTLS, authMech, bindDn, bindPassword, binaryAttrs, note); 
     }
     
     /*
@@ -598,7 +588,7 @@ public class LegacyZimbraLdapContext implements ILdapContext {
         Hashtable<String, String> env = new Hashtable<String, String>();
         
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-        env.put(Context.PROVIDER_URL, LegacyZimbraLdapContext.joinURLS(urls));
+        env.put(Context.PROVIDER_URL, LdapUtilCommon.joinURLS(urls));
         env.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());
         env.put("com.sun.jndi.ldap.read.timeout", LC.ldap_read_timeout.value());
         

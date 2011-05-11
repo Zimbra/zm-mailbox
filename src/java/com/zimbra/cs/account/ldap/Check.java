@@ -20,7 +20,6 @@ import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.naming.AuthenticationException;
@@ -32,7 +31,6 @@ import javax.naming.directory.InvalidSearchFilterException;
 import javax.net.ssl.SSLHandshakeException;
 
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.GalMode;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
@@ -44,7 +42,6 @@ import com.zimbra.cs.fb.ExchangeEWSFreeBusyProvider;
 import com.zimbra.cs.fb.ExchangeFreeBusyProvider;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ExceptionToString;
 import com.zimbra.common.util.ZimbraLog;
 
 public class Check {
@@ -82,53 +79,14 @@ public class Check {
     public static final String STATUS_BAD_URL = "check.BAD_URL";
     public static final String STATUS_FORBIDDEN = "check.FORBIDDEN";
     
-    public static class Result {
-        String code;
-        String message;
-        String detail;
-
-        public String getCode() { return code; }
-        public String getMessage() { return message; }
-        public String getComputedDn() {return detail; }
-        public Object getDetail() { return  detail; }        
-
-        public Result(String status, String message, String detail) {
-            this.code = status;
-            this.message = message;
-            this.detail = detail;
-        }
-
-        public Result(String status, Exception e, String detail) {
-            this.code = status;
-            this.message = ExceptionToString.ToString(e);
-            this.detail = detail;
-        }
-
-        public String toString() {
-            return "Result { code: "+code+" detail: "+detail+" message: "+message+" }";
-        }
-    }
-    
-    public static class GalResult extends Result {
-        private List<GalContact> mResult;
-        public GalResult(String status, String message, List<GalContact> result) {
-            super(status, message, null);
-            mResult = result;
-        }
-        
-        public List<GalContact> getContacts() { 
-            return mResult; 
-        }
-    }
-
-    private static String getRequiredAttr(Map attrs, String name) throws ServiceException {
+    public static String getRequiredAttr(Map attrs, String name) throws ServiceException {
         String value = (String) attrs.get(name);
         if (value == null)
             throw ServiceException.INVALID_REQUEST("must specifiy: "+name, null);
         return value;
     }
 
-    private static String[] getRequiredMultiAttr(Map attrs, String name) throws ServiceException {
+    public static String[] getRequiredMultiAttr(Map attrs, String name) throws ServiceException {
         Object v = attrs.get(name);
         if (v instanceof String) return new String[] {(String)v};
         else if (v instanceof String[]) {
@@ -139,191 +97,68 @@ public class Check {
         throw ServiceException.INVALID_REQUEST("must specifiy: "+name, null);
     }
 
-    public static Result checkHostnameResolve(String hostname) {
+    public static Provisioning.Result checkHostnameResolve(String hostname) {
         try {
             InetAddress.getByName(hostname);
         } catch (UnknownHostException e) {
-            return new Result(STATUS_UNKNOWN_HOST, e, (String)null);
+            return new Provisioning.Result(STATUS_UNKNOWN_HOST, e, (String)null);
         }
-        return new Result(STATUS_OK, "", (String) null);
+        return new Provisioning.Result(STATUS_OK, "", (String) null);
     }
 
-    public static Result checkAuthConfig(Map attrs, String name, String password) throws ServiceException {
-        String mech = getRequiredAttr(attrs, Provisioning.A_zimbraAuthMech);
-        if (!(mech.equals(Provisioning.AM_LDAP) || mech.equals(Provisioning.AM_AD)))
-            throw ServiceException.INVALID_REQUEST("auth mech must be: "+Provisioning.AM_LDAP+" or "+Provisioning.AM_AD, null);
-
-        String url[] = getRequiredMultiAttr(attrs, Provisioning.A_zimbraAuthLdapURL);
-        
-        // TODO, need admin UI work for zimbraAuthLdapStartTlsEnabled
-        String startTLSEnabled = (String) attrs.get(Provisioning.A_zimbraAuthLdapStartTlsEnabled);
-        boolean startTLS = startTLSEnabled == null ? false : Provisioning.TRUE.equals(startTLSEnabled);
-        boolean requireStartTLS = LegacyZimbraLdapContext.requireStartTLS(url,  startTLS);
-        
-        try {
-            String searchFilter = (String) attrs.get(Provisioning.A_zimbraAuthLdapSearchFilter);
-            if (searchFilter != null) {
-                String searchPassword = (String) attrs.get(Provisioning.A_zimbraAuthLdapSearchBindPassword);
-                String searchDn = (String) attrs.get(Provisioning.A_zimbraAuthLdapSearchBindDn);
-                String searchBase = (String) attrs.get(Provisioning.A_zimbraAuthLdapSearchBase);
-                if (searchBase == null) searchBase = "";
-                searchFilter = LdapUtilCommon.computeAuthDn(name, searchFilter);
-                if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with search filter of "+searchFilter);
-                LegacyLdapUtil.ldapAuthenticate(url, requireStartTLS, password, searchBase, searchFilter, searchDn, searchPassword);
-                return new Result(STATUS_OK, "", searchFilter);                
-            }
-        
-            String bindDn = (String) attrs.get(Provisioning.A_zimbraAuthLdapBindDn);
-            if (bindDn != null) {
-                String dn = LdapUtilCommon.computeAuthDn(name, bindDn);
-                if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with bind dn template of "+dn);
-                LegacyLdapUtil.ldapAuthenticate(url, requireStartTLS, dn, password);
-                return new Result(STATUS_OK, "", dn);
-            }
-            
-            throw ServiceException.INVALID_REQUEST("must specify "+Provisioning.A_zimbraAuthLdapSearchFilter+" or "+Provisioning.A_zimbraAuthLdapBindDn, null);
-        } catch (NamingException e) {
-            return toResult(e, "");
-        } catch (IOException e) {
-            return toResult(e, "");
-        } 
-    }
-
-    
-    public static Result checkGalConfig(Map attrs, String query, int limit, GalOp galOp) throws ServiceException {
-        GalMode mode = GalMode.fromString(getRequiredAttr(attrs, Provisioning.A_zimbraGalMode));
-        if (mode != GalMode.ldap)
-            throw ServiceException.INVALID_REQUEST("gal mode must be: "+GalMode.ldap.toString(), null);
-
-        GalParams.ExternalGalParams galParams = new GalParams.ExternalGalParams(attrs, galOp);
-
-        LdapGalMapRules rules = new LdapGalMapRules(Provisioning.getInstance().getConfig(), false);
-
-        try {
-            SearchGalResult result = null;
-            if (galOp == GalOp.autocomplete)
-                result = LegacyLdapUtil.searchLdapGal(galParams, GalOp.autocomplete, query, limit, rules, null, null); 
-            else if (galOp == GalOp.search)
-                result = LegacyLdapUtil.searchLdapGal(galParams, GalOp.search, query, limit, rules, null, null); 
-            else if (galOp == GalOp.sync)
-                result = LegacyLdapUtil.searchLdapGal(galParams, GalOp.sync, query, limit, rules, "", null); 
-            else 
-                throw ServiceException.INVALID_REQUEST("invalid GAL op: "+galOp.toString(), null);
-            
-            return new GalResult(STATUS_OK, "", result.getMatches());
-        } catch (NamingException e) {
-            return toResult(e, "");
-        } catch (IOException e) {
-            return toResult(e, "");
-        }
-    }
-
-    public static Result checkExchangeAuth(ExchangeFreeBusyProvider.ServerInfo sinfo, Account acct) throws ServiceException {
+    public static Provisioning.Result checkExchangeAuth(ExchangeFreeBusyProvider.ServerInfo sinfo, Account acct) throws ServiceException {
     	try {
         	int code = ExchangeFreeBusyProvider.checkAuth(sinfo, acct);
         	switch (code) {
         	case 400:
         	case 404:
-                return new Result(STATUS_BAD_URL, "", null);
+                return new Provisioning.Result(STATUS_BAD_URL, "", null);
         	case 401:
         	case 403:
-                return new Result(STATUS_AUTH_FAILED, "", null);
+                return new Provisioning.Result(STATUS_AUTH_FAILED, "", null);
         	}
     	} catch (IOException e) {
     	    return toResult(e, "");
         }
-    	return new Result(STATUS_OK, "", null);
+    	return new Provisioning.Result(STATUS_OK, "", null);
     }
     
-  public static Result checkExchangeEWSAuth(ExchangeFreeBusyProvider.ServerInfo sinfo, Account acct) throws ServiceException {
-	try {
-    	int code = ExchangeEWSFreeBusyProvider.checkAuth(sinfo, acct);
-    	switch (code) {
-    	case 400:
-    	case 404:
-            return new Result(STATUS_BAD_URL, "", null);
-    	case 401:
-    	case 403:
-            return new Result(STATUS_AUTH_FAILED, "", null);
-    	}
-	} catch (IOException e) {
-	    return toResult(e, "");
-    }
-	return new Result(STATUS_OK, "", null);
-}    
+    public static Provisioning.Result checkExchangeEWSAuth(ExchangeFreeBusyProvider.ServerInfo sinfo, Account acct) throws ServiceException {
+    	try {
+        	int code = ExchangeEWSFreeBusyProvider.checkAuth(sinfo, acct);
+        	switch (code) {
+        	case 400:
+        	case 404:
+                return new Provisioning.Result(STATUS_BAD_URL, "", null);
+        	case 401:
+        	case 403:
+                return new Provisioning.Result(STATUS_AUTH_FAILED, "", null);
+        	}
+    	} catch (IOException e) {
+    	    return toResult(e, "");
+        }
+    	return new Provisioning.Result(STATUS_OK, "", null);
+    }    
     
-    private static Result toResult(IOException e, String dn) {
+    public static Provisioning.Result toResult(IOException e, String dn) {
         if (e instanceof UnknownHostException) {
-            return new Result(STATUS_UNKNOWN_HOST, e, dn);
+            return new Provisioning.Result(STATUS_UNKNOWN_HOST, e, dn);
         } else if (e instanceof ConnectException) {
-            return new Result(STATUS_CONNECTION_REFUSED, e, dn);
+            return new Provisioning.Result(STATUS_CONNECTION_REFUSED, e, dn);
         } else if (e instanceof SSLHandshakeException) {
-            return new Result(STATUS_SSL_HANDSHAKE_FAILURE, e, dn);
+            return new Provisioning.Result(STATUS_SSL_HANDSHAKE_FAILURE, e, dn);
         } else {
-            return new Result(STATUS_COMMUNICATION_FAILURE, e, dn);
-        }
-    }
-    
-    private static Result toResult(NamingException e, String dn) {
-        if (e instanceof CommunicationException) {
-            if (e.getRootCause() instanceof UnknownHostException) {
-                return new Result(STATUS_UNKNOWN_HOST, e, dn);
-            } else if (e.getRootCause() instanceof ConnectException) {
-                return new Result(STATUS_CONNECTION_REFUSED, e, dn);
-            } else if (e.getRootCause() instanceof SSLHandshakeException) {
-                return new Result(STATUS_SSL_HANDSHAKE_FAILURE, e, dn);
-            } else {
-                return new Result(STATUS_COMMUNICATION_FAILURE, e, dn);
-            }
-        } else if (e instanceof AuthenticationException) {
-            return new Result(STATUS_AUTH_FAILED, e, dn);
-        } else if (e instanceof AuthenticationNotSupportedException) {
-            return new Result(STATUS_AUTH_NOT_SUPPORTED, e, dn);
-        } else if (e instanceof NameNotFoundException) {
-            return new Result(STATUS_NAME_NOT_FOUND, e, dn);
-        } else if (e instanceof InvalidSearchFilterException) {
-            return new Result(STATUS_INVALID_SEARCH_FILTER, e, dn);            
-        }  else {
-            return new Result(STATUS_FAILURE, e, dn);
-        }
-    }
-    
-    private static void testCheckAuth() {
-        HashMap<String, String> attrs = new HashMap<String, String>();
-        attrs.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_LDAP);
-        attrs.put(Provisioning.A_zimbraAuthLdapURL, "ldap://exch1.example.zimbra.com/");
-        attrs.put(Provisioning.A_zimbraAuthLdapBindDn, "%u@example.zimbra.com");
-        try {
-            Result r = checkAuthConfig(attrs, "schemers", "xxxxx");
-            System.out.println(r);
-        } catch (ServiceException e) {
-            e.printStackTrace();
+            return new Provisioning.Result(STATUS_COMMUNICATION_FAILURE, e, dn);
         }
     }
     
     private static void testCheckHostnameResolve() {
-        Result r = checkHostnameResolve("slapshot");
+        Provisioning.Result r = checkHostnameResolve("slapshot");
         System.out.println(r);
     }
-
-   private static void testCheckGal() {
-        HashMap<String, String> attrs = new HashMap<String, String>();
-        attrs.put(Provisioning.A_zimbraGalMode, GalMode.ldap.toString());
-        attrs.put(Provisioning.A_zimbraGalLdapURL, "ldap://exch1.example.zimbra.com/");
-        attrs.put(Provisioning.A_zimbraGalLdapBindDn, "zz_gal");
-        attrs.put(Provisioning.A_zimbraGalLdapBindPassword, "zz_gal");
-        attrs.put(Provisioning.A_zimbraGalLdapSearchBase, "dc=example,dc=zimbra,dc=com");        
-        attrs.put(Provisioning.A_zimbraGalLdapFilter, "ad");
-        try {
-            Result r = checkGalConfig(attrs, "sam", 10, GalOp.search);
-            System.out.println(r);
-        } catch (ServiceException e) {
-            e.printStackTrace();
-        }
-    }
    
-   public static void main(String args[]) {
-       testCheckHostnameResolve();
-       //testCheckGal();       
-   }
+    public static void main(String args[]) {
+        testCheckHostnameResolve();
+        //testCheckGal();       
+    }
 }

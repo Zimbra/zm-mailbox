@@ -27,6 +27,7 @@ import com.zimbra.cs.prov.ldap.LdapProv;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.ILdapContext;
 import com.zimbra.cs.ldap.SearchLdapOptions;
+import com.zimbra.cs.ldap.ZSearchScope;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
 
 public class ADGalGroupHandler extends GalGroupHandler {
@@ -87,7 +88,8 @@ public class ADGalGroupHandler extends GalGroupHandler {
             try {
                 LdapHelper ldapHelper = LdapProv.getInst().getHelper();
                 SearchLdapOptions searchOptions = new SearchLdapOptions(searchBase, query, 
-                        returnAttrs, SearchLdapOptions.SIZE_UNLIMITED, null, this);
+                        returnAttrs, SearchLdapOptions.SIZE_UNLIMITED, null, 
+                        ZSearchScope.SEARCH_SCOPE_SUBTREE, this);
                 ldapHelper.searchLdap(zlc, searchOptions);
             } catch (ServiceException e) {
                 // log and continue

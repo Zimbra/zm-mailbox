@@ -39,6 +39,7 @@ import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.SearchLdapOptions;
+import com.zimbra.cs.ldap.ZSearchScope;
 import com.zimbra.cs.prov.ldap.LdapHelper;
 import com.zimbra.cs.prov.ldap.LdapProv;
 
@@ -206,7 +207,8 @@ public class TestLdapProvDomain {
         
         SearchLdapOptions searchOpts = new SearchLdapOptions(LdapConstants.DN_ROOT_DSE, 
                 "(objectclass=zimbraDomain)", new String[]{Provisioning.A_zimbraId}, 
-                SearchLdapOptions.SIZE_UNLIMITED, null, visitor);
+                SearchLdapOptions.SIZE_UNLIMITED, null, ZSearchScope.SEARCH_SCOPE_SUBTREE, 
+                visitor);
         
         ZLdapContext zlc = null;
         try {

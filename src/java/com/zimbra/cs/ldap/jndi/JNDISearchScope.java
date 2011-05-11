@@ -26,7 +26,7 @@ public class JNDISearchScope extends ZSearchScope {
         this.searchScope = searchScope;
     }
     
-    int getNative() {
+    public int getNative() {
         return searchScope;
     }
     

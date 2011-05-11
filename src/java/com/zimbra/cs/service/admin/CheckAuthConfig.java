@@ -24,6 +24,7 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.ldap.Check;
@@ -42,7 +43,7 @@ public class CheckAuthConfig extends AdminDocumentHandler {
 	    Map attrs = AdminService.getAttrs(request, true);
         
         Element response = zsc.createElement(AdminConstants.CHECK_AUTH_CONFIG_RESPONSE);
-        Check.Result r = Check.checkAuthConfig(attrs, name, password);
+        Provisioning.Result r = Provisioning.getInstance().checkAuthConfig(attrs, name, password);
         
         response.addElement(AdminConstants.E_CODE).addText(r.getCode());
         String message = r.getMessage();

@@ -111,6 +111,7 @@ public class TestLdap {
         junit.run(TestLdapProvDistributionList.class);
         junit.run(TestLdapProvDomain.class);
         junit.run(TestLdapProvEntry.class);
+        junit.run(TestLdapProvExternalLdapAuth.class);
         junit.run(TestLdapProvGlobalConfig.class);
         junit.run(TestLdapProvGlobalGrant.class);
         junit.run(TestLdapProvIdentity.class);
@@ -298,12 +299,12 @@ public class TestLdap {
     }
     
     // so tests can be called directly, without running from TestLdap.
-    static void manualInit() throws Exception {
+    public static void manualInit() throws Exception {
         
         CliUtil.toolSetup();
-        TestConfig.useConfig(TestConfig.UBID);
+        // TestConfig.useConfig(TestConfig.UBID);
         // TestConfig.useConfig(TestConfig.JNDI);
-        // TestConfig.useConfig(TestConfig.LEGACY);
+        TestConfig.useConfig(TestConfig.LEGACY);
     }
     
     /*

@@ -23,6 +23,7 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.ldap.Check;
@@ -40,7 +41,7 @@ public class CheckHostnameResolve extends AdminDocumentHandler {
 
 	    String host = request.getAttribute(AdminConstants.E_HOSTNAME).toLowerCase();
 
-        Check.Result r = Check.checkHostnameResolve(host);
+        Provisioning.Result r = Check.checkHostnameResolve(host);
 
 	    Element response = zsc.createElement(AdminConstants.CHECK_HOSTNAME_RESOLVE_RESPONSE);
         response.addElement(AdminConstants.E_CODE).addText(r.getCode());

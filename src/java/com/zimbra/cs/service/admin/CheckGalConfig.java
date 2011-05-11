@@ -25,6 +25,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.GalContact;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.ldap.Check;
@@ -56,15 +57,16 @@ public class CheckGalConfig extends AdminDocumentHandler {
 	    Map attrs = AdminService.getAttrs(request, true);
 
         Element response = zsc.createElement(AdminConstants.CHECK_GAL_CONFIG_RESPONSE);
-        Check.Result r = Check.checkGalConfig(attrs, query, (int)limit, galOp);
+        Provisioning.Result r = Provisioning.getInstance().checkGalConfig(
+                attrs, query, (int)limit, galOp);
         
         response.addElement(AdminConstants.E_CODE).addText(r.getCode());
         String message = r.getMessage();
         if (message != null)
             response.addElement(AdminConstants.E_MESSAGE).addText(message);
 
-        if (r instanceof Check.GalResult) {
-            List<GalContact> contacts = ((Check.GalResult)r).getContacts();
+        if (r instanceof Provisioning.GalResult) {
+            List<GalContact> contacts = ((Provisioning.GalResult)r).getContacts();
             if (contacts != null) {
                 for (GalContact contact : contacts) {
                     ToXML.encodeGalContact(response, contact);

@@ -16,8 +16,11 @@ package com.zimbra.cs.ldap.unboundid;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.ldap.LdapClient;
+import com.zimbra.cs.ldap.LdapConfig.ExternalLdapConfig;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapServerType;
+import com.zimbra.cs.ldap.LdapTODO;
+import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.ZMutableEntry;
@@ -43,13 +46,15 @@ public class UBIDLdapClient extends LdapClient {
     }
     
     @Override
-    protected ZLdapFilterFactory getLdapFilterFactoryInstance() throws LdapException {
+    protected ZLdapFilterFactory getLdapFilterFactoryInstance() 
+    throws LdapException {
         UBIDLdapFilterFactory.initialize();
         return new UBIDLdapFilterFactory();
     }
     
     @Override
-    protected ZLdapContext getContextImpl(LdapServerType serverType) throws ServiceException {
+    protected ZLdapContext getContextImpl(LdapServerType serverType) 
+    throws ServiceException {
         return new UBIDLdapContext(serverType);
     }
     
@@ -57,9 +62,18 @@ public class UBIDLdapClient extends LdapClient {
      * useConnPool is always ignored
      */
     @Override
-    protected ZLdapContext getContextImpl(LdapServerType serverType, boolean useConnPool) throws ServiceException {
+    protected ZLdapContext getContextImpl(LdapServerType serverType, boolean useConnPool) 
+    throws ServiceException {
         return getContextImpl(serverType);
     }
+    
+
+    @Override
+    protected ZLdapContext getExternalContextImpl(ExternalLdapConfig config)
+    throws ServiceException {
+        return new UBIDLdapContext(config);
+    }
+    
 
     @Override
     protected ZMutableEntry createMutableEntryImpl() {
@@ -71,6 +85,7 @@ public class UBIDLdapClient extends LdapClient {
             ZSearchScope searchScope, int sizeLimit, String[] returnAttrs) {
         return new UBIDSearchControls(searchScope, sizeLimit, returnAttrs);
     }
+
 
 
 }

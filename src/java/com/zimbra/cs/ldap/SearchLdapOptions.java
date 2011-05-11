@@ -35,16 +35,18 @@ public class SearchLdapOptions {
     private int maxResults = SIZE_UNLIMITED;
     private Set<String> binaryAttrs;
     private int resultPageSize  = DEFAULT_RESULT_PAGE_SIZE; // hardcoded for now, add setter API when needed
+    private ZSearchScope searchScope;
     private SearchLdapOptions.SearchLdapVisitor visitor;
     
     public SearchLdapOptions(String searchbase, String query, 
             String[] returnAttrs, int maxResults, Set<String> binaryAttrs, 
-            SearchLdapOptions.SearchLdapVisitor visitor) {
+            ZSearchScope searchScope, SearchLdapOptions.SearchLdapVisitor visitor) {
         setSearchBase(searchbase);
         setQuery(query);
         setReturnAttrs(returnAttrs);
         setMaxResults(maxResults);
         setBinaryAttrs(binaryAttrs);
+        setSearchScope(searchScope);
         setVisitor(visitor);
     }
     
@@ -70,6 +72,10 @@ public class SearchLdapOptions {
     public int getResultPageSize() {
         return resultPageSize;
     }
+    
+    public ZSearchScope getSearchScope() {
+        return searchScope;
+    }
 
     public SearchLdapOptions.SearchLdapVisitor getVisitor() {
         return visitor;
@@ -93,6 +99,10 @@ public class SearchLdapOptions {
     
     public void setBinaryAttrs(Set<String> binaryAttrs) {
         this.binaryAttrs = binaryAttrs;
+    }
+    
+    public void setSearchScope(ZSearchScope searchScope) {
+        this.searchScope = searchScope;
     }
     
     public void setVisitor(SearchLdapOptions.SearchLdapVisitor visitor) {

@@ -16,6 +16,8 @@
 package com.zimbra.cs.account.ldap;
 
 import java.io.IOException;
+import java.net.ConnectException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -35,6 +37,7 @@ import java.util.regex.PatternSyntaxException;
 
 import javax.naming.AuthenticationException;
 import javax.naming.AuthenticationNotSupportedException;
+import javax.naming.CommunicationException;
 import javax.naming.ContextNotEmptyException;
 import javax.naming.InvalidNameException;
 import javax.naming.NameAlreadyBoundException;
@@ -53,6 +56,7 @@ import javax.naming.directory.InvalidSearchFilterException;
 import javax.naming.directory.SchemaViolationException;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
+import javax.net.ssl.SSLHandshakeException;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -71,6 +75,8 @@ import com.zimbra.cs.account.AccountCache;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.DomainCache.GetFromDomainCacheOption;
+import com.zimbra.cs.account.Provisioning.GalMode;
+import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
@@ -3673,6 +3679,149 @@ public class LdapProvisioning extends LdapProv {
         }
 
     }
+    
+    
+    private static Provisioning.Result toResult(NamingException e, String dn) {
+        if (e instanceof CommunicationException) {
+            if (e.getRootCause() instanceof UnknownHostException) {
+                return new Provisioning.Result(Check.STATUS_UNKNOWN_HOST, e, dn);
+            } else if (e.getRootCause() instanceof ConnectException) {
+                return new Provisioning.Result(Check.STATUS_CONNECTION_REFUSED, e, dn);
+            } else if (e.getRootCause() instanceof SSLHandshakeException) {
+                return new Provisioning.Result(Check.STATUS_SSL_HANDSHAKE_FAILURE, e, dn);
+            } else {
+                return new Provisioning.Result(Check.STATUS_COMMUNICATION_FAILURE, e, dn);
+            }
+        } else if (e instanceof AuthenticationException) {
+            return new Provisioning.Result(Check.STATUS_AUTH_FAILED, e, dn);
+        } else if (e instanceof AuthenticationNotSupportedException) {
+            return new Provisioning.Result(Check.STATUS_AUTH_NOT_SUPPORTED, e, dn);
+        } else if (e instanceof NameNotFoundException) {
+            return new Provisioning.Result(Check.STATUS_NAME_NOT_FOUND, e, dn);
+        } else if (e instanceof InvalidSearchFilterException) {
+            return new Provisioning.Result(Check.STATUS_INVALID_SEARCH_FILTER, e, dn);            
+        }  else {
+            return new Provisioning.Result(Check.STATUS_FAILURE, e, dn);
+        }
+    }
+    
+    private static void ldapAuthenticate(String urls[], boolean requireStartTLS, String principal, String password) 
+    throws NamingException, IOException {
+        if (password == null || password.equals("")) 
+            throw new AuthenticationException("empty password");
+        
+        LegacyZimbraLdapContext.ldapAuthenticate(urls, requireStartTLS, principal, password, "external LDAP auth");
+    }
+
+    private static void ldapAuthenticate(String url[], boolean requireStartTLS, String password, String searchBase, 
+            String searchFilter, String searchDn, String searchPassword) throws ServiceException, NamingException, IOException {
+        
+        if (password == null || password.equals("")) 
+            throw new AuthenticationException("empty password");
+
+        LegacyZimbraLdapContext zlc = null;
+        String resultDn = null;;
+        String tooMany = null;
+        NamingEnumeration ne = null;
+        try {
+            zlc = new LegacyZimbraLdapContext(url, requireStartTLS, searchDn, searchPassword, "external LDAP auth");
+            ne = zlc.searchDir(searchBase, searchFilter, sSubtreeSC);
+            while (ne.hasMore()) {
+                SearchResult sr = (SearchResult) ne.next();
+                if (resultDn == null) {
+                    resultDn = sr.getNameInNamespace();
+                } else {
+                    tooMany = sr.getNameInNamespace();
+                    break;
+                }
+            }
+        } finally {
+            LegacyZimbraLdapContext.closeContext(zlc);
+            LegacyLdapUtil.closeEnumContext(ne);
+        }
+        
+        if (tooMany != null) {
+            ZimbraLog.account.warn(String.format("ldapAuthenticate searchFilter returned more then one result: (dn1=%s, dn2=%s, filter=%s)", resultDn, tooMany, searchFilter));
+            throw new AuthenticationException("too many results from search filter!");
+        } else if (resultDn == null) {
+            throw new AuthenticationException("empty search");
+        }
+        if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("search filter matched: "+resultDn);
+        ldapAuthenticate(url, requireStartTLS, resultDn, password); 
+    }
+    
+    @Override
+    public Provisioning.Result checkAuthConfig(Map attrs, String name, String password) throws ServiceException {
+        String mech = Check.getRequiredAttr(attrs, Provisioning.A_zimbraAuthMech);
+        if (!(mech.equals(Provisioning.AM_LDAP) || mech.equals(Provisioning.AM_AD)))
+            throw ServiceException.INVALID_REQUEST("auth mech must be: "+Provisioning.AM_LDAP+" or "+Provisioning.AM_AD, null);
+
+        String url[] = Check.getRequiredMultiAttr(attrs, Provisioning.A_zimbraAuthLdapURL);
+        
+        // TODO, need admin UI work for zimbraAuthLdapStartTlsEnabled
+        String startTLSEnabled = (String) attrs.get(Provisioning.A_zimbraAuthLdapStartTlsEnabled);
+        boolean startTLS = startTLSEnabled == null ? false : Provisioning.TRUE.equals(startTLSEnabled);
+        boolean requireStartTLS = LegacyZimbraLdapContext.requireStartTLS(url,  startTLS);
+        
+        try {
+            String searchFilter = (String) attrs.get(Provisioning.A_zimbraAuthLdapSearchFilter);
+            if (searchFilter != null) {
+                String searchPassword = (String) attrs.get(Provisioning.A_zimbraAuthLdapSearchBindPassword);
+                String searchDn = (String) attrs.get(Provisioning.A_zimbraAuthLdapSearchBindDn);
+                String searchBase = (String) attrs.get(Provisioning.A_zimbraAuthLdapSearchBase);
+                if (searchBase == null) searchBase = "";
+                searchFilter = LdapUtilCommon.computeAuthDn(name, searchFilter);
+                if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with search filter of "+searchFilter);
+                ldapAuthenticate(url, requireStartTLS, password, searchBase, searchFilter, searchDn, searchPassword);
+                return new Provisioning.Result(Check.STATUS_OK, "", searchFilter);                
+            }
+        
+            String bindDn = (String) attrs.get(Provisioning.A_zimbraAuthLdapBindDn);
+            if (bindDn != null) {
+                String dn = LdapUtilCommon.computeAuthDn(name, bindDn);
+                if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with bind dn template of "+dn);
+                ldapAuthenticate(url, requireStartTLS, dn, password);
+                return new Provisioning.Result(Check.STATUS_OK, "", dn);
+            }
+            
+            throw ServiceException.INVALID_REQUEST("must specify "+Provisioning.A_zimbraAuthLdapSearchFilter + " or " + 
+                    Provisioning.A_zimbraAuthLdapBindDn, null);
+        } catch (NamingException e) {
+            return toResult(e, "");
+        } catch (IOException e) {
+            return Check.toResult(e, "");
+        } 
+    }
+
+    @Override
+    public Provisioning.Result checkGalConfig(Map attrs, String query, int limit, GalOp galOp) 
+    throws ServiceException {
+        GalMode mode = GalMode.fromString(Check.getRequiredAttr(attrs, Provisioning.A_zimbraGalMode));
+        if (mode != GalMode.ldap)
+            throw ServiceException.INVALID_REQUEST("gal mode must be: "+GalMode.ldap.toString(), null);
+
+        GalParams.ExternalGalParams galParams = new GalParams.ExternalGalParams(attrs, galOp);
+
+        LdapGalMapRules rules = new LdapGalMapRules(Provisioning.getInstance().getConfig(), false);
+
+        try {
+            SearchGalResult result = null;
+            if (galOp == GalOp.autocomplete)
+                result = LegacyLdapUtil.searchLdapGal(galParams, GalOp.autocomplete, query, limit, rules, null, null); 
+            else if (galOp == GalOp.search)
+                result = LegacyLdapUtil.searchLdapGal(galParams, GalOp.search, query, limit, rules, null, null); 
+            else if (galOp == GalOp.sync)
+                result = LegacyLdapUtil.searchLdapGal(galParams, GalOp.sync, query, limit, rules, "", null); 
+            else 
+                throw ServiceException.INVALID_REQUEST("invalid GAL op: "+galOp.toString(), null);
+            
+            return new Provisioning.GalResult(Check.STATUS_OK, "", result.getMatches());
+        } catch (NamingException e) {
+            return toResult(e, "");
+        } catch (IOException e) {
+            return Check.toResult(e, "");
+        }
+    }
 
     @Override
     public void externalLdapAuth(Domain d, String authMech, Account acct, String password, 
@@ -3693,7 +3842,7 @@ public class LdapProvisioning extends LdapProv {
 
             if (externalDn != null) {
                 if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with explicit dn of "+externalDn);
-                LegacyLdapUtil.ldapAuthenticate(url, requireStartTLS, externalDn, password);
+                ldapAuthenticate(url, requireStartTLS, externalDn, password);
                 return;
             }
 
@@ -3705,7 +3854,7 @@ public class LdapProvisioning extends LdapProv {
                 if (searchBase == null) searchBase = "";
                 searchFilter = LdapUtilCommon.computeAuthDn(acct.getName(), searchFilter);
                 if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with search filter of "+searchFilter);
-                LegacyLdapUtil.ldapAuthenticate(url, requireStartTLS, password, searchBase, searchFilter, searchDn, searchPassword);
+                ldapAuthenticate(url, requireStartTLS, password, searchBase, searchFilter, searchDn, searchPassword);
                 return;
             }
 
@@ -3713,7 +3862,7 @@ public class LdapProvisioning extends LdapProv {
             if (bindDn != null) {
                 String dn = LdapUtilCommon.computeAuthDn(acct.getName(), bindDn);
                 if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with bind dn template of "+dn);
-                LegacyLdapUtil.ldapAuthenticate(url, requireStartTLS, dn, password);
+                ldapAuthenticate(url, requireStartTLS, dn, password);
                 return;
             }
 

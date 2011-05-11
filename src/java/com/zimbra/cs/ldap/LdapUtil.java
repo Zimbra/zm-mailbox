@@ -62,7 +62,8 @@ public class LdapUtil {
             boolean useMaster, SearchLdapVisitor visitor) throws ServiceException {
         
         SearchLdapOptions searchOptions = new SearchLdapOptions(base, query, 
-                returnAttrs, SearchLdapOptions.SIZE_UNLIMITED, null, visitor);
+                returnAttrs, SearchLdapOptions.SIZE_UNLIMITED, null, 
+                ZSearchScope.SEARCH_SCOPE_SUBTREE, visitor);
         
         ZLdapContext zlc = null;
         try {

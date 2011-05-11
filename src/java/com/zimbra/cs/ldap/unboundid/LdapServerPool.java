@@ -42,22 +42,15 @@ import com.zimbra.cs.ldap.LdapException;
  */
 public class LdapServerPool {
     List<LDAPURL> urls;
-    LdapServerType serverType;  // do we need this?
     LdapConnType connType;
     LDAPConnectionOptions connOpts;
     
     ServerSet serverSet;
 
-    /**
-     * 
-     * @param serverType
-     * @param urls space separated urls
-     */
-    public LdapServerPool(String urls, LdapServerType serverType, 
-            LdapConnType connType, LdapConfig config) throws LdapException {
+    public LdapServerPool(LdapConfig config) throws LdapException {
         this.urls = new ArrayList<LDAPURL>();
         
-        String[] ldapUrls = urls.split(" ");
+        String[] ldapUrls = config.getLdapURL().split(" ");
         for (String ldapUrl : ldapUrls) {
             try {
                 LDAPURL url = new LDAPURL(ldapUrl);
@@ -65,25 +58,19 @@ public class LdapServerPool {
             } catch (LDAPException e) {
                 throw LdapException.INVALID_CONFIG(e);
             }
-            
         }
         
-        this.serverType = serverType;
-        this.connType = connType;
+        this.connType = config.getConnType();
         this.connOpts = LdapConnUtil.getConnectionOptions(config);
         
         SocketFactory socketFactory = 
-            LdapConnUtil.getSocketFactory(connType, config.sslAllowUntrustedCerts());
+            LdapConnUtil.getSocketFactory(this.connType, config.sslAllowUntrustedCerts());
         
         this.serverSet = createServerSet(socketFactory);
     }
     
     public List<LDAPURL> getUrls() {
         return urls;
-    }
-    
-    public boolean isMaster() {
-        return serverType.isMaster();
     }
     
     public LdapConnType getConnectionType() {

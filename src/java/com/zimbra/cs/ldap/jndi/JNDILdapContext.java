@@ -37,6 +37,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.ldap.LdapException;
+import com.zimbra.cs.ldap.LdapConfig.ExternalLdapConfig;
 import com.zimbra.cs.ldap.LdapException.LdapInvalidNameException;
 import com.zimbra.cs.ldap.LdapException.LdapEntryAlreadyExistException;
 import com.zimbra.cs.ldap.LdapException.LdapEntryNotFoundException;
@@ -67,8 +68,23 @@ public class JNDILdapContext extends ZLdapContext {
         zlc = new LegacyZimbraLdapContext(serverType.isMaster());
     }
     
-    public JNDILdapContext(LdapServerType serverType, boolean useConnPool) throws ServiceException {
+    public JNDILdapContext(LdapServerType serverType, boolean useConnPool) 
+    throws ServiceException {
         zlc = new LegacyZimbraLdapContext(serverType.isMaster(), useConnPool);
+    }
+    
+    @TODO  // need to somehow expose  NamingException and IOException for check external auth/gal config
+    public JNDILdapContext(ExternalLdapConfig config)
+    throws ServiceException {
+        try {
+            zlc = new LegacyZimbraLdapContext(config.getLdapURL(), config.getWantStartTLS(), 
+                    config.getAuthMech(), config.getAdminBindDN(), config.getAdminBindPassword(),
+                    config.getBinaryAttrs(), config.getNotes());
+        } catch (NamingException e) {
+            throw JNDILdapException.mapToLdapException(e);
+        } catch (IOException e) {
+            throw JNDILdapException.mapToLdapException(e);
+        }
     }
     
     @Override
@@ -182,15 +198,16 @@ public class JNDILdapContext extends ZLdapContext {
     
     @Override
     public void searchPaged(SearchLdapOptions searchOptions) throws ServiceException {
-        int maxResults = 0; // no limit
+        int maxResults = searchOptions.getMaxResults();
         String base = searchOptions.getSearchBase();
         String query = searchOptions.getQuery();
         Set<String> binaryAttrs = searchOptions.getBinaryAttrs();
+        int searchScope = ((JNDISearchScope) searchOptions.getSearchScope()).getNative();
         SearchLdapOptions.SearchLdapVisitor visitor = searchOptions.getVisitor();
         
         try {
             SearchControls searchControls =
-                new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, searchOptions.getReturnAttrs(), false, false);
+                new SearchControls(searchScope, maxResults, 0, searchOptions.getReturnAttrs(), false, false);
 
             //Set the page size and initialize the cookie that we pass back in subsequent pages
             int pageSize = searchOptions.getResultPageSize();
@@ -246,6 +263,12 @@ public class JNDILdapContext extends ZLdapContext {
         } catch (NamingException e) {
             throw JNDILdapException.mapToLdapException(e);
         }
+    }
+
+    @Override
+    public void ldapAuthenticate(String[] urls, boolean requireStartTLS,
+            String principal, String password, String note) {
+        LdapTODO.TODO();
     }
 
 }

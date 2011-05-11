@@ -18,11 +18,14 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ExceptionToString;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.auth.AuthContext;
+import com.zimbra.cs.account.gal.GalOp;
+import com.zimbra.cs.account.ldap.Check;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.mime.MimeTypeInfo;
@@ -2226,22 +2229,53 @@ public abstract class Provisioning extends ZAttrProvisioning {
         void refresh();
     }
 
-    public void register(ProvisioningValidator validator) {
-        synchronized (validators) {
-            validators.add(validator);
+    public static class Result {
+        String code;
+        String message;
+        String detail;
+    
+        public String getCode() { return code; }
+        public String getMessage() { return message; }
+        public String getComputedDn() {return detail; }
+        public Object getDetail() { return  detail; }        
+    
+        public Result(String status, String message, String detail) {
+            this.code = status;
+            this.message = message;
+            this.detail = detail;
+        }
+    
+        public Result(String status, Exception e, String detail) {
+            this.code = status;
+            this.message = ExceptionToString.ToString(e);
+            this.detail = detail;
+        }
+    
+        public String toString() {
+            return "Result { code: "+code+" detail: "+detail+" message: "+message+" }";
         }
     }
-
-    protected void validate(String action, Object... args) throws ServiceException {
-        for (ProvisioningValidator validator : validators) {
-            validator.validate(this, action, args);
-        }
+    
+    public Provisioning.Result checkAuthConfig(Map<String, Object> attrs, String name, String password) 
+    throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
     }
 
-    public void refreshValidators() {
-        for (ProvisioningValidator validator : validators) {
-            validator.refresh();
+    public static class GalResult extends Result {
+        private List<GalContact> mResult;
+        public GalResult(String status, String message, List<GalContact> result) {
+            super(status, message, null);
+            mResult = result;
         }
+        
+        public List<GalContact> getContacts() { 
+            return mResult; 
+        }
+    }
+    
+    public Provisioning.Result checkGalConfig(Map attrs, String query, int limit, GalOp galOp) 
+    throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
     }
     
     //
@@ -2274,5 +2308,30 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public void removeConfigSMIMEConfig(String configName) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
+    
+    
+    //
+    //
+    // Validators
+    //
+    //
+    public void register(ProvisioningValidator validator) {
+        synchronized (validators) {
+            validators.add(validator);
+        }
+    }
+
+    protected void validate(String action, Object... args) throws ServiceException {
+        for (ProvisioningValidator validator : validators) {
+            validator.validate(this, action, args);
+        }
+    }
+
+    public void refreshValidators() {
+        for (ProvisioningValidator validator : validators) {
+            validator.refresh();
+        }
+    }
+
 
 }

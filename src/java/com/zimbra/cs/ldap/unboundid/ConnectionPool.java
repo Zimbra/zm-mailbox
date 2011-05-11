@@ -38,6 +38,7 @@ import com.unboundid.util.ssl.SSLUtil;
 import com.unboundid.util.ssl.TrustAllTrustManager;
 
 import com.zimbra.cs.ldap.LdapConfig;
+import com.zimbra.cs.ldap.LdapConfig.ExternalLdapConfig;
 import com.zimbra.cs.ldap.LdapConnType;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapTODO;
@@ -57,20 +58,24 @@ public class ConnectionPool {
     
     
     static LDAPConnectionPool createConnectionPool(String connPoolName, 
-            LdapConfig config, LdapServerPool ldapHost) throws LdapException {
+            LdapConfig config) throws LdapException {
         
-        ServerSet serverSet = ldapHost.getServerSet();
+        LdapServerPool serverPool = new LdapServerPool(config);
+        
+        ServerSet serverSet = serverPool.getServerSet();
         BindRequest bindRequest = createBindRequest(config);
     
         PostConnectProcessor postConnectProcessor = null;
-        if (ldapHost.getConnectionType() == LdapConnType.STARTTLS) {
-            SSLContext startTLSContext = LdapSSLUtil.createSSLContext(config.sslAllowUntrustedCerts());
+        if (serverPool.getConnectionType() == LdapConnType.STARTTLS) {
+            SSLContext startTLSContext = 
+                LdapSSLUtil.createSSLContext(config.sslAllowUntrustedCerts());
             postConnectProcessor = new StartTLSPostConnectProcessor(startTLSContext);
         }
         
         LDAPConnectionPool connPool;
         try {
-            connPool = new LDAPConnectionPool(serverSet, bindRequest, config.getConnPoolInitSize(), 
+            connPool = new LDAPConnectionPool(serverSet, bindRequest, 
+                    config.getConnPoolInitSize(), 
                     config.getConnPoolMaxSize(), postConnectProcessor);
         } catch (LDAPException e) {
             throw UBIDLdapException.mapToLdapException(e);
@@ -100,6 +105,23 @@ public class ConnectionPool {
     
     public static synchronized LDAPConnectionPool getConnPoolByName(String connPoolName) {
         return connPools.get(connPoolName);
+    }
+    
+    private static synchronized LDAPConnectionPool getConnPool(
+            String connPoolName, ExternalLdapConfig config) 
+    throws LdapException{
+        LDAPConnectionPool pool = connPools.get(connPoolName);
+        if (pool == null) {
+            // the newly created pool will be automatically put into connPools
+            pool = ConnectionPool.createConnectionPool(connPoolName, config);
+        }
+        return pool;
+    }
+    
+    static LDAPConnectionPool getConnPoolByConfig(ExternalLdapConfig config) 
+    throws LdapException {
+        String connPoolName = config.getConnPoolKey();
+        return getConnPool(connPoolName, config);
     }
     
     @TODO  // handle SASL

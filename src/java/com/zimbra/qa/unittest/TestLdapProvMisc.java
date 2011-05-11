@@ -21,11 +21,14 @@ import java.util.Map;
 import org.junit.*;
 import static org.junit.Assert.*;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchOptions;
+import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.prov.ldap.LdapObjectClassHierarchy;
 import com.zimbra.cs.prov.ldap.LdapProv;
@@ -51,6 +54,18 @@ public class TestLdapProvMisc {
     
     private static String baseDomainName() {
         return TestLdapProvMisc.class.getName().toLowerCase();
+    }
+    
+    private Account createAccount(String localPart) throws Exception {
+        return createAccount(localPart, null);
+    }
+    
+    private Account createAccount(String localPart, Map<String, Object> attrs) throws Exception {
+        return TestLdapProvAccount.createAccount(prov, localPart, domain, attrs);
+    }
+    
+    private void deleteAccount(Account acct) throws Exception {
+        TestLdapProvAccount.deleteAccount(prov, acct);
     }
     
     @Test
@@ -102,7 +117,7 @@ public class TestLdapProvMisc {
             attrs.put(Provisioning.A_displayName, "acct-" + i);
             
             String ACCT_LOCALPART = TestLdap.makeAccountNameLocalPart("acct-" + i);
-            TestLdapProvAccount.createAccount(prov, ACCT_LOCALPART, domain, attrs);
+            createAccount(ACCT_LOCALPART, attrs);
         }
         
         String filter = "(uid=*)";
@@ -145,7 +160,6 @@ public class TestLdapProvMisc {
         }
         assertTrue(caughtException);
     }
-    
-    
+
     
 }
