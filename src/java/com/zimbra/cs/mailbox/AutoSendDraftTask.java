@@ -58,7 +58,7 @@ public class AutoSendDraftTask extends ScheduledTask<Object> {
         mailSender.setOriginalMessageId(StringUtil.isNullOrEmpty(msg.getDraftOrigId()) ? null : new ItemId(msg.getDraftOrigId(), mbox.getAccountId()));
         mailSender.setReplyType(StringUtil.isNullOrEmpty(msg.getDraftReplyType()) ? null : msg.getDraftReplyType());
         mailSender.setIdentity(StringUtil.isNullOrEmpty(msg.getDraftIdentityId()) ? null : mbox.getAccount().getIdentityById(msg.getDraftIdentityId()));
-        mailSender.sendMimeMessage(null, mbox, msg.getMimeMessage());
+        mailSender.sendMimeMessage(new OperationContext(mbox), mbox, msg.getMimeMessage());
         // now delete the draft
         mbox.delete(null, draftId, MailItem.Type.MESSAGE);
         return null;
