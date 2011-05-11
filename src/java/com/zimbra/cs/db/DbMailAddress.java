@@ -270,12 +270,17 @@ public final class DbMailAddress {
      * @return number of rows deleted
      */
     public static int purge(DbConnection conn, Mailbox mbox) throws ServiceException {
+        // In MySQL (single-table syntax), can't use "AS alias" after "DELETE FROM table".
+        SQL sql = new SQL(mbox).add("DELETE FROM ").mail_address().add(" WHERE ").addIf("mailbox_id = ? AND ")
+            .add("contact_count = ? AND NOT EXISTS (SELECT * FROM ").mail_item().add(" WHERE ");
+        if (SQL.isMailboxGrouped()) {
+            sql.add("mailbox_id = ").mail_address().add(".mailbox_id AND ");
+        }
+        sql.add("sender_id = ").mail_address().add(".id)");
+
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement(new SQL(mbox).add("DELETE FROM ").mail_address().add(" AS ma WHERE ")
-                    .addIf("mailbox_id = ? AND ").add("contact_count = ? AND NOT EXISTS (SELECT * FROM ")
-                    .mail_item().add(" WHERE ").addIf("mailbox_id = ma.mailbox_id AND ").add("sender_id = ma.id)")
-                    .build());
+            stmt = conn.prepareStatement(sql.build());
             int pos = SQL.setIf(stmt, 1, mbox.getId());
             stmt.setInt(pos, 0);
             return stmt.executeUpdate();
@@ -348,7 +353,7 @@ public final class DbMailAddress {
         }
 
         SQL addIf(String str) {
-            if (!DebugConfig.disableMailboxGroups) {
+            if (isMailboxGrouped()) {
                 out.append(str);
             }
             return this;
@@ -366,6 +371,10 @@ public final class DbMailAddress {
 
         String build() {
             return out.toString();
+        }
+
+        static boolean isMailboxGrouped() {
+            return !DebugConfig.disableMailboxGroups;
         }
 
         static int setIf(PreparedStatement stmt, int pos, int value) throws SQLException {
