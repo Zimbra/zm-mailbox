@@ -511,8 +511,11 @@ public final class SoapEngine {
                         requiresChangeHeader = false;
 
                     // put <refresh> blocks back for any newly-created SoapSession objects
-                    if (sinfo.created || soap.requiresRefresh(sinfo.sequence))
+                    if (sinfo.created || soap.requiresRefresh(sinfo.sequence)) {
+                        if (ZimbraLog.session.isDebugEnabled())
+                            ZimbraLog.session.debug("returning refresh block; reason=" + (sinfo.created ? "new session" : "sequence-based"));
                         soap.putRefresh(ctxt, zsc);
+                    }
                     // put <notify> blocks back for any SoapSession objects
                     soap.putNotifications(ctxt, zsc, sinfo.sequence);
                     // add any extension headers
