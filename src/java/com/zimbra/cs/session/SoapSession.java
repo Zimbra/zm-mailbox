@@ -523,7 +523,10 @@ public class SoapSession extends Session {
                 return;
         }
         synchronized (mSentChanges) {
-            mForceRefresh = mChanges.getSequence();
+            int force = mChanges.getSequence();
+            if (ZimbraLog.session.isDebugEnabled())
+                ZimbraLog.session.debug("removeDelegateSession: changing mForceRefresh: " + mForceRefresh + " -> " + force);
+            mForceRefresh = force;
         }
     }
 
@@ -579,8 +582,12 @@ public class SoapSession extends Session {
             refreshExpected = registerRemoteSessionId(server, sessionId);
 
         // remote refresh should cause overall refresh
-        if (!ignoreRefresh && !refreshExpected && context.getOptionalElement(ZimbraNamespace.E_REFRESH) != null)
-            mForceRefresh = getCurrentNotificationSequence();
+        if (!ignoreRefresh && !refreshExpected && context.getOptionalElement(ZimbraNamespace.E_REFRESH) != null) {
+            int force = getCurrentNotificationSequence();
+            if (ZimbraLog.session.isDebugEnabled())
+                ZimbraLog.session.debug("handleRemoteNotifications: changing mForceRefresh: " + mForceRefresh + " -> " + force);
+            mForceRefresh = force;
+        }
 
         Element eNotify = context.getOptionalElement(ZimbraNamespace.E_NOTIFY);
         if (eNotify != null) {
@@ -851,14 +858,20 @@ public class SoapSession extends Session {
             if (count > MAX_QUEUED_NOTIFICATIONS) {
                 // if we've overflowed, jettison the pending change set
                 mChanges.clearMailboxChanges();
-                mForceRefresh = currentSequence;
+                int force = currentSequence;
+                if (ZimbraLog.session.isDebugEnabled())
+                    ZimbraLog.session.debug("skipNotifications: changing mForceRefresh: " + mForceRefresh + " -> " + force);
+                mForceRefresh = force;
             }
 
             for (QueuedNotifications ntfn : mSentChanges) {
                 count += ntfn.getNotificationCount();
                 if (count > MAX_QUEUED_NOTIFICATIONS) {
                     ntfn.clearMailboxChanges();
-                    mForceRefresh = Math.max(mForceRefresh, ntfn.getSequence());
+                    int force = Math.max(mForceRefresh, ntfn.getSequence());
+                    if (ZimbraLog.session.isDebugEnabled())
+                        ZimbraLog.session.debug("skipNotifications: changing mForceRefresh: " + mForceRefresh + " -> " + force);
+                    mForceRefresh = force;
                 }
             }
         }
@@ -892,10 +905,16 @@ public class SoapSession extends Session {
 
     public boolean requiresRefresh(final int lastSequence) {
         synchronized (mSentChanges) {
+            boolean required = false;
+            int currentSeq = getCurrentNotificationSequence();
             if (lastSequence <= 0)
-                return mForceRefresh == getCurrentNotificationSequence();
+                required = mForceRefresh == currentSeq;
             else
-                return mForceRefresh > Math.min(lastSequence, getCurrentNotificationSequence());
+                required = mForceRefresh > Math.min(lastSequence, currentSeq);
+            if (required && ZimbraLog.session.isDebugEnabled())
+                ZimbraLog.session.debug("refresh required: mForceRefresh=" + mForceRefresh + ", lastSequence=" + lastSequence +
+                        ", currentSequence=" + currentSeq);
+            return required;
         }
     }
 
