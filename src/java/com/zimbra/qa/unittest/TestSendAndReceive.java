@@ -48,7 +48,6 @@ import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.AttachedMessagePart;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.MessagePart;
 import com.zimbra.cs.zclient.ZMessage;
 import com.zimbra.cs.zclient.ZMessage.ZMimePart;
-import com.zimbra.cs.zclient.ZSearchParams;
 
 public class TestSendAndReceive extends TestCase {
 
@@ -81,14 +80,10 @@ public class TestSendAndReceive extends TestCase {
         String senderAddr = TestUtil.getAddress(USER_NAME);
         addrs.add(new ZEmailAddress(senderAddr, null, null, ZEmailAddress.EMAIL_TYPE_FROM));
         String rcptAddr = TestUtil.getAddress(REMOTE_USER_NAME);
-        addrs.add(new ZEmailAddress(rcptAddr, null, NAME_PREFIX + " testAutoSendDraft", ZEmailAddress.EMAIL_TYPE_TO));
+        addrs.add(new ZEmailAddress(rcptAddr, null, null, ZEmailAddress.EMAIL_TYPE_TO));
         outgoingMsg.setAddresses(addrs);
         String subject = NAME_PREFIX + " autoSendDraft";
         outgoingMsg.setSubject(subject);
-
-        // before sending..
-        int numEmailedContacts =
-                TestUtil.search(mbox, "in:\"Emailed Contacts\" " + rcptAddr, ZSearchParams.TYPE_CONTACT).size();
 
         // auto-send after 0.5 sec
         mbox.saveDraft(outgoingMsg, null, Integer.toString(Mailbox.ID_FOLDER_DRAFTS), System.currentTimeMillis() + 500);
@@ -99,11 +94,6 @@ public class TestSendAndReceive extends TestCase {
         // make sure message is no longer in the Drafts folder
         assertTrue("message is still in the Drafts folder",
                    TestUtil.search(mbox, "in:Drafts " + subject).isEmpty());
-
-        // make sure recipient address has been added to Emailed Contacts
-        assertEquals("Recipient address has not been added to Emailed Contacts",
-                     TestUtil.search(mbox, "in:\"Emailed Contacts\" " + rcptAddr, ZSearchParams.TYPE_CONTACT).size(),
-                     numEmailedContacts + 1);
     }
 
     /**
@@ -350,8 +340,8 @@ public class TestSendAndReceive extends TestCase {
             threads[i] = new SenderThread(subject + " " + i, attachId);
             threads[i].start();
         }
-        for (int i = 0; i < threads.length; i++) {
-            threads[i].join();
+        for (SenderThread thread : threads) {
+            thread.join();
         }
 
         // Make sure only 1 succeeded.
