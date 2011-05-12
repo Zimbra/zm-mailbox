@@ -16,6 +16,8 @@
 package com.zimbra.cs.prov.ldap;
 
 import java.io.IOException;
+import java.net.ConnectException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -32,6 +34,8 @@ import java.util.Stack;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+
+import javax.net.ssl.SSLHandshakeException;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -100,17 +104,19 @@ import com.zimbra.cs.account.ldap.Validators;
 import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.ldap.LdapClient;
+import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.IAttributes.CheckBinary;
+import com.zimbra.cs.ldap.LdapClient;
+import com.zimbra.cs.ldap.LdapConfig.ExternalLdapConfig;
+import com.zimbra.cs.ldap.LdapConstants;
+import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapException.*;
 import com.zimbra.cs.ldap.LdapServerType;
+import com.zimbra.cs.ldap.LdapTODO;
 import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.LdapUtilCommon;
-import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
-import com.zimbra.cs.ldap.LdapConstants;
-import com.zimbra.cs.ldap.LdapTODO;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
@@ -3548,16 +3554,92 @@ public class LdapProvisioning extends LdapProv {
                 }
             }
         }
-
+    }
+    
+    private static Provisioning.Result toResult(ServiceException e, String dn) {
+        Throwable cause = e.getCause();
+        
+        if (cause instanceof IOException) {
+            return Check.toResult((IOException) cause, dn);
+        } else if (e instanceof LdapException) {  
+            LdapException ldapException = (LdapException) e;
+            Throwable detail = ldapException.getDetail();
+            if (detail instanceof IOException) {
+                return Check.toResult((IOException) detail, dn);
+            } else if (ldapException instanceof LdapEntryNotFoundException ||
+                       detail instanceof LdapEntryNotFoundException) {
+                return new Provisioning.Result(Check.STATUS_NAME_NOT_FOUND, e, dn);
+            } else if (ldapException instanceof LdapInvalidSearchFilterException ||
+                       detail instanceof LdapInvalidSearchFilterException) {
+                return new Provisioning.Result(Check.STATUS_INVALID_SEARCH_FILTER, e, dn);
+            }
+        }
+        
+        // return a generic error for all other causes
+        return new Provisioning.Result(Check.STATUS_AUTH_FAILED, e, dn);
+    }
+    
+    private void ldapAuthenticate(String urls[], boolean requireStartTLS, String principal, String password) 
+    throws ServiceException {
+        if (password == null || password.equals("")) {
+            throw AccountServiceException.AuthFailedServiceException.AUTH_FAILED("empty password");
+        }
+        
+        LdapClient.externalLdapAuthenticate(urls, requireStartTLS, principal, password, "external LDAP auth");
+    }
+    
+    /*
+     * search for the auth DN for the user, authneticate to the result DN
+     */
+    private void ldapAuthenticate(String url[], boolean wantStartTLS, String password, 
+            String searchBase, String searchFilter, String searchDn, String searchPassword) 
+    throws ServiceException {
+        
+        if (password == null || password.equals("")) {
+            throw AccountServiceException.AuthFailedServiceException.AUTH_FAILED("empty password");
+        }
+        
+        ExternalLdapConfig config = new ExternalLdapConfig(url, wantStartTLS, 
+                null, searchDn, searchPassword, null, "external LDAP auth");
+        
+        String resultDn = null;
+        String tooMany = null;
+        
+        ZLdapContext zlc = null;
+        try {
+            zlc = LdapClient.getExternalContext(config);
+            ZSearchResultEnumeration ne = zlc.searchDir(searchBase, 
+                    filterFactory.fromFilterString(searchFilter), 
+                    ZSearchControls.SEARCH_CTLS_SUBTREE());
+            
+            while (ne.hasMore()) {
+                ZSearchResultEntry sr = ne.next();
+                if (resultDn == null) {
+                    resultDn = sr.getDN();
+                } else {
+                    tooMany = sr.getDN();
+                    break;
+                }
+            }
+            ne.close();
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
+        
+        if (tooMany != null) {
+            ZimbraLog.account.warn(String.format(
+                    "ldapAuthenticate searchFilter returned more then one result: (dn1=%s, dn2=%s, filter=%s)", 
+                    resultDn, tooMany, searchFilter));
+            throw AccountServiceException.AuthFailedServiceException.AUTH_FAILED("too many results from search filter!");
+        } else if (resultDn == null) {
+            throw AccountServiceException.AuthFailedServiceException.AUTH_FAILED("empty search");
+        }
+        if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("search filter matched: "+resultDn);
+        ldapAuthenticate(url, wantStartTLS, resultDn, password); 
     }
     
     @Override
-    @TODO
     public Provisioning.Result checkAuthConfig(Map attrs, String name, String password) throws ServiceException {
-        LdapTODO.TODO();
-        return null;
-        
-        /*
         String mech = Check.getRequiredAttr(attrs, Provisioning.A_zimbraAuthMech);
         if (!(mech.equals(Provisioning.AM_LDAP) || mech.equals(Provisioning.AM_AD)))
             throw ServiceException.INVALID_REQUEST("auth mech must be: "+Provisioning.AM_LDAP+" or "+Provisioning.AM_AD, null);
@@ -3566,8 +3648,7 @@ public class LdapProvisioning extends LdapProv {
         
         // TODO, need admin UI work for zimbraAuthLdapStartTlsEnabled
         String startTLSEnabled = (String) attrs.get(Provisioning.A_zimbraAuthLdapStartTlsEnabled);
-        boolean startTLS = startTLSEnabled == null ? false : Provisioning.TRUE.equals(startTLSEnabled);
-        boolean requireStartTLS = LegacyZimbraLdapContext.requireStartTLS(url,  startTLS);
+        boolean requireStartTLS = startTLSEnabled == null ? false : Provisioning.TRUE.equals(startTLSEnabled);
         
         try {
             String searchFilter = (String) attrs.get(Provisioning.A_zimbraAuthLdapSearchFilter);
@@ -3578,7 +3659,7 @@ public class LdapProvisioning extends LdapProv {
                 if (searchBase == null) searchBase = "";
                 searchFilter = LdapUtilCommon.computeAuthDn(name, searchFilter);
                 if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with search filter of "+searchFilter);
-                LegacyLdapUtil.ldapAuthenticate(url, requireStartTLS, password, searchBase, searchFilter, searchDn, searchPassword);
+                ldapAuthenticate(url, requireStartTLS, password, searchBase, searchFilter, searchDn, searchPassword);
                 return new Provisioning.Result(Check.STATUS_OK, "", searchFilter);                
             }
         
@@ -3586,19 +3667,15 @@ public class LdapProvisioning extends LdapProv {
             if (bindDn != null) {
                 String dn = LdapUtilCommon.computeAuthDn(name, bindDn);
                 if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with bind dn template of "+dn);
-                LegacyLdapUtil.ldapAuthenticate(url, requireStartTLS, dn, password);
+                ldapAuthenticate(url, requireStartTLS, dn, password);
                 return new Provisioning.Result(Check.STATUS_OK, "", dn);
             }
             
             throw ServiceException.INVALID_REQUEST("must specify "+Provisioning.A_zimbraAuthLdapSearchFilter + " or " + 
                     Provisioning.A_zimbraAuthLdapBindDn, null);
-        } catch (NamingException e) {
+        } catch (ServiceException e) {
             return toResult(e, "");
-        } catch (IOException e) {
-            return Check.toResult(e, "");
-        } 
-        
-        */
+        }
     }
 
     @Override
@@ -3658,7 +3735,7 @@ public class LdapProvisioning extends LdapProv {
 
             if (externalDn != null) {
                 if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with explicit dn of "+externalDn);
-                LdapUtil.ldapAuthenticate(url, requireStartTLS, externalDn, password);
+                ldapAuthenticate(url, requireStartTLS, externalDn, password);
                 return;
             }
 
@@ -3670,7 +3747,7 @@ public class LdapProvisioning extends LdapProv {
                 if (searchBase == null) searchBase = "";
                 searchFilter = LdapUtilCommon.computeAuthDn(acct.getName(), searchFilter);
                 if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with search filter of "+searchFilter);
-                LdapUtil.ldapAuthenticate(url, requireStartTLS, password, searchBase, searchFilter, searchDn, searchPassword);
+                ldapAuthenticate(url, requireStartTLS, password, searchBase, searchFilter, searchDn, searchPassword);
                 return;
             }
 
@@ -3678,7 +3755,7 @@ public class LdapProvisioning extends LdapProv {
             if (bindDn != null) {
                 String dn = LdapUtilCommon.computeAuthDn(acct.getName(), bindDn);
                 if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with bind dn template of "+dn);
-                LdapUtil.ldapAuthenticate(url, requireStartTLS, dn, password);
+                ldapAuthenticate(url, requireStartTLS, dn, password);
                 return;
             }
         /* TODO exception mapping
