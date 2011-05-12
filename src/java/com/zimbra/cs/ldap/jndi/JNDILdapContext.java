@@ -265,10 +265,19 @@ public class JNDILdapContext extends ZLdapContext {
         }
     }
 
-    @Override
-    public void ldapAuthenticate(String[] urls, boolean requireStartTLS,
-            String principal, String password, String note) {
-        LdapTODO.TODO();
+    @TODO // map all exceptions to meaningful user understandable exceptions
+    static void externalLdapAuthenticate(String[] urls,
+            boolean wantStartTLS, String principal, String password, String note)
+            throws ServiceException {
+        try {
+            LegacyZimbraLdapContext.ldapAuthenticate(urls, wantStartTLS, 
+                        principal, password, note);
+        } catch (NamingException e) {
+            throw JNDILdapException.mapToLdapException(e); // TODO
+        } catch (IOException e) {
+            throw JNDILdapException.mapToLdapException(e); // TODO
+        }
     }
+
 
 }

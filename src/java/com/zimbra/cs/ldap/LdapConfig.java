@@ -181,6 +181,23 @@ public abstract class LdapConfig {
             this.connType = LdapConnType.getConnType(this.ldapURL, this.wantStartTLS);
         }
         
+        /**
+         * Instantiate an external LDAP config. 
+         * 
+         * @param urls          array of URLs
+         * @param wantStartTLS
+         * @param authMech
+         * @param bindDn
+         * @param bindPassword
+         * @param binaryAttrs
+         * @param note
+         */
+        public ExternalLdapConfig(String[] urls, boolean wantStartTLS, String authMech, 
+                String bindDn, String bindPassword, Set<String> binaryAttrs, String note) {
+            this (LdapUtilCommon.joinURLS(urls), wantStartTLS, authMech, 
+                    bindDn, bindPassword, binaryAttrs,  note);
+        }
+        
         public String getAuthMech() {
             return authMech;
         }

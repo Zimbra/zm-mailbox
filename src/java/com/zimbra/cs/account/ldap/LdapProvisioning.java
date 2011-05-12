@@ -3705,7 +3705,7 @@ public class LdapProvisioning extends LdapProv {
         }
     }
     
-    private static void ldapAuthenticate(String urls[], boolean requireStartTLS, String principal, String password) 
+    private void ldapAuthenticate(String urls[], boolean requireStartTLS, String principal, String password) 
     throws NamingException, IOException {
         if (password == null || password.equals("")) 
             throw new AuthenticationException("empty password");
@@ -3713,7 +3713,7 @@ public class LdapProvisioning extends LdapProv {
         LegacyZimbraLdapContext.ldapAuthenticate(urls, requireStartTLS, principal, password, "external LDAP auth");
     }
 
-    private static void ldapAuthenticate(String url[], boolean requireStartTLS, String password, String searchBase, 
+    private void ldapAuthenticate(String url[], boolean requireStartTLS, String password, String searchBase, 
             String searchFilter, String searchDn, String searchPassword) throws ServiceException, NamingException, IOException {
         
         if (password == null || password.equals("")) 

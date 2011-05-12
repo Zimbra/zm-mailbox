@@ -28,4 +28,5 @@ public enum LdapConnType {
             return PLAIN;
         }
     }
+
 }

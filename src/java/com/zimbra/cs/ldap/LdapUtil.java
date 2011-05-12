@@ -99,15 +99,5 @@ public class LdapUtil {
         LdapTODO.TODO();
         return null;
     }
-    
-    @TODO // see impl in LegacyLdapUtil
-    public static void ldapAuthenticate(String urls[], boolean requireStartTLS, String principal, String password) {
-        LdapTODO.TODO();
-    }
-    
-    @TODO // see impl in LegacyLdapUtil
-    public static void ldapAuthenticate(String url[], boolean requireStartTLS, String password, String searchBase, 
-            String searchFilter, String searchDn, String searchPassword) throws ServiceException {
-        LdapTODO.TODO();
-    }
+
 }

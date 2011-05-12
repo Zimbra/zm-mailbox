@@ -302,9 +302,9 @@ public class TestLdap {
     public static void manualInit() throws Exception {
         
         CliUtil.toolSetup();
-        // TestConfig.useConfig(TestConfig.UBID);
+        TestConfig.useConfig(TestConfig.UBID);
         // TestConfig.useConfig(TestConfig.JNDI);
-        TestConfig.useConfig(TestConfig.LEGACY);
+        // TestConfig.useConfig(TestConfig.LEGACY);
     }
     
     /*

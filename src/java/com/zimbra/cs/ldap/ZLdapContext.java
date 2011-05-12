@@ -41,9 +41,6 @@ public abstract class ZLdapContext extends ZLdapElement implements ILdapContext 
     
     public abstract ZLdapSchema getSchema() throws LdapException;
     
-    public abstract void ldapAuthenticate(String urls[], boolean requireStartTLS, 
-            String principal, String password, String note);
-    
     public abstract void modifyAttributes(String dn, ZModificationList modList) 
     throws LdapException;
     

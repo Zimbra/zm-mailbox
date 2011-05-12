@@ -46,23 +46,26 @@ public class JNDILdapClient extends LdapClient {
     }
 
     @Override
-    protected ZLdapFilterFactory getLdapFilterFactoryInstance() throws LdapException {
+    protected ZLdapFilterFactory getLdapFilterFactoryInstance() 
+    throws LdapException {
         return new JNDILdapFilterFactory();
     }
     
     @Override
-    protected ZLdapContext getContextImpl(LdapServerType serverType) throws ServiceException {
+    protected ZLdapContext getContextImpl(LdapServerType serverType) 
+    throws ServiceException {
         return new JNDILdapContext(serverType);
     }
     
     @Override
-    protected ZLdapContext getContextImpl(LdapServerType serverType, boolean useConnPool) throws ServiceException {
+    protected ZLdapContext getContextImpl(LdapServerType serverType, boolean useConnPool) 
+    throws ServiceException {
         return new JNDILdapContext(serverType, useConnPool);
     }
 
     @Override
     protected ZLdapContext getExternalContextImpl(ExternalLdapConfig config)
-            throws ServiceException {
+    throws ServiceException {
         return new JNDILdapContext(config);
     }
     
@@ -72,9 +75,17 @@ public class JNDILdapClient extends LdapClient {
     }
 
     @Override
-    protected ZSearchControls createSearchControlsImpl(ZSearchScope searchScope, int sizeLimit, String[] returnAttrs) {
+    protected ZSearchControls createSearchControlsImpl(ZSearchScope searchScope, 
+            int sizeLimit, String[] returnAttrs) {
         return new JNDISearchControls(searchScope, sizeLimit, returnAttrs);
     }
 
+    @Override
+    protected void externalLdapAuthenticateImpl(String[] urls,
+            boolean wantStartTLS, String principal, String password, String note)
+    throws ServiceException {
+        JNDILdapContext.externalLdapAuthenticate(urls, wantStartTLS, 
+                principal, password, note);
+    }
 
 }

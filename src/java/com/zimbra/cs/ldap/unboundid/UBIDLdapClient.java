@@ -86,6 +86,15 @@ public class UBIDLdapClient extends LdapClient {
         return new UBIDSearchControls(searchScope, sizeLimit, returnAttrs);
     }
 
+    @Override
+    protected void externalLdapAuthenticateImpl(String[] urls,
+            boolean wantStartTLS, String principal, String password, String note)
+    throws ServiceException {
+        UBIDLdapContext.ldapAuthenticate(urls, wantStartTLS,
+                principal, password, note);
+        
+    }
+
 
 
 }

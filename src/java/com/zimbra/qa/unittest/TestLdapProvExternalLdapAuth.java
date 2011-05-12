@@ -205,7 +205,7 @@ public class TestLdapProvExternalLdapAuth {
         result = prov.checkAuthConfig(attrs, acct.getName(), "bogus");
         assertEquals(Check.STATUS_AUTH_FAILED, result.getCode());
         
-        // TODO, how to tes tthis?
+        // TODO, how to test this?
         // STATUS_AUTH_NOT_SUPPORTED
         
         attrs.clear();

@@ -145,6 +145,12 @@ public abstract class LdapClient {
         return getInstance().createMutableEntryImpl();
     }
     
+    public static void externalLdapAuthenticate(String urls[], boolean wantStartTLS, 
+            String principal, String password, String note) 
+    throws ServiceException {
+        getInstance().externalLdapAuthenticateImpl(urls, wantStartTLS, 
+                principal, password, note);
+    }
     
     /*
      * ========================================================
@@ -160,7 +166,8 @@ public abstract class LdapClient {
     
     protected abstract ZSearchScopeFactory getSearchScopeFactoryInstance(); 
     
-    protected abstract ZLdapFilterFactory getLdapFilterFactoryInstance() throws LdapException;
+    protected abstract ZLdapFilterFactory getLdapFilterFactoryInstance() 
+    throws LdapException;
     
     protected ZLdapContext getContextImpl() throws ServiceException {
         return getContext(LdapServerType.REPLICA);
@@ -180,5 +187,7 @@ public abstract class LdapClient {
     protected abstract ZSearchControls createSearchControlsImpl(
             ZSearchScope searchScope, int sizeLimit, String[] returnAttrs);
 
-
+    protected abstract void externalLdapAuthenticateImpl(String urls[], 
+            boolean wantStartTLS, String principal, String password, String note) 
+    throws ServiceException;
 }

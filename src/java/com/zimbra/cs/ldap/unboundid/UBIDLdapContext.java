@@ -17,14 +17,26 @@ package com.zimbra.cs.ldap.unboundid;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.naming.Context;
+import javax.naming.NamingException;
+import javax.naming.directory.DirContext;
+import javax.naming.ldap.InitialLdapContext;
+import javax.naming.ldap.LdapContext;
+import javax.naming.ldap.StartTlsRequest;
+import javax.naming.ldap.StartTlsResponse;
+import javax.net.ssl.SSLContext;
+
 import com.unboundid.asn1.ASN1OctetString;
+import com.unboundid.ldap.sdk.BindResult;
 import com.unboundid.ldap.sdk.Control;
 import com.unboundid.ldap.sdk.DereferencePolicy;
 import com.unboundid.ldap.sdk.DN;
+import com.unboundid.ldap.sdk.ExtendedResult;
 import com.unboundid.ldap.sdk.Filter;
 import com.unboundid.ldap.sdk.LDAPConnection;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
@@ -41,9 +53,12 @@ import com.unboundid.ldap.sdk.SearchRequest;
 import com.unboundid.ldap.sdk.SearchResult;
 import com.unboundid.ldap.sdk.SearchResultEntry;
 import com.unboundid.ldap.sdk.controls.SimplePagedResultsControl;
+import com.unboundid.ldap.sdk.extensions.StartTLSExtendedRequest;
 import com.unboundid.ldap.sdk.schema.Schema;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.ldap.LdapConfig;
 import com.zimbra.cs.ldap.LdapConfig.ExternalLdapConfig;
@@ -54,6 +69,7 @@ import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.LdapTODO;
+import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
@@ -76,6 +92,7 @@ public class UBIDLdapContext extends ZLdapContext {
     
     private LDAPConnectionPool connPool;
     private LDAPConnection conn;
+    private boolean isZimbraLdap;
     private DereferencePolicy derefAliasPolicy;
     
     public static synchronized void init() throws LdapException {
@@ -107,6 +124,7 @@ public class UBIDLdapContext extends ZLdapContext {
      * Zimbra LDAP
      */
     public UBIDLdapContext(LdapServerType serverType) throws LdapException {
+        isZimbraLdap = true;
         derefAliasPolicy = DereferencePolicy.NEVER;
         
         if (serverType.isMaster()) {
@@ -121,6 +139,7 @@ public class UBIDLdapContext extends ZLdapContext {
      * External LDAP
      */
     public UBIDLdapContext(ExternalLdapConfig config) throws LdapException {
+        isZimbraLdap = false;
         setDerefAliasPolicy(config);
         
         connPool = ConnectionPool.getConnPoolByConfig(config);
@@ -138,7 +157,7 @@ public class UBIDLdapContext extends ZLdapContext {
             ConnectionPool.debugCheckOut(pool, conn);
             return conn;
         } catch (LDAPException e) {
-            throw UBIDLdapException.mapToLdapException(e);
+            throw mapToLdapException("unable to get connection", e);
         }
     }
     
@@ -149,6 +168,16 @@ public class UBIDLdapContext extends ZLdapContext {
     
     public String getConnectionName() {
         return conn.getConnectionName();
+    }
+    
+    private LdapException mapToLdapException(String message, LDAPException e) {
+        if (isZimbraLdap) {
+            return UBIDLdapException.mapToLdapException(message, e);
+        } else {
+            // need more precise mapping for external LDAP exceptions so we
+            // can report config error better
+            return UBIDLdapException.mapToExternalLdapException(message, e);
+        }
     }
 
     private void setDerefAliasPolicy(ExternalLdapConfig config) {
@@ -188,12 +217,11 @@ public class UBIDLdapContext extends ZLdapContext {
     }
     
     @Override
-    @TODOEXCEPTIONMAPPING
     public void createEntry(ZMutableEntry entry) throws ServiceException {
         try {
             conn.add(((UBIDMutableEntry) entry).getNative());
         } catch (LDAPException e) {
-            throw UBIDLdapException.mapToLdapException(e);
+            throw mapToLdapException("unable to create entry", e);
         }
         
     }
@@ -255,7 +283,7 @@ public class UBIDLdapContext extends ZLdapContext {
                 unbindEntry(entry.getDN());
             }
         } catch (LDAPException e) {
-            throw UBIDLdapException.mapToLdapException(e);
+            throw mapToLdapException("unable to delete children", e);
         }
     }
     
@@ -268,7 +296,7 @@ public class UBIDLdapContext extends ZLdapContext {
             }
             return new UBIDAttributes(entry);
         } catch (LDAPException e) {
-            throw UBIDLdapException.mapToLdapException(e);
+            throw mapToLdapException("unable to get attributes", e);
         }
     }
     
@@ -278,7 +306,7 @@ public class UBIDLdapContext extends ZLdapContext {
             Schema schema = conn.getSchema();
             return new UBIDLdapSchema(schema);
         } catch (LDAPException e) {
-            throw UBIDLdapException.mapToLdapException(e);
+            throw mapToLdapException("unable to get schema", e);
         }
     }
     
@@ -289,7 +317,7 @@ public class UBIDLdapContext extends ZLdapContext {
             // TODO: need to check result? or can rely on the exception?
             LDAPResult result = conn.modify(dn, ((UBIDModificationList)modList).getModList());
         } catch (LDAPException e) {
-            throw UBIDLdapException.mapToLdapException(e);
+            throw mapToLdapException("unable to modify attributes", e);
         }
     }
     
@@ -318,7 +346,7 @@ public class UBIDLdapContext extends ZLdapContext {
                 conn.modifyDN(childDn, childRdn, true, newDn);
             }
         } catch (LDAPException e) {
-            throw UBIDLdapException.mapToLdapException(e);
+            throw mapToLdapException("unable to move children", e);
         }
     }
     
@@ -330,7 +358,7 @@ public class UBIDLdapContext extends ZLdapContext {
             String newSuperiorDN = newDN.getParentString();
             conn.modifyDN(oldDn, newRDN, true, newSuperiorDN);
         } catch (LDAPException e) {
-            throw UBIDLdapException.mapToLdapException("unable to rename entry", e);
+            throw mapToLdapException("unable to rename entry", e);
         }
         
     }
@@ -389,7 +417,7 @@ public class UBIDLdapContext extends ZLdapContext {
             } while ((cookie != null) && (cookie.getValueLength() > 0));
             
         } catch (LDAPException e) {
-            throw UBIDLdapException.mapToLdapException("unable to search ldap", e);
+            throw mapToLdapException("unable to search ldap", e);
         }
     }
     
@@ -413,7 +441,7 @@ public class UBIDLdapContext extends ZLdapContext {
             
             return new UBIDSearchResultEnumeration(result);
         } catch (LDAPException e) {
-            throw UBIDLdapException.mapToLdapException(e);
+            throw mapToLdapException("unable to search ldap", e);
         }
     }
     
@@ -422,19 +450,72 @@ public class UBIDLdapContext extends ZLdapContext {
         try {
             conn.delete(dn);
         } catch (LDAPException e) {
-            throw UBIDLdapException.mapToLdapException(e);
+            throw mapToLdapException("unable to delete entry", e);
         }
     }
 
-    @Override
     @TODO
-    public void ldapAuthenticate(String[] urls, boolean requireStartTLS,
-            String principal, String password, String note) {
-        // TODO Auto-generated method stub
-        LdapTODO.TODO();
+    static void ldapAuthenticate(String[] urls, boolean wantStartTLS,
+            String principal, String password, String note) 
+    throws ServiceException {
+        /*
+         * About dereferencing alias.
+         * 
+         * The legacy JNDI implementation supports specifying deref 
+         * alias policy during bind, via the "java.naming.ldap.derefAliases" 
+         * DirContext env property.
+         * 
+         * Doesn't look like unboundid has an obvious way to specify 
+         * deref alias policy during bind.
+         * 
+         * The LDAP protocol http://tools.ietf.org/html/rfc4511 disallows
+         * LDAP server to deref alias during bind anyway.
+         * 
+         * section 4.2 
+         * ..., it SHALL NOT perform alias dereferencing.
+         * 
+         * Therefore, we do *not* support dereferencing alias during bind anymore.
+         * 
+         */
+
+        ExternalLdapConfig config = new ExternalLdapConfig(urls, wantStartTLS,
+                null, principal, password, null, note);
+                
+        LdapServerPool serverPool = new LdapServerPool(config);
+        LDAPConnection connection = null;
+        
+        try {
+            connection = serverPool.getServerSet().getConnection();
+            if (serverPool.getConnectionType() == LdapConnType.STARTTLS) {
+                SSLContext startTLSContext = 
+                    LdapSSLUtil.createSSLContext(config.sslAllowUntrustedCerts());
+                ExtendedResult extendedResult = connection.processExtendedOperation(
+                        new StartTLSExtendedRequest(startTLSContext));
+                
+                // NOTE:  The processExtendedOperation method will only throw an exception
+                // if a problem occurs while trying to send the request or read the
+                // response.  It will not throw an exception because of a non-success
+                // response.
+                if (extendedResult.getResultCode() != ResultCode.SUCCESS) {
+                    LdapTODO.TODO();
+                    throw ServiceException.FAILURE("TODO", null);
+                }
+            }
+            
+            BindResult bindResult = connection.bind(principal, password);
+            if (bindResult.getResultCode() != ResultCode.SUCCESS) {
+                LdapTODO.TODO();
+                throw ServiceException.FAILURE("TODO", null);
+            }
+        } catch (LDAPException e) {
+            throw UBIDLdapException.mapToExternalLdapException("unable to ldap authenticate", e);    
+        } finally {
+            if (connection != null) {
+                connection.close();
+            }
+        }
+        
     }
-
-
 
     
 }

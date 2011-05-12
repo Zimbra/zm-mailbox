@@ -31,9 +31,13 @@ public class LdapException extends ServiceException {
     public static final String INVALID_ATTR_NAME        = "ldap.INVALID_ATTR_NAME";
     public static final String INVALID_ATTR_VALUE       = "ldap.INVALID_ATTR_VALUE";
     public static final String INVALID_NAME             = "ldap.INVALID_NAME";
+    public static final String INVALID_SEARCH_FILTER    = "ldap.INVALID_SEARCH_FILTER";
     public static final String MULTIPLE_ENTRIES_MATCHED = "ldap.MULTIPLE_ENTRIES_MATCHED";
     public static final String SIZE_LIMIT_EXCEEDED      = "ldap.SIZE_LIMIT_EXCEEDED";
         
+    // in addition to getCause(), a more exception for callsites to relate 
+    // the exception to a user message.
+    private Throwable detail;
     
     private static String format(String msg1, String msg2) {
         if (msg2 == null) {
@@ -41,6 +45,14 @@ public class LdapException extends ServiceException {
         } else {
             return msg1 + " - " + msg2;
         }
+    }
+    
+    public void setDetail(Throwable detail) {
+        this.detail = detail;
+    }
+    
+    public Throwable getDetail() {
+        return detail;
     }
     
     protected LdapException(String message, String code, Throwable cause) {
@@ -74,6 +86,10 @@ public class LdapException extends ServiceException {
     
     public static LdapException INVALID_NAME(String message, Throwable cause) {
         return new LdapInvalidNameException(message, cause);
+    }
+    
+    public static LdapException INVALID_SEARCH_FILTER(String message, Throwable cause) {
+        return new LdapInvalidSearchFilterException(message, cause);
     }
     
     public static LdapException INVALID_ATTR_NAME(String message, Throwable cause) {
@@ -139,6 +155,12 @@ public class LdapException extends ServiceException {
     public static class LdapInvalidNameException extends LdapException {
         private LdapInvalidNameException(String message, Throwable cause) {
             super(format("invalid name", message), INVALID_NAME, cause);
+        }
+    }
+    
+    public static class LdapInvalidSearchFilterException extends LdapException {
+        private LdapInvalidSearchFilterException(String message, Throwable cause) {
+            super(format("invalid search filter", message), INVALID_NAME, cause);
         }
     }
     
