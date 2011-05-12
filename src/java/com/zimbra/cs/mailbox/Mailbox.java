@@ -101,7 +101,6 @@ import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
-import com.zimbra.cs.mailbox.MailboxManager.MailboxLock;
 import com.zimbra.cs.mailbox.Note.Rectangle;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
@@ -404,7 +403,7 @@ public class Mailbox {
     private Map <String, Integer> mConvHashes     = MapUtil.newLruMap(MAX_MSGID_CACHE);
     private Map <String, Integer> mSentMessageIDs = MapUtil.newLruMap(MAX_MSGID_CACHE);
 
-    private MailboxLock    mMaintenance = null;
+    private MailboxMaintenance maintenance;
     private IMPersona      mPersona = null;
     private MailboxVersion version;
     private volatile boolean open = false;
@@ -561,8 +560,11 @@ public class Mailbox {
         return mData.indexVolumeId;
     }
 
-    public MailboxLock getMailboxLock() {
-        return mMaintenance;
+    /**
+     * Returns the mailbox maintenance context if this mailbox is under maintenance, otherwise null.
+     */
+    public MailboxMaintenance getMaintenance() {
+        return maintenance;
     }
 
     /** Returns a {@link MailSender} object that can be used to send mail,
@@ -638,16 +640,17 @@ public class Mailbox {
      * @param session  The Session registering for notifications.
      * @throws ServiceException  If the mailbox is in maintenance mode. */
     public synchronized void addListener(Session session) throws ServiceException {
-        if (session == null)
+        if (session == null) {
             return;
+        }
         assert(session.getSessionId() != null);
-        if (mMaintenance != null)
+        if (maintenance != null) {
             throw MailServiceException.MAINTENANCE(mId);
-        if (!mListeners.contains(session))
+        }
+        if (!mListeners.contains(session)) {
             mListeners.add(session);
-
-        if (ZimbraLog.mailbox.isDebugEnabled())
-            ZimbraLog.mailbox.debug("adding listener: " + session);
+        }
+        ZimbraLog.mailbox.debug("adding listener: %s", session);
     }
 
     /** Removes a {@link Session} from the set of listeners notified on
@@ -1115,36 +1118,37 @@ public class Mailbox {
         mCurrentChange.conn = conn;
     }
 
-    /** Puts the Mailbox into maintenance mode.  As a side effect, disconnects
-     *  any {@link Session}s listening on this Mailbox and flushes all changes
-     *  to the search index of this Mailbox.
+    /**
+     * Puts the Mailbox into maintenance mode.  As a side effect, disconnects any {@link Session}s listening on this
+     * {@link Mailbox} and flushes all changes to the search index of this {@link Mailbox}.
      *
-     * @return A new MailboxLock token for use in a subsequent call to
-     *         {@link MailboxManager#endMaintenance(Mailbox.MailboxLock, boolean, boolean)}.
-     * @throws ServiceException MailServiceException.MAINTENANCE if the
-     *         <tt>Mailbox</tt> is already in maintenance mode. */
-    synchronized MailboxLock beginMaintenance() throws ServiceException {
-        if (mMaintenance != null)
+     * @return A new {@link MailboxManager.MaintenanceContext} token for use in a subsequent call to
+     * {@link MailboxManager#endMaintenance(MailboxManager.MaintenanceContext, boolean, boolean)}.
+     * @throws ServiceException MailServiceException.MAINTENANCE if the {@link Mailbox} is already in maintenance mode.
+     */
+    synchronized MailboxMaintenance beginMaintenance() throws ServiceException {
+        if (maintenance != null) {
             throw MailServiceException.MAINTENANCE(mId);
-        ZimbraLog.mailbox.info("Locking mailbox %d for maintenance.", getId());
+        }
+        ZimbraLog.mailbox.info("Putting mailbox %d under maintenance.", getId());
 
         purgeListeners();
         index.evict();
 
-        mMaintenance = new MailboxLock(mData.accountId, mId, this);
-        return mMaintenance;
+        maintenance = new MailboxMaintenance(mData.accountId, mId, this);
+        return maintenance;
     }
 
     synchronized void endMaintenance(boolean success) throws ServiceException {
-        if (mMaintenance == null)
+        if (maintenance == null) {
             throw ServiceException.FAILURE("mainbox not in maintenance mode", null);
-
+        }
         if (success) {
             ZimbraLog.mailbox.info("Ending maintenance on mailbox %d.", getId());
-            mMaintenance = null;
+            maintenance = null;
         } else {
             ZimbraLog.mailbox.info("Ending maintenance and marking mailbox %d as unavailable.", getId());
-            mMaintenance.markUnavailable();
+            maintenance.markUnavailable();
         }
     }
 
@@ -1196,9 +1200,9 @@ public class Mailbox {
         mCurrentChange.itemCache = cache;
 
         // don't permit mailbox access during maintenance
-        if (mMaintenance != null && !mMaintenance.canAccess())
+        if (maintenance != null && !maintenance.canAccess()) {
             throw MailServiceException.MAINTENANCE(mId);
-
+        }
         // we can only start a redoable operation as the transaction's base change
         if (recorder != null && needRedo && mCurrentChange.depth > 1)
             throw ServiceException.FAILURE("cannot start a logged transaction from within another transaction " +
@@ -1207,7 +1211,7 @@ public class Mailbox {
         // we'll need folders and tags loaded in order to handle ACLs
         loadFoldersAndTags();
     }
-    
+
     public synchronized Metadata getConfig(OperationContext octxt, String section) throws ServiceException {
         return getConfig(octxt, section, false);
     }
@@ -1233,7 +1237,7 @@ public class Mailbox {
         boolean success = true;
         try {
             if (!isBatch) {
-                beginTransaction("getConfig", octxt, null);    
+                beginTransaction("getConfig", octxt, null);
             }
 
             // make sure they have sufficient rights to view the config
@@ -1254,7 +1258,7 @@ public class Mailbox {
             }
         } finally {
             if (!isBatch) {
-                endTransaction(success);    
+                endTransaction(success);
             }
         }
     }
@@ -1284,7 +1288,7 @@ public class Mailbox {
         boolean success = false;
         try {
             if (!isBatch) {
-                beginTransaction("setConfig", octxt, redoPlayer);    
+                beginTransaction("setConfig", octxt, redoPlayer);
             }
 
             // make sure they have sufficient rights to view the config
@@ -1297,7 +1301,7 @@ public class Mailbox {
             success = true;
         } finally {
             if (!isBatch) {
-                endTransaction(success);    
+                endTransaction(success);
             }
         }
     }
@@ -1642,9 +1646,9 @@ public class Mailbox {
     public synchronized void deleteMailbox(OperationContext octxt) throws ServiceException {
         // first, throw the mailbox into maintenance mode
         //   (so anyone else with a cached reference to the Mailbox can't use it)
-        MailboxLock lock = null;
+        MailboxMaintenance maintenance = null;
         try {
-            lock = MailboxManager.getInstance().beginMaintenance(mData.accountId, mId);
+            maintenance = MailboxManager.getInstance().beginMaintenance(mData.accountId, mId);
         } catch (MailServiceException e) {
             // Ignore wrong mailbox exception.  It may be thrown if we're
             // redoing a DeleteMailbox that was interrupted when server
@@ -1699,8 +1703,9 @@ public class Mailbox {
 
                 // twiddle the mailbox lock [must be the last command of this function!]
                 //   (so even *we* can't access this Mailbox going forward)
-                if (lock != null)
-                    lock.markUnavailable();
+                if (maintenance != null) {
+                    maintenance.markUnavailable();
+                }
             }
         } finally {
             if (needRedo) {

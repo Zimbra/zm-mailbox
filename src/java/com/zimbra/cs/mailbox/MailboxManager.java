@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.NamedEntry;
@@ -70,48 +71,6 @@ public class MailboxManager {
         /** Called whenever a mailbox is deleted from this server.
          *  Could mean the mailbox was moved to another server, or could mean really deleted */
         public void mailboxDeleted(String accountId);
-    }
-
-    public static final class MailboxLock {
-        private final String accountId;
-        private final int    mailboxId;
-        private Mailbox mailbox;
-        private List<Thread> allowedThreads;
-
-        MailboxLock(String acct, int id)  { this(acct, id, null); }
-        MailboxLock(String acct, int id, Mailbox mbox) {
-            accountId = acct.toLowerCase();  mailboxId = id;
-            mailbox = mbox;
-            allowedThreads = new ArrayList<Thread>();
-            allowedThreads.add(Thread.currentThread());
-        }
-
-        String getAccountId()  { return accountId; }
-        int getMailboxId()     { return mailboxId; }
-        Mailbox getMailbox()   { return mailbox; }
-
-        public synchronized void registerAllowedThread(Thread t) {
-            allowedThreads.add(t);
-        }
-
-        synchronized boolean canAccess() {
-            Thread curr = Thread.currentThread();
-            for (Thread t : allowedThreads) {
-                if (curr == t)
-                    return true;
-            }
-            return false;
-        }
-
-        synchronized void markUnavailable()  {
-            mailbox = null;
-            allowedThreads.clear();
-        }
-
-        void cacheMailbox(Mailbox mbox) {
-            if (mbox.getId() == mailboxId && mbox.getAccountId().equalsIgnoreCase(accountId))
-                mailbox = mbox;
-        }
     }
 
     private CopyOnWriteArrayList<Listener> mListeners = new CopyOnWriteArrayList<Listener>();
@@ -161,15 +120,17 @@ public class MailboxManager {
      *  server appears in this mapping. */
     private Map<String, Integer> mailboxIds;
 
-    /** Maps mailbox IDs (<code>Integer</code>s) to either <ul>
-     *     <li>a loaded <code>Mailbox</code>, or
-     *     <li>a {@link SoftReference} to a loaded <code>Mailbox</code>, or
-     *     <li>a {@link MailboxLock} for the mailbox.</ul><p>
-     *  Mailboxes are faulted into memory as needed, but may drop from memory
-     *  when the SoftReference expires due to memory pressure combined with a
-     *  lack of outstanding references to the <code>Mailbox</code>.  Only one
-     *  <code>Mailbox</code> per user is cached, and only that
-     *  <code>Mailbox</code> can process user requests. */
+    /**
+     * Maps mailbox IDs ({@link Integer}s) to either
+     * <ul>
+     *  <li>a loaded {@link Mailbox}, or
+     *  <li>a {@link SoftReference} to a loaded {@link Mailbox}, or
+     *  <li>a {@link MaintenanceContext} for the mailbox.
+     * </ul>
+     * Mailboxes are faulted into memory as needed, but may drop from memory when the SoftReference expires due to
+     * memory pressure combined with a lack of outstanding references to the {@link Mailbox}.  Only one {@link Mailbox}
+     * per user is cached, and only that {@link Mailbox} can process user requests.
+     */
     private MailboxMap cache;
 
     public MailboxManager() throws ServiceException {
@@ -487,10 +448,11 @@ public class MailboxManager {
                     mbox = (Mailbox) cached;
                 } else {
                     // cache the newly-created Mailbox object
-                    if (cached instanceof MailboxLock)
-                        ((MailboxLock) cached).cacheMailbox(mbox);
-                    else
+                    if (cached instanceof MailboxMaintenance) {
+                        ((MailboxMaintenance) cached).setMailbox(mbox);
+                    } else {
                         cacheMailbox(mbox);
+                    }
                 }
             }
         }
@@ -514,23 +476,23 @@ public class MailboxManager {
         for (Object o : cache.values()) {
             if (o instanceof Mailbox) {
                 mboxes.add((Mailbox) o);
-            } else if (o instanceof MailboxLock) {
-                MailboxLock lock = (MailboxLock) o;
-                if (lock.canAccess())
-                    mboxes.add(lock.getMailbox());
+            } else if (o instanceof MailboxMaintenance) {
+                MailboxMaintenance maintenance = (MailboxMaintenance) o;
+                if (maintenance.canAccess()) {
+                    mboxes.add(maintenance.getMailbox());
+                }
             }
         }
         return mboxes;
     }
 
     /**
-     * @return the number of hard references to currently-loaded mailboxes, either in
-     * MAINTENANCE mode or not.
+     * Returns the number of hard references to currently-loaded mailboxes, either in MAINTENANCE mode or not.
      */
     public synchronized int getCacheSize() {
         int count = 0;
         for (Object o : cache.values()) {
-            if (o instanceof Mailbox || o instanceof MailboxLock) {
+            if (o instanceof Mailbox || o instanceof MailboxMaintenance) {
                 count++;
             }
         }
@@ -538,39 +500,42 @@ public class MailboxManager {
     }
 
     /**
-     * @param mailboxId
-     * @return TRUE if the specified mailbox is in-memory and not in maintenance mode,
-     *         if false, then caller can assume that one of the @link{Listener} APIs
-     *         be called for this mailbox at some point in the future, if this mailbox
-     *         is ever accessed
+     * Returns TRUE if the specified mailbox is in-memory and not in maintenance mode, if false, then caller can assume
+     * that one of the {@link Listener} APIs be called for this mailbox at some point in the future, if this mailbox is
+     * ever accessed.
      */
     public synchronized boolean isMailboxLoadedAndAvailable(int mailboxId) {
         Object cached = cache.get(mailboxId);
-        if (cached == null)
+        if (cached == null) {
             return false;
-
-        if (cached instanceof MailboxLock)
-            return ((MailboxLock) cached).canAccess();
-        else
+        }
+        if (cached instanceof MailboxMaintenance) {
+            return ((MailboxMaintenance) cached).canAccess();
+        } else {
             return true;
+        }
     }
 
     private Object retrieveFromCache(int mailboxId, boolean trackGC) throws MailServiceException {
         synchronized (this) {
             Object cached = cache.get(mailboxId, trackGC);
-            if (cached instanceof MailboxLock) {
-                MailboxLock lock = (MailboxLock) cached;
-                if (!lock.canAccess())
+            if (cached instanceof MailboxMaintenance) {
+                MailboxMaintenance maintenance = (MailboxMaintenance) cached;
+                if (!maintenance.canAccess()) {
                     throw MailServiceException.MAINTENANCE(mailboxId);
-                if (lock.getMailbox() != null)
-                    return lock.getMailbox();
+                }
+                if (maintenance.getMailbox() != null) {
+                    return maintenance.getMailbox();
+                }
             }
             // if we've retrieved NULL or a Mailbox or an accessible lock, return it
             return cached;
         }
     }
 
-    @SuppressWarnings("unused")
+    /**
+     * @throws ServiceException may be thrown by sub-classes
+     */
     protected Mailbox instantiateMailbox(MailboxData data) throws ServiceException {
         return new Mailbox(data);
     }
@@ -584,15 +549,14 @@ public class MailboxManager {
         return mailbox;
     }
 
-
-    public MailboxLock beginMaintenance(String accountId, int mailboxId) throws ServiceException {
+    public MailboxMaintenance beginMaintenance(String accountId, int mailboxId) throws ServiceException {
         Mailbox mbox = getMailboxByAccountId(accountId, false);
         if (mbox == null) {
             synchronized (this) {
                 if (mailboxIds.get(accountId.toLowerCase()) == null) {
-                    MailboxLock lock = new MailboxLock(accountId, mailboxId);
-                    cache.put(mailboxId, lock);
-                    return lock;
+                    MailboxMaintenance maintenance = new MailboxMaintenance(accountId, mailboxId);
+                    cache.put(mailboxId, maintenance);
+                    return maintenance;
                 }
             }
             mbox = getMailboxByAccountId(accountId);
@@ -600,36 +564,35 @@ public class MailboxManager {
 
         // mbox is non-null, and mbox.beginMaintenance() will throw if it's already in maintenance
         synchronized (mbox) {
-            MailboxLock lock = mbox.beginMaintenance();
+            MailboxMaintenance maintenance = mbox.beginMaintenance();
             synchronized (this) {
-                cache.put(mailboxId, lock);
+                cache.put(mailboxId, maintenance);
             }
-            return lock;
+            return maintenance;
         }
     }
 
-    public void endMaintenance(MailboxLock lock, boolean success, boolean removeFromCache) throws ServiceException {
-        if (lock == null)
-            throw ServiceException.INVALID_REQUEST("no lock provided", null);
+    public void endMaintenance(MailboxMaintenance maintenance, boolean success, boolean removeFromCache)
+            throws ServiceException {
+        Preconditions.checkNotNull(maintenance);
 
         Mailbox availableMailbox = null;
 
         synchronized (this) {
-            Object obj = cache.get(lock.getMailboxId());
-            if (obj != lock)
-                throw MailServiceException.MAINTENANCE(lock.getMailboxId());
-
+            Object obj = cache.get(maintenance.getMailboxId());
+            if (obj != maintenance) {
+                throw MailServiceException.MAINTENANCE(maintenance.getMailboxId());
+            }
             // start by removing the lock from the Mailbox object cache
-            cache.remove(lock.getMailboxId());
+            cache.remove(maintenance.getMailboxId());
 
-            Mailbox mbox = lock.getMailbox();
+            Mailbox mbox = maintenance.getMailbox();
             if (success) {
                 // XXX: don't recall the rationale for re-setting this...
-                cacheAccount(lock.getAccountId(), lock.getMailboxId());
+                cacheAccount(maintenance.getAccountId(), maintenance.getMailboxId());
 
                 if (mbox != null) {
-                    assert(lock == mbox.getMailboxLock() ||
-                           mbox.getMailboxLock() == null);  // restore case
+                    assert(maintenance == mbox.getMaintenance() || mbox.getMaintenance() == null); // restore case
 
                     if (removeFromCache) {
                         mbox.purge(MailItem.Type.UNKNOWN);
@@ -642,15 +605,16 @@ public class MailboxManager {
                         // Note: mbox is left in maintenance mode.
                     } else {
                         mbox.endMaintenance(success);
-                        cacheMailbox(lock.getMailbox());
+                        cacheMailbox(maintenance.getMailbox());
                     }
                     availableMailbox = mbox;
                 }
             } else {
                 // on failed maintenance, mark the Mailbox object as off-limits to everyone
-                if (mbox != null)
+                if (mbox != null) {
                     mbox.endMaintenance(success);
-                lock.markUnavailable();
+                }
+                maintenance.markUnavailable();
             }
         }
 

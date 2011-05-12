@@ -74,6 +74,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxMaintenance;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
@@ -86,7 +87,6 @@ import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.mailbox.CalendarItem.Instance;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.SetCalendarItemData;
-import com.zimbra.cs.mailbox.MailboxManager.MailboxLock;
 import com.zimbra.cs.mailbox.Message.CalendarItemInfo;
 import com.zimbra.cs.mailbox.calendar.IcsImportParseHandler;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -187,7 +187,6 @@ public abstract class ArchiveFormatter extends Formatter {
         String ext = "." + getType();
         String filename = context.params.get("filename");
         String lock = context.params.get("lock");
-        MailboxLock ml = null;
         Set<String> names = new HashSet<String>(4096);
         String query = context.getQueryString();
         Set<MailItem.Type> sysTypes = EnumSet.of(MailItem.Type.FOLDER, MailItem.Type.SEARCHFOLDER, MailItem.Type.TAG,
@@ -197,7 +196,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 MailItem.Type.CHAT, MailItem.Type.NOTE);
         ArchiveOutputStream aos = null;
         String types = context.getTypesString();
-
+        MailboxMaintenance maintenance = null;
         try {
             if (filename == null || filename.equals("")) {
                 Date date = new Date();
@@ -237,7 +236,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 }
             }
             if (lock != null && (lock.equals("1") || lock.equals("t") || lock.equals("true"))) {
-                ml = MailboxManager.getInstance().beginMaintenance(
+                maintenance = MailboxManager.getInstance().beginMaintenance(
                         context.targetMailbox.getAccountId(), context.targetMailbox.getId());
             }
             Charset charset = context.getCharset();
@@ -323,8 +322,9 @@ public abstract class ArchiveFormatter extends Formatter {
                 aos = getOutputStream(context, UTF8);
             }
         } finally {
-            if (ml != null)
-                MailboxManager.getInstance().endMaintenance(ml, true, true);
+            if (maintenance != null) {
+                MailboxManager.getInstance().endMaintenance(maintenance, true, true);
+            }
             if (aos != null) {
                 try {
                     aos.close();

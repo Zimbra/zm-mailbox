@@ -26,7 +26,6 @@ import com.zimbra.cs.account.DataSource.DataImport;
 import com.zimbra.cs.account.DataSourceConfig;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.datasource.imap.ImapSync;
-import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbScheduledTask;
@@ -108,10 +107,18 @@ public class DataSourceManager {
         }
     }
 
+    /**
+     * @param ds not used
+     * @param folder not used
+     */
     public boolean isSyncCapable(DataSource ds, Folder folder) {
         return true;
     }
 
+    /**
+     * @param ds not used
+     * @param folder not used
+     */
     public boolean isSyncEnabled(DataSource ds, Folder folder) {
         return true;
     }
@@ -144,8 +151,7 @@ public class DataSourceManager {
         return getInstance().config;
     }
 
-    public Mailbox getMailbox(DataSource ds)
-    throws ServiceException {
+    public Mailbox getMailbox(DataSource ds) throws ServiceException {
         return MailboxManager.getInstance().getMailboxByAccount(ds.getAccount());
     }
 
@@ -166,22 +172,21 @@ public class DataSourceManager {
             try {
                 String className = LC.data_source_xsync_class.value();
                 if (className != null && className.length() > 0) {
-                    Class cmdClass = null;
+                    Class<?> cmdClass = null;
                     try {
                         cmdClass = Class.forName(className);
                     } catch (ClassNotFoundException x) {
                         cmdClass = ExtensionUtil.findClass(className);
                     }
-                    Constructor constructor = cmdClass.getConstructor(new Class[] {DataSource.class});
-                    return (DataImport)constructor.newInstance(ds);
+                    Constructor<?> constructor = cmdClass.getConstructor(new Class[] {DataSource.class});
+                    return (DataImport) constructor.newInstance(ds);
                 }
             } catch (Exception x) {
                 ZimbraLog.datasource.warn("Failed instantiating xsync class: %s", ds, x);
             }
         default:
             // yab is handled by OfflineDataSourceManager
-            throw new IllegalArgumentException(
-                "Unknown data import type: " + ds.getType());
+            throw new IllegalArgumentException("Unknown data import type: " + ds.getType());
         }
     }
 
@@ -244,6 +249,7 @@ public class DataSourceManager {
         ZimbraLog.datasource.debug("Requesting async import for DataSource %s", ds.getId());
 
         executor.submit(new Runnable() {
+            @Override
             public void run() {
                 try {
                     // todo exploit comonality with DataSourceTask
@@ -276,21 +282,19 @@ public class DataSourceManager {
 
 
     /**
-     * Executes the data source's <code>MailItemImport</code> implementation
-     * to import data in the current thread.
+     * Executes the data source's {@link MailItemImport} implementation to import data in the current thread.
      */
-    public static void importData(DataSource ds, List<Integer> folderIds,
-                                  boolean fullSync) throws ServiceException {
+    public static void importData(DataSource ds, List<Integer> folderIds, boolean fullSync) throws ServiceException {
 
         ImportStatus importStatus = getImportStatus(ds.getAccount(), ds);
-           ZimbraLog.datasource.info("Requested import.");
+        ZimbraLog.datasource.info("Requested import.");
         synchronized (importStatus) {
             if (importStatus.isRunning()) {
                 ZimbraLog.datasource.info("Attempted to start import while " +
                     " an import process was already running.  Ignoring the second request.");
                 return;
             }
-            if (DataSourceManager.getInstance().getMailbox(ds).getMailboxLock() != null) {
+            if (DataSourceManager.getInstance().getMailbox(ds).getMaintenance() != null) {
                 ZimbraLog.datasource.info("Mailbox is in maintenance mode. Skipping import.");
                 return;
             }
