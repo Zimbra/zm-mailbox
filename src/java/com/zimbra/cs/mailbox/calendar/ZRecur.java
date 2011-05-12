@@ -1429,6 +1429,7 @@ public class ZRecur implements Cloneable {
     
     private void parse(String str, TimeZoneMap tzmap) throws ServiceException {
         try {
+            int numByParts = 0;
             for (String tok : str.split("\\s*;\\s*")) {
                 String[] s = tok.split("\\s*=\\s*");
                 if (s.length != 2) {
@@ -1464,30 +1465,39 @@ public class ZRecur implements Cloneable {
                         mInterval = Integer.parseInt(rhs);
                         break;
                     case BYSECOND:
+                        ++numByParts;
                         parseIntList(rhs, mBySecondList, 0, 59, false);
                         break;
                     case BYMINUTE:
+                        ++numByParts;
                         parseIntList(rhs, mByMinuteList, 0, 59, false);
                         break;
                     case BYHOUR:
+                        ++numByParts;
                         parseIntList(rhs, mByHourList, 0, 23, false);
                         break;
                     case BYDAY:
+                        ++numByParts;
                         parseByDayList(rhs, mByDayList);
                         break;
                     case BYMONTHDAY:
+                        ++numByParts;
                         parseIntList(rhs, mByMonthDayList, -31, 31, true);
                         break;
                     case BYYEARDAY:
+                        ++numByParts;
                         parseIntList(rhs, mByYearDayList, -366, 366, true);
                         break;
                     case BYWEEKNO:
+                        ++numByParts;
                         parseIntList(rhs, mByWeekNoList, -53, 53, true);
                         break;
                     case BYMONTH:
+                        ++numByParts;
                         parseIntList(rhs, mByMonthList, 1, 12, false);
                         break;
                     case BYSETPOS:
+                        ++numByParts;
                         parseIntList(rhs, mBySetPosList, Integer.MIN_VALUE, Integer.MAX_VALUE, true);
                         break;
                     case WKST:
@@ -1497,6 +1507,19 @@ public class ZRecur implements Cloneable {
                 } catch(IllegalArgumentException e) {
                     ZimbraLog.calendar.warn("Skipping RECUR token: \"%s\" in Recur \"%s\" due to parse error", s[0], str, e);
                 }
+            }
+            // Convert monthly BYDAY+BYSETPOS combo into simpler BYDAY format.  (bug 35568, 59771)
+            // e.g. "BYDAY=TU;BYSETPOS=3" becomes "BYDAY=3TU".
+            // This is done only in a very specific case, when all of the following conditions are met:
+            // 1) recurrence is monthly
+            // 2) BYDAY has exactly one element
+            // 3) the BYDAY element has no ordinal
+            // 4) BYSETPOS has exactly one element
+            // 5) there is no other BYxxx part
+            if (numByParts == 2 && Frequency.MONTHLY.equals(mFreq) &&
+                mByDayList.size() == 1 && mByDayList.get(0).mOrdinal == 0 && mBySetPosList.size() == 1) {
+                mByDayList.get(0).mOrdinal = mBySetPosList.get(0);
+                mBySetPosList.clear();
             }
         } catch (ParseException e) {
             throw ServiceException.FAILURE("Parse error for recur \""+str+"\"", e);
