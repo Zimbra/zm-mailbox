@@ -127,6 +127,7 @@ import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.account.ldap.legacy.entry.*;
 import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.gal.GalSearchConfig;
+import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapUtilCommon;
@@ -5103,7 +5104,7 @@ public class LdapProvisioning extends LdapProv {
     throws ServiceException {
         return searchCalendarResources(filter, returnAttrs,
                                        sortAttr, sortAscending,
-                                       LdapUtilCommon.getZimbraSearchBase(d, GalOp.search));
+                                       GalSearchConfig.getZimbraSearchBase(d, GalOp.search));
     }
 
     @Override
@@ -5118,19 +5119,21 @@ public class LdapProvisioning extends LdapProv {
     @Override
     public SearchGalResult searchGal(Domain d,
                                      String n,
-                                     GalSearchType type,
-                                     String token,
-                                     GalContact.Visitor visitor) throws ServiceException {
-        return searchGal(d, n, type, null, token, visitor);
-    }
-
-    @Override
-    public SearchGalResult searchGal(Domain d,
-                                     String n,
                                      Provisioning.GalSearchType type,
                                      GalMode galMode,
                                      String token) throws ServiceException {
         return searchGal(d, n, type, galMode, token, null);
+    }
+    
+    @Override
+    public void searchGal(GalSearchParams params) throws ServiceException {
+        try {
+            LegacyLdapUtil.galSearch(params);
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to search gal", e);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("unable to search gal", e);
+        }
     }
 
     private SearchGalResult searchGal(Domain d,
@@ -5237,22 +5240,6 @@ public class LdapProvisioning extends LdapProv {
         return results;
     }
 
-    public static String getFilterDef(String name) throws ServiceException {
-        String queryExprs[] = Provisioning.getInstance().getConfig().getMultiAttr(Provisioning.A_zimbraGalLdapFilterDef);
-        String fname = name+":";
-        String queryExpr = null;
-        for (int i=0; i < queryExprs.length; i++) {
-            if (queryExprs[i].startsWith(fname)) {
-                queryExpr = queryExprs[i].substring(fname.length());
-            }
-        }
-
-        if (queryExpr == null)
-            ZimbraLog.gal.warn("missing filter def " + name + " in " + Provisioning.A_zimbraGalLdapFilterDef);
-
-        return queryExpr;
-    }
-
     private synchronized LdapGalMapRules getGalRules(Domain d, boolean isZimbraGal) {
         LdapGalMapRules rules = (LdapGalMapRules) d.getCachedData(DATA_GAL_RULES);
         if (rules == null) {
@@ -5288,7 +5275,7 @@ public class LdapProvisioning extends LdapProv {
     throws ServiceException {
         GalParams.ZimbraGalParams galParams = new GalParams.ZimbraGalParams(domain, galOp);
 
-        String queryExpr = getFilterDef(filterName);
+        String queryExpr = GalSearchConfig.getFilterDef(filterName);
         String query = null;
         
         String tokenize = GalUtil.tokenizeKey(galParams, galOp);

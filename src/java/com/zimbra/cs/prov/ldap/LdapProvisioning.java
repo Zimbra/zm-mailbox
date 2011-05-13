@@ -16,8 +16,6 @@
 package com.zimbra.cs.prov.ldap;
 
 import java.io.IOException;
-import java.net.ConnectException;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -34,8 +32,6 @@ import java.util.Stack;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-
-import javax.net.ssl.SSLHandshakeException;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -54,8 +50,6 @@ import com.zimbra.cs.account.AccountCache;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.DomainCache.GetFromDomainCacheOption;
-import com.zimbra.cs.account.Provisioning.GalMode;
-import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
@@ -103,6 +97,7 @@ import com.zimbra.cs.account.ldap.LdapGalMapRules;
 import com.zimbra.cs.account.ldap.Validators;
 import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.gal.GalSearchConfig;
+import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.IAttributes.CheckBinary;
@@ -2456,25 +2451,31 @@ public class LdapProvisioning extends LdapProv {
             }
         } catch (LdapContextNotEmptyException e) {
             // get a few entries to include in the error message
-            StringBuilder sb = new StringBuilder();
+            int maxEntriesToGet = 5;
+            
+            final String doNotReportThisDN = acctBaseDn;
+            final StringBuilder sb = new StringBuilder();
             sb.append(" (remaining entries: ");
-            try {
-                int maxEntriesToGet = 5;
-                ZSearchControls searchControls = ZSearchControls.createSearchControls(
-                        ZSearchScope.SEARCH_SCOPE_SUBTREE, maxEntriesToGet, 
-                        new String[]{Provisioning.A_objectClass});
-                
-                ZSearchResultEnumeration ne = helper.searchDir(acctBaseDn, filterFactory.anyEntry(), 
-                        searchControls, zlc, LdapServerType.MASTER);
-                while (ne.hasMore()) {
-                    ZSearchResultEntry sr = ne.next();
-                    // don't show the dn itself
-                    if (!sr.getDN().equals(acctBaseDn))
-                        sb.append("[" + sr.getDN() + "] ");
+            
+            SearchLdapOptions.SearchLdapVisitor visitor = new SearchLdapOptions.SearchLdapVisitor() {
+                @Override
+                public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs) {
+                    if (!dn.equals(doNotReportThisDN)) {
+                        sb.append("[" + dn + "] ");
+                    }
                 }
-                ne.close();
-            } catch (ServiceException ne) {
-                ZimbraLog.account.warn("unable to get sample entries in non-empty domain " + d.getName() + " for reporting", ne);
+            };
+            
+            SearchLdapOptions searchOptions = new SearchLdapOptions(
+                    acctBaseDn, filterFactory.anyEntry().toFilterString(), 
+                    new String[]{Provisioning.A_objectClass}, maxEntriesToGet, null, 
+                    ZSearchScope.SEARCH_SCOPE_SUBTREE, visitor);
+            try {
+                zlc.searchPaged(searchOptions);
+            } catch (LdapSizeLimitExceededException lslee) {
+                // quietly ignore
+            } catch (ServiceException se) {
+                ZimbraLog.account.warn("unable to get sample entries in non-empty domain " + d.getName() + " for reporting", se);
             }
             sb.append("...)");
             throw AccountServiceException.DOMAIN_NOT_EMPTY(d.getName() + sb.toString(), e);
@@ -3679,13 +3680,9 @@ public class LdapProvisioning extends LdapProv {
     }
 
     @Override
-    @TODO
     public Provisioning.Result checkGalConfig(Map attrs, String query, int limit, GalOp galOp) 
     throws ServiceException {
-        LdapTODO.TODO();
-        return null;
         
-        /*
         GalMode mode = GalMode.fromString(Check.getRequiredAttr(attrs, Provisioning.A_zimbraGalMode));
         if (mode != GalMode.ldap)
             throw ServiceException.INVALID_REQUEST("gal mode must be: "+GalMode.ldap.toString(), null);
@@ -3697,22 +3694,18 @@ public class LdapProvisioning extends LdapProv {
         try {
             SearchGalResult result = null;
             if (galOp == GalOp.autocomplete)
-                result = LegacyLdapUtil.searchLdapGal(galParams, GalOp.autocomplete, query, limit, rules, null, null); 
+                result = LdapGalSearch.searchLdapGal(galParams, GalOp.autocomplete, query, limit, rules, null, null); 
             else if (galOp == GalOp.search)
-                result = LegacyLdapUtil.searchLdapGal(galParams, GalOp.search, query, limit, rules, null, null); 
+                result = LdapGalSearch.searchLdapGal(galParams, GalOp.search, query, limit, rules, null, null); 
             else if (galOp == GalOp.sync)
-                result = LegacyLdapUtil.searchLdapGal(galParams, GalOp.sync, query, limit, rules, "", null); 
+                result = LdapGalSearch.searchLdapGal(galParams, GalOp.sync, query, limit, rules, "", null); 
             else 
                 throw ServiceException.INVALID_REQUEST("invalid GAL op: "+galOp.toString(), null);
             
             return new Provisioning.GalResult(Check.STATUS_OK, "", result.getMatches());
-        } catch (NamingException e) {
+        } catch (ServiceException e) {
             return toResult(e, "");
-        } catch (IOException e) {
-            return Check.toResult(e, "");
         }
-        
-        */
     }
 
     @Override
@@ -4997,7 +4990,7 @@ public class LdapProvisioning extends LdapProv {
     throws ServiceException {
         return searchCalendarResources(filter, returnAttrs,
                                        sortAttr, sortAscending,
-                                       LdapUtilCommon.getZimbraSearchBase(d, GalOp.search));
+                                       GalSearchConfig.getZimbraSearchBase(d, GalOp.search));
     }
 
     @Override
@@ -5012,19 +5005,15 @@ public class LdapProvisioning extends LdapProv {
     @Override
     public SearchGalResult searchGal(Domain d,
                                      String n,
-                                     GalSearchType type,
-                                     String token,
-                                     GalContact.Visitor visitor) throws ServiceException {
-        return searchGal(d, n, type, null, token, visitor);
-    }
-
-    @Override
-    public SearchGalResult searchGal(Domain d,
-                                     String n,
                                      Provisioning.GalSearchType type,
                                      GalMode galMode,
                                      String token) throws ServiceException {
         return searchGal(d, n, type, galMode, token, null);
+    }
+    
+    @Override
+    public void searchGal(GalSearchParams params) throws ServiceException {
+        LdapGalSearch.galSearch(params);
     }
 
     private SearchGalResult searchGal(Domain d,
@@ -5201,12 +5190,15 @@ public class LdapProvisioning extends LdapProv {
         }
 
         // filter out hidden entries
-        query = "(&("+query+")(!(zimbraHideInGal=TRUE)))";
+        if (!query.startsWith("(")) {
+            query = "(" + query + ")";
+        }
+        query = "(&"+query+"(!(zimbraHideInGal=TRUE)))";
 
         ZLdapContext zlc = null;
         try {
             zlc = LdapClient.getContext();
-            LdapUtil.searchGal(zlc,
+            LdapGalSearch.searchGal(zlc,
                                GalSearchConfig.GalType.zimbra,
                                galParams.pageSize(),
                                galParams.searchBase(),
@@ -5235,7 +5227,7 @@ public class LdapProvisioning extends LdapProv {
 
         LdapGalMapRules rules = getGalRules(domain, false);
         try {
-            return LdapUtil.searchLdapGal(galParams,
+            return LdapGalSearch.searchLdapGal(galParams,
                                           galOp,
                                           n,
                                           maxResults,

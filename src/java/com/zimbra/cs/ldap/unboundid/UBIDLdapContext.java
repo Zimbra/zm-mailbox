@@ -151,7 +151,8 @@ public class UBIDLdapContext extends ZLdapContext {
         return conn;
     }
     
-    private LDAPConnection getConnection(LDAPConnectionPool pool) throws LdapException {
+    private LDAPConnection getConnection(LDAPConnectionPool pool) 
+    throws LdapException {
         try {
             LDAPConnection conn = pool.getConnection();
             ConnectionPool.debugCheckOut(pool, conn);
@@ -312,7 +313,8 @@ public class UBIDLdapContext extends ZLdapContext {
     
     @Override
     @TODO
-    public void modifyAttributes(String dn, ZModificationList modList) throws LdapException {
+    public void modifyAttributes(String dn, ZModificationList modList) 
+    throws LdapException {
         try {
             // TODO: need to check result? or can rely on the exception?
             LDAPResult result = conn.modify(dn, ((UBIDModificationList)modList).getModList());
@@ -377,10 +379,12 @@ public class UBIDLdapContext extends ZLdapContext {
     public void searchPaged(SearchLdapOptions searchOptions) throws ServiceException {
         int maxResults = searchOptions.getMaxResults();
         String base = searchOptions.getSearchBase();
-        String query = searchOptions.getQuery();
+        String query = searchOptions.getFilter();
         Set<String> binaryAttrs = searchOptions.getBinaryAttrs();
         SearchScope searchScope = ((UBIDSearchScope) searchOptions.getSearchScope()).getNative();
         SearchLdapOptions.SearchLdapVisitor visitor = searchOptions.getVisitor();
+        
+        boolean wantPartialResult = true;  // TODO: this is the legacy behavior, we can make it a param
         
         try {
             SearchRequest searchRequest = new SearchRequest(base, 
@@ -400,8 +404,27 @@ public class UBIDLdapContext extends ZLdapContext {
             do {
                 searchRequest.setControls(
                         new Control[] { new SimplePagedResultsControl(pageSize, cookie) });
-                SearchResult result = conn.search(searchRequest);
-
+                
+                SearchResult result = null;
+                try {
+                    result = conn.search(searchRequest);
+                } catch (LDAPException e) {
+                    if (ResultCode.SIZE_LIMIT_EXCEEDED == e.getResultCode() && wantPartialResult) {
+                        // if callsite wants partial result, return them
+                        LDAPResult ldapResult = e.toLDAPResult();
+                        if (ldapResult instanceof SearchResult) {
+                            SearchResult searchResult = (SearchResult) ldapResult;
+                            for (SearchResultEntry entry : searchResult.getSearchEntries()) {
+                                String dn = entry.getDN();
+                                UBIDAttributes ubidAttrs = new UBIDAttributes(entry);
+                                visitor.visit(dn, ubidAttrs.getAttrs(binaryAttrs), ubidAttrs);
+                            }
+                        }
+                    }
+                    // always re-throw
+                    throw e;
+                }
+                
                 for (SearchResultEntry entry : result.getSearchEntries()) {
                     String dn = entry.getDN();
                     UBIDAttributes ubidAttrs = new UBIDAttributes(entry);
@@ -437,8 +460,8 @@ public class UBIDLdapContext extends ZLdapContext {
                     ((UBIDLdapFilter) filter).getNative());
             
             searchRequest.setAttributes(sc.getReturnAttrs());
-            SearchResult result = conn.search(searchRequest);
             
+            SearchResult result = conn.search(searchRequest);
             return new UBIDSearchResultEnumeration(result);
         } catch (LDAPException e) {
             throw mapToLdapException("unable to search ldap", e);
@@ -454,7 +477,6 @@ public class UBIDLdapContext extends ZLdapContext {
         }
     }
 
-    @TODO
     static void ldapAuthenticate(String[] urls, boolean wantStartTLS,
             String principal, String password, String note) 
     throws ServiceException {
@@ -492,20 +514,20 @@ public class UBIDLdapContext extends ZLdapContext {
                 ExtendedResult extendedResult = connection.processExtendedOperation(
                         new StartTLSExtendedRequest(startTLSContext));
                 
-                // NOTE:  The processExtendedOperation method will only throw an exception
+                // NOTE:  
+                // The processExtendedOperation method will only throw an exception
                 // if a problem occurs while trying to send the request or read the
                 // response.  It will not throw an exception because of a non-success
                 // response.
                 if (extendedResult.getResultCode() != ResultCode.SUCCESS) {
-                    LdapTODO.TODO();
-                    throw ServiceException.FAILURE("TODO", null);
+                    throw ServiceException.FAILURE(
+                            "unable to send or receive startTLS extended operation", null);
                 }
             }
             
             BindResult bindResult = connection.bind(principal, password);
             if (bindResult.getResultCode() != ResultCode.SUCCESS) {
-                LdapTODO.TODO();
-                throw ServiceException.FAILURE("TODO", null);
+                throw ServiceException.FAILURE("unable to bind", null);
             }
         } catch (LDAPException e) {
             throw UBIDLdapException.mapToExternalLdapException("unable to ldap authenticate", e);    

@@ -21,10 +21,7 @@ import java.util.UUID;
 import javax.naming.ldap.Rdn;
 
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.gal.GalOp;
-import com.zimbra.cs.account.ldap.legacy.entry.LdapDomain;
 import com.zimbra.cs.ldap.LdapTODO.*;
 
 
@@ -191,26 +188,6 @@ public class LdapUtilCommon {
        }
          
        return LdapUtilCommon.expandStr(bindDnRule, vars);
-    }
-
-    public static String getZimbraSearchBase(Domain domain, GalOp galOp) {
-        String sb;
-        if (galOp == GalOp.sync) {
-            sb = domain.getAttr(Provisioning.A_zimbraGalSyncInternalSearchBase);
-            if (sb == null)
-                sb = domain.getAttr(Provisioning.A_zimbraGalInternalSearchBase, "DOMAIN");
-        } else {
-            sb = domain.getAttr(Provisioning.A_zimbraGalInternalSearchBase, "DOMAIN");
-        }
-        LdapDomain ld = (LdapDomain) domain;
-        if (sb.equalsIgnoreCase("DOMAIN"))
-            return ld.getDN();
-            //mSearchBase = mDIT.domainDNToAccountSearchDN(ld.getDN());
-        else if (sb.equalsIgnoreCase("SUBDOMAINS"))
-            return ld.getDN();
-        else if (sb.equalsIgnoreCase("ROOT"))
-            return "";
-        return "";
     }
 
     //

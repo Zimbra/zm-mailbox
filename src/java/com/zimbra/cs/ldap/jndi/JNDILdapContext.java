@@ -200,7 +200,7 @@ public class JNDILdapContext extends ZLdapContext {
     public void searchPaged(SearchLdapOptions searchOptions) throws ServiceException {
         int maxResults = searchOptions.getMaxResults();
         String base = searchOptions.getSearchBase();
-        String query = searchOptions.getQuery();
+        String query = searchOptions.getFilter();
         Set<String> binaryAttrs = searchOptions.getBinaryAttrs();
         int searchScope = ((JNDISearchScope) searchOptions.getSearchScope()).getNative();
         SearchLdapOptions.SearchLdapVisitor visitor = searchOptions.getVisitor();
@@ -233,7 +233,7 @@ public class JNDILdapContext extends ZLdapContext {
                 if (ne != null) ne.close();
             }
         } catch (SizeLimitExceededException e) {
-            throw AccountServiceException.TOO_MANY_SEARCH_RESULTS("too many search results returned", e);
+            throw JNDILdapException.mapToLdapException(e);
         } catch (NamingException e) {
             throw JNDILdapException.mapToLdapException(e);
         } catch (IOException e) {

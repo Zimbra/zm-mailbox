@@ -33,18 +33,12 @@ public class JNDISearchResultEnumeration implements ZSearchResultEnumeration {
         this.searchResult = searchResult;
     }
     
-    @TODO
-    private LdapException mapToLdapException(NamingException namingException) {
-        LdapTODO.TODO("go through all callsistes to come up with a mapping that maps NamingException to corresponding NamingException");
-        return null;
-    }
-    
     @Override
     public void close() throws LdapException {
         try {
             searchResult.close();
         } catch (NamingException e) {
-            throw mapToLdapException(e);
+            throw JNDILdapException.mapToLdapException(e);
         }
         
     }
@@ -55,7 +49,7 @@ public class JNDISearchResultEnumeration implements ZSearchResultEnumeration {
         try {
             result = searchResult.hasMore();
         } catch (NamingException e) {
-            throw mapToLdapException(e);
+            throw JNDILdapException.mapToLdapException(e);
             
         }
         return result;
@@ -68,7 +62,7 @@ public class JNDISearchResultEnumeration implements ZSearchResultEnumeration {
             SearchResult sr = searchResult.next();
             result = new JNDISearchResultEntry(sr);
         } catch (NamingException e) {
-            throw mapToLdapException(e);
+            throw JNDILdapException.mapToLdapException(e);
         }
         return result;
     }

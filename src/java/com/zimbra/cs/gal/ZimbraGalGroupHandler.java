@@ -22,7 +22,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.ILdapContext;
 
@@ -45,7 +44,7 @@ public class ZimbraGalGroupHandler extends GalGroupHandler {
     @Override
     public String[] getMembers(ILdapContext ldapContext, String searchBase, String entryDN, IAttributes ldapAttrs) {
         try {
-            ZimbraLog.gal.debug("Fetching members for group " + ldapAttrs.getAttrString(LdapProvisioning.A_mail));
+            ZimbraLog.gal.debug("Fetching members for group " + ldapAttrs.getAttrString(Provisioning.A_mail));
             String[] members = ldapAttrs.getMultiAttrString(Provisioning.A_zimbraMailForwardingAddress);
             Arrays.sort(members);
             return members;

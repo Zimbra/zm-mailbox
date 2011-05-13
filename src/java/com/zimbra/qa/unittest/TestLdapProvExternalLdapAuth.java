@@ -1,19 +1,7 @@
 package com.zimbra.qa.unittest;
 
-import static org.junit.Assert.assertNotNull;
-
-import java.net.ConnectException;
-import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.naming.AuthenticationException;
-import javax.naming.AuthenticationNotSupportedException;
-import javax.naming.CommunicationException;
-import javax.naming.NameNotFoundException;
-import javax.naming.NamingException;
-import javax.naming.directory.InvalidSearchFilterException;
-import javax.net.ssl.SSLHandshakeException;
 
 import org.junit.*;
 import static org.junit.Assert.*;

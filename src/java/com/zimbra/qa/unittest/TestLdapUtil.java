@@ -53,6 +53,7 @@ public class TestLdapUtil {
     }
     
     @Test
+    @Ignore  // only or experiment
     public void rdnUBID() throws Exception {
         // com.unboundid.ldap.sdk.RDN rdn = new com.unboundid.ldap.sdk.RDN("cn", "foo+/+/ \u4e2d\u6587");
         String rawValue = "## ,+\"\\<>;\u4e2d\u6587---createIdentity ";

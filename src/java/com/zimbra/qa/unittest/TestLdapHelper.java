@@ -24,6 +24,8 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.ldap.LdapException.LdapEntryNotFoundException;
 import com.zimbra.cs.ldap.LdapException.LdapMultipleEntriesMatchedException;
+import com.zimbra.cs.ldap.LdapException.LdapSizeLimitExceededException;
+import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
@@ -33,16 +35,15 @@ import com.zimbra.cs.ldap.ZSearchResultEnumeration;
 import com.zimbra.cs.ldap.ZSearchScope;
 import com.zimbra.cs.prov.ldap.LdapHelper;
 import com.zimbra.cs.prov.ldap.LdapProv;
-import com.zimbra.cs.prov.ldap.entry.LdapCos;
 
 public class TestLdapHelper {
-
+    private static TestLdap.TestConfig testConfig;
     private static LdapProv prov;
     private static LdapHelper ldapHelper;
     
     @BeforeClass
     public static void init() throws Exception {
-        TestLdap.manualInit();
+        testConfig = TestLdap.manualInit();
         
         prov = ((LdapProv) Provisioning.getInstance());
         ldapHelper = prov.getHelper();
@@ -114,10 +115,11 @@ public class TestLdapHelper {
         LdapDIT dit = prov.getDIT();
         String base = dit.configBranchBaseDN();
         ZLdapFilter filter = ZLdapFilterFactory.getInstance().anyEntry();
+        String returnAttrs[] = new String[]{"objectClass"};
         
         ZSearchControls searchControls = ZSearchControls.createSearchControls(
                 ZSearchScope.SEARCH_SCOPE_ONELEVEL, 
-                ZSearchControls.SIZE_UNLIMITED, new String[]{"objectClass"});
+                ZSearchControls.SIZE_UNLIMITED, returnAttrs);
         
         ZSearchResultEnumeration ne = ldapHelper.searchDir(base, filter, searchControls);
         
@@ -148,10 +150,11 @@ public class TestLdapHelper {
         LdapDIT dit = prov.getDIT();
         String base = dit.configBranchBaseDN();
         ZLdapFilter filter = ZLdapFilterFactory.getInstance().allSignatures();
+        String returnAttrs[] = new String[]{"objectClass"};
         
         ZSearchControls searchControls = ZSearchControls.createSearchControls(
-                ZSearchScope.SEARCH_SCOPE_ONELEVEL, 
-                ZSearchControls.SIZE_UNLIMITED, new String[]{"objectClass"});
+                ZSearchScope.SEARCH_SCOPE_SUBTREE, 
+                ZSearchControls.SIZE_UNLIMITED, returnAttrs);
         
         ZSearchResultEnumeration ne = 
             ldapHelper.searchDir(base, filter, searchControls);
@@ -166,5 +169,37 @@ public class TestLdapHelper {
         assertEquals(0, numFound);
     }
     
-    
+    @Test
+    public void searchDirSizeLimitExceeded() throws Exception {
+        int SIZE_LIMIT = 5;
+        
+        String base = LdapConstants.DN_ROOT_DSE;
+        ZLdapFilter filter = ZLdapFilterFactory.getInstance().anyEntry();
+        String returnAttrs[] = new String[]{"objectClass"};
+        
+        ZSearchControls searchControls = ZSearchControls.createSearchControls(
+                ZSearchScope.SEARCH_SCOPE_SUBTREE, 
+                SIZE_LIMIT, returnAttrs);
+        
+        int numFound = 0;
+        boolean caughtException = false;
+        try {
+            ZSearchResultEnumeration ne = ldapHelper.searchDir(base, filter, searchControls);
+            while (ne.hasMore()) {
+                ZSearchResultEntry sr = ne.next();
+                numFound++;
+            }
+            ne.close();
+            
+        } catch (LdapSizeLimitExceededException e) {
+            caughtException = true;
+        }
+        assertTrue(caughtException);
+     
+        // unboundid does not return entries if LdapSizeLimitExceededException
+        // is thrown,  See commons on ZLdapContext.searchDir().
+        if (testConfig != TestLdap.TestConfig.UBID) {
+            assertEquals(SIZE_LIMIT, numFound);
+        }
+    }
 }

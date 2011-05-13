@@ -32,6 +32,7 @@ import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.soap.admin.type.CacheEntrySelector;
 import com.zimbra.soap.admin.type.CalendarResourceSelector;
 import com.zimbra.soap.admin.type.CmdRightsInfo;
@@ -1625,22 +1626,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract SearchGalResult searchGal(Domain d, String query, GalSearchType type, String token) throws ServiceException;
 
     /**
-     * Interface that invokes the visitor object for each match, instead of adding matches to the SearchGalResult.
-     *
-     * @param d
-     * @param query
-     * @param type
-     * @param token
-     * @param visitor
-     * @return
-     * @throws ServiceException
-     */
-    public SearchGalResult searchGal(Domain d, String query, GalSearchType type, String token, GalContact.Visitor visitor) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
-    }
-
-
-    /**
      * Interface for CalDAV.  it needs to always search in Zimbra only, regardless of zimbraGalMode configured on the domain.
      *
      * @param d domain
@@ -1652,6 +1637,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @throws ServiceException
      */
     public SearchGalResult searchGal(Domain d, String query, GalSearchType type, GalMode mode, String token) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
+    
+    public void searchGal(GalSearchParams params) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
 

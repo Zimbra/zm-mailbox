@@ -25,6 +25,7 @@ import java.util.Map;
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
@@ -46,5 +47,16 @@ public class LdapDomain extends Domain implements LdapEntry {
 
     public String getDN() {
         return mDn;
+    }
+    
+    public String getGalSearchBase(String searchBaseSpec) throws ServiceException {
+        if (searchBaseSpec.equalsIgnoreCase("DOMAIN"))
+            return getDN();
+            //mSearchBase = mDIT.domainDNToAccountSearchDN(ld.getDN());
+        else if (searchBaseSpec.equalsIgnoreCase("SUBDOMAINS"))
+            return getDN();
+        else if (searchBaseSpec.equalsIgnoreCase("ROOT"))
+            return "";
+        return "";
     }
 }

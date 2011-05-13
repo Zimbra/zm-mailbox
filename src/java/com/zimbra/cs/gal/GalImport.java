@@ -14,7 +14,6 @@
  */
 package com.zimbra.cs.gal;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -22,8 +21,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-
-import javax.naming.NamingException;
 
 import org.json.JSONException;
 
@@ -35,7 +32,6 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
-import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.datasource.MailItemImport;
 import com.zimbra.cs.db.DbDataSource;
 import com.zimbra.cs.db.DbDataSource.DataSourceItem;
@@ -64,13 +60,7 @@ public class GalImport extends MailItemImport {
 
     @Override
     public void test() throws ServiceException {
-        try {
-            searchGal(null, SearchGalResult.newSearchGalResult(null), false);
-        } catch (NamingException e) {
-            throw ServiceException.FAILURE("Error executing gal search", e);
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("Error executing gal search", e);
-        }
+        searchGal(null, SearchGalResult.newSearchGalResult(null), false);
     }
 
     private static final String TYPE = "t";
@@ -137,7 +127,7 @@ public class GalImport extends MailItemImport {
         setStatus(true);
     }
 
-    private void searchGal(String syncToken, SearchGalResult result, boolean fetchGroupMembers) throws ServiceException, NamingException, IOException {
+    private void searchGal(String syncToken, SearchGalResult result, boolean fetchGroupMembers) throws ServiceException {
         ZimbraLog.gal.debug("searchGal: "+syncToken);
         DataSource ds = getDataSource();
         GalSearchParams params = new GalSearchParams(ds);
@@ -148,7 +138,7 @@ public class GalImport extends MailItemImport {
             params.getConfig().getRules().add(attr+"="+attr);
         params.getConfig().getRules().setFetchGroupMembers(fetchGroupMembers);
         params.getConfig().getRules().setNeedSMIMECerts(true);
-        LegacyLdapUtil.galSearch(params);
+        Provisioning.getInstance().searchGal(params);
     }
     private static String[] ZIMBRA_ATTRS = {
         "zimbraAccountCalendarUserType",

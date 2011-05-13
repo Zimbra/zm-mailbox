@@ -41,7 +41,6 @@ import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.GalSearchType;
 import com.zimbra.cs.account.ZAttrProvisioning.GalMode;
 import com.zimbra.cs.account.gal.GalOp;
-import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.db.DbDataSource;
 import com.zimbra.cs.db.DbDataSource.DataSourceItem;
@@ -573,12 +572,13 @@ public class GalSearchControl {
         Domain domain = mParams.getDomain();
         GalMode galMode = domain.getGalMode();
         Provisioning.GalSearchType stype = mParams.getType();
+        Provisioning prov = Provisioning.getInstance();
 
         if (needResources()) {
             mParams.setType(GalSearchType.resource);
             mParams.createSearchConfig(GalType.zimbra);
             try {
-                LegacyLdapUtil.galSearch(mParams);
+                prov.searchGal(mParams);
             } catch (Exception e) {
                 throw ServiceException.FAILURE("ldap search failed", e);
             }
@@ -609,7 +609,7 @@ public class GalSearchControl {
         }
         mParams.createSearchConfig(type);
         try {
-            LegacyLdapUtil.galSearch(mParams);
+            prov.searchGal(mParams);
         } catch (Exception e) {
             throw ServiceException.FAILURE("ldap search failed", e);
         }
@@ -622,7 +622,7 @@ public class GalSearchControl {
             // do the second query
             mParams.createSearchConfig(GalType.ldap);
             try {
-                LegacyLdapUtil.galSearch(mParams);
+                prov.searchGal(mParams);
             } catch (Exception e) {
                 throw ServiceException.FAILURE("ldap search failed", e);
             }

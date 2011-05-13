@@ -23,7 +23,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.account.ldap.legacy.entry.LdapDomain;
 import com.zimbra.cs.gal.GalSearchConfig;
-import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.prov.ldap.LdapGalCredential;
 
 public abstract class GalParams {
@@ -93,7 +92,7 @@ public abstract class GalParams {
         
         public ZimbraGalParams(Domain domain, GalOp galOp) throws ServiceException {
             super(domain, galOp); 
-            mSearchBase = LdapUtilCommon.getZimbraSearchBase(domain, galOp);
+            mSearchBase = GalSearchConfig.getZimbraSearchBase(domain, galOp);
         }
         
         public String searchBase() { return mSearchBase; }

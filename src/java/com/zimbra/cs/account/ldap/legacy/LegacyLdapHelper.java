@@ -54,7 +54,7 @@ public class LegacyLdapHelper extends LdapHelper {
         LegacyZimbraLdapContext zlc = LdapClient.toLegacyZimbraLdapContext(getProv(), ldapContext);
         LegacyLdapUtil.searchLdap(zlc, 
                 searchOptions.getSearchBase(), 
-                searchOptions.getQuery(),
+                searchOptions.getFilter(),
                 searchOptions.getReturnAttrs(), 
                 searchOptions.getBinaryAttrs(), 
                 ((JNDISearchScope) searchOptions.getSearchScope()).getNative(),

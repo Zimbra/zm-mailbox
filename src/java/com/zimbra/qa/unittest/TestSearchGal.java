@@ -35,7 +35,6 @@ import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
@@ -44,10 +43,6 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.qa.unittest.TestLdapBinary.Content;
-
-/*
-TODO: Add this class to {@link ZimbraSuite} once it supports JUnit 4 annotations.
-*/
 
 public class TestSearchGal {
     

@@ -14,21 +14,7 @@
  */
 package com.zimbra.cs.ldap;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Set;
-
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.cs.account.GalContact;
-import com.zimbra.cs.account.Provisioning.SearchGalResult;
-import com.zimbra.cs.account.gal.GalOp;
-import com.zimbra.cs.account.gal.GalParams;
-import com.zimbra.cs.account.ldap.LdapGalMapRules;
-import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
-import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
 
@@ -74,30 +60,8 @@ public class LdapUtil {
         }
     }
 
-    @TODO // see impl in LegacyLdapUtil
-    public static void searchGal(ZLdapContext zlc,
-            GalSearchConfig.GalType galType,
-            int pageSize,
-            String base, 
-            String query, 
-            int maxResults,
-            LdapGalMapRules rules,
-            String token,
-            SearchGalResult result) throws ServiceException {
-        LdapTODO.TODO();
-    }
     
-    @TODO // see impl in LegacyLdapUtil
-    public static SearchGalResult searchLdapGal(
-            GalParams.ExternalGalParams galParams, 
-            GalOp galOp,
-            String n,
-            int maxResults,
-            LdapGalMapRules rules,
-            String token,
-            GalContact.Visitor visitor) throws ServiceException {
-        LdapTODO.TODO();
-        return null;
-    }
+
 
 }
+

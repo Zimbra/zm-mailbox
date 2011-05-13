@@ -99,12 +99,12 @@ public class Domain extends ZAttrDomain {
         return getProvisioning().searchGal(this, query, type, token);
     }
 
-    public SearchGalResult searchGal(String query, GalSearchType type, String token, GalContact.Visitor visitor) throws ServiceException {
-        return getProvisioning().searchGal(this, query, type, token, visitor);
-    }
-
     public SearchGalResult searchGal(String query, GalSearchType type, GalMode mode, String token) throws ServiceException {
         return getProvisioning().searchGal(this, query, type, mode, token);
+    }
+    
+    public String getGalSearchBase(String searchBaseSpec) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
     }
 
     @Override
@@ -153,4 +153,5 @@ public class Domain extends ZAttrDomain {
         return Provisioning.DomainType.local == domainType;
     }
 
+    
 }

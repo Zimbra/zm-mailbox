@@ -116,9 +116,6 @@ class UBIDLdapException {
             }
             
             ldapException.setDetail(rootException);
-
-            System.out.println("=============");
-            e.printStackTrace();
         }
         
         return ldapException;

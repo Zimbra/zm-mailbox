@@ -33,8 +33,8 @@ import com.zimbra.cs.account.EntrySearchFilter.Operator;
 import com.zimbra.cs.account.EntrySearchFilter.Single;
 import com.zimbra.cs.account.EntrySearchFilter.Visitor;
 import com.zimbra.cs.account.gal.GalUtil;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.gal.GalExtraSearchFilter;
+import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.gal.GalSearchQueryCallback;
@@ -168,7 +168,7 @@ public class SearchGal extends GalDocumentHandler {
             namedFilter = namedFilter + "_" + op.name();
             String filter = null;
             try {
-                String filterDef = LdapProvisioning.getFilterDef(namedFilter);
+                String filterDef = GalSearchConfig.getFilterDef(namedFilter);
                 if (filterDef != null) {
                     filter = GalUtil.expandFilter(null, filterDef, value, null);
                 }

@@ -30,19 +30,19 @@ public class SearchLdapOptions {
     private static final int DEFAULT_RESULT_PAGE_SIZE = 1000;
     
     private String searchBase;
-    private String query;
+    private String filter;
     private String[] returnAttrs = RETURN_ALL_ATTRS;
     private int maxResults = SIZE_UNLIMITED;
     private Set<String> binaryAttrs;
-    private int resultPageSize  = DEFAULT_RESULT_PAGE_SIZE; // hardcoded for now, add setter API when needed
+    private int resultPageSize  = DEFAULT_RESULT_PAGE_SIZE;
     private ZSearchScope searchScope;
     private SearchLdapOptions.SearchLdapVisitor visitor;
     
-    public SearchLdapOptions(String searchbase, String query, 
+    public SearchLdapOptions(String searchbase, String filter, 
             String[] returnAttrs, int maxResults, Set<String> binaryAttrs, 
             ZSearchScope searchScope, SearchLdapOptions.SearchLdapVisitor visitor) {
         setSearchBase(searchbase);
-        setQuery(query);
+        setFilter(filter);
         setReturnAttrs(returnAttrs);
         setMaxResults(maxResults);
         setBinaryAttrs(binaryAttrs);
@@ -53,8 +53,8 @@ public class SearchLdapOptions {
     public String getSearchBase() {
         return searchBase;
     }
-    public String getQuery() {
-        return query;
+    public String getFilter() {
+        return filter;
     }
     
     public String[] getReturnAttrs() {
@@ -85,8 +85,8 @@ public class SearchLdapOptions {
         this.searchBase = searchBase;
     }
     
-    public void setQuery(String query) {
-        this.query = query;
+    public void setFilter(String filter) {
+        this.filter = filter;
     }
     
     public void setReturnAttrs(String[] returnAttrs) {
@@ -99,6 +99,10 @@ public class SearchLdapOptions {
     
     public void setBinaryAttrs(Set<String> binaryAttrs) {
         this.binaryAttrs = binaryAttrs;
+    }
+    
+    public void setResultPageSize(int resultPageSize) {
+        this.resultPageSize = resultPageSize;
     }
     
     public void setSearchScope(ZSearchScope searchScope) {

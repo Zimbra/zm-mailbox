@@ -31,6 +31,8 @@ import com.zimbra.cs.ldap.ZAttributes;
 
 public class UBIDAttributes extends ZAttributes {
 
+    private static String[] EMPTY_STRING_ARRAY = new String[0];
+    
     //
     // The wrapped object here is actually the SearchResultEntry or Entry object.
     // Unlike JNDI, unboundid handles attributes on the (SearchResult)Entry object.
@@ -106,7 +108,7 @@ public class UBIDAttributes extends ZAttributes {
         if (attr != null) {
             return getMultiAttrStringInternal(attr, containsBinaryData);
         } else {
-            return null;
+            return EMPTY_STRING_ARRAY;
         }
     }
 

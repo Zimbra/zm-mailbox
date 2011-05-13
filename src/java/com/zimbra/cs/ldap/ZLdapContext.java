@@ -54,14 +54,44 @@ public abstract class ZLdapContext extends ZLdapElement implements ILdapContext 
     throws LdapException;
     
     /**
-     * Important Note: caller is responsible to close the ZimbraLdapContext
-     * 
      * This API does paged search, results are returned via the search 
      * visitor interface.
+     * 
+     * If a size limit is set (on the SearchLdapOptions or on the 
+     * LDAP server), LdapSizeLimitExceededException will be thrown.
+     * Partial results are still returned to the visitor. 
      */
     public abstract void searchPaged(SearchLdapOptions searchOptions)
     throws ServiceException;
     
+    /**
+     * This API is for searches that should not hit too many entries.
+     * It does not use the LDAP paging control. 
+     * 
+     * Results are returned in a ZSearchResultEnumeration, which should 
+     * accessed in the pattern:
+     *     ZSearchResultEnumeration sr = zlc.searchDir(dn, filter, searchControls);
+     *         while (sr.hasMore()) {
+     *             ZSearchResultEntry entry = sr.next();
+     *             // use the entry
+     *         }
+     *     sr.close(); 
+     *     
+     * 
+     * If a size limit is set (on the ZSearchControls or on the 
+     * LDAP server), LdapSizeLimitExceededException will be thrown.
+     * 
+     * IMPORTANT notes on LdapSizeLimitExceededException
+     *   - the legacy JNDI implementation still returns the 
+     *     ZSearchResultEnumeration.  LdapSizeLimitExceededException 
+     *     is thrown when the ZSearchResultEnumeration.hasMore() 
+     *     is called.
+     *     
+     *   - the unboundid implementation throws LdapSizeLimitExceededException
+     *     on the searchDir() call.  
+     * 
+     *   The legacy behavior should NOT be replied on.
+     */
     public abstract ZSearchResultEnumeration searchDir(
             String baseDN, ZLdapFilter filter, ZSearchControls searchControls) 
     throws LdapException;
