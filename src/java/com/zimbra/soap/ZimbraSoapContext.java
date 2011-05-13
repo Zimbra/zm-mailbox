@@ -530,7 +530,12 @@ public final class ZimbraSoapContext {
 
         ctxt.addAttribute(HeaderConstants.A_HOPCOUNT, mHopCount);
 
-        String proxyAuthToken = mAuthToken.getProxyAuthToken();
+        String proxyAuthToken = null;
+        
+        if (mAuthToken != null) {
+            proxyAuthToken = mAuthToken.getProxyAuthToken();
+        }
+        
         if (proxyAuthToken != null) {
             new ZAuthToken(proxyAuthToken).encodeSoapCtxt(ctxt);
         } else if (mRawAuthToken != null) {
