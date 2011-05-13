@@ -127,7 +127,7 @@ class ImapFolderSync {
             createLocalFolder(ld);
         }
         if (tracker != null) {
-            remoteFolder.info("syncing remote folder " + path);
+            remoteFolder.info("syncing remote folder %s", path);
             // Check local folder flags for consistency with remote folder
             localFolder.updateFlags(ld);
         }
