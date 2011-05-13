@@ -240,10 +240,6 @@ public class LdapProvisioning extends LdapProv {
         setHelper(new ZLdapHelper(this));
         mAllDLs = new Groups(this);
         
-        //to get LdapClient initialized so the filterFactory instance is set
-        // TODO: move to Zimbra.java
-        LdapClient.initialize();
-        
         filterFactory = ZLdapFilterFactory.getInstance();
         
         register(new Validators.DomainAccountValidator());
