@@ -90,16 +90,5 @@ public class LdapObjectClassHierarchy {
         
         return mostSpecific;
     }
-    
-    public static void main(String[] args) {
-        LdapProv ldapProv = (LdapProv)Provisioning.getInstance();
-        System.out.println(getMostSpecificOC(ldapProv, new String[]{"zimbraAccount", "organizationalPerson", "person"}, "inetOrgPerson") + ", expecting inetOrgPerson");
-        System.out.println(getMostSpecificOC(ldapProv, new String[]{"inetOrgPerson"}, "organizationalPerson")                            + ", expecting inetOrgPerson");
-        System.out.println(getMostSpecificOC(ldapProv, new String[]{"organizationalPerson", "inetOrgPerson"}, "person")                  + ", expecting inetOrgPerson");
-        System.out.println(getMostSpecificOC(ldapProv, new String[]{"inetOrgPerson"}, "bbb")                                             + ", expecting bbb");
-        System.out.println(getMostSpecificOC(ldapProv, new String[]{"aaa"}, "inetOrgPerson")                                             + ", expecting inetOrgPerson");
-        System.out.println(getMostSpecificOC(ldapProv, new String[]{"aaa"}, "inetOrgPerson")                                             + ", expecting inetOrgPerson");
-        System.out.println(getMostSpecificOC(ldapProv, new String[]{"person", "inetOrgPerson"}, "organizationalPerson")                  + ", expecting inetOrgPerson");
-    }
 
 }

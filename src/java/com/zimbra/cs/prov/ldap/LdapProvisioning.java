@@ -1321,6 +1321,7 @@ public class LdapProvisioning extends LdapProv {
         
     }
     
+    @Override // from LdapProv
     public void searchObjects(String query, String returnAttrs[], String base, int flags,
             NamedEntry.Visitor visitor, int maxResults, boolean useConnPool, boolean useMaster) 
     throws ServiceException {
@@ -2741,7 +2742,6 @@ public class LdapProvisioning extends LdapProv {
         }
     };
         
-    @TODO
     private long getNumAccountsOnServer(Server server) throws ServiceException {        
         ZLdapFilter filter = filterFactory.accountsHomedOnServer(server);
         String base = mDIT.mailBranchBaseDN();
@@ -2749,8 +2749,7 @@ public class LdapProvisioning extends LdapProv {
         
         CountingVisitor visitor = new CountingVisitor();
         
-        // TODO: pass filter directly when searchLdapOnMaster supports it.
-        LdapUtil.searchLdapOnMaster(base, filter.toFilterString(), attrs, visitor);
+        searchLdapOnMaster(base, filter, attrs, visitor);
         
         return visitor.getNumAccts();
     }
@@ -4909,43 +4908,6 @@ public class LdapProvisioning extends LdapProv {
         return searchDirectory(options, true);
     }
 
-    private void addBase(Set<String> bases, String base) {
-        boolean add = true;
-        for (String b : bases) {
-            if (mDIT.isUnder(b, base)) {
-                add = false;
-                break;
-            }
-        }
-        if (add)
-            bases.add(base);
-    }
-
-    public String[] getSearchBases(int flags) {
-        Set<String> bases = new HashSet<String>();
-
-        boolean accounts = (flags & Provisioning.SA_ACCOUNT_FLAG) != 0;
-        boolean aliases = (flags & Provisioning.SA_ALIAS_FLAG) != 0;
-        boolean lists = (flags & Provisioning.SA_DISTRIBUTION_LIST_FLAG) != 0;
-        boolean calendarResources = (flags & Provisioning.SA_CALENDAR_RESOURCE_FLAG) != 0;
-        boolean domains = (flags & Provisioning.SA_DOMAIN_FLAG) != 0;
-        boolean coses = (flags & Provisioning.SD_COS_FLAG) != 0;
-
-        if (accounts || aliases || lists || calendarResources)
-            addBase(bases, mDIT.mailBranchBaseDN());
-
-        if (accounts)
-            addBase(bases, mDIT.adminBaseDN());
-
-        if (domains)
-            addBase(bases, mDIT.domainBaseDN());
-
-        if (coses)
-            addBase(bases, mDIT.cosBaseDN());
-
-        return bases.toArray(new String[bases.size()]);
-    }
-
     private List<NamedEntry> searchDirectory(SearchOptions options, boolean useConnPool) throws ServiceException {
         String base = null;
 
@@ -4960,7 +4922,7 @@ public class LdapProvisioning extends LdapProv {
 
         String bases[];
         if (base == null)
-            bases = getSearchBases(options.getFlags());
+            bases = mDIT.getSearchBases(options.getFlags());
         else
             bases = new String[] {base};
 
@@ -6845,7 +6807,7 @@ public class LdapProvisioning extends LdapProv {
                 String b = mDIT.domainDNToAccountSearchDN(((LdapDomain)domain).getDN());
                 bases = new String[]{b};
             } else
-                bases = getSearchBases(Provisioning.SA_ACCOUNT_FLAG);
+                bases = mDIT.getSearchBases(Provisioning.SA_ACCOUNT_FLAG);
 
             filter = filterFactory.allNonSystemAccounts();
             attrs = new String[] {"zimbraId"};
@@ -6876,10 +6838,9 @@ public class LdapProvisioning extends LdapProv {
         }
     }
     
-    @TODO
     private long countObjects(String base, ZLdapFilter filter, String[] attrs) throws ServiceException {
         CountObjectsVisitor visitor = new CountObjectsVisitor();
-        LdapUtil.searchLdapOnReplica(base, filter.toFilterString(), attrs, visitor);  // TODO: pass filter directly when searchLdapOnReplica supports it
+        searchLdapOnReplica(base, filter, attrs, visitor);
         return visitor.getCount();
     }
 
@@ -7001,7 +6962,7 @@ public class LdapProvisioning extends LdapProv {
             query.append("|(" + Provisioning.A_zimbraId + "=" + id + ")");
             if ((++i) % batchSize == 0) {
                 query.append(queryEnd);
-                LdapUtil.searchLdapOnReplica(base, query.toString(), returnAttrs, visitor);
+                searchLdapOnReplica(base, query.toString(), returnAttrs, visitor);
                 query.setLength(0);
                 query.append(queryStart);
             }
@@ -7010,7 +6971,7 @@ public class LdapProvisioning extends LdapProv {
         // one more search if there are remainding
         if (query.length() != queryStart.length()) {
             query.append(queryEnd);
-            LdapUtil.searchLdapOnReplica(base, query.toString(), returnAttrs, visitor);
+            searchLdapOnReplica(base, query.toString(), returnAttrs, visitor);
         }
     }
     
@@ -7049,6 +7010,52 @@ public class LdapProvisioning extends LdapProv {
         LdapSMIMEConfig smime = LdapSMIMEConfig.getInstance(getConfig());
         smime.remove(configName);
     }
+    
+    @Override
+    public void searchLdapOnMaster(String base, String filter,
+            String[] returnAttrs, SearchLdapVisitor visitor)
+            throws ServiceException {
+        searchZimbraLdap(base, filter, returnAttrs, true, visitor);
+    }
+    
+    @Override
+    public void searchLdapOnReplica(String base, String filter,
+            String[] returnAttrs, SearchLdapVisitor visitor)
+            throws ServiceException {
+        searchZimbraLdap(base, filter, returnAttrs, false, visitor);
+    }
+    
+    
+    @Override
+    @TODO  // modify SearchLdapOptions to take a ZLdapFilter
+    public void searchLdapOnMaster(String base, ZLdapFilter filter,
+            String[] returnAttrs, SearchLdapVisitor visitor)
+            throws ServiceException {
+        searchLdapOnMaster(base, filter.toFilterString(), returnAttrs, visitor);
+    }
+    
+    @Override
+    @TODO  // modify SearchLdapOptions to take a ZLdapFilter
+    public void searchLdapOnReplica(String base, ZLdapFilter filter,
+            String[] returnAttrs, SearchLdapVisitor visitor)
+            throws ServiceException {
+        searchLdapOnReplica(base, filter.toFilterString(), returnAttrs, visitor);
+    }
 
+    private void searchZimbraLdap(String base, String query, String[] returnAttrs, 
+            boolean useMaster, SearchLdapVisitor visitor) throws ServiceException {
+        
+        SearchLdapOptions searchOptions = new SearchLdapOptions(base, query, 
+                returnAttrs, SearchLdapOptions.SIZE_UNLIMITED, null, 
+                ZSearchScope.SEARCH_SCOPE_SUBTREE, visitor);
+        
+        ZLdapContext zlc = null;
+        try {
+            zlc = LdapClient.getContext(LdapServerType.get(useMaster));
+            zlc.searchPaged(searchOptions);
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
+    }
 
 }
