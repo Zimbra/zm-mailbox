@@ -739,7 +739,7 @@ public class Folder extends MailItem {
             return false;
         } else if ((type == Type.CONVERSATION) != (mId == Mailbox.ID_FOLDER_CONVERSATIONS)) {
             return false;
-        } else if (mId == Mailbox.ID_FOLDER_SPAM && type == Type.FOLDER) {
+        } else if (type == Type.FOLDER && !mMailbox.isChildFolderPermitted(mId)) {
             return false;
         }
         return true;
