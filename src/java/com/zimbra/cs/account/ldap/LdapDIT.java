@@ -14,7 +14,9 @@
  */
 package com.zimbra.cs.account.ldap;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.EmailUtil;
@@ -388,6 +390,12 @@ public class LdapDIT {
         return mailBranchBaseDN();
     }
     
+    public String domainNameToDN(String domainName) {
+        String parts[] = domainName.split("\\.");
+        String dns[] = domainToDNs(parts);
+        return dns[0];
+    }
+    
     /**
      * Given a domain like foo.com, return an array of dns that work their way up the tree:
      *    [0] = dc=foo,dc=com
@@ -565,6 +573,45 @@ public class LdapDIT {
                 return false;
         }
         return true;
+    }
+    
+
+    private void addBase(Set<String> bases, String base) {
+        boolean add = true;
+        for (String b : bases) {
+            if (isUnder(b, base)) {
+                add = false;
+                break;
+            }
+        }
+        if (add) {
+            bases.add(base);
+        }
+    }
+    
+    public String[] getSearchBases(int flags) {
+        Set<String> bases = new HashSet<String>();
+
+        boolean accounts = (flags & Provisioning.SA_ACCOUNT_FLAG) != 0;
+        boolean aliases = (flags & Provisioning.SA_ALIAS_FLAG) != 0;
+        boolean lists = (flags & Provisioning.SA_DISTRIBUTION_LIST_FLAG) != 0;
+        boolean calendarResources = (flags & Provisioning.SA_CALENDAR_RESOURCE_FLAG) != 0;
+        boolean domains = (flags & Provisioning.SA_DOMAIN_FLAG) != 0;
+        boolean coses = (flags & Provisioning.SD_COS_FLAG) != 0;
+
+        if (accounts || aliases || lists || calendarResources)
+            addBase(bases, mailBranchBaseDN());
+
+        if (accounts)
+            addBase(bases, adminBaseDN());
+
+        if (domains)
+            addBase(bases, domainBaseDN());
+
+        if (coses)
+            addBase(bases, cosBaseDN());
+
+        return bases.toArray(new String[bases.size()]);
     }
 
 }

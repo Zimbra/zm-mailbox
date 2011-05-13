@@ -26,13 +26,21 @@ import com.zimbra.cs.account.accesscontrol.RightCommand.AllEffectiveRights;
 import com.zimbra.cs.account.accesscontrol.RightCommand.EffectiveRights;
 import com.zimbra.cs.account.accesscontrol.SearchGrants.GrantsOnTarget;
 import com.zimbra.cs.account.ldap.LdapDIT;
+
+
+/*
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapFilter;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.account.ldap.legacy.entry.LdapDomain;
+*/
+
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.SearchLdapOptions;
+import com.zimbra.cs.ldap.ZLdapFilter;
+import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
+import com.zimbra.cs.prov.ldap.LdapProv;
 
 public class CollectAllEffectiveRights {
 
@@ -173,13 +181,13 @@ public class CollectAllEffectiveRights {
     }
     
     private static class Visitor implements SearchLdapVisitor {
-        private LdapProvisioning mProv;
+        private LdapProv mProv;
         private LdapDIT mLdapDIT;
         
         // set of names
         private Set<String> mNames = new HashSet<String>();
 
-        Visitor(LdapProvisioning prov) {
+        Visitor(LdapProv prov) {
             mProv = prov;
             mLdapDIT = mProv.getDIT();
         }
@@ -204,7 +212,7 @@ public class CollectAllEffectiveRights {
     private boolean mExpandSetAttrs;
     private boolean mExpandGetAttrs;
     private AllEffectiveRights mResult;
-    private Provisioning mProv;
+    private LdapProv mProv;
     
     static void getAllEffectiveRights(RightBearer rightBearer, 
             boolean expandSetAttrs, boolean expandGetAttrs,
@@ -217,7 +225,7 @@ public class CollectAllEffectiveRights {
             
     private CollectAllEffectiveRights(RightBearer rightBearer, 
             boolean expandSetAttrs, boolean expandGetAttrs,
-            AllEffectiveRights result) {
+            AllEffectiveRights result) throws ServiceException {
         
         mRightBearer = rightBearer;
         
@@ -227,7 +235,8 @@ public class CollectAllEffectiveRights {
         mExpandSetAttrs = expandSetAttrs;
         mExpandGetAttrs = expandGetAttrs;
         mResult = result;
-        mProv = Provisioning.getInstance();
+
+        mProv = LdapProv.getInst();
     }
     
     private void collect() throws ServiceException {
@@ -390,28 +399,28 @@ public class CollectAllEffectiveRights {
     }
     
     private Set<String> getAllGroups() throws ServiceException {
-        LdapDIT ldapDIT = ((LdapProvisioning)mProv).getDIT();
+        LdapDIT ldapDIT = mProv.getDIT();
         String base = ldapDIT.mailBranchBaseDN();
-        String query = LegacyLdapFilter.allDistributionLists();
+        ZLdapFilter filter = ZLdapFilterFactory.getInstance().allDistributionLists();
         
         // hack, see LDAPDIT.dnToEmail, for now we get naming rdn for both default and possible custom DIT
         String[] returnAttrs = new String[] {Provisioning.A_cn, Provisioning.A_uid}; 
         
-        Visitor visitor = new Visitor((LdapProvisioning)mProv);
-        LegacyLdapUtil.searchLdapOnMaster(base, query, returnAttrs, visitor);
+        Visitor visitor = new Visitor(mProv);
+        mProv.searchLdapOnMaster(base, filter, returnAttrs, visitor);
         return visitor.getResult();
     }
     
     private Set<String> getAllCalendarResources() throws ServiceException {
-        LdapDIT ldapDIT = ((LdapProvisioning)mProv).getDIT();
+        LdapDIT ldapDIT = mProv.getDIT();
         String base = ldapDIT.mailBranchBaseDN();
-        String query = LegacyLdapFilter.allCalendarResources();
+        ZLdapFilter filter = ZLdapFilterFactory.getInstance().allCalendarResources();
         
         // hack, see LDAPDIT.dnToEmail, for now we get naming rdn for both default and possible custom DIT
         String[] returnAttrs = new String[] {Provisioning.A_cn, Provisioning.A_uid}; 
         
-        Visitor visitor = new Visitor((LdapProvisioning)mProv);
-        LegacyLdapUtil.searchLdapOnMaster(base, query, returnAttrs, visitor);
+        Visitor visitor = new Visitor(mProv);
+        mProv.searchLdapOnMaster(base, filter, returnAttrs, visitor);
         return visitor.getResult();
     }
     
@@ -488,18 +497,13 @@ public class CollectAllEffectiveRights {
     private List<Domain> searchSubDomains(Domain domain) throws ServiceException {
         
         List<Domain> subDomains = new ArrayList<Domain>();
-        
-        if (!(domain instanceof LdapDomain)) {
-            ZimbraLog.acl.error("domain " + domain.getName() + " is not an LdapDomain");
-            return subDomains;
-        }
                 
-        String base = ((LdapDomain)domain).getDN();
-        String query = LegacyLdapFilter.allDomains();
+        String base = mProv.getDIT().domainNameToDN(domain.getName());
+        ZLdapFilter filter = ZLdapFilterFactory.getInstance().allDomains();
         String returnAttrs[] = new String[] {Provisioning.A_zimbraId};
         SearchSubDomainVisitor visitor = new SearchSubDomainVisitor();
         
-        LegacyLdapUtil.searchLdapOnMaster(base, query, returnAttrs, visitor);
+        mProv.searchLdapOnMaster(base, filter, returnAttrs, visitor);
         
         List<String> zimbraIds = visitor.getResults();
         for (String zimbraId : zimbraIds) {

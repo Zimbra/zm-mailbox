@@ -31,23 +31,19 @@ import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.TargetType;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
+import com.zimbra.cs.prov.ldap.LdapProv;
 import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 
 abstract class LdapUpgrade {
     
     protected String mBug;
     protected boolean mVerbose;
-    protected LdapProvisioning mProv;
+    protected LdapProv mProv;
     
     LdapUpgrade() throws ServiceException {
-        Provisioning prov = Provisioning.getInstance();
-        if (!(prov instanceof LdapProvisioning))
-            throw ServiceException.FAILURE("Provisioning is not instance of LdapProvisioning", null);
-        else
-            mProv = (LdapProvisioning)prov;
+        mProv = LdapProv.getInst();
     };
     
     String getBug() {
@@ -107,10 +103,10 @@ abstract class LdapUpgrade {
     
     abstract static class UpgradeVisitor {
         boolean mVerbose;
-        LdapProvisioning mProv;
+        LdapProv mProv;
         LegacyZimbraLdapContext mZlcForMod;
         
-        UpgradeVisitor(LdapProvisioning prov, LegacyZimbraLdapContext zlcForMod, boolean verbose) {
+        UpgradeVisitor(LdapProv prov, LegacyZimbraLdapContext zlcForMod, boolean verbose) {
             mVerbose = verbose;
             mProv = prov;
             mZlcForMod = zlcForMod;

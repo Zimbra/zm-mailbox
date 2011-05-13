@@ -21,8 +21,12 @@ import java.util.Set;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapDIT;
+import com.zimbra.cs.ldap.SearchLdapOptions;
+import com.zimbra.cs.ldap.ZLdapFilter;
+import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.prov.ldap.LdapHelper;
 
@@ -81,5 +85,31 @@ public abstract class LdapProv extends Provisioning {
     
     public abstract void externalLdapAuth(Domain d, String authMech, Account acct, String password, 
             Map<String, Object> authCtxt) throws ServiceException;
+    
+    @TODO  // deprecate
+    public abstract void searchLdapOnMaster(String base, String filter, String[] returnAttrs, 
+            SearchLdapOptions.SearchLdapVisitor visitor) 
+    throws ServiceException;
+    
+    public abstract void searchLdapOnMaster(String base, ZLdapFilter filter, String[] returnAttrs, 
+            SearchLdapOptions.SearchLdapVisitor visitor) 
+    throws ServiceException;
 
+    @TODO  // deprecate
+    public abstract void searchLdapOnReplica(String base, String filter, String[] returnAttrs, 
+            SearchLdapOptions.SearchLdapVisitor visitor) 
+    throws ServiceException;
+    
+    public abstract void searchLdapOnReplica(String base, ZLdapFilter filter, String[] returnAttrs, 
+            SearchLdapOptions.SearchLdapVisitor visitor) 
+    throws ServiceException;
+    
+    
+    /*
+     * Only used in upgrade.  DO NOT use it.
+     * TODO: retire it!
+     */
+    public abstract void searchObjects(String query, String returnAttrs[], String base, int flags,
+            NamedEntry.Visitor visitor, int maxResults, boolean useConnPool, boolean useMaster) 
+    throws ServiceException;
 }

@@ -418,6 +418,14 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
 
     
     /*
+     * global config
+     */
+    public ZLdapFilter globalConfig() {
+        return new UBIDLdapFilter(Filter.createEqualityFilter("cn", "config"));
+    }
+    
+    
+    /*
      * identity
      */
     @Override

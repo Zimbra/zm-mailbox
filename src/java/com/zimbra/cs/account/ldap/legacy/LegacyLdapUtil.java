@@ -458,16 +458,6 @@ public class LegacyLdapUtil {
             return values;
         }
     }
-    
-    @SDKDONE
-    public static void searchLdapOnMaster(String base, String query, String[] returnAttrs, SearchLdapOptions.SearchLdapVisitor visitor) throws ServiceException {
-        searchZimbraLdap(base, query, returnAttrs, true, visitor);
-    }
-
-    @SDKDONE
-    public static void searchLdapOnReplica(String base, String query, String[] returnAttrs, SearchLdapOptions.SearchLdapVisitor visitor) throws ServiceException {
-        searchZimbraLdap(base, query, returnAttrs, false, visitor);
-    }
       
     @SDKDONE
       private static void searchZimbraLdap(String base, String query, String[] returnAttrs, boolean useMaster, SearchLdapOptions.SearchLdapVisitor visitor) 

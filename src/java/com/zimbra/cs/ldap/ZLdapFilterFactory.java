@@ -95,6 +95,11 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter domainLabel();
 
     /*
+     * global config
+     */
+    public abstract ZLdapFilter globalConfig();
+    
+    /*
      * identity
      */
     public abstract ZLdapFilter allIdentities();

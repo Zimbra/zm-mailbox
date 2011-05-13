@@ -14,24 +14,13 @@
  */
 package com.zimbra.cs.account.ldap;
 
-import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-/*
-import javax.naming.NamingEnumeration;
-import javax.naming.NamingException;
-import javax.naming.directory.Attribute;
-import javax.naming.directory.Attributes;
-import javax.naming.directory.SearchControls;
-import javax.naming.directory.SearchResult;
-*/
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -43,10 +32,11 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.CountObjectsType;
-import com.zimbra.cs.account.ldap.legacy.LegacyLdapFilter;
-import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.ldap.IAttributes;
+import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
+import com.zimbra.cs.ldap.ZLdapFilterFactory;
+import com.zimbra.cs.prov.ldap.LdapProv;
 
 final public class Validators {
 
@@ -412,10 +402,11 @@ final public class Validators {
             }
             
             void search() throws ServiceException {
-                String searchBaseDN = ((LdapProvisioning) prov).getDIT().domainToAccountSearchDN(domain);
-                String query = LegacyLdapFilter.allNonSystemAccounts();
+                LdapProv ldapProv = (LdapProv) prov;
+                String searchBaseDN = ldapProv.getDIT().domainToAccountSearchDN(domain);
+                ZLdapFilter query = ZLdapFilterFactory.getInstance().allNonSystemAccounts();
                 
-                LegacyLdapUtil.searchLdapOnReplica(searchBaseDN, query, null, this);
+                ldapProv.searchLdapOnReplica(searchBaseDN, query, null, this);
                 ZimbraLog.account.debug("COS/Feature counts: %s + %s", cosCount, featureCount);
             }
             

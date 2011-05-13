@@ -27,6 +27,7 @@ import com.zimbra.cs.account.ldap.legacy.LegacyLdapFilter;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.SearchLdapOptions;
+import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.prov.ldap.LdapProv;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
 
@@ -63,7 +64,8 @@ public class Groups {
         if (mAllDLs == null) {
             try {
                 GetAllDLsVisitor visitor = new GetAllDLsVisitor();
-                LegacyLdapUtil.searchLdapOnReplica(mProv.getDIT().mailBranchBaseDN(), LegacyLdapFilter.allDistributionLists(),
+                mProv.searchLdapOnReplica(mProv.getDIT().mailBranchBaseDN(), 
+                        ZLdapFilterFactory.getInstance().allDistributionLists(),
                         new String[] {Provisioning.A_mail}, visitor);
                 
                 // all is well, swap in the result Set and cache it

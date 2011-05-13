@@ -29,6 +29,7 @@ import com.zimbra.cs.account.Provisioning.MailMode;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
+import com.zimbra.cs.prov.ldap.LdapProv;
 
 class DomainPublicServiceProtocolAndPort extends LdapUpgrade {
     
@@ -76,7 +77,8 @@ class DomainPublicServiceProtocolAndPort extends LdapUpgrade {
         Map<String, ServerInfo> mServerMap; // map keyed by server.zimbraServiceHostname
         int mDomainsVisited;
         
-        DomainPuclicServiceProtocolAndPortVisitor(LdapProvisioning prov, LegacyZimbraLdapContext zlcForMod, List<Server> servers, boolean verbose) {
+        DomainPuclicServiceProtocolAndPortVisitor(LdapProv prov, LegacyZimbraLdapContext zlcForMod, 
+                List<Server> servers, boolean verbose) {
             super(prov, zlcForMod, verbose);
             
             mServerMap = new HashMap<String, ServerInfo>();
@@ -226,7 +228,7 @@ class DomainPublicServiceProtocolAndPort extends LdapUpgrade {
         
         String query = genQuery(servers);
        
-        String bases[] = mProv.getSearchBases(Provisioning.SA_DOMAIN_FLAG);
+        String bases[] = mProv.getDIT().getSearchBases(Provisioning.SA_DOMAIN_FLAG);
         String attrs[] = new String[] {Provisioning.A_objectClass,
                                        Provisioning.A_zimbraId,
                                        Provisioning.A_zimbraDomainName,

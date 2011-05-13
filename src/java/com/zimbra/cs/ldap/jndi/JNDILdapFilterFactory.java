@@ -225,6 +225,14 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
 
     
     /*
+     * global config
+     */
+    public ZLdapFilter globalConfig() {
+        return new JNDILdapFilter(LegacyLdapFilter.globalConfig());
+    }
+    
+    
+    /*
      * identity
      */
     @Override

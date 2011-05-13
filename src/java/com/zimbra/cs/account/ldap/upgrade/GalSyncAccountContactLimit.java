@@ -69,12 +69,12 @@ public class GalSyncAccountContactLimit extends LdapUpgrade {
         };
         
         String query = "(&(objectClass=zimbraDomain)(zimbraGalAccountId=*))";
-        String bases[] = mProv.getSearchBases(Provisioning.SA_DOMAIN_FLAG);
+        String bases[] = mProv.getDIT().getSearchBases(Provisioning.SA_DOMAIN_FLAG);
         String attrs[] = new String[] {Provisioning.A_zimbraDomainName,
                                        Provisioning.A_zimbraGalAccountId};
         
         for (String base : bases) {
-            LegacyLdapUtil.searchLdapOnMaster(base, query, attrs, visitor);
+            mProv.searchLdapOnMaster(base, query, attrs, visitor);
         }
         
         return galSyncAcctIds;

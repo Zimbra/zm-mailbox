@@ -25,6 +25,7 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
+import com.zimbra.cs.prov.ldap.LdapProv;
 
 public class DomainObjectClassAmavisAccount extends LdapUpgrade {
 
@@ -34,7 +35,7 @@ public class DomainObjectClassAmavisAccount extends LdapUpgrade {
     static class AddDomainObjectClassAmavisAccountVisitor extends LdapUpgrade.UpgradeVisitor implements NamedEntry.Visitor {
         int mDomainsVisited;
     
-        AddDomainObjectClassAmavisAccountVisitor(LdapProvisioning prov, LegacyZimbraLdapContext zlcForMod, boolean verbose) {
+        AddDomainObjectClassAmavisAccountVisitor(LdapProv prov, LegacyZimbraLdapContext zlcForMod, boolean verbose) {
             super(prov, zlcForMod, verbose);
         }
         
@@ -84,7 +85,7 @@ public class DomainObjectClassAmavisAccount extends LdapUpgrade {
     void doUpgrade() throws ServiceException {
         
         String query = "(&(objectClass=zimbraDomain)(!(objectClass=amavisAccount)))";
-        String bases[] = mProv.getSearchBases(Provisioning.SA_DOMAIN_FLAG);
+        String bases[] = mProv.getDIT().getSearchBases(Provisioning.SA_DOMAIN_FLAG);
         String attrs[] = new String[] {Provisioning.A_objectClass,
                                        Provisioning.A_zimbraId,
                                        Provisioning.A_zimbraDomainName};

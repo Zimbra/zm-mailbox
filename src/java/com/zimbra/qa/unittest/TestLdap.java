@@ -109,6 +109,7 @@ public class TestLdap {
         junit.run(TestLdapProvCos.class);
         junit.run(TestLdapProvDataSource.class);
         junit.run(TestLdapProvDistributionList.class);
+        junit.run(TestLdapProvDIT.class);
         junit.run(TestLdapProvDomain.class);
         junit.run(TestLdapProvEntry.class);
         junit.run(TestLdapProvExternalLdapAuth.class);

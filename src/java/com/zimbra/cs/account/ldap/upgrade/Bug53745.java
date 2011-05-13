@@ -84,7 +84,7 @@ public class Bug53745 extends LdapUpgrade {
         
         for (String base : bases) {
             try {
-                LegacyLdapUtil.searchLdapOnMaster(base, query, attrs, visitor);
+                mProv.searchLdapOnMaster(base, query, attrs, visitor);
             } catch (ServiceException e) {
                 // log and continue
                 System.out.println("Caught ServiceException while searching " + query + " under base " + base);
@@ -98,13 +98,13 @@ public class Bug53745 extends LdapUpgrade {
     }
     
     private void doCos(LegacyZimbraLdapContext modZlc) {
-        String bases[] = mProv.getSearchBases(Provisioning.SD_COS_FLAG);
+        String bases[] = mProv.getDIT().getSearchBases(Provisioning.SD_COS_FLAG);
         String query = "(&" + LegacyLdapFilter.allCoses() + query() + ")";
         upgrade(modZlc, bases, query);
     }
     
     private void doAccount(LegacyZimbraLdapContext modZlc) {
-        String bases[] = mProv.getSearchBases(Provisioning.SA_ACCOUNT_FLAG);
+        String bases[] = mProv.getDIT().getSearchBases(Provisioning.SA_ACCOUNT_FLAG);
         String query = "(&" + LegacyLdapFilter.allAccounts() + query() + ")";
         upgrade(modZlc, bases, query);
     }

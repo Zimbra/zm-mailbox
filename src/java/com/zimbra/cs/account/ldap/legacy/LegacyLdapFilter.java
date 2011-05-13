@@ -190,6 +190,15 @@ public class LegacyLdapFilter {
         return "(objectclass=dcObject)";
     }
     
+    
+    /*
+     * global config
+     */
+    public static String globalConfig() {
+        return "cn=config";
+    }
+    
+    
     /*
      * identity
      */
