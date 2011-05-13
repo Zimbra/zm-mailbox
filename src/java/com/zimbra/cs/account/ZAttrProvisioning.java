@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 ysasaki 20110504-1502 */
+    /* build: 7.0.0_BETA1_1111 administrator 20110513-1215 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -7329,6 +7329,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1166)
     public static final String A_zimbraPrefPop3IncludeSpam = "zimbraPrefPop3IncludeSpam";
+
+    /**
+     * quick command encoded by the client
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1211)
+    public static final String A_zimbraPrefQuickCommand = "zimbraPrefQuickCommand";
 
     /**
      * Deprecated since: 6.0.0_BETA2. deprecated in favor of

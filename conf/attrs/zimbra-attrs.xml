@@ -5686,4 +5686,8 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
+<attr id="1211" name="zimbraPrefQuickCommand" type="string" cardinality="multi" optionalIn="account" since="8.0.0">
+  <desc>quick command encoded by the client</desc>
+</attr>
+
 </attrs>

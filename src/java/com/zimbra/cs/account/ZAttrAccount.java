@@ -35,7 +35,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 ysasaki 20110504-1502 */
+    /* build: 7.0.0_BETA1_1111 administrator 20110513-1215 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -35107,6 +35107,140 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPrefPop3IncludeSpam(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefPop3IncludeSpam, "");
+        return attrs;
+    }
+
+    /**
+     * quick command encoded by the client
+     *
+     * @return zimbraPrefQuickCommand, or empty array if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1211)
+    public String[] getPrefQuickCommand() {
+        return getMultiAttr(Provisioning.A_zimbraPrefQuickCommand);
+    }
+
+    /**
+     * quick command encoded by the client
+     *
+     * @param zimbraPrefQuickCommand new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1211)
+    public void setPrefQuickCommand(String[] zimbraPrefQuickCommand) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefQuickCommand, zimbraPrefQuickCommand);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * quick command encoded by the client
+     *
+     * @param zimbraPrefQuickCommand new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1211)
+    public Map<String,Object> setPrefQuickCommand(String[] zimbraPrefQuickCommand, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefQuickCommand, zimbraPrefQuickCommand);
+        return attrs;
+    }
+
+    /**
+     * quick command encoded by the client
+     *
+     * @param zimbraPrefQuickCommand new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1211)
+    public void addPrefQuickCommand(String zimbraPrefQuickCommand) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraPrefQuickCommand, zimbraPrefQuickCommand);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * quick command encoded by the client
+     *
+     * @param zimbraPrefQuickCommand new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1211)
+    public Map<String,Object> addPrefQuickCommand(String zimbraPrefQuickCommand, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraPrefQuickCommand, zimbraPrefQuickCommand);
+        return attrs;
+    }
+
+    /**
+     * quick command encoded by the client
+     *
+     * @param zimbraPrefQuickCommand existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1211)
+    public void removePrefQuickCommand(String zimbraPrefQuickCommand) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraPrefQuickCommand, zimbraPrefQuickCommand);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * quick command encoded by the client
+     *
+     * @param zimbraPrefQuickCommand existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1211)
+    public Map<String,Object> removePrefQuickCommand(String zimbraPrefQuickCommand, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraPrefQuickCommand, zimbraPrefQuickCommand);
+        return attrs;
+    }
+
+    /**
+     * quick command encoded by the client
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1211)
+    public void unsetPrefQuickCommand() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefQuickCommand, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * quick command encoded by the client
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1211)
+    public Map<String,Object> unsetPrefQuickCommand(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefQuickCommand, "");
         return attrs;
     }
 
