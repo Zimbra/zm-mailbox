@@ -24,6 +24,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapDIT;
+import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.LdapTODO.*;
@@ -50,7 +51,11 @@ public abstract class LdapProv extends Provisioning {
             Provisioning.A_zimbraACE,
             Provisioning.A_zimbraIsAdminGroup,
             Provisioning.A_zimbraAdminConsoleUIComponents
-    };
+    }; 
+    
+    protected LdapProv() {
+        LdapClient.initialize();
+    }
     
     public static LdapProv getInst() throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
