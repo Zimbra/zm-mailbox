@@ -16,6 +16,7 @@ package com.zimbra.cs.prov.ldap.entry;
 
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ldap.LdapException;
@@ -29,15 +30,6 @@ import com.zimbra.cs.ldap.ZAttributes;
 public class LdapDomain extends Domain implements LdapEntry {
 
     private String mDn;
-
-    /*
-    LdapDomain(ZSearchResultEntry entry, Map<String, Object> defaults, Provisioning prov) throws LdapException {
-        super(entry.getAttributes().getAttrString(Provisioning.A_zimbraDomainName), 
-                entry.getAttributes().getAttrString(Provisioning.A_zimbraId), 
-                entry.getAttributes().getAttrs(), defaults, prov);
-        mDn = entry.getDN();
-    }
-    */
     
     public LdapDomain(String dn, ZAttributes attrs, Map<String, Object> defaults, Provisioning prov) 
     throws LdapException {
@@ -49,5 +41,16 @@ public class LdapDomain extends Domain implements LdapEntry {
 
     public String getDN() {
         return mDn;
+    }
+    
+    public String getGalSearchBase(String searchBaseSpec) throws ServiceException {
+        if (searchBaseSpec.equalsIgnoreCase("DOMAIN"))
+            return getDN();
+            //mSearchBase = mDIT.domainDNToAccountSearchDN(ld.getDN());
+        else if (searchBaseSpec.equalsIgnoreCase("SUBDOMAINS"))
+            return getDN();
+        else if (searchBaseSpec.equalsIgnoreCase("ROOT"))
+            return "";
+        return "";
     }
 }
