@@ -8015,4 +8015,8 @@ public class Mailbox {
     public boolean isImmutableSystemFolder(int folderId) {
         return false;
     }
+
+    boolean isChildFolderPermitted(int folderId) {
+        return (folderId != Mailbox.ID_FOLDER_SPAM);
+    }
 }

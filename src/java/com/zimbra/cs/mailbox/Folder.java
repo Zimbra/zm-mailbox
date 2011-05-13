@@ -665,7 +665,7 @@ public class Folder extends MailItem {
             return false;
         else if ((type == TYPE_CONVERSATION) != (mId == Mailbox.ID_FOLDER_CONVERSATIONS))
             return false;
-        else if (mId == Mailbox.ID_FOLDER_SPAM && type == TYPE_FOLDER)
+        else if (type == TYPE_FOLDER && !mMailbox.isChildFolderPermitted(mId))
             return false;
         return true;
     }
