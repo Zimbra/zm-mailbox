@@ -1559,7 +1559,7 @@ public class SoapProvisioning extends Provisioning {
         if (options.getReturnAttrs() != null)
             req.addAttrs(options.getReturnAttrs());
         // TODO: handle ApplyCos, limit, offset?
-        SearchDirectoryResponse resp = invokeJaxb(new SearchDirectoryRequest());
+        SearchDirectoryResponse resp = invokeJaxb(req);
 
         for (DistributionListInfo dl : resp.getDistributionLists())
             result.add(new SoapDistributionList(dl, this));
