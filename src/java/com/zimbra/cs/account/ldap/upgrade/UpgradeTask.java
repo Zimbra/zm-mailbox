@@ -48,7 +48,8 @@ public enum UpgradeTask {
     BUG_57855(Bug57855.class),
     BUG_58084(Bug58084.class),
     BUG_58481(Bug58481.class),
-    BUG_58514(Bug58514.class);
+    BUG_58514(Bug58514.class),
+    BUG_59720(Bug59720.class);
     
     
     private Class mUpgradeClass;

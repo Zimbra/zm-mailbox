@@ -35,7 +35,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 ysasaki 20110504-1502 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110516-1608 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -13655,13 +13655,13 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @see #getFilterSleepIntervalAsString()
      *
-     * @return zimbraFilterSleepInterval in millseconds, or 100 (100ms)  if unset
+     * @return zimbraFilterSleepInterval in millseconds, or 1 (1ms)  if unset
      *
      * @since ZCS 7.0.0
      */
     @ZAttr(id=1159)
     public long getFilterSleepInterval() {
-        return getTimeInterval(Provisioning.A_zimbraFilterSleepInterval, 100L);
+        return getTimeInterval(Provisioning.A_zimbraFilterSleepInterval, 1L);
     }
 
     /**
@@ -13672,13 +13672,13 @@ public class ZAttrAccount  extends MailTarget {
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
      *
-     * @return zimbraFilterSleepInterval, or "100ms" if unset
+     * @return zimbraFilterSleepInterval, or "1ms" if unset
      *
      * @since ZCS 7.0.0
      */
     @ZAttr(id=1159)
     public String getFilterSleepIntervalAsString() {
-        return getAttr(Provisioning.A_zimbraFilterSleepInterval, "100ms");
+        return getAttr(Provisioning.A_zimbraFilterSleepInterval, "1ms");
     }
 
     /**
