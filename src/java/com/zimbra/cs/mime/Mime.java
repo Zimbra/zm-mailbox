@@ -238,7 +238,7 @@ public class Mime {
         mpart.mSize = size;
         mpart.mChildren = null;
         mpart.mDisposition = (disp == null ? (inDigest  && cts.equals(MimeConstants.CT_MESSAGE_RFC822) ? Part.ATTACHMENT : "") : disp.toLowerCase());
-        mpart.mFilename = (filename == null ? "" : filename.toLowerCase());
+        mpart.mFilename = (filename == null ? "" : filename);
         return mpart;
     }
 
