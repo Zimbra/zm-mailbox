@@ -31,11 +31,11 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.ldap.legacy.LegacyLdapFilter;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
+import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.prov.ldap.LdapProv;
 import com.zimbra.cs.util.Zimbra;
 
@@ -218,7 +218,7 @@ public class DataSourceCallback extends AttributeCallback {
     private List<Account> lookupAccountsFromLDAP(Provisioning prov, String cosId)
     throws ServiceException{
 
-        String filter = LegacyLdapFilter.accountsOnServerOnCosHasSubordinates(prov.getLocalServer(), cosId);
+        String filter = ZLdapFilterFactory.getInstance().accountsOnServerOnCosHasSubordinates(prov.getLocalServer(), cosId).toFilterString();
 
         List accts = prov.searchAccounts(filter, null, null, false,
                 Provisioning.SA_ACCOUNT_FLAG | Provisioning.SA_CALENDAR_RESOURCE_FLAG | Provisioning.SO_NO_FIXUP_OBJECTCLASS);

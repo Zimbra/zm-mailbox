@@ -17,13 +17,11 @@ package com.zimbra.cs.account.callback;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CosBy;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
 
 public class CosId extends AttributeCallback {
 

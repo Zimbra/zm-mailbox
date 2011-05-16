@@ -30,4 +30,7 @@ public class LdapConstants {
     public final static String ATTR_DN = "dn";
     public final static String ATTR_OBJECTCLASS = "objectClass";
     
+    // milli seconds to wait for checking LDAP server health
+    public final static int CHECK_LDAP_SLEEP_MILLIS = 5000;
+    
 }

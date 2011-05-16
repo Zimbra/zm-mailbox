@@ -29,11 +29,10 @@ import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZMutableEntry;
 
-public class TestLdapZMutableEntry {
+public class TestLdapZMutableEntry extends TestLdap {
 
     @BeforeClass
     public static void init() throws Exception {
-        TestLdap.manualInit();
     }
     
     @Test

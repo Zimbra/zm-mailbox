@@ -29,4 +29,18 @@ public enum LdapConnType {
         }
     }
 
+    /*
+     * for external LDAP, only called from legacy code
+     */
+    public static boolean requireStartTLS(String[] urls, boolean wantStartTLS) {
+        if (wantStartTLS) {
+            for (String url : urls) {
+                if (url.toLowerCase().contains("ldaps://"))
+                    return false;
+            }
+            return true;
+        }
+        return false;
+    }
+
 }

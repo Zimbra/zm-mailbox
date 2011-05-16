@@ -60,9 +60,9 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.ldap.LdapConfig;
-import com.zimbra.cs.ldap.LdapConfig.ExternalLdapConfig;
-import com.zimbra.cs.ldap.LdapConfig.ZimbraLdapConfig;
+import com.zimbra.cs.ldap.LdapServerConfig;
+import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
+import com.zimbra.cs.ldap.LdapServerConfig.ZimbraLdapConfig;
 import com.zimbra.cs.ldap.LdapConnType;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapException;
@@ -83,7 +83,7 @@ import com.zimbra.cs.ldap.ZSearchResultEnumeration;
 public class UBIDLdapContext extends ZLdapContext {
     
     private static boolean initialized = false;
-
+    
     private static ZimbraLdapConfig replicaConfig;
     private static ZimbraLdapConfig masterConfig;
     
@@ -118,6 +118,11 @@ public class UBIDLdapContext extends ZLdapContext {
     public void debug() {
         // TODO Auto-generated method stub
         
+    }
+    
+    // fo zmprov 
+    static synchronized void alwaysUseMaster() {
+        replicaConnPool = masterConnPool;
     }
     
     /*
@@ -477,8 +482,21 @@ public class UBIDLdapContext extends ZLdapContext {
         }
     }
 
-    static void ldapAuthenticate(String[] urls, boolean wantStartTLS,
-            String principal, String password, String note) 
+    /**
+     * authenticate to LDAP server.
+     * 
+     * This is method is called for:
+     *   - external LDAP auth
+     *   - auth to ZImbra LDAP server when the stored password is not SSHA.
+     *   
+     * @param urls
+     * @param wantStartTLS
+     * @param bindDN
+     * @param password
+     * @param note
+     * @throws ServiceException
+     */
+    private static void ldapAuthenticate(LdapServerConfig config, String bindDN, String password) 
     throws ServiceException {
         /*
          * About dereferencing alias.
@@ -500,8 +518,6 @@ public class UBIDLdapContext extends ZLdapContext {
          * 
          */
 
-        ExternalLdapConfig config = new ExternalLdapConfig(urls, wantStartTLS,
-                null, principal, password, null, note);
                 
         LdapServerPool serverPool = new LdapServerPool(config);
         LDAPConnection connection = null;
@@ -525,7 +541,7 @@ public class UBIDLdapContext extends ZLdapContext {
                 }
             }
             
-            BindResult bindResult = connection.bind(principal, password);
+            BindResult bindResult = connection.bind(bindDN, password);
             if (bindResult.getResultCode() != ResultCode.SUCCESS) {
                 throw ServiceException.FAILURE("unable to bind", null);
             }
@@ -539,5 +555,16 @@ public class UBIDLdapContext extends ZLdapContext {
         
     }
 
+    static void externalLdapAuthenticate(String[] urls, boolean wantStartTLS,
+            String bindDN, String password, String note)
+    throws ServiceException {
+        ExternalLdapConfig config = new ExternalLdapConfig(urls, wantStartTLS,
+                null, bindDN, password, null, note);
+        ldapAuthenticate(config, bindDN, password);
+    }
     
+    static void zimbraLdapAuthenticate(String bindDN, String password) 
+    throws ServiceException {
+        ldapAuthenticate(replicaConfig, bindDN, password); 
+    }
 }

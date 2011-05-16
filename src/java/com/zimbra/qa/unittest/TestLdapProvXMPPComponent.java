@@ -31,15 +31,13 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.XMPPComponent;
 
 
-public class TestLdapProvXMPPComponent {
+public class TestLdapProvXMPPComponent extends TestLdap {
     private static Provisioning prov;
     private static Domain domain;
     private static Server server;
     
     @BeforeClass
     public static void init() throws Exception {
-        TestLdap.manualInit();
-        
         prov = Provisioning.getInstance();
         domain = prov.createDomain("TestLdapProvXMPPComponent", new HashMap<String, Object>());
         server = prov.getLocalServer();

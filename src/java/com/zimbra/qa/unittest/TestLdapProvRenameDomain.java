@@ -14,12 +14,10 @@
  */
 package com.zimbra.qa.unittest;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -27,16 +25,17 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import com.zimbra.common.localconfig.LC;
+import junit.framework.AssertionFailedError;
+import org.junit.*;
+
+import static org.junit.Assert.*;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.CliUtil;
-import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Alias;
-import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
@@ -46,20 +45,16 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.XMPPComponent;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.prov.ldap.LdapProv;
 import com.zimbra.qa.unittest.TestProvisioningUtil.IDNName;
 
-import junit.framework.AssertionFailedError;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-
-public class TestRenameDomain  extends TestCase {
-    private LdapProvisioning mLdapProv;
-    private SoapProvisioning mSoapProv;
-    private Provisioning mProv;
-    private String TEST_ID;
+public class TestLdapProvRenameDomain extends TestLdap {
+    private static LdapProv mLdapProv;
+    private static SoapProvisioning mSoapProv;
+    private static Provisioning mProv;
+    private static String TEST_ID;
     
     private static String PASSWORD = "test123";
     
@@ -122,11 +117,11 @@ public class TestRenameDomain  extends TestCase {
     int NUM_OBJS(int objType) throws Exception {
         switch (objType) {
         case OBJ_ACCT:
-            return TestRenameDomain.NUM_ACCOUNTS;
+            return TestLdapProvRenameDomain.NUM_ACCOUNTS;
         case OBJ_DL_NESTED:
-            return TestRenameDomain.NUM_DLS_NESTED;
+            return TestLdapProvRenameDomain.NUM_DLS_NESTED;
         case OBJ_DL_TOP:
-            return TestRenameDomain.NUM_DLS_TOP;         }
+            return TestLdapProvRenameDomain.NUM_DLS_TOP;         }
         throw new Exception();
     }
         
@@ -162,20 +157,30 @@ public class TestRenameDomain  extends TestCase {
         mProv = mSoapProv;
     }
     
-    private void init() throws Exception {
+    @BeforeClass
+    public static void init() throws Exception {
+        // ZimbraLog.toolSetupLog4j("INFO", "/Users/pshao/p4/main/ZimbraServer/conf/log4j.properties.cli");
+        ZimbraLog.toolSetupLog4j("INFO", "/opt/zimbra/conf/log4j.properties");
         
         TEST_ID = TestProvisioningUtil.genTestId();
         
         System.out.println("\nTest " + TEST_ID + "\n");
         
         Provisioning prov = Provisioning.getInstance();
-        assertTrue(prov instanceof LdapProvisioning);
-        mLdapProv = (LdapProvisioning)prov;
+        assertTrue(prov instanceof LdapProv);
+        mLdapProv = (LdapProv) prov;
         
         mSoapProv = new SoapProvisioning();
         mSoapProv.soapSetURI("https://localhost:7071" + AdminConstants.ADMIN_SERVICE_URI);
         mSoapProv.soapZimbraAdminAuthenticate();
     }
+    
+    @AfterClass
+    public static void cleanup() throws Exception {
+        String baseDomainName = baseDomainName();
+        TestLdap.deleteEntireBranch(baseDomainName);
+    }
+    
     
     private void prepareDomain() throws Exception {    
         setLdapProv();
@@ -231,8 +236,12 @@ public class TestRenameDomain  extends TestCase {
             return domainIdx;
     }
     
+    private static String baseDomainName() {
+        return TestProvisioningUtil.baseDomainName("renamedomain", TEST_ID);
+    }
+    
     private String DOMAIN_NAME(String leafDomainName) {
-        return leafDomainName + "." + UNICODESTR + "." + TestProvisioningUtil.baseDomainName("renamedomain", TEST_ID);
+        return leafDomainName + "." + UNICODESTR + "." + baseDomainName();
     }
     
     private String SUB_DOMAIN_NAME(int index, int parentDomain) {
@@ -981,7 +990,7 @@ public class TestRenameDomain  extends TestCase {
         System.out.println("rd " + oldDomain.getId() + " " +  DOMAIN_NAME(NEW_DOMAIN));
         
         // rename
-        ((LdapProvisioning)mProv).renameDomain(oldDomain.getId(), DOMAIN_NAME(NEW_DOMAIN));
+        ((LdapProv) mProv).renameDomain(oldDomain.getId(), DOMAIN_NAME(NEW_DOMAIN));
         
         // verify
         // switch to SoapProvisioning, because the new domain is still cached under the wrong id
@@ -1021,7 +1030,7 @@ public class TestRenameDomain  extends TestCase {
         
         boolean ok = false;
         try {
-            ((LdapProvisioning)mProv).renameDomain(srcDomain.getId(), tgtDomainName);
+            ((LdapProv) mProv).renameDomain(srcDomain.getId(), tgtDomainName);
         } catch (ServiceException e) {
             assertEquals(ServiceException.INVALID_REQUEST, e.getCode());
             assertEquals("invalid request: domain " + new IDNName(tgtDomainName).aName() + " already exists", e.getMessage());
@@ -1031,10 +1040,10 @@ public class TestRenameDomain  extends TestCase {
         verifyDomainStatus(tgtDomainName);
     }
     
+    @Test
     public void testRenameDomain() throws Exception {
         try {
             System.out.println("\nTest " + TEST_ID + " starting\n");
-            init();
             
             renameDomainTest();
             renameToExistingDomainTest();
@@ -1052,19 +1061,5 @@ public class TestRenameDomain  extends TestCase {
             e.printStackTrace(System.out);
         }
     }
-    
-    
-    public static void main(String[] args) throws Exception {
-        CliUtil.toolSetup("INFO");
-        // ZimbraLog.toolSetupLog4j("INFO", "/Users/pshao/p4/main/ZimbraServer/conf/log4j.properties.cli");
-        ZimbraLog.toolSetupLog4j("INFO", "/opt/zimbra/conf/log4j.properties");
 
-        TestUtil.runTest(TestRenameDomain.class);
-
-        
-        /*
-        TestRenameDomain t = new TestRenameDomain();
-        t.setUp();
-        */
-    }
 }

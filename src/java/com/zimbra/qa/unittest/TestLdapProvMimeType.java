@@ -23,13 +23,11 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.mime.handler.UnknownTypeHandler;
 
-public class TestLdapProvMimeType {
+public class TestLdapProvMimeType extends TestLdap {
     private static Provisioning prov;
     
     @BeforeClass
     public static void init() throws Exception {
-        TestLdap.manualInit();
-        
         prov = Provisioning.getInstance();
     }
     

@@ -43,14 +43,12 @@ import com.zimbra.cs.ldap.ZSearchScope;
 import com.zimbra.cs.prov.ldap.LdapHelper;
 import com.zimbra.cs.prov.ldap.LdapProv;
 
-public class TestLdapProvDomain {
+public class TestLdapProvDomain extends TestLdap {
     
     private static Provisioning prov;
     
     @BeforeClass
     public static void init() throws Exception {
-        TestLdap.manualInit();
-        
         prov = Provisioning.getInstance();
     }
     
@@ -91,7 +89,7 @@ public class TestLdapProvDomain {
         assertNull(domain);
     }
     
-    private static String makeDomainName(String prefix) {
+    private static String makeTestDomainName(String prefix) {
         String baseDomainName = baseDomainName();
         String domainName;
         if (prefix == null) {
@@ -117,7 +115,7 @@ public class TestLdapProvDomain {
 
     @Test
     public void createTopDomain() throws Exception {
-        String DOMAIN_NAME = makeDomainName(null);
+        String DOMAIN_NAME = makeTestDomainName(null);
         Domain domain = createDomain(DOMAIN_NAME);
         
         deleteDomain(domain);
@@ -125,7 +123,7 @@ public class TestLdapProvDomain {
     
     @Test
     public void createSubDomain() throws Exception {
-        String DOMAIN_NAME = makeDomainName("createSubDomain.sub1.sub2");
+        String DOMAIN_NAME = makeTestDomainName("createSubDomain.sub1.sub2");
         Domain domain = createDomain(DOMAIN_NAME);
         
         deleteDomain(domain);
@@ -133,7 +131,7 @@ public class TestLdapProvDomain {
     
     @Test
     public void createDomainAlreadyExists() throws Exception {
-        String DOMAIN_NAME = makeDomainName("createDomainAlreadyExists");
+        String DOMAIN_NAME = makeTestDomainName("createDomainAlreadyExists");
         Domain domain = createDomain(DOMAIN_NAME);
         
         boolean caughtException = false;
@@ -152,7 +150,7 @@ public class TestLdapProvDomain {
     
     @Test
     public void deleteNonEmptyDomain() throws Exception {
-        String DOMAIN_NAME = makeDomainName("deleteNonEmptyDomain");
+        String DOMAIN_NAME = makeTestDomainName("deleteNonEmptyDomain");
         Domain domain = createDomain(DOMAIN_NAME);
         
         String ACCT_NAME = TestUtil.getAddress("acct", DOMAIN_NAME);
@@ -249,8 +247,8 @@ public class TestLdapProvDomain {
     
     @Test
     public void testAliasDomain() throws Exception {
-        String TARGET_DOMAIN_NAME = makeDomainName("testAliasDomain-target");
-        String ALIAS_DOMAIN_NAME = makeDomainName("testAliasDomain-alias");
+        String TARGET_DOMAIN_NAME = makeTestDomainName("testAliasDomain-target");
+        String ALIAS_DOMAIN_NAME = makeTestDomainName("testAliasDomain-alias");
         String USER_LOCAL_PART = "user";
         
         Domain targetDomain = prov.get(DomainBy.name, TARGET_DOMAIN_NAME);
@@ -311,7 +309,7 @@ public class TestLdapProvDomain {
 
     @Test
     public void getDomain() throws Exception {
-        String DOMAIN_NAME = makeDomainName("getDomain");
+        String DOMAIN_NAME = makeTestDomainName("getDomain");
         
         String VIRTUAL_HOSTNAME = "virtual.com";
         String KRB5_REALM = "KRB5.REALM";
@@ -337,7 +335,7 @@ public class TestLdapProvDomain {
     
     @Test
     public void getDomainNotExist() throws Exception {
-        String DOMAIN_NAME = makeDomainName("getDomainNotExist");
+        String DOMAIN_NAME = makeTestDomainName("getDomainNotExist");
         Domain domain = prov.get(DomainBy.name, DOMAIN_NAME);
         assertNull(domain);
     }

@@ -69,7 +69,7 @@ public class SearchDirectory extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
-        String query = request.getAttribute(AdminConstants.E_QUERY);
+        String query = request.getAttribute(AdminConstants.E_QUERY, null);
 
         int maxResults = (int) request.getAttributeLong(AdminConstants.A_MAX_RESULTS, MAX_SEARCH_RESULTS);
         int limit = (int) request.getAttributeLong(AdminConstants.A_LIMIT, Integer.MAX_VALUE);

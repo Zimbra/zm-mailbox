@@ -39,7 +39,7 @@ import com.zimbra.cs.account.ZAttrProvisioning;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.prov.ldap.LdapObjectClass;
 
-public class TestLdapProvEntry {
+public class TestLdapProvEntry extends TestLdap {
     private static final String DOMAIN_NAME = "\u4e2d\u6587";  // an IDN domain name
     private static final String ACCTNAME_LOCAL_PART = "test-ldap-prov-entry";
     
@@ -54,8 +54,6 @@ public class TestLdapProvEntry {
     
     @BeforeClass
     public static void init() throws Exception {
-        TestLdap.manualInit();
-        
         prov = Provisioning.getInstance();
         
         domain = prov.get(Provisioning.DomainBy.name, DOMAIN_NAME);

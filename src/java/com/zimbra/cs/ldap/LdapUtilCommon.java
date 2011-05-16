@@ -288,14 +288,4 @@ public class LdapUtilCommon {
         return sb.toString();
     }
 
-    public static String joinURLS(String urls[]) {
-        if (urls.length == 1) return urls[0];
-        StringBuffer url = new StringBuffer();
-        for (int i=0; i < urls.length; i++) {
-            if (i > 0) url.append(' ');
-            url.append(urls[i]);
-        }
-        return url.toString();
-    }
-
 }

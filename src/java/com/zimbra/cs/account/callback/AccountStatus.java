@@ -16,14 +16,16 @@
 package com.zimbra.cs.account.callback;
 
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeCallback;
+import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
+import com.zimbra.cs.account.Provisioning.DistributionListBy;
 
 public class AccountStatus extends AttributeCallback {
 	
@@ -84,19 +86,22 @@ public class AccountStatus extends AttributeCallback {
     }
     
     private void handleAccountStatusClosed(Account account)  throws ServiceException {
-        LdapProvisioning prov = (LdapProvisioning) Provisioning.getInstance();
+        Provisioning prov = Provisioning.getInstance();
         String status = account.getAccountStatus(prov);
         
         if (status.equals(Provisioning.ACCOUNT_STATUS_CLOSED)) {
             ZimbraLog.misc.info("removing account address and all its aliases from all distribution lists");
             
-            String aliases[] = account.getMailAlias();
-            String addrs[] = new String[aliases.length+1];
-            addrs[0] = account.getName();
-            if (aliases.length > 0)
-                System.arraycopy(aliases, 0, addrs, 1, aliases.length);
+            String[] addrToRemove = new String[] {account.getName()};
             
-            prov.removeAddressesFromAllDistributionLists(addrs);
+            Set<String> dlIds = prov.getDistributionLists(account);
+            for (String dlId : dlIds) {
+                DistributionList dl = prov.get(DistributionListBy.id, dlId);
+                if (dl != null) {
+                    // will remove all members that are aliases of the account too
+                    prov.removeMembers(dl, addrToRemove);
+                }
+            }
         }
     }
     

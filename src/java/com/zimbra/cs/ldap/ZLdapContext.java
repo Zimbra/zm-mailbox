@@ -15,10 +15,7 @@
 package com.zimbra.cs.ldap;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.ldap.LdapException.LdapEntryAlreadyExistException;
-import com.zimbra.cs.ldap.LdapTODO.TODOEXCEPTIONMAPPING;
 
 public abstract class ZLdapContext extends ZLdapElement implements ILdapContext {
 

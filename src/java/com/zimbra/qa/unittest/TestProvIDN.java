@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.httpclient.Credentials;
-import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpState;
@@ -41,7 +40,6 @@ import static org.junit.Assert.*;
 
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeManager.IDNType;
@@ -56,7 +54,17 @@ import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.qa.unittest.TestProvisioningUtil.IDNName;
 
-public class TestIDN {
+/*
+ * 
+ * SOAP: UTF-8 (multi bytes)
+ * LDAP: UTF-8 (multi bytes)
+ * Java: UTF-16 (2 bytes Unicode) 
+ *       The primitive data type char in the Java programming language is an unsigned 16-bit 
+ *       integer that can represent a Unicode code point in the range U+0000 to U+FFFF, 
+ *       or the code units of UTF-16.
+ */
+
+public class TestProvIDN extends TestLdap {
     private static String TEST_ID;
     private static String TEST_NAME = "test-IDN";
     private static String UNICODESTR = "\u4e2d\u6587";
@@ -79,7 +87,7 @@ public class TestIDN {
         BASE_DOMAIN_NAME = "." + TestProvisioningUtil.baseDomainName(TEST_NAME, TEST_ID);
     }
     
-    private String makeDomainName(String prefix) {
+    private String makeTestDomainName(String prefix) {
         return prefix + UNICODESTR + BASE_DOMAIN_NAME;
     }
 
@@ -277,9 +285,9 @@ public class TestIDN {
     @Test
     public void testDomain() throws Exception {
 
-        IDNName d1Name = new IDNName(makeDomainName("domain-1."));
-        IDNName d2Name = new IDNName(makeDomainName("domain-2."));
-        IDNName d2RenamedName = new IDNName(makeDomainName("domain-2-renamed."));
+        IDNName d1Name = new IDNName(makeTestDomainName("domain-1."));
+        IDNName d2Name = new IDNName(makeTestDomainName("domain-2."));
+        IDNName d2RenamedName = new IDNName(makeTestDomainName("domain-2-renamed."));
         
         // create domain with unicode name
         Domain domain1 = (Domain)createTest(EntryType.DOMAIN, NameType.UNAME, d1Name);
@@ -325,9 +333,9 @@ public class TestIDN {
         
         // test values
         String goodEnglish       = "good" + BASE_DOMAIN_NAME;
-        String goodIDN           = makeDomainName("good");
+        String goodIDN           = makeTestDomainName("good");
         String LDHEnglish_comma  = "ldh'ldh" + BASE_DOMAIN_NAME;
-        String LDHIDN_comma      = makeDomainName("ldh'ldh");
+        String LDHIDN_comma      = makeTestDomainName("ldh'ldh");
         
         
         // when zimbraAllowNonLDHCharsInDomain is TRUE
@@ -335,11 +343,11 @@ public class TestIDN {
         attrs.put(Provisioning.A_zimbraAllowNonLDHCharsInDomain, Provisioning.TRUE);
         mProv.modifyAttrs(config, attrs);
         
-        String prefix = "allowtest.";  // so that we don't run into doamin exist problem
+        String prefix = "allowtest.";  // so that we don't run into domain exist problem
         doTestInvalidNames(prefix + goodEnglish, true);
         doTestInvalidNames(prefix + goodIDN, true);
-        doTestInvalidNames(prefix + LDHEnglish_comma, true);
-        doTestInvalidNames(prefix + LDHIDN_comma, true);
+        doTestInvalidNames(prefix + LDHEnglish_comma, true);  // test failed. javamail does not allow it anymore, fix? bug 41123
+        doTestInvalidNames(prefix + LDHIDN_comma, true);      // test failed. javamail does not allow it anymore. fix? bug 41123
         
         // when zimbraAllowNonLDHCharsInDomain is FALSE
         attrs.clear();
@@ -361,7 +369,7 @@ public class TestIDN {
     @Test
     public void testAccount() throws Exception {
         
-        IDNName domainName = new IDNName(makeDomainName("domain-acct-test."));
+        IDNName domainName = new IDNName(makeTestDomainName("domain-acct-test."));
         Domain domain = createDomain(domainName.uName(), domainName.uName());
         
         IDNName acct1Name = new IDNName("acct-1", domainName.uName());
@@ -427,7 +435,7 @@ public class TestIDN {
     @Test
     public void testDistributionList() throws Exception {
        
-        IDNName domainName = new IDNName(makeDomainName("domain-dl-test."));
+        IDNName domainName = new IDNName(makeTestDomainName("domain-dl-test."));
         Domain domain = createDomain(domainName.uName(), domainName.uName());
         
         IDNName acct1Name = new IDNName("acct-1", domainName.uName());
@@ -485,7 +493,7 @@ public class TestIDN {
     @Test
     public void testBasicAuth() throws Exception {
         
-        IDNName domainName = new IDNName(makeDomainName("basicAuthTest."));
+        IDNName domainName = new IDNName(makeTestDomainName("basicAuthTest."));
         Domain domain = createDomain(domainName.uName(), domainName.uName());
         
         IDNName acctName = new IDNName("acct", domainName.uName());
@@ -640,22 +648,6 @@ public class TestIDN {
         } catch (IOException e) {
             ps.println(text);
         }
-    }
-    
- 
-    public static void main(String[] args) throws Exception {
-        /*
-         * 
-         * SOAP: UTF-8 (multi bytes)
-         * LDAP: UTF-8 (multi bytes)
-         * Java: UTF-16 (2 bytes Unicode) 
-         *       The primitive data type char in the Java programming language is an unsigned 16-bit 
-         *       integer that can represent a Unicode code point in the range U+0000 to U+FFFF, 
-         *       or the code units of UTF-16.
-         */
-        // TestUtil.cliSetup();  // we don't want SOAPProvisoning, we want LdapProvisioning
-        CliUtil.toolSetup();
-        TestUtil.runTest(TestIDN.class);
     }
 
 }

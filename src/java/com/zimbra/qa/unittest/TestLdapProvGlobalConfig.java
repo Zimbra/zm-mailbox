@@ -20,14 +20,12 @@ import static org.junit.Assert.*;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 
-public class TestLdapProvGlobalConfig {
+public class TestLdapProvGlobalConfig extends TestLdap {
 
     private static Provisioning prov;
     
     @BeforeClass
     public static void init() throws Exception {
-        TestLdap.manualInit();
-        
         prov = Provisioning.getInstance();
     }
     

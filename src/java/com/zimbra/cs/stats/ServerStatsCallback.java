@@ -21,8 +21,8 @@ import java.util.Map;
 import com.zimbra.common.stats.RealtimeStatsCallback;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.PermissionCache;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.mailbox.MessageCache;
+import com.zimbra.cs.prov.ldap.LdapProv;
 import com.zimbra.cs.store.BlobInputStream;
 import com.zimbra.cs.store.FileDescriptorCache;
 
@@ -41,8 +41,8 @@ public class ServerStatsCallback implements RealtimeStatsCallback {
         data.put(ZimbraPerf.RTS_ACL_CACHE_HIT_RATE, PermissionCache.getHitRate());
         
         Provisioning prov = Provisioning.getInstance();
-        if (prov instanceof LdapProvisioning) {
-            LdapProvisioning ldap = (LdapProvisioning) prov;
+        if (prov instanceof LdapProv) {
+            LdapProv ldap = (LdapProv) prov;
             data.put(ZimbraPerf.RTS_ACCOUNT_CACHE_SIZE, ldap.getAccountCacheSize());
             data.put(ZimbraPerf.RTS_ACCOUNT_CACHE_HIT_RATE, ldap.getAccountCacheHitRate());
             data.put(ZimbraPerf.RTS_COS_CACHE_SIZE, ldap.getCosCacheSize());

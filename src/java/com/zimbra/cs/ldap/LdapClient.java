@@ -16,10 +16,9 @@ package com.zimbra.cs.ldap;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
-import com.zimbra.cs.ldap.LdapConfig.ExternalLdapConfig;
+import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
 import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.ZSearchScope.ZSearchScopeFactory;
 import com.zimbra.cs.ldap.jndi.JNDILdapClient;
@@ -68,7 +67,8 @@ public abstract class LdapClient {
      * Bridging the legacy ZimbraLdapContext and the new ZLdapContext classes.
      */
     @TODO
-    public static LegacyZimbraLdapContext toLegacyZimbraLdapContext(com.zimbra.cs.account.Provisioning prov, ILdapContext ldapContext) {
+    public static LegacyZimbraLdapContext toLegacyZimbraLdapContext(
+            com.zimbra.cs.account.Provisioning prov, ILdapContext ldapContext) {
         if (!prov.getClass().equals(com.zimbra.cs.account.ldap.LdapProvisioning.class) &&
             !prov.getClass().equals(com.zimbra.cs.account.ldap.custom.CustomLdapProvisioning.class)) { // TODO: what to do with CustomLdapProvisioning?
             Zimbra.halt("Provisioning instance is not LdapProvisioning", 
@@ -90,7 +90,8 @@ public abstract class LdapClient {
     }
     
     @TODO
-    public static ZLdapContext toZLdapContext(com.zimbra.cs.account.Provisioning prov, ILdapContext ldapContext) {
+    public static ZLdapContext toZLdapContext(
+            com.zimbra.cs.account.Provisioning prov, ILdapContext ldapContext) {
         if (!prov.getClass().equals(com.zimbra.cs.prov.ldap.LdapProvisioning.class)) {
             Zimbra.halt("Provisioning instance is not XXXLdapProvisioning",  // TODO, what would be the name?
                     ServiceException.FAILURE("internal error, wrong ldap context instance", null));
@@ -116,6 +117,14 @@ public abstract class LdapClient {
      * static methods just to short-hand the getInstance() call
      * ========================================================
      */
+    public static void waitForLdapServer() {
+        getInstance().waitForLdapServerImpl();
+    }
+    
+    public static void alwasyUseMaster() {
+        getInstance().alwaysUseMasterImpl();
+    }
+    
     public static ZLdapContext getContext() throws ServiceException {
         return getInstance().getContextImpl();
     }
@@ -146,10 +155,24 @@ public abstract class LdapClient {
     }
     
     public static void externalLdapAuthenticate(String urls[], boolean wantStartTLS, 
-            String principal, String password, String note) 
+            String bindDN, String password, String note) 
     throws ServiceException {
         getInstance().externalLdapAuthenticateImpl(urls, wantStartTLS, 
-                principal, password, note);
+                bindDN, password, note);
+    }
+    
+    /**
+     * LDAP authenticate to the Zimbra LDAP server.
+     * Used when stored password is not SSHA.
+     * 
+     * @param principal
+     * @param password
+     * @param note
+     * @throws ServiceException
+     */
+    public static void zimbraLdapAuthenticate(String bindDN, String password) 
+    throws ServiceException {
+        getInstance().zimbraLdapAuthenticateImpl(bindDN, password);
     }
     
     /*
@@ -169,6 +192,10 @@ public abstract class LdapClient {
     protected abstract ZLdapFilterFactory getLdapFilterFactoryInstance() 
     throws LdapException;
     
+    protected abstract void waitForLdapServerImpl();
+    
+    protected abstract void alwaysUseMasterImpl();
+    
     protected ZLdapContext getContextImpl() throws ServiceException {
         return getContext(LdapServerType.REPLICA);
     }
@@ -186,8 +213,11 @@ public abstract class LdapClient {
     
     protected abstract ZSearchControls createSearchControlsImpl(
             ZSearchScope searchScope, int sizeLimit, String[] returnAttrs);
-
+    
     protected abstract void externalLdapAuthenticateImpl(String urls[], 
-            boolean wantStartTLS, String principal, String password, String note) 
+            boolean wantStartTLS, String bindDN, String password, String note) 
+    throws ServiceException;
+    
+    protected abstract void zimbraLdapAuthenticateImpl(String bindDN, String password) 
     throws ServiceException;
 }

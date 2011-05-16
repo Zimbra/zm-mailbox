@@ -14,13 +14,14 @@
  */
 package com.zimbra.cs.ldap.unboundid;
 
+import java.util.Date;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.ldap.LdapClient;
-import com.zimbra.cs.ldap.LdapConfig.ExternalLdapConfig;
+import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapServerType;
-import com.zimbra.cs.ldap.LdapTODO;
-import com.zimbra.cs.ldap.LdapTODO.*;
+import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.ZMutableEntry;
@@ -53,6 +54,35 @@ public class UBIDLdapClient extends LdapClient {
     }
     
     @Override
+    protected void waitForLdapServerImpl() {
+        while (true) {
+            UBIDLdapContext zlc = null;
+            try {
+                zlc = new UBIDLdapContext(LdapServerType.REPLICA);
+                break;
+            } catch (ServiceException e) {
+                // may called at server startup when logging is not up yet.
+                System.err.println(new Date() + ": error communicating with LDAP (will retry)");
+                e.printStackTrace();
+                try {
+                    Thread.sleep(LdapConstants.CHECK_LDAP_SLEEP_MILLIS);
+                } catch (InterruptedException ie) {
+                }
+            } finally {
+                if (zlc != null) {
+                    zlc.closeContext();
+                }
+            }
+        }
+    }
+    
+    @Override
+    protected void alwaysUseMasterImpl() {
+        // TODO Auto-generated method stub
+        
+    }
+    
+    @Override
     protected ZLdapContext getContextImpl(LdapServerType serverType) 
     throws ServiceException {
         return new UBIDLdapContext(serverType);
@@ -66,14 +96,12 @@ public class UBIDLdapClient extends LdapClient {
     throws ServiceException {
         return getContextImpl(serverType);
     }
-    
 
     @Override
     protected ZLdapContext getExternalContextImpl(ExternalLdapConfig config)
     throws ServiceException {
         return new UBIDLdapContext(config);
     }
-    
 
     @Override
     protected ZMutableEntry createMutableEntryImpl() {
@@ -88,13 +116,16 @@ public class UBIDLdapClient extends LdapClient {
 
     @Override
     protected void externalLdapAuthenticateImpl(String[] urls,
-            boolean wantStartTLS, String principal, String password, String note)
+            boolean wantStartTLS, String bindDN, String password, String note)
     throws ServiceException {
-        UBIDLdapContext.ldapAuthenticate(urls, wantStartTLS,
-                principal, password, note);
-        
+        UBIDLdapContext.externalLdapAuthenticate(urls, wantStartTLS,
+                bindDN, password, note);
     }
 
-
+    @Override
+    protected void zimbraLdapAuthenticateImpl(String bindDN, String password) 
+    throws ServiceException {
+        UBIDLdapContext.zimbraLdapAuthenticate(bindDN, password);
+    }
 
 }

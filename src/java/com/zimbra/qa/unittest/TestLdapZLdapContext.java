@@ -17,7 +17,6 @@ package com.zimbra.qa.unittest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -41,7 +40,7 @@ import com.zimbra.cs.ldap.ZSearchResultEnumeration;
 import com.zimbra.cs.ldap.ZSearchScope;
 import com.zimbra.cs.ldap.LdapException.LdapSizeLimitExceededException;
 
-public class TestLdapZLdapContext {
+public class TestLdapZLdapContext extends TestLdap {
     
     private static TestLdap.TestConfig testConfig;
     private static Provisioning prov;
@@ -49,7 +48,7 @@ public class TestLdapZLdapContext {
     
     @BeforeClass
     public static void init() throws Exception {
-        testConfig = TestLdap.manualInit();
+        testConfig = getCurrentTestConfig();
         
         prov = Provisioning.getInstance();
         domain = TestLdapProvDomain.createDomain(prov, baseDomainName(), null);

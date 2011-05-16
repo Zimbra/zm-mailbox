@@ -32,7 +32,7 @@ import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 
-public class TestCos {
+public class TestProvCos extends TestLdap {
     
     Provisioning mProv= Provisioning.getInstance();
     
@@ -241,15 +241,6 @@ public class TestCos {
         mProv.flushCache(CacheEntryType.account, new CacheEntry[]{new CacheEntry(CacheEntryBy.name, ACCT_NAME)});
         // reload the account
         ACCT = mProv.get(Provisioning.AccountBy.name, ACCT_NAME);
-    }
-    
-    /**
-     * @param args
-     */
-    public static void main(String[] args) throws ServiceException {
-        // TestUtil.cliSetup(); // SoapProvisioning
-        CliUtil.toolSetup();    // LdapProvisioning
-        TestUtil.runTest(TestCos.class);
     }
 
 }

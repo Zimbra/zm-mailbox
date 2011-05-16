@@ -1,3 +1,17 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ *
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.cs.account;
 
 import java.io.BufferedWriter;
@@ -19,12 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.naming.NameClassPair;
-import javax.naming.NamingEnumeration;
-import javax.naming.NamingException;
-import javax.naming.directory.Attributes;
-import javax.naming.directory.DirContext;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -43,7 +51,7 @@ import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeManager.ObjectClassInfo;
-import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
+import com.zimbra.cs.prov.ldap.LdapProv;
 
 public class AttributeManagerUtil {
 
@@ -766,31 +774,6 @@ public class AttributeManagerUtil {
         
         FileGenUtil.replaceFile(outFile, result.toString());
     }
-    
-    private static void dumpAttrs(PrintWriter pw, String name, Attributes attrs) throws NamingException {
-        NamingEnumeration<javax.naming.directory.Attribute> attrIter = (NamingEnumeration<javax.naming.directory.Attribute>) attrs.getAll();
-        List<javax.naming.directory.Attribute> attrsList = new LinkedList<javax.naming.directory.Attribute>();
-        while (attrIter.hasMore()) {
-            attrsList.add(attrIter.next());
-        }
-        Collections.sort(attrsList, new Comparator<javax.naming.directory.Attribute>() {
-            public int compare(javax.naming.directory.Attribute a1, javax.naming.directory.Attribute b1) {
-                return a1.getID().compareTo(b1.getID());
-            }
-        });
-        for (javax.naming.directory.Attribute attr : attrsList) {
-//            String s = attr.toString();
-            NamingEnumeration valIter = attr.getAll();
-            List<String> values = new LinkedList<String>();
-            while (valIter.hasMore()) {
-                values.add((String)valIter.next());
-            }
-            Collections.sort(values);
-            for (String val : values) {
-                pw.println(name + ": " + attr.getID() + ": " + val);
-            }
-        }
-    }
 
     private void listAttrs(PrintWriter pw, String[] inClass, String[] notInClass, String[] printFlags) throws ServiceException {
         if (inClass == null)
@@ -835,39 +818,6 @@ public class AttributeManagerUtil {
         }
 
     }
-    
-    private static void dumpSchema(PrintWriter pw) throws ServiceException {
-        LegacyZimbraLdapContext zlc = null;
-        try {
-          zlc = new LegacyZimbraLdapContext(true);
-          DirContext schema = zlc.getSchema();
-
-          // Enumerate over ClassDefinition, AttributeDefinition, MatchingRule, SyntaxDefinition
-          NamingEnumeration<NameClassPair> schemaTypeIter = schema.list("");
-          while (schemaTypeIter.hasMore()) {
-              String schemaType = schemaTypeIter.next().getName();
-              NamingEnumeration<NameClassPair> schemaEntryIter = schema.list(schemaType);
-              List<String> schemaEntries = new LinkedList<String>();
-              while (schemaEntryIter.hasMore()) {
-                  schemaEntries.add(schemaEntryIter.next().getName());
-              }
-              Collections.sort(schemaEntries);
-
-              for (String schemaEntry : schemaEntries) {
-                  DirContext sdc = (DirContext) schema.lookup(schemaType + "/" + schemaEntry);
-                  dumpAttrs(pw, schemaType + ": " + schemaEntry, sdc.getAttributes(""));
-              }
-          }
-
-          dumpAttrs(pw, "GlobalConfig", zlc.getAttributes("cn=config,cn=zimbra"));
-          dumpAttrs(pw, "DefaultCOS", zlc.getAttributes("cn=default,cn=cos,cn=zimbra"));
-        } catch (NamingException ne) {
-            ne.printStackTrace();
-        } finally {
-            LegacyZimbraLdapContext.closeContext(zlc);
-        }
-    }
-    
 
     private static String enumName(AttributeInfo ai) {
         String enumName = ai.getName();
@@ -1381,7 +1331,7 @@ public class AttributeManagerUtil {
         
         switch (action) {
         case dump:
-            dumpSchema(pw);
+            LdapProv.getInst().dumpLdapSchema(pw);
             break;
         case generateDefaultCOSLdif:
             amu.generateDefaultCOSLdif(pw);

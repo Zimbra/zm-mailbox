@@ -38,14 +38,12 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Provisioning.SignatureBy;
 
-public class TestLdapProvSignature {
+public class TestLdapProvSignature extends TestLdap {
     private static Provisioning prov;
     private static Domain domain;
     
     @BeforeClass
     public static void init() throws Exception {
-        TestLdap.manualInit();
-        
         prov = Provisioning.getInstance();
         domain = prov.createDomain(baseDomainName(), new HashMap<String, Object>());
         assertNotNull(domain);

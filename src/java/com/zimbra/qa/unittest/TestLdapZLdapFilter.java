@@ -25,15 +25,13 @@ import com.zimbra.cs.ldap.ZLdapFilterFactory;
 
 import static org.junit.Assert.*;
 
-public class TestLdapZLdapFilter {
+public class TestLdapZLdapFilter extends TestLdap {
     
     private static Provisioning prov;
     private static ZLdapFilterFactory filterDactory;
     
     @BeforeClass
     public static void init() throws Exception {
-        TestLdap.manualInit();
-        
         prov = Provisioning.getInstance();
         filterDactory = ZLdapFilterFactory.getInstance();
     }

@@ -17,49 +17,20 @@ package com.zimbra.cs.account;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.CliUtil;
-import com.zimbra.common.util.DateUtil;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.SetUtil;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.Version;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.callback.IDNCallback;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
-import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
-import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.extension.ExtensionUtil;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import com.zimbra.cs.prov.ldap.LdapProv;
 import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
-import javax.naming.NameClassPair;
-import javax.naming.NamingEnumeration;
-import javax.naming.NamingException;
-import javax.naming.directory.Attributes;
-import javax.naming.directory.DirContext;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -1216,7 +1187,7 @@ public class AttributeManager {
             return mAttrs.get(name.toLowerCase());
     }
 
-    public static void loadLdapSchemaExtensionAttrs(LdapProvisioning prov) {
+    public static void loadLdapSchemaExtensionAttrs(LdapProv prov) {
         synchronized(AttributeManager.class) {
             try {
                 AttributeManager theInstance = AttributeManager.getInstance();
@@ -1228,7 +1199,7 @@ public class AttributeManager {
         }
     }
 
-    private void getLdapSchemaExtensionAttrs(LdapProvisioning prov) throws ServiceException {
+    private void getLdapSchemaExtensionAttrs(LdapProv prov) throws ServiceException {
         if (mLdapSchemaExtensionInited)
             return;
 
@@ -1241,57 +1212,14 @@ public class AttributeManager {
         getExtraObjectClassAttrs(prov, AttributeClass.server, Provisioning.A_zimbraServerExtraObjectClass);
     }
 
-    private void getExtraObjectClassAttrs(LdapProvisioning prov, AttributeClass ac, String extraObjectClassAttr) throws ServiceException {
+    private void getExtraObjectClassAttrs(LdapProv prov, AttributeClass ac, String extraObjectClassAttr) throws ServiceException {
         Config config = prov.getConfig();
 
         String[] extraObjectClasses = config.getMultiAttr(extraObjectClassAttr);
 
         if (extraObjectClasses.length > 0) {
             Set<String> attrsInOCs = mClassToAttrsMap.get(AttributeClass.account);
-            getAttrsInOCs(extraObjectClasses, attrsInOCs);
-        }
-    }
-
-    private void getAttrsInOCs(String[] ocs, Set<String> attrsInOCs) throws ServiceException {
-
-        LegacyZimbraLdapContext zlc = null;
-        try {
-            zlc = new LegacyZimbraLdapContext(true);
-            DirContext schema = zlc.getSchema();
-
-            Map<String, Object> attrs;
-            for (String oc : ocs) {
-                attrs = null;
-                try {
-                    DirContext ocSchema = (DirContext)schema.lookup("ClassDefinition/" + oc);
-                    Attributes attributes = ocSchema.getAttributes("");
-                    attrs = LegacyLdapUtil.getAttrs(attributes);
-                } catch (NamingException e) {
-                    ZimbraLog.account.debug("unable to load LDAP schema extension for objectclass: " + oc, e);
-                }
-
-                if (attrs == null)
-                    continue;
-
-                for (Map.Entry<String, Object> attr : attrs.entrySet()) {
-                    String attrName = attr.getKey();
-                    if ("MAY".compareToIgnoreCase(attrName) == 0 || "MUST".compareToIgnoreCase(attrName) == 0) {
-                        Object value = attr.getValue();
-                        if (value instanceof String)
-                            attrsInOCs.add((String)value);
-                        else if (value instanceof String[]) {
-                            for (String v : (String[])value)
-                                attrsInOCs.add(v);
-                        }
-                    }
-                }
-
-            }
-
-        } catch (NamingException e) {
-            ZimbraLog.account.debug("unable to load LDAP schema extension", e);
-        } finally {
-            LegacyZimbraLdapContext.closeContext(zlc);
+            prov.getAttrsInOCs(extraObjectClasses, attrsInOCs);
         }
     }
 

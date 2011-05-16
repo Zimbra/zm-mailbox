@@ -18,9 +18,8 @@ import java.util.Set;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.cs.ldap.LdapTODO.*;
 
-public abstract class LdapConfig {
+public abstract class LdapServerConfig {
     private static final String DEFALT_LDAP_PORT = "389";
     
     protected String ldapURL;  // space separated URLs
@@ -47,7 +46,7 @@ public abstract class LdapConfig {
     public abstract int getConnPoolInitSize();
     
     
-    private LdapConfig() {
+    private LdapServerConfig() {
         
         // load common settings, for both Zimbra LDAP and external LDAP
         
@@ -70,7 +69,7 @@ public abstract class LdapConfig {
     }
     
     
-    public static class ZimbraLdapConfig extends LdapConfig {
+    public static class ZimbraLdapConfig extends LdapServerConfig {
         private LdapServerType serverType;
         
         // This is a Zimbra LDAP setting only.
@@ -143,7 +142,7 @@ public abstract class LdapConfig {
         }
     }
     
-    public static class ExternalLdapConfig extends LdapConfig {
+    public static class ExternalLdapConfig extends LdapServerConfig {
         
         // only in external LDAP settings, in ZimbraLDAP the deref policy is never
         protected String derefAliasPolicy;  
@@ -194,7 +193,7 @@ public abstract class LdapConfig {
          */
         public ExternalLdapConfig(String[] urls, boolean wantStartTLS, String authMech, 
                 String bindDn, String bindPassword, Set<String> binaryAttrs, String note) {
-            this (LdapUtilCommon.joinURLS(urls), wantStartTLS, authMech, 
+            this (LdapServerConfig.joinURLS(urls), wantStartTLS, authMech, 
                     bindDn, bindPassword, binaryAttrs,  note);
         }
         
@@ -243,7 +242,18 @@ public abstract class LdapConfig {
         
     }
 
+
+    public static String joinURLS(String urls[]) {
+        if (urls.length == 1) return urls[0];
+        StringBuffer url = new StringBuffer();
+        for (int i=0; i < urls.length; i++) {
+            if (i > 0) url.append(' ');
+            url.append(urls[i]);
+        }
+        return url.toString();
+    }
     
+    // return space separated URLs
     public String getLdapURL() {
         return ldapURL; 
     }

@@ -31,8 +31,6 @@ import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.RightManager;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
-import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.Versions;
 import com.zimbra.cs.extension.ExtensionUtil;
@@ -44,6 +42,7 @@ import com.zimbra.cs.mailbox.PurgeThread;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
 import com.zimbra.cs.mailbox.calendar.WellKnownTimeZones;
 import com.zimbra.cs.memcached.MemcachedConnector;
+import com.zimbra.cs.prov.ldap.LdapProv;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.server.ServerManager;
 import com.zimbra.cs.servlet.FirstServlet;
@@ -177,10 +176,10 @@ public final class Zimbra {
         }
 
         Provisioning prov = Provisioning.getInstance();
-        if (prov instanceof LdapProvisioning) {
-            LegacyZimbraLdapContext.waitForServer();
+        if (prov instanceof LdapProv) {
+            ((LdapProv) prov).waitForLdapServer();
             if (forMailboxd) {
-                AttributeManager.loadLdapSchemaExtensionAttrs((LdapProvisioning)prov);
+                AttributeManager.loadLdapSchemaExtensionAttrs((LdapProv) prov);
             }
         }
 

@@ -21,20 +21,18 @@ import java.util.Set;
 import org.junit.*;
 import static org.junit.Assert.*;
 
-import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CosBy;
 
-public class TestProvCallback {
+public class TestProvCallbackAvailableZimlets extends TestLdap {
     
     private static String COS_NAME = "cos1";
     private static Provisioning mProv = Provisioning.getInstance();
     
-    // this test has to be run first.  TODO: fix and don't make it @BeforeClass
     @BeforeClass
-    public static void testCreate() throws Exception {
+    public static void init() throws Exception {
         Map<String, Object> attrs = new HashMap<String, Object>(); 
         
         StringUtil.addToMultiMap(attrs, Provisioning.A_zimbraZimletAvailableZimlets, "foo");
@@ -61,6 +59,12 @@ public class TestProvCallback {
                    getAttrs.contains("+bar") ||
                    getAttrs.contains("!bar"));
     } 
+    
+    @AfterClass
+    public static void cleanup() throws Exception {
+        Cos cos = mProv.get(CosBy.name, COS_NAME);
+        mProv.deleteCos(cos.getId());
+    }
     
     @Test
     public void testReplace() throws Exception {
@@ -243,8 +247,4 @@ public class TestProvCallback {
         
     }
 
-    public static void main(String[] args) throws Exception {
-        CliUtil.toolSetup("INFO");
-        TestUtil.runTest(TestProvCallback.class);
-    }
 }

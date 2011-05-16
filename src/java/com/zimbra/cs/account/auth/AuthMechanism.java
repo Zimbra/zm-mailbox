@@ -15,15 +15,11 @@
 
 package com.zimbra.cs.account.auth;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import javax.naming.AuthenticationException;
-import javax.naming.AuthenticationNotSupportedException;
-import javax.naming.NamingException;
 import javax.security.auth.login.LoginException;
 
 import com.zimbra.cs.account.Account;
@@ -32,8 +28,6 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.krb5.Krb5Login;
 import com.zimbra.cs.account.krb5.Krb5Principal;
-import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
-import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.prov.ldap.LdapProv;
 import com.zimbra.cs.prov.ldap.entry.LdapEntry;
@@ -121,33 +115,27 @@ public abstract class AuthMechanism {
             return true;
         }
         
-        public void doAuth(LdapProv prov, Domain domain, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException {
+        public void doAuth(LdapProv prov, Domain domain, Account acct, String password, 
+                Map<String, Object> authCtxt) throws ServiceException {
             
             String encodedPassword = acct.getAttr(Provisioning.A_userPassword);
 
-            if (encodedPassword == null)
-                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt), "missing "+Provisioning.A_userPassword);
-
+            if (encodedPassword == null) {
+                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), 
+                        namePassedIn(authCtxt), "missing "+Provisioning.A_userPassword);
+            }
+            
             if (PasswordUtil.SSHA.isSSHA(encodedPassword)) {
-                if (PasswordUtil.SSHA.verifySSHA(encodedPassword, password))
+                if (PasswordUtil.SSHA.verifySSHA(encodedPassword, password)) {
                     return; // good password, RETURN
-                else {
-                    throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt), "invalid password"); 
+                }  else {
+                    throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), 
+                            namePassedIn(authCtxt), "invalid password"); 
                 }
             } else if (acct instanceof LdapEntry) {
                 // not SSHA, authenticate to Zimbra LDAP
-                try {
-                    LegacyZimbraLdapContext.ldapAuthenticate(((LdapEntry)acct).getDN(), password);
-                    return; // good password, RETURN                
-                } catch (AuthenticationException e) {
-                    throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt), e.getMessage(), e);
-                } catch (AuthenticationNotSupportedException e) {
-                    throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt), e.getMessage(), e);
-                } catch (NamingException e) {
-                    throw ServiceException.FAILURE(e.getMessage(), e);
-                } catch (IOException e) {
-                    throw ServiceException.FAILURE(e.getMessage(), e);
-                }
+                prov.zimbraLdapAuthenticate(acct, password, authCtxt);
+                return;  // good password, RETURN   
             }
             throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt));       
         }
@@ -165,7 +153,8 @@ public abstract class AuthMechanism {
             super(authMech);
         }
         
-        public void doAuth(LdapProv prov, Domain domain, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException {
+        public void doAuth(LdapProv prov, Domain domain, Account acct, String password, 
+                Map<String, Object> authCtxt) throws ServiceException {
             prov.externalLdapAuth(domain, mAuthMech, acct, password, authCtxt);
         }
         
@@ -182,17 +171,20 @@ public abstract class AuthMechanism {
             super(authMech);
         }
         
-        public void doAuth(LdapProv prov, Domain domain, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException {
+        public void doAuth(LdapProv prov, Domain domain, Account acct, String password, 
+                Map<String, Object> authCtxt) throws ServiceException {
             String principal = Krb5Principal.getKrb5Principal(domain, acct);
             
             if (principal == null)
-                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt), "cannot obtain principal for " + mAuthMech + " auth");
+                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), 
+                        namePassedIn(authCtxt), "cannot obtain principal for " + mAuthMech + " auth");
             
             if (principal != null) {
                 try {
                     Krb5Login.verifyPassword(principal, password);
                 } catch (LoginException e) {
-                    throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt) + "(kerberos5 principal: " + principal + ")", e.getMessage(), e);
+                    throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), 
+                            namePassedIn(authCtxt) + "(kerberos5 principal: " + principal + ")", e.getMessage(), e);
                 }
             }
         }
@@ -255,10 +247,13 @@ public abstract class AuthMechanism {
             }
         }
         
-        public void doAuth(LdapProv prov, Domain domain, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException {
+        public void doAuth(LdapProv prov, Domain domain, Account acct, String password, 
+                Map<String, Object> authCtxt) throws ServiceException {
             
             if (mHandler == null)
-                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt), "handler " + mHandlerName + " for custom auth for domain " + domain.getName() + " not found");
+                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), 
+                        namePassedIn(authCtxt), "handler " + mHandlerName + 
+                        " for custom auth for domain " + domain.getName() + " not found");
             
             try {
                 mHandler.authenticate(acct, password, authCtxt, mArgs);

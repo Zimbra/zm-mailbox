@@ -1367,6 +1367,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract void getAllAccounts(Domain d, NamedEntry.Visitor visitor) throws ServiceException;
 
     public abstract void getAllAccounts(Domain d, Server s, NamedEntry.Visitor visitor) throws ServiceException;
+    
+    public void getAllAccountsNoDefaults(Domain d, Server s, NamedEntry.Visitor visitor) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
 
     public abstract List getAllCalendarResources(Domain d) throws ServiceException;
 

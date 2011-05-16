@@ -17,7 +17,7 @@ package com.zimbra.cs.ldap.unboundid;
 import javax.net.SocketFactory;
 
 import com.unboundid.ldap.sdk.LDAPConnectionOptions;
-import com.zimbra.cs.ldap.LdapConfig;
+import com.zimbra.cs.ldap.LdapServerConfig;
 import com.zimbra.cs.ldap.LdapConnType;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapTODO.TODO;
@@ -38,7 +38,7 @@ public class LdapConnUtil {
         }
     }
     
-    static LDAPConnectionOptions getConnectionOptions(LdapConfig ldapConfig) {
+    static LDAPConnectionOptions getConnectionOptions(LdapServerConfig ldapConfig) {
         LDAPConnectionOptions connOpts = new LDAPConnectionOptions();
         
         connOpts.setUseSynchronousMode(true); // TODO: expose in LC?

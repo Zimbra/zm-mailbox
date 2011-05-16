@@ -15,33 +15,31 @@
 package com.zimbra.qa.unittest;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.*;
 import static org.junit.Assert.*;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchOptions;
-import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.prov.ldap.LdapObjectClassHierarchy;
 import com.zimbra.cs.prov.ldap.LdapProv;
 
-public class TestLdapProvMisc {
+public class TestLdapProvMisc extends TestLdap {
 
     private static Provisioning prov;
     private static Domain domain;
     
     @BeforeClass
     public static void init() throws Exception {
-        TestLdap.manualInit();
-        
         prov = Provisioning.getInstance();
         domain = TestLdapProvDomain.createDomain(prov, baseDomainName(), null);
     }
@@ -105,6 +103,25 @@ public class TestLdapProvMisc {
                 LdapObjectClassHierarchy.getMostSpecificOC(ldapProv, 
                         new String[]{"person", "inetOrgPerson"}, "organizationalPerson"));
  
+    }
+    
+    @Test
+    public void getAttrsInOCs() throws Exception {
+        LdapProv ldapProv = (LdapProv) prov;
+        
+        String[] ocs = { "amavisAccount" };
+        Set<String> attrsInOCs = new HashSet<String>();
+        ldapProv.getAttrsInOCs(ocs, attrsInOCs);
+        
+        assertEquals(36, attrsInOCs.size());
+        assertTrue(attrsInOCs.contains("amavisBlacklistSender"));
+        assertTrue(attrsInOCs.contains("amavisWhitelistSender"));
+        
+        /*
+        for (String attr : attrsInOCs) {
+            System.out.println(attr);
+        }
+        */
     }
     
     @Test

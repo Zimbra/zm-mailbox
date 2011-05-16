@@ -23,7 +23,7 @@ import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
+import com.zimbra.cs.prov.ldap.LdapProv;
  
 public class DisplayName extends AttributeCallback {
 
@@ -47,9 +47,8 @@ public class DisplayName extends AttributeCallback {
         
         String namingRdnAttr = null;
         Provisioning prov = Provisioning.getInstance();
-        if (prov instanceof LdapProvisioning) {
-            LdapProvisioning ldapProv = (LdapProvisioning)prov;
-            namingRdnAttr = ldapProv.getNamingRdnAttr(entry);
+        if (prov instanceof LdapProv) {
+            namingRdnAttr = ((LdapProv) prov).getDIT().getNamingRdnAttr(entry);
         }
         
         // update cn only if it is not the naming attr

@@ -57,11 +57,11 @@ import com.zimbra.common.service.ServiceException;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.ServerBy;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.extension.ExtensionDispatcherServlet;
+import com.zimbra.cs.prov.ldap.LdapProv;
 import com.zimbra.cs.util.BuildInfo;
 
 enum ProxyConfOverride {
@@ -716,7 +716,7 @@ public class ProxyConfGen
     private static List<DnVhnVIPItem> loadReverseProxyVhnAndVIP()
             throws ServiceException {
 
-        if (!(mProv instanceof LdapProvisioning))
+        if (!(mProv instanceof LdapProv))
             throw ServiceException.INVALID_REQUEST(
                 "The method can work only when LDAP is available", null);
 

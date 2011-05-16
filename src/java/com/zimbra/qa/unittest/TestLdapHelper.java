@@ -36,14 +36,14 @@ import com.zimbra.cs.ldap.ZSearchScope;
 import com.zimbra.cs.prov.ldap.LdapHelper;
 import com.zimbra.cs.prov.ldap.LdapProv;
 
-public class TestLdapHelper {
+public class TestLdapHelper extends TestLdap {
     private static TestLdap.TestConfig testConfig;
     private static LdapProv prov;
     private static LdapHelper ldapHelper;
     
     @BeforeClass
     public static void init() throws Exception {
-        testConfig = TestLdap.manualInit();
+        testConfig = getCurrentTestConfig();
         
         prov = ((LdapProv) Provisioning.getInstance());
         ldapHelper = prov.getHelper();

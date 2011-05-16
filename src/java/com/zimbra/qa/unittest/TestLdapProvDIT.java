@@ -18,17 +18,14 @@ import org.junit.*;
 import static org.junit.Assert.*;
 
 import com.zimbra.cs.account.Domain;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.prov.ldap.LdapProv;
 
-public class TestLdapProvDIT {
+public class TestLdapProvDIT extends TestLdap {
     private static LdapProv prov;
     private static Domain domain;
     
     @BeforeClass
     public static void init() throws Exception {
-        TestLdap.manualInit();
-        
         prov = LdapProv.getInst();
         domain = TestLdapProvDomain.createDomain(prov, baseDomainName(), null);
     }

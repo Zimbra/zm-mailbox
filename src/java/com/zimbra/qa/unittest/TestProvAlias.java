@@ -22,18 +22,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+// TODO: remove dependency on JNDI
 import javax.naming.NamingException;
 
 import org.junit.*;
 import static org.junit.Assert.*;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.CliUtil;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.account.Alias;
-import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
@@ -45,16 +42,18 @@ import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CacheEntryBy;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
+
+//TODO: remove dependency on legacy stuff
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
+
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.prov.ldap.entry.LdapEntry;
-import com.zimbra.qa.unittest.TestProvisioningUtil.IDNName;
 
-public class TestAlias {
+
+public class TestProvAlias extends TestLdap {
+    private static String TEST_ID;
     private static String TEST_NAME = "test-alias";
     private static String PASSWORD = "test123";
    
@@ -65,7 +64,7 @@ public class TestAlias {
     private static String LOCAL_DOMAIN_NAME;
     private static String ALIAS_DOMAIN_NAME;
     
-    private static String origdDefaultDomainName;
+    private static String origDefaultDomainName;
     
     /*
      * convert underscores in inStr to hyphens
@@ -74,12 +73,37 @@ public class TestAlias {
         return inStr.replaceAll("_", "-");
     }
     
-    @Test
-    public void testInit() throws Exception {
+    
+    @BeforeClass
+    public static void init() throws Exception {
+        TEST_ID = TestProvisioningUtil.genTestId();
         
-        String TEST_ID = TestProvisioningUtil.genTestId();
+        mProv = Provisioning.getInstance();
         
-        BASE_DOMAIN_NAME = TestProvisioningUtil.baseDomainName(TEST_NAME, TEST_ID);
+        Config config = mProv.getConfig();
+        origDefaultDomainName = config.getAttr(Provisioning.A_zimbraDefaultDomainName);
+        
+        initTest();
+    }
+    
+    @AfterClass
+    public static void cleanup() throws Exception {
+        Config config = mProv.getConfig();
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraDefaultDomainName, origDefaultDomainName);
+        mProv.modifyAttrs(config, attrs);
+        
+        String baseDomainName = baseDomainName();
+        TestLdap.deleteEntireBranch(baseDomainName);
+    }
+    
+    private static String baseDomainName() {
+        return TestProvisioningUtil.baseDomainName(TEST_NAME, TEST_ID);
+    }
+    
+    private static void initTest() throws Exception {
+        
+        BASE_DOMAIN_NAME = baseDomainName();
         LOCAL_DOMAIN_NAME = "local." + BASE_DOMAIN_NAME;
         ALIAS_DOMAIN_NAME = "alias." + BASE_DOMAIN_NAME;
         
@@ -1069,22 +1093,6 @@ javax.naming.NameAlreadyBoundException: [LDAP: error code 68 - Entry Already Exi
         }
         assertTrue(good);
     }
-    
-    
-    @BeforeClass
-    public static void init() throws Exception {
-        mProv = Provisioning.getInstance();
-        
-        Config config = mProv.getConfig();
-        origdDefaultDomainName = config.getAttr(Provisioning.A_zimbraDefaultDomainName);
-    }
-    
-    @AfterClass
-    public static void cleanup() throws Exception {
-        Config config = mProv.getConfig();
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraDefaultDomainName, origdDefaultDomainName);
-        mProv.modifyAttrs(config, attrs);
-    }
+
 
 }

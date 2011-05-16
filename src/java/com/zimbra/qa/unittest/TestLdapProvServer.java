@@ -29,13 +29,11 @@ import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.Server;
 
-public class TestLdapProvServer {
+public class TestLdapProvServer extends TestLdap {
     private static Provisioning prov;
     
     @BeforeClass
     public static void init() throws Exception {
-        TestLdap.manualInit();
-        
         prov = Provisioning.getInstance();
     }
     

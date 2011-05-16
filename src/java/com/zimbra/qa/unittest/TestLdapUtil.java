@@ -19,7 +19,7 @@ import static org.junit.Assert.*;
 
 import com.zimbra.cs.ldap.LdapUtilCommon;
 
-public class TestLdapUtil {
+public class TestLdapUtil extends TestLdap {
 
     @Test
     public void testAuthDN() {

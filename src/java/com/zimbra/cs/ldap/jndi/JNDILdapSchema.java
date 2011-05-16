@@ -1,3 +1,17 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2011 Zimbra, Inc.
+ *
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.cs.ldap.jndi;
 
 import java.util.ArrayList;
@@ -11,7 +25,6 @@ import javax.naming.directory.DirContext;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.ZLdapSchema;
-import com.zimbra.cs.ldap.ZLdapSchema.ZObjectClassDefinition;
 
 public class JNDILdapSchema extends ZLdapSchema {
 
@@ -39,9 +52,8 @@ public class JNDILdapSchema extends ZLdapSchema {
         private JNDIObjectClassDefinition(DirContext ocSchema) {
             this.ocDef = ocSchema;
         }
-
-        @Override
-        public List<String> getSuperiorClasses() throws LdapException {
+        
+        private List<String> getProperty(String property) throws LdapException {
             List<String> result = new ArrayList<String>();
             
             try {
@@ -50,7 +62,7 @@ public class JNDILdapSchema extends ZLdapSchema {
                 
                 for (Map.Entry<String, Object> attr : attrs.entrySet()) {
                     String attrName = attr.getKey();
-                    if ("SUP".compareToIgnoreCase(attrName) == 0) {
+                    if (property.compareToIgnoreCase(attrName) == 0) {
                          Object value = attr.getValue();
                         if (value instanceof String)
                             result.add(((String)value).toLowerCase());
@@ -66,10 +78,32 @@ public class JNDILdapSchema extends ZLdapSchema {
             
             return result;
         }
+
+
+        @Override
+        public String getName() {
+            throw new UnsupportedOperationException();
+        }
+        
+        @Override
+        public List<String> getSuperiorClasses() throws LdapException {
+            return getProperty("SUP");
+        }
+
+        @Override
+        public List<String> getOptionalAttributes() throws LdapException {
+            return getProperty("MAY");
+        }
+
+        @Override
+        public List<String> getRequiredAttributes() throws LdapException {
+            return getProperty("MUST");
+        }
+
     }
 
     @Override
-    public ZObjectClassDefinition getObjectClassDefinition(String objectClass) 
+    public ZObjectClassDefinition getObjectClass(String objectClass) 
     throws LdapException {
         try {
             return new JNDIObjectClassDefinition(
@@ -77,6 +111,11 @@ public class JNDILdapSchema extends ZLdapSchema {
         } catch (NamingException e) {
             throw JNDILdapException.mapToLdapException(e);
         }
+    }
+
+    @Override
+    public List<ZObjectClassDefinition> getObjectClasses() throws LdapException {
+        throw new UnsupportedOperationException();
     }
 
 }

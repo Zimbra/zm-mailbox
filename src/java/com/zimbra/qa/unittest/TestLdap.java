@@ -15,16 +15,21 @@
 package com.zimbra.qa.unittest;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import java.io.IOException;
 
 import static org.junit.Assert.*;
+
+import org.junit.BeforeClass;
 import org.junit.runner.JUnitCore;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.ZLdapContext;
@@ -74,6 +79,8 @@ public class TestLdap {
         JNDI(com.zimbra.cs.ldap.jndi.JNDILdapClient.class, com.zimbra.cs.prov.ldap.LdapProvisioning.class),
         LEGACY(null, com.zimbra.cs.account.ldap.LdapProvisioning.class);
         
+        static private TestConfig currentTestConfig = null;
+        
         private Class ldapClientClass;
         private Class ldapProvClass;
         
@@ -82,7 +89,13 @@ public class TestLdap {
             this.ldapProvClass = ldapProvClass;
         }
         
-        static void useConfig(TestConfig config) throws Exception {
+        static synchronized void useConfig(TestConfig config) throws Exception {
+            if (currentTestConfig != null) {
+                fail("TestConfig.useConfig cann only be called once per JVM");
+            }
+            
+            currentTestConfig = config;
+            
             if (config.ldapClientClass != null) {
                 modifyLocalConfig(LC.zimbra_class_ldap_client.key(), config.ldapClientClass.getCanonicalName());
             } else {
@@ -92,43 +105,17 @@ public class TestLdap {
             modifyLocalConfig(LC.zimbra_class_provisioning.key(), config.ldapProvClass.getCanonicalName());
             LC.reload();
         }
+        
+        static synchronized TestConfig getCurrentTestConfig() {
+            if (currentTestConfig == null) {
+                fail("TestConfig has not been initialized");
+            }
+            
+            return currentTestConfig;
+        }
+        
     }
 
-    //
-    // TODO: merge with LdapSuite
-    //
-    private static void runTests(JUnitCore junit, TestConfig testConfig) throws Exception {
-        TestConfig.useConfig(testConfig);
-        
-        if (testConfig == TestConfig.UBID) {
-            // junit.run(TestLdapSDK.class);
-        }
-        junit.run(TestLdapHelper.class);
-        junit.run(TestLdapProvAccount.class);
-        junit.run(TestLdapProvAlias.class);
-        junit.run(TestLdapProvCos.class);
-        junit.run(TestLdapProvDataSource.class);
-        junit.run(TestLdapProvDistributionList.class);
-        junit.run(TestLdapProvDIT.class);
-        junit.run(TestLdapProvDomain.class);
-        junit.run(TestLdapProvEntry.class);
-        junit.run(TestLdapProvExternalLdapAuth.class);
-        junit.run(TestLdapProvGal.class);
-        junit.run(TestLdapProvGlobalConfig.class);
-        junit.run(TestLdapProvGlobalGrant.class);
-        junit.run(TestLdapProvIdentity.class);
-        junit.run(TestLdapProvMimeType.class);
-        junit.run(TestLdapProvMisc.class);
-        junit.run(TestLdapProvModifyAttrs.class);
-        junit.run(TestLdapProvServer.class);
-        junit.run(TestLdapProvSignature.class);
-        junit.run(TestLdapProvXMPPComponent.class);
-        junit.run(TestLdapProvZimlet.class);
-        junit.run(TestLdapUtil.class);
-        junit.run(TestLdapZLdapContext.class);
-        junit.run(TestLdapZLdapFilter.class);
-        junit.run(TestLdapZMutableEntry.class);
-    }
     
     /*
      * given a domain name like test.com, delete the entire tree under 
@@ -139,9 +126,45 @@ public class TestLdap {
         String[] dns = ((LdapProv) Provisioning.getInstance()).getDIT().domainToDNs(parts);
         String topMostRDN = dns[dns.length-1];
         TestLdap.deleteEntireBranchByDN(topMostRDN);
+        
+        cleanupAll();
     }
     
-    static void deleteEntireBranchByDN(String dn) throws Exception {
+    private static void cleanupAll() throws Exception {
+        deleteAllNonDefaultCoses();
+        deleteAllNonDefaultServers();
+        deleteAllXMPPComponents();
+    }
+    
+    private static void deleteAllNonDefaultCoses() throws Exception {
+        LdapDIT dit = ((LdapProv) Provisioning.getInstance()).getDIT();
+        String cosBaseDN = dit.cosBaseDN();
+        
+        Set<String> defaultCosDN = new HashSet<String>();
+        defaultCosDN.add(dit.cosNametoDN(Provisioning.DEFAULT_COS_NAME));
+        
+        deleteAllChildrenUnderDN(cosBaseDN, defaultCosDN);
+    }
+    
+    private static void deleteAllNonDefaultServers() throws Exception {
+        LdapProv ldapProv = LdapProv.getInst();
+        LdapDIT dit = ldapProv.getDIT();
+        String serverBaseDN = dit.serverBaseDN();
+        
+        Set<String> defaultServerDN = new HashSet<String>();
+        defaultServerDN.add(dit.serverNametoDN(ldapProv.getLocalServer().getName()));
+        
+        deleteAllChildrenUnderDN(serverBaseDN, defaultServerDN);
+    }
+    
+    private static void deleteAllXMPPComponents() throws Exception {
+        String xmppBaseDN = ((LdapProv) Provisioning.getInstance()).getDIT().xmppcomponentBaseDN();
+        deleteAllChildrenUnderDN(xmppBaseDN, null);
+    }
+
+    
+    // dn itself will also be deleted
+    private static void deleteEntireBranchByDN(String dn) throws Exception {
         ZLdapContext zlc = null;
         
         try {
@@ -150,6 +173,24 @@ public class TestLdap {
         } finally {
             LdapClient.closeContext(zlc);
         }
+    }
+    
+    // dn itself will not be deleted
+    private static void deleteAllChildrenUnderDN(String dn, Set<String> ignoreDNs) throws Exception {
+        
+        ZLdapContext zlc = null;
+        try {
+            zlc = LdapClient.getContext();
+            List<String> childrenDNs = getDirectChildrenDNs(zlc, dn);
+            for (String childDN : childrenDNs) {
+                if (ignoreDNs == null || !ignoreDNs.contains(childDN)) {
+                    deleteEntireBranch(zlc, childDN);
+                }
+            }
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
+        
     }
     
     private static void deleteEntireBranch(ZLdapContext zlc, String dn) throws Exception {
@@ -301,8 +342,56 @@ public class TestLdap {
         return makeRFC2253Name(name, false);
     }
     
+
+    private static boolean batchMode = false;
+    
+    //
+    // TODO: merge with LdapSuite
+    //
+    private static void runTests(JUnitCore junit, TestConfig testConfig) throws Exception {
+        batchMode = true;
+         
+        TestConfig.useConfig(testConfig);
+        
+        if (testConfig == TestConfig.UBID) {
+            // junit.run(TestLdapSDK.class);
+        }
+        
+        junit.run(TestLdapHelper.class);
+        junit.run(TestLdapProvAccount.class);
+        junit.run(TestLdapProvAlias.class);
+        junit.run(TestLdapProvCos.class);
+        junit.run(TestLdapProvDataSource.class);
+        junit.run(TestLdapProvDistributionList.class);
+        junit.run(TestLdapProvDIT.class);
+        junit.run(TestLdapProvDomain.class);
+        junit.run(TestLdapProvEntry.class);
+        junit.run(TestLdapProvExternalLdapAuth.class);
+        junit.run(TestLdapProvGal.class);
+        junit.run(TestLdapProvGlobalConfig.class);
+        junit.run(TestLdapProvGlobalGrant.class);
+        junit.run(TestLdapProvIdentity.class);
+        junit.run(TestLdapProvMimeType.class);
+        junit.run(TestLdapProvMisc.class);
+        junit.run(TestLdapProvModifyAttrs.class);
+        junit.run(TestLdapProvRenameDomain.class);
+        junit.run(TestLdapProvServer.class);
+        junit.run(TestLdapProvSignature.class);
+        junit.run(TestLdapProvXMPPComponent.class);
+        junit.run(TestLdapProvZimlet.class);
+        junit.run(TestLdapUtil.class);
+        junit.run(TestLdapZLdapContext.class);
+        junit.run(TestLdapZLdapFilter.class);
+        junit.run(TestLdapZMutableEntry.class);
+        junit.run(TestProvAttrCallback.class);
+    }
+    
     // so tests can be called directly, without running from TestLdap.
-    public static TestConfig manualInit() throws Exception {
+    private static void manualInit() throws Exception {
+        
+        if (batchMode) {
+            return;
+        }
         
         CliUtil.toolSetup();
         
@@ -311,7 +400,15 @@ public class TestLdap {
         // TestConfig testConfig = TestConfig.LEGACY;
         
         TestConfig.useConfig(testConfig);
-        return testConfig;
+    }
+    
+    @BeforeClass
+    public static void beforeClass() throws Exception {
+        manualInit();
+    }
+    
+    static TestConfig getCurrentTestConfig() {
+        return TestConfig.getCurrentTestConfig();
     }
     
     /*
@@ -324,6 +421,7 @@ public class TestLdap {
         junit.addListener(new ConsoleListener());
         
         // TestConfig.useConfig(TestConfig.LEGACY);
+        cleanupAll();
         
         runTests(junit, TestConfig.UBID);
         // runTests(junit, TestConfig.JNDI);

@@ -26,17 +26,7 @@ import com.zimbra.cs.account.accesscontrol.RightCommand.AllEffectiveRights;
 import com.zimbra.cs.account.accesscontrol.RightCommand.EffectiveRights;
 import com.zimbra.cs.account.accesscontrol.SearchGrants.GrantsOnTarget;
 import com.zimbra.cs.account.ldap.LdapDIT;
-
-
-/*
-import com.zimbra.cs.account.ldap.LdapProvisioning;
-import com.zimbra.cs.account.ldap.legacy.LegacyLdapFilter;
-import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
-import com.zimbra.cs.account.ldap.legacy.entry.LdapDomain;
-*/
-
 import com.zimbra.cs.ldap.IAttributes;
-import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;

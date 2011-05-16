@@ -23,7 +23,6 @@ import org.junit.*;
 import static org.junit.Assert.*;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -35,7 +34,7 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 
 
-public class TestAttr {
+public class TestProvAttr extends TestLdap {
     private static String TEST_ID = TestProvisioningUtil.genTestId();;
     private static String TEST_NAME = "test-attr";
     private static String PASSWORD = "test123";
@@ -488,15 +487,5 @@ public class TestAttr {
         assertTrue(good); 
     }
  
-    /*
-    public static void main(String[] args) throws Exception {
-        CliUtil.toolSetup();
-        try {
-            TestUtil.runTest(TestAttr.class);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
-    }
-    */
 }
 

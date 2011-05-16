@@ -44,6 +44,7 @@ public interface IAttributes {
         NOCHECK;
     }
     
-    public List<String> getMultiAttrStringAsList(String attrName, CheckBinary checkBinary) throws ServiceException;
+    public List<String> getMultiAttrStringAsList(String attrName, CheckBinary checkBinary) 
+    throws ServiceException;
 
 }

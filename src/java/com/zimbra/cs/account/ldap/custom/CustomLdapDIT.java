@@ -22,12 +22,11 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Domain;
-import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapDIT;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.prov.ldap.LdapProv;
 import com.zimbra.cs.prov.ldap.SpecialAttrs;
 
 /*
@@ -61,7 +60,7 @@ public class CustomLdapDIT extends LdapDIT {
     private final String DEFAULT_BASE_RDN_DOMAIN = "cn=domains";
     private String BASE_DN_DOMAIN;
     
-    public CustomLdapDIT(LdapProvisioning prov) {
+    public CustomLdapDIT(LdapProv prov) {
         super(prov);
     }
     

@@ -46,19 +46,22 @@ public class LdapSuite {
         }
     }
     
+    /*
+     * TODO: rename all test to TestProvXXX
+     */
     private static void runTests(JUnitCore junit) {
         junit.run(TestAccountLockout.class);
         junit.run(TestACPermissionCache.class);
         junit.run(TestACUserRights.class);
-        junit.run(TestAlias.class);
-        junit.run(TestAttr.class);
         junit.run(TestBuildInfo.class);
-        junit.run(TestCos.class);
-        junit.run(TestIDN.class);
         junit.run(TestLdapBinary.class);
         junit.run(TestLdapUtil.class);
-        junit.run(TestProvCallback.class);
+        junit.run(TestProvAlias.class);
+        junit.run(TestProvAttr.class);
+        junit.run(TestProvCallbackAvailableZimlets.class);
+        junit.run(TestProvCos.class);
         junit.run(TestProvGroup.class);
+        junit.run(TestProvIDN.class);
         junit.run(TestProvValidator.class);
         junit.run(TestSearchCalendarResources.class);
         junit.run(TestSearchGal.class);
@@ -83,7 +86,6 @@ public class LdapSuite {
          * zmsoap -v -z RunUnitTestsRequest/test=com.zimbra.qa.unittest.TestGalGroupMembers
          */
         // TestGalGroupMembers (has to be run in the server)
-        
         
         // connection test, ahs to be run manually
         junit.run(TestLdapSDK.class);

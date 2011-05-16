@@ -25,7 +25,7 @@ import com.unboundid.ldap.sdk.LDAPURL;
 import com.unboundid.ldap.sdk.ServerSet;
 import com.unboundid.ldap.sdk.SingleServerSet;
 
-import com.zimbra.cs.ldap.LdapConfig;
+import com.zimbra.cs.ldap.LdapServerConfig;
 import com.zimbra.cs.ldap.LdapConnType;
 import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.LdapServerType;
@@ -47,7 +47,7 @@ public class LdapServerPool {
     
     ServerSet serverSet;
 
-    public LdapServerPool(LdapConfig config) throws LdapException {
+    public LdapServerPool(LdapServerConfig config) throws LdapException {
         this.urls = new ArrayList<LDAPURL>();
         
         String[] ldapUrls = config.getLdapURL().split(" ");

@@ -33,14 +33,12 @@ import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.gal.GalSearchParams;
 
-public class TestLdapProvGal {
+public class TestLdapProvGal extends TestLdap {
     private static Provisioning prov;
     private static Domain domain;
     
     @BeforeClass
     public static void init() throws Exception {
-        TestLdap.manualInit();
-        
         prov = Provisioning.getInstance();
         domain = TestLdapProvDomain.createDomain(prov, baseDomainName(), null);
     }

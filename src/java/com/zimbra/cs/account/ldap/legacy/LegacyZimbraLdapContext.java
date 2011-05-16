@@ -66,6 +66,8 @@ import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.ldap.ILdapContext;
+import com.zimbra.cs.ldap.LdapConstants;
+import com.zimbra.cs.ldap.LdapServerConfig;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.prov.ldap.LdapGalCredential;
 import com.zimbra.cs.stats.ZimbraPerf;
@@ -92,8 +94,6 @@ public class LegacyZimbraLdapContext implements ILdapContext {
     private LdapContext mDirContext;
     private StartTlsResponse mTlsResp;
     
-    private static final int CHECK_LDAP_SLEEP_MILLIS = 5000;
-
     private static enum ConnType {
         PLAIN,
         LDAPS,
@@ -211,20 +211,6 @@ public class LegacyZimbraLdapContext implements ILdapContext {
     
     public static String getLdapURL() {
         return sLdapURL;
-    }
-    
-    /*
-     * for external LDAP
-     */
-    public static boolean requireStartTLS(String[] urls, boolean startTLSEnabled) {
-        if (startTLSEnabled) {
-            for (String url : urls) {
-                if (url.toLowerCase().contains("ldaps://"))
-                    return false;
-            }
-            return true;
-        }
-        return false;
     }
     
     // TODO: re-visit when we switch away from JNDI
@@ -472,7 +458,7 @@ public class LegacyZimbraLdapContext implements ILdapContext {
     public LegacyZimbraLdapContext(String urls[], boolean requireStartTLS, String authMech, 
             String bindDn, String bindPassword, Set<String> binaryAttrs, String note)  
     throws ServiceException, NamingException, IOException {
-        this(LdapUtilCommon.joinURLS(urls), requireStartTLS, authMech, bindDn, bindPassword, binaryAttrs, note); 
+        this(LdapServerConfig.joinURLS(urls), requireStartTLS, authMech, bindDn, bindPassword, binaryAttrs, note); 
     }
     
     /*
@@ -588,7 +574,7 @@ public class LegacyZimbraLdapContext implements ILdapContext {
         Hashtable<String, String> env = new Hashtable<String, String>();
         
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-        env.put(Context.PROVIDER_URL, LdapUtilCommon.joinURLS(urls));
+        env.put(Context.PROVIDER_URL, LdapServerConfig.joinURLS(urls));
         env.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());
         env.put("com.sun.jndi.ldap.read.timeout", LC.ldap_read_timeout.value());
         
@@ -874,10 +860,11 @@ public class LegacyZimbraLdapContext implements ILdapContext {
                 zlc = new LegacyZimbraLdapContext();
                 break;
             } catch (ServiceException e) {
+                // may called at server startup when logging is not up yet.
                 System.err.println(new Date() + ": error communicating with LDAP (will retry)");
                 e.printStackTrace();
                 try {
-                    Thread.sleep(CHECK_LDAP_SLEEP_MILLIS);
+                    Thread.sleep(LdapConstants.CHECK_LDAP_SLEEP_MILLIS);
                 } catch (InterruptedException ie) {
                 }
             } finally {

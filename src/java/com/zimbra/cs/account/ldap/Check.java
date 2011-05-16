@@ -19,30 +19,15 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.HashMap;
 import java.util.Map;
 
-import javax.naming.AuthenticationException;
-import javax.naming.AuthenticationNotSupportedException;
-import javax.naming.CommunicationException;
-import javax.naming.NameNotFoundException;
-import javax.naming.NamingException;
-import javax.naming.directory.InvalidSearchFilterException;
 import javax.net.ssl.SSLHandshakeException;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.GalMode;
-import com.zimbra.cs.account.Provisioning.SearchGalResult;
-import com.zimbra.cs.account.gal.GalOp;
-import com.zimbra.cs.account.gal.GalParams;
-import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
-import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.fb.ExchangeEWSFreeBusyProvider;
 import com.zimbra.cs.fb.ExchangeFreeBusyProvider;
-import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 
 public class Check {
 

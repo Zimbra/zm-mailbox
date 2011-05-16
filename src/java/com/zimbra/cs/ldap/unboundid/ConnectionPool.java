@@ -37,8 +37,8 @@ import com.unboundid.ldap.sdk.StartTLSPostConnectProcessor;
 import com.unboundid.util.ssl.SSLUtil;
 import com.unboundid.util.ssl.TrustAllTrustManager;
 
-import com.zimbra.cs.ldap.LdapConfig;
-import com.zimbra.cs.ldap.LdapConfig.ExternalLdapConfig;
+import com.zimbra.cs.ldap.LdapServerConfig;
+import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
 import com.zimbra.cs.ldap.LdapConnType;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapTODO;
@@ -58,7 +58,7 @@ public class ConnectionPool {
     
     
     static LDAPConnectionPool createConnectionPool(String connPoolName, 
-            LdapConfig config) throws LdapException {
+            LdapServerConfig config) throws LdapException {
         
         LdapServerPool serverPool = new LdapServerPool(config);
         
@@ -125,7 +125,7 @@ public class ConnectionPool {
     }
     
     @TODO  // handle SASL
-    private static BindRequest createBindRequest(LdapConfig config) {
+    private static BindRequest createBindRequest(LdapServerConfig config) {
         String bindDN = config.getAdminBindDN();
         
         if (bindDN != null) {

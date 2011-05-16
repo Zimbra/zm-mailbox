@@ -14,13 +14,11 @@
  */
 package com.zimbra.cs.ldap;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.ldap.LdapTODO.*;
-import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
 
 public class LdapUtil {
     
-    public static String formatMultipleMatchedEntries(ZSearchResultEntry first, ZSearchResultEnumeration rest) 
+    public static String formatMultipleMatchedEntries(
+            ZSearchResultEntry first, ZSearchResultEnumeration rest) 
     throws LdapException {
         StringBuffer dups = new StringBuffer();
         dups.append("[" + first.getDN() + "] ");

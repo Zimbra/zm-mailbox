@@ -104,8 +104,6 @@ import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.Right.RightType;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
-import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.MailboxInfo;
 import com.zimbra.cs.account.soap.SoapProvisioning.MemcachedClientConfig;
@@ -116,6 +114,7 @@ import com.zimbra.cs.extension.ExtensionDispatcherServlet;
 import com.zimbra.cs.fb.FbCli;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.prov.ldap.LdapEntrySearchFilter;
+import com.zimbra.cs.prov.ldap.LdapProv;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.SoapCLI;
 import com.zimbra.cs.wiki.WikiUtil;
@@ -712,7 +711,7 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     /**
-     * Commands that should always use LdapProvisioning, but for convenience don't require the -l option specified.
+     * Commands that should always use LdapProv, but for convenience don't require the -l option specified.
      *
      * Commands that must use -l (e.g. gaa) are indicated in the Via field of the command definition
      * or in the command handler.
@@ -730,7 +729,9 @@ public class ProvUtil implements HttpDebugListener {
         if (useLdap) {
             prov = Provisioning.getInstance();
             if (useLdapMaster) {
-                LegacyZimbraLdapContext.forceMasterURL();
+                if (prov instanceof LdapProv) {
+                    ((LdapProv) prov).alwaysUseMaster();
+                }
             }
         } else {
             SoapProvisioning sp = new SoapProvisioning();
@@ -755,7 +756,7 @@ public class ProvUtil implements HttpDebugListener {
         if (via == null) {
             return null;
         }
-        if (via == Command.Via.ldap && !(prov instanceof LdapProvisioning)) {
+        if (via == Command.Via.ldap && !(prov instanceof LdapProv)) {
             return Command.Via.ldap;
         }
         if (via == Command.Via.soap && !(prov instanceof SoapProvisioning)) {
@@ -1308,10 +1309,10 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void doRenameDomain(String[] args) throws ServiceException {
-        if (!(prov instanceof LdapProvisioning)) {
+        if (!(prov instanceof LdapProv)) {
             throwLdapOnly();
         }
-        LdapProvisioning lp = (LdapProvisioning) prov;
+        LdapProv lp = (LdapProv) prov;
         Domain domain = lookupDomain(args[1]);
         lp.renameDomain(domain.getId(), args[2]);
         printOutput("domain " + args[1] + " renamed to " + args[2]);
@@ -1503,10 +1504,10 @@ public class ProvUtil implements HttpDebugListener {
             throws ServiceException {
         Domain local = lookupDomain(localDoamin);
         String localType = local.getAttr(Provisioning.A_zimbraDomainType);
-        if (!LdapProvisioning.DOMAIN_TYPE_LOCAL.equals(localType)) {
+        if (!Provisioning.DOMAIN_TYPE_LOCAL.equals(localType)) {
             throw ServiceException.INVALID_REQUEST("target domain must be a local domain", null);
         }
-        attrs.put(Provisioning.A_zimbraDomainType, LdapProvisioning.DOMAIN_TYPE_ALIAS);
+        attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DOMAIN_TYPE_ALIAS);
         attrs.put(Provisioning.A_zimbraDomainAliasTargetId, local.getId());
         return prov.createDomain(aliasDomain, attrs);
     }
@@ -1773,9 +1774,9 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     /**
-     * prov is always LdapProvisioning here
+     * prov is always LdapProv here
      */
-    private void doGetAllAccounts(LdapProvisioning ldapProv, Domain domain, Server server,
+    private void doGetAllAccounts(LdapProv ldapProv, Domain domain, Server server,
             final boolean verbose, final boolean applyDefault, final Set<String> attrNames) throws ServiceException {
         NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
             @Override
@@ -1796,10 +1797,10 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void doGetAllAccounts(String[] args) throws ServiceException {
-        if (!(prov instanceof LdapProvisioning)) {
+        if (!(prov instanceof LdapProv)) {
             throwLdapOnly();
         }
-        LdapProvisioning ldapProv = (LdapProvisioning) prov;
+        LdapProv ldapProv = (LdapProv) prov;
 
         boolean verbose = false;
         boolean applyDefault = true;
@@ -1978,7 +1979,7 @@ public class ProvUtil implements HttpDebugListener {
 
     private void doCountObjects(String[] args) throws ServiceException {
         // only used by installer for now.  LDAP only is good for now, add soap if needed.
-        if (!(prov instanceof LdapProvisioning)) {
+        if (!(prov instanceof LdapProv)) {
             throwLdapOnly();
         }
 
@@ -2651,7 +2652,7 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void doSearchCalendarResources(String[] args) throws ServiceException {
-        if (!(prov instanceof LdapProvisioning)) {
+        if (!(prov instanceof LdapProv)) {
             throwLdapOnly();
         }
         boolean verbose = false;
@@ -2762,7 +2763,7 @@ public class ProvUtil implements HttpDebugListener {
 
     private Account lookupAccount(String key, boolean mustFind, boolean applyDefault) throws ServiceException {
         Account account;
-        if (applyDefault==true || (prov instanceof LdapProvisioning)) {
+        if (applyDefault==true || (prov instanceof LdapProv)) {
             account = prov.getAccount(key);
         } else {
             /*
@@ -3913,7 +3914,7 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void doGetAllReverseProxyDomains() throws ServiceException {
-        if (!(prov instanceof LdapProvisioning)) {
+        if (!(prov instanceof LdapProv)) {
             throwLdapOnly();
         }
         NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
@@ -4250,7 +4251,7 @@ public class ProvUtil implements HttpDebugListener {
     private void doGetAllEffectiveRights(String[] args) throws ServiceException, ArgException {
         RightArgs ra = new RightArgs(args);
 
-        if (prov instanceof LdapProvisioning) {
+        if (prov instanceof LdapProv) {
             // must provide grantee info
             getRightArgsGrantee(ra, true, false);
         } else {
@@ -4336,7 +4337,7 @@ public class ProvUtil implements HttpDebugListener {
         RightArgs ra = new RightArgs(args);
         getRightArgsTarget(ra);
 
-        if (prov instanceof LdapProvisioning) {
+        if (prov instanceof LdapProv) {
             // must provide grantee info
             getRightArgsGrantee(ra, false, false);
         } else {
@@ -4447,9 +4448,9 @@ public class ProvUtil implements HttpDebugListener {
         GranteeBy granteeBy = null;
         String grantee = null;
 
-        // take grantee arg only if LdapProvisioning
+        // take grantee arg only if LdapProv
         // for SoapProvisioning, -a {admin account} -p {password} is required with zmprov
-        if (prov instanceof LdapProvisioning) {
+        if (prov instanceof LdapProv) {
             granteeBy = guessGranteeBy(args[4]);
             grantee = args[4];
         }
@@ -4788,8 +4789,8 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void loadLdapSchemaExtensionAttrs() {
-        if (prov instanceof LdapProvisioning) {
-            AttributeManager.loadLdapSchemaExtensionAttrs((LdapProvisioning) prov);
+        if (prov instanceof LdapProv) {
+            AttributeManager.loadLdapSchemaExtensionAttrs((LdapProv) prov);
         }
     }
 

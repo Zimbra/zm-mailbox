@@ -38,11 +38,12 @@ import com.zimbra.cs.account.Provisioning.CacheEntryBy;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.ZimbraCustomAuth;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.custom.CustomLdapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.mime.MimeTypeInfo;
+import com.zimbra.cs.prov.ldap.LdapProv;
+import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 
 public class TestProvisioning extends TestCase {
 
@@ -50,7 +51,7 @@ public class TestProvisioning extends TestCase {
     private static final boolean TEST_STARTTLS = false;
 
     private Provisioning mProv;
-    LdapProvisioning mLdapProv;
+    LdapProv mLdapProv;
     CustomProvTester mCustomProvTester;
     SoapProvisioning mSoapProv;
 
@@ -122,8 +123,8 @@ public class TestProvisioning extends TestCase {
 
     public void setUp() throws Exception {
         mProv = Provisioning.getInstance();
-        assertTrue(mProv instanceof LdapProvisioning);
-        mLdapProv = (LdapProvisioning)mProv;
+        assertTrue(mProv instanceof LdapProv);
+        mLdapProv = (LdapProv)mProv;
         mCustomProvTester = new CustomProvTester(mProv);
 
         mSoapProv = new SoapProvisioning();
@@ -299,7 +300,8 @@ public class TestProvisioning extends TestCase {
             if (!mIsCustomProv)
                 return;
 
-            assertEquals(dn, mLdapProv.getDN(entry));
+            assertTrue(entry instanceof LdapEntry);
+            assertEquals(dn, ((LdapEntry) entry).getDN());
         }
 
         public boolean verifyAccountCountForDomainBasedSearch() {
@@ -1380,7 +1382,7 @@ public class TestProvisioning extends TestCase {
 
         // make sure cn is also updated if cn is not the naing attribute
         if (mLdapProv != null) {
-            String namingAttr = mLdapProv.getNamingRdnAttr(entry);
+            String namingAttr = mLdapProv.getDIT().getNamingRdnAttr(entry);
             if (!namingAttr.equals(Provisioning.A_cn)) {
                 String cnValue = entry.getAttr(Provisioning.A_cn);
                 assertEquals(ACCT_FULL_NAME, cnValue);

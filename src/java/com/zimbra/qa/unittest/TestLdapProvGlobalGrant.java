@@ -8,14 +8,12 @@ import static org.junit.Assert.*;
 import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.Provisioning;
 
-public class TestLdapProvGlobalGrant {
+public class TestLdapProvGlobalGrant extends TestLdap {
 
 private static Provisioning prov;
     
     @BeforeClass
     public static void init() throws Exception {
-        TestLdap.manualInit();
-        
         prov = Provisioning.getInstance();
     }
     

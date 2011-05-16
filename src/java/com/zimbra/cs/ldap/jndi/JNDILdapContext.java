@@ -37,7 +37,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.ldap.LdapException;
-import com.zimbra.cs.ldap.LdapConfig.ExternalLdapConfig;
+import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
 import com.zimbra.cs.ldap.LdapException.LdapInvalidNameException;
 import com.zimbra.cs.ldap.LdapException.LdapEntryAlreadyExistException;
 import com.zimbra.cs.ldap.LdapException.LdapEntryNotFoundException;
@@ -267,11 +267,11 @@ public class JNDILdapContext extends ZLdapContext {
 
     @TODO // map all exceptions to meaningful user understandable exceptions
     static void externalLdapAuthenticate(String[] urls,
-            boolean wantStartTLS, String principal, String password, String note)
-            throws ServiceException {
+            boolean wantStartTLS, String bindDN, String password, String note)
+    throws ServiceException {
         try {
             LegacyZimbraLdapContext.ldapAuthenticate(urls, wantStartTLS, 
-                        principal, password, note);
+                        bindDN, password, note);
         } catch (NamingException e) {
             throw JNDILdapException.mapToLdapException(e); // TODO
         } catch (IOException e) {
@@ -279,5 +279,15 @@ public class JNDILdapContext extends ZLdapContext {
         }
     }
 
-
+    @TODO // map all exceptions to meaningful user understandable exceptions
+    static void zimbraLdapAuthenticate(String bindDN, String password)
+    throws ServiceException {
+        try {
+            LegacyZimbraLdapContext.ldapAuthenticate(bindDN, password);
+        } catch (NamingException e) {
+            throw JNDILdapException.mapToLdapException(e); // TODO
+        } catch (IOException e) {
+            throw JNDILdapException.mapToLdapException(e); // TODO
+        }
+    }
 }

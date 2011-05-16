@@ -28,14 +28,12 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
 
-public class TestLdapProvModifyAttrs {
+public class TestLdapProvModifyAttrs extends TestLdap {
     private static Provisioning prov;
     private static Domain domain;
     
     @BeforeClass
     public static void init() throws Exception {
-        TestLdap.manualInit();
-        
         prov = Provisioning.getInstance();
         domain = prov.createDomain(baseDomainName(), new HashMap<String, Object>());
         assertNotNull(domain);

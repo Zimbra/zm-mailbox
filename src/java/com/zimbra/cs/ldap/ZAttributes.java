@@ -41,7 +41,8 @@ public abstract class ZAttributes extends ZLdapElement implements IAttributes {
     }
     
     // make public if necessary
-    private String getAttrString(String attrName, CheckBinary checkBinary) throws LdapException {
+    private String getAttrString(String attrName, CheckBinary checkBinary) 
+    throws LdapException {
         boolean containsBinaryData;
         String transferAttrName;
         
@@ -65,7 +66,8 @@ public abstract class ZAttributes extends ZLdapElement implements IAttributes {
     }
     
     // make public if necessary
-    private String[] getMultiAttrString(String attrName, CheckBinary checkBinary) throws LdapException {
+    private String[] getMultiAttrString(String attrName, CheckBinary checkBinary) 
+    throws LdapException {
         boolean containsBinaryData;
         boolean isBinaryTransfer;
         
@@ -89,7 +91,8 @@ public abstract class ZAttributes extends ZLdapElement implements IAttributes {
     }
     
     @Override
-    public List<String> getMultiAttrStringAsList(String attrName, CheckBinary checkBinary) throws LdapException {
+    public List<String> getMultiAttrStringAsList(String attrName, CheckBinary checkBinary) 
+    throws LdapException {
         if (checkBinary == CheckBinary.NOCHECK) {
             return Arrays.asList(getMultiAttrString(attrName, false));
         } else {
