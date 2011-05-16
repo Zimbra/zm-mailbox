@@ -161,12 +161,16 @@ public class SoapToSieve {
             DateComparison comparison = DateComparison.fromString(s);
             String time = test.getAttribute(MailConstants.A_TIME);
             // validate time value
+            String timeFormat = "HHmm";
+            SimpleDateFormat parser = new SimpleDateFormat(timeFormat);
+            parser.setLenient(false);
             try {
-                SimpleDateFormat dateFormat = new SimpleDateFormat("HHmm");
-                dateFormat.setLenient(false);
-                dateFormat.parse(time);
+                parser.parse(time);
             } catch (ParseException e) {
                 throw ServiceException.INVALID_REQUEST("Invalid time: " + time, e);
+            }
+            if (time.length() != timeFormat.length()) {
+                throw ServiceException.INVALID_REQUEST("Time string must be of length " + timeFormat.length(), null);
             }
             snippet = String.format("current_time :%s \"%s\"", comparison, time);
         } else if (name.equals(MailConstants.E_CURRENT_DAY_OF_WEEK_TEST)) {
