@@ -19,39 +19,47 @@ import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class GeoInfo {
+@XmlRootElement(name=MailConstants.E_MIMEPART)
+public class MimePartAttachSpec extends AttachSpec {
 
-    @XmlAttribute(name=MailConstants.A_CAL_GEO_LATITUDE, required=false)
-    private final String latitude;
+    @XmlAttribute(name=MailConstants.A_MESSAGE_ID, required=true)
+    private final String messageId;
 
-    @XmlAttribute(name=MailConstants.A_CAL_GEO_LONGITUDE, required=false)
-    private final String longitude;
+    @XmlAttribute(name=MailConstants.A_PART, required=true)
+    private final String part;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private GeoInfo() {
+    private MimePartAttachSpec() {
         this((String) null, (String) null);
     }
 
-    public GeoInfo(String latitude, String longitude) {
-        this.latitude = latitude;
-        this.longitude = longitude;
+    public MimePartAttachSpec(String messageId, String part) {
+        this.messageId = messageId;
+        this.part = part;
     }
 
-    public String getLatitude() { return latitude; }
-    public String getLongitude() { return longitude; }
+    public String getMessageId() { return messageId; }
+    public String getPart() { return part; }
+
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        helper = super.addToStringInfo(helper);
+        return helper
+            .add("messageId", messageId)
+            .add("part", part);
+    }
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
-            .add("latitude", latitude)
-            .add("longitude", longitude)
-            .toString();
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }

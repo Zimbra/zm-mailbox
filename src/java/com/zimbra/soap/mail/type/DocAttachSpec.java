@@ -18,33 +18,41 @@ package com.zimbra.soap.mail.type;
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class ExceptionRuleInfo extends RecurIdInfo implements RecurRuleBase {
+@XmlRootElement(name=MailConstants.E_DOC)
+public class DocAttachSpec extends AttachSpec {
 
-    @XmlElement(name=MailConstants.E_CAL_ADD, required=false)
-    private RecurrenceInfo add;
+    @XmlAttribute(name=MailConstants.A_PATH, required=false)
+    private String path;
 
-    @XmlElement(name=MailConstants.E_CAL_EXCLUDE, required=false)
-    private RecurrenceInfo exclude;
+    @XmlAttribute(name=MailConstants.A_ID, required=false)
+    private String id;
 
-    public ExceptionRuleInfo() {
+    @XmlAttribute(name=MailConstants.A_VERSION, required=false)
+    private Integer version;
+
+    public DocAttachSpec() {
     }
 
-    public void setAdd(RecurrenceInfo add) { this.add = add; }
-    public void setExclude(RecurrenceInfo exclude) { this.exclude = exclude; }
-    public RecurrenceInfo getAdd() { return add; }
-    public RecurrenceInfo getExclude() { return exclude; }
+    public void setPath(String path) { this.path = path; }
+    public void setId(String id) { this.id = id; }
+    public void setVersion(Integer version) { this.version = version; }
+    public String getPath() { return path; }
+    public String getId() { return id; }
+    public Integer getVersion() { return version; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
-            .add("add", add)
-            .add("exclude", exclude);
+            .add("path", path)
+            .add("id", id)
+            .add("version", version);
     }
 
     @Override

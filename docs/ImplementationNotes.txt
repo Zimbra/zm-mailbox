@@ -45,6 +45,9 @@ to be annotated rather than letting JAXB do some defaults.
 
 Gotchas
 -------
+.   Unmarshalling from Xml may not correctly identify superclasses.
+    Test before using! e.g. See :
+        JaxbToElementTest.ConvActionRequestJaxbSubclassHandlingTestDisabled()
 .   Target objects for @XmlElementRef etc must have an @XmlRootElement
     annotation
 .   For structured fields, e.g. comma separated strings, there is a temptation

@@ -18,7 +18,6 @@ package com.zimbra.soap;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
-
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -30,18 +29,32 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-
 import org.dom4j.Document;
 import org.dom4j.io.DocumentResult;
 import org.dom4j.io.DocumentSource;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.soap.util.JaxbInfo;
 
 public final class JaxbUtil {
 
+    private static final Log LOG = ZimbraLog.soap;
     private static final Class<?>[] MESSAGE_CLASSES;
+    private static final String ACCOUNT_JAXB_PACKAGE = 
+        "com.zimbra.soap.account.message";
+    private static final String ADMIN_JAXB_PACKAGE = 
+        "com.zimbra.soap.admin.message";
+    private static final String MAIL_JAXB_PACKAGE = 
+        "com.zimbra.soap.mail.message";
     private static JAXBContext JAXB_CONTEXT;
 
     static {
@@ -111,6 +124,10 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.ContactActionResponse.class,
             com.zimbra.soap.mail.message.ConvActionRequest.class,
             com.zimbra.soap.mail.message.ConvActionResponse.class,
+            com.zimbra.soap.mail.message.CreateAppointmentExceptionRequest.class,
+            com.zimbra.soap.mail.message.CreateAppointmentExceptionResponse.class,
+            com.zimbra.soap.mail.message.CreateAppointmentRequest.class,
+            com.zimbra.soap.mail.message.CreateAppointmentResponse.class,
             com.zimbra.soap.mail.message.CreateContactRequest.class,
             com.zimbra.soap.mail.message.CreateContactResponse.class,
             com.zimbra.soap.mail.message.CreateFolderRequest.class,
@@ -123,6 +140,10 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.CreateSearchFolderResponse.class,
             com.zimbra.soap.mail.message.CreateTagRequest.class,
             com.zimbra.soap.mail.message.CreateTagResponse.class,
+            com.zimbra.soap.mail.message.CreateTaskExceptionRequest.class,
+            com.zimbra.soap.mail.message.CreateTaskExceptionResponse.class,
+            com.zimbra.soap.mail.message.CreateTaskRequest.class,
+            com.zimbra.soap.mail.message.CreateTaskResponse.class,
             com.zimbra.soap.mail.message.EmptyDumpsterRequest.class,
             com.zimbra.soap.mail.message.EmptyDumpsterResponse.class,
             com.zimbra.soap.mail.message.EnableSharedReminderRequest.class,
@@ -175,8 +196,12 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.GetTaskSummariesResponse.class,
             com.zimbra.soap.mail.message.ImportContactsRequest.class,
             com.zimbra.soap.mail.message.ImportContactsResponse.class,
+            com.zimbra.soap.mail.message.InvalidateReminderDeviceRequest.class,
+            com.zimbra.soap.mail.message.InvalidateReminderDeviceResponse.class,
             com.zimbra.soap.mail.message.ItemActionRequest.class,
             com.zimbra.soap.mail.message.ItemActionResponse.class,
+            com.zimbra.soap.mail.message.ModifyAppointmentRequest.class,
+            com.zimbra.soap.mail.message.ModifyAppointmentResponse.class,
             com.zimbra.soap.mail.message.ModifyContactRequest.class,
             com.zimbra.soap.mail.message.ModifyContactResponse.class,
             com.zimbra.soap.mail.message.ModifyFilterRulesRequest.class,
@@ -195,14 +220,22 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.NoteActionResponse.class,
             com.zimbra.soap.mail.message.SaveRulesRequest.class,
             com.zimbra.soap.mail.message.SaveRulesResponse.class,
+            com.zimbra.soap.mail.message.SendVerificationCodeRequest.class,
+            com.zimbra.soap.mail.message.SendVerificationCodeResponse.class,
+            com.zimbra.soap.mail.message.SetAppointmentRequest.class,
+            com.zimbra.soap.mail.message.SetAppointmentResponse.class,
             com.zimbra.soap.mail.message.SetCustomMetadataRequest.class,
             com.zimbra.soap.mail.message.SetCustomMetadataResponse.class,
             com.zimbra.soap.mail.message.SetMailboxMetadataRequest.class,
             com.zimbra.soap.mail.message.SetMailboxMetadataResponse.class,
+            com.zimbra.soap.mail.message.SetTaskRequest.class,
+            com.zimbra.soap.mail.message.SetTaskResponse.class,
             com.zimbra.soap.mail.message.SyncRequest.class,
             com.zimbra.soap.mail.message.SyncResponse.class,
             com.zimbra.soap.mail.message.TagActionRequest.class,
             com.zimbra.soap.mail.message.TagActionResponse.class,
+            com.zimbra.soap.mail.message.VerifyCodeRequest.class,
+            com.zimbra.soap.mail.message.VerifyCodeResponse.class,
 
             // zimbraAdmin
             com.zimbra.soap.admin.message.AddAccountAliasRequest.class,
@@ -530,7 +563,7 @@ public final class JaxbUtil {
         try {
             JAXB_CONTEXT = JAXBContext.newInstance(MESSAGE_CLASSES);
         } catch (JAXBException e) {
-            ZimbraLog.soap.error("Unable to initialize JAXB", e);
+            LOG.error("Unable to initialize JAXB", e);
         }
     }
 
@@ -568,7 +601,12 @@ public final class JaxbUtil {
         return jaxbToElement(o, XMLElement.mFactory);
     }
 
-    //  This appears to be safe but is fairly slow.
+    /**
+     * This appears to be safe but is fairly slow.
+     * Note that this method does NOT support Zimbra's greater flexibility
+     * for Xml structure.  Something similar to {@link fixupStructureForJaxb}
+     * will be needed to add such support.
+     */
     @Deprecated
     @SuppressWarnings("unchecked")
     public static <T> T elementToJaxbUsingByteArray(Element e)
@@ -576,7 +614,8 @@ public final class JaxbUtil {
         try {
             Unmarshaller unmarshaller = getContext().createUnmarshaller();
             org.dom4j.Element rootElem = e.toXML();
-            return (T) unmarshaller.unmarshal(new ByteArrayInputStream(rootElem.asXML().getBytes("utf-8")));
+            return (T) unmarshaller.unmarshal(new ByteArrayInputStream(
+                        rootElem.asXML().getBytes("utf-8")));
         } catch (JAXBException ex) {
             throw ServiceException.FAILURE(
                     "Unable to unmarshal response for " + e.getName(), ex);
@@ -586,11 +625,16 @@ public final class JaxbUtil {
 		}
     }
 
-    // This appears to work if e is an XMLElement but sometimes fails badly if
-    // e is a JSONElement - get:
-    // javax.xml.bind.UnmarshalException: Namespace URIs and local names
-    //      to the unmarshaller needs to be interned.
-    // and that seems to make the unmarshaller unstable from then on :-(
+    /**
+     * This appears to work if e is an XMLElement but sometimes fails badly if
+     * e is a JSONElement - get:
+     * javax.xml.bind.UnmarshalException: Namespace URIs and local names
+     *      to the unmarshaller needs to be interned.
+     * and that seems to make the unmarshaller unstable from then on :-(
+     * Note that this method does NOT support Zimbra's greater flexibility
+     * for Xml structure.  Something similar to {@link fixupStructureForJaxb}
+     * will be needed to add such support.
+     */
     @Deprecated
     @SuppressWarnings("unchecked")
     public static <T> T elementToJaxbUsingDom4j(Element e)
@@ -607,6 +651,152 @@ public final class JaxbUtil {
     }
 
     /**
+     * Manipulates a structure under {@link elem} which obeys Zimbra's
+     * SOAP XML structure rules to comply with more stringent JAXB rules.
+     * e.g. Zimbra allows attributes to be specified as elements.
+     * @param klass is the JAXB class for {@link elem}
+     */
+    public static void fixupStructureForJaxb(org.w3c.dom.Element elem,
+                    Class<?> klass) {
+        if (elem == null) {
+            return;
+        }
+        if (klass == null) {
+            LOG.debug("JAXB no class associated with " + elem.getLocalName());
+            return;
+        }
+        if (!klass.getName().startsWith("com.zimbra.soap")) {
+            return;
+        }
+
+        JaxbInfo jaxbInfo = JaxbInfo.getFromCache(klass);
+        if (jaxbInfo == null) {
+            jaxbInfo = new JaxbInfo(klass);
+        }
+        NodeList list = elem.getChildNodes();
+        for (int i=0; i < list.getLength(); i++) {
+            Node subnode = list.item(i);
+            if (subnode.getNodeType() == Node.ELEMENT_NODE) {
+                org.w3c.dom.Element child = (org.w3c.dom.Element) subnode;
+                String childName = child.getLocalName();
+                if (jaxbInfo.hasWrappedElement(childName)) {
+                    NodeList wrappedList = child.getChildNodes();
+                    for (int j=0; j < wrappedList.getLength(); j++) {
+                        Node wSubnode = wrappedList.item(j);
+                        if (wSubnode.getNodeType() == Node.ELEMENT_NODE) {
+                            org.w3c.dom.Element wChild =
+                                (org.w3c.dom.Element) wSubnode;
+                            fixupStructureForJaxb(wChild,
+                                    jaxbInfo.getClassForWrappedElement(
+                                            childName, wChild.getLocalName()));
+                        }
+                    }
+                } else if (jaxbInfo.hasElement(childName))  {
+                    fixupStructureForJaxb(child,
+                            jaxbInfo.getClassForElement(childName));
+                } else if (jaxbInfo.hasAttribute(childName)) {
+                    // TODO: remove logging
+                    LOG.debug("Promoting element '" + childName +
+                            "' to attribute for JAXB class " + klass.getName());
+                    elem.setAttribute(childName, child.getTextContent());
+                    // Don't remove pre-existing child until later pass
+                    // to avoid changing the list of child elements
+                } else {
+                    LOG.debug("JAXB class " + klass.getName() +
+                            " does NOT recognise element named:" + childName);
+                }
+            }
+        }
+        // Prune the promoted elements from the list of children
+        list = elem.getChildNodes();
+        for (int i=0; i < list.getLength(); i++) {
+            Node subnode = list.item(i);
+            if (subnode.getNodeType() == Node.ELEMENT_NODE) {
+                org.w3c.dom.Element child = (org.w3c.dom.Element) subnode;
+                String childName = child.getLocalName();
+                if  (   (!jaxbInfo.hasWrappedElement(childName)) &&
+                        (!jaxbInfo.hasElement(childName)) &&
+                        (jaxbInfo.hasAttribute(childName))) {
+                    elem.removeChild(child);
+                }
+            }
+        }
+    }
+
+    /**
+     * Manipulates a structure under {@link elem} which obeys Zimbra's
+     * SOAP XML structure rules to comply with more stringent JAXB rules.
+     * e.g. Zimbra allows attributes to be specified as elements.
+     * The JAXB class associated with this element MUST be discoverable
+     * from {@link elem} based on it's namespace and localname.
+     */
+    public static void fixupStructureForJaxb(org.w3c.dom.Element elem) {
+        String className = null;
+        try {
+            String ns = elem.getNamespaceURI();
+            if (AdminConstants.NAMESPACE_STR.equals(ns)) {
+                className = ADMIN_JAXB_PACKAGE  + "." + elem.getLocalName();
+            } else if (AccountConstants.NAMESPACE_STR.equals(ns)) {
+                className = ACCOUNT_JAXB_PACKAGE  + "." + elem.getLocalName();
+            } else if (MailConstants.NAMESPACE_STR.equals(ns)) {
+                className = MAIL_JAXB_PACKAGE  + "." + elem.getLocalName();
+            } else {
+                LOG.info("Unexpected namespace[" + ns + "]");
+                return;
+            }
+            Class<?> klass = Class.forName(className);
+            if (klass == null) {
+                LOG.info("Failed to find CLASS for name=[" + className + "]");
+                return;
+            }
+            fixupStructureForJaxb(elem, klass);
+            // JaxbInfo.clearCache();
+        } catch (NullPointerException npe) {
+            LOG.info("Problem finding JAXB package", npe);
+            return;
+        } catch (ClassNotFoundException cnfe) {
+            LOG.info("Problem finding JAXB class", cnfe);
+            return;
+        }
+    }
+
+    /**
+     * @param elem represents a structure which may only match Zimbra's more
+     * relaxed rules rather than stringent JAXB rules.
+     * e.g. Zimbra allows attributes to be specified as elements.
+     * @param klass is the JAXB class for {@link elem}
+     * @return a JAXB object
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T w3cDomDocToJaxb(org.w3c.dom.Document doc)
+    throws ServiceException {
+        fixupStructureForJaxb((org.w3c.dom.Element)doc.getDocumentElement());
+        return (T) rawW3cDomDocToJaxb(doc);
+    }
+
+    /**
+     * Return a JAXB object.  This implementation uses a org.w3c.dom.Document 
+     * as an intermediate representation.  This appears to be more reliable
+     * than using a DocumentSource based on org.dom4j.Element
+     */
+    @SuppressWarnings("unchecked")
+    private static <T> T rawW3cDomDocToJaxb(org.w3c.dom.Document doc)
+    throws ServiceException {
+        if ((doc == null || doc.getDocumentElement() == null)) {
+            return null;
+        }
+        try {
+            Unmarshaller unmarshaller = getContext().createUnmarshaller();
+            // LOG.warn("Dom to Xml:\n" + domToString(doc));
+            return (T) unmarshaller.unmarshal(doc);
+        } catch (JAXBException ex) {
+            throw ServiceException.FAILURE(
+                    "Unable to unmarshal response for " +
+                    doc.getDocumentElement().getNodeName(), ex);
+        }
+    }
+
+    /**
      * Return a JAXB object.  This implementation uses a org.w3c.dom.Document 
      * as an intermediate representation.  This appears to be more reliable
      * than using a DocumentSource based on org.dom4j.Element
@@ -614,15 +804,7 @@ public final class JaxbUtil {
     @SuppressWarnings("unchecked")
     public static <T> T elementToJaxb(Element e)
     throws ServiceException {
-        try {
-            Unmarshaller unmarshaller = getContext().createUnmarshaller();
-            org.w3c.dom.Document doc = e.toW3cDom();
-            // ZimbraLog.soap.warn("Dom to Xml:\n" + domToString(doc));
-            return (T) unmarshaller.unmarshal(doc);
-        } catch (JAXBException ex) {
-            throw ServiceException.FAILURE(
-                    "Unable to unmarshal response for " + e.getName(), ex);
-        }
+        return (T) w3cDomDocToJaxb(e.toW3cDom());
     }
 
     public static String domToString(org.w3c.dom.Document document) {
@@ -635,9 +817,9 @@ public final class JaxbUtil {
             transformer.transform(xmlSource, result);
             return result.getOutputStream().toString();
         } catch (TransformerFactoryConfigurationError factoryError) {
-            ZimbraLog.soap.error("Error creating TransformerFactory", factoryError);
+            LOG.error("Error creating TransformerFactory", factoryError);
         } catch (TransformerException transformerError) {
-            ZimbraLog.soap.error( "Error transforming document", transformerError);
+            LOG.error( "Error transforming document", transformerError);
         }
         return null;
     }

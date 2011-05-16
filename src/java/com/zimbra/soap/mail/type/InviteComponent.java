@@ -47,7 +47,7 @@ public class InviteComponent {
     private final boolean rsvp;
 
     @XmlAttribute(name=MailConstants.A_CAL_PRIORITY, required=false)
-    private boolean priority;
+    private String priority;
 
     @XmlAttribute(name=MailConstants.A_NAME, required=false)
     private String name;
@@ -178,7 +178,7 @@ public class InviteComponent {
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private InviteComponent() {
+    protected InviteComponent() {
         this((String) null, -1, false);
     }
 
@@ -188,7 +188,7 @@ public class InviteComponent {
         this.rsvp = rsvp;
     }
 
-    public void setPriority(boolean priority) { this.priority = priority; }
+    public void setPriority(String priority) { this.priority = priority; }
     public void setName(String name) { this.name = name; }
     public void setLocation(String location) { this.location = location; }
     public void setPercentComplete(String percentComplete) {
@@ -272,8 +272,8 @@ public class InviteComponent {
         }
     }
 
-    public InviteComponent addAttende(CalendarAttendee attende) {
-        this.attendees.add(attende);
+    public InviteComponent addAttendee(CalendarAttendee attendee) {
+        this.attendees.add(attendee);
         return this;
     }
 
@@ -323,7 +323,7 @@ public class InviteComponent {
     public String getMethod() { return method; }
     public int getComponentNum() { return componentNum; }
     public boolean getRsvp() { return rsvp; }
-    public boolean getPriority() { return priority; }
+    public String getPriority() { return priority; }
     public String getName() { return name; }
     public String getLocation() { return location; }
     public String getPercentComplete() { return percentComplete; }
@@ -378,9 +378,9 @@ public class InviteComponent {
     public DtTimeInfo getDtEnd() { return dtEnd; }
     public DurationInfo getDuration() { return duration; }
 
-    @Override
-    public String toString() {
-        return Objects.toStringHelper(this)
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        return helper
             .add("method", method)
             .add("componentNum", componentNum)
             .add("rsvp", rsvp)
@@ -425,7 +425,12 @@ public class InviteComponent {
             .add("exceptionId", exceptionId)
             .add("dtStart", dtStart)
             .add("dtEnd", dtEnd)
-            .add("duration", duration)
-            .toString();
+            .add("duration", duration);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }

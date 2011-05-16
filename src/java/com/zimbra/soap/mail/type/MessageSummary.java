@@ -29,47 +29,16 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.type.CustomMetadata;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = {"metadatas", "emails", "subject", "fragment", "invite"})
-public class MessageSummary {
-
-    @XmlAttribute(name=MailConstants.A_SIZE, required=false)
-    private Long size;
-
-    @XmlAttribute(name=MailConstants.A_DATE, required=false)
-    private Long date;
-
-    @XmlAttribute(name=MailConstants.A_FOLDER, required=false)
-    private String folderId;
-
-    @XmlAttribute(name=MailConstants.A_CONV_ID, required=false)
-    private String conversationId;
-
-    @XmlAttribute(name=MailConstants.A_FLAGS, required=false)
-    private String flags;
-
-    @XmlAttribute(name=MailConstants.A_TAGS, required=false)
-    private String tags;
-
-    @XmlAttribute(name=MailConstants.A_REVISION, required=false)
-    private Integer revision;
-
-    @XmlAttribute(name=MailConstants.A_CHANGE_DATE, required=false)
-    private Long changeDate;
-
-    @XmlAttribute(name=MailConstants.A_MODIFIED_SEQUENCE, required=false)
-    private Integer modifiedSequence;
+@XmlType(propOrder = {"emails", "subject", "fragment", "invite"})
+public class MessageSummary extends MessageCommon {
 
     @XmlAttribute(name=MailConstants.A_ID, required=true)
     private final String id;
 
     @XmlAttribute(name=MailConstants.A_AUTO_SEND_TIME, required=false)
     private Long autoSendTime;
-
-    @XmlElement(name=MailConstants.E_METADATA, required=false)
-    private List<CustomMetadata> metadatas = Lists.newArrayList();
 
     @XmlElement(name=MailConstants.E_EMAIL, required=false)
     private List<EmailInfo> emails = Lists.newArrayList();
@@ -95,32 +64,8 @@ public class MessageSummary {
         this.id = id;
     }
 
-    public void setSize(Long size) { this.size = size; }
-    public void setDate(Long date) { this.date = date; }
-    public void setFolderId(String folderId) { this.folderId = folderId; }
-    public void setConversationId(String conversationId) {
-        this.conversationId = conversationId;
-    }
-    public void setFlags(String flags) { this.flags = flags; }
-    public void setTags(String tags) { this.tags = tags; }
-    public void setRevision(Integer revision) { this.revision = revision; }
-    public void setChangeDate(Long changeDate) { this.changeDate = changeDate; }
-    public void setModifiedSequence(Integer modifiedSequence) {
-        this.modifiedSequence = modifiedSequence;
-    }
     public void setAutoSendTime(Long autoSendTime) {
         this.autoSendTime = autoSendTime;
-    }
-    public void setMetadatas(Iterable <CustomMetadata> metadatas) {
-        this.metadatas.clear();
-        if (metadatas != null) {
-            Iterables.addAll(this.metadatas,metadatas);
-        }
-    }
-
-    public MessageSummary addMetadata(CustomMetadata metadata) {
-        this.metadatas.add(metadata);
-        return this;
     }
 
     public void setEmails(Iterable <EmailInfo> emails) {
@@ -138,20 +83,8 @@ public class MessageSummary {
     public void setSubject(String subject) { this.subject = subject; }
     public void setFragment(String fragment) { this.fragment = fragment; }
     public void setInvite(InviteInfo invite) { this.invite = invite; }
-    public Long getSize() { return size; }
-    public Long getDate() { return date; }
-    public String getFolderId() { return folderId; }
-    public String getConversationId() { return conversationId; }
-    public String getFlags() { return flags; }
-    public String getTags() { return tags; }
-    public Integer getRevision() { return revision; }
-    public Long getChangeDate() { return changeDate; }
-    public Integer getModifiedSequence() { return modifiedSequence; }
     public String getId() { return id; }
     public Long getAutoSendTime() { return autoSendTime; }
-    public List<CustomMetadata> getMetadatas() {
-        return Collections.unmodifiableList(metadatas);
-    }
     public List<EmailInfo> getEmails() {
         return Collections.unmodifiableList(emails);
     }
@@ -159,25 +92,21 @@ public class MessageSummary {
     public String getFragment() { return fragment; }
     public InviteInfo getInvite() { return invite; }
 
-    @Override
-    public String toString() {
-        return Objects.toStringHelper(this)
-            .add("size", size)
-            .add("date", date)
-            .add("folderId", folderId)
-            .add("conversationId", conversationId)
-            .add("flags", flags)
-            .add("tags", tags)
-            .add("revision", revision)
-            .add("changeDate", changeDate)
-            .add("modifiedSequence", modifiedSequence)
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        helper = super.addToStringInfo(helper);
+        return helper
             .add("id", id)
             .add("autoSendTime", autoSendTime)
-            .add("metadatas", metadatas)
             .add("emails", emails)
             .add("subject", subject)
             .add("fragment", fragment)
-            .add("invite", invite)
-            .toString();
+            .add("invite", invite);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }

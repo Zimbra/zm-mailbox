@@ -18,36 +18,42 @@ package com.zimbra.soap.mail.message;
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=MailConstants.E_EXPORT_CONTACTS_RESPONSE)
-public class ExportContactsResponse {
+@XmlRootElement(name=MailConstants.E_VERIFY_CODE_REQUEST)
+public class VerifyCodeRequest {
 
-    @XmlElement(name=MailConstants.E_CONTENT, required=true)
-    private final String content;
+    @XmlAttribute(name=MailConstants.A_ADDRESS, required=false)
+    private String address;
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private ExportContactsResponse() {
-        this((String) null);
+    @XmlAttribute(name=MailConstants.A_VERIFICATION_CODE, required=false)
+    private String verificationCode;
+
+    public VerifyCodeRequest() {
+        this(null, null);
     }
 
-    public ExportContactsResponse(String content) {
-        this.content = content;
+    public VerifyCodeRequest(String address, String verificationCode) {
+        setAddress(address);
+        setVerificationCode(verificationCode);
     }
 
-    public String getContent() { return content; }
+    public void setAddress(String address) { this.address = address; }
+    public void setVerificationCode(String verificationCode) {
+        this.verificationCode = verificationCode;
+    }
+    public String getAddress() { return address; }
+    public String getVerificationCode() { return verificationCode; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("content", content);
+            .add("address", address)
+            .add("verificationCode", verificationCode);
     }
 
     @Override

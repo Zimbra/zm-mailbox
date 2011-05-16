@@ -23,35 +23,40 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class GeoInfo {
+public class ExceptIdInfo {
 
-    @XmlAttribute(name=MailConstants.A_CAL_GEO_LATITUDE, required=false)
-    private final String latitude;
+    @XmlAttribute(name=MailConstants.A_CAL_RECURRENCE_ID, required=true)
+    private final String recurrenceId;
 
-    @XmlAttribute(name=MailConstants.A_CAL_GEO_LONGITUDE, required=false)
-    private final String longitude;
+    @XmlAttribute(name=MailConstants.A_ID, required=true)
+    private final String id;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private GeoInfo() {
+    private ExceptIdInfo() {
         this((String) null, (String) null);
     }
 
-    public GeoInfo(String latitude, String longitude) {
-        this.latitude = latitude;
-        this.longitude = longitude;
+    public ExceptIdInfo(String recurrenceId, String id) {
+        this.recurrenceId = recurrenceId;
+        this.id = id;
     }
 
-    public String getLatitude() { return latitude; }
-    public String getLongitude() { return longitude; }
+    public String getRecurrenceId() { return recurrenceId; }
+    public String getId() { return id; }
+
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        return helper
+            .add("recurrenceId", recurrenceId)
+            .add("id", id);
+    }
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
-            .add("latitude", latitude)
-            .add("longitude", longitude)
-            .toString();
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }

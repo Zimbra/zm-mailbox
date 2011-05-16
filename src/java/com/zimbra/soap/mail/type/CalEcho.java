@@ -18,40 +18,31 @@ package com.zimbra.soap.mail.type;
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class GeoInfo {
+public class CalEcho {
 
-    @XmlAttribute(name=MailConstants.A_CAL_GEO_LATITUDE, required=false)
-    private final String latitude;
+    @XmlElement(name=MailConstants.E_MSG, required=false)
+    private InviteAsMP invite;
 
-    @XmlAttribute(name=MailConstants.A_CAL_GEO_LONGITUDE, required=false)
-    private final String longitude;
-
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private GeoInfo() {
-        this((String) null, (String) null);
+    public CalEcho() {
     }
 
-    public GeoInfo(String latitude, String longitude) {
-        this.latitude = latitude;
-        this.longitude = longitude;
-    }
+    public void setInvite(InviteAsMP invite) { this.invite = invite; }
+    public InviteAsMP getInvite() { return invite; }
 
-    public String getLatitude() { return latitude; }
-    public String getLongitude() { return longitude; }
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        return helper
+            .add("invite", invite);
+    }
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
-            .add("latitude", latitude)
-            .add("longitude", longitude)
-            .toString();
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }

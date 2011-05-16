@@ -13,45 +13,38 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.mail.type;
+package com.zimbra.soap.mail.message;
 
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class GeoInfo {
+@XmlRootElement(name=MailConstants.E_SEND_VERIFICATION_CODE_REQUEST)
+public class SendVerificationCodeRequest {
 
-    @XmlAttribute(name=MailConstants.A_CAL_GEO_LATITUDE, required=false)
-    private final String latitude;
+    @XmlAttribute(name=MailConstants.A_ADDRESS, required=false)
+    private String address;
 
-    @XmlAttribute(name=MailConstants.A_CAL_GEO_LONGITUDE, required=false)
-    private final String longitude;
-
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private GeoInfo() {
-        this((String) null, (String) null);
+    public SendVerificationCodeRequest() {
     }
 
-    public GeoInfo(String latitude, String longitude) {
-        this.latitude = latitude;
-        this.longitude = longitude;
-    }
+    public void setAddress(String address) { this.address = address; }
+    public String getAddress() { return address; }
 
-    public String getLatitude() { return latitude; }
-    public String getLongitude() { return longitude; }
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        return helper
+            .add("address", address);
+    }
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
-            .add("latitude", latitude)
-            .add("longitude", longitude)
-            .toString();
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }

@@ -23,35 +23,26 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class GeoInfo {
+public class AttachSpec {
 
-    @XmlAttribute(name=MailConstants.A_CAL_GEO_LATITUDE, required=false)
-    private final String latitude;
+    @XmlAttribute(name=MailConstants.A_OPTIONAL, required=false)
+    private Boolean optional;
 
-    @XmlAttribute(name=MailConstants.A_CAL_GEO_LONGITUDE, required=false)
-    private final String longitude;
-
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private GeoInfo() {
-        this((String) null, (String) null);
+    public AttachSpec() {
     }
 
-    public GeoInfo(String latitude, String longitude) {
-        this.latitude = latitude;
-        this.longitude = longitude;
-    }
+    public void setOptional(Boolean optional) { this.optional = optional; }
+    public Boolean getOptional() { return optional; }
 
-    public String getLatitude() { return latitude; }
-    public String getLongitude() { return longitude; }
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        return helper
+            .add("optional", optional);
+    }
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
-            .add("latitude", latitude)
-            .add("longitude", longitude)
-            .toString();
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }

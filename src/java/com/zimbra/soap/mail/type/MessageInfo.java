@@ -30,43 +30,15 @@ import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.type.CustomMetadata;
 import com.zimbra.soap.type.KeyValuePair;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = { "metadatas", "fragment", "emails", "subject",
+@XmlType(propOrder = { "fragment", "emails", "subject",
     "messageIdHdr", "inReplyTo", "invite", "headers", "contentElems" })
-public class MessageInfo {
+public class MessageInfo extends MessageCommon {
 
     @XmlAttribute(name=MailConstants.A_ID, required=true)
     private final String id;
-
-    @XmlAttribute(name=MailConstants.A_DATE, required=false)
-    private Long date;
-
-    @XmlAttribute(name=MailConstants.A_SIZE, required=false)
-    private Long size;
-
-    @XmlAttribute(name=MailConstants.A_FOLDER, required=false)
-    private String folder;
-
-    @XmlAttribute(name=MailConstants.A_CONV_ID, required=false)
-    private String conversationId;
-
-    @XmlAttribute(name=MailConstants.A_FLAGS, required=false)
-    private String flags;
-
-    @XmlAttribute(name=MailConstants.A_TAGS, required=false)
-    private String tags;
-
-    @XmlAttribute(name=MailConstants.A_REVISION, required=false)
-    private Integer revision;
-
-    @XmlAttribute(name=MailConstants.A_CHANGE_DATE, required=false)
-    private Long changeDate;
-
-    @XmlAttribute(name=MailConstants.A_MODIFIED_SEQUENCE, required=false)
-    private Integer modifiedSequence;
 
     @XmlAttribute(name=MailConstants.A_CAL_INTENDED_FOR, required=false)
     private String calendarIntendedFor;
@@ -94,9 +66,6 @@ public class MessageInfo {
 
     @XmlAttribute(name=MailConstants.A_PART, required=false)
     private String part;
-
-    @XmlElement(name=MailConstants.E_METADATA, required=false)
-    private List<CustomMetadata> metadatas = Lists.newArrayList();
 
     @XmlElement(name=MailConstants.E_FRAG, required=false)
     private String fragment;
@@ -139,20 +108,6 @@ public class MessageInfo {
         this.id = id;
     }
 
-    public void setDate(Long date) { this.date = date; }
-    public void setSize(Long size) { this.size = size; }
-    public void setFolder(String folder) { this.folder = folder; }
-    public void setConversationId(String conversationId) {
-        this.conversationId = conversationId;
-    }
-
-    public void setFlags(String flags) { this.flags = flags; }
-    public void setTags(String tags) { this.tags = tags; }
-    public void setRevision(Integer revision) { this.revision = revision; }
-    public void setChangeDate(Long changeDate) { this.changeDate = changeDate; }
-    public void setModifiedSequence(Integer modifiedSequence) {
-        this.modifiedSequence = modifiedSequence;
-    }
 
     public void setCalendarIntendedFor(String calendarIntendedFor) {
         this.calendarIntendedFor = calendarIntendedFor;
@@ -181,18 +136,6 @@ public class MessageInfo {
     }
 
     public void setPart(String part) { this.part = part; }
-    public void setMetadatas(Iterable <CustomMetadata> metadatas) {
-        this.metadatas.clear();
-        if (metadatas != null) {
-            Iterables.addAll(this.metadatas,metadatas);
-        }
-    }
-
-    public MessageInfo addMetadata(CustomMetadata metadata) {
-        this.metadatas.add(metadata);
-        return this;
-    }
-
     public void setFragment(String fragment) { this.fragment = fragment; }
     public void setEmails(Iterable <EmailInfo> emails) {
         this.emails.clear();
@@ -237,15 +180,6 @@ public class MessageInfo {
     }
 
     public String getId() { return id; }
-    public Long getDate() { return date; }
-    public Long getSize() { return size; }
-    public String getFolder() { return folder; }
-    public String getConversationId() { return conversationId; }
-    public String getFlags() { return flags; }
-    public String getTags() { return tags; }
-    public Integer getRevision() { return revision; }
-    public Long getChangeDate() { return changeDate; }
-    public Integer getModifiedSequence() { return modifiedSequence; }
     public String getCalendarIntendedFor() { return calendarIntendedFor; }
     public String getOrigId() { return origId; }
     public String getDraftReplyType() { return draftReplyType; }
@@ -255,9 +189,6 @@ public class MessageInfo {
     public Long getSentDate() { return sentDate; }
     public Long getResentDate() { return resentDate; }
     public String getPart() { return part; }
-    public List<CustomMetadata> getMetadatas() {
-        return Collections.unmodifiableList(metadatas);
-    }
     public String getFragment() { return fragment; }
     public List<EmailInfo> getEmails() {
         return Collections.unmodifiableList(emails);
@@ -273,19 +204,11 @@ public class MessageInfo {
         return Collections.unmodifiableList(contentElems);
     }
 
-    @Override
-    public String toString() {
-        return Objects.toStringHelper(this)
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        helper = super.addToStringInfo(helper);
+        return helper
             .add("id", id)
-            .add("date", date)
-            .add("size", size)
-            .add("folder", folder)
-            .add("conversationId", conversationId)
-            .add("flags", flags)
-            .add("tags", tags)
-            .add("revision", revision)
-            .add("changeDate", changeDate)
-            .add("modifiedSequence", modifiedSequence)
             .add("calendarIntendedFor", calendarIntendedFor)
             .add("origId", origId)
             .add("draftReplyType", draftReplyType)
@@ -295,7 +218,6 @@ public class MessageInfo {
             .add("sentDate", sentDate)
             .add("resentDate", resentDate)
             .add("part", part)
-            .add("metadatas", metadatas)
             .add("fragment", fragment)
             .add("emails", emails)
             .add("subject", subject)
@@ -303,7 +225,12 @@ public class MessageInfo {
             .add("inReplyTo", inReplyTo)
             .add("invite", invite)
             .add("headers", headers)
-            .add("contentElems", contentElems)
-            .toString();
+            .add("contentElems", contentElems);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }

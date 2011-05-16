@@ -16,6 +16,12 @@
 package com.zimbra.soap.mail.type;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
+import java.util.Collections;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -25,7 +31,9 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = {})
+@XmlType(propOrder = {"until", "count", "interval", "bySecond", "byMinute",
+            "byHour", "byDay", "byMonthDay", "byYearDay", "byWeekNo",
+            "byMonth", "bySetPos", "weekStart", "xNames"})
 public class SimpleRepeatingRule implements RecurRuleBase {
 
     @XmlAttribute(name=MailConstants.A_CAL_RULE_FREQ, required=true)
@@ -70,9 +78,8 @@ public class SimpleRepeatingRule implements RecurRuleBase {
     @XmlElement(name=MailConstants.E_CAL_RULE_WKST, required=false)
     private WkstRule weekStart;
 
-    // TODO:Should support multiple XNames but that would make the JAXB more complex
     @XmlElement(name=MailConstants.E_CAL_RULE_XNAME, required=false)
-    private XNameRule xName;
+    private List<XNameRule> xNames = Lists.newArrayList();
 
     /**
      * no-argument constructor wanted by JAXB
@@ -105,7 +112,18 @@ public class SimpleRepeatingRule implements RecurRuleBase {
     public void setByMonth(ByMonthRule byMonth) { this.byMonth = byMonth; }
     public void setBySetPos(BySetPosRule bySetPos) { this.bySetPos = bySetPos; }
     public void setWeekStart(WkstRule weekStart) { this.weekStart = weekStart; }
-    public void setXName(XNameRule xName) { this.xName = xName; }
+    public void setXNames(Iterable <XNameRule> xNames) {
+        this.xNames.clear();
+        if (xNames != null) {
+            Iterables.addAll(this.xNames,xNames);
+        }
+    }
+
+    public SimpleRepeatingRule addXName(XNameRule xName) {
+        this.xNames.add(xName);
+        return this;
+    }
+
     public String getFrequency() { return frequency; }
     public DateTimeStringAttr getUntil() { return until; }
     public NumAttr getCount() { return count; }
@@ -120,7 +138,9 @@ public class SimpleRepeatingRule implements RecurRuleBase {
     public ByMonthRule getByMonth() { return byMonth; }
     public BySetPosRule getBySetPos() { return bySetPos; }
     public WkstRule getWeekStart() { return weekStart; }
-    public XNameRule getXName() { return xName; }
+    public List<XNameRule> getXNames() {
+        return Collections.unmodifiableList(xNames);
+    }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
@@ -139,7 +159,7 @@ public class SimpleRepeatingRule implements RecurRuleBase {
             .add("byMonth", byMonth)
             .add("bySetPos", bySetPos)
             .add("weekStart", weekStart)
-            .add("xName", xName);
+            .add("xNames", xNames);
     }
 
     @Override

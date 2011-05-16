@@ -27,7 +27,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 
@@ -35,32 +34,28 @@ import com.zimbra.common.soap.MailConstants;
 public class FolderActionSelector extends ActionSelector {
 
     @XmlAttribute(name=MailConstants.A_RECURSIVE, required=false)
-    private Boolean recursive;
+    protected Boolean recursive;
 
     @XmlAttribute(name=MailConstants.A_URL, required=false)
-    private String url;
+    protected String url;
 
     @XmlAttribute(name=MailConstants.A_EXCLUDE_FREEBUSY, required=false)
-    private Boolean excludeFreebusy;
+    protected Boolean excludeFreebusy;
 
     @XmlAttribute(name=MailConstants.A_ZIMBRA_ID, required=false)
-    private String zimbraId;
+    protected String zimbraId;
 
     @XmlAttribute(name=MailConstants.A_GRANT_TYPE, required=false)
-    private String grantType;
+    protected String grantType;
 
     @XmlElement(name=MailConstants.E_GRANT, required=false)
-    private ActionGrantSelector grant;
+    protected ActionGrantSelector grant;
 
     @XmlElementWrapper(name=MailConstants.E_ACL, required=false)
     @XmlElement(name=MailConstants.E_GRANT, required=false)
-    private List<ActionGrantSelector> grants = Lists.newArrayList();
+    protected List<ActionGrantSelector> grants = Lists.newArrayList();
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    protected FolderActionSelector() {
+    public FolderActionSelector() {
         this((String) null, (String) null);
     }
 
@@ -77,13 +72,16 @@ public class FolderActionSelector extends ActionSelector {
     public void setGrantType(String grantType) { this.grantType = grantType; }
     public void setGrant(ActionGrantSelector grant) { this.grant = grant; }
     public void setGrants(Iterable <ActionGrantSelector> grants) {
-        this.grants.clear();
+        this.grants = null;
         if (grants != null) {
+            this.grants = Lists.newArrayList();
             Iterables.addAll(this.grants,grants);
         }
     }
 
     public FolderActionSelector addGrant(ActionGrantSelector grant) {
+        if (grants == null)
+            this.grants = Lists.newArrayList();
         this.grants.add(grant);
         return this;
     }

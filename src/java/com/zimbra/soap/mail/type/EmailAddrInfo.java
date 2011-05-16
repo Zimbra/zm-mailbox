@@ -18,33 +18,46 @@ package com.zimbra.soap.mail.type;
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class ExceptionRuleInfo extends RecurIdInfo implements RecurRuleBase {
+public class EmailAddrInfo {
 
-    @XmlElement(name=MailConstants.E_CAL_ADD, required=false)
-    private RecurrenceInfo add;
+    @XmlAttribute(name=MailConstants.A_ADDRESS, required=true)
+    private final String address;
 
-    @XmlElement(name=MailConstants.E_CAL_EXCLUDE, required=false)
-    private RecurrenceInfo exclude;
+    @XmlAttribute(name=MailConstants.A_ADDRESS_TYPE, required=true)
+    private final String addressType;
 
-    public ExceptionRuleInfo() {
+    @XmlAttribute(name=MailConstants.A_PERSONAL, required=false)
+    private String personal;
+
+    /**
+     * no-argument constructor wanted by JAXB
+     */
+    @SuppressWarnings("unused")
+    private EmailAddrInfo() {
+        this((String) null, (String) null);
     }
 
-    public void setAdd(RecurrenceInfo add) { this.add = add; }
-    public void setExclude(RecurrenceInfo exclude) { this.exclude = exclude; }
-    public RecurrenceInfo getAdd() { return add; }
-    public RecurrenceInfo getExclude() { return exclude; }
+    public EmailAddrInfo(String address, String addressType) {
+        this.address = address;
+        this.addressType = addressType;
+    }
+
+    public void setPersonal(String personal) { this.personal = personal; }
+    public String getAddress() { return address; }
+    public String getAddressType() { return addressType; }
+    public String getPersonal() { return personal; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
-        helper = super.addToStringInfo(helper);
         return helper
-            .add("add", add)
-            .add("exclude", exclude);
+            .add("address", address)
+            .add("addressType", addressType)
+            .add("personal", personal);
     }
 
     @Override

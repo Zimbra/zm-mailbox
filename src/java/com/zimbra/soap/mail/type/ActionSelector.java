@@ -19,42 +19,48 @@ import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlSeeAlso;
 
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
+@XmlSeeAlso({
+    NoteActionSelector.class,
+    ContactActionSelector.class,
+    FolderActionSelector.class
+})
 public class ActionSelector {
 
     // Comma separated list
     @XmlAttribute(name=MailConstants.A_ID, required=true)
-    private final String ids;
+    protected final String ids;
 
     @XmlAttribute(name=MailConstants.A_OPERATION, required=true)
-    private final String operation;
+    protected final String operation;
 
     @XmlAttribute(name=MailConstants.A_TARGET_CONSTRAINT, required=false)
-    private String constraint;
+    protected String constraint;
 
     @XmlAttribute(name=MailConstants.A_TAG, required=false)
-    private Integer tag;
+    protected Integer tag;
 
     @XmlAttribute(name=MailConstants.A_FOLDER, required=false)
-    private String folder;
+    protected String folder;
 
     @XmlAttribute(name=MailConstants.A_RGB, required=false)
-    private String rgb;
+    protected String rgb;
 
     @XmlAttribute(name=MailConstants.A_COLOR, required=false)
-    private Byte color;
+    protected Byte color;
 
     @XmlAttribute(name=MailConstants.A_NAME, required=false)
-    private String name;
+    protected String name;
 
     @XmlAttribute(name=MailConstants.A_FLAGS, required=false)
-    private String flags;
+    protected String flags;
 
     @XmlAttribute(name=MailConstants.A_TAGS, required=false)
-    private String tags;
+    protected String tags;
 
     /**
      * no-argument constructor wanted by JAXB

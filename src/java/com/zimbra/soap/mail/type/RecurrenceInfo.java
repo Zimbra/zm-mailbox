@@ -41,6 +41,8 @@ public class RecurrenceInfo {
             type=ExceptionRuleInfo.class),
         @XmlElement(name=MailConstants.E_CAL_CANCEL,
             type=CancelRuleInfo.class),
+        @XmlElement(name=MailConstants.E_CAL_DATES,
+            type=SingleDates.class),
         @XmlElement(name=MailConstants.E_CAL_RULE,
             type=SimpleRepeatingRule.class)
     })
@@ -56,8 +58,8 @@ public class RecurrenceInfo {
         }
     }
 
-    public RecurrenceInfo addRul(RecurRuleBase rul) {
-        this.rules.add(rul);
+    public RecurrenceInfo addRule(RecurRuleBase rule) {
+        this.rules.add(rule);
         return this;
     }
 
@@ -65,10 +67,15 @@ public class RecurrenceInfo {
         return Collections.unmodifiableList(rules);
     }
 
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        return helper
+            .add("rules", rules);
+    }
+
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
-            .add("rules", rules)
-            .toString();
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }

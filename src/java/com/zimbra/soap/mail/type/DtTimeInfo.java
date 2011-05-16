@@ -25,7 +25,7 @@ import com.zimbra.common.soap.MailConstants;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class DtTimeInfo {
 
-    @XmlAttribute(name=MailConstants.A_CAL_DATETIME, required=true)
+    @XmlAttribute(name=MailConstants.A_CAL_DATETIME, required=false)
     private final String dateTime;
 
     @XmlAttribute(name=MailConstants.A_CAL_TIMEZONE, required=false)

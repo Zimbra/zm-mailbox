@@ -25,6 +25,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.nio.charset.Charset;
+import java.util.List;
 import java.util.Map;
 
 import javax.xml.bind.JAXBContext;
@@ -34,14 +35,38 @@ import junit.framework.Assert;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 import org.apache.log4j.Level;
+import org.dom4j.QName;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 import com.zimbra.soap.JaxbUtil;
+import com.zimbra.soap.account.message.AuthRequest;
 import com.zimbra.soap.account.message.CreateIdentityRequest;
 import com.zimbra.soap.account.message.GetInfoResponse;
+import com.zimbra.soap.account.type.Pref;
+import com.zimbra.soap.admin.message.CreateAccountRequest;
+import com.zimbra.soap.admin.message.MailQueueActionRequest;
+import com.zimbra.soap.admin.type.Attr;
+import com.zimbra.soap.admin.type.MailQueueAction;
+import com.zimbra.soap.admin.type.MailQueueWithAction;
+import com.zimbra.soap.admin.type.QueueQuery;
+import com.zimbra.soap.admin.type.QueueQueryField;
+import com.zimbra.soap.admin.type.ServerWithQueueAction;
+import com.zimbra.soap.admin.type.ValueAttrib;
+import com.zimbra.soap.mail.message.ConvActionRequest;
+import com.zimbra.soap.mail.message.GetContactsRequest;
+import com.zimbra.soap.mail.message.ImportContactsRequest;
+import com.zimbra.soap.mail.type.ActionSelector;
+import com.zimbra.soap.mail.type.ContactActionSelector;
+import com.zimbra.soap.mail.type.FolderActionSelector;
+import com.zimbra.soap.mail.type.NoteActionSelector;
+import com.zimbra.soap.type.AttributeName;
+import com.zimbra.soap.type.Id;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.JSONElement;
+import com.zimbra.common.soap.MailConstants;
 
 /**
  * Unit test for {@link GetInfoResponse} which exercises
@@ -206,6 +231,274 @@ public class JaxbToElementTest {
             getInfoResp = JaxbUtil.elementToJaxbUsingDom4j(el);
             Assert.assertEquals("Account name", "user1@ysasaki.local",
                  getInfoResp.getAccountName());
+        }
+    }
+
+    /**
+     * Check that @{link JaxbUtil.elementToJaxb} will accept XML where
+     * JAXB expects content type as an attribute but it is specified as
+     * an element.
+     * @throws Exception
+     */
+    @Test
+    public void importContactsWithContentTypeAsElementTest () throws Exception {
+        Element icrElem = Element.XMLElement.mFactory.createElement(
+                MailConstants.IMPORT_CONTACTS_REQUEST);
+        icrElem.addAttribute(MailConstants.A_CSVLOCALE, "fr");
+        icrElem.addElement(MailConstants.A_CONTENT_TYPE).setText("csv");
+        icrElem.addElement(MailConstants.E_CONTENT).setText("CONTENT");
+        ImportContactsRequest icr = JaxbUtil.elementToJaxb(icrElem);
+        Assert.assertEquals("ImportContactsRequest content type:",
+                "csv", icr.getContentType());
+        Assert.assertEquals("ImportContactsRequest csvlocale:",
+                "fr", icr.getCsvLocale());
+        Assert.assertEquals("ImportContactsRequest contents:",
+                "CONTENT", icr.getContent().getValue());
+    }
+
+    /**
+     * Check that @{link JaxbUtil.elementToJaxb} will accept XML where
+     * JAXB expects various attributes that have been specified as elements
+     * in a fairly deep structure.  Ensure that @XmlElementRef is handled
+     * @throws Exception
+     */
+    @Test
+    public void jaxbElementRefsFixupTest () throws Exception {
+        Element rootElem = Element.XMLElement.mFactory.createElement(
+                AdminConstants.MAIL_QUEUE_ACTION_REQUEST);
+        // JAXB Element E_SERVER --> ServerWithQueueAction
+        Element svrE = rootElem.addElement(AdminConstants.E_SERVER);
+        // JAXB attribute A_NAME
+        svrE.addElement(AdminConstants.A_NAME).setText("SERVER-NAME");
+        // JAXB Element E_QUEUE --> MailQueueWithAction
+        Element qE = svrE.addElement(AdminConstants.E_QUEUE);
+        // JAXB attribute A_NAME
+        qE.addElement(AdminConstants.A_NAME).setText("queueName");
+        // JAXB Element E_ACTION --> MailQueueAction
+        Element actE = qE.addElement(AdminConstants.E_ACTION);
+        // JAXB attribute A_OP
+        actE.addElement(AdminConstants.A_OP).setText("requeue");
+        // JAXB attribute A_BY
+        actE.addElement(AdminConstants.A_BY).setText("query");
+        // MailQueueAction XmlElementRef E_QUERY --> QueueQuery
+        // actually, part of XmlMixed, so JAXB class deals in
+        // an array of Object
+        Element queryE = actE.addElement(AdminConstants.E_QUERY);
+        // JAXB attribute A_OFFSET
+        queryE.addAttribute(AdminConstants.A_OFFSET, "20");
+        // JAXB attribute A_LIMIT
+        queryE.addElement(AdminConstants.A_LIMIT).setText("99");
+        for (int sfx = 1; sfx <= 3; sfx++) {
+            // List<QueueQueryField> fields 
+            Element fE = queryE.addElement(AdminConstants.E_FIELD);
+            fE.addAttribute(AdminConstants.A_NAME, "name" + sfx);
+            // List<ValueAttrib> matches
+            Element mE = fE.addElement(AdminConstants.E_MATCH);
+            // JAXB attribute A_VALUE
+            mE.addElement(AdminConstants.A_VALUE).setText("value " + sfx);
+            mE = fE.addElement(AdminConstants.E_MATCH);
+            // JAXB attribute A_VALUE
+            mE.addElement(AdminConstants.A_VALUE).setText("2nd value " + sfx);
+        }
+        MailQueueActionRequest req = JaxbUtil.elementToJaxb(rootElem);
+        ServerWithQueueAction svrWithQ = req.getServer();
+        Assert.assertEquals("Server name", "SERVER-NAME", svrWithQ.getName());
+        MailQueueWithAction q = svrWithQ.getQueue();
+        Assert.assertEquals("Queue name", "queueName", q.getName());
+        MailQueueAction a = q.getAction();
+        Assert.assertEquals("Action BY",
+                MailQueueAction.QueueActionBy.query, a.getBy());
+        Assert.assertEquals("Action OP",
+                MailQueueAction.QueueAction.requeue, a.getOp());
+        QueueQuery query = a.getQuery();
+        Assert.assertEquals("Query offset", 20, query.getOffset().intValue());
+        Assert.assertEquals("Query limit", 99, query.getLimit().intValue());
+        List<QueueQueryField> qFields = query.getFields();
+        Assert.assertEquals("Number of query fields", 3, qFields.size());
+        Assert.assertEquals("Query field 2 name", "name2",
+                qFields.get(1).getName());
+        List<ValueAttrib> matches = qFields.get(1).getMatches();
+        Assert.assertEquals("Number of matches", 2, matches.size());
+        Assert.assertEquals("Match 2 value", "2nd value 2",
+                matches.get(1).getValue());
+    }
+
+    /**
+     * Check that @{link JaxbUtil.elementToJaxb} will accept XML where
+     * JAXB expects various attributes that have been specified as elements.
+     * Ensure that @XmlElements is handled
+     * @throws Exception
+     */
+    @Test
+    public void jaxbElementsFixupTest() throws Exception {
+        Element rootElem = Element.XMLElement.mFactory.createElement(
+                MailConstants.GET_CONTACTS_REQUEST);
+        // JAXB Attribute A_SYNC
+        rootElem.addElement(MailConstants.A_SYNC).addText("true");
+        // JAXB Attribute A_FOLDER
+        rootElem.addAttribute(MailConstants.A_FOLDER, "folderId");
+        // JAXB Attribute A_SORTBY
+        rootElem.addElement(MailConstants.A_SORTBY).addText("sortBy");
+        // JAXB Elements:
+        //    Element E_ATTRIBUTE --> AttributeName
+        //    Element E_CONTACT --> Id
+        Element attrName1 = rootElem.addElement(MailConstants.E_ATTRIBUTE);
+        attrName1.addAttribute(MailConstants.A_ATTRIBUTE_NAME, "aName1");
+        Element contact1 = rootElem.addElement(MailConstants.E_CONTACT);
+        contact1.addElement(MailConstants.A_ID).addText("ctctId1");
+        Element contact2 = rootElem.addElement(MailConstants.E_CONTACT);
+        contact2.addAttribute(MailConstants.A_ID, "ctctId2");
+        Element attrName2 = rootElem.addElement(MailConstants.E_ATTRIBUTE);
+        attrName2.addElement(MailConstants.A_ATTRIBUTE_NAME).addText("aName2");
+
+        GetContactsRequest req = JaxbUtil.elementToJaxb(rootElem);
+
+        Assert.assertEquals("Sync", true, req.getSync().booleanValue());
+        Assert.assertEquals("FolderID", "folderId", req.getFolderId());
+        Assert.assertEquals("SortBy", "sortBy", req.getSortBy());
+        List<Object> objs = req.getElements();
+        Assert.assertEquals("Number of elements", 4, objs.size());
+        boolean haveC1 = false;
+        boolean haveC2 = false;
+        boolean haveA1 = false;
+        boolean haveA2 = false;
+        for (Object obj : objs) {
+            if (obj instanceof AttributeName) {
+                AttributeName an = (AttributeName) obj;
+                String aNam = an.getName();
+                if (aNam.equals("aName1")) {
+                    haveA1 = true;
+                } else if (aNam.equals("aName2")) {
+                    haveA2 = true;
+                } else {
+                    Assert.fail("Unexpected attribute with name " + aNam);
+                }
+            } else if (obj instanceof Id) {
+                Id an = (Id) obj;
+                String aNam = an.getId();
+                if (aNam.equals("ctctId1")) {
+                    haveC1 = true;
+                } else if (aNam.equals("ctctId2")) {
+                    haveC2 = true;
+                } else {
+                    Assert.fail("Unexpected contact id " + aNam);
+                }
+            } else {
+                Assert.fail("Unexpected class for element");
+            }
+        }
+        Assert.assertTrue("All elements should be present", 
+                haveC1 && haveC2 && haveA1 && haveA2);
+    }
+
+    /**
+     * Check that @{link JaxbUtil.elementToJaxb} will accept XML where
+     * JAXB expects various attributes that have been specified as elements.
+     * Ensure that attributes in elements of superclasses are handled
+     * @throws Exception
+     */
+    @Test
+    public void jaxbSubclassFixupTest() throws Exception {
+        Element rootElem = Element.XMLElement.mFactory.createElement(
+                AdminConstants.CREATE_ACCOUNT_REQUEST);
+        // JAXB Attribute E_NAME
+        rootElem.addElement(AdminConstants.E_NAME).addText("acctName");
+        // JAXB Attribute E_PASSWORD
+        rootElem.addElement(AdminConstants.E_PASSWORD).addText("AcctPassword");
+        // JAXB Element E_A ---> Attr (actually a List)
+        Element a1 = rootElem.addElement(AdminConstants.E_A);
+        // JAXB Attribute A_N
+        a1.addElement(AdminConstants.A_N).addText("attrName1");
+        // value can't be set when we've specified an attribute as an element
+
+        CreateAccountRequest req = JaxbUtil.elementToJaxb(rootElem);
+        Assert.assertEquals("Account name", "acctName", req.getName());
+        Assert.assertEquals("Account Password",
+                "AcctPassword", req.getPassword());
+        List<Attr> attrs = req.getAttrs();
+        Assert.assertEquals("Number of attrs", 1, attrs.size());
+        Assert.assertEquals("attr 1 name", "attrName1",
+                attrs.get(0).getN());
+        Assert.assertEquals("attr 1 value", "",
+                attrs.get(0).getValue());
+    }
+
+    /**
+     * Check that @{link JaxbUtil.elementToJaxb} will accept XML where
+     * JAXB expects various attributes that have been specified as elements.
+     * Ensure that attributes in wrapped elements are handled
+     * @throws Exception
+     */
+    @Test
+    public void jaxbWrapperFixupTest() throws Exception {
+        Element rootElem = Element.XMLElement.mFactory.createElement(
+                AccountConstants.AUTH_REQUEST);
+        // JAXB wrapper element name E_PREFS
+        Element prefsE = rootElem.addElement(AccountConstants.E_PREFS);
+        // JAXB element E_PREF with attribute "name"
+        Element prefE = prefsE.addElement(AccountConstants.E_PREF);
+        prefE.addElement("name").addText("pref name");
+
+        AuthRequest req = JaxbUtil.elementToJaxb(rootElem);
+        List<Pref> prefs = req.getPrefs();
+        Assert.assertEquals("Number of prefs", 1, prefs.size());
+        Assert.assertEquals("Pref name",
+                "pref name", prefs.get(0).getName());
+    }
+
+    /**
+     * Explore handling of Jaxb classes which specify an @XmlElement with
+     * a super class.  How do subclasses get treated with this?
+     * WSDLJaxbTest.ConvActionRequestJaxbSubclassHandlingTest passes,
+     * i.e. it successfully unmarshalls to a ConvActionRequest with
+     * a FolderActionSelector member.
+     * However, even if I use those class files (with package name changed)
+     * in place of the committed ones, this test only seems to unmarshall
+     * with an ActionSelector member - i.e. the "recursive" and "url"
+     * attribute information gets lost.
+     */
+    // @Test
+    public void ConvActionRequestJaxbSubclassHandlingTestDisabled() throws Exception {
+        FolderActionSelector fas = new FolderActionSelector("ids", "op");
+        fas.setFolder("folder");
+        fas.setRecursive(true);
+        fas.setUrl("http://url");
+        ConvActionRequest car = new ConvActionRequest(fas);
+        Element carE = JaxbUtil.jaxbToElement(car);
+        String eXml = carE.toString();
+        LOG.info("ConvActionRequestJaxbSubclassHandling: marshalled XML=" +
+                eXml);
+        Assert.assertTrue("Xml should contain recursive attribute",
+                eXml.contains("recursive=\"true\""));
+
+        carE = Element.XMLElement.mFactory.createElement(
+                MailConstants.CONV_ACTION_REQUEST);
+        Element actionE = carE.addElement(MailConstants.E_ACTION);
+        actionE.addAttribute(MailConstants.A_OPERATION, "op");
+        actionE.addAttribute(MailConstants.A_ID, "ids");
+        actionE.addAttribute(MailConstants.A_FOLDER, "folder");
+        actionE.addAttribute(MailConstants.A_RECURSIVE, true);
+        actionE.addAttribute(MailConstants.A_URL, "http://url");
+        LOG.info("ConvActionRequestJaxbSubclassHandling: half baked XML=" +
+                carE.toString());
+        car = JaxbUtil.elementToJaxb(carE);
+        carE = JaxbUtil.jaxbToElement(car);
+        eXml = carE.toString();
+        LOG.info("ConvActionRequestJaxbSubclassHandling: round tripped XML=" +
+                eXml);
+        ActionSelector as = car.getAction();
+        Assert.assertEquals("Folder attribute value",
+                    "folder", as.getFolder());
+        if (as instanceof FolderActionSelector) {
+            fas = (FolderActionSelector)as;
+            Assert.assertEquals("url attribute value",
+                    "http://url", fas.getUrl());
+        } else if (as instanceof NoteActionSelector) {
+            Assert.fail("got a NoteActionSelector");
+        } else if (as instanceof ContactActionSelector) {
+            Assert.fail("got a ContactActionSelector");
+        } else {
+            Assert.fail("Failed to get back a FolderActionSelector");
         }
     }
 

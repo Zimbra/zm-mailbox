@@ -21,7 +21,7 @@
   <property name="common.jars.dir" location="${common.dir}/jars"/>
   <property name="metro.jars.dir" location="jars/metro"/>
 
-  <property name="xml.schema.dir" location="${build.dir}/schema"/>
+  <property name="xml.schema.dir" location="${build.classes.dir}/com/zimbra/soap"/>
 
   <property name="TESTNAME" value="com.zimbra.soap.admin.GetServerTest" />
   <property name="WSDLTEST" value="com.zimbra.soap.account.WSDLAuthRequestTest" />
@@ -79,7 +79,7 @@
     </javac>
   </target>
 
-  <target name="jar" depends="compile" description="Creates the jar file">
+  <target name="jar" depends="compile,generate-schema,wsdl-files" description="Creates the jar file">
     <jar destfile="${build.dir}/${jar.file}" basedir="${build.classes.dir}" />
   </target>
 
@@ -94,7 +94,7 @@
     </java>
   </target>
 
-  <target name="generate-schema">
+  <target name="generate-schema" depends="compile">
     <mkdir dir="${xml.schema.dir}"/>
     <schemagen srcdir="${src.java.dir}" destdir="${xml.schema.dir}">
       <classpath refid="class.path"/>
@@ -107,7 +107,7 @@
     </schemagen>
   </target>
 
-  <target name="account-service-client-support" depends="wsdl-files,generate-schema">
+  <target name="account-service-client-support" depends="jar">
     <mkdir dir="${wsdl.test.classes.dir}"/>
     <delete dir="${wsdl.test.src.dir}/com/zimbra/soap/account/wsimport/generated" />
     <!-- extension="true|false" - allow vendor extensions -->
@@ -128,7 +128,7 @@
     <delete file="${wsdl.test.classes.dir}/com/zimbra/soap/account/wsimport/generated/AccountService_Service.class"/>
   </target>
 
-  <target name="admin-service-client-support" depends="wsdl-files,generate-schema">
+  <target name="admin-service-client-support" depends="jar">
     <mkdir dir="${wsdl.test.classes.dir}"/>
     <delete dir="${wsdl.test.src.dir}/com/zimbra/soap/admin/wsimport/generated" />
     <!-- extension="true|false" - allow vendor extensions -->
@@ -149,7 +149,7 @@
     <delete file="${wsdl.test.classes.dir}/com/zimbra/soap/admin/wsimport/generated/AdminService_Service.class"/>
   </target>
 
-  <target name="mail-service-client-support" depends="wsdl-files,generate-schema">
+  <target name="mail-service-client-support" depends="jar">
     <mkdir dir="${wsdl.test.classes.dir}"/>
     <delete dir="${wsdl.test.src.dir}/com/zimbra/soap/mail/wsimport/generated" />
     <!-- extension="true|false" - allow vendor extensions -->

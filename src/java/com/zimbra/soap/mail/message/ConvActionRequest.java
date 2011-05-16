@@ -29,7 +29,7 @@ import com.zimbra.soap.mail.type.ActionSelector;
 public class ConvActionRequest {
 
     @XmlElement(name=MailConstants.E_ACTION, required=true)
-    private final ActionSelector action;
+    protected ActionSelector action;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -44,6 +44,7 @@ public class ConvActionRequest {
     }
 
     public ActionSelector getAction() { return action; }
+    public void setAction(ActionSelector value) { this.action = value; }
 
     @Override
     public String toString() {

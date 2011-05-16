@@ -18,33 +18,39 @@ package com.zimbra.soap.mail.type;
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlValue;
 
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class ExceptionRuleInfo extends RecurIdInfo implements RecurRuleBase {
+public class RawInvite {
 
-    @XmlElement(name=MailConstants.E_CAL_ADD, required=false)
-    private RecurrenceInfo add;
+    @XmlAttribute(name=MailConstants.A_ID, required=false)
+    private String uid;
 
-    @XmlElement(name=MailConstants.E_CAL_EXCLUDE, required=false)
-    private RecurrenceInfo exclude;
+    @XmlAttribute(name="summary", required=false)
+    private String summary;
 
-    public ExceptionRuleInfo() {
+    @XmlValue
+    private String content;
+
+    public RawInvite() {
     }
 
-    public void setAdd(RecurrenceInfo add) { this.add = add; }
-    public void setExclude(RecurrenceInfo exclude) { this.exclude = exclude; }
-    public RecurrenceInfo getAdd() { return add; }
-    public RecurrenceInfo getExclude() { return exclude; }
+    public void setUid(String uid) { this.uid = uid; }
+    public void setSummary(String summary) { this.summary = summary; }
+    public void setContent(String content) { this.content = content; }
+    public String getUid() { return uid; }
+    public String getSummary() { return summary; }
+    public String getContent() { return content; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
-        helper = super.addToStringInfo(helper);
         return helper
-            .add("add", add)
-            .add("exclude", exclude);
+            .add("uid", uid)
+            .add("summary", summary)
+            .add("content", content);
     }
 
     @Override

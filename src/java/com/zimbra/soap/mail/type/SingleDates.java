@@ -19,50 +19,46 @@ import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class RecurIdInfo {
-
-    @XmlAttribute(name=MailConstants.A_CAL_RECURRENCE_RANGE_TYPE, required=true)
-    private final int recurrenceRangeType;
-
-    @XmlAttribute(name=MailConstants.A_CAL_RECURRENCE_ID, required=true)
-    private final String recurrenceId;
+public class SingleDates implements RecurRuleBase {
 
     @XmlAttribute(name=MailConstants.A_CAL_TIMEZONE, required=false)
     private String timezone;
 
-    @XmlAttribute(name=MailConstants.A_CAL_RECURRENCE_ID_Z, required=false)
-    private String recurIdZ;
+    @XmlElement(name=MailConstants.E_CAL_START_TIME, required=false)
+    private DtTimeInfo startTime;
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    protected RecurIdInfo() {
-        this(-1, (String) null);
-    }
+    @XmlElement(name=MailConstants.E_CAL_END_TIME, required=false)
+    private DtTimeInfo endTime;
 
-    public RecurIdInfo(int recurrenceRangeType, String recurrenceId) {
-        this.recurrenceRangeType = recurrenceRangeType;
-        this.recurrenceId = recurrenceId;
+    @XmlElement(name=MailConstants.E_CAL_DURATION, required=false)
+    private DurationInfo duration;
+
+    public SingleDates() {
     }
 
     public void setTimezone(String timezone) { this.timezone = timezone; }
-    public void setRecurIdZ(String recurIdZ) { this.recurIdZ = recurIdZ; }
-    public int getRecurrenceRangeType() { return recurrenceRangeType; }
-    public String getRecurrenceId() { return recurrenceId; }
+    public void setStartTime(DtTimeInfo startTime) {
+        this.startTime = startTime;
+    }
+    public void setEndTime(DtTimeInfo endTime) { this.endTime = endTime; }
+    public void setDuration(DurationInfo duration) { this.duration = duration; }
     public String getTimezone() { return timezone; }
-    public String getRecurIdZ() { return recurIdZ; }
+    public DtTimeInfo getStartTime() { return startTime; }
+    public DtTimeInfo getEndTime() { return endTime; }
+    public DurationInfo getDuration() { return duration; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("recurrenceRangeType", recurrenceRangeType)
-            .add("recurrenceId", recurrenceId)
             .add("timezone", timezone)
-            .add("recurIdZ", recurIdZ);
+            .add("startTime", startTime)
+            .add("endTime", endTime)
+            .add("duration", duration);
     }
 
     @Override
