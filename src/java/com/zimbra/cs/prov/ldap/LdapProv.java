@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.prov.ldap;
 
+import java.io.PrintWriter;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -21,6 +22,7 @@ import java.util.Set;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapDIT;
@@ -35,23 +37,6 @@ public abstract class LdapProv extends Provisioning {
     
     protected LdapDIT mDIT;
     protected LdapHelper helper;
-    
-    protected static final String[] sInvalidAccountCreateModifyAttrs = {
-            Provisioning.A_zimbraMailAlias,
-            Provisioning.A_zimbraMailDeliveryAddress,
-            Provisioning.A_uid
-    };
-
-    protected static final String[] sMinimalDlAttrs = {
-            Provisioning.A_displayName,
-            Provisioning.A_zimbraShareInfo,
-            Provisioning.A_zimbraMailAlias,
-            Provisioning.A_zimbraId,
-            Provisioning.A_uid,
-            Provisioning.A_zimbraACE,
-            Provisioning.A_zimbraIsAdminGroup,
-            Provisioning.A_zimbraAdminConsoleUIComponents
-    }; 
     
     protected LdapProv() {
         LdapClient.initialize();
@@ -83,30 +68,69 @@ public abstract class LdapProv extends Provisioning {
         return helper;
     }
     
-    public abstract void searchOCsForSuperClasses(Map<String, Set<String>> ocs);
+    public abstract int getAccountCacheSize();
+    public abstract double getAccountCacheHitRate();
+    public abstract int getCosCacheSize();
+    public abstract double getCosCacheHitRate();
+    public abstract int getDomainCacheSize();
+    public abstract double getDomainCacheHitRate();
+    public abstract int getServerCacheSize();
+    public abstract double getServerCacheHitRate();
+    public abstract int getZimletCacheSize();
+    public abstract double getZimletCacheHitRate();
+    public abstract int getGroupCacheSize();
+    public abstract double getGroupCacheHitRate();
+    public abstract int getXMPPCacheSize();
+    public abstract double getXMPPCacheHitRate();
     
-    public abstract List<MimeTypeInfo> getAllMimeTypesByQuery() throws ServiceException;
-    public abstract List<MimeTypeInfo> getMimeTypesByQuery(String mimeType) throws ServiceException;
     
-    public abstract void externalLdapAuth(Domain d, String authMech, Account acct, String password, 
-            Map<String, Object> authCtxt) throws ServiceException;
+    public abstract void waitForLdapServer();
+    public abstract void alwaysUseMaster();
     
-    @TODO  // deprecate
-    public abstract void searchLdapOnMaster(String base, String filter, String[] returnAttrs, 
-            SearchLdapOptions.SearchLdapVisitor visitor) 
+    public abstract void dumpLdapSchema(PrintWriter pw) throws ServiceException;
+    
+    public abstract void renameDomain(String domainId, String newDomainName)
     throws ServiceException;
     
-    public abstract void searchLdapOnMaster(String base, ZLdapFilter filter, String[] returnAttrs, 
-            SearchLdapOptions.SearchLdapVisitor visitor) 
+    public abstract void searchOCsForSuperClasses(Map<String, Set<String>> ocs);
+    public abstract void getAttrsInOCs(String[] ocs, Set<String> attrsInOCs) 
+    throws ServiceException;
+    
+    public abstract List<MimeTypeInfo> getAllMimeTypesByQuery() 
+    throws ServiceException;
+    public abstract List<MimeTypeInfo> getMimeTypesByQuery(String mimeType) 
+    throws ServiceException;
+    
+    public abstract void externalLdapAuth(Domain d, String authMech, Account acct, 
+            String password, Map<String, Object> authCtxt) 
+    throws ServiceException;
+    
+    /**
+     * Authenticate to Zimbra LDAP server with bind DN and password.
+     * Used when stored password is not SSHA.
+     */
+    public abstract void zimbraLdapAuthenticate(Account acct, String password, 
+            Map<String, Object> authCtxt)
+    throws ServiceException;
+    
+    public abstract void removeFromCache(Entry entry);
+    
+    @TODO  // deprecate
+    public abstract void searchLdapOnMaster(String base, String filter, 
+            String[] returnAttrs, SearchLdapOptions.SearchLdapVisitor visitor) 
+    throws ServiceException;
+    
+    public abstract void searchLdapOnMaster(String base, ZLdapFilter filter, 
+            String[] returnAttrs, SearchLdapOptions.SearchLdapVisitor visitor) 
     throws ServiceException;
 
     @TODO  // deprecate
-    public abstract void searchLdapOnReplica(String base, String filter, String[] returnAttrs, 
-            SearchLdapOptions.SearchLdapVisitor visitor) 
+    public abstract void searchLdapOnReplica(String base, String filter, 
+            String[] returnAttrs, SearchLdapOptions.SearchLdapVisitor visitor) 
     throws ServiceException;
     
-    public abstract void searchLdapOnReplica(String base, ZLdapFilter filter, String[] returnAttrs, 
-            SearchLdapOptions.SearchLdapVisitor visitor) 
+    public abstract void searchLdapOnReplica(String base, ZLdapFilter filter, 
+            String[] returnAttrs, SearchLdapOptions.SearchLdapVisitor visitor) 
     throws ServiceException;
     
     

@@ -22,7 +22,7 @@ import com.zimbra.cs.account.krb5.Krb5Login;
 import com.zimbra.cs.account.ldap.LdapGalMapRules;
 import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.gal.GalSearchParams;
-import com.zimbra.cs.ldap.LdapConfig.ExternalLdapConfig;
+import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapException.LdapSizeLimitExceededException;
 import com.zimbra.cs.ldap.LdapTODO.*;
