@@ -15,15 +15,20 @@ import java.util.Map;
 public class InvalidateReminderDevice extends MailDocumentHandler {
 
     @Override
-    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+    public Element handle(Element request, Map<String, Object> context)
+    throws ServiceException {
         String emailAddr = request.getAttribute(MailConstants.A_ADDRESS);
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account account = getRequestedAccount(zsc);
-        if (emailAddr.equals(account.getCalendarReminderDeviceEmail()))
+        String configuredAddr = account.getCalendarReminderDeviceEmail();
+        if (emailAddr.equals(configuredAddr))
             account.unsetCalendarReminderDeviceEmail();
         else
-            throw ServiceException.INVALID_REQUEST(
-                    "Email address is not same as the " + Provisioning.A_zimbraCalendarReminderDeviceEmail + " attr value", null);
-        return zsc.createElement(MailConstants.INVALIDATE_REMINDER_DEVICE_RESPONSE);
+            throw ServiceException.INVALID_REQUEST("Email address'" +
+                    emailAddr + "' is not same as the " +
+                    Provisioning.A_zimbraCalendarReminderDeviceEmail +
+                    " attr value '" + configuredAddr + "'", null);
+        return zsc.createElement(
+                MailConstants.INVALIDATE_REMINDER_DEVICE_RESPONSE);
     }
 }

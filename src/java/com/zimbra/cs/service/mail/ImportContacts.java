@@ -41,7 +41,13 @@ import com.zimbra.cs.service.formatter.ContactCSV;
 import com.zimbra.cs.service.formatter.ContactCSV.ParseException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
+import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.JaxbUtil;
+import com.zimbra.soap.mail.message.ImportContactsRequest;
+import com.zimbra.soap.mail.message.ImportContactsResponse;
+import com.zimbra.soap.mail.type.Content;
+import com.zimbra.soap.mail.type.ImportContact;
 
 /**
  * @author schemers
@@ -60,24 +66,26 @@ public class ImportContacts extends MailDocumentHandler  {
         OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
-        String folder = request.getAttribute(MailConstants.A_FOLDER, DEFAULT_FOLDER_ID);
+        ImportContactsRequest req = JaxbUtil.elementToJaxb(request);
+        String ct = req.getContentType();
+        if (!ct.equals(ZMailbox.CONTACT_IMPORT_TYPE_CSV))
+            throw ServiceException.INVALID_REQUEST("unsupported content type: " + ct, null);
+        String folder = req.getFolderId();
+        if (folder == null)
+            folder = this.DEFAULT_FOLDER_ID;
         ItemId iidFolder = new ItemId(folder, zsc);
 
-        String ct = request.getAttribute(MailConstants.A_CONTENT_TYPE);
-        if (!ct.equals("csv"))
-            throw ServiceException.INVALID_REQUEST("unsupported content type: " + ct, null);
-        
-        String format = request.getAttribute(MailConstants.A_CSVFORMAT, null);
-        String locale = request.getAttribute(MailConstants.A_CSVLOCALE, null);
-        Element content = request.getElement(MailConstants.E_CONTENT);
+        String format = req.getCsvFormat();
+        String locale = req.getCsvLocale();
+        Content reqContent = req.getContent();
         List<Map<String, String>> contacts = null;
         List<Upload> uploads = null;
         BufferedReader reader = null;
-        String attachment = content.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
+        String attachment = reqContent.getAttachUploadId();
         try {
             if (attachment == null) {
                 // Convert LF to CRLF because the XML parser normalizes element text to LF.
-                String text = StringUtil.lfToCrlf(content.getText());
+                String text = StringUtil.lfToCrlf(reqContent.getValue());
                 reader = new BufferedReader(new StringReader(text));
             } else {
                 reader = parseUploadedContent(zsc, attachment, uploads = new ArrayList<Upload>());
@@ -99,19 +107,16 @@ public class ImportContacts extends MailDocumentHandler  {
         List<ItemId> idsList = ImportCsvContacts(octxt, mbox, iidFolder, contacts);
         
 
-        StringBuilder ids = new StringBuilder();
+        ImportContactsResponse resp = new ImportContactsResponse();
+        ImportContact impCntct = new ImportContact();
         
         for (ItemId iid : idsList) {
-            if (ids.length() > 0)
-                ids.append(",");
-            ids.append(iid.toString(ifmt));
+            impCntct.addCreatedId(iid.toString(ifmt));
         }
+        impCntct.setNumImported(contacts.size());
+        resp.setContact(impCntct);
 
-        Element response = zsc.createElement(MailConstants.IMPORT_CONTACTS_RESPONSE);
-        Element cn = response.addElement(MailConstants.E_CONTACT);
-        cn.addAttribute(MailConstants.A_IDS, ids.toString());
-        cn.addAttribute(MailConstants.A_NUM, contacts.size());
-        return response;
+        return zsc.jaxbToElement(resp);
     }
     
     private static BufferedReader parseUploadedContent(ZimbraSoapContext lc, String attachId, List<Upload> uploads)
