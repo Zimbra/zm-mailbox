@@ -36,7 +36,7 @@ public final class MailboxLock {
     /**
      * Acquires the lock.
      *
-     * @throw LockFailedException failed to lock
+     * @throws LockFailedException failed to lock
      */
     public void lock() {
         if (lock.tryLock()) { // This succeeds in most cases.
@@ -44,15 +44,19 @@ public final class MailboxLock {
         }
         int queueLength = lock.getQueueLength();
         if (queueLength >= LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
-            // Too many threads are already waiting for the lock, can't let you queued.
-            throw new LockFailedException("too busy threads=" + queueLength);
+            // Too many threads are already waiting for the lock, can't let you queued. We don't want to log stack trace
+            // here because once requests back up, each new incoming request falls into here, which creates too much
+            // noise in the logs.
+            throw new LockFailedException("too many waiters: " + queueLength);
         }
         try {
             // Wait for the lock up to the timeout.
             if (lock.tryLock(LC.zimbra_mailbox_lock_timeout.intValue(), TimeUnit.SECONDS)) {
                 return;
             }
-            throw new LockFailedException("timeout");
+            LockFailedException e = new LockFailedException("timeout");
+            e.logStackTrace();
+            throw e;
         } catch (InterruptedException e) {
             throw new LockFailedException("interrupted", e);
         }
@@ -103,15 +107,13 @@ public final class MailboxLock {
     public final class LockFailedException extends RuntimeException {
         private LockFailedException(String message) {
             super(message);
-            log();
         }
 
         private LockFailedException(String message, Throwable cause) {
             super(message, cause);
-            log();
         }
 
-        private void log() {
+        private void logStackTrace() {
             StringBuilder out = new StringBuilder("Failed to lock mailbox\n");
             lock.printStackTrace(out);
             ZimbraLog.mailbox.error(out, this);
