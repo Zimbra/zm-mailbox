@@ -15,15 +15,10 @@
 
 package com.zimbra.qa.unittest;
 
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-// TODO: remove dependency on JNDI
-import javax.naming.NamingException;
 
 import org.junit.*;
 import static org.junit.Assert.*;
@@ -42,12 +37,8 @@ import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CacheEntryBy;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
-
-//TODO: remove dependency on legacy stuff
-import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
-import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
-
 import com.zimbra.cs.account.auth.AuthContext;
+import com.zimbra.cs.prov.ldap.LdapProv;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 
@@ -357,14 +348,12 @@ public class TestProvAlias extends TestLdap {
         
         // and hack the other account to also contain the alias in it's mail/zimbraMailAlias attrs
         // the hacked attrs should be removed after the removeAlais call
-        LegacyZimbraLdapContext zlc = null;
-        try {
-            zlc = new LegacyZimbraLdapContext(true);
+        {
             Map<String, Object> attributes = new HashMap<String, Object>();
             attributes.put(Provisioning.A_mail, aliasName);
             attributes.put(Provisioning.A_zimbraMailAlias, aliasName);
             LdapEntry ldapAccount = (LdapEntry)otherAcct;
-            LegacyLdapUtil.modifyAttrs(zlc, ldapAccount.getDN(), attributes, (Entry)ldapAccount);
+            ((LdapProv) mProv).getHelper().modifyEntry(ldapAccount.getDN(), attributes, (Entry)ldapAccount);
             
             // make the attrs did get hacked in
             mProv.reload(otherAcct);
@@ -374,8 +363,6 @@ public class TestProvAlias extends TestLdap {
             values = otherAcct.getMultiAttrSet(Provisioning.A_zimbraMailAlias);
             assertTrue(values.contains(aliasName));
             
-        } finally {
-            LegacyZimbraLdapContext.closeContext(zlc);
         }
         
         // remove the alias, on the "other" account, which is *not* the target for the alias we are removing
@@ -455,18 +442,14 @@ public class TestProvAlias extends TestLdap {
         mProv.addMembers(dl2, new String[]{aliasName});
         
         // now, hack it so the alias points to a non-existing entry
-        LegacyZimbraLdapContext zlc = null;
-        try {
-            zlc = new LegacyZimbraLdapContext(true);
+        {
             Map<String, Object> attributes = new HashMap<String, Object>();
             attributes.put(Provisioning.A_zimbraAliasTargetId, LdapUtilCommon.generateUUID());
             
             List<NamedEntry> aliases = searchAliasesInDomain(domain);
             assertEquals(aliases.size(), 1);
             LdapEntry ldapAlias = (LdapEntry)aliases.get(0);
-            LegacyLdapUtil.modifyAttrs(zlc, ldapAlias.getDN(), attributes, (Entry)ldapAlias);
-        } finally {
-            LegacyZimbraLdapContext.closeContext(zlc);
+            ((LdapProv) mProv).getHelper().modifyEntry(ldapAlias.getDN(), attributes, (Entry)ldapAlias);
         }
         
         // remove the alias
@@ -539,16 +522,12 @@ public class TestProvAlias extends TestLdap {
         mProv.addMembers(dl2, new String[]{aliasName});
         
         // now, hack it to delete the alias entry
-        LegacyZimbraLdapContext zlc = null;
-        try {
-            zlc = new LegacyZimbraLdapContext(true);
+        {
             List<NamedEntry> aliases = searchAliasesInDomain(domain);
             assertEquals(aliases.size(), 1);
             LdapEntry ldapAlias = (LdapEntry)aliases.get(0);
             String aliasDn = ldapAlias.getDN();
-            zlc.unbindEntry(aliasDn);
-        } finally {
-            LegacyZimbraLdapContext.closeContext(zlc);
+            ((LdapProv) mProv).getHelper().deleteEntry(aliasDn);
         }
         
         // remove the alias
@@ -687,18 +666,14 @@ public class TestProvAlias extends TestLdap {
         mProv.addMembers(dl2, new String[]{aliasName});
         
         // now, hack it so the alias points to a non-existing entry
-        LegacyZimbraLdapContext zlc = null;
-        try {
-            zlc = new LegacyZimbraLdapContext(true);
+        {
             Map<String, Object> attributes = new HashMap<String, Object>();
             attributes.put(Provisioning.A_zimbraAliasTargetId, LdapUtilCommon.generateUUID());
             
             List<NamedEntry> aliases = searchAliasesInDomain(domain);
             assertEquals(aliases.size(), 1);
             LdapEntry ldapAlias = (LdapEntry)aliases.get(0);
-            LegacyLdapUtil.modifyAttrs(zlc, ldapAlias.getDN(), attributes, (Entry)ldapAlias);
-        } finally {
-            LegacyZimbraLdapContext.closeContext(zlc);
+            ((LdapProv) mProv).getHelper().modifyEntry(ldapAlias.getDN(), attributes, (Entry)ldapAlias);
         }
         
         Account nonExistingAcct = null;
@@ -768,16 +743,12 @@ public class TestProvAlias extends TestLdap {
         mProv.addMembers(dl2, new String[]{aliasName});
         
         // now, hack it to delete the alias entry
-        LegacyZimbraLdapContext zlc = null;
-        try {
-            zlc = new LegacyZimbraLdapContext(true);
+        {
             List<NamedEntry> aliases = searchAliasesInDomain(domain);
             assertEquals(aliases.size(), 1);
             LdapEntry ldapAlias = (LdapEntry)aliases.get(0);
             String aliasDn = ldapAlias.getDN();
-            zlc.unbindEntry(aliasDn);
-        } finally {
-            LegacyZimbraLdapContext.closeContext(zlc);
+            ((LdapProv) mProv).getHelper().deleteEntry(aliasDn);
         }
         
         Account nonExistingAcct = null;
@@ -909,13 +880,9 @@ public class TestProvAlias extends TestLdap {
         mProv.addMembers(dl2, new String[]{aliasName});
         
         // now, hack it to delete the orig account entry
-        LegacyZimbraLdapContext zlc = null;
-        try {
-            zlc = new LegacyZimbraLdapContext(true);
+        {
             LdapEntry ldapAccount = (LdapEntry)acct;
-            zlc.unbindEntry(ldapAccount.getDN());
-        } finally {
-            LegacyZimbraLdapContext.closeContext(zlc);
+            ((LdapProv) mProv).getHelper().deleteEntry(ldapAccount.getDN());
         }
         
         // now , try to add the alias to another account
@@ -1030,10 +997,10 @@ public class TestProvAlias extends TestLdap {
      *      zmporv -l cd main.com
      *      zmporv -l cd other.com
      *      
-     *    - create an account in teh main domain
+     *    - create an account in the main domain
      *      zmprov -l ca junk@main.com test123
      *      
-     *    - add two aliases to the account, one in the same domain, ther other in the other domain
+     *    - add two aliases to the account, one in the same domain, the other in the other domain
      *      zmprov -l aaa junk@main.com phoebe@main.com  (this is required to repro)
      *      zmprov -l aaa junk@main.com phoebe@other.com (can be skipped - A)
      *      
@@ -1062,8 +1029,8 @@ javax.naming.NameAlreadyBoundException: [LDAP: error code 68 - Entry Already Exi
         - when the account is being renamed, there is an alias named as:
           {same localpart as the account's new localpart}@{same domain as the account's old domain}
      
-        This is becasue when we do validation to see if there is any clash with new lias names, the account has not been renamed 
-        yet, therefore it is not catched.
+        This is because when we do validation to see if there is any clash with new alias names, 
+        the account has not been renamed yet, therefore it is not caught.
         
         After the fix, it should throw ACCOUNT_EXISTS (com.zimbra.cs.account.AccountServiceException: email address already exists: phoebe@other.com)
         i.e. the renameAccount should not be allowed
@@ -1088,8 +1055,9 @@ javax.naming.NameAlreadyBoundException: [LDAP: error code 68 - Entry Already Exi
         try {
             mProv.renameAccount(acct.getId(), NEW_ACCT_NAME);
         } catch (ServiceException e) {
-            if (AccountServiceException.ACCOUNT_EXISTS.equals(e.getCode()))
+            if (AccountServiceException.ACCOUNT_EXISTS.equals(e.getCode())) {
                 good = true;
+            }
         }
         assertTrue(good);
     }

@@ -90,10 +90,13 @@ public class RightManager {
     static private class CoreRightDefFiles {
         private static final HashSet<String> sCoreRightDefFiles = new HashSet<String>();
         
-        static void init() {
+        static void init(boolean unittest) {
             sCoreRightDefFiles.add("zimbra-rights.xml");
             sCoreRightDefFiles.add("zimbra-user-rights.xml");
-            // sCoreRightDefFiles.add("rights-unittest.xml");
+            
+            if (unittest) {
+                sCoreRightDefFiles.add("rights-unittest.xml");
+            }
         }
         
         static boolean isCoreRightFile(File file) {
@@ -115,11 +118,15 @@ public class RightManager {
     }
     
     public static synchronized RightManager getInstance() throws ServiceException {
+        return getInstance(false);
+    }
+    
+    public static synchronized RightManager getInstance(boolean unittest) throws ServiceException {
         if (mInstance != null) {
             return mInstance;
         }
         
-        CoreRightDefFiles.init();
+        CoreRightDefFiles.init(unittest);
         
         String dir = LC.zimbra_rights_directory.value();
         mInstance = new RightManager(dir);

@@ -43,8 +43,9 @@ import com.zimbra.cs.account.ZAttrProvisioning.CalResType;
 
 public class TestSearchCalendarResources {
 
-    private static final String DOMAIN_LDAP = "ldap.search-calendar-resource";
-    private static final String DOMAIN_GSA = "gsa.search-calendar-resource";
+    private static final String BASE_DOMAIN_NAME = "search-calendar-resource";
+    private static final String DOMAIN_LDAP = "ldap." + BASE_DOMAIN_NAME;
+    private static final String DOMAIN_GSA = "gsa." + BASE_DOMAIN_NAME;
     private static final String AUTHED_USER = "user1";
     
     private static final String KEY_FOR_SEARCH_BY_NAME = "meeting";
@@ -284,7 +285,7 @@ public class TestSearchCalendarResources {
     
     @BeforeClass 
     public static void init() throws Exception {
-        TestUtil.cliSetup();
+        TestUtil.cliSetup(); // use SoapProvisioning
         
         createDomainObjects(DOMAIN_LDAP);
         createDomainObjects(DOMAIN_GSA);
@@ -294,6 +295,9 @@ public class TestSearchCalendarResources {
     public static void cleanup() throws Exception {
         deleteDomainObjects(DOMAIN_LDAP);
         deleteDomainObjects(DOMAIN_GSA);
+        
+        // can't do this, it needs LdapProv
+        // TestLdap.deleteEntireBranch(BASE_DOMAIN_NAME);
     }
     
     @Test
