@@ -4725,30 +4725,16 @@ public class LdapProvisioning extends LdapProv {
         return acct;
     }
 
-    public void setAccountDefaults(Account acct, int flags) throws ServiceException {
-        boolean dontSetDefaults = (flags & Provisioning.SO_NO_ACCOUNT_DEFAULTS) == Provisioning.SO_NO_ACCOUNT_DEFAULTS;
-        if (dontSetDefaults)
+    private void setAccountDefaults(Account acct, int flags) throws ServiceException {
+        boolean setDefaults = (flags & Provisioning.SO_NO_ACCOUNT_DEFAULTS) == 0;
+        
+        if (!setDefaults) {
             return;
-
-        boolean dontSetSecondaryDefaults = (flags & Provisioning.SO_NO_ACCOUNT_SECONDARY_DEFAULTS) == Provisioning.SO_NO_ACCOUNT_SECONDARY_DEFAULTS;
-
-        Cos cos = getCOS(acct); // will set cos if not set yet
-
-        Map<String, Object> defaults = null;
-        if (cos != null)
-            defaults = cos.getAccountDefaults();
-
-        if (dontSetSecondaryDefaults) {
-            // set only primary defaults
-            acct.setDefaults(defaults);
-        } else {
-            // set primary and secondary defaults
-            Map<String, Object> secondaryDefaults = null;
-            Domain domain = getDomain(acct);
-            if (domain != null)
-                secondaryDefaults = domain.getAccountDefaults();
-            acct.setDefaults(defaults, secondaryDefaults);
         }
+        
+        boolean setSecondaryDefaults = (flags & Provisioning.SO_NO_ACCOUNT_SECONDARY_DEFAULTS) == 0;
+
+        acct.setAccountDefaults(setSecondaryDefaults);
     }
 
     private Alias makeAlias(String dn, Attributes attrs) throws NamingException, ServiceException {

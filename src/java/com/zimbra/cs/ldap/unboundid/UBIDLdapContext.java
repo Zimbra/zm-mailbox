@@ -286,7 +286,7 @@ public class UBIDLdapContext extends ZLdapContext {
             
             List<SearchResultEntry> entries = result.getSearchEntries();
             for (SearchResultEntry entry : entries) {
-                unbindEntry(entry.getDN());
+                deleteEntry(entry.getDN());
             }
         } catch (LDAPException e) {
             throw mapToLdapException("unable to delete children", e);
@@ -474,7 +474,7 @@ public class UBIDLdapContext extends ZLdapContext {
     }
     
     @Override
-    public void unbindEntry(String dn) throws LdapException {
+    public void deleteEntry(String dn) throws LdapException {
         try {
             conn.delete(dn);
         } catch (LDAPException e) {

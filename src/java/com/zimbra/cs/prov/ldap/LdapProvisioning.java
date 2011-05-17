@@ -1771,7 +1771,7 @@ public class LdapProvisioning extends LdapProv {
             // 3. remove the alias entry
             if (aliasPointsToEntry || aliasPointsToNonExistingEntry) {
                 try {
-                    zlc.unbindEntry(aliasDn);
+                    zlc.deleteEntry(aliasDn);
                 } catch (ServiceException e) {
                     // should not happen, log it
                     ZimbraLog.account.warn("unable to remove alias entry at : " + aliasDn);
@@ -2339,7 +2339,7 @@ public class LdapProvisioning extends LdapProv {
             zlc = LdapClient.getContext(LdapServerType.MASTER);
 
             zlc.deleteChildren(entry.getDN());
-            zlc.unbindEntry(entry.getDN());
+            zlc.deleteEntry(entry.getDN());
             sAccountCache.remove(acc);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to purge account: "+zimbraId, e);
@@ -2458,13 +2458,11 @@ public class LdapProvisioning extends LdapProv {
                 throw e;
             } finally {
                 if (dnChanged)
-                    zlc.unbindEntry(oldDn);  // unbind old dn
+                    zlc.deleteEntry(oldDn);  // unbind old dn
             }
 
         } catch (LdapEntryAlreadyExistException nabe) {
             throw AccountServiceException.ACCOUNT_EXISTS(newName);
-        } catch (ServiceException e) {
-            throw ServiceException.FAILURE("unable to rename account: "+zimbraId, e);
         } finally {
             // prune cache
             sAccountCache.remove(acct);
@@ -2496,10 +2494,10 @@ public class LdapProvisioning extends LdapProv {
 
             acctBaseDn = mDIT.domainDNToAccountBaseDN(d.getDN());
             if (!acctBaseDn.equals(d.getDN()))
-                zlc.unbindEntry(acctBaseDn);
+                zlc.deleteEntry(acctBaseDn);
 
             try {
-                zlc.unbindEntry(d.getDN());
+                zlc.deleteEntry(d.getDN());
                 sDomainCache.remove(d);
             } catch (LdapContextNotEmptyException e) {
                 // remove from cache before nuking all attrs
@@ -2599,7 +2597,7 @@ public class LdapProvisioning extends LdapProv {
                 @Override
                 public void deleteEntry(String dn) throws ServiceException {
                     ZLdapContext ldapContext = toZLdapContext();
-                    ldapContext.unbindEntry(dn);
+                    ldapContext.deleteEntry(dn);
                 }
                 
                 @Override
@@ -2668,7 +2666,7 @@ public class LdapProvisioning extends LdapProv {
         ZLdapContext zlc = null;
         try {
             zlc = LdapClient.getContext(LdapServerType.MASTER);
-            zlc.unbindEntry(c.getDN());
+            zlc.deleteEntry(c.getDN());
             sCosCache.remove(c);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to purge cos: "+zimbraId, e);
@@ -2911,7 +2909,7 @@ public class LdapProvisioning extends LdapProv {
         try {
             zlc = LdapClient.getContext(LdapServerType.MASTER);
             removeServerFromAllCOSes(zimbraId, server.getName(), zlc);
-            zlc.unbindEntry(server.getDN());
+            zlc.deleteEntry(server.getDN());
             sServerCache.remove(server);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to purge server: "+zimbraId, e);
@@ -3194,7 +3192,7 @@ public class LdapProvisioning extends LdapProv {
         ZLdapContext zlc = null;
         try {
             zlc = LdapClient.getContext(LdapServerType.MASTER);
-            zlc.unbindEntry(dl.getDN());
+            zlc.deleteEntry(dl.getDN());
             mAllDLs.removeGroup(addrs);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to purge distribution list: "+zimbraId, e);
@@ -4420,7 +4418,7 @@ public class LdapProvisioning extends LdapProv {
             LdapZimlet zimlet = (LdapZimlet)getZimlet(name, zlc, true);
             if (zimlet != null) {
                 sZimletCache.remove(zimlet);
-                zlc.unbindEntry(zimlet.getDN());
+                zlc.deleteEntry(zimlet.getDN());
             }
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to delete zimlet: "+name, e);
@@ -4565,31 +4563,17 @@ public class LdapProvisioning extends LdapProv {
 
         return acct;
     }
-
-    public void setAccountDefaults(Account acct, int flags) throws ServiceException {
-        boolean dontSetDefaults = (flags & Provisioning.SO_NO_ACCOUNT_DEFAULTS) == Provisioning.SO_NO_ACCOUNT_DEFAULTS;
-        if (dontSetDefaults)
+    
+    private void setAccountDefaults(Account acct, int flags) throws ServiceException {
+        boolean setDefaults = (flags & Provisioning.SO_NO_ACCOUNT_DEFAULTS) == 0;
+        
+        if (!setDefaults) {
             return;
-
-        boolean dontSetSecondaryDefaults = (flags & Provisioning.SO_NO_ACCOUNT_SECONDARY_DEFAULTS) == Provisioning.SO_NO_ACCOUNT_SECONDARY_DEFAULTS;
-
-        Cos cos = getCOS(acct); // will set cos if not set yet
-
-        Map<String, Object> defaults = null;
-        if (cos != null)
-            defaults = cos.getAccountDefaults();
-
-        if (dontSetSecondaryDefaults) {
-            // set only primary defaults
-            acct.setDefaults(defaults);
-        } else {
-            // set primary and secondary defaults
-            Map<String, Object> secondaryDefaults = null;
-            Domain domain = getDomain(acct);
-            if (domain != null)
-                secondaryDefaults = domain.getAccountDefaults();
-            acct.setDefaults(defaults, secondaryDefaults);
         }
+        
+        boolean setSecondaryDefaults = (flags & Provisioning.SO_NO_ACCOUNT_SECONDARY_DEFAULTS) == 0;
+
+        acct.setAccountDefaults(setSecondaryDefaults);
     }
 
     private Alias makeAlias(String dn, ZAttributes attrs) throws ServiceException {
@@ -5763,7 +5747,7 @@ public class LdapProvisioning extends LdapProv {
             if (identity == null)
                 throw AccountServiceException.NO_SUCH_IDENTITY(identityName);
             String dn = getIdentityDn(ldapEntry, identityName);
-            zlc.unbindEntry(dn);
+            zlc.deleteEntry(dn);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to delete identity: "+identityName, e);
         } finally {
@@ -6055,7 +6039,7 @@ public class LdapProvisioning extends LdapProv {
             if (signature == null)
                 throw AccountServiceException.NO_SUCH_SIGNATURE(signatureId);
             String dn = getSignatureDn(ldapEntry, signature.getName());
-            zlc.unbindEntry(dn);
+            zlc.deleteEntry(dn);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to delete signarure: "+signatureId, e);
         } finally {
@@ -6339,7 +6323,7 @@ public class LdapProvisioning extends LdapProv {
             if (dataSource == null)
                 throw AccountServiceException.NO_SUCH_DATA_SOURCE(dataSourceId);
             String dn = getDataSourceDn(ldapEntry, dataSource.getName());
-            zlc.unbindEntry(dn);
+            zlc.deleteEntry(dn);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to delete data source: "+dataSourceId, e);
         } finally {
@@ -6582,7 +6566,7 @@ public class LdapProvisioning extends LdapProv {
         LdapXMPPComponent l = (LdapXMPPComponent)get(XMPPComponentBy.id, zimbraId);
         try {
             zlc = LdapClient.getContext(LdapServerType.MASTER);
-            zlc.unbindEntry(l.getDN());
+            zlc.deleteEntry(l.getDN());
             sXMPPComponentCache.remove(l);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to purge XMPPComponent : "+zimbraId, e);

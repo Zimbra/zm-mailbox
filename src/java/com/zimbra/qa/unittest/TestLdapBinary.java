@@ -34,14 +34,18 @@ import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 
-public class TestLdapBinary {
+public class TestLdapBinary extends TestLdap {
     
     /* 
-     * To run this unit test, paste these attributes to zimbra-attrs.xml and run:
+     * To run this unit test:
+     * 
+     * (to get the two test attrs added in the schema)
+     * cp -f /Users/pshao/p4/main/ZimbraServer/data/unittest/ldap/attrs-unittest.xml /opt/zimbra/conf/attrs
      * ant refresh-ldap-schema
      * ant generate-getters
      * ant init-unittest
@@ -55,6 +59,7 @@ public class TestLdapBinary {
     </attr>
 
     */
+    private static Domain domain;
     private static final String USER = "test-ldap-binary";
     
     private static final String DATA_PATH = "/opt/zimbra/unittest/ldap/binaryContent/";
@@ -297,7 +302,7 @@ public class TestLdapBinary {
     }
 
     private Entry getEntry() throws Exception {
-        String entryName = TestUtil.getAddress(USER);
+        String entryName = TestUtil.getAddress(USER, domain.getName());
         return Provisioning.getInstance().get(AccountBy.name, entryName);
     }
     
@@ -469,8 +474,9 @@ public class TestLdapBinary {
     @BeforeClass
     public static void init() throws Exception {
         Provisioning prov = Provisioning.getInstance();
+        domain = TestLdapProvDomain.createDomain(prov, baseDomainName(), null);
         
-        String entryName = TestUtil.getAddress(USER);
+        String entryName = TestUtil.getAddress(USER, domain.getName());
         Account acct = prov.get(AccountBy.name, entryName);
         Assert.assertNull(acct);
         
@@ -482,11 +488,18 @@ public class TestLdapBinary {
     public static void cleanup() throws Exception {
         Provisioning prov = Provisioning.getInstance();
         
-        String entryName = TestUtil.getAddress(USER);
+        String entryName = TestUtil.getAddress(USER, domain.getName());
         Account acct = prov.get(AccountBy.name, entryName);
         Assert.assertNotNull(acct);
         
         prov.deleteAccount(acct.getId());
+        
+        String baseDomainName = baseDomainName();
+        TestLdap.deleteEntireBranch(baseDomainName);
+    }
+    
+    private static String baseDomainName() {
+        return TestLdapBinary.class.getName().toLowerCase();
     }
     
     @Test

@@ -50,7 +50,7 @@ import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
+import com.zimbra.cs.prov.ldap.LdapProv;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.qa.unittest.TestProvisioningUtil.IDNName;
 
@@ -251,8 +251,8 @@ public class TestProvIDN extends TestLdap {
 
         switch (entryType) {
         case DOMAIN:
-            assertTrue(mProv instanceof LdapProvisioning);
-            ((LdapProvisioning)mProv).renameDomain(entry.getId(), name.uName());
+            assertTrue(mProv instanceof LdapProv);
+            ((LdapProv)mProv).renameDomain(entry.getId(), name.uName());
             break;
         case ACCOUNT:
             mProv.renameAccount(entry.getId(), name.uName());

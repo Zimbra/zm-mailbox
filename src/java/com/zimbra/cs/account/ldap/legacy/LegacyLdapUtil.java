@@ -37,9 +37,7 @@ import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.prov.ldap.LdapGalCredential;
-import com.zimbra.cs.prov.ldap.LdapProv;
 
-import javax.naming.AuthenticationException;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.SizeLimitExceededException;
@@ -68,7 +66,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.UUID;
 
 /**
  * @author schemers
@@ -331,7 +328,7 @@ public class LegacyLdapUtil {
      *     in which case a multi-valued attr is updated</li>
      * </ul>
      */
-    @SDKDONE
+    @TODO  // make it private, should be called only from LegacyLdapHelper
     public static void modifyAttrs(LegacyZimbraLdapContext zlc, String dn, Map attrs, com.zimbra.cs.account.Entry entry) 
     throws NamingException, ServiceException {
         ArrayList<ModificationItem> modlist = new ArrayList<ModificationItem>();

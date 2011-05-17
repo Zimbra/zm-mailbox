@@ -231,9 +231,20 @@ public class TestLdapProvAccount extends TestLdap {
         String acctId = acct.getId();
         
         // create some children
-        String DATA_SOURCE_NAME_1 = TestLdap.makeDataSourceName("ds1");
-        String DATA_SOURCE_NAME_2 = TestLdap.makeDataSourceName("ds2");
-        String DATA_SOURCE_NAME_3 = TestLdap.makeDataSourceName("ds3");
+        String DATA_SOURCE_NAME_1;
+        String DATA_SOURCE_NAME_2;
+        String DATA_SOURCE_NAME_3;
+        
+        if (getCurrentTestConfig() == TestConfig.UBID) {
+            DATA_SOURCE_NAME_1 = TestLdap.makeDataSourceName("ds1");
+            DATA_SOURCE_NAME_2 = TestLdap.makeDataSourceName("ds2");
+            DATA_SOURCE_NAME_3 = TestLdap.makeDataSourceName("ds3");
+        } else {
+            DATA_SOURCE_NAME_1 = "ds1";
+            DATA_SOURCE_NAME_2 = "ds2";
+            DATA_SOURCE_NAME_3 = "ds3";
+        }
+        
         DataSource ds1 = createDataSource(acct, DATA_SOURCE_NAME_1);
         DataSource ds2 = createDataSource(acct, DATA_SOURCE_NAME_2);
         DataSource ds3 = createDataSource(acct, DATA_SOURCE_NAME_3);
@@ -271,9 +282,20 @@ public class TestLdapProvAccount extends TestLdap {
         String acctId = acct.getId();
         
         // create some children
-        String DATA_SOURCE_NAME_1 = TestLdap.makeDataSourceName("ds1");
-        String DATA_SOURCE_NAME_2 = TestLdap.makeDataSourceName("ds2");
-        String DATA_SOURCE_NAME_3 = TestLdap.makeDataSourceName("ds3");
+        String DATA_SOURCE_NAME_1;
+        String DATA_SOURCE_NAME_2;
+        String DATA_SOURCE_NAME_3;
+        
+        if (getCurrentTestConfig() == TestConfig.UBID) {
+            DATA_SOURCE_NAME_1 = TestLdap.makeDataSourceName("ds1");
+            DATA_SOURCE_NAME_2 = TestLdap.makeDataSourceName("ds2");
+            DATA_SOURCE_NAME_3 = TestLdap.makeDataSourceName("ds3");
+        } else {
+            DATA_SOURCE_NAME_1 = "ds1";
+            DATA_SOURCE_NAME_2 = "ds2";
+            DATA_SOURCE_NAME_3 = "ds3";
+        }
+        
         DataSource ds1 = createDataSource(acct, DATA_SOURCE_NAME_1);
         DataSource ds2 = createDataSource(acct, DATA_SOURCE_NAME_2);
         DataSource ds3 = createDataSource(acct, DATA_SOURCE_NAME_3);

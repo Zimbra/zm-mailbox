@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<attrs group="ZimbraAttrTypeUnittest" groupid="100">
+
+<attr id="10000" name="zimbraUnittestBinary" type="binary" max="5000" cardinality="single" optionalIn="account" since="8.0.0">
+  <desc>binary data</desc>
+</attr>
+ 
+<attr id="10001" name="zimbraUnittestCertificate" type="certificate" cardinality="single" optionalIn="account" since="8.0.0">
+  <desc>binary data</desc>
+</attr>
+
+</attrs>

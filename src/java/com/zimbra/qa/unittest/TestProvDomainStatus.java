@@ -20,9 +20,7 @@ import java.lang.reflect.InvocationTargetException;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.junit.*;
 import static org.junit.Assert.*;
@@ -32,25 +30,22 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.account.AttributeType;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.auth.AuthContext;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
 import com.zimbra.cs.lmtpserver.LmtpProtocolException;
 
-public class TestDomainStatus {
+public class TestProvDomainStatus {
     private Provisioning mProv;
     private SoapProvisioning mSoapProv;
     private SoapProvisioning mSoapProvAdmin;
@@ -158,8 +153,6 @@ public class TestDomainStatus {
         // mSoapProvAdmin.soapSetURI("https://localhost:7071/service/admin/soap/");
         mSoapProvAdmin.soapZimbraAdminAuthenticate();
         
-        // mProv = Provisioning.getInstance();
-        // assertTrue(mProv instanceof LdapProvisioning);
         mProv = mSoapProvAdmin;
         
         
@@ -1095,19 +1088,6 @@ public class TestDomainStatus {
             System.out.println(e.getMessage());
             e.printStackTrace(System.out);
         } */
-    }
-    
-    public static void main(String[] args) throws Exception {
-        // CliUtil.toolSetup("DEBUG");
-        CliUtil.toolSetup();
-        
-        TestUtil.runTest(TestDomainStatus.class);
-        
-        /*
-        TestDomainStatus t = new TestDomainStatus();
-        t.setUp();
-        t.execute();
-        */
     }
 }
 

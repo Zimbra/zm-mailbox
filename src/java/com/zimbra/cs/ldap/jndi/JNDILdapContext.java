@@ -257,7 +257,7 @@ public class JNDILdapContext extends ZLdapContext {
     }
     
     @Override
-    public void unbindEntry(String dn) throws LdapException {
+    public void deleteEntry(String dn) throws LdapException {
         try {
             zlc.unbindEntry(dn);
         } catch (NamingException e) {

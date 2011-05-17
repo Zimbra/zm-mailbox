@@ -30,7 +30,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.ldap.LdapConstants;
 
-public class TestAccountLockout {
+public class TestAccountLockout extends TestLdap {
     
     private static final String ACCT = "testlockout";
     private static final String PASSWORD = "test123";

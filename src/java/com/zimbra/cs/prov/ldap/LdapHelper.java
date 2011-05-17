@@ -53,6 +53,8 @@ public abstract class LdapHelper {
     public abstract void searchLdap(ILdapContext ldapContext, SearchLdapOptions searchOptions) 
     throws ServiceException;
     
+    public abstract void deleteEntry(String dn) throws ServiceException;
+    
     /**
      * Modifies the specified entry.  <code>attrs</code> is a <code>Map</code> consisting of
      * keys that are <code>String</code>s, and values that are either
@@ -64,8 +66,22 @@ public abstract class LdapHelper {
      *     in which case a multi-valued attr is updated</li>
      * </ul>
      */
-    public abstract void modifyAttrs(ZLdapContext zlc, String dn, Map<String, ? extends Object> attrs, 
-            Entry entry) throws ServiceException;
+    public abstract void modifyAttrs(ZLdapContext zlc, String dn, 
+            Map<String, ? extends Object> attrs, Entry entry) 
+    throws ServiceException;
+    
+    /**
+     * like modifyAttrs, but ZLdapContext cannot be specified.
+     * Implementation should always do the modification against 
+     * LDAP master. 
+     * 
+     * @param dn
+     * @param attrs
+     * @param entry
+     * @throws ServiceException
+     */
+    public abstract void modifyEntry(String dn, Map<String, ? extends Object> attrs, Entry entry) 
+    throws ServiceException;
     
     
     /**

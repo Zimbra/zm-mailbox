@@ -98,16 +98,18 @@ public class Account extends ZAttrAccount implements GroupedEntry {
     /**
      *
      * @param directOnly return only DLs this account is a direct member of
-     * @param via if non-null and directOnly is false, this map will containing a mapping from a DL name to the DL it was a member of, if
-     *            member was indirect.
+     * @param via if non-null and directOnly is false, this map will containing a mapping from 
+     *            a DL name to the DL it was a member of, if member was indirect.
      * @return all the DLs
      * @throws ServiceException on error
      */
-    public List<DistributionList> getDistributionLists(boolean directOnly, Map<String,String> via) throws ServiceException {
+    public List<DistributionList> getDistributionLists(boolean directOnly, Map<String,String> via) 
+    throws ServiceException {
         return getProvisioning().getDistributionLists(this, directOnly, via);
     }
 
-    public void preAuthAccount(String accountName, String accountBy, long timestamp, long expires, String preAuth, Map<String, Object> authCtxt) throws ServiceException {
+    public void preAuthAccount(String accountName, String accountBy, long timestamp, long expires, 
+            String preAuth, Map<String, Object> authCtxt) throws ServiceException {
         getProvisioning().preAuthAccount(this, accountName, accountBy, timestamp, expires, preAuth, authCtxt);
     }
 
@@ -404,6 +406,28 @@ public class Account extends ZAttrAccount implements GroupedEntry {
         } 
       
         return false;
+    }
+    
+    public void setAccountDefaults(boolean setSecondaryDefaults) throws ServiceException {
+        
+        Cos cos = getProvisioning().getCOS(this); // will set cos if not set yet
+
+        Map<String, Object> defaults = null;
+        if (cos != null)
+            defaults = cos.getAccountDefaults();
+
+        if (!setSecondaryDefaults) {
+            // set only primary defaults
+            setDefaults(defaults);
+        } else {
+            // set primary and secondary defaults
+            Map<String, Object> secondaryDefaults = null;
+            Domain domain = getProvisioning().getDomain(this);
+            if (domain != null)
+                secondaryDefaults = domain.getAccountDefaults();
+            setDefaults(defaults, secondaryDefaults);
+        }
+        
     }
     
 }

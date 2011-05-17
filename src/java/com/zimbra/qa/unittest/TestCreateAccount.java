@@ -18,7 +18,6 @@ package com.zimbra.qa.unittest;
 import java.util.HashMap;
 
 import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.soap.AdminConstants;
@@ -26,8 +25,8 @@ import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.prov.ldap.LdapProv;
 
 public class TestCreateAccount extends TestCase {
     private String TEST_ID = TestProvisioningUtil.genTestId();;
@@ -46,7 +45,7 @@ public class TestCreateAccount extends TestCase {
     private void setUpDomain() throws Exception {
         
         Provisioning prov = Provisioning.getInstance();
-        assertTrue(prov instanceof LdapProvisioning);
+        assertTrue(prov instanceof LdapProv);
             
         DOMAIN_NAME = TestProvisioningUtil.baseDomainName(TEST_NAME, TEST_ID);
         Domain domain = prov.createDomain(DOMAIN_NAME, new HashMap<String, Object>());
@@ -61,7 +60,7 @@ public class TestCreateAccount extends TestCase {
     private void setUpAccounts() throws Exception {
         
         Provisioning prov = Provisioning.getInstance();
-        assertTrue(prov instanceof LdapProvisioning);
+        assertTrue(prov instanceof LdapProv);
             
         DOMAIN_NAME = TestProvisioningUtil.baseDomainName(TEST_NAME, null);
         Domain domain = prov.get(Provisioning.DomainBy.name, DOMAIN_NAME);
@@ -188,7 +187,7 @@ public class TestCreateAccount extends TestCase {
     
     public void xxxtestCreateDomain() throws Exception {
         Provisioning prov = Provisioning.getInstance();
-        assertTrue(prov instanceof LdapProvisioning);
+        assertTrue(prov instanceof LdapProv);
          
         String baseDomainName = TestProvisioningUtil.baseDomainName("domaintest", TEST_ID);
         

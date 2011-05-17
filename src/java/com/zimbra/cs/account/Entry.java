@@ -50,28 +50,17 @@ public abstract class Entry implements ToZJSONObject {
     
     protected static String[] sEmptyMulti = new String[0];
     protected static List<byte[]> sEmptyListMulti = new ArrayList<byte[]>();
-
-    /*
-    protected Entry(Map<String,Object> attrs, Map<String,Object> defaults) {
-        mAttrs = attrs;
-        mDefaults = defaults;
-    }
     
-    protected Entry(Map<String,Object> attrs, Map<String,Object> defaults, Map<String,Object> secondaryDefaults) {
-        mAttrs = attrs;
-        mDefaults = defaults;
-        mSecondaryDefaults = secondaryDefaults;
-    }
-    */
-    
-    protected Entry(Map<String,Object> attrs, Map<String,Object> defaults, Provisioning provisioning) {
+    protected Entry(Map<String,Object> attrs, Map<String,Object> defaults, 
+            Provisioning provisioning) {
     	mProvisioning = provisioning;
     	mAttrs = attrs;
         mDefaults = defaults;
         setAttributeManager();
     }
     
-    protected Entry(Map<String,Object> attrs, Map<String,Object> defaults, Map<String,Object> secondaryDefaults, Provisioning provisioning) {
+    protected Entry(Map<String,Object> attrs, Map<String,Object> defaults, 
+            Map<String,Object> secondaryDefaults, Provisioning provisioning) {
     	mProvisioning = provisioning;
     	mAttrs = attrs;
         mDefaults = defaults;
@@ -95,12 +84,14 @@ public abstract class Entry implements ToZJSONObject {
     	return mProvisioning;
     }
     
-    // for debugging/logging, subclass should define a proper "label" for the entry by that it is best identified
+    // for debugging/logging, subclass should define a proper "label" 
+    // for the entry by that the entry is best identified
     public String getLabel() {
         return "unknown";
     }
     
-    public synchronized void setAttrs(Map<String,Object> attrs, Map<String,Object> defaults, Map<String,Object> secondaryDefaults) {
+    public synchronized void setAttrs(Map<String,Object> attrs, 
+            Map<String,Object> defaults, Map<String,Object> secondaryDefaults) {
         mAttrs = attrs;
         mDefaults = defaults;
         mSecondaryDefaults = secondaryDefaults;
@@ -117,7 +108,8 @@ public abstract class Entry implements ToZJSONObject {
         resetData();
     }
     
-    public synchronized void setDefaults(Map<String,Object> defaults, Map<String,Object> secondaryDefaults) {
+    public synchronized void setDefaults(Map<String,Object> defaults, 
+            Map<String,Object> secondaryDefaults) {
         mDefaults = defaults;
         mSecondaryDefaults = secondaryDefaults;
         resetData();
@@ -139,7 +131,8 @@ public abstract class Entry implements ToZJSONObject {
 
     /**
      * looks up name in map, and if found, returns its value.
-     * if not found, get real attr name from AttributeManager and try getting from the map again
+     * if not found, get real attr name from AttributeManager and try getting 
+     * from the map again
      * 
      * @param name
      * @return
@@ -196,7 +189,8 @@ public abstract class Entry implements ToZJSONObject {
     
     /*
      * convert attr values to unicode and put back the converted value to the same attr map
-     * We are modifying a copy of the map created in getAttrs, not the mAttrs/mDefaults/mSecondaryDefaults data member
+     * We are modifying a copy of the map created in getAttrs, not the 
+     * mAttrs/mDefaults/mSecondaryDefaults data member
      */
     private Map<String, Object> toUnicode(Map<String, Object> attrs) {
         AttributeManager attrMgr = getAttributeManager();
@@ -456,8 +450,8 @@ public abstract class Entry implements ToZJSONObject {
 
     /**
      * get a time interval, which is a number, optional followed by a character denoting the units
-     * (d = days, h = hours, m = minutes, s = seconds. If no character unit is specified, the default is
-     * seconds.
+     * (d = days, h = hours, m = minutes, s = seconds. If no character unit is specified, 
+     * the default is seconds.
      * 
      * the time interval is returned in seconds.
      * 
@@ -470,8 +464,9 @@ public abstract class Entry implements ToZJSONObject {
     }
     
     /**
-     * temporarily associate a key/value pair with this entry. When an entry is reloaded, any cached data is cleared via
-     * a call to resetData.
+     * temporarily associate a key/value pair with this entry. When an entry is reloaded, 
+     * any cached data is cleared via a call to resetData.
+     * 
      * @param key
      * @param value
      */
@@ -482,8 +477,8 @@ public abstract class Entry implements ToZJSONObject {
     }
     
     /**
-     * temporarily associate a key/value pair with this entry. When an entry is reloaded, any cached data is cleared via
-     * a call to resetData.
+     * temporarily associate a key/value pair with this entry. When an entry is reloaded, 
+     * any cached data is cleared via a call to resetData.
      *
      * TODO: retire setCachedData(String key, Object value) and use only this signature
      *       IMPORTANT: REMEMBER TO ADD synchronized TO THIS METHOD WHEN WE DO THE REFACTORING. 
@@ -518,7 +513,8 @@ public abstract class Entry implements ToZJSONObject {
         return getCachedData(key.getKeyName());
     }
     
-    protected void getDefaults(AttributeFlag flag, Map<String,Object> defaults) throws ServiceException {
+    protected void getDefaults(AttributeFlag flag, Map<String,Object> defaults) 
+    throws ServiceException {
         defaults.clear();
         Set<String> attrs = AttributeManager.getInstance().getAttrsWithFlag(flag);
         for (String a : attrs) {

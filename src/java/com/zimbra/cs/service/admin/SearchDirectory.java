@@ -34,7 +34,6 @@ import com.zimbra.cs.account.Provisioning.SearchOptions;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.TargetType;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
 import com.zimbra.common.soap.Element;
@@ -168,7 +167,8 @@ public class SearchDirectory extends AdminDocumentHandler {
         flags |= Provisioning.SO_NO_ACCOUNT_DEFAULTS;
         
         if (session != null) {
-            accounts = session.searchAccounts(d, query, attrs, sortBy, sortAscending, flags, offset, maxResults, rightChecker);
+            accounts = session.searchAccounts(d, query, attrs, sortBy, sortAscending, 
+                    flags, offset, maxResults, rightChecker);
         } else {
             SearchOptions options = new SearchOptions();
             options.setDomain(d);
@@ -182,10 +182,6 @@ public class SearchDirectory extends AdminDocumentHandler {
             accounts = prov.searchDirectory(options);
             accounts = rightChecker.getAllowed(accounts);
         }
-
-        LdapProvisioning ldapProv = null;
-        if (prov instanceof LdapProvisioning)
-            ldapProv = (LdapProvisioning)prov;
         
         // use originally requested attrs for encoding
         String[] origAttrs = origAttrsStr == null ? null : origAttrsStr.split(",");
@@ -199,7 +195,7 @@ public class SearchDirectory extends AdminDocumentHandler {
             
             if (entry instanceof Account) {
                 applyDefault = applyCos;
-                setAccountDefaults(ldapProv, (Account)entry);
+                setAccountDefaults((Account)entry);
             } else if (entry instanceof Domain) {
                 applyDefault = applyConfig;
             }
@@ -212,35 +208,39 @@ public class SearchDirectory extends AdminDocumentHandler {
         return response;
     }
     
-    private void setAccountDefaults(LdapProvisioning ldapProv, Account entry) throws ServiceException {
-        if (ldapProv == null)
-            return;
-        
+    private void setAccountDefaults(Account entry) throws ServiceException {
+       
         Boolean isDefaultSet = (Boolean)entry.getCachedData(SEARCH_DIRECTORY_ACCOUNT_DATA);
         if (isDefaultSet == null || isDefaultSet == Boolean.FALSE) {
-            ldapProv.setAccountDefaults((Account)entry, 0);
+            entry.setAccountDefaults(true);
             entry.setCachedData(SEARCH_DIRECTORY_ACCOUNT_DATA, Boolean.TRUE);
         }
     }
     
-    static void encodeEntry(Provisioning prov, Element parent, NamedEntry entry, boolean applyDefault, Set<String> reqAttrs, AdminAccessControl aac) 
+    static void encodeEntry(Provisioning prov, Element parent, NamedEntry entry, 
+            boolean applyDefault, Set<String> reqAttrs, AdminAccessControl aac) 
     throws ServiceException {
         if (entry instanceof CalendarResource) {
-            ToXML.encodeCalendarResource(parent, (CalendarResource)entry, applyDefault, reqAttrs, aac.getAttrRightChecker((CalendarResource)entry));
+            ToXML.encodeCalendarResource(parent, (CalendarResource)entry, applyDefault, 
+                    reqAttrs, aac.getAttrRightChecker((CalendarResource)entry));
         } else if (entry instanceof Account) {
-            ToXML.encodeAccount(parent, (Account)entry, applyDefault, true, reqAttrs, aac.getAttrRightChecker((Account)entry));
+            ToXML.encodeAccount(parent, (Account)entry, applyDefault, true, 
+                    reqAttrs, aac.getAttrRightChecker((Account)entry));
         } else if (entry instanceof DistributionList) {
-            GetDistributionList.encodeDistributionList(parent, (DistributionList)entry, false, reqAttrs, aac.getAttrRightChecker((DistributionList)entry));
+            GetDistributionList.encodeDistributionList(parent, (DistributionList)entry, false, 
+                    reqAttrs, aac.getAttrRightChecker((DistributionList)entry));
         } else if (entry instanceof Alias) {
             encodeAlias(parent, prov, (Alias)entry, reqAttrs);
         } else if (entry instanceof Domain) {
-            GetDomain.encodeDomain(parent, (Domain)entry, applyDefault, reqAttrs, aac.getAttrRightChecker((Domain)entry));
+            GetDomain.encodeDomain(parent, (Domain)entry, applyDefault, 
+                    reqAttrs, aac.getAttrRightChecker((Domain)entry));
         } else if (entry instanceof Cos) {
             GetCos.encodeCos(parent, (Cos)entry, reqAttrs, aac.getAttrRightChecker((Cos)entry));
         }
     }
 
-    private static void encodeAlias(Element e, Provisioning prov, Alias a, Set<String> reqAttrs) throws ServiceException {
+    private static void encodeAlias(Element e, Provisioning prov, Alias a, Set<String> reqAttrs) 
+    throws ServiceException {
         Element ealias = e.addElement(AdminConstants.E_ALIAS);
         ealias.addAttribute(AdminConstants.A_NAME, a.getUnicodeName());
         ealias.addAttribute(AdminConstants.A_ID, a.getId());

@@ -14,7 +14,9 @@
  */
 package com.zimbra.qa.unittest;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -28,7 +30,10 @@ import org.junit.runner.JUnitCore;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.DateUtil;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapServerType;
@@ -211,7 +216,7 @@ public class TestLdap {
         ZLdapContext zlc = null;
         try {
             zlc = LdapClient.getContext(LdapServerType.MASTER);
-            zlc.unbindEntry(dn);
+            zlc.deleteEntry(dn);
         } finally {
             LdapClient.closeContext(zlc);
         }
@@ -351,7 +356,11 @@ public class TestLdap {
     private static void runTests(JUnitCore junit, TestConfig testConfig) throws Exception {
         batchMode = true;
          
-        TestConfig.useConfig(testConfig);
+        initTest(testConfig);
+        
+        Date startTime = new Date();
+        SimpleDateFormat dateFmt = new SimpleDateFormat("HH:mm:ss");
+        System.out.println("TestLdap started at: " + dateFmt.format(startTime));
         
         if (testConfig == TestConfig.UBID) {
             // junit.run(TestLdapSDK.class);
@@ -384,27 +393,63 @@ public class TestLdap {
         junit.run(TestLdapZLdapFilter.class);
         junit.run(TestLdapZMutableEntry.class);
         junit.run(TestProvAttrCallback.class);
+        
+        // old tests
+        junit.run(TestAccountLockout.class);
+        junit.run(TestACPermissionCache.class);
+        junit.run(TestACUserRights.class);
+        junit.run(TestBuildInfo.class);
+        junit.run(TestLdapBinary.class);
+        junit.run(TestLdapUtil.class);
+        junit.run(TestProvAlias.class);
+        junit.run(TestProvAttr.class);
+        junit.run(TestProvCallbackAvailableZimlets.class);
+        junit.run(TestProvCos.class);
+        junit.run(TestProvGroup.class);
+        junit.run(TestProvIDN.class);
+        junit.run(TestProvValidator.class);
+        junit.run(TestProvZimbraId.class);
+        junit.run(TestSearchCalendarResources.class);
+        junit.run(TestSearchGal.class);
+        
+        
+        /*  // tests need fixing
+        junit.run(TestCreateAccount.class);
+        junit.run(TestProvDomainStatus.class);
+        */
+        
+       Thread.sleep(3000);
+        
+        Date endTime = new Date();
+        System.out.println("TestLdap ended at:   " + dateFmt.format(endTime));
+        
+        long elapsedMills = endTime.getTime() - startTime.getTime();
+        long minutes = elapsedMills / Constants.MILLIS_PER_MINUTE;
+        long seconds = elapsedMills / Constants.MILLIS_PER_SECOND;
+        long secs = seconds - (minutes * Constants.SECONDS_PER_MINUTE);
+        System.out.println();
+        System.out.println("Elapsed time: " + minutes + " mins " + secs + " secs");
     }
     
-    // so tests can be called directly, without running from TestLdap.
-    private static void manualInit() throws Exception {
-        
+    // invoked once per JVM
+    private static void initTest(TestConfig testConfig) throws Exception {
+        CliUtil.toolSetup();
+        RightManager.getInstance(true);
+        TestConfig.useConfig(testConfig);
+        cleanupAll();
+    }
+    
+    @BeforeClass  // invoked once per class loaded
+    public static void beforeClass() throws Exception {
         if (batchMode) {
             return;
         }
         
-        CliUtil.toolSetup();
-        
-        TestConfig testConfig = TestConfig.UBID;
+        // TestConfig testConfig = TestConfig.UBID;
         // TestConfig testConfig = TestConfig.JNDI;
-        // TestConfig testConfig = TestConfig.LEGACY;
+        TestConfig testConfig = TestConfig.LEGACY;
         
-        TestConfig.useConfig(testConfig);
-    }
-    
-    @BeforeClass
-    public static void beforeClass() throws Exception {
-        manualInit();
+        initTest(testConfig);
     }
     
     static TestConfig getCurrentTestConfig() {
@@ -413,15 +458,17 @@ public class TestLdap {
     
     /*
      * zmjava -ea com.zimbra.qa.unittest.TestLdap > ~/temp/out.txt
+     * 
+     * cp -f /Users/pshao/p4/main/ZimbraServer/data/unittest/ldap/rights-unittest.xml /opt/zimbra/conf/rights
+     * cp -f /Users/pshao/p4/main/ZimbraServer/data/unittest/ldap/attrs-unittest.xml /Users/pshao/p4/main/ZimbraServer/conf/attrs
+     * ant refresh-ldap-schema
      */
     public static void main(String[] args) throws Exception {
-        CliUtil.toolSetup();
-        
         JUnitCore junit = new JUnitCore();
         junit.addListener(new ConsoleListener());
         
         // TestConfig.useConfig(TestConfig.LEGACY);
-        cleanupAll();
+        
         
         runTests(junit, TestConfig.UBID);
         // runTests(junit, TestConfig.JNDI);

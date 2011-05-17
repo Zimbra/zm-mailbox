@@ -99,7 +99,7 @@ public class UBIDModificationList extends ZModificationList {
         }
         
         if (modOp == ModificationType.DELETE) {
-            removeAttr(name);
+            removeAttr(name, isBinaryTransfer);
         } else {
             String[] val = new String[]{value};
             modifyAttr(name, val, containsBinaryData, isBinaryTransfer);
@@ -124,8 +124,9 @@ public class UBIDModificationList extends ZModificationList {
     }
 
     @Override
-    public void removeAttr(String attrName) {
-        Modification mod = new Modification(ModificationType.DELETE, attrName);
+    public void removeAttr(String attrName, boolean isBinaryTransfer) {
+        String transferAttrName = LdapUtilCommon.attrNameToBinaryTransferAttrName(isBinaryTransfer, attrName);
+        Modification mod = new Modification(ModificationType.DELETE, transferAttrName);
         modList.add(mod);
     }
 

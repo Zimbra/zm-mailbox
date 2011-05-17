@@ -83,7 +83,7 @@ public class JNDIModificationList extends ZModificationList {
         }
         
         if (modOp == DirContext.REMOVE_ATTRIBUTE) {
-            removeAttr(name);
+            removeAttr(name, isBinaryTransfer);
         } else {
             String[] val = new String[]{value};
             modifyAttr(name, val, containsBinaryData, isBinaryTransfer);
@@ -125,8 +125,8 @@ public class JNDIModificationList extends ZModificationList {
     
 
     @Override
-    public void removeAttr(String attrName) {
-        BasicAttribute ba = new BasicAttribute(attrName);
+    public void removeAttr(String attrName, boolean isBinaryTransfer) {
+        BasicAttribute ba = JNDIUtil.newAttribute(isBinaryTransfer, attrName);
         modList.add(new ModificationItem(DirContext.REMOVE_ATTRIBUTE, ba));
     }
 

@@ -44,7 +44,7 @@ public abstract class ZModificationList extends ZLdapElement {
     public abstract void modifyAttr(String name, String[] value, 
             boolean containsBinaryData, boolean isBinaryTransfer);
     
-    public abstract void removeAttr(String attrName);
+    public abstract void removeAttr(String attrName, boolean isBinaryTransfer);
     
     public abstract void removeAttr(String name, String value[], Entry entry, 
             boolean containsBinaryData, boolean isBinaryTransfer);

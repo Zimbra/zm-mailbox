@@ -93,6 +93,6 @@ public abstract class ZLdapContext extends ZLdapElement implements ILdapContext 
             String baseDN, ZLdapFilter filter, ZSearchControls searchControls) 
     throws LdapException;
    
-    public abstract void unbindEntry(String dn) throws LdapException;
+    public abstract void deleteEntry(String dn) throws LdapException;
 
 }

@@ -30,12 +30,12 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
-import com.zimbra.common.util.SetUtil;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.prov.ldap.LdapProv;
+
 
 public class TestProvisioningUtil extends TestCase {
     
@@ -187,17 +187,8 @@ public class TestProvisioningUtil extends TestCase {
         String aName() { return mAsciiName; }
     }
     
-    public static Provisioning getProvisioning(Class cls) throws ServiceException {
-        if (cls == LdapProvisioning.class)
-            return getLdapProvisioning();
-        else if (cls == SoapProvisioning.class)
-            return getSoapProvisioning();
-        else
-            throw ServiceException.FAILURE("unsupported Provisioning class", null);
-    }
-    
-    public static LdapProvisioning getLdapProvisioning() throws ServiceException {
-        LdapProvisioning lp = (LdapProvisioning)Provisioning.getInstance();
+    public static LdapProv getLdapProvisioning() throws ServiceException {
+        LdapProv lp = (LdapProv)Provisioning.getInstance();
         return lp;
     }
     

@@ -25,8 +25,6 @@ import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.gal.GalOp;
-import com.zimbra.cs.account.ldap.Check;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.AccountUtil;
@@ -279,11 +277,14 @@ public abstract class Provisioning extends ZAttrProvisioning {
                         sProvisioning = (Provisioning) ExtensionUtil.findClass(className).newInstance();
                     }
                 } catch (Exception e) {
-                    ZimbraLog.account.error("could not instantiate Provisioning interface of class '" + className + "'; defaulting to LdapProvisioning", e);
+                    ZimbraLog.account.error("could not instantiate Provisioning interface of class '" + 
+                            className + "'", e);
                 }
             }
-            if (sProvisioning == null)
-                sProvisioning = new LdapProvisioning();
+            if (sProvisioning == null) {
+                sProvisioning = new com.zimbra.cs.account.ldap.LdapProvisioning();
+                ZimbraLog.account.error("defaulting to " + sProvisioning.getClass().getCanonicalName());
+            }
         }
         return sProvisioning;
     }

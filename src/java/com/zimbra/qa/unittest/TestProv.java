@@ -23,7 +23,7 @@ import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Zimlet;
 
-public abstract class TestProv {
+public abstract class TestProv extends TestLdap {
 
     protected static final String TEST_ID = TestProvisioningUtil.genTestId();
     protected static final String BASE_DOMAIN_NAME = TestProvisioningUtil.baseDomainName("test-prov", TEST_ID);

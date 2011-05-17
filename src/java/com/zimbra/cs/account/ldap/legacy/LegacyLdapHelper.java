@@ -16,7 +16,7 @@ package com.zimbra.cs.account.ldap.legacy;
 
 import java.util.Map;
 
-import javax.naming.directory.SearchControls;
+import javax.naming.NamingException;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.prov.ldap.LdapHelper;
@@ -62,10 +62,40 @@ public class LegacyLdapHelper extends LdapHelper {
     }
     
     @Override
-    public void modifyAttrs(ZLdapContext zlc, String dn,
-            Map<String, ? extends Object> attrs, Entry entry)
-            throws ServiceException {
+    public void deleteEntry(String dn) throws ServiceException {
+        LegacyZimbraLdapContext zlc = null;
+        try {
+            zlc = new LegacyZimbraLdapContext(true);
+            zlc.unbindEntry(dn);
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to modify attrs: "
+                    + e.getMessage(), e);
+        } finally {
+            LegacyZimbraLdapContext.closeContext(zlc);
+        }
+    }
+    
+    @Override
+    public void modifyAttrs(ZLdapContext zlc, String dn, Map<String, ? extends Object> attrs, 
+            Entry entry)
+    throws ServiceException {
         throw new UnsupportedOperationException();
+    }
+    
+    @Override
+    public void modifyEntry(String dn, Map<String, ? extends Object> attrs, Entry entry) 
+    throws ServiceException {
+        
+        LegacyZimbraLdapContext zlc = null;
+        try {
+            zlc = new LegacyZimbraLdapContext(true);
+            LegacyLdapUtil.modifyAttrs(zlc, dn, attrs, entry);
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to modify attrs: "
+                    + e.getMessage(), e);
+        } finally {
+            LegacyZimbraLdapContext.closeContext(zlc);
+        }
     }
 
     @Override

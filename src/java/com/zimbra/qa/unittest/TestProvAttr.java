@@ -31,8 +31,6 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
-
 
 public class TestProvAttr extends TestLdap {
     private static String TEST_ID = TestProvisioningUtil.genTestId();;
