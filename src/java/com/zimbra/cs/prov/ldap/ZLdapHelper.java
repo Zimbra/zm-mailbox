@@ -38,10 +38,9 @@ import com.zimbra.cs.ldap.ZSearchControls;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
 import com.zimbra.cs.ldap.ZSearchResultEnumeration;
 
-import com.zimbra.cs.prov.ldap.entry.LdapCos;
-
 /**
- * An SDK-neutral LdapHelper.  Based on Z* classes and LdapUtil in the com.zimbra.cs.ldap package.
+ * An SDK-neutral LdapHelper.  
+ * Based on Z* classes and LdapUtil in the com.zimbra.cs.ldap package.
  * 
  * @author pshao
  *
@@ -60,6 +59,17 @@ public class ZLdapHelper extends LdapHelper {
         zlc.searchPaged(searchOptions);
     }
     
+
+    @Override
+    public void deleteEntry(String dn) throws ServiceException {
+        ZLdapContext zlc = null;
+        try {
+            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            zlc.deleteEntry(dn);
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
+    }
 
     /**
      * Modifies the specified entry.  <code>attrs</code> is a <code>Map</code> consisting of
@@ -107,7 +117,7 @@ public class ZLdapHelper extends LdapHelper {
                 if (c.size() == 0) {
                     // make sure it exists
                     if (entry.getAttr(key, false) != null) {
-                        modList.removeAttr(key);
+                        modList.removeAttr(key, isBinaryTransfer);
                     }
                 } else {
                     // Convert values Collection to a String array
@@ -149,9 +159,23 @@ public class ZLdapHelper extends LdapHelper {
     
 
     @Override
+    public void modifyEntry(String dn, Map<String, ? extends Object> attrs, Entry entry)
+    throws ServiceException {
+        ZLdapContext zlc = null;
+        try {
+            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            modifyAttrs(zlc, dn, attrs, entry);
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
+    }
+    
+
+    @Override
     @TODOEXCEPTIONMAPPING
     public ZSearchResultEntry searchForEntry(String base, ZLdapFilter filter, ZLdapContext initZlc, 
-            boolean useMaster) throws LdapMultipleEntriesMatchedException, ServiceException {
+            boolean useMaster) 
+    throws LdapMultipleEntriesMatchedException, ServiceException {
         ZLdapContext zlc = initZlc;
         try {
             if (zlc == null)
