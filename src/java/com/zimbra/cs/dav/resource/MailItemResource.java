@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -433,12 +433,16 @@ public abstract class MailItemResource extends DavResource {
         }
         try {
             Mailbox mbox = getMailbox(ctxt);
-            synchronized (mbox) {
+            mbox.lock.lock();
+            try {
                 Metadata data = mbox.getConfig(ctxt.getOperationContext(), CONFIG_KEY);
-                if (data == null)
+                if (data == null) {
                     data = new Metadata();
+                }
                 data.put(Integer.toString(mId), configVal);
                 mbox.setConfig(ctxt.getOperationContext(), CONFIG_KEY, data);
+            } finally {
+                mbox.lock.release();
             }
         } catch (ServiceException se) {
             throw new DavException("unable to patch properties", HttpServletResponse.SC_FORBIDDEN, se);

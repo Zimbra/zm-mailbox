@@ -563,12 +563,15 @@ public class MailboxManager {
         }
 
         // mbox is non-null, and mbox.beginMaintenance() will throw if it's already in maintenance
-        synchronized (mbox) {
+        mbox.lock.lock();
+        try {
             MailboxMaintenance maintenance = mbox.beginMaintenance();
             synchronized (this) {
                 cache.put(mailboxId, maintenance);
             }
             return maintenance;
+        } finally {
+            mbox.lock.release();
         }
     }
 
@@ -765,12 +768,9 @@ public class MailboxManager {
         CreateMailbox redoRecorder = new CreateMailbox(account.getId());
 
         Mailbox mbox = null;
-
-        DbConnection conn = null;
         boolean success = false;
+        DbConnection conn = DbPool.getConnection();
         try {
-            conn = DbPool.getConnection();
-
             CreateMailbox redoPlayer = (octxt == null ? null : (CreateMailbox) octxt.getPlayer());
             int id = (redoPlayer == null ? Mailbox.ID_AUTO_INCREMENT : redoPlayer.getMailboxId());
 
@@ -780,10 +780,8 @@ public class MailboxManager {
 
             mbox = instantiateMailbox(data);
 
-            synchronized (mbox) { // this is here only so that the assert(Thread.holdsLock(this)) doesn't trip in Mailbox.beginTransaction
-                // the existing Connection is used for the rest of this transaction...
-                mbox.beginTransaction("createMailbox", octxt, redoRecorder, conn);
-            }
+            // the existing Connection is used for the rest of this transaction...
+            mbox.beginTransaction("createMailbox", octxt, redoRecorder, conn);
 
             // create the default folders
             mbox.initialize();
@@ -807,17 +805,12 @@ public class MailboxManager {
         } finally {
             try {
                 if (mbox != null) {
-                    synchronized (mbox) { // this is here only so that the assert(Thread.holdsLock(this)) doesn't trip in Mailbox.beginTransaction
-                        mbox.endTransaction(success);
-                    }
-                    conn = null;
+                    mbox.endTransaction(success);
                 } else {
-                    if (conn != null)
-                        conn.rollback();
+                    conn.rollback();
                 }
             } finally {
-                if (conn != null)
-                    DbPool.quietClose(conn);
+                conn.closeQuietly();
             }
         }
 

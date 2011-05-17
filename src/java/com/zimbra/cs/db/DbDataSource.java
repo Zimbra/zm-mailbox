@@ -126,7 +126,7 @@ public class DbDataSource {
             }
         }
     }
-    
+
     public static void updateMapping(DataSource ds, DataSourceItem item) throws ServiceException {
         updateMapping(ds, item, false);
     }
@@ -296,7 +296,8 @@ public class DbDataSource {
 
         ZimbraLog.datasource.debug("Deleting all mappings for dataSource %s in folder %d", ds.getName(), folderId);
 
-        synchronized (mbox) {
+        mbox.lock.lock();
+        try {
             DbConnection conn = null;
             PreparedStatement stmt = null;
             try {
@@ -324,6 +325,8 @@ public class DbDataSource {
                 DbPool.closeStatement(stmt);
                 DbPool.quietClose(conn);
             }
+        } finally {
+            mbox.lock.release();
         }
         return items;
     }

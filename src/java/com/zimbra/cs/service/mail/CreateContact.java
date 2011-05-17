@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -115,7 +115,7 @@ public class CreateContact extends MailDocumentHandler  {
     }
 
     static Pair<Map<String,Object>, List<Attachment>> parseContact(
-            Element cn, ZimbraSoapContext zsc, OperationContext octxt, Contact existing) 
+            Element cn, ZimbraSoapContext zsc, OperationContext octxt, Contact existing)
     throws ServiceException {
         Map<String, Object> fields = new HashMap<String, Object>();
         List<Attachment> attachments = new ArrayList<Attachment>();
@@ -129,10 +129,10 @@ public class CreateContact extends MailDocumentHandler  {
             if (attach == null) {
                 String opStr = elt.getAttribute(MailConstants.A_OPERATION, null);
                 if (opStr != null) {
-                    throw ServiceException.INVALID_REQUEST(MailConstants.A_OPERATION + 
+                    throw ServiceException.INVALID_REQUEST(MailConstants.A_OPERATION +
                             " is not allowed", null);
                 }
-                
+
                 StringUtil.addToMultiMap(fields, name, elt.getText());
             } else {
                 attachments.add(attach);
@@ -141,9 +141,9 @@ public class CreateContact extends MailDocumentHandler  {
 
         return new Pair<Map<String,Object>, List<Attachment>>(fields, attachments);
     }
-    
+
     static Pair<ParsedContact.FieldDeltaList, List<Attachment>> parseContactMergeMode(
-            Element cn, ZimbraSoapContext zsc, OperationContext octxt, Contact existing) 
+            Element cn, ZimbraSoapContext zsc, OperationContext octxt, Contact existing)
     throws ServiceException {
         ParsedContact.FieldDeltaList deltaList = new ParsedContact.FieldDeltaList();
         List<Attachment> attachments = new ArrayList<Attachment>();
@@ -264,13 +264,17 @@ public class CreateContact extends MailDocumentHandler  {
     }
 
     public static List<Contact> createContacts(OperationContext oc, Mailbox mbox,
-        ItemId iidFolder, List<ParsedContact> list, String tagsStr) throws ServiceException {
+            ItemId iidFolder, List<ParsedContact> list, String tagsStr) throws ServiceException {
 
         List<Contact> toRet = new ArrayList<Contact>();
 
-        synchronized(mbox) {
-            for (ParsedContact pc : list)
+        mbox.lock.lock();
+        try {
+            for (ParsedContact pc : list) {
                 toRet.add(mbox.createContact(oc, pc, iidFolder.getId(), tagsStr));
+            }
+        } finally {
+            mbox.lock.release();
         }
         return toRet;
     }

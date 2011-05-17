@@ -368,10 +368,13 @@ class ImapFolderSync {
 
     private FolderSyncState newSyncState() throws ServiceException {
         FolderSyncState ss = new FolderSyncState();
-        synchronized (mailbox) {
+        mailbox.lock.lock();
+        try {
             trackedMsgs = tracker.getMessages();
             localMsgIds = localFolder.getMessageIds();
             ss.setLastChangeId(mailbox.getLastChangeID());
+        } finally {
+            mailbox.lock.release();
         }
         ss.setLastFetchedUid(trackedMsgs.getLastUid());
         return ss;

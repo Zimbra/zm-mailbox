@@ -52,10 +52,9 @@ public class ExportAndDeleteItems extends AdminDocumentHandler {
         String dirPath = request.getAttribute(AdminConstants.A_EXPORT_DIR, null);
         String prefix = request.getAttribute(AdminConstants.A_EXPORT_FILENAME_PREFIX, null);
 
-        // Synchronize on the mailbox, to make sure that another thread doesn't
-        // modify the items we're exporting/deleting.
-
-        synchronized (mbox) {
+        // Lock the mailbox, to make sure that another thread doesn't modify the items we're exporting/deleting.
+        mbox.lock.lock();
+        try {
             // Export items to SQL files.
             if (dirPath != null) {
                 File exportDir = new File(dirPath);
@@ -91,6 +90,8 @@ public class ExportAndDeleteItems extends AdminDocumentHandler {
                 idArray[i] = itemIds.get(i);
             }
             mbox.delete(null, idArray, MailItem.Type.UNKNOWN, null);
+        } finally {
+            mbox.lock.release();
         }
 
         return zsc.createElement(AdminConstants.EXPORT_AND_DELETE_ITEMS_RESPONSE);

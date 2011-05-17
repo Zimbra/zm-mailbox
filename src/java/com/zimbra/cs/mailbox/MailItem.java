@@ -978,12 +978,10 @@ public abstract class MailItem implements Comparable<MailItem> {
      *
      * @throws ServiceException on errors fetching the item's folder. */
     public boolean inTrash() throws ServiceException {
-        if (mData.folderId <= Mailbox.HIGHEST_SYSTEM_ID)
+        if (mData.folderId <= Mailbox.HIGHEST_SYSTEM_ID) {
             return (mData.folderId == Mailbox.ID_FOLDER_TRASH);
-        Folder folder = null;
-        synchronized (mMailbox) {
-            folder = mMailbox.getFolderById(null, getFolderId());
         }
+        Folder folder = mMailbox.getFolderById(null, getFolderId());
         return folder.inTrash();
     }
 
@@ -3140,7 +3138,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         int last = length == -1 ? comments.size() : Math.min(comments.size(), offset + length);
         return comments.subList(offset, last);
     }
-    
+
     Metadata serializeUnderlyingData() {
         Metadata meta = mData.serialize();
         // metadata

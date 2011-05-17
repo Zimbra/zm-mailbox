@@ -526,13 +526,15 @@ public final class SendMsg extends MailDocumentHandler {
                     continue;
 
                 String uid = replyInv.getUid();
-                synchronized (mMailbox) {
+                mMailbox.lock.lock();
+                try {
                     CalendarItem calItem = mMailbox.getCalendarItemByUid(uid);
                     if (calItem != null) {
                         RecurId rid = replyInv.getRecurId();
                         Invite inv = calItem.getInvite(rid);
-                        if (inv == null && rid != null)  // replying to a non-exception instance
+                        if (inv == null && rid != null) { // replying to a non-exception instance
                             inv = calItem.getInvite((RecurId) null);
+                        }
                         if (inv != null) {
                             ZOrganizer org = inv.getOrganizer();
                             if (org != null) {
@@ -546,7 +548,7 @@ public final class SendMsg extends MailDocumentHandler {
                                     String replyOrgAddr = replyOrg.getAddress();
                                     String orgAddr = org.getAddress();
                                     if (org.hasSentBy() ||
-                                        (orgAddr != null && !orgAddr.equalsIgnoreCase(replyOrgAddr))) {
+                                            (orgAddr != null && !orgAddr.equalsIgnoreCase(replyOrgAddr))) {
                                         uidToOrganizer.put(uid, orgProp);
                                     }
                                 }
@@ -556,6 +558,8 @@ public final class SendMsg extends MailDocumentHandler {
                             }
                         }
                     }
+                } finally {
+                    mMailbox.lock.release();
                 }
             }
 

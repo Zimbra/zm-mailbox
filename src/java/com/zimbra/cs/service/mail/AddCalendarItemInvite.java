@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -38,10 +38,10 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public class AddCalendarItemInvite extends CalendarRequest {
 
-    protected class AddInviteParser extends ParseMimeMessage.InviteParser { 
-        public ParseMimeMessage.InviteParserResult parseInviteElement(
-                ZimbraSoapContext lc, OperationContext octxt, Account account, Element inviteElem)
-        throws ServiceException {
+    protected class AddInviteParser extends ParseMimeMessage.InviteParser {
+        @Override
+        public ParseMimeMessage.InviteParserResult parseInviteElement(ZimbraSoapContext lc, OperationContext octxt,
+                Account account, Element inviteElem) throws ServiceException {
             return CalendarUtils.parseInviteForAddInvite(account, getItemType(), inviteElem, null);
         }
     }
@@ -56,7 +56,7 @@ public class AddCalendarItemInvite extends CalendarRequest {
         AddInviteParser parser = new AddInviteParser();
         SetCalendarItemData scid = SetCalendarItem.getSetCalendarItemData(zsc, octxt, acct, mbox, request, parser);
 
-        Invite inv = scid.mInv;
+        Invite inv = scid.invite;
         CalendarItem calItem = mbox.getCalendarItemByUid(octxt, inv.getUid());
         int folderId = inv.isTodo() ? Mailbox.ID_FOLDER_TASKS : Mailbox.ID_FOLDER_CALENDAR;
         if (calItem != null) {
@@ -70,18 +70,19 @@ public class AddCalendarItemInvite extends CalendarRequest {
         // We don't want to set organizer to receiving user unless we're absolutely certain
         // it's the correct organizer.
         if (!inv.hasOrganizer() && inv.hasOtherAttendees()) {
-            if (scid.mPm == null) {
+            if (scid.message == null) {
                 ZimbraLog.calendar.info(
                         "Got malformed invite without organizer.  Clearing attendees to prevent inadvertent cancels.");
                 inv.clearAttendees();
             } else {
-                String fromEmail = scid.mPm.getSenderEmail(true);
+                String fromEmail = scid.message.getSenderEmail(true);
                 if (fromEmail != null) {
                     boolean dangerousSender = false;
                     // Is sender == recipient?  If so, clear attendees.
                     String intendedForAddress;
                     try {
-                        intendedForAddress = scid.mPm.getMimeMessage().getHeader(CalendarMailSender.X_ZIMBRA_CALENDAR_INTENDED_FOR, null);
+                        intendedForAddress = scid.message.getMimeMessage().getHeader(
+                                CalendarMailSender.X_ZIMBRA_CALENDAR_INTENDED_FOR, null);
                     } catch (MessagingException e) {
                         throw ServiceException.FAILURE("error parsing message", e);
                     }
@@ -100,7 +101,7 @@ public class AddCalendarItemInvite extends CalendarRequest {
                     }
                     if (!dangerousSender) {
                         ZOrganizer org = new ZOrganizer(fromEmail, null);
-                        String senderEmail = scid.mPm.getSenderEmail(false);
+                        String senderEmail = scid.message.getSenderEmail(false);
                         if (senderEmail != null && !senderEmail.equalsIgnoreCase(fromEmail))
                             org.setSentBy(senderEmail);
                         inv.setOrganizer(org);
@@ -126,9 +127,9 @@ public class AddCalendarItemInvite extends CalendarRequest {
         Element response = getResponseElement(zsc);
         if (calItem != null) {
             // If the calendar item already has the invite, no need to add again.
-            RecurId rid = scid.mInv.getRecurId();
+            RecurId rid = scid.invite.getRecurId();
             Invite matchingInv = calItem.getInvite(rid);
-            if (matchingInv != null && matchingInv.isSameOrNewerVersion(scid.mInv)) {
+            if (matchingInv != null && matchingInv.isSameOrNewerVersion(scid.invite)) {
                 response.addAttribute(MailConstants.A_CAL_ID, calItem.getId());
                 response.addAttribute(MailConstants.A_CAL_INV_ID, matchingInv.getMailItemId());
                 response.addAttribute(MailConstants.A_CAL_COMPONENT_NUM, matchingInv.getComponentNum());
@@ -136,7 +137,7 @@ public class AddCalendarItemInvite extends CalendarRequest {
             }
         }
 
-        AddInviteData aid = mbox.addInvite(octxt, inv, folderId, scid.mPm, false, false, true);
+        AddInviteData aid = mbox.addInvite(octxt, inv, folderId, scid.message, false, false, true);
         if (aid != null) {
             calItem = mbox.getCalendarItemById(octxt, aid.calItemId);
             if (calItem != null) {

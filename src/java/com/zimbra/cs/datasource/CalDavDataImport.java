@@ -177,6 +177,9 @@ public class CalDavDataImport extends MailItemImport {
         int itemId;
     }
 
+    /**
+     * @throws ServiceException subclasses may throw an error
+     */
     protected int getRootFolderId(DataSource ds) throws ServiceException {
         return ds.getFolderId();
     }
@@ -570,11 +573,11 @@ public class CalDavDataImport extends MailItemImport {
                 boolean first = true;
                 for (Invite i : invites) {
                     if (first) {
-                        main.mInv = i;
+                        main.invite = i;
                         first = false;
                     } else {
                         SetCalendarItemData scid = new SetCalendarItemData();
-                        scid.mInv = i;
+                        scid.invite = i;
                         exceptions[pos++] = scid;
                     }
                 }

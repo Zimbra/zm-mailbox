@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -49,7 +49,7 @@ public class ModifyCalendarItem extends CalendarRequest {
         private Invite mSeriesInv;
         private List<ZAttendee> mAttendeesAdded;
         private List<ZAttendee> mAttendeesCanceled;
-        
+
         ModifyCalendarItemParser(Invite inv, Invite seriesInv) {
             mInv = inv;
             mSeriesInv = seriesInv;
@@ -60,17 +60,16 @@ public class ModifyCalendarItem extends CalendarRequest {
         public List<ZAttendee> getAttendeesAdded() { return mAttendeesAdded; }
         public List<ZAttendee> getAttendeesCanceled() { return mAttendeesCanceled; }
 
-        public ParseMimeMessage.InviteParserResult parseInviteElement(
-                ZimbraSoapContext lc, OperationContext octxt, Account account, Element inviteElem)
-        throws ServiceException {
-            ParseMimeMessage.InviteParserResult toRet = CalendarUtils.parseInviteForModify(
-                    account, getItemType(), inviteElem, mInv, mSeriesInv,
-                    mAttendeesAdded, mAttendeesCanceled, !mInv.hasRecurId());
+        @Override
+        public ParseMimeMessage.InviteParserResult parseInviteElement(ZimbraSoapContext lc, OperationContext octxt,
+                Account account, Element inviteElem) throws ServiceException {
+            ParseMimeMessage.InviteParserResult toRet = CalendarUtils.parseInviteForModify(account, getItemType(),
+                    inviteElem, mInv, mSeriesInv, mAttendeesAdded, mAttendeesCanceled, !mInv.hasRecurId());
             return toRet;
         }
     };
 
-    
+    @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account acct = getRequestedAccount(zsc);
@@ -99,23 +98,26 @@ public class ModifyCalendarItem extends CalendarRequest {
             iidFolder = new ItemId(folderStr, zsc);
             isInterMboxMove = !iidFolder.belongsTo(mbox);
         }
-        
+
         Element response = getResponseElement(zsc);
         int compNum = (int) request.getAttributeLong(MailConstants.A_CAL_COMP, 0);
-        synchronized(mbox) {
+        mbox.lock.lock();
+        try {
             CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId());
             if (calItem == null) {
                 throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
             }
 
             // Reject the request if calendar item is under trash or is being moved to trash.
-            if (calItem.inTrash())
+            if (calItem.inTrash()) {
                 throw ServiceException.INVALID_REQUEST("cannot modify a calendar item under trash", null);
+            }
             if (!isInterMboxMove && iidFolder != null) {
                 if (iidFolder.getId() != calItem.getFolderId()) {
                     Folder destFolder = mbox.getFolderById(octxt, iidFolder.getId());
-                    if (destFolder.inTrash())
+                    if (destFolder.inTrash()) {
                         throw ServiceException.INVALID_REQUEST("cannot combine with a move to trash", null);
+                    }
                 }
             }
 
@@ -123,8 +125,9 @@ public class ModifyCalendarItem extends CalendarRequest {
             int modSeq = (int) request.getAttributeLong(MailConstants.A_MODIFIED_SEQUENCE, 0);
             int revision = (int) request.getAttributeLong(MailConstants.A_REVISION, 0);
             if (modSeq != 0 && revision != 0 &&
-                (modSeq < calItem.getModifiedSequence() || revision < calItem.getSavedSequence()))
+                    (modSeq < calItem.getModifiedSequence() || revision < calItem.getSavedSequence())) {
                 throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
+            }
 
             Invite inv = calItem.getInvite(iid.getSubpartId(), compNum);
             if (inv == null) {
@@ -132,10 +135,13 @@ public class ModifyCalendarItem extends CalendarRequest {
             }
             Invite seriesInv = calItem.getDefaultInviteOrNull();
             int folderId = calItem.getFolderId();
-            if (!isInterMboxMove && iidFolder != null)
+            if (!isInterMboxMove && iidFolder != null) {
                 folderId = iidFolder.getId();
+            }
             modifyCalendarItem(zsc, octxt, request, acct, mbox, folderId, calItem, inv, seriesInv,
                                response, isInterMboxMove);
+        } finally {
+            mbox.lock.release();
         }
 
         // Inter-mailbox move if necessary.
@@ -156,9 +162,9 @@ public class ModifyCalendarItem extends CalendarRequest {
     throws ServiceException {
         // <M>
         Element msgElem = request.getElement(MailConstants.E_MSG);
-        
+
         ModifyCalendarItemParser parser = new ModifyCalendarItemParser(inv, seriesInv);
-        
+
         CalSendData dat = handleMsgElement(zsc, octxt, msgElem, acct, mbox, parser);
         dat.mDontNotifyAttendees = isInterMboxMove;
 

@@ -158,7 +158,8 @@ public class SoapSession extends Session {
                 return true;
             }
 
-            synchronized (mbox) {
+            mbox.lock.lock();
+            try {
                 if (!force && mNextFolderCheck > now) {
                     return mVisibleFolderIds != null;
                 }
@@ -167,6 +168,8 @@ public class SoapSession extends Session {
                 mVisibleFolderIds = visible;
                 mNextFolderCheck = now + SOAP_SESSION_TIMEOUT_MSEC / 2;
                 return visible != null;
+            } finally {
+                mbox.lock.release();
             }
         }
 
@@ -999,7 +1002,7 @@ public class SoapSession extends Session {
         // for mountpoints pointing to this host, get the serialized folder subhierarchy
         expandLocalMountpoints(octxt, root, eRefresh.getFactory(), mountpoints);
         // for mountpoints pointing to other hosts, get the folder structure from the remote server
-        expandRemoteMountpoints(octxt, zsc, eRefresh.getFactory(), mountpoints);
+        expandRemoteMountpoints(octxt, zsc, mountpoints);
 
         // graft in subfolder trees from the other user's mailbox, making sure that mountpoints reflect the counts (etc.) of the target folder
         if (!mountpoints.isEmpty())
@@ -1053,7 +1056,7 @@ public class SoapSession extends Session {
         }
     }
 
-    private void expandRemoteMountpoints(OperationContext octxt, ZimbraSoapContext zsc, Element.ElementFactory factory, Map<ItemId, Element> mountpoints) {
+    private void expandRemoteMountpoints(OperationContext octxt, ZimbraSoapContext zsc, Map<ItemId, Element> mountpoints) {
         Map<String, Server> remoteServers = null;
         Provisioning prov = Provisioning.getInstance();
         for (Map.Entry<ItemId, Element> mptinfo : mountpoints.entrySet()) {
@@ -1224,7 +1227,7 @@ public class SoapSession extends Session {
         }
         return ret;
     }
-    
+
     /** Serializes cached notifications to a SOAP response header.
      *  <p>
      *  Adds a <tt>&lt;notify></tt> block to an existing <tt>&lt;context></tt>
@@ -1365,7 +1368,7 @@ public class SoapSession extends Session {
                         if (item instanceof Mountpoint && mbox == item.getMailbox()) {
                             Map<ItemId, Element> mountpoints = new HashMap<ItemId, Element>(2);
                             expandLocalMountpoint(octxt, (Mountpoint) item, eCreated.getFactory(), mountpoints);
-                            expandRemoteMountpoints(octxt, zsc, eCreated.getFactory(), mountpoints);
+                            expandRemoteMountpoints(octxt, zsc, mountpoints);
                             transferMountpointContents(elem, octxt, mountpoints);
                         }
                     } catch (ServiceException e) {

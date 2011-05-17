@@ -105,7 +105,8 @@ public class SetCalendarItem extends CalendarRequest {
         String tagsStr = request.getAttribute(MailConstants.A_TAGS, null);
         long tags = tagsStr != null ? Tag.tagsToBitmask(tagsStr) : 0;
 
-        synchronized (mbox) {
+        mbox.lock.lock();
+        try {
             int defaultFolder = getItemType() == MailItem.Type.TASK ? Mailbox.ID_FOLDER_TASKS : Mailbox.ID_FOLDER_CALENDAR;
             String defaultFolderStr = Integer.toString(defaultFolder);
             String folderIdStr = request.getAttribute(MailConstants.A_FOLDER, defaultFolderStr);
@@ -119,15 +120,16 @@ public class SetCalendarItem extends CalendarRequest {
 
             Element response = getResponseElement(zsc);
 
-            if (parsed.defaultInv != null)
+            if (parsed.defaultInv != null) {
                 response.addElement(MailConstants.A_DEFAULT).
-                    addAttribute(MailConstants.A_ID, ifmt.formatItemId(parsed.defaultInv.mInv.getMailItemId()));
+                    addAttribute(MailConstants.A_ID, ifmt.formatItemId(parsed.defaultInv.invite.getMailItemId()));
+            }
 
             if (parsed.exceptions != null) {
                 for (SetCalendarItemData cur : parsed.exceptions) {
                     Element e = response.addElement(MailConstants.E_CAL_EXCEPT);
-                    e.addAttribute(MailConstants.A_CAL_RECURRENCE_ID, cur.mInv.getRecurId().toString());
-                    e.addAttribute(MailConstants.A_ID, ifmt.formatItemId(cur.mInv.getMailItemId()));
+                    e.addAttribute(MailConstants.A_CAL_RECURRENCE_ID, cur.invite.getRecurId().toString());
+                    e.addAttribute(MailConstants.A_ID, ifmt.formatItemId(cur.invite.getMailItemId()));
                 }
             }
             String itemId = ifmt.formatItemId(calItem == null ? 0 : calItem.getId());
@@ -161,7 +163,9 @@ public class SetCalendarItem extends CalendarRequest {
                 response.addAttribute(MailConstants.A_APPT_ID_DEPRECATE_ME, itemId);  // for backward compat
 
             return response;
-        } // synchronized(mbox)
+        } finally {
+            mbox.lock.release();
+        }
     }
 
     static SetCalendarItemData getSetCalendarItemData(ZimbraSoapContext zsc, OperationContext octxt, Account acct, Mailbox mbox, Element e, ParseMimeMessage.InviteParser parser)
@@ -225,8 +229,8 @@ public class SetCalendarItem extends CalendarRequest {
         inv.setPartStat(partStatStr);
 
         SetCalendarItemData sadata = new SetCalendarItemData();
-        sadata.mInv = inv;
-        sadata.mPm = pm;
+        sadata.invite = inv;
+        sadata.message = pm;
         return sadata;
     }
 
@@ -253,9 +257,7 @@ public class SetCalendarItem extends CalendarRequest {
             if (e != null) {
                 result.defaultInv = getSetCalendarItemData(
                         zsc, octxt, acct, mbox, e, new SetCalendarItemInviteParser(false, false, folder, type));
-                if (defInv == null) {
-                    defInv = result.defaultInv.mInv;
-                }
+                defInv = result.defaultInv.invite;
             }
         }
 
@@ -265,7 +267,7 @@ public class SetCalendarItem extends CalendarRequest {
                     zsc, octxt, acct, mbox, e, new SetCalendarItemInviteParser(true, false, folder, type));
             exceptions.add(exDat);
             if (defInv == null) {
-                defInv = exDat.mInv;
+                defInv = exDat.invite;
             }
         }
 
@@ -275,7 +277,7 @@ public class SetCalendarItem extends CalendarRequest {
                     zsc, octxt, acct, mbox, e, new SetCalendarItemInviteParser(true, true, folder, type));
             exceptions.add(exDat);
             if (defInv == null) {
-                defInv = exDat.mInv;
+                defInv = exDat.invite;
             }
         }
 

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -140,37 +140,6 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
         } else {
             return null;
         }
-
-//            // The session is not already initialized....therefore it's OK to lock in the reverse order
-//            // (waitset then mailbox) because we know the session isn't added as a listener and therefore
-//            // we won't get an upcall from the Mailbox
-//            //
-//            // See bug 31666 for more info
-//            //
-//            WaitSetSession wsSession = new WaitSetSession(this, wsa.accountId, wsa.interests, wsa.lastKnownSyncToken);
-//            try {
-//                synchronized(mbox) { // this is OK, see above comment
-//                    wsSession.register();
-//                    wsa.setRef(wsSession);
-////                    wsa.ref = new SoftReference<WaitSetSession>(wsSession);
-//                    // must force update here so that initial sync token is checked against current mbox state
-//                    wsSession.update(wsa.interests, wsa.lastKnownSyncToken);
-//                }
-//            } catch (MailServiceException e) {
-//                if (e.getCode().equals(MailServiceException.MAINTENANCE)) {
-//                    //wsa.ref = null; // will get re-set when mailboxAvailable() is called
-//                    wsa.setRef(null);
-//                    ZimbraLog.session.debug("Maintenance mode trying to initialize WaitSetSession for accountId "+wsa.accountId);
-//                } else {
-//                    ZimbraLog.session.warn("Error initializing WaitSetSession for accountId "+wsa.accountId+" -- MailServiceException", e);
-//                    return new WaitSetError(wsa.accountId, WaitSetError.Type.ERROR_LOADING_MAILBOX);
-//                }
-//            } catch (ServiceException e) {
-//                ZimbraLog.session.warn("Error initializing WaitSetSession for accountId "+wsa.accountId+" -- ServiceException", e);
-//                return new WaitSetError(wsa.accountId, WaitSetError.Type.ERROR_LOADING_MAILBOX);
-//            }
-//        }
-//        return null;
     }
 
     @Override

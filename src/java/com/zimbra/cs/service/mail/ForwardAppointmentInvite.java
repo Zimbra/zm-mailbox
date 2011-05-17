@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -68,22 +68,24 @@ public class ForwardAppointmentInvite extends ForwardAppointment {
         Element msgElem = request.getElement(MailConstants.E_MSG);
         ParseMimeMessage.MimeMessageData parsedMessageData = new ParseMimeMessage.MimeMessageData();
         MimeMessage mmFwdWrapper =
-            ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, mbox, msgElem, 
+            ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, mbox, msgElem,
                 null, ParseMimeMessage.NO_INV_ALLOWED_PARSER, parsedMessageData);
 
         MimeMessage mmFwd;
-        synchronized(mbox) {
+        mbox.lock.lock();
+        try {
             Message msg = mbox.getMessageById(octxt, iid.getId());
-            if (msg == null)
+            if (msg == null) {
                 throw MailServiceException.NO_SUCH_MSG(iid.getId());
-
+            }
             MimeMessage mmInv = msg.getMimeMessage();
             List<Invite> invs = new ArrayList<Invite>();
             for (Iterator<CalendarItemInfo> iter = msg.getCalendarItemInfoIterator(); iter.hasNext(); ) {
                 CalendarItemInfo cii = iter.next();
                 Invite inv = cii.getInvite();
-                if (inv != null)
+                if (inv != null) {
                     invs.add(inv);
+                }
             }
             ZVCalendar cal = null;
             Invite firstInv = null;
@@ -132,6 +134,8 @@ public class ForwardAppointmentInvite extends ForwardAppointment {
             }
 
             mmFwd = getInstanceFwdMsg(senderAcct, firstInv, cal, mmInv, mmFwdWrapper);
+        } finally {
+            mbox.lock.release();
         }
         sendFwdMsg(octxt, mbox, mmFwd);
 

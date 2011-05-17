@@ -1003,22 +1003,21 @@ public abstract class ArchiveFormatter extends Formatter {
                     MimeMessage mm;
 
                     if (invs != null && invs.length > 0) {
-                        defScid.mInv = invs[0];
-                        if (blobMimeMsgMap != null && (mm =
-                            blobMimeMsgMap.get(defScid.mInv.getMailItemId())) != null)
-                            defScid.mPm = new ParsedMessage(mm,
-                                mbox.attachmentsIndexingEnabled());
+                        defScid.invite = invs[0];
+                        if (blobMimeMsgMap != null &&
+                                (mm = blobMimeMsgMap.get(defScid.invite.getMailItemId())) != null) {
+                            defScid.message = new ParsedMessage(mm, mbox.attachmentsIndexingEnabled());
+                        }
                         if (invs.length > 1) {
                             exceptionScids = new SetCalendarItemData[invs.length - 1];
                             for (int i = 1; i < invs.length; i++) {
                                 SetCalendarItemData scid = new SetCalendarItemData();
 
-                                scid.mInv = invs[i];
-                                if (blobMimeMsgMap != null && (mm =
-                                    blobMimeMsgMap.get(
-                                        defScid.mInv.getMailItemId())) != null)
-                                    scid.mPm = new ParsedMessage(mm,
-                                        mbox.attachmentsIndexingEnabled());
+                                scid.invite = invs[i];
+                                if (blobMimeMsgMap != null &&
+                                        (mm = blobMimeMsgMap.get(defScid.invite.getMailItemId())) != null) {
+                                    scid.message = new ParsedMessage(mm, mbox.attachmentsIndexingEnabled());
+                                }
                                 exceptionScids[i - 1] = scid;
                             }
                         }

@@ -707,18 +707,19 @@ public class Contact extends MailItem {
 
     @Override
     public List<IndexDocument> generateIndexData() throws TemporaryIndexingException {
-        synchronized (mMailbox) {
-            try {
-                ParsedContact pc = new ParsedContact(this);
-                pc.analyze(mMailbox);
-                if (pc.hasTemporaryAnalysisFailure()) {
-                    throw new TemporaryIndexingException();
-                }
-                return pc.getLuceneDocuments(mMailbox);
-            } catch (ServiceException e) {
-                ZimbraLog.index.error("Failed to index contact id=%d", getId());
-                return Collections.emptyList();
+        mMailbox.lock.lock();
+        try {
+            ParsedContact pc = new ParsedContact(this);
+            pc.analyze(mMailbox);
+            if (pc.hasTemporaryAnalysisFailure()) {
+                throw new TemporaryIndexingException();
             }
+            return pc.getLuceneDocuments(mMailbox);
+        } catch (ServiceException e) {
+            ZimbraLog.index.error("Failed to index contact id=%d", getId());
+            return Collections.emptyList();
+        } finally {
+            mMailbox.lock.release();
         }
     }
 

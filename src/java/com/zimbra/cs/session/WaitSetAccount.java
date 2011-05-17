@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -65,14 +65,12 @@ public class WaitSetAccount {
         // See bug 31666 for more info
         //
         WaitSetSession session = new WaitSetSession(ws, accountId, interests, lastKnownSyncToken);
-
+        mbox.lock.lock();
         try {
-            synchronized(mbox) { // this is OK, see above comment
-                session.register();
-                sessionId = session.getSessionId();
-                // must force update here so that initial sync token is checked against current mbox state
-                session.update(interests, lastKnownSyncToken);
-            }
+            session.register();
+            sessionId = session.getSessionId();
+            // must force update here so that initial sync token is checked against current mbox state
+            session.update(interests, lastKnownSyncToken);
         } catch (MailServiceException e) {
             sessionId = null;
             if (e.getCode().equals(MailServiceException.MAINTENANCE)) {
@@ -87,6 +85,8 @@ public class WaitSetAccount {
             sessionId = null;
             ZimbraLog.session.warn("Error initializing WaitSetSession for accountId "+accountId+" -- ServiceException", e);
             return new WaitSetError(accountId, WaitSetError.Type.ERROR_LOADING_MAILBOX);
+        } finally {
+            mbox.lock.release();
         }
         return null;
     }

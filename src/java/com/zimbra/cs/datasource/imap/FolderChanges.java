@@ -45,13 +45,16 @@ class FolderChanges {
         List<Integer> tombstones;
         List<Folder> modifiedFolders;
 
-        synchronized (mbox) {
+        mbox.lock.lock();
+        try {
             lastChangeId = mbox.getLastChangeID();
             if (lastChangeId <= lastSync) {
                 return this; // No changes
             }
             tombstones = mbox.getTombstones(lastSync).getIds(MailItem.Type.FOLDER);
             modifiedFolders = mbox.getModifiedFolders(lastSync);
+        } finally {
+            mbox.lock.release();
         }
         if ((tombstones == null || tombstones.isEmpty()) && modifiedFolders.isEmpty()) {
             return this; // No changes

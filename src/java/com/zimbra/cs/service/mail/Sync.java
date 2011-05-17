@@ -103,7 +103,8 @@ public class Sync extends MailDocumentHandler {
         OperationContextData.addGranteeNames(octxt, rootNode);
 
         // actually perform the sync
-        synchronized (mbox) {
+        mbox.lock.lock();
+        try {
             mbox.beginTrackingSync();
 
             if (initialSync) {
@@ -120,6 +121,8 @@ public class Sync extends MailDocumentHandler {
                 String newToken = deltaSync(response, octxt, ifmt, mbox, tokenInt, itemCutoff, typedDeletes, root, visible);
                 response.addAttribute(MailConstants.A_TOKEN, newToken);
             }
+        } finally {
+            mbox.lock.release();
         }
 
         return response;

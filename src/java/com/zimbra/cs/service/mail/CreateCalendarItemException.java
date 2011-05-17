@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -40,8 +40,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public class CreateCalendarItemException extends CalendarRequest {
 
-    protected class CreateCalendarItemExceptionInviteParser extends ParseMimeMessage.InviteParser
-    {
+    protected class CreateCalendarItemExceptionInviteParser extends ParseMimeMessage.InviteParser {
         private String mUid;
         private Invite mDefaultInvite;
 
@@ -50,24 +49,24 @@ public class CreateCalendarItemException extends CalendarRequest {
             mDefaultInvite = defaultInvite;
         }
 
-        public ParseMimeMessage.InviteParserResult parseInviteElement(ZimbraSoapContext zsc, OperationContext octxt, Account account, Element inviteElem)
-        throws ServiceException {
-            ParseMimeMessage.InviteParserResult toRet =
-                CalendarUtils.parseInviteForCreateException(
-                        account, getItemType(), inviteElem,
-                        mDefaultInvite.getTimeZoneMap(), mUid, mDefaultInvite);
+        @Override
+        public ParseMimeMessage.InviteParserResult parseInviteElement(ZimbraSoapContext zsc, OperationContext octxt,
+                Account account, Element inviteElem) throws ServiceException {
+            ParseMimeMessage.InviteParserResult toRet = CalendarUtils.parseInviteForCreateException(
+                    account, getItemType(), inviteElem, mDefaultInvite.getTimeZoneMap(), mUid, mDefaultInvite);
 
             // Send cancellations to any attendees who have been removed.
             List<ZAttendee> removedAttendees = CalendarUtils.getRemovedAttendees(
                     mDefaultInvite.getAttendees(), toRet.mInvite.getAttendees(), true, account);
-            if (removedAttendees.size() > 0)
-                updateRemovedInvitees(zsc, octxt, account,
-                                      mDefaultInvite.getCalendarItem().getMailbox(), mDefaultInvite.getCalendarItem(), toRet.mInvite, removedAttendees);
-
+            if (removedAttendees.size() > 0) {
+                updateRemovedInvitees(zsc, octxt, account, mDefaultInvite.getCalendarItem().getMailbox(),
+                        mDefaultInvite.getCalendarItem(), toRet.mInvite, removedAttendees);
+            }
             return toRet;
         }
-    };
+    }
 
+    @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account acct = getRequestedAccount(zsc);
@@ -101,8 +100,9 @@ public class CreateCalendarItemException extends CalendarRequest {
         int compNum = (int) request.getAttributeLong(MailConstants.E_INVITE_COMPONENT);
 
         Element response = getResponseElement(zsc);
-        synchronized(mbox) {
-            CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId()); 
+        mbox.lock.lock();
+        try {
+            CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId());
             if (calItem == null)
                 throw MailServiceException.NO_SUCH_CALITEM(iid.getId(), " for CreateCalendarItemExceptionRequest(" + iid + "," + compNum + ")");
 
@@ -131,7 +131,7 @@ public class CreateCalendarItemException extends CalendarRequest {
                 throw MailServiceException.INVITE_OUT_OF_DATE("Invite id=" + ifmt.formatItemId(iid) + " comp=" + compNum + " is not the default invite");
             if (!calItem.isRecurring())
                 throw ServiceException.INVALID_REQUEST("CalendarItem " + calItem.getId() + " is not a recurring calendar item", null);
-            
+
             CreateCalendarItemExceptionInviteParser parser = new CreateCalendarItemExceptionInviteParser(calItem.getUid(), inv);
             CalSendData dat = handleMsgElement(zsc, octxt, msgElem, acct, mbox, parser);
             dat.mDontNotifyAttendees = isInterMboxMove;
@@ -185,6 +185,8 @@ public class CreateCalendarItemException extends CalendarRequest {
                 boolean neuter = request.getAttributeBool(MailConstants.A_NEUTER, true);
                 echoAddedInvite(response, ifmt, octxt, mbox, dat.mAddInvData, maxSize, wantHTML, neuter);
             }
+        } finally {
+            mbox.lock.release();
         }
 
         // Inter-mailbox move if necessary.

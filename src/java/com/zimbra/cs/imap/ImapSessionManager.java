@@ -224,7 +224,8 @@ final class ImapSessionManager {
             i4list = loadVirtualFolder(octxt, (SearchFolder) folder);
         }
 
-        synchronized (mbox) {
+        mbox.lock.lock();
+        try {
             // need mInitialRecent to be set *before* loading the folder so we can determine what's \Recent
             folder = mbox.getFolderById(octxt, folderId);
             int recentCutoff = folder.getImapRECENTCutoff();
@@ -282,6 +283,8 @@ final class ImapSessionManager {
                 }
                 throw e;
             }
+        } finally {
+            mbox.lock.release();
         }
     }
 
@@ -467,7 +470,8 @@ final class ImapSessionManager {
         // if there are still other listeners on this folder, this session is unnecessary
         Mailbox mbox = session.getMailbox();
         if (mbox != null) {
-            synchronized (mbox) {
+            mbox.lock.lock();
+            try {
                 for (Session listener : mbox.getListeners(Session.Type.IMAP)) {
                     ImapSession i4listener = (ImapSession) listener;
                     if (i4listener != session && i4listener.getFolderId() == session.getFolderId()) {
@@ -476,6 +480,8 @@ final class ImapSessionManager {
                         return;
                     }
                 }
+            } finally {
+                mbox.lock.release();
             }
         }
     }

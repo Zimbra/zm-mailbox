@@ -115,12 +115,16 @@ public final class GetContacts extends MailDocumentHandler  {
             }
 
             if (local.size() > 0) {
-                synchronized(mbox) {
+                mbox.lock.lock();
+                try {
                     for (int id : local) {
                         Contact con = mbox.getContactById(octxt, id);
-                        if (con != null && (folderId == ALL_FOLDERS || folderId == con.getFolderId()))
+                        if (con != null && (folderId == ALL_FOLDERS || folderId == con.getFolderId())) {
                             ToXML.encodeContact(response, ifmt, con, false, attrs, fields);
+                        }
                     }
+                } finally {
+                    mbox.lock.release();
                 }
             }
         } else {

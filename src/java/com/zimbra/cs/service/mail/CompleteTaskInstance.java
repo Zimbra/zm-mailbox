@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -60,7 +60,8 @@ public class CompleteTaskInstance extends CalendarRequest {
         ItemId iid = new ItemId(request.getAttribute(MailConstants.A_ID), zsc);
         Element exceptElem = request.getElement(MailConstants.E_CAL_EXCEPTION_ID);
 
-        synchronized (mbox) {
+        mbox.lock.lock();
+        try {
             CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId());
             if (calItem == null) {
                 throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
@@ -128,6 +129,8 @@ public class CompleteTaskInstance extends CalendarRequest {
                 // No more instance left.  Delete the recurring task.
                 mbox.delete(octxt, calItem.getId(), calItem.getType());
             }
+        } finally {
+            mbox.lock.release();
         }
 
         // response

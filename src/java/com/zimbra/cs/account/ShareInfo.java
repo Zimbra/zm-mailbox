@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -116,11 +116,6 @@ public class ShareInfo {
     public ShareInfo() {
         mData = new ShareInfoData();
     }
-
-    private ShareInfo(ShareInfoData shareInfoData) {
-        mData = shareInfoData;
-    }
-
 
     public boolean hasGrant() {
         return (mGrants != null);
@@ -326,7 +321,8 @@ public class ShareInfo {
 
             Map<String, Integer> mountpoints = new HashMap<String, Integer>();
 
-            synchronized (mbox) {
+            mbox.lock.lock();
+            try {
                 // get the root node...
                 int folderId = Mailbox.ID_FOLDER_USER_ROOT;
                 Folder folder = mbox.getFolderById(octxt, folderId);
@@ -334,6 +330,8 @@ public class ShareInfo {
                 // for each subNode...
                 Set<Folder> visibleFolders = mbox.getVisibleFolders(octxt);
                 getLocalMountpoints(folder, visibleFolders, mountpoints);
+            } finally {
+                mbox.lock.release();
             }
 
             return mountpoints;
@@ -981,7 +979,7 @@ public class ShareInfo {
 
             // XML part
             MimeBodyPart xmlPart = new JavaMailMimeBodyPart();
-            xmlPart.setDataHandler(new DataHandler(new XmlPartDataSource(genXmlPart(sid, notes, locale, null))));
+            xmlPart.setDataHandler(new DataHandler(new XmlPartDataSource(genXmlPart(sid, notes, null))));
             mmp.addBodyPart(xmlPart);
 
             return mmp;
@@ -1070,7 +1068,7 @@ public class ShareInfo {
             return sb.toString();
         }
 
-        private static String genXmlPart(ShareInfoData sid, String senderNotes, Locale locale, StringBuilder sb) {
+        private static String genXmlPart(ShareInfoData sid, String senderNotes, StringBuilder sb) {
             if (sb == null)
                 sb = new StringBuilder();
             /*
@@ -1230,16 +1228,16 @@ public class ShareInfo {
                 return sb.toString();
             }
 
-            private String genXml(String dlName, Locale locale, Integer idx) {
+            private String genXml(Integer idx) {
                 StringBuilder sb = new StringBuilder();
 
                  if (idx == null) {
                     for (ShareInfoData sid : mShares) {
-                        genXmlPart(sid, null, locale, sb);
+                        genXmlPart(sid, null, sb);
                     }
-                } else
-                    genXmlPart(mShares.get(idx.intValue()), null, locale, sb);
-
+                } else {
+                    genXmlPart(mShares.get(idx.intValue()), null, sb);
+                }
                 return sb.toString();
             }
         }
@@ -1300,7 +1298,8 @@ public class ShareInfo {
          * 2. otherwise if the authed admin has a valid email address, use that.
          * 3. otherwise use the DL's address.
          */
-        private static Pair<Address, Address> getFromAndReplyToAddr(Provisioning prov, Account fromAcct, DistributionList dl) throws AddressException {
+        private static Pair<Address, Address> getFromAndReplyToAddr(Account fromAcct, DistributionList dl)
+                throws AddressException {
 
             InternetAddress addr;
 
@@ -1346,9 +1345,9 @@ public class ShareInfo {
             String shareInfoText = visitor.genText(dl.getName(), locale, idx);
             String shareInfoHtml = visitor.genHtml(dl.getName(), locale, idx);
             String shareInfoXml = null;
-            if (idx != null)
-                shareInfoXml = visitor.genXml(dl.getName(), locale, idx);
-
+            if (idx != null) {
+                shareInfoXml = visitor.genXml(idx);
+            }
             // Body
             MimeMultipart mmp = new JavaMailMimeMultipart("alternative");
 
@@ -1393,7 +1392,7 @@ public class ShareInfo {
             try {
                 SMTPMessage out = new SMTPMessage(JMSession.getSmtpSession());
 
-                Pair<Address, Address> senderAddrs = getFromAndReplyToAddr(prov, fromAcct, dl);
+                Pair<Address, Address> senderAddrs = getFromAndReplyToAddr(fromAcct, dl);
                 Address fromAddr = senderAddrs.getFirst();
                 Address replyToAddr = senderAddrs.getSecond();
 

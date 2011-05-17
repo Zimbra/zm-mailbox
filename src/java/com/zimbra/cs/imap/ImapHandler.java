@@ -2908,9 +2908,12 @@ abstract class ImapHandler {
         try {
             Mailbox mbox = i4folder.getMailbox();
             if (unsorted && i4search.canBeRunLocally()) {
-                synchronized (mbox) {
+                mbox.lock.lock();
+                try {
                     hits = i4search.evaluate(i4folder);
                     hits.remove(null);
+                } finally {
+                    mbox.lock.release();
                 }
             } else {
                 ZimbraQueryResults zqr = runSearch(i4search, i4folder, sort, requiresMODSEQ ? Mailbox.SearchResultMode.MODSEQ : Mailbox.SearchResultMode.IDS);
@@ -3005,15 +3008,19 @@ abstract class ImapHandler {
         TimeZone tz = acct == null ? null : WellKnownTimeZones.getTimeZoneById(acct.getAttr(Provisioning.A_zimbraPrefTimeZoneId));
 
         String search;
-        synchronized (mbox) {
+        mbox.lock.lock();
+        try {
             search = i4search.toZimbraSearch(i4folder);
-            if (!i4folder.isVirtual())
+            if (!i4folder.isVirtual()) {
                 search = "in:" + i4folder.getQuotedPath() + ' ' + search;
-            else if (i4folder.getSize() <= LARGEST_FOLDER_BATCH)
+            } else if (i4folder.getSize() <= LARGEST_FOLDER_BATCH) {
                 search = ImapSearch.sequenceAsSearchTerm(i4folder, i4folder.getAllMessages(), false) + ' ' + search;
-            else
+            } else {
                 search = '(' + i4folder.getQuery() + ") " + search;
+            }
             ZimbraLog.imap.info("[ search is: " + search + " ]");
+        } finally {
+            mbox.lock.release();
         }
 
         SearchParams params = new SearchParams();
@@ -3181,9 +3188,12 @@ abstract class ImapHandler {
 
         ImapMessageSet i4set;
         Mailbox mbox = i4folder.getMailbox();
-        synchronized (mbox) {
+        mbox.lock.lock();
+        try {
             i4set = i4folder.getSubsequence(tag, sequenceSet, byUID, false, true);
             i4set.remove(null);
+        } finally {
+            mbox.lock.release();
         }
 
         // if VANISHED was requested, we need to return the set of UIDs that *don't* exist in the folder
@@ -3247,11 +3257,14 @@ abstract class ImapHandler {
             }
         }
 
-        synchronized (mbox) {
+        mbox.lock.lock();
+        try {
             if (i4folder.areTagsDirty()) {
                 sendUntagged("FLAGS (" + StringUtil.join(" ", i4folder.getFlagList(false)) + ')');
                 i4folder.cleanTags();
             }
+        } finally {
+            mbox.lock.release();
         }
 
         for (ImapMessage i4msg : i4set) {
@@ -3457,8 +3470,11 @@ abstract class ImapHandler {
         Mailbox mbox = selectedFolder.getMailbox();
 
         Set<ImapMessage> i4set;
-        synchronized (mbox) {
+        mbox.lock.lock();
+        try {
             i4set = i4folder.getSubsequence(tag, sequenceSet, byUID);
+        } finally {
+            mbox.lock.release();
         }
         boolean allPresent = byUID || !i4set.contains(null);
         i4set.remove(null);
@@ -3466,19 +3482,24 @@ abstract class ImapHandler {
         try {
             // get set of relevant tags
             Set<ImapFlag> i4flags = new HashSet<ImapFlag>(flagNames.size());
-            synchronized (mbox) {
+            mbox.lock.lock();
+            try {
                 for (String name : flagNames) {
                     ImapFlag i4flag = i4folder.getFlagByName(name);
-                    if ((i4flag == null || !i4flag.mListed) && operation != StoreAction.REMOVE)
+                    if ((i4flag == null || !i4flag.mListed) && operation != StoreAction.REMOVE) {
                         i4flag = i4folder.getTagset().createTag(mbox, getContext(), name, newTags);
-                    if (i4flag != null)
+                    }
+                    if (i4flag != null) {
                         i4flags.add(i4flag);
+                    }
                 }
 
                 if (i4folder.areTagsDirty()) {
                     sendUntagged("FLAGS (" + StringUtil.join(" ", i4folder.getFlagList(false)) + ')');
                     i4folder.cleanTags();
                 }
+            } finally {
+                mbox.lock.release();
             }
 
             if (operation != StoreAction.REMOVE) {
@@ -3516,10 +3537,12 @@ abstract class ImapHandler {
             for (ImapMessage msg : i4set) {
                 // we're sending 'em off in batches of 100
                 i4list.add(msg);  idlist.add(msg.msgId);
-                if (++i % SUGGESTED_BATCH_SIZE != 0 && i != i4set.size())
+                if (++i % SUGGESTED_BATCH_SIZE != 0 && i != i4set.size()) {
                     continue;
+                }
 
-                synchronized (mbox) {
+                mbox.lock.lock();
+                try {
                     if (modseq >= 0) {
                         MailItem[] items = mbox.getItemById(getContext(), idlist, MailItem.Type.UNKNOWN);
                         for (int idx = items.length - 1; idx >= 0; idx--) {
@@ -3560,6 +3583,8 @@ abstract class ImapHandler {
                         // if it was a STORE [+-]?FLAGS.SILENT, reenable notifications
                         i4folder.enableNotifications();
                     }
+                } finally {
+                    mbox.lock.release();
                 }
 
                 if (!silent || modseqEnabled) {
@@ -3635,8 +3660,11 @@ abstract class ImapHandler {
         Mailbox mbox = i4folder.getMailbox();
 
         Set<ImapMessage> i4set;
-        synchronized (mbox) {
+        mbox.lock.lock();
+        try {
             i4set = i4folder.getSubsequence(tag, sequenceSet, byUID);
+        } finally {
+            mbox.lock.release();
         }
         // RFC 2180 4.4.1: "The server MAY disallow the COPY of messages in a multi-
         //                  accessed mailbox that contains expunged messages."
@@ -3793,7 +3821,8 @@ abstract class ImapHandler {
 
         List<String> notifications = new ArrayList<String>();
         // XXX: is this the right thing to synchronize on?
-        synchronized (mbox) {
+        mbox.lock.lock();
+        try {
             // FIXME: notify untagged NO if close to quota limit
 
             if (i4folder.areTagsDirty()) {
@@ -3810,8 +3839,9 @@ abstract class ImapHandler {
                     if (sessionActivated(ImapExtension.QRESYNC)) {
                         notifications.add("VANISHED " + ImapFolder.encodeSubsequence(expunged));
                     } else {
-                        for (Integer index : expunged)
+                        for (Integer index : expunged) {
                             notifications.add(index + " EXPUNGE");
+                        }
                     }
                 }
             }
@@ -3821,18 +3851,23 @@ abstract class ImapHandler {
             boolean sendModseq = sessionActivated(ImapExtension.CONDSTORE);
             for (Iterator<ImapFolder.DirtyMessage> it = i4folder.dirtyIterator(); it.hasNext(); ) {
                 ImapFolder.DirtyMessage dirty = it.next();
-                if (dirty.i4msg.isAdded())
+                if (dirty.i4msg.isAdded()) {
                     dirty.i4msg.setAdded(false);
-                else
+                } else {
                     notifications.add(dirty.i4msg.sequence + " FETCH (" + dirty.i4msg.getFlags(i4folder) +
-                                      (sendModseq && dirty.modseq > 0 ? " MODSEQ (" + dirty.modseq + ')' : "") + ')');
+                            (sendModseq && dirty.modseq > 0 ? " MODSEQ (" + dirty.modseq + ')' : "") + ')');
+                }
             }
             i4folder.clearDirty();
 
-            if (received || removed)
+            if (received || removed) {
                 notifications.add(i4folder.getSize() + " EXISTS");
-            if (received || oldRecent != i4folder.getRecentCount())
+            }
+            if (received || oldRecent != i4folder.getRecentCount()) {
                 notifications.add(i4folder.getRecentCount() + " RECENT");
+            }
+        } finally {
+            mbox.lock.release();
         }
 
         // no I/O while the Mailbox is locked...

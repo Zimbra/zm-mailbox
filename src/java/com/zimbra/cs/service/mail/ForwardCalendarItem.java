@@ -101,7 +101,8 @@ public class ForwardCalendarItem extends CalendarRequest {
                 null, ParseMimeMessage.NO_INV_ALLOWED_PARSER, parsedMessageData);
 
         MimeMessage[] fwdMsgs = null;
-        synchronized(mbox) {
+        mbox.lock.lock();
+        try {
             CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId());
             if (calItem == null) {
                 throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
@@ -130,35 +131,33 @@ public class ForwardCalendarItem extends CalendarRequest {
                 if (inv != null) {
                     mmInv = calItem.getSubpartMessage(inv.getMailItemId());
                 } else {
-                    if (rid != null) {
-                        // No invite found matching the RECURRENCE-ID.  It must be a non-exception instance.
-                        // Create an invite based on the series invite.
-                        Invite seriesInv = calItem.getDefaultInviteOrNull();
-                        if (seriesInv == null)
-                            throw ServiceException.INVALID_REQUEST("Instance specified but no recurrence series found", null);
-                        Invite exceptInv = seriesInv.newCopy();
-                        exceptInv.clearAlarms();
-                        exceptInv.setRecurrence(null);
-                        exceptInv.setRecurId(rid);
-                        long now = octxt != null ? octxt.getTimestamp() : System.currentTimeMillis();
-                        exceptInv.setDtStamp(now);
-                        ParsedDateTime dtStart = rid.getDt();
-                        ParsedDateTime dtEnd = dtStart.add(exceptInv.getEffectiveDuration());
-                        exceptInv.setDtStart(dtStart);
-                        exceptInv.setDtEnd(dtEnd);
-                        inv = exceptInv;
+                    assert(rid != null);
+                    // No invite found matching the RECURRENCE-ID.  It must be a non-exception instance.
+                    // Create an invite based on the series invite.
+                    Invite seriesInv = calItem.getDefaultInviteOrNull();
+                    if (seriesInv == null)
+                        throw ServiceException.INVALID_REQUEST("Instance specified but no recurrence series found", null);
+                    Invite exceptInv = seriesInv.newCopy();
+                    exceptInv.clearAlarms();
+                    exceptInv.setRecurrence(null);
+                    exceptInv.setRecurId(rid);
+                    long now = octxt != null ? octxt.getTimestamp() : System.currentTimeMillis();
+                    exceptInv.setDtStamp(now);
+                    ParsedDateTime dtStart = rid.getDt();
+                    ParsedDateTime dtEnd = dtStart.add(exceptInv.getEffectiveDuration());
+                    exceptInv.setDtStart(dtStart);
+                    exceptInv.setDtEnd(dtEnd);
+                    inv = exceptInv;
 
-                        // Carry over the MimeMessage/ParsedMessage to preserve any attachments.
-                        mmInv = calItem.getSubpartMessage(seriesInv.getMailItemId());
-                    } else {
-                        // No RECURRENCE-ID given and no invite found.
-                        throw ServiceException.INVALID_REQUEST("Invite not found for the requested RECURRENCE-ID", null);
-                    }
+                    // Carry over the MimeMessage/ParsedMessage to preserve any attachments.
+                    mmInv = calItem.getSubpartMessage(seriesInv.getMailItemId());
                 }
                 ZVCalendar cal = inv.newToICalendar(true);
                 MimeMessage mmFwd = getInstanceFwdMsg(senderAcct, inv, cal, mmInv, mm);
                 fwdMsgs = new MimeMessage[] { mmFwd };
             }
+        } finally {
+            mbox.lock.release();
         }
 
         for (MimeMessage mmFwd : fwdMsgs) {
@@ -404,6 +403,7 @@ public class ForwardCalendarItem extends CalendarRequest {
             if (mmInv != null) {
                 MimeMessage mm = new JavaMailMimeMessage(mmInv);  // Get a copy so we can modify it.
                 // Discard all old headers except Subject and Content-*.
+                @SuppressWarnings("rawtypes")
                 Enumeration eh = mmInv.getAllHeaders();
                 while (eh.hasMoreElements()) {
                     Header hdr = (Header) eh.nextElement();

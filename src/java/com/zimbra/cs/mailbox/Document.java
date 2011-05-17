@@ -113,7 +113,6 @@ public class Document extends MailItem {
 
     @Override
     public List<IndexDocument> generateIndexData() throws TemporaryIndexingException {
-        ParsedDocument pd = null;
         try {
             MailboxBlob mblob = getBlob();
             if (mblob == null) {
@@ -122,11 +121,17 @@ public class Document extends MailItem {
                 throw new MailItem.TemporaryIndexingException();
             }
 
-            synchronized (mMailbox) {
+            ParsedDocument pd = null;
+            mMailbox.lock.lock();
+            try {
                 pd = new ParsedDocument(mblob.getLocalBlob(), getName(), getContentType(),
-                    getChangeDate(), getCreator(), getDescription(), isDescriptionEnabled());
-                if (pd.hasTemporaryAnalysisFailure())
-                    throw new MailItem.TemporaryIndexingException();
+                        getChangeDate(), getCreator(), getDescription(), isDescriptionEnabled());
+            } finally {
+                mMailbox.lock.release();
+            }
+
+            if (pd.hasTemporaryAnalysisFailure()) {
+                throw new MailItem.TemporaryIndexingException();
             }
 
             IndexDocument doc = pd.getDocument();
@@ -352,7 +357,7 @@ public class Document extends MailItem {
                 !authenticatedAccount.getId().equalsIgnoreCase(mLockOwner))
             throw MailServiceException.LOCKED(mId, mLockOwner);
     }
-    
+
     @Override PendingDelete getDeletionInfo() throws ServiceException {
         PendingDelete info = new PendingDelete();
         info.rootId = mId;

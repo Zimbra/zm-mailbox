@@ -1,20 +1,17 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-
-/* created 9/26/2005 */
-
 package com.zimbra.cs.redolog.op;
 
 import java.io.ByteArrayInputStream;
@@ -42,9 +39,10 @@ import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.util.JMSession;
 
-
-public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRecorder, CreateCalendarItemPlayer 
-{
+/**
+ * @since 9/26/2005
+ */
+public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRecorder, CreateCalendarItemPlayer {
     private int mFolderId;
     private int mCalendarItemId;
     private String mCalendarItemPartStat = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
@@ -59,24 +57,24 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
     public SetCalendarItem() {
         super(MailboxOperation.SetCalendarItem);
     }
-    
+
     private void serializeSetCalendarItemData(RedoLogOutput out, Mailbox.SetCalendarItemData data)
     throws IOException {
         out.writeBoolean(true);  // keep this for backward compatibility with when SetCalendarItemData
                                  // used to have mForce field
-        
-        ICalTimeZone localTz = data.mInv.getTimeZoneMap().getLocalTimeZone();
-        out.writeUTF(localTz.encodeAsMetadata().toString());
-        
-        out.writeUTF(Invite.encodeMetadata(data.mInv).toString());
 
-        if (getVersion().atLeast(1, 24))
-            out.writeBoolean(data.mPm != null);
+        ICalTimeZone localTz = data.invite.getTimeZoneMap().getLocalTimeZone();
+        out.writeUTF(localTz.encodeAsMetadata().toString());
+
+        out.writeUTF(Invite.encodeMetadata(data.invite).toString());
+
+        if (getVersion().atLeast(1, 24)) {
+            out.writeBoolean(data.message != null);
+        }
         // If version is earlier than 1.24, we always have non-null data.mPm.
-        if (data.mPm != null) {
-            out.writeLong(data.mPm.getReceivedDate());
-            
-            byte[] pmData = data.mPm.getRawData();
+        if (data.message != null) {
+            out.writeLong(data.message.getReceivedDate());
+            byte[] pmData = data.message.getRawData();
             out.writeInt(pmData.length);
             out.write(pmData);
         }
@@ -91,11 +89,11 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
         try {
             in.readBoolean();  // keep this for backward compatibility with when SetCalendarItemData
                                // used to have mForce field
-        
+
             ICalTimeZone localTz = ICalTimeZone.decodeFromMetadata(new Metadata(in.readUTF()));
-            
-            toRet.mInv = Invite.decodeMetadata(mboxId, new Metadata(in.readUTF()), null, localTz);
-            
+
+            toRet.invite = Invite.decodeMetadata(mboxId, new Metadata(in.readUTF()), null, localTz);
+
             boolean hasPm;
             if (getVersion().atLeast(1, 24))
                 hasPm = in.readBoolean();
@@ -107,20 +105,20 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
                 int dataLen = in.readInt();
                 byte[] rawPmData = new byte[dataLen];
                 in.readFully(rawPmData, 0, dataLen);
-    
+
                 InputStream is = new ByteArrayInputStream(rawPmData);
                 MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), is);
-                
-                toRet.mPm = new ParsedMessage(mm, receivedDate, attachmentIndexingEnabled);
+
+                toRet.message = new ParsedMessage(mm, receivedDate, attachmentIndexingEnabled);
             }
         } catch (ServiceException ex) {
             ex.printStackTrace();
             throw new IOException("Cannot read serialized entry for CreateInvite "+ex.toString());
         }
-        
+
         return toRet;
     }
-    
+
     @Override protected void serializeData(RedoLogOutput out) throws IOException {
         assert(getMailboxId() != 0);
         out.writeInt(mFolderId);
@@ -142,7 +140,7 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
         if (hasDefaultInvite) {
             serializeSetCalendarItemData(out, mDefaultInvite);
         }
-        
+
         if (mExceptions == null) {
             out.writeInt(0);
         } else {
@@ -195,15 +193,16 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
         try {
             if (hasDefaultInvite) {
                 mDefaultInvite = deserializeSetCalendarItemData(in, mAttachmentIndexingEnabled);
-                tzmapInv = mDefaultInvite.mInv;
+                tzmapInv = mDefaultInvite.invite;
             }
             int numExceptions = in.readInt();
             if (numExceptions > 0) {
                 mExceptions = new Mailbox.SetCalendarItemData[numExceptions];
                 for (int i = 0; i < numExceptions; i++){
                     mExceptions[i] = deserializeSetCalendarItemData(in, mAttachmentIndexingEnabled);
-                    if (tzmapInv == null)
-                        tzmapInv = mExceptions[i].mInv;
+                    if (tzmapInv == null) {
+                        tzmapInv = mExceptions[i].invite;
+                    }
                 }
             }
         } catch (MessagingException ex) {
@@ -251,13 +250,13 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
 
     public SetCalendarItem(int mailboxId, boolean attachmentIndexingEnabled,
                            int flags, long tags) {
-        this(); 
+        this();
         setMailboxId(mailboxId);
         mAttachmentIndexingEnabled = attachmentIndexingEnabled;
         mFlags = flags;
         mTags = tags;
     }
-    
+
     public void setData(Mailbox.SetCalendarItemData defaultInvite,
                         Mailbox.SetCalendarItemData exceptions[],
                         List<ReplyInfo> replies, long nextAlarm) {
@@ -266,18 +265,18 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
         mReplies = replies;
         mNextAlarm = nextAlarm;
     }
-    
+
     public Mailbox.SetCalendarItemData getDefaultData() {
         return mDefaultInvite;
     }
-    
+
     public int getNumExceptions() {
         if (mExceptions == null) {
             return 0;
         }
         return mExceptions.length;
     }
-    
+
     public Mailbox.SetCalendarItemData getExceptionData(int exceptionNum) {
         return mExceptions[exceptionNum];
     }
@@ -299,6 +298,7 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
         mCalendarItemPartStat = partStat;
     }
 
+    @Override
     public int getFolderId() {
         return mFolderId;
     }

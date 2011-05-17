@@ -499,7 +499,8 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             return;
         }
 
-        synchronized (mbox) {
+        mbox.lock.lock();
+        try {
             // Refresh the cal item so we see the latest blob, whose path may have been changed
             // earlier in the current request.
             calItem = mbox.getCalendarItemById(octxt, calItem.getId());
@@ -590,6 +591,8 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                             new ItemId(mbox, inv.getMailItemId()), null, null, false);
                 }
             }
+        } finally {
+            mbox.lock.release();
         }
     }
 
@@ -601,7 +604,8 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             return;
         }
 
-        synchronized (mbox) {
+        mbox.lock.lock();
+        try {
             // Refresh the cal item so we see the latest blob, whose path may have been changed
             // earlier in the current request.
             calItem = mbox.getCalendarItemById(octxt, calItem.getId());
@@ -691,6 +695,8 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                         "Could not inform attendees (" + to + ") that they were removed from meeting " +
                         invToCancel.toString() + " b/c of exception: " + ex.toString());
             }
+        } finally {
+            mbox.lock.release();
         }
     }
 

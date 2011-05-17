@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -195,8 +195,9 @@ public class CalendarCollection extends Collection {
         if (!needCalendarData(ctxt)) {
             ZimbraLog.dav.debug("METADATA only");
             mMetadataOnly = true;
-            for (CalendarItem.CalendarMetadata item : mbox.getCalendarItemMetadata(ctxt.getOperationContext(), getId(), start, end))
+            for (CalendarItem.CalendarMetadata item : mbox.getCalendarItemMetadata(getId(), start, end)) {
                 appts.put(item.uid, new CalendarObject.LightWeightCalendarObject(getUri(), getOwner(), item));
+            }
         } else {
             for (CalendarItem calItem : mbox.getCalendarItemsForRange(ctxt.getOperationContext(), start, end, getId(), null))
                 appts.put(calItem.getUid(), new CalendarObject.LocalCalendarObject(ctxt, calItem));
@@ -376,11 +377,11 @@ public class CalendarCollection extends Collection {
                      */
                 }
                 if (first) {
-                    scidDefault.mInv = i;
+                    scidDefault.invite = i;
                     first = false;
                 } else {
                     SetCalendarItemData scid = new SetCalendarItemData();
-                    scid.mInv = i;
+                    scid.invite = i;
                     scidExceptions[idxExceptions++] = scid;
                 }
             }
