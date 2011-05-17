@@ -2988,8 +2988,14 @@ public class LdapProvisioning extends LdapProv {
             zlc.createEntry(entry);
 
             DistributionList dlist = getDistributionListById(zimbraIdStr, zlc);
-            AttributeManager.getInstance().postModify(listAttrs, dlist, attrManagerContext, true);
-            mAllDLs.addGroup(dlist);
+            
+            if (dlist != null) {
+                AttributeManager.getInstance().postModify(listAttrs, dlist, attrManagerContext, true);
+                mAllDLs.addGroup(dlist);
+            } else {
+                throw ServiceException.FAILURE("unable to get distribution list after creating LDAP entry: "+
+                        listAddress, null);
+            }
             return dlist;
 
         } catch (LdapEntryAlreadyExistException nabe) {

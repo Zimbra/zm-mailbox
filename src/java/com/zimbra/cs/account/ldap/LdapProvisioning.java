@@ -3135,8 +3135,14 @@ public class LdapProvisioning extends LdapProv {
             zlc.createEntry(dn, attrs, "createDistributionList");
 
             DistributionList dlist = getDistributionListById(zimbraIdStr, zlc);
-            AttributeManager.getInstance().postModify(listAttrs, dlist, attrManagerContext, true);
-            mAllDLs.addGroup(dlist);
+            
+            if (dlist != null) {
+	            AttributeManager.getInstance().postModify(listAttrs, dlist, attrManagerContext, true);
+	            mAllDLs.addGroup(dlist);
+            } else {
+            	throw ServiceException.FAILURE("unable to get distribution list after creating LDAP entry: "+
+            			listAddress, null);
+            }
             return dlist;
 
         } catch (NameAlreadyBoundException nabe) {
@@ -3171,8 +3177,10 @@ public class LdapProvisioning extends LdapProv {
             }
             ne.close();
         } catch (NameNotFoundException e) {
+        	ZimbraLog.account.warn("unable to lookup distribution list via query: "+query+ " message: "+e.getMessage(), e);
             return null;
         } catch (InvalidNameException e) {
+        	ZimbraLog.account.warn("unable to lookup distribution list via query: "+query+ " message: "+e.getMessage(), e);
             return null;
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to lookup distribution list via query: "+query+ " message: "+e.getMessage(), e);
