@@ -1212,10 +1212,6 @@ public class Mailbox {
         loadFoldersAndTags();
     }
 
-    public synchronized Metadata getConfig(OperationContext octxt, String section) throws ServiceException {
-        return getConfig(octxt, section, false);
-    }
-
     /** Returns the set of configuration info for the given section.
      *  We segment the mailbox-level configuration data into "sections" to
      *  allow server applications to store their config separate from all
@@ -1229,16 +1225,14 @@ public class Mailbox {
      *         configuration information, or <tt>null</tt> if none is
      *         found or if the caller does not have sufficient privileges
      *         to read the mailbox's config. */
-    public synchronized Metadata getConfig(OperationContext octxt, String section, boolean isBatch) throws ServiceException {
+    public synchronized Metadata getConfig(OperationContext octxt, String section) throws ServiceException {
         if (section == null || section.equals(""))
             return null;
 
         // note: defaulting to true, not false...
         boolean success = true;
         try {
-            if (!isBatch) {
-                beginTransaction("getConfig", octxt, null);
-            }
+            beginTransaction("getConfig", octxt, null);
 
             // make sure they have sufficient rights to view the config
             if (!hasFullAccess())
@@ -1257,14 +1251,8 @@ public class Mailbox {
                 return null;
             }
         } finally {
-            if (!isBatch) {
-                endTransaction(success);
-            }
+            endTransaction(success);
         }
-    }
-
-    public synchronized void setConfig(OperationContext octxt, String section, Metadata config) throws ServiceException {
-        setConfig(octxt, section, config, false);
     }
 
     /** Sets the configuration info for the given section.  We segment the
@@ -1280,16 +1268,14 @@ public class Mailbox {
      *    <li><tt>service.PERM_DENIED</tt> - if you don't have
      *        sufficient permissions</ul>
      * @see #getConfig(OperationContext, String) */
-    public synchronized void setConfig(OperationContext octxt, String section, Metadata config, boolean isBatch) throws ServiceException {
+    public synchronized void setConfig(OperationContext octxt, String section, Metadata config) throws ServiceException {
         if (section == null)
             throw new IllegalArgumentException();
 
         SetConfig redoPlayer = new SetConfig(mId, section, config);
         boolean success = false;
         try {
-            if (!isBatch) {
-                beginTransaction("setConfig", octxt, redoPlayer);
-            }
+            beginTransaction("setConfig", octxt, redoPlayer);
 
             // make sure they have sufficient rights to view the config
             if (!hasFullAccess())
@@ -1300,9 +1286,7 @@ public class Mailbox {
             DbMailbox.updateConfig(this, section, config);
             success = true;
         } finally {
-            if (!isBatch) {
-                endTransaction(success);
-            }
+            endTransaction(success);
         }
     }
 
@@ -6075,7 +6059,7 @@ public class Mailbox {
         return calItem;
     }
 
-    public Contact createContact(OperationContext octxt, ParsedContact pc, int folderId, String tags, final boolean isBatch) throws ServiceException {
+    public Contact createContact(OperationContext octxt, ParsedContact pc, int folderId, String tags) throws ServiceException {
         StoreManager sm = StoreManager.getInstance();
         StagedBlob staged = null;
         if (pc.hasAttachment()) {
@@ -6095,9 +6079,7 @@ public class Mailbox {
 
             boolean success = false;
             try {
-                if (!isBatch) {
-                    beginTransaction("createContact", octxt, redoRecorder);
-                }
+                beginTransaction("createContact", octxt, redoRecorder);
                 CreateContact redoPlayer = (CreateContact) mCurrentChange.getRedoPlayer();
                 boolean isRedo = redoPlayer != null;
 
@@ -6122,24 +6104,13 @@ public class Mailbox {
                 success = true;
                 return con;
             } finally {
-                if (!isBatch) {
-                    endTransaction(success);
-                }
-
+                endTransaction(success);
                 sm.quietDelete(staged);
             }
         }
     }
 
-    public Contact createContact(OperationContext octxt, ParsedContact pc, int folderId, String tags) throws ServiceException {
-        return createContact(octxt, pc, folderId, tags, false);
-    }
-
     public void modifyContact(OperationContext octxt, int contactId, ParsedContact pc) throws ServiceException {
-        modifyContact(octxt, contactId, pc, false);
-    }
-
-    public void modifyContact(OperationContext octxt, int contactId, ParsedContact pc, final boolean isBatch) throws ServiceException {
         StoreManager sm = StoreManager.getInstance();
         StagedBlob staged = null;
         if (pc.hasAttachment()) {
@@ -6159,9 +6130,7 @@ public class Mailbox {
 
             boolean success = false;
             try {
-                if (!isBatch) {
-                    beginTransaction("modifyContact", octxt, redoRecorder);
-                }
+                beginTransaction("modifyContact", octxt, redoRecorder);
 
                 Contact con = getContactById(contactId);
                 if (!checkItemChangeID(con))
@@ -6177,10 +6146,7 @@ public class Mailbox {
                 index.add(con);
                 success = true;
             } finally {
-                if (!isBatch) {
-                    endTransaction(success);
-                }
-
+                endTransaction(success);
                 sm.quietDelete(staged);
             }
         }
