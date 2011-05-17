@@ -364,7 +364,6 @@ public class UserServlet extends ZimbraServlet {
             return null;
         }
         
-        
         String folderPath = null;
         
         // Figure out the target server from the target user's account.
@@ -377,15 +376,16 @@ public class UserServlet extends ZimbraServlet {
         }
         Server targetServer = prov.getServer(targetAccount);
         
+
         // Avoid the soap call if its a local mailbox
         if (Provisioning.onLocalServer(targetAccount)) {
-            Mailbox mailbox = MailboxManager.getInstance().getMailboxByAccountId(authToken.getAccount().getId());
+            Mailbox mailbox = MailboxManager.getInstance().getMailboxByAccountId(targetAccount.getId());
             if(mailbox == null){
                 // no mailbox (shouldn't happen normally)
                 return null;
             }
             // Get the folder from the mailbox
-            Folder folder = mailbox.getFolderById(mpt.getFolderId());
+            Folder folder = mailbox.getFolderById(mpt.getRemoteId());
             if(folder == null) {
                 return null;
             }
@@ -404,7 +404,7 @@ public class UserServlet extends ZimbraServlet {
             }
             
             // Get an instance of their folder so we can build the path correctly
-            ZFolder folder = zmbx.getFolder(mpt.getTarget().toString(authToken.getAccount().getId()));
+            ZFolder folder = zmbx.getFolderById(mpt.getTarget().toString(authToken.getAccount().getId()));
             // if for some reason we can't find the folder, return null
             if(folder == null){
                 return null;
