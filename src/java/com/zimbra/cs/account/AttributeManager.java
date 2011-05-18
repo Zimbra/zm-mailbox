@@ -990,6 +990,22 @@ public class AttributeManager {
         return IDNType.none;
     }
 
+    /**
+     * returns whether attr is in the specified version.
+     * 
+     * An attr is considered in a version if it is introduced prior to version 
+     * or on the same version.
+     * 
+     * e.g. 
+     *   - if attr is introduced on 7.1.0, it is in 7.1.1
+     *   - if attr is introduced on 7.1.1, it is in 7.1.1
+     *   - if attr is introduced on 7.1.2, it is not in 7.1.1
+     * 
+     * @param attr
+     * @param version
+     * @return
+     * @throws ServiceException
+     */
     public boolean inVersion(String attr, String version) throws ServiceException {
         AttributeInfo ai = mAttrs.get(attr.toLowerCase());
         if (ai != null) {
@@ -998,6 +1014,31 @@ public class AttributeManager {
                 return true;
             else
                 return since.compare(version) <= 0;
+        } else
+            throw AccountServiceException.INVALID_ATTR_NAME("unknown attribute: " + attr, null);
+    }
+    
+    /**
+     * returns whether attr is introduced before the specified version.
+     * 
+     * e.g. 
+     *   - if attr is introduced on 7.1.0, it is before 7.1.1
+     *   - if attr is introduced on 7.1.1, it is *NOT* before 7.1.1
+     *   - if attr is introduced on 7.1.2, it is not before 7.1.1
+     * 
+     * @param attr
+     * @param version
+     * @return
+     * @throws ServiceException
+     */
+    public boolean beforeVersion(String attr, String version) throws ServiceException {
+        AttributeInfo ai = mAttrs.get(attr.toLowerCase());
+        if (ai != null) {
+            Version since = ai.getSince();
+            if (since == null)
+                return true;
+            else
+                return since.compare(version) < 0;
         } else
             throw AccountServiceException.INVALID_ATTR_NAME("unknown attribute: " + attr, null);
     }
