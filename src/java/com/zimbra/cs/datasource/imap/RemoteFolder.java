@@ -32,6 +32,7 @@ import com.zimbra.cs.mailclient.imap.ResponseText;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 final class RemoteFolder {
@@ -142,6 +143,15 @@ final class RemoteFolder {
         // result.
         if (endUid <= 0 && uids.size() == 1 && uids.get(0) < startUid) {
             return Collections.emptyList();
+        }
+        //Yahoo sometimes returns out-of-range UIDs; bug 59773
+        Iterator<Long> it = uids.iterator();
+        while (it.hasNext()) {
+            Long uid = it.next();
+            if (uid < startUid || (endUid > 0 && uid > endUid)) {
+                LOG.warn("UID FETCH %d:%d returned UID out of range: %d", startUid, endUid, uid);
+                it.remove();
+            }
         }
         // Sort UIDs in reverse order so we download latest messages first
         Collections.sort(uids, Collections.reverseOrder());
