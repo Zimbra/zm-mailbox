@@ -14,7 +14,9 @@
  */
 package com.zimbra.cs.service.formatter;
 
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PushbackInputStream;
@@ -23,6 +25,11 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.MemoryCacheImageInputStream;
+import javax.imageio.stream.MemoryCacheImageOutputStream;
 import javax.mail.MessagingException;
 import javax.mail.Part;
 import javax.mail.internet.MimeMessage;
@@ -32,11 +39,15 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.MimeDetect;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
+import com.zimbra.common.util.ImageUtil;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.html.HtmlDefang;
@@ -44,12 +55,11 @@ import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Document;
-import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedDocument;
@@ -68,6 +78,8 @@ public class NativeFormatter extends Formatter {
     public static final String ATTR_CONTENTURL = "contenturl";
     public static final String ATTR_CONTENTTYPE = "contenttype";
     public static final String ATTR_CONTENTLENGTH = "contentlength";
+    
+    private static final Log log = LogFactory.getLog(NativeFormatter.class);
 
     @Override
     public FormatType getType() {
@@ -187,13 +199,98 @@ public class NativeFormatter extends Formatter {
 
             boolean html = checkGlobalOverride(Provisioning.A_zimbraAttachmentsViewInHtmlOnly,
                     context.getAuthAccount()) || (context.hasView() && context.getView().equals(HTML_VIEW));
-            if (!html || ExtensionUtil.getExtension("convertd") == null) {
-                String defaultCharset = context.targetAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null);
-                sendbackOriginalDoc(mp, contentType, defaultCharset, context.req, context.resp);
-            } else {
-                handleConversion(context, mp.getInputStream(), Mime.getFilename(mp), contentType, item.getDigest(), mp.getSize());
+            InputStream in = null;
+            try {
+                if (!html || ExtensionUtil.getExtension("convertd") == null) {
+                    byte[] data = null;
+                    
+                    // If this is an image that exceeds the max size, resize it.  Don't resize
+                    // gigantic images because ImageIO reads image content into memory.
+                    if (context.hasMaxWidth() && (Mime.getSize(mp) < LC.max_image_size_to_resize.intValue())) {
+                        try {
+                            data = getResizedImageData(mp, context.getMaxWidth());
+                        } catch (Exception e) {
+                            log.info("Unable to resize image.  Returning original content.", e);
+                        }
+                    }
+
+                    // Return the data, or resized image if available.
+                    long size = 0;
+                    if (data != null) {
+                        in = new ByteArrayInputStream(data);
+                        size = data.length;
+                    } else {
+                        in = mp.getInputStream();
+                        String enc = mp.getEncoding();
+                        if (enc != null) {
+                            enc = enc.toLowerCase();
+                        }
+                        size = enc == null || enc.equals("7bit") || enc.equals("8bit") || enc.equals("binary") ? mp.getSize() : 0;
+                    }
+                    String defaultCharset = context.targetAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null);
+                    sendbackOriginalDoc(in, contentType, defaultCharset, Mime.getFilename(mp), mp.getDescription(), size, context.req, context.resp);
+                } else {
+                    in = mp.getInputStream();
+                    handleConversion(context, in, Mime.getFilename(mp), contentType, item.getDigest(), mp.getSize());
+                }
+            } finally {
+                ByteUtil.closeStream(in);
             }
         }
+    }
+    
+    /**
+     * If the image stored in the {@code MimePart} exceeds the given width,
+     * shrinks the image and returns the shrunk data.  If the
+     * image width is smaller than {@code maxWidth} or resizing is not supported,
+     * returns {@code null}. 
+     */
+    private static byte[] getResizedImageData(MimePart mp, int maxWidth)
+    throws IOException, MessagingException {
+        ImageReader reader = null;
+        ImageWriter writer = null;
+        InputStream in = null;
+        
+        try {
+            // Get ImageReader for stream content.
+            reader = ImageUtil.getImageReader(Mime.getContentType(mp), mp.getFileName());
+            if (reader == null) {
+                log.debug("No ImageReader available.");
+                return null;
+            }
+
+            // Read message content.
+            in = mp.getInputStream();
+            reader.setInput(new MemoryCacheImageInputStream(in));
+            BufferedImage img = reader.read(0);
+            if (img.getWidth() <= maxWidth) {
+                log.debug("Image width %d is less than max %d.  Not resizing.", img.getWidth(), maxWidth);
+                return null;
+            }
+            
+            // Resize.
+            writer = ImageIO.getImageWriter(reader);
+            if (writer == null) {
+                log.debug("No ImageWriter available.");
+                return null;
+            }
+            int height = (int) ((double) maxWidth / (double) img.getWidth() * img.getHeight());
+            BufferedImage small = ImageUtil.resize(img, maxWidth, height);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            writer.setOutput(new MemoryCacheImageOutputStream(out));
+            writer.write(small);
+            return out.toByteArray();
+        } finally {
+            ByteUtil.closeStream(in);
+            if (reader != null) {
+                reader.dispose();
+            }
+            if (writer != null) {
+                writer.dispose();
+            }
+        }
+        
+        
     }
 
     private void handleDocument(UserServletContext context, Document doc) throws IOException, ServiceException, ServletException {
@@ -237,15 +334,6 @@ public class NativeFormatter extends Formatter {
 
     public static MimePart getMimePart(Message msg, String part) throws IOException, MessagingException, ServiceException {
         return Mime.getMimePart(msg.getMimeMessage(), part);
-    }
-
-    public static void sendbackOriginalDoc(MimePart mp, String contentType, String defaultCharset, HttpServletRequest req, HttpServletResponse resp)
-    throws IOException, MessagingException {
-        String enc = mp.getEncoding();
-        if (enc != null)
-            enc = enc.toLowerCase();
-        long size = enc == null || enc.equals("7bit") || enc.equals("8bit") || enc.equals("binary") ? mp.getSize() : 0;
-        sendbackOriginalDoc(mp.getInputStream(), contentType, defaultCharset, Mime.getFilename(mp), mp.getDescription(), size, req, resp);
     }
 
     public static void sendbackOriginalDoc(InputStream is, String contentType, String defaultCharset, String filename, String desc,

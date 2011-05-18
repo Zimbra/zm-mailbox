@@ -41,6 +41,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.cs.account.Account;
@@ -413,6 +414,27 @@ public final class UserServletContext {
 
     public boolean isAnonymousRequest() {
         return authAccount.equals(GuestAccount.ANONYMOUS_ACCT);
+    }
+    
+    public boolean hasMaxWidth() {
+        return getMaxWidth() != null;
+    }
+    
+    /**
+     * Returns the maximum width of the image returned by this request, or
+     * {@code null} if the max with is not specified or invalid.
+     */
+    public Integer getMaxWidth() {
+        String s = params.get(UserServlet.QP_MAX_WIDTH);
+        if (StringUtil.isNullOrEmpty(s)) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(s);
+        } catch (NumberFormatException e) {
+            UserServlet.log.warn("Ignoring invalid maxWidth value: " + s);
+            return null;
+        }
     }
 
     /** Default maximum upload size for PUT/POST write ops: 10MB. */

@@ -47,6 +47,8 @@ import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
@@ -222,8 +224,12 @@ public class UserServlet extends ZimbraServlet {
 
     public static final String HTTP_URL = "http_url";
     public static final String HTTP_STATUS_CODE = "http_code";
+    
+    public static final String QP_MAX_WIDTH = "max_width";
 
     protected static final String MSGPAGE_BLOCK = "errorpage.attachment.blocked";
+    
+    public static final Log log = LogFactory.getLog(UserServlet.class); 
 
     /** Returns the REST URL for the account. */
     public static String getRestUrl(Account acct) throws ServiceException {
@@ -242,7 +248,7 @@ public class UserServlet extends ZimbraServlet {
 
     private void sendError(UserServletContext ctxt, HttpServletRequest req, HttpServletResponse resp, String message) throws IOException {
         if(resp.isCommitted()) {
-            ZimbraLog.io.info("Response already committed. Skipping sending error code for response");
+            log.info("Response already committed. Skipping sending error code for response");
             return;
         }
         if (ctxt != null &&!ctxt.cookieAuthHappened && ctxt.basicAuthAllowed() && !ctxt.basicAuthHappened) {
@@ -443,11 +449,11 @@ public class UserServlet extends ZimbraServlet {
     
     private void doAuthGet(HttpServletRequest req, HttpServletResponse resp, UserServletContext context)
     throws ServletException, IOException, ServiceException, UserServletException {
-        if (ZimbraLog.mailbox.isDebugEnabled()) {
+        if (log.isDebugEnabled()) {
             StringBuffer reqURL = context.req.getRequestURL();
             String queryParam = context.req.getQueryString();
             if (queryParam != null) reqURL.append('?').append(queryParam);
-            ZimbraLog.mailbox.debug("UserServlet: " + reqURL.toString());
+            log.debug("UserServlet: " + reqURL.toString());
         }
 
         context.opContext = new OperationContext(context.getAuthAccount(), isAdminRequest(req));
@@ -513,7 +519,7 @@ public class UserServlet extends ZimbraServlet {
             if (mbox != null) {
                 ZimbraLog.addMboxToContext(mbox.getId());
 
-                ZimbraLog.mailbox.info("UserServlet (POST): " + context.req.getRequestURL().toString());
+                log.info("POST: " + context.req.getRequestURL().toString());
 
                 context.opContext = new OperationContext(context.getAuthAccount(), isAdminRequest(req));
 
@@ -674,15 +680,13 @@ public class UserServlet extends ZimbraServlet {
 
     @Override
     public void init() throws ServletException {
-        String name = getServletName();
-        ZimbraLog.mailbox.info("Servlet " + name + " starting up");
+        log.info("Starting up");
         super.init();
     }
 
     @Override
     public void destroy() {
-        String name = getServletName();
-        ZimbraLog.mailbox.info("Servlet " + name + " shutting down");
+        log.info("Shutting down");
         super.destroy();
     }
 
@@ -878,7 +882,7 @@ public class UserServlet extends ZimbraServlet {
             url = method.getURI().toString();
             hostname = method.getURI().getHost();
         } catch (IOException e) {
-            ZimbraLog.mailbox.warn("can't parse target URI", e);
+            log.warn("can't parse target URI", e);
         }
 
         HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
