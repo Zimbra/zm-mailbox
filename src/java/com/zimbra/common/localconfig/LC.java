@@ -1084,6 +1084,8 @@ public final class LC {
     public static final KnownKey zimbra_vami_user = KnownKey.newKey("vmware");
     public static final KnownKey zimbra_vami_password = KnownKey.newKey("vmware").protect();
     public static final KnownKey zimbra_vami_installmode = KnownKey.newKey("single");
+    
+    public static final KnownKey max_image_size_to_resize = KnownKey.newKey(10 * 1024 * 1024);
 
     static {
         // Automatically set the key name with the variable name.
