@@ -106,7 +106,8 @@ extends TestCase {
         LC.javamail_imap_enable_starttls.setDefault(Boolean.toString(false));
     }
     
-    public void testImapImport()
+    // Disabled test until bug 60057 is fixed.
+    public void disabledTestImapImport()
     throws Exception {
         List<ZMessage> msgs;
         ZMessage msg;
