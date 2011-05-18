@@ -102,9 +102,10 @@ public class CosAndGlobalConfigDefault extends LdapUpgrade {
         if (attrVersion == null)
             return false;  // no version info, i.e. a 4.X attr, not need to upgrade
 
-        if (!am.inVersion(attr, since) && !attrVersion.isFuture())
+        if (!am.beforeVersion(attr, since) && !attrVersion.isFuture())
             return true;
-
+        
+        
         //
         // bug 38426
         //
