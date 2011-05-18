@@ -212,8 +212,14 @@ public class ToXML {
 
         if (needToOutput(fields, Change.MODIFIED_URL)) {
             String url = folder.getUrl();
-            if (!url.equals("") || fields != NOTIFY_FIELDS)
+            if (!url.equals("") || fields != NOTIFY_FIELDS){
+                // Note: in this case, a url on a folder object
+                // is not a url to the folder, but the url to another item that's
+                // external of the mail system. In most cases this is a 'synced' folder
+                // that is either RSS or a remote calendar object
                 elem.addAttribute(MailConstants.A_URL, HttpUtil.sanitizeURL(url));
+            }
+                
         }
 
         Mailbox mbox = folder.getMailbox();
@@ -237,11 +243,9 @@ public class ToXML {
         }
         
         try {
-            if(!folder.getAccount().equals(octxt.getAuthenticatedUser())){
-                String url = UserServlet.getExternalRestUrl(octxt, folder);
-                if(url != null ){
-                    elem.addAttribute(MailConstants.A_URL, url);
-                }
+            String url = UserServlet.getExternalRestUrl(folder);
+            if(url != null ){
+                elem.addAttribute(MailConstants.A_REST_URL, url);
             }
         } catch (ServiceException e) {
             ZimbraLog.soap.warn("Error encoding external rest url for folder", e);
@@ -418,7 +422,7 @@ public class ToXML {
         try {
             String remoteUrl = UserServlet.getExternalRestUrl(octx, mpt);
             if(remoteUrl != null) {
-                elem.addAttribute(MailConstants.A_URL, remoteUrl);
+                elem.addAttribute(MailConstants.A_REST_URL, remoteUrl);
             }
         }
          catch (ServiceException e) {

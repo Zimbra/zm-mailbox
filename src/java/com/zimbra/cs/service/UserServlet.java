@@ -428,7 +428,7 @@ public class UserServlet extends ZimbraServlet {
      * @return The url for the mountpoint/share that goes back to the original user/share/server
      * @throws ServiceException 
      */
-    public static String getExternalRestUrl(OperationContext octxt, Folder folder) throws ServiceException {
+    public static String getExternalRestUrl(Folder folder) throws ServiceException {
         // Figure out the target server from the target user's account.
         // This will let us get the correct server/port
         Provisioning prov = Provisioning.getInstance();
