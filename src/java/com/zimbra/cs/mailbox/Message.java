@@ -450,7 +450,7 @@ public class Message extends MailItem {
             boolean sentByMe = false;
             String pmSender = pm.getSenderEmail();
             if (pmSender != null && pmSender.length() > 0)
-                sentByMe = AccountUtil.addressMatchesAccount(acct, pmSender);
+                sentByMe = AccountUtil.addressMatchesAccountOrSendAs(acct, pmSender);
 
             try {
                 components = Invite.createFromCalendar(acct, pm.getFragment(), cal, sentByMe, mbox, id);

@@ -759,7 +759,7 @@ public class MailSender {
             // if the call doesn't require a Sender but the caller supplied one, pass it through if it's acceptable
             Address addr = mm.getSender();
             if (addr != null && addr instanceof InternetAddress) {
-                if (AccountUtil.addressMatchesAccount(authuser, ((InternetAddress) addr).getAddress()))
+                if (AccountUtil.addressMatchesAccountOrSendAs(authuser, ((InternetAddress) addr).getAddress()))
                     sender = (InternetAddress) addr;
             }
         }

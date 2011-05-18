@@ -152,7 +152,7 @@ class AppendMessage {
         try {
             if (!pm.getSender().equals("")) {
                 InternetAddress ia = new JavaMailInternetAddress(pm.getSender());
-                if (AccountUtil.addressMatchesAccount(mbox.getAccount(), ia.getAddress()))
+                if (AccountUtil.addressMatchesAccountOrSendAs(mbox.getAccount(), ia.getAddress()))
                     flags |= Flag.BITMASK_FROM_ME;
             }
         } catch (Exception e) { }
