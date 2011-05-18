@@ -241,15 +241,6 @@ public class ToXML {
                 }
             }
         }
-        
-        try {
-            String url = UserServlet.getExternalRestUrl(folder);
-            if(url != null ){
-                elem.addAttribute(MailConstants.A_REST_URL, url);
-            }
-        } catch (ServiceException e) {
-            ZimbraLog.soap.warn("Error encoding external rest url for folder", e);
-        }
         return elem;
     }
 
@@ -416,13 +407,18 @@ public class ToXML {
     public static Element encodeMountpoint(Element parent, ItemIdFormatter ifmt, OperationContext octx, Mountpoint mpt, int fields) {
         
         Element elem = parent.addElement(MailConstants.E_MOUNT);
-                
-        // Add the original rest url to the responds if this mount point
-        // is from another user's mailbox
+        // check to see if this is a delegate request (like bes) 
+        boolean remote = octx != null && octx.isDelegatedRequest(mpt.getMailbox());
+
         try {
-            String remoteUrl = UserServlet.getExternalRestUrl(octx, mpt);
-            if(remoteUrl != null) {
-                elem.addAttribute(MailConstants.A_REST_URL, remoteUrl);
+            // only construct the external url if this isn't a remote request.
+            // remote/delegate requests have managed to ping pong back and forth between
+            // servers and tie things up.
+            if(!remote){
+                String remoteUrl = UserServlet.getExternalRestUrl(octx, mpt);
+                if(remoteUrl != null) {
+                    elem.addAttribute(MailConstants.A_REST_URL, remoteUrl);
+                }
             }
         }
          catch (ServiceException e) {

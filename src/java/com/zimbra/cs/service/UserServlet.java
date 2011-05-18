@@ -364,12 +364,12 @@ public class UserServlet extends ZimbraServlet {
      * @throws ServiceException 
      */
     public static String getExternalRestUrl(OperationContext octxt, Mountpoint mpt) throws ServiceException {
+        AuthToken authToken = octxt.getAuthToken();
         // check to see if it is a local mount point, if it is there's 
         // no need to do anything
         if(mpt.isLocal()) {
             return null;
         }
-        
         
         String folderPath = null;
         
@@ -383,15 +383,16 @@ public class UserServlet extends ZimbraServlet {
         }
         Server targetServer = prov.getServer(targetAccount);
         
+
         // Avoid the soap call if its a local mailbox
         if (Provisioning.onLocalServer(targetAccount)) {
-            Mailbox mailbox = MailboxManager.getInstance().getMailboxByAccountId(octxt.getAuthToken().getAccount().getId());
+            Mailbox mailbox = MailboxManager.getInstance().getMailboxByAccountId(targetAccount.getId());
             if(mailbox == null){
                 // no mailbox (shouldn't happen normally)
                 return null;
             }
             // Get the folder from the mailbox
-            Folder folder = mailbox.getFolderById(octxt, mpt.getFolderId());
+            Folder folder = mailbox.getFolderById(octxt, mpt.getRemoteId());
             if(folder == null) {
                 return null;
             }
@@ -399,7 +400,7 @@ public class UserServlet extends ZimbraServlet {
         } else {
             // The remote server case
             // Get the target user's mailbox.. 
-            ZMailbox.Options zoptions = new ZMailbox.Options(octxt.getAuthToken().toZAuthToken(), AccountUtil.getSoapUri(targetAccount));
+            ZMailbox.Options zoptions = new ZMailbox.Options(authToken.toZAuthToken(), AccountUtil.getSoapUri(targetAccount));
             zoptions.setTargetAccount(mpt.getOwnerId());
             zoptions.setTargetAccountBy(AccountBy.id);
             zoptions.setNoSession(true);
@@ -410,7 +411,7 @@ public class UserServlet extends ZimbraServlet {
             }
             
             // Get an instance of their folder so we can build the path correctly
-            ZFolder folder = zmbx.getFolder(mpt.getTarget().toString(octxt.getAuthToken().getAccount().getId()));
+             ZFolder folder = zmbx.getFolderById(mpt.getTarget().toString(authToken.getAccount().getId()));
             // if for some reason we can't find the folder, return null
             if(folder == null){
                 return null;
