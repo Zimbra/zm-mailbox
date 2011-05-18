@@ -628,14 +628,10 @@ public class DefangFilter extends DefaultFilter {
      * @param aName The attribute name
      * @param attributes The set of the attribtues
      * @param i The index of the attribute
-     * @return true fi the attr should be removed, false if not
+     * @return true if the attr should be removed, false if not
      */
     private boolean removeAttrValue(String eName, String aName, XMLAttributes attributes, int i) {
         String value = attributes.getValue(i);
-        //System.out.println("==== "+eName+" "+aName+" ("+value+")");
-        value = AV_JS_ENTITY.matcher(value).replaceAll("JS-ENTITY-BLOCKED");
-        value = AV_SCRIPT_TAG.matcher(value).replaceAll("SCRIPT-TAG-BLOCKED");
-       
         if (aName.equalsIgnoreCase("href") || aName.equalsIgnoreCase("src") || aName.equalsIgnoreCase("longdesc") || aName.equalsIgnoreCase("usemap")){
             if (!VALID_URL.matcher(value).find()) {
                 return true;
