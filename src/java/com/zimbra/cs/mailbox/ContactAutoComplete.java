@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -17,7 +17,6 @@ package com.zimbra.cs.mailbox;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -27,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.google.common.io.Closeables;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -161,7 +161,7 @@ public class ContactAutoComplete {
                 canExpand = GalSearchControl.canExpandGalGroup(email, zimbraId, authedAcct);
             setIsGalGroup(canExpand);
         }
-        
+
         void setIsGalGroup(boolean canExpand) {
             mIsGroup = true;
             mCanExpandGroupMembers = canExpand;
@@ -246,7 +246,7 @@ public class ContactAutoComplete {
     private ZimbraSoapContext mZsc;
     private Account mAuthedAcct;
     private Account mRequestedAcct;
-    
+
 
     private static final String[] DEFAULT_EMAIL_KEYS = {
         ContactConstants.A_email, ContactConstants.A_email2, ContactConstants.A_email3
@@ -284,7 +284,7 @@ public class ContactAutoComplete {
         }
         mSearchType = GalSearchType.account;
     }
-    
+
     private String getRequestedAcctId() {
         return mRequestedAcct.getId();
     }
@@ -352,15 +352,15 @@ public class ContactAutoComplete {
         ZimbraLog.gal.info("autocomplete: overall="+(t3-t0)+"ms, ranking="+(t1-t0)+"ms, folder="+(t2-t1)+"ms, gal="+(t3-t2)+"ms");
         return result;
     }
-    
+
     /**
-     * ranking table and local contact matches don't have group indicator persisted on them, 
+     * ranking table and local contact matches don't have group indicator persisted on them,
      * cross-ref GAL to check if the address is a group.
-     * 
-     * If the address is a group, set group info in the ContactEntry object.  Also, change the 
-     * folder ID to GAL.  Client relies on this to display the expand icon, otherwise it would 
+     *
+     * If the address is a group, set group info in the ContactEntry object.  Also, change the
+     * folder ID to GAL.  Client relies on this to display the expand icon, otherwise it would
      * consider the entry a local contact group and will not offer to expand it.
-     * 
+     *
      * @param entry
      * @param email
      * @return true if the address is a group, false otherwise
@@ -370,7 +370,7 @@ public class ContactAutoComplete {
         if (groupInfo != null) {
             boolean canExpand = (GalGroup.GroupInfo.CAN_EXPAND == groupInfo);
             entry.setIsGalGroup(canExpand);
-            
+
             // set folder ID to GAL, client relies on this to display the expand icon
             entry.mFolderId = FOLDER_ID_GAL;
         }
@@ -619,9 +619,7 @@ public class ContactAutoComplete {
                 }
             }
         } finally {
-            if (qres != null) {
-                qres.doneWithSearchResults();
-            }
+            Closeables.closeQuietly(qres);
         }
     }
 

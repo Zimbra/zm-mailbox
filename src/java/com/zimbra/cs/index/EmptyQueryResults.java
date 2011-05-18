@@ -56,7 +56,7 @@ final class EmptyQueryResults extends ZimbraQueryResultsImpl {
     }
 
     @Override
-    public void doneWithSearchResults() {
+    public void close() {
     }
 
     @Override

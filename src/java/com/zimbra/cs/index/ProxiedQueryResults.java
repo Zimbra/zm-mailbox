@@ -197,7 +197,7 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
     }
 
     @Override
-    public void doneWithSearchResults() {
+    public void close() {
     }
 
     @Override

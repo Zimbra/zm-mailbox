@@ -79,7 +79,7 @@ public class MockQueryResults extends ZimbraQueryResultsImpl {
     }
 
     @Override
-    public void doneWithSearchResults() throws ServiceException {
+    public void close() {
         hits = null;
     }
 

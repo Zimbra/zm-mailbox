@@ -15,6 +15,7 @@
 
 package com.zimbra.cs.index;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
@@ -62,8 +63,8 @@ class UngroupedQueryResults extends ZimbraQueryResultsImpl {
     }
 
     @Override
-    public void doneWithSearchResults() throws ServiceException {
-        results.doneWithSearchResults();
+    public void close() throws IOException {
+        results.close();
     }
 
     @Override

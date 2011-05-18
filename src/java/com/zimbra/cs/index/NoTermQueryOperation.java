@@ -132,7 +132,7 @@ public final class NoTermQueryOperation extends QueryOperation {
     }
 
     @Override
-    public void doneWithSearchResults() {
+    public void close() {
     }
 
     @Override

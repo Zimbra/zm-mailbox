@@ -26,6 +26,7 @@ import java.util.Set;
 import org.jivesoftware.wildfire.XMPPServer;
 
 import com.google.common.collect.Iterables;
+import com.google.common.io.Closeables;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -120,7 +121,7 @@ public class Search extends MailDocumentHandler  {
             putHits(zsc, octxt, response, results, params);
             return response;
         } finally {
-            results.doneWithSearchResults();
+            Closeables.closeQuietly(results);
         }
     }
 

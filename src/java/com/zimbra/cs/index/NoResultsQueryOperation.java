@@ -115,8 +115,7 @@ public final class NoResultsQueryOperation extends QueryOperation {
     }
 
     @Override
-    public void doneWithSearchResults() {
-        //empty
+    public void close() {
     }
 
     @Override

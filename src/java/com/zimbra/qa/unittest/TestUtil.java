@@ -39,6 +39,7 @@ import junit.framework.TestCase;
 import org.testng.TestListenerAdapter;
 import org.testng.TestNG;
 
+import com.google.common.io.Closeables;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.service.ServiceException;
@@ -359,15 +360,14 @@ extends Assert {
     /**
      * Searches a mailbox and returns the id's of all matching items.
      */
-    public static List<Integer> search(Mailbox mbox, String query, Set<MailItem.Type> types)
-            throws ServiceException {
+    public static List<Integer> search(Mailbox mbox, String query, Set<MailItem.Type> types) throws ServiceException {
         List<Integer> ids = new ArrayList<Integer>();
         ZimbraQueryResults r = mbox.index.search(new OperationContext(mbox), query, types, SortBy.DATE_DESC, 100);
         while (r.hasNext()) {
             ZimbraHit hit = r.getNext();
             ids.add(new Integer(hit.getItemId()));
         }
-        r.doneWithSearchResults();
+        Closeables.closeQuietly(r);
         return ids;
     }
 

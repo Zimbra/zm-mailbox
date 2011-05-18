@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -20,6 +20,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.google.common.base.Strings;
+import com.google.common.io.Closeables;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.AccountConstants;
@@ -387,11 +388,10 @@ public class GalSearchControl {
             callback.setQueryOffset(searchParams.getOffset());
             callback.setHasMoreResult(pager.hasNext());
         } catch (Exception e) {
-            ZimbraLog.gal.warn("search on GalSync account failed for "+galAcct.getId(), e);
+            ZimbraLog.gal.warn("search on GalSync account failed for %s", galAcct.getId(), e);
             return false;
         } finally {
-            if (zqr != null)
-                try { zqr.doneWithSearchResults(); } catch (ServiceException e) {}
+            Closeables.closeQuietly(zqr);
         }
         return true;
     }

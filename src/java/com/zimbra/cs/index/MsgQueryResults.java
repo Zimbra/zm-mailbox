@@ -15,6 +15,7 @@
 
 package com.zimbra.cs.index;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -130,8 +131,8 @@ final class MsgQueryResults extends ZimbraQueryResultsImpl {
     }
 
     @Override
-    public void doneWithSearchResults() throws ServiceException {
-        results.doneWithSearchResults();
+    public void close() throws IOException {
+        results.close();
     }
 
     @Override

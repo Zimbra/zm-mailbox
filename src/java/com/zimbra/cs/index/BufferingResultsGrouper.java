@@ -15,6 +15,7 @@
 
 package com.zimbra.cs.index;
 
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -102,8 +103,8 @@ public abstract class BufferingResultsGrouper implements ZimbraQueryResults {
     }
 
     @Override
-    public void doneWithSearchResults() throws ServiceException {
-        hits.doneWithSearchResults();
+    public void close() throws IOException {
+        hits.close();
     }
 
     @Override

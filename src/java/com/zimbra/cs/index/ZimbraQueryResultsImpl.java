@@ -86,9 +86,6 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
     };
 
     @Override
-    public abstract void doneWithSearchResults() throws ServiceException;
-
-    @Override
     public abstract ZimbraHit skipToHit(int hitNo) throws ServiceException;
 
     @Override

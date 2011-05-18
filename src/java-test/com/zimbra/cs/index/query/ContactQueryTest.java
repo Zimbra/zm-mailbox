@@ -78,7 +78,7 @@ public final class ContactQueryTest {
                 EnumSet.of(MailItem.Type.CONTACT), SortBy.NONE, 100);
         Assert.assertTrue(results.hasNext());
         Assert.assertEquals(contact.getId(), results.getNext().getItemId());
-        results.doneWithSearchResults();
+        results.close();
     }
 
 }

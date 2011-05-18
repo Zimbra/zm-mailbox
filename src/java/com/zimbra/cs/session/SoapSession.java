@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.io.Closeables;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
@@ -399,66 +400,60 @@ public class SoapSession extends Session {
         }
     }
 
-    // Read/write access to all these members requires synchronizing on "this".
-    private String mQueryStr = "";
-    private String mGroupBy  = "";
-    private String mSortBy   = "";
-    private ZimbraQueryResults mQueryResults;
-
-    private int  mRecentMessages;
-    private long mPreviousAccess = -1;
-    private long mLastWrite      = -1;
-
-    // read/write access to all these members requires synchronizing on "mSentChanges"
-    protected   int mForceRefresh;
-    protected LinkedList<QueuedNotifications> mSentChanges = new LinkedList<QueuedNotifications>();
-    protected QueuedNotifications mChanges = new QueuedNotifications(1);
-
-    private PushChannel mPushChannel = null;
-
-    private boolean mUnregistered;
-    private Map<String, DelegateSession> mDelegateSessions = new HashMap<String, DelegateSession>(3);
-    private List<RemoteSessionInfo> mRemoteSessions;
-
-    private boolean mAsAdmin;
-
     static final long SOAP_SESSION_TIMEOUT_MSEC = Math.max(5, LC.zimbra_session_timeout_soap.intValue()) * Constants.MILLIS_PER_SECOND;
-
     // if a keepalive request to a remote session failed, how long to wait before a new ping is permitted
     private static final long MINIMUM_PING_RETRY_TIME = 30 * Constants.MILLIS_PER_SECOND;
-
     private static final int MAX_QUEUED_NOTIFICATIONS = LC.zimbra_session_max_pending_notifications.intValue();
 
+    // Read/write access to all these members requires synchronizing on "this".
+    private String queryString = "";
+    private String groupBy = "";
+    private String sortBy = "";
+    private ZimbraQueryResults queryResults;
+    private int  recentMessages;
+    private long previousAccess = -1;
+    private long lastWrite      = -1;
+
+    // read/write access to all these members requires synchronizing on "mSentChanges"
+    protected int forceRefresh;
+    protected LinkedList<QueuedNotifications> sentChanges = new LinkedList<QueuedNotifications>();
+    protected QueuedNotifications changes = new QueuedNotifications(1);
+    private PushChannel pushChannel;
+    private boolean unregistered;
+    private Map<String, DelegateSession> delegateSessions = new HashMap<String, DelegateSession>(3);
+    private List<RemoteSessionInfo> remoteSessions;
+    private boolean asAdmin;
+    private boolean isOffline = false;
 
     /** Creates a <tt>SoapSession</tt> owned by the given account and
      *  listening on its {@link Mailbox}.
      * @see Session#register() */
     public SoapSession(String authenticatedId, boolean asAdmin) {
         super(authenticatedId, Session.Type.SOAP);
-        mAsAdmin = asAdmin;
+        this.asAdmin = asAdmin;
     }
 
-    @Override public SoapSession register() throws ServiceException {
+    @Override
+    public SoapSession register() throws ServiceException {
         super.register();
 
         Mailbox mbox = mMailbox;
         if (mbox != null) {
-            mRecentMessages = mbox.getRecentMessageCount();
-            mPreviousAccess = mbox.getLastSoapAccessTime();
-            mUnregistered = false;
-
-            if (ZimbraLog.session.isDebugEnabled())
-                ZimbraLog.session.debug("initializing session recent count to " + mRecentMessages);
+            recentMessages = mbox.getRecentMessageCount();
+            previousAccess = mbox.getLastSoapAccessTime();
+            unregistered = false;
+            ZimbraLog.session.debug("initializing session recent count to %d", recentMessages);
         }
         return this;
     }
 
-    @Override public SoapSession unregister() {
+    @Override
+    public SoapSession unregister() {
         // when the session goes away, record the timestamp of the last write op to the database
         Mailbox mbox = mMailbox;
-        if (mLastWrite != -1 && mbox != null) {
+        if (lastWrite != -1 && mbox != null) {
             try {
-                mbox.recordLastSoapAccessTime(mLastWrite);
+                mbox.recordLastSoapAccessTime(lastWrite);
             } catch (OutOfMemoryError e) {
                 Zimbra.halt("out of memory", e);
             } catch (Throwable t) {
@@ -468,58 +463,60 @@ public class SoapSession extends Session {
 
         // unloading a SoapSession also must unload all its delegates
         List<DelegateSession> delegates;
-        synchronized (mDelegateSessions) {
-            delegates = new ArrayList<DelegateSession>(mDelegateSessions.values());
-            mDelegateSessions.clear();
-            mUnregistered = true;
+        synchronized (delegateSessions) {
+            delegates = new ArrayList<DelegateSession>(delegateSessions.values());
+            delegateSessions.clear();
+            unregistered = true;
         }
-        for (DelegateSession ds : delegates)
+        for (DelegateSession ds : delegates) {
             ds.unregister();
-
+        }
         // note that Session.unregister() unsets mMailbox...
         super.unregister();
         return this;
     }
 
-    @Override protected boolean isMailboxListener() {
+    @Override
+    protected boolean isMailboxListener() {
         return true;
     }
 
-    @Override protected boolean isRegisteredInCache() {
+    @Override
+    protected boolean isRegisteredInCache() {
         return true;
     }
 
-    @Override protected boolean isIMListener() {
+    @Override
+    protected boolean isIMListener() {
         return true;
-//        try {
-//            return Provisioning.getInstance().get(AccountBy.id, this.getTargetAccountId()).getBooleanAttr(Provisioning.A_zimbraPrefIMAutoLogin, false);
-//        } catch (ServiceException e) {
-//            ZimbraLog.session.info("Caught exception fetching account preference A_zimbraPrefIMAutoLogin", e);
-//            return false;
-//        }
     }
 
-    @Override protected long getSessionIdleLifetime() {
+    @Override
+    protected long getSessionIdleLifetime() {
         return SOAP_SESSION_TIMEOUT_MSEC;
     }
 
-    private boolean mIsOffline = false;
+    public boolean isOfflineSoapSession() {
+        return isOffline;
+    }
 
-    public boolean isOfflineSoapSession()  { return mIsOffline; }
-    public void setOfflineSoapSession()    { mIsOffline = true; }
+    public void setOfflineSoapSession() {
+        isOffline = true;
+    }
 
     private boolean asAdmin() {
-        return mAsAdmin;
+        return asAdmin;
     }
 
     public Session getDelegateSession(String targetAccountId) {
-        if (mUnregistered || targetAccountId == null)
+        if (unregistered || targetAccountId == null) {
             return null;
-
+        }
         // delegate sessions are only for mailboxes on the local host
         try {
-            if (!Provisioning.onLocalServer(Provisioning.getInstance().get(Provisioning.AccountBy.id, targetAccountId)))
+            if (!Provisioning.onLocalServer(Provisioning.getInstance().get(Provisioning.AccountBy.id, targetAccountId))) {
                 return null;
+            }
         } catch (ServiceException e) {
             ZimbraLog.session.info("exception while fetching delegate session", e);
             return null;
@@ -527,70 +524,73 @@ public class SoapSession extends Session {
 
         // catch the case where they ask for a delegate session for the same user
         targetAccountId = targetAccountId.toLowerCase();
-        if (targetAccountId.equalsIgnoreCase(mAuthenticatedAccountId))
+        if (targetAccountId.equalsIgnoreCase(mAuthenticatedAccountId)) {
             return this;
-
-        synchronized (mDelegateSessions) {
+        }
+        synchronized (delegateSessions) {
             // don't return delegate sessions after an unregister()
-            if (mUnregistered)
+            if (unregistered) {
                 return null;
-
-            DelegateSession ds = mDelegateSessions.get(targetAccountId);
+            }
+            DelegateSession ds = delegateSessions.get(targetAccountId);
             if (ds == null) {
                 ds = new DelegateSession(mAuthenticatedAccountId, targetAccountId).register();
-                if (ds != null)
-                    mDelegateSessions.put(targetAccountId, ds);
+                if (ds != null) {
+                    delegateSessions.put(targetAccountId, ds);
+                }
             }
             return ds;
         }
     }
 
     void removeDelegateSession(DelegateSession ds) {
-        synchronized (mDelegateSessions) {
-            if (mUnregistered || mDelegateSessions.isEmpty())
+        synchronized (delegateSessions) {
+            if (unregistered || delegateSessions.isEmpty()) {
                 return;
-            boolean removed = mDelegateSessions.remove(ds.mTargetAccountId.toLowerCase()) != null;
-            if (!removed)
+            }
+            boolean removed = delegateSessions.remove(ds.mTargetAccountId.toLowerCase()) != null;
+            if (!removed) {
                 return;
+            }
         }
-        synchronized (mSentChanges) {
-            int force = mChanges.getSequence();
-            if (ZimbraLog.session.isDebugEnabled())
-                ZimbraLog.session.debug("removeDelegateSession: changing mForceRefresh: " + mForceRefresh + " -> " + force);
-            mForceRefresh = force;
+        synchronized (sentChanges) {
+            int force = changes.getSequence();
+            ZimbraLog.session.debug("removeDelegateSession: changing mForceRefresh: %d -> %d", forceRefresh, force);
+            forceRefresh = force;
         }
     }
 
 
-    public String getRemoteSessionId(Server server) {
-        synchronized (this) {
-            if (mMailbox == null || mRemoteSessions == null || server == null)
-                return null;
-            for (RemoteSessionInfo rsi : mRemoteSessions)
-                if (rsi.mServerId.equals(server.getId()))
-                    return rsi.mSessionId;
+    public synchronized String getRemoteSessionId(Server server) {
+        if (mMailbox == null || remoteSessions == null || server == null) {
             return null;
         }
+        for (RemoteSessionInfo rsi : remoteSessions) {
+            if (rsi.mServerId.equals(server.getId())) {
+                return rsi.mSessionId;
+            }
+        }
+        return null;
     }
 
     protected boolean registerRemoteSessionId(Server server, String sessionId) {
-        if (mMailbox == null || server == null || sessionId == null)
+        if (mMailbox == null || server == null || sessionId == null) {
             return true;
-
+        }
         String serverId = server.getId().toLowerCase();
         synchronized (this) {
             boolean isNewEntry = true;
-            if (mRemoteSessions == null) {
-                mRemoteSessions = new LinkedList<RemoteSessionInfo>();
+            if (remoteSessions == null) {
+                remoteSessions = new LinkedList<RemoteSessionInfo>();
             } else {
-                for (Iterator<RemoteSessionInfo> it = mRemoteSessions.iterator(); it.hasNext(); ) {
+                for (Iterator<RemoteSessionInfo> it = remoteSessions.iterator(); it.hasNext(); ) {
                     if (it.next().mServerId.equals(server.getId())) {
                         it.remove();
                         isNewEntry = false;
                     }
                 }
             }
-            mRemoteSessions.add(new RemoteSessionInfo(sessionId, serverId, System.currentTimeMillis()));
+            remoteSessions.add(new RemoteSessionInfo(sessionId, serverId, System.currentTimeMillis()));
             return isNewEntry;
         }
     }
@@ -600,38 +600,38 @@ public class SoapSession extends Session {
     }
 
     protected void handleRemoteNotifications(Server server, Element context, boolean ignoreRefresh, boolean isPing) {
-        if (context == null)
+        if (context == null) {
             return;
-
+        }
         boolean refreshExpected = true;
 
         // remember the remote session ID for the server
         Element eSession = context.getOptionalElement(HeaderConstants.E_SESSION);
         boolean isSoap = eSession != null && eSession.getAttribute(HeaderConstants.A_TYPE, null) == null;
         String sessionId = eSession == null ? null : eSession.getAttribute(HeaderConstants.A_ID, null);
-        if (isSoap && sessionId != null && !sessionId.equals(""))
+        if (isSoap && sessionId != null && !sessionId.equals("")) {
             refreshExpected = registerRemoteSessionId(server, sessionId);
-
+        }
         // remote refresh should cause overall refresh
         if (!ignoreRefresh && !refreshExpected && context.getOptionalElement(ZimbraNamespace.E_REFRESH) != null) {
             int force = getCurrentNotificationSequence();
-            if (ZimbraLog.session.isDebugEnabled())
-                ZimbraLog.session.debug("handleRemoteNotifications: changing mForceRefresh: " + mForceRefresh + " -> " + force);
-            mForceRefresh = force;
+            ZimbraLog.session.debug("handleRemoteNotifications: changing mForceRefresh: %d -> %d", forceRefresh, force);
+            forceRefresh = force;
         }
 
         Element eNotify = context.getOptionalElement(ZimbraNamespace.E_NOTIFY);
         if (eNotify != null) {
             RemoteNotifications rns = new RemoteNotifications(eNotify);
-            synchronized (mSentChanges) {
-                if (!skipNotifications(rns.getScaledNotificationCount(), !isPing))
+            synchronized (sentChanges) {
+                if (!skipNotifications(rns.getScaledNotificationCount(), !isPing)) {
                     addRemoteNotifications(rns);
+                }
             }
         }
     }
 
     protected void addRemoteNotifications(RemoteNotifications rns) {
-        mChanges.addNotification(rns);
+        changes.addNotification(rns);
     }
 
     private void pingRemoteSessions(ZimbraSoapContext zsc) {
@@ -639,22 +639,23 @@ public class SoapSession extends Session {
 
         List<RemoteSessionInfo> needsPing = null;
         synchronized (this) {
-            if (mRemoteSessions == null)
+            if (remoteSessions == null) {
                 return;
-
+            }
             long cutoff = now - getSessionIdleLifetime() / 2;
-            for (RemoteSessionInfo rsi : mRemoteSessions) {
+            for (RemoteSessionInfo rsi : remoteSessions) {
                 if (rsi.mLastRequest < cutoff && now - rsi.mLastFailedPing > MINIMUM_PING_RETRY_TIME) {
-                    if (needsPing == null)
+                    if (needsPing == null) {
                         needsPing = new LinkedList<RemoteSessionInfo>();
+                    }
                     needsPing.add(rsi);
                 }
             }
         }
 
-        if (needsPing == null)
+        if (needsPing == null) {
             return;
-
+        }
         Provisioning prov = Provisioning.getInstance();
         for (RemoteSessionInfo rsi : needsPing) {
             try {
@@ -680,27 +681,29 @@ public class SoapSession extends Session {
      *  that messages added to the Mailbox during this session are included
      *  in the count. */
     public int getRecentMessageCount() {
-        return mRecentMessages;
+        return recentMessages;
     }
 
     /** Returns the time (in milliseconds) of last write op from any SOAP
      *  session <u>before</u> this session was initiated.  This value remains
      *  constant for the duration of this session. */
     public long getPreviousSessionTime() {
-        return mPreviousAccess;
+        return previousAccess;
     }
 
     /** Returns the time (in milliseconds) of the last write operation
      *  initiated by this session.  If the session has not done any write ops
      *  yet, returns {@link #getPreviousSessionTime()}. */
     public long getLastWriteAccessTime() {
-        return mLastWrite == -1 ? mPreviousAccess : mLastWrite;
+        return lastWrite == -1 ? previousAccess : lastWrite;
     }
 
 
-    @Override public void doEncodeState(Element parent) {
-        if (mPushChannel != null)
+    @Override
+    public void doEncodeState(Element parent) {
+        if (pushChannel != null) {
             parent.addAttribute("push", true);
+        }
     }
 
 
@@ -726,50 +729,49 @@ public class SoapSession extends Session {
      * @param includeDelegates  Whether notifications from delegate sessions
      *                          trigger {@link RegisterNotificationResult#DATA_READY}.
      * @return the state of the channel (@see RegisterNotificationResult} */
-    public RegisterNotificationResult registerNotificationConnection(final PushChannel sc)
-    throws ServiceException {
+    public synchronized RegisterNotificationResult registerNotificationConnection(final PushChannel sc)
+            throws ServiceException {
         // don't have to lock the Mailbox before locking the Session to avoid deadlock because we're not calling any ToXML functions
-        synchronized (this) {
-            if (mPushChannel != null) {
-                mPushChannel.closePushChannel();
-                mPushChannel = null;
-            }
+        if (pushChannel != null) {
+            pushChannel.closePushChannel();
+            pushChannel = null;
+        }
 
-            if (mMailbox == null) {
-                sc.closePushChannel();
-                return RegisterNotificationResult.NO_NOTIFY;
-            }
+        if (mMailbox == null) {
+            sc.closePushChannel();
+            return RegisterNotificationResult.NO_NOTIFY;
+        }
 
-            boolean dataReady;
-            synchronized (mSentChanges) {
-                // are there any notifications already pending given the passed-in seqno?
-                int lastSeqNo = sc.getLastKnownSequence();
-                dataReady = mChanges.hasNotifications(sc.localChangesOnly());
-                if (!dataReady && mChanges.getSequence() > lastSeqNo + 1 && !mSentChanges.isEmpty()) {
-                    for (QueuedNotifications ntfn : mSentChanges) {
-                        if (ntfn.getSequence() > lastSeqNo && ntfn.hasNotifications(sc.localChangesOnly())) {
-                            dataReady = true;  break;
-                        }
+        boolean dataReady;
+        synchronized (sentChanges) {
+            // are there any notifications already pending given the passed-in seqno?
+            int lastSeqNo = sc.getLastKnownSequence();
+            dataReady = changes.hasNotifications(sc.localChangesOnly());
+            if (!dataReady && changes.getSequence() > lastSeqNo + 1 && !sentChanges.isEmpty()) {
+                for (QueuedNotifications ntfn : sentChanges) {
+                    if (ntfn.getSequence() > lastSeqNo && ntfn.hasNotifications(sc.localChangesOnly())) {
+                        dataReady = true;  break;
                     }
                 }
             }
-            if (dataReady) {
-                sc.notificationsReady();
-                return RegisterNotificationResult.DATA_READY;
-            } else {
-                mPushChannel = sc;
-                return RegisterNotificationResult.BLOCKING;
-            }
+        }
+        if (dataReady) {
+            sc.notificationsReady();
+            return RegisterNotificationResult.DATA_READY;
+        } else {
+            pushChannel = sc;
+            return RegisterNotificationResult.BLOCKING;
         }
     }
 
 
-    @Override public void notifyIM(IMNotification imn) {
-        if (imn == null)
+    @Override
+    public void notifyIM(IMNotification imn) {
+        if (imn == null) {
             return;
-
-        synchronized (mSentChanges) {
-            mChanges.addNotification(imn);
+        }
+        synchronized (sentChanges) {
+            changes.addNotification(imn);
         }
         try {
             // if we're in a hanging no-op, alert the client that there are changes
@@ -781,11 +783,11 @@ public class SoapSession extends Session {
 
     /** On the session's first write op, record the timestamp to the database. */
     public void updateLastWrite(Mailbox mbox) {
-        boolean firstWrite = mLastWrite == -1;
-        mLastWrite = System.currentTimeMillis();
+        boolean firstWrite = lastWrite == -1;
+        lastWrite = System.currentTimeMillis();
         if (firstWrite) {
             try {
-                mbox.recordLastSoapAccessTime(mLastWrite);
+                mbox.recordLastSoapAccessTime(lastWrite);
             } catch (ServiceException e) {
                 ZimbraLog.session.warn("ServiceException in notifyPendingChanges ", e);
             }
@@ -803,11 +805,12 @@ public class SoapSession extends Session {
      * @param pms       A set of new change notifications from our Mailbox.
      * @param changeId  The sync-token change id of the change.
      * @param source    The (optional) Session which initiated these changes. */
-    @Override public void notifyPendingChanges(PendingModifications pms, int changeId, Session source) {
+    @Override
+    public void notifyPendingChanges(PendingModifications pms, int changeId, Session source) {
         Mailbox mbox = mMailbox;
-        if (pms == null || mbox == null || !pms.hasNotifications())
+        if (pms == null || mbox == null || !pms.hasNotifications()) {
             return;
-
+        }
         if (source == this) {
             updateLastWrite(mbox);
         } else {
@@ -816,17 +819,16 @@ public class SoapSession extends Session {
                 for (MailItem item : pms.created.values()) {
                     if (item instanceof Message) {
                         boolean isReceived = true;
-                        if (item.getFolderId() == Mailbox.ID_FOLDER_SPAM || item.getFolderId() == Mailbox.ID_FOLDER_TRASH)
+                        if (item.getFolderId() == Mailbox.ID_FOLDER_SPAM || item.getFolderId() == Mailbox.ID_FOLDER_TRASH) {
                             isReceived = false;
-                        else if ((item.getFlagBitmask() & Mailbox.NON_DELIVERY_FLAGS) != 0)
+                        } else if ((item.getFlagBitmask() & Mailbox.NON_DELIVERY_FLAGS) != 0) {
                             isReceived = false;
-                        else if (source != null)
+                        } else if (source != null) {
                             isReceived = false;
-
+                        }
                         if (isReceived) {
-                            mRecentMessages++;
-                            if (ZimbraLog.session.isDebugEnabled())
-                                ZimbraLog.session.debug("incrementing session recent count to " + mRecentMessages);
+                            recentMessages++;
+                            ZimbraLog.session.debug("incrementing session recent count to %d", recentMessages);
                         }
                     }
                 }
@@ -838,23 +840,26 @@ public class SoapSession extends Session {
 
     boolean hasSerializableChanges(PendingModifications pms) {
         // catch cases where the only notifications are mailbox config changes, which we don't serialize
-        if (pms.created != null && !pms.created.isEmpty())
+        if (pms.created != null && !pms.created.isEmpty()) {
             return true;
-        if (pms.deleted != null && !pms.deleted.isEmpty())
+        }
+        if (pms.deleted != null && !pms.deleted.isEmpty()) {
             return true;
+        }
         if (pms.modified != null && !pms.modified.isEmpty()) {
             for (Change chg : pms.modified.values()) {
-                if (!(chg.what instanceof Mailbox) || chg.why != Change.MODIFIED_CONFIG)
+                if (!(chg.what instanceof Mailbox) || chg.why != Change.MODIFIED_CONFIG) {
                     return true;
+                }
             }
         }
         return false;
     }
 
     void handleNotifications(PendingModifications pms, boolean fromThisSession) {
-        if (!hasSerializableChanges(pms))
+        if (!hasSerializableChanges(pms)) {
             return;
-
+        }
         try {
             // update the set of notifications not yet sent to the client
             cacheNotifications(pms, fromThisSession);
@@ -870,12 +875,12 @@ public class SoapSession extends Session {
     private void cacheNotifications(PendingModifications pms, boolean fromThisSession) {
         // XXX: should constrain to folders, tags, and stuff relevant to the current query?
 
-        synchronized (mSentChanges) {
+        synchronized (sentChanges) {
             if (!skipNotifications(pms.getScaledNotificationCount(), fromThisSession)) {
                 // if we're here, these changes either
                 //   a) do not cause the session's notification cache to overflow, or
                 //   b) originate from this session and hence must be notified back to the session
-                mChanges.addNotification(pms);
+                changes.addNotification(pms);
             }
         }
     }
@@ -883,35 +888,33 @@ public class SoapSession extends Session {
     protected boolean skipNotifications(int notificationCount, boolean fromThisSession) {
         // if we're going to be sending a <refresh> anyway, there's no need to record these changes
         int currentSequence = getCurrentNotificationSequence();
-        if (mForceRefresh == currentSequence && !fromThisSession)
+        if (forceRefresh == currentSequence && !fromThisSession) {
             return true;
-
+        }
         // determine whether this set of notifications would cause the cached set to overflow
-        if (mForceRefresh != currentSequence && MAX_QUEUED_NOTIFICATIONS > 0) {
+        if (forceRefresh != currentSequence && MAX_QUEUED_NOTIFICATIONS > 0) {
             // XXX: more accurate would be to combine pms and mChanges and take the count...
-            int count = notificationCount + mChanges.getScaledNotificationCount();
+            int count = notificationCount + changes.getScaledNotificationCount();
             if (count > MAX_QUEUED_NOTIFICATIONS) {
                 // if we've overflowed, jettison the pending change set
-                mChanges.clearMailboxChanges();
+                changes.clearMailboxChanges();
                 int force = currentSequence;
-                if (ZimbraLog.session.isDebugEnabled())
-                    ZimbraLog.session.debug("skipNotifications: changing mForceRefresh: " + mForceRefresh + " -> " + force);
-                mForceRefresh = force;
+                ZimbraLog.session.debug("skipNotifications: changing mForceRefresh: %d -> %d", forceRefresh, force);
+                forceRefresh = force;
             }
 
-            for (QueuedNotifications ntfn : mSentChanges) {
+            for (QueuedNotifications ntfn : sentChanges) {
                 count += ntfn.getScaledNotificationCount();
                 if (count > MAX_QUEUED_NOTIFICATIONS) {
                     ntfn.clearMailboxChanges();
-                    int force = Math.max(mForceRefresh, ntfn.getSequence());
-                    if (ZimbraLog.session.isDebugEnabled())
-                        ZimbraLog.session.debug("skipNotifications: changing mForceRefresh: " + mForceRefresh + " -> " + force);
-                    mForceRefresh = force;
+                    int force = Math.max(forceRefresh, ntfn.getSequence());
+                    ZimbraLog.session.debug("skipNotifications: changing mForceRefresh: %d -> %d", forceRefresh, force);
+                    forceRefresh = force;
                 }
             }
         }
 
-        return (mForceRefresh == currentSequence && !fromThisSession);
+        return (forceRefresh == currentSequence && !fromThisSession);
     }
 
     public void forcePush() {
@@ -922,33 +925,34 @@ public class SoapSession extends Session {
         }
     }
 
-    private void notifyPushChannel(final PendingModifications pms, final boolean clearChannel) throws ServiceException {
+    private synchronized void notifyPushChannel(final PendingModifications pms, final boolean clearChannel)
+            throws ServiceException {
         // don't have to lock the Mailbox before locking the Session to avoid deadlock because we're not calling any ToXML functions
-        synchronized (this) {
-            if (mPushChannel == null)
-                return;
-            // ignore the notification if we're only interested in local changes and these aren't local
-            if (mPushChannel.localChangesOnly() && pms != null && !pms.overlapsWithAccount(mAuthenticatedAccountId))
-                return;
-
-            mPushChannel.notificationsReady();
-            if (clearChannel)
-                mPushChannel = null;
+        if (pushChannel == null) {
+            return;
+        }
+        // ignore the notification if we're only interested in local changes and these aren't local
+        if (pushChannel.localChangesOnly() && pms != null && !pms.overlapsWithAccount(mAuthenticatedAccountId)) {
+            return;
+        }
+        pushChannel.notificationsReady();
+        if (clearChannel) {
+            pushChannel = null;
         }
     }
 
 
     public boolean requiresRefresh(final int lastSequence) {
-        synchronized (mSentChanges) {
+        synchronized (sentChanges) {
             boolean required = false;
             int currentSeq = getCurrentNotificationSequence();
-            if (lastSequence <= 0)
-                required = mForceRefresh == currentSeq;
-            else
-                required = mForceRefresh > Math.min(lastSequence, currentSeq);
-            if (required && ZimbraLog.session.isDebugEnabled())
-                ZimbraLog.session.debug("refresh required: mForceRefresh=" + mForceRefresh + ", lastSequence=" + lastSequence +
-                        ", currentSequence=" + currentSeq);
+            if (lastSequence <= 0) {
+                required = forceRefresh == currentSeq;
+            } else {
+                required = forceRefresh > Math.min(lastSequence, currentSeq);
+            }
+            ZimbraLog.session.debug("refresh required: forceRefresh=%d,lastSequence=%d,currentSequence=%d",
+                    forceRefresh, lastSequence, currentSeq);
             return required;
         }
     }
@@ -966,12 +970,13 @@ public class SoapSession extends Session {
      * @param zsc   The SOAP request's encapsulated context */
     public void putRefresh(Element ctxt, ZimbraSoapContext zsc) throws ServiceException {
         Mailbox mbox = mMailbox;
-        if (mbox == null)
+        if (mbox == null) {
             return;
-
-        synchronized (mSentChanges) {
-            for (QueuedNotifications ntfn : mSentChanges)
+        }
+        synchronized (sentChanges) {
+            for (QueuedNotifications ntfn : sentChanges) {
                 ntfn.clearMailboxChanges();
+            }
         }
 
         Element eRefresh = ctxt.addUniqueElement(ZimbraNamespace.E_REFRESH);
@@ -988,8 +993,9 @@ public class SoapSession extends Session {
         if (tags != null && tags.size() > 0) {
             Element eTags = eRefresh.addUniqueElement(ZimbraNamespace.E_TAGS);
             for (Tag tag : tags) {
-                if (tag != null && !(tag instanceof Flag))
+                if (tag != null && !(tag instanceof Flag)) {
                     ToXML.encodeTag(eTags, ifmt, tag);
+                }
             }
         }
 
@@ -1005,8 +1011,9 @@ public class SoapSession extends Session {
         expandRemoteMountpoints(octxt, zsc, mountpoints);
 
         // graft in subfolder trees from the other user's mailbox, making sure that mountpoints reflect the counts (etc.) of the target folder
-        if (!mountpoints.isEmpty())
+        if (!mountpoints.isEmpty()) {
             transferMountpointContents(eRefresh.getOptionalElement(MailConstants.E_FOLDER), octxt, mountpoints);
+        }
     }
 
     private void expandLocalMountpoints(OperationContext octxt, FolderNode node, Element.ElementFactory factory, Map<ItemId, Element> mountpoints) {
@@ -1016,17 +1023,18 @@ public class SoapSession extends Session {
             Mountpoint mpt = (Mountpoint) node.mFolder;
             expandLocalMountpoint(octxt, mpt, factory, mountpoints);
         } else {
-            for (FolderNode child : node.mSubfolders)
+            for (FolderNode child : node.mSubfolders) {
                 expandLocalMountpoints(octxt, child, factory, mountpoints);
+            }
         }
     }
 
     private void expandLocalMountpoint(OperationContext octxt, Mountpoint mpt, Element.ElementFactory factory, Map<ItemId, Element> mountpoints) {
         // don't bother generating the subhierarchy more than once
         ItemId iidTarget = mpt.getTarget();
-        if (mountpoints.containsKey(iidTarget))
+        if (mountpoints.containsKey(iidTarget)) {
             return;
-
+        }
         try {
             Provisioning prov = Provisioning.getInstance();
             Account owner = prov.get(Provisioning.AccountBy.id, mpt.getOwnerId(), octxt.getAuthToken());
@@ -1044,8 +1052,9 @@ public class SoapSession extends Session {
 
             if (remote != null && remote.mFolder != null && !remote.mFolder.isHidden()) {
                 ItemIdFormatter ifmt = new ItemIdFormatter(octxt.getAuthenticatedUser(), mbox, false);
-                if (OperationContextData.getNeedGranteeName(octxt))
+                if (OperationContextData.getNeedGranteeName(octxt)) {
                     OperationContextData.addGranteeNames(octxt, remote);
+                }
                 Element subhierarchy = GetFolder.encodeFolderNode(ifmt, octxt, factory.createElement("ignored"), remote).detach();
                 mountpoints.put(iidTarget, subhierarchy);
                 // fault in a delegate session because there's actually something to listen on...
@@ -1062,28 +1071,32 @@ public class SoapSession extends Session {
         for (Map.Entry<ItemId, Element> mptinfo : mountpoints.entrySet()) {
             try {
                 // local mountpoints already have their targets serialized
-                if (mptinfo.getValue() != null)
+                if (mptinfo.getValue() != null) {
                     continue;
-
+                }
                 Account owner = prov.get(Provisioning.AccountBy.id, mptinfo.getKey().getAccountId(), zsc.getAuthToken());
-                if (owner == null)
+                if (owner == null) {
                     continue;
+                }
                 Server server = prov.getServer(owner);
-                if (server == null)
+                if (server == null) {
                     continue;
-
-                if (remoteServers == null)
+                }
+                if (remoteServers == null) {
                     remoteServers = new HashMap<String, Server>(3);
+                }
                 remoteServers.put(owner.getId(), server);
-            } catch (ServiceException e) { }
+            } catch (ServiceException e) {
+            }
         }
 
         if (remoteServers != null && !remoteServers.isEmpty()) {
             Map<String, Element> remoteHierarchies = fetchRemoteHierarchies(octxt, zsc, remoteServers);
             for (Map.Entry<ItemId, Element> mptinfo : mountpoints.entrySet()) {
                 // local mountpoints already have their targets serialized
-                if (mptinfo.getValue() != null)
+                if (mptinfo.getValue() != null) {
                     continue;
+                }
                 ItemId iid = mptinfo.getKey();
                 mptinfo.setValue(findRemoteFolder(iid.toString(mAuthenticatedAccountId), remoteHierarchies.get(iid.getAccountId())));
             }
@@ -1096,8 +1109,9 @@ public class SoapSession extends Session {
         Element noop;
         try {
             noop = Element.create(zsc.getRequestProtocol(), MailConstants.GET_FOLDER_REQUEST).addAttribute(MailConstants.A_VISIBLE, true);
-            if (!OperationContextData.getNeedGranteeName(octxt))
+            if (!OperationContextData.getNeedGranteeName(octxt)) {
                 noop.addAttribute(MailConstants.A_NEED_GRANTEE_NAME, false);
+            }
         } catch (ServiceException e) {
             // garbage in, nothing out...
             return hierarchies;
@@ -1116,15 +1130,16 @@ public class SoapSession extends Session {
                 Pair<Element, Element> envelope = proxy.execute(noop.detach(), zscProxy);
                 handleRemoteNotifications(server, envelope.getFirst(), true, true);
                 hierarchies.put(accountId, envelope.getSecond().getOptionalElement(MailConstants.E_FOLDER));
-            } catch (ServiceException e) { }
+            } catch (ServiceException e) {
+            }
         }
         return hierarchies;
     }
 
     private static Element findRemoteFolder(String id, Element eFolder) {
-        if (id == null || eFolder == null)
+        if (id == null || eFolder == null) {
             return null;
-
+        }
         if (id.equalsIgnoreCase(eFolder.getAttribute(MailConstants.A_ID, null))) {
             // folder stubs (hierarchy placeholders for non-readable folders) contain only "id" and "name"
             boolean isStub = eFolder.getAttribute(MailConstants.A_SIZE, null) == null;
@@ -1133,16 +1148,17 @@ public class SoapSession extends Session {
 
         for (Element eSubfolder : eFolder.listElements()) {
             Element match = findRemoteFolder(id, eSubfolder);
-            if (match != null)
+            if (match != null) {
                 return match;
+            }
         }
         return null;
     }
 
     private static void transferMountpointContents(Element elem, OperationContext octxt, Map<ItemId, Element> mountpoints) throws ServiceException {
-        if (elem == null)
+        if (elem == null) {
             return;
-
+        }
         Element target = null;
         if (elem.getName().equals(MailConstants.E_MOUNT)) {
             ItemId iidTarget = new ItemId(elem.getAttribute(MailConstants.A_ZIMBRA_ID, null), (int) elem.getAttributeLong(MailConstants.A_REMOTE_ID, -1));
@@ -1151,8 +1167,9 @@ public class SoapSession extends Session {
 
         if (target == null) {
             // not a local mountpoint with a known target; recurse on children
-            for (Element child : elem.listElements())
+            for (Element child : elem.listElements()) {
                 transferMountpointContents(child, octxt, mountpoints);
+            }
         } else {
             transferMountpointContents(elem, target);
         }
@@ -1166,63 +1183,67 @@ public class SoapSession extends Session {
         elem.addAttribute(MailConstants.A_OWNER_FOLDER_NAME, mptTarget.getAttribute(MailConstants.A_NAME, null));
         elem.addAttribute(MailConstants.A_URL, mptTarget.getAttribute(MailConstants.A_URL, null));
         elem.addAttribute(MailConstants.A_RIGHTS, mptTarget.getAttribute(MailConstants.A_RIGHTS, null));
-        if (mptTarget.getAttribute(MailConstants.A_FLAGS, "").indexOf("u") != -1)
+        if (mptTarget.getAttribute(MailConstants.A_FLAGS, "").indexOf("u") != -1) {
             elem.addAttribute(MailConstants.A_FLAGS, "u" + elem.getAttribute(MailConstants.A_FLAGS, "").replace("u", ""));
-
+        }
         // transfer ACL and child folders to the serialized mountpoint from the serialized remote folder
         for (Element child : mptTarget.listElements()) {
-            if (child.getName().equals(MailConstants.E_ACL))
+            if (child.getName().equals(MailConstants.E_ACL)) {
                 elem.addUniqueElement(child.clone());
-            else
+            } else {
                 elem.addElement(child.clone());
+            }
         }
     }
 
     private static void transferLongAttribute(Element to, Element from, String attrName) {
         try {
             long remote = from.getAttributeLong(attrName, -1L);
-            if (remote >= 0)
+            if (remote >= 0) {
                 to.addAttribute(attrName, remote);
+            }
         } catch (ServiceException e) {
-            ZimbraLog.session.warn("exception reading long attr from remote folder: " + attrName, e);
+            ZimbraLog.session.warn("exception reading long attr from remote folder: %s", attrName, e);
         } catch (Element.ContainerException e) {
-            ZimbraLog.session.warn("exception adding remote folder attr to serialized mountpoint: " + attrName, e);
+            ZimbraLog.session.warn("exception adding remote folder attr to serialized mountpoint: %s", attrName, e);
         }
     }
 
 
     public int getCurrentNotificationSequence() {
-        synchronized (mSentChanges) {
-            return mChanges.getSequence();
+        synchronized (sentChanges) {
+            return changes.getSequence();
         }
     }
 
     public void acknowledgeNotifications(int sequence) {
-        synchronized (mSentChanges) {
-            if (mSentChanges == null || mSentChanges.isEmpty())
+        synchronized (sentChanges) {
+            if (sentChanges == null || sentChanges.isEmpty()) {
                 return;
-
+            }
             if (sequence <= 0) {
                 // if the client didn't send a valid "last sequence number", *don't* keep old changes around
-                mSentChanges.clear();
+                sentChanges.clear();
             } else {
                 // clear any notifications we now know the client has received
-                for (Iterator<QueuedNotifications> it = mSentChanges.iterator(); it.hasNext(); ) {
-                    if (it.next().getSequence() <= sequence)
+                for (Iterator<QueuedNotifications> it = sentChanges.iterator(); it.hasNext(); ) {
+                    if (it.next().getSequence() <= sequence) {
                         it.remove();
-                    else
+                    } else {
                         break;
+                    }
                 }
             }
         }
     }
 
     public Collection<PendingModifications> getNotifications() {
-        ArrayList<PendingModifications> ret = new ArrayList<PendingModifications>();
-        synchronized (mSentChanges) {
-            for (QueuedNotifications notification : mSentChanges) {
-                if (notification.hasNotifications())
+        List<PendingModifications> ret = new ArrayList<PendingModifications>();
+        synchronized (sentChanges) {
+            for (QueuedNotifications notification : sentChanges) {
+                if (notification.hasNotifications()) {
                     ret.add(notification.mMailboxChanges);
+                }
             }
         }
         return ret;
@@ -1266,9 +1287,9 @@ public class SoapSession extends Session {
      * @return The passed-in <tt>&lt;context></tt> element */
     public Element putNotifications(Element ctxt, ZimbraSoapContext zsc, int lastSequence) {
         Mailbox mbox = mMailbox;
-        if (ctxt == null || mbox == null)
+        if (ctxt == null || mbox == null) {
             return null;
-
+        }
         if (Provisioning.getInstance().allowsPingRemote()) {
             // if there are remote sessions that haven't been accessed in a while, ping them
             pingRemoteSessions(zsc);
@@ -1276,7 +1297,7 @@ public class SoapSession extends Session {
 
         // because ToXML functions can now call back into the Mailbox, don't hold any locks when calling putQueuedNotifications
         LinkedList<QueuedNotifications> notifications;
-        synchronized (mSentChanges) {
+        synchronized (sentChanges) {
             // send the "change" block:  <change token="555"/>
             ctxt.addUniqueElement(HeaderConstants.E_CHANGE).addAttribute(HeaderConstants.A_CHANGE_ID, mbox.getLastChangeID());
 
@@ -1284,33 +1305,34 @@ public class SoapSession extends Session {
             acknowledgeNotifications(lastSequence);
 
             // cover ourselves in case a client is doing something really stupid...
-            if (mSentChanges.size() > 20) {
+            if (sentChanges.size() > 20) {
                 ZimbraLog.session.warn("clearing abnormally long notification change list due to misbehaving client");
-                mSentChanges.clear();
+                sentChanges.clear();
             }
 
-            if (mChanges.hasNotifications() || requiresRefresh(lastSequence)) {
-                assert(mChanges.getSequence() >= 1);
-                int newSequence = mChanges.getSequence() + 1;
-                mSentChanges.add(mChanges);
-                mChanges = new QueuedNotifications(newSequence);
+            if (changes.hasNotifications() || requiresRefresh(lastSequence)) {
+                assert(changes.getSequence() >= 1);
+                int newSequence = changes.getSequence() + 1;
+                sentChanges.add(changes);
+                changes = new QueuedNotifications(newSequence);
             }
 
             // mChanges must be empty at this point (everything moved into the mSentChanges list)
-            assert(!mChanges.hasNotifications());
+            assert(!changes.hasNotifications());
 
             // drop out if notify is off or if there is nothing to send
-            if (mSentChanges.isEmpty())
+            if (sentChanges.isEmpty()) {
                 return ctxt;
-
-            notifications = new LinkedList<QueuedNotifications>(mSentChanges);
+            }
+            notifications = new LinkedList<QueuedNotifications>(sentChanges);
         }
 
         // send all the old changes
         QueuedNotifications last = notifications.getLast();
         for (QueuedNotifications ntfn : notifications) {
-            if (ntfn.hasNotifications() || ntfn == last)
+            if (ntfn.hasNotifications() || ntfn == last) {
                 putQueuedNotifications(mbox, ntfn, ctxt, zsc);
+            }
         }
 
         return ctxt;
@@ -1330,9 +1352,9 @@ public class SoapSession extends Session {
     protected void putQueuedNotifications(Mailbox mbox, QueuedNotifications ntfn, Element parent, ZimbraSoapContext zsc) {
         // create the base "notify" block:  <notify seq="6"/>
         Element eNotify = parent.addElement(ZimbraNamespace.E_NOTIFY);
-        if (ntfn.getSequence() > 0)
+        if (ntfn.getSequence() > 0) {
             eNotify.addAttribute(HeaderConstants.A_SEQNO, ntfn.getSequence());
-
+        }
         OperationContext octxt = null;
         try {
             octxt = DocumentHandler.getOperationContext(zsc, this);
@@ -1349,12 +1371,13 @@ public class SoapSession extends Session {
         Element eDeleted = eNotify.addUniqueElement(ZimbraNamespace.E_DELETED);
         StringBuilder deletedIds = new StringBuilder();
         if (pms != null && pms.deleted != null && pms.deleted.size() > 0) {
-            for (ModificationKey mkey : pms.deleted.keySet())
+            for (ModificationKey mkey : pms.deleted.keySet()) {
                 addDeletedNotification(mkey, deletedIds);
+            }
         }
-        if (rns != null && rns.deleted != null)
+        if (rns != null && rns.deleted != null) {
             deletedIds.append(deletedIds.length() == 0 ? "" : ",").append(rns.deleted);
-
+        }
         boolean hasLocalCreates = pms != null && pms.created != null && !pms.created.isEmpty();
         boolean hasRemoteCreates = rns != null && rns.created != null && !rns.created.isEmpty();
         if (hasLocalCreates || hasRemoteCreates) {
@@ -1377,14 +1400,17 @@ public class SoapSession extends Session {
                     }
                 }
                 // sanity-check the returned element
-                if (!eCreated.hasChildren() && debug)
-                    ZimbraLog.session.debug("no serialied creates for item set: " + pms.created.keySet());
+                if (!eCreated.hasChildren() && debug) {
+                    ZimbraLog.session.debug("no serialied creates for item set: %s", pms.created.keySet());
+                }
             }
             if (hasRemoteCreates) {
-                if (debug)
-                    ZimbraLog.session.debug("adding " + rns.created.size() + " proxied creates");
-                for (Element elt : rns.created)
+                if (debug) {
+                    ZimbraLog.session.debug("adding %d proxied creates", rns.created.size());
+                }
+                for (Element elt : rns.created) {
                     eCreated.addElement(elt.clone().detach());
+                }
             }
         }
 
@@ -1403,8 +1429,9 @@ public class SoapSession extends Session {
                             if (elt == null) {
                                 ModificationKey mkey = new ModificationKey(item);
                                 addDeletedNotification(mkey, deletedIds);
-                                if (debug)
-                                    ZimbraLog.session.debug("marking nonserialized item as a delete: " + mkey);
+                                if (debug) {
+                                    ZimbraLog.session.debug("marking nonserialized item as a delete: %s", mkey);
+                                }
                             }
                         } catch (ServiceException e) {
                             ZimbraLog.session.warn("error encoding item " + item.getId(), e);
@@ -1415,14 +1442,17 @@ public class SoapSession extends Session {
                     }
                 }
                 // sanity-check the returned element
-                if (!eModified.hasChildren() && debug)
-                    ZimbraLog.session.debug("no serialied modifies for item set: " + pms.modified.keySet());
+                if (!eModified.hasChildren() && debug) {
+                    ZimbraLog.session.debug("no serialied modifies for item set: %s", pms.modified.keySet());
+                }
             }
             if (hasRemoteModifies) {
-                if (debug)
-                    ZimbraLog.session.debug("adding " + rns.modified.size() + " proxied modifies");
-                for (Element elt : rns.modified)
+                if (debug) {
+                    ZimbraLog.session.debug("adding %d proxied modifies", rns.modified.size());
+                }
+                for (Element elt : rns.modified) {
                     eModified.addElement(elt.clone().detach());
+                }
             }
         }
 
@@ -1437,60 +1467,54 @@ public class SoapSession extends Session {
             }
         }
 
-        if (deletedIds == null || deletedIds.length() == 0)
+        if (deletedIds == null || deletedIds.length() == 0) {
             eDeleted.detach();
-        else
+        } else {
             eDeleted.addAttribute(A_ID, deletedIds.toString());
+        }
     }
 
     private void addDeletedNotification(ModificationKey mkey, StringBuilder deletedIds) {
-        if (deletedIds.length() != 0)
+        if (deletedIds.length() != 0) {
             deletedIds.append(',');
+        }
         // should be using the ItemIdFormatter, but I'm preoptimizing here
-        if (!mkey.getAccountId().equals(mAuthenticatedAccountId))
+        if (!mkey.getAccountId().equals(mAuthenticatedAccountId)) {
             deletedIds.append(mkey.getAccountId()).append(':');
+        }
         deletedIds.append(mkey.getItemId());
     }
 
 
-    public void clearCachedQueryResults() throws ServiceException {
-        synchronized (this) {
-            try {
-                if (mQueryResults != null)
-                    mQueryResults.doneWithSearchResults();
-            } finally {
-                mQueryStr = "";
-                mGroupBy  = "";
-                mSortBy   = "";
-                mQueryResults = null;
-            }
-        }
-    }
-
-    public void putQueryResults(String queryStr, String groupBy, String sortBy, ZimbraQueryResults res) throws ServiceException {
-        synchronized (this) {
-            clearCachedQueryResults();
-            mQueryStr = queryStr;
-            mGroupBy = groupBy;
-            mSortBy = sortBy;
-            mQueryResults = res;
-        }
-    }
-
-    public ZimbraQueryResults getQueryResults(String queryStr, String groupBy, String sortBy) {
-        synchronized (this) {
-            if (mQueryStr.equals(queryStr) && mGroupBy.equals(groupBy) && mSortBy.equals(sortBy))
-                return mQueryResults;
-            else
-                return null;
-        }
-    }
-
-    @Override public void cleanup() {
+    public synchronized void clearCachedQueryResults() {
         try {
-            clearCachedQueryResults();
-        } catch (ServiceException e) {
-            ZimbraLog.session.warn("ServiceException while cleaning up Session", e);
+            Closeables.closeQuietly(queryResults);
+        } finally {
+            queryString = "";
+            groupBy  = "";
+            sortBy   = "";
+            queryResults = null;
         }
+    }
+
+    public synchronized void putQueryResults(String query, String groupBy, String sortBy, ZimbraQueryResults res) {
+        clearCachedQueryResults();
+        this.queryString = query;
+        this.groupBy = groupBy;
+        this.sortBy = sortBy;
+        this.queryResults = res;
+    }
+
+    public synchronized ZimbraQueryResults getQueryResults(String query, String groupBy, String sortBy) {
+        if (queryString.equals(query) && this.groupBy.equals(groupBy) && this.sortBy.equals(sortBy)) {
+            return queryResults;
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public void cleanup() {
+        clearCachedQueryResults();
     }
 }

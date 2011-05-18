@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.index;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -46,18 +47,17 @@ public final class UnionQueryOperation extends CombiningQueryOperation {
 
     @Override
     QueryTargetSet getQueryTargets() {
-        QueryTargetSet toRet = new QueryTargetSet();
-
-        for (QueryOperation op : mQueryOperations) {
-            toRet = (QueryTargetSet)SetUtil.union(toRet, op.getQueryTargets());
+        QueryTargetSet result = new QueryTargetSet();
+        for (QueryOperation op : operations) {
+            result = (QueryTargetSet)SetUtil.union(result, op.getQueryTargets());
         }
-        return toRet;
+        return result;
     }
 
     @Override
     public void resetIterator() throws ServiceException {
         if (!atStart) {
-            for (Iterator<QueryOperation> iter = mQueryOperations.iterator(); iter.hasNext(); ) {
+            for (Iterator<QueryOperation> iter = operations.iterator(); iter.hasNext(); ) {
                 QueryOperation q = iter.next();
                 q.resetIterator();
             }
@@ -70,7 +70,8 @@ public final class UnionQueryOperation extends CombiningQueryOperation {
     public ZimbraHit getNext() throws ServiceException {
         atStart = false;
         ZimbraHit toRet = cachedNextHit;
-        if (cachedNextHit != null) { // this "if" is here so we don't keep calling internalGetNext when we've reached the end of the results...
+        // this "if" is here so we don't keep calling internalGetNext when we've reached the end of the results...
+        if (cachedNextHit != null) {
             cachedNextHit = null;
             internalGetNext();
         }
@@ -86,7 +87,7 @@ public final class UnionQueryOperation extends CombiningQueryOperation {
     private void internalGetNext() throws ServiceException {
         if (cachedNextHit == null) {
             if (context.getResults().getSortBy() == SortBy.NONE) {
-                for (QueryOperation op : mQueryOperations) {
+                for (QueryOperation op : operations) {
                     cachedNextHit = op.getNext();
                     if (cachedNextHit != null) {
                         return;
@@ -98,8 +99,8 @@ public final class UnionQueryOperation extends CombiningQueryOperation {
                 // mergesort: loop through QueryOperations and find the "best" hit
                 int currentBestHitOffset = -1;
                 ZimbraHit currentBestHit = null;
-                for (int i = 0; i < mQueryOperations.size(); i++) {
-                    QueryOperation op = mQueryOperations.get(i);
+                for (int i = 0; i < operations.size(); i++) {
+                    QueryOperation op = operations.get(i);
                     if (op.hasNext()) {
                         if (currentBestHitOffset == -1) {
                             currentBestHitOffset = i;
@@ -116,7 +117,7 @@ public final class UnionQueryOperation extends CombiningQueryOperation {
                     }
                 }
                 if (currentBestHitOffset > -1) {
-                    cachedNextHit = mQueryOperations.get(currentBestHitOffset).getNext();
+                    cachedNextHit = operations.get(currentBestHitOffset).getNext();
                     assert(cachedNextHit == currentBestHit);
                 }
             }
@@ -125,27 +126,25 @@ public final class UnionQueryOperation extends CombiningQueryOperation {
 
 
     @Override
-    public void doneWithSearchResults() throws ServiceException {
-        for (Iterator<QueryOperation> iter = mQueryOperations.iterator(); iter.hasNext(); ) {
-            QueryOperation q = iter.next();
-            q.doneWithSearchResults();
+    public void close() throws IOException {
+        for (QueryOperation op : operations) {
+            op.close();
         }
     }
 
     @Override
     public boolean hasSpamTrashSetting() {
-        boolean hasAll = true;
-        for (Iterator<QueryOperation> iter = mQueryOperations.iterator(); hasAll && iter.hasNext(); ) {
-            QueryOperation op = iter.next();
-            hasAll = op.hasSpamTrashSetting();
+        for (QueryOperation op : operations) {
+            if (!op.hasSpamTrashSetting()) {
+                return false;
+            }
         }
-        return hasAll;
+        return true;
     }
 
     @Override
     void forceHasSpamTrashSetting() {
-        for (Iterator<QueryOperation> iter = mQueryOperations.iterator(); iter.hasNext(); ) {
-            QueryOperation op = iter.next();
+        for (QueryOperation op : operations) {
             op.forceHasSpamTrashSetting();
         }
     }
@@ -167,49 +166,47 @@ public final class UnionQueryOperation extends CombiningQueryOperation {
     @Override
     QueryOperation expandLocalRemotePart(Mailbox mbox) throws ServiceException {
         List<QueryOperation> newList = new ArrayList<QueryOperation>();
-        for (QueryOperation op : mQueryOperations) {
+        for (QueryOperation op : operations) {
             newList.add(op.expandLocalRemotePart(mbox));
         }
-        mQueryOperations = newList;
+        operations = newList;
         return this;
     }
 
     @Override
     QueryOperation ensureSpamTrashSetting(Mailbox mbox, boolean includeTrash, boolean includeSpam) throws ServiceException {
-        ArrayList<QueryOperation> newList = new ArrayList<QueryOperation>();
-
-        for (Iterator<QueryOperation> iter = mQueryOperations.iterator(); iter.hasNext(); ) {
-            QueryOperation op = iter.next();
+        List<QueryOperation> newList = new ArrayList<QueryOperation>(operations.size());
+        for (QueryOperation op : operations) {
             if (!op.hasSpamTrashSetting()) {
                 newList.add(op.ensureSpamTrashSetting(mbox, includeTrash, includeSpam));
             } else {
                 newList.add(op);
             }
         }
-        assert(newList.size() == mQueryOperations.size());
-        mQueryOperations = newList;
+        assert(newList.size() == operations.size());
+        operations = newList;
         return this;
     }
 
 
     public void add(QueryOperation op) {
-        mQueryOperations.add(op);
+        operations.add(op);
     }
 
     void pruneIncompatibleTargets(QueryTargetSet targets) {
         // go from end--front so we don't get confused when entries are removed
-        for (int i = mQueryOperations.size()-1; i >= 0; i--) {
-            QueryOperation op = mQueryOperations.get(i);
+        for (int i = operations.size() - 1; i >= 0; i--) {
+            QueryOperation op = operations.get(i);
             if (op instanceof UnionQueryOperation) {
                 assert(false); // shouldn't be here, should have optimized already
-                ((UnionQueryOperation)op).pruneIncompatibleTargets(targets);
+                ((UnionQueryOperation) op).pruneIncompatibleTargets(targets);
             } else if (op instanceof IntersectionQueryOperation) {
-                ((IntersectionQueryOperation)op).pruneIncompatibleTargets(targets);
+                ((IntersectionQueryOperation) op).pruneIncompatibleTargets(targets);
             } else {
                 QueryTargetSet qts = op.getQueryTargets();
                 assert(qts.size() <= 1);
                 if ((qts.size() == 0) || (!qts.isSubset(targets) && !qts.contains(QueryTarget.UNSPECIFIED))) {
-                    mQueryOperations.remove(i);
+                    operations.remove(i);
                 }
             }
         }
@@ -219,13 +216,13 @@ public final class UnionQueryOperation extends CombiningQueryOperation {
     public QueryOperation optimize(Mailbox mbox) throws ServiceException {
         restartSubOpt:
             do {
-                for (Iterator<QueryOperation> iter = mQueryOperations.iterator(); iter.hasNext(); ) {
+                for (Iterator<QueryOperation> iter = operations.iterator(); iter.hasNext(); ) {
                     QueryOperation q = iter.next();
                     QueryOperation newQ = q.optimize(mbox);
                     if (newQ != q) {
                         iter.remove();
                         if (newQ != null) {
-                            mQueryOperations.add(newQ);
+                            operations.add(newQ);
                         }
                         continue restartSubOpt;
                     }
@@ -233,41 +230,40 @@ public final class UnionQueryOperation extends CombiningQueryOperation {
                 break;
             } while(true);
 
-        if (mQueryOperations.size() == 0) {
+        if (operations.isEmpty()) {
             return new NoTermQueryOperation();
         }
 
         outer: do {
-            for (int i = 0; i < mQueryOperations.size(); i++) {
-                QueryOperation lhs = mQueryOperations.get(i);
+            for (int i = 0; i < operations.size(); i++) {
+                QueryOperation lhs = operations.get(i);
 
                 // if one of our direct children is an OR, then promote all of its
                 // elements to our level -- this can happen if a subquery has
                 // ORed terms at the top level
                 if (lhs instanceof UnionQueryOperation) {
                     combineOps(lhs, true);
-                    mQueryOperations.remove(i);
+                    operations.remove(i);
                     continue outer;
                 }
 
-                for (int j = i+1; j < mQueryOperations.size(); j++) {
-                    QueryOperation rhs = mQueryOperations.get(j);
+                for (int j = i+1; j < operations.size(); j++) {
+                    QueryOperation rhs = operations.get(j);
                     QueryOperation joined = lhs.combineOps(rhs,true);
                     if (joined != null) {
-                        mQueryOperations.remove(j);
-                        mQueryOperations.remove(i);
-                        mQueryOperations.add(joined);
+                        operations.remove(j);
+                        operations.remove(i);
+                        operations.add(joined);
                         continue outer;
                     }
                 }
             }
             break;
-        } while(true);
+        } while (true);
 
-        // now - check to see if we have only one child -- if so, then WE can be
-        // eliminated, so push the child up
-        if (mQueryOperations.size() == 1) {
-            return mQueryOperations.get(0);
+        // now - check to see if we have only one child -- if so, then WE can be eliminated, so push the child up
+        if (operations.size() == 1) {
+            return operations.get(0);
         }
 
         return this;
@@ -275,56 +271,52 @@ public final class UnionQueryOperation extends CombiningQueryOperation {
 
     @Override
     String toQueryString() {
-        StringBuilder ret = new StringBuilder("(");
+        StringBuilder out = new StringBuilder("(");
 
         boolean atFirst = true;
 
-        for (QueryOperation op : mQueryOperations) {
-            if (!atFirst)
-                ret.append(" OR ");
-
-            ret.append(op.toQueryString());
+        for (QueryOperation op : operations) {
+            if (!atFirst) {
+                out.append(" OR ");
+            }
+            out.append(op.toQueryString());
             atFirst = false;
         }
-
-        ret.append(')');
-        return ret.toString();
+        return out.append(')').toString();
     }
 
     @Override
     public String toString() {
-        StringBuilder retval = new StringBuilder("UNION{");
+        StringBuilder out = new StringBuilder("UNION{");
 
         boolean atFirst = true;
 
-        for (int i = 0; i < mQueryOperations.size(); i++) {
-            if (atFirst)
+        for (QueryOperation op : operations) {
+            if (atFirst) {
                 atFirst = false;
-            else
-                retval.append(" OR ");
-
-            retval.append(mQueryOperations.get(i).toString());
+            } else {
+                out.append(" OR ");
+            }
+            out.append(op);
         }
-        retval.append("}");
-        return retval.toString();
+        return out.append('}').toString();
     }
 
     @Override
     public Object clone() {
         assert(cachedNextHit == null);
-        UnionQueryOperation toRet = null;
-        toRet = (UnionQueryOperation)super.clone();
-        toRet.mQueryOperations = new ArrayList<QueryOperation>(mQueryOperations.size());
-        for (QueryOperation q : mQueryOperations) {
-            toRet.mQueryOperations.add((QueryOperation)(q.clone()));
+        UnionQueryOperation result = (UnionQueryOperation) super.clone();
+        result.operations = new ArrayList<QueryOperation>(operations.size());
+        for (QueryOperation op : operations) {
+            result.operations.add((QueryOperation) op.clone());
         }
-        return toRet;
+        return result;
     }
 
     @Override
     protected QueryOperation combineOps(QueryOperation other, boolean union) {
         if (union && other instanceof UnionQueryOperation) {
-            mQueryOperations.addAll(((UnionQueryOperation)other).mQueryOperations);
+            operations.addAll(((UnionQueryOperation) other).operations);
             return this;
         }
         return null;
@@ -334,30 +326,26 @@ public final class UnionQueryOperation extends CombiningQueryOperation {
     protected void begin(QueryContext ctx) throws ServiceException {
         assert(context == null);
         context = ctx;
-
-        for (int i = 0; i < mQueryOperations.size(); i++) {
-            QueryOperation qop = mQueryOperations.get(i);
-            ZimbraLog.search.debug("Executing: %s", qop);
+        for (QueryOperation op : operations) {
+            ZimbraLog.search.debug("Executing: %s", op);
             // add 1 to chunk size b/c we buffer
-            qop.begin(new QueryContext(ctx.getMailbox(), ctx.getResults(), ctx.getParams(), ctx.getChunkSize() + 1));
+            op.begin(new QueryContext(ctx.getMailbox(), ctx.getResults(), ctx.getParams(), ctx.getChunkSize() + 1));
         }
-
         internalGetNext();
     }
 
     @Override
     public List<QueryInfo> getResultInfo() {
-        List<QueryInfo> toRet = new ArrayList<QueryInfo>();
-        for (QueryOperation op : mQueryOperations) {
-            toRet.addAll(op.getResultInfo());
+        List<QueryInfo> result = new ArrayList<QueryInfo>();
+        for (QueryOperation op : operations) {
+            result.addAll(op.getResultInfo());
         }
-        return toRet;
+        return result;
     }
 
     @Override
     protected void depthFirstRecurse(RecurseCallback cb) {
-        for (int i = 0; i < mQueryOperations.size(); i++) {
-            QueryOperation op = mQueryOperations.get(i);
+        for (QueryOperation op : operations) {
             op.depthFirstRecurse(cb);
         }
         cb.recurseCallback(this);

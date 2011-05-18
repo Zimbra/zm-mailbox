@@ -15,6 +15,7 @@
 
 package com.zimbra.cs.index;
 
+import java.io.Closeable;
 import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
@@ -25,7 +26,7 @@ import com.zimbra.common.service.ServiceException;
  * @since Mar 15, 2005
  * @author tim
  */
-public interface ZimbraQueryResults {
+public interface ZimbraQueryResults extends Closeable {
 
     /**
      * Resets the iterator to the beginning
@@ -62,15 +63,6 @@ public interface ZimbraQueryResults {
      * @throws ServiceException
      */
     boolean hasNext() throws ServiceException;
-
-    /**
-     * MUST be called when you are done with this iterator!
-     * <p>
-     * If this is not called, file descriptors can be leaked.
-     *
-     * @throws ServiceException
-     */
-    void doneWithSearchResults() throws ServiceException;
 
     /**
      * Note that in some cases, this might be a different Sort from the one

@@ -25,6 +25,7 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.search.TermQuery;
 
 import com.google.common.base.Joiner;
+import com.google.common.io.Closeables;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.AccessManager;
@@ -466,7 +467,7 @@ public final class ZimbraQuery {
         if (operation instanceof UnionQueryOperation) {
             UnionQueryOperation union = (UnionQueryOperation) operation;
             // separate out the LOCAL vs REMOTE parts...
-            for (QueryOperation op : union.mQueryOperations) {
+            for (QueryOperation op : union.operations) {
                 QueryTargetSet targets = op.getQueryTargets();
 
                 // this assertion OK because we have already distributed multi-target query ops
@@ -498,14 +499,14 @@ public final class ZimbraQuery {
         }
 
         // Handle the REMOTE side:
-        if (!remoteOps.mQueryOperations.isEmpty()) {
+        if (!remoteOps.operations.isEmpty()) {
             // Since optimize() has already been run, we know that each of our ops
             // only has one target (or none).  Find those operations which have
             // an external target and wrap them in RemoteQueryOperations
 
             // iterate backwards so we can remove/add w/o screwing iteration
-            for (int i = remoteOps.mQueryOperations.size()-1; i >= 0; i--) {
-                QueryOperation op = remoteOps.mQueryOperations.get(i);
+            for (int i = remoteOps.operations.size() - 1; i >= 0; i--) {
+                QueryOperation op = remoteOps.operations.get(i);
 
                 QueryTargetSet targets = op.getQueryTargets();
 
@@ -517,10 +518,10 @@ public final class ZimbraQuery {
                 // that we only have ONE target (ie we've already distributed if necessary)
 
                 if (targets.hasExternalTargets()) {
-                    remoteOps.mQueryOperations.remove(i);
+                    remoteOps.operations.remove(i);
                     boolean foundOne = false;
                     // find a remoteOp to add this one to
-                    for (QueryOperation remoteOp : remoteOps.mQueryOperations) {
+                    for (QueryOperation remoteOp : remoteOps.operations) {
                         if (remoteOp instanceof RemoteQueryOperation) {
                             if (((RemoteQueryOperation) remoteOp).tryAddOredOperation(op)) {
                                 foundOne = true;
@@ -531,13 +532,13 @@ public final class ZimbraQuery {
                     if (!foundOne) {
                         RemoteQueryOperation remoteOp = new RemoteQueryOperation();
                         remoteOp.tryAddOredOperation(op);
-                        remoteOps.mQueryOperations.add(i, remoteOp);
+                        remoteOps.operations.add(i, remoteOp);
                     }
                 }
             }
 
             // ...we need to call setup on every RemoteQueryOperation we end up with...
-            for (QueryOperation remoteOp : remoteOps.mQueryOperations) {
+            for (QueryOperation remoteOp : remoteOps.operations) {
                 assert(remoteOp instanceof RemoteQueryOperation);
                 try {
                     ((RemoteQueryOperation) remoteOp).setup(protocol, octxt.getAuthToken(), params);
@@ -548,7 +549,7 @@ public final class ZimbraQuery {
         }
 
         // For the LOCAL parts of the query, do permission checks, do trash/spam exclusion
-        if (!localOps.mQueryOperations.isEmpty()) {
+        if (!localOps.operations.isEmpty()) {
             ZimbraLog.search.debug("LOCAL_IN=%s", localOps);
 
             Account authAcct = octxt != null ? octxt.getAuthenticatedUser() : mailbox.getAccount();
@@ -561,7 +562,7 @@ public final class ZimbraQuery {
             }
             if (!includeTrash || !includeSpam) {
                 List<QueryOperation> toAdd = new ArrayList<QueryOperation>();
-                for (Iterator<QueryOperation> iter = localOps.mQueryOperations.iterator(); iter.hasNext();) {
+                for (Iterator<QueryOperation> iter = localOps.operations.iterator(); iter.hasNext();) {
                     QueryOperation cur = iter.next();
                     if (!cur.hasSpamTrashSetting()) {
                         QueryOperation newOp = cur.ensureSpamTrashSetting(mailbox, includeTrash, includeSpam);
@@ -571,7 +572,7 @@ public final class ZimbraQuery {
                         }
                     }
                 }
-                localOps.mQueryOperations.addAll(toAdd);
+                localOps.operations.addAll(toAdd);
             }
 
             ZimbraLog.search.debug("LOCAL_AFTERTS=%s", localOps);
@@ -637,7 +638,7 @@ public final class ZimbraQuery {
                 ZimbraLog.search.debug("CLONED_LOCAL_AFTER_PERM=%s", clonedLocal);
 
                 // clonedLocal should only have the single INTERSECT in it
-                assert(clonedLocal.mQueryOperations.size() == 1);
+                assert(clonedLocal.operations.size() == 1);
 
                 QueryOperation optimizedClonedLocal = clonedLocal.optimize(mailbox);
                 ZimbraLog.search.debug("CLONED_LOCAL_AFTER_OPTIMIZE=%s", optimizedClonedLocal);
@@ -719,10 +720,8 @@ public final class ZimbraQuery {
             }
             return results;
         } catch (RuntimeException e) {
-            if (results != null) {
-                results.doneWithSearchResults();
-            }
-            operation.doneWithSearchResults();
+            Closeables.closeQuietly(results);
+            Closeables.closeQuietly(operation);
             throw e;
         }
     }
@@ -749,11 +748,11 @@ public final class ZimbraQuery {
     private static UnionQueryOperation handleLocalPermissionChecks(UnionQueryOperation union,
             Set<Folder> visibleFolders, boolean allowPrivateAccess) {
 
-        // Since optimize() has already been run, we know that each of our ops
-        // only has one target (or none).  Find those operations which have
-        // an external target and wrap them in RemoteQueryOperations
-        for (int i = union.mQueryOperations.size()-1; i >= 0; i--) { // iterate backwards so we can remove/add w/o screwing iteration
-            QueryOperation op = union.mQueryOperations.get(i);
+        // Since optimize() has already been run, we know that each of our ops only has one target (or none). Find those
+        // operations which have an external target and wrap them in RemoteQueryOperations.
+        // iterate backwards so we can remove/add w/o screwing iteration
+        for (int i = union.operations.size() - 1; i >= 0; i--) {
+            QueryOperation op = union.operations.get(i);
             QueryTargetSet targets = op.getQueryTargets();
 
             // this assertion is OK because we have already distributed multi-target query ops
@@ -771,11 +770,11 @@ public final class ZimbraQuery {
 
                 if (visibleFolders != null) {
                     if (visibleFolders.isEmpty()) {
-                        union.mQueryOperations.remove(i);
+                        union.operations.remove(i);
                         ZimbraLog.search.debug("Query changed to NULL_QUERY_OPERATION, no visible folders");
-                        union.mQueryOperations.add(i, new NoResultsQueryOperation());
+                        union.operations.add(i, new NoResultsQueryOperation());
                     } else {
-                        union.mQueryOperations.remove(i);
+                        union.operations.remove(i);
 
                         // build a "and (in:visible1 or in:visible2 or in:visible3...)" query tree here!
                         IntersectionQueryOperation intersect = new IntersectionQueryOperation();
@@ -793,7 +792,7 @@ public final class ZimbraQuery {
                             }
                         }
 
-                        union.mQueryOperations.add(i, intersect);
+                        union.operations.add(i, intersect);
                     }
                 }
             }

@@ -40,6 +40,7 @@ import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
+import com.google.common.io.Closeables;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -175,7 +176,7 @@ public class IndexEditor {
                 try {
                     all.add(result);
                 } finally {
-                    result.doneWithSearchResults();
+                    result.close();
                 }
             }
             return HitIdGrouper.create(all, sortBy);
@@ -231,7 +232,7 @@ public class IndexEditor {
                 outputStream.println("Query ran in " + (endTime-startTime) + " ms");
                 outputStream.println("Displayed a total of " + totalShown + " Hits");
             } finally {
-                res.doneWithSearchResults();
+                Closeables.closeQuietly(res);
             }
         }
     }

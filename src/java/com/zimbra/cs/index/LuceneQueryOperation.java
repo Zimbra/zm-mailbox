@@ -237,7 +237,7 @@ public final class LuceneQueryOperation extends QueryOperation {
     }
 
     @Override
-    public void doneWithSearchResults() throws ServiceException {
+    public void close() {
         Closeables.closeQuietly(searcher);
         searcher = null;
     }

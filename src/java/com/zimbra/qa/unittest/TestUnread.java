@@ -362,15 +362,14 @@ public class TestUnread extends TestCase {
     /**
      * Makes sure that something comes back when searching for unread items.
      */
-    public void testSearch()
-    throws Exception {
+    public void testSearch() throws Exception {
         ZimbraLog.test.debug("testSearch");
         verifySetUp();
 
         ZimbraQueryResults results = mMbox.index.search(new OperationContext(mMbox), "is:unread",
                 EnumSet.of(MailItem.Type.MESSAGE), SortBy.DATE_DESC, 100);
         assertTrue("No search results found", results.hasNext());
-        results.doneWithSearchResults();
+        results.close();
     }
 
     public void testDeleteConversation()

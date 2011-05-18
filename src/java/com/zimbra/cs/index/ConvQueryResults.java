@@ -15,6 +15,7 @@
 
 package com.zimbra.cs.index;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -154,8 +155,8 @@ final class ConvQueryResults extends ZimbraQueryResultsImpl {
     }
 
     @Override
-    public void doneWithSearchResults() throws ServiceException {
-        results.doneWithSearchResults();
+    public void close() throws IOException {
+        results.close();
     }
 
     @Override

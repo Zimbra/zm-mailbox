@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -14,9 +14,11 @@
  */
 package com.zimbra.cs.index;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+import com.google.common.io.Closeables;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
@@ -69,16 +71,16 @@ final class RemoteQueryOperation extends FilterQueryOperation {
 
         assert(queryTarget != null);
 
-        if (mOp == null) {
-            mOp = new UnionQueryOperation();
+        if (operation == null) {
+            operation = new UnionQueryOperation();
         }
-        ((UnionQueryOperation) mOp).add(op);
+        ((UnionQueryOperation) operation).add(op);
         return true;
     }
 
     @Override
     public String toString() {
-        return "REMOTE[" + queryTarget + "]:" + mOp;
+        return "REMOTE[" + queryTarget + "]:" + operation;
     }
 
     protected void setup(SoapProtocol proto, AuthToken authToken, SearchParams params)
@@ -94,10 +96,10 @@ final class RemoteQueryOperation extends FilterQueryOperation {
 
         if (ZimbraLog.search.isDebugEnabled()) {
             ZimbraLog.search.debug("RemoteQuery=\"%s\" target=%s server=%s",
-                    mOp.toQueryString(), queryTarget, remoteServer.getName());
+                    operation.toQueryString(), queryTarget, remoteServer.getName());
         }
 
-        String queryString = mOp.toQueryString();
+        String queryString = operation.toQueryString();
         results = new ProxiedQueryResults(proto, authToken, queryTarget.toString(),
                 remoteServer.getName(), params, queryString, params.getMode());
     }
@@ -120,11 +122,9 @@ final class RemoteQueryOperation extends FilterQueryOperation {
     }
 
     @Override
-    public void doneWithSearchResults() throws ServiceException {
-        if (results != null) {
-            results.doneWithSearchResults();
-        }
-        super.doneWithSearchResults();
+    public void close() throws IOException {
+        Closeables.closeQuietly(results);
+        super.close();
     }
 
     @Override

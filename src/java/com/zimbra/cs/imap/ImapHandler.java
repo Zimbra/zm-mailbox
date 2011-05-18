@@ -15,6 +15,7 @@
 package com.zimbra.cs.imap;
 
 import com.google.common.base.Charsets;
+import com.google.common.io.Closeables;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ArrayUtil;
@@ -2928,7 +2929,7 @@ abstract class ImapHandler {
                             modseq = Math.max(modseq, Math.max(hit.getModifiedSequence(), i4msg.getFlagModseq(i4folder.getTagset())));
                     }
                 } finally {
-                    zqr.doneWithSearchResults();
+                    Closeables.closeQuietly(zqr);
                 }
             }
         } catch (ServiceException e) {
@@ -3083,7 +3084,7 @@ abstract class ImapHandler {
                     }
                 }
             } finally {
-                zqr.doneWithSearchResults();
+                zqr.close();
             }
         } catch (ServiceException e) {
             ZimbraLog.imap.warn("THREAD failed", e);

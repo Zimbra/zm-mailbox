@@ -28,6 +28,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.dom4j.Element;
 import org.json.JSONException;
 
+import com.google.common.io.Closeables;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
@@ -214,12 +215,9 @@ public class AddressObject extends MailItemResource {
                     }
                 }
             } catch (Exception e) {
-                ZimbraLog.dav.error("can't search for: uid="+uid, e);
+                ZimbraLog.dav.error("can't search for: uid=%s", uid, e);
             } finally {
-                if (zqr != null)
-                    try {
-                        zqr.doneWithSearchResults();
-                    } catch (ServiceException e) {}
+                Closeables.closeQuietly(zqr);
             }
         }
         return item;

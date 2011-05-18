@@ -319,7 +319,7 @@ final class ImapSessionManager {
                     i4list.add(hit.getImapMessage());
                 }
             } finally {
-                zqr.doneWithSearchResults();
+                zqr.close();
             }
         } catch (ServiceException e) {
             throw e;

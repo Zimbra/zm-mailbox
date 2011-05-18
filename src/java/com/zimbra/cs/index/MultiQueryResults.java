@@ -100,7 +100,7 @@ public class MultiQueryResults implements ZimbraQueryResults {
     }
 
     @Override
-    public void doneWithSearchResults() {
+    public void close() {
         hits = null;
         queryInfo = null;
     }

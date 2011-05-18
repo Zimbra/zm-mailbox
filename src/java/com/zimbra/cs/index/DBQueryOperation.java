@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.io.Closeables;
 import com.zimbra.common.util.ZimbraLog;
 
 import org.apache.lucene.document.Document;
@@ -32,7 +33,6 @@ import org.apache.lucene.index.Term;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.Db;
-import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.db.DbPool.DbConnection;
@@ -415,10 +415,8 @@ public class DBQueryOperation extends QueryOperation {
     }
 
     @Override
-    public void doneWithSearchResults() throws ServiceException {
-        if (luceneOp != null) {
-            luceneOp.doneWithSearchResults();
-        }
+    public void close() {
+        Closeables.closeQuietly(luceneOp);
     }
 
     @Override
@@ -814,8 +812,6 @@ public class DBQueryOperation extends QueryOperation {
         } else {
             SortBy sort = getSortOrder();
             dbHits = new ArrayList<DbSearch.Result>();
-
-            Mailbox mbox = context.getMailbox();
             switch (executeMode) {
                 case NO_RESULTS:
                     assert(false); // notreached

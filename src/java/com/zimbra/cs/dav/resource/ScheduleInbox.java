@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -26,6 +26,7 @@ import java.util.Set;
 import org.dom4j.Element;
 import org.dom4j.QName;
 
+import com.google.common.io.Closeables;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -70,13 +71,15 @@ public class ScheduleInbox extends CalendarCollection {
 
     @Override
     public java.util.Collection<DavResource> getAppointmentsByUids(DavContext ctxt, List<String> hrefs) throws ServiceException, DavException {
-        ArrayList<DavResource> result = new ArrayList<DavResource>();
-        if (!ctxt.isSchedulingEnabled())
+        List<DavResource> result = new ArrayList<DavResource>();
+        if (!ctxt.isSchedulingEnabled()) {
             return result;
+        }
         Account target = null;
         Provisioning prov = Provisioning.getInstance();
-        if (ctxt.getPathInfo() != null)
+        if (ctxt.getPathInfo() != null) {
             target = prov.getAccountByName(ctxt.getPathInfo());
+        }
         String query = "is:invite is:unread inid:" + getId() + " after:\"-1month\" ";
         Mailbox mbox = getMailbox(ctxt);
         ZimbraQueryResults zqr = null;
@@ -86,36 +89,39 @@ public class ScheduleInbox extends CalendarCollection {
                 ZimbraHit hit = zqr.getNext();
                 if (hit instanceof MessageHit) {
                     Message msg = ((MessageHit)hit).getMessage();
-                    if (target == null && msg.getCalendarIntendedFor() != null)
+                    if (target == null && msg.getCalendarIntendedFor() != null) {
                         continue;
-                    if (!msg.isInvite() || !msg.hasCalendarItemInfos())
+                    }
+                    if (!msg.isInvite() || !msg.hasCalendarItemInfos()) {
                         continue;
-                    if ("REPLY".equals(msg.getCalendarItemInfo(0).getInvite().getMethod()))
+                    }
+                    if ("REPLY".equals(msg.getCalendarItemInfo(0).getInvite().getMethod())) {
                         continue;
+                    }
                     if (target != null) {
-                        if (msg.getCalendarIntendedFor() == null)
+                        if (msg.getCalendarIntendedFor() == null) {
                             continue;
+                        }
                         Account apptRcpt = prov.getAccountByName(msg.getCalendarIntendedFor());
-                        if (apptRcpt == null || !apptRcpt.getId().equals(target.getId()))
+                        if (apptRcpt == null || !apptRcpt.getId().equals(target.getId())) {
                             continue;
+                        }
                     }
                     DavResource rs = UrlNamespace.getResourceFromMailItem(ctxt, msg);
                     if (rs != null) {
                         String href = UrlNamespace.getRawResourceUrl(rs);
-                        if (hrefs == null || hrefs.contains(href))
+                        if (hrefs == null || hrefs.contains(href)) {
                             result.add(rs);
-                        else
+                        } else {
                             result.add(new DavResource.InvalidResource(href, getOwner()));
+                        }
                     }
                 }
             }
         } catch (Exception e) {
             ZimbraLog.dav.error("can't search: uri="+getUri(), e);
         } finally {
-            if (zqr != null)
-                try {
-                    zqr.doneWithSearchResults();
-                } catch (ServiceException e) {}
+            Closeables.closeQuietly(zqr);
         }
         return result;
     }
@@ -125,8 +131,7 @@ public class ScheduleInbox extends CalendarCollection {
         ArrayList<Element> newSet = null;
         for (Element el : set) {
             if (el.getQName().equals(DavElements.E_CALENDAR_FREE_BUSY_SET)) {
-                @SuppressWarnings("unchecked")
-                Iterator hrefs = el.elementIterator(DavElements.E_HREF);
+                Iterator<?> hrefs = el.elementIterator(DavElements.E_HREF);
                 ArrayList<String> urls = new ArrayList<String>();
                 while (hrefs.hasNext())
                     urls.add(((Element)hrefs.next()).getText());

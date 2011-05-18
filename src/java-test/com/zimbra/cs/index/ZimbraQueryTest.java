@@ -114,7 +114,7 @@ public final class ZimbraQueryTest {
         Assert.assertTrue(results.hasNext());
         Assert.assertEquals(msg3.getId(), results.getNext().getItemId());
         Assert.assertFalse(results.hasNext());
-        results.doneWithSearchResults();
+        results.close();
     }
 
 }

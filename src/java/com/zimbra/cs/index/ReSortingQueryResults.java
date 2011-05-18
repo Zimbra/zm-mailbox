@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.index;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -52,8 +53,8 @@ public final class ReSortingQueryResults implements ZimbraQueryResults {
     }
 
     @Override
-    public void doneWithSearchResults() throws ServiceException {
-        results.doneWithSearchResults();
+    public void close() throws IOException {
+        results.close();
     }
 
     @Override

@@ -29,6 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
+import com.google.common.io.Closeables;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
@@ -233,18 +234,19 @@ public abstract class Formatter {
     }
 
     protected static class QueryResultIterator implements Iterator<MailItem> {
-        private ZimbraQueryResults mResults;
+        private ZimbraQueryResults results;
 
         QueryResultIterator(ZimbraQueryResults results) {
-            mResults = results;
+            this.results = results;
         }
 
         @Override
         public boolean hasNext() {
-            if (mResults == null)
+            if (results == null) {
                 return false;
+            }
             try {
-                return mResults.hasNext();
+                return results.hasNext();
             } catch (ServiceException e) {
                 ZimbraLog.misc.warn("caught exception", e);
                 return false;
@@ -253,12 +255,14 @@ public abstract class Formatter {
 
         @Override
         public MailItem next() {
-            if (mResults == null)
+            if (results == null) {
                 return null;
+            }
             try {
-                ZimbraHit hit = mResults.getNext();
-                if (hit != null)
+                ZimbraHit hit = results.getNext();
+                if (hit != null) {
                     return hit.getMailItem();
+                }
             } catch (ServiceException e) {
                 ZimbraLog.misc.warn("caught exception", e);
             }
@@ -271,11 +275,8 @@ public abstract class Formatter {
         }
 
         public void finished() {
-            try {
-                if (mResults != null)
-                    mResults.doneWithSearchResults();
-            } catch (ServiceException e) { }
-            mResults = null;
+            Closeables.closeQuietly(results);
+            results = null;
         }
     }
 

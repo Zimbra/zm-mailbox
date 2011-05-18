@@ -51,6 +51,7 @@ import org.mortbay.jetty.HttpConnection;
 import org.mortbay.thread.Timeout;
 
 import com.google.common.base.Strings;
+import com.google.common.io.Closeables;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
@@ -306,19 +307,16 @@ public abstract class ArchiveFormatter extends Formatter {
                 } catch (Exception e) {
                     warn(e);
                 } finally {
-                    if (results != null)
-                        results.doneWithSearchResults();
+                    Closeables.closeQuietly(results);
                 }
             }
             if (aos == null) {
                 if (emptyname == null) {
                     context.resp.setHeader("Content-Disposition", null);
-                    throw new UserServletException(HttpServletResponse.
-                        SC_NO_CONTENT, "No data found");
+                    throw new UserServletException(HttpServletResponse.SC_NO_CONTENT, "No data found");
                 }
                 context.resp.setHeader("Content-Disposition", Part.ATTACHMENT +
-                    "; filename=" + HttpUtil.encodeFilename(context.req,
-                    emptyname));
+                        "; filename=" + HttpUtil.encodeFilename(context.req, emptyname));
                 aos = getOutputStream(context, UTF8);
             }
         } finally {
