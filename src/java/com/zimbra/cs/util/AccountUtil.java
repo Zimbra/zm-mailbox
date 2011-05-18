@@ -35,6 +35,7 @@ import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning.DomainBy;
@@ -126,7 +127,6 @@ public class AccountUtil {
     }
     
     public static boolean isDirectRecipient(Account acct, String[] otherAccountAddrs, MimeMessage mm, int maxToCheck) throws ServiceException, MessagingException {
-        String accountAddress = acct.getName();
         String canonicalAddress = getCanonicalAddress(acct);
         String[] accountAliases = acct.getMailAlias();
         String[] allowedFromAddrs = acct.getMultiAttr(Provisioning.A_zimbraAllowFromAddress);
@@ -139,7 +139,7 @@ public class AccountUtil {
         int numRecipientsToCheck = (maxToCheck <= 0 ? recipients.length : Math.min(recipients.length, maxToCheck));
         for (int i = 0; i < numRecipientsToCheck; i++) {
             String msgAddress = ((InternetAddress) recipients[i]).getAddress();
-            if (addressMatchesAccount(accountAddress, canonicalAddress, accountAliases, allowedFromAddrs, msgAddress)) 
+            if (addressMatchesAccount(acct, canonicalAddress, accountAliases, allowedFromAddrs, false, msgAddress)) 
                 return true;
             
             if (otherAccountAddrs != null) {
@@ -187,21 +187,35 @@ public class AccountUtil {
     public static boolean allowFromAddress(Account acct, String fromAddr) throws ServiceException {
         if (fromAddr == null)
             return false;
-        return addressMatchesAccount(acct, fromAddr)
+        return addressMatchesAccountOrSendAs(acct, fromAddr)
             || acct.getBooleanAttr(Provisioning.A_zimbraAllowAnyFromAddress, false);
     }
 
     /**
-     * True if this address matches some address for this account (aliases, domain re-writes, etc)
+     * True if this address matches some address for this account (aliases, domain re-writes, etc) or address of
+     * another account that this account may send as.
+     */
+    public static boolean addressMatchesAccountOrSendAs(Account acct, String givenAddress) throws ServiceException {
+        if (givenAddress == null)
+            return false;
+        String canonicalAddress = getCanonicalAddress(acct);
+        String[] accountAliases = acct.getMailAlias();
+        String[] allowedFromAddrs = acct.getMultiAttr(Provisioning.A_zimbraAllowFromAddress);
+        return addressMatchesAccount(acct, canonicalAddress, accountAliases, allowedFromAddrs, true, givenAddress);
+    }
+
+    /**
+     * True if this address matches some address for this account (aliases, domain re-writes, etc).  Send-as addresses
+     * are not considered a match.  A send-as address is an allow-from address that corresponds to an account different
+     * from this account.
      */
     public static boolean addressMatchesAccount(Account acct, String givenAddress) throws ServiceException {
         if (givenAddress == null)
             return false;
-        String accountAddress = acct.getName();
         String canonicalAddress = getCanonicalAddress(acct);
         String[] accountAliases = acct.getMailAlias();
         String[] allowedFromAddrs = acct.getMultiAttr(Provisioning.A_zimbraAllowFromAddress);
-        return addressMatchesAccount(accountAddress, canonicalAddress, accountAliases, allowedFromAddrs, givenAddress);
+        return addressMatchesAccount(acct, canonicalAddress, accountAliases, allowedFromAddrs, false, givenAddress);
     }
     
     /**
@@ -228,11 +242,13 @@ public class AccountUtil {
     }
 
     private static boolean addressMatchesAccount(
-            String accountAddress, String canonicalAddress, String[] accountAliases, String[] allowedFromAddrs,
+            Account account, String canonicalAddress, String[] accountAliases,
+            String[] allowedFromAddrs, boolean includeSendAsAddresses,
             String givenAddress) {
         if (givenAddress == null)
             return false;
 
+        String accountAddress = account.getName();
         if (givenAddress.equalsIgnoreCase(accountAddress))
             return true;
         if (givenAddress.equalsIgnoreCase(canonicalAddress))
@@ -246,11 +262,22 @@ public class AccountUtil {
         }
         if (allowedFromAddrs != null) {
             for (int j = 0; j < allowedFromAddrs.length; j++) {
+                if (!includeSendAsAddresses) {
+                    Account allowFromAccount = null;
+                    try {
+                        allowFromAccount = Provisioning.getInstance().get(AccountBy.name, allowedFromAddrs[j]);
+                        if (allowFromAccount != null && !account.equals(allowFromAccount)) {
+                            // The allow-from address refers to another account, and therefore it is not a match
+                            // for this account.
+                            continue;
+                        }
+                    } catch (ServiceException e) {}                
+                }
                 if (givenAddress.equalsIgnoreCase(allowedFromAddrs[j]))
                     return true;
             }
         }
-        
+
         try {
             String addrByDomainAlias = Provisioning.getInstance().getEmailAddrByDomainAlias(givenAddress);
             if (addrByDomainAlias != null && addrByDomainAlias.equals(accountAddress))

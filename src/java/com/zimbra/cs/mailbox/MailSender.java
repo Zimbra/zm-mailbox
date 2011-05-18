@@ -801,7 +801,8 @@ public class MailSender {
         if (!skipSendAsCheck) {
             InternetAddress addr = canSendAs ? null : AccountUtil.getFriendlyEmailAddress(authuser);
             // if the call doesn't require a Sender but the caller supplied one, pass it through if it's acceptable
-            if (sender == null || !(sender instanceof InternetAddress) || !AccountUtil.addressMatchesAccount(authuser, ((InternetAddress) sender).getAddress())) {
+            if (sender == null || !(sender instanceof InternetAddress) ||
+                !AccountUtil.addressMatchesAccountOrSendAs(authuser, ((InternetAddress) sender).getAddress())) {
                 sender = addr;
             }
         }

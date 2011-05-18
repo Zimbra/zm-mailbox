@@ -487,7 +487,7 @@ public class Message extends MailItem {
             //   boolean sentByMe = (flags & Flag.FLAG_FROM_ME) != 0;
             boolean sentByMe = false;
             if (!Strings.isNullOrEmpty(sender)) {
-                sentByMe = AccountUtil.addressMatchesAccount(acct, sender);
+                sentByMe = AccountUtil.addressMatchesAccountOrSendAs(acct, sender);
             }
             try {
                 components = Invite.createFromCalendar(acct, pm.getFragment(), cal, sentByMe, mbox, id);
