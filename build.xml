@@ -236,6 +236,9 @@
       <fileset dir="${common.jars.dir}">
         <include name="**/*.jar"/>
       </fileset>
+      <fileset dir="${common.dir}/jars-test">
+        <include name="**/*.jar"/>
+      </fileset>
       <fileset dir="${im.jars.dir}">
         <include name="**/*.jar"/>
       </fileset>
