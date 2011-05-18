@@ -37,6 +37,8 @@ import com.zimbra.cs.service.authenticator.SSOAuthenticator.ZimbraPrincipal;
 import com.zimbra.cs.servlet.ZimbraServlet;
 
 public abstract class SSOServlet extends ZimbraServlet {
+    private final static String IGNORE_LOGIN_URL = "/?ignoreLoginURL=1";
+    
     
     public void init() throws ServletException {
         String name = getServletName();
@@ -119,6 +121,9 @@ public abstract class SSOServlet extends ZimbraServlet {
             redirectUrl = getMailUrl(server);
         }
         
+        // always append the ignore loginURL query so we do not get into a redirect loop.
+        redirectUrl = redirectUrl + IGNORE_LOGIN_URL;  // not yet supported for admin console
+        
         URL url = new URL(redirectUrl);
         boolean isRedirectProtocolSecure = isProtocolSecure(url.getProtocol());
         
@@ -137,16 +142,18 @@ public abstract class SSOServlet extends ZimbraServlet {
         String redirectUrl;
         
         if (errorUrl == null) {
-            // append the ignore loginURL query so we do not get into a redirect loop.
-            final String IGNORE_LOGIN_URL = "/?ignoreLoginURL=1";
             
             Server server = Provisioning.getInstance().getLocalServer();
             
             if (isAdminRequest) {
-                redirectUrl = getAdminUrl(server) + IGNORE_LOGIN_URL; // not yet supported for admin console
+                redirectUrl = getAdminUrl(server); 
             } else {
-                redirectUrl = getMailUrl(server) + IGNORE_LOGIN_URL;
+                redirectUrl = getMailUrl(server);
             }
+            
+            // always append the ignore loginURL query so we do not get into a redirect loop.
+            redirectUrl = redirectUrl + IGNORE_LOGIN_URL;  // not yet supported for admin console
+            
         } else {
             redirectUrl = errorUrl;
         }
