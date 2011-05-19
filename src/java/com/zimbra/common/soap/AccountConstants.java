@@ -248,6 +248,7 @@ public class AccountConstants {
     public static final String A_BY = "by";
     public static final String A_TYPE = "type";
     public static final String A_LIMIT = "limit";
+    public static final String A_LOCAL_NAME = "localName";
     public static final String A_MORE = "more";
     public static final String A_TOTAL = "total";
     public static final String A_ZIMLET = "zimlet";
