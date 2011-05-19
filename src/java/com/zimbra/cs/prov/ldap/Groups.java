@@ -34,7 +34,7 @@ public class Groups {
     private LdapProv mProv;
     private Set<String> mAllDLs = null; // email addresses of all distribution lists on the system
     
-    private static class GetAllDLsVisitor implements SearchLdapVisitor {
+    private static class GetAllDLsVisitor extends SearchLdapVisitor {
         Set<String> allDLs = new HashSet<String>();
         
         @Override

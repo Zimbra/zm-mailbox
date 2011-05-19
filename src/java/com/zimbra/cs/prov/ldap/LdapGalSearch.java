@@ -249,7 +249,7 @@ public class LdapGalSearch {
         }
     }
 
-    private static class SearhcGalVisitor implements SearchLdapOptions.SearchLdapVisitor {
+    private static class SearhcGalVisitor extends SearchLdapOptions.SearchLdapVisitor {
 
         private ZLdapContext zlc;
         private GalSearchConfig.GalType galType;
@@ -259,6 +259,8 @@ public class LdapGalSearch {
         
         private SearhcGalVisitor(ZLdapContext zlc, GalSearchConfig.GalType galType, 
                 String base, LdapGalMapRules rules, SearchGalResult result) {
+            super(false);
+            
             this.zlc = zlc;
             this.galType = galType;
             this.base = base;
@@ -267,7 +269,7 @@ public class LdapGalSearch {
         }
         
         @Override
-        public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs) {
+        public void visit(String dn, IAttributes ldapAttrs) {
             GalContact lgc = new GalContact(galType, dn, rules.apply(zlc, base, dn, ldapAttrs));
             String mts = (String) lgc.getAttrs().get("modifyTimeStamp");
             result.setToken(LdapUtilCommon.getLaterTimestamp(result.getToken(), mts));
@@ -279,7 +281,6 @@ public class LdapGalSearch {
                 ZimbraLog.gal.warn("unable to add GAL match", e);
             }
             ZimbraLog.gal.debug("dn=" + dn + ", mts=" + mts + ", cts=" + cts);
-            
         }
         
     }
