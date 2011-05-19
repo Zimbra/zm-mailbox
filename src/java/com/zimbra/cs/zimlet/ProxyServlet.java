@@ -26,6 +26,8 @@ import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.service.AuthProvider;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
@@ -60,12 +62,17 @@ import com.zimbra.common.localconfig.LC;
  */
 @SuppressWarnings("serial")
 public class ProxyServlet extends ZimbraServlet {
+
+    private static final String Z_AUTH_TOKEN_PARAM = "zauthtoken";
+
     private static final String TARGET_PARAM = "target";
+
     private static final String UPLOAD_PARAM = "upload";
+    private static final String FILENAME_PARAM = "filename";
+    private static final String FORMAT_PARAM = "fmt";
+
     private static final String USER_PARAM = "user";
     private static final String PASS_PARAM = "pass";
-    private static final String FORMAT_PARAM = "fmt";
-    private static final String FILENAME_PARAM = "filename";
     private static final String AUTH_PARAM = "auth";
     private static final String AUTH_BASIC = "basic";
    
@@ -83,7 +90,7 @@ public class ProxyServlet extends ZimbraServlet {
         return allowedDomains;
     }
     
-    private boolean checkPermissionOnTarget(HttpServletRequest req, URL target, AuthToken auth) {
+    private boolean checkPermissionOnTarget(URL target, AuthToken auth) {
         String host = target.getHost().toLowerCase();
         ZimbraLog.zimlet.debug("checking allowedDomains permission on target host: "+host);
         Set<String> domains;
@@ -167,6 +174,15 @@ public class ProxyServlet extends ZimbraServlet {
         ZimbraLog.clearContext();
         boolean isAdmin = isAdminRequest(req);
         AuthToken authToken = isAdmin ? getAdminAuthTokenFromCookie(req, resp) : getAuthTokenFromCookie(req, resp);      
+        if (authToken == null) {
+            String zAuthToken = req.getParameter(Z_AUTH_TOKEN_PARAM);
+            if (zAuthToken != null)
+                try {
+                    authToken = AuthProvider.getAuthToken(zAuthToken);
+                } catch (AuthTokenException e) {
+                    resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "unable to parse auth token");
+                }
+        }
         if (authToken == null)
             return;
 
@@ -182,7 +198,7 @@ public class ProxyServlet extends ZimbraServlet {
 
         // check for permission
         URL url = new URL(target);
-        if (!isAdmin && !checkPermissionOnTarget(req, url, authToken)) {
+        if (!isAdmin && !checkPermissionOnTarget(url, authToken)) {
             resp.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }

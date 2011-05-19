@@ -337,19 +337,12 @@ public abstract class AuthProvider {
     }
     
     /**
-     * 
-     * Note: this API for now is only supported by ZimbraAuthProvider.
-     *      
-     * Callsites of this API:    
-     *     1. qp auth in UserServlet(REST)
-     *     2. authtoken query param in PreAuthServlet
-     *     
-     * Also see doc for AuthToken authToken(String encoded)
-     * 
+     * Creates an AuthToken object from token string.
+     *
      * @param encoded
-     * @param isAdminReq
      * @return
      * @throws AuthTokenException
+     * @see #authToken(String)
      */
     public static AuthToken getAuthToken(String encoded) throws AuthTokenException {
         AuthToken at = null;
