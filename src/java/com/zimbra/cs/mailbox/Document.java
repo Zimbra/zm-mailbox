@@ -27,7 +27,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.IndexDocument;
-import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -252,7 +251,7 @@ public class Document extends MailItem {
                 int version = (int) rev.getLong(Metadata.FN_VERSION, 1);
                 if (version > 1 && rev.getLong(Metadata.FN_VERSION, 1) != 1)
                     meta.put(Metadata.FN_VERSION, version);
-            } catch (ServiceException e) {
+            } catch (ServiceException ignored) {
             }
         }
 
@@ -359,17 +358,9 @@ public class Document extends MailItem {
     }
 
     @Override PendingDelete getDeletionInfo() throws ServiceException {
-        PendingDelete info = new PendingDelete();
-        info.rootId = mId;
-        info.itemIds.add(getType(), mId);
-
-        ArrayList<Integer> comments = new ArrayList<Integer>();
-        try {
-            for (Comment comment : mMailbox.getComments(null, mId, 0, -1)) {
-                info.add(comment.getDeletionInfo());
-                comments.add(comment.mId);
-            }
-        } catch (Exception e) {
+        PendingDelete info = super.getDeletionInfo();
+        for (Comment comment : mMailbox.getComments(null, mId, 0, -1)) {
+            info.add(comment.getDeletionInfo());
         }
         return info;
     }
