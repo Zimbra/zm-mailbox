@@ -35,13 +35,14 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+import com.zimbra.common.lmtp.LmtpClient;
+import com.zimbra.common.lmtp.LmtpClient.Protocol;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-import com.zimbra.cs.lmtpserver.utils.LmtpClient.Protocol;
 
 @SuppressWarnings("static-access")
 public class LmtpInject {

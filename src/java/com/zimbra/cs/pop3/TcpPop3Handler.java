@@ -15,10 +15,10 @@
 
 package com.zimbra.cs.pop3;
 
+import com.zimbra.common.io.TcpServerInputStream;
 import com.zimbra.common.util.NetUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.server.ProtocolHandler;
-import com.zimbra.cs.server.TcpServerInputStream;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;

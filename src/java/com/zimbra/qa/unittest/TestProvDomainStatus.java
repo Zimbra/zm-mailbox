@@ -26,6 +26,7 @@ import org.junit.*;
 import static org.junit.Assert.*;
 
 import com.zimbra.common.auth.ZAuthToken;
+import com.zimbra.common.lmtp.LmtpProtocolException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
@@ -43,7 +44,6 @@ import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
-import com.zimbra.cs.lmtpserver.LmtpProtocolException;
 
 public class TestProvDomainStatus {
     private Provisioning mProv;

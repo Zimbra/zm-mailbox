@@ -52,7 +52,7 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mailbox.SearchResultMode;
 import com.zimbra.cs.server.ProtocolHandler;
 import com.zimbra.cs.server.TcpServer;
-import com.zimbra.cs.server.TcpServerInputStream;
+import com.zimbra.common.io.TcpServerInputStream;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.*;

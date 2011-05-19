@@ -21,9 +21,9 @@ import java.util.Timer;
 
 import org.apache.mina.core.buffer.IoBuffer;
 
+import com.zimbra.common.lmtp.SmtpToLmtp;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.smtpserver.SmtpToLmtp;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
@@ -259,7 +259,8 @@ public final class Zimbra {
             if (LC.smtp_to_lmtp_enabled.booleanValue()) {
                 int smtpPort = LC.smtp_to_lmtp_port.intValue();
                 int lmtpPort = Provisioning.getInstance().getLocalServer().getLmtpBindPort();
-                SmtpToLmtp.startup(smtpPort, "localhost", lmtpPort);
+                SmtpToLmtp smtpServer = SmtpToLmtp.startup(smtpPort, "localhost", lmtpPort);
+                smtpServer.setRecipientValidator(new SmtpRecipientValidator());
             }
 
             // should be last, so that other subsystems can add dynamic stats counters

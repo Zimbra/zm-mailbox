@@ -14,8 +14,8 @@
  */
 package com.zimbra.cs.imap;
 
+import com.zimbra.common.io.TcpServerInputStream;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.server.TcpServerInputStream;
 
 import java.io.IOException;
 
