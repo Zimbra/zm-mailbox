@@ -52,6 +52,7 @@ public class GalSyncAccountContactLimit extends LdapUpgrade {
         final Set<String> galSyncAcctIds = new HashSet<String>();
         
         SearchLdapOptions.SearchLdapVisitor visitor = new SearchLdapVisitor() {
+            @Override
             public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs) {
                 System.out.println("Domain " + attrs.get(Provisioning.A_zimbraDomainName));
                 

@@ -225,10 +225,16 @@ public class JNDILdapContext extends ZLdapContext {
                         String dn = sr.getNameInNamespace();
                         Attributes attrs = sr.getAttributes();
                         JNDIAttributes jndiAttrs = new JNDIAttributes(attrs);
-                        visitor.visit(dn, jndiAttrs.getAttrs(binaryAttrs), jndiAttrs);
+                        if (visitor.wantAttrMapOnVisit()) {
+                            visitor.visit(dn, jndiAttrs.getAttrs(binaryAttrs), jndiAttrs);
+                        } else {
+                            visitor.visit(dn, jndiAttrs);
+                        }
                     }
                     cookie = zlc.getCookie();
                 } while (cookie != null);
+            } catch (SearchLdapOptions.StopIteratingException e) { 
+                // break out of the loop and close the ne    
             } finally {
                 if (ne != null) ne.close();
             }

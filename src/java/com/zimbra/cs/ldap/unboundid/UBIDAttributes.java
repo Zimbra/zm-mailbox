@@ -138,6 +138,16 @@ public class UBIDAttributes extends ZAttributes {
         return map;
     }
 
+    @Override
+    public boolean hasAttribute(String attrName) {
+        return entry.hasAttribute(attrName);
+    }
+
+    @Override
+    public boolean hasAttributeValue(String attrName, String value) {
+        return entry.hasAttributeValue(attrName, value);
+    }
+
 
 
 }

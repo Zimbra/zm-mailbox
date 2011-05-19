@@ -193,8 +193,7 @@ public class TestLdapProvDomain extends TestLdap {
         final List<String /* zimbraId */> domainIds = new ArrayList<String>();
         SearchLdapOptions.SearchLdapVisitor visitor = new SearchLdapOptions.SearchLdapVisitor() {
             @Override
-            public void visit(String dn, Map<String, Object> attrs,
-                    IAttributes ldapAttrs) {
+            public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs) {
                 try {
                     domainIds.add(ldapAttrs.getAttrString(Provisioning.A_zimbraId));
                 } catch (ServiceException e) {

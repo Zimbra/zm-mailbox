@@ -170,7 +170,7 @@ public class CollectAllEffectiveRights {
         }
     }
     
-    private static class Visitor implements SearchLdapVisitor {
+    private static class Visitor extends SearchLdapVisitor {
         private LdapProv mProv;
         private LdapDIT mLdapDIT;
         
@@ -178,11 +178,13 @@ public class CollectAllEffectiveRights {
         private Set<String> mNames = new HashSet<String>();
 
         Visitor(LdapProv prov) {
+            super(false);
             mProv = prov;
             mLdapDIT = mProv.getDIT();
         }
         
-        public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs) {
+        @Override
+        public void visit(String dn, IAttributes ldapAttrs) {
             try {
                 String name = mLdapDIT.dnToEmail(dn, ldapAttrs);
                 mNames.add(name);
@@ -513,9 +515,10 @@ public class CollectAllEffectiveRights {
         return subDomains;
     }
     
-    private static class SearchSubDomainVisitor implements SearchLdapVisitor {
+    private static class SearchSubDomainVisitor extends SearchLdapVisitor {
         List<String> mDomainIds = new ArrayList<String>();
 
+        @Override
         public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs) {
             String zimbraId = (String)attrs.get(Provisioning.A_zimbraId);
             if (zimbraId != null) {

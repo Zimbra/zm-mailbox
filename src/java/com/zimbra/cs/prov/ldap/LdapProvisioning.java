@@ -1338,7 +1338,7 @@ public class LdapProvisioning extends LdapProv {
     }
 
     @TODO
-    private static class SearchObjectsVisitor implements SearchLdapVisitor {
+    private static class SearchObjectsVisitor extends SearchLdapVisitor {
 
         private LdapProvisioning prov;  // TODO; change to the new name?
         private String configBranchBaseDn;
@@ -1349,6 +1349,8 @@ public class LdapProvisioning extends LdapProv {
         private int total = 0;
         
         private SearchObjectsVisitor(LdapProvisioning prov, NamedEntry.Visitor visitor, int maxResults, int flags) {
+            super(false);
+            
             this.prov = prov;
             configBranchBaseDn = prov.getDIT().configBranchBaseDN();
             this.visitor = visitor;
@@ -1357,16 +1359,16 @@ public class LdapProvisioning extends LdapProv {
         }
         
         @Override
-        public void visit(String dn, Map<String, Object> mapAttrs, IAttributes ldapAttrs) {
+        public void visit(String dn, IAttributes ldapAttrs) {
             try {
-                doVisit(dn, mapAttrs, ldapAttrs);
+                doVisit(dn, ldapAttrs);
             } catch (ServiceException e) {
                 ZimbraLog.account.warn("entry skipped, encountered error while processing entry at:" + dn);
             }
         }
         
         @TODO
-        private void doVisit(String dn, Map<String, Object> mapAttrs, IAttributes ldapAttrs) throws ServiceException {
+        private void doVisit(String dn, IAttributes ldapAttrs) throws ServiceException {
             /* can this happen?  TODO: check
             if (maxResults > 0 && total++ > maxResults) {
                 throw AccountServiceException.TOO_MANY_SEARCH_RESULTS("exceeded limit of "+maxResults, null);
@@ -2870,10 +2872,15 @@ public class LdapProvisioning extends LdapProv {
 
      }
     
-    private static class CountingVisitor implements SearchLdapVisitor {
+    private static class CountingVisitor extends SearchLdapVisitor {
         long numAccts = 0;
-            
-        public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs) {
+          
+        CountingVisitor() {
+            super(false);
+        }
+        
+        @Override
+        public void visit(String dn, IAttributes ldapAttrs) {
             numAccts++;
         }
             
@@ -6926,12 +6933,15 @@ public class LdapProvisioning extends LdapProv {
         return num;
     }
 
-    private class CountObjectsVisitor implements SearchLdapVisitor {
+    private class CountObjectsVisitor extends SearchLdapVisitor {
         long count = 0;
         
+        CountObjectsVisitor() {
+            super(false);
+        }
+        
         @Override
-        public void visit(String dn, Map<String, Object> attrs,
-                IAttributes ldapAttrs) {
+        public void visit(String dn, IAttributes ldapAttrs) {
             count++;
         }
         

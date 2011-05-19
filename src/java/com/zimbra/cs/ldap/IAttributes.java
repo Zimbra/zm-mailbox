@@ -46,5 +46,22 @@ public interface IAttributes {
     
     public List<String> getMultiAttrStringAsList(String attrName, CheckBinary checkBinary) 
     throws ServiceException;
+    
+    /**
+     * Whether the specified attribute is present.
+     * 
+     * @param attrName
+     * @return
+     */
+    public abstract boolean hasAttribute(String attrName);
+    
+    /**
+     * Whether it contains the specified attribute with the specified value.
+     *  
+     * @param attrName
+     * @param value
+     * @return
+     */
+    public abstract boolean hasAttributeValue(String attrName, String value);
 
 }

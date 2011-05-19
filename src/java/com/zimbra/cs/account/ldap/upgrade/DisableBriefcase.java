@@ -9,7 +9,6 @@ import javax.naming.directory.BasicAttributes;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapFilter;
-import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.LdapConstants;
@@ -34,16 +33,16 @@ public class DisableBriefcase extends LdapUpgrade {
         } finally {
             LegacyZimbraLdapContext.closeContext(zlc);
         }
-
     }
     
-    private static class DisableBriefcaseVisitor implements SearchLdapVisitor {
+    private static class DisableBriefcaseVisitor extends SearchLdapVisitor {
         private LegacyZimbraLdapContext mModZlc;
         
         DisableBriefcaseVisitor(LegacyZimbraLdapContext modZlc) {
             mModZlc = modZlc;
         }
         
+        @Override
         public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs) {
             Attributes modAttrs = new BasicAttributes(true);
             

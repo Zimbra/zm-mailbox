@@ -381,7 +381,7 @@ final public class Validators {
             map.put(parts[0], max);
         }
 
-        private static class BuildDomainCounts implements SearchLdapVisitor {
+        private static class BuildDomainCounts extends SearchLdapVisitor {
             
             private Provisioning prov;
             private String domain;

@@ -422,7 +422,11 @@ public class UBIDLdapContext extends ZLdapContext {
                             for (SearchResultEntry entry : searchResult.getSearchEntries()) {
                                 String dn = entry.getDN();
                                 UBIDAttributes ubidAttrs = new UBIDAttributes(entry);
-                                visitor.visit(dn, ubidAttrs.getAttrs(binaryAttrs), ubidAttrs);
+                                if (visitor.wantAttrMapOnVisit()) {
+                                    visitor.visit(dn, ubidAttrs.getAttrs(binaryAttrs), ubidAttrs);
+                                } else {
+                                    visitor.visit(dn, ubidAttrs);
+                                }
                             }
                         }
                     }
@@ -433,7 +437,11 @@ public class UBIDLdapContext extends ZLdapContext {
                 for (SearchResultEntry entry : result.getSearchEntries()) {
                     String dn = entry.getDN();
                     UBIDAttributes ubidAttrs = new UBIDAttributes(entry);
-                    visitor.visit(dn, ubidAttrs.getAttrs(binaryAttrs), ubidAttrs);
+                    if (visitor.wantAttrMapOnVisit()) {
+                        visitor.visit(dn, ubidAttrs.getAttrs(binaryAttrs), ubidAttrs);
+                    } else {
+                        visitor.visit(dn, ubidAttrs);
+                    }
                 }
 
                 cookie = null;
@@ -443,7 +451,8 @@ public class UBIDLdapContext extends ZLdapContext {
                     }
                 }
             } while ((cookie != null) && (cookie.getValueLength() > 0));
-            
+        } catch (SearchLdapOptions.StopIteratingException e) { 
+            // break out of the loop and close the ne
         } catch (LDAPException e) {
             throw mapToLdapException("unable to search ldap", e);
         }

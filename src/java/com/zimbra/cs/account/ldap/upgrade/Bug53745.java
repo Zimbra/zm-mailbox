@@ -36,13 +36,14 @@ public class Bug53745 extends LdapUpgrade {
 
     }
     
-    private static class Bug53745Visitor implements SearchLdapVisitor {
+    private static class Bug53745Visitor extends SearchLdapVisitor {
         private LegacyZimbraLdapContext mModZlc;
         
         Bug53745Visitor(LegacyZimbraLdapContext modZlc) {
             mModZlc = modZlc;
         }
         
+        @Override
         public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs) {
             Attributes modAttrs = new BasicAttributes(true);
             

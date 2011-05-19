@@ -35,6 +35,7 @@ import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.LdapTODO.*;
+import com.zimbra.cs.ldap.SearchLdapOptions.StopIteratingException;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.prov.ldap.LdapGalCredential;
 
@@ -457,7 +458,8 @@ public class LegacyLdapUtil {
     }
       
     @SDKDONE
-      private static void searchZimbraLdap(String base, String query, String[] returnAttrs, boolean useMaster, SearchLdapOptions.SearchLdapVisitor visitor) 
+      private static void searchZimbraLdap(String base, String query, String[] returnAttrs, 
+              boolean useMaster, SearchLdapOptions.SearchLdapVisitor visitor) 
       throws ServiceException {
           LegacyZimbraLdapContext zlc = null;
           try {
@@ -497,10 +499,17 @@ public class LegacyLdapUtil {
                           SearchResult sr = (SearchResult) ne.nextElement();
                           String dn = sr.getNameInNamespace();
                           Attributes attrs = sr.getAttributes();
-                          visitor.visit(dn, LegacyLdapUtil.getAttrs(attrs, binaryAttrs), new LegacyJNDIAttributes(attrs));
+                          if (visitor.wantAttrMapOnVisit()) {
+                              visitor.visit(dn, LegacyLdapUtil.getAttrs(attrs, binaryAttrs), 
+                                      new LegacyJNDIAttributes(attrs));
+                          } else {
+                              visitor.visit(dn, new LegacyJNDIAttributes(attrs));
+                          }
                       }
                       cookie = zlc.getCookie();
                   } while (cookie != null);
+              } catch (SearchLdapOptions.StopIteratingException e) { 
+                  // break out of the loop and close the ne
               } finally {
                   if (ne != null) ne.close();
               }

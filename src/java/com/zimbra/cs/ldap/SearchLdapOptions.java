@@ -17,16 +17,80 @@ package com.zimbra.cs.ldap;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.util.ZimbraLog;
+
 
 public class SearchLdapOptions {
     
     public static final int SIZE_UNLIMITED  = 0;
     public static final String[] RETURN_ALL_ATTRS = null;
     
+    /*
     public static interface SearchLdapVisitor {
-          public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs);
+        public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs);
     }
-
+    */
+    
+    
+    public static class StopIteratingException extends Exception {
+    }
+    
+    public static abstract class SearchLdapVisitor {
+        // whether IAttributes (native data from SDK) should be mapped 
+        // to Map<String, Object> when the visit method is called.
+        //
+        // Callsites don't need the Map should set this to false to save the processing.
+        private boolean wantAttrMapOnVisit = true;
+        
+        protected SearchLdapVisitor() {
+        }
+        
+        protected SearchLdapVisitor(boolean wantAttrMapOnVisit) {
+            this.wantAttrMapOnVisit = wantAttrMapOnVisit;
+        }
+        
+        public final boolean wantAttrMapOnVisit() {
+            return wantAttrMapOnVisit;
+        }
+        
+        /**
+         * invoked for each hit returned from the LDAP server, when wantAttrMapOnVisit
+         * is true.
+         * 
+         * @param dn
+         * @param attrs
+         * @param ldapAttrs
+         * @throws StopIteratingException Indicating to the search result iterator to stop 
+         *                                iterating the remaining LDAP search result and  
+         *                                calling the visit method.
+         */
+        public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs)
+        throws StopIteratingException {
+            assert(false);
+            ZimbraLog.ldap.warn("default implementation of SearchLdapVisitor.visit is invoked");
+            throw new StopIteratingException();
+        }
+        
+        /**
+         * invoked for each hit returned from the LDAP server, when wantAttrMapOnVisit
+         * is false.
+         * 
+         * @param dn
+         * @param attrs
+         * @param ldapAttrs
+         * @throws StopIteratingException Indicating to the search result iterator to stop 
+         *                                iterating the remaining LDAP search result and  
+         *                                calling the visit method.
+         */
+        public void visit(String dn, IAttributes ldapAttrs)
+        throws StopIteratingException {
+            assert(false);
+            ZimbraLog.ldap.warn("default implementation of SearchLdapVisitor.visit is invoked");
+            throw new StopIteratingException();
+        }
+    }
+    
+    
     private static final int DEFAULT_RESULT_PAGE_SIZE = 1000;
     
     private String searchBase;

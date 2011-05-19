@@ -58,13 +58,14 @@ public class Bug50458  extends LdapUpgrade {
         }
     }
     
-    private static class Bug50458Visitor implements SearchLdapVisitor {
+    private static class Bug50458Visitor extends SearchLdapOptions.SearchLdapVisitor {
         private LegacyZimbraLdapContext mModZlc;
         
         Bug50458Visitor(LegacyZimbraLdapContext modZlc) {
             mModZlc = modZlc;
         }
         
+        @Override
         public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs) {
             Attributes modAttrs = new BasicAttributes(true);
             

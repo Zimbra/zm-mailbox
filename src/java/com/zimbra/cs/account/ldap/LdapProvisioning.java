@@ -3022,10 +3022,15 @@ public class LdapProvisioning extends LdapProv {
 
      }
     
-    private static class CountingVisitor implements SearchLdapVisitor {
+    private static class CountingVisitor extends SearchLdapVisitor {
         long numAccts = 0;
+        
+        CountingVisitor() {
+            super(false);
+        }
             
-        public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs) {
+        @Override
+        public void visit(String dn, IAttributes ldapAttrs) {
             numAccts++;
         }
             

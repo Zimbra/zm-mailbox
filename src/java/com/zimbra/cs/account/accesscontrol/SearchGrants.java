@@ -196,7 +196,7 @@ public class SearchGrants {
         }
     }
     
-    private static class SearchGrantVisitor implements SearchLdapVisitor {
+    private static class SearchGrantVisitor extends SearchLdapVisitor {
         SearchGrantsResults mResults; 
         
         SearchGrantVisitor(SearchGrantsResults results) {

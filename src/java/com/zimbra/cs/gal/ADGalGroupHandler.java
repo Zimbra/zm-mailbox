@@ -62,12 +62,16 @@ public class ADGalGroupHandler extends GalGroupHandler {
     }
     
     
-    private static class SearchADGroupMembers implements SearchLdapVisitor {
+    private static class SearchADGroupMembers extends SearchLdapVisitor {
 
         TreeSet<String> result = new TreeSet<String>();
         
+        SearchADGroupMembers() {
+            super(false);
+        }
+        
         @Override
-        public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs) {
+        public void visit(String dn, IAttributes ldapAttrs) {
             String email;
             try {
                 email = ldapAttrs.getAttrString(MAIL_ATTR);

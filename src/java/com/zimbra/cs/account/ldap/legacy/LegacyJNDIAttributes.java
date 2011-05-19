@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import javax.naming.NamingException;
+import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 
 import com.zimbra.common.service.ServiceException;
@@ -30,16 +31,16 @@ import com.zimbra.cs.ldap.IAttributes;
  *
  */
 public class LegacyJNDIAttributes implements IAttributes {
-    private Attributes attrs;
+    private Attributes attributes;
     
     public LegacyJNDIAttributes(Attributes attrs) {
-        this.attrs = attrs;
+        this.attributes = attrs;
     }
     
     @Override
     public String getAttrString(String attrName) throws ServiceException {
         try {
-            return LegacyLdapUtil.getAttrString(attrs, attrName);
+            return LegacyLdapUtil.getAttrString(attributes, attrName);
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to get attribute " + attrName, e);
         }
@@ -48,7 +49,7 @@ public class LegacyJNDIAttributes implements IAttributes {
     @Override
     public String[] getMultiAttrString(String attrName) throws ServiceException {
         try {
-            return LegacyLdapUtil.getMultiAttrString(attrs, attrName);
+            return LegacyLdapUtil.getMultiAttrString(attributes, attrName);
         } catch (NamingException e) {
           throw ServiceException.FAILURE("unable to get attribute " + attrName, e);
         }
@@ -58,7 +59,7 @@ public class LegacyJNDIAttributes implements IAttributes {
     public String[] getMultiAttrString(String attrName, boolean containsBinaryData, boolean isBinaryTransfer) 
     throws ServiceException {
         try {
-            return LegacyLdapUtil.getMultiAttrString(attrs, attrName, containsBinaryData, isBinaryTransfer);
+            return LegacyLdapUtil.getMultiAttrString(attributes, attrName, containsBinaryData, isBinaryTransfer);
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to get attribute " + attrName, e);
         }
@@ -71,10 +72,21 @@ public class LegacyJNDIAttributes implements IAttributes {
     public List<String> getMultiAttrStringAsList(String attrName, CheckBinary checkBinary) 
     throws ServiceException {
         try {
-            return Arrays.asList(LegacyLdapUtil.getMultiAttrString(attrs, attrName));
+            return Arrays.asList(LegacyLdapUtil.getMultiAttrString(attributes, attrName));
         } catch (NamingException e) {
           throw ServiceException.FAILURE("unable to get attribute " + attrName, e);
         }
+    }
+
+    @Override
+    public boolean hasAttribute(String attrName) {
+        return attributes.get(attrName) != null;
+    }
+
+    @Override
+    public boolean hasAttributeValue(String attrName, String value) {
+        Attribute attr = attributes.get(attrName);
+        return attr.contains(value);
     }
 
 }

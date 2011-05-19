@@ -418,8 +418,6 @@ public class TestLdap {
         junit.run(TestProvDomainStatus.class);
         */
         
-       Thread.sleep(3000);
-        
         Date endTime = new Date();
         System.out.println("TestLdap ended at:   " + dateFmt.format(endTime));
         
@@ -459,9 +457,11 @@ public class TestLdap {
     /*
      * zmjava -ea com.zimbra.qa.unittest.TestLdap > ~/temp/out.txt
      * 
-     * cp -f /Users/pshao/p4/main/ZimbraServer/data/unittest/ldap/rights-unittest.xml /opt/zimbra/conf/rights
      * cp -f /Users/pshao/p4/main/ZimbraServer/data/unittest/ldap/attrs-unittest.xml /Users/pshao/p4/main/ZimbraServer/conf/attrs
      * ant refresh-ldap-schema
+     * 
+     * cp -f /Users/pshao/p4/main/ZimbraServer/data/unittest/ldap/rights-unittest.xml /opt/zimbra/conf/rights
+     * 
      */
     public static void main(String[] args) throws Exception {
         JUnitCore junit = new JUnitCore();

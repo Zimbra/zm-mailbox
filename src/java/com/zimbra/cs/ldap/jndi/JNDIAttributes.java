@@ -143,5 +143,16 @@ public class JNDIAttributes extends ZAttributes {
             throw JNDILdapException.mapToLdapException(e);
         }
     }
+
+    @Override
+    public boolean hasAttribute(String attrName) {
+        return attributes.get(attrName) != null;
+    }
+
+    @Override
+    public boolean hasAttributeValue(String attrName, String value) {
+        Attribute attr = attributes.get(attrName);
+        return attr.contains(value);
+    }
     
 }
