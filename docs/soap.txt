@@ -2878,9 +2878,12 @@ stored as zimbraPrefSpellIgnoreWord.
 <GetAllLocalesRequest/>
 
 <GetAllLocalesResponse>
-  <locale id="en_US" name="English (United States)"/>
+  <locale id="en_US" name="English (United States)" localName="English (United States)"/>
   ...
 </GetAllLocalesResponse>
+
+name: name in the locale itself
+localName: name in the user's locale
 
 Returns all locales defined in the system.  This is the same list returned by
 java.util.Locale.getAvailableLocales(), sorted by display name (name attribute).
