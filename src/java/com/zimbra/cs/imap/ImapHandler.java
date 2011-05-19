@@ -2005,11 +2005,16 @@ abstract class ImapHandler {
         return true;
     }
 
-    private boolean checkSubscription(ImapPath path, Pattern pattern, Pattern childPattern, Map<ImapPath, Boolean> hits) {
+    private void checkSubscription(ImapPath path, Pattern pattern, Pattern childPattern, Map<ImapPath, Boolean> hits)
+            throws ServiceException {
+        if (!path.isVisible()) { // hidden folders are not exposed even if subscribed
+            return;
+        }
         if (pathMatches(path, pattern)) {
-            hits.put(path, Boolean.TRUE);  return true;
+            hits.put(path, Boolean.TRUE);
+            return;
         } else if (!pathMatches(path, childPattern)) {
-            return false;
+            return;
         }
 
         // 6.3.9: "A special situation occurs when using LSUB with the % wildcard. Consider
@@ -2018,16 +2023,14 @@ abstract class ImapHandler {
         //         the LSUB response, and it MUST be flagged with the \Noselect attribute."
 
         // figure out the set of unsubscribed mailboxes that match the pattern and are parents of subscribed mailboxes
-        boolean matched = false;
         int delimiter = path.asImapPath().lastIndexOf('/');
         while (delimiter > 0) {
             path = new ImapPath(path.asImapPath().substring(0, delimiter), credentials);
             if (!hits.containsKey(path) && pathMatches(path, pattern)) {
-                hits.put(path, Boolean.FALSE);  matched = true;
+                hits.put(path, Boolean.FALSE);
             }
             delimiter = path.asImapPath().lastIndexOf('/');
         }
-        return matched;
     }
 
     static final int STATUS_MESSAGES      = 0x01;
