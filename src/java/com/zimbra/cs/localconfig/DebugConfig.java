@@ -169,6 +169,8 @@ public final class DebugConfig {
     public static boolean enableRdate;
     public static boolean enableThisAndFuture;
 
+    public static boolean caldavAllowAttendeeForOrganizer;
+
     static {
         calendarAllowProcedureAlarms = booleanValue("debug_calendar_allow_procedure_alarms", false);
         calendarConvertNonDisplayAlarm = booleanValue("debug_calendar_convert_non_display_alarms", true);
@@ -239,6 +241,8 @@ public final class DebugConfig {
 
         enableRdate = booleanValue("debug_enable_calendar_rdate", false);
         enableThisAndFuture = booleanValue("debug_enable_calendar_thisandfuture", false);
+
+        caldavAllowAttendeeForOrganizer = booleanValue("debug_caldav_allow_attendee_for_organizer", false);
     }
 
     protected static boolean booleanValue(String key, boolean defaultValue) {
