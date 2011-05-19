@@ -6457,6 +6457,21 @@ public class LdapProvisioning extends Provisioning {
     public void flushCache(CacheEntryType type, CacheEntry[] entries) throws ServiceException {
 
         switch (type) {
+        case all:
+            if (entries != null) {
+                throw ServiceException.INVALID_REQUEST("cannot specify entry for flushing all", null);
+            }
+            ZimbraLog.account.info("Flushing all LDAP entry caches");
+            flushCache(CacheEntryType.account, null);
+            flushCache(CacheEntryType.group, null);
+            flushCache(CacheEntryType.config, null);
+            flushCache(CacheEntryType.globalgrant, null);
+            flushCache(CacheEntryType.cos, null);
+            flushCache(CacheEntryType.domain, null);
+            flushCache(CacheEntryType.mime, null);
+            flushCache(CacheEntryType.server, null);
+            flushCache(CacheEntryType.zimlet, null);
+            break;
         case account:
             if (entries != null) {
                 for (CacheEntry entry : entries) {
@@ -6485,8 +6500,9 @@ public class LdapProvisioning extends Provisioning {
                     if (account != null)
                         removeFromCache(account);
                 }
-            } else
+            } else {
                 sAccountCache.clear();
+            }
             return;
         case group:
             if (entries != null) {
@@ -6500,10 +6516,18 @@ public class LdapProvisioning extends Provisioning {
             }
             return;
         case config:
-            if (entries != null)
+            if (entries != null) {
                 throw ServiceException.INVALID_REQUEST("cannot specify entry for flushing global config", null);
+            }
             Config config = getConfig();
             reload(config, false);
+            return;
+        case globalgrant:
+            if (entries != null) {
+                throw ServiceException.INVALID_REQUEST("cannot specify entry for flushing global grant", null);
+            }
+            GlobalGrant globalGrant = getGlobalGrant();
+            reload(globalGrant, false);
             return;
         case cos:
             if (entries != null) {

@@ -133,7 +133,7 @@ public class MinaMilterServer extends MinaServer implements MilterServer {
         public void handle(Signal signal) {
             ZimbraLog.milter.info("Received Signal:" + signal.getName());
             ZimbraLog.milter.info("Begin ACL cache invalidation");
-            PermissionCache.invalidateCache();
+            PermissionCache.invalidateAllCache();
             ZimbraLog.milter.info("ACL cache successfully cleared");
         }
         
