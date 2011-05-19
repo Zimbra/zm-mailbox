@@ -20,6 +20,8 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Enumeration;
 
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -52,9 +54,9 @@ import com.zimbra.cs.servlet.ZimbraServlet;
 public class ApplianceProxyServlet extends ZimbraServlet {
     private static final String TARGET_PARAM = "target";
     private static final String DEFAULT_CTYPE = "text/xml";
-    
+   
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         doProxy(req, resp);
     }
 
@@ -77,15 +79,10 @@ public class ApplianceProxyServlet extends ZimbraServlet {
     }
     
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         doProxy(req, resp);
     }
 
-    protected boolean isAdminRequest(HttpServletRequest req) {
-        return req.getServerPort() == LC.zimbra_admin_service_port.intValue();
-    }
-    
-    
 
     private byte[] copyPostedData(HttpServletRequest req) throws IOException {
         int size = req.getContentLength();
@@ -109,9 +106,9 @@ public class ApplianceProxyServlet extends ZimbraServlet {
         }
     }
     
-    private void doProxy(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    private void doProxy(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         ZimbraLog.clearContext();
-        boolean isAdmin = isAdminRequest(req);
+        boolean isAdmin = super.isRequestOnAllowedPort(req);
         if (!isAdmin) {
             resp.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
