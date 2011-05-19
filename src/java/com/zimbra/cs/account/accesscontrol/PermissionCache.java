@@ -15,10 +15,12 @@
 package com.zimbra.cs.account.accesscontrol;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.GuestAccount;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 
 public class PermissionCache {
@@ -51,6 +53,29 @@ public class PermissionCache {
     
     public static void invalidateCache() {
         PermCacheManager.getInstance().invalidateCache();
+    }
+    
+    /**
+     * Invoked from the milter server/JVM.
+     * 
+     * In addition to just invalidating the permission cache, we also need to  
+     * invalidate account, aclgroup, domain, and globalgrant LDAP entry caches 
+     * where the ACL is cached. 
+     * On mailbox server those caches are automatically updated when the 
+     * modification (grant, revoke, member changes, group/account/domain 
+     * creation/deletion etc) happens.
+     */
+    public static void invalidateAllCache() {
+    	// clear all LDAP entry caches
+        Provisioning prov = Provisioning.getInstance();
+        try {
+            prov.flushCache(Provisioning.CacheEntryType.all, null);
+        } catch (ServiceException e) {
+            ZimbraLog.acl.warn("unable to flush cache", e);
+        }
+
+        // clear the permission cache
+        invalidateCache();
     }
     
     public static void invalidateCache(Entry target) {

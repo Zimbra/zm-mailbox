@@ -1991,8 +1991,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
         license,
 
         // ldap entries
+        all,  // all ldap entries
         account,
         config,
+        globalgrant,
         cos,
         domain,
         galgroup,
