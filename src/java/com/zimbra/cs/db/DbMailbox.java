@@ -22,6 +22,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -121,15 +123,16 @@ public final class DbMailbox {
         }
     }
 
-    public interface CreateDatabaseCallback {
+    public interface DbTableCallback {
         public void create(DbConnection conn, int mailboxId, int groupId) throws ServiceException;
+        public Collection<String> getTableNames();
     }
     
-    public static void addCreateDatabaseCallback(CreateDatabaseCallback callback) {
+    public static void addCreateDatabaseCallback(DbTableCallback callback) {
         callbacks.add(callback);
     }
     
-    private static final HashSet<CreateDatabaseCallback> callbacks = new HashSet<CreateDatabaseCallback>();
+    private static final HashSet<DbTableCallback> callbacks = new HashSet<DbTableCallback>();
     
     /**
      * Gets the next mailbox id.  If <tt>mailboxId</tt> is {@link Mailbox#ID_AUTO_INCREMENT} or
@@ -310,7 +313,7 @@ public final class DbMailbox {
         } finally {
             DbPool.closeStatement(stmt);
             if (succeeded) {
-                for (CreateDatabaseCallback callback : callbacks) {
+                for (DbTableCallback callback : callbacks) {
                     callback.create(conn, mailboxId, groupId);
                 }
             }
@@ -360,8 +363,14 @@ public final class DbMailbox {
                 conn.disableForeignKeyConstraints();
 
             // delete from tables in reverse order
-            for (int i = sTables.size() - 1; i >= 0; i--) {
-                String tableName = sTables.get(i);
+            ArrayList<String> tables = new ArrayList<String>();
+            tables.addAll(sTables);
+            for (DbTableCallback callback : callbacks) {
+                tables.addAll(callback.getTableNames());
+            }
+            Collections.reverse(tables);
+            
+            for (String tableName : tables) {
                 if (tableName == null)
                     continue;
                 PreparedStatement stmt = null;
