@@ -532,6 +532,7 @@ public final class MailConstants {
     public static final String E_SEARCH = "search";
     public static final String E_MOUNT = "link";
     public static final String E_COMMENT = "comment";
+    public static final String E_LINK = "lk";
 
     public static final String E_INFO = "info";
     public static final String E_LOCALE = "locale";
