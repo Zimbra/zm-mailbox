@@ -480,7 +480,7 @@ public final class SmtpConnection extends MailConnection {
         try {
             sendInternal(sender, rcpts, msg, null);
         } finally {
-            close();
+            quit();
         }
     }
 
@@ -500,7 +500,7 @@ public final class SmtpConnection extends MailConnection {
         try {
             sendInternal(sender, rcpts, null, msg);
         } finally {
-            close();
+            quit();
         }
     }
 
@@ -535,8 +535,6 @@ public final class SmtpConnection extends MailConnection {
         if (!reply.isPositive()) {
             throw new CommandFailedException(DATA, reply.toString());
         }
-        quit();
-        close();
     }
 
     /**
@@ -633,6 +631,8 @@ public final class SmtpConnection extends MailConnection {
             sendCommand(QUIT, null);
         } catch (CommandFailedException e) { // no reason to make it an error
             getLogger().warn(e.getMessage());
+        } finally {
+            close();
         }
     }
 

@@ -145,12 +145,13 @@ public final class SmtpTransportTest {
     @Test(timeout = 3000)
     public void mailFromError() throws Exception {
         server = MockTcpServer.scenario()
-        .sendLine("220 test ready")
-        .recvLine() // EHLO
-        .sendLine("250 OK")
-        .recvLine() // MAIL FROM
-        .sendLine("451 error")
-        .build().start(PORT);
+            .sendLine("220 test ready")
+            .recvLine() // EHLO
+            .sendLine("250 OK")
+            .recvLine() // MAIL FROM
+            .sendLine("451 error")
+            .recvLine() // QUIT
+            .build().start(PORT);
 
         Session session = JMSession.getSession();
         Transport transport = session.getTransport("smtp");
@@ -172,6 +173,7 @@ public final class SmtpTransportTest {
         server.shutdown(1000);
         Assert.assertEquals("EHLO localhost\r\n", server.replay());
         Assert.assertEquals("MAIL FROM:<sender@zimbra.com>\r\n", server.replay());
+        Assert.assertEquals("QUIT\r\n", server.replay());
         Assert.assertNull(server.replay());
     }
 
@@ -377,14 +379,15 @@ public final class SmtpTransportTest {
     @Test(timeout = 3000)
     public void rcptToError() throws Exception {
         server = MockTcpServer.scenario()
-        .sendLine("220 test ready")
-        .recvLine() // EHLO
-        .sendLine("250 OK")
-        .recvLine() // MAIL FROM
-        .sendLine("250 OK")
-        .recvLine() // RCPT TO
-        .sendLine("550 error")
-        .build().start(PORT);
+            .sendLine("220 test ready")
+            .recvLine() // EHLO
+            .sendLine("250 OK")
+            .recvLine() // MAIL FROM
+            .sendLine("250 OK")
+            .recvLine() // RCPT TO
+            .sendLine("550 error")
+            .recvLine() // QUIT
+            .build().start(PORT);
 
         Session session = JMSession.getSession();
         session.getProperties().setProperty("mail.smtp.sendpartial", "true");
@@ -407,6 +410,7 @@ public final class SmtpTransportTest {
         Assert.assertEquals("EHLO localhost\r\n", server.replay());
         Assert.assertEquals("MAIL FROM:<sender@zimbra.com>\r\n", server.replay());
         Assert.assertEquals("RCPT TO:<rcpt@zimbra.com>\r\n", server.replay());
+        Assert.assertEquals("QUIT\r\n", server.replay());
         Assert.assertNull(server.replay());
     }
 
@@ -457,16 +461,17 @@ public final class SmtpTransportTest {
     @Test(timeout = 3000)
     public void dataError() throws Exception {
         server = MockTcpServer.scenario()
-        .sendLine("220 test ready")
-        .recvLine() // EHLO
-        .sendLine("250 OK")
-        .recvLine() // MAIL FROM
-        .sendLine("250 OK")
-        .recvLine() // RCPT TO
-        .sendLine("250 OK")
-        .recvLine() // DATA
-        .sendLine("451 error")
-        .build().start(PORT);
+            .sendLine("220 test ready")
+            .recvLine() // EHLO
+            .sendLine("250 OK")
+            .recvLine() // MAIL FROM
+            .sendLine("250 OK")
+            .recvLine() // RCPT TO
+            .sendLine("250 OK")
+            .recvLine() // DATA
+            .sendLine("451 error")
+            .recvLine() // QUIT
+            .build().start(PORT);
 
         Session session = JMSession.getSession();
         Transport transport = session.getTransport("smtp");
@@ -489,6 +494,7 @@ public final class SmtpTransportTest {
         Assert.assertEquals("MAIL FROM:<sender@zimbra.com>\r\n", server.replay());
         Assert.assertEquals("RCPT TO:<rcpt@zimbra.com>\r\n", server.replay());
         Assert.assertEquals("DATA\r\n", server.replay());
+        Assert.assertEquals("QUIT\r\n", server.replay());
         Assert.assertNull(server.replay());
     }
 
