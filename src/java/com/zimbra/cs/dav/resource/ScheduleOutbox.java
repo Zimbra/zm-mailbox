@@ -88,7 +88,17 @@ public class ScheduleOutbox extends Collection {
             throw new DavException("empty request", HttpServletResponse.SC_BAD_REQUEST);
         ZimbraLog.dav.debug("originator: "+originator);
 
-        CalDavUtils.removeAttendeeForOrganizer(req);  // Apple iCal fixup
+        boolean isVEventOrVTodo = ICalTok.VEVENT.equals(req.getTok()) || ICalTok.VTODO.equals(req.getTok());
+        boolean isOrganizerMethod = false, isCancel = false;
+        if (isVEventOrVTodo) {
+            String method = vcalendar.getPropVal(ICalTok.METHOD, null);
+            if (method != null) {
+                isOrganizerMethod = Invite.isOrganizerMethod(method);
+                isCancel = ICalTok.CANCEL.toString().equalsIgnoreCase(method);;
+            }
+
+            CalDavUtils.removeAttendeeForOrganizer(req);  // Apple iCal fixup
+        }
 
         // Get organizer and list of attendees. (mailto:email values)
         ArrayList<String> attendees = new ArrayList<String>();
@@ -109,11 +119,42 @@ public class ScheduleOutbox extends Collection {
             }
         }
 
+        // Keep originator address consistent with the address used in ORGANIZER/ATTENDEE.
+        // Apple iCal is very inconsistent about the user's identity when the account has aliases.
+        if (isVEventOrVTodo && originator != null) {
+            String originatorEmail = stripMailto(originator);
+            Account authAcct = ctxt.getAuthAccount();
+            if (AccountUtil.addressMatchesAccount(authAcct, originatorEmail)) {
+                boolean changed = false;
+                if (isOrganizerMethod) {
+                    if (organizer != null) {
+                        String organizerEmail = stripMailto(organizer);
+                        if (!organizerEmail.equalsIgnoreCase(originatorEmail) &&
+                            AccountUtil.addressMatchesAccount(authAcct, organizerEmail)) {
+                            originator = organizer;
+                            changed = true;
+                        }
+                    }
+                } else {
+                    for (String at : attendees) {
+                        String atEmail = stripMailto(at);
+                        if (originatorEmail.equalsIgnoreCase(atEmail)) {
+                            break;
+                        } else if (AccountUtil.addressMatchesAccount(authAcct, atEmail)) {
+                            originator = at;
+                            changed = true;
+                            break;
+                        }
+                    }
+                }
+                if (changed) {
+                    ZimbraLog.dav.debug("changing originator to " + originator + " to match the address/alias used in ORGANIZER/ATTENDEE");
+                }
+            }
+        }
+
         // Get the recipients.
         ArrayList<String> rcptArray = new ArrayList<String>();
-        String method = vcalendar.getPropVal(ICalTok.METHOD, null);
-        boolean isOrganizerMethod = method != null && Invite.isOrganizerMethod(method);
-        boolean isCancel = ICalTok.CANCEL.toString().equalsIgnoreCase(method);
         while (recipients.hasMoreElements()) {
             String rcptHdr = (String)recipients.nextElement();
             String[] rcpts = null;
@@ -130,28 +171,30 @@ public class ScheduleOutbox extends Collection {
                         if (rcpt.equalsIgnoreCase("invalid:nomail")) {
                             continue;
                         }
-                        // Workaround for Apple iCal: Never send REQUEST/CANCEL notification to organizer.
-                        // iCal can sometimes do that when organizer account has aliases.
-                        if (isOrganizerMethod && rcpt.equalsIgnoreCase(organizer)) {
-                            continue;
-                        }
-                        // bug 49987: Workaround for Apple iCal
-                        // iCal sends cancel notice to all original attendees when some attendees are removed from the
-                        // appointment.  As a result the appointment is cancelled from the calendars of all original
-                        // attendees.  Counter this bad behavior by filtering out any recipients who aren't listed
-                        // as ATTENDEE in the CANCEL component being sent.  (iCal does that part correctly, at least.)
-                        if (isCancel) {
-                            boolean isAttendee = false;
-                            // Rcpt must be an attendee of the cancel component.
-                            for (String at : attendees) {
-                                if (rcpt.equalsIgnoreCase(at)) {
-                                    isAttendee = true;
-                                    break;
-                                }
-                            }
-                            if (!isAttendee) {
-                                ZimbraLog.dav.info("Ignoring non-attendee recipient " + rcpt + " of CANCEL request; likely a client bug");
+                        if (isVEventOrVTodo) {
+                            // Workaround for Apple iCal: Never send REQUEST/CANCEL notification to organizer.
+                            // iCal can sometimes do that when organizer account has aliases.
+                            if (isOrganizerMethod && rcpt.equalsIgnoreCase(organizer)) {
                                 continue;
+                            }
+                            // bug 49987: Workaround for Apple iCal
+                            // iCal sends cancel notice to all original attendees when some attendees are removed from the
+                            // appointment.  As a result the appointment is cancelled from the calendars of all original
+                            // attendees.  Counter this bad behavior by filtering out any recipients who aren't listed
+                            // as ATTENDEE in the CANCEL component being sent.  (iCal does that part correctly, at least.)
+                            if (isCancel) {
+                                boolean isAttendee = false;
+                                // Rcpt must be an attendee of the cancel component.
+                                for (String at : attendees) {
+                                    if (rcpt.equalsIgnoreCase(at)) {
+                                        isAttendee = true;
+                                        break;
+                                    }
+                                }
+                                if (!isAttendee) {
+                                    ZimbraLog.dav.info("Ignoring non-attendee recipient " + rcpt + " of CANCEL request; likely a client bug");
+                                    continue;
+                                }
                             }
                         }
                         // All checks passed.
@@ -229,18 +272,29 @@ public class ScheduleOutbox extends Collection {
         ArrayList<Address> recipients = new java.util.ArrayList<Address>();
         InternetAddress from, sender, to;
         try {
+            originator = stripMailto(originator);
+            sender = new JavaMailInternetAddress(originator);
             Account target = null;
             Provisioning prov = Provisioning.getInstance();
-            if (ctxt.getPathInfo() != null)
+            if (ctxt.getPathInfo() != null) {
                 target = prov.getAccountByName(ctxt.getPathInfo());
-            if (target == null)
+            }
+            if (target != null) {
+                from = AccountUtil.getFriendlyEmailAddress(target);
+            } else {
                 target = getMailbox(ctxt).getAccount();
-            from = AccountUtil.getFriendlyEmailAddress(target);
-            if (originator.toLowerCase().startsWith("mailto:"))
-                originator = originator.substring(7);
-            sender = new JavaMailInternetAddress(originator);
-            if (rcpt.toLowerCase().startsWith("mailto:"))
-                rcpt = rcpt.substring(7);
+                if (AccountUtil.addressMatchesAccount(target, originator)) {
+                    // Make sure we don't use two different aliases for From and Sender.
+                    // This is a concern with Apple iCal, which picks a random alias as originator.
+                    from = sender;
+                } else {
+                    from = AccountUtil.getFriendlyEmailAddress(target);
+                }
+            }
+            if (sender.getAddress() != null && sender.getAddress().equalsIgnoreCase(from.getAddress())) {
+                sender = null;
+            }
+            rcpt = stripMailto(rcpt);
             to = new JavaMailInternetAddress(rcpt);
             recipients.add(to);
         } catch (AddressException e) {
@@ -336,5 +390,13 @@ public class ScheduleOutbox extends Collection {
             }
         }
         return url;
+    }
+
+    private static String stripMailto(String address) {
+        if (address != null && address.toLowerCase().startsWith("mailto:")) {
+            return address.substring(7);
+        } else {
+            return address;
+        }
     }
 }
