@@ -12,10 +12,6 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-
-/*
- * Created on Aug 23, 2004
- */
 package com.zimbra.cs.mailbox;
 
 import java.io.IOException;
@@ -23,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Strings;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
@@ -35,21 +32,24 @@ import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
+/**
+ * @since Aug 23, 2004
+ */
 public class Document extends MailItem {
-    protected String mContentType;
-    protected String mCreator;
-    protected String mFragment;
-    protected String mLockOwner;
-    protected long   mLockTimestamp;
-    protected String mDescription;
-    protected boolean mDescEnabled;
+    protected String contentType;
+    protected String creator;
+    protected String fragment;
+    protected String lockOwner;
+    protected long lockTimestamp;
+    protected String description;
+    protected boolean descEnabled;
 
     public Document(Mailbox mbox, UnderlyingData data) throws ServiceException {
         super(mbox, data);
     }
 
     public String getContentType() {
-        return mContentType;
+        return contentType;
     }
 
     @Override
@@ -58,27 +58,27 @@ public class Document extends MailItem {
     }
 
     public String getCreator() {
-        return mCreator == null ? "" : mCreator;
+        return Strings.nullToEmpty(creator);
     }
 
     public String getFragment() {
-        return mFragment == null ? "" : mFragment;
+        return Strings.nullToEmpty(fragment);
     }
 
     public String getLockOwner() {
-        return mLockOwner;
+        return lockOwner;
     }
 
     public long getLockTimestamp() {
-        return mLockTimestamp;
+        return lockTimestamp;
     }
 
     public String getDescription() {
-        return mDescription == null ? "" : mDescription;
+        return Strings.nullToEmpty(description);
     }
 
     public boolean isDescriptionEnabled() {
-        return mDescEnabled;
+        return descEnabled;
     }
 
     @Override
@@ -106,7 +106,8 @@ public class Document extends MailItem {
         return true;
     }
 
-    @Override int getMaxRevisions() throws ServiceException {
+    @Override
+    int getMaxRevisions() throws ServiceException {
         return getAccount().getIntAttr(Provisioning.A_zimbraNotebookMaxRevisions, 0);
     }
 
@@ -168,14 +169,14 @@ public class Document extends MailItem {
             markItemModified(Change.MODIFIED_NAME);
         }
 
-        mContentType = pd.getContentType();
-        mCreator = pd.getCreator();
-        mFragment = pd.getFragment();
+        contentType = pd.getContentType();
+        creator = pd.getCreator();
+        fragment = pd.getFragment();
         mData.date = (int) (pd.getCreatedDate() / 1000L);
         mData.name = pd.getFilename();
         mData.setSubject(pd.getFilename());
-        mDescription = pd.getDescription();
-        mDescEnabled = pd.isDescriptionEnabled();
+        description = pd.getDescription();
+        descEnabled = pd.isDescriptionEnabled();
         pd.setVersion(getVersion());
 
         if (mData.size != pd.getSize()) {
@@ -221,8 +222,8 @@ public class Document extends MailItem {
        return data;
     }
 
-    static Document create(int id, Folder folder, String filename, String type, ParsedDocument pd, CustomMetadata custom, int flags)
-    throws ServiceException {
+    static Document create(int id, Folder folder, String filename, String type, ParsedDocument pd,
+            CustomMetadata custom, int flags) throws ServiceException {
         assert(id != Mailbox.ID_AUTO_INCREMENT);
 
         Mailbox mbox = folder.getMailbox();
@@ -239,40 +240,47 @@ public class Document extends MailItem {
         return doc;
     }
 
-    @Override void decodeMetadata(Metadata meta) throws ServiceException {
+    @Override
+    void decodeMetadata(Metadata meta) throws ServiceException {
         // roll forward from the old versioning mechanism (old revisions are lost)
         MetadataList revlist = meta.getList(Metadata.FN_REVISIONS, true);
         if (revlist != null && !revlist.isEmpty()) {
             try {
                 Metadata rev = revlist.getMap(revlist.size() - 1);
-                mCreator = rev.get(Metadata.FN_CREATOR, null);
-                mFragment = rev.get(Metadata.FN_FRAGMENT, null);
+                creator = rev.get(Metadata.FN_CREATOR, null);
+                fragment = rev.get(Metadata.FN_FRAGMENT, null);
 
                 int version = (int) rev.getLong(Metadata.FN_VERSION, 1);
-                if (version > 1 && rev.getLong(Metadata.FN_VERSION, 1) != 1)
+                if (version > 1 && rev.getLong(Metadata.FN_VERSION, 1) != 1) {
                     meta.put(Metadata.FN_VERSION, version);
+                }
             } catch (ServiceException ignored) {
             }
         }
 
         super.decodeMetadata(meta);
 
-        mContentType = meta.get(Metadata.FN_MIME_TYPE);
-        mCreator     = meta.get(Metadata.FN_CREATOR, mCreator);
-        mFragment    = meta.get(Metadata.FN_FRAGMENT, mFragment);
-        mLockOwner   = meta.get(Metadata.FN_LOCK_OWNER, mLockOwner);
-        mDescription = meta.get(Metadata.FN_DESCRIPTION, mDescription);
-        mLockTimestamp = meta.getLong(Metadata.FN_LOCK_TIMESTAMP, 0);
-        mDescEnabled = meta.getBool(Metadata.FN_DESC_ENABLED, true);
+        contentType = meta.get(Metadata.FN_MIME_TYPE);
+        creator     = meta.get(Metadata.FN_CREATOR, creator);
+        fragment    = meta.get(Metadata.FN_FRAGMENT, fragment);
+        lockOwner   = meta.get(Metadata.FN_LOCK_OWNER, lockOwner);
+        description = meta.get(Metadata.FN_DESCRIPTION, description);
+        lockTimestamp = meta.getLong(Metadata.FN_LOCK_TIMESTAMP, 0);
+        descEnabled = meta.getBool(Metadata.FN_DESC_ENABLED, true);
     }
 
-    @Override Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, mContentType, mCreator, mFragment, mLockOwner, mLockTimestamp, mDescription, mDescEnabled);
+    @Override
+    Metadata encodeMetadata(Metadata meta) {
+        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, contentType, creator, fragment, lockOwner,
+                lockTimestamp, description, descEnabled);
     }
 
-    static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended, String mimeType, String creator, String fragment, String lockowner, long lockts, String description, boolean descEnabled) {
-        if (meta == null)
+    static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended,
+            String mimeType, String creator, String fragment, String lockowner, long lockts, String description,
+            boolean descEnabled) {
+        if (meta == null) {
             meta = new Metadata();
+        }
         meta.put(Metadata.FN_MIME_TYPE, mimeType);
         meta.put(Metadata.FN_CREATOR, creator);
         meta.put(Metadata.FN_FRAGMENT, fragment);
@@ -297,67 +305,75 @@ public class Document extends MailItem {
         helper.add("type", getType());
         helper.add(CN_FILE_NAME, getName());
         helper.add(CN_EDITOR, getCreator());
-        helper.add(CN_MIME_TYPE, mContentType);
+        helper.add(CN_MIME_TYPE, contentType);
         appendCommonMembers(helper);
-        helper.add(CN_FRAGMENT, mFragment);
-        if (mDescription != null) {
-            helper.add(CN_DESCRIPTION, mDescription);
+        helper.add(CN_FRAGMENT, fragment);
+        if (description != null) {
+            helper.add(CN_DESCRIPTION, description);
         }
-        if (mLockOwner != null) {
-            helper.add(CN_LOCKOWNER, mLockOwner);
+        if (lockOwner != null) {
+            helper.add(CN_LOCKOWNER, lockOwner);
         }
-        if (mLockTimestamp > 0) {
-            helper.add(CN_LOCKTIMESTAMP, mLockTimestamp);
+        if (lockTimestamp > 0) {
+            helper.add(CN_LOCKTIMESTAMP, lockTimestamp);
         }
         return helper.toString();
     }
 
-    @Override protected boolean trackUserAgentInMetadata() {
+    @Override
+    protected boolean trackUserAgentInMetadata() {
         return true;
     }
 
-    @Override MailboxBlob setContent(StagedBlob staged, Object content) throws ServiceException, IOException {
+    @Override
+    MailboxBlob setContent(StagedBlob staged, Object content) throws ServiceException, IOException {
         checkLock();
         return super.setContent(staged, content);
     }
 
-    @Override boolean move(Folder target) throws ServiceException {
+    @Override
+    boolean move(Folder target) throws ServiceException {
         checkLock();
         return super.move(target);
     }
 
-    @Override void lock(Account authuser) throws ServiceException {
-        if (mLockOwner != null &&
-                !mLockOwner.equalsIgnoreCase(authuser.getId()))
-            throw MailServiceException.CANNOT_LOCK(mId, mLockOwner);
-        mLockOwner = authuser.getId();
-        mLockTimestamp = System.currentTimeMillis();
+    @Override
+    void lock(Account authuser) throws ServiceException {
+        if (lockOwner != null && !lockOwner.equalsIgnoreCase(authuser.getId())) {
+            throw MailServiceException.CANNOT_LOCK(mId, lockOwner);
+        }
+        lockOwner = authuser.getId();
+        lockTimestamp = System.currentTimeMillis();
         markItemModified(Change.MODIFIED_LOCK);
         saveMetadata();
     }
 
-    @Override void unlock(Account authuser) throws ServiceException {
-        if (mLockOwner == null)
+    @Override
+    void unlock(Account authuser) throws ServiceException {
+        if (lockOwner == null) {
             return;
-        if (!mLockOwner.equalsIgnoreCase(authuser.getId()) &&
-                checkRights(ACL.RIGHT_ADMIN, authuser, false) == 0)
-            throw MailServiceException.CANNOT_UNLOCK(mId, mLockOwner);
-        mLockOwner = null;
-        mLockTimestamp = 0;
+        }
+        if (!lockOwner.equalsIgnoreCase(authuser.getId()) && checkRights(ACL.RIGHT_ADMIN, authuser, false) == 0) {
+            throw MailServiceException.CANNOT_UNLOCK(mId, lockOwner);
+        }
+        lockOwner = null;
+        lockTimestamp = 0;
         markItemModified(Change.MODIFIED_LOCK);
         saveMetadata();
     }
 
     protected void checkLock() throws ServiceException {
         Account authenticatedAccount = mMailbox.getAuthenticatedAccount();
-        if (authenticatedAccount == null)
+        if (authenticatedAccount == null) {
             authenticatedAccount = mMailbox.getAccount();
-        if (mLockOwner != null &&
-                !authenticatedAccount.getId().equalsIgnoreCase(mLockOwner))
-            throw MailServiceException.LOCKED(mId, mLockOwner);
+        }
+        if (lockOwner != null && !authenticatedAccount.getId().equalsIgnoreCase(lockOwner)) {
+            throw MailServiceException.LOCKED(mId, lockOwner);
+        }
     }
 
-    @Override PendingDelete getDeletionInfo() throws ServiceException {
+    @Override
+    PendingDelete getDeletionInfo() throws ServiceException {
         PendingDelete info = super.getDeletionInfo();
         for (Comment comment : mMailbox.getComments(null, mId, 0, -1)) {
             info.add(comment.getDeletionInfo());

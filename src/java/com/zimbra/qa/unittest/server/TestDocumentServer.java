@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -62,12 +62,12 @@ public class TestDocumentServer extends TestCase {
         Document doc = mbox.createDocument(null, Mailbox.ID_FOLDER_BRIEFCASE, pd, MailItem.Type.DOCUMENT, 0);
         int docId = doc.getId();
         MailItem.Type type = doc.getType();
-        File blobDir = getBlobDir(mbox, doc);
+        File blobDir = getBlobDir(doc);
         List<Document> revisions = mbox.getAllRevisions(null, docId, type);
         assertEquals(1, revisions.size());
         assertEquals(1, getBlobCount(blobDir, docId));
         assertEquals(true, doc.isDescriptionEnabled());
-        
+
         // Add a second revision.
         content = "two";
         pd = new ParsedDocument(
@@ -76,7 +76,7 @@ public class TestDocumentServer extends TestCase {
         assertEquals(2, mbox.getAllRevisions(null, docId, type).size());
         assertEquals(2, getBlobCount(blobDir, docId));
         assertEquals(false, doc.isDescriptionEnabled());
-        
+
         // Move to trash, empty trash, and confirm that both blobs were deleted.
         mbox.move(null, doc.getId(), doc.getType(), Mailbox.ID_FOLDER_TRASH);
         mbox.emptyFolder(null, Mailbox.ID_FOLDER_TRASH, false);
@@ -96,8 +96,7 @@ public class TestDocumentServer extends TestCase {
         return count;
     }
 
-    private File getBlobDir(Mailbox mbox, Document doc)
-    throws Exception {
+    private File getBlobDir(Document doc) throws Exception {
         MailboxBlob mblob = StoreManager.getInstance().getMailboxBlob(doc);
         File blobFile = mblob.getLocalBlob().getFile();
         return blobFile.getParentFile();
@@ -106,9 +105,7 @@ public class TestDocumentServer extends TestCase {
     /**
      * Confirms that saving a document to a compressed volume works correctly (bug 48363).
      */
-    // TODO: reenable test after bug 60150 is fixed.
-    public void disabledTestCompressedVolume()
-    throws Exception {
+    public void testCompressedVolume() throws Exception {
         Volume vol = Volume.getCurrentMessageVolume();
         Volume.update(vol.getId(), vol.getType(), vol.getName(), vol.getRootPath(),
             vol.getMboxGroupBits(), vol.getMboxBits(), vol.getFileGroupBits(), vol.getFileBits(),
