@@ -63,8 +63,6 @@ import com.zimbra.common.localconfig.LC;
 @SuppressWarnings("serial")
 public class ProxyServlet extends ZimbraServlet {
 
-    private static final String Z_AUTH_TOKEN_PARAM = "zauthtoken";
-
     private static final String TARGET_PARAM = "target";
 
     private static final String UPLOAD_PARAM = "upload";
@@ -175,7 +173,7 @@ public class ProxyServlet extends ZimbraServlet {
         boolean isAdmin = isAdminRequest(req);
         AuthToken authToken = isAdmin ? getAdminAuthTokenFromCookie(req, resp) : getAuthTokenFromCookie(req, resp);      
         if (authToken == null) {
-            String zAuthToken = req.getParameter(Z_AUTH_TOKEN_PARAM);
+            String zAuthToken = req.getParameter(QP_ZAUTHTOKEN);
             if (zAuthToken != null)
                 try {
                     authToken = AuthProvider.getAuthToken(zAuthToken);

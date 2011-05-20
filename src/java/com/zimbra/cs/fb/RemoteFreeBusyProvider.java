@@ -27,6 +27,7 @@ import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.zimbra.cs.servlet.ZimbraServlet;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -123,7 +124,7 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
                         authToken = mSoapCtxt.getAuthToken().getEncoded();
                 } catch (AuthTokenException e) {}
                 if (authToken != null) {
-                    targetUrl.append("&").append(UserServlet.QP_ZAUTHTOKEN).append("=");
+                    targetUrl.append("&").append(ZimbraServlet.QP_ZAUTHTOKEN).append("=");
                     try {
                         targetUrl.append(URLEncoder.encode(authToken, "UTF-8"));
                     } catch (UnsupportedEncodingException e) {}

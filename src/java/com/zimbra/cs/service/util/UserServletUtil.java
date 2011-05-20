@@ -40,6 +40,7 @@ import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.UserServletContext;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
+import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.servlet.util.AuthUtil;
 
 public class UserServletUtil {
@@ -247,7 +248,7 @@ public class UserServletUtil {
 
             // check query string
             if (context.queryParamAuthAllowed()) {
-                String auth = context.params.get(UserServlet.QP_ZAUTHTOKEN);
+                String auth = context.params.get(ZimbraServlet.QP_ZAUTHTOKEN);
                 if (auth == null)
                     auth = context.params.get(UserServlet.QP_AUTHTOKEN);  // not sure who uses this parameter; zauthtoken is preferred
                 if (auth != null) {
