@@ -606,6 +606,7 @@
           <include name="slf4j*.jar"/>
           <include name="*jsieve*.jar"/>
           <include name="lucene*.jar"/>
+          <include name="unboundid*.jar"/>
           <include name="ant-tar*.jar"/>
           <include name="icu4j-*.jar"/>
           <include name="mina-*.jar"/>

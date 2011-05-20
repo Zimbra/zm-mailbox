@@ -52,6 +52,15 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.DomainCache.GetFromDomainCacheOption;
 import com.zimbra.cs.account.NamedEntry.Visitor;
+import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.CacheEntry;
+import com.zimbra.cs.account.Provisioning.CacheEntryBy;
+import com.zimbra.cs.account.Provisioning.CacheEntryType;
+import com.zimbra.cs.account.Provisioning.CosBy;
+import com.zimbra.cs.account.Provisioning.DistributionListBy;
+import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.cs.account.Provisioning.ServerBy;
+import com.zimbra.cs.account.Provisioning.ZimletBy;
 import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
@@ -6721,6 +6730,21 @@ public class LdapProvisioning extends LdapProv {
     public void flushCache(CacheEntryType type, CacheEntry[] entries) throws ServiceException {
 
         switch (type) {
+        case all:
+            if (entries != null) {
+                throw ServiceException.INVALID_REQUEST("cannot specify entry for flushing all", null);
+            }
+            ZimbraLog.account.info("Flushing all LDAP entry caches");
+            flushCache(CacheEntryType.account, null);
+            flushCache(CacheEntryType.group, null);
+            flushCache(CacheEntryType.config, null);
+            flushCache(CacheEntryType.globalgrant, null);
+            flushCache(CacheEntryType.cos, null);
+            flushCache(CacheEntryType.domain, null);
+            flushCache(CacheEntryType.mime, null);
+            flushCache(CacheEntryType.server, null);
+            flushCache(CacheEntryType.zimlet, null);
+            break;
         case account:
             if (entries != null) {
                 for (CacheEntry entry : entries) {
@@ -6749,8 +6773,9 @@ public class LdapProvisioning extends LdapProv {
                     if (account != null)
                         removeFromCache(account);
                 }
-            } else
+            } else {
                 sAccountCache.clear();
+            }
             return;
         case group:
             if (entries != null) {
@@ -6764,10 +6789,18 @@ public class LdapProvisioning extends LdapProv {
             }
             return;
         case config:
-            if (entries != null)
+            if (entries != null) {
                 throw ServiceException.INVALID_REQUEST("cannot specify entry for flushing global config", null);
+            }
             Config config = getConfig();
             reload(config, false);
+            return;
+        case globalgrant:
+            if (entries != null) {
+                throw ServiceException.INVALID_REQUEST("cannot specify entry for flushing global grant", null);
+            }
+            GlobalGrant globalGrant = getGlobalGrant();
+            reload(globalGrant, false);
             return;
         case cos:
             if (entries != null) {
@@ -6796,8 +6829,8 @@ public class LdapProvisioning extends LdapProv {
                 sDomainCache.clear();
             return;
         case mime:
-        	sMimeTypeCache.flushCache(this);
-        	return;
+            sMimeTypeCache.flushCache(this);
+            return;
         case server:
             if (entries != null) {
                 for (CacheEntry entry : entries) {

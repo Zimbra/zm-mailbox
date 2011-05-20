@@ -126,7 +126,7 @@ public class TestLdap {
      * given a domain name like test.com, delete the entire tree under 
      * dc=com in LDAP
      */
-    static void deleteEntireBranch(String domainName) throws Exception {
+    public static void deleteEntireBranch(String domainName) throws Exception {
         String parts[] = domainName.split("\\.");
         String[] dns = ((LdapProv) Provisioning.getInstance()).getDIT().domainToDNs(parts);
         String topMostRDN = dns[dns.length-1];
@@ -412,6 +412,13 @@ public class TestLdap {
         junit.run(TestSearchCalendarResources.class);
         junit.run(TestSearchGal.class);
         
+        /*
+         * tests in extensions - don't forget to run them:
+         * 
+         * NginxLookupExtensionTest
+         * TestGetSMIMEPublicCerts
+         * TestLdapSMIMELookup
+         */
         
         /*  // tests need fixing
         junit.run(TestCreateAccount.class);
@@ -443,9 +450,9 @@ public class TestLdap {
             return;
         }
         
-        // TestConfig testConfig = TestConfig.UBID;
+        TestConfig testConfig = TestConfig.UBID;
         // TestConfig testConfig = TestConfig.JNDI;
-        TestConfig testConfig = TestConfig.LEGACY;
+        // TestConfig testConfig = TestConfig.LEGACY;
         
         initTest(testConfig);
     }
@@ -467,8 +474,7 @@ public class TestLdap {
         JUnitCore junit = new JUnitCore();
         junit.addListener(new ConsoleListener());
         
-        // TestConfig.useConfig(TestConfig.LEGACY);
-        
+        // TestConfig.useConfig(TestConfig.UBID);
         
         runTests(junit, TestConfig.UBID);
         // runTests(junit, TestConfig.JNDI);
