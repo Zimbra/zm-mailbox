@@ -57,13 +57,17 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
 import com.zimbra.cs.mailbox.Mailbox.SetCalendarItemData;
+import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.calendar.RecurId;
+import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mailbox.calendar.cache.CtagInfo;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.mime.MimeConstants;
@@ -384,6 +388,32 @@ public class CalendarCollection extends Collection {
                     SetCalendarItemData scid = new SetCalendarItemData();
                     scid.mInv = i;
                     scidExceptions[idxExceptions++] = scid;
+                }
+
+                // For attendee case, update replies list with matching ATTENDEE from the invite.
+                if (!i.isOrganizer()) {
+                    ZAttendee at = i.getMatchingAttendee(account);
+                    if (at != null) {
+                        ReplyInfo newReply = null;
+                        for (Iterator<ReplyInfo> replyIter = replies.iterator(); replyIter.hasNext(); ) {
+                            ReplyInfo reply = replyIter.next();
+                            if (AccountUtil.addressMatchesAccount(account, reply.getAttendee().getAddress())) {
+                                RecurId ridR = reply.getRecurId(), ridI = i.getRecurId();
+                                if ((ridR == null && ridI == null) || (ridR != null && ridR.equals(ridI))) {  // matching RECURRENCE-ID
+                                    // No need to compare SEQUENCE and DTSTAMP of existing reply and new invite.
+                                    // We're just going to take what the caldav client sent, even if it's older than the existing reply.
+                                    replyIter.remove();
+                                    if (!IcalXmlStrMap.PARTSTAT_NEEDS_ACTION.equalsIgnoreCase(at.getPartStat())) {
+                                        newReply = new ReplyInfo(at, i.getSeqNo(), i.getDTStamp(), ridI);
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                        if (newReply != null) {
+                            replies.add(newReply);
+                        }
+                    }
                 }
             }
             calItem = mbox.setCalendarItem(ctxt.getOperationContext(), mId, flags, tags,
