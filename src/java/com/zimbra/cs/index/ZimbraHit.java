@@ -49,26 +49,17 @@ public abstract class ZimbraHit {
             case NONE:
                 sortValue = "";
                 break;
+            case ID:
+                sortValue = toInteger(sort);
+                break;
             case DATE:
             case SIZE:
                 sortValue = toLong(sort);
                 break;
-            case SENDER:
-            case NAME:
-            case NAME_NATURAL_ORDER:
-            case SUBJECT:
-            case RCPT:
+            default:
                 assert sort instanceof String : sort;
                 sortValue = sort;
                 break;
-            case ID:
-            case ATTACHMENT:
-            case FLAG:
-            case PRIORITY:
-                sortValue = toInteger(sort);
-                break;
-            default:
-                throw new IllegalArgumentException(results.getSortBy().toString());
         }
     }
 
@@ -211,11 +202,11 @@ public abstract class ZimbraHit {
             case ATTACHMENT_ASC:
             case FLAG_ASC:
             case PRIORITY_ASC:
-                return (Integer) sortValue - (Integer) other.sortValue;
+                return ((String) sortValue).compareTo((String) other.sortValue);
             case ATTACHMENT_DESC:
             case FLAG_DESC:
             case PRIORITY_DESC:
-                return (Integer) other.sortValue - (Integer) sortValue;
+                return ((String) other.sortValue).compareTo((String) sortValue);
             case NONE:
             default:
                 throw new IllegalArgumentException(sort.name());

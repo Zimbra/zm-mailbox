@@ -106,20 +106,25 @@ public final class DbSearch {
             case SIZE:
                 return "mi.size";
             case ATTACHMENT: // 0 or 1
-                return "SIGN(" + Db.getInstance().bitAND("mi.flags", String.valueOf(Flag.BITMASK_ATTACHED)) + ")";
+                return "CONCAT(SIGN(" + Db.getInstance().bitAND("mi.flags", String.valueOf(Flag.BITMASK_ATTACHED)) +
+                    "), LPAD(mi.id, 10, '0'))";
             case FLAG: // 0 or 1
-                return "SIGN(" + Db.getInstance().bitAND("mi.flags", String.valueOf(Flag.BITMASK_FLAGGED)) + ")";
-            case PRIORITY: // -1 or 0 or 1
-                return "SIGN(" + Db.getInstance().bitAND("mi.flags", String.valueOf(Flag.BITMASK_HIGH_PRIORITY)) +
-                    ") - SIGN(" + Db.getInstance().bitAND("mi.flags", String.valueOf(Flag.BITMASK_LOW_PRIORITY)) + ")";
+                return "CONCAT(SIGN(" + Db.getInstance().bitAND("mi.flags", String.valueOf(Flag.BITMASK_FLAGGED)) +
+                    "), LPAD(mi.id, 10, '0'))";
+            case PRIORITY: // 0 or 1 or 2
+                return "CONCAT(1 + SIGN(" +
+                    Db.getInstance().bitAND("mi.flags", String.valueOf(Flag.BITMASK_HIGH_PRIORITY)) + ") - SIGN(" +
+                    Db.getInstance().bitAND("mi.flags", String.valueOf(Flag.BITMASK_LOW_PRIORITY)) +
+                    "), LPAD(mi.id, 10, '0'))";
             case DATE:
             default:
                 return "mi.date";
         }
     }
 
-    private static String toStringSortField(String key) {
-        return Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON) ? "UPPER(" + key + ")" : key;
+    private static String toStringSortField(String col) {
+        return "CONCAT(" + (Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON) ? "UPPER(" + col + ")" : col) +
+            ", LPAD(mi.id, 10, '0'))";
     }
 
     /**
@@ -249,6 +254,7 @@ public final class DbSearch {
 
         // WHERE mi.mailboxId=? [AND ap.mailboxId=? AND mi.id = ap.id ] AND "
         out.append(" WHERE ");
+        //TODO don't put a bare mailbox_id, but use a parameter
         out.append(DbMailItem.getInThisMailboxAnd(mbox.getId(), "mi", includeCalTable ? "ap" : null));
         if (includeCalTable) {
             out.append(" mi.id = ap.item_id AND ");
@@ -321,6 +327,9 @@ public final class DbSearch {
         num += encode(out, "mi.id", true, constraint.itemIds);
         num += encode(out, "mi.id", false, constraint.prohibitedItemIds);
         num += encode(out, "mi.index_id", true, constraint.indexIds);
+        if (constraint.cursorRange != null) {
+            num += encodeRange(out, constraint.cursorRange);
+        }
         num += encodeRange(out, "mi.date", constraint.dateRanges, 1);
         num += encodeRange(out, "mi.mod_metadata", constraint.modSeqRanges, 1);
         num += encodeRange(out, "mi.size", constraint.sizeRanges, 0);
@@ -425,76 +434,77 @@ public final class DbSearch {
             SortBy sort, int offset, int limit, FetchMode fetch, boolean inDumpster)
             throws SQLException, ServiceException {
         boolean hasValidLIMIT = offset >= 0 && limit >= 0;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
         StringBuilder sql = new StringBuilder();
         int numParams = 0;
         boolean hasMailItemOnlyConstraints = true;
         boolean hasAppointmentTableConstraints = hasAppointmentTableConstraints(node);
-        if (hasAppointmentTableConstraints)
+        if (hasAppointmentTableConstraints) {
             hasMailItemOnlyConstraints = hasMailItemOnlyConstraints(node);
+        }
         boolean requiresUnion = hasMailItemOnlyConstraints && hasAppointmentTableConstraints;
 
-        try {
-            if (hasMailItemOnlyConstraints) {
-                if (requiresUnion) {
-                    sql.append("(");
-                }
-
-                // SELECT mi.id,... FROM mail_item AS mi [FORCE INDEX (...)] WHERE mi.mailboxid=? AND
-                encodeSelect(mbox, sql, sort, fetch, false, node, hasValidLIMIT, inDumpster);
-
-                /*
-                 *( SUB-NODE AND/OR (SUB-NODE...) ) AND/OR ( SUB-NODE ) AND
-                 *    (
-                 *       one of: [type NOT IN (...)]  || [type = ?] || [type IN ( ...)]
-                 *       [ AND tags != 0]
-                 *       [ AND tags IN ( ... ) ]
-                 *       [ AND flags IN (...) ]
-                 *       ..etc
-                 *    )
-                 */
-                numParams += encodeConstraint(sql, conn, mbox, node,
-                        hasAppointmentTableConstraints ? APPOINTMENT_TABLE_TYPES : null, false);
-
-                if (requiresUnion) {
-                    sql.append(orderBy(sort, true));
-                    // LIMIT ?, ?
-                    if (hasValidLIMIT && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
-                        sql.append(" LIMIT ").append(offset).append(',').append(limit);
-                    }
-                }
+        if (hasMailItemOnlyConstraints) {
+            if (requiresUnion) {
+                sql.append("(");
             }
+
+            // SELECT mi.id,... FROM mail_item AS mi [FORCE INDEX (...)] WHERE mi.mailboxid = ? AND
+            encodeSelect(mbox, sql, sort, fetch, false, node, hasValidLIMIT, inDumpster);
+
+            /*
+             *( SUB-NODE AND/OR (SUB-NODE...) ) AND/OR ( SUB-NODE ) AND
+             *    (
+             *       one of: [type NOT IN (...)]  || [type = ?] || [type IN ( ...)]
+             *       [ AND tags != 0]
+             *       [ AND tags IN ( ... ) ]
+             *       [ AND flags IN (...) ]
+             *       ..etc
+             *    )
+             */
+            numParams += encodeConstraint(sql, conn, mbox, node,
+                    hasAppointmentTableConstraints ? APPOINTMENT_TABLE_TYPES : null, false);
 
             if (requiresUnion) {
-                sql.append(" ) UNION ALL (");
-            }
-
-            if (hasAppointmentTableConstraints) {
-                // SELECT...again...(this time with "appointment as ap")...WHERE...
-                encodeSelect(mbox, sql, sort, fetch, true, node, hasValidLIMIT, inDumpster);
-                numParams += encodeConstraint(sql, conn, mbox, node, APPOINTMENT_TABLE_TYPES, true);
-
-                if (requiresUnion) {
-                    sql.append(orderBy(sort, true));
-                    // LIMIT ?, ?
-                    if (hasValidLIMIT && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
-                        sql.append(" LIMIT ").append(offset).append(',').append(limit);
-                    }
-                    if (requiresUnion) {
-                        sql.append(")");
-                    }
+                sql.append(orderBy(sort, true));
+                // LIMIT ?, ?
+                if (hasValidLIMIT && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
+                    sql.append(" LIMIT ").append(offset).append(',').append(limit);
                 }
             }
+        }
 
-            // TODO FIXME: include COLLATION for sender/subject sort
-            sql.append(orderBy(sort, true));
+        if (requiresUnion) {
+            sql.append(" ) UNION ALL (");
+        }
 
-            // LIMIT ?, ?
-            if (hasValidLIMIT && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
-                sql.append(" LIMIT ").append(offset).append(',').append(limit);
+        if (hasAppointmentTableConstraints) {
+            // SELECT...again...(this time with "appointment as ap")...WHERE...
+            encodeSelect(mbox, sql, sort, fetch, true, node, hasValidLIMIT, inDumpster);
+            numParams += encodeConstraint(sql, conn, mbox, node, APPOINTMENT_TABLE_TYPES, true);
+
+            if (requiresUnion) {
+                sql.append(orderBy(sort, true));
+                // LIMIT ?, ?
+                if (hasValidLIMIT && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
+                    sql.append(" LIMIT ").append(offset).append(',').append(limit);
+                }
+                if (requiresUnion) {
+                    sql.append(")");
+                }
             }
+        }
 
+        // TODO FIXME: include COLLATION for sender/subject sort
+        sql.append(orderBy(sort, true));
+
+        // LIMIT ?, ?
+        if (hasValidLIMIT && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
+            sql.append(" LIMIT ").append(offset).append(',').append(limit);
+        }
+
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
             // Create the statement and bind all our parameters!
             stmt = conn.prepareStatement(sql.toString());
             int param = 1;
@@ -568,13 +578,12 @@ public final class DbSearch {
             case RCPT:
             case NAME:
             case NAME_NATURAL_ORDER:
-                return Strings.nullToEmpty(rs.getString(SORT_COLUMN_ALIAS));
-            case SIZE:
-                return new Long(rs.getInt(SORT_COLUMN_ALIAS));
             case ATTACHMENT:
             case FLAG:
             case PRIORITY:
-                return new Integer(rs.getInt(SORT_COLUMN_ALIAS));
+                return Strings.nullToEmpty(rs.getString(SORT_COLUMN_ALIAS));
+            case SIZE:
+                return new Long(rs.getInt(SORT_COLUMN_ALIAS));
             case DATE:
             default:
                 return new Long(rs.getInt(SORT_COLUMN_ALIAS) * 1000L);
@@ -658,6 +667,17 @@ public final class DbSearch {
             if (range.max != null) {
                 stmt.setString(param++, range.max.replace("\\\"", "\""));
             }
+        }
+        return param;
+    }
+
+    private static final int setCursorRange(PreparedStatement stmt, int param, DbSearchConstraints.CursorRange range)
+            throws SQLException {
+        if (range.min != null) {
+            stmt.setString(param++, range.min.replace("\\\"", "\""));
+        }
+        if (range.max != null) {
+            stmt.setString(param++, range.max.replace("\\\"", "\""));
         }
         return param;
     }
@@ -811,6 +831,26 @@ public final class DbSearch {
         return params;
     }
 
+    private static final int encodeRange(StringBuilder out, DbSearchConstraints.CursorRange range) {
+        // Can't use SORT_COLUMN_ALIAS because column aliases in SELECT are illegal to use in WHERE
+        String col = toSortField(range.sortBy);
+        int params = 0;
+        out.append(" AND (");
+        if (range.min != null) {
+            params++;
+            out.append(col).append(range.minInclusive ? " >= ?" : " > ?");
+        }
+        if (range.max != null) {
+            if (range.min != null) {
+                out.append(" AND ");
+            }
+            params++;
+            out.append(col).append(range.maxInclusive ? " <= ?" : " < ?");
+        }
+        out.append(')');
+        return params;
+    }
+
     public static final class TagConstraints {
         Set<Long> searchTagsets;
         Set<Long> searchFlagsets;
@@ -940,6 +980,9 @@ public final class DbSearch {
         param = setIntegers(stmt, param, leaf.itemIds);
         param = setIntegers(stmt, param, leaf.prohibitedItemIds);
         param = setIntegers(stmt, param, leaf.indexIds);
+        if (leaf.cursorRange != null) {
+            param = setCursorRange(stmt, param, leaf.cursorRange);
+        }
         param = setDateRange(stmt, param, leaf.dateRanges);
         param = setLongRange(stmt, param, leaf.modSeqRanges, 1);
         param = setIntRange(stmt, param, leaf.sizeRanges, 0);

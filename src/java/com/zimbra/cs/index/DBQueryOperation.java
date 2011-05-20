@@ -928,28 +928,6 @@ public class DBQueryOperation extends QueryOperation {
                 top.addDateRange(low, false, high, true, true);
                 break;
             }
-            case SUBJ_ASC: {
-                String low = cursor.getSortValue();
-                String high = cursor.getEndSortValue();
-                DbSearchConstraints.Leaf top = getTopLeafConstraint();
-                if (calcOffset) {
-                    offsetConstraints = top.clone();
-                    offsetConstraints.addSubjectRange(null, false, low, false, true);
-                }
-                top.addSubjectRange(low, true, high, false, true);
-                break;
-            }
-            case SUBJ_DESC: {
-                String high = cursor.getSortValue();
-                String low = cursor.getEndSortValue();
-                DbSearchConstraints.Leaf top = getTopLeafConstraint();
-                if (calcOffset) {
-                    offsetConstraints = top.clone();
-                    offsetConstraints.addSubjectRange(high, false, null, false, true);
-                }
-                top.addSubjectRange(low, false, high, true, true);
-                break;
-            }
             case SIZE_ASC: {
                 long low = Long.parseLong(cursor.getSortValue());
                 long high = cursor.getEndSortValue() != null ? Long.parseLong(cursor.getEndSortValue()) : -1;
@@ -972,26 +950,34 @@ public class DBQueryOperation extends QueryOperation {
                 top.addSizeRange(low, false, high, true, true);
                 break;
             }
-            case NAME_ASC: {
+            case SUBJ_ASC:
+            case NAME_ASC:
+            case ATTACHMENT_ASC:
+            case FLAG_ASC:
+            case PRIORITY_ASC: {
                 String low = cursor.getSortValue();
                 String high = cursor.getEndSortValue();
                 DbSearchConstraints.Leaf top = getTopLeafConstraint();
-                if (calcOffset)  {
+                if (calcOffset) {
                     offsetConstraints = top.clone();
-                    offsetConstraints.addSenderRange(null, false, low, false, true);
+                    offsetConstraints.setCursorRange(null, false, low, false, sort);
                 }
-                top.addSenderRange(low, true, high, false, true);
+                top.setCursorRange(low, true, high, false, sort);
                 break;
             }
-            case NAME_DESC: {
+            case SUBJ_DESC:
+            case NAME_DESC:
+            case ATTACHMENT_DESC:
+            case FLAG_DESC:
+            case PRIORITY_DESC: {
                 String high = cursor.getSortValue();
                 String low = cursor.getEndSortValue();
                 DbSearchConstraints.Leaf top = getTopLeafConstraint();
                 if (calcOffset) {
                     offsetConstraints = top.clone();
-                    offsetConstraints.addSenderRange(high, false, null, false, true);
+                    offsetConstraints.setCursorRange(high, false, null, false, sort);
                 }
-                top.addSenderRange(low, false, high, true, true);
+                top.setCursorRange(low, false, high, true, sort);
                 break;
             }
             default:

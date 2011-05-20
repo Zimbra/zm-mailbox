@@ -179,7 +179,7 @@ public class IndexEditor {
                     result.close();
                 }
             }
-            return HitIdGrouper.create(all, sortBy);
+            return all;
         }
     }
 

@@ -704,7 +704,7 @@ public final class ZimbraQuery {
 
         ZimbraQueryResults results = null;
         try {
-            results = HitIdGrouper.create(operation.run(mailbox, params, chunkSize), params.getSortBy());
+            results = operation.run(mailbox, params, chunkSize);
             if ((!params.getIncludeTagDeleted() && params.getMode() != SearchResultMode.IDS)
                     || params.getAllowableTaskStatuses() != null) {
                 // we have to do some filtering of the result set

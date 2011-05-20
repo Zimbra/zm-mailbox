@@ -74,21 +74,21 @@ public final class DbSearchTest {
                 SortBy.ATTACHMENT_ASC, 0, 100, DbSearch.FetchMode.ID, false);
         Assert.assertEquals(3, result.size());
         Assert.assertEquals(100, result.get(0).getId());
-        Assert.assertEquals(0, result.get(0).getSortValue());
+        Assert.assertEquals("00000000100", result.get(0).getSortValue());
         Assert.assertEquals(102, result.get(1).getId());
-        Assert.assertEquals(0, result.get(1).getSortValue());
+        Assert.assertEquals("00000000102", result.get(1).getSortValue());
         Assert.assertEquals(101, result.get(2).getId());
-        Assert.assertEquals(1, result.get(2).getSortValue());
+        Assert.assertEquals("10000000101", result.get(2).getSortValue());
 
         result = DbSearch.search(conn, mbox, new DbSearchConstraints.Leaf(), SortBy.ATTACHMENT_DESC,
                 0, 100, DbSearch.FetchMode.ID, false);
         Assert.assertEquals(3, result.size());
         Assert.assertEquals(101, result.get(0).getId());
-        Assert.assertEquals(1, result.get(0).getSortValue());
-        Assert.assertEquals(100, result.get(1).getId());
-        Assert.assertEquals(0, result.get(1).getSortValue());
-        Assert.assertEquals(102, result.get(2).getId());
-        Assert.assertEquals(0, result.get(2).getSortValue());
+        Assert.assertEquals("10000000101", result.get(0).getSortValue());
+        Assert.assertEquals(102, result.get(1).getId());
+        Assert.assertEquals("00000000102", result.get(1).getSortValue());
+        Assert.assertEquals(100, result.get(2).getId());
+        Assert.assertEquals("00000000100", result.get(2).getSortValue());
 
         conn.closeQuietly();
     }
@@ -115,21 +115,21 @@ public final class DbSearchTest {
                 0, 100, DbSearch.FetchMode.ID, false);
         Assert.assertEquals(3, result.size());
         Assert.assertEquals(100, result.get(0).getId());
-        Assert.assertEquals(0, result.get(0).getSortValue());
+        Assert.assertEquals("00000000100", result.get(0).getSortValue());
         Assert.assertEquals(102, result.get(1).getId());
-        Assert.assertEquals(0, result.get(1).getSortValue());
+        Assert.assertEquals("00000000102", result.get(1).getSortValue());
         Assert.assertEquals(101, result.get(2).getId());
-        Assert.assertEquals(1, result.get(2).getSortValue());
+        Assert.assertEquals("10000000101", result.get(2).getSortValue());
 
         result = DbSearch.search(conn, mbox, new DbSearchConstraints.Leaf(), SortBy.FLAG_DESC,
                 0, 100, DbSearch.FetchMode.ID, false);
         Assert.assertEquals(3, result.size());
         Assert.assertEquals(101, result.get(0).getId());
-        Assert.assertEquals(1, result.get(0).getSortValue());
-        Assert.assertEquals(100, result.get(1).getId());
-        Assert.assertEquals(0, result.get(1).getSortValue());
-        Assert.assertEquals(102, result.get(2).getId());
-        Assert.assertEquals(0, result.get(2).getSortValue());;
+        Assert.assertEquals("10000000101", result.get(0).getSortValue());
+        Assert.assertEquals(102, result.get(1).getId());
+        Assert.assertEquals("00000000102", result.get(1).getSortValue());
+        Assert.assertEquals(100, result.get(2).getId());
+        Assert.assertEquals("00000000100", result.get(2).getSortValue());;
 
         conn.closeQuietly();
     }
@@ -156,21 +156,58 @@ public final class DbSearchTest {
                 0, 100, DbSearch.FetchMode.ID, false);
         Assert.assertEquals(3, result.size());
         Assert.assertEquals(100, result.get(0).getId());
-        Assert.assertEquals(-1, result.get(0).getSortValue());
+        Assert.assertEquals("00000000100", result.get(0).getSortValue());
         Assert.assertEquals(102, result.get(1).getId());
-        Assert.assertEquals(0, result.get(1).getSortValue());
+        Assert.assertEquals("10000000102", result.get(1).getSortValue());
         Assert.assertEquals(101, result.get(2).getId());
-        Assert.assertEquals(1, result.get(2).getSortValue());
+        Assert.assertEquals("20000000101", result.get(2).getSortValue());
 
         result = DbSearch.search(conn, mbox, new DbSearchConstraints.Leaf(), SortBy.PRIORITY_DESC,
                 0, 100, DbSearch.FetchMode.ID, false);
         Assert.assertEquals(3, result.size());
         Assert.assertEquals(101, result.get(0).getId());
-        Assert.assertEquals(1, result.get(0).getSortValue());
+        Assert.assertEquals("20000000101", result.get(0).getSortValue());
         Assert.assertEquals(102, result.get(1).getId());
-        Assert.assertEquals(0, result.get(1).getSortValue());
+        Assert.assertEquals("10000000102", result.get(1).getSortValue());
         Assert.assertEquals(100, result.get(2).getId());
-        Assert.assertEquals(-1, result.get(2).getSortValue());
+        Assert.assertEquals("00000000100", result.get(2).getSortValue());
+
+        conn.closeQuietly();
+    }
+
+    @Test
+    public void subjectCursor() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        DbConnection conn = DbPool.getConnection();
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, flags, date, size, tags, mod_metadata, mod_content, subject) " +
+                "VALUES(?, ?, ?, 0, 0, 0, 0, 0, 0, ?)", mbox.getId(), 100, MailItem.Type.MESSAGE.toByte(), "subject");
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, flags, date, size, tags, mod_metadata, mod_content, subject) " +
+                "VALUES(?, ?, ?, 0, 0, 0, 0, 0, 0, ?)", mbox.getId(), 101, MailItem.Type.MESSAGE.toByte(), "subject");
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, flags, date, size, tags, mod_metadata, mod_content, subject) " +
+                "VALUES(?, ?, ?, 0, 0, 0, 0, 0, 0, ?)", mbox.getId(), 102, MailItem.Type.MESSAGE.toByte(), "subject");
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, flags, date, size, tags, mod_metadata, mod_content, subject) " +
+                "VALUES(?, ?, ?, 0, 0, 0, 0, 0, 0, ?)", mbox.getId(), 103, MailItem.Type.MESSAGE.toByte(), "subject");
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, flags, date, size, tags, mod_metadata, mod_content, subject) " +
+                "VALUES(?, ?, ?, 0, 0, 0, 0, 0, 0, ?)", mbox.getId(), 104, MailItem.Type.MESSAGE.toByte(), "subject");
+
+        DbSearchConstraints.Leaf constraints = new DbSearchConstraints.Leaf();
+        constraints.cursorRange = new DbSearchConstraints.CursorRange("SUBJECT0000000102", true, null, false,
+                SortBy.SUBJ_ASC);
+        List<DbSearch.Result> result = DbSearch.search(conn, mbox, constraints, SortBy.SUBJ_ASC, 0, 100,
+                DbSearch.FetchMode.ID, false);
+        Assert.assertEquals(3, result.size());
+        Assert.assertEquals(102, result.get(0).getId());
+        Assert.assertEquals("SUBJECT0000000102", result.get(0).getSortValue());
+        Assert.assertEquals(103, result.get(1).getId());
+        Assert.assertEquals("SUBJECT0000000103", result.get(1).getSortValue());
+        Assert.assertEquals(104, result.get(2).getId());
+        Assert.assertEquals("SUBJECT0000000104", result.get(2).getSortValue());
 
         conn.closeQuietly();
     }

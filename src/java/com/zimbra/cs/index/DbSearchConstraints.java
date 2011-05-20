@@ -207,6 +207,7 @@ public interface DbSearchConstraints extends Cloneable {
         public List<NumericRange> convCountRanges = new ArrayList<NumericRange>(); // optional
         public List<StringRange> subjectRanges = new ArrayList<StringRange>(); // optional
         public List<StringRange> senderRanges = new ArrayList<StringRange>(); // optional
+        public CursorRange cursorRange; // optional
 
         private Set<MailItem.Type> calcTypes() {
             if (excludeTypes.isEmpty()) {
@@ -785,6 +786,11 @@ public interface DbSearchConstraints extends Cloneable {
             senderRanges.add(new StringRange(min, minInclusive, max, maxInclusive, bool));
         }
 
+        void setCursorRange(String min, boolean minInclusive, String max, boolean maxInclusive, SortBy sort) {
+            assert cursorRange == null : cursorRange;
+            cursorRange = new CursorRange(min, minInclusive, max, maxInclusive, sort);
+        }
+
         void setFromContact(boolean bool) {
             fromContact = bool;
         }
@@ -1301,6 +1307,27 @@ public interface DbSearchConstraints extends Cloneable {
         @Override
         public String toString() {
             return toQueryString("RANGE", new StringBuilder()).toString();
+        }
+    }
+
+    public static final class CursorRange {
+        public final String min;
+        public final boolean minInclusive;
+        public final String max;
+        public final boolean maxInclusive;
+        public final SortBy sortBy;
+
+        public CursorRange(String min, boolean minInclusive, String max, boolean maxInclusive, SortBy sort) {
+            this.min = min;
+            this.minInclusive = minInclusive;
+            this.max = max;
+            this.maxInclusive = maxInclusive;
+            this.sortBy = sort;
+        }
+
+        @Override
+        public String toString() {
+            return Objects.toStringHelper(this).add("min", min).add("max", max).add("sort", sortBy).toString();
         }
     }
 
