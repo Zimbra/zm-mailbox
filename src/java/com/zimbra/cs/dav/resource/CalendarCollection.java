@@ -41,6 +41,7 @@ import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
+import com.zimbra.cs.dav.caldav.CalDavUtils;
 import com.zimbra.cs.dav.caldav.TimeRange;
 import com.zimbra.cs.dav.property.CalDavProperty;
 import com.zimbra.cs.dav.property.ResourceProperty;
@@ -293,6 +294,7 @@ public class CalendarCollection extends Collection {
             List<Invite> invites;
             try {
                 ZCalendar.ZVCalendar vcalendar = ZCalendar.ZCalendarBuilder.build(is, MimeConstants.P_CHARSET_UTF8);
+                CalDavUtils.removeAttendeeForOrganizer(vcalendar);  // Apple iCal fixup
                 invites = Invite.createFromCalendar(account,
                         findSummary(vcalendar), 
                         vcalendar, 
