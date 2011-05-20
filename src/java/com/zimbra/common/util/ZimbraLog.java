@@ -383,6 +383,9 @@ public final class ZimbraLog {
      * "zimbra.tnef" logger.  Logs TNEF conversion operations.
      */
     public static final Log tnef = LogFactory.getLog("zimbra.tnef");
+    
+    
+    public static final Log nginxlookup = LogFactory.getLog("zimbra.nginxlookup");
 
 
     /**
@@ -470,6 +473,7 @@ public final class ZimbraLog {
         descriptions.put(store.getCategory(), "Mail store disk operations");
         descriptions.put(purge.getCategory(), "Mailbox purge operations");
         descriptions.put(datasource.getCategory(), "Data Source operations");
+        descriptions.put(nginxlookup.getCategory(), "Nginx lookup operations");
         CATEGORY_DESCRIPTIONS = Collections.unmodifiableMap(descriptions);
     }
 
