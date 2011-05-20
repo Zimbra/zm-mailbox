@@ -36,8 +36,8 @@ public abstract class AbstractRetry<T> {
         return (sqle.getMessage() != null && (sqle.getMessage().contains("SQLITE_BUSY") || sqle.getMessage().contains("database is locked")));
     }
 
-    private static final int RETRY_LIMIT = 5;
-    private static final int RETRY_DELAY = 250;
+    private static final int RETRY_LIMIT = 10;
+    private static final int RETRY_DELAY = 1000;
     
     private static int retryCount = 0;
     public static int getTotalRetries() {

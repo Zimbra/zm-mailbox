@@ -178,7 +178,7 @@ public abstract class Db {
     /** Callback executed immediately before creating a user database. */
     void precreateDatabase(String dbname)  { }
 
-    void deleteDatabaseFile(String dbname) {
+    void deleteDatabaseFile(Connection conn, String dbname) {
         // not supported by default
         throw new UnsupportedOperationException("DB is not file-per-database");
     }

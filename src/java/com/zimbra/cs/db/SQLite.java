@@ -27,6 +27,8 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -196,11 +198,19 @@ public class SQLite extends Db {
                         pragma(conn.getConnection(), dbname, "incremental_vacuum", null);
                 }
                 (stmt = conn.prepareStatement("ANALYZE " + dbname)).execute();
-                if (!autocommit)
-                    conn.getConnection().setAutoCommit(autocommit);
                 ZimbraLog.dbconn.debug("sqlite " +
                     (level > 0 ? "vacuum" : "analyze") + ' ' + dbname);
             } finally {
+                if (!autocommit) {
+                    try {
+                        conn.getConnection().setAutoCommit(autocommit);
+                    } catch (SQLException sqle) {
+                        ZimbraLog.dbconn.warn("failed to reset autocommit to false. probably caused by prior errors %s", dbname);
+                        DbPool.quietClose(conn);
+                        throw ServiceException.FAILURE("failed to reset autocommit to false",sqle);
+                    }
+                }
+
                 DbPool.quietCloseStatement(stmt);
             }
         } catch (Exception e) {
@@ -228,22 +238,28 @@ public class SQLite extends Db {
 
     void attachDatabase(Connection conn, String dbname) throws SQLException, ServiceException {
         PreparedStatement stmt = null;
-
+        boolean autocommit = true;
         try {
-            boolean autocommit = conn.getConnection().getAutoCommit();
+            autocommit = conn.getConnection().getAutoCommit();
             if (!autocommit)
                 conn.getConnection().setAutoCommit(true);
 
             (stmt = conn.prepareStatement("ATTACH DATABASE \"" + getDatabaseFilename(dbname) + "\" AS " + dbname)).execute();
             pragmas(conn.getConnection(), dbname);
-
-            if (!autocommit)
-                conn.getConnection().setAutoCommit(autocommit);
         } catch (SQLException e) {
             ZimbraLog.dbconn.error("database " + dbname + " attach failed", e);
             if (!"database is already attached".equals(e.getMessage()))
                 throw e;
         } finally {
+            if (!autocommit) {
+                try {
+                    conn.getConnection().setAutoCommit(autocommit);
+                } catch (SQLException sqle) {
+                    ZimbraLog.dbconn.warn("failed to reset autocommit to false. probably caused by prior errors " + dbname);
+                    DbPool.quietClose(conn);
+                    throw ServiceException.FAILURE("failed to reset autocommit to false",sqle);
+                }
+            }
             DbPool.quietCloseStatement(stmt);
         }
         
@@ -257,22 +273,33 @@ public class SQLite extends Db {
         }
     }
 
-    private boolean detachDatabase(Connection conn, String dbname) {
+    private boolean detachDatabase(Connection conn, String dbname) throws ServiceException {
         PreparedStatement stmt = null;
+        boolean autocommit = true;
         try {
-            boolean autocommit = conn.getConnection().getAutoCommit();
-            if (!autocommit)
+            autocommit = conn.getConnection().getAutoCommit();
+            if (!autocommit) {
                 conn.getConnection().setAutoCommit(true);
-
+            }
             (stmt = conn.prepareStatement("DETACH DATABASE " + dbname)).execute();
-
-            if (!autocommit)
-                conn.getConnection().setAutoCommit(autocommit);
             return true;
         } catch (SQLException e) {
-            ZimbraLog.dbconn.warn("database overflow autoclose failed for DB " + dbname, e);
-            return false;
+            if (!deleted.containsKey(dbname)) { 
+                ZimbraLog.dbconn.warn("database overflow autoclose failed for DB " + dbname, e);
+                return false;
+            } else {
+                return true;
+            }
         } finally {
+            if (!autocommit) {
+                try {
+                    conn.getConnection().setAutoCommit(autocommit);
+                } catch (SQLException sqle) {
+                    ZimbraLog.dbconn.warn("failed to reset autocommit to false. probably caused by prior errors %s", dbname);
+                    DbPool.quietClose(conn);
+                    throw ServiceException.FAILURE("failed to reset autocommit to false",sqle);
+                }
+            }
             DbPool.quietCloseStatement(stmt);
         }
     }
@@ -297,8 +324,9 @@ public class SQLite extends Db {
         // sure that at least one table exists 
         PreparedStatement stmt = null;
         ResultSet rs = null;
+        boolean autocommit = true;
         try {
-            boolean autocommit = conn.getConnection().getAutoCommit();
+            autocommit = conn.getConnection().getAutoCommit();
             if (!autocommit)
                 conn.getConnection().setAutoCommit(true);
 
@@ -308,20 +336,35 @@ public class SQLite extends Db {
                 "sqlite_master WHERE type='table'");
             rs = stmt.executeQuery();
             boolean complete = rs.next() ? (rs.getInt(1) >= 1) : false;
-
-            if (!autocommit)
-                conn.getConnection().setAutoCommit(autocommit);
             return complete;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("sqlite error", e);
         } finally {
+            if (!autocommit) {
+                try {
+                    conn.getConnection().setAutoCommit(autocommit);
+                } catch (SQLException sqle) {
+                    ZimbraLog.dbconn.warn("failed to reset autocommit to false. probably caused by prior errors %s", dbname);
+                    DbPool.quietClose(conn);
+                    throw ServiceException.FAILURE("failed to reset autocommit to false",sqle);
+                }
+            }
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
         }
     }
 
-    @Override void deleteDatabaseFile(String dbname) {
+    private ConcurrentMap<String,Boolean> deleted = new ConcurrentHashMap<String, Boolean>();
+
+    @Override
+    void deleteDatabaseFile(Connection conn, String dbname) {
         assert(dbname != null && !dbname.trim().equals(""));
+        try {
+            detachDatabase(conn, dbname);
+        } catch (ServiceException se) {
+            ZimbraLog.dbconn.warn("failed to detach while deleting");
+        }
+        deleted.put(dbname,true);
         ZimbraLog.dbconn.info("deleting database file for DB '" + dbname + "'");
         new File(getDatabaseFilename(dbname)).delete();
         new File(getDatabaseFilename(dbname) + "-journal").delete();

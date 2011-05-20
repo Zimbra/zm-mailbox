@@ -338,7 +338,7 @@ public class DbMailbox {
         ZimbraLog.mailbox.info("clearing contents of mailbox " + mailboxId + ", group " + mbox.getSchemaGroupId());
 
         if (DebugConfig.disableMailboxGroups && Db.supports(Db.Capability.FILE_PER_DATABASE)) {
-            Db.getInstance().deleteDatabaseFile(getDatabaseName(mbox));
+            Db.getInstance().deleteDatabaseFile(conn, getDatabaseName(mbox));
             return;
         }
 
