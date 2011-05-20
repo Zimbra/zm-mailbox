@@ -8018,17 +8018,30 @@ public class Mailbox {
             if (parent.getType() != Type.DOCUMENT) {
                 throw MailServiceException.CANNOT_PARENT();
             }
-
             CreateComment redoPlayer = (CreateComment)mCurrentChange.getRedoPlayer();
-
             int itemId = redoPlayer == null ? getNextItemId(ID_AUTO_INCREMENT) : redoPlayer.getItemId();
-
             Comment comment = Comment.create(this, parent, itemId, text, creatorId, null);
-            redoRecorder.setItemId(itemId);
-
+            redoRecorder.setItemId(comment.getId());
             index.add(comment);
             success = true;
             return comment;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public Link createLink(OperationContext octxt, int folderId, String name, String ownerId, int remoteId) throws ServiceException {
+        CreateLink redoRecorder = new CreateLink(mId, folderId, name, ownerId, remoteId);
+
+        boolean success = false;
+        try {
+            beginTransaction("createLink", octxt, redoRecorder);
+            CreateLink redoPlayer = (CreateLink) mCurrentChange.getRedoPlayer();
+            int itemId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getId());
+            Link link = Link.create(getFolderById(folderId), itemId, name, ownerId, remoteId, null);
+            redoRecorder.setId(link.getId());
+            success = true;
+            return link;
         } finally {
             endTransaction(success);
         }

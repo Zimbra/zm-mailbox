@@ -82,6 +82,7 @@ import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.Link;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -2521,5 +2522,23 @@ public class ToXML {
             c.addAttribute(MailConstants.A_DATE, comment.getDate());
         if (needToOutput(fields, Change.MODIFIED_METADATA))
             encodeAllCustomMetadata(c, comment, fields);
+    }
+    
+    public static Element encodeLink(Element response, ItemIdFormatter ifmt, Link link, int fields) {
+        Element l = response.addElement(MailConstants.E_LINK);
+        l.addAttribute(MailConstants.A_ID, ifmt.formatItemId(link));
+
+        if (needToOutput(fields, Change.MODIFIED_NAME)) {
+            String name = link.getName();
+            if (name != null && name.length() > 0)
+                l.addAttribute(MailConstants.A_NAME, name);
+        }
+        if (needToOutput(fields, Change.MODIFIED_CONTENT)) {
+            l.addAttribute(MailConstants.A_ZIMBRA_ID, link.getOwnerId());
+            l.addAttribute(MailConstants.A_REMOTE_ID, link.getRemoteId());
+            NamedEntry nentry = FolderAction.lookupGranteeByZimbraId(link.getOwnerId(), ACL.GRANTEE_USER);
+            l.addAttribute(MailConstants.A_OWNER_NAME, nentry == null ? null : nentry.getName());
+        }
+        return l;
     }
 }

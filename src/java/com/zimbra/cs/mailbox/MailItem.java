@@ -97,7 +97,9 @@ public abstract class MailItem implements Comparable<MailItem> {
         /** Item is a {@link Chat} */
         CHAT(16),
         /** Item is a {@link Comment} */
-        COMMENT(17);
+        COMMENT(17),
+        /** Item is a {@link Link} pointing to a {@link Document} */
+        LINK(18);
 
         private static final Map<Byte, Type> BYTE2TYPE;
         static {

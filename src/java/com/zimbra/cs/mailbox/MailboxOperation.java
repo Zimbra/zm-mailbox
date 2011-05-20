@@ -99,7 +99,8 @@ public enum MailboxOperation {
     Download(81),    // not a true mailbox operation but it's used for audit logging
     Preview(82),     // ditto
     SnoozeCalendarItemAlarm(83),
-    CreateComment(84);
+    CreateComment(84),
+    CreateLink(85);
     
     private MailboxOperation(int c) {
         code = c;

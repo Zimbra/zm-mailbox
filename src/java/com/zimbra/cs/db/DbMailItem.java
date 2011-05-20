@@ -2012,6 +2012,7 @@ public class DbMailItem {
 
     private static final String DOCUMENT_TYPES = "(" +
         MailItem.Type.DOCUMENT.toByte() + ',' +
+        MailItem.Type.LINK.toByte() + ',' +
         MailItem.Type.WIKI.toByte() + ')';
 
     private static final String CALENDAR_TYPES = "(" +
@@ -2022,6 +2023,7 @@ public class DbMailItem {
         MailItem.Type.MESSAGE.toByte() + ',' +
         MailItem.Type.CONTACT.toByte() + ',' +
         MailItem.Type.DOCUMENT.toByte() + ',' +
+        MailItem.Type.LINK.toByte() + ',' +
         MailItem.Type.APPOINTMENT.toByte() + ',' +
         MailItem.Type.TASK.toByte() + ',' +
         MailItem.Type.CHAT.toByte() + ',' +
