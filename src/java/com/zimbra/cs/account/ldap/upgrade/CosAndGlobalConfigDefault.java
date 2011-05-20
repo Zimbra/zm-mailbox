@@ -153,6 +153,20 @@ public class CosAndGlobalConfigDefault extends LdapUpgrade {
             }
         }
         
+        /*
+         * bug 58084
+         * 
+         * zimbraMailEmptyFolderBatchThreshold was added in 6.0.13, *after* 7.1.0 and before 7.1.1
+         * 
+         */
+        if (Provisioning.A_zimbraMailEmptyFolderBatchThreshold.equalsIgnoreCase(attr)) {
+            boolean fromATroubledInstall = (mSince.compare("7.0.0") >= 0 &&
+                                            mSince.compare("7.1.1") < 0);
+            if (fromATroubledInstall) {
+                return true;
+            }
+        }
+        
         return false;
     }
 
