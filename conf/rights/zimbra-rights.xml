@@ -88,6 +88,18 @@
   <desc>check password strength</desc>
 </right>
 
+<right name="configurePasswordStrength" type="setAttrs" targetType="account,calresource,cos">
+  <desc>configure password strength</desc>
+  <attrs>
+      <a n="zimbraPasswordMinLength"/>
+      <a n="zimbraPasswordMaxLength"/>
+      <a n="zimbraPasswordMinUpperCaseChars"/>
+      <a n="zimbraPasswordMinLowerCaseChars"/>
+      <a n="zimbraPasswordMinNumericChars"/>
+      <a n="zimbraPasswordMinPunctuationChars"/>
+  </attrs>
+</right>
+
 <right name="viewAdminSavedSearch" type="getAttrs" targetType="account,calresource">
   <desc>view admin saved searches</desc>
   <attrs>
@@ -100,7 +112,17 @@
   <attrs>
       <a n="zimbraAdminSavedSearches"/>
   </attrs>
-</right>   
+</right>  
+
+<right name="configureQuota" type="setAttrs" targetType="account,cos">
+  <desc>configure quota</desc>
+  <attrs>
+      <a n="zimbraMailQuota"/>
+      <a n="zimbraQuotaWarnPercent"/>
+      <a n="zimbraQuotaWarnInterval"/>
+      <a n="zimbraQuotaWarnMessage"/>
+  </attrs>
+</right> 
 
 <right name="viewAccountAdminUI" type="preset" targetType="account">
   <desc>
