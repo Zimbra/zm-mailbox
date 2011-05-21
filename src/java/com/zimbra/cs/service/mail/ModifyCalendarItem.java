@@ -193,9 +193,17 @@ public class ModifyCalendarItem extends CalendarRequest {
             dat.mInvite.setNeverSent(false);
         } else {
             // This is the case of organizer saving an invite with attendees, but without sending the notification.
-            // Set neverSent to false, but only if it wasn't already set to true before.
-            // !inv.isNeverSent() ? false : true ==> inv.isNeverSent()
-            dat.mInvite.setNeverSent(inv.isNeverSent());
+            assert(dat.mInvite.hasOtherAttendees() && !hasRecipients);
+            if (!inv.hasOtherAttendees()) {
+                // Special case of going from a personal appointment (no attendees) to a draft appointment with
+                // attendees.  neverSent was false for being a personal appointment, so we need to explicitly set it to true.
+                // This case is essentially identical to creating a new appointment with attendees without notification.
+                dat.mInvite.setNeverSent(true);
+            } else {
+                // Set neverSent to false, but only if it wasn't already set to true before.
+                // !inv.isNeverSent() ? false : true ==> inv.isNeverSent()
+                dat.mInvite.setNeverSent(inv.isNeverSent());
+            }
         }
 
         // If updating recurrence series, remove newly added attendees from the email
@@ -248,10 +256,12 @@ public class ModifyCalendarItem extends CalendarRequest {
             echoAddedInvite(response, ifmt, octxt, mbox, dat.mAddInvData, maxSize, wantHTML, neuter);
         }
 
-        // Notify removed attendees.
-        List<ZAttendee> atsCanceled = parser.getAttendeesCanceled();
-        if (!atsCanceled.isEmpty() && inv.isOrganizer()) {
-            updateRemovedInvitees(zsc, octxt, acct, mbox, inv.getCalendarItem(), inv, atsCanceled);
+        if (!inv.isNeverSent()) {
+            // Notify removed attendees.
+            List<ZAttendee> atsCanceled = parser.getAttendeesCanceled();
+            if (!atsCanceled.isEmpty() && inv.isOrganizer()) {
+                updateRemovedInvitees(zsc, octxt, acct, mbox, inv.getCalendarItem(), inv, atsCanceled);
+            }
         }
 
         // Notify attendees added to recurrence series.
