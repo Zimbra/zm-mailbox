@@ -30,7 +30,7 @@ public class AdminRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pjoseph 20110308-2155 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110520-1711 */
 
 
     public static AdminRight R_accessGAL;
@@ -139,6 +139,8 @@ public class AdminRights {
     public static AdminRight R_configureExternalAuth;
     public static AdminRight R_configureExternalGAL;
     public static AdminRight R_configureGlobalConfigConstraint;
+    public static AdminRight R_configurePasswordStrength;
+    public static AdminRight R_configureQuota;
     public static AdminRight R_configureWikiAccount;
     public static AdminRight R_countAccount;
     public static AdminRight R_createAccount;
@@ -537,6 +539,8 @@ public class AdminRights {
         R_configureExternalAuth                = rm.getAdminRight(Right.RT_configureExternalAuth);
         R_configureExternalGAL                 = rm.getAdminRight(Right.RT_configureExternalGAL);
         R_configureGlobalConfigConstraint      = rm.getAdminRight(Right.RT_configureGlobalConfigConstraint);
+        R_configurePasswordStrength            = rm.getAdminRight(Right.RT_configurePasswordStrength);
+        R_configureQuota                       = rm.getAdminRight(Right.RT_configureQuota);
         R_configureWikiAccount                 = rm.getAdminRight(Right.RT_configureWikiAccount);
         R_countAccount                         = rm.getAdminRight(Right.RT_countAccount);
         R_createAccount                        = rm.getAdminRight(Right.RT_createAccount);
