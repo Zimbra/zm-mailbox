@@ -24,7 +24,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pjoseph 20110308-2155 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110520-2013 */
 
 
     /*
@@ -234,6 +234,16 @@ public class RightConsts {
      * Admin Console set attr rights for create GAL sync account
      */
     public static final String RT_adminConsoleCreateGALRights = "adminConsoleCreateGALRights";
+
+    /**
+     * Admin Console Create Sub Domain Rights
+     */
+    public static final String RT_adminConsoleCreateSubDomainModifierRights = "adminConsoleCreateSubDomainModifierRights";
+
+    /**
+     * Admin Console Create Sub Domain Account Rights
+     */
+    public static final String RT_adminConsoleCreateSubDomainRights = "adminConsoleCreateSubDomainRights";
 
     /**
      * Admin Console Create Top Domain Rights
@@ -605,6 +615,16 @@ public class RightConsts {
      * configure global config constraint
      */
     public static final String RT_configureGlobalConfigConstraint = "configureGlobalConfigConstraint";
+
+    /**
+     * configure password strength
+     */
+    public static final String RT_configurePasswordStrength = "configurePasswordStrength";
+
+    /**
+     * configure quota
+     */
+    public static final String RT_configureQuota = "configureQuota";
 
     /**
      * configure attributes for wiki account
