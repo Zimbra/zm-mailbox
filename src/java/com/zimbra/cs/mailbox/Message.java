@@ -934,6 +934,11 @@ public class Message extends MailItem {
                     }
                 }
 
+                Account senderAcct = null;
+                String senderEmail = pm.getSenderEmail(false);
+                if (senderEmail != null)
+                    senderAcct = Provisioning.getInstance().get(AccountBy.name, senderEmail);
+
                 if (forwardTo != null && forwardTo.length > 0) {
                     List<String> rcptsUnfiltered = new ArrayList<String>();  // recipients to receive unfiltered message
                     List<String> rcptsFiltered = new ArrayList<String>();    // recipients to receive message filtered to remove private data
@@ -944,17 +949,41 @@ public class Message extends MailItem {
                         ZimbraLog.mailbox.warn("No such calendar folder (" + calItemFolderId + ") during invite auto-forwarding");
                     }
                     for (String fwd : forwardTo) {
+                        if (fwd != null) {
+                            fwd = fwd.trim();
+                        }
+                        if (StringUtil.isNullOrEmpty(fwd)) {
+                            continue;
+                        }
                         // Prevent forwarding to self.
                         if (AccountUtil.addressMatchesAccount(acct, fwd))
                             continue;
+                        // Don't forward back to the sender.  It's redundant and confusing.
+                        Account rcptAcct = Provisioning.getInstance().get(AccountBy.name, fwd);
+                        boolean rcptIsSender = false;
+                        if (rcptAcct != null) {
+                            if (senderAcct != null) {
+                                rcptIsSender = rcptAcct.getId().equalsIgnoreCase(senderAcct.getId());
+                            } else {
+                                rcptIsSender = AccountUtil.addressMatchesAccount(rcptAcct, senderEmail);
+                            }
+                        } else {
+                            if (senderAcct != null) {
+                                rcptIsSender = AccountUtil.addressMatchesAccount(senderAcct, fwd);
+                            } else {
+                                rcptIsSender = fwd.equalsIgnoreCase(senderEmail);
+                            }
+                        }
+                        if (rcptIsSender) {
+                            ZimbraLog.calendar.info("Not auto-forwarding to " + fwd + " because it is the sender of this message");
+                            continue;
+                        }
                         if (publicInvites) {
                             rcptsUnfiltered.add(fwd);
                         } else {
                             boolean allowed = false;
-                            if (calFolder != null) {
-                                Account rcptAcct = Provisioning.getInstance().get(AccountBy.name, fwd);
-                                if (rcptAcct != null)
-                                    allowed = calFolder.canAccess(ACL.RIGHT_PRIVATE, rcptAcct, false);
+                            if (calFolder != null && rcptAcct != null) {
+                                allowed = calFolder.canAccess(ACL.RIGHT_PRIVATE, rcptAcct, false);
                             }
                             if (allowed) {
                                 rcptsUnfiltered.add(fwd);
