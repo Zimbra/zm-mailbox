@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -18,22 +18,43 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.mail.internet.MimeUtility;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.codec.net.URLCodec;
 import org.apache.commons.httpclient.HttpURL;
 import org.apache.commons.httpclient.HttpsURL;
 
+import com.google.common.base.Charsets;
 import com.google.common.primitives.Bytes;
 
-public class HttpUtil {
+public final class HttpUtil {
 
     public enum Browser { IE, FIREFOX, MOZILLA, OPERA, SAFARI, APPLE_ICAL, UNKNOWN };
+
+    // Encode ' ' to '%20' instead of '+' because IE doesn't decode '+' to ' '.
+    private static final BitSet IE_URL_SAFE = new BitSet(256);
+    static {
+        for (int i = 'a'; i <= 'z'; i++) {
+            IE_URL_SAFE.set(i);
+        }
+        for (int i = 'A'; i <= 'Z'; i++) {
+            IE_URL_SAFE.set(i);
+        }
+        for (int i = '0'; i <= '9'; i++) {
+            IE_URL_SAFE.set(i);
+        }
+        // special except for space (0x20).
+        IE_URL_SAFE.set('-');
+        IE_URL_SAFE.set('_');
+        IE_URL_SAFE.set('.');
+        IE_URL_SAFE.set('*');
+    }
 
     public static Browser guessBrowser(HttpServletRequest req) {
         String ua = req.getHeader("User-Agent");
@@ -77,7 +98,8 @@ public class HttpUtil {
         try {
             switch (browser) {
                 case IE:
-                    return URLEncoder.encode(filename, "utf-8");
+                    return new String(URLCodec.encodeUrl(IE_URL_SAFE, filename.getBytes(Charsets.UTF_8)),
+                            Charsets.ISO_8859_1);
                 case SAFARI:
                     // Safari doesn't support any encoding. The only solution is
                     // to let Safari use the path-info in URL by returning no
@@ -135,7 +157,7 @@ public class HttpUtil {
         }
         return params;
     }
-    
+
     /**
      * URL-encodes the given URL path.
      *
@@ -172,7 +194,7 @@ public class HttpUtil {
     }
 
     private static final Map<Character,String> sUrlEscapeMap = new HashMap<Character,String>();
-    
+
     static {
         sUrlEscapeMap.put(' ', "%20");
         sUrlEscapeMap.put('"', "%22");
@@ -189,15 +211,15 @@ public class HttpUtil {
         sUrlEscapeMap.put('|', "%7C");
         sUrlEscapeMap.put('}', "%7D");
     }
-    
+
     /**
      * urlEscape method will encode '?' and '&', so make sure
      * the passed in String does not have query string in it.
      * Or call urlEscape on each segment and append query
      * String afterwards.
-     * 
+     *
      * from RFC 3986:
-     * 
+     *
      * pchar       = unreserved / pct-encoded / sub-delims / ":" / "@"
      *
      * sub-delims  = "!" / "$" / "&" / "'" / "(" / ")"
@@ -207,36 +229,36 @@ public class HttpUtil {
      *
      */
     public static String urlEscape(String str) {
-    	// rfc 2396 url escape.
-    	StringBuilder buf = null;
-    	for (int i = 0; i < str.length(); i++) {
+        // rfc 2396 url escape.
+        StringBuilder buf = null;
+        for (int i = 0; i < str.length(); i++) {
             char c = str.charAt(i);
             String escaped = null;
             if (c < 0x7F)
-            	escaped = sUrlEscapeMap.get(c);
-            
+                escaped = sUrlEscapeMap.get(c);
+
             if (escaped != null || c >= 0x7F) {
                 if (buf == null) {
                     buf = new StringBuilder();
                     buf.append(str.substring(0, i));
                 }
                 if (escaped != null)
-                	buf.append(escaped);
+                    buf.append(escaped);
                 else {
-                	try {
+                    try {
                         byte[] raw = Character.valueOf(c).toString().getBytes("UTF-8");
-                    	for (byte b : raw) {
-                    		int unsignedB = b & 0xFF;  // byte is signed
-                    		buf.append("%").append(Integer.toHexString(unsignedB).toUpperCase());
-                    	}
-                	} catch (IOException e) {
-                		buf.append(c);
-                	}
+                        for (byte b : raw) {
+                            int unsignedB = b & 0xFF;  // byte is signed
+                            buf.append("%").append(Integer.toHexString(unsignedB).toUpperCase());
+                        }
+                    } catch (IOException e) {
+                        buf.append(c);
+                    }
                 }
             } else if (buf != null) {
                 buf.append(c);
             }
-    	}
+        }
         if (buf != null)
             return buf.toString();
         return str;
@@ -259,7 +281,7 @@ public class HttpUtil {
                 String bytes = escaped.substring(i+1, i+3);
                 try {
                     // java Byte type is signed with range of -0x80 to 0x7F.
-                    // it cannot convert segment of encoded UTF-8 string 
+                    // it cannot convert segment of encoded UTF-8 string
                     // with high bit set.  we'll parse using Integer
                     // then cast the result back to signed Byte.
                     // e.g. 0xED becomes 237 as Integer, then -19 as Byte
