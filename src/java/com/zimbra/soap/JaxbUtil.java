@@ -49,11 +49,11 @@ public final class JaxbUtil {
 
     private static final Log LOG = ZimbraLog.soap;
     private static final Class<?>[] MESSAGE_CLASSES;
-    private static final String ACCOUNT_JAXB_PACKAGE = 
+    private static final String ACCOUNT_JAXB_PACKAGE =
         "com.zimbra.soap.account.message";
-    private static final String ADMIN_JAXB_PACKAGE = 
+    private static final String ADMIN_JAXB_PACKAGE =
         "com.zimbra.soap.admin.message";
-    private static final String MAIL_JAXB_PACKAGE = 
+    private static final String MAIL_JAXB_PACKAGE =
         "com.zimbra.soap.mail.message";
     private static JAXBContext JAXB_CONTEXT;
 
@@ -524,6 +524,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.ReloadLocalConfigResponse.class,
             com.zimbra.soap.admin.message.ReloadMemcachedClientConfigRequest.class,
             com.zimbra.soap.admin.message.ReloadMemcachedClientConfigResponse.class,
+            com.zimbra.soap.admin.message.ResetAllLoggersRequest.class,
+            com.zimbra.soap.admin.message.ResetAllLoggersResponse.class,
             com.zimbra.soap.admin.message.RemoveAccountAliasRequest.class,
             com.zimbra.soap.admin.message.RemoveAccountAliasResponse.class,
             com.zimbra.soap.admin.message.RemoveAccountLoggerRequest.class,
@@ -576,7 +578,7 @@ public final class JaxbUtil {
 
     /**
      * @param o
-     * @param factory - e.g. XmlElement.mFactory or JSONElement.mFactory 
+     * @param factory - e.g. XmlElement.mFactory or JSONElement.mFactory
      * @return
      * @throws ServiceException
      */
@@ -586,7 +588,7 @@ public final class JaxbUtil {
             Marshaller marshaller = getContext().createMarshaller();
             // marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
             DocumentResult dr = new DocumentResult();
-            marshaller.marshal(o, dr); 
+            marshaller.marshal(o, dr);
             Document theDoc = dr.getDocument();
             org.dom4j.Element rootElem = theDoc.getRootElement();
             return Element.convertDOM(rootElem, factory);
@@ -622,7 +624,7 @@ public final class JaxbUtil {
         } catch (UnsupportedEncodingException ex) {
             throw ServiceException.FAILURE(
                     "Unable to unmarshal response for " + e.getName(), ex);
-		}
+        }
     }
 
     /**
@@ -775,7 +777,7 @@ public final class JaxbUtil {
     }
 
     /**
-     * Return a JAXB object.  This implementation uses a org.w3c.dom.Document 
+     * Return a JAXB object.  This implementation uses a org.w3c.dom.Document
      * as an intermediate representation.  This appears to be more reliable
      * than using a DocumentSource based on org.dom4j.Element
      */
@@ -797,7 +799,7 @@ public final class JaxbUtil {
     }
 
     /**
-     * Return a JAXB object.  This implementation uses a org.w3c.dom.Document 
+     * Return a JAXB object.  This implementation uses a org.w3c.dom.Document
      * as an intermediate representation.  This appears to be more reliable
      * than using a DocumentSource based on org.dom4j.Element
      */
