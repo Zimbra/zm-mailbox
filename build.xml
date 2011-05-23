@@ -305,7 +305,7 @@
         <condition property="zimbra.buildinfo.platform" value="${native.os}">
             <not><isset property="${zimbra.buildinfo.platform}"/></not>
         </condition>
-        <condition property="zimbra.buildinfo.version" value="7.0.0_BETA1_1111">
+        <condition property="zimbra.buildinfo.version" value="8.0.0_BETA1_1111">
             <not><isset property="${zimbra.buildinfo.version}"/></not>
         </condition>
 
