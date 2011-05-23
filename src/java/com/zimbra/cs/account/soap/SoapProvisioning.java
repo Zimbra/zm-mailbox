@@ -887,8 +887,7 @@ public class SoapProvisioning extends Provisioning {
     }
 
     public void resetAllLoggers(String server) throws ServiceException {
-        invoke(new XMLElement(AdminConstants.RESET_ALL_LOGGERS_REQUEST),
-                server != null ? server : getLocalServer().getName());
+        invokeJaxb(new ResetAllLoggersRequest(), server != null ? server : getLocalServer().getName());
     }
 
     public static class MailboxInfo {
