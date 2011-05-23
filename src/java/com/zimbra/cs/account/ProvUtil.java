@@ -597,7 +597,8 @@ public class ProvUtil implements HttpDebugListener {
         GET_MEMCACHED_CLIENT_CONFIG("getMemcachedClientConfig", "gmcc", "all | mailbox-server [...]", Category.MISC, 1, Integer.MAX_VALUE, Via.soap),
         SOAP(".soap", ".s"),
         SYNC_GAL("syncGal", "syg", "{domain} [{token}]", Category.MISC, 1, 2),
-        UPDATE_TEMPLATES("updateTemplates", "ut", "[-h host] {template-directory}", Category.NOTEBOOK, 1, 3);
+        UPDATE_TEMPLATES("updateTemplates", "ut", "[-h host] {template-directory}", Category.NOTEBOOK, 1, 3),
+        RESET_ALL_LOGGERS("resetAllLoggers", "rlog", "[-s/--server hostname]", Category.LOG, 0, 2);
 
         private String mName;
         private String mAlias;
@@ -1267,6 +1268,9 @@ public class ProvUtil implements HttpDebugListener {
                 // HACK FOR NOW
                 prov = Provisioning.getInstance();
                 break;
+            case RESET_ALL_LOGGERS:
+                doResetAllLoggers(args);
+                break;
             default:
                 return false;
         }
@@ -1479,6 +1483,18 @@ public class ProvUtil implements HttpDebugListener {
             category = alo.args[2];
         }
         sp.removeAccountLoggers(acct, category, alo.server);
+    }
+
+    private void doResetAllLoggers(String[] args) throws ServiceException {
+        if (!(prov instanceof SoapProvisioning)) {
+            throwSoapOnly();
+        }
+        SoapProvisioning sprov = (SoapProvisioning) prov;
+        String server = null;
+        if (args.length > 1 && ("-s".equals(args[1]) || "--server".equals(args[1]))) {
+            server = args.length > 0 ? args[2] : null;
+        }
+        sprov.resetAllLoggers(server);
     }
 
     private void doCreateAccountsBulk(String[] args) throws ServiceException {
@@ -2983,7 +2999,7 @@ public class ProvUtil implements HttpDebugListener {
             console.println();
         }
     }
-    
+
     private static boolean needsBinaryIO(AttributeManager attrMgr, String attr) {
         return attrMgr.containsBinaryData(attr);
     }

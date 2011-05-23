@@ -217,7 +217,7 @@ Access: domain admin sufficient
 
 Access: domain admin sufficient
 
-<message> : If the password had violated any policy, it is returned in the 
+<message> : If the password had violated any policy, it is returned in the
             <message> element, and the password is still set successfully.
 
    note: this request is by default proxied to the account's home server
@@ -262,6 +262,14 @@ Access: domain admin sufficient
    note: this request is by default proxied to the account's home server
 
 -----------------------------
+
+<ResetAllLoggersRequest/>
+
+<ResetAllLoggersResponse/>
+
+Removes all account loggers and reloads /opt/zimbra/conf/log4j.properties.
+
+-----------------------------
 NOTE: SearchAccountsRequest is deprecated. See SearchDirectoryRequest.
 
 <SearchAccountsRequest [limit="..."] [offset="..."] [domain="{domain-name}"] [applyCos="{apply-cos}"]
@@ -302,7 +310,7 @@ SearchAccountsRequest
 
 SearchAccountsResponse
   isExternal: whether the account's zimbraMailTranport points to the designated protocol(lmtp) and server(home server of the account).
-  
+
 Access: domain admin sufficient (a domain admin can't specify "domains" as a type)
 
 -----------------------------
@@ -409,7 +417,7 @@ SearchDirectoryRequest
 
 SearchDirectoryResponse
   isExternal: whether the account's zimbraMailTranport points to the designated protocol(lmtp) and server(home server of the account).
-  
+
 Access: domain admin sufficient (though a domain admin can't specify "domains" as a type)
 
 -----------------------------
@@ -2080,7 +2088,7 @@ in soap-waitset.txt
   stays in effect only during the lifetime of the current server instance.
   If the request is sent to a server other than the one that the account
   resides on, it is proxied to the correct server.
-  
+
   If the category is "all", adds a custom logger for every category
   for the given user.
 

@@ -886,6 +886,11 @@ public class SoapProvisioning extends Provisioning {
                 getSelector(account), logger), server);
     }
 
+    public void resetAllLoggers(String server) throws ServiceException {
+        invoke(new XMLElement(AdminConstants.RESET_ALL_LOGGERS_REQUEST),
+                server != null ? server : getLocalServer().getName());
+    }
+
     public static class MailboxInfo {
         private long mUsed;
         private String mMboxId;
@@ -1699,10 +1704,10 @@ public class SoapProvisioning extends Provisioning {
     public List<Identity> getAllIdentities(Account account)
     throws ServiceException {
         List<Identity> result = new ArrayList<Identity>();
-        GetIdentitiesResponse response = 
+        GetIdentitiesResponse response =
             invokeJaxbOnTargetAccount(new GetIdentitiesRequest(),
                     account.getId());
-        for (com.zimbra.soap.account.type.Identity identity : 
+        for (com.zimbra.soap.account.type.Identity identity :
             response.getIdentities()) {
             result.add(new SoapIdentity(account, identity, this));
         }

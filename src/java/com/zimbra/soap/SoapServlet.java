@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -29,7 +29,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.HttpVersion;
 import org.apache.commons.httpclient.ProtocolException;
-import org.apache.log4j.PropertyConfigurator;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -87,15 +86,9 @@ public class SoapServlet extends ZimbraServlet {
     private static Log sLog = LogFactory.getLog(SoapServlet.class);
     private SoapEngine mEngine;
 
-    @Override public void init() throws ServletException {
-        // TODO we should have a ReloadConfig soap command that will reload
-        // on demand, instead of modifying and waiting for some time.
-        long watch = LC.zimbra_log4j_properties_watch.longValue();
-
-        if (watch > 0)
-            PropertyConfigurator.configureAndWatch(LC.zimbra_log4j_properties.value(), watch);
-        else
-            PropertyConfigurator.configure(LC.zimbra_log4j_properties.value());
+    @Override
+    public void init() throws ServletException {
+        LogFactory.init();
 
         String name = getServletName();
         ZimbraLog.soap.info("Servlet " + name + " starting up");
