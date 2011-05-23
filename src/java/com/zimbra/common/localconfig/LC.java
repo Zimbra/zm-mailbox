@@ -130,7 +130,6 @@ public final class LC {
 
     @Supported
     public static final KnownKey zimbra_log4j_properties = KnownKey.newKey("${zimbra_home}/conf/log4j.properties");
-    public static final KnownKey zimbra_log4j_properties_watch = KnownKey.newKey(60000);
 
     @Supported
     public static final KnownKey zimbra_auth_always_send_refer = KnownKey.newKey(false);
@@ -1084,7 +1083,7 @@ public final class LC {
     public static final KnownKey zimbra_vami_user = KnownKey.newKey("vmware");
     public static final KnownKey zimbra_vami_password = KnownKey.newKey("vmware").protect();
     public static final KnownKey zimbra_vami_installmode = KnownKey.newKey("single");
-    
+
     public static final KnownKey max_image_size_to_resize = KnownKey.newKey(10 * 1024 * 1024);
 
     static {

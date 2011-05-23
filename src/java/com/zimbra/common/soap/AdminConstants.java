@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -328,6 +328,8 @@ public final class AdminConstants {
     public static final String E_GET_ACCOUNT_LOGGERS_RESPONSE = "GetAccountLoggersResponse";
     public static final String E_GET_ALL_ACCOUNT_LOGGERS_REQUEST = "GetAllAccountLoggersRequest";
     public static final String E_GET_ALL_ACCOUNT_LOGGERS_RESPONSE = "GetAllAccountLoggersResponse";
+    public static final String E_RESET_ALL_LOGGERS_REQUEST = "ResetAllLoggersRequest";
+    public static final String E_RESET_ALL_LOGGERS_RESPONSE = "ResetAllLoggersResponse";
 
     // f/b providers
     public static final String E_GET_ALL_FREE_BUSY_PROVIDERS_REQUEST = "GetAllFreeBusyProvidersRequest";
@@ -418,13 +420,13 @@ public final class AdminConstants {
     // noop
     public static final String E_NO_OP_REQUEST = "NoOpRequest";
     public static final String E_NO_OP_RESPONSE = "NoOpResponse";
-    
+
     // SMIME config
     public static final String E_GET_SMIME_CONFIG_REQUEST = "GetSMIMEConfigRequest";
     public static final String E_GET_SMIME_CONFIG_RESPONSE = "GetSMIMEConfigResponse";
     public static final String E_MODIFY_SMIME_CONFIG_REQUEST = "ModifySMIMEConfigRequest";
     public static final String E_MODIFY_SMIME_CONFIG_RESPONSE = "ModifySMIMEConfigResponse";
-    
+
     public static final QName PING_REQUEST = QName.get(E_PING_REQUEST, NAMESPACE);
     public static final QName PING_RESPONSE = QName.get(E_PING_RESPONSE, NAMESPACE);
     public static final QName CHECK_HEALTH_REQUEST = QName.get(E_CHECK_HEALTH_REQUEST, NAMESPACE);
@@ -729,6 +731,8 @@ public final class AdminConstants {
     public static final QName GET_ACCOUNT_LOGGERS_RESPONSE = QName.get(E_GET_ACCOUNT_LOGGERS_RESPONSE, NAMESPACE);
     public static final QName GET_ALL_ACCOUNT_LOGGERS_REQUEST = QName.get(E_GET_ALL_ACCOUNT_LOGGERS_REQUEST, NAMESPACE);
     public static final QName GET_ALL_ACCOUNT_LOGGERS_RESPONSE = QName.get(E_GET_ALL_ACCOUNT_LOGGERS_RESPONSE, NAMESPACE);
+    public static final QName RESET_ALL_LOGGERS_REQUEST = QName.get(E_RESET_ALL_LOGGERS_REQUEST, NAMESPACE);
+    public static final QName RESET_ALL_LOGGERS_RESPONSE = QName.get(E_RESET_ALL_LOGGERS_RESPONSE, NAMESPACE);
 
     // f/b providers
     public static final QName GET_ALL_FREE_BUSY_PROVIDERS_REQUEST = QName.get(E_GET_ALL_FREE_BUSY_PROVIDERS_REQUEST, NAMESPACE);
@@ -819,12 +823,12 @@ public final class AdminConstants {
     // noop
     public static final QName NO_OP_REQUEST = QName.get(E_NO_OP_REQUEST, NAMESPACE);
     public static final QName NO_OP_RESPONSE = QName.get(E_NO_OP_RESPONSE, NAMESPACE);
-    
+
     public static final QName GET_SMIME_CONFIG_REQUEST = QName.get(E_GET_SMIME_CONFIG_REQUEST, NAMESPACE);
     public static final QName GET_SMIME_CONFIG_RESPONSE = QName.get(E_GET_SMIME_CONFIG_RESPONSE, NAMESPACE);
     public static final QName MODIFY_SMIME_CONFIG_REQUEST = QName.get(E_MODIFY_SMIME_CONFIG_REQUEST, NAMESPACE);
     public static final QName MODIFY_SMIME_CONFIG_RESPONSE = QName.get(E_MODIFY_SMIME_CONFIG_RESPONSE, NAMESPACE);
-    
+
     // DumpSessions
     public static final String E_SESSION = "session";
     public static final String A_ZIMBRA_ID = "zid";
@@ -1150,7 +1154,7 @@ public final class AdminConstants {
     public static final String E_MIGRATE = "migrate";
 
     public static final String A_ERROR = "error";
-    
+
     public static final String OP_MODIFY = "modify";
     public static final String OP_REMOVE = "remove";
 }
