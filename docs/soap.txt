@@ -772,6 +772,9 @@ import and export of addressbook.
   id attribute without all the contact fields populated.  The sync client
   then should make batch request to the server to fetch the contact fields
   with <GetContactsRequest/>.
+  Note: idOnly only works when GAL sync account is configured/enabled.  
+  If idOnly is specified and GAL sync account is not enabled, idOnly will 
+  be ignored.
 
 ----------------------------
 
