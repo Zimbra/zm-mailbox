@@ -87,6 +87,9 @@ public class Message extends MailItem {
         // zero value implies a normal draft, i.e. no auto-send intended
         long autoSendTime;
 
+        private DraftInfo() {
+        }
+        
         public DraftInfo(String rt, String id, String ident, String account, long autoSendTime) {
             replyType = rt;
             origId = id;
@@ -288,6 +291,13 @@ public class Message extends MailItem {
     public String getDraftOrigId() {
         return (draftInfo == null || draftInfo.origId == null ? "" : draftInfo.origId);
     }
+    
+    void setDraftOrigId(String origId) {
+        if (draftInfo == null) {
+            draftInfo = new DraftInfo();
+        }
+        draftInfo.origId = origId;
+    }
 
     /** Returns the "reply type" for a draft message.
      *
@@ -301,6 +311,13 @@ public class Message extends MailItem {
     public String getDraftReplyType() {
         return (draftInfo == null || draftInfo.replyType == null ? "" : draftInfo.replyType);
     }
+    
+    void setDraftReplyType(String replyType) {
+        if (draftInfo == null) {
+            draftInfo = new DraftInfo();
+        }
+        draftInfo.replyType = replyType;
+    }
 
 
     /** Returns the ID of the account that was used to compose this draft message.
@@ -312,6 +329,13 @@ public class Message extends MailItem {
     public String getDraftAccountId() {
         return (draftInfo == null || draftInfo.accountId == null ? "" : draftInfo.accountId);
     }
+    
+    void setDraftAccountId(String accountId) {
+        if (draftInfo == null) {
+            draftInfo = new DraftInfo();
+        }
+        draftInfo.accountId = accountId;
+    }
 
     /** Returns the ID of the {@link com.zimbra.cs.account.Identity} that was
      *  used to compose this draft message.
@@ -322,6 +346,13 @@ public class Message extends MailItem {
      * @see #getDraftOrigId() */
     public String getDraftIdentityId() {
         return (draftInfo == null || draftInfo.identityId == null ? "" : draftInfo.identityId);
+    }
+    
+    void setDraftIdentityId(String identityId) {
+        if (draftInfo == null) {
+            draftInfo = new DraftInfo();
+        }
+        draftInfo.identityId = identityId;
     }
 
     /** Returns the time (millis since epoch) at which the draft message is
@@ -342,7 +373,7 @@ public class Message extends MailItem {
             saveMetadata();
         }
     }
-
+    
     /** Returns whether the Message has a vCal attachment. */
     public boolean isInvite() {
         return mData.isSet(Flag.FlagInfo.INVITE);

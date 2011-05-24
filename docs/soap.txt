@@ -2207,13 +2207,16 @@ needCalendarSentByFixup - Add SENT-BY parameter to ORGANIZER and/or ATTENDEE
    FileUploadServlet, and submit it through our server:
 
 <SaveDraftRequest>
-  <m aid="{uploaded-MIME-body-ID}" [id="{existing-draft-id}"] [origid="..." rt="r|w"] [l="{folder}"] [f="{flags}"] [t="{tag-id-list}"] [color="{color}"] [autoSendTime="{millis-since-epoch}"]/>
+  <m aid="{uploaded-MIME-body-ID}" [id="{existing-draft-id}"]
+    [origid="..." rt="r|w"] [l="{folder}"] [f="{flags}"] [t="{tag-id-list}"] [color="{color}"] [autoSendTime="{millis-since-epoch}"]/>
 </SaveDraftRequest>
 
 
 # The id of the saved draft is returned
 <SaveDraftResponse>
-  <m id="{message-id}" f="{flags}" t="{tags}" s="{size}" [d="{received-date}"] sd="{date-header}" l="{folder}" (cid="{conv}") [autoSendTime="{millis-since-epoch}"]>
+  <m id="{message-id}" f="{flags}" t="{tags}" s="{size}" [d="{received-date}"]
+    sd="{date-header}" l="{folder}" (cid="{conv}") [autoSendTime="{millis-since-epoch}"]
+    [idnt="{identity-id}"]>
     <e .../>*
     <su>{subject}</su>
     <irt>{Message-ID header for message being replied to}</irt>
@@ -2223,6 +2226,9 @@ needCalendarSentByFixup - Add SENT-BY parameter to ORGANIZER and/or ATTENDEE
     [<content (url="...")>...</content>]
   </m>
 </SaveDraftResponse>
+
+The identity referenced by {identity-id} specifies the folder where the sent message
+is saved.
 
 ----------------------------
 

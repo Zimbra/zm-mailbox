@@ -62,6 +62,7 @@ import com.zimbra.common.util.CopyInputStream;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -5084,8 +5085,7 @@ public class Mailbox {
             String origId, String replyType, String identityId, String accountId, long autoSendTime)
             throws IOException, ServiceException {
         Message.DraftInfo dinfo = null;
-        if ((replyType != null && origId != null) || !StringUtil.isNullOrEmpty(identityId) ||
-                !StringUtil.isNullOrEmpty(accountId) || autoSendTime != 0) {
+        if ((replyType != null && origId != null) || identityId != null || accountId != null || autoSendTime != 0) {
             dinfo = new Message.DraftInfo(replyType, origId, identityId, accountId, autoSendTime);
         }
 
@@ -5129,6 +5129,24 @@ public class Mailbox {
             redoRecorder.setMessageBodyInfo(new ParsedMessageDataSource(pm), size);
 
             msg.setDraftAutoSendTime(autoSendTime);
+
+                if (dinfo != null) {
+                    if (replyType != null) {
+                        msg.setDraftReplyType(replyType);
+                    }
+                    if (origId != null) {
+                        msg.setDraftOrigId(origId);
+                    }
+                    if (identityId != null) {
+                        msg.setDraftIdentityId(identityId);
+                    }
+                    if (accountId != null) {
+                        msg.setDraftAccountId(accountId);
+                    }
+                    if (autoSendTime != 0) {
+                        msg.setDraftAutoSendTime(autoSendTime);
+                    }
+                }
 
             // update the content and increment the revision number
             msg.setContent(staged, pm);

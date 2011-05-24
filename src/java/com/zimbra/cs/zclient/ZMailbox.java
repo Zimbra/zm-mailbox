@@ -3304,6 +3304,7 @@ public class ZMailbox implements ToZJSONObject {
         private List<String> mDocIdsToAttach;
         private String mOriginalMessageId;
         private String mReplyType;
+        private String mIdentityId;
 
         public List<ZEmailAddress> getAddresses() { return mAddresses; }
         public void setAddresses(List<ZEmailAddress> addresses) { mAddresses = addresses; }
@@ -3337,6 +3338,9 @@ public class ZMailbox implements ToZJSONObject {
 
         public List<String> getMessageIdsToAttach() { return mMessageIdsToAttach; }
         public void setMessageIdsToAttach(List<String> messageIdsToAttach) { mMessageIdsToAttach = messageIdsToAttach; }
+        
+        public String getIdentityId() { return mIdentityId; }
+        public void setIdentityId(String id) { mIdentityId = id; }
 
         public List<String> getDocIdsToAttach() { return mDocIdsToAttach; }
         public void setDocIdsToAttach(List<String> docIdsToAttach) { mDocIdsToAttach = docIdsToAttach; }
@@ -3516,6 +3520,10 @@ public class ZMailbox implements ToZJSONObject {
         if (autoSendTime != 0)
             m.addAttribute(MailConstants.A_AUTO_SEND_TIME, autoSendTime);
 
+        if (message.getIdentityId() != null) {
+            m.addAttribute(MailConstants.A_IDENTITY_ID, message.getIdentityId());
+        }
+        
         String requestedAccountId = mountpoint == null ? null : mGetInfoResult.getId();
         return new ZMessage(invoke(req, requestedAccountId).getElement(MailConstants.E_MSG), this);
     }

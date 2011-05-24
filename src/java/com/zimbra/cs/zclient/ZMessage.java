@@ -54,6 +54,7 @@ public class ZMessage implements ZItem, ToZJSONObject {
     private ZShare mShare;
     private ZMailbox mMailbox;
     private Map<String, String> mReqHdrs;
+    private String mIdentityId;
     
     public ZMessage(Element e, ZMailbox mailbox) throws ServiceException {
         mMailbox = mailbox;
@@ -73,6 +74,7 @@ public class ZMessage implements ZItem, ToZJSONObject {
         mConversationId = e.getAttribute(MailConstants.A_CONV_ID, null);
         mPartName = e.getAttribute(MailConstants.A_PART, null);
         mSize = e.getAttributeLong(MailConstants.A_SIZE, -1);
+        mIdentityId = e.getAttribute(MailConstants.A_IDENTITY_ID, null);
         
         Element content = e.getOptionalElement(MailConstants.E_CONTENT);
         if (content != null) {
@@ -215,6 +217,7 @@ public class ZMessage implements ZItem, ToZJSONObject {
         zjo.put("isRepliedTo", isRepliedTo());
         zjo.put("isSentByMe", isSentByMe());
         zjo.put("isUnread", isUnread());
+        zjo.put("idnt", mIdentityId);
         zjo.putMap("requestHeaders", mReqHdrs);        
         return zjo;
     }
@@ -291,6 +294,10 @@ public class ZMessage implements ZItem, ToZJSONObject {
     /** if raw is specified and message too big or not ASCII, a content servlet URL is returned */
     public String getContentURL() {
         return mContentURL;
+    }
+    
+    public String getIdentityId() {
+        return mIdentityId;
     }
     
     public static class ZMimePart implements ToZJSONObject {

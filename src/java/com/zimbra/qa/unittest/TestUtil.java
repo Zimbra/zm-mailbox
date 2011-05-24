@@ -86,22 +86,7 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.cs.zclient.ZContact;
-import com.zimbra.cs.zclient.ZDataSource;
-import com.zimbra.cs.zclient.ZDateTime;
-import com.zimbra.cs.zclient.ZDocument;
-import com.zimbra.cs.zclient.ZEmailAddress;
-import com.zimbra.cs.zclient.ZFilterRule;
-import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZGetInfoResult;
-import com.zimbra.cs.zclient.ZGetMessageParams;
-import com.zimbra.cs.zclient.ZInvite;
-import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZMessage;
-import com.zimbra.cs.zclient.ZMountpoint;
-import com.zimbra.cs.zclient.ZSearchHit;
-import com.zimbra.cs.zclient.ZSearchParams;
-import com.zimbra.cs.zclient.ZTag;
+import com.zimbra.cs.zclient.*;
 import com.zimbra.cs.zclient.ZGrant.GranteeType;
 import com.zimbra.cs.zclient.ZInvite.ZAttendee;
 import com.zimbra.cs.zclient.ZInvite.ZClass;
@@ -1070,5 +1055,16 @@ extends Assert {
         String attachId = mbox.uploadAttachment(name, content, contentType, 0);
         String docId = mbox.createDocument(folderId, name, attachId, isNote);
         return mbox.getDocument(docId);
+    }
+    
+    public static ZIdentity getDefaultIdentity(ZMailbox mbox)
+    throws ServiceException {
+        for (ZIdentity ident : mbox.getIdentities()) {
+            if (ident.getName().equalsIgnoreCase("DEFAULT")) {
+                return ident;
+            }
+        }
+        Assert.fail("Could not find default identity for " + mbox.getName());
+        return null;
     }
 }
