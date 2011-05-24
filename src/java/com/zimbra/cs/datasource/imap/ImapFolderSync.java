@@ -852,6 +852,10 @@ class ImapFolderSync {
             try {
                 LOG.info("Fetching message for uid: " + uid);
                 MessageData md = connection.uidFetch(uid, "BODY.PEEK[]");
+                if (md == null) {
+                    //FLAGS returned data for UID but BODY.PEEK[] is not; server error; provide more meaningful error than NPE
+                    throw ServiceException.FAILURE("Server returned no response for UID FETCH "+uid+" BODY.PEEK[]", null);
+                }
                 handler.handleFetchResponse(md);
             } catch (Exception e) {
                 String msg = "Error while fetching message for UID " + uid;
