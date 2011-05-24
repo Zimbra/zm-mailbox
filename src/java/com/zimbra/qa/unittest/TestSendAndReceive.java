@@ -31,6 +31,7 @@ import junit.framework.TestCase;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.SystemUtil;
@@ -362,8 +363,8 @@ public class TestSendAndReceive extends TestCase {
                 // If the upload was deleted before the outgoing message was assembled,
                 // we get NO_SUCH_UPLOAD.  If the outgoing message already references
                 // an UploadDataSource, we'll get an IOException that the file was deleted.
-                SoapFaultException fault = (SoapFaultException) sender.error;
-                if (!fault.getCode().equals(MailServiceException.NO_SUCH_UPLOAD)) {
+                ServiceException ex = (ServiceException) sender.error;
+                if (!ex.getCode().equals(MailServiceException.NO_SUCH_UPLOAD)) {
                     String stackTrace = SystemUtil.getStackTrace(sender.error);
                     assertTrue(stackTrace,
                         stackTrace.contains("upload " + attachId + " because it was deleted"));
