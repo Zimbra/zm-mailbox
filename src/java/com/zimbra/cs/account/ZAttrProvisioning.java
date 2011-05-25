@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110516-1608 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110524-1711 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -4995,6 +4995,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=166)
     public static final String A_zimbraMailSSLPort = "zimbraMailSSLPort";
+
+    /**
+     * SSL client certificate port for HTTP proxy
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=1212)
+    public static final String A_zimbraMailSSLProxyClientCertPort = "zimbraMailSSLProxyClientCertPort";
 
     /**
      * SSL port HTTP proxy

@@ -41,7 +41,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110516-1608 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110524-1711 */
 
     /**
      * RFC2256: descriptive information
@@ -15351,6 +15351,125 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetMailSSLPort(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailSSLPort, "");
+        return attrs;
+    }
+
+    /**
+     * SSL client certificate port for HTTP proxy
+     *
+     * <p>Use getMailSSLProxyClientCertPortAsString to access value as a string.
+     *
+     * @see #getMailSSLProxyClientCertPortAsString()
+     *
+     * @return zimbraMailSSLProxyClientCertPort, or 0 if unset
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=1212)
+    public int getMailSSLProxyClientCertPort() {
+        return getIntAttr(Provisioning.A_zimbraMailSSLProxyClientCertPort, 0);
+    }
+
+    /**
+     * SSL client certificate port for HTTP proxy
+     *
+     * @return zimbraMailSSLProxyClientCertPort, or "0" if unset
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=1212)
+    public String getMailSSLProxyClientCertPortAsString() {
+        return getAttr(Provisioning.A_zimbraMailSSLProxyClientCertPort, "0");
+    }
+
+    /**
+     * SSL client certificate port for HTTP proxy
+     *
+     * @param zimbraMailSSLProxyClientCertPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=1212)
+    public void setMailSSLProxyClientCertPort(int zimbraMailSSLProxyClientCertPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSSLProxyClientCertPort, Integer.toString(zimbraMailSSLProxyClientCertPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SSL client certificate port for HTTP proxy
+     *
+     * @param zimbraMailSSLProxyClientCertPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=1212)
+    public Map<String,Object> setMailSSLProxyClientCertPort(int zimbraMailSSLProxyClientCertPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSSLProxyClientCertPort, Integer.toString(zimbraMailSSLProxyClientCertPort));
+        return attrs;
+    }
+
+    /**
+     * SSL client certificate port for HTTP proxy
+     *
+     * @param zimbraMailSSLProxyClientCertPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=1212)
+    public void setMailSSLProxyClientCertPortAsString(String zimbraMailSSLProxyClientCertPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSSLProxyClientCertPort, zimbraMailSSLProxyClientCertPort);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SSL client certificate port for HTTP proxy
+     *
+     * @param zimbraMailSSLProxyClientCertPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=1212)
+    public Map<String,Object> setMailSSLProxyClientCertPortAsString(String zimbraMailSSLProxyClientCertPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSSLProxyClientCertPort, zimbraMailSSLProxyClientCertPort);
+        return attrs;
+    }
+
+    /**
+     * SSL client certificate port for HTTP proxy
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=1212)
+    public void unsetMailSSLProxyClientCertPort() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSSLProxyClientCertPort, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SSL client certificate port for HTTP proxy
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.1
+     */
+    @ZAttr(id=1212)
+    public Map<String,Object> unsetMailSSLProxyClientCertPort(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSSLProxyClientCertPort, "");
         return attrs;
     }
 
