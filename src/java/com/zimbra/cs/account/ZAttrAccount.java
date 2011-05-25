@@ -35,7 +35,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110516-1633 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110524-1812 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -28818,11 +28818,11 @@ public class ZAttrAccount  extends MailTarget {
      * zimbraPrefForwardReplyFormat. Orig desc: whether or not to use same
      * format (text or html) of message we are replying to
      *
-     * @return zimbraPrefForwardReplyInOriginalFormat, or false if unset
+     * @return zimbraPrefForwardReplyInOriginalFormat, or true if unset
      */
     @ZAttr(id=218)
     public boolean isPrefForwardReplyInOriginalFormat() {
-        return getBooleanAttr(Provisioning.A_zimbraPrefForwardReplyInOriginalFormat, false);
+        return getBooleanAttr(Provisioning.A_zimbraPrefForwardReplyInOriginalFormat, true);
     }
 
     /**
