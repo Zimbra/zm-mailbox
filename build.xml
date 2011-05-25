@@ -76,7 +76,6 @@
 
     <property name="jars.dir" location="jars"/>
     <property name="lib.dir" location="lib"/>
-    <property name="tools.lib.dir" location="tools/lib"/>
     <property name="src.dir" location="src"/>
     <property name="src.java.dir" location="${src.dir}/java"/>
     <property name="test.dir" location="${build.dir}/test"/>
@@ -107,8 +106,6 @@
     <property name="lmtpinject.numthreads" value="2"/>
 
     <property name="zimbra.home.dir" location="/opt/zimbra"/>
-
-    <property name="zimbra.derby.dir" location="${zimbra.home.dir}/derby"/>
     <property name="zimbra.index.dir" location="${zimbra.home.dir}/index"/>
     <property name="zimbra.store.dir" location="${zimbra.home.dir}/store"/>
     <property name="zimbra.sqlite.dir" location="${zimbra.home.dir}/sqlite"/>
@@ -126,21 +123,8 @@
     <condition property="db-sqlite">
         <isset property="env.ZIMBRA_USE_SQLITE"/>
     </condition>
-    <condition property="db-derby">
-        <and>
-            <isset property="env.ZIMBRA_USE_DERBY"/>
-            <not><isset property="db-sqlite"/></not>
-        </and>
-    </condition>
     <condition property="db-mysql">
-        <and>
       <not><isset property="db-sqlite"/></not>
-            <not><isset property="db-derby"/></not>
-        </and>
-    </condition>
-
-    <condition property="db.driver.jar" value="derby*.jar">
-        <isset property="db-derby"/>
     </condition>
     <condition property="db.driver.jar" value="mysql-connector-java*.jar">
         <isset property="db-mysql"/>
@@ -252,12 +236,12 @@
       <fileset dir="${common.jars.dir}">
         <include name="**/*.jar"/>
       </fileset>
+      <fileset dir="${common.dir}/jars-test">
+        <include name="**/*.jar"/>
+      </fileset>
       <fileset dir="${im.jars.dir}">
         <include name="**/*.jar"/>
       </fileset>
-        <fileset dir="${tools.lib.dir}">
-            <include name="**/*.jar"/>
-        </fileset>
     </path>
 
     <taskdef name="deploy" classname="org.apache.catalina.ant.DeployTask" classpathref="class.path"/>
@@ -321,7 +305,7 @@
         <condition property="zimbra.buildinfo.platform" value="${native.os}">
             <not><isset property="${zimbra.buildinfo.platform}"/></not>
         </condition>
-        <condition property="zimbra.buildinfo.version" value="7.0.0_BETA1_1111">
+        <condition property="zimbra.buildinfo.version" value="8.0.0_BETA1_1111">
             <not><isset property="${zimbra.buildinfo.version}"/></not>
         </condition>
 
@@ -513,12 +497,6 @@
         </java>
     </target>
 
-    <target name="derby-versions-init" if="db-derby">
-        <java classname="com.zimbra.cs.db.Derby" fork="true" classpathref="class.path" failonerror="true">
-            <arg line="-o ${build.dir}"/>
-        </java>
-    </target>
-
     <target name="mysql-versions-init" if="db-mysql">
         <java classname="com.zimbra.cs.db.MySQL" fork="true" classpathref="class.path" failonerror="true">
             <arg line="-o ${build.dir}"/>
@@ -531,7 +509,7 @@
         </java>
     </target>
 
-    <target name="db-versions-init" depends="mysql-versions-init,sqlite-versions-init,derby-versions-init"/>
+    <target name="db-versions-init" depends="mysql-versions-init,sqlite-versions-init"/>
 
     <target name="compile" depends="build-init">
         <ant dir="${common.dir}" target="jar" inheritAll="false"/>
@@ -572,7 +550,47 @@
       <delete dir="${zimbra.home.dir}/zimlets-deployed" failonerror="false"/>
       <delete dir="${zimbra.home.dir}/zimlets-properties" failonerror="false"/>
       <delete failonerror="false">
-        <fileset dir="${jetty.home.dir}/common/lib" includes="${ical4j.jar},${ziputil.jar},${memcached.jar},${db.driver.jar},mysql-connector-java*.jar,mail.jar,zimbra-native.jar,bcprov-jdk15-146.jar,commons-beanutils*.jar,commons-cli*.jar,commons-codec*.jar,commons-collections*.jar,commons-dbcp*.jar,commons-digester*.jar,commons-fileupload*.jar,commons-httpclient*.jar,commons-io*.jar,commons-logging.jar,commons-pool*.jar,concurrent*.jar,yuicompressor*.jar,dom4j*.jar,ganymed-ssh2*.jar,jakarta-oro*.jar,jaxen*.jar,jcommon*.jar,jfreechart*.jar,junit*.jar,jzlib.jar,mina*.jar,nekohtml.jar,tnef*.jar,xercesImpl*.jar,xpp3.jar,libidn*.jar,jdom*.jar,json.jar,testng*.jar,jython*.jar"/>
+        <fileset dir="${jetty.home.dir}/common/lib">
+          <include name="${ical4j.jar}"/>
+          <include name="${ziputil.jar}"/>
+          <include name="${memcached.jar}"/>
+          <include name="${db.driver.jar}"/>
+          <include name="mysql-connector-java*.jar"/>
+          <include name="mail.jar"/>
+          <include name="zimbra-native.jar"/>
+          <include name="bcprov-jdk15-146.jar"/>
+          <include name="commons-beanutils*.jar"/>
+          <include name="commons-cli*.jar"/>
+          <include name="commons-codec*.jar"/>
+          <include name="commons-collections*.jar"/>
+          <include name="commons-dbcp*.jar"/>
+          <include name="commons-digester*.jar"/>
+          <include name="commons-fileupload*.jar"/>
+          <include name="commons-httpclient*.jar"/>
+          <include name="commons-io*.jar"/>
+          <include name="commons-lang-*.jar"/>
+          <include name="commons-logging.jar"/>
+          <include name="commons-pool*.jar"/>
+          <include name="concurrent*.jar"/>
+          <include name="yuicompressor*.jar"/>
+          <include name="dom4j*.jar"/>
+          <include name="ganymed-ssh2*.jar"/>
+          <include name="jakarta-oro*.jar"/>
+          <include name="jaxen*.jar"/>
+          <include name="jcommon*.jar"/>
+          <include name="jfreechart*.jar"/>
+          <include name="junit*.jar"/>
+          <include name="jzlib.jar"/>
+          <include name="nekohtml.jar"/>
+          <include name="tnef*.jar"/>
+          <include name="xercesImpl*.jar"/>
+          <include name="xpp3.jar"/>
+          <include name="libidn*.jar"/>
+          <include name="jdom*.jar"/>
+          <include name="json.jar"/>
+          <include name="testng*.jar"/>
+          <include name="jython*.jar"/>
+        </fileset>
       </delete>
     </target>
 
@@ -588,9 +606,17 @@
           <include name="slf4j*.jar"/>
           <include name="*jsieve*.jar"/>
           <include name="lucene*.jar"/>
+          <include name="unboundid*.jar"/>
           <include name="ant-tar*.jar"/>
           <include name="icu4j-*.jar"/>
+          <include name="mina-*.jar"/>
           <include name="ews.jar"/>
+          <include name="cassandra-*.jar"/>
+          <include name="hector-*.jar"/>
+          <include name="perf4j-*.jar"/>
+          <include name="libthrift-*.jar"/>
+          <include name="high-scale-lib-*.jar"/>
+          <include name="jackson-*.jar"/>
         </lib>
         <lib dir="${im.jars.dir}" includes="*.jar"/>
         <classes dir="${config.dir}" includes="sieveConfig.xml"/>
@@ -623,10 +649,10 @@
             test client box can DNS resolve the home server for the user.
         -->
         <property name="spnego.server.name"         value="${SERVICE_PRINCIPAL_NAME}"/>
-        
-        
-        <!-- 
-            SPNEGO auth realm.  Use SPNEGO_AUTH_REALM environment variable if set.  
+
+
+        <!--
+            SPNEGO auth realm.  Use SPNEGO_AUTH_REALM environment variable if set.
             Exit if the environment variable is not set.
         -->
         <condition property="SPNEGO_AUTH_REALM" value="${env.SPNEGO_AUTH_REALM}">
@@ -638,7 +664,7 @@
             </condition>
         </fail>
         <echo>===== Spnego auth realm: ${SPNEGO_AUTH_REALM} =====</echo>
-        
+
     </target>
 
     <target name="spnego-inject" depends="spnego-service-name">
@@ -1010,18 +1036,6 @@
         </copy>
 
         <if>
-          <isset property="db-derby"/>
-          <then>
-            <copy todir="${dist.dir}/conf" file="${config.dir}/derby.properties" overwrite="true"/>
-            <copy todir="${dist.dir}/lib" file="../ZimbraServer/tools/lib/derbytools.jar" overwrite="true"/>
-            <copy todir="${dist.dir}/jetty/common/lib" file="${common.jars.dir}/derby.jar" overwrite="true"/>
-            <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
-              <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
-              <arg line="-e zimbra_class_database=com.zimbra.cs.db.Derby -f"/>
-            </java>
-          </then>
-        </if>
-        <if>
           <isset property="db-sqlite"/>
           <then>
             <copy todir="${dist.dir}/jetty/common/lib" overwrite="true">
@@ -1069,8 +1083,41 @@
     <copy tofile="${dist.jetty.dir}/resources/log4j.properties"
           file="${config.dir}/jetty-6.1/log4j.properties${production.suffix}" overwrite="true"/>
     <copy todir="${dist.jetty.dir}/common/lib" overwrite="true">
-            <fileset dir="${common.jars.dir}"
-                     includes="${ical4j.jar},${ziputil.jar},${memcached.jar},${db.driver.jar},mail.jar,zimbra-native.jar,bcprov-jdk15-146.jar,commons-cli*.jar,commons-codec*.jar,commons-dbcp*.jar,commons-fileupload*.jar,commons-httpclient*.jar,commons-io*.jar,commons-logging.jar,commons-pool*.jar,yuicompressor*jar,dom4j*.jar,ganymed-ssh2*.jar,jaxen*.jar,jcommon*.jar,jfreechart*.jar,junit*.jar,jzlib.jar,mina*.jar,nekohtml.jar,tnef*.jar,xercesImpl*.jar,xpp3.jar,libidn*.jar,jdom*.jar,json.jar,testng*.jar,guava*.jar"/>
+      <fileset dir="${common.jars.dir}">
+        <include name="${ical4j.jar}"/>
+        <include name="${ziputil.jar}"/>
+        <include name="${memcached.jar}"/>
+        <include name="${db.driver.jar}"/>
+        <include name="mail.jar"/>
+        <include name="zimbra-native.jar"/>
+        <include name="bcprov-jdk15-146.jar"/>
+        <include name="commons-cli*.jar"/>
+        <include name="commons-codec*.jar"/>
+        <include name="commons-dbcp*.jar"/>
+        <include name="commons-fileupload*.jar"/>
+        <include name="commons-httpclient*.jar"/>
+        <include name="commons-io*.jar"/>
+        <include name="commons-lang-*.jar"/>
+        <include name="commons-logging.jar"/>
+        <include name="commons-pool*.jar"/>
+        <include name="yuicompressor*jar"/>
+        <include name="dom4j*.jar"/>
+        <include name="ganymed-ssh2*.jar"/>
+        <include name="jaxen*.jar"/>
+        <include name="jcommon*.jar"/>
+        <include name="jfreechart*.jar"/>
+        <include name="junit*.jar"/>
+        <include name="jzlib.jar"/>
+        <include name="nekohtml.jar"/>
+        <include name="tnef*.jar"/>
+        <include name="xercesImpl*.jar"/>
+        <include name="xpp3.jar"/>
+        <include name="libidn*.jar"/>
+        <include name="jdom*.jar"/>
+        <include name="json.jar"/>
+        <include name="testng*.jar"/>
+        <include name="guava*.jar"/>
+      </fileset>
     </copy>
     <copy todir="${dist.jetty.dir}/common/endorsed" overwrite="true">
       <fileset dir="${common.jars.dir}" includes="zimbra-charset.jar"/>
@@ -1101,7 +1148,7 @@
           <antcall target="stop-webserver"/>
           <antcall target="stop-ldap"/>
           <exec failonerror="true" executable="../ZimbraServer/src/perl/install-thirdparty">
-	    <arg line="HELIX"/>
+      <arg line="main"/>
           </exec>
         </then>
       </if>
@@ -1134,12 +1181,13 @@
              3. start web server
              4. run the target "reset-the-world-stage2" -->
     <target name="reset-the-world" description="Reset the world">
+      <!-- do not add any other ant calls in between reset-the-world-stage1 and stage2.
+           instead add them as a dependency of stage1 and stage2 targets. -->
         <antcall target="reset-the-world-stage1"/>
-      <antcall target="upgrade-domain-admin"/>
         <antcall target="reset-the-world-stage2"/>
     </target>
 
-    <target name="reset-the-world-stage1" depends="clean-opt-zimbra,clean,init"
+    <target name="reset-the-world-stage1" depends="clean-opt-zimbra,clean,init,upgrade-domain-admin"
       description="Cleans deployed files, compiles, and initializes /opt/zimbra."/>
 
     <target name="reset-the-world-stage2" depends="deploy-war,init-unittest"
@@ -1339,23 +1387,13 @@
         <condition property="db.schema.dir" value="src/db/sqlite">
             <isset property="db-sqlite"/>
         </condition>
-        <condition property="db.schema.dir" value="src/db/derby">
-            <isset property="db-derby"/>
-        </condition>
         <condition property="db.schema.dir" value="src/db/mysql">
             <isset property="db-mysql"/>
         </condition>
         <echo>Using database schema in ${db.schema.dir}</echo>
     </target>
 
-    <target name="db-init" depends="choose-db-schema,mysql-init,sqlite-init,derby-init"/>
-
-    <target name="derby-init" if="db-derby">
-        <delete dir="${zimbra.derby.dir}"/>
-        <java classname="org.apache.derby.tools.ij" fork="true" classpathref="class.path" failonerror="true">
-            <arg file="${dist.db.dir}/init.sql" />
-        </java>
-    </target>
+    <target name="db-init" depends="choose-db-schema,mysql-init,sqlite-init"/>
 
     <target name="mysql-init" if="db-mysql">
         <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
@@ -2232,9 +2270,10 @@
     <delete dir="${test.dir}" quiet="true"/>
     <mkdir dir="${test.dir}/output"/>
     <mkdir dir="${test.dir}/report"/>
-    <junit printsummary="on" haltonfailure="on" tempdir="${test.dir}">
+    <junit printsummary="on" failureproperty="junit.failure" tempdir="${test.dir}">
       <classpath refid="class.path"/>
       <classpath path="${test.classes.dir}"/>
+      <assertions><enable/></assertions>
       <formatter type="xml"/>
       <batchtest todir="${test.dir}/output">
         <fileset dir="${test.src.dir}">
@@ -2247,6 +2286,7 @@
       <report todir="${test.dir}/report"/>
     </junitreport>
     <echo>Test Report: ${test.dir}/report/index.html</echo>
+    <fail if="junit.failure" message="Unit test failed"/>
   </target>
 
 </project>
