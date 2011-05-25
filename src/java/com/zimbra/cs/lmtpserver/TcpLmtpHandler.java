@@ -15,8 +15,8 @@
 
 package com.zimbra.cs.lmtpserver;
 
+import com.zimbra.common.io.TcpServerInputStream;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.tcpserver.TcpServerInputStream;
 
 import java.net.Socket;
 import java.io.IOException;

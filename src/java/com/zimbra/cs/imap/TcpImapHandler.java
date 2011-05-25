@@ -14,11 +14,12 @@
  */
 package com.zimbra.cs.imap;
 
+import com.zimbra.common.io.TcpServerInputStream;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.NetUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.stats.ZimbraPerf;
-import com.zimbra.cs.tcpserver.TcpServerInputStream;
+import com.zimbra.common.io.TcpServerInputStream;
 import com.zimbra.cs.util.Config;
 
 import javax.net.ssl.SSLSocket;

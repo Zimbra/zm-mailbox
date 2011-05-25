@@ -47,7 +47,7 @@ import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
-import com.zimbra.cs.lmtpserver.LmtpProtocolException;
+import com.zimbra.common.lmtp.LmtpProtocolException;
 
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
