@@ -31,7 +31,7 @@ public class Id {
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private Id() {
+    protected Id() {
         this((String) null);
     }
 

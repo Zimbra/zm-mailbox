@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -15,32 +15,55 @@
 
 package com.zimbra.soap.admin.type;
 
-import java.util.Collection;
+import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.XmlAttribute;
+
 import com.zimbra.common.soap.AccountConstants;
 
-//TODO: Is it appropriate to extend AdminObjectInfo?
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AccountConstants.E_LOCALE)
-@XmlType(propOrder = {})
-public class LocaleInfo extends AdminObjectInfo {
+public class LocaleInfo {
+
+    @XmlAttribute(name=AccountConstants.A_ID /* id */, required=true)
+    private final String id;
+
+    @XmlAttribute(name=AccountConstants.A_NAME /* name */, required=true)
+    private final String name;
+
+    @XmlAttribute(name=AccountConstants.A_LOCAL_NAME /* localName */,
+                    required=false)
+    private final String localName;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
     private LocaleInfo() {
-        this(null, null, null);
+        this((String) null, (String) null, (String) null);
     }
 
-    public LocaleInfo(String id, String name) {
-        this(id, name, null);
+    public LocaleInfo(String id, String name, String localName) {
+        this.id = id;
+        this.name = name;
+        this.localName = localName;
     }
 
-    public LocaleInfo(String id, String name, Collection <Attr> attrs) {
-        super(id, name, attrs);
+    public String getId() { return id; }
+    public String getName() { return name; }
+    public String getLocalName() { return localName; }
+
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        return helper
+            .add("id", id)
+            .add("name", name)
+            .add("localName", localName);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }
