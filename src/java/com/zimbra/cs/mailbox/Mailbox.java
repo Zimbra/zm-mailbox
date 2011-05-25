@@ -7822,7 +7822,7 @@ public class Mailbox {
                 }
             }
 
-            PendingDelete deletes = mCurrentChange.deletes;
+            PendingDelete deletes = change.deletes;
             if (deletes != null) {
                 if (!deletes.indexIds.isEmpty()) {
                     // delete any index entries associated with items deleted from db
