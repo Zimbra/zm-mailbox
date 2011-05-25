@@ -2132,39 +2132,46 @@ abstract class ImapHandler {
         List<Integer> createdIds = new ArrayList<Integer>(appends.size());
         StringBuilder appendHint = extensionEnabled("UIDPLUS") ? new StringBuilder() : null;
         try {
-            if (!path.isVisible())
+            if (!path.isVisible()) {
                 throw ImapServiceException.FOLDER_NOT_VISIBLE(path.asImapPath());
-            else if (!path.isWritable(ACL.RIGHT_INSERT))
+            } else if (!path.isWritable(ACL.RIGHT_INSERT)) {
                 throw ImapServiceException.FOLDER_NOT_WRITABLE(path.asImapPath());
-
+            }
             mboxobj = path.getOwnerMailbox();
             Object folderobj = path.getFolder();
 
-            synchronized (mboxobj) {
-                Mailbox mbox = mboxobj instanceof Mailbox ? (Mailbox) mboxobj : credentials.getMailbox();
+            Mailbox mbox = mboxobj instanceof Mailbox ? (Mailbox) mboxobj : credentials.getMailbox();
+            mbox.lock.lock();
+            try {
                 ImapFlagCache flagset = ImapFlagCache.getSystemFlags(mbox);
-                ImapFlagCache tagset = mboxobj instanceof Mailbox ? new ImapFlagCache((Mailbox) mboxobj, getContext()) : new ImapFlagCache();
-
-                for (AppendMessage append : appends)
+                ImapFlagCache tagset = mboxobj instanceof Mailbox ?
+                        new ImapFlagCache((Mailbox) mboxobj, getContext()) : new ImapFlagCache();
+                for (AppendMessage append : appends) {
                     append.checkFlags(mbox, flagset, tagset, newTags);
+                }
+            } finally {
+                mbox.lock.release();
             }
 
             // Append message parts and check message content size
-            for (AppendMessage append : appends)
+            for (AppendMessage append : appends) {
                 append.checkContent();
-
+            }
             for (AppendMessage append : appends) {
                 int id = append.storeContent(mboxobj, folderobj);
-                if (id > 0)
+                if (id > 0) {
                     createdIds.add(id);
+                }
             }
 
             int uvv = (folderobj instanceof Folder ? ImapFolder.getUIDValidity((Folder) folderobj) : ImapFolder.getUIDValidity((ZFolder) folderobj));
-            if (appendHint != null && uvv > 0)
+            if (appendHint != null && uvv > 0) {
                 appendHint.append("[APPENDUID ").append(uvv).append(' ').append(ImapFolder.encodeSubsequence(createdIds)).append("] ");
+            }
         } catch (ServiceException e) {
-            for (AppendMessage append : appends)
+            for (AppendMessage append : appends) {
                 append.cleanup();
+            }
             deleteTags(newTags);
             deleteMessages(mboxobj, createdIds);
 
@@ -2174,8 +2181,9 @@ abstract class ImapHandler {
                 // 6.3.11: "Unless it is certain that the destination mailbox can not be created,
                 //          the server MUST send the response code "[TRYCREATE]" as the prefix
                 //          of the text of the tagged NO response."
-                if (path.isCreatable())
+                if (path.isCreatable()) {
                     msg = "[TRYCREATE] APPEND failed: no such mailbox";
+                }
             } else if (e.getCode().equals(MailServiceException.INVALID_NAME)) {
                 ZimbraLog.imap.info("APPEND failed: " + e.getMessage());
             } else if (e.getCode().equals(ImapServiceException.FOLDER_NOT_VISIBLE)) {

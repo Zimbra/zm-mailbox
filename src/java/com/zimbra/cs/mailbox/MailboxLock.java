@@ -62,7 +62,7 @@ public final class MailboxLock {
         }
     }
 
-    boolean isLocked() {
+    public boolean isLocked() {
         return lock.isHeldByCurrentThread();
     }
 

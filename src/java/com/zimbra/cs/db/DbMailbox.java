@@ -127,13 +127,13 @@ public final class DbMailbox {
         public void create(DbConnection conn, int mailboxId, int groupId) throws ServiceException;
         public Collection<String> getTableNames();
     }
-    
+
     public static void addCreateDatabaseCallback(DbTableCallback callback) {
         callbacks.add(callback);
     }
-    
+
     private static final HashSet<DbTableCallback> callbacks = new HashSet<DbTableCallback>();
-    
+
     /**
      * Gets the next mailbox id.  If <tt>mailboxId</tt> is {@link Mailbox#ID_AUTO_INCREMENT} or
      * greater than the current <tt>next_mailbox_id</tt> value in the <tt>current_volumes</tt>
@@ -369,7 +369,7 @@ public final class DbMailbox {
                 tables.addAll(callback.getTableNames());
             }
             Collections.reverse(tables);
-            
+
             for (String tableName : tables) {
                 if (tableName == null)
                     continue;
@@ -1081,7 +1081,7 @@ public final class DbMailbox {
     }
 
     public static void optimize(DbConnection conn, Mailbox mbox, int level) throws ServiceException {
-        assert(Thread.holdsLock(getZimbraSynchronizer(mbox)));
+        assert(mbox.lock.isLocked());
 
         String name = getDatabaseName(mbox);
 
