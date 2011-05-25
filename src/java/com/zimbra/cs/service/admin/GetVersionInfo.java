@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -18,38 +18,39 @@ package com.zimbra.cs.service.admin;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.admin.message.GetVersionInfoResponse;
+import com.zimbra.soap.admin.type.VersionInfo;
 
 import com.zimbra.cs.account.accesscontrol.AdminRight;
-import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.util.BuildInfo;
-import com.zimbra.common.soap.AdminConstants;
 
 public class GetVersionInfo extends AdminDocumentHandler {
 
-    public Element handle(Element request, Map<String, Object> context) {
+    public Element handle(Element request, Map<String, Object> context)
+    throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 
-        Element response = lc.createElement(AdminConstants.GET_VERSION_INFO_RESPONSE);
-        Element infoEl = response.addElement(AdminConstants.A_VERSION_INFO_INFO);
-        
+        VersionInfo versionInfo = new VersionInfo();
         String fullVersionInfo = BuildInfo.VERSION;
         if (!StringUtil.isNullOrEmpty(BuildInfo.TYPE)) {
             fullVersionInfo = fullVersionInfo + "." + BuildInfo.TYPE;
-            infoEl.addAttribute(AdminConstants.A_VERSION_INFO_TYPE, BuildInfo.TYPE);
+            versionInfo.setType(BuildInfo.TYPE);
         }    
-        infoEl.addAttribute(AdminConstants.A_VERSION_INFO_VERSION, fullVersionInfo);
-        infoEl.addAttribute(AdminConstants.A_VERSION_INFO_RELEASE, BuildInfo.RELEASE);
-        infoEl.addAttribute(AdminConstants.A_VERSION_INFO_DATE, BuildInfo.DATE);
-        infoEl.addAttribute(AdminConstants.A_VERSION_INFO_HOST, BuildInfo.HOST);
+        versionInfo.setVersion(fullVersionInfo);
+        versionInfo.setRelease(BuildInfo.RELEASE);
+        versionInfo.setBuildDate(BuildInfo.DATE);
+        versionInfo.setHost(BuildInfo.HOST);
         
-        infoEl.addAttribute(AdminConstants.A_VERSION_INFO_MAJOR, BuildInfo.MAJORVERSION);
-        infoEl.addAttribute(AdminConstants.A_VERSION_INFO_MINOR, BuildInfo.MINORVERSION);
-        infoEl.addAttribute(AdminConstants.A_VERSION_INFO_MICRO, BuildInfo.MICROVERSION);
-        infoEl.addAttribute(AdminConstants.A_VERSION_INFO_PLATFORM, BuildInfo.PLATFORM);
-        return response;
+        versionInfo.setMajorVersion(BuildInfo.MAJORVERSION);
+        versionInfo.setMinorVersion(BuildInfo.MINORVERSION);
+        versionInfo.setMicroVersion(BuildInfo.MICROVERSION);
+        versionInfo.setPlatform(BuildInfo.PLATFORM);
+        GetVersionInfoResponse resp = new GetVersionInfoResponse(versionInfo);
+        return lc.jaxbToElement(resp);
     }
 
     public boolean needsAdminAuth(Map<String, Object> context) {
