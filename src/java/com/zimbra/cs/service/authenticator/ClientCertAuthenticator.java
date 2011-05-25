@@ -78,6 +78,10 @@ public class ClientCertAuthenticator extends SSOAuthenticator {
             throw AuthFailedServiceException.AUTH_FAILED("missing name in principal", (Throwable)null);
         }
         
+        return getAccountByX509SubjectDN(x509SubjectDN);
+    }
+    
+    public static Account getAccountByX509SubjectDN(String x509SubjectDN) throws ServiceException {
         try {
             LdapName dn = new LdapName(x509SubjectDN);
             List<Rdn> rdns = dn.getRdns();
