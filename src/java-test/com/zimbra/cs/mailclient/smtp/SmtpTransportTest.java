@@ -17,6 +17,8 @@ package com.zimbra.cs.mailclient.smtp;
 import static com.google.common.base.Charsets.ISO_8859_1;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Properties;
 
 import javax.mail.Address;
@@ -495,6 +497,48 @@ public final class SmtpTransportTest {
         Assert.assertEquals("RCPT TO:<rcpt@zimbra.com>\r\n", server.replay());
         Assert.assertEquals("DATA\r\n", server.replay());
         Assert.assertEquals("QUIT\r\n", server.replay());
+        Assert.assertNull(server.replay());
+    }
+
+    @Test(timeout = 3000)
+    public void dataException() throws Exception {
+        server = MockTcpServer.scenario()
+            .sendLine("220 test ready")
+            .recvLine() // EHLO
+            .sendLine("250 OK")
+            .recvLine() // MAIL FROM
+            .sendLine("250 OK")
+            .recvLine() // RCPT TO
+            .sendLine("250 OK")
+            .recvLine() // DATA
+            .sendLine("354 OK")
+            .swallowUntil("\r\n.\r\n")
+            .build().start(PORT);
+
+        Session session = JMSession.getSession();
+        Transport transport = session.getTransport("smtp");
+        transport.connect("localhost", PORT, null, null);
+        String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\nSubject: test\n\ntest";
+        MimeMessage msg = new JavaMailMimeMessage(session,
+                new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1))) {
+            @Override
+            public void writeTo(OutputStream os, String[] ignoreList) throws MessagingException {
+                throw new MessagingException(); // exception while encoding
+            }
+        };
+        try {
+            transport.sendMessage(msg, msg.getAllRecipients());
+            Assert.fail();
+        } catch (SendFailedException expected) {
+        } finally {
+            transport.close();
+        }
+
+        server.shutdown(1000);
+        Assert.assertEquals("EHLO localhost\r\n", server.replay());
+        Assert.assertEquals("MAIL FROM:<sender@zimbra.com>\r\n", server.replay());
+        Assert.assertEquals("RCPT TO:<rcpt@zimbra.com>\r\n", server.replay());
+        Assert.assertEquals("DATA\r\n", server.replay());
         Assert.assertNull(server.replay());
     }
 
