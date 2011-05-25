@@ -519,10 +519,18 @@ public final class SmtpConnection extends MailConnection {
         }
 
         SmtpDataOutputStream smtpData = new SmtpDataOutputStream(mailOut);
-        if (javaMailMessage != null) {
-            javaMailMessage.writeTo(smtpData, IGNORE_HEADERS);
-        } else {
-            smtpData.write(messageString.getBytes());
+        try {
+            if (javaMailMessage != null) {
+                javaMailMessage.writeTo(smtpData, IGNORE_HEADERS);
+            } else {
+                smtpData.write(messageString.getBytes());
+            }
+        } catch (MessagingException e) { // close without QUIT
+            close();
+            throw e;
+        } catch (IOException e) { // close without QUIT
+            close();
+            throw e;
         }
         smtpData.end();
         mailOut.flush();
@@ -627,6 +635,9 @@ public final class SmtpConnection extends MailConnection {
     }
 
     private void quit() throws IOException {
+        if (isClosed()) {
+            return;
+        }
         try {
             sendCommand(QUIT, null);
         } catch (CommandFailedException e) { // no reason to make it an error
