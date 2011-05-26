@@ -4612,8 +4612,13 @@ public class Mailbox {
 
     public Message addMessage(OperationContext octxt, ParsedMessage pm, DeliveryOptions dopt, DeliveryContext dctxt)
     throws IOException, ServiceException {
+        return addMessage(octxt, pm, dopt, dctxt, null);
+    }
+
+    public Message addMessage(OperationContext octxt, ParsedMessage pm, DeliveryOptions dopt, DeliveryContext dctxt, Message.DraftInfo dinfo)
+    throws IOException, ServiceException {
         return addMessage(octxt, pm, dopt.getFolderId(), dopt.getNoICal(), dopt.getFlags(), dopt.getTags(),
-                          dopt.getConversationId(), dopt.getRecipientEmail(), null, dopt.getCustomMetadata(), dctxt);
+                          dopt.getConversationId(), dopt.getRecipientEmail(), dinfo, dopt.getCustomMetadata(), dctxt);
     }
 
     private Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags,
