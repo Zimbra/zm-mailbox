@@ -140,16 +140,30 @@ public final class LuceneQueryOperation extends QueryOperation {
      * <p>
      * Note that this API does *not* update the text-representation of this query.
      */
-    void addAndedClause(Query q, boolean bool) {
+    void addAndedClause(Query query, boolean bool) {
+        assert(luceneQuery != null);
         haveRunSearch = false; // will need to re-run the search with this new clause
         curHitNo = 0;
 
-        BooleanQuery top = new BooleanQuery();
-        BooleanClause lhs = new BooleanClause(luceneQuery, BooleanClause.Occur.MUST);
-        BooleanClause rhs = new BooleanClause(q, bool ? BooleanClause.Occur.MUST : BooleanClause.Occur.MUST_NOT);
-        top.add(lhs);
-        top.add(rhs);
-        luceneQuery = top;
+        if (luceneQuery instanceof BooleanQuery) {
+            BooleanQuery bquery = ((BooleanQuery) luceneQuery);
+            boolean orOnly = true;
+            for (BooleanClause clause : bquery) {
+                if (clause.getOccur() != BooleanClause.Occur.SHOULD) {
+                    orOnly = false;
+                    break;
+                }
+            }
+            if (!orOnly) {
+                bquery.add(new BooleanClause(query, bool ? BooleanClause.Occur.MUST : BooleanClause.Occur.MUST_NOT));
+                return;
+            }
+        }
+
+        BooleanQuery bquery = new BooleanQuery();
+        bquery.add(new BooleanClause(luceneQuery, BooleanClause.Occur.MUST));
+        bquery.add(new BooleanClause(query, bool ? BooleanClause.Occur.MUST : BooleanClause.Occur.MUST_NOT));
+        luceneQuery = bquery;
     }
 
     /**
