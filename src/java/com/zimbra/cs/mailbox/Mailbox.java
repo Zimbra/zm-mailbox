@@ -4632,7 +4632,7 @@ public class Mailbox {
         return addMessage(octxt, pm, folderId, noICal, flags, tagStr, conversationId, rcptEmail, null, customData, dctxt);
     }
 
-    private Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal,
+    public Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal,
                               int flags, String tagStr, int conversationId, String rcptEmail,
                               Message.DraftInfo dinfo, CustomMetadata customData, DeliveryContext dctxt)
     throws IOException, ServiceException {
