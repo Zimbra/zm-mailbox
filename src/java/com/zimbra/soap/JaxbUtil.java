@@ -536,8 +536,6 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.GetZimletStatusResponse.class,
             com.zimbra.soap.admin.message.GrantRightRequest.class,
             com.zimbra.soap.admin.message.GrantRightResponse.class,
-            com.zimbra.soap.admin.message.InitNotebookRequest.class,
-            com.zimbra.soap.admin.message.InitNotebookResponse.class,
             com.zimbra.soap.admin.message.MailQueueActionRequest.class,
             com.zimbra.soap.admin.message.MailQueueActionResponse.class,
             com.zimbra.soap.admin.message.MailQueueFlushRequest.class,
