@@ -116,7 +116,7 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
     }
 
     protected ContactHit getContactHit(Mailbox mbx, int id, Contact contact, Object sortValue) {
-        ContactHit hit = contactHits.get(contact.getId());
+        ContactHit hit = contactHits.get(id);
         if (hit == null) {
             hit = new ContactHit(this, mbx, id, contact, sortValue);
             contactHits.put(id, hit);

@@ -16,16 +16,19 @@ package com.zimbra.cs.index;
 
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -33,6 +36,7 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedMessage;
 
 /**
@@ -92,6 +96,27 @@ public final class ZimbraQueryTest {
         } catch (ServiceException e) {
             Assert.assertEquals(ServiceException.INVALID_REQUEST, e.getCode());
         }
+    }
+
+    @Test
+    public void searchResultMode() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        Map<String, Object> fields = new HashMap<String, Object>();
+        fields.put(ContactConstants.A_email, "test1@zimbra.com");
+        Contact contact = mbox.createContact(null, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
+        MailboxTestUtil.index(mbox);
+
+        SearchParams params = new SearchParams();
+        params.setQueryStr("contact:test");
+        params.setSortBy(SortBy.NONE);
+        params.setTypes(EnumSet.of(MailItem.Type.CONTACT));
+        params.setMode(Mailbox.SearchResultMode.IDS);
+
+        ZimbraQuery query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
+        ZimbraQueryResults result = query.execute();
+        Assert.assertTrue(result.hasNext());
+        Assert.assertEquals(contact.getId(), result.getNext().getItemId());
     }
 
     @Test
