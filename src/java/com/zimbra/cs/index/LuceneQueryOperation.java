@@ -369,9 +369,9 @@ public final class LuceneQueryOperation extends QueryOperation {
      */
     private LuceneQueryOperation cloneInternal() {
         assert(!haveRunSearch);
-        LuceneQueryOperation toRet = (LuceneQueryOperation) super.clone();
-        toRet.luceneQuery = (BooleanQuery) luceneQuery.clone();
-        return toRet;
+        LuceneQueryOperation clone = (LuceneQueryOperation) super.clone();
+        clone.luceneQuery = (Query) luceneQuery.clone();
+        return clone;
     }
 
     @Override
