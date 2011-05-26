@@ -414,7 +414,7 @@ abstract class Pop3Handler {
         if (state != STATE_AUTHORIZATION) {
             throw new Pop3CmdException("this command is only valid in authorization state");
         }
-        if (username == null) {
+        if (username == null || username.trim().isEmpty()) {
             throw new Pop3CmdException("please specify a user");
         }
         if (username.length() > 1024) {
