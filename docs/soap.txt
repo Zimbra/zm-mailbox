@@ -3557,20 +3557,6 @@ sets device email address as the value of zimbraCalendarReminderDeviceEmail acco
 
 -----------------------------
 
-Get SMIME public keys from external LDAP.
-
-<GetSMIMEPublicKeysRequest>
-  <email>...<email>
-<GetSMIMEPublicKeysRequest>
-
-<GetSMIMEPublicKeysResponse>
-  <cert>{base64-encoded-cert}</cert>+
-</GetSMIMEPublicKeysResponse>
-
-Throws NO_SMIME_CONFIG if ther is no SMIME config on the domain or globalconfig.
-
------------------------------
-
 <AddCommentRequest>
   <comment parentId="{item-id-of-parent}" text="{comment-text}"/>
 </AddCommentRequest>
