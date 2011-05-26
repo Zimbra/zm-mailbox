@@ -160,8 +160,6 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.MAIL_QUEUE_ACTION_REQUEST, new MailQueueAction());
         dispatcher.registerHandler(AdminConstants.MAIL_QUEUE_FLUSH_REQUEST, new MailQueueFlush());
 
-        dispatcher.registerHandler(AdminConstants.INIT_NOTEBOOK_REQUEST, new InitNotebook());
-
         dispatcher.registerHandler(AdminConstants.AUTO_COMPLETE_GAL_REQUEST, new AutoCompleteGal());
         dispatcher.registerHandler(AdminConstants.SEARCH_GAL_REQUEST, new SearchGal());
 
