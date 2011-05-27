@@ -245,8 +245,8 @@ public final class MailboxTest {
                               f.getType() == fDeletion.what && f.getId() == ((Folder) fDeletion.preModifyObj).getId());
             PendingModifications.Change mDeletion = ml.pms.deleted.get(mkey);
             Assert.assertNotNull("deleted message has entry", mDeletion);
-            Assert.assertTrue("deleted message matches deleted entry",
-                              m.getType() == mDeletion.what && m.getId() == ((Message) mDeletion.preModifyObj).getId());
+            // Note that preModifyObj may be null for the deleted message, so just check for the type
+            Assert.assertTrue("deleted message matches deleted entry", m.getType() == mDeletion.what);
 
             Assert.assertNotNull("modifications aren't null", ml.pms.modified);
             Assert.assertEquals("parent folder modified, mailbox size modified", 2, ml.pms.modified.size());
