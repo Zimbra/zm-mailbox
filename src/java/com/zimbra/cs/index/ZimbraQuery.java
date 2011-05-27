@@ -810,12 +810,11 @@ public final class ZimbraQuery {
         return out.toString();
     }
 
-    public String toQueryString() {
+    public String toQueryString() throws ServiceException {
         if (operation == null) {
-            return "";
-        } else {
-            return operation.toQueryString();
+            compile();
         }
+        return operation.toQueryString();
     }
 
 }

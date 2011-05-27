@@ -389,7 +389,7 @@ public interface DbSearchConstraints extends Cloneable {
                 out.append(") ");
             }
             if (remoteConvId != null) {
-                out.append("CONV:").append(remoteConvId).append(' ');
+                out.append("CONV:\"").append(remoteConvId).append("\" ");
             }
             if (!prohibitedRemoteConvIds.isEmpty()) {
                 out.append("-CONV:(");
