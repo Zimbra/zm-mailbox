@@ -39,6 +39,7 @@ import com.zimbra.cs.account.AttributeManager.IDNType;
 public abstract class Entry implements ToZJSONObject {
     
     public static enum EntryType {
+        ENTRY,  // a generic entry, only used in extension
         ACCOUNT,
         ALIAS,
         CALRESOURCE,
@@ -69,7 +70,9 @@ public abstract class Entry implements ToZJSONObject {
     protected static String[] sEmptyMulti = new String[0];
     protected static List<byte[]> sEmptyListMulti = new ArrayList<byte[]>();
     
-    public abstract EntryType getEntryType();
+    public EntryType getEntryType() {
+        return EntryType.ENTRY;
+    }
     
     /*
     public EntryType getEntryType() {
