@@ -17,7 +17,7 @@
  * Created on Sep 23, 2004
  *
  */
-package com.zimbra.cs.prov.ldap.entry;
+package com.zimbra.cs.account.ldap.entry;
 
 /**
  * 

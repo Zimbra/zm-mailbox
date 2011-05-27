@@ -38,11 +38,11 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.XMPPComponent;
+import com.zimbra.cs.account.ldap.entry.LdapEntry;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.ldap.ILdapContext;
 import com.zimbra.cs.prov.ldap.LdapProv;
-import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 
 
 public class RenameDomain {

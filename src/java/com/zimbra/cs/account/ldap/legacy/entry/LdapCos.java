@@ -26,8 +26,8 @@ import javax.naming.directory.Attributes;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.entry.LdapEntry;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
-import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 
 /**
  * @author schemers

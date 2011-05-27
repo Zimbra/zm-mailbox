@@ -19,8 +19,8 @@ import javax.naming.directory.Attributes;
 
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.entry.LdapEntry;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
-import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 
 public class LdapConfig extends Config implements LdapEntry {
     

@@ -54,8 +54,8 @@ public class TestLdapProvExternalLdapAuth extends TestLdap {
     private String getAccountDN(Account acct) throws Exception {
         if (acct instanceof com.zimbra.cs.account.ldap.legacy.entry.LdapAccount) {
             return ((com.zimbra.cs.account.ldap.legacy.entry.LdapAccount) acct).getDN();
-        } else if (acct instanceof com.zimbra.cs.prov.ldap.entry.LdapAccount) {
-            return ((com.zimbra.cs.prov.ldap.entry.LdapAccount) acct).getDN();
+        } else if (acct instanceof com.zimbra.cs.account.ldap.entry.LdapAccount) {
+            return ((com.zimbra.cs.account.ldap.entry.LdapAccount) acct).getDN();
         }
         
         fail();

@@ -39,11 +39,11 @@ import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.ZimbraCustomAuth;
 import com.zimbra.cs.account.ldap.custom.CustomLdapProvisioning;
+import com.zimbra.cs.account.ldap.entry.LdapEntry;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.prov.ldap.LdapProv;
-import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 
 public class TestProvisioning extends TestCase {
 

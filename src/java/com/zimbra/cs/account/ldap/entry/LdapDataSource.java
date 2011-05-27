@@ -12,7 +12,7 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.prov.ldap.entry;
+package com.zimbra.cs.account.ldap.entry;
 
 import java.util.List;
 

@@ -17,8 +17,8 @@ package com.zimbra.cs.account.ldap.legacy.entry;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.entry.LdapEntry;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
-import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
