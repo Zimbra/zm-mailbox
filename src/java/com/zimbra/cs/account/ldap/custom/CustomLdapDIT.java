@@ -24,10 +24,10 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapDIT;
+import com.zimbra.cs.account.ldap.LdapProv;
+import com.zimbra.cs.account.ldap.SpecialAttrs;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.LdapUtilCommon;
-import com.zimbra.cs.prov.ldap.LdapProv;
-import com.zimbra.cs.prov.ldap.SpecialAttrs;
 
 /*
  * This class and CustomerLdapProvisioning should really go under the 

@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.prov.ldap;
+package com.zimbra.cs.account.ldap;
 
 import java.util.Collections;
 import java.util.HashMap;

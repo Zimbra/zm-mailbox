@@ -22,6 +22,8 @@ import static org.junit.Assert.*;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapDIT;
+import com.zimbra.cs.account.ldap.LdapHelper;
+import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.ldap.LdapException.LdapEntryNotFoundException;
 import com.zimbra.cs.ldap.LdapException.LdapMultipleEntriesMatchedException;
 import com.zimbra.cs.ldap.LdapException.LdapSizeLimitExceededException;
@@ -33,8 +35,6 @@ import com.zimbra.cs.ldap.ZSearchControls;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
 import com.zimbra.cs.ldap.ZSearchResultEnumeration;
 import com.zimbra.cs.ldap.ZSearchScope;
-import com.zimbra.cs.prov.ldap.LdapHelper;
-import com.zimbra.cs.prov.ldap.LdapProv;
 
 public class TestLdapHelper extends TestLdap {
     private static TestLdap.TestConfig testConfig;

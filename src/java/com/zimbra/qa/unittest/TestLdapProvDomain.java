@@ -34,6 +34,8 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ZAttrProvisioning;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.cs.account.ldap.LdapHelper;
+import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapConstants;
@@ -41,8 +43,6 @@ import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZSearchScope;
-import com.zimbra.cs.prov.ldap.LdapHelper;
-import com.zimbra.cs.prov.ldap.LdapProv;
 
 public class TestLdapProvDomain extends TestLdap {
     

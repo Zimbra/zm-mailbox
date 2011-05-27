@@ -36,8 +36,8 @@ import com.zimbra.cs.account.EntryCacheDataKey;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ZAttrProvisioning;
+import com.zimbra.cs.account.ldap.LdapObjectClass;
 import com.zimbra.cs.ldap.LdapConstants;
-import com.zimbra.cs.prov.ldap.LdapObjectClass;
 
 public class TestLdapProvEntry extends TestLdap {
     private static final String DOMAIN_NAME = "\u4e2d\u6587";  // an IDN domain name

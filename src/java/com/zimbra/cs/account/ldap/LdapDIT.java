@@ -35,8 +35,6 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.LdapUtilCommon;
-import com.zimbra.cs.prov.ldap.LdapProv;
-import com.zimbra.cs.prov.ldap.SpecialAttrs;
 import com.zimbra.cs.util.Zimbra;
 
 public class LdapDIT {

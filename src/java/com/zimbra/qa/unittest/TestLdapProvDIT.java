@@ -18,7 +18,7 @@ import org.junit.*;
 import static org.junit.Assert.*;
 
 import com.zimbra.cs.account.Domain;
-import com.zimbra.cs.prov.ldap.LdapProv;
+import com.zimbra.cs.account.ldap.LdapProv;
 
 public class TestLdapProvDIT extends TestLdap {
     private static LdapProv prov;

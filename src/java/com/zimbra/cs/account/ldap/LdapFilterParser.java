@@ -12,7 +12,7 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.prov.ldap;
+package com.zimbra.cs.account.ldap;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.EntrySearchFilter;

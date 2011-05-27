@@ -20,9 +20,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapGalCredential;
 import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.ldap.LdapConnType;
-import com.zimbra.cs.prov.ldap.LdapGalCredential;
 
 public abstract class GalParams {
     

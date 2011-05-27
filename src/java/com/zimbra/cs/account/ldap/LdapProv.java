@@ -12,7 +12,7 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.prov.ldap;
+package com.zimbra.cs.account.ldap;
 
 import java.io.PrintWriter;
 import java.util.List;
@@ -25,13 +25,12 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapDIT;
+import com.zimbra.cs.account.ldap.LdapHelper;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.mime.MimeTypeInfo;
-import com.zimbra.cs.prov.ldap.LdapHelper;
 
 public abstract class LdapProv extends Provisioning {
     

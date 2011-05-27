@@ -21,7 +21,7 @@ import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.prov.ldap.LdapProv;
+import com.zimbra.cs.account.ldap.LdapProv;
 
 public class AdminGroup extends AttributeCallback {
 

@@ -27,6 +27,7 @@ import com.zimbra.cs.account.krb5.Krb5Login;
 import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.gal.GalParams;
 import com.zimbra.cs.account.gal.GalUtil;
+import com.zimbra.cs.account.ldap.LdapGalCredential;
 import com.zimbra.cs.account.ldap.LdapGalMapRules;
 import com.zimbra.cs.account.ldap.legacy.LegacyJNDIAttributes;
 import com.zimbra.cs.account.ldap.legacy.entry.LdapConfig;
@@ -37,7 +38,6 @@ import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.SearchLdapOptions.StopIteratingException;
 import com.zimbra.cs.ldap.LdapUtilCommon;
-import com.zimbra.cs.prov.ldap.LdapGalCredential;
 
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;

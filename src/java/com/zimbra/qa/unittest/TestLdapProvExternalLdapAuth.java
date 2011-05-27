@@ -13,9 +13,9 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.ldap.Check;
+import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.ldap.LdapConnType;
 import com.zimbra.cs.ldap.LdapConstants;
-import com.zimbra.cs.prov.ldap.LdapProv;
 
 public class TestLdapProvExternalLdapAuth extends TestLdap {
 

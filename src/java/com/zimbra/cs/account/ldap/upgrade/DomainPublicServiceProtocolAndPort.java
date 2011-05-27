@@ -27,9 +27,9 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.MailMode;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapProvisioning;
 import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
-import com.zimbra.cs.prov.ldap.LdapProv;
 
 class DomainPublicServiceProtocolAndPort extends LdapUpgrade {
     

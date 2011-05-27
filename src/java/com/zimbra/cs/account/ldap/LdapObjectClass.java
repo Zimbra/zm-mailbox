@@ -12,7 +12,7 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.prov.ldap;
+package com.zimbra.cs.account.ldap;
 
 // use LinkedHashSet to preserve the order and uniqueness of entries, 
 // not that order/uniqueness matters to LDAP server, just cleaner this way

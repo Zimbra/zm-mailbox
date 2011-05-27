@@ -19,9 +19,9 @@ import java.util.Map;
 import javax.naming.NamingException;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.prov.ldap.LdapHelper;
-import com.zimbra.cs.prov.ldap.LdapProv;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.ldap.LdapHelper;
+import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.ldap.ILdapContext;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapException.LdapEntryNotFoundException;

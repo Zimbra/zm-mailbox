@@ -51,7 +51,7 @@ import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeManager.ObjectClassInfo;
-import com.zimbra.cs.prov.ldap.LdapProv;
+import com.zimbra.cs.account.ldap.LdapProv;
 
 public class AttributeManagerUtil {
 

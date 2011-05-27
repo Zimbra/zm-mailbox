@@ -29,9 +29,9 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchOptions;
+import com.zimbra.cs.account.ldap.LdapObjectClassHierarchy;
+import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.prov.ldap.LdapObjectClassHierarchy;
-import com.zimbra.cs.prov.ldap.LdapProv;
 
 public class TestLdapProvMisc extends TestLdap {
 

@@ -1,4 +1,4 @@
-package com.zimbra.cs.prov.ldap;
+package com.zimbra.cs.account.ldap;
 
 import java.io.IOException;
 import java.security.PrivilegedActionException;
@@ -19,7 +19,6 @@ import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.gal.GalParams;
 import com.zimbra.cs.account.gal.GalUtil;
 import com.zimbra.cs.account.krb5.Krb5Login;
-import com.zimbra.cs.account.ldap.LdapGalMapRules;
 import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;

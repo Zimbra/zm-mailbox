@@ -21,8 +21,8 @@ import java.util.Map;
 import com.zimbra.common.stats.RealtimeStatsCallback;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.PermissionCache;
+import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.mailbox.MessageCache;
-import com.zimbra.cs.prov.ldap.LdapProv;
 import com.zimbra.cs.store.BlobInputStream;
 import com.zimbra.cs.store.FileDescriptorCache;
 

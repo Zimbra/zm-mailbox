@@ -31,6 +31,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapEntrySearchFilter.LdapQueryVisitor;
 import com.zimbra.cs.gal.GalExtraSearchFilter;
 import com.zimbra.cs.gal.GalExtraSearchFilter.FilteredGalSearchResultCallback;
 import com.zimbra.cs.gal.GalExtraSearchFilter.GalExtraQueryCallback;
@@ -38,7 +39,6 @@ import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.gal.GalSearchQueryCallback;
 import com.zimbra.cs.mailbox.Contact;
-import com.zimbra.cs.prov.ldap.LdapEntrySearchFilter.LdapQueryVisitor;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class SearchCalendarResources extends GalDocumentHandler {

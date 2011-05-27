@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.prov.ldap;
+package com.zimbra.cs.account.ldap;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -103,10 +103,17 @@ import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.gal.GalParams;
 import com.zimbra.cs.account.gal.GalUtil;
 import com.zimbra.cs.account.krb5.Krb5Principal;
-import com.zimbra.cs.account.ldap.Check;
-import com.zimbra.cs.account.ldap.LdapGalMapRules;
-import com.zimbra.cs.account.ldap.RenameDomain;
-import com.zimbra.cs.account.ldap.Validators;
+import com.zimbra.cs.account.ldap.ChangePasswordListener;
+import com.zimbra.cs.account.ldap.DomainNameMappingHandler;
+import com.zimbra.cs.account.ldap.Groups;
+import com.zimbra.cs.account.ldap.LdapEntrySearchFilter;
+import com.zimbra.cs.account.ldap.LdapLockoutPolicy;
+import com.zimbra.cs.account.ldap.LdapMimeTypeCache;
+import com.zimbra.cs.account.ldap.LdapObjectClass;
+import com.zimbra.cs.account.ldap.LdapObjectClassHierarchy;
+import com.zimbra.cs.account.ldap.LdapProv;
+import com.zimbra.cs.account.ldap.LdapSMIMEConfig;
+import com.zimbra.cs.account.ldap.SpecialAttrs;
 import com.zimbra.cs.account.ldap.entry.*;
 import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.gal.GalSearchConfig;
@@ -138,17 +145,6 @@ import com.zimbra.cs.ldap.ZSearchResultEnumeration;
 import com.zimbra.cs.ldap.ZSearchScope;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mime.MimeTypeInfo;
-import com.zimbra.cs.prov.ldap.ChangePasswordListener;
-import com.zimbra.cs.prov.ldap.DomainNameMappingHandler;
-import com.zimbra.cs.prov.ldap.Groups;
-import com.zimbra.cs.prov.ldap.LdapEntrySearchFilter;
-import com.zimbra.cs.prov.ldap.LdapLockoutPolicy;
-import com.zimbra.cs.prov.ldap.LdapMimeTypeCache;
-import com.zimbra.cs.prov.ldap.LdapObjectClass;
-import com.zimbra.cs.prov.ldap.LdapObjectClassHierarchy;
-import com.zimbra.cs.prov.ldap.LdapProv;
-import com.zimbra.cs.prov.ldap.LdapSMIMEConfig;
-import com.zimbra.cs.prov.ldap.SpecialAttrs;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletUtil;

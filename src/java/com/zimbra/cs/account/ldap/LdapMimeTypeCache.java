@@ -12,7 +12,7 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.prov.ldap;
+package com.zimbra.cs.account.ldap;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -22,8 +22,8 @@ import java.util.Map;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
+import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.mime.MimeTypeInfo;
-import com.zimbra.cs.prov.ldap.LdapProv;
 
 public class LdapMimeTypeCache {
 	

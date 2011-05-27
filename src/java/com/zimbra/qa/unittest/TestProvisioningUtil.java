@@ -33,8 +33,8 @@ import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.soap.SoapProvisioning;
-import com.zimbra.cs.prov.ldap.LdapProv;
 
 
 public class TestProvisioningUtil extends TestCase {

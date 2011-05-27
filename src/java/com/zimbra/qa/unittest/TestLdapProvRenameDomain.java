@@ -45,9 +45,9 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.XMPPComponent;
+import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.ldap.LdapUtilCommon;
-import com.zimbra.cs.prov.ldap.LdapProv;
 import com.zimbra.qa.unittest.TestProvisioningUtil.IDNName;
 
 public class TestLdapProvRenameDomain extends TestLdap {

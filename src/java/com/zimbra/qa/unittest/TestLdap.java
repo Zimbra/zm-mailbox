@@ -36,6 +36,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.ldap.LdapDIT;
+import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.LdapUsage;
@@ -46,7 +47,6 @@ import com.zimbra.cs.ldap.ZSearchControls;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
 import com.zimbra.cs.ldap.ZSearchResultEnumeration;
 import com.zimbra.cs.ldap.ZSearchScope;
-import com.zimbra.cs.prov.ldap.LdapProv;
 import com.zimbra.qa.unittest.LdapSuite.ConsoleListener;
 
 public class TestLdap {
@@ -82,8 +82,8 @@ public class TestLdap {
     }
 
     enum TestConfig {
-        UBID(com.zimbra.cs.ldap.unboundid.UBIDLdapClient.class, com.zimbra.cs.prov.ldap.LdapProvisioning.class),
-        JNDI(com.zimbra.cs.ldap.jndi.JNDILdapClient.class, com.zimbra.cs.prov.ldap.LdapProvisioning.class),
+        UBID(com.zimbra.cs.ldap.unboundid.UBIDLdapClient.class, com.zimbra.cs.account.ldap.LdapProvisioning.class),
+        JNDI(com.zimbra.cs.ldap.jndi.JNDILdapClient.class, com.zimbra.cs.account.ldap.LdapProvisioning.class),
         LEGACY(null, com.zimbra.cs.account.ldap.legacy.LegacyLdapProvisioning.class);
         
         static private TestConfig currentTestConfig = null;

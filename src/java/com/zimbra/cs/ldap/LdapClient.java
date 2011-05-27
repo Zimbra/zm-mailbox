@@ -91,9 +91,9 @@ public abstract class LdapClient {
     @TODO
     public static ZLdapContext toZLdapContext(
             com.zimbra.cs.account.Provisioning prov, ILdapContext ldapContext) {
-        if (!prov.getClass().equals(com.zimbra.cs.prov.ldap.LdapProvisioning.class) &&
+        if (!prov.getClass().equals(com.zimbra.cs.account.ldap.LdapProvisioning.class) &&
             !prov.getClass().equals(com.zimbra.cs.account.ldap.custom.CustomLdapProvisioning.class)) {
-            Zimbra.halt("Provisioning instance is not " + com.zimbra.cs.prov.ldap.LdapProvisioning.class.getCanonicalName(),
+            Zimbra.halt("Provisioning instance is not " + com.zimbra.cs.account.ldap.LdapProvisioning.class.getCanonicalName(),
                     ServiceException.FAILURE("internal error, wrong ldap context instance", null));
         }
         

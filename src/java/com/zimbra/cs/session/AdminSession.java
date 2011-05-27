@@ -23,7 +23,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.prov.ldap.LdapEntrySearchFilter;
+import com.zimbra.cs.account.ldap.LdapEntrySearchFilter;
 
 import java.util.HashMap;
 import java.util.List;

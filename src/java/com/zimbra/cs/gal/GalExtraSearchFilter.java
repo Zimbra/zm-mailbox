@@ -30,8 +30,8 @@ import com.zimbra.cs.account.EntrySearchFilter.Operator;
 import com.zimbra.cs.account.EntrySearchFilter.Single;
 import com.zimbra.cs.account.EntrySearchFilter.Term;
 import com.zimbra.cs.account.EntrySearchFilter.Visitor;
+import com.zimbra.cs.account.ldap.LdapEntrySearchFilter.LdapQueryVisitor;
 import com.zimbra.cs.mailbox.Contact;
-import com.zimbra.cs.prov.ldap.LdapEntrySearchFilter.LdapQueryVisitor;
 
 public class GalExtraSearchFilter {
 

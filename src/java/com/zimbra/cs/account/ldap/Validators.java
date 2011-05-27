@@ -36,7 +36,6 @@ import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
-import com.zimbra.cs.prov.ldap.LdapProv;
 
 final public class Validators {
 

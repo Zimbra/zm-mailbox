@@ -42,7 +42,6 @@ import com.zimbra.cs.account.ldap.entry.LdapEntry;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.ldap.ILdapContext;
-import com.zimbra.cs.prov.ldap.LdapProv;
 
 
 public class RenameDomain {
