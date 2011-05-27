@@ -27,7 +27,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.PermissionCache;
-import com.zimbra.cs.prov.ldap.LdapProv;
+import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.server.NioConnection;
 import com.zimbra.cs.server.NioHandler;
 import com.zimbra.cs.server.NioServer;
