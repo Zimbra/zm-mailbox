@@ -738,7 +738,7 @@ public final class LC {
     public static final KnownKey zimbra_mailbox_groups = KnownKey.newKey(100);
 
     public static final KnownKey zimbra_class_ldap_client = KnownKey.newKey("com.zimbra.cs.ldap.jndi.JNDILdapClient");
-    public static final KnownKey zimbra_class_provisioning = KnownKey.newKey("com.zimbra.cs.account.ldap.LdapProvisioning");
+    public static final KnownKey zimbra_class_provisioning = KnownKey.newKey("com.zimbra.cs.account.ldap.legacy.LegacyLdapProvisioning");
     public static final KnownKey zimbra_class_accessmanager = KnownKey.newKey("com.zimbra.cs.account.accesscontrol.ACLAccessManager");
     public static final KnownKey zimbra_class_mboxmanager = KnownKey.newKey("com.zimbra.cs.mailbox.MailboxManager");
     public static final KnownKey zimbra_class_database = KnownKey.newKey("com.zimbra.cs.db.MySQL");
