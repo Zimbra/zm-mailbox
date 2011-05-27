@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.account.ldap;
+package com.zimbra.cs.account.ldap.legacy;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -123,6 +123,11 @@ import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.gal.GalParams;
 import com.zimbra.cs.account.gal.GalUtil;
 import com.zimbra.cs.account.krb5.Krb5Principal;
+import com.zimbra.cs.account.ldap.Check;
+import com.zimbra.cs.account.ldap.LdapDIT;
+import com.zimbra.cs.account.ldap.LdapGalMapRules;
+import com.zimbra.cs.account.ldap.RenameDomain;
+import com.zimbra.cs.account.ldap.Validators;
 import com.zimbra.cs.account.ldap.entry.LdapEntry;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapFilter;
 import com.zimbra.cs.account.ldap.legacy.LegacyJNDIAttributes;
@@ -167,13 +172,13 @@ import com.zimbra.cs.zimlet.ZimletUtil;
  * @since Sep 23, 2004
  * @author schemers
  */
-public class LdapProvisioning extends LdapProv {
+public class LegacyLdapProvisioning extends LdapProv {
     
     private static final SearchControls sObjectSC = new SearchControls(SearchControls.OBJECT_SCOPE, 0, 0, null, false, false);
 
     static final SearchControls sSubtreeSC = new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, null, false, false);
 
-    private static final Log mLog = LogFactory.getLog(LdapProvisioning.class);
+    private static final Log mLog = LogFactory.getLog(LegacyLdapProvisioning.class);
 
     private AccountCache sAccountCache =
         new AccountCache(
@@ -287,9 +292,9 @@ public class LdapProvisioning extends LdapProv {
     private static final Random sPoolRandom = new Random();
     private Groups mAllDLs; // email addresses of all distribution lists on the system
     
-    private static LdapProvisioning SINGLETON = null;
+    private static LegacyLdapProvisioning SINGLETON = null;
     
-    private static synchronized void ensureSingleton(LdapProvisioning prov) {
+    private static synchronized void ensureSingleton(LegacyLdapProvisioning prov) {
         if (SINGLETON != null) {
             // pass an exception to have the stack logged
             Zimbra.halt("Only one instance of LdapProvisioning can be created", 
@@ -298,7 +303,7 @@ public class LdapProvisioning extends LdapProv {
         SINGLETON = prov;
     }
     
-    public LdapProvisioning() {
+    public LegacyLdapProvisioning() {
         ensureSingleton(this);
         
         setDIT();
@@ -539,7 +544,7 @@ public class LdapProvisioning extends LdapProv {
     public Config getConfig() throws ServiceException
     {
         if (sConfig == null) {
-            synchronized(LdapProvisioning.class) {
+            synchronized(LegacyLdapProvisioning.class) {
                 if (sConfig == null) {
                     LegacyZimbraLdapContext zlc = null;
                     try {
@@ -562,7 +567,7 @@ public class LdapProvisioning extends LdapProv {
     public GlobalGrant getGlobalGrant() throws ServiceException
     {
         if (sGlobalGrant == null) {
-            synchronized(LdapProvisioning.class) {
+            synchronized(LegacyLdapProvisioning.class) {
                 if (sGlobalGrant == null) {
                     LegacyZimbraLdapContext zlc = null;
                     try {
@@ -2746,7 +2751,7 @@ public class LdapProvisioning extends LdapProv {
                 public void searchObjects(String query, String[] returnAttrs,
                         String base, int flags, Visitor visitor, int maxResults) 
                 throws ServiceException {
-                    ((LdapProvisioning) mProv).searchObjects(query, returnAttrs,
+                    ((LegacyLdapProvisioning) mProv).searchObjects(query, returnAttrs,
                             base, flags, visitor, maxResults);
                 }
 
@@ -2754,19 +2759,19 @@ public class LdapProvisioning extends LdapProv {
                 public void modifyAttrsInternal(Entry entry, Map<String, ? extends Object> attrs)
                 throws ServiceException {
                     LegacyZimbraLdapContext ldapContext = toLegacyZimbraLdapContext();
-                    ((LdapProvisioning) mProv).modifyAttrsInternal(entry,
+                    ((LegacyLdapProvisioning) mProv).modifyAttrsInternal(entry,
                             ldapContext, attrs);
                 }
 
                 @Override
                 public void renameAddressesInAllDistributionLists(Map<String, String> changedPairs) {
-                    ((LdapProvisioning) mProv).renameAddressesInAllDistributionLists(changedPairs);
+                    ((LegacyLdapProvisioning) mProv).renameAddressesInAllDistributionLists(changedPairs);
                 }
 
                 @Override
                 public void renameXMPPComponent(String zimbraId, String newName)
                 throws ServiceException {
-                    ((LdapProvisioning) mProv).renameXMPPComponent(zimbraId, newName);
+                    ((LegacyLdapProvisioning) mProv).renameXMPPComponent(zimbraId, newName);
                 }
                 
             };
@@ -4884,7 +4889,7 @@ public class LdapProvisioning extends LdapProv {
     private static List<DistributionList> getDistributionLists(String addrs[], boolean directOnly, Map<String, String> via)
         throws ServiceException
     {
-        LdapProvisioning prov = (LdapProvisioning) Provisioning.getInstance(); // GROSS
+        LegacyLdapProvisioning prov = (LegacyLdapProvisioning) Provisioning.getInstance(); // GROSS
         List<DistributionList> directDLs = prov.getAllDistributionListsForAddresses(addrs, true);
         HashSet<String> directDLSet = new HashSet<String>();
         HashSet<String> checked = new HashSet<String>();
@@ -4918,7 +4923,7 @@ public class LdapProvisioning extends LdapProv {
         return result;
     }
 
-    private List<DistributionList> getAllDirectGroups(LdapProvisioning prov, Entry entry) throws ServiceException {
+    private List<DistributionList> getAllDirectGroups(LegacyLdapProvisioning prov, Entry entry) throws ServiceException {
         if (!(entry instanceof GroupedEntry))
             throw ServiceException.FAILURE("internal error", null);
 
@@ -5037,7 +5042,7 @@ public class LdapProvisioning extends LdapProv {
     private List<DistributionList> getGroupsInternal(Entry entry, boolean directOnly, Map<String, String> via)
         throws ServiceException
     {
-        LdapProvisioning prov = (LdapProvisioning) Provisioning.getInstance(); // GROSS
+        LegacyLdapProvisioning prov = (LegacyLdapProvisioning) Provisioning.getInstance(); // GROSS
         List<DistributionList> directDLs = getAllDirectGroups(prov, entry);
         HashSet<String> directDLSet = new HashSet<String>();
         HashSet<String> checked = new HashSet<String>();
@@ -5649,9 +5654,9 @@ public class LdapProvisioning extends LdapProv {
     }
 
     private void clearUpwardMembershipCache(Account acct) {
-        acct.setCachedData(LdapProvisioning.DATA_DL_SET, null);
-        acct.setCachedData(LdapProvisioning.DATA_ACLGROUP_LIST, null);
-        acct.setCachedData(LdapProvisioning.DATA_ACLGROUP_LIST_ADMINS_ONLY, null);
+        acct.setCachedData(LegacyLdapProvisioning.DATA_DL_SET, null);
+        acct.setCachedData(LegacyLdapProvisioning.DATA_ACLGROUP_LIST, null);
+        acct.setCachedData(LegacyLdapProvisioning.DATA_ACLGROUP_LIST_ADMINS_ONLY, null);
         acct.setCachedData(EntryCacheDataKey.GROUPEDENTRY_DIRECT_GROUPIDS.getKeyName(), null);
     }
     
