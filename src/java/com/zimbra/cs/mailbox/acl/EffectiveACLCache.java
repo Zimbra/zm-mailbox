@@ -122,8 +122,9 @@ public class EffectiveACLCache {
             }
         }
         if (mods.deleted != null) {
-            for (Map.Entry<ModificationKey, MailItem.Type> entry : mods.deleted.entrySet()) {
-                if (entry.getValue() == MailItem.Type.FOLDER) {
+            for (Map.Entry<ModificationKey, Change> entry : mods.deleted.entrySet()) {
+                MailItem.Type type = (MailItem.Type) entry.getValue().what;
+                if (type == MailItem.Type.FOLDER) {
                     String acctId = entry.getKey().getAccountId();
                     if (acctId == null)
                         continue;  // just to be safe

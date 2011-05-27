@@ -168,8 +168,9 @@ public class CalListCache {
             }
         }
         if (mods.deleted != null) {
-            for (Map.Entry<ModificationKey, MailItem.Type> entry : mods.deleted.entrySet()) {
-                if (entry.getValue() == MailItem.Type.FOLDER) {
+            for (Map.Entry<ModificationKey, Change> entry : mods.deleted.entrySet()) {
+                MailItem.Type type = (MailItem.Type) entry.getValue().what;
+                if (type == MailItem.Type.FOLDER) {
                     // We only have item id.  Let's just assume it's a calendar folder id and check
                     // against the cached list.
                     ChangedFolders changedFolders = changeMap.getAccount(entry.getKey().getAccountId());

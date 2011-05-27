@@ -1525,7 +1525,11 @@ public abstract class MailItem implements Comparable<MailItem> {
      * @param reason  The bitmask of changes made to the item.
      * @see PendingModifications.Change */
     void markItemModified(int reason) {
-        mMailbox.markItemModified(this, reason);
+        try {
+            mMailbox.markItemModified(this, reason, snapshotItem());
+        } catch (ServiceException e) {
+            ZimbraLog.mailbox.warn("error cloning item with id %s", mId, e);
+        }
     }
 
     /** Adds this item to the {@link Mailbox}'s list of blobs to be removed
@@ -2780,13 +2784,13 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         // also delete any conversations whose messages have all been removed
         if (info.cascadeIds != null && !info.cascadeIds.isEmpty()) {
+            for (Integer convId : info.cascadeIds) {
+                mbox.markItemDeleted(Type.CONVERSATION, convId);
+            }
             try {
                 DbMailItem.delete(mbox, info.cascadeIds, false);
             } catch (ServiceException se) {
                 MailboxErrorUtil.handleCascadeFailure(mbox, info.cascadeIds, se);
-            }
-            for (Integer convId : info.cascadeIds) {
-                mbox.markItemDeleted(Type.CONVERSATION, convId);
             }
             info.itemIds.add(Type.CONVERSATION, info.cascadeIds);
         }
@@ -3225,5 +3229,18 @@ public abstract class MailItem implements Comparable<MailItem> {
             result.add(item.getId());
         }
         return result;
+    }
+
+    /**
+     * Returns a copy of the item with {@link Flag#BITMASK_UNCACHED} set.
+     *
+     * @return
+     * @throws ServiceException
+     * @see Mailbox#snapshotItem(MailItem)
+     */
+    public MailItem snapshotItem() throws ServiceException {
+        UnderlyingData data = getUnderlyingData().clone();
+        data.setFlag(Flag.FlagInfo.UNCACHED);
+        return MailItem.constructItem(mMailbox, data);
     }
 }

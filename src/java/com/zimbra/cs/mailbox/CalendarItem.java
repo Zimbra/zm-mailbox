@@ -205,11 +205,6 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         reanalyze(null, getSize());
     }
 
-    @Override
-    public void markItemModified(int reason) {
-        mMailbox.markItemModified(this, reason);
-    }
-
 
     @Override
     boolean isTaggable() {
@@ -2949,8 +2944,10 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         saveMetadata();
     }
 
-    public boolean processNewInviteReply(Invite reply)
+    boolean processNewInviteReply(Invite reply)
     throws ServiceException {
+        MailItem itemSnapshot = snapshotItem();
+
         List<ZAttendee> attendees = reply.getAttendees();
 
         // trace logging
@@ -3039,7 +3036,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         if (invMatchingRecurId != null)
             invMatchingRecurId.updateMatchingAttendeesFromReply(reply);
         saveMetadata();
-        getMailbox().markItemModified(this, Change.MODIFIED_INVITE);
+        getMailbox().markItemModified(this, Change.MODIFIED_INVITE, itemSnapshot);
         return true;
     }
 

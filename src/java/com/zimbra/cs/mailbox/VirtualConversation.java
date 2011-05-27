@@ -39,7 +39,6 @@ public class VirtualConversation extends Conversation {
         }
     }
 
-
     public int getMessageId() {
         return -mId;
     }
@@ -126,5 +125,12 @@ public class VirtualConversation extends Conversation {
             throw MailServiceException.IS_NOT_CHILD();
         markItemDeleted();
         mMailbox.uncache(this);
+    }
+
+    @Override
+    public MailItem snapshotItem() throws ServiceException {
+        UnderlyingData data = getUnderlyingData().clone();
+        data.setFlag(Flag.FlagInfo.UNCACHED);
+        return new VirtualConversation(mMailbox, data);
     }
 }

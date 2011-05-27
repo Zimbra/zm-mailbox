@@ -55,10 +55,10 @@ public class ImapSession extends Session {
         void doEncodeState(Element imap);
         void endSelect();
 
-        void handleTagDelete(int changeId, int tagId);
+        void handleTagDelete(int changeId, int tagId, Change chg);
         void handleTagCreate(int changeId, Tag tag);
         void handleTagRename(int changeId, Tag tag, Change chg);
-        void handleItemDelete(int changeId, int itemId, MailItem.Type type);
+        void handleItemDelete(int changeId, int itemId, Change chg);
         void handleItemCreate(int changeId, MailItem item, AddedItems added);
         void handleFolderRename(int changeId, Folder folder, Change chg);
         void handleItemUpdate(int changeId, Change chg, AddedItems added);
@@ -320,7 +320,7 @@ public class ImapSession extends Session {
             synchronized (this) {
                 AddedItems added = new AddedItems();
                 if (pns.deleted != null) {
-                    for (Map.Entry<ModificationKey, MailItem.Type> entry : pns.deleted.entrySet()) {
+                    for (Map.Entry<ModificationKey, Change> entry : pns.deleted.entrySet()) {
                         handleDelete(changeId, entry.getKey().getItemId(), entry.getValue());
                     }
                 }
@@ -356,11 +356,12 @@ public class ImapSession extends Session {
         }
     }
 
-    void handleDelete(int changeId, int id, MailItem.Type type) {
+    void handleDelete(int changeId, int id, Change chg) {
+        MailItem.Type type = (MailItem.Type) chg.what;
         if (id <= 0) {
             return;
         } else if (type == MailItem.Type.TAG) {
-            mFolder.handleTagDelete(changeId, id);
+            mFolder.handleTagDelete(changeId, id, chg);
         } else if (id == mFolderId) {
             // Once the folder's gone, there's no point in keeping an IMAP Session listening on it around.
             detach();
@@ -372,7 +373,7 @@ public class ImapSession extends Session {
                 mHandler.dropConnection(true);
             }
         } else if (ImapMessage.SUPPORTED_TYPES.contains(type)) {
-            mFolder.handleItemDelete(changeId, id, type);
+            mFolder.handleItemDelete(changeId, id, chg);
         }
     }
 
@@ -517,8 +518,9 @@ public class ImapSession extends Session {
             return pns;
         }
 
-        private synchronized void queueDelete(int changeId, int itemId, MailItem.Type type) {
-            getQueuedNotifications(changeId).recordDeleted(getTargetAccountId(), itemId, type);
+        private synchronized void queueDelete(int changeId, int itemId, Change chg) {
+            getQueuedNotifications(changeId).recordDeleted(
+                    getTargetAccountId(), itemId, (MailItem.Type) chg.what, chg.op, chg.when);
         }
 
         private synchronized void queueCreate(int changeId, MailItem item) {
@@ -526,7 +528,8 @@ public class ImapSession extends Session {
         }
 
         private synchronized void queueModify(int changeId, Change chg) {
-            getQueuedNotifications(changeId).recordModified(chg.op, (MailItem) chg.what, chg.why, chg.when);
+            getQueuedNotifications(changeId).recordModified(
+                    chg.op, (MailItem) chg.what, chg.why, chg.when, (MailItem) chg.preModifyObj);
         }
 
         synchronized void replay() {
@@ -544,8 +547,8 @@ public class ImapSession extends Session {
             }
         }
 
-        @Override public void handleTagDelete(int changeId, int tagId) {
-            queueDelete(changeId, tagId, MailItem.Type.TAG);
+        @Override public void handleTagDelete(int changeId, int tagId, Change chg) {
+            queueDelete(changeId, tagId, chg);
         }
 
         @Override public void handleTagCreate(int changeId, Tag tag) {
@@ -556,8 +559,8 @@ public class ImapSession extends Session {
             queueModify(changeId, chg);
         }
 
-        @Override public void handleItemDelete(int changeId, int itemId, MailItem.Type type) {
-            queueDelete(changeId, itemId, type);
+        @Override public void handleItemDelete(int changeId, int itemId, Change chg) {
+            queueDelete(changeId, itemId, chg);
         }
 
         @Override public void handleItemCreate(int changeId, MailItem item, AddedItems added) {

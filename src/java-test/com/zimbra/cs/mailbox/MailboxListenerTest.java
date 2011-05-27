@@ -26,8 +26,8 @@ import org.testng.Assert;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.session.PendingModifications.ModificationKey;
 
 public class MailboxListenerTest {
 
@@ -67,23 +67,28 @@ public class MailboxListenerTest {
         @Override
         public void notify(ChangeNotification notification) {
             listenerWasCalled = true;
+
             Assert.assertNotNull(notification);
             Assert.assertNotNull(notification.mailboxAccount);
             Assert.assertEquals(notification.mailboxAccount.getId(), MockProvisioning.DEFAULT_ACCOUNT_ID);
-            Assert.assertNotNull(notification.mods);
+
             Assert.assertNotNull(notification.mods.created);
             boolean newDocFound = false;
             for (MailItem item : notification.mods.created.values()) {
                 if (item instanceof Document) {
-                    if ("test".equals(((Document)item).getName()))
+                    if ("test".equals(item.getName()))
                         newDocFound = true;
                 }
             }
             Assert.assertTrue(newDocFound);
-            Change change = notification.mods.modified.get(new PendingModifications.ModificationKey(
-                    MockProvisioning.DEFAULT_ACCOUNT_ID, Mailbox.ID_FOLDER_BRIEFCASE));
+
+            Assert.assertNotNull(notification.mods);
+            Change change = notification.mods.modified.get(
+                    new ModificationKey(MockProvisioning.DEFAULT_ACCOUNT_ID, Mailbox.ID_FOLDER_BRIEFCASE));
             Assert.assertNotNull(change);
             Assert.assertEquals(change.why, Change.MODIFIED_SIZE);
+            Assert.assertNotNull(change.preModifyObj);
+            Assert.assertEquals(((Folder) change.preModifyObj).getId(), Mailbox.ID_FOLDER_BRIEFCASE);
         }
     }
 }

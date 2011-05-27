@@ -251,6 +251,15 @@ public class Folder extends MailItem {
         return mImapMODSEQ;
     }
 
+    @Override
+    public MailItem snapshotItem() throws ServiceException {
+        Folder retVal = (Folder) super.snapshotItem();
+        if (mParent != null) {
+            retVal.mParent = (Folder) mParent.snapshotItem();
+        }
+        return retVal;
+    }
+
     /** Returns whether the folder is the Trash folder or any of its
      *  subfolders. */
     @Override public boolean inTrash() {

@@ -875,7 +875,7 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
     }
 
 
-    @Override public void handleTagDelete(int changeId, int tagId) {
+    @Override public void handleTagDelete(int changeId, int tagId, Change chg) {
         mTags.uncache(1L << Tag.getIndex(tagId));
         dirtyTag(tagId, changeId, true);
     }
@@ -890,7 +890,7 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
         dirtyTag(tag.getId(), changeId);
     }
 
-    @Override public void handleItemDelete(int changeId, int itemId, MailItem.Type type) {
+    @Override public void handleItemDelete(int changeId, int itemId, Change chg) {
         ImapMessage i4msg = getById(itemId);
         if (i4msg != null) {
             markMessageExpunged(i4msg);

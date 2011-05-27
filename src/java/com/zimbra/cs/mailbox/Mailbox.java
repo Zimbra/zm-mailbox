@@ -14,41 +14,11 @@
  */
 package com.zimbra.cs.mailbox;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
-import java.io.Writer;
-import java.lang.ref.SoftReference;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArrayList;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
-import com.zimbra.cs.upgrade.MailboxUpgrade;
-import com.zimbra.common.util.MapUtil;
-
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.mime.Rfc822ValidationInputStream;
@@ -59,6 +29,7 @@ import com.zimbra.common.util.BufferStream;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.CopyInputStream;
+import com.zimbra.common.util.MapUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
@@ -74,9 +45,9 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.db.DbMailAddress;
 import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.db.DbMailItem.QueryParams;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbMailItem.QueryParams;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.fb.FreeBusyQuery;
@@ -103,6 +74,7 @@ import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
+import com.zimbra.cs.mailbox.MailboxListener.ChangeNotification;
 import com.zimbra.cs.mailbox.Note.Rectangle;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
@@ -111,13 +83,13 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
-import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
-import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
+import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache.CalendarDataResult;
+import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
 import com.zimbra.cs.mailbox.calendar.tzfixup.TimeZoneFixupRules;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.mime.Mime;
@@ -125,11 +97,73 @@ import com.zimbra.cs.mime.ParsedAddress;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.mime.ParsedMessage.CalendarPartInfo;
 import com.zimbra.cs.mime.ParsedMessageDataSource;
 import com.zimbra.cs.mime.ParsedMessageOptions;
-import com.zimbra.cs.mime.ParsedMessage.CalendarPartInfo;
 import com.zimbra.cs.pop3.Pop3Message;
-import com.zimbra.cs.redolog.op.*;
+import com.zimbra.cs.redolog.op.AddDocumentRevision;
+import com.zimbra.cs.redolog.op.AlterItemTag;
+import com.zimbra.cs.redolog.op.ColorItem;
+import com.zimbra.cs.redolog.op.CopyItem;
+import com.zimbra.cs.redolog.op.CreateCalendarItemPlayer;
+import com.zimbra.cs.redolog.op.CreateCalendarItemRecorder;
+import com.zimbra.cs.redolog.op.CreateChat;
+import com.zimbra.cs.redolog.op.CreateComment;
+import com.zimbra.cs.redolog.op.CreateContact;
+import com.zimbra.cs.redolog.op.CreateFolder;
+import com.zimbra.cs.redolog.op.CreateFolderPath;
+import com.zimbra.cs.redolog.op.CreateInvite;
+import com.zimbra.cs.redolog.op.CreateLink;
+import com.zimbra.cs.redolog.op.CreateMessage;
+import com.zimbra.cs.redolog.op.CreateMountpoint;
+import com.zimbra.cs.redolog.op.CreateNote;
+import com.zimbra.cs.redolog.op.CreateSavedSearch;
+import com.zimbra.cs.redolog.op.CreateTag;
+import com.zimbra.cs.redolog.op.DateItem;
+import com.zimbra.cs.redolog.op.DeleteItem;
+import com.zimbra.cs.redolog.op.DeleteItemFromDumpster;
+import com.zimbra.cs.redolog.op.DeleteMailbox;
+import com.zimbra.cs.redolog.op.DismissCalendarItemAlarm;
+import com.zimbra.cs.redolog.op.EditNote;
+import com.zimbra.cs.redolog.op.EnableSharedReminder;
+import com.zimbra.cs.redolog.op.FixCalendarItemEndTime;
+import com.zimbra.cs.redolog.op.FixCalendarItemPriority;
+import com.zimbra.cs.redolog.op.FixCalendarItemTZ;
+import com.zimbra.cs.redolog.op.GrantAccess;
+import com.zimbra.cs.redolog.op.ICalReply;
+import com.zimbra.cs.redolog.op.ImapCopyItem;
+import com.zimbra.cs.redolog.op.LockItem;
+import com.zimbra.cs.redolog.op.ModifyContact;
+import com.zimbra.cs.redolog.op.ModifyInvitePartStat;
+import com.zimbra.cs.redolog.op.ModifySavedSearch;
+import com.zimbra.cs.redolog.op.MoveItem;
+import com.zimbra.cs.redolog.op.PurgeImapDeleted;
+import com.zimbra.cs.redolog.op.PurgeOldMessages;
+import com.zimbra.cs.redolog.op.PurgeRevision;
+import com.zimbra.cs.redolog.op.RecoverItem;
+import com.zimbra.cs.redolog.op.RedoableOp;
+import com.zimbra.cs.redolog.op.RenameItem;
+import com.zimbra.cs.redolog.op.RenameItemPath;
+import com.zimbra.cs.redolog.op.RenameMailbox;
+import com.zimbra.cs.redolog.op.RepositionNote;
+import com.zimbra.cs.redolog.op.RevokeAccess;
+import com.zimbra.cs.redolog.op.SaveChat;
+import com.zimbra.cs.redolog.op.SaveDocument;
+import com.zimbra.cs.redolog.op.SaveDraft;
+import com.zimbra.cs.redolog.op.SetCalendarItem;
+import com.zimbra.cs.redolog.op.SetConfig;
+import com.zimbra.cs.redolog.op.SetCustomData;
+import com.zimbra.cs.redolog.op.SetFolderDefaultView;
+import com.zimbra.cs.redolog.op.SetFolderUrl;
+import com.zimbra.cs.redolog.op.SetImapUid;
+import com.zimbra.cs.redolog.op.SetItemTags;
+import com.zimbra.cs.redolog.op.SetPermissions;
+import com.zimbra.cs.redolog.op.SetSubscriptionData;
+import com.zimbra.cs.redolog.op.SnoozeCalendarItemAlarm;
+import com.zimbra.cs.redolog.op.StoreIncomingBlob;
+import com.zimbra.cs.redolog.op.TrackImap;
+import com.zimbra.cs.redolog.op.TrackSync;
+import com.zimbra.cs.redolog.op.UnlockItem;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FeedManager;
 import com.zimbra.cs.service.util.ItemId;
@@ -137,21 +171,48 @@ import com.zimbra.cs.service.util.SpamHandler;
 import com.zimbra.cs.service.util.SpamHandler.SpamReport;
 import com.zimbra.cs.session.AllAccountsRedoCommitCallback;
 import com.zimbra.cs.session.PendingModifications;
+import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
-import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.MailboxBlobDataSource;
 import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.upgrade.MailboxUpgrade;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMailbox.Options;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
+import java.io.Writer;
+import java.lang.ref.SoftReference;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * @since Jun 13, 2004
@@ -277,15 +338,6 @@ public class Mailbox {
             if (recorder != null)
                 return recorder.getOperation();
             return null;
-        }
-
-        void addPreModifyItem(MailItem item) {
-            if (mDirty != null) {
-                try {
-                    mDirty.addPreModifyItem(snapshotItem(item));
-                } catch (ServiceException e) {
-                }
-            }
         }
 
         void setTimestamp(long millis) {
@@ -1071,37 +1123,50 @@ public class Mailbox {
         mCurrentChange.mDirty.recordCreated(item);
     }
 
-    /** Adds the item to the current change's list of items deleted during
-     *  the transaction.
-     * @param item  The deleted item. */
+    /** Adds the item to the current change's list of items deleted during the transaction.
+     *
+     * @param item  The item being deleted. */
     void markItemDeleted(MailItem item) {
-        mCurrentChange.mDirty.recordDeleted(item);
+        MailItem itemSnapshot = null;
+        try {
+            itemSnapshot = item.snapshotItem();
+        } catch (ServiceException e) {
+            ZimbraLog.mailbox.warn("could not snapshot to-be-deleted item", e);
+        }
+        if (itemSnapshot == null) {
+            markItemDeleted(item.getType(), item.getId());
+        } else {
+            mCurrentChange.mDirty.recordDeleted(itemSnapshot, mCurrentChange.getOperation(), mCurrentChange.timestamp);
+        }
     }
 
-    /**
-     * Adds the item id to the current change's list of items deleted during the transaction.
+    /** Adds the item to the current change's list of items deleted during the transaction.
      *
      * @param type item type
-     * @param itemId  The deleted item's id.
-     */
+     * @param itemId  The id of the item being deleted. */
     void markItemDeleted(MailItem.Type type, int itemId) {
-        mCurrentChange.mDirty.recordDeleted(mData.accountId, itemId, type);
+        mCurrentChange.mDirty.recordDeleted(
+                mData.accountId, itemId, type, mCurrentChange.getOperation(), mCurrentChange.timestamp);
     }
 
-    /**
-     * Adds the item ids to the current change's list of items deleted during the transaction.
-     */
+    /** Adds the items to the current change's list of items deleted during the transaction.
+     *
+     * @param idlist  The ids of the items being deleted. */
     void markItemDeleted(TypedIdList idlist) {
-        mCurrentChange.mDirty.recordDeleted(mData.accountId, idlist);
+        mCurrentChange.mDirty.recordDeleted(
+                mData.accountId, idlist, mCurrentChange.getOperation(), mCurrentChange.timestamp);
     }
 
     /** Adds the item to the current change's list of items modified during
      *  the transaction.
+     *
      * @param item    The modified item.
      * @param reason  The bitmask describing the modified item properties.
+     * @param preModifyItemSnapshot
      * @see com.zimbra.cs.session.PendingModifications.Change */
-    void markItemModified(MailItem item, int reason) {
-        mCurrentChange.mDirty.recordModified(mCurrentChange.getOperation(), item, reason, mCurrentChange.timestamp);
+    void markItemModified(MailItem item, int reason, MailItem preModifyItemSnapshot) {
+        mCurrentChange.mDirty.recordModified(
+                mCurrentChange.getOperation(), item, reason, mCurrentChange.timestamp, preModifyItemSnapshot);
     }
 
     /** Adds the object to the current change's list of non-{@link MailItem}
@@ -1616,7 +1681,7 @@ public class Mailbox {
                 // some broken upgrades ended up with CHANGE_DATE = NULL; patch it here
                 boolean badChangeDate = folder.getChangeDate() <= 0;
                 if (badChangeDate) {
-                    markItemModified(folder, Change.INTERNAL_ONLY);
+                    markItemModified(folder, Change.INTERNAL_ONLY, folder.snapshotItem());
                     folder.mData.metadataChanged(this);
                 }
                 // if we recalculated folder counts or had to fix CHANGE_DATE, persist those values now
@@ -2063,16 +2128,15 @@ public class Mailbox {
                         ZimbraLog.mailbox.warn("folder missing from snapshotted folder set: %d", item.getId());
                         folder = (Folder) item;
                     }
-                    snapshot.recordModified(chg.op, folder, chg.why, chg.when);
+                    snapshot.recordModified(chg.op, folder, chg.why, chg.when, (MailItem) chg.preModifyObj);
                 } else {
                     // NOTE: if the folder cache is null, folders fall down here and should always get copy == false
                     boolean copy = item instanceof Tag || (cache != null && cache.containsKey(item.getId()));
-                    snapshot.recordModified(chg.op, copy ? snapshotItem(item) : item, chg.why, chg.when);
+                    snapshot.recordModified(
+                            chg.op, copy ? snapshotItem(item) : item, chg.why, chg.when, (MailItem) chg.preModifyObj);
                 }
             }
         }
-
-        snapshot.preModifyItems = pms.preModifyItems;
 
         return snapshot;
     }
@@ -2104,37 +2168,30 @@ public class Mailbox {
 
         // try the cache first
         MailItem item = getCachedItem(new Integer(id), type);
-        try {
-            if (item != null)
-                return item;
-
-            // the tag and folder caches contain ALL tags and folders, so cache miss == doesn't exist
-            if (isCachedType(type))
-                throw MailItem.noSuchItem(id, type);
-
-            if (id <= -FIRST_USER_ID) {
-                // special-case virtual conversations
-                if (type != MailItem.Type.CONVERSATION && type != MailItem.Type.UNKNOWN) {
-                    throw MailItem.noSuchItem(id, type);
-                }
-                Message msg = getCachedMessage(new Integer(-id));
-                if (msg == null)
-                    msg = getMessageById(-id);
-                if (msg.getConversationId() != id)
-                    return msg.getParent();
-                else
-                    item = new VirtualConversation(this, msg);
-            } else {
-                // cache miss, so fetch from the database
-                item = MailItem.getById(this, id, type);
-            }
+        if (item != null)
             return item;
 
-        } finally {
-            if (item != null) {
-                mCurrentChange.addPreModifyItem(item);
+        // the tag and folder caches contain ALL tags and folders, so cache miss == doesn't exist
+        if (isCachedType(type))
+            throw MailItem.noSuchItem(id, type);
+
+        if (id <= -FIRST_USER_ID) {
+            // special-case virtual conversations
+            if (type != MailItem.Type.CONVERSATION && type != MailItem.Type.UNKNOWN) {
+                throw MailItem.noSuchItem(id, type);
             }
+            Message msg = getCachedMessage(new Integer(-id));
+            if (msg == null)
+                msg = getMessageById(-id);
+            if (msg.getConversationId() != id)
+                return msg.getParent();
+            else
+                item = new VirtualConversation(this, msg);
+        } else {
+            // cache miss, so fetch from the database
+            item = MailItem.getById(this, id, type);
         }
+        return item;
     }
 
     /**
@@ -2187,109 +2244,99 @@ public class Mailbox {
             return null;
 
         MailItem items[] = new MailItem[ids.length];
-        try {
 
-            if (fromDumpster) {
-                for (int i = 0; i < items.length; ++i) {
-                    int id = ids[i];
-                    if (id > 0) {
-                        items[i] = getItemById(id, type, true);
-                    }
-                }
-                return items;
-            }
-
-            Set<Integer> uncached = new HashSet<Integer>();
-
-            // try the cache first
-            Integer miss = null;
-            boolean relaxType = false;
-            for (int i = 0; i < ids.length; i++) {
-                // special-case -1 as a signal to return null...
-                if (ids[i] == ID_AUTO_INCREMENT) {
-                    items[i] = null;
-                } else {
-                    Integer key = ids[i];
-                    MailItem item = getCachedItem(key, type);
-                    // special-case virtual conversations
-                    if (item == null && ids[i] <= -FIRST_USER_ID) {
-                        if (!MailItem.isAcceptableType(type, MailItem.Type.CONVERSATION)) {
-                            throw MailItem.noSuchItem(ids[i], type);
-                        }
-                        Message msg = getCachedMessage(-ids[i]);
-                        if (msg != null) {
-                            if (msg.getConversationId() == ids[i])
-                                item = new VirtualConversation(this, msg);
-                            else
-                                item = getCachedConversation(key = msg.getConversationId());
-                        } else {
-                            // need to fetch the message in order to get its conv...
-                            key = -ids[i];
-                            relaxType = true;
-                        }
-                    }
-                    items[i] = item;
-                    if (item == null)
-                        uncached.add(miss = key);
+        if (fromDumpster) {
+            for (int i = 0; i < items.length; ++i) {
+                int id = ids[i];
+                if (id > 0) {
+                    items[i] = getItemById(id, type, true);
                 }
             }
-            if (uncached.isEmpty())
-                return items;
+            return items;
+        }
 
-            // the tag and folder caches contain ALL tags and folders, so cache miss == doesn't exist
-            if (isCachedType(type))
-                throw MailItem.noSuchItem(miss.intValue(), type);
+        Set<Integer> uncached = new HashSet<Integer>();
 
-            // cache miss, so fetch from the database
-            MailItem.getById(this, uncached, relaxType ? MailItem.Type.UNKNOWN : type);
-
-            uncached.clear();
-            for (int i = 0; i < ids.length; i++) {
-                if (ids[i] != ID_AUTO_INCREMENT && items[i] == null) {
-                    if (ids[i] <= -FIRST_USER_ID) {
-                        // special-case virtual conversations
-                        MailItem item = getCachedItem(-ids[i]);
-                        if (!(item instanceof Message)) {
-                            throw MailItem.noSuchItem(ids[i], type);
-                        } else if (item.getParentId() == ids[i]) {
-                            items[i] = new VirtualConversation(this, (Message) item);
-                        } else {
-                            items[i] = getCachedItem(item.getParentId());
-                            if (items[i] == null)
-                                uncached.add(item.getParentId());
-                        }
+        // try the cache first
+        Integer miss = null;
+        boolean relaxType = false;
+        for (int i = 0; i < ids.length; i++) {
+            // special-case -1 as a signal to return null...
+            if (ids[i] == ID_AUTO_INCREMENT) {
+                items[i] = null;
+            } else {
+                Integer key = ids[i];
+                MailItem item = getCachedItem(key, type);
+                // special-case virtual conversations
+                if (item == null && ids[i] <= -FIRST_USER_ID) {
+                    if (!MailItem.isAcceptableType(type, MailItem.Type.CONVERSATION)) {
+                        throw MailItem.noSuchItem(ids[i], type);
+                    }
+                    Message msg = getCachedMessage(-ids[i]);
+                    if (msg != null) {
+                        if (msg.getConversationId() == ids[i])
+                            item = new VirtualConversation(this, msg);
+                        else
+                            item = getCachedConversation(key = msg.getConversationId());
                     } else {
-                        if ((items[i] = getCachedItem(ids[i])) == null)
-                            throw MailItem.noSuchItem(ids[i], type);
+                        // need to fetch the message in order to get its conv...
+                        key = -ids[i];
+                        relaxType = true;
                     }
                 }
+                items[i] = item;
+                if (item == null)
+                    uncached.add(miss = key);
             }
+        }
+        if (uncached.isEmpty())
+            return items;
 
-            // special case asking for VirtualConversation but having it be a real Conversation
-            if (!uncached.isEmpty()) {
-                MailItem.getById(this, uncached, MailItem.Type.CONVERSATION);
-                for (int i = 0; i < ids.length; i++) {
-                    if (ids[i] <= -FIRST_USER_ID && items[i] == null) {
-                        MailItem item = getCachedItem(-ids[i]);
-                        if (!(item instanceof Message) || item.getParentId() == ids[i])
-                            throw ServiceException.FAILURE("item should be cached but is not: " + -ids[i], null);
+        // the tag and folder caches contain ALL tags and folders, so cache miss == doesn't exist
+        if (isCachedType(type))
+            throw MailItem.noSuchItem(miss.intValue(), type);
+
+        // cache miss, so fetch from the database
+        MailItem.getById(this, uncached, relaxType ? MailItem.Type.UNKNOWN : type);
+
+        uncached.clear();
+        for (int i = 0; i < ids.length; i++) {
+            if (ids[i] != ID_AUTO_INCREMENT && items[i] == null) {
+                if (ids[i] <= -FIRST_USER_ID) {
+                    // special-case virtual conversations
+                    MailItem item = getCachedItem(-ids[i]);
+                    if (!(item instanceof Message)) {
+                        throw MailItem.noSuchItem(ids[i], type);
+                    } else if (item.getParentId() == ids[i]) {
+                        items[i] = new VirtualConversation(this, (Message) item);
+                    } else {
                         items[i] = getCachedItem(item.getParentId());
                         if (items[i] == null)
-                            throw MailItem.noSuchItem(ids[i], type);
+                            uncached.add(item.getParentId());
                     }
-                }
-            }
-
-            return items;
-        } finally {
-            if (items != null) {
-                for (MailItem item : items) {
-                    if (item != null) {
-                        mCurrentChange.addPreModifyItem(item);
-                    }
+                } else {
+                    if ((items[i] = getCachedItem(ids[i])) == null)
+                        throw MailItem.noSuchItem(ids[i], type);
                 }
             }
         }
+
+        // special case asking for VirtualConversation but having it be a real Conversation
+        if (!uncached.isEmpty()) {
+            MailItem.getById(this, uncached, MailItem.Type.CONVERSATION);
+            for (int i = 0; i < ids.length; i++) {
+                if (ids[i] <= -FIRST_USER_ID && items[i] == null) {
+                    MailItem item = getCachedItem(-ids[i]);
+                    if (!(item instanceof Message) || item.getParentId() == ids[i])
+                        throw ServiceException.FAILURE("item should be cached but is not: " + -ids[i], null);
+                    items[i] = getCachedItem(item.getParentId());
+                    if (items[i] == null)
+                        throw MailItem.noSuchItem(ids[i], type);
+                }
+            }
+        }
+
+        return items;
     }
 
     /** retrieve an item from the Mailbox's caches; return null if no item found */
@@ -3886,9 +3933,10 @@ public class Mailbox {
             if (calItem == null) {
                 throw MailServiceException.NO_SUCH_CALITEM(calItemId);
             }
+            MailItem itemSnapshot = calItem.snapshotItem();
             calItem.snapshotRevision();
             calItem.updateNextAlarm(dismissedAt + 1, true);
-            markItemModified(calItem, Change.MODIFIED_INVITE);
+            markItemModified(calItem, Change.MODIFIED_INVITE, itemSnapshot);
             success = true;
         } finally {
             endTransaction(success);
@@ -3905,9 +3953,10 @@ public class Mailbox {
             if (calItem == null) {
                 throw MailServiceException.NO_SUCH_CALITEM(calItemId);
             }
+            MailItem itemSnapshot = calItem.snapshotItem();
             calItem.snapshotRevision();
             calItem.updateNextAlarm(snoozeUntil, false);
-            markItemModified(calItem, Change.MODIFIED_INVITE);
+            markItemModified(calItem, Change.MODIFIED_INVITE, itemSnapshot);
             success = true;
         } finally {
             endTransaction(success);
@@ -4148,6 +4197,7 @@ public class Mailbox {
         try {
             beginTransaction("fixCalendarItemTimeZone2", octxt, redoRecorder);
             CalendarItem calItem = getCalendarItemById(octxt, calItemId);
+            MailItem itemSnapshot = calItem.snapshotItem();
             Map<String, ICalTimeZone> replaced = new HashMap<String, ICalTimeZone>();
             int numFixed = fixupRules.fixCalendarItem(calItem, replaced);
             if (numFixed > 0) {
@@ -4161,7 +4211,7 @@ public class Mailbox {
                 // or simply invalidate the calendar item and refetch it.
                 uncacheItem(calItemId);
                 calItem = getCalendarItemById(octxt, calItemId);
-                markItemModified(calItem, Change.MODIFIED_CONTENT | Change.MODIFIED_INVITE);
+                markItemModified(calItem, Change.MODIFIED_CONTENT | Change.MODIFIED_INVITE, itemSnapshot);
                 success = true;
 
                 Callback cb = CalendarItem.getCallback();
@@ -4208,12 +4258,13 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("fixupCalendarItemEndTime", octxt, redoRecorder);
+            MailItem itemSnapshot = calItem.snapshotItem();
             int numFixed = calItem.fixRecurrenceEndTime();
             if (numFixed > 0) {
                 ZimbraLog.calendar.info("Fixed calendar item " + calItem.getId());
                 calItem.snapshotRevision();
                 calItem.saveMetadata();
-                markItemModified(calItem, Change.MODIFIED_CONTENT | Change.MODIFIED_INVITE);
+                markItemModified(calItem, Change.MODIFIED_CONTENT | Change.MODIFIED_INVITE, itemSnapshot);
                 success = true;
             }
             return numFixed;
@@ -4255,6 +4306,7 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("fixupCalendarItemPriority", octxt, redoRecorder);
+            MailItem itemSnapshot = calItem.snapshotItem();
             int flags = calItem.mData.getFlags() & ~(Flag.BITMASK_HIGH_PRIORITY | Flag.BITMASK_LOW_PRIORITY);
             Invite[] invs = calItem.getInvites();
             if (invs != null) {
@@ -4275,7 +4327,7 @@ public class Mailbox {
                 calItem.mData.setFlags(flags);
                 calItem.snapshotRevision();
                 calItem.saveMetadata();
-                markItemModified(calItem, Change.MODIFIED_INVITE);
+                markItemModified(calItem, Change.MODIFIED_INVITE, itemSnapshot);
                 success = true;
                 numFixed = 1;
             }
@@ -5188,14 +5240,11 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("updateInvitePartStat", octxt, redoRecorder);
-
             CalendarItem calItem = getCalendarItemById(calItemId);
-
+            MailItem itemSnapshot = calItem.snapshotItem();
             Account acct = getAccount();
-
             calItem.modifyPartStat(acct, recurId, cnStr, addressStr, cutypeStr, roleStr, partStatStr, rsvp, seqNo, dtStamp);
-            markItemModified(calItem, Change.MODIFIED_INVITE);
-
+            markItemModified(calItem, Change.MODIFIED_INVITE, itemSnapshot);
             success = true;
         } finally {
             endTransaction(success);
@@ -7772,7 +7821,7 @@ public class Mailbox {
         if (change == null) {
             return;
         }
-        MailboxListener.ChangeNotification notification = null;
+        ChangeNotification notification = null;
 
         // save for notifications (below)
         PendingModifications dirty = null;
@@ -7861,7 +7910,8 @@ public class Mailbox {
                     ZimbraLog.mailbox.warn("error copying notifications; will notify with live set", e);
                 }
                 try {
-                    notification = new MailboxListener.ChangeNotification(getAccount(), dirty, change.octxt, mData.lastChangeId, getOperationTimestampMillis());
+                    notification = new ChangeNotification(
+                            getAccount(), dirty, change.octxt, mData.lastChangeId, change.timestamp);
                 } catch (ServiceException e) {
                     ZimbraLog.mailbox.warn("error getting account for the mailbox", e);
                 }
@@ -7894,7 +7944,6 @@ public class Mailbox {
         }
         try {
             // rolling back changes, so purge dirty items from the various caches
-            Map<Integer, MailItem> cache = change.itemCache;
             for (Map<?, ?> map : new Map[] {change.mDirty.created, change.mDirty.deleted, change.mDirty.modified}) {
                 if (map != null) {
                     for (Object obj : map.values()) {
@@ -7903,13 +7952,11 @@ public class Mailbox {
                         }
 
                         if (obj instanceof Tag || obj == MailItem.Type.TAG) {
-                            purge(MailItem.Type.TAG);
+                            purge(Type.TAG);
                         } else if (obj instanceof Folder || FOLDER_TYPES.contains(obj)) {
-                            purge(MailItem.Type.FOLDER);
-                        } else if (obj instanceof MailItem && cache != null) {
-                            cache.remove(new Integer(((MailItem) obj).getId()));
-                        } else if (obj instanceof Integer && cache != null) {
-                            cache.remove(obj);
+                            purge(Type.FOLDER);
+                        } else if (obj instanceof MailItem && change.itemCache != null) {
+                            change.itemCache.remove(((MailItem) obj).getId());
                         }
                     }
                 }

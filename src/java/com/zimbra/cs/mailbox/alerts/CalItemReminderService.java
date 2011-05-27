@@ -11,7 +11,8 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
 import com.zimbra.cs.mailbox.calendar.Alarm;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
-import com.zimbra.cs.session.PendingModifications;
+import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.session.PendingModifications.ModificationKey;
 
 import java.util.Date;
 import java.util.EnumSet;
@@ -28,7 +29,7 @@ public class CalItemReminderService extends MailboxListener {
     public void notify(ChangeNotification notification) {
         Account account = notification.mailboxAccount;
         if (notification.mods.created != null) {
-            for (Map.Entry<PendingModifications.ModificationKey, MailItem> entry : notification.mods.created.entrySet()) {
+            for (Map.Entry<ModificationKey, MailItem> entry : notification.mods.created.entrySet()) {
                 MailItem item = entry.getValue();
                 if (item instanceof CalendarItem) {
                     ZimbraLog.scheduler.debug("Handling creation of calendar item (id=%s,mailboxId=%s)", item.getId(), item.getMailboxId());
@@ -37,14 +38,14 @@ public class CalItemReminderService extends MailboxListener {
             }
         }
         if (notification.mods.modified != null) {
-            for (Map.Entry<PendingModifications.ModificationKey, PendingModifications.Change> entry : notification.mods.modified.entrySet()) {
-                PendingModifications.Change change = entry.getValue();
+            for (Map.Entry<ModificationKey, Change> entry : notification.mods.modified.entrySet()) {
+                Change change = entry.getValue();
                 if (change.what instanceof CalendarItem) {
                     CalendarItem calItem = (CalendarItem) change.what;
                     ZimbraLog.scheduler.debug("Handling modification of calendar item (id=%s,mailboxId=%s)", calItem.getId(), calItem.getMailboxId());
                     boolean calItemCanceled = false;
                     try {
-                        if ((change.why & PendingModifications.Change.MODIFIED_FOLDER) != 0 && calItem.inTrash()) {
+                        if ((change.why & Change.MODIFIED_FOLDER) != 0 && calItem.inTrash()) {
                             calItemCanceled = true;
                         }
                     } catch (ServiceException e) {
@@ -57,11 +58,13 @@ public class CalItemReminderService extends MailboxListener {
             }
         }
         if (notification.mods.deleted != null) {
-            for (Map.Entry<PendingModifications.ModificationKey, MailItem.Type> entry : notification.mods.deleted.entrySet()) {
-                if (entry.getValue() == MailItem.Type.APPOINTMENT || entry.getValue() == MailItem.Type.TASK) {
+            for (Map.Entry<ModificationKey, Change> entry : notification.mods.deleted.entrySet()) {
+                MailItem.Type type = (MailItem.Type) entry.getValue().what;
+                if (type == MailItem.Type.APPOINTMENT || type == MailItem.Type.TASK) {
                     Mailbox mbox = null;
                     try {
-                        mbox = MailboxManager.getInstance().getMailboxByAccount(account, MailboxManager.FetchMode.DO_NOT_AUTOCREATE);
+                        mbox = MailboxManager.getInstance().getMailboxByAccount(
+                                account, MailboxManager.FetchMode.DO_NOT_AUTOCREATE);
                     } catch (ServiceException e) {
                         ZimbraLog.scheduler.error("Error looking up the mailbox of account %s", account.getId(), e);
                     }

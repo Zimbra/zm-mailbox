@@ -263,8 +263,9 @@ public class CtagInfoCache {
             }
         }
         if (mods.deleted != null) {
-            for (Entry<ModificationKey, Type> entry : mods.deleted.entrySet()) {
-                if (entry.getValue() == MailItem.Type.FOLDER) {
+            for (Entry<ModificationKey, Change> entry : mods.deleted.entrySet()) {
+                Type type = (Type) entry.getValue().what;
+                if (type == MailItem.Type.FOLDER) {
                     // We only have item id.  Assume it's a folder id and issue a delete.
                     String acctId = entry.getKey().getAccountId();
                     if (acctId == null)

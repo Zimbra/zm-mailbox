@@ -192,8 +192,9 @@ public class FoldersTagsCache {
             }
         }
         if (mods.deleted != null) {
-            for (Map.Entry<ModificationKey, MailItem.Type> entry : mods.deleted.entrySet()) {
-                if (FOLDER_AND_TAG_TYPES.contains(entry.getValue())) {
+            for (Map.Entry<ModificationKey, Change> entry : mods.deleted.entrySet()) {
+                //noinspection RedundantCast
+                if (FOLDER_AND_TAG_TYPES.contains((MailItem.Type) entry.getValue().what)) {
                     String acctId = entry.getKey().getAccountId();
                     if (acctId == null)
                         continue;  // just to be safe

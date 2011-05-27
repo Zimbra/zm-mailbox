@@ -191,8 +191,10 @@ public class SoapSession extends Session {
             return false;
         }
 
-        private static final int BASIC_CONVERSATION_FLAGS = Change.MODIFIED_FLAGS | Change.MODIFIED_TAGS | Change.MODIFIED_UNREAD;
-        private static final int MODIFIED_CONVERSATION_FLAGS = BASIC_CONVERSATION_FLAGS | Change.MODIFIED_SIZE  | Change.MODIFIED_SENDERS;
+        private static final int BASIC_CONVERSATION_FLAGS =
+                Change.MODIFIED_FLAGS | Change.MODIFIED_TAGS | Change.MODIFIED_UNREAD;
+        private static final int MODIFIED_CONVERSATION_FLAGS =
+                BASIC_CONVERSATION_FLAGS | Change.MODIFIED_SIZE  | Change.MODIFIED_SENDERS;
 
         private PendingModifications filterNotifications(PendingModifications pms) throws ServiceException {
             // first, recalc visible folders if any folders got created or moved or had their ACL changed
@@ -211,7 +213,8 @@ public class SoapSession extends Session {
             }
             if (pms.created != null && !pms.created.isEmpty()) {
                 for (MailItem item : pms.created.values()) {
-                    if (item instanceof Conversation || visible.contains(item instanceof Folder ? item.getId() : item.getFolderId())) {
+                    if (item instanceof Conversation ||
+                            visible.contains(item instanceof Folder ? item.getId() : item.getFolderId())) {
                         filtered.recordCreated(item);
                     }
                 }
@@ -222,25 +225,33 @@ public class SoapSession extends Session {
                         MailItem item = (MailItem) chg.what;
                         if (skipChangeSerialization(getParentSession().getMailbox(), item)) {
                             if (ZimbraLog.session.isDebugEnabled()) {
-                                ZimbraLog.session.debug("skipping serialization of too-large remote conversation: " + new ItemId(item));
+                                ZimbraLog.session.debug("skipping serialization of too-large remote conversation: " +
+                                                                new ItemId(item));
                             }
                             continue;
                         }
-                        boolean isVisible = visible.contains(item instanceof Folder ? item.getId() : item.getFolderId());
+                        boolean isVisible =
+                                visible.contains(item instanceof Folder ? item.getId() : item.getFolderId());
                         boolean moved = (chg.why & Change.MODIFIED_FOLDER) != 0;
                         if (item instanceof Conversation) {
-                            filtered.recordModified(chg.op, item, chg.why | MODIFIED_CONVERSATION_FLAGS, chg.when);
+                            filtered.recordModified(chg.op, item, chg.why | MODIFIED_CONVERSATION_FLAGS, chg.when,
+                                                    (MailItem) chg.preModifyObj);
                         } else if (isVisible) {
-                            filtered.recordModified(chg.op, item, chg.why, chg.when);
-                            // if it's an unmoved visible message and it had a tag/flag/unread change, make sure the conv shows up in the modified or created list
+                            filtered.recordModified(chg.op, item, chg.why, chg.when, (MailItem) chg.preModifyObj);
+                            // if it's an unmoved visible message and it had a tag/flag/unread change,
+                            // make sure the conv shows up in the modified or created list
                             if (item instanceof Message && (moved || (chg.why & BASIC_CONVERSATION_FLAGS) != 0)) {
-                                forceConversationModification((Message) item, pms, filtered, moved ? MODIFIED_CONVERSATION_FLAGS : BASIC_CONVERSATION_FLAGS);
+                                forceConversationModification(
+                                        (Message) item, chg, pms, filtered,
+                                        moved ? MODIFIED_CONVERSATION_FLAGS : BASIC_CONVERSATION_FLAGS);
                             }
                         } else if (moved) {
-                            filtered.recordDeleted(item);
-                            // if it's a message and it's moved, make sure the conv shows up in the modified or created list
+                            filtered.recordDeleted((MailItem) chg.preModifyObj, chg.op, chg.when);
+                            // if it's a message and it's moved, make sure the conv shows up in the
+                            // modified or created list
                             if (item instanceof Message) {
-                                forceConversationModification((Message) item, pms, filtered, MODIFIED_CONVERSATION_FLAGS);
+                                forceConversationModification(
+                                        (Message) item, chg, pms, filtered, MODIFIED_CONVERSATION_FLAGS);
                             }
                         }
                     } else if (chg.what instanceof Mailbox) {
@@ -254,21 +265,26 @@ public class SoapSession extends Session {
             return filtered;
         }
 
-        private void forceConversationModification(Message msg, PendingModifications pms, PendingModifications filtered, int changeMask) {
+        private void forceConversationModification(
+                Message msg, Change chg, PendingModifications pms, PendingModifications filtered, int changeMask) {
             int convId = msg.getConversationId();
             Mailbox mbox = msg.getMailbox();
             ModificationKey mkey = new ModificationKey(mbox.getAccountId(), convId);
-            Change existing = null;
+            Change existing;
             if (pms.created != null && pms.created.containsKey(mkey)) {
-                ;
+                // do nothing
             } else if (pms.modified != null && (existing = pms.modified.get(mkey)) != null) {
-                filtered.recordModified(existing.op, (MailItem) existing.what, existing.why | changeMask, existing.when);
+                filtered.recordModified(existing.op, (MailItem) existing.what, existing.why | changeMask,
+                                        existing.when, (MailItem) existing.preModifyObj);
             } else {
                 try {
-                    filtered.recordModified(null, mbox.getConversationById(null, convId), changeMask, System.currentTimeMillis());
-                } catch (OutOfMemoryError e) {
-                    Zimbra.halt("out of memory", e);
-                } catch (Throwable t) { }
+                    Conversation conv = mbox.getConversationById(null, convId);
+                    // we don't know the preModify value here, so simply take the current conv snapshot
+                    MailItem itemSnapshot = conv.snapshotItem();
+                    filtered.recordModified(chg.op, conv, changeMask, chg.when, itemSnapshot);
+                } catch (ServiceException e) {
+                    ZimbraLog.session.warn("exception during forceConversationModification", e);
+                }
             }
         }
     }
@@ -803,7 +819,7 @@ public class SoapSession extends Session {
      *  <p>
      *  *All* changes are currently cached, regardless of the client's state/views.
      * @param pms       A set of new change notifications from our Mailbox.
-     * @param changeId  The sync-token change id of the change.
+     * @param changeId  The change ID of the change.
      * @param source    The (optional) Session which initiated these changes. */
     @Override
     public void notifyPendingChanges(PendingModifications pms, int changeId, Session source) {

@@ -275,7 +275,7 @@ public class Conversation extends MailItem {
 
         DbMailItem.setParent(msgs, conv);
         for (int i = 0; i < msgs.length; i++) {
-            mbox.markItemModified(msgs[i], Change.MODIFIED_PARENT);
+            mbox.markItemModified(msgs[i], Change.MODIFIED_PARENT, msgs[i].snapshotItem());
             msgs[i].mData.parentId = id;
             msgs[i].mData.metadataChanged(mbox);
         }

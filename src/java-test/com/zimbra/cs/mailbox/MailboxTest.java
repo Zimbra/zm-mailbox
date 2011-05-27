@@ -207,25 +207,56 @@ public final class MailboxTest {
 
         try {
             Folder f = mbox.createFolder(null, "foo", (byte) 0, MailItem.Type.MESSAGE);
+            Folder fParent = (Folder) f.getParent();
+
             ModificationKey fkey = new ModificationKey(f);
+            ModificationKey fParentKey = new ModificationKey(fParent);
+
             Assert.assertNull("no deletes after create", ml.pms.deleted);
+
             Assert.assertNotNull("creates aren't null", ml.pms.created);
             Assert.assertEquals("one created folder", 1, ml.pms.created.size());
-            Assert.assertNotNull("created folder has created entry", ml.pms.created.get(fkey));
+            Assert.assertNotNull("created folder has entry", ml.pms.created.get(fkey));
             Assert.assertEquals("created folder matches created entry", f.getId(), ml.pms.created.get(fkey).getId());
+
+            Assert.assertNotNull("modifications aren't null", ml.pms.modified);
+            Assert.assertEquals("one modified folder", 1, ml.pms.modified.size());
+            PendingModifications.Change pModification = ml.pms.modified.get(fParentKey);
+            Assert.assertNotNull("parent folder modified", pModification);
+            Assert.assertEquals("parent folder matches modified entry",
+                                fParent.getId(), ((Folder) pModification.what).getId());
+            Assert.assertNotNull("preModifyObj is not null", pModification.preModifyObj);
+            Assert.assertEquals("preModifyObj is a snapshot of parent folder",
+                                fParent.getId(), ((Folder) pModification.preModifyObj).getId());
 
             DeliveryOptions dopt = new DeliveryOptions().setFolderId(f.getId());
             Message m = mbox.addMessage(null, generateMessage("test subject"), dopt, null);
             ModificationKey mkey = new ModificationKey(m);
 
             mbox.delete(null, f.getId(), MailItem.Type.FOLDER);
+
             Assert.assertNull("no creates after delete", ml.pms.created);
+
             Assert.assertNotNull("deletes aren't null", ml.pms.deleted);
             Assert.assertEquals("one deleted folder, one deleted message, one deleted vconv", 3, ml.pms.deleted.size());
-            Assert.assertNotNull("deleted folder has deleted entry", ml.pms.deleted.get(fkey));
-            Assert.assertNotNull("deleted message has deleted entry", ml.pms.deleted.get(mkey));
-            Assert.assertEquals("deleted folder matches deleted entry", f.getType(), ml.pms.deleted.get(fkey));
-            Assert.assertEquals("deleted message matches deleted entry", m.getType(), ml.pms.deleted.get(mkey));
+            PendingModifications.Change fDeletion = ml.pms.deleted.get(fkey);
+            Assert.assertNotNull("deleted folder has entry", fDeletion);
+            Assert.assertTrue("deleted folder matches deleted entry",
+                              f.getType() == fDeletion.what && f.getId() == ((Folder) fDeletion.preModifyObj).getId());
+            PendingModifications.Change mDeletion = ml.pms.deleted.get(mkey);
+            Assert.assertNotNull("deleted message has entry", mDeletion);
+            Assert.assertTrue("deleted message matches deleted entry",
+                              m.getType() == mDeletion.what && m.getId() == ((Message) mDeletion.preModifyObj).getId());
+
+            Assert.assertNotNull("modifications aren't null", ml.pms.modified);
+            Assert.assertEquals("parent folder modified, mailbox size modified", 2, ml.pms.modified.size());
+            pModification = ml.pms.modified.get(fParentKey);
+            Assert.assertNotNull("parent folder modified", pModification);
+            Assert.assertEquals("parent folder matches modified entry",
+                                fParent.getId(), ((Folder) pModification.what).getId());
+            Assert.assertNotNull("preModifyObj is not null", pModification.preModifyObj);
+            Assert.assertEquals("preModifyObj is a snapshot of parent folder",
+                                fParent.getId(), ((Folder) pModification.preModifyObj).getId());
         } finally {
             MailboxListener.unregister(ml);
         }

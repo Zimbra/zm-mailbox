@@ -63,13 +63,17 @@ public final class PendingModifications {
         public static final int ALL_FIELDS         = ~0;
 
         public MailboxOperation op;
-        
         public Object what;
         public int    why;
         public long   when;
+        public Object preModifyObj;
 
-        Change(MailboxOperation op, Object thing, int reason, long timestamp) {
-            this.op = op;  what = thing;  why = reason;  when = timestamp;
+        Change(MailboxOperation op, Object thing, int reason, long timestamp, Object preModifyObj) {
+            this.op = op;
+            what = thing; // MailItem.Type for deletions
+            why = reason; // not applicable for deletions
+            when = timestamp;
+            this.preModifyObj = preModifyObj;
         }
 
         @Override
@@ -144,8 +148,7 @@ public final class PendingModifications {
 
     public LinkedHashMap<ModificationKey, MailItem> created;
     public Map<ModificationKey, Change> modified;
-    public Map<ModificationKey, MailItem.Type> deleted;
-    public Map<Integer, MailItem> preModifyItems;
+    public Map<ModificationKey, Change> deleted;
 
     public PendingModifications() { }
 
@@ -195,66 +198,79 @@ public final class PendingModifications {
         created.put(new ModificationKey(item), item);
     }
 
-    public void recordDeleted(String accountId, int id, MailItem.Type type) {
+    public void recordDeleted(
+            String accountId, int id, MailItem.Type type, MailboxOperation operation, long timestamp) {
         if (type != MailItem.Type.UNKNOWN) {
             changedTypes.add(type);
         }
         ModificationKey key = new ModificationKey(accountId, id);
-        delete(key, type);
+        delete(key, type, operation, timestamp, null);
     }
 
-    public void recordDeleted(String accountId, TypedIdList idlist) {
+    public void recordDeleted(String accountId, TypedIdList idlist, MailboxOperation operation, long timestamp) {
         changedTypes.addAll(idlist.types());
         for (Map.Entry<MailItem.Type, List<Integer>> entry : idlist) {
             MailItem.Type type = entry.getKey();
             for (Integer id : entry.getValue()) {
-                delete(new ModificationKey(accountId, id), type);
+                delete(new ModificationKey(accountId, id), type, operation, timestamp, null);
             }
         }
     }
 
-    public void recordDeleted(MailItem item) {
-        changedTypes.add(item.getType());
-        delete(new ModificationKey(item), item.getType());
+    public void recordDeleted(MailItem itemSnapshot, MailboxOperation operation, long timestamp) {
+        MailItem.Type type = itemSnapshot.getType();
+        changedTypes.add(type);
+        delete(new ModificationKey(itemSnapshot), type, operation, timestamp, itemSnapshot);
     }
 
-    public void recordDeleted(Map<ModificationKey, MailItem.Type> deletes) {
+    public void recordDeleted(Map<ModificationKey, Change> deletes) {
         if (deletes != null && !deletes.isEmpty()) {
-            for (Map.Entry<ModificationKey, MailItem.Type> entry : deletes.entrySet()) {
-                MailItem.Type type = entry.getValue();
-                changedTypes.add(type);
-                delete(entry.getKey(), type);
+            for (Map.Entry<ModificationKey, Change> entry : deletes.entrySet()) {
+                changedTypes.add((MailItem.Type) entry.getValue().what);
+                delete(entry.getKey(), entry.getValue());
             }
         }
     }
 
-    private void delete(ModificationKey key, MailItem.Type type) {
-        if (created != null && created.remove(key) != null)
-            return;
+    private void delete(
+            ModificationKey key, MailItem.Type type, MailboxOperation op, long timestamp, MailItem itemSnapshot) {
+        delete(key, new Change(op, type, Change.UNMODIFIED, timestamp, itemSnapshot));
+    }
 
+    private void delete(ModificationKey key, Change chg) {
+        if (created != null && created.remove(key) != null) {
+            return;
+        }
         if (modified != null) {
             modified.remove(key);
         }
         if (deleted == null) {
-            deleted = new HashMap<ModificationKey, MailItem.Type>();
+            deleted = new HashMap<ModificationKey, Change>();
         }
-        deleted.put(key, type);
+        Change existingChg = deleted.get(key);
+        if (existingChg == null) {
+            deleted.put(key, chg);
+        } else if (existingChg.preModifyObj == null) {
+            existingChg.preModifyObj = chg.preModifyObj;
+        }
     }
 
     public void recordModified(ModificationKey mkey, Change chg) {
-        recordModified(mkey, chg.op, chg.what, chg.why, chg.when);
+        recordModified(mkey, chg.op, chg.what, chg.why, chg.when, chg.preModifyObj);
     }
 
     public void recordModified(MailboxOperation op, Mailbox mbox, int reason, long timestamp) {
-        recordModified(new ModificationKey(mbox.getAccountId(), 0), op, mbox, reason, timestamp);
+        // Not recording preModify state of the mailbox for now
+        recordModified(new ModificationKey(mbox.getAccountId(), 0), op, mbox, reason, timestamp, null);
     }
 
-    public void recordModified(MailboxOperation op, MailItem item, int reason, long timestamp) {
+    public void recordModified(MailboxOperation op, MailItem item, int reason, long timestamp, MailItem preModifyItem) {
         changedTypes.add(item.getType());
-        recordModified(new ModificationKey(item), op, item, reason, timestamp);
+        recordModified(new ModificationKey(item), op, item, reason, timestamp, preModifyItem);
     }
 
-    private void recordModified(ModificationKey key, MailboxOperation op, Object item, int reason, long timestamp) {
+    private void recordModified(
+            ModificationKey key, MailboxOperation op, Object item, int reason, long timestamp, Object preModifyObj) {
         Change chg = null;
         if (created != null && created.containsKey(key)) {
             if (item instanceof MailItem) {
@@ -270,29 +286,22 @@ public final class PendingModifications {
             if (chg != null) {
                 chg.what = item;
                 chg.why |= reason;
+                if (chg.preModifyObj == null) {
+                    chg.preModifyObj = preModifyObj;
+                }
             }
         }
         if (chg == null) {
-            chg = new Change(op, item, reason, timestamp);
+            chg = new Change(op, item, reason, timestamp, preModifyObj);
         }
         modified.put(key, chg);
     }
 
-    public void addPreModifyItem(MailItem item) {
-        if (preModifyItems == null) {
-            preModifyItems = new HashMap<Integer,MailItem>();        
-        }
-        if (!preModifyItems.containsKey(item.getId())) {
-            preModifyItems.put(item.getId(), item);
-        }
-    }
-    
     PendingModifications add(PendingModifications other) {
         changedTypes.addAll(other.changedTypes);
 
         if (other.deleted != null) {
-            // note that deleted MailItems are just added as IDs for concision
-            for (Map.Entry<ModificationKey, MailItem.Type> entry : other.deleted.entrySet()) {
+            for (Map.Entry<ModificationKey, Change> entry : other.deleted.entrySet()) {
                 delete(entry.getKey(), entry.getValue());
             }
         }
@@ -306,18 +315,13 @@ public final class PendingModifications {
         if (other.modified != null) {
             for (Change chg : other.modified.values()) {
                 if (chg.what instanceof MailItem) {
-                    recordModified(chg.op, (MailItem) chg.what, chg.why, chg.when);
+                    recordModified(chg.op, (MailItem) chg.what, chg.why, chg.when, (MailItem) chg.preModifyObj);
                 } else if (chg.what instanceof Mailbox) {
                     recordModified(chg.op, (Mailbox) chg.what, chg.why, chg.when);
                 }
             }
         }
 
-        if (other.preModifyItems != null) {
-            for (MailItem item : other.preModifyItems.values()) {
-                addPreModifyItem(item);
-            }
-        }
         return this;
     }
 
@@ -325,7 +329,6 @@ public final class PendingModifications {
         created = null;
         deleted = null;
         modified = null;
-        preModifyItems = null;
         changedTypes.clear();
     }
 }
