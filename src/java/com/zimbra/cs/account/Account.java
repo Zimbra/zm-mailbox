@@ -37,6 +37,11 @@ public class Account extends ZAttrAccount implements GroupedEntry {
     public Account(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults, Provisioning prov) {
         super(name, id, attrs, defaults, prov);
     }
+    
+    @Override
+    public EntryType getEntryType() {
+        return EntryType.ACCOUNT;
+    }
 
     public void deleteAccount() throws ServiceException {
         getProvisioning().deleteAccount(this.getId());

@@ -21,6 +21,7 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.ldap.ILdapContext;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapServerType;
+import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
@@ -53,7 +54,7 @@ public abstract class LdapHelper {
     public abstract void searchLdap(ILdapContext ldapContext, SearchLdapOptions searchOptions) 
     throws ServiceException;
     
-    public abstract void deleteEntry(String dn) throws ServiceException;
+    public abstract void deleteEntry(String dn, LdapUsage ldapUsage) throws ServiceException;
     
     /**
      * Modifies the specified entry.  <code>attrs</code> is a <code>Map</code> consisting of
@@ -80,7 +81,8 @@ public abstract class LdapHelper {
      * @param entry
      * @throws ServiceException
      */
-    public abstract void modifyEntry(String dn, Map<String, ? extends Object> attrs, Entry entry) 
+    public abstract void modifyEntry(String dn, Map<String, ? extends Object> attrs, 
+            Entry entry, LdapUsage ldapUsage) 
     throws ServiceException;
     
     
@@ -126,10 +128,12 @@ public abstract class LdapHelper {
      * @throws LdapEntryNotFoundException  if the entry is not found
      * @throws ServiceException            all other errors
      */
-    public abstract ZAttributes getAttributes(String dn, ZLdapContext initZlc, LdapServerType ldapServerType) 
+    public abstract ZAttributes getAttributes(String dn, ZLdapContext initZlc, 
+            LdapServerType ldapServerType) 
     throws LdapEntryNotFoundException, ServiceException;
     
-    public ZAttributes getAttributes(String dn) throws LdapEntryNotFoundException, ServiceException {
+    public ZAttributes getAttributes(String dn) 
+    throws LdapEntryNotFoundException, ServiceException {
         return getAttributes(dn, null, LdapServerType.REPLICA);
     }
     

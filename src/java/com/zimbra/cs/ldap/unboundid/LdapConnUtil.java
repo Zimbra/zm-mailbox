@@ -20,7 +20,6 @@ import com.unboundid.ldap.sdk.LDAPConnectionOptions;
 import com.zimbra.cs.ldap.LdapServerConfig;
 import com.zimbra.cs.ldap.LdapConnType;
 import com.zimbra.cs.ldap.LdapException;
-import com.zimbra.cs.ldap.LdapTODO.TODO;
 
 public class LdapConnUtil {
 

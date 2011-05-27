@@ -39,6 +39,7 @@ import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.prov.ldap.LdapProv;
+import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 
@@ -353,7 +354,8 @@ public class TestProvAlias extends TestLdap {
             attributes.put(Provisioning.A_mail, aliasName);
             attributes.put(Provisioning.A_zimbraMailAlias, aliasName);
             LdapEntry ldapAccount = (LdapEntry)otherAcct;
-            ((LdapProv) mProv).getHelper().modifyEntry(ldapAccount.getDN(), attributes, (Entry)ldapAccount);
+            ((LdapProv) mProv).getHelper().modifyEntry(ldapAccount.getDN(), attributes, 
+                    (Entry)ldapAccount, LdapUsage.UNITTEST);
             
             // make the attrs did get hacked in
             mProv.reload(otherAcct);
@@ -449,7 +451,8 @@ public class TestProvAlias extends TestLdap {
             List<NamedEntry> aliases = searchAliasesInDomain(domain);
             assertEquals(aliases.size(), 1);
             LdapEntry ldapAlias = (LdapEntry)aliases.get(0);
-            ((LdapProv) mProv).getHelper().modifyEntry(ldapAlias.getDN(), attributes, (Entry)ldapAlias);
+            ((LdapProv) mProv).getHelper().modifyEntry(ldapAlias.getDN(), attributes, 
+                    (Entry)ldapAlias, LdapUsage.UNITTEST);
         }
         
         // remove the alias
@@ -527,7 +530,7 @@ public class TestProvAlias extends TestLdap {
             assertEquals(aliases.size(), 1);
             LdapEntry ldapAlias = (LdapEntry)aliases.get(0);
             String aliasDn = ldapAlias.getDN();
-            ((LdapProv) mProv).getHelper().deleteEntry(aliasDn);
+            ((LdapProv) mProv).getHelper().deleteEntry(aliasDn, LdapUsage.UNITTEST);
         }
         
         // remove the alias
@@ -673,7 +676,8 @@ public class TestProvAlias extends TestLdap {
             List<NamedEntry> aliases = searchAliasesInDomain(domain);
             assertEquals(aliases.size(), 1);
             LdapEntry ldapAlias = (LdapEntry)aliases.get(0);
-            ((LdapProv) mProv).getHelper().modifyEntry(ldapAlias.getDN(), attributes, (Entry)ldapAlias);
+            ((LdapProv) mProv).getHelper().modifyEntry(ldapAlias.getDN(), attributes, 
+                    (Entry)ldapAlias, LdapUsage.UNITTEST);
         }
         
         Account nonExistingAcct = null;
@@ -748,7 +752,7 @@ public class TestProvAlias extends TestLdap {
             assertEquals(aliases.size(), 1);
             LdapEntry ldapAlias = (LdapEntry)aliases.get(0);
             String aliasDn = ldapAlias.getDN();
-            ((LdapProv) mProv).getHelper().deleteEntry(aliasDn);
+            ((LdapProv) mProv).getHelper().deleteEntry(aliasDn, LdapUsage.UNITTEST);
         }
         
         Account nonExistingAcct = null;
@@ -882,7 +886,7 @@ public class TestProvAlias extends TestLdap {
         // now, hack it to delete the orig account entry
         {
             LdapEntry ldapAccount = (LdapEntry)acct;
-            ((LdapProv) mProv).getHelper().deleteEntry(ldapAccount.getDN());
+            ((LdapProv) mProv).getHelper().deleteEntry(ldapAccount.getDN(), LdapUsage.UNITTEST);
         }
         
         // now , try to add the alias to another account

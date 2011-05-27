@@ -32,7 +32,7 @@ import java.util.Map;
  * AUTO-GENERATED. DO NOT EDIT.
  *
  */
-public class ZAttrDomain extends NamedEntry {
+public abstract class ZAttrDomain extends NamedEntry {
 
     public ZAttrDomain(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults, Provisioning prov) {
         super(name, id, attrs, defaults, prov);
@@ -41,7 +41,7 @@ public class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110524-1812 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110526-1839 */
 
     /**
      * RFC2256: descriptive information

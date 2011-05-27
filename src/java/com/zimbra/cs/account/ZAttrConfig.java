@@ -33,7 +33,7 @@ import java.util.Map;
  * AUTO-GENERATED. DO NOT EDIT.
  *
  */
-public class ZAttrConfig extends Entry {
+public abstract class ZAttrConfig extends Entry {
 
     public ZAttrConfig(Map<String, Object> attrs, Provisioning provisioning) {
         super(attrs, null, provisioning);
@@ -41,7 +41,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110524-1812 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110526-1839 */
 
     /**
      * RFC2256: descriptive information

@@ -34,6 +34,11 @@ public class XMPPComponent extends NamedEntry implements Comparable {
         super(name, id, attrs, null, prov);
     }
     
+    @Override
+    public EntryType getEntryType() {
+        return EntryType.XMPPCOMPONENT;
+    }
+    
     public String getComponentCategory() {
         return getAttr(Provisioning.A_zimbraXMPPComponentCategory);
     }

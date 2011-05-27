@@ -32,7 +32,7 @@ import java.util.Map;
  * AUTO-GENERATED. DO NOT EDIT.
  *
  */
-public class ZAttrServer extends NamedEntry {
+public abstract class ZAttrServer extends NamedEntry {
 
     public ZAttrServer(String name, String id, Map<String,Object> attrs, Map<String,Object> defaults, Provisioning prov) {
         super(name, id, attrs, defaults, prov);
@@ -40,7 +40,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110524-1812 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110526-1839 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by

@@ -98,6 +98,11 @@ public class DataSource extends AccountProperty {
 
         initKnownService();
     }
+    
+    @Override
+    public EntryType getEntryType() {
+        return EntryType.DATASOURCE;
+    }
 
     private void initKnownService() {
         final String serviceName;

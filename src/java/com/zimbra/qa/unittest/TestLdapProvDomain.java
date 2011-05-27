@@ -37,6 +37,7 @@ import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapConstants;
+import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZSearchScope;
@@ -209,7 +210,7 @@ public class TestLdapProvDomain extends TestLdap {
         
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext();
+            zlc = LdapClient.getContext(LdapUsage.UNITTEST);
             ldapHelper.searchLdap(zlc, searchOpts);
         } finally {
             LdapClient.closeContext(zlc);

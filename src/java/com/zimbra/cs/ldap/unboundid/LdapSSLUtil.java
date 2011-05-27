@@ -15,19 +15,14 @@
 package com.zimbra.cs.ldap.unboundid;
 
 import java.security.GeneralSecurityException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 
 import com.unboundid.util.ssl.SSLUtil;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.net.SocketFactories;
 import com.zimbra.common.net.TrustManagers;
-import com.zimbra.cs.ldap.LdapConnType;
 import com.zimbra.cs.ldap.LdapException;
 
 public class LdapSSLUtil {

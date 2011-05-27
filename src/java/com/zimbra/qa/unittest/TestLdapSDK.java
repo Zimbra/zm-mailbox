@@ -26,9 +26,10 @@ import com.unboundid.ldap.sdk.LDAPConnectionPoolStatistics;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.ldap.LdapClient;
+import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.LdapTODO.*;
-import com.zimbra.cs.ldap.unboundid.ConnectionPool;
+import com.zimbra.cs.ldap.unboundid.LdapConnectionPool;
 import com.zimbra.cs.ldap.unboundid.UBIDLdapContext;
 
 
@@ -172,7 +173,7 @@ public class TestLdapSDK extends TestLdap {
     }
     
     private UBIDLdapContext getContext() throws Exception {
-        return (UBIDLdapContext) LdapClient.getContext();
+        return (UBIDLdapContext) LdapClient.getContext(LdapUsage.UNITTEST);
     }
     
     private void closeContext(UBIDLdapContext zlc) {
@@ -248,8 +249,8 @@ public class TestLdapSDK extends TestLdap {
         int INIT_POOL_SIZE = LC.ldap_connect_pool_initsize.intValue();
         int MAX_POOL_SIZE = LC.ldap_connect_pool_maxsize.intValue();
         
-        LDAPConnectionPool connPool = ConnectionPool.getConnPoolByName(
-                ConnectionPool.CP_ZIMBRA_REPLICA);
+        LDAPConnectionPool connPool = LdapConnectionPool.getConnPoolByName(
+                LdapConnectionPool.CP_ZIMBRA_REPLICA);
         
         assertEquals(INIT_POOL_SIZE, connPool.getCurrentAvailableConnections());
         assertEquals(MAX_POOL_SIZE, connPool.getMaximumAvailableConnections());
@@ -258,7 +259,7 @@ public class TestLdapSDK extends TestLdap {
         String poolName = connPool.getConnectionPoolName();
         closeContext(zlc);
         
-        assertEquals(ConnectionPool.CP_ZIMBRA_REPLICA, poolName);
+        assertEquals(LdapConnectionPool.CP_ZIMBRA_REPLICA, poolName);
         
         //
         // available connections: 
@@ -302,8 +303,8 @@ public class TestLdapSDK extends TestLdap {
     @Ignore
     @TODO  // doesn't seem to work
     public void testConnPoolIdleTimeout() throws Exception {
-        LDAPConnectionPool connPool = ConnectionPool.getConnPoolByName(
-                ConnectionPool.CP_ZIMBRA_REPLICA);
+        LDAPConnectionPool connPool = LdapConnectionPool.getConnPoolByName(
+                LdapConnectionPool.CP_ZIMBRA_REPLICA);
         
         int numCurAvailConns = connPool.getCurrentAvailableConnections();
         long curMaxConnAgeMillis = connPool.getMaxConnectionAgeMillis();

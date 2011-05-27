@@ -197,6 +197,31 @@ public abstract class LdapServerConfig {
                     bindDn, bindPassword, binaryAttrs,  note);
         }
         
+        public static class ConnPoolKey {
+            private static final char DELIMITER = ':';
+            
+            public static String getConnPoolKey(ExternalLdapConfig config) {
+                StringBuilder key = new StringBuilder();
+                key.append(config.ldapURL + DELIMITER);
+                key.append(config.connType.toString() + DELIMITER);
+                key.append((config.authMech == null ? "" : config.authMech) + DELIMITER);
+                key.append((config.adminBindDN == null ? "" : config.adminBindDN) + DELIMITER);
+                key.append((config.adminBindPassword == null ? "" :  config.adminBindPassword));
+                
+                // do not take into account common settings set in LdapConfig
+                // they should be all the same.  
+                
+                return key.toString();
+            }
+            
+            // given a key in the format of the String returned by getConnPoolKey,
+            // return a display name for loggin purpose - basically just hide the password
+            public static String getDisplayName(String key) {
+                int offset = key.lastIndexOf(DELIMITER);
+                return key.substring(0, offset);
+            }
+        }
+        
         public String getAuthMech() {
             return authMech;
         }
@@ -211,20 +236,6 @@ public abstract class LdapServerConfig {
         
         public String getDerefAliasPolicy() {
             return derefAliasPolicy;
-        }
-        
-        public String getConnPoolKey() {
-            StringBuilder key = new StringBuilder();
-            key.append(ldapURL + ":");
-            key.append(connType.toString() + ":");
-            key.append((authMech == null ? "" : authMech) + ":");
-            key.append((adminBindDN == null ? "" : adminBindDN) + ":");
-            key.append((adminBindPassword == null ? "" :  adminBindPassword) + ":");
-            
-            // do not take into account common settings set in LdapConfig
-            // they should be all the same.  
-            
-            return key.toString();
         }
 
         @Override

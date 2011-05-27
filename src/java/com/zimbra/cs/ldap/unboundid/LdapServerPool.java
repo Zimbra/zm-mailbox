@@ -27,8 +27,6 @@ import com.unboundid.ldap.sdk.SingleServerSet;
 
 import com.zimbra.cs.ldap.LdapServerConfig;
 import com.zimbra.cs.ldap.LdapConnType;
-import com.zimbra.cs.ldap.LdapTODO.*;
-import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.LdapException;
 
 /**
@@ -42,12 +40,15 @@ import com.zimbra.cs.ldap.LdapException;
  */
 public class LdapServerPool {
     List<LDAPURL> urls;
+    String rawUrls; // for logging, space separated URLs
     LdapConnType connType;
     LDAPConnectionOptions connOpts;
     
     ServerSet serverSet;
 
     public LdapServerPool(LdapServerConfig config) throws LdapException {
+        this.rawUrls = config.getLdapURL();
+        
         this.urls = new ArrayList<LDAPURL>();
         
         String[] ldapUrls = config.getLdapURL().split(" ");
@@ -71,6 +72,11 @@ public class LdapServerPool {
     
     public List<LDAPURL> getUrls() {
         return urls;
+    }
+    
+    // for logging only
+    public String getRawUrls() {
+        return rawUrls;
     }
     
     public LdapConnType getConnectionType() {

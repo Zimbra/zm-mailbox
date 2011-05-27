@@ -24,11 +24,8 @@ import java.util.Set;
 import com.unboundid.ldap.sdk.schema.ObjectClassDefinition;
 import com.unboundid.ldap.sdk.schema.Schema;
 
-import com.zimbra.common.util.Pair;
-import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.ZLdapSchema;
-import com.zimbra.cs.zimlet.Version;
 
 public class UBIDLdapSchema extends ZLdapSchema {
 

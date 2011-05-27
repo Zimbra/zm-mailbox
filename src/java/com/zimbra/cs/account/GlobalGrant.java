@@ -23,6 +23,12 @@ public class GlobalGrant extends Entry {
         resetData();
     }
     
+    @Override
+    public EntryType getEntryType() {
+        return EntryType.GLOBALGRANT;
+    }
+    
+    @Override
     public String getLabel() {
         return "globalacltarget";
     }

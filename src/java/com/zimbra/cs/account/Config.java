@@ -40,6 +40,12 @@ public class Config extends ZAttrConfig {
         resetData();
     }
     
+    @Override
+    public EntryType getEntryType() {
+        return EntryType.GLOBALCONFIG;
+    }
+    
+    @Override
     public String getLabel() {
         return "globalconfig";
     }

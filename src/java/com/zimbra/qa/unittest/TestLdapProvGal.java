@@ -75,6 +75,9 @@ public class TestLdapProvGal extends TestLdap {
         attrs.put(Provisioning.A_zimbraGalLdapURL, "ldap://" + LC.zimbra_server_hostname.value() + ":389");
         attrs.put(Provisioning.A_zimbraGalLdapFilter, "(mail=*%s*)");
         
+        attrs.put(Provisioning.A_zimbraGalLdapBindDn, "cn=config");
+        attrs.put(Provisioning.A_zimbraGalLdapBindPassword, "zimbra");
+        
         String query = "checkGalConfig";
         int limit = 0;
         GalOp galOp = GalOp.search;

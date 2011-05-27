@@ -125,23 +125,25 @@ public abstract class LdapClient {
         getInstance().alwaysUseMasterImpl();
     }
     
-    public static ZLdapContext getContext() throws ServiceException {
-        return getInstance().getContextImpl();
+    public static ZLdapContext getContext(LdapUsage usage) throws ServiceException {
+        return getContext(LdapServerType.REPLICA, usage);
     }
     
-    public static ZLdapContext getContext(LdapServerType serverType) 
+    public static ZLdapContext getContext(LdapServerType serverType, LdapUsage usage) 
     throws ServiceException {
-        return getInstance().getContextImpl(serverType);
+        return getInstance().getContextImpl(serverType, usage);
     }
     
-    public static ZLdapContext getContext(LdapServerType serverType, boolean useConnPool) 
+    public static ZLdapContext getContext(LdapServerType serverType, boolean useConnPool,
+            LdapUsage usage) 
     throws ServiceException {
-        return getInstance().getContextImpl(serverType, useConnPool);
+        return getInstance().getContextImpl(serverType, useConnPool, usage);
     }
     
-    public static ZLdapContext getExternalContext(ExternalLdapConfig ldapConfig) 
+    public static ZLdapContext getExternalContext(ExternalLdapConfig ldapConfig,
+            LdapUsage usage) 
     throws ServiceException {
-        return getInstance().getExternalContextImpl(ldapConfig);
+        return getInstance().getExternalContextImpl(ldapConfig, usage);
     }
     
     public static void closeContext(ZLdapContext lctxt) {
@@ -196,17 +198,15 @@ public abstract class LdapClient {
     
     protected abstract void alwaysUseMasterImpl();
     
-    protected ZLdapContext getContextImpl() throws ServiceException {
-        return getContext(LdapServerType.REPLICA);
-    }
-    
-    protected abstract ZLdapContext getContextImpl(LdapServerType serverType) 
+    protected abstract ZLdapContext getContextImpl(LdapServerType serverType, LdapUsage usage) 
     throws ServiceException;
     
-    protected abstract ZLdapContext getContextImpl(LdapServerType serverType, boolean useConnPool) 
+    protected abstract ZLdapContext getContextImpl(LdapServerType serverType, 
+            boolean useConnPool, LdapUsage usage) 
     throws ServiceException;
     
-    protected abstract ZLdapContext getExternalContextImpl(ExternalLdapConfig ldapConfig) 
+    protected abstract ZLdapContext getExternalContextImpl(ExternalLdapConfig ldapConfig,
+            LdapUsage usage) 
     throws ServiceException;
     
     protected abstract ZMutableEntry createMutableEntryImpl();

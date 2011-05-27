@@ -18,6 +18,11 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.ldap.LdapException.LdapEntryAlreadyExistException;
 
 public abstract class ZLdapContext extends ZLdapElement implements ILdapContext {
+    protected LdapUsage usage;
+    
+    protected ZLdapContext(LdapUsage usage) {
+        this.usage = usage;
+    }
 
     public abstract void closeContext();
     

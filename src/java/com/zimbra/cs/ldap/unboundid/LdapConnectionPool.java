@@ -14,40 +14,34 @@
  */
 package com.zimbra.cs.ldap.unboundid;
 
-import java.security.GeneralSecurityException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
 
 import com.unboundid.ldap.sdk.BindRequest;
 import com.unboundid.ldap.sdk.LDAPConnection;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
-import com.unboundid.ldap.sdk.LDAPConnectionPoolStatistics;
 import com.unboundid.ldap.sdk.LDAPException;
 import com.unboundid.ldap.sdk.PostConnectProcessor;
 import com.unboundid.ldap.sdk.ServerSet;
 import com.unboundid.ldap.sdk.SimpleBindRequest;
 import com.unboundid.ldap.sdk.StartTLSPostConnectProcessor;
-import com.unboundid.util.ssl.SSLUtil;
-import com.unboundid.util.ssl.TrustAllTrustManager;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.ldap.LdapServerConfig;
 import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
 import com.zimbra.cs.ldap.LdapConnType;
 import com.zimbra.cs.ldap.LdapException;
-import com.zimbra.cs.ldap.LdapTODO;
 import com.zimbra.cs.ldap.LdapTODO.TODO;
 
-public class ConnectionPool {
+public class LdapConnectionPool {
     
     //
-    // Connection pool names
+    // Known connection pool names
     //
     public static final String CP_ZIMBRA_REPLICA = "ZimbraReplica";
     public static final String CP_ZIMBRA_MASTER = "ZimbraMaster";
@@ -113,14 +107,14 @@ public class ConnectionPool {
         LDAPConnectionPool pool = connPools.get(connPoolName);
         if (pool == null) {
             // the newly created pool will be automatically put into connPools
-            pool = ConnectionPool.createConnectionPool(connPoolName, config);
+            pool = LdapConnectionPool.createConnectionPool(connPoolName, config);
         }
         return pool;
     }
     
     static LDAPConnectionPool getConnPoolByConfig(ExternalLdapConfig config) 
     throws LdapException {
-        String connPoolName = config.getConnPoolKey();
+        String connPoolName = ExternalLdapConfig.ConnPoolKey.getConnPoolKey(config);
         return getConnPool(connPoolName, config);
     }
     
@@ -147,21 +141,31 @@ public class ConnectionPool {
     }
     
     
-    
+    //
+    // static wrappers for DebugConnPool
+    //
     static void debugCheckOut(LDAPConnectionPool connPool, LDAPConnection conn) {
+        if (!DebugConnPool.enabled()) {
+            return;
+        }
         DebugConnPool.checkOut(connPool, conn);
     }
     
     static void debugCheckIn(LDAPConnectionPool connPool, LDAPConnection conn) {
-        ConnectionPool.DebugConnPool.checkIn(connPool, conn);
+        if (!DebugConnPool.enabled()) {
+            return;
+        }
+        LdapConnectionPool.DebugConnPool.checkIn(connPool, conn);
     }
     
     @TODO  // have a way to trigger dumping the DebugConnPool
     public static void dump() {
-        ConnectionPool.DebugConnPool.dump();
+        if (!DebugConnPool.enabled()) {
+            return;
+        }
+        LdapConnectionPool.DebugConnPool.dump();
     }
     
-    @TODO  //  integrate with log4j debug
     private static class DebugConnPool {
         
         private static final Map<String /* connection pool name */, DebugConnPool> 
@@ -169,6 +173,11 @@ public class ConnectionPool {
         
         private List<CheckedOutInfo> checkedOutConns = new ArrayList<CheckedOutInfo>();
        
+        static boolean enabled() {
+            return LC.ldap_connect_pool_debug.booleanValue();
+        }
+        
+        @TODO // where to output to?
         private static void output(String msg) {
             System.out.println(msg);
         }

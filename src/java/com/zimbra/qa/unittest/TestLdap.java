@@ -31,12 +31,14 @@ import org.junit.runner.JUnitCore;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.DateUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.util.Log;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapServerType;
+import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
@@ -173,7 +175,7 @@ public class TestLdap {
         ZLdapContext zlc = null;
         
         try {
-            zlc = LdapClient.getContext();
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.UNITTEST);
             deleteEntireBranch(zlc, dn);
         } finally {
             LdapClient.closeContext(zlc);
@@ -185,7 +187,7 @@ public class TestLdap {
         
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext();
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.UNITTEST);
             List<String> childrenDNs = getDirectChildrenDNs(zlc, dn);
             for (String childDN : childrenDNs) {
                 if (ignoreDNs == null || !ignoreDNs.contains(childDN)) {
@@ -215,7 +217,7 @@ public class TestLdap {
     private static void deleteEntry(String dn) throws Exception {
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.UNITTEST);
             zlc.deleteEntry(dn);
         } finally {
             LdapClient.closeContext(zlc);
@@ -439,6 +441,9 @@ public class TestLdap {
     // invoked once per JVM
     private static void initTest(TestConfig testConfig) throws Exception {
         CliUtil.toolSetup();
+        // ZimbraLog.ldap.setLevel(Log.Level.debug);
+        ZimbraLog.soap.setLevel(Log.Level.trace);
+        
         RightManager.getInstance(true);
         TestConfig.useConfig(testConfig);
         cleanupAll();

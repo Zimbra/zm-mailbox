@@ -34,6 +34,11 @@ public class Server extends ZAttrServer {
     public Server(String name, String id, Map<String,Object> attrs, Map<String,Object> defaults, Provisioning prov) {
         super(name, id, attrs, defaults, prov);
     }
+    
+    @Override
+    public EntryType getEntryType() {
+        return EntryType.SERVER;
+    }
 
     public void deleteServer(String zimbraId) throws ServiceException {
         getProvisioning().deleteServer(getId());

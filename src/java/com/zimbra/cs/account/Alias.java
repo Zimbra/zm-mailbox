@@ -21,10 +21,8 @@
  */
 package com.zimbra.cs.account;
 
-import java.util.List;
 import java.util.Map;
 
-import com.zimbra.cs.account.Provisioning.SearchOptions;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -42,6 +40,11 @@ public class Alias extends MailTarget {
 
     public Alias(String name, String id, Map<String, Object> attrs, Provisioning prov) {
         super(name, id, attrs, null, prov);
+    }
+    
+    @Override
+    public EntryType getEntryType() {
+        return EntryType.ALIAS;
     }
     
     public NamedEntry getTarget(Provisioning prov) {

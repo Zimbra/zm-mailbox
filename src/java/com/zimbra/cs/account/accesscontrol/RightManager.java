@@ -126,10 +126,8 @@ public class RightManager {
             return mInstance;
         }
         
-        CoreRightDefFiles.init(unittest);
-        
         String dir = LC.zimbra_rights_directory.value();
-        mInstance = new RightManager(dir);
+        mInstance = new RightManager(dir, unittest);
         
         try {
             Right.init(mInstance);
@@ -140,7 +138,9 @@ public class RightManager {
         return mInstance;
     }
     
-    private RightManager(String dir) throws ServiceException {
+    private RightManager(String dir, boolean unittest) throws ServiceException {
+        CoreRightDefFiles.init(unittest);
+        
         File fdir = new File(dir);
         if (!fdir.exists()) {
             throw ServiceException.FAILURE("rights directory does not exists: " + dir, null);
@@ -619,7 +619,7 @@ public class RightManager {
         private static void check() throws ServiceException  {
             ZimbraLog.toolSetupLog4j("DEBUG", "/Users/pshao/sandbox/conf/log4j.properties.phoebe");
             
-            RightManager rm = new RightManager("/Users/pshao/p4/main/ZimbraServer/conf/rights");
+            RightManager rm = new RightManager("/Users/pshao/p4/main/ZimbraServer/conf/rights", false);
             System.out.println(rm.dump(null));
         }
         
@@ -722,7 +722,7 @@ public class RightManager {
             if (!"genDomainAdminSetAttrsRights".equals(action)) {
                 if (!cl.hasOption('i')) usage("no input dir specified");
                 inputDir = cl.getOptionValue('i');
-                rm = new RightManager(inputDir);
+                rm = new RightManager(inputDir, false);
             }
              
             if ("genRightConsts".equals(action))

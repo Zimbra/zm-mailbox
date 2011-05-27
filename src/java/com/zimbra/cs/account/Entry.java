@@ -37,6 +37,24 @@ import java.util.regex.Pattern;
 import com.zimbra.cs.account.AttributeManager.IDNType;
 
 public abstract class Entry implements ToZJSONObject {
+    
+    public static enum EntryType {
+        ACCOUNT,
+        ALIAS,
+        CALRESOURCE,
+        COS,
+        DATASOURCE,
+        DISTRIBUTIONLIST,
+        DOMAIN,
+        GLOBALCONFIG,
+        GLOBALGRANT,
+        IDENTITY,
+        MIMETYPE,
+        SERVER,
+        SIGNATURE,
+        XMPPCOMPONENT,
+        ZIMLET;
+    }
 
     private Map<String,Object> mAttrs;
     private Map<String,Object> mDefaults;
@@ -50,6 +68,14 @@ public abstract class Entry implements ToZJSONObject {
     
     protected static String[] sEmptyMulti = new String[0];
     protected static List<byte[]> sEmptyListMulti = new ArrayList<byte[]>();
+    
+    public abstract EntryType getEntryType();
+    
+    /*
+    public EntryType getEntryType() {
+        throw new UnsupportedOperationException();
+    }
+    */
     
     protected Entry(Map<String,Object> attrs, Map<String,Object> defaults, 
             Provisioning provisioning) {

@@ -19,7 +19,6 @@ import java.io.IOException;
 import com.unboundid.ldap.sdk.LDAPException;
 import com.unboundid.ldap.sdk.ResultCode;
 import com.zimbra.cs.ldap.LdapException;
-import com.zimbra.cs.ldap.LdapTODO;
 
 class UBIDLdapException {
     

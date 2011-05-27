@@ -25,6 +25,11 @@ public class CalendarResource extends ZAttrCalendarResource {
     public CalendarResource(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults, Provisioning prov) {
         super(name, id, attrs, defaults, prov);
     }
+    
+    @Override
+    public EntryType getEntryType() {
+        return EntryType.CALRESOURCE;
+    }
 
     public String getResourceType() {
         return getAttr(Provisioning.A_zimbraCalResType, "Location");

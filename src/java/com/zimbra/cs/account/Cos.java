@@ -38,6 +38,11 @@ public class Cos extends ZAttrCos {
         super(name, id, attrs, prov);
         resetData();
     }
+    
+    @Override
+    public EntryType getEntryType() {
+        return EntryType.COS;
+    }
 
     public void modify(Map<String, Object> attrs) throws ServiceException {
         getProvisioning().modifyAttrs(this, attrs);

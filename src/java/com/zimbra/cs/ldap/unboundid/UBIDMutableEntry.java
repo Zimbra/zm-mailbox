@@ -23,7 +23,6 @@ import com.unboundid.ldap.sdk.Attribute;
 import com.unboundid.ldap.sdk.Entry;
 
 import com.zimbra.cs.account.AttributeManager;
-import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZMutableEntry;

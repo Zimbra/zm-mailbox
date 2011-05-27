@@ -30,6 +30,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapConstants;
+import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.ZLdapFilter;
@@ -101,7 +102,7 @@ public class TestLdapZLdapContext extends TestLdap {
         
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext();
+            zlc = LdapClient.getContext(LdapUsage.UNITTEST);
             zlc.searchPaged(searchOptions);
         } catch (LdapSizeLimitExceededException e) {
             caughtException = true;
@@ -130,7 +131,7 @@ public class TestLdapZLdapContext extends TestLdap {
         
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext();
+            zlc = LdapClient.getContext(LdapUsage.UNITTEST);
             
             ZSearchResultEnumeration ne = zlc.searchDir(base, filter, searchControls);
             while (ne.hasMore()) {

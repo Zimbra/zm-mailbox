@@ -28,6 +28,7 @@ import com.zimbra.cs.ldap.LdapException.LdapEntryNotFoundException;
 import com.zimbra.cs.ldap.LdapException.LdapMultipleEntriesMatchedException;
 import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.LdapTODO.*;
+import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZAttributes;
@@ -58,18 +59,18 @@ public class ZLdapHelper extends LdapHelper {
         ZLdapContext zlc = LdapClient.toZLdapContext(getProv(), ldapContext);
         zlc.searchPaged(searchOptions);
     }
-    
 
     @Override
-    public void deleteEntry(String dn) throws ServiceException {
+    public void deleteEntry(String dn, LdapUsage ldapUsage) throws ServiceException {
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, ldapUsage);
             zlc.deleteEntry(dn);
         } finally {
             LdapClient.closeContext(zlc);
         }
     }
+    
 
     /**
      * Modifies the specified entry.  <code>attrs</code> is a <code>Map</code> consisting of
@@ -159,11 +160,12 @@ public class ZLdapHelper extends LdapHelper {
     
 
     @Override
-    public void modifyEntry(String dn, Map<String, ? extends Object> attrs, Entry entry)
+    public void modifyEntry(String dn, Map<String, ? extends Object> attrs, 
+            Entry entry, LdapUsage ldapUsage)
     throws ServiceException {
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, ldapUsage);
             modifyAttrs(zlc, dn, attrs, entry);
         } finally {
             LdapClient.closeContext(zlc);
@@ -179,7 +181,7 @@ public class ZLdapHelper extends LdapHelper {
         ZLdapContext zlc = initZlc;
         try {
             if (zlc == null)
-                zlc = LdapClient.getContext(LdapServerType.get(useMaster));
+                zlc = LdapClient.getContext(LdapServerType.get(useMaster), LdapUsage.SEARCH);
             
             ZSearchResultEnumeration ne = zlc.searchDir(base, filter, ZSearchControls.SEARCH_CTLS_SUBTREE());
             if (ne.hasMore()) {
@@ -214,7 +216,7 @@ public class ZLdapHelper extends LdapHelper {
         ZLdapContext zlc = initZlc;
         try {
             if (zlc == null) {
-                zlc = LdapClient.getContext(ldapServerType);
+                zlc = LdapClient.getContext(ldapServerType, LdapUsage.GET_ENTRY);
             }
             return zlc.getAttributes(dn);
         /*  all callsites with the following @TODOEXCEPTIONMAPPING pattern can have ease of mind now and remove the 
@@ -241,7 +243,7 @@ public class ZLdapHelper extends LdapHelper {
         ZLdapContext zlc = initZlc;
         try {
             if (zlc == null) {
-                zlc = LdapClient.getContext(ldapServerType);
+                zlc = LdapClient.getContext(ldapServerType, LdapUsage.SEARCH);
             }
             return zlc.searchDir(baseDN, filter, searchControls);
         /*    
@@ -256,6 +258,7 @@ public class ZLdapHelper extends LdapHelper {
             }
         }
     }
+
 
 
 }

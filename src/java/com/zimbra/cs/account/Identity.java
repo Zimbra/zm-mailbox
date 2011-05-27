@@ -32,6 +32,11 @@ public class Identity extends AccountProperty implements Comparable {
         super(acct, name, id, attrs, null, prov);
     }
     
+    @Override
+    public EntryType getEntryType() {
+        return EntryType.IDENTITY;
+    }
+    
     /**
      * this should only be used internally by the server. it doesn't modify the real id, just
      * the cached one.

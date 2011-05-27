@@ -14,11 +14,6 @@
  */
 package com.zimbra.cs.ldap.jndi;
 
-import java.io.IOException;
-import java.util.Set;
-
-import javax.naming.NamingException;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.ldap.LdapClient;
@@ -26,13 +21,13 @@ import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.LdapTODO;
+import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.ZMutableEntry;
 import com.zimbra.cs.ldap.ZSearchControls;
 import com.zimbra.cs.ldap.ZSearchScope;
 import com.zimbra.cs.ldap.ZSearchScope.ZSearchScopeFactory;
-import com.zimbra.cs.prov.ldap.entry.LdapEntry;
 
 public class JNDILdapClient extends LdapClient {
     @Override
@@ -67,21 +62,22 @@ public class JNDILdapClient extends LdapClient {
     }
     
     @Override
-    protected ZLdapContext getContextImpl(LdapServerType serverType) 
+    protected ZLdapContext getContextImpl(LdapServerType serverType, LdapUsage usage) 
     throws ServiceException {
-        return new JNDILdapContext(serverType);
+        return new JNDILdapContext(serverType, usage);
     }
     
     @Override
-    protected ZLdapContext getContextImpl(LdapServerType serverType, boolean useConnPool) 
+    protected ZLdapContext getContextImpl(LdapServerType serverType, boolean useConnPool,
+            LdapUsage usage) 
     throws ServiceException {
-        return new JNDILdapContext(serverType, useConnPool);
+        return new JNDILdapContext(serverType, useConnPool, usage);
     }
 
     @Override
-    protected ZLdapContext getExternalContextImpl(ExternalLdapConfig config)
+    protected ZLdapContext getExternalContextImpl(ExternalLdapConfig config, LdapUsage usage)
     throws ServiceException {
-        return new JNDILdapContext(config);
+        return new JNDILdapContext(config, usage);
     }
     
     @Override

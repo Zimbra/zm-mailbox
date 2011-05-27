@@ -22,6 +22,7 @@ import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.LdapConstants;
+import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.ZMutableEntry;
@@ -38,7 +39,7 @@ public class UBIDLdapClient extends LdapClient {
     
     @Override
     protected void terminate() {
-        ConnectionPool.closeAll();
+        LdapConnectionPool.closeAll();
     }
     
     @Override 
@@ -58,7 +59,7 @@ public class UBIDLdapClient extends LdapClient {
         while (true) {
             UBIDLdapContext zlc = null;
             try {
-                zlc = new UBIDLdapContext(LdapServerType.REPLICA);
+                zlc = new UBIDLdapContext(LdapServerType.REPLICA, LdapUsage.PING);
                 break;
             } catch (ServiceException e) {
                 // may called at server startup when logging is not up yet.
@@ -83,24 +84,25 @@ public class UBIDLdapClient extends LdapClient {
     }
     
     @Override
-    protected ZLdapContext getContextImpl(LdapServerType serverType) 
+    protected ZLdapContext getContextImpl(LdapServerType serverType, LdapUsage usage) 
     throws ServiceException {
-        return new UBIDLdapContext(serverType);
+        return new UBIDLdapContext(serverType, usage);
     }
     
     /**
      * useConnPool is always ignored
      */
     @Override
-    protected ZLdapContext getContextImpl(LdapServerType serverType, boolean useConnPool) 
+    protected ZLdapContext getContextImpl(LdapServerType serverType, boolean useConnPool,
+            LdapUsage usage) 
     throws ServiceException {
-        return getContextImpl(serverType);
+        return getContextImpl(serverType, usage);
     }
 
     @Override
-    protected ZLdapContext getExternalContextImpl(ExternalLdapConfig config)
+    protected ZLdapContext getExternalContextImpl(ExternalLdapConfig config, LdapUsage usage)
     throws ServiceException {
-        return new UBIDLdapContext(config);
+        return new UBIDLdapContext(config, usage);
     }
 
     @Override

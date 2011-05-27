@@ -36,6 +36,11 @@ public class DistributionList extends ZAttrDistributionList implements GroupedEn
     public DistributionList(String name, String id, Map<String, Object> attrs, Provisioning prov) {
         super(name, id, attrs, prov);
     }
+    
+    @Override
+    public EntryType getEntryType() {
+        return EntryType.DISTRIBUTIONLIST;
+    }
 
     public void modify(Map<String, Object> attrs) throws ServiceException {
         getProvisioning().modifyAttrs(this, attrs);

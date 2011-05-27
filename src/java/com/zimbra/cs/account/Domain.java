@@ -51,6 +51,11 @@ public class Domain extends ZAttrDomain {
             resetData();
     }
 
+    @Override
+    public EntryType getEntryType() {
+        return EntryType.DOMAIN;
+    }
+    
     public void modify(Map<String, Object> attrs) throws ServiceException {
         getProvisioning().modifyAttrs(this, attrs);
     }

@@ -29,6 +29,7 @@ import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapTODO;
+import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZLdapContext;
@@ -73,14 +74,15 @@ public class LdapGalSearch {
         
         String authMech = galParams.credential().getAuthMech();
         if (authMech.equals(Provisioning.LDAP_AM_KERBEROS5))
-            searchLdapGalKrb5(galParams, query, maxResults, rules, token, result);
+            searchLdapGalKrb5(galParams, galOp, query, maxResults, rules, token, result);
         else    
-            searchLdapGal(galParams, query, maxResults, rules, token, result);
+            searchLdapGal(galParams, galOp, query, maxResults, rules, token, result);
         return result;
     }
     
     private static void searchLdapGalKrb5(
             GalParams.ExternalGalParams galParams,
+            GalOp galOp,
             String query, 
             int maxResults,
             LdapGalMapRules rules,
@@ -90,7 +92,7 @@ public class LdapGalSearch {
         try {
             LdapGalCredential credential = galParams.credential();
             Krb5Login.performAs(credential.getKrb5Principal(), credential.getKrb5Keytab(),
-                                new SearchGalAction(galParams, query, maxResults, rules, token, result));
+                    new SearchGalAction(galParams, galOp, query, maxResults, rules, token, result));
         } catch (LoginException le) {
             throw ServiceException.FAILURE("login failed, unable to search GAL", le);
         } catch (PrivilegedActionException pae) {
@@ -107,6 +109,7 @@ public class LdapGalSearch {
     static class SearchGalAction implements PrivilegedExceptionAction {
         
         GalParams.ExternalGalParams galParams;
+        GalOp galOp;
         String query;
         int maxResults;
         LdapGalMapRules rules;
@@ -114,12 +117,14 @@ public class LdapGalSearch {
         SearchGalResult result;
         
         SearchGalAction(GalParams.ExternalGalParams arg_galParams,
+                        GalOp arg_galOp,
                         String arg_query, 
                         int arg_maxResults,
                         LdapGalMapRules arg_rules,
                         String arg_token,
                         SearchGalResult arg_result) {
             galParams = arg_galParams;
+            galOp = arg_galOp;
             query = arg_query;
             maxResults = arg_maxResults;
             rules = arg_rules;
@@ -128,13 +133,14 @@ public class LdapGalSearch {
         }
             
         public Object run() throws ServiceException {
-            searchLdapGal(galParams, query, maxResults, rules, token, result);
+            searchLdapGal(galParams, galOp, query, maxResults, rules, token, result);
             return null;
         }
     }
     
     private static void searchLdapGal(
             GalParams.ExternalGalParams galParams,
+            GalOp galOp,
             String query, 
             int maxResults,
             LdapGalMapRules rules,
@@ -150,7 +156,7 @@ public class LdapGalSearch {
                     credential.getBindDn(), credential.getBindPassword(),
                     rules.getBinaryLdapAttrs(), "external GAL");
             
-            zlc = LdapClient.getExternalContext(ldapConfig);
+            zlc = LdapClient.getExternalContext(ldapConfig, LdapUsage.fromGalOpLegacy(galOp));
             searchGal(zlc,
                       GalSearchConfig.GalType.ldap,
                       galParams.pageSize(),
@@ -190,14 +196,14 @@ public class LdapGalSearch {
             GalSearchConfig.GalType galType =  params.getConfig().getGalType();
 
             if (galType == GalSearchConfig.GalType.zimbra) {
-                zlc = LdapClient.getContext();
+                zlc = LdapClient.getContext(LdapUsage.fromGalOp(params.getOp()));
             } else {
                 ExternalLdapConfig ldapConfig = new ExternalLdapConfig(
                         cfg.getUrl(), cfg.getStartTlsEnabled(), cfg.getAuthMech(),
                         cfg.getBindDn(), cfg.getBindPassword(), cfg.getRules().getBinaryLdapAttrs(), 
                         "external GAL");
                 
-                zlc = LdapClient.getExternalContext(ldapConfig);
+                zlc = LdapClient.getExternalContext(ldapConfig, LdapUsage.fromGalOp(params.getOp()));
             }
             
             searchGal(zlc,

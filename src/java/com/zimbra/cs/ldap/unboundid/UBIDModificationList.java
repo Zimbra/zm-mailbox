@@ -32,9 +32,10 @@ public class UBIDModificationList extends ZModificationList {
     private List<Modification> modList = new ArrayList<Modification>();
     
     @Override
-    public void debug() {
-        // TODO Auto-generated method stub
-        
+    public void debug(ZLdapElementDebugListener debugListener) {
+        for (Modification mod : modList) {
+            print(debugListener, mod.toString() + " ,");
+        }
     }
     
     List<Modification> getModList() {

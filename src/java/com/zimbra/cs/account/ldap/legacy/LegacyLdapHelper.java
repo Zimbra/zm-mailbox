@@ -27,6 +27,7 @@ import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapException.LdapEntryNotFoundException;
 import com.zimbra.cs.ldap.LdapException.LdapMultipleEntriesMatchedException;
 import com.zimbra.cs.ldap.LdapServerType;
+import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
@@ -62,7 +63,7 @@ public class LegacyLdapHelper extends LdapHelper {
     }
     
     @Override
-    public void deleteEntry(String dn) throws ServiceException {
+    public void deleteEntry(String dn, LdapUsage ldapUsage) throws ServiceException {
         LegacyZimbraLdapContext zlc = null;
         try {
             zlc = new LegacyZimbraLdapContext(true);
@@ -83,7 +84,8 @@ public class LegacyLdapHelper extends LdapHelper {
     }
     
     @Override
-    public void modifyEntry(String dn, Map<String, ? extends Object> attrs, Entry entry) 
+    public void modifyEntry(String dn, Map<String, ? extends Object> attrs, 
+            Entry entry, LdapUsage ldapUsage) 
     throws ServiceException {
         
         LegacyZimbraLdapContext zlc = null;
@@ -117,5 +119,6 @@ public class LegacyLdapHelper extends LdapHelper {
     throws ServiceException {
         throw new UnsupportedOperationException();
     }
+
 
 }

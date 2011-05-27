@@ -123,6 +123,7 @@ import com.zimbra.cs.ldap.LdapTODO;
 import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
+import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
@@ -367,7 +368,8 @@ public class LdapProvisioning extends LdapProv {
         ZLdapContext zlc = initZlc;
         try {
             if (zlc == null) {
-                zlc = LdapClient.getContext(LdapServerType.MASTER);
+                zlc = LdapClient.getContext(LdapServerType.MASTER, 
+                        LdapUsage.modifyEntryfromEntryType(entry.getEntryType()));
             }
             helper.modifyAttrs(zlc, ((LdapEntry)entry).getDN(), attrs, entry);
             refreshEntry(entry, zlc);
@@ -400,7 +402,7 @@ public class LdapProvisioning extends LdapProv {
 
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.get(master));
+            zlc = LdapClient.getContext(LdapServerType.get(master), LdapUsage.GET_ENTRY);
             refreshEntry(e, zlc);
         } finally {
             LdapClient.closeContext(zlc);
@@ -860,7 +862,7 @@ public class LdapProvisioning extends LdapProv {
         String dn = null;
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.CREATE_ACCOUNT);
 
             Domain d = getDomainByAsciiName(domain, zlc);
             if (d == null) {
@@ -1046,7 +1048,7 @@ public class LdapProvisioning extends LdapProv {
     public void searchOCsForSuperClasses(Map<String, Set<String>> ocs) {
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.GET_SCHEMA);
             ZLdapSchema schema = zlc.getSchema();
           
             for (Map.Entry<String, Set<String>> entry : ocs.entrySet()) {
@@ -1084,7 +1086,7 @@ public class LdapProvisioning extends LdapProv {
         
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.GET_SCHEMA);
             ZLdapSchema schema = zlc.getSchema();
           
             for (String oc : ocs) {
@@ -1415,7 +1417,6 @@ public class LdapProvisioning extends LdapProv {
     public void searchObjects(String query, String returnAttrs[], String base, int flags,
             NamedEntry.Visitor visitor, int maxResults, boolean useConnPool, boolean useMaster) 
     throws ServiceException {
-
         
         if ((flags & Provisioning.SO_NO_FIXUP_OBJECTCLASS) == 0) {
             String objectClass = getObjectClassQuery(flags);
@@ -1443,7 +1444,7 @@ public class LdapProvisioning extends LdapProv {
                 
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.get(useMaster), useConnPool);
+            zlc = LdapClient.getContext(LdapServerType.get(useMaster), useConnPool, LdapUsage.SEARCH);
 
             zlc.searchPaged(searchObjectsOptions);
         } catch (LdapSizeLimitExceededException e) {
@@ -1590,14 +1591,20 @@ public class LdapProvisioning extends LdapProv {
 
     private void addAliasInternal(NamedEntry entry, String alias) throws ServiceException {
 
+        LdapUsage ldapUsage = null;
+        
         String targetDomainName = null;
-        if (entry instanceof Account)
+        if (entry instanceof Account) {
             targetDomainName = ((Account)entry).getDomainName();
-        else if (entry instanceof DistributionList)
+            ldapUsage = LdapUsage.ADD_ALIAS_ACCOUNT;
+        } else if (entry instanceof DistributionList) {
+            ldapUsage = LdapUsage.ADD_ALIAS_DL;
             targetDomainName = ((DistributionList)entry).getDomainName();
-        else
+        } else {
             assert(false);
-
+            throw ServiceException.FAILURE("invalid entry type for alias", null);
+        }
+        
         alias = alias.toLowerCase().trim();
         alias = IDNUtil.toAsciiEmail(alias);
 
@@ -1610,7 +1617,7 @@ public class LdapProvisioning extends LdapProv {
         ZLdapContext zlc = null;
         String aliasDn = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, ldapUsage);
 
             Domain domain = getDomainByAsciiName(aliasDomain, zlc);
             if (domain == null)
@@ -1710,9 +1717,19 @@ public class LdapProvisioning extends LdapProv {
      */
     private void removeAliasInternal(NamedEntry entry, String alias) throws ServiceException {
 
+        LdapUsage ldapUsage = null;
+        if (entry instanceof Account) {
+            ldapUsage = LdapUsage.ADD_ALIAS_ACCOUNT;
+        } else if (entry instanceof DistributionList) {
+            ldapUsage = LdapUsage.ADD_ALIAS_DL;
+        } else {
+            assert(false);
+            throw ServiceException.FAILURE("invalid entry type for alias", null);
+        }
+        
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, ldapUsage);
 
             alias = alias.toLowerCase();
             alias = IDNUtil.toAsciiEmail(alias);
@@ -1837,7 +1854,7 @@ public class LdapProvisioning extends LdapProv {
 
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.CREATE_DOMAIN);
             
             LdapDomain d = (LdapDomain) getDomainByAsciiName(name, zlc);
             if (d != null)
@@ -2181,7 +2198,7 @@ public class LdapProvisioning extends LdapProv {
 
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.CREATE_COS);
 
             ZMutableEntry entry = LdapClient.createMutableEntry();
             entry.mapToAttrs(allAttrs);
@@ -2219,7 +2236,7 @@ public class LdapProvisioning extends LdapProv {
         newName = newName.toLowerCase().trim();
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.RENAME_COS);
             String newDn = mDIT.cosNametoDN(newName);
             zlc.renameEntry(cos.getDN(), newDn);
             // remove old cos from cache
@@ -2347,7 +2364,7 @@ public class LdapProvisioning extends LdapProv {
 
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_ACCOUNT);
 
             zlc.deleteChildren(entry.getDN());
             zlc.deleteEntry(entry.getDN());
@@ -2374,7 +2391,7 @@ public class LdapProvisioning extends LdapProv {
 
         boolean domainChanged = false;
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.RENAME_ACCOUNT);
 
             String oldDn = entry.getDN();
             String oldDomain = EmailUtil.getValidDomainPart(oldEmail);
@@ -2495,7 +2512,7 @@ public class LdapProvisioning extends LdapProv {
         LdapDomain d = null;
         String acctBaseDn = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_DOMAIN);
 
             d = (LdapDomain) getDomainById(zimbraId, zlc);
             if (d == null)
@@ -2584,7 +2601,7 @@ public class LdapProvisioning extends LdapProv {
         ZLdapContext zlc = null;
 
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.RENAME_DOMAIN);
             
             RenameDomain.RenameDomainLdapHelper helper = 
                 new RenameDomain.RenameDomainLdapHelper(this, zlc) {
@@ -2676,7 +2693,7 @@ public class LdapProvisioning extends LdapProv {
         // TODO: should we go through all accounts with this cos and remove the zimbraCOSId attr?
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_COS);
             zlc.deleteEntry(c.getDN());
             sCosCache.remove(c);
         } catch (ServiceException e) {
@@ -2700,7 +2717,7 @@ public class LdapProvisioning extends LdapProv {
 
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.CREATE_SERVER);
 
             ZMutableEntry entry = LdapClient.createMutableEntry();
             entry.mapToAttrs(serverAttrs);
@@ -2923,7 +2940,7 @@ public class LdapProvisioning extends LdapProv {
         
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_SERVER);
             removeServerFromAllCOSes(zimbraId, server.getName(), zlc);
             zlc.deleteEntry(server.getDN());
             sServerCache.remove(server);
@@ -2962,7 +2979,7 @@ public class LdapProvisioning extends LdapProv {
 
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.CREATE_DISTRIBUTIONLIST);
 
             Domain d = getDomainByAsciiName(domain, zlc);
             if (d == null)
@@ -3057,7 +3074,7 @@ public class LdapProvisioning extends LdapProv {
         boolean domainChanged = false;
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.RENAME_DISTRIBUTIONLIST);
 
             LdapDistributionList dl = (LdapDistributionList) getDistributionListById(zimbraId, zlc);
             if (dl == null)
@@ -3213,7 +3230,7 @@ public class LdapProvisioning extends LdapProv {
 
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_DISTRIBUTIONLIST);
             zlc.deleteEntry(dl.getDN());
             mAllDLs.removeGroup(addrs);
         } catch (ServiceException e) {
@@ -3769,7 +3786,7 @@ public class LdapProvisioning extends LdapProv {
         
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getExternalContext(config);
+            zlc = LdapClient.getExternalContext(config, LdapUsage.LDAP_AUTH_EXTERNAL);
             ZSearchResultEnumeration ne = zlc.searchDir(searchBase, 
                     filterFactory.fromFilterString(searchFilter), 
                     ZSearchControls.SEARCH_CTLS_SUBTREE());
@@ -4401,7 +4418,7 @@ public class LdapProvisioning extends LdapProv {
 
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext();
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.CREATE_ZIMLET);
 
             String hasKeyword = LdapConstants.LDAP_FALSE;
             if (zimletAttrs.containsKey(A_zimbraZimletKeyword)) {
@@ -4436,7 +4453,7 @@ public class LdapProvisioning extends LdapProv {
     public void deleteZimlet(String name) throws ServiceException {
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext();
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_ZIMLET);
             LdapZimlet zimlet = (LdapZimlet)getZimlet(name, zlc, true);
             if (zimlet != null) {
                 sZimletCache.remove(zimlet);
@@ -5312,7 +5329,7 @@ public class LdapProvisioning extends LdapProv {
 
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext();
+            zlc = LdapClient.getContext(LdapUsage.fromGalOpLegacy(galOp));
             LdapGalSearch.searchGal(zlc,
                                GalSearchConfig.GalType.zimbra,
                                galParams.pageSize(),
@@ -5667,7 +5684,7 @@ public class LdapProvisioning extends LdapProv {
 
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.CREATE_IDENTITY);
 
             String dn = getIdentityDn(ldapEntry, identityName);
 
@@ -5741,7 +5758,7 @@ public class LdapProvisioning extends LdapProv {
 
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.RENAME_IDENTITY);
             String newDn = getIdentityDn(entry, newIdentityName);
             zlc.renameEntry(identity.getDN(), newDn);
         } catch (ServiceException e) {
@@ -5764,7 +5781,7 @@ public class LdapProvisioning extends LdapProv {
 
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_IDENTITY);
             Identity identity = getIdentityByName(ldapEntry, identityName, zlc);
             if (identity == null)
                 throw AccountServiceException.NO_SUCH_IDENTITY(identityName);
@@ -5947,7 +5964,7 @@ public class LdapProvisioning extends LdapProv {
 
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.CREATE_SIGNATURE);
 
             String dn = getSignatureDn(ldapEntry, signatureName);
 
@@ -6031,7 +6048,7 @@ public class LdapProvisioning extends LdapProv {
     private void renameSignature(LdapEntry entry, LdapSignature signature, String newSignatureName) throws ServiceException {
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.RENAME_SIGNATURE);
             String newDn = getSignatureDn(entry, newSignatureName);
             zlc.renameEntry(signature.getDN(), newDn);
         } catch (ServiceException e) {
@@ -6056,7 +6073,7 @@ public class LdapProvisioning extends LdapProv {
 
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_SIGNATURE);
             Signature signature = getSignatureById(account, ldapEntry, signatureId, zlc);
             if (signature == null)
                 throw AccountServiceException.NO_SUCH_SIGNATURE(signatureId);
@@ -6290,7 +6307,7 @@ public class LdapProvisioning extends LdapProv {
 
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.CREATE_DATASOURCE);
 
             String dn = getDataSourceDn(ldapEntry, dsName);
 
@@ -6340,7 +6357,7 @@ public class LdapProvisioning extends LdapProv {
 
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_DATASOURCE);
             DataSource dataSource = getDataSourceById(ldapEntry, dataSourceId, zlc);
             if (dataSource == null)
                 throw AccountServiceException.NO_SUCH_DATA_SOURCE(dataSourceId);
@@ -6412,7 +6429,7 @@ public class LdapProvisioning extends LdapProv {
             account.setCachedData(DATA_SOURCE_LIST_CACHE_KEY, null);
             ZLdapContext zlc = null;
             try {
-                zlc = LdapClient.getContext(LdapServerType.MASTER);
+                zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.RENAME_DATASOURCE);
                 String newDn = getDataSourceDn(ldapEntry, name);
                 zlc.renameEntry(ds.getDN(), newDn);
             } catch (ServiceException e) {
@@ -6538,7 +6555,7 @@ public class LdapProvisioning extends LdapProv {
 
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.CREATE_XMPPCOMPONENT);
 
             ZMutableEntry entry = LdapClient.createMutableEntry();
             entry.mapToAttrs(inAttrs);
@@ -6587,7 +6604,7 @@ public class LdapProvisioning extends LdapProv {
         ZLdapContext zlc = null;
         LdapXMPPComponent l = (LdapXMPPComponent)get(XMPPComponentBy.id, zimbraId);
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_XMPPCOMPONENT);
             zlc.deleteEntry(l.getDN());
             sXMPPComponentCache.remove(l);
         } catch (ServiceException e) {
@@ -6606,7 +6623,7 @@ public class LdapProvisioning extends LdapProv {
         newName = newName.toLowerCase().trim();
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.RENAME_XMPPCOMPONENT);
             String newDn = mDIT.xmppcomponentNameToDN(newName);
             zlc.renameEntry(comp.getDN(), newDn);
             // remove old comp from cache
@@ -7196,7 +7213,7 @@ public class LdapProvisioning extends LdapProv {
         
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.get(useMaster));
+            zlc = LdapClient.getContext(LdapServerType.get(useMaster), LdapUsage.SEARCH);
             zlc.searchPaged(searchOptions);
         } finally {
             LdapClient.closeContext(zlc);
@@ -7217,7 +7234,7 @@ public class LdapProvisioning extends LdapProv {
     public void dumpLdapSchema(PrintWriter writer) throws ServiceException {
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.GET_SCHEMA);
             ZLdapSchema schema = zlc.getSchema();
           
             for (ZLdapSchema.ZObjectClassDefinition oc : schema.getObjectClasses()) {

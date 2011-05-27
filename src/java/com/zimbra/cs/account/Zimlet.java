@@ -22,6 +22,11 @@ public class Zimlet extends NamedEntry {
         super(name, id, attrs, null, prov);
     }
 
+    @Override
+    public EntryType getEntryType() {
+        return EntryType.ZIMLET;
+    }
+    
     public boolean isEnabled() {
         return getBooleanAttr(Provisioning.A_zimbraZimletEnabled, false);
     }

@@ -45,6 +45,7 @@ import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.LdapTODO;
 import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
+import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
@@ -64,18 +65,22 @@ public class JNDILdapContext extends ZLdapContext {
     
     private LegacyZimbraLdapContext zlc;
     
-    public JNDILdapContext(LdapServerType serverType) throws ServiceException {
+    public JNDILdapContext(LdapServerType serverType, LdapUsage usage) 
+    throws ServiceException {
+        super(usage);
         zlc = new LegacyZimbraLdapContext(serverType.isMaster());
     }
     
-    public JNDILdapContext(LdapServerType serverType, boolean useConnPool) 
+    public JNDILdapContext(LdapServerType serverType, boolean useConnPool, LdapUsage usage) 
     throws ServiceException {
+        super(usage);
         zlc = new LegacyZimbraLdapContext(serverType.isMaster(), useConnPool);
     }
     
     @TODO  // need to somehow expose  NamingException and IOException for check external auth/gal config
-    public JNDILdapContext(ExternalLdapConfig config)
+    public JNDILdapContext(ExternalLdapConfig config, LdapUsage usage)
     throws ServiceException {
+        super(usage);
         try {
             zlc = new LegacyZimbraLdapContext(config.getLdapURL(), config.getWantStartTLS(), 
                     config.getAuthMech(), config.getAdminBindDN(), config.getAdminBindPassword(),
