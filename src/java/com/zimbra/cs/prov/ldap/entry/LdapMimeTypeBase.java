@@ -35,6 +35,11 @@ public abstract class LdapMimeTypeBase extends Entry implements LdapEntry, MimeT
         super(attrs, defaults, provisioning);
     }
     
+    @Override
+    public EntryType getEntryType() {
+        return EntryType.MIMETYPE;
+    }
+    
     public String getLabel() {
         return mDn;
     }
