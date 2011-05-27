@@ -28,27 +28,31 @@ import com.zimbra.cs.mailbox.Mailbox;
  * @author ysasaki
  */
 public final class SenderQuery extends Query {
-    private String sender;
-    private boolean lt;
-    private boolean inclusive;
+    private final String sender;
+    private final Comparison comparison;
 
     /**
      * This is only used for subject queries that start with {@code <} or {@code >}, otherwise we just use the normal
      * {@link TextQuery}.
      */
     private SenderQuery(String text) {
-        lt = (text.charAt(0) == '<');
-        inclusive = false;
-        sender = text.substring(1);
-
-        if (sender.charAt(0) == '=') {
-            inclusive = true;
-            sender = sender.substring(1);
+        if (text.startsWith(Comparison.LE.toString())) {
+            comparison = Comparison.LE;
+        } else if (text.startsWith(Comparison.LT.toString())) {
+            comparison = Comparison.LT;
+        } else if (text.startsWith(Comparison.GE.toString())) {
+            comparison = Comparison.GE;
+        } else if (text.startsWith(Comparison.GT.toString())) {
+            comparison = Comparison.GT;
+        } else {
+            throw new IllegalArgumentException(text);
         }
+        sender = text.substring(comparison.toString().length());
     }
 
     public static Query create(Analyzer analyzer, String text) {
-        if (text.length() > 1 && (text.startsWith("<") || text.startsWith(">"))) {
+        if (text.length() > 1 &&
+                (text.startsWith(Comparison.LT.toString()) || text.startsWith(Comparison.GT.toString()))) {
             return new SenderQuery(text);
         } else {
             return new TextQuery(analyzer, LuceneFields.L_H_FROM, text);
@@ -63,22 +67,28 @@ public final class SenderQuery extends Query {
     @Override
     public QueryOperation compile(Mailbox mbox, boolean bool) {
         DBQueryOperation op = new DBQueryOperation();
-        if (lt) {
-            op.addSenderRange(null, false, sender, lt, evalBool(bool));
-        } else {
-            op.addSenderRange(sender, inclusive, null, false, evalBool(bool));
+        switch (comparison) {
+            case LE:
+                op.addSenderRange(null, false, sender, true, evalBool(bool));
+                break;
+            case LT:
+                op.addSenderRange(null, false, sender, false, evalBool(bool));
+                break;
+            case GE:
+                op.addSenderRange(sender, true, null, false, evalBool(bool));
+                break;
+            case GT:
+                op.addSenderRange(sender, false, null, false, evalBool(bool));
+                break;
+            default:
+                assert false : comparison;
         }
         return op;
     }
 
     @Override
     public void dump(StringBuilder out) {
-        out.append("SENDER:");
-        out.append(lt ? '<' : '>');
-        if (inclusive) {
-            out.append('=');
-        }
-        out.append(sender);
+        out.append("SENDER:").append(comparison).append(sender);
     }
 
 }

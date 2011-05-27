@@ -49,6 +49,21 @@ public abstract class Query {
         }
     }
 
+    enum Comparison {
+        GT(">"), GE(">="), LT("<"), LE("<=");
+
+        private final String symbol;
+
+        private Comparison(String symbol) {
+            this.symbol = symbol;
+        }
+
+        @Override
+        public String toString() {
+            return symbol;
+        }
+    }
+
     private static final Map<String, String> LUCENE2QUERY =
         new ImmutableMap.Builder<String, String>()
         .put(LuceneFields.L_CONTACT_DATA, "contact:")

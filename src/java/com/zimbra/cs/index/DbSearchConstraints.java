@@ -914,6 +914,11 @@ public interface DbSearchConstraints extends Cloneable {
                 excludeTags.add(tag);
             }
         }
+
+        @Override
+        public String toString() {
+            return toQueryString(new StringBuilder()).toString();
+        }
     }
 
     static final class Intersection implements DbSearchConstraints {
