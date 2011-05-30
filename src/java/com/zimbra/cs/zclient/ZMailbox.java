@@ -3303,6 +3303,8 @@ public class ZMailbox implements ToZJSONObject {
         private List<String> mMessageIdsToAttach;
         private List<String> mDocIdsToAttach;
         private String mOriginalMessageId;
+        private String mMessageId;
+        private String mDraftMessageId;
         private String mReplyType;
         private String mIdentityId;
 
@@ -3323,6 +3325,12 @@ public class ZMailbox implements ToZJSONObject {
 
         public String getOriginalMessageId() { return mOriginalMessageId; }
         public void setOriginalMessageId(String originalMessageId) { mOriginalMessageId = originalMessageId; }
+
+        public String getMessageId() { return mMessageId; }
+        public void setMessageId(String messageId) { mMessageId = messageId; }
+
+        public String getDraftMessageId() { return mDraftMessageId; }
+        public void setDraftMessageId(String draftMessageId) { mDraftMessageId = draftMessageId; }
 
         public String getInReplyTo() { return mInReplyTo; }
         public void setInReplyTo(String inReplyTo) { mInReplyTo = inReplyTo; }
@@ -3373,6 +3381,14 @@ public class ZMailbox implements ToZJSONObject {
         if (id != null) {
             m.addAttribute(MailConstants.A_ORIG_ID, id);
         }
+
+        String msgId = message.getMessageId();
+        if (msgId != null)
+            m.addAttribute(MailConstants.A_ID, msgId);
+
+        String draftId = message.getDraftMessageId();
+        if (draftId != null)
+            m.addAttribute(MailConstants.A_DRAFT_ID, draftId);
 
         if (message.getReplyType() != null)
             m.addAttribute(MailConstants.A_REPLY_TYPE, message.getReplyType());
