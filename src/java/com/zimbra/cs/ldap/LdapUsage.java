@@ -19,6 +19,7 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.gal.GalOp;
 
 public enum LdapUsage {
+    ADD_ALIAS,
     ADD_ALIAS_ACCOUNT,
     ADD_ALIAS_DL,
     CREATE_ACCOUNT,
@@ -70,6 +71,7 @@ public enum LdapUsage {
     MODIFY_XMPPCOMPONENT,
     MODIFY_ZIMLET,
     PING,
+    REMOVE_ALIAS,
     REMOVE_ALIAS_ACCOUNT,
     REMOVE_ALIAS_DL,
     RENAME_ACCOUNT,
@@ -83,7 +85,8 @@ public enum LdapUsage {
     SEARCH, 
     SMIME_LOOKUP,
     NGINX_LOOKUP,
-    UNITTEST;
+    UNITTEST,
+    UPGRADE;
     
     public static LdapUsage modifyEntryfromEntryType(Entry.EntryType entryType) {
         switch (entryType) {

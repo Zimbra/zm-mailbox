@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -12,22 +12,15 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.account.ldap.upgrade.legacy;
-
-import java.io.IOException;
+package com.zimbra.cs.account.ldap.upgrade;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javax.naming.NamingEnumeration;
-import javax.naming.NamingException;
-import javax.naming.directory.Attributes;
-import javax.naming.directory.SearchControls;
-import javax.naming.directory.SearchResult;
-
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Domain;
@@ -42,13 +35,18 @@ import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.generated.RightConsts;
 import com.zimbra.cs.account.ldap.LdapDIT;
-import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
-import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
-import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext.LdapConfig;
+import com.zimbra.cs.ldap.IAttributes;
+import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapConstants;
+import com.zimbra.cs.ldap.LdapServerType;
+import com.zimbra.cs.ldap.LdapUsage;
+import com.zimbra.cs.ldap.SearchLdapOptions;
+import com.zimbra.cs.ldap.ZAttributes;
+import com.zimbra.cs.ldap.ZLdapContext;
+import com.zimbra.cs.ldap.ZSearchScope;
 
-public class AdminRights extends LegacyLdapUpgrade {
-    
+public class BUG_18277 extends UpgradeOp {
+
     private static String[] sAdminUICompForAllDomainAdmins = new String[] {
         "accountListView",
         "aliasListView",
@@ -60,9 +58,6 @@ public class AdminRights extends LegacyLdapUpgrade {
     private static String[] sAdminUICompForAllGlobalAdmins = new String[] {
         "cartBlancheUI"
     };
-
-    AdminRights() throws ServiceException {
-    }
     
     @Override
     void doUpgrade() throws ServiceException {
@@ -74,39 +69,104 @@ public class AdminRights extends LegacyLdapUpgrade {
         
         for (String domainAdminId : domainAdminIds) {
             try {
-                Account domainAdmin = mProv.get(AccountBy.id, domainAdminId);
+                Account domainAdmin = prov.get(AccountBy.id, domainAdminId);
                 if (domainAdmin == null)
                     continue;
                 
-                Domain domain = mProv.getDomain(domainAdmin);
+                Domain domain = prov.getDomain(domainAdmin);
                 if (domain == null)
                     continue;
                 
-                System.out.println("Upgrading domain admin: " + domainAdmin.getName());
+                printer.println("Upgrading domain admin: " + domainAdmin.getName());
                 grantRights(domain, domainAdmin);
             } catch (ServiceException e) {
-                System.out.println("Skipped upgrading global admin " + domainAdminId + " (Encountered error: " + e.getMessage() + ")");
+                printer.println("Skipped upgrading global admin " + domainAdminId + " (Encountered error: " + e.getMessage() + ")");
             }
         }
         
         for (String globalAdminId : globalAdminIds) {
             try {
-                Account globalAdmin = mProv.get(AccountBy.id, globalAdminId);
+                Account globalAdmin = prov.get(AccountBy.id, globalAdminId);
                 if (globalAdmin == null)
                     continue;
                 
-                System.out.println("Upgrading global admin: " + globalAdmin.getName());
+                printer.println("Upgrading global admin: " + globalAdmin.getName());
                 setGlobalAdminUIComp(globalAdmin);
             } catch (ServiceException e) {
-                System.out.println("Skipped upgrading global admin " + globalAdminId + " (Encountered error: " + e.getMessage() + ")");
+                printer.println("Skipped upgrading global admin " + globalAdminId + " (Encountered error: " + e.getMessage() + ")");
             }
         }
         
     }
     
+    
+    private static class Bug18277Visitor extends SearchLdapOptions.SearchLdapVisitor {
+        
+        private String configBranchBaseDn;
+        private Set<String> domainAdminIds;
+        private Set<String> globalAdminIds;
+        
+        private Bug18277Visitor(String configBranchBaseDn, 
+                Set<String> domainAdminIds, Set<String> globalAdminIds) {
+            super(false);
+            this.configBranchBaseDn = configBranchBaseDn;
+            this.domainAdminIds = domainAdminIds;
+            this.globalAdminIds = globalAdminIds;
+        }
+        
+        @Override
+        public void visit(String dn, IAttributes ldapAttrs) {
+            try {
+                doVisit(dn, (ZAttributes) ldapAttrs);
+            } catch (ServiceException e) {
+                ZimbraLog.account.warn("entry skipped, encountered error while processing entry at:" + dn);
+            }
+        }
+        
+        private void doVisit(String dn, ZAttributes ldapAttrs) throws ServiceException {
+            
+            // skip admin accounts under config branch
+            if (dn.endsWith(configBranchBaseDn)) {
+                return;
+            }
+            
+            String globalAdminId = getZimbraIdIfGlobalAdmin(ldapAttrs);
+            if (globalAdminId != null)
+                globalAdminIds.add(globalAdminId);
+            else {
+                String domainAdminId = getZimbraIdIfDomainOnlyAdmin(ldapAttrs);
+                if (domainAdminId != null)
+                    domainAdminIds.add(domainAdminId);
+            }
+        }
+        
+        
+        private String getZimbraIdIfDomainOnlyAdmin(ZAttributes attrs) throws ServiceException {
+            String isAdmin = attrs.getAttrString(Provisioning.A_zimbraIsAdminAccount);
+            String isDomainAdmin = attrs.getAttrString(Provisioning.A_zimbraIsDomainAdminAccount);
+            String isDelegatedAdmin = attrs.getAttrString(Provisioning.A_zimbraIsDelegatedAdminAccount);
+            
+            if (LdapConstants.LDAP_TRUE.equals(isDomainAdmin) &&
+                !LdapConstants.LDAP_TRUE.equals(isAdmin) &&         // is a global admin, don't touch it
+                !LdapConstants.LDAP_TRUE.equals(isDelegatedAdmin))  // already migrated, don't touch it
+                return attrs.getAttrString(Provisioning.A_zimbraId);
+            else
+                return null;
+        }
+        
+        private String getZimbraIdIfGlobalAdmin(ZAttributes attrs) throws ServiceException {
+            String isAdmin = attrs.getAttrString(Provisioning.A_zimbraIsAdminAccount);
+            
+            if (LdapConstants.LDAP_TRUE.equals(isAdmin))
+                return attrs.getAttrString(Provisioning.A_zimbraId);
+            else
+                return null;
+        }
+    }
+    
     private void getAllDomainOrGlobalAdmins(Set<String> domainAdminIds, Set<String> globalAdminIds) throws ServiceException {
         
-        LdapDIT dit = mProv.getDIT();
+        LdapDIT dit = prov.getDIT();
         String returnAttrs[] = new String[] {Provisioning.A_objectClass,
                                              Provisioning.A_zimbraId,
                                              Provisioning.A_zimbraIsAdminAccount,
@@ -117,81 +177,22 @@ public class AdminRights extends LegacyLdapUpgrade {
         String base = dit.mailBranchBaseDN();
         String query = "(&(objectclass=zimbraAccount)(|(zimbraIsDomainAdminAccount=TRUE)(zimbraIsAdminAccount=TRUE)))";
         
-        int maxResults = 0; // no limit
-        LegacyZimbraLdapContext zlc = null; 
-        
+        ZLdapContext zlc = null; 
         try {
-            // use master, do not use connection pool, use infinite read timeout
-            zlc = new LegacyZimbraLdapContext(true, new LdapConfig(Boolean.FALSE, null, LdapConfig.NO_TIMEOUT));  
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.UPGRADE);
             
-            SearchControls searchControls =
-                new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, returnAttrs, false, false);
-
-            //Set the page size and initialize the cookie that we pass back in subsequent pages
-            int pageSize = LegacyLdapUtil.adjustPageSize(maxResults, 1000);
-            byte[] cookie = null;
-
-            NamingEnumeration ne = null;
+            Bug18277Visitor visitor = new Bug18277Visitor(configBranchBaseDn, domainAdminIds, globalAdminIds);
             
+            SearchLdapOptions searchOpts = new SearchLdapOptions(base, query, 
+                    returnAttrs, SearchLdapOptions.SIZE_UNLIMITED, null, 
+                    ZSearchScope.SEARCH_SCOPE_SUBTREE, visitor);
             
-            try {
-                do {
-                    zlc.setPagedControl(pageSize, cookie, true);
-
-                    ne = zlc.searchDir(base, query, searchControls);
-                    while (ne != null && ne.hasMore()) {
-                        SearchResult sr = (SearchResult) ne.nextElement();
-                        String dn = sr.getNameInNamespace();
-
-                        Attributes attrs = sr.getAttributes();
-                        
-                        // skip admin accounts under config branch
-                        if (dn.endsWith(configBranchBaseDn))
-                            continue;
-                        
-                        String globalAdminId = getZimbraIdIfGlobalAdmin(attrs);
-                        if (globalAdminId != null)
-                            globalAdminIds.add(globalAdminId);
-                        else {
-                            String domainAdminId = getZimbraIdIfDomainOnlyAdmin(attrs);
-                            if (domainAdminId != null)
-                                domainAdminIds.add(domainAdminId);
-                        }
-                    }
-                    cookie = zlc.getCookie();
-                } while (cookie != null);
-            } finally {
-                if (ne != null) ne.close();
-            }
-        } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to list all objects", e);
-        } catch (IOException e) {
+            zlc.searchPaged(searchOpts);
+        } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to list all objects", e);
         } finally {
-            LegacyZimbraLdapContext.closeContext(zlc);
+            LdapClient.closeContext(zlc);
         }
-    }
-    
-    String getZimbraIdIfDomainOnlyAdmin(Attributes attrs) throws NamingException {
-        String isAdmin = LegacyLdapUtil.getAttrString(attrs, Provisioning.A_zimbraIsAdminAccount);
-        String isDomainAdmin = LegacyLdapUtil.getAttrString(attrs, Provisioning.A_zimbraIsDomainAdminAccount);
-        String isDelegatedAdmin = LegacyLdapUtil.getAttrString(attrs, Provisioning.A_zimbraIsDelegatedAdminAccount);
-        
-        if (LdapConstants.LDAP_TRUE.equals(isDomainAdmin) &&
-            !LdapConstants.LDAP_TRUE.equals(isAdmin) &&         // is a global admin, don't touch it
-            !LdapConstants.LDAP_TRUE.equals(isDelegatedAdmin))  // already migrated, don't touch it
-            return LegacyLdapUtil.getAttrString(attrs, Provisioning.A_zimbraId);
-        else
-            return null;
-    }
-    
-    String getZimbraIdIfGlobalAdmin(Attributes attrs) throws NamingException {
-        String isAdmin = LegacyLdapUtil.getAttrString(attrs, Provisioning.A_zimbraIsAdminAccount);
-        
-        if (LdapConstants.LDAP_TRUE.equals(isAdmin))
-            return LegacyLdapUtil.getAttrString(attrs, Provisioning.A_zimbraId);
-        else
-            return null;
     }
     
     private void grantRights(Domain domain, Account domainAdmin) throws ServiceException {
@@ -200,12 +201,12 @@ public class AdminRights extends LegacyLdapUpgrade {
         //
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIsDelegatedAdminAccount, Provisioning.TRUE);
-        mProv.modifyAttrs(domainAdmin, attrs);
+        prov.modifyAttrs(domainAdmin, attrs);
         
         //
         // domain rights
         //
-        mProv.grantRight(TargetType.domain.getCode(), TargetBy.id, domain.getId(), 
+        prov.grantRight(TargetType.domain.getCode(), TargetBy.id, domain.getId(), 
                 GranteeType.GT_USER.getCode(), GranteeBy.id, domainAdmin.getId(), null,
                 RightConsts.RT_domainAdminConsoleRights, RightModifier.RM_CAN_DELEGATE);
         
@@ -217,11 +218,11 @@ public class AdminRights extends LegacyLdapUpgrade {
         //
         // zimlet rights
         //
-        mProv.grantRight(TargetType.global.getCode(), null, null, 
+        prov.grantRight(TargetType.global.getCode(), null, null, 
                 GranteeType.GT_USER.getCode(), GranteeBy.id, domainAdmin.getId(), null,
                 RightConsts.RT_listZimlet, RightModifier.RM_CAN_DELEGATE);
         
-        mProv.grantRight(TargetType.global.getCode(), null, null, 
+        prov.grantRight(TargetType.global.getCode(), null, null, 
                 GranteeType.GT_USER.getCode(), GranteeBy.id, domainAdmin.getId(), null,
                 RightConsts.RT_getZimlet, RightModifier.RM_CAN_DELEGATE);
         
@@ -235,7 +236,7 @@ public class AdminRights extends LegacyLdapUpgrade {
         //
         long maxQuota = domainAdmin.getLongAttr(Provisioning.A_zimbraDomainAdminMaxMailQuota, -1);
         if (maxQuota == -1)  // they don't have permission to change quota
-            mProv.grantRight(TargetType.domain.getCode(), TargetBy.id, domain.getId(), 
+            prov.grantRight(TargetType.domain.getCode(), TargetBy.id, domain.getId(), 
                     GranteeType.GT_USER.getCode(), GranteeBy.id, domainAdmin.getId(), null,
                     InlineAttrRight.composeSetRight(TargetType.account, Provisioning.A_zimbraMailQuota), RightModifier.RM_DENY);
             
@@ -251,21 +252,21 @@ public class AdminRights extends LegacyLdapUpgrade {
             String cosId = parts[0];
             
             // sanity check
-            Cos cos = mProv.get(CosBy.id, cosId);
+            Cos cos = prov.get(CosBy.id, cosId);
             if (cos == null) {
-                System.out.println("    cannot find cos " + cosId + ", skipping granting cos right to " + domainAdmin.getName());
+                printer.println("    cannot find cos " + cosId + ", skipping granting cos right to " + domainAdmin.getName());
                 continue;
             }
             
-            mProv.grantRight(TargetType.cos.getCode(), TargetBy.id, cosId, 
+            prov.grantRight(TargetType.cos.getCode(), TargetBy.id, cosId, 
                     GranteeType.GT_USER.getCode(), GranteeBy.id, domainAdmin.getId(), null,
                     RightConsts.RT_listCos, RightModifier.RM_CAN_DELEGATE);
             
-            mProv.grantRight(TargetType.cos.getCode(), TargetBy.id, cosId, 
+            prov.grantRight(TargetType.cos.getCode(), TargetBy.id, cosId, 
                     GranteeType.GT_USER.getCode(), GranteeBy.id, domainAdmin.getId(), null,
                     RightConsts.RT_getCos, RightModifier.RM_CAN_DELEGATE);
             
-            mProv.grantRight(TargetType.cos.getCode(), TargetBy.id, cosId, 
+            prov.grantRight(TargetType.cos.getCode(), TargetBy.id, cosId, 
                     GranteeType.GT_USER.getCode(), GranteeBy.id, domainAdmin.getId(), null,
                     RightConsts.RT_assignCos, RightModifier.RM_CAN_DELEGATE);
         }
@@ -294,41 +295,7 @@ public class AdminRights extends LegacyLdapUpgrade {
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put("+" + attrName, adminUIComp);
         
-        mProv.modifyAttrs(admin, attrs);
-    }
-    
-    
-    public static void main(String[] args) throws ServiceException {
-
-        /*
-        Provisioning prov = Provisioning.getInstance();
-        
-        String domainName = "test.com";
-        Domain domain = prov.createDomain(domainName, new HashMap<String, Object>());
-        
-        String globalAdminName = "global-admin@" + domainName;
-        String domainAdminName = "domain-admin@" + domainName;
-        String bothAdminName = "both-admin@" + domainName;
-        
-        Map<String, Object> globalAdminAttrs = new HashMap<String, Object>();
-        globalAdminAttrs.put(Provisioning.A_zimbraIsAdminAccount, "TRUE");
-        Account globalAdmin = prov.createAccount(globalAdminName, "test123", globalAdminAttrs);
-        
-        Map<String, Object> domainAdminAttrs = new HashMap<String, Object>();
-        domainAdminAttrs.put(Provisioning.A_zimbraIsDomainAdminAccount, "TRUE");
-        Account domainAdmin = prov.createAccount(domainAdminName, "test123", domainAdminAttrs);
-        
-        Map<String, Object> bothAdminAttrs = new HashMap<String, Object>();
-        bothAdminAttrs.put(Provisioning.A_zimbraIsAdminAccount, "TRUE");
-        bothAdminAttrs.put(Provisioning.A_zimbraIsDomainAdminAccount, "TRUE");
-        Account bothAdmin = prov.createAccount(bothAdminName, "test123", bothAdminAttrs);
-        */
-        
-        LegacyUpgradeTask upgradeTask = LegacyUpgradeTask.fromString("18277");
-        LegacyLdapUpgrade upgrade = upgradeTask.getUpgrader();
-        upgrade.setVerbose(true);
-        upgrade.doUpgrade();
-        
+        prov.modifyAttrs(admin, attrs);
     }
 
 }

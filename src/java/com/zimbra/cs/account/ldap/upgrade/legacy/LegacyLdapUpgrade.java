@@ -196,7 +196,7 @@ public abstract class LegacyLdapUpgrade {
         String bug = cl.getOptionValue(O_BUG);
         boolean verbose = cl.hasOption(O_VERBOSE);
         
-        UpgradeTask upgradeTask = UpgradeTask.fromString(bug);
+        LegacyUpgradeTask upgradeTask = LegacyUpgradeTask.fromString(bug);
         
         if (upgradeTask == null) {
             System.out.println("unrecognized bug number");

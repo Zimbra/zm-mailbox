@@ -52,15 +52,6 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.DomainCache.GetFromDomainCacheOption;
 import com.zimbra.cs.account.NamedEntry.Visitor;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.CacheEntry;
-import com.zimbra.cs.account.Provisioning.CacheEntryBy;
-import com.zimbra.cs.account.Provisioning.CacheEntryType;
-import com.zimbra.cs.account.Provisioning.CosBy;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.account.Provisioning.ServerBy;
-import com.zimbra.cs.account.Provisioning.ZimletBy;
 import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
@@ -127,7 +118,6 @@ import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapException.*;
 import com.zimbra.cs.ldap.LdapServerType;
-import com.zimbra.cs.ldap.LdapTODO;
 import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
@@ -1715,12 +1705,11 @@ public class LdapProvisioning extends LdapProv {
 
         LdapUsage ldapUsage = null;
         if (entry instanceof Account) {
-            ldapUsage = LdapUsage.ADD_ALIAS_ACCOUNT;
+            ldapUsage = LdapUsage.REMOVE_ALIAS_ACCOUNT;
         } else if (entry instanceof DistributionList) {
-            ldapUsage = LdapUsage.ADD_ALIAS_DL;
+            ldapUsage = LdapUsage.REMOVE_ALIAS_DL;
         } else {
-            assert(false);
-            throw ServiceException.FAILURE("invalid entry type for alias", null);
+            ldapUsage = LdapUsage.REMOVE_ALIAS;
         }
         
         ZLdapContext zlc = null;

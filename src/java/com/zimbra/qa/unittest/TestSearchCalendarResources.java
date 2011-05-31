@@ -198,7 +198,7 @@ public class TestSearchCalendarResources {
             Assert.assertTrue(!found1);   // not matching capacity requirement   
             Assert.assertTrue(found2);   
             Assert.assertTrue(!found3);  // at offset 0 (gal sync acount mailbox search is by dateDesc order) 
-                                  // - not within specified offset  
+                                         // - not within specified offset  
         }
     }
     

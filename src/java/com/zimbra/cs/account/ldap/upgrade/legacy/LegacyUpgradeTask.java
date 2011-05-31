@@ -16,7 +16,7 @@ package com.zimbra.cs.account.ldap.upgrade.legacy;
 
 import com.zimbra.common.service.ServiceException;
 
-public enum UpgradeTask {
+public enum LegacyUpgradeTask {
     BUG_10287(zimbraPrefCalendarReminderSendEmail.class),
     BUG_14531(ZimbraGalLdapFilterDef_zimbraSync.class),
     BUG_18277(AdminRights.class),
@@ -54,15 +54,15 @@ public enum UpgradeTask {
     
     private Class mUpgradeClass;
     
-    UpgradeTask(Class klass) {
+    LegacyUpgradeTask(Class klass) {
         mUpgradeClass = klass;
     }
 
-    static UpgradeTask fromString(String bugNumber) throws ServiceException {
+    static LegacyUpgradeTask fromString(String bugNumber) throws ServiceException {
         String bug = "BUG_" + bugNumber;
         
         try {
-            return UpgradeTask.valueOf(bug);
+            return LegacyUpgradeTask.valueOf(bug);
         } catch (IllegalArgumentException e) {
             return null;
         }
@@ -91,7 +91,7 @@ public enum UpgradeTask {
 
     public static void main(String[] args) throws ServiceException {
         // sanity test
-        for (UpgradeTask upgradeTask : UpgradeTask.values()) {
+        for (LegacyUpgradeTask upgradeTask : LegacyUpgradeTask.values()) {
             LegacyLdapUpgrade upgrade = upgradeTask.getUpgrader();
             
             System.out.println("====================================");
