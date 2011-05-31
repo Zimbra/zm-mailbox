@@ -7505,7 +7505,7 @@ public class Mailbox {
         }
     }
 
-    private boolean needRedo(OperationContext octxt) {
+    protected boolean needRedo(OperationContext octxt) {
         // Don't generate redo data for changes made during mailbox version migrations.
         if (!open)
             return false;
