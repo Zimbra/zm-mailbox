@@ -76,7 +76,8 @@ public class LdapUpgrade {
         }
     }
     
-    static void upgrade(String[] args) throws ServiceException {
+    // public for unittest
+    public static void upgrade(String[] args) throws ServiceException {
         LdapUpgradePrinter printer = new LdapUpgradePrinter();
         
         printer.println("\n\n--------------");

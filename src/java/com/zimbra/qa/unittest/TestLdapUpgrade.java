@@ -12,7 +12,7 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.account.ldap.upgrade;
+package com.zimbra.qa.unittest;
 
 import java.util.HashMap;
 
@@ -23,11 +23,11 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.ldap.LdapProv;
-import com.zimbra.qa.unittest.TestLdap;
+import com.zimbra.cs.account.ldap.upgrade.LdapUpgrade;
 
 import static org.junit.Assert.*;
 
-public class LdapUpgradeTest extends TestLdap {
+public class TestLdapUpgrade extends TestLdap {
 
     private static LdapProv prov;
     

@@ -392,6 +392,7 @@ public class TestLdap {
         junit.run(TestLdapProvXMPPComponent.class);
         junit.run(TestLdapProvZimlet.class);
         junit.run(TestLdapUtil.class);
+        junit.run(TestLdapUpgrade.class);
         junit.run(TestLdapZLdapContext.class);
         junit.run(TestLdapZLdapFilter.class);
         junit.run(TestLdapZMutableEntry.class);
