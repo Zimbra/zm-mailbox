@@ -58,6 +58,10 @@ public class DbDataSource {
     public static final String TABLE_DATA_SOURCE_ITEM = "data_source_item";
 
     public static void addMapping(DataSource ds, DataSourceItem item) throws ServiceException {
+        addMapping(ds, item, false);
+    }
+
+    public static void addMapping(DataSource ds, DataSourceItem item, final boolean isBatch) throws ServiceException {
         Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
 
         Connection conn = null;
@@ -71,7 +75,11 @@ public class DbDataSource {
 
         synchronized (getSynchronizer(mbox)) {
             try {
-                conn = DbPool.getConnection(mbox);
+                if (isBatch) {
+                    conn = mbox.getOperationConnection();
+                } else {
+                    conn = DbPool.getConnection(mbox);
+                }
                 StringBuilder sb = new StringBuilder();
                 sb.append("INSERT INTO ");
                 sb.append(getTableName(mbox));
@@ -99,31 +107,44 @@ public class DbDataSource {
                     stmt.setString(i++, DbMailItem.checkMetadataLength((item.md == null) ? null : item.md.toString()));
                 }
                 stmt.executeUpdate();
-                conn.commit();
+                if (!isBatch) {
+                    conn.commit();
+                }
             } catch (SQLException e) {
                 if (!Db.supports(Db.Capability.ON_DUPLICATE_KEY) && Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
                     DbPool.closeStatement(stmt);
                     DbPool.quietClose(conn);
-                	updateMapping(ds, item);
+                    updateMapping(ds, item, isBatch);
                 } else {
                     throw ServiceException.FAILURE("Unable to add mapping for dataSource "+ds.getName(), e);
                 }
             } finally {
                 DbPool.closeStatement(stmt);
-                DbPool.quietClose(conn);
+                if (!isBatch) {
+                    DbPool.quietClose(conn);
+                }
             }
         }
     }
-
+    
     public static void updateMapping(DataSource ds, DataSourceItem item) throws ServiceException {
+        updateMapping(ds, item, false);
+    }
+
+    public static void updateMapping(DataSource ds, DataSourceItem item, final boolean isBatch) throws ServiceException {
     	Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
 
         ZimbraLog.datasource.debug("Updating mapping for dataSource %s: itemId(%d), remoteId(%s)", ds.getName(), item.itemId, item.remoteId);
 
+        Connection conn = null;
+        PreparedStatement stmt = null;
         synchronized (getSynchronizer(mbox)) {
-            Connection conn = null;
-            PreparedStatement stmt = null;
             try {
+                if (isBatch) {
+                    conn = mbox.getOperationConnection();
+                } else {
+                    conn = DbPool.getConnection(mbox);
+                }
                 if (!Db.supports(Db.Capability.ON_DUPLICATE_KEY) && !hasMapping(ds, item.itemId)) {
                     //if we need to update due to unique remoteId then itemid isn't going to be the same
                     conn = DbPool.getConnection(mbox);
@@ -140,8 +161,6 @@ public class DbDataSource {
                     stmt.setString(i++, DbMailItem.checkMetadataLength((item.md == null) ? null : item.md.toString()));
                     i = DbMailItem.setMailboxId(stmt, mbox, i);
                     stmt.setString(i++, item.remoteId);
-                    stmt.executeUpdate();
-                    conn.commit();
                 } else {
                     conn = DbPool.getConnection(mbox);
                     StringBuilder sb = new StringBuilder();
@@ -157,14 +176,18 @@ public class DbDataSource {
                     stmt.setString(i++, DbMailItem.checkMetadataLength((item.md == null) ? null : item.md.toString()));
                     i = DbMailItem.setMailboxId(stmt, mbox, i);
                     stmt.setInt(i++, item.itemId);
-                    stmt.executeUpdate();
+                }
+                stmt.executeUpdate();
+                if (!isBatch) {
                     conn.commit();
                 }
             } catch (SQLException e) {
                 throw ServiceException.FAILURE("Unable to update mapping for dataSource "+ds.getName(), e);
             } finally {
                 DbPool.closeStatement(stmt);
-                DbPool.quietClose(conn);
+                if (!isBatch) {
+                    DbPool.quietClose(conn);
+                }
             }
         }
     }
