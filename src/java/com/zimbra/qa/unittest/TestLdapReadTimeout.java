@@ -1,5 +1,6 @@
 package com.zimbra.qa.unittest;
 
+import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Hashtable;
@@ -15,9 +16,17 @@ import javax.naming.directory.ModificationItem;
 import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+
 import com.unboundid.ldap.sdk.LDAPConnection;
 import com.unboundid.ldap.sdk.LDAPConnectionOptions;
 import com.unboundid.ldap.sdk.LDAPResult;
+import com.unboundid.ldap.sdk.LDAPURL;
 import com.unboundid.ldap.sdk.SearchResultEntry;
 
 /*
@@ -27,23 +36,37 @@ import com.unboundid.ldap.sdk.SearchResultEntry;
 
 public class TestLdapReadTimeout {
     
-    private static interface LdapReadTimeoutTester {
-        void doTest(String dn, boolean createEntry) throws Exception;
+    private static abstract class LdapReadTimeoutTester {
+        String uri;
+        String bindDN;
+        String password;
+        
+        protected LdapReadTimeoutTester(String uri, String bindDN, String password) {
+            this.uri = uri;
+            this.bindDN = bindDN;
+            this.password = password;
+        }
+        
+        abstract void doTest(String dn, boolean createEntry) throws Exception;
     }
 
-    private static class JNDITest implements LdapReadTimeoutTester {
+    private static class JNDITest extends LdapReadTimeoutTester {
+        
+        JNDITest(String uri, String bindDN, String password) {
+            super(uri, bindDN, password);
+        }
         
         private LdapContext connect() throws Exception {
             Hashtable<String, String> env = new Hashtable<String, String>(); 
             env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-            env.put(Context.PROVIDER_URL, "ldap://localhost:389");
+            env.put(Context.PROVIDER_URL, uri);
             env.put(Context.REFERRAL, "follow");
             env.put("com.sun.jndi.ldap.connect.timeout", "30000");
             env.put("com.sun.jndi.ldap.read.timeout", "30000");
             env.put("com.sun.jndi.ldap.connect.pool", "false");
             env.put(Context.SECURITY_AUTHENTICATION, "simple");
-            env.put(Context.SECURITY_PRINCIPAL, "uid=zimbra,cn=admins,cn=zimbra");
-            env.put(Context.SECURITY_CREDENTIALS, "zimbra");
+            env.put(Context.SECURITY_PRINCIPAL, bindDN);
+            env.put(Context.SECURITY_CREDENTIALS, password);
                 
             LdapContext dirCtxt = null;
             long startTime = 0;
@@ -118,7 +141,18 @@ public class TestLdapReadTimeout {
         }
     }
     
-    private static class UBIDTest implements LdapReadTimeoutTester {
+    private static class UBIDTest extends LdapReadTimeoutTester {
+        String host;
+        int port; 
+        
+        UBIDTest(String uri, String bindDN, String password) throws Exception {
+            super(uri, bindDN, password);
+            
+            LDAPURL ldapUrl = new LDAPURL(uri);
+            host = ldapUrl.getHost();
+            port = ldapUrl.getPort();
+        }
+        
         LDAPConnection connect() throws Exception {
             LDAPConnectionOptions connOpts = new LDAPConnectionOptions();
             connOpts.setUseSynchronousMode(true);
@@ -129,11 +163,11 @@ public class TestLdapReadTimeout {
             long startTime = 0;
             try {
                 startTime = System.currentTimeMillis();
-                conn = new LDAPConnection(connOpts, "localhost", 389, 
-                        "uid=zimbra,cn=admins,cn=zimbra", "zimbra");
+                conn = new LDAPConnection(connOpts, host, 389, 
+                        bindDN, password);
             } catch (Exception e) {
                 long elapsed = System.currentTimeMillis() - startTime;
-                System.out.println("\nActual elapsed time for \"creating conneciton\"= " + elapsed + "ms");
+                System.out.println("\nActual elapsed time for making connection = " + elapsed + "ms");
                 throw e;
             }
             
@@ -196,11 +230,6 @@ public class TestLdapReadTimeout {
     }
     
     private static void test(LdapReadTimeoutTester tester) {
-        System.out.println("=============");
-        System.out.println(tester.getClass().getCanonicalName());
-        System.out.println("=============");
-        System.out.println();
-        
         Date date = new Date();
         SimpleDateFormat fmt =  new SimpleDateFormat("yyyyMMdd-HHmmss");
         String testId =  fmt.format(date);
@@ -224,20 +253,134 @@ public class TestLdapReadTimeout {
             }
         } catch (Exception e) {
             System.out.println("Failed at iteration: " + i);
+            System.out.println();
             e.printStackTrace();
         }
     }
 
+    private static String O_HELP = "h";
+    private static String O_SLEEP = "s";
+    private static String O_URI = "H";
+    private static String O_BINDDN = "D";
+    private static String O_PASSWORD = "w";
+    
+    private static void usage(Options options) {
+        System.out.println("\n");
+        PrintWriter pw = new PrintWriter(System.out, true);
+        HelpFormatter formatter = new HelpFormatter();
+        formatter.printHelp(pw, formatter.getWidth(), 
+                "zmjava " + TestLdapReadTimeout.class.getCanonicalName() + " [options]", 
+                null, options, formatter.getLeftPadding(), formatter.getDescPadding(), null);
+        System.out.println("\n");
+        pw.flush();
+    }
     /**
      * /Users/pshao/dev/workspace/sandbox/sandbox/bin>/System/Library/Frameworks/JavaVM.framework/Versions/1.6/Home/bin/java  LdapReadTimeout
      * /System/Library/Frameworks/JavaVM.framework/Versions/1.6/Home/bin/java LdapReadTimeout
      * 
+     * zmjava com.zimbra.qa.unittest.TestLdapReadTimeout -s 5
+     * zmjava com.zimbra.qa.unittest.TestLdapReadTimeout -H ldap://localhost:389 -D uid=zimbra,cn=admins,cn=zimbra -w zimbra -s 5
+     * 
      * @param args
      */
-    public static void main(String[] args) {
-        // LdapReadTimeoutTester tester = new JNDITest();  // fails
-        LdapReadTimeoutTester tester = new UBIDTest();     // works
+    public static void main(String[] args) throws Exception {
+        Options options = new Options();
+        options.addOption(O_HELP, false, "print usage");
+        options.addOption(O_SLEEP, true, 
+                "upon hitting an Exception, minutes to wait until exiting the program.  " +  
+                "If not specified, will exit immediately.");
+        options.addOption(O_URI, true, "URI. e.g. ldap://localhost:389");
+        options.addOption(O_BINDDN, true, "bind DN");
+        options.addOption(O_PASSWORD, true, "password");
         
+        CommandLine cl = null;
+        try {
+            CommandLineParser parser = new GnuParser();
+            cl = parser.parse(options, args);
+            if (cl == null) {
+                throw new ParseException("");
+            }
+        } catch (ParseException e) {
+            usage(options);
+            e.printStackTrace();
+            System.exit(1);
+        }
+        
+        if (cl.hasOption(O_HELP)) {
+            usage(options);
+            System.exit(0);
+        }
+        
+        String uri = null;
+        String bindDN = null;
+        String password = null;
+        Integer minutesToWait = null;
+        
+        if (cl.hasOption(O_URI)) {
+            uri = cl.getOptionValue(O_URI);
+        } else {
+            uri = "ldap://localhost:389";
+        }
+        
+        if (cl.hasOption(O_BINDDN)) {
+            bindDN = cl.getOptionValue(O_BINDDN);
+        } else {
+            bindDN =  "uid=zimbra,cn=admins,cn=zimbra";
+        }
+        
+        if (cl.hasOption(O_PASSWORD)) {
+            password = cl.getOptionValue(O_PASSWORD);
+        } else {
+            password =  "zimbra";
+        }
+        
+        if (cl.hasOption(O_SLEEP)) {
+            String wait = cl.getOptionValue(O_SLEEP);
+            
+            try {
+                minutesToWait = Integer.valueOf(wait);
+            } catch (NumberFormatException e) {
+                usage(options);
+                e.printStackTrace();
+                System.exit(1);
+            }
+        }
+        
+        LdapReadTimeoutTester tester = null;
+        
+        try {
+            // tester = new JNDITest(uri, bindDN, password);  // fails
+            tester = new UBIDTest(uri, bindDN, password);    // works
+            
+            System.out.println("=============");
+            System.out.println(tester.getClass().getCanonicalName());
+            System.out.println("LDAP server URI: " + uri);
+            System.out.println("bind DN: " + bindDN);
+            System.out.println("=============");
+            System.out.println();
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+        
+        Long startTime = System.currentTimeMillis();
         test(tester);
+        long endTime = System.currentTimeMillis();
+        long elapsed = endTime - startTime;
+        
+        SimpleDateFormat fmt =  new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        
+        System.out.println();
+        System.out.println(tester.getClass().getCanonicalName());
+        System.out.println("Started at: " + fmt.format(new Date(startTime)));
+        System.out.println("Ended at: " + fmt.format(new Date(endTime)));
+        System.out.println("Elapsed = " + (elapsed/1000) + " seconds");
+        System.out.println();
+        
+        if (minutesToWait != null) {
+            System.out.println("Sleeping for " + minutesToWait + " minutes before exiting...");
+            Thread.sleep(minutesToWait * 60 * 1000);
+        }
     }
 }
