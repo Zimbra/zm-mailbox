@@ -588,6 +588,7 @@
           <include name="libidn*.jar"/>
           <include name="jdom*.jar"/>
           <include name="json.jar"/>
+          <include name="unboundid*.jar"/>
           <include name="testng*.jar"/>
           <include name="jython*.jar"/>
         </fileset>
@@ -606,7 +607,6 @@
           <include name="slf4j*.jar"/>
           <include name="*jsieve*.jar"/>
           <include name="lucene*.jar"/>
-          <include name="unboundid*.jar"/>
           <include name="ant-tar*.jar"/>
           <include name="icu4j-*.jar"/>
           <include name="mina-*.jar"/>
@@ -1115,6 +1115,7 @@
         <include name="libidn*.jar"/>
         <include name="jdom*.jar"/>
         <include name="json.jar"/>
+        <include name="unboundid*.jar"/>
         <include name="testng*.jar"/>
         <include name="guava*.jar"/>
       </fileset>
