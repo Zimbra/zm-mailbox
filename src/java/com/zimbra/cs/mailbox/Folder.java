@@ -36,6 +36,7 @@ import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.imap.ImapSession;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -153,7 +154,7 @@ public class Folder extends MailItem {
      * of messages that share a same {@code parent_id}.
      */
     public long getConversationCount() throws ServiceException {
-        if (conversationCount < 0) {
+        if (DebugConfig.enableConversationCount && conversationCount < 0) {
             DbConnection conn = DbPool.getConnection(getMailbox());
             try {
                 conversationCount = DbMailItem.getConversationCount(conn, this);

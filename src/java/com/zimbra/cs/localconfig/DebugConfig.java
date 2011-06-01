@@ -31,6 +31,7 @@ public final class DebugConfig {
 
     /** If true, turns off conversation feature. */
     public static final boolean disableConversation = value("debug_disable_conversation", false);
+    public static final boolean enableConversationCount = value("debug_enable_conversation_count", true);
 
     /** If true, turns off filtering of incoming messages. */
     public static final boolean disableIncomingFilter = value("debug_disable_filter", false);
