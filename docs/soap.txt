@@ -3575,7 +3575,7 @@ added to Documents only.
 </GetCommentsRequest>
 
 <GetCommentsResponse>
-  [<comment id="{item-id}" cr="{creator}" d="{timestamp}" text="{comment-text}"/>]+
+  [<comment id="{item-id}" parentId="{item-id-of-parent}" cr="{creator}" d="{timestamp}" text="{comment-text}"/>]+
 <GetCommentsResponse>
 
 -----------------------------
