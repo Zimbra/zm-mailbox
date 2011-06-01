@@ -163,6 +163,8 @@ public class ToXML {
         } else if (item instanceof Message) {
             OutputParticipants output = (fields == NOTIFY_FIELDS ? OutputParticipants.PUT_BOTH : OutputParticipants.PUT_SENDERS);
             return encodeMessageSummary(parent, ifmt, octxt, (Message) item, output, fields);
+        } else if (item instanceof Comment) {
+            return encodeComment(parent, ifmt, (Comment) item, fields);
         } else {
             return null;
         }
@@ -2495,10 +2497,10 @@ public class ToXML {
         }
     }
     
-    public static void encodeComment(Element response, ItemIdFormatter ifmt, Comment comment) {
-        encodeComment(response, ifmt, comment, NOTIFY_FIELDS);
+    public static Element encodeComment(Element response, ItemIdFormatter ifmt, Comment comment) {
+        return encodeComment(response, ifmt, comment, NOTIFY_FIELDS);
     }
-    public static void encodeComment(Element response, ItemIdFormatter ifmt, Comment comment, int fields) {
+    public static Element encodeComment(Element response, ItemIdFormatter ifmt, Comment comment, int fields) {
         Element c = response.addElement(MailConstants.E_COMMENT);
         if (needToOutput(fields, Change.MODIFIED_PARENT)) {
             c.addAttribute(MailConstants.A_PARENT_ID, comment.getParentId());
@@ -2525,6 +2527,7 @@ public class ToXML {
             c.addAttribute(MailConstants.A_DATE, comment.getDate());
         if (needToOutput(fields, Change.MODIFIED_METADATA))
             encodeAllCustomMetadata(c, comment, fields);
+        return c;
     }
     
     public static Element encodeLink(Element response, ItemIdFormatter ifmt, Link link, int fields) {
