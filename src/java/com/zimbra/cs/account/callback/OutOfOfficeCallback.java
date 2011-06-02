@@ -60,26 +60,24 @@ public class OutOfOfficeCallback extends AttributeCallback {
         try {
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
-            synchronized (DbMailbox.getZimbraSynchronizer(mbox)) {
-                DbConnection conn = null;
-                try {
-                    // clear the OOF database for this account
-                    conn = DbPool.getConnection(mbox);
-                    DbOutOfOffice.clear(conn, mbox);
-                    conn.commit();
-                    ZimbraLog.misc.info("reset vacation info");
+            DbConnection conn = null;
+            try {
+                // clear the OOF database for this account
+                conn = DbPool.getConnection(mbox);
+                DbOutOfOffice.clear(conn, mbox);
+                conn.commit();
+                ZimbraLog.misc.info("reset vacation info");
 
-                    // Convenient place to prune old data, until we determine that this
-                    //  needs to be a separate scheduled process.
-                    // TODO: only prune once a day?
-                    long interval = account.getTimeInterval(Provisioning.A_zimbraPrefOutOfOfficeCacheDuration, Notification.DEFAULT_OUT_OF_OFFICE_CACHE_DURATION_MILLIS);
-                    DbOutOfOffice.prune(conn, interval);
-                    conn.commit();
-                } catch (ServiceException e) {
-                    DbPool.quietRollback(conn);
-                } finally {
-                    DbPool.quietClose(conn);
-                }
+                // Convenient place to prune old data, until we determine that this
+                //  needs to be a separate scheduled process.
+                // TODO: only prune once a day?
+                long interval = account.getTimeInterval(Provisioning.A_zimbraPrefOutOfOfficeCacheDuration, Notification.DEFAULT_OUT_OF_OFFICE_CACHE_DURATION_MILLIS);
+                DbOutOfOffice.prune(conn, interval);
+                conn.commit();
+            } catch (ServiceException e) {
+                DbPool.quietRollback(conn);
+            } finally {
+                DbPool.quietClose(conn);
             }
         } catch (ServiceException e) {
             ZimbraLog.misc.warn("error handling out-of-office", e);

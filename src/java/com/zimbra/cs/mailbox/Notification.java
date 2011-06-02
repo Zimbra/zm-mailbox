@@ -246,17 +246,15 @@ public class Notification implements LmtpCallback {
         }
 
         // If we've already sent to this user, do not send again
-        synchronized (DbMailbox.getZimbraSynchronizer(mbox)) {
-            DbConnection conn = null;
-            try {
-                conn = DbPool.getConnection(mbox);
-                if (DbOutOfOffice.alreadySent(conn, mbox, destination, account.getTimeInterval(Provisioning.A_zimbraPrefOutOfOfficeCacheDuration, DEFAULT_OUT_OF_OFFICE_CACHE_DURATION_MILLIS))) {
-                    ofailed("already sent", destination, rcpt, msg);
-                    return;
-                }
-            } finally {
-                DbPool.quietClose(conn);
+        DbConnection conn = null;
+        try {
+            conn = DbPool.getConnection(mbox);
+            if (DbOutOfOffice.alreadySent(conn, mbox, destination, account.getTimeInterval(Provisioning.A_zimbraPrefOutOfOfficeCacheDuration, DEFAULT_OUT_OF_OFFICE_CACHE_DURATION_MILLIS))) {
+                ofailed("already sent", destination, rcpt, msg);
+                return;
             }
+        } finally {
+            DbPool.quietClose(conn);
         }
 
         // Send the message
@@ -310,15 +308,12 @@ public class Notification implements LmtpCallback {
             ZimbraLog.mailbox.info("outofoffice sent dest='" + destination + "' rcpt='" + rcpt + "' mid=" + msg.getId());
 
             // Save so we will not send to again
-            synchronized (DbMailbox.getZimbraSynchronizer(mbox)) {
-                DbConnection conn = null;
-                try {
-                    conn = DbPool.getConnection(mbox);
-                    DbOutOfOffice.setSentTime(conn, mbox, destination);
-                    conn.commit();
-                } finally {
-                    DbPool.quietClose(conn);
-                }
+            try {
+                conn = DbPool.getConnection(mbox);
+                DbOutOfOffice.setSentTime(conn, mbox, destination);
+                conn.commit();
+            } finally {
+                DbPool.quietClose(conn);
             }
         } catch (MessagingException me) {
             ofailed("send failed", destination, rcpt, msg, me);

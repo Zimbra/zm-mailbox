@@ -764,11 +764,6 @@ public final class DbMailbox {
         }
     }
 
-    public static Object getZimbraSynchronizer(Mailbox mbox) throws ServiceException {
-        return DebugConfig.disableMailboxGroups ? mbox : MailboxManager.getInstance();
-    }
-
-
     public static int calculateMailboxGroupId(int mailboxId) {
         int groups = DebugConfig.numMailboxGroups;
         // -1 / +1 operations are done so that the group id is never 0.
