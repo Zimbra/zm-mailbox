@@ -224,6 +224,11 @@ public class SoapProvisioning extends Provisioning {
     public String toString() {
         return String.format("[%s %s]", getClass().getName(), mTransport == null ? "" : mTransport.getURI());
     }
+    
+    public boolean isExpired() {
+        // if never authed, mAuthTokenExpiration would be 0, isExpired will return true 
+        return (mAuthTokenExpiration <= System.currentTimeMillis());
+    }
 
     /**
      * @param uri URI of server we want to talk to
