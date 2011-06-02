@@ -255,6 +255,8 @@ public class LC {
     public static final KnownKey ldap_cache_reverseproxylookup_domain_maxage;
     public static final KnownKey ldap_cache_reverseproxylookup_server_maxsize;
     public static final KnownKey ldap_cache_reverseproxylookup_server_maxage;
+    
+    public static final KnownKey zimbra_directory_max_search_result;
 
     public static final KnownKey mysql_directory;
     public static final KnownKey mysql_data_directory;
@@ -1026,6 +1028,10 @@ public class LC {
         ldap_cache_reverseproxylookup_server_maxsize = new KnownKey("ldap_cache_reverseproxylookup_server_maxsize", "100");
 
         ldap_cache_reverseproxylookup_server_maxage = new KnownKey("ldap_cache_reverseproxylookup_server_maxage", "15");
+        
+        zimbra_directory_max_search_result = new KnownKey("zimbra_directory_max_search_result", "5000");
+        zimbra_directory_max_search_result.setDoc("Size limit for the underlying LDAP search for the SearchDirectoryRequest " +
+        		"SOAP request.  0 means unlimited.");
 
         mysql_directory = new KnownKey("mysql_directory");
         mysql_directory.setDefault("${zimbra_home}" + FS + "mysql");
