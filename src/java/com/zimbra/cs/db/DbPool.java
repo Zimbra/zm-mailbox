@@ -168,6 +168,7 @@ public class DbPool {
         String mLoggerUrl;
         boolean mSupportsStatsCallback;
         Properties mDatabaseProperties;
+        byte whenExhaustedAction = GenericObjectPool.WHEN_EXHAUSTED_BLOCK;
     }
 
     /**
@@ -235,7 +236,7 @@ public class DbPool {
             return sPoolingDataSource;
 
         PoolConfig pconfig = Db.getInstance().getPoolConfig();
-        sConnectionPool = new GenericObjectPool(null, pconfig.mPoolSize, GenericObjectPool.WHEN_EXHAUSTED_BLOCK, -1, pconfig.mPoolSize);
+        sConnectionPool = new GenericObjectPool(null, pconfig.mPoolSize, pconfig.whenExhaustedAction, -1, pconfig.mPoolSize);
         ConnectionFactory cfac = ZimbraConnectionFactory.getConnectionFactory(pconfig);
 
         boolean defAutoCommit = false, defReadOnly = false;

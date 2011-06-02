@@ -33,6 +33,7 @@ import java.util.concurrent.ConcurrentMap;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.dbcp.DelegatingConnection;
+import org.apache.commons.pool.impl.GenericObjectPool;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -384,6 +385,7 @@ public class SQLite extends Db {
             mLoggerUrl = null;
             mSupportsStatsCallback = false;
             mDatabaseProperties = getSQLiteProperties();
+            whenExhaustedAction = GenericObjectPool.WHEN_EXHAUSTED_GROW; //we use a small pool. we can easily starve when any code requires more than one connection to complete a single operation
 
             // override pool size if specified in prefs
             mPoolSize = readConfigInt("sqlite_pool_size", "connection pool size", DEFAULT_CONNECTION_POOL_SIZE);

@@ -113,7 +113,9 @@ public class DbDataSource {
             } catch (SQLException e) {
                 if (!Db.supports(Db.Capability.ON_DUPLICATE_KEY) && Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
                     DbPool.closeStatement(stmt);
-                    DbPool.quietClose(conn);
+                    if (!isBatch) {
+                        DbPool.quietClose(conn);
+                    }
                     updateMapping(ds, item, isBatch);
                 } else {
                     throw ServiceException.FAILURE("Unable to add mapping for dataSource "+ds.getName(), e);
@@ -147,7 +149,6 @@ public class DbDataSource {
                 }
                 if (!Db.supports(Db.Capability.ON_DUPLICATE_KEY) && !hasMapping(ds, item.itemId)) {
                     //if we need to update due to unique remoteId then itemid isn't going to be the same
-                    conn = DbPool.getConnection(mbox);
                     StringBuilder sb = new StringBuilder();
                     sb.append("UPDATE ");
                     sb.append(getTableName(mbox));
@@ -162,7 +163,6 @@ public class DbDataSource {
                     i = DbMailItem.setMailboxId(stmt, mbox, i);
                     stmt.setString(i++, item.remoteId);
                 } else {
-                    conn = DbPool.getConnection(mbox);
                     StringBuilder sb = new StringBuilder();
                     sb.append("UPDATE ");
                     sb.append(getTableName(mbox));
