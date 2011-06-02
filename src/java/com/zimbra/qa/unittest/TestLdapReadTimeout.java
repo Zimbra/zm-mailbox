@@ -74,8 +74,10 @@ public class TestLdapReadTimeout {
                 startTime = System.currentTimeMillis();
                 dirCtxt = new InitialLdapContext(env, null);
             } catch (Exception e) {
+                SimpleDateFormat fmt = new SimpleDateFormat("HH:mm:ss");
                 long elapsed = System.currentTimeMillis() - startTime;
-                System.out.println("\nActual elapsed time for \"new InitialLdapContext\"= " + elapsed + "ms");
+                System.out.println("Connection attempt started at: " + fmt.format(new Date(startTime)));
+                System.out.println("\nActual elapsed time for making connection= " + elapsed + "ms");
                 throw e;
             }
     
@@ -141,11 +143,11 @@ public class TestLdapReadTimeout {
         }
     }
     
-    private static class UBIDTest extends LdapReadTimeoutTester {
+    private static class UnboundIDTest extends LdapReadTimeoutTester {
         String host;
         int port; 
         
-        UBIDTest(String uri, String bindDN, String password) throws Exception {
+        UnboundIDTest(String uri, String bindDN, String password) throws Exception {
             super(uri, bindDN, password);
             
             LDAPURL ldapUrl = new LDAPURL(uri);
@@ -165,12 +167,17 @@ public class TestLdapReadTimeout {
                 startTime = System.currentTimeMillis();
                 conn = new LDAPConnection(connOpts, host, 389, 
                         bindDN, password);
+                
             } catch (Exception e) {
+                SimpleDateFormat fmt = new SimpleDateFormat("HH:mm:ss");
+                
                 long elapsed = System.currentTimeMillis() - startTime;
+                
+                System.out.println("Connection attempt started at: " + fmt.format(new Date(startTime)));
                 System.out.println("\nActual elapsed time for making connection = " + elapsed + "ms");
                 throw e;
             }
-            
+
             return conn;
         }
         
@@ -350,7 +357,7 @@ public class TestLdapReadTimeout {
         
         try {
             // tester = new JNDITest(uri, bindDN, password);  // fails
-            tester = new UBIDTest(uri, bindDN, password);    // works
+            tester = new UnboundIDTest(uri, bindDN, password);    // works
             
             System.out.println("=============");
             System.out.println(tester.getClass().getCanonicalName());
@@ -364,12 +371,12 @@ public class TestLdapReadTimeout {
             System.exit(1);
         }
         
-        Long startTime = System.currentTimeMillis();
+        long startTime = System.currentTimeMillis();
         test(tester);
         long endTime = System.currentTimeMillis();
         long elapsed = endTime - startTime;
         
-        SimpleDateFormat fmt =  new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         
         System.out.println();
         System.out.println(tester.getClass().getCanonicalName());
