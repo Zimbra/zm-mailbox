@@ -18,6 +18,7 @@
  */
 package com.zimbra.cs.service.admin;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Account;
@@ -56,7 +57,7 @@ public class SearchDirectory extends AdminDocumentHandler {
     
     private static final String SEARCH_DIRECTORY_ACCOUNT_DATA = "SearchDirectoryAccount";
 
-    public static final int MAX_SEARCH_RESULTS = 5000;
+    public static final int MAX_SEARCH_RESULTS = LC.zimbra_directory_max_search_result.intValue();
     
     /**
      * must be careful and only allow access to domain if domain admin
