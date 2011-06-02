@@ -35,6 +35,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.LuceneQueryOperation;
+import com.zimbra.cs.index.NoResultsQueryOperation;
 import com.zimbra.cs.index.NoTermQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
 import com.zimbra.cs.index.WildcardExpansionQueryInfo;
@@ -125,7 +126,7 @@ public class TextQuery extends Query {
             }
 
             if (terms.isEmpty()) {
-                return new NoTermQueryOperation();
+                return new NoResultsQueryOperation();
             } else {
                 MultiPhraseQuery query = new MultiPhraseQuery();
                 for (String token : tokens) {
