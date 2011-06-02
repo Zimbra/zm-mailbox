@@ -2110,7 +2110,7 @@ public class SoapProvisioning extends Provisioning {
         }
         EffectiveRightsTargetSelector targetSel =
             new EffectiveRightsTargetSelector(
-                    EffectiveRightsTarget.TargetType.fromString(targetType),
+                    com.zimbra.soap.type.TargetType.fromString(targetType),
                     targetBy.toJaxb(), target);
         GetEffectiveRightsResponse resp =
             invokeJaxb(new GetEffectiveRightsRequest(targetSel, granteeSel,

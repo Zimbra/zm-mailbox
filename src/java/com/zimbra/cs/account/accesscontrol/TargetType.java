@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2008, 2009, 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.SetUtil;
 
 import com.zimbra.cs.account.Account;
@@ -53,7 +52,6 @@ import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
-import com.zimbra.soap.admin.type.EffectiveRightsTarget;
 
 
 public enum TargetType {
@@ -113,8 +111,8 @@ public enum TargetType {
     }
 
     /* Convert to equivalent JAXB object */
-    public EffectiveRightsTarget.TargetType toJaxb() throws ServiceException {
-        return EffectiveRightsTarget.TargetType.fromString(this.name());
+    public com.zimbra.soap.type.TargetType toJaxb() throws ServiceException {
+        return com.zimbra.soap.type.TargetType.fromString(this.name());
     }
 
     private void setInheritedByTargetTypes(TargetType[] targetTypes) {
