@@ -29,7 +29,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.ConstraintAttr;
-import com.zimbra.soap.admin.type.EffectiveRightsTarget.TargetType;
+import com.zimbra.soap.type.TargetType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_MODIFY_DELEGATED_ADMIN_CONSTRAINTS_REQUEST)
@@ -55,7 +55,8 @@ public class ModifyDelegatedAdminConstraintsRequest {
         this((TargetType) null, (String) null, (String) null);
     }
 
-    public ModifyDelegatedAdminConstraintsRequest(TargetType type, String id, String name) {
+    public ModifyDelegatedAdminConstraintsRequest(
+                    TargetType type, String id, String name) {
         this.type = type;
         this.id = id;
         this.name = name;

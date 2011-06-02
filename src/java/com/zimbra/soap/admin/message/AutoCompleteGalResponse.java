@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -15,6 +15,7 @@
 
 package com.zimbra.soap.admin.message;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -36,27 +37,27 @@ import com.zimbra.soap.admin.type.AutoCompleteGalContactInfo;
 @XmlRootElement(name=AdminConstants.E_AUTO_COMPLETE_GAL_RESPONSE)
 public class AutoCompleteGalResponse {
 
-    @XmlAttribute(name=MailConstants.A_SORTBY, required=false)
+    @XmlAttribute(name=MailConstants.A_SORTBY /* sortBy */, required=false)
     private final String sortBy;
 
-    @XmlAttribute(name=MailConstants.A_QUERY_OFFSET, required=false)
+    @XmlAttribute(name=MailConstants.A_QUERY_OFFSET /* offset */, required=false)
     private final Integer offset;
 
-    @XmlAttribute(name=MailConstants.A_QUERY_MORE, required=false)
+    @XmlAttribute(name=MailConstants.A_QUERY_MORE /* more */, required=false)
     private final Boolean more;
 
     // Probably not actually used for AutoCompleteGal
-    @XmlAttribute(name=MailConstants.A_TOKEN, required=false)
+    @XmlAttribute(name=MailConstants.A_TOKEN /* token */, required=false)
     private String token;
 
     // TODO:Is this actually set anywhere in the server?
-    @XmlAttribute(name=AccountConstants.A_TOKENIZE_KEY, required=false)
+    @XmlAttribute(name=AccountConstants.A_TOKENIZE_KEY /* tokenizeKey */, required=false)
     private final Boolean tokenizeKey;
 
-    @XmlAttribute(name=AccountConstants.A_PAGINATION_SUPPORTED, required=false)
+    @XmlAttribute(name=AccountConstants.A_PAGINATION_SUPPORTED /* paginationSupported */, required=false)
     private Boolean pagingSupported;
 
-    @XmlElement(name=MailConstants.E_CONTACT, required=false)
+    @XmlElement(name=MailConstants.E_CONTACT /* cn */, required=false)
     private List<AutoCompleteGalContactInfo> contacts = Lists.newArrayList();
 
     // Believe that GalSearchResultCallback.handleDeleted(ItemId id) is not
@@ -107,5 +108,23 @@ public class AutoCompleteGalResponse {
     public Boolean getPagingSupported() { return pagingSupported; }
     public List<AutoCompleteGalContactInfo> getContacts() {
         return Collections.unmodifiableList(contacts);
+    }
+
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        return helper
+            .add("sortBy", sortBy)
+            .add("offset", offset)
+            .add("more", more)
+            .add("token", token)
+            .add("tokenizeKey", tokenizeKey)
+            .add("pagingSupported", pagingSupported)
+            .add("contacts", contacts);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }

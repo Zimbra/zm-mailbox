@@ -13,42 +13,42 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.message;
+package com.zimbra.soap.mail.message;
 
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.mail.type.RankingActionSpec;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AdminConstants.E_ADMIN_DESTROY_WAIT_SET_REQUEST)
-public class AdminDestroyWaitSetRequest {
+@XmlRootElement(name=MailConstants.E_RANKING_ACTION_REQUEST)
+public class RankingActionRequest {
 
-    @XmlAttribute(name=MailConstants.A_WAITSET_ID /* waitSet */, required=true)
-    private final String waitSetId;
+    @XmlElement(name=MailConstants.E_ACTION /* action */, required=true)
+    private final RankingActionSpec action;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private AdminDestroyWaitSetRequest() {
-        this((String) null);
+    private RankingActionRequest() {
+        this((RankingActionSpec) null);
     }
 
-    public AdminDestroyWaitSetRequest(String waitSetId) {
-        this.waitSetId = waitSetId;
+    public RankingActionRequest(RankingActionSpec action) {
+        this.action = action;
     }
 
-    public String getWaitSetId() { return waitSetId; }
+    public RankingActionSpec getAction() { return action; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("waitSetId", waitSetId);
+            .add("action", action);
     }
 
     @Override

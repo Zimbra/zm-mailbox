@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.message;
+package com.zimbra.soap.mail.message;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
@@ -29,14 +29,13 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.Id;
 import com.zimbra.soap.type.WaitSetAddSpec;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AdminConstants.E_ADMIN_WAIT_SET_REQUEST)
-public class AdminWaitSetRequest {
+@XmlRootElement(name=MailConstants.E_WAIT_SET_REQUEST)
+public class WaitSetRequest {
 
     @XmlAttribute(name=MailConstants.A_WAITSET_ID /* waitSet */, required=true)
     private final String waitSetId;
@@ -73,11 +72,11 @@ public class AdminWaitSetRequest {
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private AdminWaitSetRequest() {
+    private WaitSetRequest() {
         this((String) null, (String) null);
     }
 
-    public AdminWaitSetRequest(String waitSetId, String lastKnownSeqNo) {
+    public WaitSetRequest(String waitSetId, String lastKnownSeqNo) {
         this.waitSetId = waitSetId;
         this.lastKnownSeqNo = lastKnownSeqNo;
     }
@@ -94,7 +93,7 @@ public class AdminWaitSetRequest {
         }
     }
 
-    public AdminWaitSetRequest addAddAccount(WaitSetAddSpec addAccount) {
+    public WaitSetRequest addAddAccount(WaitSetAddSpec addAccount) {
         this.addAccounts.add(addAccount);
         return this;
     }
@@ -106,7 +105,7 @@ public class AdminWaitSetRequest {
         }
     }
 
-    public AdminWaitSetRequest addUpdateAccount(WaitSetAddSpec updateAccount) {
+    public WaitSetRequest addUpdateAccount(WaitSetAddSpec updateAccount) {
         this.updateAccounts.add(updateAccount);
         return this;
     }
@@ -118,7 +117,7 @@ public class AdminWaitSetRequest {
         }
     }
 
-    public AdminWaitSetRequest addRemoveAccount(Id removeAccount) {
+    public WaitSetRequest addRemoveAccount(Id removeAccount) {
         this.removeAccounts.add(removeAccount);
         return this;
     }

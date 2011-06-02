@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.message;
+package com.zimbra.soap.mail.message;
 
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -21,34 +21,25 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AdminConstants.E_ADMIN_DESTROY_WAIT_SET_REQUEST)
-public class AdminDestroyWaitSetRequest {
+@XmlRootElement(name=MailConstants.E_GET_YAHOO_AUTH_TOKEN_RESPONSE)
+public class GetYahooAuthTokenResponse {
 
-    @XmlAttribute(name=MailConstants.A_WAITSET_ID /* waitSet */, required=true)
-    private final String waitSetId;
+    @XmlAttribute(name="failed", required=false)
+    private Boolean failed;
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private AdminDestroyWaitSetRequest() {
-        this((String) null);
+    public GetYahooAuthTokenResponse() {
     }
 
-    public AdminDestroyWaitSetRequest(String waitSetId) {
-        this.waitSetId = waitSetId;
-    }
-
-    public String getWaitSetId() { return waitSetId; }
+    public void setFailed(Boolean failed) { this.failed = failed; }
+    public Boolean getFailed() { return failed; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("waitSetId", waitSetId);
+            .add("failed", failed);
     }
 
     @Override

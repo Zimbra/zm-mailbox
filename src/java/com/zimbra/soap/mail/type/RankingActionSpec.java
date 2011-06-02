@@ -13,42 +13,47 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.message;
+package com.zimbra.soap.mail.type;
 
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlRootElement;
 
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AdminConstants.E_ADMIN_DESTROY_WAIT_SET_REQUEST)
-public class AdminDestroyWaitSetRequest {
+public class RankingActionSpec {
 
-    @XmlAttribute(name=MailConstants.A_WAITSET_ID /* waitSet */, required=true)
-    private final String waitSetId;
+    // Valid values are "reset" and "delete" (case insensitive)
+    @XmlAttribute(name=MailConstants.A_OPERATION /* op */, required=true)
+    private final String operation;
+
+    // required if action is "delete"
+    @XmlAttribute(name=MailConstants.A_EMAIL /* email */, required=false)
+    private String email;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private AdminDestroyWaitSetRequest() {
+    private RankingActionSpec() {
         this((String) null);
     }
 
-    public AdminDestroyWaitSetRequest(String waitSetId) {
-        this.waitSetId = waitSetId;
+    public RankingActionSpec(String operation) {
+        this.operation = operation;
     }
 
-    public String getWaitSetId() { return waitSetId; }
+    public void setEmail(String email) { this.email = email; }
+    public String getOperation() { return operation; }
+    public String getEmail() { return email; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("waitSetId", waitSetId);
+            .add("operation", operation)
+            .add("email", email);
     }
 
     @Override

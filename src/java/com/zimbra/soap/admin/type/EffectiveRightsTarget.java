@@ -32,24 +32,10 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.EffectiveRightsInfo;
 import com.zimbra.soap.admin.type.RightsEntriesInfo;
 import com.zimbra.soap.admin.type.InDomainInfo;
+import com.zimbra.soap.type.TargetType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class EffectiveRightsTarget {
-    
-    @XmlEnum
-    public enum TargetType {
-        // case must match protocol
-        account, calresource, cos, dl, domain, server,
-        xmppcomponent, zimlet, config, global;
-        
-        public static TargetType fromString(String s) throws ServiceException {
-            try {
-                return TargetType.valueOf(s);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
-            }
-        }
-    }
 
     @XmlAttribute(name=AdminConstants.A_TYPE, required=true)
     private final TargetType type;
@@ -76,7 +62,8 @@ public class EffectiveRightsTarget {
         this.all = all;
     }
 
-    public EffectiveRightsTarget setInDomainLists(Collection <InDomainInfo> inDomainLists) {
+    public EffectiveRightsTarget setInDomainLists(
+                    Collection <InDomainInfo> inDomainLists) {
         this.inDomainLists.clear();
         if (inDomainLists != null) {
             this.inDomainLists.addAll(inDomainLists);
@@ -89,7 +76,8 @@ public class EffectiveRightsTarget {
         return this;
     }
 
-    public EffectiveRightsTarget setEntriesLists(Collection <RightsEntriesInfo> entriesLists) {
+    public EffectiveRightsTarget setEntriesLists(
+                    Collection <RightsEntriesInfo> entriesLists) {
         this.entriesLists.clear();
         if (entriesLists != null) {
             this.entriesLists.addAll(entriesLists);

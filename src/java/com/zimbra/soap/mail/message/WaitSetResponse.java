@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.message;
+package com.zimbra.soap.mail.message;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
@@ -29,15 +29,14 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.Id;
 import com.zimbra.soap.type.IdAndType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AdminConstants.E_ADMIN_WAIT_SET_RESPONSE)
+@XmlRootElement(name=MailConstants.E_WAIT_SET_RESPONSE)
 @XmlType(propOrder = {"signalledAccounts", "errors"})
-public class AdminWaitSetResponse {
+public class WaitSetResponse {
 
     @XmlAttribute(name=MailConstants.A_WAITSET_ID /* waitSet */, required=true)
     private final String waitSetId;
@@ -58,11 +57,11 @@ public class AdminWaitSetResponse {
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private AdminWaitSetResponse() {
+    private WaitSetResponse() {
         this((String) null);
     }
 
-    public AdminWaitSetResponse(String waitSetId) {
+    public WaitSetResponse(String waitSetId) {
         this.waitSetId = waitSetId;
     }
 
@@ -75,7 +74,7 @@ public class AdminWaitSetResponse {
         }
     }
 
-    public AdminWaitSetResponse addSignalledAccount(Id signalledAccount) {
+    public WaitSetResponse addSignalledAccount(Id signalledAccount) {
         this.signalledAccounts.add(signalledAccount);
         return this;
     }
@@ -87,7 +86,7 @@ public class AdminWaitSetResponse {
         }
     }
 
-    public AdminWaitSetResponse addError(IdAndType error) {
+    public WaitSetResponse addError(IdAndType error) {
         this.errors.add(error);
         return this;
     }

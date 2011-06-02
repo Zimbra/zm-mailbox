@@ -13,49 +13,41 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.mail.type;
+package com.zimbra.soap.mail.message;
 
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class WaitSetAddSpec {
+@XmlRootElement(name=MailConstants.E_DESTROY_WAIT_SET_REQUEST)
+public class DestroyWaitSetRequest {
 
-    @XmlAttribute(name=MailConstants.A_NAME /* name */, required=false)
-    private String name;
+    @XmlAttribute(name=MailConstants.A_WAITSET_ID /* waitSet */, required=true)
+    private final String waitSetId;
 
-    @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
-    private String id;
-
-    @XmlAttribute(name=MailConstants.A_TOKEN /* token */, required=false)
-    private String token;
-
-    @XmlAttribute(name=MailConstants.A_TYPES /* types */, required=false)
-    private String interests;
-
-    public WaitSetAddSpec() {
+    /**
+     * no-argument constructor wanted by JAXB
+     */
+    @SuppressWarnings("unused")
+    private DestroyWaitSetRequest() {
+        this((String) null);
     }
 
-    public void setName(String name) { this.name = name; }
-    public void setId(String id) { this.id = id; }
-    public void setToken(String token) { this.token = token; }
-    public void setInterests(String interests) { this.interests = interests; }
-    public String getName() { return name; }
-    public String getId() { return id; }
-    public String getToken() { return token; }
-    public String getInterests() { return interests; }
+    public DestroyWaitSetRequest(String waitSetId) {
+        this.waitSetId = waitSetId;
+    }
+
+    public String getWaitSetId() { return waitSetId; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("name", name)
-            .add("id", id)
-            .add("token", token)
-            .add("interests", interests);
+            .add("waitSetId", waitSetId);
     }
 
     @Override

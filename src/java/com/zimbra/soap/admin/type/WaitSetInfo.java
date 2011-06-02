@@ -30,6 +30,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.IdAndType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(propOrder = {"sessions", "errors", "signalledAccounts",

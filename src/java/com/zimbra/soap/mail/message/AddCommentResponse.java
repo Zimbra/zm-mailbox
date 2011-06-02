@@ -13,42 +13,44 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.message;
+package com.zimbra.soap.mail.message;
 
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.Id;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AdminConstants.E_ADMIN_DESTROY_WAIT_SET_REQUEST)
-public class AdminDestroyWaitSetRequest {
+@XmlRootElement(name=MailConstants.E_ADD_COMMENT_RESPONSE)
+@XmlType(propOrder = {})
+public class AddCommentResponse {
 
-    @XmlAttribute(name=MailConstants.A_WAITSET_ID /* waitSet */, required=true)
-    private final String waitSetId;
+    @XmlElement(name=MailConstants.E_COMMENT /* comment */, required=true)
+    private final Id comment;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private AdminDestroyWaitSetRequest() {
-        this((String) null);
+    private AddCommentResponse() {
+        this((Id) null);
     }
 
-    public AdminDestroyWaitSetRequest(String waitSetId) {
-        this.waitSetId = waitSetId;
+    public AddCommentResponse(Id comment) {
+        this.comment = comment;
     }
 
-    public String getWaitSetId() { return waitSetId; }
+    public Id getComment() { return comment; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("waitSetId", waitSetId);
+            .add("comment", comment);
     }
 
     @Override

@@ -19,10 +19,12 @@ import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
+@XmlRootElement(name=MailConstants.E_METADATA)
 public class CustomMetadata extends KeyValuePairsImpl {
 
     // Normally present but sometimes an empty element is created

@@ -13,42 +13,53 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.message;
+package com.zimbra.soap.mail.message;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
+import java.util.Collections;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.mail.type.Right;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AdminConstants.E_ADMIN_DESTROY_WAIT_SET_REQUEST)
-public class AdminDestroyWaitSetRequest {
+@XmlRootElement(name=MailConstants.E_GET_PERMISSION_REQUEST)
+public class GetPermissionRequest {
 
-    @XmlAttribute(name=MailConstants.A_WAITSET_ID /* waitSet */, required=true)
-    private final String waitSetId;
+    @XmlElement(name=MailConstants.E_ACE /* ace */, required=false)
+    private List<Right> aces = Lists.newArrayList();
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private AdminDestroyWaitSetRequest() {
-        this((String) null);
+    public GetPermissionRequest() {
     }
 
-    public AdminDestroyWaitSetRequest(String waitSetId) {
-        this.waitSetId = waitSetId;
+    public void setAces(Iterable <Right> aces) {
+        this.aces.clear();
+        if (aces != null) {
+            Iterables.addAll(this.aces,aces);
+        }
     }
 
-    public String getWaitSetId() { return waitSetId; }
+    public GetPermissionRequest addAce(Right ace) {
+        this.aces.add(ace);
+        return this;
+    }
+
+    public List<Right> getAces() {
+        return Collections.unmodifiableList(aces);
+    }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("waitSetId", waitSetId);
+            .add("aces", aces);
     }
 
     @Override

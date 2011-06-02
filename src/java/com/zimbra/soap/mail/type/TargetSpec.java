@@ -13,42 +13,54 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.message;
+package com.zimbra.soap.mail.type;
 
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlValue;
 
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.AccountBy;
+import com.zimbra.soap.type.TargetType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AdminConstants.E_ADMIN_DESTROY_WAIT_SET_REQUEST)
-public class AdminDestroyWaitSetRequest {
+public class TargetSpec {
 
-    @XmlAttribute(name=MailConstants.A_WAITSET_ID /* waitSet */, required=true)
-    private final String waitSetId;
+    @XmlAttribute(name=MailConstants.A_TARGET_TYPE /* type */, required=true)
+    private final TargetType targetType;
+
+    @XmlAttribute(name=MailConstants.A_TARGET_BY /* by */, required=true)
+    private final AccountBy accountBy;
+
+    @XmlValue
+    private String value;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private AdminDestroyWaitSetRequest() {
-        this((String) null);
+    private TargetSpec() {
+        this((TargetType) null, (AccountBy) null);
     }
 
-    public AdminDestroyWaitSetRequest(String waitSetId) {
-        this.waitSetId = waitSetId;
+    public TargetSpec(TargetType targetType, AccountBy accountBy) {
+        this.targetType = targetType;
+        this.accountBy = accountBy;
     }
 
-    public String getWaitSetId() { return waitSetId; }
+    public void setValue(String value) { this.value = value; }
+    public TargetType getTargetType() { return targetType; }
+    public AccountBy getAccountBy() { return accountBy; }
+    public String getValue() { return value; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("waitSetId", waitSetId);
+            .add("targetType", targetType)
+            .add("accountBy", accountBy)
+            .add("value", value);
     }
 
     @Override

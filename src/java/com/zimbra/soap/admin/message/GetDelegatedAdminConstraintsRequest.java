@@ -28,7 +28,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.EffectiveRightsTarget.TargetType;
+import com.zimbra.soap.type.TargetType;
 import com.zimbra.soap.type.NamedElement;
 
 @XmlAccessorType(XmlAccessType.FIELD)

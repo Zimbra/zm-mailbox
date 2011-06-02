@@ -30,7 +30,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.mail.type.IdAndType;
+import com.zimbra.soap.type.IdAndType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=MailConstants.E_CREATE_WAIT_SET_RESPONSE)

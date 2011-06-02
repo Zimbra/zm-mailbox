@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.message;
+package com.zimbra.soap.mail.message;
 
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -21,34 +21,43 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AdminConstants.E_ADMIN_DESTROY_WAIT_SET_REQUEST)
-public class AdminDestroyWaitSetRequest {
+@XmlRootElement(name=MailConstants.E_GET_YAHOO_COOKIE_RESPONSE)
+public class GetYahooCookieResponse {
 
-    @XmlAttribute(name=MailConstants.A_WAITSET_ID /* waitSet */, required=true)
-    private final String waitSetId;
+    @XmlAttribute(name="error", required=false)
+    private String error;
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private AdminDestroyWaitSetRequest() {
-        this((String) null);
+    @XmlAttribute(name="crumb", required=false)
+    private String crumb;
+
+    @XmlAttribute(name="y", required=false)
+    private String y;
+
+    @XmlAttribute(name="t", required=false)
+    private String t;
+
+    public GetYahooCookieResponse() {
     }
 
-    public AdminDestroyWaitSetRequest(String waitSetId) {
-        this.waitSetId = waitSetId;
-    }
-
-    public String getWaitSetId() { return waitSetId; }
+    public void setError(String error) { this.error = error; }
+    public void setCrumb(String crumb) { this.crumb = crumb; }
+    public void setY(String y) { this.y = y; }
+    public void setT(String t) { this.t = t; }
+    public String getError() { return error; }
+    public String getCrumb() { return crumb; }
+    public String getY() { return y; }
+    public String getT() { return t; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("waitSetId", waitSetId);
+            .add("error", error)
+            .add("crumb", crumb)
+            .add("y", y)
+            .add("t", t);
     }
 
     @Override

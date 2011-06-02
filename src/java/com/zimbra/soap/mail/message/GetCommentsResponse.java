@@ -13,42 +13,55 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.message;
+package com.zimbra.soap.mail.message;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
+import java.util.Collections;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.mail.type.CommentInfo;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AdminConstants.E_ADMIN_DESTROY_WAIT_SET_REQUEST)
-public class AdminDestroyWaitSetRequest {
+@XmlRootElement(name=MailConstants.E_GET_COMMENTS_RESPONSE)
+@XmlType(propOrder = {})
+public class GetCommentsResponse {
 
-    @XmlAttribute(name=MailConstants.A_WAITSET_ID /* waitSet */, required=true)
-    private final String waitSetId;
+    @XmlElement(name=MailConstants.E_COMMENT /* comment */, required=false)
+    private List<CommentInfo> comments = Lists.newArrayList();
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private AdminDestroyWaitSetRequest() {
-        this((String) null);
+    public GetCommentsResponse() {
     }
 
-    public AdminDestroyWaitSetRequest(String waitSetId) {
-        this.waitSetId = waitSetId;
+    public void setComments(Iterable <CommentInfo> comments) {
+        this.comments.clear();
+        if (comments != null) {
+            Iterables.addAll(this.comments,comments);
+        }
     }
 
-    public String getWaitSetId() { return waitSetId; }
+    public GetCommentsResponse addComment(CommentInfo comment) {
+        this.comments.add(comment);
+        return this;
+    }
+
+    public List<CommentInfo> getComments() {
+        return Collections.unmodifiableList(comments);
+    }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("waitSetId", waitSetId);
+            .add("comments", comments);
     }
 
     @Override

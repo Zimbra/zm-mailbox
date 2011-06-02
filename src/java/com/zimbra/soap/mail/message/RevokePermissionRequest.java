@@ -13,46 +13,53 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.mail.type;
+package com.zimbra.soap.mail.message;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
+import java.util.Collections;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.mail.type.AccountACEinfo;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class IdAndType {
+@XmlRootElement(name=MailConstants.E_REVOKE_PERMISSION_REQUEST)
+public class RevokePermissionRequest {
 
-    @XmlAttribute(name=AdminConstants.A_ID /* id */, required=true)
-    private final String id;
+    @XmlElement(name=MailConstants.E_ACE /* ace */, required=false)
+    private List<AccountACEinfo> aces = Lists.newArrayList();
 
-    @XmlAttribute(name=AdminConstants.A_TYPE /* type */, required=true)
-    private final String type;
-
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private IdAndType() {
-        this((String) null, (String) null);
+    public RevokePermissionRequest() {
     }
 
-    public IdAndType(String id, String type) {
-        this.id = id;
-        this.type = type;
+    public void setAces(Iterable <AccountACEinfo> aces) {
+        this.aces.clear();
+        if (aces != null) {
+            Iterables.addAll(this.aces,aces);
+        }
     }
 
-    public String getId() { return id; }
-    public String getType() { return type; }
+    public RevokePermissionRequest addAce(AccountACEinfo ace) {
+        this.aces.add(ace);
+        return this;
+    }
+
+    public List<AccountACEinfo> getAces() {
+        return Collections.unmodifiableList(aces);
+    }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("id", id)
-            .add("type", type);
+            .add("aces", aces);
     }
 
     @Override
