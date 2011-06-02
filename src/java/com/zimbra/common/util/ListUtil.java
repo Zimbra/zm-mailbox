@@ -27,30 +27,22 @@ public class ListUtil {
      * Returns {@code true} if the collection is {@code null} or empty. 
      */
     public static boolean isEmpty(Collection<?> c) {
-        return c == null || c.isEmpty();
-    }
-
-    /**
-     * Returns the first element, or {@code null} if the collection is
-     * {@code null} or empty.
-     */
-    public static <T> T getFirstElement(Iterable<T> iterable) {
-        return iterable == null ? null : Iterables.getFirst(iterable, null);
+        return (c == null || c.isEmpty());
     }
 
     /**
      * Given two unsorted lists, return TRUE if they contain exactly the same things
      * (regardless of order)
      * 
-     * @param <T>
-     * @param lhs
-     * @param rhs
-     * @return
-     */
-    public static <T> boolean listsEqual(List<T> lhs, List<T> rhs) {
+	 * @param <T>
+	 * @param lhs
+	 * @param rhs
+	 * @return
+	 */
+	public static <T> boolean listsEqual(List<T> lhs, List<T> rhs) {
         if (lhs.size() != rhs.size())
             return false;
-
+        
         HashSet<T> set = new HashSet<T>();
         set.addAll(lhs);
         for (T t: rhs) {
@@ -59,7 +51,7 @@ public class ListUtil {
         }
         return (set.size() == 0);
     }
-
+	
     /**
      * Merge two sorted Lists
      * 
@@ -97,8 +89,9 @@ public class ListUtil {
                 iter[iterOffset++] = src[i].iterator();
             }
         }
-
-
+        
+        
+        
         int numItersActive = src.length;
         
         // holds the next values of each iterator
@@ -251,7 +244,7 @@ public class ListUtil {
     private static class Test {
 
         @SuppressWarnings("unchecked")
-        static void doit() {
+        static private void doit() {
             List<Integer>[] in = new List[5];
 
             int i = 0;
@@ -315,26 +308,25 @@ public class ListUtil {
 
             test = subtractSortedLists(in[2], in[0], new IntegerComparator());
             System.out.print("(1,2,3,4,5) - (1,3,5,7,9): ");
-            for (Iterator<Integer> iter = test.iterator(); iter.hasNext();) {
-                Integer cur = iter.next();
+            for (Iterator iter = test.iterator(); iter.hasNext();) {
+                Integer cur = (Integer)iter.next();
                 System.out.print(cur+", ");
             }
             System.out.println();
 
             test = subtractSortedLists(in[0], in[1], new IntegerComparator());
             System.out.print("(1,3,5,7,9) - (1,7,12,13,13): ");
-            for (Iterator<Integer> iter = test.iterator(); iter.hasNext();) {
-                Integer cur = iter.next();
+            for (Iterator iter = test.iterator(); iter.hasNext();) {
+                Integer cur = (Integer)iter.next();
                 System.out.print(cur+", ");
             }
             System.out.println();
             
         }
 
-        private static class IntegerComparator implements Comparator<Integer> {
-            IntegerComparator()  {}
-
-            @Override public int compare(Integer o1, Integer o2) {
+        private static class IntegerComparator
+        implements Comparator<Integer> {
+            public int compare(Integer o1, Integer o2) {
                 return o1.compareTo(o2);
             }
         }
