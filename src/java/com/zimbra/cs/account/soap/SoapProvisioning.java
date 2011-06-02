@@ -172,6 +172,11 @@ public class SoapProvisioning extends Provisioning {
         }
     }
 
+    public boolean isExpired() {
+        // if never authed, mAuthTokenExpiration would be 0, isExpired will return true 
+        return (mAuthTokenExpiration <= System.currentTimeMillis());
+    }
+    
     public String toString() {
         return String.format("[%s %s]", getClass().getName(), mTransport == null ? "" : mTransport.getURI());
     }
