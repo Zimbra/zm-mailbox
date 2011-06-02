@@ -366,6 +366,9 @@ public final class LC {
 
     @Supported
     public static final KnownKey ldap_starttls_required = KnownKey.newKey(true);
+    
+    @Supported
+    public static final KnownKey zimbra_directory_max_search_result = KnownKey.newKey(5000);
 
     public static final KnownKey ldap_common_loglevel = KnownKey.newKey(49152);
     public static final KnownKey ldap_common_require_tls = KnownKey.newKey(0);
