@@ -39,6 +39,7 @@ import com.google.common.io.Closeables;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
@@ -316,13 +317,33 @@ public final class LuceneQueryOperation extends QueryOperation {
         return result;
     }
 
-    private boolean isMustNotOnly(BooleanQuery query) {
+    /**
+     * It is not possible to search for queries that only consist of a MUST_NOT clause. Combining with MatchAllDocsQuery
+     * works in general, but we generate more than one documents per item for multipart messages. If we match including
+     * non top level parts, negative queries will end up matching everything. Therefore we only match the top level part
+     * for negative queries.
+     */
+    private void fixMustNotOnly(BooleanQuery query) {
         for (BooleanClause clause : query.clauses()) {
+            if (clause.getQuery() instanceof BooleanQuery) {
+                fixMustNotOnly((BooleanQuery) clause.getQuery());
+            }
             if (clause.getOccur() != BooleanClause.Occur.MUST_NOT) {
-                return false;
+                return;
             }
         }
-        return true;
+
+        query.add(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_TOP)),
+                BooleanClause.Occur.SHOULD);
+        Set<MailItem.Type> types = context.getParams().getTypes();
+        if (types.contains(MailItem.Type.CONTACT)) {
+            query.add(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_CONTACT)),
+                    BooleanClause.Occur.SHOULD);
+        }
+        if (types.contains(MailItem.Type.NOTE)) {
+            query.add(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_NOTE)),
+                    BooleanClause.Occur.SHOULD);
+        }
     }
 
     /**
@@ -338,19 +359,7 @@ public final class LuceneQueryOperation extends QueryOperation {
 
         try {
             if (luceneQuery instanceof BooleanQuery) {
-                BooleanQuery booleanQuery = (BooleanQuery) luceneQuery;
-                // It is not possible to search for queries that only consist of a MUST_NOT clause. Combining with
-                // MatchAllDocsQuery works in general, but we generate more than one documents per item for multipart
-                // messages. If we match including non top level parts, negative queries will end up matching
-                // everything. Therefore we only match the top level part for negative queries.
-                if (isMustNotOnly(booleanQuery)) {
-                    booleanQuery.add(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_TOP)),
-                            BooleanClause.Occur.SHOULD);
-                    booleanQuery.add(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_CONTACT)),
-                            BooleanClause.Occur.SHOULD);
-                    booleanQuery.add(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_NOTE)),
-                            BooleanClause.Occur.SHOULD);
-                }
+                fixMustNotOnly((BooleanQuery) luceneQuery);
             }
             ZimbraLog.search.debug("Executing Lucene Query: %s", luceneQuery);
             TermsFilter filter = null;

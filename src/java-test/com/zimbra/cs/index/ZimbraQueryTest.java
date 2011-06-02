@@ -119,27 +119,4 @@ public final class ZimbraQueryTest {
         Assert.assertEquals(contact.getId(), result.getNext().getItemId());
     }
 
-    @Test
-    public void notClause() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
-        mbox.addMessage(null, new ParsedMessage("From: test1@zimbra.com".getBytes(), false), dopt, null);
-        Message msg2 = mbox.addMessage(null, new ParsedMessage("From: test2@zimbra.com".getBytes(), false), dopt, null);
-        Message msg3 = mbox.addMessage(null, new ParsedMessage("From: test3@zimbra.com".getBytes(), false), dopt, null);
-        MailboxTestUtil.index(mbox);
-
-        SearchParams params = new SearchParams();
-        params.setQueryStr("-from:test1@zimbra.com");
-        params.setTypes(EnumSet.of(MailItem.Type.MESSAGE));
-        params.setSortBy(SortBy.NONE);
-        ZimbraQuery query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
-        ZimbraQueryResults results = query.execute();
-        Assert.assertTrue(results.hasNext());
-        Assert.assertEquals(msg2.getId(), results.getNext().getItemId());
-        Assert.assertTrue(results.hasNext());
-        Assert.assertEquals(msg3.getId(), results.getNext().getItemId());
-        Assert.assertFalse(results.hasNext());
-        results.close();
-    }
-
 }
