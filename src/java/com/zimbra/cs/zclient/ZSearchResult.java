@@ -15,6 +15,7 @@
 
 package com.zimbra.cs.zclient;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -29,58 +30,55 @@ import java.util.TimeZone;
 
 public class ZSearchResult implements ToZJSONObject {
 
-    private List<ZSearchHit> mHits;
-    private ZConversationSummary mConvSummary;
-    private boolean mHasMore;
-    private String mSortBy;
-    private int mOffset;
+    private List<ZSearchHit> hits;
+    private ZConversationSummary convSummary;
+    private boolean hasMore;
+    private String sortBy;
+    private int offset;
 
     public ZSearchResult(Element e, boolean convNest, TimeZone tz) throws ServiceException {
         if (!convNest) {
             init(e, e, tz);
         } else {
             Element c = e.getElement(MailConstants.E_CONV);
-            mConvSummary = new ZConversationSummary(c);
+            convSummary = new ZConversationSummary(c);
             init(e, c, tz);
         }
     }
 
-    public ZSearchResult(List<ZSearchHit> hits,
-                         ZConversationSummary convSummary,
-                         boolean hasMore,
-                         String sortBy,
-                         int offset) {
-        mHits = hits;
-        mConvSummary = convSummary;
-        mHasMore = hasMore;
-        mSortBy = sortBy;
-        mOffset = offset;
+    public ZSearchResult(List<ZSearchHit> hits, ZConversationSummary convSummary, boolean hasMore, String sortBy,
+            int offset) {
+        this.hits = hits;
+        this.convSummary = convSummary;
+        this.hasMore = hasMore;
+        this.sortBy = sortBy;
+        this.offset = offset;
     }
 
-    private void init(Element resp, Element hits, TimeZone tz) throws ServiceException {
-        mSortBy = resp.getAttribute(MailConstants.A_SORTBY);
-        mHasMore = resp.getAttributeBool(MailConstants.A_QUERY_MORE);
-        mOffset = (int) resp.getAttributeLong(MailConstants.A_QUERY_OFFSET);
-        mHits = new ArrayList<ZSearchHit>();
-        for (Element h: hits.listElements()) {
+    private void init(Element resp, Element el, TimeZone tz) throws ServiceException {
+        sortBy = resp.getAttribute(MailConstants.A_SORTBY);
+        hasMore = resp.getAttributeBool(MailConstants.A_QUERY_MORE);
+        offset = (int) resp.getAttributeLong(MailConstants.A_QUERY_OFFSET, -1);
+        hits = new ArrayList<ZSearchHit>();
+        for (Element h : el.listElements()) {
             if (h.getName().equals(MailConstants.E_CONV)) {
-                mHits.add(new ZConversationHit(h));
+                hits.add(new ZConversationHit(h));
             } else if (h.getName().equals(MailConstants.E_MSG)) {
-                mHits.add(new ZMessageHit(h));
+                hits.add(new ZMessageHit(h));
             } else if (h.getName().equals(MailConstants.E_CONTACT)) {
-                mHits.add(new ZContactHit(h));
+                hits.add(new ZContactHit(h));
             } else if (h.getName().equals(MailConstants.E_APPOINTMENT)) {
-                ZAppointmentHit.addInstances(h, mHits, tz, false);
+                ZAppointmentHit.addInstances(h, hits, tz, false);
             } else if (h.getName().equals(MailConstants.E_TASK)) {
-                ZAppointmentHit.addInstances(h, mHits, tz, true);
+                ZAppointmentHit.addInstances(h, hits, tz, true);
             } else if (h.getName().equals(MailConstants.E_DOC)) {
-                mHits.add(new ZDocumentHit(h));
+                hits.add(new ZDocumentHit(h));
             } else if (h.getName().equals(MailConstants.E_WIKIWORD)) {
-                mHits.add(new ZWikiHit(h));
+                hits.add(new ZWikiHit(h));
             } else if (h.getName().equals(VoiceConstants.E_VOICEMSG)) {
-                mHits.add(new ZVoiceMailItemHit(h));
+                hits.add(new ZVoiceMailItemHit(h));
             } else if (h.getName().equals(VoiceConstants.E_CALLLOG)) {
-                mHits.add(new ZCallHit(h));
+                hits.add(new ZCallHit(h));
             }
         }
     }
@@ -89,47 +87,47 @@ public class ZSearchResult implements ToZJSONObject {
      * @return ZSearchHit objects from search
      */
     public List<ZSearchHit> getHits() {
-        return mHits;
+        return hits;
     }
 
     public ZConversationSummary getConversationSummary() {
-        return mConvSummary;
+        return convSummary;
     }
 
     /**
      * @return true if there are more search results on the server
      */
     public boolean hasMore() {
-        return mHasMore;
+        return hasMore;
     }
 
     /**
      * @return the sort by value
      */
     public String getSortBy() {
-        return mSortBy;
+        return sortBy;
     }
 
     /**
      * @return offset of the search
      */
     public int getOffset() {
-        return mOffset;
+        return offset;
     }
 
     @Override
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject zjo = new ZJSONObject();
-        zjo.put("more", mHasMore);
-        zjo.put("sortBy", mSortBy);
-        zjo.put("offset", mOffset);
-        zjo.put("hits", mHits);
+        zjo.put("more", hasMore);
+        zjo.put("sortBy", sortBy);
+        zjo.put("offset", offset);
+        zjo.put("hits", hits);
         return zjo;
     }
 
     @Override
     public String toString() {
-       return String.format("[ZSearchResult size=%s more=%s]", mHits.size(), mHasMore);
+       return Objects.toStringHelper(this).add("size", hits.size()).add("more", hasMore).toString();
     }
 
     public String dump() {
