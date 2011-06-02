@@ -40,7 +40,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110526-1839 */
+    /* build: 8.0.0_BETA1_1111 administrator 20110531-1052 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -11882,6 +11882,83 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetMailForwardingAddressMaxNumAddrs(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailForwardingAddressMaxNumAddrs, "");
+        return attrs;
+    }
+
+    /**
+     * max size in KB of text emails that will automatically highlight
+     * objects
+     *
+     * @return zimbraMailHighlightObjectsMaxSize, or 70 if unset
+     *
+     * @since ZCS 7.1.2
+     */
+    @ZAttr(id=1213)
+    public int getMailHighlightObjectsMaxSize() {
+        return getIntAttr(Provisioning.A_zimbraMailHighlightObjectsMaxSize, 70);
+    }
+
+    /**
+     * max size in KB of text emails that will automatically highlight
+     * objects
+     *
+     * @param zimbraMailHighlightObjectsMaxSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.2
+     */
+    @ZAttr(id=1213)
+    public void setMailHighlightObjectsMaxSize(int zimbraMailHighlightObjectsMaxSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailHighlightObjectsMaxSize, Integer.toString(zimbraMailHighlightObjectsMaxSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * max size in KB of text emails that will automatically highlight
+     * objects
+     *
+     * @param zimbraMailHighlightObjectsMaxSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.2
+     */
+    @ZAttr(id=1213)
+    public Map<String,Object> setMailHighlightObjectsMaxSize(int zimbraMailHighlightObjectsMaxSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailHighlightObjectsMaxSize, Integer.toString(zimbraMailHighlightObjectsMaxSize));
+        return attrs;
+    }
+
+    /**
+     * max size in KB of text emails that will automatically highlight
+     * objects
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.2
+     */
+    @ZAttr(id=1213)
+    public void unsetMailHighlightObjectsMaxSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailHighlightObjectsMaxSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * max size in KB of text emails that will automatically highlight
+     * objects
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.2
+     */
+    @ZAttr(id=1213)
+    public Map<String,Object> unsetMailHighlightObjectsMaxSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailHighlightObjectsMaxSize, "");
         return attrs;
     }
 
