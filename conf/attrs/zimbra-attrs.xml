@@ -5695,7 +5695,7 @@ TODO: delete them permerntly from here
   <desc>SSL client certificate port for HTTP proxy</desc>
 </attr>
 
-<attr id="1213" name="zimbraMailHighlightObjectsMaxSize" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="7.1.2">
+<attr id="1213" name="zimbraMailHighlightObjectsMaxSize" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="7.1.2">
   <defaultCOSValue>70</defaultCOSValue>
   <desc>max size in KB of text emails that will automatically highlight objects</desc>
 </attr>
