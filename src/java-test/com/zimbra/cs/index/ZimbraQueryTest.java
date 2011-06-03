@@ -29,15 +29,12 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Contact;
-import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
-import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedContact;
-import com.zimbra.cs.mime.ParsedMessage;
 
 /**
  * Unit test for {@link ZimbraQuery}.
@@ -117,6 +114,24 @@ public final class ZimbraQueryTest {
         ZimbraQueryResults result = query.execute();
         Assert.assertTrue(result.hasNext());
         Assert.assertEquals(contact.getId(), result.getNext().getItemId());
+    }
+
+    @Test
+    public void calItemExpandRange() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        SearchParams params = new SearchParams();
+        params.setQueryStr("test");
+        params.setSortBy(SortBy.NONE);
+        params.setTypes(EnumSet.of(MailItem.Type.APPOINTMENT));
+        params.setMode(Mailbox.SearchResultMode.IDS);
+        params.setCalItemExpandStart(1000);
+        params.setCalItemExpandEnd(2000);
+
+        ZimbraQuery query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
+        // CalItemExpand range shouldn't be expanded yet
+        Assert.assertEquals("ZQ: Q(l.content:test)", query.toString());
+        Assert.assertEquals("(( content:test) AND -ID:/Trash -ID:/Junk )", query.toQueryString());
     }
 
 }
