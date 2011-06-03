@@ -26,17 +26,12 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpState;
-import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
-import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.params.HttpConnectionParams;
 
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
@@ -47,8 +42,6 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
-import com.zimbra.cs.account.Entry;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 
@@ -136,16 +129,12 @@ public class TestZimbraHttpConnectionManager {
         }
     }
     
-    /*    
-     * set in localconfig.xml before running this test
-
-      <key name="httpclient_connmgr_idle_reaper_sleep_interval">
-        <value>5000</value>
-      </key>
+    /* This test has to be run manually.
+     *    
+     * before running this test, do:
       
-        <key name="httpclient_connmgr_idle_reaper_connection_timeout">
-        <value>2000</value>
-      </key>
+      zmlocalconfig -e httpclient_connmgr_idle_reaper_sleep_interval_external=10000
+      zmlocalconfig -e httpclient_connmgr_idle_reaper_connection_timeout_external=2000
       
     */  
     // @Test
@@ -177,6 +166,8 @@ public class TestZimbraHttpConnectionManager {
         }
 
         /*
+         * This test has to be run manually.
+         * 
          * not sure how to automate this:
          * 
          * if ZimbraHttpConnectionManager.startReaperThread() was run:
@@ -194,6 +185,9 @@ public class TestZimbraHttpConnectionManager {
          * 
          * for very long time.
          */
+        
+        // wait, so we can watch the CLOSE_WAIT going away
+        Thread.sleep(Constants.MILLIS_PER_HOUR);
     }
    
     
@@ -575,7 +569,54 @@ public class TestZimbraHttpConnectionManager {
         SimpleHttpServer.shutdown();
     }
     
+    /*
+     * Before running this test:
+     * 
+     * zmlocalconfig -e httpclient_connmgr_so_timeout_external=3000  (3 seconds)
+     */
     @Test
+    public void testSoTimeoutViaConnMgrParam() throws Exception {
+        
+        int serverPort = 7778;
+        String resourceToGet = "/opt/zimbra/unittest/rights-unittest.xml";
+        long delayInServer = 10000;  // delay 10 seconds in server
+        int soTimeout = 3000;  // 3 seconds
+        
+        String qp = "?" + SimpleHttpServer.DelayWhen.BEFORE_WRITING_RESPONSE_HEADERS.name() + "=" + delayInServer;
+        String uri = "http://localhost:" + serverPort + resourceToGet + qp;
+        
+        // start a http server for testing
+        SimpleHttpServer.start(serverPort);
+        
+        HttpClient httpClient = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
+        
+        GetMethod method = new GetMethod(uri);
+        
+        long startTime = System.currentTimeMillis();
+        long endTime;
+        try {
+            // int respCode = HttpClientUtil.executeMethod(httpClient, method);
+            int respCode = httpClient.executeMethod(method);
+            
+            dumpResponse(respCode, method, "");
+            Assert.fail(); // nope, it should have timed out
+        } catch (java.net.SocketTimeoutException e) {
+            // good, just what we want
+            endTime = System.currentTimeMillis();
+            long elapsedTime = endTime - startTime;
+            System.out.println("Client timed out after " + elapsedTime + " msecs");
+        } catch (Exception e) {
+            e.printStackTrace();
+            Assert.fail();
+        } finally {
+            method.releaseConnection();
+        }
+        
+        // shutdown the server
+        SimpleHttpServer.shutdown();
+    }
+    
+    // @Test
     public void testSoTimeoutViaHttpPostMethod() throws Exception {
         
         int serverPort = 7778;
@@ -629,8 +670,8 @@ public class TestZimbraHttpConnectionManager {
     /*
      * before running this test:
      * 
-     * zmlocalconfig -e httpclient_connmgr_max_total_connections=1  // the connection manager can only hand out one connection
-     * zmlocalconfig -e httpclient_client_connection_timeout=5000   // time to get a connection from the connection manager
+     * zmlocalconfig -e httpclient_connmgr_max_total_connections_external=1  // the connection manager can only hand out one connection
+     * zmlocalconfig -e httpclient_client_connection_timeout_external=5000   // time to get a connection from the connection manager
      */
     // @Test
     public void testHttpClientConnectionManagerTimeout() throws Exception {
@@ -655,7 +696,8 @@ public class TestZimbraHttpConnectionManager {
         // second thread
         GetMethod method2 = new GetMethod("http://localhost:" + serverPort + path + qp);
         TestGetThread thread2 = new TestGetThread(connMgr.newHttpClient(), method1, 2);
-        thread2.start(); // this thread should timeout (ConnectionPoolTimeoutException) after 5000 milli seconds, because zmlocalconfig -e httpclient_client_connection_timeout=5000 
+        thread2.start(); // this thread should timeout (ConnectionPoolTimeoutException) after 5000 milli seconds, 
+                         // because zmlocalconfig -e httpclient_client_connection_timeout_external=5000 
         
         Thread.sleep(60000); // wait a little so we can observe the threads run
         
@@ -728,8 +770,9 @@ public class TestZimbraHttpConnectionManager {
             System.out.println(id + " - about to get something from " + method.getURI());
             // execute the method
             
-            if (authPreemp)
+            if (authPreemp) {
                 httpClient.getParams().setAuthenticationPreemptive(true);
+            }
             
             int respCode = HttpClientUtil.executeMethod(httpClient, method);
             
@@ -753,15 +796,16 @@ public class TestZimbraHttpConnectionManager {
         }
     }
     
+    // bug 47488
     // @Test
     public void testAuthenticationPreemptive() throws Exception {
 
         ZimbraHttpConnectionManager.startReaperThread();
         
-        
         for (int i = 0; i < 10; i++) {
             // runTest(new HttpClient(), "PLAIN"+i, true);
-            runTest(ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient(), "EXT"+i, true);
+            runTest(ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient(), "EXT-authPreemp"+i, true);
+            runTest(ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient(), "EXT"+i, false);
             runTest(ZimbraHttpConnectionManager.getInternalHttpConnMgr().getDefaultHttpClient(), "INT"+i, false);
         }
     }
