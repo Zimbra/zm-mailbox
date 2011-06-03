@@ -15,6 +15,7 @@
 package com.zimbra.cs.index;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -199,14 +200,14 @@ public interface DbSearchConstraints extends Cloneable {
         // A possible result must match *ALL* the range constraints below.  It might seem strange that we don't
         // just combine the ranges -- yes this would be easy for positive ranges (foo>5 AND foo >7 and foo<10)
         // but it quickly gets very complicated with negative ranges such as (3<foo<100 AND NOT 7<foo<20)
-        public List<NumericRange> dateRanges = new ArrayList<NumericRange>(); // optional
-        public List<NumericRange> calStartDateRanges = new ArrayList<NumericRange>(); // optional
-        public List<NumericRange> calEndDateRanges = new ArrayList<NumericRange>(); // optional
-        public List<NumericRange> modSeqRanges = new ArrayList<NumericRange>(); // optional
-        public List<NumericRange> sizeRanges = new ArrayList<NumericRange>(); // optional
-        public List<NumericRange> convCountRanges = new ArrayList<NumericRange>(); // optional
-        public List<StringRange> subjectRanges = new ArrayList<StringRange>(); // optional
-        public List<StringRange> senderRanges = new ArrayList<StringRange>(); // optional
+        public Set<NumericRange> dateRanges = new HashSet<NumericRange>(); // optional
+        public Set<NumericRange> calStartDateRanges = new HashSet<NumericRange>(); // optional
+        public Set<NumericRange> calEndDateRanges = new HashSet<NumericRange>(); // optional
+        public Set<NumericRange> modSeqRanges = new HashSet<NumericRange>(); // optional
+        public Set<NumericRange> sizeRanges = new HashSet<NumericRange>(); // optional
+        public Set<NumericRange> convCountRanges = new HashSet<NumericRange>(); // optional
+        public Set<StringRange> subjectRanges = new HashSet<StringRange>(); // optional
+        public Set<StringRange> senderRanges = new HashSet<StringRange>(); // optional
         public CursorRange cursorRange; // optional
 
         private Set<MailItem.Type> calcTypes() {
@@ -274,7 +275,7 @@ public interface DbSearchConstraints extends Cloneable {
             if (convCountRanges.size() != 1) {
                 return null;
             }
-            NumericRange range = convCountRanges.get(0);
+            NumericRange range = Iterables.getOnlyElement(convCountRanges);
             if (range.max == 1 && range.maxInclusive && range.min == 1 && range.minInclusive) {
                 return range.bool;
             } else {
@@ -307,14 +308,14 @@ public interface DbSearchConstraints extends Cloneable {
             result.indexIds = new HashSet<Integer>(indexIds);
             result.types = EnumSet.copyOf(types);
             result.excludeTypes = EnumSet.copyOf(excludeTypes);
-            result.dateRanges = new ArrayList<NumericRange>(dateRanges);
-            result.calStartDateRanges = new ArrayList<NumericRange>(calStartDateRanges);
-            result.calEndDateRanges = new ArrayList<NumericRange>(calEndDateRanges);
-            result.modSeqRanges = new ArrayList<NumericRange>(modSeqRanges);
-            result.sizeRanges = new ArrayList<NumericRange>(sizeRanges);
-            result.convCountRanges = new ArrayList<NumericRange>(convCountRanges);
-            result.subjectRanges = new ArrayList<StringRange>(subjectRanges);
-            result.senderRanges = new ArrayList<StringRange>(senderRanges);
+            result.dateRanges = new HashSet<NumericRange>(dateRanges);
+            result.calStartDateRanges = new HashSet<NumericRange>(calStartDateRanges);
+            result.calEndDateRanges = new HashSet<NumericRange>(calEndDateRanges);
+            result.modSeqRanges = new HashSet<NumericRange>(modSeqRanges);
+            result.sizeRanges = new HashSet<NumericRange>(sizeRanges);
+            result.convCountRanges = new HashSet<NumericRange>(convCountRanges);
+            result.subjectRanges = new HashSet<StringRange>(subjectRanges);
+            result.senderRanges = new HashSet<StringRange>(senderRanges);
             result.fromContact = fromContact;
             return result;
         }
@@ -623,7 +624,7 @@ public interface DbSearchConstraints extends Cloneable {
             validate(convCountRanges);
         }
 
-        void validate(List<NumericRange> ranges) {
+        void validate(Collection<NumericRange> ranges) {
             for (Iterator<NumericRange> itr = ranges.iterator(); itr.hasNext(); ) {
                 NumericRange range = itr.next();
                 if (!range.isValid()) {
@@ -1211,6 +1212,11 @@ public interface DbSearchConstraints extends Cloneable {
             }
         }
 
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(bool, min, minInclusive, max, maxInclusive);
+        }
+
         private StringBuilder toQueryString(String name, StringBuilder out) {
             if (!bool) {
                 out.append('-');
@@ -1271,6 +1277,11 @@ public interface DbSearchConstraints extends Cloneable {
             } else {
                 return false;
             }
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(bool, min, minInclusive, max, maxInclusive);
         }
 
         boolean isValid() {

@@ -607,7 +607,7 @@ public final class DbSearch {
     }
 
     private static final int setDateRange(PreparedStatement stmt, int param,
-            List<DbSearchConstraints.NumericRange> ranges) throws SQLException {
+            Collection<DbSearchConstraints.NumericRange> ranges) throws SQLException {
         for (DbSearchConstraints.NumericRange range : ranges) {
             if (range.min > 0) {
                 stmt.setInt(param++, (int) Math.min(range.min / 1000, Integer.MAX_VALUE));
@@ -620,7 +620,7 @@ public final class DbSearch {
     }
 
     private static final int setTimestampRange(PreparedStatement stmt, int param,
-            List<DbSearchConstraints.NumericRange> ranges) throws SQLException {
+            Collection<DbSearchConstraints.NumericRange> ranges) throws SQLException {
         for (DbSearchConstraints.NumericRange range : ranges) {
             if (range.min > 0) {
                 stmt.setTimestamp(param++, new Timestamp(range.min));
@@ -633,7 +633,7 @@ public final class DbSearch {
     }
 
     private static final int setLongRange(PreparedStatement stmt, int param,
-            List<DbSearchConstraints.NumericRange> ranges, int min) throws SQLException {
+            Collection<DbSearchConstraints.NumericRange> ranges, int min) throws SQLException {
         for (DbSearchConstraints.NumericRange range : ranges) {
             if (range.min >= min) {
                 stmt.setLong(param++, range.min);
@@ -646,7 +646,7 @@ public final class DbSearch {
     }
 
     private static final int setIntRange(PreparedStatement stmt, int param,
-            List<DbSearchConstraints.NumericRange> ranges, int min) throws SQLException {
+            Collection<DbSearchConstraints.NumericRange> ranges, int min) throws SQLException {
         for (DbSearchConstraints.NumericRange range : ranges) {
             if (range.min >= min) {
                 stmt.setInt(param++, (int) range.min);
@@ -659,7 +659,7 @@ public final class DbSearch {
     }
 
     private static final int setStringRange(PreparedStatement stmt, int param,
-            List<DbSearchConstraints.StringRange> ranges) throws SQLException {
+            Collection<DbSearchConstraints.StringRange> ranges) throws SQLException {
         for (DbSearchConstraints.StringRange range: ranges) {
             if (range.min != null) {
                 stmt.setString(param++, range.min.replace("\\\"", "\""));
@@ -770,7 +770,7 @@ public final class DbSearch {
      * @return number of parameters bound
      */
     private static final int encodeRange(StringBuilder out, String column,
-            List<DbSearchConstraints.NumericRange> ranges, long min) {
+            Collection<DbSearchConstraints.NumericRange> ranges, long min) {
         if (ranges.isEmpty()) {
             return 0;
         }
@@ -805,7 +805,7 @@ public final class DbSearch {
      * @return number of parameters bound
      */
     private static final int encodeRange(StringBuilder out, String column,
-            List<DbSearchConstraints.StringRange> ranges) {
+            Collection<DbSearchConstraints.StringRange> ranges) {
         if (ranges.isEmpty()) {
             return 0;
         }

@@ -853,6 +853,7 @@ public class DBQueryOperation extends QueryOperation {
         // calculate the total hit count before adding cursor constraint
         totalHitCount = calcTotalHitCount();
         addCursorConstraint();
+        addCalItemExpandRange();
 
         if (luceneOp != null) {
             hitsPerChunk *= 2; // enlarge chunk size b/c of join
@@ -872,6 +873,16 @@ public class DBQueryOperation extends QueryOperation {
             }
         } else {
             return -1;
+        }
+    }
+
+    private void addCalItemExpandRange() {
+        SearchParams params = context.getParams();
+        if (params.getCalItemExpandStart() > 0) {
+            addCalEndDateRange(params.getCalItemExpandStart(), true, -1, false, true);
+        }
+        if (params.getCalItemExpandEnd() > 0) {
+            addCalStartDateRange(-1, false, params.getCalItemExpandEnd(), true, true);
         }
     }
 

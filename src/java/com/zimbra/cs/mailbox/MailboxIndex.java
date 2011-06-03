@@ -158,27 +158,6 @@ public final class MailboxIndex {
         return indexStore;
     }
 
-    private ZimbraQuery compileQuery(SoapProtocol proto, OperationContext octx, SearchParams params)
-            throws ServiceException {
-        String qs = params.getQueryStr();
-
-        // calendar expansions
-        if (params.getCalItemExpandStart() > 0 || params.getCalItemExpandEnd() > 0) {
-            StringBuilder toAdd = new StringBuilder();
-            toAdd.append('(').append(qs).append(')');
-            if (params.getCalItemExpandStart() > 0) {
-                toAdd.append(" appt-end:>=").append(params.getCalItemExpandStart());
-            }
-            if (params.getCalItemExpandEnd() > 0) {
-                toAdd.append(" appt-start:<=").append(params.getCalItemExpandEnd());
-            }
-            qs = toAdd.toString();
-            params.setQueryStr(qs);
-        }
-
-        return new ZimbraQuery(octx, proto, mailbox, params);
-    }
-
     /**
      * This is the preferred form of the API call.
      *
@@ -196,7 +175,7 @@ public final class MailboxIndex {
         assert(!mailbox.lock.isLocked());
         assert(octx != null);
 
-        ZimbraQuery query = compileQuery(proto, octx, params);
+        ZimbraQuery query = new ZimbraQuery(octx, proto, mailbox, params);
         Set<MailItem.Type> types = toIndexTypes(params.getTypes());
         // no need to index if the search doesn't involve Lucene
         if (query.hasTextOperation() && getDeferredCount(types) > 0) {
