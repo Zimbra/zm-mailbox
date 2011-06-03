@@ -55,6 +55,7 @@ import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -465,7 +466,19 @@ public class GalSearchControl {
             }
             if (mParams.isIdOnly() && token.doMailboxSync()) {
                 int changeId = token.getChangeId(galAcct.getId());
-                List<Integer> deleted = mbox.getTombstones(changeId).getAll();
+                List<Integer> deleted = null;
+                if (changeId > 0) {
+                    try {
+                        deleted = mbox.getTombstones(changeId).getAll();
+                    } catch (MailServiceException e) {
+                        if (MailServiceException.MUST_RESYNC == e.getCode()) {
+                            ZimbraLog.gal.warn("sync token too old, deleted items will not be handled", e);
+                        } else {
+                            throw e;
+                        }
+                    }
+                }
+                
                 Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, changeId,
                         MailItem.Type.CONTACT, folderIds);
 
@@ -479,9 +492,12 @@ public class GalSearchControl {
                         ZimbraLog.gal.debug("processing #"+count);
                 }
 
-                if (changeId > 0)
-                    for (int itemId : deleted)
+                if (deleted != null) {
+                    for (int itemId : deleted) {
                         callback.handleDeleted(new ItemId(galAcct.getId(), itemId));
+                    }
+                }
+                
             }
             GalSyncToken newToken = new GalSyncToken(syncToken, galAcct.getId(), mbox.getLastChangeID());
             ZimbraLog.gal.debug("computing new sync token for "+galAcct.getId()+": "+newToken);
