@@ -2440,8 +2440,6 @@ public abstract class MailItem implements Comparable<MailItem> {
                     throw MailServiceException.ALREADY_EXISTS(name);
             } catch (MailServiceException.NoSuchItemException nsie) { }
 
-            MailboxBlob oldblob = getBlob();
-
             if (ZimbraLog.mailop.isDebugEnabled())
                 ZimbraLog.mailop.debug("renaming " + getMailopContext(this) + " to " + name);
 
@@ -2450,17 +2448,9 @@ public abstract class MailItem implements Comparable<MailItem> {
             markItemModified(Change.MODIFIED_NAME);
             mData.name    = name;
             mData.subject = name;
-            mData.date    = mMailbox.getOperationTimestamp();
-            mData.contentChanged(mMailbox);
+            mData.dateChanged = mMailbox.getOperationTimestamp();
+            mData.metadataChanged(mMailbox);
             saveName(target.getId());
-
-            if (oldblob != null) {
-                try {
-                    StoreManager.getInstance().link(oldblob, mMailbox, mId, getSavedSequence());
-                } catch (IOException ioe) {
-                    throw ServiceException.FAILURE("could not copy blob for renamed document", ioe);
-                }
-            }
         }
 
         if (moved)
@@ -3088,7 +3078,6 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
     protected void saveName(int folderId) throws ServiceException {
-        mData.contentChanged(mMailbox);
         DbMailItem.saveName(this, folderId, encodeMetadata());
     }
 
