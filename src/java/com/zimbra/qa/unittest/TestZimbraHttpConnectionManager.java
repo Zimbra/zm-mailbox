@@ -26,18 +26,16 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpState;
-import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
-import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.params.HttpConnectionParams;
+import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
+import org.apache.commons.httpclient.methods.PostMethod;
 
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.ByteUtil;
@@ -48,6 +46,11 @@ import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 
 public class TestZimbraHttpConnectionManager {
+    
+    @BeforeClass
+    public static void init() throws Exception {
+        CliUtil.toolSetup("INFO");
+    }
     
 
     public static void dumpResponse(int respCode, HttpMethod method, String prefix) throws IOException {
@@ -126,16 +129,12 @@ public class TestZimbraHttpConnectionManager {
         }
     }
     
-    /*    
-     * set in localconfig.xml before running this test
-
-      <key name="httpclient_connmgr_idle_reaper_sleep_interval">
-        <value>5000</value>
-      </key>
+    /* This test has to be run manually.
+     *    
+     * before running this test, do:
       
-        <key name="httpclient_connmgr_idle_reaper_connection_timeout">
-        <value>2000</value>
-      </key>
+      zmlocalconfig -e httpclient_connmgr_idle_reaper_sleep_interval_external=10000
+      zmlocalconfig -e httpclient_connmgr_idle_reaper_connection_timeout_external=2000
       
     */  
     // @Test
@@ -167,6 +166,8 @@ public class TestZimbraHttpConnectionManager {
         }
 
         /*
+         * This test has to be run manually.
+         * 
          * not sure how to automate this:
          * 
          * if ZimbraHttpConnectionManager.startReaperThread() was run:
@@ -184,6 +185,9 @@ public class TestZimbraHttpConnectionManager {
          * 
          * for very long time.
          */
+        
+        // wait, so we can watch the CLOSE_WAIT going away
+        Thread.sleep(Constants.MILLIS_PER_HOUR);
     }
    
     
@@ -198,7 +202,16 @@ public class TestZimbraHttpConnectionManager {
         private ServerSocket mServerSocket;
         private boolean mShutdownRequested = false;
         
-        private static final String WAIT_IN_SERVER = "waitInServer";
+        private enum DelayWhen {
+            BEFORE_READING_REQ_LINE,
+            BEFORE_READING_HEADERS,
+            GET_BEFORE_FETCHING_RESOURCE,
+            POST_BEFORE_READING_BODY,
+            BEFORE_WRITING_RESPONSE_HEADERS,
+            BEFORE_WRITING_RESPONSE_BODY,
+            DURING_WRITING_RESPONSE_BODY,
+            AFTER_WRITING_RESPONSE_BODY
+        }
         
         private synchronized static void start(int port) {
             if (mServerThread != null) {
@@ -273,18 +286,31 @@ public class TestZimbraHttpConnectionManager {
     }
 
     private static class HttpRequestHandler implements Runnable {
+        
         final static String CRLF = "\r\n";
+        
+        private static final String SERVER_LINE = "Server: brain dead java httpServer" + CRLF;
+        private static final String STATUS_LINE_200 = "HTTP/1.0 200 OK" + CRLF ;
+        private static final String STATUS_LINE_404 = "HTTP/1.0 404 Not Found" + CRLF ;
+        
+        private static final String HEADER_CONTENT_LENGTH = "Content-Length";
+        private static final String HEADER_CONTENT_TYPE = "Content-Type";
+        
         Socket socket;
         InputStream input;
         OutputStream output;
-        BufferedReader br;
-    
-        // Constructor
+        BufferedReader reader;
+        
+        private String url;
+        private Map<String, String> headers = new HashMap<String, String>();
+        private Map<String, String> queryParams = new HashMap<String, String>();
+        
+        
         private HttpRequestHandler(Socket socket) throws Exception {
             this.socket = socket;
             this.input = socket.getInputStream();
             this.output = socket.getOutputStream();
-            this.br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            this.reader = new BufferedReader(new InputStreamReader(input));
         }
         
         // Implement the run() method of the Runnable interface.
@@ -295,107 +321,50 @@ public class TestZimbraHttpConnectionManager {
                 e.printStackTrace();
             }
         }
-        
-        private void processRequest() throws Exception {
-            while(true) {
-                String headerLine = br.readLine();
-                SimpleHttpServer.log(headerLine);
-                if(headerLine.equals(CRLF) || headerLine.equals("")) break;
+        private void getHeaders() throws Exception {
+            delayIfRequested(SimpleHttpServer.DelayWhen.BEFORE_READING_HEADERS);
+            
+            String header;
+            
+            while (true) {
+                header = reader.readLine();
                 
-                StringTokenizer s = new StringTokenizer(headerLine);
-                String temp = s.nextToken();
-                
-                if (temp.equals("GET")) {
-            
-                    String req = s.nextToken();
-                    String[] parts = req.split("\\?");
-                    String fileName = parts[0];
-                    // fileName = "." + fileName ;
-                    
-                    String qp = null;
-                    long waitInServer = 0;
-                    if (parts.length == 2) {
-                        qp = parts[1];
-                    
-                        String[] params = qp.split("&");
-                        for (String param : params) {
-                            String[] nameValue = param.split("=");
-                            if (nameValue[0].equals(SimpleHttpServer.WAIT_IN_SERVER))
-                                waitInServer = Long.valueOf(nameValue[1]);
-                        }
-                    }
-
-                    if (waitInServer != 0) {
-                        SimpleHttpServer.log("Waiting " + waitInServer + " milli seconds in SimpleHttpServer");
-                        Thread.sleep(waitInServer);
-                    }
-                
-                    // Open the requested file.
-                    FileInputStream fis = null ;
-                    boolean fileExists = true ;
-                    try {
-                        fis = new FileInputStream(fileName) ;
-                    } catch ( FileNotFoundException e) {
-                        fileExists = false ;
-                    }
-            
-                    // Construct the response message.
-                    String serverLine = "Server: fpont simple java httpServer" + CRLF;
-                    String statusLine = null;
-                    String contentTypeLine = null;
-                    String entityBody = null;
-                    String contentLengthLine = null;
-                    if (fileExists) {
-                        statusLine = "HTTP/1.0 200 OK" + CRLF ;
-                        contentTypeLine = "Content-type: " + "text/plain" + CRLF;
-                        contentLengthLine = "Content-Length: "
-                             + (new Integer(fis.available())).toString()
-                             + CRLF;
-                    } else {
-                        statusLine = "HTTP/1.0 404 Not Found" + CRLF ;
-                        contentTypeLine = "Content-type: " + "text/html" + CRLF;
-                        entityBody = "<HTML>" +
-                            "<HEAD><TITLE>404 Not Found</TITLE></HEAD>" +
-                            "<BODY>404 Not Found"
-                            +"<br>usage:http://www.snaip.com:4444/"
-                            +"fileName.html</BODY></HTML>" ;
-                        
-                        contentLengthLine = "Content-Length: " + entityBody.length() + CRLF;
-                    }
-            
-                    // Send the status line.
-                    output.write(statusLine.getBytes());
-                    
-                    // Send the server line.
-                    output.write(serverLine.getBytes());
-                    
-                    // Send the content type line.
-                    output.write(contentTypeLine.getBytes());
-                    
-                    // Send the Content-Length
-                    output.write(contentLengthLine.getBytes());
-                    
-                    // Send a blank line to indicate the end of the header lines.
-                    output.write(CRLF.getBytes());
-            
-                    // Send the entity body.
-                    if (fileExists) {
-                        sendBytes(fis, output) ;
-                        fis.close();
-                    } else {
-                        output.write(entityBody.getBytes());
-                    }
-                    
-                    // our thread only process one request  :)
+                if (header.equals(CRLF) || header.equals("")) {
                     break;
                 }
+                
+                String[] parts = header.split(":");
+                headers.put(parts[0].trim(), parts[1].trim());
             }
-                    
-            try {
-                output.close();
-                br.close();
-                socket.close();
-            } catch(Exception e) {}
+          
+            
+        }
+        private void parseRequestLine(String req) {
+            String[] parts = req.split("\\?");
+            url = parts[0];
+            
+            String qp = null;
+            long waitInServer = 0;
+            if (parts.length == 2) {
+                qp = parts[1];
+            
+                String[] params = qp.split("&");
+                for (String param : params) {
+                    String[] nameValue = param.split("=");
+                    queryParams.put(nameValue[0], nameValue[1]);
+                }
+            }
+        }
+        
+        private void delayIfRequested(SimpleHttpServer.DelayWhen delayWhen) throws Exception {
+            String delay = queryParams.get(delayWhen.name());
+            if (delay != null) {
+                int delayMilliSecs = Integer.valueOf(delay);
+                if (delayMilliSecs != 0) {
+                    SimpleHttpServer.log("Delaying " + delay + " milli seconds: " + delayWhen.name());
+                    Thread.sleep(delayMilliSecs);
+                }
+            }
         }
         
         private static void sendBytes(FileInputStream fis, OutputStream os) throws Exception {
@@ -408,18 +377,162 @@ public class TestZimbraHttpConnectionManager {
                 os.write(buffer, 0, bytes);
             }
         }
+        
+        private void doGet() throws Exception {
+           
+            delayIfRequested(SimpleHttpServer.DelayWhen.GET_BEFORE_FETCHING_RESOURCE);
+        
+            // Open the requested file.
+            String fileName = url;
+            FileInputStream fis = null ;
+            boolean fileExists = true ;
+            try {
+                fis = new FileInputStream(fileName) ;
+            } catch ( FileNotFoundException e) {
+                fileExists = false ;
+            }
+            
+            String statusLine = null;
+            String contentTypeLine = null;
+            String entityBody = null;
+            String contentLengthLine = null;
+            if (fileExists) {
+                statusLine = STATUS_LINE_200;
+                contentTypeLine = HEADER_CONTENT_TYPE + ": " + "text/plain" + CRLF;
+                contentLengthLine = HEADER_CONTENT_LENGTH + ": " + 
+                    (new Integer(fis.available())).toString() + CRLF;
+            } else {
+                statusLine = STATUS_LINE_404;
+                contentTypeLine = HEADER_CONTENT_TYPE + ": " + "text/html" + CRLF;
+                entityBody = "<HTML>" + "<HEAD><TITLE>404 Not Found</TITLE></HEAD>" +
+                    "<BODY>404 Not Found" + "<br>File " + fileName + "</BODY></HTML>" ;
+                
+                contentLengthLine = HEADER_CONTENT_LENGTH + ": " +  + entityBody.length() + CRLF;
+            }
+            
+            delayIfRequested(SimpleHttpServer.DelayWhen.BEFORE_WRITING_RESPONSE_HEADERS);
+    
+            // Send the status line.
+            output.write(statusLine.getBytes());
+            
+            // Send the server line.
+            output.write(SERVER_LINE.getBytes());
+            
+            // Send the content type line.
+            output.write(contentTypeLine.getBytes());
+            
+            // Send the Content-Length
+            output.write(contentLengthLine.getBytes());
+            
+            // Send a blank line to indicate the end of the header lines.
+            output.write(CRLF.getBytes());
+            
+            delayIfRequested(SimpleHttpServer.DelayWhen.BEFORE_WRITING_RESPONSE_BODY);
+            
+            // Send the entity body.
+            if (fileExists) {
+                sendBytes(fis, output) ;
+                fis.close();
+            } else {
+                output.write(entityBody.getBytes());
+            }
+            
+            delayIfRequested(SimpleHttpServer.DelayWhen.AFTER_WRITING_RESPONSE_BODY);
+        }
+        
+        private void doPost() throws Exception {
+            
+            delayIfRequested(SimpleHttpServer.DelayWhen.POST_BEFORE_READING_BODY);
+            
+            int contentLength = Integer.valueOf(headers.get(HEADER_CONTENT_LENGTH));
+            int firstHalfLen = contentLength / 2;
+            int secondHalfLen = contentLength - firstHalfLen;
+            
+            byte[] bodyFirstHalf = new byte[firstHalfLen];
+            input.read(bodyFirstHalf);
+            
+            // wait while reading
+            // waitIfRequested();
+            
+            byte[] bodySecondHalf = new byte[secondHalfLen];
+            input.read(bodySecondHalf);
+            
+            String entityBody = "all is well!";
+            String contentTypeLine = HEADER_CONTENT_TYPE + ": " + "text/plain" + CRLF;
+            String contentLengthLine = HEADER_CONTENT_LENGTH + ": " + entityBody.getBytes().length + CRLF;
+                
+            delayIfRequested(SimpleHttpServer.DelayWhen.BEFORE_WRITING_RESPONSE_HEADERS);
+            
+            // Send the status line.
+            output.write(STATUS_LINE_200.getBytes());
+            
+            // Send the server line.
+            output.write(SERVER_LINE.getBytes());
+            
+            // Send the content type line.
+            output.write(contentTypeLine.getBytes());
+            
+            // Send the Content-Length
+            output.write(contentLengthLine.getBytes());
+            
+            // Send a blank line to indicate the end of the header lines.
+            output.write(CRLF.getBytes());
+            
+            delayIfRequested(SimpleHttpServer.DelayWhen.BEFORE_WRITING_RESPONSE_BODY);
+            
+            // Send the entity body.
+            output.write(entityBody.getBytes());
+            
+            delayIfRequested(SimpleHttpServer.DelayWhen.AFTER_WRITING_RESPONSE_BODY);
+        }
+        
+        private void processRequest() throws Exception {
+            
+            while(true) {
+                delayIfRequested(SimpleHttpServer.DelayWhen.BEFORE_READING_REQ_LINE);
+                String reqLine = reader.readLine();
+                SimpleHttpServer.log(reqLine);
+                if (reqLine.equals(CRLF) || reqLine.equals("")) {
+                    break;
+                }
+                
+                getHeaders();
+                
+                StringTokenizer s = new StringTokenizer(reqLine);
+                String method = s.nextToken();
+                
+                String req = s.nextToken();
+                parseRequestLine(req);
+                
+                if (method.equals("GET")) {
+                    doGet();
+                } else if (method.equals("POST")) {
+                    doPost();
+                }
+             
+                // our thread only process one request  :)
+                break;
+            }
+                    
+            try {
+                output.close();
+                reader.close();
+                socket.close();
+            } catch(Exception e) {}
+        }
+
     }
 
-    @Test
+    // @Test
     public void testSoTimeoutViaHttpMethod() throws Exception {
         
         int serverPort = 7778;
-        String path = "/opt/zimbra/unittest/ldap/binaryContent/rights-unittest.xml";
+        String resourceToGet = "/opt/zimbra/unittest/rights-unittest.xml";
+        long delayInServer = 10000;  // delay 10 seconds in server
         int soTimeout = 3000;  // 3 seconds
-            
-        // make server take 10 seconds to return
-        long waitInServer = 10000;
-        String qp = "?" + SimpleHttpServer.WAIT_IN_SERVER + "=" + waitInServer;
+        
+        String qp = "?" + SimpleHttpServer.DelayWhen.BEFORE_WRITING_RESPONSE_HEADERS.name() + "=" + delayInServer;
+        String uri = "http://localhost:" + serverPort + resourceToGet + qp;
         
         // start a http server for testing
         SimpleHttpServer.start(serverPort);
@@ -427,7 +540,7 @@ public class TestZimbraHttpConnectionManager {
         // HttpClient httpClient = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
         HttpClient httpClient = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         
-        GetMethod method = new GetMethod("http://localhost:" + serverPort + path + qp);
+        GetMethod method = new GetMethod(uri);
         
         // method.getParams().setParameter(HttpConnectionParams.SO_TIMEOUT, Integer.valueOf(soTimeout));
         method.getParams().setSoTimeout(soTimeout); 
@@ -444,7 +557,7 @@ public class TestZimbraHttpConnectionManager {
             // good, just what we want
             endTime = System.currentTimeMillis();
             long elapsedTime = endTime - startTime;
-            System.out.println("Timed out after " + elapsedTime + " msecs");
+            System.out.println("Client timed out after " + elapsedTime + " msecs");
         } catch (Exception e) {
             e.printStackTrace();
             Assert.fail();
@@ -457,18 +570,116 @@ public class TestZimbraHttpConnectionManager {
     }
     
     /*
+     * Before running this test:
+     * 
+     * zmlocalconfig -e httpclient_connmgr_so_timeout_external=3000  (3 seconds)
+     */
+    @Test
+    public void testSoTimeoutViaConnMgrParam() throws Exception {
+        
+        int serverPort = 7778;
+        String resourceToGet = "/opt/zimbra/unittest/rights-unittest.xml";
+        long delayInServer = 10000;  // delay 10 seconds in server
+        int soTimeout = 3000;  // 3 seconds
+        
+        String qp = "?" + SimpleHttpServer.DelayWhen.BEFORE_WRITING_RESPONSE_HEADERS.name() + "=" + delayInServer;
+        String uri = "http://localhost:" + serverPort + resourceToGet + qp;
+        
+        // start a http server for testing
+        SimpleHttpServer.start(serverPort);
+        
+        HttpClient httpClient = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
+        
+        GetMethod method = new GetMethod(uri);
+        
+        long startTime = System.currentTimeMillis();
+        long endTime;
+        try {
+            // int respCode = HttpClientUtil.executeMethod(httpClient, method);
+            int respCode = httpClient.executeMethod(method);
+            
+            dumpResponse(respCode, method, "");
+            Assert.fail(); // nope, it should have timed out
+        } catch (java.net.SocketTimeoutException e) {
+            // good, just what we want
+            endTime = System.currentTimeMillis();
+            long elapsedTime = endTime - startTime;
+            System.out.println("Client timed out after " + elapsedTime + " msecs");
+        } catch (Exception e) {
+            e.printStackTrace();
+            Assert.fail();
+        } finally {
+            method.releaseConnection();
+        }
+        
+        // shutdown the server
+        SimpleHttpServer.shutdown();
+    }
+    
+    // @Test
+    public void testSoTimeoutViaHttpPostMethod() throws Exception {
+        
+        int serverPort = 7778;
+        String resourceToPost = "/opt/zimbra/unittest/rights-unittest.xml";
+        long delayInServer = 100000;  // delay 10 seconds in server
+        int soTimeout = 60000; // 3000;  // 3 seconds, 0 for infinite wait
+            
+        String qp = "?" + SimpleHttpServer.DelayWhen.BEFORE_WRITING_RESPONSE_HEADERS.name() + "=" + delayInServer;
+        String uri = "http://localhost:" + serverPort + resourceToPost + qp;
+        
+        // start a http server for testing
+        SimpleHttpServer.start(serverPort);
+
+        // post the exported content to the target server
+        HttpClient httpClient = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        PostMethod method = new PostMethod(uri);
+        method.getParams().setSoTimeout(soTimeout); // infinite wait because it can take a long time to import a large mailbox
+        
+        File file = new File(resourceToPost);
+        FileInputStream fis = null;
+        
+        long startTime = System.currentTimeMillis();
+        long endTime;
+        try {
+            fis = new FileInputStream(file);
+            InputStreamRequestEntity isre =
+                new InputStreamRequestEntity(fis, file.length(), MimeConstants.CT_APPLICATION_OCTET_STREAM);
+            method.setRequestEntity(isre);
+            int respCode = httpClient.executeMethod(method);
+            
+            dumpResponse(respCode, method, "");
+            Assert.fail(); // nope, it should have timed out
+        } catch (java.net.SocketTimeoutException e) {
+            e.printStackTrace();
+            // good, just what we want
+            endTime = System.currentTimeMillis();
+            long elapsedTime = endTime - startTime;
+            System.out.println("Client timed out after " + elapsedTime + " msecs");
+        } catch (Exception e) {
+            e.printStackTrace();
+            Assert.fail();
+        } finally {
+            method.releaseConnection();
+        }
+        
+        // shutdown the server
+        SimpleHttpServer.shutdown();
+    }
+    
+    
+    /*
      * before running this test:
      * 
-     * zmlocalconfig -e httpclient_connmgr_max_total_connections=1  // the connection manager can only hand out one connection
-     * zmlocalconfig -e httpclient_client_connection_timeout=5000   // time to get a connection from the connection manager
+     * zmlocalconfig -e httpclient_connmgr_max_total_connections_external=1  // the connection manager can only hand out one connection
+     * zmlocalconfig -e httpclient_client_connection_timeout_external=5000   // time to get a connection from the connection manager
      */
     // @Test
     public void testHttpClientConnectionManagerTimeout() throws Exception {
         
         int serverPort = 7778;
         String path = "/Users/pshao/p4/main/ZimbraServer/src/java/com/zimbra/qa/unittest/TestZimbraHttpConnectionManager.java";  // this file
-        long waitInServer = 10000;
-        String qp = "?" + SimpleHttpServer.WAIT_IN_SERVER + "=" + waitInServer;
+        long delayInServer = 10000;
+        String qp = "?" + SimpleHttpServer.DelayWhen.GET_BEFORE_FETCHING_RESOURCE.name() + "=" + delayInServer;
         
         // start a server for testing
         SimpleHttpServer.start(serverPort);
@@ -485,7 +696,8 @@ public class TestZimbraHttpConnectionManager {
         // second thread
         GetMethod method2 = new GetMethod("http://localhost:" + serverPort + path + qp);
         TestGetThread thread2 = new TestGetThread(connMgr.newHttpClient(), method1, 2);
-        thread2.start(); // this thread should timeout (ConnectionPoolTimeoutException) after 5000 milli seconds, because zmlocalconfig -e httpclient_client_connection_timeout=5000 
+        thread2.start(); // this thread should timeout (ConnectionPoolTimeoutException) after 5000 milli seconds, 
+                         // because zmlocalconfig -e httpclient_client_connection_timeout_external=5000 
         
         Thread.sleep(60000); // wait a little so we can observe the threads run
         
@@ -558,8 +770,9 @@ public class TestZimbraHttpConnectionManager {
             System.out.println(id + " - about to get something from " + method.getURI());
             // execute the method
             
-            if (authPreemp)
+            if (authPreemp) {
                 httpClient.getParams().setAuthenticationPreemptive(true);
+            }
             
             int respCode = HttpClientUtil.executeMethod(httpClient, method);
             
@@ -583,15 +796,16 @@ public class TestZimbraHttpConnectionManager {
         }
     }
     
+    // bug 47488
     // @Test
     public void testAuthenticationPreemptive() throws Exception {
 
         ZimbraHttpConnectionManager.startReaperThread();
         
-        
         for (int i = 0; i < 10; i++) {
             // runTest(new HttpClient(), "PLAIN"+i, true);
-            runTest(ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient(), "EXT"+i, true);
+            runTest(ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient(), "EXT-authPreemp"+i, true);
+            runTest(ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient(), "EXT"+i, false);
             runTest(ZimbraHttpConnectionManager.getInternalHttpConnMgr().getDefaultHttpClient(), "INT"+i, false);
         }
     }
