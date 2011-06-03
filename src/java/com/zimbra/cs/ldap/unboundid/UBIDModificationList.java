@@ -49,8 +49,14 @@ public class UBIDModificationList extends ZModificationList {
             Object attrValue = attr.getValue();
             
             Modification mod = null;
-            if (attrValue instanceof String) {
-                mod = new Modification(ModificationType.REPLACE, attrName, (String) attrValue);
+            if (attrValue == null) {
+                mod = new Modification(ModificationType.DELETE, attrName);
+            } else if (attrValue instanceof String) {
+                if (((String) attrValue).isEmpty()) {
+                    mod = new Modification(ModificationType.DELETE, attrName);
+                } else {
+                    mod = new Modification(ModificationType.REPLACE, attrName, (String) attrValue);
+                }
             } else if (attrValue instanceof String[]) {
                 mod = new Modification(ModificationType.REPLACE, attrName, (String[]) attrValue);
             }

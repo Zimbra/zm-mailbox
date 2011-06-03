@@ -33,7 +33,15 @@ class LdapUpgradePrinter {
         printer.println(str);
     }
     
+    void format(String format, Object ... objects) {
+        printer.format(format, objects);
+    }
+    
     PrintWriter getPrintWriter() {
         return new PrintWriter(printer, true);
+    }
+    
+    void printStackTrace(Throwable e) {
+        e.printStackTrace(getPrintWriter());
     }
 }

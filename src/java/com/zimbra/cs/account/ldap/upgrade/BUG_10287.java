@@ -63,7 +63,7 @@ public class BUG_10287 extends UpgradeOp {
         } catch (ServiceException e) {
             // log the exception and continue
             printer.println("Caught ServiceException while modifying " + entryName);
-            e.printStackTrace();
+            printer.printStackTrace(e);
         }
 
     }

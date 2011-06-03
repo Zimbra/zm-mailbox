@@ -88,7 +88,7 @@ public class BUG_42896 extends UpgradeOp {
         } catch (ServiceException e) {
             // log the exception and continue
             printer.println("Caught ServiceException while modifying " + Provisioning.A_zimbraConstraint + " attribute ");
-            e.printStackTrace();
+            printer.printStackTrace(e);
         }
     }
     

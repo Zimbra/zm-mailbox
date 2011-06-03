@@ -46,13 +46,13 @@ public class BUG_50465 extends UpgradeOp {
         }
     }
     
-    private static class DisableBriefcaseVisitor extends SearchLdapVisitor {
+    private static class Bug50465Visitor extends SearchLdapVisitor {
         private UpgradeOp upgradeOp;
-        private ZLdapContext mModZlc;
+        private ZLdapContext modZlc;
         
-        private DisableBriefcaseVisitor(UpgradeOp upgradeOp, ZLdapContext modZlc) {
+        private Bug50465Visitor(UpgradeOp upgradeOp, ZLdapContext modZlc) {
             this.upgradeOp = upgradeOp;
-            this.mModZlc = modZlc;
+            this.modZlc = modZlc;
         }
         
         @Override
@@ -70,18 +70,18 @@ public class BUG_50465 extends UpgradeOp {
                     entry.setAttr(ATTR_NOTEBOOK, LdapConstants.LDAP_FALSE);
                 
                 upgradeOp.printer.println("Modifying " + dn);
-                upgradeOp.replaceAttrs(mModZlc, dn, entry);
+                upgradeOp.replaceAttrs(modZlc, dn, entry);
                 
             } catch (ServiceException e) {
                 // log and continue
                 upgradeOp.printer.println("Caught ServiceException while modifying " + dn);
-                e.printStackTrace();
+                upgradeOp.printer.printStackTrace(e);
             }
         }
     }
     
     private void upgrade(ZLdapContext modZlc, String bases[], String query) {
-        SearchLdapOptions.SearchLdapVisitor visitor = new DisableBriefcaseVisitor(this, modZlc);
+        SearchLdapOptions.SearchLdapVisitor visitor = new Bug50465Visitor(this, modZlc);
 
         String attrs[] = new String[] {ATTR_SPREADSHEET, ATTR_SLIDES, ATTR_NOTEBOOK};
         
@@ -91,7 +91,7 @@ public class BUG_50465 extends UpgradeOp {
             } catch (ServiceException e) {
                 // log and continue
                 printer.println("Caught ServiceException while searching " + query + " under base " + base);
-                e.printStackTrace();
+                printer.printStackTrace(e);
             }
         }
     }

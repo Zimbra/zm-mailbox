@@ -71,16 +71,16 @@ public class BUG_29978 extends UpgradeOp {
         }
         
         private UpgradeOp upgradeOp;
-        private ZLdapContext mZlcForMod;
-        private Map<String, ServerInfo> mServerMap; // map keyed by server.zimbraServiceHostname
-        private int mDomainsVisited;
+        private ZLdapContext modZlc;
+        private Map<String, ServerInfo> serverMap; // map keyed by server.zimbraServiceHostname
+        private int domainsVisited;
         
-        DomainPuclicServiceProtocolAndPortVisitor(UpgradeOp upgradeOp, ZLdapContext zlcForMod, 
+        DomainPuclicServiceProtocolAndPortVisitor(UpgradeOp upgradeOp, ZLdapContext modZlc, 
                 List<Server> servers) {
             this.upgradeOp = upgradeOp;
-            this.mZlcForMod = mZlcForMod;
+            this.modZlc = modZlc;
             
-            mServerMap = new HashMap<String, ServerInfo>();
+            serverMap = new HashMap<String, ServerInfo>();
             for (Server server : servers) {
                 /*
                  * it should have zimbraServiceHostname, otherwise it should not be found,
@@ -94,7 +94,7 @@ public class BUG_29978 extends UpgradeOp {
                      * if so only the first server returned by the LDAP search is honored
                      * and all others are ignored.
                      */
-                    ServerInfo sInfo = mServerMap.get(serviceName);
+                    ServerInfo sInfo = serverMap.get(serviceName);
                     if (sInfo != null) {
                         upgradeOp.printer.println("Found duplicated " + Provisioning.A_zimbraServiceHostname +
                                            ", server honored:" + sInfo.mServerName +
@@ -127,7 +127,7 @@ public class BUG_29978 extends UpgradeOp {
                         }
                         
                         if (proto != null)
-                            mServerMap.put(server.getAttr(Provisioning.A_zimbraServiceHostname), 
+                            serverMap.put(server.getAttr(Provisioning.A_zimbraServiceHostname), 
                                            new ServerInfo(server.getName(), proto, port));
                     }
                 }
@@ -141,7 +141,7 @@ public class BUG_29978 extends UpgradeOp {
                 return;
             }
             
-            mDomainsVisited++;
+            domainsVisited++;
             
             Domain domain = (Domain)entry;
             
@@ -152,7 +152,7 @@ public class BUG_29978 extends UpgradeOp {
             // should not be null/empty, otherwise the domain would not have been found, sanity check
             if (StringUtil.isNullOrEmpty(domainPublicHostname)) {
                 if (upgradeOp.verbose) {
-                    System.out.format("Not updating domain %d: domain does not have %s\n",
+                    upgradeOp.printer.format("Not updating domain %d: domain does not have %s\n",
                                        domain.getName(), Provisioning.A_zimbraPublicServiceHostname);
                 }
                 return;
@@ -161,7 +161,7 @@ public class BUG_29978 extends UpgradeOp {
             // update only if either protocol or port is already set
             if (domainPublicProtocol != null) {
                 if (upgradeOp.verbose) {
-                    System.out.format("Not updating domain %s: %s already set to %s on domain\n", 
+                    upgradeOp.printer.format("Not updating domain %s: %s already set to %s on domain\n", 
                                       domain.getName(), Provisioning.A_zimbraPublicServiceProtocol, domainPublicProtocol);
                 }
                 return;
@@ -169,18 +169,18 @@ public class BUG_29978 extends UpgradeOp {
             
             if (domainPublicPort != null) {
                 if (upgradeOp.verbose) {
-                    System.out.format("Not updating domain %s: %s already set to %s on domain\n", 
+                    upgradeOp.printer.format("Not updating domain %s: %s already set to %s on domain\n", 
                                       domain.getName(), Provisioning.A_zimbraPublicServicePort, domainPublicPort);
                 }
                 return;
             }
                 
             
-            ServerInfo serverInfo = mServerMap.get(domainPublicHostname);
+            ServerInfo serverInfo = serverMap.get(domainPublicHostname);
             // should not be null, otherwise the domain would not have been found, sanity check
             if (serverInfo == null) {
                 if (upgradeOp.verbose) {
-                    System.out.format("Not updating domain %s\n", domain.getName());
+                    upgradeOp.printer.format("Not updating domain %s\n", domain.getName());
                 }
                 return;
             }
@@ -193,21 +193,21 @@ public class BUG_29978 extends UpgradeOp {
                 attrs.put(Provisioning.A_zimbraPublicServicePort, serverInfo.mPort);
                     
             try {
-                System.out.format("Updating domain %-30s: proto => %-5s   port => %-5s\n",
+                upgradeOp.printer.format("Updating domain %-30s: proto => %-5s   port => %-5s\n",
                                   domain.getName(),
                                   attrs.get(Provisioning.A_zimbraPublicServiceProtocol),
                                   attrs.get(Provisioning.A_zimbraPublicServicePort));
-                upgradeOp.modifyAttrs(mZlcForMod, domain, attrs);
+                upgradeOp.modifyAttrs(modZlc, domain, attrs);
             } catch (ServiceException e) {
                 // log the exception and continue
                 upgradeOp.printer.println("Caught ServiceException while modifying domain " + domain.getName());
-                e.printStackTrace();
+                upgradeOp.printer.printStackTrace(e);
             }
         }
         
         void reportStat() {
             upgradeOp.printer.println();
-            upgradeOp.printer.println("Number of domains found = " + mDomainsVisited);
+            upgradeOp.printer.println("Number of domains found = " + domainsVisited);
             upgradeOp.printer.println();
         }
     }

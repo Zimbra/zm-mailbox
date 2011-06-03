@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
@@ -62,7 +61,7 @@ public class BUG_46883 extends UpgradeOp {
         } catch (ServiceException e) {
             // log the exception and continue
             printer.println("Caught ServiceException while modifying " + entryName);
-            e.printStackTrace();
+            printer.printStackTrace(e);
         }
 
     }

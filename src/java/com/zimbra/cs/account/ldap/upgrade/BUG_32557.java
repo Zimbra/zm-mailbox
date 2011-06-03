@@ -31,13 +31,13 @@ public class BUG_32557 extends UpgradeOp {
     private static class AddDomainObjectClassAmavisAccountVisitor implements NamedEntry.Visitor {
         
         private UpgradeOp upgradeOp;
-        private ZLdapContext mZlcForMod;
+        private ZLdapContext modZlc;
         
         private int mDomainsVisited;
     
-        AddDomainObjectClassAmavisAccountVisitor(UpgradeOp upgradeOp, ZLdapContext zlcForMod) {
+        AddDomainObjectClassAmavisAccountVisitor(UpgradeOp upgradeOp, ZLdapContext modZlc) {
             this.upgradeOp = upgradeOp;
-            this.mZlcForMod = mZlcForMod;
+            this.modZlc = modZlc;
         }
         
         public void visit(NamedEntry entry) {
@@ -55,13 +55,13 @@ public class BUG_32557 extends UpgradeOp {
             attrs.put("+" + Provisioning.A_objectClass, "amavisAccount");
             
             try {
-                System.out.format("Updating domain %-30s: objectClass=amavisAccount\n",
+                upgradeOp.printer.format("Updating domain %-30s: objectClass=amavisAccount\n",
                                   domain.getName());
-                upgradeOp.modifyAttrs(mZlcForMod, domain, attrs);
+                upgradeOp.modifyAttrs(modZlc, domain, attrs);
             } catch (ServiceException e) {
                 // log the exception and continue
                 upgradeOp.printer.println("Caught ServiceException while modifying domain " + domain.getName());
-                e.printStackTrace();
+                upgradeOp.printer.printStackTrace(e);
             }
         }
         

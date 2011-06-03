@@ -21,6 +21,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.ZModificationList;
+import com.zimbra.cs.ldap.ZMutableEntry;
 import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
 import com.zimbra.cs.ldap.ZLdapElement.StringLdapElementDebugListener;
 
@@ -91,6 +92,21 @@ public class UBIDLogger {
                 ldapOp, timer.elapsedMillis(), usage.name(),
                 conn.getConnectionID(), 
                 dn);
+    }
+    
+    static void afterTimedOp(LdapOp ldapOp, Timer timer, LdapUsage usage,
+            LDAPConnection conn, ZMutableEntry entry) {
+        if (!debugLogger.isDebugEnabled()) {
+            return;
+        }
+        
+        StringLdapElementDebugListener debugListener = new StringLdapElementDebugListener();
+        entry.debug(debugListener);
+        
+        UBIDLogger.debugLogger.debug("%s - millis=[%d], usage=[%s], conn=[%d] entry=[%s]", 
+                ldapOp, timer.elapsedMillis(), usage.name(),
+                conn.getConnectionID(), 
+                debugListener.getString());
     }
     
     static void afterTimedOp(LdapOp ldapOp, Timer timer, LdapUsage usage,

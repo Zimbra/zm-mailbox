@@ -27,7 +27,6 @@ import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZMutableEntry;
 
-
 public class UBIDMutableEntry extends ZMutableEntry {
 
     private Entry entry;
@@ -37,11 +36,10 @@ public class UBIDMutableEntry extends ZMutableEntry {
         // call site should set a real DN later
         this.entry = new Entry("");
     }
-    
+
     @Override
-    public void debug() {
-        // TODO Auto-generated method stub
-        
+    public void debug(ZLdapElementDebugListener debugListener) {
+        print(debugListener, entry.toString());
     }
     
     Entry getNative() {

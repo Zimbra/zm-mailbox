@@ -65,7 +65,7 @@ public class BUG_58084 extends UpgradeOp {
             } catch (ServiceException e) {
                 // log the exception and continue
                 printer.println("Caught ServiceException while modifying " + entryName + " attribute " + attr);
-                e.printStackTrace();
+                printer.printStackTrace(e);
             }
         } else {
             printer.println("    Current value of " + attrName + " on " + entryName + " is " + curValue + " - not changed");

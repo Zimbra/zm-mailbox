@@ -28,7 +28,6 @@ import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZLdapContext;
-import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
 
 public class BUG_43147 extends UpgradeOp {
 
@@ -111,7 +110,7 @@ public class BUG_43147 extends UpgradeOp {
                         modifyAttrs(zlc, acct, attrs);
                     } catch (ServiceException e) {
                         printer.println("Caught ServiceException while modifying GAL sync account entry " + acct.getName());
-                        e.printStackTrace();
+                        printer.printStackTrace(e);
                     }
                 } else
                     printer.println("Account: " + acct.getId() + "(" + acct.getName() + ") - "+ "already has value " + curValue + ", skipping");

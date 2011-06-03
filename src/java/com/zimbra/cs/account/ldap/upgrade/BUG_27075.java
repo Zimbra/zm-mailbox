@@ -249,7 +249,7 @@ public class BUG_27075 extends UpgradeOp {
                 } catch (ServiceException e) {
                     // log the exception and continue
                     printer.println("Caught ServiceException while modifying " + entryName + " attribute " + attr);
-                    e.printStackTrace();
+                    printer.printStackTrace(e);
                 }
             }
         }
@@ -270,7 +270,7 @@ public class BUG_27075 extends UpgradeOp {
                     prov.modifyAttrs(entry, attrs);
                 } catch (ServiceException e) {
                     printer.println("Caught ServiceException while unsetting " + theAttr + " on " +  entryName);
-                    e.printStackTrace();
+                    printer.printStackTrace(e);
                 }
             }
         }

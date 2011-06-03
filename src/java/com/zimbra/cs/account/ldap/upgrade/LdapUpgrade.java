@@ -142,6 +142,9 @@ public class LdapUpgrade {
         printer.println("--------------");
     }
     
+    /*
+     * zmjava com.zimbra.cs.account.ldap.upgrade.LdapUpgrade -b <bug number>
+     */
     public static void main(String[] args) throws ServiceException {
         if (LdapClient.isLegacy()) {
             // delegate to the legacy package

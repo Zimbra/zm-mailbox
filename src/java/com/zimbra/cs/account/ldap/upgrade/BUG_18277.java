@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Domain;
@@ -102,13 +101,15 @@ public class BUG_18277 extends UpgradeOp {
     
     private static class Bug18277Visitor extends SearchLdapOptions.SearchLdapVisitor {
         
+        private UpgradeOp upgradeOp;
         private String configBranchBaseDn;
         private Set<String> domainAdminIds;
         private Set<String> globalAdminIds;
         
-        private Bug18277Visitor(String configBranchBaseDn, 
+        private Bug18277Visitor(UpgradeOp upgradeOp, String configBranchBaseDn, 
                 Set<String> domainAdminIds, Set<String> globalAdminIds) {
             super(false);
+            this.upgradeOp = upgradeOp;
             this.configBranchBaseDn = configBranchBaseDn;
             this.domainAdminIds = domainAdminIds;
             this.globalAdminIds = globalAdminIds;
@@ -119,7 +120,8 @@ public class BUG_18277 extends UpgradeOp {
             try {
                 doVisit(dn, (ZAttributes) ldapAttrs);
             } catch (ServiceException e) {
-                ZimbraLog.account.warn("entry skipped, encountered error while processing entry at:" + dn);
+                upgradeOp.printer.println("entry skipped, encountered error while processing entry at:" + dn);
+                upgradeOp.printer.printStackTrace(e);
             }
         }
         
@@ -181,7 +183,7 @@ public class BUG_18277 extends UpgradeOp {
         try {
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.UPGRADE);
             
-            Bug18277Visitor visitor = new Bug18277Visitor(configBranchBaseDn, domainAdminIds, globalAdminIds);
+            Bug18277Visitor visitor = new Bug18277Visitor(this, configBranchBaseDn, domainAdminIds, globalAdminIds);
             
             SearchLdapOptions searchOpts = new SearchLdapOptions(base, query, 
                     returnAttrs, SearchLdapOptions.SIZE_UNLIMITED, null, 

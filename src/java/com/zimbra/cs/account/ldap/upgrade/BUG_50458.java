@@ -14,8 +14,6 @@
  */
 package com.zimbra.cs.account.ldap.upgrade;
 
-import java.util.Map;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ldap.IAttributes;
@@ -23,8 +21,10 @@ import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.SearchLdapOptions;
+import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
+import com.zimbra.cs.ldap.ZMutableEntry;
 
 public class BUG_50458 extends UpgradeOp {
 
@@ -61,40 +61,35 @@ public class BUG_50458 extends UpgradeOp {
             } catch (ServiceException e) {
                 // log and continue
                 printer.println("Caught ServiceException while searching " + query + " under base " + base);
-                e.printStackTrace();
+                printer.printStackTrace(e);
             }
         }
     }
     
     private static class Bug50458Visitor extends SearchLdapOptions.SearchLdapVisitor {
         private UpgradeOp upgradeOp;
-        private ZLdapContext mModZlc;
+        private ZLdapContext modZlc;
         
         Bug50458Visitor(UpgradeOp upgradeOp, ZLdapContext modZlc) {
+            super(false);
             this.upgradeOp = upgradeOp;
-            this.mModZlc = modZlc;
+            this.modZlc = modZlc;
         }
         
         @Override
-        public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs) {
-            // TODO: implement ZLdapContext.removeAttributes
-            /*
-            Attributes modAttrs = new BasicAttributes(true);
-            
+        public void visit(String dn, IAttributes ldapAttrs) {
             try {
-                modAttrs.put(Provisioning.A_zimbraPasswordChangeListener, VALUE_TO_REMOVE);
-                
-                upgradeOp.printer.println("Modifying " + dn + 
-                        ": removing " + Provisioning.A_zimbraPasswordChangeListener + "=" + VALUE_TO_REMOVE );
-                mModZlc.removeAttributes(dn, modAttrs);
-
+                doVisit(dn, (ZAttributes) ldapAttrs);
             } catch (ServiceException e) {
-                // log and continue
-                upgradeOp.printer.println("Caught ServiceException while modifying " + dn);
-                e.printStackTrace();
+                upgradeOp.printer.println("entry skipped, encountered error while processing entry at:" + dn);
+                upgradeOp.printer.printStackTrace(e);
             }
-            */
-            
+        }
+        
+        public void doVisit(String dn, ZAttributes ldapAttrs) throws ServiceException {
+            ZMutableEntry entry = LdapClient.createMutableEntry();
+            entry.setAttr(Provisioning.A_zimbraPasswordChangeListener, "");
+            upgradeOp.replaceAttrs(modZlc, dn, entry);
         }
     }
 

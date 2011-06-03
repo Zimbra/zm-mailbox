@@ -18,7 +18,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.ldap.IAttributes;
@@ -93,14 +92,12 @@ public class BUG_22033 extends UpgradeOp {
         
         private UpgradeOp upgradeOp;
         private ZLdapContext modZlc;
-        private LdapUpgradePrinter printer;
         private int numModified = 0;
         
-        private Bug22033Visitor(UpgradeOp upgradeOp, ZLdapContext modZlc, LdapUpgradePrinter printer) {
+        private Bug22033Visitor(UpgradeOp upgradeOp, ZLdapContext modZlc) {
             super(false);
             this.upgradeOp = upgradeOp;
             this.modZlc = modZlc;
-            this.printer = printer;
         }
         
         @Override
@@ -108,7 +105,8 @@ public class BUG_22033 extends UpgradeOp {
             try {
                 doVisit(dn, (ZAttributes) ldapAttrs);
             } catch (ServiceException e) {
-                ZimbraLog.account.warn("entry skipped, encountered error while processing entry at:" + dn);
+                upgradeOp.printer.println("entry skipped, encountered error while processing entry at:" + dn);
+                upgradeOp.printer.printStackTrace(e);
             }
         }
         
@@ -227,7 +225,7 @@ public class BUG_22033 extends UpgradeOp {
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.UPGRADE);
             modZlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.UPGRADE);
             
-            visitor = new Bug22033Visitor(this, modZlc, printer);
+            visitor = new Bug22033Visitor(this, modZlc);
             
             SearchLdapOptions searchOpts = new SearchLdapOptions(base, query, 
                     returnAttrs, SearchLdapOptions.SIZE_UNLIMITED, null, 

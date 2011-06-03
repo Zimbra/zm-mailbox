@@ -233,7 +233,7 @@ public class UBIDLdapContext extends ZLdapContext {
         try {
             Timer timer = UBIDLogger.beforeTimedOp();
             conn.add(((UBIDMutableEntry) entry).getNative());
-            UBIDLogger.afterTimedOp(LdapOp.CREATE_ENTRY, timer, usage, conn, entry.getDN());
+            UBIDLogger.afterTimedOp(LdapOp.CREATE_ENTRY, timer, usage, conn, entry);
         } catch (LDAPException e) {
             throw mapToLdapException("unable to create entry", e);
         }

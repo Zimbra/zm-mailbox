@@ -14,8 +14,6 @@
  */
 package com.zimbra.cs.account.ldap.upgrade;
 
-import java.util.Map;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ldap.IAttributes;
@@ -47,15 +45,16 @@ public class BUG_53745 extends UpgradeOp {
     
     private static class Bug53745Visitor extends SearchLdapVisitor {
         private UpgradeOp upgradeOp;
-        private ZLdapContext mModZlc;
+        private ZLdapContext modZlc;
         
         Bug53745Visitor(UpgradeOp upgradeOp, ZLdapContext modZlc) {
+            super(false);
             this.upgradeOp = upgradeOp;
-            this.mModZlc = modZlc;
+            this.modZlc = modZlc;
         }
         
         @Override
-        public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs) {
+        public void visit(String dn, IAttributes ldapAttrs) {
             ZMutableEntry entry = LdapClient.createMutableEntry();
             
             try {
@@ -73,12 +72,12 @@ public class BUG_53745 extends UpgradeOp {
                     }
                 } 
                 
-                upgradeOp.replaceAttrs(mModZlc, dn, entry);
+                upgradeOp.replaceAttrs(modZlc, dn, entry);
                 
             } catch (ServiceException e) {
                 // log and continue
                 upgradeOp.printer.println("Caught ServiceException while modifying " + dn);
-                e.printStackTrace();
+                upgradeOp.printer.printStackTrace(e);
             }
         }
     }
@@ -94,7 +93,7 @@ public class BUG_53745 extends UpgradeOp {
             } catch (ServiceException e) {
                 // log and continue
                 printer.println("Caught ServiceException while searching " + query + " under base " + base);
-                e.printStackTrace();
+                printer.printStackTrace(e);
             }
         }
     }
