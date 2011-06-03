@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110524-1711 */
+    /* build: 7.0.0_BETA1_1111 administrator 20110601-1620 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -4778,6 +4778,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1040)
     public static final String A_zimbraMailForwardingAddressMaxNumAddrs = "zimbraMailForwardingAddressMaxNumAddrs";
+
+    /**
+     * max size in KB of text emails that will automatically highlight
+     * objects
+     *
+     * @since ZCS 7.1.2
+     */
+    @ZAttr(id=1213)
+    public static final String A_zimbraMailHighlightObjectsMaxSize = "zimbraMailHighlightObjectsMaxSize";
 
     /**
      * the server hosting the account&#039;s mailbox
