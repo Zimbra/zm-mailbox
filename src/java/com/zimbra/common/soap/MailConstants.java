@@ -1093,4 +1093,5 @@ public final class MailConstants {
 
     public static final String A_PARENT_ID = "parentId";
     public static final String A_TEXT = "text";
+    public static final String E_ARG = "arg";
 }
