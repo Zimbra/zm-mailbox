@@ -126,7 +126,7 @@ public class ZMailboxUtil implements DebugListener {
     ZSearchParams mConvSearchParams;
     ZSearchResult mConvSearchResult;
     SoapProvisioning mProv;
-    private int mTimeout = LC.httpclient_connmgr_so_timeout.intValue();
+    private int mTimeout = LC.httpclient_internal_connmgr_so_timeout.intValue();
 
     private Map<Integer, String> mIndexToId = new HashMap<Integer, String>();
 
