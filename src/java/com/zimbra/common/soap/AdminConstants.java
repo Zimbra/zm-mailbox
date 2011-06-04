@@ -195,6 +195,9 @@ public final class AdminConstants {
 
     public static final String E_GET_LICENSE_INFO_REQUEST = "GetLicenseInfoRequest";
     public static final String E_GET_LICENSE_INFO_RESPONSE = "GetLicenseInfoResponse";
+    
+    public static final String E_GET_ATTRIBUTE_INFO_REQUEST = "GetAttributeInfoRequest";
+    public static final String E_GET_ATTRIBUTE_INFO_RESPONSE = "GetAttributeInfoResponse";    
 
     public static final String E_REINDEX_REQUEST = "ReIndexRequest";
     public static final String E_REINDEX_RESPONSE = "ReIndexResponse";
@@ -598,6 +601,9 @@ public final class AdminConstants {
 
     public static final QName GET_LICENSE_INFO_REQUEST = QName.get(E_GET_LICENSE_INFO_REQUEST, NAMESPACE);
     public static final QName GET_LICENSE_INFO_RESPONSE = QName.get(E_GET_LICENSE_INFO_RESPONSE, NAMESPACE);
+    
+    public static final QName GET_ATTRIBUTE_INFO_REQUEST = QName.get(E_GET_ATTRIBUTE_INFO_REQUEST, NAMESPACE);
+    public static final QName GET_ATTRIBUTE_INFO_RESPONSE = QName.get(E_GET_ATTRIBUTE_INFO_RESPONSE, NAMESPACE);
 
     public static final QName REINDEX_REQUEST = QName.get(E_REINDEX_REQUEST, NAMESPACE);
     public static final QName REINDEX_RESPONSE = QName.get(E_REINDEX_RESPONSE, NAMESPACE);
@@ -953,6 +959,8 @@ public final class AdminConstants {
     public static final String A_READABLE = "readable";
     public static final String A_WRITABLE = "writable";
     public static final String A_REVISION = "rev";
+    public static final String A_ENTRY_TYPES = "entryTypes";
+    public static final String A_DESC = "desc";
 
     public static final String BY_ID = "id";
     public static final String BY_QUERY = "query";
