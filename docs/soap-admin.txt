@@ -2506,3 +2506,24 @@ Returns the memcached client configuration on a mailbox server.
 A request that does nothing and always returns nothing. Used to keep an admin session alive.
 
 ----------------------------
+
+<GetAttributeInfoRequest [attrs="{attrs-to-return}"] [entryTypes="{entry-types}"]/>
+
+{attrs-to-return} = comma-seperated list of attrs to return
+
+{entry-type} = comma-seperated list of entry types.  Attributes on the specified entry types will be returned.
+               valid entry types:
+                   account,alias,distributionList,cos,globalConfig,domain,server,mimeEntry,zimletEntry,
+                   calendarResource,identity,dataSource,pop3DataSource,imapDataSource,rssDataSource,
+                   liveDataSource,galDataSource,signature,xmppComponent,aclTarget
+
+Only one of attrs or entryTypes can be specified.  
+If both are specified, INVALID_REQUEST will be thrown.
+If neither is specified, all attributes will be returned.
+
+
+<GetAttributeInfoResponse>
+    <a name="..." desc="..."/>+
+</GetAttributeInfoResponse>
+
+----------------------------

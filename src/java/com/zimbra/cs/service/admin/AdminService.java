@@ -121,7 +121,8 @@ public class AdminService implements DocumentService {
 
         dispatcher.registerHandler(AdminConstants.GET_VERSION_INFO_REQUEST, new GetVersionInfo());
         dispatcher.registerHandler(AdminConstants.GET_LICENSE_INFO_REQUEST, new GetLicenseInfo());
-
+        dispatcher.registerHandler(AdminConstants.GET_ATTRIBUTE_INFO_REQUEST, new GetAttributeInfo());
+        
         dispatcher.registerHandler(AdminConstants.REINDEX_REQUEST, new ReIndex());
         dispatcher.registerHandler(AdminConstants.VERIFY_INDEX_REQUEST, new VerifyIndex());
         dispatcher.registerHandler(AdminConstants.RECALCULATE_MAILBOX_COUNTS_REQUEST, new RecalculateMailboxCounts());
