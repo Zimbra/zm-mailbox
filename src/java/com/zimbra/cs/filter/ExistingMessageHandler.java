@@ -23,7 +23,6 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
-import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -127,31 +126,13 @@ extends FilterHandler {
     private void updateTagsAndFlagsIfNecessary(Message msg, Collection<ActionFlag> flagActions, String tagString)
     throws ServiceException {
         long tags = msg.getTagBitmask() | Tag.tagsToBitmask(tagString);
-        int flags = getFlagBitmask(msg, flagActions);
+        int flags = FilterUtil.getFlagBitmask(flagActions, msg.getFlagBitmask(), mailbox);
         if (msg.getTagBitmask() != tags || msg.getFlagBitmask() != flags) {
             ZimbraLog.filter.info("Updating flags to %d, tags to %d on message %d.",
                 flags, tags, msg.getId());
             mailbox.setTags(octxt, msg.getId(), MailItem.TYPE_MESSAGE, flags, tags);
             filtered = true;
         }
-    }
-    
-    /**
-     * Applies flag actions to the given <tt>Message</tt>'s existing flags
-     * and returns the result.  Does not modify the message.
-     */
-    private int getFlagBitmask(Message msg, Collection<ActionFlag> flagActions)
-    throws ServiceException {
-        int flags = msg.getFlagBitmask();
-        for (ActionFlag action : flagActions) {
-            Flag flag = mailbox.getFlagById(action.getFlagId());
-            if (action.isSetFlag()) {
-                flags |= flag.getBitmask();
-            } else {
-                flags &= ~flag.getBitmask();
-            }
-        }
-        return flags;
     }
     
     @Override
@@ -162,7 +143,7 @@ extends FilterHandler {
         Folder targetFolder = null;
         try {
             targetFolder = mailbox.getFolderByPath(octxt, folderPath);
-        } catch (NoSuchItemException e) {
+        } catch (NoSuchItemException ignored) {
         }
         if (targetFolder != null && source.getFolderId() == targetFolder.getId()) {
             ZimbraLog.filter.debug("Ignoring fileinto action for message %d.  It is already in %s.",
@@ -180,15 +161,16 @@ extends FilterHandler {
             filed = true;
 
             // Apply flags and tags
-            int flagBits = source.getFlagBitmask();
-            long tagBits = Tag.tagsToBitmask(tags);
             mailbox.setTags(octxt, newMsg.getId(), MailItem.TYPE_MESSAGE,
-                source.getFlagBitmask() | flagBits, source.getTagBitmask() | tagBits);
+                            FilterUtil.getFlagBitmask(flagActions, source.getFlagBitmask(), mailbox),
+                            source.getTagBitmask() | Tag.tagsToBitmask(tags));
             return new ItemId(mailbox, messageId);
         }
         
         ItemId id = FilterUtil.addMessage(new DeliveryContext(), mailbox, getParsedMessage(),
-            mailbox.getAccount().getName(), folderPath, false, getFlagBitmask(source, flagActions), tags, Mailbox.ID_AUTO_INCREMENT, octxt);
+                                          mailbox.getAccount().getName(), folderPath, false,
+                                          FilterUtil.getFlagBitmask(flagActions, source.getFlagBitmask(), mailbox),
+                                          tags, Mailbox.ID_AUTO_INCREMENT, octxt);
         if (id != null) {
             filtered = true;
             filed = true;
