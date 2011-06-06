@@ -577,7 +577,8 @@ public class RenameDomain {
                     warn(e, "moveDistributionList", "renameEntry", "entry=[%s], oldDn=[%s], newDn=[%s]", entry.getName(), oldDn, newDn);
                 }
             
-                // refresh for the new DN
+                // refresh for the new DN 
+                // (the entry will be read from the master, since we forced using LDAP master for the rename domain process - bug 56768)
                 // do not catch here, if we can't refresh - we can't modify, just let it throw and proceed to the next entry
                 try {
                     refreshedEntry = mProv.get(Provisioning.DistributionListBy.id, entry.getId());

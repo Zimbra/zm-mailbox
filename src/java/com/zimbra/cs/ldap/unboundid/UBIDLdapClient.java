@@ -79,8 +79,7 @@ public class UBIDLdapClient extends LdapClient {
     
     @Override
     protected void alwaysUseMasterImpl() {
-        // TODO Auto-generated method stub
-        
+        UBIDLdapContext.alwaysUseMaster();
     }
     
     @Override

@@ -1316,6 +1316,14 @@ public class ProvUtil implements HttpDebugListener {
         if (!(prov instanceof LdapProv)) {
             throwLdapOnly();
         }
+        
+        // bug 56768
+        ((LdapProv) prov).alwaysUseMaster();
+        
+        // should we disable interactive mode or use a separate CLI (e.g. zmrenamedomain) 
+        // for renameDomain?  After renameDomain, all subsequent LDAP accesses will go to
+        // the master.
+        
         LdapProv lp = (LdapProv) prov;
         Domain domain = lookupDomain(args[1]);
         lp.renameDomain(domain.getId(), args[2]);
