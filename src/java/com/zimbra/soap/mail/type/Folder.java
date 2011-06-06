@@ -24,8 +24,8 @@ import java.util.Map;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementRef;
 import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlEnumValue;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -90,6 +90,7 @@ public class Folder {
     @XmlAttribute(name="l") private String parentId;
     @XmlAttribute(name="f") private String flags;
     @XmlAttribute private Integer color;
+    @XmlAttribute private String rgb;
     @XmlAttribute(name="u") private Integer unreadCount;
     @XmlAttribute(name="i4u") private Integer imapUnreadCount;
     @XmlAttribute(name="n") private Integer itemCount;
@@ -104,7 +105,12 @@ public class Folder {
     @XmlAttribute(name="i4next") private Integer imapUidNext;
     @XmlAttribute(name="i4ms") private Integer imapModifiedSequence;
     
-    @XmlElementRef private List<Folder> subfolders = new ArrayList<Folder>();
+    @XmlElements({
+        @XmlElement(name="folder", type=Folder.class),
+        @XmlElement(name="link", type=Mountpoint.class),
+        @XmlElement(name="search", type=SearchFolder.class)
+    })
+    private List<Folder> subfolders = new ArrayList<Folder>();
     @XmlElementWrapper(name="acl")
     @XmlElement(name="grant")
     private List<Grant> grants = new ArrayList<Grant>();
@@ -132,6 +138,10 @@ public class Folder {
         return color;
     }
     
+    public String getRgb() {
+        return rgb;
+    }
+
     public Integer getUnreadCount() {
         return unreadCount;
     }
@@ -217,6 +227,10 @@ public class Folder {
         this.color = color;
     }
     
+    public void setRgb(String rgb) {
+        this.rgb = rgb;;
+    }
+
     public void setUnreadCount(Integer unreadCount) {
         this.unreadCount = unreadCount;
     }
