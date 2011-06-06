@@ -557,7 +557,8 @@ class RenameDomain {
                     warn(e, "moveDistributionList", "renameEntry", "entry=[%s], oldDn=[%s], newDn=[%s]", entry.getName(), oldDn, newDn);
                 }
             
-                // refresh for the new DN
+                // refresh for the new DN 
+                // (the entry will be read from the master, since we forced using LDAP master for the rename domain process - bug 56768)
                 // do not catch here, if we can't refresh - we can't modify, just let it throw and proceed to the next entry
                 try {
                     refreshedEntry = mProv.get(Provisioning.DistributionListBy.id, entry.getId());
@@ -588,7 +589,7 @@ class RenameDomain {
                 // move the entry
             
                 /*
-                 * for accounts, we need to first crate the entry in the new domain, because it may have sub entries
+                 * for accounts, we need to first create the entry in the new domain, because it may have sub entries
                  * (identities/datasources, signatures).  We create the account entry in the new domain using the fixed adddr attrs.
                  */
                 Attributes attributes = new BasicAttributes(true);

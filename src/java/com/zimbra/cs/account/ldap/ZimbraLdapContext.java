@@ -203,6 +203,9 @@ public class ZimbraLdapContext {
     public static synchronized void forceMasterURL() {
         sLdapURL = sLdapMasterURL;
         sConnType = sMasterConnType;
+        
+        sEnvMasterAuth = null;
+        sEnvAuth = null;
     }
     
     public static String getLdapURL() {

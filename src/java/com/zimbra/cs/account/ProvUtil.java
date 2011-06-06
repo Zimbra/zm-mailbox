@@ -1281,7 +1281,14 @@ public class ProvUtil implements HttpDebugListener {
     private void doRenameDomain(String[] args) throws ServiceException {
         if (!(mProv instanceof LdapProvisioning))
             throwLdapOnly();
-
+        
+        // bug 56768
+        ZimbraLdapContext.forceMasterURL();
+        
+        // should we disable interactive mode or use a separate CLI (e.g. zmrenamedomain) 
+        // for renameDomain?  After renameDomain, all subsequent LDAP accesses will go to
+        // the master.
+        
         LdapProvisioning lp = (LdapProvisioning) mProv;
         Domain domain = lookupDomain(args[1]);
         lp.renameDomain(domain.getId(), args[2]);
