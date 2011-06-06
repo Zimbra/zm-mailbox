@@ -100,7 +100,7 @@ public class Search extends MailDocumentHandler  {
 
         params.setQueryStr(query);
         if (LC.calendar_cache_enabled.booleanValue()) {
-            List<String> apptFolderIds = getFolderIdListIfSimpleAppointmentsQuery(params);
+            List<String> apptFolderIds = getFolderIdListIfSimpleAppointmentsQuery(params, zsc);
             if (apptFolderIds != null) {
                 Account authAcct = getAuthenticatedAccount(zsc);
                 Element response = zsc.createElement(MailConstants.SEARCH_RESPONSE);
@@ -182,7 +182,7 @@ public class Search extends MailDocumentHandler  {
 
     // Returns list of folder id string if the query is a simple appointments query.
     // Otherwise returns null.
-    private static List<String> getFolderIdListIfSimpleAppointmentsQuery(SearchParams params) {
+    protected List<String> getFolderIdListIfSimpleAppointmentsQuery(SearchParams params, ZimbraSoapContext zsc) throws ServiceException {
         // types = "appointment"
         byte[] types = params.getTypes();
         if (types == null || types.length != 1 ||
