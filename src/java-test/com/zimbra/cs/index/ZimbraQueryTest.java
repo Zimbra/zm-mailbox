@@ -16,13 +16,16 @@ package com.zimbra.cs.index;
 
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.base.Joiner;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
@@ -131,7 +134,11 @@ public final class ZimbraQueryTest {
         ZimbraQuery query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
         // CalItemExpand range shouldn't be expanded yet
         Assert.assertEquals("ZQ: Q(l.content:test)", query.toString());
-        Assert.assertEquals("(( content:test) AND -ID:/Trash -ID:/Junk )", query.toQueryString());
+        // The order of HashSet iteration may be different on different platforms.
+        Set<String> folders = new HashSet<String>();
+        folders.add("-ID:/Junk");
+        folders.add("-ID:/Trash");
+        Assert.assertEquals("(( content:test) AND " + Joiner.on(' ').join(folders) + " )", query.toQueryString());
     }
 
 }
