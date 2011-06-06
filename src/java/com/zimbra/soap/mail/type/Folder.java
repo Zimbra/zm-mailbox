@@ -27,8 +27,8 @@ import java.util.Map;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementRef;
 import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlEnumValue;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -178,7 +178,11 @@ public class Folder {
     @XmlElement(name=MailConstants.E_GRANT, required=false)
     private List<Grant> grants = new ArrayList<Grant>();
 
-    @XmlElementRef
+    @XmlElements({
+        @XmlElement(name="folder", type=Folder.class),
+        @XmlElement(name="link", type=Mountpoint.class),
+        @XmlElement(name="search", type=SearchFolder.class)
+    })
     private List<Folder> subfolders = new ArrayList<Folder>();
 
     public Folder() {
