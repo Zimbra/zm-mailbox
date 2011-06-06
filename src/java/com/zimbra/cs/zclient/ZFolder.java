@@ -254,6 +254,7 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         mParentId = f.getParentId();
         mIsPlaceholder = mParentId == null;
         mFlags = f.getFlags();
+        mRgb = f.getRgb() == null ? "null" : f.getRgb();
         try {
             mColor = ZFolder.Color.fromInt(SystemUtil.coalesce(f.getColor(), 0));
         } catch (ServiceException se) {
