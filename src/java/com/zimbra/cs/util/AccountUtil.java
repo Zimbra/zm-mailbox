@@ -263,13 +263,19 @@ public class AccountUtil {
         if (allowedFromAddrs != null) {
             for (int j = 0; j < allowedFromAddrs.length; j++) {
                 if (!includeSendAsAddresses) {
-                    Account allowFromAccount = null;
                     try {
-                        allowFromAccount = Provisioning.getInstance().get(AccountBy.name, allowedFromAddrs[j]);
-                        if (allowFromAccount != null && !account.equals(allowFromAccount)) {
-                            // The allow-from address refers to another account, and therefore it is not a match
-                            // for this account.
-                            continue;
+                        // Don't lookup account if email domain is not internal.  This will avoid unnecessary ldap searches.
+                        String domain = EmailUtil.getValidDomainPart(allowedFromAddrs[j]);
+                        if (domain != null) {
+                            Domain internalDomain = Provisioning.getInstance().getDomain(DomainBy.name, domain, true);
+                            if (internalDomain != null) {
+                                Account allowFromAccount = Provisioning.getInstance().get(AccountBy.name, allowedFromAddrs[j]);
+                                if (allowFromAccount != null && !account.getId().equalsIgnoreCase(allowFromAccount.getId())) {
+                                    // The allow-from address refers to another account, and therefore it is not a match
+                                    // for this account.
+                                    continue;
+                                }
+                            }
                         }
                     } catch (ServiceException e) {}                
                 }
