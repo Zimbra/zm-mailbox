@@ -89,11 +89,13 @@ public final class UserServletContext {
         public int ver;
         public boolean versioned;
         public MailItem mailItem;
-        public Item(String itemId) {
+        public Item(String itemId, Account targetAccount) throws ServiceException {
             String[] vals = itemId.split("\\.");
-            id = (vals.length > 0) ?
-                    Integer.parseInt(vals[0]) :
-                    Integer.parseInt(itemId);
+            ItemId iid = new ItemId((vals.length > 0) ? vals[0] : itemId, targetAccount == null ? (String) null : targetAccount.getId());
+            if (!iid.belongsTo(targetAccount)) {
+                throw ServiceException.INVALID_REQUEST("Cross account multi list is not supported. Requested id "+itemId+" in account "+(targetAccount == null ? "null" : targetAccount.getId()), null);
+            }
+            id = iid.getId();
             if (vals.length == 2) {
                 versioned = true;
                 ver = Integer.parseInt(vals[1]);
@@ -176,18 +178,6 @@ public final class UserServletContext {
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, L10nUtil.getMessage(MsgKey.errInvalidId, request));
         }
 
-        String listParam = this.params.get(UserServlet.QP_LIST);
-        if (listParam != null && listParam.length() > 0) {
-            String[] ids = listParam.split(",");
-            requestedItems = new ArrayList<Item>();
-            reqListIds = new int[ids.length];
-            for (int i = 0; i < ids.length; ++i) {
-                Item item = new Item(ids[i]);
-                requestedItems.add(item);
-                reqListIds[i] = item.id;
-            }
-        }
-
         String imap = this.params.get(UserServlet.QP_IMAP_ID);
         try {
             this.imapId = imap == null ? -1 : Integer.parseInt(imap);
@@ -212,6 +202,19 @@ public final class UserServletContext {
             accountPath = accountPath.substring(1);
         }
         targetAccount = prov.get(AccountBy.name, accountPath, authToken);
+        
+        String listParam = this.params.get(UserServlet.QP_LIST);
+        if (listParam != null && listParam.length() > 0) {
+            String[] ids = listParam.split(",");
+            requestedItems = new ArrayList<Item>();
+            reqListIds = new int[ids.length];
+            for (int i = 0; i < ids.length; ++i) {
+                Item item = new Item(ids[i], targetAccount);
+                requestedItems.add(item);
+                reqListIds[i] = item.id;
+            }
+        }
+
     }
 
     public Locale getLocale() {
