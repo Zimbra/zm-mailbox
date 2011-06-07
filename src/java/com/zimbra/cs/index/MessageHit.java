@@ -83,12 +83,12 @@ public final class MessageHit extends ZimbraHit {
                         mCachedDate = DateTools.stringToTime(sortDate);
                         if (mCachedDate > 0) {
                             return mCachedDate;
-                        } else { // fall back to date from DB
-                            ZimbraLog.index_search.warn("Failed to parse sort-date from index id=%d,date=%s",
+                        } else { // fall back to DB date
+                            ZimbraLog.index_search.warn("Index corrupted, re-indexing is recommended: id=%d,date=%s",
                                     mMessageId, sortDate);
                         }
-                    } catch (ParseException e) { // fall back to date from DB
-                        ZimbraLog.index_search.warn("Failed to parse sort-date from index id=%d,date=%s",
+                    } catch (ParseException e) { // fall back to DB date
+                        ZimbraLog.index_search.warn("Index corrupted, re-indexing is recommended: id=%d,date=%s",
                                 mMessageId, sortDate, e);
                     }
                 }
