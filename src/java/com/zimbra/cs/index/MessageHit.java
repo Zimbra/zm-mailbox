@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010, 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -32,6 +32,7 @@ import com.zimbra.cs.mime.ParsedAddress;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * Efficient Read-access to a {@link Message} returned from a query. APIs mirror
@@ -76,16 +77,26 @@ public final class MessageHit extends ZimbraHit {
     public long getDate() throws ServiceException {
         if (mCachedDate == -1) {
             if (mMessage == null && mDoc != null) {
-                String dateStr = mDoc.get(LuceneFields.L_SORT_DATE);
-                if (dateStr != null) {
+                String sortDate = mDoc.get(LuceneFields.L_SORT_DATE);
+                if (sortDate != null) {
                     try {
-                        return mCachedDate = DateTools.stringToTime(dateStr);
-                    } catch (ParseException e) {
-                        return 0;
+                        mCachedDate = DateTools.stringToTime(sortDate);
+                        if (mCachedDate > 0) {
+                            return mCachedDate;
+                        } else { // fall back to date from DB
+                            ZimbraLog.index_search.warn("Failed to parse sort-date from index id=%d,date=%s",
+                                    mMessageId, sortDate);
+                        }
+                    } catch (ParseException e) { // fall back to date from DB
+                        ZimbraLog.index_search.warn("Failed to parse sort-date from index id=%d,date=%s",
+                                mMessageId, sortDate, e);
                     }
                 }
             }
             mCachedDate = getMessage().getDate();
+            if (mCachedDate <= 0) {
+                ZimbraLog.index_search.error("Invalid sort-date from DB id=%d,date=%d", mMessageId, mCachedDate);
+            }
         }
         return mCachedDate;
     }
