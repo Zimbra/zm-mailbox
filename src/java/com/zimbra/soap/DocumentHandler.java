@@ -452,8 +452,23 @@ public abstract class DocumentHandler {
         SoapEngine engine = (SoapEngine) context.get(SoapEngine.ZIMBRA_ENGINE);
         boolean isLocal = getLocalHostId().equalsIgnoreCase(server.getId());
 
-        if (isLocal)
+        //reset proxy token if proxying locally; it could previously be set to wrong account
+        if (isLocal) {
             zsc.resetProxyAuthToken();
+        } 
+        
+        //make sure proxy token is set correctly for current requested acct
+        if (zsc.getRequestedAccountId() != null) {
+            try {
+                AuthToken at = zsc.getAuthToken();
+                String proxyToken = Provisioning.getInstance().getProxyAuthToken(zsc.getRequestedAccountId());
+                if (at != null && (at.getProxyAuthToken() == null || !at.getProxyAuthToken().equals(proxyToken))) {
+                    at.setProxyAuthToken(proxyToken);
+                }
+            } catch (ServiceException se) {
+                ZimbraLog.soap.warn("failed to set proxy auth token", se);
+            }
+        }
 
         Element response = null;
         request.detach();
