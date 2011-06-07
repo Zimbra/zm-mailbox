@@ -562,7 +562,7 @@ public class MailSender {
             }
             
             // actually send the message via SMTP
-            Collection<Address> sentAddresses = sendMessage(mbox, mm, rollbacks);
+            Collection<Address> sentAddresses = sendMessage(octxt, mbox, mm, rollbacks);
 
             // send intercept if save-to-sent didn't do it already
             if (!mSaveToSent) {
@@ -813,7 +813,7 @@ public class MailSender {
     }
 
     /** @return a Collection of successfully sent recipient Addresses */
-    protected Collection<Address> sendMessage(Mailbox mbox, final MimeMessage mm, Collection<RollbackData> rollbacks)
+    protected Collection<Address> sendMessage(OperationContext octxt, Mailbox mbox, final MimeMessage mm, Collection<RollbackData> rollbacks)
     throws SafeMessagingException, IOException {
         // send the message via SMTP
         HashSet<Address> sentAddresses = new HashSet<Address>();
@@ -856,6 +856,10 @@ public class MailSender {
                 }
             }
         } catch (SendFailedException e) {
+            //skip roll backs for partial send failure cases for mobile sync!!
+            if (octxt != null && octxt.getUserAgent() != null && octxt.getUserAgent().startsWith("MobileSync - ") && isSendPartial())
+                throw new SafeSendFailedException(e);
+            
             for (RollbackData rdata : rollbacks)
                 if (rdata != null)
                     rdata.rollback();
