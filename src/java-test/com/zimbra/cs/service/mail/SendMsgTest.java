@@ -40,7 +40,6 @@ import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
-import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.MailboxData;
 import com.zimbra.cs.mailbox.Message;
@@ -67,7 +66,7 @@ public class SendMsgTest {
                     public MailSender getMailSender() {
                         return new MailSender() {
                             @Override
-                            protected Collection<Address> sendMessage(OperationContext octxt, Mailbox mbox, MimeMessage mm, Collection<RollbackData> rollbacks)
+                            protected Collection<Address> sendMessage(Mailbox mbox, MimeMessage mm, Collection<RollbackData> rollbacks)
                             throws SafeMessagingException, IOException {
                                 try {
                                     return Arrays.asList(getRecipients(mm));
