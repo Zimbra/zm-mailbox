@@ -84,7 +84,6 @@ import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.account.Provisioning.IdentityBy;
 import com.zimbra.cs.fb.FreeBusyQuery;
 import com.zimbra.cs.index.SearchParams;
-import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.zclient.ZFolder.Color;
 import com.zimbra.cs.zclient.ZGrant.GranteeType;
 import com.zimbra.cs.zclient.ZInvite.ZTimeZone;
@@ -515,7 +514,7 @@ public class ZMailbox implements ToZJSONObject {
         if (mTransport != null) mTransport.shutdown();
         mTransport = new SoapHttpTransport(options.getUri());
         if (options.getUserAgentName() == null)
-            mTransport.setUserAgent("zclient", BuildInfo.VERSION);
+            mTransport.setUserAgent("zclient", SystemUtil.getProductVersion());
         else
             mTransport.setUserAgent(options.getUserAgentName(), options.getUserAgentVersion());
         mTransport.setMaxNotifySeq(0);
