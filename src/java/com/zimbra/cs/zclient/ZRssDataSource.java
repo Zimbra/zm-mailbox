@@ -44,25 +44,6 @@ public class ZRssDataSource implements ZDataSource, ToZJSONObject {
         this.data = DataSources.newRssDataSource(data);
     }
     
-    /*
-    public ZRssDataSource(Element e)
-    throws ServiceException {
-        mId = e.getAttribute(MailConstants.A_ID);
-        mName = e.getAttribute(MailConstants.A_NAME);
-        mEnabled = e.getAttributeBool(MailConstants.A_DS_IS_ENABLED);
-        mFolderId = e.getAttribute(MailConstants.A_FOLDER);
-    }
-    */
-    
-    public Map<String, Object> getAttrs() {
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraDataSourceId, getId());
-        attrs.put(Provisioning.A_zimbraDataSourceName, getName());
-        attrs.put(Provisioning.A_zimbraDataSourceEnabled, isEnabled() ? LdapConstants.LDAP_TRUE : LdapConstants.LDAP_FALSE);
-        attrs.put(Provisioning.A_zimbraDataSourceFolderId, getFolderId());
-        return attrs;
-    }
-
     public String getId() {
         return data.getId();
     }

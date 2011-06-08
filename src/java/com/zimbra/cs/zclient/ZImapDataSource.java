@@ -135,22 +135,6 @@ public class ZImapDataSource implements ZDataSource, ToZJSONObject {
         data.setConnectionType(SoapConverter.TO_SOAP_CONNECTION_TYPE.apply(connectionType));
     }
     
-    public Map<String, Object> getAttrs() {
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraDataSourceId, getId());
-        attrs.put(Provisioning.A_zimbraDataSourceName, getName());
-        attrs.put(Provisioning.A_zimbraDataSourceEnabled, isEnabled() ? LdapConstants.LDAP_TRUE : LdapConstants.LDAP_FALSE);
-        attrs.put(Provisioning.A_zimbraDataSourceUsername, getUsername());
-        attrs.put(Provisioning.A_zimbraDataSourceHost, getHost());
-        attrs.put(Provisioning.A_zimbraDataSourceConnectionType, getConnectionType().toString());
-        if (getPort() > 0)
-            attrs.put(Provisioning.A_zimbraDataSourcePort, "" + getPort());
-        if (getFolderId() != null)
-            attrs.put(Provisioning.A_zimbraDataSourceFolderId, getFolderId());
-        attrs.put(Provisioning.A_zimbraDataSourceImportOnly, isImportOnly());
-        return attrs;
-    }
-
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject zjo = new ZJSONObject();
         zjo.put("id", data.getId());

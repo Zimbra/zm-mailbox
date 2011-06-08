@@ -115,22 +115,6 @@ public class ZPop3DataSource implements ZDataSource, ToZJSONObject {
     
     public void setLeaveOnServer(boolean leaveOnServer) { data.setLeaveOnServer(leaveOnServer); }
     
-    public Map<String, Object> getAttrs() {
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraDataSourceId, getId());
-        attrs.put(Provisioning.A_zimbraDataSourceName, getName());
-        attrs.put(Provisioning.A_zimbraDataSourceEnabled, isEnabled() ? "TRUE" : "FALSE");
-        attrs.put(Provisioning.A_zimbraDataSourceUsername, getUsername());
-        attrs.put(Provisioning.A_zimbraDataSourceHost, getHost());
-        attrs.put(Provisioning.A_zimbraDataSourceConnectionType, data.getConnectionType().toString());
-        if (getPort() > 0)
-            attrs.put(Provisioning.A_zimbraDataSourcePort, "" + getPort());
-        if (data.getFolderId() != null)
-            attrs.put(Provisioning.A_zimbraDataSourceFolderId, data.getFolderId());
-        attrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer, LdapUtilCommon.getLdapBooleanString(leaveOnServer()));
-        return attrs;
-    }
-
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject zjo = new ZJSONObject();
         zjo.put("id", data.getId());
