@@ -1,2 +1,3 @@
 # zimbra override for globs
 60:application/vnd.ms-project:*.mpp
+60:application/vnd.sealed.mht:*.mht
