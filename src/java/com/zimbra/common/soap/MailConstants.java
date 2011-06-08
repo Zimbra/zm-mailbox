@@ -242,6 +242,8 @@ public final class MailConstants {
     public static final String E_ADD_COMMENT_RESPONSE = "AddCommentResponse";
     public static final String E_GET_COMMENTS_REQUEST = "GetCommentsRequest";
     public static final String E_GET_COMMENTS_RESPONSE = "GetCommentsResponse";
+    public static final String E_GET_SHARE_NOTIFICATIONS_REQUEST = "GetShareNotificationsRequest";
+    public static final String E_GET_SHARE_NOTIFICATIONS_RESPONSE = "GetShareNotificationsResponse";
 
     // noop
     public static final QName NO_OP_REQUEST = QName.get(E_NO_OP_REQUEST, NAMESPACE);
@@ -520,6 +522,10 @@ public final class MailConstants {
     public static final QName GET_COMMENTS_REQUEST = QName.get(E_GET_COMMENTS_REQUEST, NAMESPACE);
     public static final QName GET_COMMENTS_RESPONSE = QName.get(E_GET_COMMENTS_RESPONSE, NAMESPACE);
 
+    // sharing
+    public static final QName GET_SHARE_NOTIFICATIONS_REQUEST = QName.get(E_GET_SHARE_NOTIFICATIONS_REQUEST, NAMESPACE);
+    public static final QName GET_SHARE_NOTIFICATIONS_RESPONSE = QName.get(E_GET_SHARE_NOTIFICATIONS_RESPONSE, NAMESPACE);
+    
     public static final String E_MAILBOX = "mbx";
     public static final String E_ITEM = "item";
     public static final String E_MSG = "m";
@@ -1094,4 +1100,6 @@ public final class MailConstants {
     public static final String A_PARENT_ID = "parentId";
     public static final String A_TEXT = "text";
     public static final String E_ARG = "arg";
+    
+    public static final String E_GRANTOR = "grantor";
 }
