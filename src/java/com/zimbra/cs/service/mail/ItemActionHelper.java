@@ -443,7 +443,13 @@ public class ItemActionHelper {
 
         AuthToken at = getAuthToken();
         String pxyAuthToken = Provisioning.onLocalServer(target) ? null : at.getProxyAuthToken();
-        ZAuthToken zat = pxyAuthToken == null ? at.toZAuthToken() : new ZAuthToken(pxyAuthToken);
+        ZAuthToken zat = null;
+        if (pxyAuthToken == null) {
+            zat = at.toZAuthToken();
+            zat.resetProxyAuthToken();
+        } else {
+            zat = new ZAuthToken(pxyAuthToken);
+        }
 
         ZMailbox.Options zoptions = new ZMailbox.Options(zat, AccountUtil.getSoapUri(target));
         zoptions.setNoSession(true);
