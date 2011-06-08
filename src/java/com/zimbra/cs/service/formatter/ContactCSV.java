@@ -17,6 +17,7 @@ package com.zimbra.cs.service.formatter;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
+import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.util.Log;
@@ -25,7 +26,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Tag;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;

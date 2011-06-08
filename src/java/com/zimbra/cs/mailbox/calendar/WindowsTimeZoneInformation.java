@@ -15,7 +15,8 @@
 
 package com.zimbra.cs.mailbox.calendar;
 
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
+import com.zimbra.common.calendar.ICalTimeZone;
+import com.zimbra.common.calendar.ICalTimeZone.SimpleOnset;
 
 /**
  * Java representation of Windows TIME_ZONE_INFORMATION structure in Winbase.h

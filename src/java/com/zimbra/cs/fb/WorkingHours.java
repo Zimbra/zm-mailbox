@@ -23,6 +23,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.calendar.ICalTimeZone;
+import com.zimbra.common.calendar.ParsedDateTime;
+import com.zimbra.common.calendar.ParsedDuration;
+import com.zimbra.common.calendar.TimeZoneMap;
+import com.zimbra.common.calendar.ZWeekDay;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -30,15 +35,11 @@ import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.fb.FreeBusy.Interval;
 import com.zimbra.cs.fb.FreeBusy.IntervalList;
 import com.zimbra.cs.mailbox.CalendarItem.Instance;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
-import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
-import com.zimbra.cs.mailbox.calendar.ParsedDuration;
 import com.zimbra.cs.mailbox.calendar.Recurrence;
-import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
+import com.zimbra.cs.mailbox.calendar.Util;
 import com.zimbra.cs.mailbox.calendar.ZRecur;
 import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
-import com.zimbra.cs.mailbox.calendar.ZRecur.ZWeekDay;
 
 public class WorkingHours {
 
@@ -56,7 +57,7 @@ public class WorkingHours {
 
         // Build a recurrence rule for each day of the week and expand over the time range.
         IntervalList intervals = new IntervalList(start, end);
-        ICalTimeZone tz = ICalTimeZone.getAccountTimeZone(account);
+        ICalTimeZone tz = Util.getAccountTimeZone(account);
         TimeZoneMap tzmap = new TimeZoneMap(tz);
         StartSpec startSpec = new StartSpec(start, tz);
         for (int day = 1; day <= 7; ++day) {

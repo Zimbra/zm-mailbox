@@ -27,6 +27,11 @@ import javax.mail.internet.MimeMessage;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
+import com.zimbra.common.calendar.ICalTimeZone;
+import com.zimbra.common.calendar.ZCalendar.ICalTok;
+import com.zimbra.common.calendar.ZCalendar.ZProperty;
+import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.service.ServiceException;
@@ -44,19 +49,15 @@ import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.db.DbMailAddress;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.IndexDocument;
-import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteChanges;
+import com.zimbra.cs.mailbox.calendar.Util;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedAddress;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -166,7 +167,7 @@ public class Message extends MailItem {
             Metadata metaInv = meta.getMap(FN_INV, true);
             if (metaInv != null) {
                 int mboxId = mbox.getId();
-                ICalTimeZone accountTZ = ICalTimeZone.getAccountTimeZone(mbox.getAccount());
+                ICalTimeZone accountTZ = Util.getAccountTimeZone(mbox.getAccount());
                 inv = Invite.decodeMetadata(mboxId, metaInv, null, accountTZ);
             }
             return new CalendarItemInfo(calItemId, componentNo, inv, invChanges);

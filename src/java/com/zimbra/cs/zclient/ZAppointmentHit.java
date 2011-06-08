@@ -14,10 +14,10 @@
  */
 package com.zimbra.cs.zclient;
 
+import com.zimbra.common.calendar.Geo;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.cs.mailbox.calendar.Geo;
 import com.zimbra.cs.zclient.ZInvite.ZComponent;
 import com.zimbra.cs.zclient.ZInvite.ZStatus;
 import com.zimbra.cs.zclient.ZMailbox.ZFreeBusyTimeSlot;

@@ -18,10 +18,10 @@ package com.zimbra.cs.mailbox.calendar.cache;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
+import com.zimbra.common.calendar.ICalTimeZone;
+import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.util.Pair;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
-import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 
 public class Util {
 

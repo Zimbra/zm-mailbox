@@ -20,8 +20,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.localconfig.DebugConfig;
 
 /**
  * QueryResults wrapper that implements Re-Sorting. It does this by caching **ALL** hits and then sorting them. It is

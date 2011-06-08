@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.stats.Counter;
 import com.zimbra.common.util.FileUtil;
@@ -29,7 +30,6 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.localconfig.DebugConfig;
 
 /**
  * Caches file descriptors to blobs in the mail store.  If the blob is compressed,

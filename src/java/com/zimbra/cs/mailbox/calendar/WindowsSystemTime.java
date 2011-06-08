@@ -18,7 +18,7 @@ package com.zimbra.cs.mailbox.calendar;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
+import com.zimbra.common.calendar.ICalTimeZone.SimpleOnset;
 
 /**
  * Java representation of Windows SYSTEMTIME structure in Winbase.h

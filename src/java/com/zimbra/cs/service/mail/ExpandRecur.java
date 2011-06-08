@@ -18,6 +18,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.calendar.ParsedDateTime;
+import com.zimbra.common.calendar.ParsedDuration;
+import com.zimbra.common.calendar.TimeZoneMap;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -25,16 +28,13 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.Constants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.CalendarItem.Instance;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
-import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
-import com.zimbra.cs.mailbox.calendar.ParsedDuration;
 import com.zimbra.cs.mailbox.calendar.RecurId;
-import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.Recurrence.CancellationRule;
 import com.zimbra.cs.mailbox.calendar.Recurrence.ExceptionRule;
 import com.zimbra.cs.mailbox.calendar.Recurrence.IException;
 import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
 import com.zimbra.cs.mailbox.calendar.Recurrence.RecurrenceRule;
+import com.zimbra.cs.mailbox.calendar.Util;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class ExpandRecur extends MailDocumentHandler {
@@ -51,7 +51,7 @@ public class ExpandRecur extends MailDocumentHandler {
         if (days > maxDays)
             throw ServiceException.INVALID_REQUEST("Requested range is too large (Maximum " + maxDays + " days)", null);
 
-        TimeZoneMap tzmap = new TimeZoneMap(ICalTimeZone.getAccountTimeZone(authAcct));
+        TimeZoneMap tzmap = new TimeZoneMap(Util.getAccountTimeZone(authAcct));
         ParsedRecurrence parsed = parseRecur(request, tzmap);
         List<Instance> instances = getInstances(parsed, rangeStart, rangeEnd);
         Element response = getResponseElement(zsc);

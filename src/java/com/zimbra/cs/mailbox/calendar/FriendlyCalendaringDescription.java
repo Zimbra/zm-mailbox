@@ -21,6 +21,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
+import com.zimbra.common.calendar.ICalTimeZone;
+import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.Log;
@@ -30,9 +32,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
-import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.Recurrence;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZRecur;
@@ -245,7 +245,7 @@ public class FriendlyCalendaringDescription {
             sb.append(timeFormat.format(end.getDate()));
         }
         if (mAccount.getBooleanAttr("zimbraPrefUseTimeZoneListInCalendar", false)) {
-            ICalTimeZone tz = ICalTimeZone.getAccountTimeZone(mAccount);
+            ICalTimeZone tz = Util.getAccountTimeZone(mAccount);
             sb.append(", ").append(tz.getDisplayName(mLc));
         }
         return sb.toString();

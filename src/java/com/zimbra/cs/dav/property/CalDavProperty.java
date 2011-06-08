@@ -25,6 +25,8 @@ import org.dom4j.QName;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.calendar.ICalTimeZone;
+import com.zimbra.common.calendar.ZCalendar;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -39,8 +41,7 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
-import com.zimbra.cs.mailbox.calendar.ZCalendar;
+import com.zimbra.cs.mailbox.calendar.Util;
 
 /**
  * CALDAV:supported-calendar-component-set - draft-dusseault-caldav section 5.2.3
@@ -344,7 +345,7 @@ public class CalDavProperty extends ResourceProperty {
         @Override
         public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
             Element timezone = super.toElement(ctxt, parent, nameOnly);
-            ICalTimeZone tz = ICalTimeZone.getAccountTimeZone(account);
+            ICalTimeZone tz = Util.getAccountTimeZone(account);
             CharArrayWriter wr = new CharArrayWriter();
             try {
                 tz.newToVTimeZone().toICalendar(wr, true);

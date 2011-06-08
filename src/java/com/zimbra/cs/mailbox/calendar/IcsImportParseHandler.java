@@ -22,21 +22,25 @@ import java.util.Set;
 
 import net.fortuna.ical4j.data.ParserException;
 
+import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.TZIDMapper;
+import com.zimbra.common.calendar.TimeZoneMap;
+import com.zimbra.common.calendar.WellKnownTimeZones;
+import com.zimbra.common.calendar.ZCalendar;
+import com.zimbra.common.calendar.ZCalendar.ICalTok;
+import com.zimbra.common.calendar.ZCalendar.ZComponent;
+import com.zimbra.common.calendar.ZCalendar.ZICalendarParseHandler;
+import com.zimbra.common.calendar.ZCalendar.ZParameter;
+import com.zimbra.common.calendar.ZCalendar.ZProperty;
+import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.ldap.LdapUtilCommon;
-import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite.InviteVisitor;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ZICalendarParseHandler;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 
 // ical4j parse handler that adds VEVENT/VTODOs as they are parsed
 // This is memory efficient compared to the default parse handler which builds a list of parsed objects
@@ -79,7 +83,7 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
         mCurCal = new ZVCalendar();
 
         mMethod = ICalTok.PUBLISH.toString();
-        mTimeZoneMap = new TimeZoneMap(ICalTimeZone.getAccountTimeZone(mAccount));
+        mTimeZoneMap = new TimeZoneMap(Util.getAccountTimeZone(mAccount));
     }
 
     public void endCalendar() throws ParserException {
@@ -121,7 +125,7 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
                 }
             }
         } else {
-            mComponents.get(mComponents.size() - 1).mComponents.add(comp);
+            mComponents.get(mComponents.size() - 1).addComponent(comp);
         }
     }
 
@@ -129,9 +133,9 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
         mCurProperty = new ZProperty(name);
         
         if (mComponents.size() > 0) {
-            mComponents.get(mComponents.size()-1).mProperties.add(mCurProperty);
+            mComponents.get(mComponents.size()-1).addProperty(mCurProperty);
         } else {
-            mCurCal.mProperties.add(mCurProperty);
+            mCurCal.addProperty(mCurProperty);
         }
     }
 
@@ -158,7 +162,7 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
     public void parameter(String name, String value) {
         ZParameter param = new ZParameter(name, value);
         if (mCurProperty != null) {
-            mCurProperty.mParameters.add(param);
+            mCurProperty.addParameter(param);
             // Keep track of TZIDs we've encountered.  Do it only for well-known properties.
             if (ICalTok.TZID.equals(param.getToken()) && mCurProperty.getToken() != null)
                 mTZIDsSeen.add(value);

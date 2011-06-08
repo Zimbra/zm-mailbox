@@ -27,14 +27,14 @@ import javax.mail.internet.MimeUtility;
 import org.apache.lucene.document.Document;
 
 import com.google.common.base.Strings;
+import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.convert.AttachmentInfo;
 import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.analysis.MimeTypeTokenStream;
-import com.zimbra.cs.localconfig.DebugConfig;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.object.MatchedObject;
 import com.zimbra.cs.object.ObjectHandler;
 import com.zimbra.cs.object.ObjectHandlerException;

@@ -20,14 +20,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.calendar.ICalTimeZone;
+import com.zimbra.common.calendar.TimeZoneMap;
+import com.zimbra.common.calendar.ICalTimeZone.SimpleOnset;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.CalendarItem;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
-import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
 
 public class TimeZoneFixupRules {
 

@@ -16,14 +16,27 @@
 package com.zimbra.cs.mailbox.calendar;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
+import com.zimbra.common.calendar.Attach;
+import com.zimbra.common.calendar.Geo;
+import com.zimbra.common.calendar.ICalTimeZone;
+import com.zimbra.common.calendar.TZIDMapper;
+import com.zimbra.common.calendar.TimeZoneMap;
+import com.zimbra.common.calendar.WellKnownTimeZones;
+import com.zimbra.common.calendar.ZCalendar.ICalTok;
+import com.zimbra.common.calendar.ZCalendar.ZParameter;
+import com.zimbra.common.calendar.ZCalendar.ZProperty;
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Metadata;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 
 public class Util {
 
@@ -31,6 +44,23 @@ public class Util {
     private static final String FN_NUM_XPROPS_OR_XPARAMS = "numX";
     private static final String FN_VALUE    = "v";
     private static final String FN_XPROP_OR_XPARAM   = "x";
+
+    private static final String FN_TZID = "tzid";
+    private static final String FN_STANDARD_OFFSET  = "so";
+    private static final String FN_DAYLIGHT_OFFSET  = "do";
+    private static final String FN_DAYTOSTD_DTSTART = "d2ss";
+    private static final String FN_STDTODAY_DTSTART = "s2ds";
+    private static final String FN_DAYTOSTD_RULE    = "d2sr";
+    private static final String FN_STDTODAY_RULE    = "s2dr";
+    private static final String FN_STANDARD_TZNAME  = "sn";
+    private static final String FN_DAYLIGHT_TZNAME  = "dn";
+
+    private static final String FN_CONTENT_TYPE = "ct";
+    private static final String FN_URI = "uri";
+    private static final String FN_BINARY = "bin";
+
+    private static final String FN_LATITUDE = "lat";
+    private static final String FN_LONGITUDE = "lon";
 
     public static void encodeXParamsAsMetadata(Metadata meta, Iterator<ZParameter> xparamsIter) {
         int xparamCount = 0;
@@ -117,5 +147,206 @@ public class Util {
             return list;
         }
         return null;
+    }
+
+    /**
+     * Returns the time zone for the given account.
+     */
+    public static ICalTimeZone getAccountTimeZone(Account account) {
+        String tzid = account.getAttr(Provisioning.A_zimbraPrefTimeZoneId);
+        tzid = TZIDMapper.canonicalize(tzid);
+        ICalTimeZone timeZone = WellKnownTimeZones.getTimeZoneById(tzid);
+        if (timeZone == null) {
+            return ICalTimeZone.getUTC();
+        }
+        return timeZone;
+    }
+
+    public static Metadata encodeAsMetadata(ICalTimeZone tz) {
+        Metadata meta = new Metadata();
+        String tzid = tz.getID();
+        meta.put(FN_TZID, tzid);
+        // For well-known time zone we only need the TZID.
+        if (ICalTimeZone.lookupByTZID(tzid) != null)
+            return meta;
+
+        meta.put(FN_STANDARD_OFFSET, tz.getStandardOffset());
+        meta.put(FN_DAYTOSTD_DTSTART, tz.getStandardDtStart()); 
+        meta.put(FN_DAYTOSTD_RULE, tz.getStandardRule());
+        meta.put(FN_STANDARD_TZNAME, tz.getStandardTzname());
+
+        meta.put(FN_DAYLIGHT_OFFSET, tz.getDaylightOffset());
+        meta.put(FN_STDTODAY_DTSTART, tz.getDaylightDtStart());  
+        meta.put(FN_STDTODAY_RULE, tz.getDaylightRule());
+        meta.put(FN_DAYLIGHT_TZNAME, tz.getDaylightTzname());
+        return meta;
+    }
+
+    public static ICalTimeZone decodeTimeZoneFromMetadata(Metadata m) throws ServiceException {
+        String tzid;
+        if (m.containsKey(FN_TZID)) {
+            tzid = m.get(FN_TZID);
+            boolean hasDef = m.containsKey(FN_STANDARD_OFFSET);
+            if (!DebugConfig.disableCalendarTZMatchByID || !hasDef) {
+                ICalTimeZone tz = WellKnownTimeZones.getTimeZoneById(tzid);
+                if (tz != null) {
+                    return tz;
+                } else if (!hasDef) {
+                    ZimbraLog.calendar.debug("Unknown time zone \"" + tzid + "\" in metadata; using UTC instead");
+                    return ICalTimeZone.getUTC().cloneWithNewTZID(tzid);
+                }
+            }
+        } else
+            tzid = "unknown time zone";
+        ICalTimeZone newTz = newICalTimeZone(tzid, m);
+        ICalTimeZone tz = ICalTimeZone.lookupByRule(newTz, false);
+        return tz;
+    }
+    
+    private static ICalTimeZone newICalTimeZone(String tzId, Metadata meta) throws ServiceException {
+        int standardOffset = (int) meta.getLong(FN_STANDARD_OFFSET, 0);
+        String dayToStdDtStart = meta.get(FN_DAYTOSTD_DTSTART, null);
+        String dayToStdRule = meta.get(FN_DAYTOSTD_RULE, null);
+        String standardTzname = meta.get(FN_STANDARD_TZNAME, null);
+
+        int daylightOffset = (int) meta.getLong(FN_DAYLIGHT_OFFSET, 0);
+        String stdToDayDtStart = meta.get(FN_STDTODAY_DTSTART, ICalTimeZone.DEFAULT_DTSTART);
+        String stdToDayRule = meta.get(FN_STDTODAY_RULE, null);
+        String daylightTzname = meta.get(FN_DAYLIGHT_TZNAME, null);
+        
+        ICalTimeZone tz = new ICalTimeZone(tzId, standardOffset, dayToStdDtStart, dayToStdRule, standardTzname,
+            daylightOffset, stdToDayDtStart, stdToDayRule, daylightTzname);
+        tz.initFromICalData(true);
+        return tz;
+    }
+
+    public static Metadata encodeAsMetadata(TimeZoneMap tzmap) {
+        Metadata meta = new Metadata();
+        Map<String /* real TZID */, Integer /* index */> tzIndex = new HashMap<String, Integer>();
+        int nextIndex = 0;
+        for (Iterator<Entry<String, ICalTimeZone>> iter = tzmap.getMap().entrySet().iterator(); iter.hasNext(); ) {
+            Entry<String, ICalTimeZone> entry = iter.next();
+            String tzid = entry.getKey();
+            if (tzid == null || tzid.length() < 1)    // ignore null/empty TZIDs (bug 25183)
+                continue;
+            ICalTimeZone zone = entry.getValue();
+            String realTzid = zone.getID();
+            if (!tzIndex.containsKey(realTzid)) {
+                meta.put("#" + nextIndex, encodeAsMetadata(zone));
+                tzIndex.put(realTzid, nextIndex);
+                ++nextIndex;
+            }
+        }
+        for (Iterator<Entry<String, String>> iter = tzmap.getAliasMap().entrySet().iterator(); iter.hasNext(); ) {
+            Entry<String, String> entry = iter.next();
+            String alias = entry.getKey();
+            String realTzid = entry.getValue();
+            if (tzIndex.containsKey(realTzid)) {
+                int index = tzIndex.get(realTzid);
+                meta.put(alias, index);
+            }
+        }
+        return meta;
+    }
+
+    /**
+     *
+     * @param meta
+     * @param localTZ local time zone of user account
+     * @return
+     * @throws ServiceException
+     */
+    public static TimeZoneMap decodeFromMetadata(Metadata meta, ICalTimeZone localTZ) throws ServiceException {
+        Map<String, ?> map = meta.asMap();
+        Map<String, String> aliasMap = new HashMap<String, String>();
+        ICalTimeZone[] tzlist = new ICalTimeZone[map.size()];
+        // first time, find the tz's
+        for (Map.Entry<String, ?> entry : map.entrySet()) {
+            String key = entry.getKey();
+            if (key != null && key.length() > 0) {  // ignore null/empty TZIDs (bug 25183)
+                if (key.charAt(0) == '#') {
+                    int idx = Integer.parseInt(key.substring(1));
+                    Metadata tzMeta = (Metadata) entry.getValue();
+                    String tzidMeta = tzMeta.get(FN_TZID, null);
+                    if (tzidMeta != null) {
+                        ICalTimeZone tz = decodeTimeZoneFromMetadata(tzMeta);
+                        if (tz != null) {
+                            String tzid = tz.getID();
+                            if (!DebugConfig.disableCalendarTZMatchByID)
+                                tzid = TZIDMapper.canonicalize(tzid);
+                            if (!tzidMeta.equals(tzid)) {
+                                aliasMap.put(tzidMeta, tzid);
+                                tz = WellKnownTimeZones.getTimeZoneById(tzid);
+                            }
+                            tzlist[idx] = tz;
+                        }
+                    }
+                }
+            }
+        }
+
+        Map<String, ICalTimeZone> tzmap = new HashMap<String, ICalTimeZone>();
+        for (ICalTimeZone tz : tzlist) {
+            if (tz != null)
+                tzmap.put(tz.getID(), tz);
+        }
+        // second time, build the real map
+        for (Map.Entry<String, ?> entry : map.entrySet()) {
+            String tzid = entry.getKey();
+            if (tzid != null && tzid.length() > 0) {  // ignore null/empty TZIDs (bug 25183)
+                if (tzid.charAt(0) != '#') {
+                    int idx = -1;
+                    try {
+                        idx = Integer.parseInt(entry.getValue().toString());
+                    } catch (NumberFormatException e) {}
+                    if (idx >= 0 && idx < tzlist.length) {
+                        ICalTimeZone tz = tzlist[idx];
+                        if (tz != null) {
+                            String realId = tz.getID();
+                            if (!realId.equals(tzid))
+                                aliasMap.put(tzid, realId);
+                        }
+                    }
+                }
+            }
+        }
+
+        return new TimeZoneMap(tzmap, aliasMap, localTZ);
+    }
+
+    public static Metadata encodeMetadata(Attach att) {
+        Metadata meta = new Metadata();
+        if (att.getUri() != null) {
+            meta.put(FN_URI, att.getUri());
+            meta.put(FN_CONTENT_TYPE, att.getContentType());
+        } else {
+            meta.put(FN_BINARY, att.getBinaryB64Data());
+        }
+        return meta;
+    }
+    
+    public static Attach decodeAttachFromMetadata(Metadata meta) {
+        String uri = meta.get(FN_URI, null);
+        if (uri != null) {
+            String ct = meta.get(FN_CONTENT_TYPE, null);
+            return new Attach(uri, ct);
+        } else {
+            String binary = meta.get(FN_BINARY, null);
+            return new Attach(binary);
+        }
+    }
+
+    public static Geo decodeGeoFromMetadata(Metadata meta) {
+        String lat = meta.get(FN_LATITUDE, "0");
+        String lon = meta.get(FN_LONGITUDE, "0");
+        return new Geo(lat, lon);
+    }
+
+
+    public static Metadata encodeMetadata(Geo geo) {
+        Metadata meta = new Metadata();
+        meta.put(Util.FN_LATITUDE, geo.getLatitude());
+        meta.put(Util.FN_LONGITUDE, geo.getLongitude());
+        return meta;
     }
 }

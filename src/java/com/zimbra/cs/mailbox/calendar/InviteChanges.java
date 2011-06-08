@@ -20,6 +20,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.calendar.ParsedDateTime;
+import com.zimbra.common.calendar.ParsedDuration;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
 

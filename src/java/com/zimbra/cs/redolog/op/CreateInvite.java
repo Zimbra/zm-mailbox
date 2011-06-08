@@ -17,14 +17,15 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
+import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.Metadata;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.calendar.Util;
 import com.zimbra.cs.mime.ParsedMessage;
 
 import com.zimbra.cs.redolog.RedoLogInput;
@@ -63,7 +64,7 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
         sb.append(", folder=").append(mFolderId);
         sb.append(", dataLen=").append(mData != null ? mData.length : 0);
         ICalTimeZone localTz = mInvite.getTimeZoneMap().getLocalTimeZone();
-        sb.append(", localTZ=").append(localTz.encodeAsMetadata().toString());
+        sb.append(", localTZ=").append(Util.encodeAsMetadata(localTz).toString());
         sb.append(", inv=").append(Invite.encodeMetadata(mInvite).toString());
         sb.append(", preserveExistingAlarms=").append(mPreserveExistingAlarms);
         sb.append(", discardExistingInvites=").append(mDiscardExistingInvites);
@@ -88,7 +89,7 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
         }
         
         ICalTimeZone localTz = mInvite.getTimeZoneMap().getLocalTimeZone();
-        out.writeUTF(localTz.encodeAsMetadata().toString());
+        out.writeUTF(Util.encodeAsMetadata(localTz).toString());
         out.writeUTF(Invite.encodeMetadata(mInvite).toString());
 
         if (getVersion().atLeast(1, 22)) {
@@ -116,7 +117,7 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
         }
         
         try {
-            ICalTimeZone localTz = ICalTimeZone.decodeFromMetadata(new Metadata(in.readUTF()));
+            ICalTimeZone localTz = Util.decodeTimeZoneFromMetadata(new Metadata(in.readUTF()));
             
             mInvite = Invite.decodeMetadata(getMailboxId(), new Metadata(in.readUTF()), null, localTz); 
         

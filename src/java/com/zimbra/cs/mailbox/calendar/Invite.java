@@ -32,6 +32,7 @@ import javax.mail.internet.ContentType;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import com.google.common.collect.Lists;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
@@ -40,9 +41,20 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.calendar.Geo;
+import com.zimbra.common.calendar.ICalTimeZone;
+import com.zimbra.common.calendar.ParsedDateTime;
+import com.zimbra.common.calendar.ParsedDuration;
+import com.zimbra.common.calendar.TimeZoneMap;
+import com.zimbra.common.calendar.ZCalendar.ICalTok;
+import com.zimbra.common.calendar.ZCalendar.ZCalendarBuilder;
+import com.zimbra.common.calendar.ZCalendar.ZComponent;
+import com.zimbra.common.calendar.ZCalendar.ZParameter;
+import com.zimbra.common.calendar.ZCalendar.ZProperty;
+import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.index.Fragment;
-import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -53,12 +65,6 @@ import com.zimbra.cs.mailbox.calendar.Alarm.Action;
 import com.zimbra.cs.mailbox.calendar.Alarm.TriggerRelated;
 import com.zimbra.cs.mailbox.calendar.Alarm.TriggerType;
 import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
@@ -336,7 +342,7 @@ public class Invite {
         meta.put(FN_PARTSTAT, inv.getPartStat());
         meta.put(FN_RSVP, inv.getRsvp());
 
-        meta.put(FN_TZMAP, inv.mTzMap.encodeAsMetadata());
+        meta.put(FN_TZMAP, Util.encodeAsMetadata(inv.mTzMap));
 
         if (inv.hasRecurId()) {
             meta.put(FN_RECUR_ID, inv.getRecurId().encodeMetadata());
@@ -403,7 +409,7 @@ public class Invite {
 
         Geo geo = inv.getGeo();
         if (geo != null) {
-            meta.put(FN_GEO, geo.encodeMetadata());
+            meta.put(FN_GEO, Util.encodeMetadata(geo));
         }
 
         String url = inv.getUrl();
@@ -492,7 +498,7 @@ public class Invite {
 
         RecurId recurrenceId = null;
 
-        TimeZoneMap tzMap = TimeZoneMap.decodeFromMetadata(meta.getMap(FN_TZMAP), accountTZ);
+        TimeZoneMap tzMap = Util.decodeFromMetadata(meta.getMap(FN_TZMAP), accountTZ);
 
         Metadata metaRecur = meta.getMap(FN_RECURRENCE, true);
         Recurrence.IRecurrence recurrence = null;
@@ -621,7 +627,7 @@ public class Invite {
         Geo geo = null;
         Metadata metaGeo = meta.getMap(FN_GEO, true);
         if (metaGeo != null)
-            geo = Geo.decodeMetadata(metaGeo);
+            geo = Util.decodeGeoFromMetadata(metaGeo);
 
         String url = meta.get(FN_URL, null);
 
@@ -1649,8 +1655,9 @@ public class Invite {
         String method = cal.getPropVal(ICalTok.METHOD, ICalTok.PUBLISH.toString());
 
         // process the TIMEZONE's first: everything depends on them being there...
-        TimeZoneMap tzmap = new TimeZoneMap(ICalTimeZone.getAccountTimeZone(account));
-        for (ZComponent comp : cal.mComponents) {
+        TimeZoneMap tzmap = new TimeZoneMap(Util.getAccountTimeZone(account));
+        List<ZComponent> components = Lists.newArrayList(cal.getComponentIterator());
+        for (ZComponent comp : components) {
             if (ICalTok.VTIMEZONE.equals(comp.getTok())) {
                 ICalTimeZone tz = ICalTimeZone.fromVTimeZone(comp);
                 tzmap.add(tz);
@@ -1698,7 +1705,8 @@ public class Invite {
                         newInv.setSentByMe(sentByMe);
                         compNum++;
 
-                        for (ZComponent subcomp : comp.mComponents) {
+                        List<ZComponent> subcomponents = Lists.newArrayList(comp.getComponentIterator()); 
+                        for (ZComponent subcomp : subcomponents) {
                             ICalTok subCompTypeTok = subcomp.getTok();
                             switch (subCompTypeTok) {
                             case VALARM:
@@ -1712,7 +1720,8 @@ public class Invite {
                         }
 
                         boolean sawIntendedFreeBusy = false;
-                        for (ZProperty prop : comp.mProperties) {
+                        List<ZProperty> properties = Lists.newArrayList(comp.getPropertyIterator());
+                        for (ZProperty prop : properties) {
                             String propVal = prop.getValue();
                             ICalTok propToken = prop.getToken();
                             if (propToken == null) {

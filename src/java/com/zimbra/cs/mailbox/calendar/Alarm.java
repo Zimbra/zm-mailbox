@@ -19,15 +19,18 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import com.zimbra.common.calendar.Attach;
+import com.zimbra.common.calendar.ParsedDateTime;
+import com.zimbra.common.calendar.ParsedDuration;
+import com.zimbra.common.calendar.ZCalendar.ICalTok;
+import com.zimbra.common.calendar.ZCalendar.ZComponent;
+import com.zimbra.common.calendar.ZCalendar.ZParameter;
+import com.zimbra.common.calendar.ZCalendar.ZProperty;
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Metadata;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.service.mail.CalendarUtils;
 import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.common.soap.Element;
@@ -655,7 +658,7 @@ public class Alarm {
         meta.put(FN_DESCRIPTION, mDescription);
         meta.put(FN_SUMMARY, mSummary);
         if (mAttach != null)
-            meta.put(FN_ATTACH, mAttach.encodeMetadata());
+            meta.put(FN_ATTACH, Util.encodeMetadata(mAttach));
         if (mAttendees != null) {
             meta.put(FN_NUM_ATTENDEES, mAttendees.size());
             int i = 0;
@@ -710,7 +713,7 @@ public class Alarm {
         Attach attach = null;
         Metadata metaAttach = meta.getMap(FN_ATTACH, true);
         if (metaAttach != null)
-            attach = Attach.decodeMetadata(metaAttach);
+            attach = Util.decodeAttachFromMetadata(metaAttach);
 
         int numAts = (int) meta.getLong(FN_NUM_ATTENDEES, 0);
         List<ZAttendee> attendees = new ArrayList<ZAttendee>(numAts);

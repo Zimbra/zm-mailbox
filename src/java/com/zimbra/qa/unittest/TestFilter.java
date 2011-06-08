@@ -36,7 +36,7 @@ import com.zimbra.cs.filter.SieveToSoap;
 import com.zimbra.cs.filter.SoapToSieve;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
+import com.zimbra.cs.mailbox.calendar.Util;
 import com.zimbra.cs.zclient.ZEmailAddress;
 import com.zimbra.cs.zclient.ZFilterAction;
 import com.zimbra.cs.zclient.ZFilterAction.MarkOp;
@@ -552,7 +552,7 @@ extends TestCase {
 
     public void testCurrentTimeTest()
     throws Exception {
-        TimeZone userTz = ICalTimeZone.getAccountTimeZone(TestUtil.getAccount(USER_NAME));
+        TimeZone userTz = Util.getAccountTimeZone(TestUtil.getAccount(USER_NAME));
         Calendar calendar = Calendar.getInstance(userTz);
         // Add 5 mins to current time
         calendar.add(Calendar.MINUTE, 5);
@@ -593,7 +593,7 @@ extends TestCase {
 
     public void testCurrentDayOfWeekTest()
     throws Exception {
-        TimeZone userTz = ICalTimeZone.getAccountTimeZone(TestUtil.getAccount(USER_NAME));
+        TimeZone userTz = Util.getAccountTimeZone(TestUtil.getAccount(USER_NAME));
         Calendar calendar = Calendar.getInstance(userTz);
         int dayToday = calendar.get(Calendar.DAY_OF_WEEK) - 1;
         int dayYesterday = dayToday == 0 ? 6 : dayToday - 1;

@@ -28,7 +28,8 @@ import java.io.OutputStreamWriter;
 import javax.activation.DataSource;
 import javax.mail.internet.ContentType;
 
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
+import com.zimbra.common.calendar.ZCalendar;
+import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.mime.MimeConstants;
 
 

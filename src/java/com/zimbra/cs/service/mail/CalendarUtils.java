@@ -15,7 +15,20 @@
 
 package com.zimbra.cs.service.mail;
 
+import com.zimbra.common.calendar.Geo;
+import com.zimbra.common.calendar.ICalTimeZone;
+import com.zimbra.common.calendar.ParsedDateTime;
+import com.zimbra.common.calendar.ParsedDuration;
 import com.zimbra.common.calendar.TZIDMapper;
+import com.zimbra.common.calendar.TimeZoneMap;
+import com.zimbra.common.calendar.WellKnownTimeZones;
+import com.zimbra.common.calendar.ICalTimeZone.SimpleOnset;
+import com.zimbra.common.calendar.ZCalendar.ICalTok;
+import com.zimbra.common.calendar.ZCalendar.ZCalendarBuilder;
+import com.zimbra.common.calendar.ZCalendar.ZParameter;
+import com.zimbra.common.calendar.ZCalendar.ZProperty;
+import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -27,33 +40,21 @@ import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.gal.GalGroup;
 import com.zimbra.cs.gal.GalGroupMembers;
 import com.zimbra.cs.ldap.LdapUtilCommon;
-import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.calendar.Alarm;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
-import com.zimbra.cs.mailbox.calendar.Geo;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
-import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
-import com.zimbra.cs.mailbox.calendar.ParsedDuration;
 import com.zimbra.cs.mailbox.calendar.Period;
 import com.zimbra.cs.mailbox.calendar.RdateExdate;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.Recurrence;
 import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
-import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
-import com.zimbra.cs.mailbox.calendar.WellKnownTimeZones;
+import com.zimbra.cs.mailbox.calendar.Util;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZRecur;
 import com.zimbra.cs.util.AccountUtil;
@@ -119,7 +120,7 @@ public class CalendarUtils {
             boolean recurrenceIdAllowed, boolean recurAllowed)
             throws ServiceException {
         if (tzMap == null) {
-            tzMap = new TimeZoneMap(ICalTimeZone.getAccountTimeZone(account));
+            tzMap = new TimeZoneMap(Util.getAccountTimeZone(account));
         }
         Invite create = new Invite(ICalTok.PUBLISH.toString(), tzMap, false);
         create.setSentByMe(true);
@@ -167,7 +168,7 @@ public class CalendarUtils {
     static ParseMimeMessage.InviteParserResult parseInviteForCreateException(Account account, MailItem.Type type,
             Element inviteElem, TimeZoneMap tzMap, String uid, Invite defaultInv) throws ServiceException {
         if (tzMap == null) {
-            tzMap = new TimeZoneMap(ICalTimeZone.getAccountTimeZone(account));
+            tzMap = new TimeZoneMap(Util.getAccountTimeZone(account));
         }
         Invite create = new Invite(ICalTok.PUBLISH.toString(), tzMap, false);
         create.setSentByMe(true);
@@ -289,7 +290,7 @@ public class CalendarUtils {
             Element inviteElem, TimeZoneMap tzMap, boolean recurrenceIdAllowed, boolean recurAllowed)
             throws ServiceException {
         if (tzMap == null) {
-            tzMap = new TimeZoneMap(ICalTimeZone.getAccountTimeZone(account));
+            tzMap = new TimeZoneMap(Util.getAccountTimeZone(account));
         }
         Invite cancel = new Invite(ICalTok.CANCEL.toString(), tzMap, false);
         cancel.setSentByMe(true);
@@ -325,7 +326,7 @@ public class CalendarUtils {
     static ParseMimeMessage.InviteParserResult parseInviteForAddInvite(Account account, MailItem.Type type,
             Element inviteElem, TimeZoneMap tzMap) throws ServiceException {
         if (tzMap == null)
-            tzMap = new TimeZoneMap(ICalTimeZone.getAccountTimeZone(account));
+            tzMap = new TimeZoneMap(Util.getAccountTimeZone(account));
         Invite inv = new Invite(ICalTok.PUBLISH.toString(), tzMap, false);
 
         CalendarUtils.parseInviteElementCommon(account, type, inviteElem, inv, true, true);
@@ -354,7 +355,7 @@ public class CalendarUtils {
 
     static ParseMimeMessage.InviteParserResult parseInviteForCounter(Account account, MailItem.Type type,
             Element inviteElem) throws ServiceException {
-        TimeZoneMap tzMap = new TimeZoneMap(ICalTimeZone.getAccountTimeZone(account));
+        TimeZoneMap tzMap = new TimeZoneMap(Util.getAccountTimeZone(account));
         Invite inv = new Invite(ICalTok.COUNTER.toString(), tzMap, false);
 
         CalendarUtils.parseInviteElementCommon(account, type, inviteElem, inv, true, true);
@@ -401,7 +402,7 @@ public class CalendarUtils {
 
     static ParseMimeMessage.InviteParserResult parseInviteForDeclineCounter(Account account, MailItem.Type type,
             Element inviteElem) throws ServiceException {
-        TimeZoneMap tzMap = new TimeZoneMap(ICalTimeZone.getAccountTimeZone(account));
+        TimeZoneMap tzMap = new TimeZoneMap(Util.getAccountTimeZone(account));
         Invite inv = new Invite(ICalTok.DECLINECOUNTER.toString(), tzMap, false);
 
         CalendarUtils.parseInviteElementCommon(account, type, inviteElem, inv, true, true);

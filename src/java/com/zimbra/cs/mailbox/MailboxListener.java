@@ -15,10 +15,10 @@
 package com.zimbra.cs.mailbox;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.fb.FreeBusyProvider;
 import com.zimbra.cs.filter.FilterListener;
-import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.alerts.CalItemReminderService;
 import com.zimbra.cs.session.PendingModifications;

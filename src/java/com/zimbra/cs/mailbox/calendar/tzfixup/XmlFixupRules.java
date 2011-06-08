@@ -19,11 +19,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import com.zimbra.common.calendar.ICalTimeZone;
+import com.zimbra.common.calendar.WellKnownTimeZones;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
-import com.zimbra.cs.mailbox.calendar.WellKnownTimeZones;
 import com.zimbra.cs.mailbox.calendar.tzfixup.TimeZoneFixupRules.Matcher;
 import com.zimbra.cs.service.mail.CalendarUtils;
 

@@ -20,6 +20,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.Pair;
@@ -28,7 +29,6 @@ import com.zimbra.cs.datasource.imap.ImapFolder;
 import com.zimbra.cs.datasource.imap.ImapMessage;
 import com.zimbra.cs.datasource.imap.ImapMessageCollection;
 import com.zimbra.cs.db.DbPool.DbConnection;
-import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;

@@ -22,7 +22,8 @@ package com.zimbra.cs.filter.jsieve;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 import com.zimbra.cs.filter.ZimbraSieveException;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
+import com.zimbra.cs.mailbox.calendar.Util;
+
 import org.apache.jsieve.Argument;
 import org.apache.jsieve.Arguments;
 import org.apache.jsieve.SieveContext;
@@ -74,7 +75,7 @@ public class CurrentTimeTest extends AbstractTest {
         DateFormat timeFormat = new SimpleDateFormat("HHmm");
         TimeZone accountTimeZone;
         try {
-            accountTimeZone = ICalTimeZone.getAccountTimeZone(((ZimbraMailAdapter) mail).getMailbox().getAccount());
+            accountTimeZone = Util.getAccountTimeZone(((ZimbraMailAdapter) mail).getMailbox().getAccount());
         } catch (ServiceException e) {
             throw new ZimbraSieveException(e);
         }

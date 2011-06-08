@@ -11,8 +11,8 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailSender;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.calendar.Util;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.util.JMSession;
@@ -39,7 +39,7 @@ public class CalItemSmsReminderTask extends CalItemReminderTaskBase {
     protected void sendReminder(CalendarItem calItem, Invite invite) throws Exception {
         Account account = calItem.getAccount();
         Locale locale = account.getLocale();
-        TimeZone tz = ICalTimeZone.getAccountTimeZone(account);
+        TimeZone tz = Util.getAccountTimeZone(account);
         MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
         String to = account.getAttr(Provisioning.A_zimbraCalendarReminderDeviceEmail);
         if (to == null) {

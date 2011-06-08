@@ -18,10 +18,11 @@
  */
 package com.zimbra.cs.mailbox.calendar;
 
+import com.zimbra.common.calendar.TimeZoneMap;
+import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.mailbox.Metadata;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 
 public class InviteInfo implements Comparable<InviteInfo>, Cloneable {
     private int mMsgId; // ID of the MESSAGE which this invite was originally encoded in 

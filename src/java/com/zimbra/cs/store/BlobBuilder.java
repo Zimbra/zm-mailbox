@@ -14,11 +14,11 @@
  */
 package com.zimbra.cs.store;
 
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.cs.localconfig.DebugConfig;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

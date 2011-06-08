@@ -23,16 +23,17 @@ import java.util.List;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import com.zimbra.common.calendar.ICalTimeZone;
+import com.zimbra.common.calendar.TimeZoneMap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
-import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
+import com.zimbra.cs.mailbox.calendar.Util;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.RedoLogInput;
@@ -64,7 +65,7 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
                                  // used to have mForce field
 
         ICalTimeZone localTz = data.invite.getTimeZoneMap().getLocalTimeZone();
-        out.writeUTF(localTz.encodeAsMetadata().toString());
+        out.writeUTF(Util.encodeAsMetadata(localTz).toString());
 
         out.writeUTF(Invite.encodeMetadata(data.invite).toString());
 
@@ -90,7 +91,7 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
             in.readBoolean();  // keep this for backward compatibility with when SetCalendarItemData
                                // used to have mForce field
 
-            ICalTimeZone localTz = ICalTimeZone.decodeFromMetadata(new Metadata(in.readUTF()));
+            ICalTimeZone localTz = Util.decodeTimeZoneFromMetadata(new Metadata(in.readUTF()));
 
             toRet.invite = Invite.decodeMetadata(mboxId, new Metadata(in.readUTF()), null, localTz);
 

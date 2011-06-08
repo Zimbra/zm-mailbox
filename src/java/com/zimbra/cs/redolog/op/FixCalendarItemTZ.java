@@ -20,12 +20,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.Metadata;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
+import com.zimbra.cs.mailbox.calendar.Util;
 import com.zimbra.cs.mailbox.calendar.tzfixup.TimeZoneFixupRules;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
@@ -59,7 +60,7 @@ public class FixCalendarItemTZ extends RedoableOp {
                 ICalTimeZone newTZ = entry.getValue();
                 String newTZMeta = null;
                 if (newTZ != null)
-                    newTZMeta = newTZ.encodeAsMetadata().toString();
+                    newTZMeta = Util.encodeAsMetadata(newTZ).toString();
                 out.writeUTF(tzid);
                 out.writeUTF(newTZMeta);
             }
@@ -80,7 +81,7 @@ public class FixCalendarItemTZ extends RedoableOp {
                 try {
                     ICalTimeZone newTZ = null;
                     if (newTZMeta != null)
-                        newTZ = ICalTimeZone.decodeFromMetadata(new Metadata(newTZMeta));
+                        newTZ = Util.decodeTimeZoneFromMetadata(new Metadata(newTZMeta));
                     mReplacementMap.put(tzid, newTZ);
                 } catch (ServiceException e) {
                     IOException ioe = new IOException("Error deserializing timezone");

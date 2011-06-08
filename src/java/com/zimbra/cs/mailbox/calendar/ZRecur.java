@@ -27,6 +27,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import com.zimbra.common.calendar.ICalTimeZone;
+import com.zimbra.common.calendar.ParsedDateTime;
+import com.zimbra.common.calendar.TimeZoneMap;
+import com.zimbra.common.calendar.ZWeekDay;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
@@ -36,28 +40,6 @@ import com.zimbra.cs.util.Zimbra;
 public class ZRecur implements Cloneable {
 
     public static enum Frequency { DAILY, HOURLY, MINUTELY, MONTHLY, SECONDLY, WEEKLY, YEARLY }
-    
-    public static enum ZWeekDay { 
-        FR, MO, SA, SU, TH, TU, WE;
-        
-        public int getCalendarDay() {
-            switch (this) {
-            case SU:
-                return Calendar.SUNDAY;
-            case MO:
-                return Calendar.MONDAY;
-            case TU:
-                return Calendar.TUESDAY;
-            case WE:
-                return Calendar.WEDNESDAY;
-            case TH:
-                return Calendar.THURSDAY;
-            case FR:
-                return Calendar.FRIDAY;
-            }
-            return Calendar.SATURDAY;
-        }
-    }
     
     public static class ZWeekDayNum {
         public static class DayOnlyComparator implements Comparator<ZWeekDayNum>

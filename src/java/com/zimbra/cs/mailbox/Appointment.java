@@ -30,18 +30,19 @@ import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.fb.FreeBusy.FBInstance;
 import com.zimbra.cs.fb.FreeBusy.Interval;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
-import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.RecurId;
+import com.zimbra.cs.mailbox.calendar.Util;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender.Verb;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.redolog.op.CreateCalendarItemPlayer;
 import com.zimbra.cs.redolog.op.CreateCalendarItemRecorder;
+import com.zimbra.common.calendar.ICalTimeZone;
+import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateTimeUtil;
 import com.zimbra.common.util.L10nUtil;
@@ -540,7 +541,7 @@ public class Appointment extends CalendarItem {
         ICalTimeZone tz = invite.getStartTime().getTimeZone();
         if (tz == null && invite.isAllDayEvent()) {
             // floating time: use resource's timezone
-            tz = ICalTimeZone.getAccountTimeZone(account);
+            tz = Util.getAccountTimeZone(account);
             if (tz == null)
                 ICalTimeZone.getUTC();
         } else {
@@ -549,10 +550,10 @@ public class Appointment extends CalendarItem {
                 if (organizer != null) {
                     // For this case, let's assume the sender didn't really mean UTC.
                     // This happens with Outlook and possibly more clients.
-                    tz = ICalTimeZone.getAccountTimeZone(organizer);
+                    tz = Util.getAccountTimeZone(organizer);
                 } else {
                     // If organizer is not a local user, use resource's timezone.
-                    tz = ICalTimeZone.getAccountTimeZone(account);
+                    tz = Util.getAccountTimeZone(account);
                     if (tz == null)
                         ICalTimeZone.getUTC();
                 }

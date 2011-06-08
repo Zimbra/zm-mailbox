@@ -15,13 +15,13 @@
 
 package com.zimbra.cs.zclient;
 
+import com.zimbra.common.calendar.Geo;
+import com.zimbra.common.calendar.ZCalendar.ZParameter;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.zclient.ZClientException;
-import com.zimbra.cs.mailbox.calendar.Geo;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.service.mail.CalendarUtils;
 import com.zimbra.cs.service.mail.ToXML;
 import org.json.JSONException;

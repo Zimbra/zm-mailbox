@@ -20,9 +20,9 @@ import java.util.HashSet;
 import org.dom4j.Element;
 import org.dom4j.QName;
 
+import com.zimbra.common.calendar.ZCalendar;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavElements;
-import com.zimbra.cs.mailbox.calendar.ZCalendar;
 
 /*
  * draft-dusseault-caldav section 9.7

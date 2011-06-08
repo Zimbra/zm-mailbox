@@ -16,6 +16,7 @@ package com.zimbra.cs.imap;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Closeables;
+import com.zimbra.common.calendar.WellKnownTimeZones;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ArrayUtil;
@@ -51,7 +52,6 @@ import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
-import com.zimbra.cs.mailbox.calendar.WellKnownTimeZones;
 import com.zimbra.cs.security.sasl.Authenticator;
 import com.zimbra.cs.security.sasl.AuthenticatorUser;
 import com.zimbra.cs.security.sasl.PlainAuthenticator;

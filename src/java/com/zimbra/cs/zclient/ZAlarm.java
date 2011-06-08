@@ -14,12 +14,12 @@
  */
 package com.zimbra.cs.zclient;
 
+import com.zimbra.common.calendar.Attach;
+import com.zimbra.common.calendar.ParsedDateTime;
+import com.zimbra.common.calendar.ParsedDuration;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.mailbox.calendar.ParsedDuration;
-import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
-import com.zimbra.cs.mailbox.calendar.Attach;
 import com.zimbra.cs.zclient.ZInvite.ZAttendee;
 
 import java.util.List;

@@ -20,7 +20,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.google.common.base.Objects;
-import com.zimbra.cs.localconfig.DebugConfig;
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailItem;
 
