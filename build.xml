@@ -1,25 +1,10 @@
 <project name="ZimbraCommon" default="jar">
 
+  <import file="../ant-global.xml"/>    
+
   <!-- Properties -->
 
-  <property name="javac.target" value="1.6"/>
   <property name="jar.file" value="zimbracommon.jar" />
-  <property name="src.java.dir" location="src/java" />
-  <property name="build.dir" location="build" />
-  <property name="build.classes.dir" location="${build.dir}/classes" />
-  <property name="test.dir" location="${build.dir}/test"/>
-  <property name="test.src.dir" location="src/java-test"/>
-  <property name="test.classes.dir" location="${build.dir}/test-classes"/>
-  <property name="zimbra.home.dir" location="/opt/zimbra" />
-
-  <condition property="is-windows">
-    <os family="windows" />
-  </condition>
-  <condition property="is-unix">
-    <not>
-      <os family="windows" />
-    </not>
-  </condition>
 
   <path id="all.java.path">
     <pathelement location="${src.java.dir}" />
@@ -44,9 +29,11 @@
   </target>
 
   <target name="jar" depends="compile" description="Creates the jar file">
-    <jar destfile="${build.dir}/${jar.file}" basedir="${build.classes.dir}" />
+      <antcall target="zimbra-jar">
+          <param name="implementation.title" value="Zimbra Common"/>
+      </antcall>
   </target>
-
+      
   <target name="clean" description="Removes build files and undeploys extension">
     <delete dir="${build.dir}" />
   </target>
