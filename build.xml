@@ -961,7 +961,7 @@
         <copy todir="${dist.dir}/conf/rights" overwrite="true">
             <fileset dir="${config.dir}/rights" includes="*.xml"/>
         </copy>
-        <fixcrlf srcdir="${dist.dir}/conf" eol="unix" includes="**"/>
+        <fixcrlf srcdir="${dist.dir}/conf" eol="unix" excludes="magic*"/>
 
         <!-- lib: ignore absence of DLL for windows -->
         <copy todir="${dist.dir}/lib/jars" overwrite="true">
