@@ -220,5 +220,8 @@ public class MailService implements DocumentService {
         // comments
         dispatcher.registerHandler(MailConstants.ADD_COMMENT_REQUEST, new AddComment());
         dispatcher.registerHandler(MailConstants.GET_COMMENTS_REQUEST, new GetComments());
+        
+        // share
+        dispatcher.registerHandler(MailConstants.GET_SHARE_NOTIFICATIONS_REQUEST, new GetShareNotifications());
     }
 }

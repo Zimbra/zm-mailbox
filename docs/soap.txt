@@ -3578,4 +3578,17 @@ added to Documents only.
   [<comment id="{item-id}" parentId="{item-id-of-parent}" cr="{creator}" d="{timestamp}" text="{comment-text}"/>]+
 <GetCommentsResponse>
 
+----------------------------
+
+<GetShareNotificationsRequest/>
+
+<GetShareNotificationsResponse>
+   [<share id="{notification-item-id}" d="{date}" status="new|seen">
+      <grantor id="{zimbra-id}" email="{email-address}" name="{display-name}"/>
+      <link id="{shared-item-id}" name="{item-name}" view="{item-type}" perm="{permissions-granted}"/>
+    </share>]*
+</GetShareNotificationsResponse>
+
+    perm = combination of r (read) w (write) i (insert) d (delete) x (action) a (admin)
+    
 -----------------------------
