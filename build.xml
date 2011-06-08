@@ -1,8 +1,9 @@
 <project name="ZimbraServer" default="jar">
 
+  <import file="../ant-global.xml"/>    
+      
   <property file='build-custom.properties'/>
   <property environment="env"/>
-  <property name="javac.target" value="1.6"/>
 
     <!-- The OS user running ZCS.  Use ZIMBRA_USER environment variable
           if set.  If not, default to "zimbra". -->
@@ -60,19 +61,9 @@
     <property name="warfilename" value="service.war"/>
     <property name="warfile" location="${build.dir}/${warfilename}"/>
     <property name="jarfile" location="${build.dir}/zimbrastore.jar"/>
-    <property name="common.dir" location="../ZimbraCommon"/>
-    <property name="common.classes.dir" location="${common.dir}/build/classes"/>
     <property name="common.jarfile" location="${common.dir}/build/zimbracommon.jar"/>
-    <property name="common.jars.dir" location="${common.dir}/jars"/>
-
-    <property name="soap.dir" location="../ZimbraSoap"/>
-    <property name="soap.classes.dir" location="${soap.dir}/build/classes"/>
     <property name="soap.jarfile" location="${soap.dir}/build/zimbrasoap.jar"/>
-
-    <property name="im.dir" location="../ZimbraIM"/>
-    <property name="im.classes.dir" location="${im.dir}/build/classes"/>
     <property name="im.jarfile" location="${im.dir}/build/zimbraim.jar"/>
-    <property name="im.jars.dir" location="${im.dir}/jars"/>
 
     <property name="jars.dir" location="jars"/>
     <property name="lib.dir" location="lib"/>
@@ -105,7 +96,6 @@
     <property name="lmtp.port" value="7025"/>
     <property name="lmtpinject.numthreads" value="2"/>
 
-    <property name="zimbra.home.dir" location="/opt/zimbra"/>
     <property name="zimbra.index.dir" location="${zimbra.home.dir}/index"/>
     <property name="zimbra.store.dir" location="${zimbra.home.dir}/store"/>
     <property name="zimbra.sqlite.dir" location="${zimbra.home.dir}/sqlite"/>
@@ -133,13 +123,6 @@
         <isset property="db-sqlite"/>
     </condition>
 
-    <condition property="is-windows">
-        <os family="windows"/>
-    </condition>
-    <condition property="is-unix">
-        <not><os family="windows"/></not>
-    </condition>
-
     <condition property="jetty-use-service">
         <isset property="env.ZIMBRA_JETTY_USE_SERVICE"/>
     </condition>
@@ -153,27 +136,6 @@
     </condition>
 
     <property name="deploy.path" value="/service"/>
-
-    <condition property="native.os" value="MacOSX">
-        <os name="Mac OS X"/>
-    </condition>
-    <condition property="native.os" value="Linux">
-        <os name="Linux"/>
-    </condition>
-    <condition property="native.so" value="jnilib">
-        <os name="Mac OS X"/>
-    </condition>
-    <condition property="native.so" value="so">
-        <not><os name="Mac OS X"/></not>
-    </condition>
-    <condition property="native.arch" value="">
-        <os name="Mac OS X"/>
-    </condition>
-    <condition property="native.arch" value=".${os.arch}">
-        <not>
-            <os name="Mac OS X"/>
-        </not>
-    </condition>
 
     <property name="slapd.config.dir" value="${config.dir}/ldap/config"/>
     <condition property="slapd.config.src" value="${slapd.config.dir}/cn=config.ldif">
@@ -282,7 +244,7 @@
         </antcall>
     </target>
 
-    <target name="javadoc" depends="set-buildinfo-vars">
+    <target name="javadoc">
         <javadoc sourcepath="src/java" destdir="docs/api" classpathref="class.path" access="private"
                  packagenames="com.zimbra.*" additionalparam='-tag perms:m:"Permissions Required:"'
                  breakiterator="yes" windowtitle="ZimbraServer v${zimbra.buildinfo.version}">
@@ -300,72 +262,7 @@
       outputdirectory="${src.java.dir}/com/zimbra/cs/index/query/parser/"/>
   </target>
 
-    <target name="set-buildinfo-vars">
-        <tstamp/>
-        <condition property="zimbra.buildinfo.platform" value="${native.os}">
-            <not><isset property="${zimbra.buildinfo.platform}"/></not>
-        </condition>
-        <condition property="zimbra.buildinfo.version" value="8.0.0_BETA1_1111">
-            <not><isset property="${zimbra.buildinfo.version}"/></not>
-        </condition>
-
-        <propertyregex property="zimbra.buildinfo.majorversion"
-                    input="${zimbra.buildinfo.version}"
-                    regexp="([0-9]+)\.([0-9]+)\.([0-9]+)"
-                    select="\1"
-                    casesensitive="false" />
-
-          <propertyregex property="zimbra.buildinfo.minorversion"
-                      input="${zimbra.buildinfo.version}"
-                      regexp="([0-9]+)\.([0-9]+)\.([0-9]+)"
-                      select="\2"
-                      casesensitive="false" />
-
-        <propertyregex property="zimbra.buildinfo.microversion"
-                    input="${zimbra.buildinfo.version}"
-                    regexp="([0-9]+)\.([0-9]+)\.([0-9]+)"
-                    select="\3"
-                    casesensitive="false" />
-
-      <propertyregex property="zimbra.buildinfo.relclass"
-                  input="${zimbra.buildinfo.version}"
-                  regexp="([0-9]+)\.([0-9]+)\.([0-9]+)_([A-Z]+)"
-                  select="\4"
-                  casesensitive="false" />
-        <propertyregex property="zimbra.buildinfo.relnum"
-                    input="${zimbra.buildinfo.version}"
-                    regexp="([0-9]+)\.([0-9]+)\.([0-9]+)_([A-Z]+)([0-9]+)(\.|_)?"
-                    select="\5"
-                    casesensitive="false" />
-
-      <propertyregex property="zimbra.buildinfo.buildnum"
-                  input="${zimbra.buildinfo.version}"
-                  regexp="([0-9]+)\.([0-9]+)\.([0-9]+)_([A-Z0-9]+)(\.|_)?([0-9]+)?"
-                  select="\6"
-                  casesensitive="false" />
-
-        <condition property="zimbra.buildinfo.relnum" value="0">
-            <not><isset property="${zimbra.buildinfo.relnum}"/></not>
-        </condition>
-
-        <condition property="zimbra.buildinfo.type" value="">
-            <not><isset property="${zimbra.buildinfo.type}"/></not>
-        </condition>
-        <condition property="zimbra.buildinfo.release" value="${user.name}">
-            <not><isset property="${zimbra.buildinfo.release}"/></not>
-        </condition>
-        <condition property="zimbra.buildinfo.date" value="${DSTAMP}-${TSTAMP}">
-            <not><isset property="${zimbra.buildinfo.date}"/></not>
-        </condition>
-        <condition property="zimbra.buildinfo.host" value="${zimbra.server.hostname}">
-            <not><isset property="${zimbra.buildinfo.host}"/></not>
-        </condition>
-        <property name="zimbra.buildinfo.all"
-                  value="Version: ${zimbra.buildinfo.version}; Type: ${zimbra.buildinfo.type}; Release: ${zimbra.buildinfo.release}; Built: ${zimbra.buildinfo.date}; Host: ${zimbra.buildinfo.host}"/>
-        <echo>Version: ${zimbra.buildinfo.version} Date: ${zimbra.buildinfo.date}</echo>
-    </target>
-
-    <target name="generate-buildinfo" depends="set-buildinfo-vars,build-init">
+    <target name="generate-buildinfo" depends="build-init">
         <if>
             <not><available file="${build.dir}/buildinfo/com/zimbra/cs/util/BuildInfoGenerated.java"/></not>
             <then>
@@ -381,10 +278,10 @@
                         public static final String RELNUM = "${zimbra.buildinfo.relnum}";
                         public static final String BUILDNUM = "${zimbra.buildinfo.buildnum}";
                         public static final String VERSION = "${zimbra.buildinfo.version}";
-                      public static final String TYPE = "${zimbra.buildinfo.type}";
-                      public static final String RELEASE = "${zimbra.buildinfo.release}";
-                      public static final String DATE = "${DSTAMP}-${TSTAMP}";
-                      public static final String HOST = "${zimbra.buildinfo.host}";
+                        public static final String TYPE = "${zimbra.buildinfo.type}";
+                        public static final String RELEASE = "${zimbra.buildinfo.release}";
+                        public static final String DATE = "${DSTAMP}-${TSTAMP}";
+                        public static final String HOST = "${zimbra.buildinfo.host}";
                     }
                 </echo>
           </then>
@@ -394,7 +291,7 @@
         </javac>
     </target>
 
-    <target name="generate-ldap-config" depends="set-buildinfo-vars">
+    <target name="generate-ldap-config">
         <dependset>
             <srcfileset dir="${config.dir}/attrs" includes="*.xml"/>
             <targetfileset dir='${build.dir}/ldap-config' includes='*'/>
@@ -449,7 +346,7 @@
         </if>
     </target>
 
-    <target name="generate-getters" depends="set-buildinfo-vars,compile">
+    <target name="generate-getters" depends="compile">
         <antcall target="generate-getter">
             <param name="getter.class" value="account"/>
             <param name="getter.output" value="ZAttrAccount.java"/>
@@ -522,21 +419,13 @@
         <antcall target="db-versions-init"/>
     </target>
 
-    <target name="jar" depends="generate-buildinfo,compile">
-        <echo>Hostname: ${zimbra.server.hostname}</echo>
-        <jar destfile="${jarfile}" basedir="${build.classes.dir}">
-            <manifest>
-                <attribute name="Main-Class" value="com.zimbra.cs.util.BuildInfo" />
-              <attribute name="Implementation-Vendor" value="VMware, Inc."/>
-              <attribute name="Implementation-Title" value="Zimbra Server"/>
-              <attribute name="Implementation-Version" value="${zimbra.buildinfo.version} ${zimbra.buildinfo.release} ${DSTAMP}-${TSTAMP} ${zimbra.buildinfo.type}"/>
-              <attribute name="Specification-Vendor" value="VMware, Inc."/>
-              <attribute name="Specification-Title" value="Zimbra Collaboration Suite"/>
-              <attribute name="Specification-version" value="${zimbra.buildinfo.majorversion}.${zimbra.buildinfo.minorversion}"/>
-            </manifest>
-        </jar>
+    <target name="jar" depends="generate-buildinfo,compile" description="Creates the jar file">
+        <antcall target="zimbra-jar">
+            <param name="jar.file" value="zimbrastore.jar"/> <!-- zimbra-jar expects the filename without the path --> 
+            <param name="implementation.title" value="Zimbra Server"/>
+        </antcall>
     </target>
-
+        
     <target name="clean" description="Deletes classes from build directories">
       <ant dir="${common.dir}" target="clean" inheritAll="false"/>
       <ant dir="${soap.dir}" target="clean" inheritAll="false"/>
@@ -915,6 +804,7 @@
 
   <!-- target called by the production build -->
     <target name="dev-dist" depends="war,dev-dist-unix,dev-dist-jetty,choose-db-schema,generate-ldap-config" description="Initializes build/dist">
+        <echo>Version: ${zimbra.buildinfo.version} Date: ${zimbra.buildinfo.date}</echo>
         <!-- bin, libexec -->
         <copy todir="${dist.dir}/bin" overwrite="true">
             <fileset dir="${src.dir}/bin" excludes="*.production,zmmailboxdctl,jetty"/>
@@ -2122,14 +2012,14 @@
   <!--                          rights                           -->
   <!-- ========================================================= -->
 
-  <target name="generate-domainadmin-rights-xml" depends="set-buildinfo-vars,compile">
+  <target name="generate-domainadmin-rights-xml" depends="compile">
     <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path" failonerror="true">
       <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
       <arg line="-a genDomainAdminSetAttrsRights -r conf/rights/zimbra-rights-domainadmin.xml -t conf/rights/zimbra-rights-domainadmin.xml-template"/>
     </java>
   </target>
 
-  <target name="generate-rights-java" depends="set-buildinfo-vars,compile">
+  <target name="generate-rights-java" depends="compile">
     <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path" failonerror="true">
       <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
       <arg line="-a genRightConsts -i conf/rights -r ${src.java.dir}/com/zimbra/cs/account/accesscontrol/generated/RightConsts.java"/>
@@ -2144,7 +2034,7 @@
     </java>
   </target>
 
-  <target name="generate-rights-message-properties" depends="set-buildinfo-vars,compile">
+  <target name="generate-rights-message-properties" depends="compile">
     <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path" failonerror="true">
       <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
       <arg line="-a genMessageProperties -i conf/rights -r conf/msgs/ZsMsgRights.properties"/>
