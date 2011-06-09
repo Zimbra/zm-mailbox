@@ -51,8 +51,6 @@
         <isset property="is-production"/>
     </condition>
 
-    <property name="build.dir" location="build"/>
-    <property name="build.classes.dir" location="${build.dir}/classes"/>
     <property name="build.zmprov" location="${build.dir}/data/zmprov.txt"/>
     <property name="dist.dir" location="build/dist"/>
     <property name="dist.db.dir" location="build/dist/db"/>
@@ -65,13 +63,7 @@
     <property name="soap.jarfile" location="${soap.dir}/build/zimbrasoap.jar"/>
     <property name="im.jarfile" location="${im.dir}/build/zimbraim.jar"/>
 
-    <property name="jars.dir" location="jars"/>
     <property name="lib.dir" location="lib"/>
-    <property name="src.dir" location="src"/>
-    <property name="src.java.dir" location="${src.dir}/java"/>
-    <property name="test.dir" location="${build.dir}/test"/>
-    <property name="test.src.dir" location="${src.dir}/java-test"/>
-    <property name="test.classes.dir" location="${build.dir}/test-classes"/>
     <property name="config.dir" location="conf"/>
   <property name="war.web.xml" location="${config.dir}/web.xml${production.suffix}"/>
     <property name="jetty.xml.file" location='${config.dir}/jetty-6.1/jetty.xml' />
@@ -186,13 +178,13 @@
             <pathelement location="${common.jars.dir}/ant-contrib-1.0b1.jar"/>
         </classpath>
     </taskdef>
-
+    
     <path id="class.path">
       <pathelement location="${common.classes.dir}"/>
       <pathelement location="${soap.classes.dir}"/>
       <pathelement location="${im.classes.dir}"/>
       <pathelement location="${build.classes.dir}"/>
-      <fileset dir="${jars.dir}">
+      <fileset dir="${server.jars.dir}">
         <include name="**/*.jar"/>
       </fileset>
       <fileset dir="${common.jars.dir}">
