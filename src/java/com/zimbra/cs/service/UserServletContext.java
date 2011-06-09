@@ -194,14 +194,14 @@ public final class UserServletContext {
         // see if we can get target account or not
         if (itemId != null && itemId.getAccountId() != null) {
             targetAccount = prov.get(AccountBy.id, itemId.getAccountId(), authToken);
-            return;
         } else if (accountPath.equals("~")) {
             // can't resolve this yet
-            return;
-        } else if (accountPath.startsWith("~")) {
-            accountPath = accountPath.substring(1);
+        } else {
+            if (accountPath.startsWith("~")) {
+                accountPath = accountPath.substring(1);
+            }
+            targetAccount = prov.get(AccountBy.name, accountPath, authToken);
         }
-        targetAccount = prov.get(AccountBy.name, accountPath, authToken);
         
         String listParam = this.params.get(UserServlet.QP_LIST);
         if (listParam != null && listParam.length() > 0) {
