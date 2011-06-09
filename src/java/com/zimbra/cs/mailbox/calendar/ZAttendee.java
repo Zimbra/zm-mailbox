@@ -27,6 +27,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.soap.mail.type.CalendarAttendee;
 
 public class ZAttendee extends CalendarUser {
 
@@ -251,6 +252,49 @@ public class ZAttendee extends CalendarUser {
 
     public boolean addressMatches(String addr) {
         return getAddress().equalsIgnoreCase(addr);
+    }
+
+    public CalendarAttendee toJaxb() {
+        CalendarAttendee attendee = new CalendarAttendee();
+        // address
+        attendee.setAddress(IDNUtil.toUnicode(getAddress()));
+        attendee.setUrl(getAddress());  // for backward compatibility
+        // CN
+        if (hasCn())
+            attendee.setDisplayName(getCn());
+        // SENT-BY
+        if (hasSentBy())
+            attendee.setSentBy(getSentBy());
+        // DIR
+        if (hasDir())
+            attendee.setDir(getDir());
+        // LANGUAGE
+        if (hasLanguage())
+            attendee.setLanguage(getLanguage());
+        // CUTYPE
+        if (hasCUType())
+            attendee.setCuType(getCUType());
+        // ROLE
+        if (hasRole())
+            attendee.setRole(getRole());
+        // PARTSTAT
+        if (hasPartStat())
+            attendee.setPartStat(getPartStat());
+        // RSVP
+        if (hasRsvp())
+            attendee.setRsvp(getRsvp());
+        // MEMBER
+        if (hasMember())
+            attendee.setMember(getMember());
+        // DELEGATED-TO
+        if (hasDelegatedTo())
+            attendee.setDelegatedTo(getDelegatedTo());
+        // DELEGATED-FROM
+        if (hasDelegatedFrom())
+            attendee.setDelegatedFrom(getDelegatedFrom());
+
+        attendee.setXParams(ToXML.jaxbXParams(xparamsIterator()));
+        return attendee;
     }
 
     public Element toXml(Element parent) {

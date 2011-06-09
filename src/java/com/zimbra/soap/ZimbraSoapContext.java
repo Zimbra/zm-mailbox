@@ -617,8 +617,26 @@ public final class ZimbraSoapContext {
         return mRequestProtocol.getFactory().createElement(qname);
     }
 
+    /**
+     * Only use this for response objects (or requests)
+     * {@link jaxbToNamedElement} should be used for all other cases.
+     * @param resp
+     * @return
+     * @throws ServiceException
+     */
     public Element jaxbToElement(Object resp) throws ServiceException {
         return JaxbUtil.jaxbToElement(resp, mResponseProtocol.getFactory());
+    }
+
+    /**
+     * Use this rather than {@link jaxbToElement} when dealing with a
+     * class that is not in the JAXB context.  This will be true if the
+     * class is not for a top level Soap request or response.
+     */
+    public Element jaxbToNamedElement(String name, String namespace,
+            Object o) throws ServiceException {
+        return JaxbUtil.jaxbToNamedElement(name, namespace, o,
+                mResponseProtocol.getFactory());
     }
 
     /**

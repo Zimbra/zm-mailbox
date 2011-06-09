@@ -26,6 +26,8 @@ import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.service.mail.CalendarUtils;
 import com.zimbra.cs.service.mail.ToXML;
+import com.zimbra.soap.JaxbUtil;
+import com.zimbra.soap.mail.type.CalOrganizer;
 
 public class ZOrganizer extends CalendarUser {
     public ZOrganizer(String address, String cn) {
@@ -57,23 +59,27 @@ public class ZOrganizer extends CalendarUser {
         return ICalTok.ORGANIZER;
     }
 
-    public Element toXml(Element parent) {
-        Element orgElt = parent.addUniqueElement(MailConstants.E_CAL_ORGANIZER);
+    public CalOrganizer toJaxb() {
+        CalOrganizer org = new CalOrganizer();
         String str = getAddress();
-        orgElt.addAttribute(MailConstants.A_ADDRESS, IDNUtil.toUnicode(str));
-        orgElt.addAttribute(MailConstants.A_URL, str);  // for backward compatibility
+        org.setAddress(IDNUtil.toUnicode(str));
+        org.setUrl(str); // for backward compatibility
         if (hasCn())
-            orgElt.addAttribute(MailConstants.A_DISPLAY, getCn());
+            org.setDisplayName(getCn());
         if (hasSentBy())
-            orgElt.addAttribute(MailConstants.A_CAL_SENTBY, getSentBy());
+            org.setSentBy(getSentBy());
         if (hasDir())
-            orgElt.addAttribute(MailConstants.A_CAL_DIR, getDir());
+            org.setDir(getDir());
         if (hasLanguage())
-            orgElt.addAttribute(MailConstants.A_CAL_LANGUAGE, getLanguage());
+            org.setLanguage(getLanguage());
+        org.setXParams(ToXML.jaxbXParams(xparamsIterator()));
+        return org;
+    }
 
-        ToXML.encodeXParams(orgElt, xparamsIterator());
-
-        return orgElt;
+    public Element toXml(Element parent) {
+        return JaxbUtil.addChildElementFromJaxb(parent,
+                MailConstants.E_CAL_ORGANIZER, MailConstants.NAMESPACE_STR,
+                toJaxb());
     }
 
     public static ZOrganizer parse(Element element) throws ServiceException {

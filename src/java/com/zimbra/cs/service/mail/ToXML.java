@@ -22,6 +22,7 @@ import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -38,6 +39,7 @@ import javax.mail.internet.MimeUtility;
 
 import org.json.JSONException;
 
+import com.google.common.collect.Lists;
 import com.zimbra.common.calendar.Geo;
 import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.ParsedDateTime;
@@ -125,6 +127,9 @@ import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.soap.mail.type.AlarmDataInfo;
+import com.zimbra.soap.mail.type.XParam;
+import com.zimbra.soap.mail.type.XProp;
 
 /**
  * Class containing static methods for encoding various MailItem-derived
@@ -1653,6 +1658,21 @@ public class ToXML {
         return e;
     }
 
+    public static List<XParam> jaxbXParams(
+                    Iterator<ZParameter> xparamsIterator) {
+        List<XParam> xparams = Lists.newArrayList();
+        while (xparamsIterator.hasNext()) {
+            ZParameter xparam = xparamsIterator.next();
+            String paramName = xparam.getName();
+            if (paramName == null) continue;
+            xparams.add(new XParam(paramName, xparam.getValue()));
+        }
+        return Collections.unmodifiableList(xparams);
+    }
+
+    /**
+     * Use {@link jaxbXParams} where possible instead of this
+     */
     public static void encodeXParams(Element parent, Iterator<ZParameter> xparamsIterator) {
         while (xparamsIterator.hasNext()) {
             ZParameter xparam = xparamsIterator.next();
@@ -1666,6 +1686,22 @@ public class ToXML {
         }
     }
 
+    public static List<XProp> jaxbXProps(Iterator<ZProperty> xpropsIterator) {
+        List<XProp> xprops = Lists.newArrayList();
+        while (xpropsIterator.hasNext()) {
+            ZProperty xprop = xpropsIterator.next();
+            String paramName = xprop.getName();
+            if (paramName == null) continue;
+            XProp xp = new XProp(paramName, xprop.getValue());
+            xp.setXParams(jaxbXParams(xprop.parameterIterator()));
+            xprops.add(xp);
+        }
+        return Collections.unmodifiableList(xprops);
+    }
+
+    /**
+     * Use {@link jaxbXProps} where possible instead of this
+     */
     public static void encodeXProps(Element parent, Iterator<ZProperty> xpropsIterator) {
         while (xpropsIterator.hasNext()) {
             ZProperty xprop = xpropsIterator.next();
@@ -2271,13 +2307,47 @@ public class ToXML {
         elem.addAttribute(MailConstants.A_CAL_ITEM_TYPE, type == MailItem.Type.APPOINTMENT ? "appt" : "task");
     }
 
-    public static void encodeAlarmTimes(Element elem, CalendarItem calItem) {
+    /**
+     * @return the next alarm time or Long.MAX_VALUE if there isn't one
+     */
+    private static long getNextAlarmTime(CalendarItem calItem) {
         AlarmData alarmData = calItem.getAlarmData();
-        if (alarmData != null) {
-            long nextAlarm = alarmData.getNextAt();
-            if (nextAlarm < Long.MAX_VALUE)
-                elem.addAttribute(MailConstants.A_CAL_NEXT_ALARM, nextAlarm);
+        if (alarmData == null)
+            return Long.MAX_VALUE;
+        return alarmData.getNextAt();
+    }
+
+    public static void encodeAlarmTimes(Element elem, CalendarItem calItem) {
+        long nextAlarm = getNextAlarmTime(calItem);
+        if (nextAlarm < Long.MAX_VALUE)
+            elem.addAttribute(MailConstants.A_CAL_NEXT_ALARM, nextAlarm);
+    }
+
+    public static AlarmDataInfo alarmDataToJaxb(CalendarItem calItem,
+            AlarmData alarmData) {
+        AlarmDataInfo alarm = new AlarmDataInfo();
+        long nextAlarm = getNextAlarmTime(calItem);
+        if (nextAlarm < Long.MAX_VALUE)
+            alarm.setNextAlarm(nextAlarm);
+        long alarmInstStart = alarmData.getNextInstanceStart();
+        if (alarmInstStart != 0)
+            alarm.setAlarmInstanceStart(alarmInstStart);
+        int alarmInvId = alarmData.getInvId();
+        int alarmCompNum = alarmData.getCompNum();
+        Invite alarmInv = calItem.getInvite(alarmInvId, alarmCompNum);
+        if (alarmInv != null) {
+            // Some info on the meeting instance the reminder is for.
+            // These allow the UI to display tooltip and issue a Get
+            // call on the correct meeting instance.
+            alarm.setName(alarmInv.getName());
+            alarm.setLocation(alarmInv.getLocation());
+            alarm.setInvId(alarmInvId);
+            alarm.setComponentNum(alarmCompNum);
         }
+        Alarm alarmObj = alarmData.getAlarm();
+        if (alarmObj != null)
+            alarm.setAlarm(alarmObj.toJaxb());
+        return alarm;
     }
 
     public static Element encodeAlarmData(Element parent, CalendarItem calItem, AlarmData alarmData) {

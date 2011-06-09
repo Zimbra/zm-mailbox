@@ -51,6 +51,15 @@ import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache.CalendarDataResult;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.mail.type.AppointmentData;
+import com.zimbra.soap.mail.type.CalendaringDataInterface;
+import com.zimbra.soap.mail.type.GeoInfo;
+import com.zimbra.soap.mail.type.InstanceDataInfo;
+import com.zimbra.soap.mail.type.InstanceDataInterface;
+import com.zimbra.soap.mail.type.LegacyAppointmentData;
+import com.zimbra.soap.mail.type.LegacyInstanceDataInfo;
+import com.zimbra.soap.mail.type.LegacyTaskData;
+import com.zimbra.soap.mail.type.TaskData;
 
 
 /**
@@ -113,7 +122,8 @@ public class GetCalendarItemSummaries extends CalendarRequest {
             
             boolean isAppointment = calItem instanceof Appointment;
             
-            Element calItemElem = null; // don't initialize until we find at least one valid instance
+            // don't initialize until we find at least one valid instance
+            CalendaringDataInterface calData = null;
             
             Invite defaultInvite = calItem.getDefaultInviteOrNull();
             
@@ -186,255 +196,304 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                             continue;
                         }
 
-                        if (calItemElem == null) {
-                            calItemElem = lc.createElement(isAppointment ? MailConstants.E_APPOINTMENT : MailConstants.E_TASK);
-
+                        if (calData == null) {
+                            String uid = calItem.getUid();
+                            if (newFormat) {
+                                if (isAppointment)
+                                    calData = new AppointmentData(uid, uid);
+                                else
+                                    calData = new TaskData(uid, uid);
+                            } else {
+                                if (isAppointment)
+                                    calData =
+                                        new LegacyAppointmentData(uid, uid);
+                                else
+                                    calData = new LegacyTaskData(uid, uid);
+                            }
                             if (showAll) {
                                 // flags and tags
                                 String flags = calItem.getFlagString();
                                 if (flags != null && !flags.equals(""))
-                                    calItemElem.addAttribute(MailConstants.A_FLAGS, flags);
+                                    calData.setFlags(flags);
                                 String tags = calItem.getTagString();
                                 if (tags != null && !tags.equals(""))
-                                    calItemElem.addAttribute(MailConstants.A_TAGS, tags);
+                                    calData.setTags(tags);
                             }
 
                             // Organizer
                             if (inv.hasOrganizer()) {
                                 ZOrganizer org = inv.getOrganizer();
-                                org.toXml(calItemElem);
+                                calData.setOrganizer(org.toJaxb());
                             }
-
-                            calItemElem.addAttribute("x_uid", calItem.getUid());
-                            calItemElem.addAttribute(MailConstants.A_UID, calItem.getUid());
                         }
-
-                        Element instElt = calItemElem.addElement(MailConstants.E_INSTANCE);
+                        InstanceDataInterface instance = (newFormat
+                                ? new InstanceDataInfo()
+                                : new LegacyInstanceDataInfo());
+                        calData.addCalendaringInstance(instance);
 
                         if (showAll) {
                             if (isAppointment && inv.isEvent()) {
                                 String instFba = ((Appointment) calItem).getEffectiveFreeBusyActual(inv, inst);
-                                if (instFba != null && (!instFba.equals(defaultFba) || inst.isException()))
-                                    instElt.addAttribute(MailConstants.A_APPT_FREEBUSY_ACTUAL, instFba);
+                                if (instFba != null &&
+                                        (!instFba.equals(defaultFba) ||
+                                                inst.isException())) {
+                                    instance.setFreeBusyActual(instFba);
+                                }
                             }
-                            String instPtSt = calItem.getEffectivePartStat(inv, inst);
-                            if (!defaultPtSt.equals(instPtSt) || inst.isException())
-                                instElt.addAttribute(MailConstants.A_CAL_PARTSTAT, instPtSt);
+                            String instPtSt =
+                                calItem.getEffectivePartStat(inv, inst);
+                            if (!defaultPtSt.equals(instPtSt) ||
+                                    inst.isException()) {
+                                instance.setPartStat(instPtSt);
+                            }
                         }
 
                         if (inst.hasStart()) {
-                            instElt.addAttribute(MailConstants.A_CAL_START_TIME, instStart);
-                            if (inv.isAllDayEvent())
-                                instElt.addAttribute(MailConstants.A_CAL_TZ_OFFSET, inst.getStartTzOffset());
+                            instance.setStartTime(instStart);
+                            if (inv.isAllDayEvent()) {
+                                instance.setTzOffset(
+                                        new Long(inst.getStartTzOffset()));
+                            }
                         }
 
 
                         if (inst.isException() && inv.hasRecurId()) {
                             RecurId rid = inv.getRecurId();
-                            instElt.addAttribute(MailConstants.A_CAL_RECURRENCE_ID_Z, rid.getDtZ());
+                            instance.setRecurIdZ(rid.getDtZ());
                         } else {
-                            instElt.addAttribute(MailConstants.A_CAL_RECURRENCE_ID_Z, inst.getRecurIdZ());
+                            instance.setRecurIdZ(inst.getRecurIdZ());
                         }
 
                         if (inst.isException()) {
 
-                            instElt.addAttribute(MailConstants.A_CAL_IS_EXCEPTION, true);
+                            instance.setIsException(true);
 
-                            instElt.addAttribute(MailConstants.A_CAL_INV_ID, ifmt.formatItemId(calItem, inst.getMailItemId()));
-                            instElt.addAttribute(MailConstants.A_CAL_COMPONENT_NUM, inst.getComponentNum());
+                            instance.setInvId(ifmt.formatItemId(
+                                            calItem, inst.getMailItemId()));
+                            instance.setComponentNum(inst.getComponentNum());
 
                             if (showAll) {
                                 // fragment has already been sanitized...
                                 String frag = inv.getFragment();
-                                if (frag != null && !frag.equals(""))
-                                    instElt.addAttribute(MailConstants.E_FRAG, frag, Element.Disposition.CONTENT);
+                                if (frag != null && !frag.equals("")) {
+                                    instance.setFragment(frag);
+                                }
 
-                                if (inv.getPriority() != null)
-                                    instElt.addAttribute(MailConstants.A_CAL_PRIORITY, inv.getPriority());
+                                instance.setPriority(inv.getPriority());
 
                                 if (inv.isEvent()) {
-                                    if (inv.getFreeBusy() != null)
-                                        instElt.addAttribute(MailConstants.A_APPT_FREEBUSY, inv.getFreeBusy());
-                                    if (inv.getTransparency() != null)
-                                        instElt.addAttribute(MailConstants.A_APPT_TRANSPARENCY, inv.getTransparency());
+                                    instance.setFreeBusyIntended(
+                                            inv.getFreeBusy());
+                                    instance.setTransparency(
+                                                inv.getTransparency());
                                 }
 
                                 if (inv.isTodo()) {
-                                    if (inv.getPercentComplete() != null)
-                                        instElt.addAttribute(MailConstants.A_TASK_PERCENT_COMPLETE, inv.getPercentComplete());
+                                    instance.setTaskPercentComplete(
+                                                inv.getPercentComplete());
                                 }
 
-                                if (inv.getName() != null)
-                                    instElt.addAttribute(MailConstants.A_NAME, inv.getName());
+                                instance.setName(inv.getName());
 
-                                if (inv.getLocation() != null)
-                                    instElt.addAttribute(MailConstants.A_CAL_LOCATION, inv.getLocation());
+                                instance.setLocation(inv.getLocation());
 
                                 List<String> categories = inv.getCategories();
                                 if (categories != null) {
                                     for (String cat : categories) {
-                                        instElt.addElement(MailConstants.E_CAL_CATEGORY).setText(cat);
+                                        instance.addCategory(cat);
                                     }
                                 }
                                 Geo geo = inv.getGeo();
-                                if (geo != null)
-                                    geo.toXml(instElt);
+                                if (geo != null) {
+                                    instance.setGeo(new GeoInfo(geo));
+                                }
 
-                                if (inv.hasOtherAttendees())
-                                    instElt.addAttribute(MailConstants.A_CAL_OTHER_ATTENDEES, true);
+                                if (inv.hasOtherAttendees()) {
+                                    instance.setHasOtherAttendees(true);
+                                }
 
-                                if (inv.hasAlarm())
-                                    instElt.addAttribute(MailConstants.A_CAL_ALARM, true);
+                                if (inv.hasAlarm()) {
+                                    instance.setHasAlarm(true);
+                                }
                             }
 
-                            instElt.addAttribute(MailConstants.A_CAL_ISORG, inv.isOrganizer());
+                            instance.setIsOrganizer(inv.isOrganizer());
 
                             if (inv.isTodo()) {
                                 if (inst.hasEnd()) {
-                                    instElt.addAttribute(MailConstants.A_TASK_DUE_DATE, inst.getEnd());
-                                    if (inv.isAllDayEvent())
-                                        instElt.addAttribute(MailConstants.A_CAL_TZ_OFFSET_DUE, inst.getEndTzOffset());
+                                    instance.setTaskDueDate(inst.getEnd());
+                                    if (inv.isAllDayEvent()) {
+                                        instance.setTaskTzOffsetDue(inst.getEndTzOffset());
+                                    }
                                 }
                             } else {
                                 if (inst.hasStart() && inst.hasEnd()) {
-                                    instElt.addAttribute(
-                                            newFormat ? MailConstants.A_CAL_NEW_DURATION : MailConstants.A_CAL_DURATION,
+                                    instance.setDuration(
                                             inst.getEnd() - inst.getStart());
                                 }
                             }
 
-                            if (inv.getStatus() != null)
-                                instElt.addAttribute(MailConstants.A_CAL_STATUS, inv.getStatus());
-
-                            if (inv.getClassProp() != null)
-                                instElt.addAttribute(MailConstants.A_CAL_CLASS, inv.getClassProp());
-
-                            if (inv.isAllDayEvent())
-                                instElt.addAttribute(MailConstants.A_CAL_ALLDAY, true);
-                            if (inv.isDraft())
-                                instElt.addAttribute(MailConstants.A_CAL_DRAFT, true);
-                            if (inv.isNeverSent())
-                                instElt.addAttribute(MailConstants.A_CAL_NEVER_SENT, true);
-                            if (inv.isRecurrence())
-                                instElt.addAttribute(MailConstants.A_CAL_RECUR, true);
+                            instance.setStatus(inv.getStatus());
+                            instance.setCalClass(inv.getClassProp());
+                            if (inv.isAllDayEvent()) {
+                                instance.setAllDay(true);
+                            }
+                            if (inv.isDraft()) {
+                                instance.setDraft(true);
+                            }
+                            if (inv.isNeverSent()) {
+                                instance.setNeverSent(true);
+                            }
+                            if (inv.isRecurrence()) {
+                                instance.setIsRecurring(true);
+                            }
                         } else {
                             if (inv.isTodo()) {
                                 if (inst.hasEnd()) {
-                                    instElt.addAttribute(MailConstants.A_TASK_DUE_DATE, inst.getEnd());
-                                    if (inv.isAllDayEvent())
-                                        instElt.addAttribute(MailConstants.A_CAL_TZ_OFFSET_DUE, inst.getEndTzOffset());
+                                    instance.setTaskDueDate(inst.getEnd());
+                                    if (inv.isAllDayEvent()) {
+                                        instance.setTaskTzOffsetDue(
+                                                inst.getEndTzOffset());
+                                    }
                                 }
                             } else {
-                                // A non-exception instance can have duration that is different from
-                                // the default duration due to daylight savings time transitions.
-                                if (inst.hasStart() && inst.hasEnd() && defDurationMsecs != inst.getEnd()-inst.getStart()) {
-                                    instElt.addAttribute(newFormat ? MailConstants.A_CAL_NEW_DURATION : MailConstants.A_CAL_DURATION, inst.getEnd()-inst.getStart());
+                                // A non-exception instance can have duration
+                                // that is different from the default duration
+                                // due to daylight savings time transitions.
+                                if (inst.hasStart() && inst.hasEnd() &&
+                                        defDurationMsecs !=
+                                            inst.getEnd()-inst.getStart()) {
+                                    instance.setDuration(
+                                            inst.getEnd() - inst.getStart());
                                 }
                             }
                         }
                     } catch (MailServiceException.NoSuchItemException e) {
-                        mLog.info("Error could not get instance "+inst.getMailItemId()+"-"+inst.getComponentNum()+
+                        mLog.info("Error could not get instance "+
+                                inst.getMailItemId()+"-"+inst.getComponentNum()+
                             " for appt "+calItem.getId(), e);
                     }
                 } // iterate all the instances
             } // if expandRanges
 
-            
-            if (!expandRanges || numInRange > 0) { // if we found any calItems at all, we have to encode the "Default" data here
+            // if we found any calItems at all, we have to encode the "Default" data here
+            if (!expandRanges || numInRange > 0) {
                 boolean showAll = !hidePrivate || defaultInvite.isPublic();
-                if (calItemElem == null) {
-                    calItemElem = lc.createElement(isAppointment ? MailConstants.E_APPOINTMENT : MailConstants.E_TASK);
-
-                    calItemElem.addAttribute("x_uid", calItem.getUid());
-                    calItemElem.addAttribute(MailConstants.A_UID, calItem.getUid());
-
+                if (calData == null) {
+                    String uid = calItem.getUid();
+                    if (newFormat) {
+                        if (isAppointment)
+                            calData = new AppointmentData(uid, uid);
+                        else
+                            calData = new TaskData(uid, uid);
+                    } else {
+                        if (isAppointment)
+                            calData =
+                                new LegacyAppointmentData(uid, uid);
+                        else
+                            calData = new LegacyTaskData(uid, uid);
+                    }
                     if (showAll) {
                         // flags and tags
                         String flags = calItem.getFlagString();
                         if (flags != null && !flags.equals(""))
-                            calItemElem.addAttribute(MailConstants.A_FLAGS, flags);
+                            calData.setFlags(flags);
                         String tags = calItem.getTagString();
                         if (tags != null && !tags.equals(""))
-                            calItemElem.addAttribute(MailConstants.A_TAGS, tags);
+                            calData.setTags(tags);
                     }
 
                     // Organizer
                     if (defaultInvite.hasOrganizer()) {
                         ZOrganizer org = defaultInvite.getOrganizer();
-                        org.toXml(calItemElem);
+                        calData.setOrganizer(org.toJaxb());
                     }
                 }
-                
-                if (showAll) {
-                    if (alarmData != null)
-                        ToXML.encodeAlarmData(calItemElem, calItem, alarmData);
 
+                if (showAll) {
                     String defaultPriority = defaultInvite.getPriority();
-                    if (defaultPriority != null)
-                        calItemElem.addAttribute(MailConstants.A_CAL_PRIORITY, defaultPriority);
-                    calItemElem.addAttribute(MailConstants.A_CAL_PARTSTAT, defaultPtSt);
+                    
+                    calData.setPriority(defaultPriority);
+                    calData.setPartStat(defaultPtSt);
                     if (defaultInvite.isEvent()) {
-                        calItemElem.addAttribute(MailConstants.A_APPT_FREEBUSY, defaultInvite.getFreeBusy());
-                        calItemElem.addAttribute(MailConstants.A_APPT_FREEBUSY_ACTUAL, defaultFba);
-                        calItemElem.addAttribute(MailConstants.A_APPT_TRANSPARENCY, defaultInvite.getTransparency());
+                        calData.setFreeBusyIntended(defaultInvite.getFreeBusy());
+                        calData.setFreeBusyActual(defaultFba);
+                        calData.setTransparency(defaultInvite.getTransparency());
                     }
                     if (defaultInvite.isTodo()) {
                         String pctComplete = defaultInvite.getPercentComplete();
-                        if (pctComplete != null)
-                            calItemElem.addAttribute(MailConstants.A_TASK_PERCENT_COMPLETE, pctComplete);
+                        calData.setTaskPercentComplete(pctComplete);
                     }
 
-                    calItemElem.addAttribute(MailConstants.A_NAME, defaultInvite.getName());
-                    calItemElem.addAttribute(MailConstants.A_CAL_LOCATION, defaultInvite.getLocation());
+                    calData.setName(defaultInvite.getName());
+                    calData.setLocation(defaultInvite.getLocation());
 
                     List<String> categories = defaultInvite.getCategories();
                     if (categories != null) {
                         for (String cat : categories) {
-                            calItemElem.addElement(MailConstants.E_CAL_CATEGORY).setText(cat);
+                            calData.addCategory(cat);
                         }
                     }
                     Geo geo = defaultInvite.getGeo();
-                    if (geo != null)
-                        geo.toXml(calItemElem);
+                    if (geo != null) {
+                        calData.setGeo(new GeoInfo(geo));
+                    }
 
                     // fragment has already been sanitized...
                     String fragment = defaultInvite.getFragment();
-                    if (!fragment.equals(""))
-                        calItemElem.addAttribute(MailConstants.E_FRAG, fragment, Element.Disposition.CONTENT);
+                    if (!fragment.equals("")) {
+                        calData.setFragment(fragment);
+                    }
+
+                    if (alarmData != null) {
+                        calData.setAlarmData(
+                                ToXML.alarmDataToJaxb(calItem, alarmData));
+                    }
 
                     if (defaultInvite.hasOtherAttendees()) {
-                        calItemElem.addAttribute(MailConstants.A_CAL_OTHER_ATTENDEES, defaultInvite.hasOtherAttendees());
+                        calData.setHasOtherAttendees(defaultInvite.hasOtherAttendees());
                     }
                     if (defaultInvite.hasAlarm()) {
-                        calItemElem.addAttribute(MailConstants.A_CAL_ALARM, defaultInvite.hasAlarm());
+                        calData.setHasAlarm(defaultInvite.hasAlarm());
                     }
                 }
 
-                calItemElem.addAttribute(MailConstants.A_CAL_ISORG, defaultInvite.isOrganizer());
-                calItemElem.addAttribute(MailConstants.A_ID, ifmt.formatItemId(calItem));
-                calItemElem.addAttribute(MailConstants.A_CAL_INV_ID, ifmt.formatItemId(calItem, defaultInvite.getMailItemId()));
-                calItemElem.addAttribute(MailConstants.A_CAL_COMPONENT_NUM, defaultInvite.getComponentNum());
-                calItemElem.addAttribute(MailConstants.A_FOLDER, ifmt.formatItemId(calItem.getFolderId()));
-                calItemElem.addAttribute(MailConstants.A_CAL_STATUS, defaultInvite.getStatus());
-                calItemElem.addAttribute(MailConstants.A_CAL_CLASS, defaultInvite.getClassProp());
-                if (!defaultInvite.isTodo())
-                    calItemElem.addAttribute(newFormat ? MailConstants.A_CAL_NEW_DURATION : MailConstants.A_CAL_DURATION, defDurationMsecs);
-                if (defaultInvite.isAllDayEvent())
-                    calItemElem.addAttribute(MailConstants.A_CAL_ALLDAY, defaultInvite.isAllDayEvent());
-                if (defaultInvite.isDraft())
-                    calItemElem.addAttribute(MailConstants.A_CAL_DRAFT, defaultInvite.isDraft());
-                if (defaultInvite.isNeverSent())
-                    calItemElem.addAttribute(MailConstants.A_CAL_NEVER_SENT, defaultInvite.isNeverSent());
-                if (defaultInvite.isRecurrence())
-                    calItemElem.addAttribute(MailConstants.A_CAL_RECUR, defaultInvite.isRecurrence());
-                
-                toRet.element = calItemElem;
+                calData.setIsOrganizer(defaultInvite.isOrganizer());
+                calData.setId(ifmt.formatItemId(calItem));
+                calData.setInvId(ifmt.formatItemId(
+                        calItem, defaultInvite.getMailItemId()));
+                calData.setComponentNum(defaultInvite.getComponentNum());
+                calData.setFolderId(ifmt.formatItemId(calItem.getFolderId()));
+                calData.setStatus(defaultInvite.getStatus());
+                calData.setCalClass(defaultInvite.getClassProp());
+                if (!defaultInvite.isTodo()) {
+                    calData.setDuration(defDurationMsecs);
+                }
+                if (defaultInvite.isAllDayEvent()) {
+                    calData.setAllDay(defaultInvite.isAllDayEvent());
+                }
+                if (defaultInvite.isDraft()) {
+                    calData.setDraft(defaultInvite.isDraft());
+                }
+                if (defaultInvite.isNeverSent()) {
+                    calData.setNeverSent(defaultInvite.isNeverSent());
+                }
+                if (defaultInvite.isRecurrence()) {
+                    calData.setIsRecurring(defaultInvite.isRecurrence());
+                }
+                toRet.element = lc.jaxbToNamedElement(
+                        isAppointment ? MailConstants.E_APPOINTMENT :
+                            MailConstants.E_TASK, MailConstants.NAMESPACE_STR,
+                            calData);
             }
             toRet.numInstancesExpanded = numInRange;
         } catch(MailServiceException.NoSuchItemException e) {
-            mLog.info("Error could not get default invite for calendar item: "+ calItem.getId(), e);
+            mLog.info("Error could not get default invite for calendar item: "+
+                    calItem.getId(), e);
         } catch (RuntimeException e) {
-            mLog.info("Caught Exception "+e+ " while getting summary info for calendar item: "+calItem.getId(), e);
+            mLog.info("Caught Exception "+e+
+                    " while getting summary info for calendar item: "+
+                    calItem.getId(), e);
         }
         
         return toRet;
