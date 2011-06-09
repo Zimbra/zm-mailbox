@@ -188,8 +188,12 @@ public class DbDataSource {
             }
         }
     }
-
+    
     public static void deleteMappings(DataSource ds, Collection<Integer> itemIds) throws ServiceException {
+        deleteMappings(ds, itemIds, false);
+    }
+
+    public static void deleteMappings(DataSource ds, Collection<Integer> itemIds, boolean isBatch) throws ServiceException {
         Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
 
         ZimbraLog.datasource.debug("Deleting %d mappings for dataSource %s", itemIds.size(), ds.getName());
@@ -197,7 +201,11 @@ public class DbDataSource {
         DbConnection conn = null;
         PreparedStatement stmt = null;
         try {
-            conn = DbPool.getConnection(mbox);
+            if (isBatch) {
+                conn = mbox.getOperationConnection();
+            } else {
+                conn = DbPool.getConnection(mbox);    
+            }
             int numRows = 0;
             for (List<Integer> curIds : splitIds) {
                 StringBuilder sb = new StringBuilder();
@@ -216,7 +224,9 @@ public class DbDataSource {
                     stmt.setInt(i++, itemId);
 
                 numRows += stmt.executeUpdate();
-                conn.commit();
+                if (!isBatch) {
+                    conn.commit();    
+                }
                 stmt.close();
             }
             ZimbraLog.datasource.debug("Deleted %d mappings for %s", numRows, ds.getName());
@@ -224,7 +234,9 @@ public class DbDataSource {
             throw ServiceException.FAILURE("Unable to delete mapping for dataSource " + ds.getName(), e);
         } finally {
             DbPool.closeStatement(stmt);
-            DbPool.quietClose(conn);
+            if (!isBatch) {
+                DbPool.quietClose(conn);
+            }
         }
     }
 
@@ -517,8 +529,12 @@ public class DbDataSource {
         }
         return items;
     }
-
+    
     public static DataSourceItem getMapping(DataSource ds, int itemId) throws ServiceException {
+        return getMapping(ds, itemId, false);
+    }
+
+    public static DataSourceItem getMapping(DataSource ds, int itemId, boolean isBatch) throws ServiceException {
         Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
 
         int folderId = 0;
@@ -531,7 +547,11 @@ public class DbDataSource {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            conn = DbPool.getConnection(mbox);
+            if (isBatch) {
+                conn = mbox.getOperationConnection();
+            } else {
+                conn = DbPool.getConnection(mbox);    
+            }
             StringBuilder sb = new StringBuilder();
             sb.append("SELECT folder_id, remote_id, metadata FROM ");
             sb.append(getTableName(mbox));
@@ -558,7 +578,9 @@ public class DbDataSource {
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
-            DbPool.quietClose(conn);
+            if (!isBatch) {
+                DbPool.quietClose(conn);    
+            }
         }
         return new DataSourceItem(folderId, itemId, remoteId, md);
     }
