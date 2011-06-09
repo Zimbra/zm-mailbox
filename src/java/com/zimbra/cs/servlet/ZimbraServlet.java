@@ -59,8 +59,9 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.service.AuthProvider;
@@ -98,7 +99,7 @@ public class ZimbraServlet extends HttpServlet {
             if (host != null) {
                 // to defend against DOS attack, use the negative domain cache
                 try {
-                    domain = Provisioning.getInstance().getDomain(DomainBy.virtualHostname, host.toLowerCase(), true);
+                    domain = Provisioning.getInstance().getDomain(Key.DomainBy.virtualHostname, host.toLowerCase(), true);
                 } catch (ServiceException e) {
                     mLog.warn("caught exception while getting domain by virtual host: " + host, e);
                 }
@@ -446,7 +447,7 @@ public class ZimbraServlet extends HttpServlet {
         if (user.indexOf('@') == -1) {
             String host = HttpUtil.getVirtualHost(req);
             if (host != null) {
-                Domain d = prov.get(DomainBy.virtualHostname, host.toLowerCase());
+                Domain d = prov.get(Key.DomainBy.virtualHostname, host.toLowerCase());
                 if (d != null) user += "@" + d.getName();
             }
         }

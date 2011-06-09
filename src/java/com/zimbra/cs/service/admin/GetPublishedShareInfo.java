@@ -27,7 +27,7 @@ import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ShareInfo;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.service.account.GetShareInfo.ShareInfoVisitor;

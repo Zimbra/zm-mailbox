@@ -21,7 +21,7 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public abstract class GalDocumentHandler extends AccountDocumentHandler {

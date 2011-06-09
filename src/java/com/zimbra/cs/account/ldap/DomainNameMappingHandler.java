@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
@@ -178,7 +179,7 @@ public abstract class DomainNameMappingHandler {
 
         Provisioning prov = Provisioning.getInstance();
         
-        Domain domain = prov.get(Provisioning.DomainBy.name, "phoebe.mbp");
+        Domain domain = prov.get(Key.DomainBy.name, "phoebe.mbp");
         domain.addForeignName("app1:name1");
         domain.addForeignName("app2:name2");
         domain.addForeignName("app3:name3");

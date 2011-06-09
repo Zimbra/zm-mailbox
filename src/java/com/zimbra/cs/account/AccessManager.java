@@ -23,7 +23,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 
@@ -194,7 +195,7 @@ public abstract class AccessManager {
     }
     
     protected void checkDomainStatus(String domainName) throws ServiceException {
-        Domain domain = Provisioning.getInstance().get(Provisioning.DomainBy.name, domainName);
+        Domain domain = Provisioning.getInstance().get(Key.DomainBy.name, domainName);
         checkDomainStatus(domain);
     }
     

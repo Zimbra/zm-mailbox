@@ -18,6 +18,8 @@ package com.zimbra.cs.account.callback;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -25,7 +27,6 @@ import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
 
 public class AccountStatus extends AttributeCallback {
 	
@@ -96,7 +97,7 @@ public class AccountStatus extends AttributeCallback {
             
             Set<String> dlIds = prov.getDistributionLists(account);
             for (String dlId : dlIds) {
-                DistributionList dl = prov.get(DistributionListBy.id, dlId);
+                DistributionList dl = prov.get(Key.DistributionListBy.id, dlId);
                 if (dl != null) {
                     // will remove all members that are aliases of the account too
                     prov.removeMembers(dl, addrToRemove);

@@ -24,9 +24,10 @@ import java.util.Map;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;
@@ -50,7 +51,7 @@ public class RenameDistributionList extends AdminDocumentHandler {
 	    String id = request.getAttribute(AdminConstants.E_ID);
         String newName = request.getAttribute(AdminConstants.E_NEW_NAME);
 
-	    DistributionList dl = prov.get(DistributionListBy.id, id);
+	    DistributionList dl = prov.get(Key.DistributionListBy.id, id);
         if (dl == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
 
@@ -69,7 +70,7 @@ public class RenameDistributionList extends AdminDocumentHandler {
         
         // get again with new name...
 
-        dl = prov.get(DistributionListBy.id, id);
+        dl = prov.get(Key.DistributionListBy.id, id);
         if (dl == null)
             throw ServiceException.FAILURE("unable to get distribution list after rename: " + id, null);
 	    Element response = zsc.createElement(AdminConstants.RENAME_DISTRIBUTION_LIST_RESPONSE);

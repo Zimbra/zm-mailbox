@@ -19,6 +19,7 @@ import java.util.Collections;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
@@ -53,7 +54,7 @@ public class RemoteCollection extends Collection {
         addResourceType(DavElements.E_MOUNTPOINT);
         getMountpointTarget(ctxt);
         mMailboxId = 0;
-        Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteOwnerId);
+        Account target = Provisioning.getInstance().get(Key.AccountBy.id, mRemoteOwnerId);
         if (target != null && Provisioning.onLocalServer(target))
             mMailboxId = MailboxManager.getInstance().getMailboxByAccount(target).getId();
     }
@@ -87,13 +88,13 @@ public class RemoteCollection extends Collection {
         throw new DavException("request should be proxied", HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
     static ZMailbox getRemoteMailbox(ZAuthToken zat, String ownerId) throws ServiceException {
-        Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, ownerId);
+        Account target = Provisioning.getInstance().get(Key.AccountBy.id, ownerId);
         if (target == null)
             return null;
         ZMailbox.Options zoptions = new ZMailbox.Options(zat, AccountUtil.getSoapUri(target));
         zoptions.setNoSession(true);
         zoptions.setTargetAccount(ownerId);
-        zoptions.setTargetAccountBy(Provisioning.AccountBy.id);
+        zoptions.setTargetAccountBy(Key.AccountBy.id);
         return ZMailbox.getMailbox(zoptions);
     }
     protected void getMountpointTarget(DavContext ctxt) throws ServiceException {
@@ -109,7 +110,7 @@ public class RemoteCollection extends Collection {
         short rights = ACL.stringToRights(folder.getEffectivePerms());
         addProperty(Acl.getCurrentUserPrivilegeSet(rights));
         addProperty(Acl.getMountpointTargetPrivilegeSet(rights));
-        String targetUrl = UrlNamespace.getResourceUrl(Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteOwnerId), folder.getPath() + "/");
+        String targetUrl = UrlNamespace.getResourceUrl(Provisioning.getInstance().get(Key.AccountBy.id, mRemoteOwnerId), folder.getPath() + "/");
         ResourceProperty mp = new ResourceProperty(DavElements.E_MOUNTPOINT_TARGET_URL);
         mp.addChild(DavElements.E_HREF).setText(targetUrl);
         addProperty(mp);

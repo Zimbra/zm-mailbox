@@ -16,6 +16,8 @@ package com.zimbra.cs.account.accesscontrol;
 
 import java.util.List;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
@@ -25,7 +27,6 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.AccessManager.ViaGrant;
 import com.zimbra.cs.account.Provisioning.AclGroups;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.accesscontrol.PermissionCache.CachedPermission;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 
@@ -104,7 +105,7 @@ public class CheckPresetRight extends CheckRight {
         // DistributionList obtained from prov.get(DistributionListBy).  
         // We require one from prov.getAclGroup(DistributionListBy) here, call getAclGroup to be sure.
         if (mTarget instanceof DistributionList)
-            mTarget = mProv.getAclGroup(DistributionListBy.id, ((DistributionList)target).getId());
+            mTarget = mProv.getAclGroup(Key.DistributionListBy.id, ((DistributionList)target).getId());
         
         mTargetType = TargetType.getTargetType(mTarget);
         

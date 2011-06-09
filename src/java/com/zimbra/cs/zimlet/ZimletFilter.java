@@ -29,7 +29,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.cs.account.*;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.service.admin.AdminAccessControl;
 import com.zimbra.common.localconfig.LC;

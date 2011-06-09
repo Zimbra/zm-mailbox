@@ -30,8 +30,9 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.imap.ImapCredentials.EnabledHack;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
@@ -288,7 +289,7 @@ abstract class ImapHandler {
             return true;
         }
         try {
-            Account account = Provisioning.getInstance().get(Provisioning.AccountBy.id, id);
+            Account account = Provisioning.getInstance().get(Key.AccountBy.id, id);
             if (account == null || !account.isAccountStatusActive()) {
                 ZimbraLog.imap.warn("target account missing or not active; dropping connection");
                 return false;
@@ -2428,7 +2429,7 @@ abstract class ImapHandler {
                 granteeType = ACL.GRANTEE_USER;
                 NamedEntry entry = Provisioning.getInstance().get(AccountBy.name, principal);
                 if (entry == null) {
-                    entry = Provisioning.getInstance().get(DistributionListBy.name, principal);
+                    entry = Provisioning.getInstance().get(Key.DistributionListBy.name, principal);
                     granteeType = ACL.GRANTEE_GROUP;
                 }
                 if (entry != null)
@@ -2511,7 +2512,7 @@ abstract class ImapHandler {
             } else {
                 NamedEntry entry = Provisioning.getInstance().get(AccountBy.name, principal);
                 if (entry == null)
-                    entry = Provisioning.getInstance().get(DistributionListBy.name, principal);
+                    entry = Provisioning.getInstance().get(Key.DistributionListBy.name, principal);
                 if (entry != null)
                     granteeId = entry.getId();
             }
@@ -2658,7 +2659,7 @@ abstract class ImapHandler {
         boolean isOwner = false;
         try {
             if (!principal.equals("anyone")) {
-                Account acct = Provisioning.getInstance().get(Provisioning.AccountBy.name, principal);
+                Account acct = Provisioning.getInstance().get(Key.AccountBy.name, principal);
                 if (acct == null)
                     throw AccountServiceException.NO_SUCH_ACCOUNT(principal);
                 isOwner = path.belongsTo(acct.getId());

@@ -23,13 +23,14 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.rmgmt.RemoteCommands;
 import com.zimbra.cs.rmgmt.RemoteManager;
@@ -56,7 +57,7 @@ public class GetServerNIFs extends AdminDocumentHandler {
 	    String method = serverEl.getAttribute(AdminConstants.A_BY);
 	    String serverName = serverEl.getText();
 	    Provisioning prov = Provisioning.getInstance();
-		Server server = prov.get(ServerBy.fromString(method), serverName);
+		Server server = prov.get(Key.ServerBy.fromString(method), serverName);
 		if (server == null) {
 			throw ServiceException.INVALID_REQUEST("Cannot find server record for the host: " + serverName, null);
 		}	    

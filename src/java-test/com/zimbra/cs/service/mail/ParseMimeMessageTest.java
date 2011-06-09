@@ -27,6 +27,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
@@ -94,7 +95,7 @@ public final class ParseMimeMessageTest {
             .addAttribute(MailConstants.A_ADDRESS_TYPE, EmailType.TO.toString())
             .addAttribute(MailConstants.A_ADDRESS, "rcpt@zimbra.com");
 
-        Account acct = Provisioning.getInstance().get(Provisioning.AccountBy.name, "test@zimbra.com");
+        Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
         ZimbraSoapContext zsc = new ZimbraSoapContext(
                 new ZimbraSoapContext(null, Collections.<String, Object>emptyMap(), SoapProtocol.SoapJS),
                 MockProvisioning.DEFAULT_ACCOUNT_ID, null);
@@ -132,7 +133,7 @@ public final class ParseMimeMessageTest {
                     "MIME-Version: 1.0\r\n\r\n" +
                     "This is the inner message.");
 
-        Account acct = Provisioning.getInstance().get(Provisioning.AccountBy.name, "test@zimbra.com");
+        Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
         ZimbraSoapContext zsc = new ZimbraSoapContext(
                 new ZimbraSoapContext(null, Collections.<String, Object>emptyMap(), SoapProtocol.SoapJS),
                 MockProvisioning.DEFAULT_ACCOUNT_ID, null);
@@ -162,7 +163,7 @@ public final class ParseMimeMessageTest {
 
     @Test
     public void attachPdfDocument() throws Exception {
-        Account acct = Provisioning.getInstance().get(Provisioning.AccountBy.name, "test@zimbra.com");
+        Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         ZimbraSoapContext zsc = new ZimbraSoapContext(
                 new ZimbraSoapContext(null, Collections.<String, Object>emptyMap(), SoapProtocol.SoapJS),
@@ -193,7 +194,7 @@ public final class ParseMimeMessageTest {
 
     @Test
     public void attachZimbraDocument() throws Exception {
-        Account acct = Provisioning.getInstance().get(Provisioning.AccountBy.name, "test@zimbra.com");
+        Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         ZimbraSoapContext zsc = new ZimbraSoapContext(
                 new ZimbraSoapContext(null, Collections.<String, Object>emptyMap(), SoapProtocol.SoapJS),

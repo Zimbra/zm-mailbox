@@ -17,11 +17,12 @@ package com.zimbra.cs.account.soap;
 
 import java.util.Map;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.soap.admin.type.Attr;
@@ -53,7 +54,7 @@ class SoapDomain extends Domain implements SoapEntry {
         XMLElement req = new XMLElement(AdminConstants.GET_DOMAIN_REQUEST);
         Element a = req.addElement(AdminConstants.E_DOMAIN);
         a.setText(getId());
-        a.addAttribute(AdminConstants.A_BY, DomainBy.id.name());
+        a.addAttribute(AdminConstants.A_BY, Key.DomainBy.id.name());
         setAttrs(SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminConstants.E_DOMAIN)));
     }
 }

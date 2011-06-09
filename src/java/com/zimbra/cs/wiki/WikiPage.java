@@ -35,6 +35,7 @@ import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.wiki.WikiServiceException;
+import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 
@@ -133,7 +134,7 @@ public abstract class WikiPage {
     }
 
     public static WikiPage findPage(WikiPage.WikiContext ctxt, String accountId, int id) throws ServiceException {
-        Account account = Provisioning.getInstance().get(Provisioning.AccountBy.id, accountId, ctxt.auth);
+        Account account = Provisioning.getInstance().get(Key.AccountBy.id, accountId, ctxt.auth);
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
 
@@ -175,7 +176,7 @@ public abstract class WikiPage {
     }
     public static WikiPage findTemplate(WikiPage.WikiContext ctxt, String accountId, String template) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
-        Account acct = prov.get(Provisioning.AccountBy.id, accountId, ctxt.auth);
+        Account acct = prov.get(Key.AccountBy.id, accountId, ctxt.auth);
         Domain domain = prov.getDomain(acct);
         template = "/Template/" + template;
 
@@ -207,7 +208,7 @@ public abstract class WikiPage {
     }
     private static WikiPage findTemplatePage(WikiPage.WikiContext ctxt, String wikiAccountName, String template) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
-        Account acct = prov.get(Provisioning.AccountBy.name, wikiAccountName);
+        Account acct = prov.get(Key.AccountBy.name, wikiAccountName);
 
         if (acct == null)
             throw ServiceException.FAILURE("wiki account " + wikiAccountName + " does not exist, please check " +

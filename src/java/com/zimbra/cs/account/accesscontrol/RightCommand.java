@@ -26,6 +26,11 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import com.google.common.collect.Sets;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.CosBy;
+import com.zimbra.common.account.Key.DomainBy;
+import com.zimbra.common.account.Key.GranteeBy;
+import com.zimbra.common.account.Key.TargetBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -39,10 +44,6 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.CosBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.account.Provisioning.GranteeBy;
-import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.accesscontrol.Right.RightType;
 import com.zimbra.cs.account.accesscontrol.RightBearer.Grantee;
 import com.zimbra.cs.account.accesscontrol.SearchGrants.GrantsOnTarget;
@@ -929,8 +930,8 @@ public class RightCommand {
     }
     
     public static boolean checkRight(Provisioning prov,
-                                     String targetType, TargetBy targetBy, String target,
-                                     GranteeBy granteeBy, String grantee, GuestAccount guest,
+                                     String targetType, Key.TargetBy targetBy, String target,
+                                     Key.GranteeBy granteeBy, String grantee, GuestAccount guest,
                                      String right, Map<String, Object> attrs,
                                      AccessManager.ViaGrant via) throws ServiceException {
         verifyAccessManager();
@@ -968,7 +969,7 @@ public class RightCommand {
     }
     
     public static AllEffectiveRights getAllEffectiveRights(Provisioning prov,
-            String granteeType, GranteeBy granteeBy, String grantee, 
+            String granteeType, Key.GranteeBy granteeBy, String grantee, 
             boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
         AdminConsoleCapable acc = verifyAdminConsoleCapable();
 
@@ -984,8 +985,8 @@ public class RightCommand {
     }
     
     public static EffectiveRights getEffectiveRights(Provisioning prov,
-                                                     String targetType, TargetBy targetBy, String target,
-                                                     GranteeBy granteeBy, String grantee,
+                                                     String targetType, Key.TargetBy targetBy, String target,
+                                                     Key.GranteeBy granteeBy, String grantee,
                                                      boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
         AdminConsoleCapable acc = verifyAdminConsoleCapable();
         
@@ -1009,9 +1010,9 @@ public class RightCommand {
     
     public static EffectiveRights getCreateObjectAttrs(Provisioning prov,
                                                        String targetType,
-                                                       DomainBy domainBy, String domainStr,
-                                                       CosBy cosBy, String cosStr,
-                                                       GranteeBy granteeBy, String grantee) throws ServiceException {
+                                                       Key.DomainBy domainBy, String domainStr,
+                                                       Key.CosBy cosBy, String cosStr,
+                                                       Key.GranteeBy granteeBy, String grantee) throws ServiceException {
         
         AdminConsoleCapable acc = verifyAdminConsoleCapable();
         
@@ -1019,7 +1020,7 @@ public class RightCommand {
         
         String domainName = null;
         if (tt == TargetType.domain) {
-            if (domainBy != DomainBy.name)
+            if (domainBy != Key.DomainBy.name)
                 throw ServiceException.INVALID_REQUEST("must be by name for domain target", null);
             
             domainName = domainStr;
@@ -1041,8 +1042,8 @@ public class RightCommand {
     }
     
     public static Grants getGrants(Provisioning prov,
-                                String targetType, TargetBy targetBy, String target, 
-                                String granteeType, GranteeBy granteeBy, String grantee, 
+                                String targetType, Key.TargetBy targetBy, String target, 
+                                String granteeType, Key.GranteeBy granteeBy, String grantee, 
                                 boolean granteeIncludeGroupsGranteeBelongs) throws ServiceException {
         verifyAccessManager();
         
@@ -1206,8 +1207,8 @@ public class RightCommand {
     public static void grantRight(
             Provisioning prov,
             Account authedAcct,
-            String targetType, TargetBy targetBy, String target,
-            String granteeType, GranteeBy granteeBy, String grantee, String secret,
+            String targetType, Key.TargetBy targetBy, String target,
+            String granteeType, Key.GranteeBy granteeBy, String grantee, String secret,
             String right, RightModifier rightModifier) throws ServiceException {
         
         verifyAccessManager();
@@ -1245,8 +1246,8 @@ public class RightCommand {
     public static void revokeRight(
             Provisioning prov,
             Account authedAcct,
-            String targetType, TargetBy targetBy, String target,
-            String granteeType, GranteeBy granteeBy, String grantee,
+            String targetType, Key.TargetBy targetBy, String target,
+            String granteeType, Key.GranteeBy granteeBy, String grantee,
             String right, RightModifier rightModifier) throws ServiceException {
         
         verifyAccessManager();
@@ -1279,7 +1280,7 @@ public class RightCommand {
                 
                 // grantee had been probably deleted.
                 // if granteeBy is id, we try to revoke the orphan grant
-                if (granteeBy == GranteeBy.id)
+                if (granteeBy == Key.GranteeBy.id)
                     granteeId = grantee;
                 else
                     throw ServiceException.INVALID_REQUEST("cannot find grantee by name: " + grantee + 

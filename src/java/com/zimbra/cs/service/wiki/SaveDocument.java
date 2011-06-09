@@ -42,7 +42,7 @@ import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.account.ZAttrProvisioning;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Flag;

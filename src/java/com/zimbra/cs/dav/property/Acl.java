@@ -28,7 +28,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -499,7 +500,7 @@ public class Acl extends ResourceProperty {
             switch (mGranteeType) {
             case ACL.GRANTEE_USER:
                 try {
-                    Account acct = Provisioning.getInstance().get(Provisioning.AccountBy.id, mId);
+                    Account acct = Provisioning.getInstance().get(Key.AccountBy.id, mId);
                     mPrincipalUrl = UrlNamespace.getPrincipalCollectionUrl(acct);
                 } catch (ServiceException se) {
                     ZimbraLog.dav.warn("can't lookup account "+mId, se);

@@ -37,8 +37,9 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.GalSearchType;
 import com.zimbra.cs.account.ZAttrProvisioning.GalMode;
 import com.zimbra.cs.account.gal.GalOp;
@@ -690,7 +691,7 @@ public class GalSearchControl {
 
             try {
                 // get the dl object for ACL checking
-                DistributionList dl = prov.getAclGroup(DistributionListBy.id, groupId);
+                DistributionList dl = prov.getAclGroup(Key.DistributionListBy.id, groupId);
 
                 // the DL might have been deleted since the last GAL sync account sync, throw.
                 // or should we just let the request through?

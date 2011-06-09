@@ -20,12 +20,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.soap.admin.type.Attr;
 import com.zimbra.soap.admin.type.DLInfo;
@@ -100,7 +101,7 @@ class SoapDistributionList extends DistributionList implements SoapEntry {
         XMLElement req = new XMLElement(AdminConstants.GET_DISTRIBUTION_LIST_REQUEST);
         Element a = req.addElement(AdminConstants.E_DL);
         a.setText(getId());
-        a.addAttribute(AdminConstants.A_BY, DistributionListBy.id.name());
+        a.addAttribute(AdminConstants.A_BY, Key.DistributionListBy.id.name());
         Element dl = prov.invoke(req).getElement(AdminConstants.E_DL);
         Map<String, Object> attrs = SoapProvisioning.getAttrs(dl);
         addDlm(dl, attrs);                

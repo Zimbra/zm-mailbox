@@ -31,6 +31,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
@@ -40,7 +42,6 @@ import com.zimbra.common.util.CsvReader;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -60,7 +61,7 @@ public class GetServiceStatus extends AdminDocumentHandler {
         String monitorHost = prov.getConfig().getAttr(Provisioning.A_zimbraLogHostname);
         if (monitorHost == null || monitorHost.trim().equals(""))
             throw ServiceException.FAILURE("zimbraLogHostname is not configured", null);
-        Server monitorServer = prov.get(ServerBy.name, monitorHost);
+        Server monitorServer = prov.get(Key.ServerBy.name, monitorHost);
         if (monitorServer == null)
             throw ServiceException.FAILURE("could not find zimbraLogHostname server: " + monitorServer, null);
         if (!prov.getLocalServer().getId().equalsIgnoreCase(monitorServer.getId()))
@@ -221,7 +222,7 @@ public class GetServiceStatus extends AdminDocumentHandler {
 
     private boolean checkRights(ZimbraSoapContext zsc, String serverName) throws ServiceException {
         try {
-            Server server = Provisioning.getInstance().get(ServerBy.name, serverName);
+            Server server = Provisioning.getInstance().get(Key.ServerBy.name, serverName);
             checkRight(zsc, server, Admin.R_getServiceStatus);
         } catch (ServiceException e) {
             // if PERM_DENIED, return false and log, do not throw, so we 

@@ -20,13 +20,14 @@ import java.util.Set;
 
 import org.junit.*;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ZAttrProvisioning;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
 
 import static org.junit.Assert.*;
 
@@ -106,7 +107,7 @@ public class TestProvAttrCallback extends TestLdap {
         prov.flushCache(CacheEntryType.account, null);
         prov.flushCache(CacheEntryType.group, null);
         
-        dl = prov.get(DistributionListBy.id, dl.getId());
+        dl = prov.get(Key.DistributionListBy.id, dl.getId());
         
         allMembers = dl.getAllMembersSet();
         assertEquals(0, allMembers.size());

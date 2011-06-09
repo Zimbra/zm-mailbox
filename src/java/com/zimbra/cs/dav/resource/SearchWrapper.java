@@ -24,7 +24,7 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.index.MessageHit;
 import com.zimbra.cs.index.SearchParams;

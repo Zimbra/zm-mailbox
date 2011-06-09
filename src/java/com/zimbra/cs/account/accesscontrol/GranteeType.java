@@ -21,10 +21,11 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.account.Provisioning.GranteeBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DistributionListBy;
+import com.zimbra.common.account.Key.DomainBy;
+import com.zimbra.common.account.Key.GranteeBy;
 import com.zimbra.soap.admin.type.GranteeInfo;
 
 public enum GranteeType {
@@ -111,7 +112,7 @@ public enum GranteeType {
      * @throws ServiceException
      */
     public static NamedEntry lookupGrantee(Provisioning prov, GranteeType granteeType, 
-            GranteeBy granteeBy, String grantee) throws ServiceException {
+            Key.GranteeBy granteeBy, String grantee) throws ServiceException {
         NamedEntry granteeEntry = null;
         
         switch (granteeType) {
@@ -121,12 +122,12 @@ public enum GranteeType {
                 throw AccountServiceException.NO_SUCH_ACCOUNT(grantee); 
             break;
         case GT_GROUP:
-            granteeEntry = prov.getAclGroup(DistributionListBy.fromString(granteeBy.name()), grantee);
+            granteeEntry = prov.getAclGroup(Key.DistributionListBy.fromString(granteeBy.name()), grantee);
             if (granteeEntry == null)
                 throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(grantee); 
             break;
         case GT_DOMAIN:
-            granteeEntry = prov.get(DomainBy.fromString(granteeBy.name()), grantee);
+            granteeEntry = prov.get(Key.DomainBy.fromString(granteeBy.name()), grantee);
             if (granteeEntry == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(grantee); 
             break;

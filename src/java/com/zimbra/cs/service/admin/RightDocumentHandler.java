@@ -14,6 +14,9 @@
  */
 package com.zimbra.cs.service.admin;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.GranteeBy;
+import com.zimbra.common.account.Key.TargetBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -23,8 +26,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.GranteeBy;
-import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
@@ -33,7 +34,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 public abstract class RightDocumentHandler extends AdminDocumentHandler {
     
     Entry getTargetEntry(Provisioning prov, Element eTarget, TargetType targetType) throws ServiceException {
-        TargetBy targetBy = TargetBy.fromString(eTarget.getAttribute(AdminConstants.A_BY));
+        Key.TargetBy targetBy = Key.TargetBy.fromString(eTarget.getAttribute(AdminConstants.A_BY));
         String target = eTarget.getText();
          
         return TargetType.lookupTarget(prov, targetType, targetBy, target);
@@ -43,14 +44,14 @@ public abstract class RightDocumentHandler extends AdminDocumentHandler {
         if (!granteeType.allowedForAdminRights())
             throw ServiceException.INVALID_REQUEST("unsupported grantee type: " + granteeType.getCode(), null);
         
-        GranteeBy granteeBy = GranteeBy.fromString(eGrantee.getAttribute(AdminConstants.A_BY));
+        Key.GranteeBy granteeBy = Key.GranteeBy.fromString(eGrantee.getAttribute(AdminConstants.A_BY));
         String grantee = eGrantee.getText();
         
         return GranteeType.lookupGrantee(prov, granteeType, granteeBy, grantee);
     }
     
     protected void checkCheckRightRight(ZimbraSoapContext zsc, 
-            GranteeType granteeType, GranteeBy granteeBy, String grantee) throws ServiceException {
+            GranteeType granteeType, Key.GranteeBy granteeBy, String grantee) throws ServiceException {
         checkCheckRightRight(zsc, granteeType, granteeBy, grantee, false);
     }
     
@@ -68,7 +69,7 @@ public abstract class RightDocumentHandler extends AdminDocumentHandler {
      * @throws ServiceException
      */
     protected boolean checkCheckRightRight(ZimbraSoapContext zsc, 
-            GranteeType granteeType, GranteeBy granteeBy, String grantee, 
+            GranteeType granteeType, Key.GranteeBy granteeBy, String grantee, 
             boolean granteeCanBeExternalEmailAddr) throws ServiceException {
         
         NamedEntry granteeEntry = null;

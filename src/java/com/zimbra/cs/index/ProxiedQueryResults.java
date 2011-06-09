@@ -16,6 +16,8 @@
 package com.zimbra.cs.index;
 
 import com.google.common.base.Objects;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -26,7 +28,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.util.ParseMailboxID;
@@ -256,7 +257,7 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
     public String toString() {
         String url;
         try {
-            url = URLUtil.getAdminURL(Provisioning.getInstance().get(ServerBy.name, server));
+            url = URLUtil.getAdminURL(Provisioning.getInstance().get(Key.ServerBy.name, server));
         } catch (ServiceException ex) {
             url = server;
         }
@@ -310,7 +311,7 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
         }
 
         // call the remote server now!
-        Server targetServer = Provisioning.getInstance().get(ServerBy.name, server);
+        Server targetServer = Provisioning.getInstance().get(Key.ServerBy.name, server);
         String baseurl = null;
         if (!isMultipleMailboxes) {
             try {

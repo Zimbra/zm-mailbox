@@ -14,6 +14,8 @@
  */
 package com.zimbra.soap;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapHttpTransport;
@@ -22,7 +24,6 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.httpclient.URLUtil;
 
@@ -43,7 +44,7 @@ public final class ProxyTarget {
 
     public ProxyTarget(String serverId, AuthToken authToken, HttpServletRequest req) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
-        mServer = prov.get(ServerBy.id, serverId);
+        mServer = prov.get(Key.ServerBy.id, serverId);
         if (mServer == null)
             throw AccountServiceException.NO_SUCH_SERVER(serverId);
 

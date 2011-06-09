@@ -27,9 +27,10 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.AclGroups;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -72,7 +73,7 @@ public class GetAdminConsoleUIComp extends AdminDocumentHandler {
             aclGroups = prov.getAclGroups(acct, true);
             
         } else if (eDL != null) {
-            DistributionListBy by = DistributionListBy.fromString(eDL.getAttribute(AdminConstants.A_BY));
+            Key.DistributionListBy by = Key.DistributionListBy.fromString(eDL.getAttribute(AdminConstants.A_BY));
             String key = eDL.getText();
             DistributionList dl = prov.getAclGroup(by, key);
             
@@ -90,7 +91,7 @@ public class GetAdminConsoleUIComp extends AdminDocumentHandler {
         }
         
         for (String groupId : aclGroups.groupIds()) {
-            DistributionList dl = prov.get(DistributionListBy.id, groupId);
+            DistributionList dl = prov.get(Key.DistributionListBy.id, groupId);
             addValues(dl, resp, added, true);
         }
         

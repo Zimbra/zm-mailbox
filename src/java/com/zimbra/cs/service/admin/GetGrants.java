@@ -19,13 +19,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.GranteeBy;
+import com.zimbra.common.account.Key.TargetBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.GranteeBy;
-import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
@@ -39,13 +40,13 @@ public class GetGrants extends RightDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
         
         String targetType = null;
-        TargetBy targetBy = null;
+        Key.TargetBy targetBy = null;
         String target = null;
         Element eTarget = request.getOptionalElement(AdminConstants.E_TARGET);
         if (eTarget != null) {
             targetType = eTarget.getAttribute(AdminConstants.A_TYPE);
             if (TargetType.fromCode(targetType).needsTargetIdentity()) {
-                targetBy = TargetBy.fromString(eTarget.getAttribute(AdminConstants.A_BY));
+                targetBy = Key.TargetBy.fromString(eTarget.getAttribute(AdminConstants.A_BY));
                 target = eTarget.getText();
             }
             
@@ -59,13 +60,13 @@ public class GetGrants extends RightDocumentHandler {
         }
         
         String granteeType = null;
-        GranteeBy granteeBy = null;
+        Key.GranteeBy granteeBy = null;
         String grantee = null;
         boolean granteeIncludeGroupsGranteeBelongs = true;
         Element eGrantee = request.getOptionalElement(AdminConstants.E_GRANTEE);
         if (eGrantee != null) {
             granteeType = eGrantee.getAttribute(AdminConstants.A_TYPE);
-            granteeBy = GranteeBy.fromString(eGrantee.getAttribute(AdminConstants.A_BY));
+            granteeBy = Key.GranteeBy.fromString(eGrantee.getAttribute(AdminConstants.A_BY));
             grantee = eGrantee.getText();
             granteeIncludeGroupsGranteeBelongs = eGrantee.getAttributeBool(AdminConstants.A_ALL);
         }
@@ -81,7 +82,7 @@ public class GetGrants extends RightDocumentHandler {
         for (RightCommand.ACE ace : grants.getACEs()) {
             TargetType tt = TargetType.fromCode(ace.targetType());
             // has to look up target by name, because zimlet can only be looked up by name
-            Entry targetEntry = TargetType.lookupTarget(prov, tt, TargetBy.name, ace.targetName());
+            Entry targetEntry = TargetType.lookupTarget(prov, tt, Key.TargetBy.name, ace.targetName());
             String targetKey = ace.targetType() + "-" + ace.targetId();
             if (!OKedTarget.contains(targetKey)) {
                 checkRight(zsc, targetEntry, Admin.R_viewGrants);

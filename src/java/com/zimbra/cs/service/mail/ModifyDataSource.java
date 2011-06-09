@@ -19,6 +19,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DataSourceBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -26,7 +28,6 @@ import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.db.DbDataSource;
 import com.zimbra.cs.db.DbPop3Message;
@@ -53,7 +54,7 @@ public class ModifyDataSource extends MailDocumentHandler {
         DataSource.Type type = DataSource.Type.fromString(eDataSource.getName());
         
         String id = eDataSource.getAttribute(MailConstants.A_ID);
-        DataSource ds = prov.get(account, DataSourceBy.id, id);
+        DataSource ds = prov.get(account, Key.DataSourceBy.id, id);
         if (ds == null) {
             throw ServiceException.INVALID_REQUEST("Unable to find data source with id=" + id, null);
         }

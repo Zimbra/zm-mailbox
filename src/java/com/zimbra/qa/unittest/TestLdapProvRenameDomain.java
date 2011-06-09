@@ -30,6 +30,7 @@ import org.junit.*;
 
 import static org.junit.Assert.*;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.CliUtil;
@@ -223,7 +224,7 @@ public class TestLdapProvRenameDomain extends TestLdap {
             setupDLs(i);
         
         // create XMPPComponents pointing/not pointing to the domain to be renamed
-        Domain oldDomain = mProv.get(Provisioning.DomainBy.name, DOMAIN_NAME(OLD_DOMAIN));
+        Domain oldDomain = mProv.get(Key.DomainBy.name, DOMAIN_NAME(OLD_DOMAIN));
         for (int i = 0; i < NUM_XMPPCOMPONENTS; i++)     
             createXMPPComponent(i, oldDomain);
 
@@ -551,11 +552,11 @@ public class TestLdapProvRenameDomain extends TestLdap {
         // now add them
         for (int d = 0; d < NUM_DOMAINS; d++) {
             for (int nd = 0; nd < NUM_DLS_NESTED; nd++) {
-                DistributionList dl = mProv.get(Provisioning.DistributionListBy.name, NESTED_DL_NAME(nd, d));
+                DistributionList dl = mProv.get(Key.DistributionListBy.name, NESTED_DL_NAME(nd, d));
                 mProv.addMembers(dl, nestedDLMembers[d][nd].toArray(new String[0]));
             }
             for (int td = 0; td < NUM_DLS_TOP; td++) {
-                DistributionList dl = mProv.get(Provisioning.DistributionListBy.name, TOP_DL_NAME(td, d));
+                DistributionList dl = mProv.get(Key.DistributionListBy.name, TOP_DL_NAME(td, d));
                 mProv.addMembers(dl, topDLMembers[d][td].toArray(new String[0]));
             }
         }
@@ -564,7 +565,7 @@ public class TestLdapProvRenameDomain extends TestLdap {
     
     private void verifyOldDomain() throws Exception {
         String oldDomainName = DOMAIN_NAME(OLD_DOMAIN);
-        Domain oldDomain = mProv.get(Provisioning.DomainBy.name, oldDomainName);
+        Domain oldDomain = mProv.get(Key.DomainBy.name, oldDomainName);
         assertTrue(oldDomain == null);
     }
     
@@ -629,17 +630,17 @@ public class TestLdapProvRenameDomain extends TestLdap {
     private NamedEntry getEntryByName(int objType, String name) throws Exception {
         switch (objType) {
         case OBJ_ACCT:
-            return mProv.get(Provisioning.AccountBy.name, name);
+            return mProv.get(Key.AccountBy.name, name);
         case OBJ_DL_NESTED:
         case OBJ_DL_TOP:
-            return mProv.get(Provisioning.DistributionListBy.name, name);
+            return mProv.get(Key.DistributionListBy.name, name);
         }
         throw new Exception();
     }
     
     private void verifyDomainStatus(String domainName) throws Exception {
         
-        Domain domain = mProv.get(Provisioning.DomainBy.name, domainName);
+        Domain domain = mProv.get(Key.DomainBy.name, domainName);
         assertTrue(domain != null);
         
         String domainStatus = domain.getAttr(Provisioning.A_zimbraDomainStatus);
@@ -650,11 +651,11 @@ public class TestLdapProvRenameDomain extends TestLdap {
     
     private Domain verifyNewDomainBasic(String domainId) throws Exception {
         // get by name
-        Domain domainByName = mProv.get(Provisioning.DomainBy.name, DOMAIN_NAME(NEW_DOMAIN));
+        Domain domainByName = mProv.get(Key.DomainBy.name, DOMAIN_NAME(NEW_DOMAIN));
         assertTrue(domainByName != null);
         
         // get by id
-        Domain domainById = mProv.get(Provisioning.DomainBy.id, domainId);
+        Domain domainById = mProv.get(Key.DomainBy.id, domainId);
         assertTrue(domainById != null);
         
         TestProvisioningUtil.verifySameEntry(domainByName, domainById);
@@ -736,21 +737,21 @@ public class TestLdapProvRenameDomain extends TestLdap {
         Set<String> expectedEntries = new HashSet<String>();
         for (int a = 0; a < NUM_ACCOUNTS; a++) {
             IDNName name = new IDNName(ACCOUNT_NAME(a, domainIdx));
-            Account entry = mProv.get(Provisioning.AccountBy.name, name.uName());
+            Account entry = mProv.get(Key.AccountBy.name, name.uName());
             assertNotNull(entry);
             expectedEntries.add(name.uName());
         }
             
         for (int nd = 0; nd < NUM_DLS_NESTED; nd++) {
             IDNName name = new IDNName(NESTED_DL_NAME(nd, domainIdx));
-            DistributionList entry = mProv.get(Provisioning.DistributionListBy.name, name.uName());
+            DistributionList entry = mProv.get(Key.DistributionListBy.name, name.uName());
             assertNotNull(entry);
             expectedEntries.add(name.uName());
         }
             
         for (int td = 0; td < NUM_DLS_NESTED; td++){
             IDNName name = new IDNName(TOP_DL_NAME(td, domainIdx));
-            DistributionList entry = mProv.get(Provisioning.DistributionListBy.name, name.uName());
+            DistributionList entry = mProv.get(Key.DistributionListBy.name, name.uName());
             assertNotNull(entry);
             expectedEntries.add(name.uName());
         }
@@ -877,7 +878,7 @@ public class TestLdapProvRenameDomain extends TestLdap {
         
         for (int dlIdx = 0; dlIdx < NUM_OBJS(dlType); dlIdx++) {
             String name =  OBJ_NAME(dlType, dlIdx, domainIdx);
-            DistributionList dl = mProv.get(Provisioning.DistributionListBy.name, name);
+            DistributionList dl = mProv.get(Key.DistributionListBy.name, name);
             assertNotNull(dl);
             
             Set<String> expectedNames = new HashSet<String>();
@@ -936,7 +937,7 @@ public class TestLdapProvRenameDomain extends TestLdap {
         System.out.println("Verifying domain " + DOMAIN_NAME(domainIdx));
         
         String domainName = DOMAIN_NAME(domainIdx);
-        Domain domain = mProv.get(Provisioning.DomainBy.name, domainName);
+        Domain domain = mProv.get(Key.DomainBy.name, domainName);
         
         verifyEntries(domainIdx, domain);
         verifyAliases(domainIdx, domain);
@@ -959,7 +960,7 @@ public class TestLdapProvRenameDomain extends TestLdap {
     private void verifyXMPPComponent(int index, Domain newDomain) throws Exception {
         String newRoutableName = XMPPCOMPONENT_NAME(index, newDomain.getName());
         
-        XMPPComponent xmpp = mProv.get(Provisioning.XMPPComponentBy.name, newRoutableName);
+        XMPPComponent xmpp = mProv.get(Key.XMPPComponentBy.name, newRoutableName);
         assertNotNull(xmpp);
         
         String domainId = newDomain.getId();
@@ -969,7 +970,7 @@ public class TestLdapProvRenameDomain extends TestLdap {
     
     private void verifyXMPPComponents() throws Exception {
         
-        Domain newDomain = mProv.get(Provisioning.DomainBy.name, DOMAIN_NAME(NEW_DOMAIN));
+        Domain newDomain = mProv.get(Key.DomainBy.name, DOMAIN_NAME(NEW_DOMAIN));
         
         for (int i = 0; i < NUM_XMPPCOMPONENTS; i++) {
             verifyXMPPComponent(i, newDomain);
@@ -983,7 +984,7 @@ public class TestLdapProvRenameDomain extends TestLdap {
     private void renameDomainTest() throws Exception {
         
         prepareDomain();
-        Domain oldDomain = mProv.get(Provisioning.DomainBy.name, DOMAIN_NAME(OLD_DOMAIN));
+        Domain oldDomain = mProv.get(Key.DomainBy.name, DOMAIN_NAME(OLD_DOMAIN));
         String oldDomainId = oldDomain.getId();
         Map<String, Object> oldDomainAttrs = oldDomain.getAttrs(false);
         

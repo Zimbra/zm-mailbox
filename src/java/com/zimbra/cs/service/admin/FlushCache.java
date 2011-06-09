@@ -23,6 +23,8 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.CacheEntryBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -32,7 +34,6 @@ import com.zimbra.cs.account.CacheExtension;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
-import com.zimbra.cs.account.Provisioning.CacheEntryBy;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.PermissionCache;
@@ -137,7 +138,7 @@ public class FlushCache extends AdminDocumentHandler {
             entries = new CacheEntry[eEntries.size()];
             int i = 0;
             for (Element eEntry : eEntries) {
-                entries[i++] = new CacheEntry(CacheEntryBy.valueOf(eEntry.getAttribute(AdminConstants.A_BY)),
+                entries[i++] = new CacheEntry(Key.CacheEntryBy.valueOf(eEntry.getAttribute(AdminConstants.A_BY)),
                         eEntry.getText());
             }
         }

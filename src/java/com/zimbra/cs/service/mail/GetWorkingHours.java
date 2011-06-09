@@ -24,7 +24,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.fb.WorkingHours;
 import com.zimbra.soap.ZimbraSoapContext;

@@ -17,11 +17,12 @@ package com.zimbra.cs.account.soap;
 
 import java.util.Map;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.CosBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.soap.admin.type.Attr;
@@ -53,7 +54,7 @@ class SoapCos extends Cos implements SoapEntry {
         XMLElement req = new XMLElement(AdminConstants.GET_COS_REQUEST);
         Element a = req.addElement(AdminConstants.E_COS);
         a.setText(getId());
-        a.addAttribute(AdminConstants.A_BY, CosBy.id.name());
+        a.addAttribute(AdminConstants.A_BY, Key.CosBy.id.name());
         setAttrs(SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminConstants.E_COS)));
     }
 }

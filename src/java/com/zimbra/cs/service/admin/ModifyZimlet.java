@@ -18,13 +18,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.CosBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
-import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.zimlet.ZimletException;
@@ -62,7 +63,7 @@ public class ModifyZimlet extends AdminDocumentHandler {
         String cosName = a.getAttribute(AdminConstants.A_COS, null);
         if (cosName == null) return;
         
-        Cos cos = Provisioning.getInstance().get(CosBy.name, cosName);
+        Cos cos = Provisioning.getInstance().get(Key.CosBy.name, cosName);
         if (cos == null)
             throw AccountServiceException.NO_SUCH_COS(cosName);
         checkRight(zsc, context, cos, Admin.R_manageZimlet);

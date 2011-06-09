@@ -79,9 +79,10 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.zclient.ZClientException;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.DataSourceBy;
-import com.zimbra.cs.account.Provisioning.IdentityBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DataSourceBy;
+import com.zimbra.common.account.Key.IdentityBy;
 import com.zimbra.cs.fb.FreeBusyQuery;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.zclient.ZFolder.Color;
@@ -3571,14 +3572,14 @@ public class ZMailbox implements ToZJSONObject {
     }
 
     public void deleteIdentity(String name) throws ServiceException {
-        deleteIdentity(IdentityBy.name, name);
+        deleteIdentity(Key.IdentityBy.name, name);
     }
 
-    public void deleteIdentity(IdentityBy by, String key) throws ServiceException {
+    public void deleteIdentity(Key.IdentityBy by, String key) throws ServiceException {
         Element req = newRequestElement(AccountConstants.DELETE_IDENTITY_REQUEST);
-        if (by == IdentityBy.name)
+        if (by == Key.IdentityBy.name)
             req.addUniqueElement(AccountConstants.E_IDENTITY).addAttribute(AccountConstants.A_NAME, key);
-        else if (by == IdentityBy.id)
+        else if (by == Key.IdentityBy.id)
             req.addUniqueElement(AccountConstants.E_IDENTITY).addAttribute(AccountConstants.A_ID, key);
         invoke(req);
     }
@@ -3703,11 +3704,11 @@ public class ZMailbox implements ToZJSONObject {
         mOutgoingRules = new ZFilterRules(rules);
     }
 
-    public void deleteDataSource(DataSourceBy by, String key) throws ServiceException {
+    public void deleteDataSource(Key.DataSourceBy by, String key) throws ServiceException {
         Element req = newRequestElement(MailConstants.DELETE_DATA_SOURCE_REQUEST);
-        if (by == DataSourceBy.name)
+        if (by == Key.DataSourceBy.name)
             req.addUniqueElement(MailConstants.E_DS).addAttribute(MailConstants.A_NAME, key);
-        else if (by == DataSourceBy.id)
+        else if (by == Key.DataSourceBy.id)
             req.addUniqueElement(MailConstants.E_DS).addAttribute(MailConstants.A_ID, key);
         else
             throw ServiceException.INVALID_REQUEST("must specify data source by id or name", null);

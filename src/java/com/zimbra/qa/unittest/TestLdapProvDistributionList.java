@@ -22,6 +22,8 @@ import java.util.Set;
 import org.junit.*;
 import static org.junit.Assert.*;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -29,7 +31,6 @@ import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
 
 public class TestLdapProvDistributionList extends TestLdap {
     private static Provisioning prov;
@@ -54,7 +55,7 @@ public class TestLdapProvDistributionList extends TestLdap {
     static DistributionList createDistributionList(Provisioning prov, String localPart, 
             Domain domain, Map<String, Object> attrs) throws Exception {
         String dlName = TestUtil.getAddress(localPart, domain.getName());
-        DistributionList dl = prov.get(DistributionListBy.name, dlName);
+        DistributionList dl = prov.get(Key.DistributionListBy.name, dlName);
         assertNull(dl);
         
         if (attrs == null) {
@@ -65,7 +66,7 @@ public class TestLdapProvDistributionList extends TestLdap {
         assertNotNull(dl);
         
         prov.flushCache(CacheEntryType.group, null);
-        dl = prov.get(DistributionListBy.name, dlName);
+        dl = prov.get(Key.DistributionListBy.name, dlName);
         assertNotNull(dl);
         assertEquals(dlName.toLowerCase(), dl.getName().toLowerCase());
         
@@ -76,7 +77,7 @@ public class TestLdapProvDistributionList extends TestLdap {
         String dlId = dl.getId();
         prov.deleteDistributionList(dl.getId());
         prov.flushCache(CacheEntryType.group, null);
-        dl = prov.get(DistributionListBy.id, dlId);
+        dl = prov.get(Key.DistributionListBy.id, dlId);
         assertNull(dl);
     }
     
@@ -133,14 +134,14 @@ public class TestLdapProvDistributionList extends TestLdap {
     
     private void getDistributionListById(String id) throws Exception {
         prov.flushCache(CacheEntryType.group, null);
-        DistributionList dl = prov.get(DistributionListBy.id, id);
+        DistributionList dl = prov.get(Key.DistributionListBy.id, id);
         assertNotNull(dl);
         assertEquals(id, dl.getId());
     }
     
     private void getDistributionListByName(String name) throws Exception {
         prov.flushCache(CacheEntryType.group, null);
-        DistributionList dl = prov.get(DistributionListBy.name, name);
+        DistributionList dl = prov.get(Key.DistributionListBy.name, name);
         assertNotNull(dl);
         assertEquals(name, dl.getName());
     }

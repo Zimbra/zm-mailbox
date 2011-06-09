@@ -53,8 +53,9 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.SignatureBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.SignatureBy;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailSender;
@@ -1126,7 +1127,7 @@ public class CalendarMailSender {
         String sigId = identity.getAttr(signatureKey);
         if (sigId == null)
             return null;
-        Signature sig = Provisioning.getInstance().get(acct, SignatureBy.id, sigId);
+        Signature sig = Provisioning.getInstance().get(acct, Key.SignatureBy.id, sigId);
         if (sig == null) {
             ZimbraLog.calendar.warn("No such signature " + sigId + " for account " + acct.getName());
             return null;

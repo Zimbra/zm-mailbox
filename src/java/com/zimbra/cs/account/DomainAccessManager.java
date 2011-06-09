@@ -17,6 +17,8 @@ package com.zimbra.cs.account;
 
 import java.util.Map;
 import java.util.Set;
+
+import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -139,7 +141,7 @@ public class DomainAccessManager extends AccessManager {
             throw ServiceException.INVALID_REQUEST("must be valid email address: "+email, null);
         
         // check for family mailbox
-        Account targetAcct = Provisioning.getInstance().get(Provisioning.AccountBy.name, email, at);
+        Account targetAcct = Provisioning.getInstance().get(Key.AccountBy.name, email, at);
         if (targetAcct != null) {
             if (isParentOf(at, targetAcct))
                 return true;
@@ -159,7 +161,7 @@ public class DomainAccessManager extends AccessManager {
     public static boolean canSetMailQuota(AuthToken at, Account targetAccount, long quota) throws ServiceException {
         if (at.isAdmin()) return true;
         
-        Account adminAccount = Provisioning.getInstance().get(Provisioning.AccountBy.id,  at.getAccountId(), at);
+        Account adminAccount = Provisioning.getInstance().get(Key.AccountBy.id,  at.getAccountId(), at);
         if (adminAccount == null) return false;
 
         // 0 is unlimited

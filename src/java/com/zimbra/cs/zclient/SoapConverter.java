@@ -18,6 +18,7 @@ package com.zimbra.cs.zclient;
 import com.google.common.base.Function;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.EnumBiMap;
+import com.zimbra.common.account.Key;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.account.type.Account;
@@ -32,7 +33,7 @@ import com.zimbra.soap.mail.type.Folder;
 public class SoapConverter {
     
     private static final BiMap<Folder.View, ZFolder.View> VIEW_MAP;
-    private static final BiMap<Account.By, Provisioning.AccountBy> ACCOUNT_BY_MAP;
+    private static final BiMap<Account.By, Key.AccountBy> ACCOUNT_BY_MAP;
     
     static {
         VIEW_MAP = EnumBiMap.create(Folder.View.class, ZFolder.View.class);
@@ -47,13 +48,13 @@ public class SoapConverter {
         VIEW_MAP.put(Folder.View.SEARCH_FOLDER, ZFolder.View.search);
         VIEW_MAP.put(Folder.View.TASK, ZFolder.View.task);
         
-        ACCOUNT_BY_MAP = EnumBiMap.create(Account.By.class, Provisioning.AccountBy.class);
-        ACCOUNT_BY_MAP.put(Account.By.NAME, Provisioning.AccountBy.name);
-        ACCOUNT_BY_MAP.put(Account.By.ID, Provisioning.AccountBy.id);
-        ACCOUNT_BY_MAP.put(Account.By.ADMIN_NAME, Provisioning.AccountBy.adminName);
-        ACCOUNT_BY_MAP.put(Account.By.FOREIGN_PRINCIPAL, Provisioning.AccountBy.foreignPrincipal);
-        ACCOUNT_BY_MAP.put(Account.By.KRB5_PRINCIPAL, Provisioning.AccountBy.krb5Principal);
-        ACCOUNT_BY_MAP.put(Account.By.APP_ADMIN_NAME, Provisioning.AccountBy.appAdminName);
+        ACCOUNT_BY_MAP = EnumBiMap.create(Account.By.class, Key.AccountBy.class);
+        ACCOUNT_BY_MAP.put(Account.By.NAME, Key.AccountBy.name);
+        ACCOUNT_BY_MAP.put(Account.By.ID, Key.AccountBy.id);
+        ACCOUNT_BY_MAP.put(Account.By.ADMIN_NAME, Key.AccountBy.adminName);
+        ACCOUNT_BY_MAP.put(Account.By.FOREIGN_PRINCIPAL, Key.AccountBy.foreignPrincipal);
+        ACCOUNT_BY_MAP.put(Account.By.KRB5_PRINCIPAL, Key.AccountBy.krb5Principal);
+        ACCOUNT_BY_MAP.put(Account.By.APP_ADMIN_NAME, Key.AccountBy.appAdminName);
     }
     
     public static Function<Folder.View, ZFolder.View> FROM_SOAP_VIEW = new Function<Folder.View, ZFolder.View>() {
@@ -136,18 +137,18 @@ public class SoapConverter {
         }
     };
     
-    public static Function<Account.By, Provisioning.AccountBy> FROM_SOAP_ACCOUNT_BY =
-        new Function<Account.By, Provisioning.AccountBy>() {
+    public static Function<Account.By, Key.AccountBy> FROM_SOAP_ACCOUNT_BY =
+        new Function<Account.By, Key.AccountBy>() {
         @Override
-        public Provisioning.AccountBy apply(Account.By by) {
+        public Key.AccountBy apply(Account.By by) {
             return ACCOUNT_BY_MAP.get(by);
         }
     };
     
-    public static Function<Provisioning.AccountBy, Account.By> TO_SOAP_ACCOUNT_BY =
-        new Function<Provisioning.AccountBy, Account.By>() {
+    public static Function<Key.AccountBy, Account.By> TO_SOAP_ACCOUNT_BY =
+        new Function<Key.AccountBy, Account.By>() {
         @Override
-        public Account.By apply(Provisioning.AccountBy by) {
+        public Account.By apply(Key.AccountBy by) {
             return ACCOUNT_BY_MAP.inverse().get(by);
         }
     };

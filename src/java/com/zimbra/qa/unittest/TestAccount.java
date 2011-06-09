@@ -25,7 +25,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.client.LmcSession;
 import com.zimbra.cs.client.soap.LmcDeleteAccountRequest;
 import com.zimbra.cs.db.DbMailbox;

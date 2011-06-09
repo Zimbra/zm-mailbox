@@ -15,6 +15,8 @@
 package com.zimbra.cs.service;
 
 import com.google.common.base.Strings;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentDisposition;
@@ -38,7 +40,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -272,7 +273,7 @@ public class FileUploadServlet extends ZimbraServlet {
             }
         }
         // the first half of the upload id is the server id where it lives
-        Server server = Provisioning.getInstance().get(ServerBy.id, getUploadServerId(uploadId));
+        Server server = Provisioning.getInstance().get(Key.ServerBy.id, getUploadServerId(uploadId));
         String url = AccountUtil.getBaseUri(server);
         if (url == null)
             return null;

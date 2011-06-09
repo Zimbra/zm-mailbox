@@ -23,10 +23,11 @@ import java.util.Set;
 import org.junit.*;
 import static org.junit.Assert.*;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.XMPPComponentBy;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.XMPPComponentBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.XMPPComponent;
 
@@ -50,7 +51,7 @@ public class TestLdapProvXMPPComponent extends TestLdap {
     }
     
     private XMPPComponent createXMPPComponent(String xmppCpntName) throws Exception {
-        XMPPComponent xmppCpnt = prov.get(XMPPComponentBy.name, xmppCpntName);
+        XMPPComponent xmppCpnt = prov.get(Key.XMPPComponentBy.name, xmppCpntName);
         assertNull(xmppCpnt);
         
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -60,7 +61,7 @@ public class TestLdapProvXMPPComponent extends TestLdap {
         xmppCpnt = prov.createXMPPComponent(xmppCpntName, domain, server, attrs);
         assertNotNull(xmppCpnt);
         
-        xmppCpnt = prov.get(XMPPComponentBy.name, xmppCpntName);
+        xmppCpnt = prov.get(Key.XMPPComponentBy.name, xmppCpntName);
         assertNotNull(xmppCpnt);
         assertEquals(xmppCpntName.toLowerCase(), xmppCpnt.getName().toLowerCase());
         
@@ -70,7 +71,7 @@ public class TestLdapProvXMPPComponent extends TestLdap {
     private void deleteXMPPComponent(XMPPComponent xmppCpnt)  throws Exception {
         String xmppCpntId = xmppCpnt.getId();
         prov.deleteXMPPComponent(xmppCpnt);
-        xmppCpnt = prov.get(XMPPComponentBy.id, xmppCpntId); 
+        xmppCpnt = prov.get(Key.XMPPComponentBy.id, xmppCpntId); 
         assertNull(xmppCpnt);
     }
     
@@ -110,10 +111,10 @@ public class TestLdapProvXMPPComponent extends TestLdap {
         XMPPComponent xmppCpnt = createXMPPComponent(XMPPCPNT_NAME);
         String xmppCpntId = xmppCpnt.getId();
         
-        xmppCpnt = prov.get(XMPPComponentBy.id, xmppCpntId); 
+        xmppCpnt = prov.get(Key.XMPPComponentBy.id, xmppCpntId); 
         assertEquals(xmppCpntId, xmppCpnt.getId());
         
-        xmppCpnt = prov.get(XMPPComponentBy.name, XMPPCPNT_NAME); 
+        xmppCpnt = prov.get(Key.XMPPComponentBy.name, XMPPCPNT_NAME); 
         assertEquals(xmppCpntId, xmppCpnt.getId());
         
         // not implemented
@@ -126,7 +127,7 @@ public class TestLdapProvXMPPComponent extends TestLdap {
     @Test 
     public void getXMPPComponentNotExist() throws Exception {
         String XMPPCPNT_NAME = TestLdap.makeXMPPName("getXMPPComponentNotExist");
-        XMPPComponent xmppCpnt = prov.get(XMPPComponentBy.name, XMPPCPNT_NAME); 
+        XMPPComponent xmppCpnt = prov.get(Key.XMPPComponentBy.name, XMPPCPNT_NAME); 
         assertNull(xmppCpnt);
     }
     

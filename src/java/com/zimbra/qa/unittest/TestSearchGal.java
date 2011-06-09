@@ -39,8 +39,9 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.EntrySearchFilter.Operator;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.qa.unittest.TestLdapBinary.Content;
 
@@ -94,7 +95,7 @@ public class TestSearchGal extends TestLdap {
     public static void disableGalSyncAccount(String domainName) throws Exception {
         Provisioning prov = Provisioning.getInstance();
         
-        Domain domain = prov.get(DomainBy.name, domainName);
+        Domain domain = prov.get(Key.DomainBy.name, domainName);
         
         String[] galSyncAcctIds = domain.getGalAccountId();
         for (String galSyncAcctId : galSyncAcctIds) {
@@ -117,7 +118,7 @@ public class TestSearchGal extends TestLdap {
     static void enableGalSyncAccount(String domainName, GSAType type) throws Exception {
         Provisioning prov = Provisioning.getInstance();
         
-        Domain domain = prov.get(DomainBy.name, domainName);
+        Domain domain = prov.get(Key.DomainBy.name, domainName);
         String[] galSyncAcctIds = domain.getGalAccountId();
         if (galSyncAcctIds.length > 0) {
             // already enabled
@@ -393,7 +394,7 @@ public class TestSearchGal extends TestLdap {
     private static void createDomainObjects(String domainName) throws Exception {
         Provisioning prov = Provisioning.getInstance();
         
-        if (prov.get(DomainBy.name, domainName) == null) {
+        if (prov.get(Key.DomainBy.name, domainName) == null) {
             ZimbraLog.test.info("Creating domain " + domainName);
             prov.createDomain(domainName, new HashMap<String, Object>());
         }
@@ -435,7 +436,7 @@ public class TestSearchGal extends TestLdap {
             }
         }
         
-        Domain domain = prov.get(DomainBy.name, domainName);
+        Domain domain = prov.get(Key.DomainBy.name, domainName);
         if (domain != null) {
             ZimbraLog.test.info("Deleting domain " + domainName);
             prov.deleteDomain(domain.getId());

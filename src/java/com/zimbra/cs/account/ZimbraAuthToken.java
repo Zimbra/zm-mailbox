@@ -26,7 +26,7 @@ import com.zimbra.common.util.BlobMetaDataEncodingException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraCookie;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.service.ZimbraAuthProvider;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;

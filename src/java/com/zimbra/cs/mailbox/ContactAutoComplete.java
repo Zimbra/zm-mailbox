@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import com.google.common.io.Closeables;
+import com.zimbra.common.account.Key;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -271,7 +272,7 @@ public class ContactAutoComplete {
             if (mZsc != null) {
                 String authedAcctId = mZsc.getAuthtokenAccountId();
                 if (authedAcctId != null)
-                    mAuthedAcct = Provisioning.getInstance().get(Provisioning.AccountBy.id, authedAcctId);
+                    mAuthedAcct = Provisioning.getInstance().get(Key.AccountBy.id, authedAcctId);
             }
             if (mAuthedAcct == null)
                 mAuthedAcct = mRequestedAcct;

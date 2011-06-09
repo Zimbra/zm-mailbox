@@ -22,6 +22,7 @@ import java.util.Set;
 import org.junit.*;
 import static org.junit.Assert.*;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.cs.account.Account;
@@ -84,7 +85,7 @@ public class TestProvAttr extends TestLdap {
     }
     
     private Account getAccount() throws Exception {
-        Account acct = mProv.get(Provisioning.AccountBy.name, ACCT_EMAIL);
+        Account acct = mProv.get(Key.AccountBy.name, ACCT_EMAIL);
         if (acct == null)
             acct = createAccount();
         assertNotNull(acct);
@@ -92,7 +93,7 @@ public class TestProvAttr extends TestLdap {
     }
     
     private Cos getCos() throws Exception {
-        Cos cos = mProv.get(Provisioning.CosBy.name, COS_NAME);
+        Cos cos = mProv.get(Key.CosBy.name, COS_NAME);
         if (cos == null)
             cos = createCos();
         assertNotNull(cos);
@@ -100,7 +101,7 @@ public class TestProvAttr extends TestLdap {
     }
     
     private Domain getDomain() throws Exception {
-        Domain domain = mProv.get(Provisioning.DomainBy.name, DOMAIN_NAME);
+        Domain domain = mProv.get(Key.DomainBy.name, DOMAIN_NAME);
         if (domain == null)
             domain = createDomain();
         assertNotNull(domain);
@@ -108,7 +109,7 @@ public class TestProvAttr extends TestLdap {
     }
     
     private Server getServer() throws Exception {
-        Server server = mProv.get(Provisioning.ServerBy.name, SERVER_NAME);
+        Server server = mProv.get(Key.ServerBy.name, SERVER_NAME);
         if (server == null)
             server = createServer();
         assertNotNull(server);

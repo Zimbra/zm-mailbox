@@ -33,9 +33,10 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
-import com.zimbra.cs.account.Provisioning.ServerBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.CalendarResourceBy;
+import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
@@ -85,7 +86,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
         return acct;
     }
 
-    private CalendarResource getCalendarResource(Provisioning prov, CalendarResourceBy crBy, String value) throws ServiceException {
+    private CalendarResource getCalendarResource(Provisioning prov, Key.CalendarResourceBy crBy, String value) throws ServiceException {
         CalendarResource cr = null;
 
         // first try getting it from master if not in cache
@@ -129,7 +130,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
             xpath = getProxiedResourcePath();
             String rsrcId = (xpath != null ? getXPath(request, xpath) : null);
             if (rsrcId != null) {
-                CalendarResource rsrc = getCalendarResource(prov, CalendarResourceBy.id, rsrcId);
+                CalendarResource rsrc = getCalendarResource(prov, Key.CalendarResourceBy.id, rsrcId);
                 if (rsrc != null && !Provisioning.onLocalServer(rsrc)) {
                     return proxyRequest(request, context, rsrcId);
                 }
@@ -138,7 +139,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
             xpath = getProxiedResourceElementPath();
             Element resourceElt = (xpath != null ? getXPathElement(request, xpath) : null);
             if (resourceElt != null) {
-                CalendarResource rsrc = getCalendarResource(prov, CalendarResourceBy.fromString(resourceElt.getAttribute(AdminConstants.A_BY)), resourceElt.getText());
+                CalendarResource rsrc = getCalendarResource(prov, Key.CalendarResourceBy.fromString(resourceElt.getAttribute(AdminConstants.A_BY)), resourceElt.getText());
                 if (rsrc != null && !Provisioning.onLocalServer(rsrc)) {
                     return proxyRequest(request, context, rsrc.getId());
                 }
@@ -148,7 +149,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
             xpath = getProxiedServerPath();
             String serverId = (xpath != null ? getXPath(request, xpath) : null);
             if (serverId != null) {
-                Server server = prov.get(ServerBy.id, serverId);
+                Server server = prov.get(Key.ServerBy.id, serverId);
                 if (server != null && !getLocalHostId().equalsIgnoreCase(server.getId()))
                     return proxyRequest(request, context, server);
             }
@@ -382,7 +383,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
     protected AdminAccessControl checkAdminLoginAsRight(ZimbraSoapContext zsc, Provisioning prov, Account account) throws ServiceException {
         if (account.isCalendarResource()) {
             // need a CalendarResource instance for RightChecker
-            CalendarResource resource = prov.get(CalendarResourceBy.id, account.getId());
+            CalendarResource resource = prov.get(Key.CalendarResourceBy.id, account.getId());
             return checkCalendarResourceRight(zsc, resource, Admin.R_adminLoginCalendarResourceAs);
         } else
             return checkAccountRight(zsc, account, Admin.R_adminLoginAs);

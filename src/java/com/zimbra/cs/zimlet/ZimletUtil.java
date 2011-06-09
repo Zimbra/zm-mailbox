@@ -56,9 +56,10 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
-import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.CosBy;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.DebugConfig;
@@ -769,7 +770,7 @@ public class ZimletUtil {
 	public static void activateZimlet(String zimlet, String cos) throws ServiceException, ZimletException {
 		ZimbraLog.zimlet.info("Adding Zimlet " + zimlet + " to COS " + cos);
 		Provisioning prov = Provisioning.getInstance();
-		Cos c = prov.get(CosBy.name, cos);
+		Cos c = prov.get(Key.CosBy.name, cos);
 		if (c == null)
 			throw ZimletException.CANNOT_ACTIVATE("no such cos " + cos, null);
 		Map<String,Object> attrs = new HashMap<String, Object>();
@@ -794,7 +795,7 @@ public class ZimletUtil {
 	public static void deactivateZimlet(String zimlet, String cos) throws ServiceException, ZimletException {
 		ZimbraLog.zimlet.info("Removing Zimlet " + zimlet + " from COS " + cos);
 		Provisioning prov = Provisioning.getInstance();
-		Cos c = prov.get(CosBy.name, cos);
+		Cos c = prov.get(Key.CosBy.name, cos);
 		if (c == null)
 			throw ZimletException.CANNOT_DEACTIVATE("no such cos " + cos, null);
 		Map<String,Object> attrs = new HashMap<String, Object>();
@@ -1038,7 +1039,7 @@ public class ZimletUtil {
     
 	public static void addAllowedDomains(String domains, String cosName) throws ServiceException {
 	    Provisioning prov = Provisioning.getInstance();          
-	    Cos cos = prov.get(CosBy.name, cosName);
+	    Cos cos = prov.get(Key.CosBy.name, cosName);
 	    Set<String> domainSet = cos.getMultiAttrSet(Provisioning.A_zimbraProxyAllowedDomains);
 	    String[] domainArray = domains.toLowerCase().split(",");
 	    for (int i = 0; i < domainArray.length; i++) {
@@ -1051,7 +1052,7 @@ public class ZimletUtil {
 
 	public static void removeAllowedDomains(Set<String> domains, String cosName) throws ServiceException {
 	    Provisioning prov = Provisioning.getInstance();            
-	    Cos cos = prov.get(CosBy.name, cosName);
+	    Cos cos = prov.get(Key.CosBy.name, cosName);
 	    Set<String> domainSet = cos.getMultiAttrSet(Provisioning.A_zimbraProxyAllowedDomains);
 	    String[] domainArray = domains.toArray(new String[0]);
 	    for (int i = 0; i < domainArray.length; i++) {

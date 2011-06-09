@@ -15,14 +15,15 @@
 
 package com.zimbra.cs.account;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DataSourceBy;
+import com.zimbra.common.account.Key.IdentityBy;
+import com.zimbra.common.account.Key.ServerBy;
+import com.zimbra.common.account.Key.SignatureBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning.AclGroups;
-import com.zimbra.cs.account.Provisioning.DataSourceBy;
-import com.zimbra.cs.account.Provisioning.IdentityBy;
-import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.Provisioning.SetPasswordResult;
-import com.zimbra.cs.account.Provisioning.SignatureBy;
 import com.zimbra.cs.account.auth.AuthContext;
 
 import java.util.List;
@@ -151,16 +152,16 @@ public class Account extends ZAttrAccount implements GroupedEntry {
         return getProvisioning().getAllDataSources(this);
     }
 
-    public DataSource get(DataSourceBy keyType, String key) throws ServiceException {
+    public DataSource get(Key.DataSourceBy keyType, String key) throws ServiceException {
         return getProvisioning().get(this, keyType, key);
     }
 
     public DataSource getDataSourceByName(String name) throws ServiceException {
-        return get(DataSourceBy.name, name);
+        return get(Key.DataSourceBy.name, name);
     }
 
     public DataSource getDataSourceById(String id) throws ServiceException {
-        return get(DataSourceBy.id, id);
+        return get(Key.DataSourceBy.id, id);
     }
 
     public Identity createIdentity(String identityName, Map<String, Object> attrs) throws ServiceException {
@@ -179,16 +180,16 @@ public class Account extends ZAttrAccount implements GroupedEntry {
         return getProvisioning().getAllIdentities(this);
     }
 
-    public Identity get(IdentityBy keyType, String key) throws ServiceException {
+    public Identity get(Key.IdentityBy keyType, String key) throws ServiceException {
         return getProvisioning().get(this, keyType, key);
     }
 
     public Identity getIdentityByName(String name) throws ServiceException {
-        return get(IdentityBy.name, name);
+        return get(Key.IdentityBy.name, name);
     }
 
     public Identity getIdentityById(String id) throws ServiceException {
-        return get(IdentityBy.id, id);
+        return get(Key.IdentityBy.id, id);
     }
     public Identity getDefaultIdentity() throws ServiceException {
         return getProvisioning().getDefaultIdentity(this);
@@ -210,16 +211,16 @@ public class Account extends ZAttrAccount implements GroupedEntry {
         return getProvisioning().getAllSignatures(this);
     }
 
-    public Signature get(SignatureBy keyType, String key) throws ServiceException {
+    public Signature get(Key.SignatureBy keyType, String key) throws ServiceException {
         return getProvisioning().get(this, keyType, key);
     }
 
     public Signature getSignatureByName(String key) throws ServiceException {
-        return get(SignatureBy.name, key);
+        return get(Key.SignatureBy.name, key);
     }
 
     public Signature getSignatureById(String key) throws ServiceException {
-        return get(SignatureBy.id, key);
+        return get(Key.SignatureBy.id, key);
     }
 
     public boolean isAccountStatusActive() {
@@ -236,7 +237,7 @@ public class Account extends ZAttrAccount implements GroupedEntry {
     
     public Server getServer() throws ServiceException {
         String serverId = getAttr(Provisioning.A_zimbraMailHost);
-        return (serverId == null ? null : getProvisioning().get(ServerBy.name, serverId));
+        return (serverId == null ? null : getProvisioning().get(Key.ServerBy.name, serverId));
     }
 
     

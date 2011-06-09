@@ -28,6 +28,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
@@ -35,7 +37,6 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -113,7 +114,7 @@ public class GetLoggerStats extends AdminDocumentHandler {
         String monitorHost = prov.getConfig().getAttr(Provisioning.A_zimbraLogHostname);
         if (monitorHost == null || monitorHost.trim().equals(""))
             throw ServiceException.FAILURE("zimbraLogHostname is not configured", null);
-        Server monitorServer = prov.get(ServerBy.name, monitorHost);
+        Server monitorServer = prov.get(Key.ServerBy.name, monitorHost);
         
         checkRight(zsc, context, monitorServer, Admin.R_getServerStats);
         

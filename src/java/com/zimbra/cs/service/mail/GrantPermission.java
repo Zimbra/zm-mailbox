@@ -28,9 +28,10 @@ import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DistributionListBy;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.ACLUtil;
@@ -155,7 +156,7 @@ public class GrantPermission extends MailDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
         nentry = prov.get(AccountBy.name, name);
         if (nentry == null)
-            nentry = prov.get(DistributionListBy.name, name);
+            nentry = prov.get(Key.DistributionListBy.name, name);
         return nentry;
     }
     
@@ -177,8 +178,8 @@ public class GrantPermission extends MailDocumentHandler {
         if (name != null)
             switch (type) {
                 case GT_USER:    nentry = lookupEmailAddress(name);                 break;
-                case GT_GROUP:   nentry = prov.get(DistributionListBy.name, name);  break;
-                case GT_DOMAIN:  nentry = prov.get(DomainBy.name, name);            break;
+                case GT_GROUP:   nentry = prov.get(Key.DistributionListBy.name, name);  break;
+                case GT_DOMAIN:  nentry = prov.get(Key.DomainBy.name, name);            break;
             }
 
         if (nentry != null)
@@ -204,13 +205,13 @@ public class GrantPermission extends MailDocumentHandler {
                     else
                         return nentry;
                 case GT_GROUP:   
-                    nentry = prov.get(DistributionListBy.id, zid);
+                    nentry = prov.get(Key.DistributionListBy.id, zid);
                     if (nentry == null && granting)
                         throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(zid);
                     else
                         return nentry;
                 case GT_DOMAIN:   
-                    nentry = prov.get(DomainBy.id, zid);
+                    nentry = prov.get(Key.DomainBy.id, zid);
                     if (nentry == null && granting)
                         throw AccountServiceException.NO_SUCH_DOMAIN(zid);
                     else

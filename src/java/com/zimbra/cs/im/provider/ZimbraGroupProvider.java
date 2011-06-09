@@ -28,6 +28,7 @@ import org.jivesoftware.wildfire.group.GroupNotFoundException;
 import org.jivesoftware.wildfire.group.GroupProvider;
 import org.xmpp.packet.JID;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -76,7 +77,7 @@ public class ZimbraGroupProvider implements GroupProvider {
     public Group getGroup(String name) throws GroupNotFoundException 
     {
         try {
-            DistributionList dl = Provisioning.getInstance().get(Provisioning.DistributionListBy.name, name);
+            DistributionList dl = Provisioning.getInstance().get(Key.DistributionListBy.name, name);
             if (dl != null) {
                 ArrayList<JID> members = new ArrayList<JID>();
                 ArrayList<JID> admins = new ArrayList<JID>();
@@ -149,7 +150,7 @@ public class ZimbraGroupProvider implements GroupProvider {
 //        try {
 //            ArrayList<String> toRet = new ArrayList<String>();
 //            if (false) {
-//            Account acct = Provisioning.getInstance().get(Provisioning.AccountBy.name,  user.toBareJID().toString());
+//            Account acct = Provisioning.getInstance().get(Key.AccountBy.name,  user.toBareJID().toString());
 //            IMPersona persona = IMRouter.getInstance().findPersona(null, new IMAddr(user));
 //            if (persona != null) {
 //                if (acct != null) {

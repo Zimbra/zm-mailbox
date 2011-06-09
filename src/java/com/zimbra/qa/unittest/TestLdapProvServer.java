@@ -23,10 +23,11 @@ import java.util.Set;
 import org.junit.*;
 import static org.junit.Assert.*;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
-import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.Server;
 
 public class TestLdapProvServer extends TestLdap {
@@ -45,13 +46,13 @@ public class TestLdapProvServer extends TestLdap {
         if (attrs == null) {
             attrs = new HashMap<String, Object>();
         }
-        Server server = prov.get(ServerBy.name, serverName);
+        Server server = prov.get(Key.ServerBy.name, serverName);
         assertNull(server);
         
         server = prov.createServer(serverName, attrs);
         assertNotNull(server);
         
-        server = prov.get(ServerBy.name, serverName);
+        server = prov.get(Key.ServerBy.name, serverName);
         assertNotNull(server);
         assertEquals(serverName.toLowerCase(), server.getName().toLowerCase());
         
@@ -61,7 +62,7 @@ public class TestLdapProvServer extends TestLdap {
     private void deleteServer(Server server) throws Exception {
         String serverId = server.getId();
         prov.deleteServer(serverId);
-        server = prov.get(ServerBy.id, serverId);
+        server = prov.get(Key.ServerBy.id, serverId);
         assertNull(server);
     }
     
@@ -134,11 +135,11 @@ public class TestLdapProvServer extends TestLdap {
         String serverId = server.getId();
         
         prov.flushCache(CacheEntryType.server, null);
-        server = prov.get(ServerBy.id, serverId);
+        server = prov.get(Key.ServerBy.id, serverId);
         assertEquals(serverId, server.getId());
         
         prov.flushCache(CacheEntryType.server, null);
-        server = prov.get(ServerBy.name, SERVER_NAME);
+        server = prov.get(Key.ServerBy.name, SERVER_NAME);
         assertEquals(serverId, server.getId());
         
         deleteServer(server);
@@ -147,7 +148,7 @@ public class TestLdapProvServer extends TestLdap {
     @Test
     public void getServerNotExist() throws Exception {
         String SERVER_NAME = TestLdap.makeServerName("getServer");
-        Server server = prov.get(ServerBy.name, SERVER_NAME);
+        Server server = prov.get(Key.ServerBy.name, SERVER_NAME);
         assertNull(server);
     }
 }

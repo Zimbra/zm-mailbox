@@ -30,8 +30,9 @@ import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.CalendarResourceBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.httpclient.URLUtil;
@@ -69,7 +70,7 @@ public class GetAccountInfo extends AdminDocumentHandler  {
        
         if (account.isCalendarResource()) {
             // need a CalendarResource instance for RightChecker
-            CalendarResource resource = prov.get(CalendarResourceBy.id, account.getId());
+            CalendarResource resource = prov.get(Key.CalendarResourceBy.id, account.getId());
             checkCalendarResourceRight(zsc, resource, Admin.R_getCalendarResourceInfo);
         } else
             checkAccountRight(zsc, account, Admin.R_getAccountInfo);

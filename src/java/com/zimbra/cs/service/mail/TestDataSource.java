@@ -14,6 +14,8 @@
  */
 package com.zimbra.cs.service.mail;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DataSourceBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -22,7 +24,6 @@ import com.zimbra.common.util.SystemUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -53,7 +54,7 @@ public class TestDataSource extends MailDocumentHandler {
         String password = null;
         if (id != null) {
             // Testing existing data source
-            DataSource dsOrig = prov.get(account, DataSourceBy.id, id);
+            DataSource dsOrig = prov.get(account, Key.DataSourceBy.id, id);
             Map<String, Object> origAttrs = dsOrig.getAttrs();
             for (String key : origAttrs.keySet()) {
                 if (key.equals(Provisioning.A_zimbraDataSourcePassword)) {

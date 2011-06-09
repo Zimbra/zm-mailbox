@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.CosBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -25,7 +27,6 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.AttributeConstraint;
 import com.zimbra.cs.account.accesscontrol.TargetType;
@@ -97,7 +98,7 @@ public class GetDelegatedAdminConstraints extends AdminDocumentHandler {
             String name = request.getAttribute(AdminConstants.A_NAME, null);
             
             if (id != null) {
-                Cos cos = prov.get(CosBy.id, id);
+                Cos cos = prov.get(Key.CosBy.id, id);
                 if (cos == null)
                     throw AccountServiceException.NO_SUCH_COS(id);
                 
@@ -108,7 +109,7 @@ public class GetDelegatedAdminConstraints extends AdminDocumentHandler {
                 
                 return cos;
             } else if (name != null) {
-                Cos cos = prov.get(CosBy.name, name);
+                Cos cos = prov.get(Key.CosBy.name, name);
                 if (cos == null)
                     throw AccountServiceException.NO_SUCH_COS(name);
                 

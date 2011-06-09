@@ -29,8 +29,9 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.CalendarResourceBy;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.UserRight;
@@ -68,10 +69,10 @@ public class CheckPermission extends MailDocumentHandler {
             // to return the default permission.
             
         } else if (TargetType.calresource == tt) {
-            CalendarResourceBy crBy = CalendarResourceBy.fromString(targetBy);
+            Key.CalendarResourceBy crBy = Key.CalendarResourceBy.fromString(targetBy);
             entry = prov.get(crBy, targetValue);
             
-            if (entry == null && crBy == CalendarResourceBy.id)
+            if (entry == null && crBy == Key.CalendarResourceBy.id)
                 throw AccountServiceException.NO_SUCH_CALENDAR_RESOURCE(targetValue);
             
         } else if (TargetType.dl == tt) {

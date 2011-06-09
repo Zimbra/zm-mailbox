@@ -28,8 +28,9 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.ZimbraAuthToken;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.auth.AuthContext;
@@ -120,7 +121,7 @@ public class Auth extends AdminDocumentHandler {
                     // not found, try applying virtual host name
                     if (acct == null) {
                         if (virtualHost != null) {
-                            Domain d = prov.get(DomainBy.virtualHostname, virtualHost);
+                            Domain d = prov.get(Key.DomainBy.virtualHostname, virtualHost);
                             if (d != null)
                                 value = value + "@" + d.getName();
                         }                    

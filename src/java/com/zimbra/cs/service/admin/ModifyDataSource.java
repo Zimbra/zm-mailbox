@@ -26,8 +26,9 @@ import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.DataSource;
 
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.DataSourceBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DataSourceBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.datasource.DataSourceManager;
@@ -63,7 +64,7 @@ public class ModifyDataSource extends AdminDocumentHandler {
         Map<String, Object> attrs = AdminService.getAttrs(dsEl);
         
         String dsId = dsEl.getAttribute(AccountConstants.A_ID);
-        DataSource ds = prov.get(account, DataSourceBy.id, dsId);
+        DataSource ds = prov.get(account, Key.DataSourceBy.id, dsId);
         if (ds == null)
             throw ServiceException.INVALID_REQUEST("Cannot find data source with id=" + dsId, null);
         

@@ -23,6 +23,7 @@ import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.dom4j.QName;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
@@ -109,7 +110,7 @@ public class AclReports extends Report {
 	        for (GalContact ct : result.getMatches()) {
 	            String email = (String)ct.getAttrs().get(ContactConstants.A_email);
 	            if (email != null) {
-	            	Account acct = prov.get(Provisioning.AccountBy.name, email);
+	            	Account acct = prov.get(Key.AccountBy.name, email);
 	            	if (acct != null)
 	            		ret.add(UrlNamespace.getPrincipal(ctxt, acct));
 	            }
@@ -118,7 +119,7 @@ public class AclReports extends Report {
 			int index = match.lastIndexOf('/');
 			if (index > 0)
 				match = match.substring(index+1);
-			Account acct = prov.get(Provisioning.AccountBy.name, match);
+			Account acct = prov.get(Key.AccountBy.name, match);
 			if (acct != null)
         		ret.add(UrlNamespace.getPrincipal(ctxt, acct));
 		}
@@ -141,7 +142,7 @@ public class AclReports extends Report {
 		Provisioning prov = Provisioning.getInstance();
 		for (Ace ace : aces) {
 			if (ace.hasHref()) {
-				Account acct = prov.get(Provisioning.AccountBy.id, ace.getZimbraId());
+				Account acct = prov.get(Key.AccountBy.id, ace.getZimbraId());
 				if (acct != null)
 					ret.add(UrlNamespace.getPrincipal(ctxt, acct));
 			}

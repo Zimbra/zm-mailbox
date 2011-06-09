@@ -26,8 +26,9 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.CosBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.CosBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.session.AdminSession;
@@ -170,7 +171,7 @@ public class ModifyAccount extends AdminDocumentHandler {
                 return;  // no domain cos, use the default COS, which is available to all
         } 
 
-        Cos cos = prov.get(CosBy.id, newCosId);
+        Cos cos = prov.get(Key.CosBy.id, newCosId);
         if (cos == null) {
             throw AccountServiceException.NO_SUCH_COS(newCosId);
         }
@@ -203,7 +204,7 @@ public class ModifyAccount extends AdminDocumentHandler {
                 newServer = Provisioning.getInstance().getServer(acct);
                 Element request = zsc.createRequestElement(AdminConstants.FLUSH_CACHE_REQUEST);
                 Element eCache = request.addElement(AdminConstants.E_CACHE).addAttribute(AdminConstants.A_TYPE, Provisioning.CacheEntryType.account.name());
-                eCache.addElement(AdminConstants.E_ENTRY).addAttribute(AdminConstants.A_BY, Provisioning.CacheEntryBy.id.name()).addText(acct.getId());
+                eCache.addElement(AdminConstants.E_ENTRY).addAttribute(AdminConstants.A_BY, Key.CacheEntryBy.id.name()).addText(acct.getId());
 
                 Element response = proxyRequest(request, context, newServer);
             }

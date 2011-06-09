@@ -21,9 +21,10 @@ import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DistributionListBy;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.mailbox.ACL;
 
 public class ZimbraACE {
@@ -361,12 +362,12 @@ public class ZimbraACE {
                     return acct.getName();
                 break;
             case GT_GROUP:
-                DistributionList group = Provisioning.getInstance().getGroup(DistributionListBy.id, mGrantee);
+                DistributionList group = Provisioning.getInstance().getGroup(Key.DistributionListBy.id, mGrantee);
                 if (group != null)
                     return group.getName();
                 break;
             case GT_DOMAIN:
-                Domain domain = Provisioning.getInstance().get(DomainBy.id, mGrantee);
+                Domain domain = Provisioning.getInstance().get(Key.DomainBy.id, mGrantee);
                 if (domain != null)
                     return domain.getName();
                 break;

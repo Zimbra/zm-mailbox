@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -34,7 +36,6 @@ import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.AccessManager.AttrRightChecker;
 import com.zimbra.cs.account.AttributeManager.IDNType;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -68,7 +69,7 @@ public class GetDistributionList extends AdminDocumentHandler {
         String key = d.getAttribute(AdminConstants.A_BY);
         String value = d.getText();
 	    
-        DistributionList distributionList = prov.get(DistributionListBy.fromString(key), value);
+        DistributionList distributionList = prov.get(Key.DistributionListBy.fromString(key), value);
 	    
         if (distributionList == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(value);

@@ -35,10 +35,11 @@ import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.Provisioning.DomainBy;
 
 public class AccountUtil {
 
@@ -170,7 +171,7 @@ public class AccountUtil {
         if (parts == null)
             return ca;
 
-        Domain domain = Provisioning.getInstance().getDomain(DomainBy.name, parts[1], true);
+        Domain domain = Provisioning.getInstance().getDomain(Key.DomainBy.name, parts[1], true);
         if (domain == null)
             return ca;
 
@@ -267,7 +268,7 @@ public class AccountUtil {
                         // Don't lookup account if email domain is not internal.  This will avoid unnecessary ldap searches.
                         String domain = EmailUtil.getValidDomainPart(allowedFromAddrs[j]);
                         if (domain != null) {
-                            Domain internalDomain = Provisioning.getInstance().getDomain(DomainBy.name, domain, true);
+                            Domain internalDomain = Provisioning.getInstance().getDomain(Key.DomainBy.name, domain, true);
                             if (internalDomain != null) {
                                 Account allowFromAccount = Provisioning.getInstance().get(AccountBy.name, allowedFromAddrs[j]);
                                 if (allowFromAccount != null && !account.getId().equalsIgnoreCase(allowFromAccount.getId())) {
@@ -372,7 +373,7 @@ public class AccountUtil {
     public static void addAccountToLogContext(Provisioning prov, String id, String nameKey, String idOnlyKey, AuthToken authToken) {
         Account acct = null;
         try {
-            acct = prov.get(Provisioning.AccountBy.id, id, authToken);
+            acct = prov.get(Key.AccountBy.id, id, authToken);
         } catch (ServiceException se) {
             ZimbraLog.misc.warn("unable to lookup account for log, id: " + id, se);
         }

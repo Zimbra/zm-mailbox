@@ -16,9 +16,10 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.CacheEntryBy;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
-import com.zimbra.cs.account.Provisioning.CacheEntryBy;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Zimlet;
@@ -206,7 +207,7 @@ public abstract class TestProv extends TestLdap {
     
     protected void flushCache(Account acct) throws Exception {
         CacheEntry[] entries = new CacheEntry[1];
-        entries[0] = new CacheEntry(CacheEntryBy.name, acct.getName());
+        entries[0] = new CacheEntry(Key.CacheEntryBy.name, acct.getName());
         mProv.flushCache(CacheEntryType.account, entries);
     }
     

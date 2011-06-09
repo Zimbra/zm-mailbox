@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.CosBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
@@ -35,7 +37,6 @@ import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.AccessManager.AttrRightChecker;
-import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -60,7 +61,7 @@ public class GetCos extends AdminDocumentHandler {
         String key = d.getAttribute(AdminConstants.A_BY);
         String value = d.getText();
 
-        Cos cos = prov.get(CosBy.fromString(key), value);
+        Cos cos = prov.get(Key.CosBy.fromString(key), value);
 
         if (cos == null)
             throw AccountServiceException.NO_SUCH_COS(value);

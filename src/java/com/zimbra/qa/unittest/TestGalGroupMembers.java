@@ -18,9 +18,10 @@ import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ZAttrProvisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DistributionListBy;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.ZAttrProvisioning.GalMode;
 import com.zimbra.cs.gal.GalGroupMembers;
 import com.zimbra.cs.ldap.LdapUtilCommon;
@@ -144,7 +145,7 @@ public class TestGalGroupMembers extends TestCase {
         Provisioning prov = Provisioning.getInstance();
         
         // create the zimbra domain
-        if (prov.get(DomainBy.name, ZIMBRA_DOMAIN) == null) {
+        if (prov.get(Key.DomainBy.name, ZIMBRA_DOMAIN) == null) {
             ZimbraLog.test.info("Creating domain " + ZIMBRA_DOMAIN);
             Domain domain = prov.createDomain(ZIMBRA_DOMAIN, new HashMap<String, Object>());
             
@@ -179,7 +180,7 @@ public class TestGalGroupMembers extends TestCase {
         
         // create zimbra group and add members
         String groupAddr = TestUtil.getAddress(ZIMBRA_GROUP, ZIMBRA_DOMAIN);
-        DistributionList group = prov.get(DistributionListBy.name, groupAddr);
+        DistributionList group = prov.get(Key.DistributionListBy.name, groupAddr);
         if (group == null) {
             group = prov.createDistributionList(groupAddr, new HashMap<String, Object>());
             prov.addMembers(group, ZimbraGroupMembers.getAllMembersAsArray());
@@ -210,12 +211,12 @@ public class TestGalGroupMembers extends TestCase {
         }
         
         String groupAddr = TestUtil.getAddress(ZIMBRA_GROUP, ZIMBRA_DOMAIN);
-        DistributionList group = prov.get(DistributionListBy.name, groupAddr);
+        DistributionList group = prov.get(Key.DistributionListBy.name, groupAddr);
         if (group != null) {
             prov.deleteDistributionList(group.getId());
         }
         
-        Domain domain = prov.get(DomainBy.name, ZIMBRA_DOMAIN);
+        Domain domain = prov.get(Key.DomainBy.name, ZIMBRA_DOMAIN);
         if (domain != null) {
             ZimbraLog.test.info("Deleting domain " + ZIMBRA_DOMAIN);
             prov.deleteDomain(domain.getId());
@@ -227,14 +228,14 @@ public class TestGalGroupMembers extends TestCase {
         Provisioning prov = Provisioning.getInstance();
         
         // create a domain to simulate entries in external GAL
-        if (prov.get(DomainBy.name, EXTERNAL_DOMAIN) == null) {
+        if (prov.get(Key.DomainBy.name, EXTERNAL_DOMAIN) == null) {
             ZimbraLog.test.info("Creating domain " + EXTERNAL_DOMAIN);
             prov.createDomain(EXTERNAL_DOMAIN, new HashMap<String, Object>());
         }
         
         // create groups in the external domain
         String groupAddr = TestUtil.getAddress(EXTERNAL_GROUP, EXTERNAL_DOMAIN);
-        DistributionList group = prov.get(DistributionListBy.name, groupAddr);
+        DistributionList group = prov.get(Key.DistributionListBy.name, groupAddr);
         if (group == null) {
             group = prov.createDistributionList(groupAddr, new HashMap<String, Object>());
             prov.addMembers(group, ExternalGroupMembers.getAllMembersAsArray());
@@ -245,12 +246,12 @@ public class TestGalGroupMembers extends TestCase {
         Provisioning prov = Provisioning.getInstance();
         
         String groupAddr = TestUtil.getAddress(EXTERNAL_GROUP, EXTERNAL_DOMAIN);
-        DistributionList group = prov.get(DistributionListBy.name, groupAddr);
+        DistributionList group = prov.get(Key.DistributionListBy.name, groupAddr);
         if (group != null) {
             prov.deleteDistributionList(group.getId());
         }
         
-        Domain domain = prov.get(DomainBy.name, EXTERNAL_DOMAIN);
+        Domain domain = prov.get(Key.DomainBy.name, EXTERNAL_DOMAIN);
         if (domain != null) {
             ZimbraLog.test.info("Deleting domain " + EXTERNAL_DOMAIN);
             prov.deleteDomain(domain.getId());

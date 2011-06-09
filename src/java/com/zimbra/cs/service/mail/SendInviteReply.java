@@ -38,7 +38,8 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
@@ -455,7 +456,7 @@ public class SendInviteReply extends CalendarRequest {
         ZMailbox.Options zoptions = new ZMailbox.Options(zat, AccountUtil.getSoapUri(targetAcct));
         zoptions.setNoSession(true);
         zoptions.setTargetAccount(targetAcct.getId());
-        zoptions.setTargetAccountBy(Provisioning.AccountBy.id);
+        zoptions.setTargetAccountBy(Key.AccountBy.id);
         return ZMailbox.getMailbox(zoptions);
     }
 

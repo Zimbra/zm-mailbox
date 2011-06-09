@@ -16,13 +16,14 @@ package com.zimbra.cs.service.mail;
 
 import java.util.Map;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DataSourceBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.db.DbDataSource;
 import com.zimbra.cs.db.DbImapFolder;
@@ -51,9 +52,9 @@ public class DeleteDataSource extends MailDocumentHandler {
             String name, id = eDsrc.getAttribute(MailConstants.A_ID, null);
             
             if (id != null)
-                dsrc = prov.get(account, DataSourceBy.id, id);
+                dsrc = prov.get(account, Key.DataSourceBy.id, id);
             else if ((name = eDsrc.getAttribute(MailConstants.A_NAME, null)) != null)
-                dsrc = prov.get(account, DataSourceBy.name, name);
+                dsrc = prov.get(account, Key.DataSourceBy.name, name);
             else
                 throw ServiceException.INVALID_REQUEST("must specify either 'id' or 'name'", null);
 

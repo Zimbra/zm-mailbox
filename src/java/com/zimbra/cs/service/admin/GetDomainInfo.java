@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -26,7 +28,6 @@ import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -41,12 +42,12 @@ public class GetDomainInfo extends AdminDocumentHandler {
         String key = d.getAttribute(AdminConstants.A_BY);
         String value = d.getText();
         
-        DomainBy domainBy = DomainBy.fromString(key);
+        Key.DomainBy domainBy = Key.DomainBy.fromString(key);
         Domain domain = prov.getDomain(domainBy, value, true);
 
         Element response = lc.createElement(AdminConstants.GET_DOMAIN_INFO_RESPONSE);
         
-        if (domain == null && domainBy != DomainBy.name && domainBy != DomainBy.virtualHostname) {
+        if (domain == null && domainBy != Key.DomainBy.name && domainBy != Key.DomainBy.virtualHostname) {
             // domain not found, and we don't have info for walking up sub domains
             // return attributes on global config 
             toXML(response, prov.getConfig(), applyConfig);
@@ -69,8 +70,8 @@ public class GetDomainInfo extends AdminDocumentHandler {
              */
             
             if (domain == null) {
-                if (domainBy == DomainBy.virtualHostname)
-                    domain = prov.getDomain(DomainBy.name, value, true);
+                if (domainBy == Key.DomainBy.virtualHostname)
+                    domain = prov.getDomain(Key.DomainBy.name, value, true);
                 
                 if (domain == null)
                     domain = findDomain(prov, value);
@@ -123,7 +124,7 @@ public class GetDomainInfo extends AdminDocumentHandler {
         //     will not do com
         while (secondDotAt != -1) {
             // System.out.println(value.substring(firstDotAt+1));
-            domain = prov.getDomain(DomainBy.name, value.substring(firstDotAt+1), true);
+            domain = prov.getDomain(Key.DomainBy.name, value.substring(firstDotAt+1), true);
             if (domain != null)
                 break;
             else {

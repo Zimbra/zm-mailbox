@@ -18,10 +18,11 @@ import java.util.HashMap;
 
 import org.junit.*;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.CosBy;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
-import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.ldap.upgrade.LdapUpgrade;
 
@@ -37,14 +38,14 @@ public class TestLdapUpgrade extends TestLdap {
     }
     
     private Cos createCos(String cosName, HashMap<String, Object> attrs) throws Exception {
-        Cos cos = prov.get(CosBy.name, cosName);
+        Cos cos = prov.get(Key.CosBy.name, cosName);
         assertNull(cos);
         
         cos = prov.createCos(cosName, attrs);
         assertNotNull(cos);
         
         prov.flushCache(CacheEntryType.cos, null);
-        cos = prov.get(CosBy.name, cosName);
+        cos = prov.get(Key.CosBy.name, cosName);
         assertNotNull(cos);
         assertEquals(cosName.toLowerCase(), cos.getName().toLowerCase());
         
@@ -55,13 +56,13 @@ public class TestLdapUpgrade extends TestLdap {
         String codId = cos.getId();
         prov.deleteCos(codId);
         prov.flushCache(CacheEntryType.cos, null);
-        cos = prov.get(CosBy.id, codId);
+        cos = prov.get(Key.CosBy.id, codId);
         assertNull(cos);
     }
     
     private Cos getFresh(Cos cos) throws Exception {
         prov.flushCache(CacheEntryType.cos, null);
-        cos = prov.get(CosBy.id, cos.getId());
+        cos = prov.get(Key.CosBy.id, cos.getId());
         assertNotNull(cos);
         return cos;
     }

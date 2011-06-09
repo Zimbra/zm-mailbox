@@ -21,6 +21,8 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.service.ServiceException;
 
 import com.zimbra.cs.account.Account;
@@ -28,7 +30,6 @@ import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.PublishShareInfoAction;
 import com.zimbra.cs.account.Provisioning.PublishedShareInfoVisitor;
 import com.zimbra.cs.account.ShareInfo.Published;
@@ -59,7 +60,7 @@ public class TestShareInfo extends TestCase {
     }
     
     private static Domain getDomain() throws Exception {
-        Domain domain = mProv.get(DomainBy.name, DOMAIN_NAME);
+        Domain domain = mProv.get(Key.DomainBy.name, DOMAIN_NAME);
         if (domain == null)
             domain = mProv.createDomain(DOMAIN_NAME, new HashMap<String, Object>());
         return domain;

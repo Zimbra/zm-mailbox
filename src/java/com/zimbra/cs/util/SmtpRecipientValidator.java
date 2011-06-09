@@ -25,8 +25,9 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DistributionListBy;
 
 /**
  * Validates recipients and expands distribution lists for the dev
@@ -45,7 +46,7 @@ implements SmtpToLmtp.RecipientValidator {
             if (account != null) {
                 return Arrays.asList(account.getName());
             } else {
-                DistributionList dl = prov.get(DistributionListBy.name, recipient);
+                DistributionList dl = prov.get(Key.DistributionListBy.name, recipient);
                 if (dl != null) {
                     return dl.getAllMembersSet();
                 }

@@ -20,6 +20,7 @@ import java.io.OutputStream;
 
 import javax.security.sasl.SaslServer;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
@@ -88,7 +89,7 @@ public class ZimbraAuthenticator extends Authenticator {
         }
 
         // make sure that the authentication account is valid
-        Account authAccount = prov.get(Provisioning.AccountBy.name, authenticateId, at);
+        Account authAccount = prov.get(Key.AccountBy.name, authenticateId, at);
         if (authAccount == null)
             return null;
 

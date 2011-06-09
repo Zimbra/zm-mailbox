@@ -25,8 +25,9 @@ import java.util.Map;
 
 import com.zimbra.common.util.MapUtil;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.stats.Counter;
-import com.zimbra.cs.account.Provisioning.DomainBy;
 
 /**
  * @author schemers
@@ -100,7 +101,7 @@ public class DomainCache {
             mNERefreshTTL = refreshTTL;
         }
         
-        private void put(DomainBy domainBy, String key) {
+        private void put(Key.DomainBy domainBy, String key) {
             if (!mEnabled)
                 return;
             
@@ -125,7 +126,7 @@ public class DomainCache {
             }
         }
         
-        private NonExistingDomain get(DomainBy domainBy, String key) {
+        private NonExistingDomain get(Key.DomainBy domainBy, String key) {
             if (!mEnabled)
                 return null;
             
@@ -144,7 +145,7 @@ public class DomainCache {
             return null;
         }
         
-        private void remove(DomainBy domainBy, String key) {
+        private void remove(Key.DomainBy domainBy, String key) {
             if (!mEnabled)
                 return;
             
@@ -167,7 +168,7 @@ public class DomainCache {
             }
         }
         
-        private void clean(DomainBy domainBy, String key, Domain entry) {
+        private void clean(Key.DomainBy domainBy, String key, Domain entry) {
             mNegativeNameCache.remove(entry.getName());
             mNegativeIdCache.remove(entry.getId());
             
@@ -240,14 +241,14 @@ public class DomainCache {
     
     public synchronized void replace(Domain entry) {
         remove(entry);
-        put(DomainBy.id, entry.getId(), entry);
+        put(Key.DomainBy.id, entry.getId(), entry);
     }
     
-    public synchronized void removeFromNegativeCache(DomainBy domainBy, String key) {
+    public synchronized void removeFromNegativeCache(Key.DomainBy domainBy, String key) {
         mNegativeCache.remove(domainBy, key);
     }
     
-    public synchronized void put(DomainBy domainBy, String key, Domain entry) {
+    public synchronized void put(Key.DomainBy domainBy, String key, Domain entry) {
         if (entry != null) {
             // clean it from the non-existing cache first
             mNegativeCache.clean(domainBy, key, entry);
@@ -295,11 +296,11 @@ public class DomainCache {
         case POSITIVE:
             return get(key, mIdCache);
         case NEGATIVE:
-            return mNegativeCache.get(DomainBy.id, key);
+            return mNegativeCache.get(Key.DomainBy.id, key);
         case BOTH:
             Domain d = get(key, mIdCache);
             if (d == null)
-                d = mNegativeCache.get(DomainBy.id, key);
+                d = mNegativeCache.get(Key.DomainBy.id, key);
             return d;
         default:
             return null;
@@ -312,11 +313,11 @@ public class DomainCache {
         case POSITIVE:
             return get(key.toLowerCase(), mNameCache);
         case NEGATIVE:
-            return mNegativeCache.get(DomainBy.name, key);
+            return mNegativeCache.get(Key.DomainBy.name, key);
         case BOTH:
             Domain d = get(key.toLowerCase(), mNameCache);
             if (d == null)
-                d = mNegativeCache.get(DomainBy.name, key);
+                d = mNegativeCache.get(Key.DomainBy.name, key);
             return d;
         default:
             return null;
@@ -329,11 +330,11 @@ public class DomainCache {
         case POSITIVE:
             return get(key.toLowerCase(), mVirtualHostnameCache);
         case NEGATIVE:
-            return mNegativeCache.get(DomainBy.virtualHostname, key);
+            return mNegativeCache.get(Key.DomainBy.virtualHostname, key);
         case BOTH:
             Domain d = get(key.toLowerCase(), mVirtualHostnameCache);
             if (d == null)
-                d = mNegativeCache.get(DomainBy.virtualHostname, key);
+                d = mNegativeCache.get(Key.DomainBy.virtualHostname, key);
             return d;
         default:
             return null;
@@ -346,11 +347,11 @@ public class DomainCache {
         case POSITIVE:
             return get(key.toLowerCase(), mForeignNameCache);
         case NEGATIVE:
-            return mNegativeCache.get(DomainBy.foreignName, key);
+            return mNegativeCache.get(Key.DomainBy.foreignName, key);
         case BOTH:
             Domain d = get(key.toLowerCase(), mForeignNameCache);
             if (d == null)
-                d = mNegativeCache.get(DomainBy.foreignName, key);
+                d = mNegativeCache.get(Key.DomainBy.foreignName, key);
             return d;
         default:
             return null;
@@ -363,11 +364,11 @@ public class DomainCache {
         case POSITIVE:
             return get(key.toLowerCase(), mKrb5RealmCache);
         case NEGATIVE:
-            return mNegativeCache.get(DomainBy.krb5Realm, key);
+            return mNegativeCache.get(Key.DomainBy.krb5Realm, key);
         case BOTH:
             Domain d = get(key.toLowerCase(), mKrb5RealmCache);
             if (d == null)
-                d = mNegativeCache.get(DomainBy.krb5Realm, key);
+                d = mNegativeCache.get(Key.DomainBy.krb5Realm, key);
             return d;
         default:
             return null;

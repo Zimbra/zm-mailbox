@@ -19,6 +19,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.security.kerberos.Krb5Keytab;
+import com.zimbra.common.account.Key;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -216,7 +217,7 @@ public class GssAuthenticator extends Authenticator {
                                           AuthContext.Protocol protocol, String origRemoteIp, String userAgent)
     throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
-        Account authAccount = prov.get(Provisioning.AccountBy.krb5Principal, principal);
+        Account authAccount = prov.get(Key.AccountBy.krb5Principal, principal);
         if (authAccount == null) {
             ZimbraLog.account.warn("authentication failed (no account associated with Kerberos principal " + principal + ')');
             return null;

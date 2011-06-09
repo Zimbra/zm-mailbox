@@ -62,8 +62,9 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.DataSourceBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DataSourceBy;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.client.LmcSession;
 import com.zimbra.cs.client.soap.LmcAdminAuthRequest;
@@ -701,7 +702,7 @@ extends Assert {
     throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Account account = getAccount(userName);
-        DataSource ds = prov.get(account, DataSourceBy.name, dataSourceName);
+        DataSource ds = prov.get(account, Key.DataSourceBy.name, dataSourceName);
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(attrName, attrValue);
         prov.modifyAttrs(ds, attrs);

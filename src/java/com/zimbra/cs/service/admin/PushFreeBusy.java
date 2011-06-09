@@ -18,6 +18,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -44,7 +45,7 @@ public class PushFreeBusy extends AdminDocumentHandler {
         		String accountId = accounts.next().getAttribute(AdminConstants.A_ID, null);
         		if (accountId == null)
         			continue;
-        		Account acct = prov.get(Provisioning.AccountBy.id, accountId, zsc.getAuthToken());
+        		Account acct = prov.get(Key.AccountBy.id, accountId, zsc.getAuthToken());
         		if (acct == null) {
         			ZimbraLog.misc.warn("invalid accountId: "+accountId);
         			continue;
@@ -61,7 +62,7 @@ public class PushFreeBusy extends AdminDocumentHandler {
         	Server s = prov.getLocalServer();
     		NamedEntry.Visitor visitor = new PushFreeBusyVisitor(zsc, prov, this);
         	for (String domain : domains) {
-            	Domain d = prov.get(Provisioning.DomainBy.name, domain);
+            	Domain d = prov.get(Key.DomainBy.name, domain);
         		prov.getAllAccounts(d, s, visitor);
         	}
         }

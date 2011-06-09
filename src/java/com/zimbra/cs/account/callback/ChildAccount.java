@@ -26,7 +26,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key.AccountBy;
  
 public class ChildAccount extends AttributeCallback {
 

@@ -43,7 +43,8 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.Zimlet;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.admin.AdminAccessControl;
@@ -335,7 +336,7 @@ public class GetInfo extends AccountDocumentHandler  {
         for (String childId : visibleChildAccounts) {
             if (children.contains(childId))
                 continue;
-            Account child = prov.get(Provisioning.AccountBy.id, childId, authToken);
+            Account child = prov.get(Key.AccountBy.id, childId, authToken);
             if (child != null)
                 encodeChildAccount(response, child, true);
             children.add(childId);
@@ -344,7 +345,7 @@ public class GetInfo extends AccountDocumentHandler  {
         for (String childId : childAccounts) {
             if (children.contains(childId))
                 continue;
-            Account child = prov.get(Provisioning.AccountBy.id, childId, authToken);
+            Account child = prov.get(Key.AccountBy.id, childId, authToken);
             if (child != null)
                 encodeChildAccount(response, child, false);
             children.add(childId);

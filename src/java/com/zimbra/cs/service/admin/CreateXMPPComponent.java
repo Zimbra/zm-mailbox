@@ -17,6 +17,9 @@ package com.zimbra.cs.service.admin;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DomainBy;
+import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
@@ -25,8 +28,6 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
@@ -59,12 +60,12 @@ public class CreateXMPPComponent extends AdminDocumentHandler {
         
         Element domainElt = cEl.getElement(AdminConstants.E_DOMAIN);
         String byStr = domainElt.getAttribute(AdminConstants.A_BY, "id");
-        DomainBy domainby = DomainBy.valueOf(byStr);
+        Key.DomainBy domainby = Key.DomainBy.valueOf(byStr);
         Domain domain = Provisioning.getInstance().get(domainby,domainElt.getText());
         
         Element serverElt = cEl.getElement(AdminConstants.E_SERVER);
         String serverByStr = serverElt.getAttribute(AdminConstants.A_BY);
-        Server server = prov.get(ServerBy.fromString(serverByStr), serverElt.getText());
+        Server server = prov.get(Key.ServerBy.fromString(serverByStr), serverElt.getText());
         
         String name = cEl.getAttribute(AccountConstants.A_NAME);
         

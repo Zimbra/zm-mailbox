@@ -38,15 +38,16 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
-import com.zimbra.cs.account.Provisioning.CosBy;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.account.Provisioning.ServerBy;
-import com.zimbra.cs.account.Provisioning.TargetBy;
-import com.zimbra.cs.account.Provisioning.XMPPComponentBy;
-import com.zimbra.cs.account.Provisioning.ZimletBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.CalendarResourceBy;
+import com.zimbra.common.account.Key.CosBy;
+import com.zimbra.common.account.Key.DistributionListBy;
+import com.zimbra.common.account.Key.DomainBy;
+import com.zimbra.common.account.Key.ServerBy;
+import com.zimbra.common.account.Key.TargetBy;
+import com.zimbra.common.account.Key.XMPPComponentBy;
+import com.zimbra.common.account.Key.ZimletBy;
 import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.Server;
@@ -230,7 +231,7 @@ public enum TargetType {
         return mAttrClass;
     }
     
-    public static Entry lookupTarget(Provisioning prov, TargetType targetType, TargetBy targetBy, String target) throws ServiceException {
+    public static Entry lookupTarget(Provisioning prov, TargetType targetType, Key.TargetBy targetBy, String target) throws ServiceException {
         return lookupTarget(prov, targetType, targetBy, target, true);
     }
     
@@ -244,7 +245,7 @@ public enum TargetType {
      * @return
      * @throws ServiceException
      */
-    static Entry lookupTarget(Provisioning prov, TargetType targetType, TargetBy targetBy, String target, boolean mustFind) throws ServiceException {
+    static Entry lookupTarget(Provisioning prov, TargetType targetType, Key.TargetBy targetBy, String target, boolean mustFind) throws ServiceException {
         Entry targetEntry = null;
         
         switch (targetType) {
@@ -254,38 +255,38 @@ public enum TargetType {
                 throw AccountServiceException.NO_SUCH_ACCOUNT(target); 
             break;
         case calresource:
-            targetEntry = prov.get(CalendarResourceBy.fromString(targetBy.name()), target);
+            targetEntry = prov.get(Key.CalendarResourceBy.fromString(targetBy.name()), target);
             if (targetEntry == null && mustFind)
                 throw AccountServiceException.NO_SUCH_CALENDAR_RESOURCE(target); 
             break;
         case dl:
-            targetEntry = prov.getAclGroup(DistributionListBy.fromString(targetBy.name()), target);
+            targetEntry = prov.getAclGroup(Key.DistributionListBy.fromString(targetBy.name()), target);
             if (targetEntry == null && mustFind)
                 throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(target); 
             break;
         case domain:
-            targetEntry = prov.get(DomainBy.fromString(targetBy.name()), target);
+            targetEntry = prov.get(Key.DomainBy.fromString(targetBy.name()), target);
             if (targetEntry == null && mustFind)
                 throw AccountServiceException.NO_SUCH_DOMAIN(target); 
             break;
         case cos:
-            targetEntry = prov.get(CosBy.fromString(targetBy.name()), target);
+            targetEntry = prov.get(Key.CosBy.fromString(targetBy.name()), target);
             if (targetEntry == null && mustFind)
                 throw AccountServiceException.NO_SUCH_COS(target); 
             break;
         case server:
-            targetEntry = prov.get(ServerBy.fromString(targetBy.name()), target);
+            targetEntry = prov.get(Key.ServerBy.fromString(targetBy.name()), target);
             if (targetEntry == null && mustFind)
                 throw AccountServiceException.NO_SUCH_SERVER(target); 
             break;
         case xmppcomponent:
-            targetEntry = prov.get(XMPPComponentBy.fromString(targetBy.name()), target);
+            targetEntry = prov.get(Key.XMPPComponentBy.fromString(targetBy.name()), target);
             if (targetEntry == null && mustFind)
                 throw AccountServiceException.NO_SUCH_XMPP_COMPONENT(target); 
             break;    
         case zimlet:
-            ZimletBy zimletBy = ZimletBy.fromString(targetBy.name());
-            if (zimletBy != ZimletBy.name)
+            Key.ZimletBy zimletBy = Key.ZimletBy.fromString(targetBy.name());
+            if (zimletBy != Key.ZimletBy.name)
                 throw ServiceException.INVALID_REQUEST("zimlet must be by name", null);
             targetEntry = prov.getZimlet(target);
             if (targetEntry == null && mustFind)

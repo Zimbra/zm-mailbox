@@ -34,9 +34,10 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.SignatureBy;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
-import com.zimbra.cs.account.Provisioning.SignatureBy;
 
 public class TestLdapProvSignature extends TestLdap {
     private static Provisioning prov;
@@ -74,7 +75,7 @@ public class TestLdapProvSignature extends TestLdap {
     private void deleteSignature(Account acct, Signature signature) throws Exception {
         String signatureId = signature.getId();
         prov.deleteSignature(acct, signatureId);
-        signature = prov.get(acct, SignatureBy.id, signatureId);
+        signature = prov.get(acct, Key.SignatureBy.id, signatureId);
         assertNull(signature);
     }
     
@@ -85,12 +86,12 @@ public class TestLdapProvSignature extends TestLdap {
     }
     
     private Signature createSignature(Account acct, String signatureName) throws Exception {
-        Signature signature = prov.get(acct, SignatureBy.name, signatureName);
+        Signature signature = prov.get(acct, Key.SignatureBy.name, signatureName);
         assertNull(signature);
         
         createSignatureRaw(acct, signatureName);
         
-        signature = prov.get(acct, SignatureBy.name, signatureName);
+        signature = prov.get(acct, Key.SignatureBy.name, signatureName);
         assertNotNull(signature);
         assertEquals(signatureName, signature.getName());
         
@@ -153,7 +154,7 @@ public class TestLdapProvSignature extends TestLdap {
         prov.modifySignature(acct, signature.getId(), attrs);
         
         acct = getFresh(acct);
-        signature = prov.get(acct, SignatureBy.name, SIGNATURE_NAME);
+        signature = prov.get(acct, Key.SignatureBy.name, SIGNATURE_NAME);
         assertEquals(MODIFIED_ATTR_VALUE, signature.getAttr(MODIFIED_ATTR_NAME));
         
         deleteSignature(acct,signature);
@@ -182,7 +183,7 @@ public class TestLdapProvSignature extends TestLdap {
         prov.modifySignature(acct, signatureOnAccountEntry.getId(), attrs);
         
         acct = getFresh(acct);
-        signatureOnAccountEntry = prov.get(acct, SignatureBy.name, NEW_SIGNATURE_NAME);
+        signatureOnAccountEntry = prov.get(acct, Key.SignatureBy.name, NEW_SIGNATURE_NAME);
         assertEquals(MODIFIED_ATTR_VALUE, signatureOnAccountEntry.getAttr(MODIFIED_ATTR_NAME));
         
         /*
@@ -197,7 +198,7 @@ public class TestLdapProvSignature extends TestLdap {
         prov.modifySignature(acct, signature.getId(), attrs);
         
         acct = getFresh(acct);
-        signature = prov.get(acct, SignatureBy.name, NEW_SIGNATURE_NAME);
+        signature = prov.get(acct, Key.SignatureBy.name, NEW_SIGNATURE_NAME);
         assertEquals(MODIFIED_ATTR_VALUE, signature.getAttr(MODIFIED_ATTR_NAME));
         
         deleteSignature(acct,signatureOnAccountEntry);
@@ -246,11 +247,11 @@ public class TestLdapProvSignature extends TestLdap {
         String signatureId = signature.getId();
         
         acct = getFresh(acct);
-        signature = prov.get(acct, SignatureBy.id, signatureId);
+        signature = prov.get(acct, Key.SignatureBy.id, signatureId);
         assertNotNull(signature);
         
         acct = getFresh(acct);
-        signature = prov.get(acct, SignatureBy.name, SIGNATURE_NAME);
+        signature = prov.get(acct, Key.SignatureBy.name, SIGNATURE_NAME);
         assertNotNull(signature);
         
         deleteSignature(acct,signature);

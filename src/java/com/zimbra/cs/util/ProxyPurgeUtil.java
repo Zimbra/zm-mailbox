@@ -29,7 +29,8 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.service.ServiceException;
 
 /** @author mansoor peerbhoy 
@@ -194,7 +195,7 @@ public class ProxyPurgeUtil
             ArrayList<String> routes = new ArrayList<String> ();
             
             // Lookup the account; at this point we don't whether the user is fully qualified.
-            Account account = prov.get(Provisioning.AccountBy.name, a);
+            Account account = prov.get(Key.AccountBy.name, a);
             if (account == null) {
                 // In this case just purge the entries with the given account name as supplied.
                 System.out.println("error looking up accout: " + a);
@@ -214,7 +215,7 @@ public class ProxyPurgeUtil
                 routes.add("route:proto=pop3;user=" + uid + "@" + domain);
                 routes.add("alias:user=" + uid + ";ip=" + domain);
                 
-                Domain d = prov.get(DomainBy.name, domain);
+                Domain d = prov.get(Key.DomainBy.name, domain);
                 String[] vips = d.getVirtualIPAddress();
                 for (String vip : vips) {
                     // for each virtual ip add the routes to the list.

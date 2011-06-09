@@ -24,10 +24,11 @@ import java.util.Map;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.util.Config;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;
@@ -49,7 +50,7 @@ public class ModifyServer extends AdminDocumentHandler {
         String id = request.getAttribute(AdminConstants.E_ID);
         Map<String, Object> attrs = AdminService.getAttrs(request);
         
-        Server server = prov.get(ServerBy.id, id);
+        Server server = prov.get(Key.ServerBy.id, id);
         if (server == null)
             throw AccountServiceException.NO_SUCH_SERVER(id);
         

@@ -21,6 +21,8 @@ package com.zimbra.cs.service.admin;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
@@ -31,7 +33,6 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.GalSearchType;
-import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.gal.GalSearchControl;
@@ -62,7 +63,7 @@ public class AutoCompleteGal extends AdminDocumentHandler {
         
         String domainName = request.getAttribute(AdminConstants.A_DOMAIN);
         Provisioning prov = Provisioning.getInstance();
-        Domain domain = prov.get(DomainBy.name, domainName);
+        Domain domain = prov.get(Key.DomainBy.name, domainName);
         if (domain == null)
             throw AccountServiceException.NO_SUCH_DOMAIN(domainName);
         

@@ -34,6 +34,7 @@ import org.dom4j.QName;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.HttpUtil;
@@ -323,7 +324,7 @@ public abstract class DavResource {
         buf.append("\tDate:\t\t\t").append(getLastModifiedDate()).append("\n");
         try {
             Provisioning prov = Provisioning.getInstance();
-            Account account = prov.get(Provisioning.AccountBy.name, getOwner());
+            Account account = prov.get(Key.AccountBy.name, getOwner());
             buf.append("\tOwner account name:\t").append(account.getName()).append("\n");
         } catch (ServiceException se) {
         }

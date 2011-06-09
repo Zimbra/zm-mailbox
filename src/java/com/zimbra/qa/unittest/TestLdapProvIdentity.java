@@ -34,9 +34,10 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.IdentityBy;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
-import com.zimbra.cs.account.Provisioning.IdentityBy;
 
 public class TestLdapProvIdentity extends TestLdap {
     private static Provisioning prov;
@@ -75,7 +76,7 @@ public class TestLdapProvIdentity extends TestLdap {
         String identityId = identity.getId();
         String identityName = identity.getName();
         prov.deleteIdentity(acct, identityName);
-        identity = prov.get(acct, IdentityBy.id, identityId);
+        identity = prov.get(acct, Key.IdentityBy.id, identityId);
         assertNull(identity);
     }
     
@@ -86,12 +87,12 @@ public class TestLdapProvIdentity extends TestLdap {
     }
     
     private Identity createIdentity(Account acct, String identityName) throws Exception {
-        Identity identity = prov.get(acct, IdentityBy.name, identityName);
+        Identity identity = prov.get(acct, Key.IdentityBy.name, identityName);
         assertNull(identity);
         
         createIdentityRaw(acct, identityName);
         
-        identity = prov.get(acct, IdentityBy.name, identityName);
+        identity = prov.get(acct, Key.IdentityBy.name, identityName);
         assertNotNull(identity);
         assertEquals(identityName, identity.getName());
         
@@ -154,7 +155,7 @@ public class TestLdapProvIdentity extends TestLdap {
         prov.modifyIdentity(acct, identity.getName(), attrs);
         
         acct = getFresh(acct);
-        identity = prov.get(acct, IdentityBy.name, IDENTITYE_NAME);
+        identity = prov.get(acct, Key.IdentityBy.name, IDENTITYE_NAME);
         assertEquals(MODIFIED_ATTR_VALUE, identity.getAttr(MODIFIED_ATTR_NAME));
         
         deleteIdentity(acct,identity);
@@ -178,7 +179,7 @@ public class TestLdapProvIdentity extends TestLdap {
         prov.modifyIdentity(acct, identity.getName(), attrs);
         
         acct = getFresh(acct);
-        identity = prov.get(acct, IdentityBy.name, NEW_IDENTITY_NAME);
+        identity = prov.get(acct, Key.IdentityBy.name, NEW_IDENTITY_NAME);
         assertEquals(MODIFIED_ATTR_VALUE, identity.getAttr(MODIFIED_ATTR_NAME));
         
         deleteIdentity(acct,identity);
@@ -226,11 +227,11 @@ public class TestLdapProvIdentity extends TestLdap {
         String identityId = identity.getId();
         
         acct = getFresh(acct);
-        identity = prov.get(acct, IdentityBy.id, identityId);
+        identity = prov.get(acct, Key.IdentityBy.id, identityId);
         assertNotNull(identity);
         
         acct = getFresh(acct);
-        identity = prov.get(acct, IdentityBy.name, IDENTITYE_NAME);
+        identity = prov.get(acct, Key.IdentityBy.name, IDENTITYE_NAME);
         assertNotNull(identity);
         
         deleteIdentity(acct,identity);

@@ -17,9 +17,10 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DistributionListBy;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.ZAttrProvisioning.GalMode;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
@@ -78,7 +79,7 @@ public class TestCalAttendeesDiff extends TestCase {
         Provisioning prov = Provisioning.getInstance();
         
         // create the zimbra domain
-        if (prov.get(DomainBy.name, ZIMBRA_DOMAIN) == null) {
+        if (prov.get(Key.DomainBy.name, ZIMBRA_DOMAIN) == null) {
             ZimbraLog.test.info("Creating domain " + ZIMBRA_DOMAIN);
             Domain domain = prov.createDomain(ZIMBRA_DOMAIN, new HashMap<String, Object>());
             
@@ -96,7 +97,7 @@ public class TestCalAttendeesDiff extends TestCase {
         }
 
         // create a domain to simulate entries in external GAL
-        if (prov.get(DomainBy.name, EXTERNAL_DOMAIN) == null) {
+        if (prov.get(Key.DomainBy.name, EXTERNAL_DOMAIN) == null) {
             ZimbraLog.test.info("Creating domain " + EXTERNAL_DOMAIN);
             prov.createDomain(EXTERNAL_DOMAIN, new HashMap<String, Object>());
         }
@@ -113,14 +114,14 @@ public class TestCalAttendeesDiff extends TestCase {
         acctL2.addAlias(USER_L2_ALIAS);
 
         // create zimbra group and add members
-        DistributionList group = prov.get(DistributionListBy.name, ZIMBRA_GROUP);
+        DistributionList group = prov.get(Key.DistributionListBy.name, ZIMBRA_GROUP);
         if (group == null) {
             group = prov.createDistributionList(ZIMBRA_GROUP, new HashMap<String, Object>());
             prov.addMembers(group, new String[] { USER_L1, USER_L2_ALIAS, USER_R1 });
         }
 
         // create group in the external domain and add members
-        DistributionList extGroup = prov.get(DistributionListBy.name, EXTERNAL_GROUP);
+        DistributionList extGroup = prov.get(Key.DistributionListBy.name, EXTERNAL_GROUP);
         if (extGroup == null) {
             extGroup = prov.createDistributionList(EXTERNAL_GROUP, new HashMap<String, Object>());
             prov.addMembers(extGroup, new String[] { USER_R2 });
@@ -143,24 +144,24 @@ public class TestCalAttendeesDiff extends TestCase {
         }
 
         // delete external group and domain
-        DistributionList extGroup = prov.get(DistributionListBy.name, EXTERNAL_GROUP);
+        DistributionList extGroup = prov.get(Key.DistributionListBy.name, EXTERNAL_GROUP);
         if (extGroup != null) {
             prov.deleteDistributionList(extGroup.getId());
         }
 
-        Domain extDomain = prov.get(DomainBy.name, EXTERNAL_DOMAIN);
+        Domain extDomain = prov.get(Key.DomainBy.name, EXTERNAL_DOMAIN);
         if (extDomain != null) {
             ZimbraLog.test.info("Deleting domain " + EXTERNAL_DOMAIN);
             prov.deleteDomain(extDomain.getId());
         }
 
         // delete zimbra group and domain
-        DistributionList group = prov.get(DistributionListBy.name, ZIMBRA_GROUP);
+        DistributionList group = prov.get(Key.DistributionListBy.name, ZIMBRA_GROUP);
         if (group != null) {
             prov.deleteDistributionList(group.getId());
         }
         
-        Domain domain = prov.get(DomainBy.name, ZIMBRA_DOMAIN);
+        Domain domain = prov.get(Key.DomainBy.name, ZIMBRA_DOMAIN);
         if (domain != null) {
             ZimbraLog.test.info("Deleting domain " + ZIMBRA_DOMAIN);
             prov.deleteDomain(domain.getId());

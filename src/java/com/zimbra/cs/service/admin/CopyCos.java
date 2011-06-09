@@ -18,6 +18,8 @@ package com.zimbra.cs.service.admin;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.CosBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;
@@ -25,7 +27,6 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -43,7 +44,7 @@ public class CopyCos extends AdminDocumentHandler {
         String destCosName = request.getElement(AdminConstants.E_NAME).getText().toLowerCase();
         Element srcCosElem = request.getElement(AdminConstants.E_COS);
         String srcCosNameOrId = srcCosElem.getText();
-        CosBy srcCosBy = CosBy.fromString(srcCosElem.getAttribute(AdminConstants.A_BY));
+        Key.CosBy srcCosBy = Key.CosBy.fromString(srcCosElem.getAttribute(AdminConstants.A_BY));
         
         Cos srcCos = prov.get(srcCosBy, srcCosNameOrId);
         if (srcCos == null)

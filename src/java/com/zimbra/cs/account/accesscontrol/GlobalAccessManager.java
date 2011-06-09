@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -119,7 +120,7 @@ public class GlobalAccessManager extends AccessManager implements AdminConsoleCa
             throw ServiceException.INVALID_REQUEST("must be valid email address: "+email, null);
         
         // check for family mailbox
-        Account targetAcct = Provisioning.getInstance().get(Provisioning.AccountBy.name, email, at);
+        Account targetAcct = Provisioning.getInstance().get(Key.AccountBy.name, email, at);
         if (targetAcct != null) {
             if (isParentOf(at, targetAcct))
                 return true;

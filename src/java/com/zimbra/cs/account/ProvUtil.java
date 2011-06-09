@@ -71,28 +71,29 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.Version;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.CacheEntryBy;
+import com.zimbra.common.account.Key.CalendarResourceBy;
+import com.zimbra.common.account.Key.CosBy;
+import com.zimbra.common.account.Key.DataSourceBy;
+import com.zimbra.common.account.Key.DistributionListBy;
+import com.zimbra.common.account.Key.DomainBy;
+import com.zimbra.common.account.Key.GranteeBy;
+import com.zimbra.common.account.Key.ServerBy;
+import com.zimbra.common.account.Key.SignatureBy;
+import com.zimbra.common.account.Key.TargetBy;
+import com.zimbra.common.account.Key.XMPPComponentBy;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
-import com.zimbra.cs.account.Provisioning.CacheEntryBy;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
-import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.Provisioning.CountObjectsType;
-import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.CountAccountResult;
-import com.zimbra.cs.account.Provisioning.DataSourceBy;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.MailMode;
 import com.zimbra.cs.account.Provisioning.PublishShareInfoAction;
 import com.zimbra.cs.account.Provisioning.PublishedShareInfoVisitor;
 import com.zimbra.cs.account.Provisioning.RightsDoc;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
-import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.Provisioning.SetPasswordResult;
-import com.zimbra.cs.account.Provisioning.SignatureBy;
-import com.zimbra.cs.account.Provisioning.TargetBy;
-import com.zimbra.cs.account.Provisioning.XMPPComponentBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.AttrRight;
@@ -1302,7 +1303,7 @@ public class ProvUtil implements HttpDebugListener {
             throwSoapOnly();
         }
         SoapProvisioning sp = (SoapProvisioning) prov;
-        DomainBy by = DomainBy.fromString(args[1]);
+        Key.DomainBy by = Key.DomainBy.fromString(args[1]);
         String key = args[2];
         Domain domain = sp.getDomainInfo(by, key);
         if (domain == null) {
@@ -1724,7 +1725,7 @@ public class ProvUtil implements HttpDebugListener {
         Config config = prov.getConfig();
         String spnegoAuthRealm = config.getSpnegoAuthRealm();
         if (spnegoAuthRealm != null) {
-            Domain domain = prov.get(DomainBy.krb5Realm, spnegoAuthRealm);
+            Domain domain = prov.get(Key.DomainBy.krb5Realm, spnegoAuthRealm);
             if (domain != null) {
                 console.println(domain.getName());
             }
@@ -2775,7 +2776,7 @@ public class ProvUtil implements HttpDebugListener {
         Server server = null;
 
         if (args.length == 4 && args[1].equals("-h")) {
-            server = prov.get(ServerBy.name, args[2]);
+            server = prov.get(Key.ServerBy.name, args[2]);
             if (server == null) {
                 throw AccountServiceException.NO_SUCH_SERVER(args[2]);
             }
@@ -2886,7 +2887,7 @@ public class ProvUtil implements HttpDebugListener {
         if (Provisioning.isUUID(key)) {
             return key;
         }
-        DataSource ds = prov.get(account, DataSourceBy.name, key);
+        DataSource ds = prov.get(account, Key.DataSourceBy.name, key);
         if (ds == null) {
             throw AccountServiceException.NO_SUCH_DATA_SOURCE(key);
         } else {
@@ -2918,9 +2919,9 @@ public class ProvUtil implements HttpDebugListener {
 
     private XMPPComponent lookupXMPPComponent(String value) throws ServiceException {
         if (Provisioning.isUUID(value)) {
-            return prov.get(XMPPComponentBy.id, value);
+            return prov.get(Key.XMPPComponentBy.id, value);
         } else {
-            return prov.get(XMPPComponentBy.name, value);
+            return prov.get(Key.XMPPComponentBy.name, value);
         }
     }
 
@@ -2932,60 +2933,60 @@ public class ProvUtil implements HttpDebugListener {
     }
 
 
-    public static CosBy guessCosBy(String value) {
+    public static Key.CosBy guessCosBy(String value) {
         if (Provisioning.isUUID(value)) {
-            return CosBy.id;
+            return Key.CosBy.id;
         }
-        return CosBy.name;
+        return Key.CosBy.name;
     }
 
-    public static DomainBy guessDomainBy(String value) {
+    public static Key.DomainBy guessDomainBy(String value) {
         if (Provisioning.isUUID(value)) {
-            return DomainBy.id;
+            return Key.DomainBy.id;
         }
-        return DomainBy.name;
+        return Key.DomainBy.name;
     }
 
-    public static ServerBy guessServerBy(String value) {
+    public static Key.ServerBy guessServerBy(String value) {
         if (Provisioning.isUUID(value)) {
-            return ServerBy.id;
+            return Key.ServerBy.id;
         }
-        return ServerBy.name;
+        return Key.ServerBy.name;
     }
 
-    public static CalendarResourceBy guessCalendarResourceBy(String value) {
+    public static Key.CalendarResourceBy guessCalendarResourceBy(String value) {
         if (Provisioning.isUUID(value)) {
-            return CalendarResourceBy.id;
+            return Key.CalendarResourceBy.id;
         }
-        return CalendarResourceBy.name;
+        return Key.CalendarResourceBy.name;
     }
 
-    public static DistributionListBy guessDistributionListBy(String value) {
+    public static Key.DistributionListBy guessDistributionListBy(String value) {
         if (Provisioning.isUUID(value)) {
-            return DistributionListBy.id;
+            return Key.DistributionListBy.id;
         }
-        return DistributionListBy.name;
+        return Key.DistributionListBy.name;
     }
 
-    public static SignatureBy guessSignatureBy(String value) {
+    public static Key.SignatureBy guessSignatureBy(String value) {
         if (Provisioning.isUUID(value)) {
-            return SignatureBy.id;
+            return Key.SignatureBy.id;
         }
-        return SignatureBy.name;
+        return Key.SignatureBy.name;
     }
 
-    public static TargetBy guessTargetBy(String value) {
+    public static Key.TargetBy guessTargetBy(String value) {
         if (Provisioning.isUUID(value)) {
-            return TargetBy.id;
+            return Key.TargetBy.id;
         }
-        return TargetBy.name;
+        return Key.TargetBy.name;
     }
 
-    public static GranteeBy guessGranteeBy(String value) {
+    public static Key.GranteeBy guessGranteeBy(String value) {
         if (Provisioning.isUUID(value)) {
-            return GranteeBy.id;
+            return Key.GranteeBy.id;
         }
-        return GranteeBy.name;
+        return Key.GranteeBy.name;
     }
 
     private void checkDeprecatedAttrs(Map<String, ? extends Object> attrs) throws ServiceException {
@@ -3802,11 +3803,11 @@ public class ProvUtil implements HttpDebugListener {
         if (args.length > argIdx) {
             entries = new CacheEntry[args.length - argIdx];
             for (int i=argIdx; i<args.length; i++) {
-                CacheEntryBy entryBy;
+                Key.CacheEntryBy entryBy;
                 if (Provisioning.isUUID(args[i])) {
-                    entryBy = CacheEntryBy.id;
+                    entryBy = Key.CacheEntryBy.id;
                 } else {
-                    entryBy = CacheEntryBy.name;
+                    entryBy = Key.CacheEntryBy.name;
                 }
                 entries[i-argIdx] = new CacheEntry(entryBy, args[i]);
             }
@@ -4253,8 +4254,8 @@ public class ProvUtil implements HttpDebugListener {
 
         Map<String, Object> attrs = getMap(args, ra.mCurPos);
 
-        TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
-        GranteeBy granteeBy = guessGranteeBy(ra.mGranteeIdOrName);
+        Key.TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
+        Key.GranteeBy granteeBy = guessGranteeBy(ra.mGranteeIdOrName);
 
         AccessManager.ViaGrant via = new AccessManager.ViaGrant();
         boolean allow = prov.checkRight(ra.mTargetType, targetBy, ra.mTargetIdOrName, granteeBy, ra.mGranteeIdOrName,
@@ -4299,7 +4300,7 @@ public class ProvUtil implements HttpDebugListener {
             }
         }
 
-        GranteeBy granteeBy = (ra.mGranteeIdOrName == null)? null: guessGranteeBy(ra.mGranteeIdOrName);
+        Key.GranteeBy granteeBy = (ra.mGranteeIdOrName == null)? null: guessGranteeBy(ra.mGranteeIdOrName);
 
         RightCommand.AllEffectiveRights allEffRights = prov.getAllEffectiveRights(
                 ra.mGranteeType, granteeBy, ra.mGranteeIdOrName, expandSetAttrs, expandGetAttrs);
@@ -4385,8 +4386,8 @@ public class ProvUtil implements HttpDebugListener {
             }
         }
 
-        TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
-        GranteeBy granteeBy = (ra.mGranteeIdOrName == null)? null: guessGranteeBy(ra.mGranteeIdOrName);
+        Key.TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
+        Key.GranteeBy granteeBy = (ra.mGranteeIdOrName == null)? null: guessGranteeBy(ra.mGranteeIdOrName);
 
         RightCommand.EffectiveRights effRights = prov.getEffectiveRights(ra.mTargetType, targetBy, ra.mTargetIdOrName,
                 granteeBy, ra.mGranteeIdOrName, expandSetAttrs, expandGetAttrs);
@@ -4455,21 +4456,21 @@ public class ProvUtil implements HttpDebugListener {
     private void doGetCreateObjectAttrs(String[] args) throws ServiceException {
         String targetType = args[1];
 
-        DomainBy domainBy = null;
+        Key.DomainBy domainBy = null;
         String domain = null;
         if (!args[2].equals("null")) {
             domainBy = guessDomainBy(args[2]);
             domain = args[2];
         }
 
-        CosBy cosBy = null;
+        Key.CosBy cosBy = null;
         String cos = null;
         if (!args[3].equals("null")) {
             cosBy = guessCosBy(args[3]);
             cos = args[3];
         }
 
-        GranteeBy granteeBy = null;
+        Key.GranteeBy granteeBy = null;
         String grantee = null;
 
         // take grantee arg only if LdapProv
@@ -4513,8 +4514,8 @@ public class ProvUtil implements HttpDebugListener {
             }
         }
 
-        TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
-        GranteeBy granteeBy = (ra.mGranteeIdOrName == null) ? null : guessGranteeBy(ra.mGranteeIdOrName);
+        Key.TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
+        Key.GranteeBy granteeBy = (ra.mGranteeIdOrName == null) ? null : guessGranteeBy(ra.mGranteeIdOrName);
 
         RightCommand.Grants grants = prov.getGrants(ra.mTargetType, targetBy, ra.mTargetIdOrName,
                 ra.mGranteeType, granteeBy, ra.mGranteeIdOrName, granteeIncludeGroupsGranteeBelongs);
@@ -4550,8 +4551,8 @@ public class ProvUtil implements HttpDebugListener {
         RightArgs ra = new RightArgs(args);
         getRightArgs(ra, true, true);
 
-        TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
-        GranteeBy granteeBy = (ra.mGranteeIdOrName == null)? null : guessGranteeBy(ra.mGranteeIdOrName);
+        Key.TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
+        Key.GranteeBy granteeBy = (ra.mGranteeIdOrName == null)? null : guessGranteeBy(ra.mGranteeIdOrName);
 
         prov.grantRight(ra.mTargetType, targetBy, ra.mTargetIdOrName, ra.mGranteeType, granteeBy, ra.mGranteeIdOrName,
                 ra.mSecret, ra.mRight, ra.mRightModifier);
@@ -4561,8 +4562,8 @@ public class ProvUtil implements HttpDebugListener {
         RightArgs ra = new RightArgs(args);
         getRightArgs(ra, true, false);
 
-        TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
-        GranteeBy granteeBy = (ra.mGranteeIdOrName == null)? null : guessGranteeBy(ra.mGranteeIdOrName);
+        Key.TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
+        Key.GranteeBy granteeBy = (ra.mGranteeIdOrName == null)? null : guessGranteeBy(ra.mGranteeIdOrName);
 
         prov.revokeRight(ra.mTargetType, targetBy, ra.mTargetIdOrName, ra.mGranteeType, granteeBy, ra.mGranteeIdOrName,
                 ra.mRight, ra.mRightModifier);

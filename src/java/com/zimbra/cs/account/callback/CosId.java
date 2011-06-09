@@ -16,12 +16,13 @@ package com.zimbra.cs.account.callback;
 
 import java.util.Map;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.CosBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.CosBy;
 
 public class CosId extends AttributeCallback {
 
@@ -47,7 +48,7 @@ public class CosId extends AttributeCallback {
              * skip for now.  Hack to use idIsUUID() for the check.
              */
             if (prov.idIsUUID()) {
-                Cos cos = prov.get(CosBy.id, cosId);
+                Cos cos = prov.get(Key.CosBy.id, cosId);
                 if (cos == null)
                     throw ServiceException.INVALID_REQUEST("cos id " + cosId + 
                             " does not point to a valid cos", null);

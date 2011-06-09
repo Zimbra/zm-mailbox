@@ -16,6 +16,8 @@ package com.zimbra.cs.service.account;
 
 import java.util.Map;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.IdentityBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -23,7 +25,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.IdentityBy;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -45,10 +46,10 @@ public class DeleteIdentity extends DocumentHandler {
         Identity ident = null;
         String idStr = eIdentity.getAttribute(AccountConstants.A_ID, null);
         if (idStr != null) {
-            ident = prov.get(account, IdentityBy.id, idStr);
+            ident = prov.get(account, Key.IdentityBy.id, idStr);
         } else {
             idStr = eIdentity.getAttribute(AccountConstants.A_NAME);
-            ident = prov.get(account, IdentityBy.name, idStr);
+            ident = prov.get(account, Key.IdentityBy.name, idStr);
         }
         
         if (ident != null)

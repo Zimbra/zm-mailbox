@@ -23,8 +23,9 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.IdentityBy;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.IdentityBy;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -51,9 +52,9 @@ public class ModifyIdentity extends DocumentHandler {
 
         String key, id = eIdentity.getAttribute(AccountConstants.A_ID, null);
         if (id != null) {
-            identity = prov.get(account, IdentityBy.id, key = id);
+            identity = prov.get(account, Key.IdentityBy.id, key = id);
         } else {
-            identity = prov.get(account, IdentityBy.name, key = eIdentity.getAttribute(AccountConstants.A_NAME));
+            identity = prov.get(account, Key.IdentityBy.name, key = eIdentity.getAttribute(AccountConstants.A_NAME));
         }
 
         if (identity == null) {
@@ -64,9 +65,9 @@ public class ModifyIdentity extends DocumentHandler {
                     Identity childIdentity;
 
                     if (id != null) {
-                        childIdentity = prov.get(childAccount, IdentityBy.id, key = id);
+                        childIdentity = prov.get(childAccount, Key.IdentityBy.id, key = id);
                     } else {
-                        childIdentity = prov.get(childAccount, IdentityBy.name, key = eIdentity.getAttribute(AccountConstants.A_NAME));
+                        childIdentity = prov.get(childAccount, Key.IdentityBy.name, key = eIdentity.getAttribute(AccountConstants.A_NAME));
                     }
 
                     if (childIdentity != null) {

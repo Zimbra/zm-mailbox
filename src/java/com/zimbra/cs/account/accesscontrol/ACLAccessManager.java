@@ -19,6 +19,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.CalendarResourceBy;
+import com.zimbra.common.account.Key.CosBy;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -30,9 +34,6 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
-import com.zimbra.cs.account.Provisioning.CosBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.accesscontrol.RightBearer.Grantee;
 import com.zimbra.cs.account.accesscontrol.RightCommand.AllEffectiveRights;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
@@ -55,7 +56,7 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
     private Account actualTargetForAdminLoginAs(Account target) throws ServiceException {
         if (target.isCalendarResource())
             // need a CalendarResource instance for RightChecker
-            return Provisioning.getInstance().get(CalendarResourceBy.id, target.getId());
+            return Provisioning.getInstance().get(Key.CalendarResourceBy.id, target.getId());
         else
             return target;
     }
@@ -310,9 +311,9 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
     
     public boolean canSetAttrsOnCreate(Account grantee, TargetType targetType, String entryName, 
             Map<String, Object> attrs, boolean asAdmin) throws ServiceException {
-        DomainBy domainBy = null;
+        Key.DomainBy domainBy = null;
         String domainStr = null;
-        CosBy cosBy = null;
+        Key.CosBy cosBy = null;
         String cosStr = null;
         
         if (targetType == TargetType.account ||
@@ -322,7 +323,7 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
             if (parts == null)
                 throw ServiceException.INVALID_REQUEST("must be valid email address: "+entryName, null);
             
-            domainBy = DomainBy.name;
+            domainBy = Key.DomainBy.name;
             domainStr = parts[1];
         }
         

@@ -3,6 +3,8 @@ package com.zimbra.cs.account.accesscontrol;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.SetUtil;
@@ -14,7 +16,6 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AclGroups;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.accesscontrol.RightBearer.Grantee;
 import com.zimbra.cs.account.accesscontrol.SearchGrants.GrantsOnTarget;
 
@@ -43,7 +44,7 @@ public class ParticallyDenied {
                         return false;
                     
                     for (String groupId : groups.groupIds()) {
-                        DistributionList group = prov.getAclGroup(DistributionListBy.id, groupId);
+                        DistributionList group = prov.getAclGroup(Key.DistributionListBy.id, groupId);
                         Domain groupInDomain = prov.getDomain(group);
                         if (groupInDomain!= null &&  // hmm, log a warn if groupInDomain is null? throw internal err?
                             domain.getId().equals(groupInDomain.getId()))

@@ -32,11 +32,12 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.CacheEntryBy;
+import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
-import com.zimbra.cs.account.Provisioning.CacheEntryBy;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.ldap.entry.LdapEntry;
@@ -820,7 +821,7 @@ public class TestProvAlias extends TestLdap {
         assertTrue(good);
         
         // make sure the account is not touched
-        mProv.flushCache(CacheEntryType.account, new CacheEntry[]{new CacheEntry(CacheEntryBy.id, acct2Id)});
+        mProv.flushCache(CacheEntryType.account, new CacheEntry[]{new CacheEntry(Key.CacheEntryBy.id, acct2Id)});
         acct2 = mProv.get(AccountBy.id, acct2Id);
         assertNotNull(acct2);
         assertEquals(acct2Id, acct2.getId());
@@ -836,7 +837,7 @@ public class TestProvAlias extends TestLdap {
         
         // make sure the dl is not touched
         // mProv.flushCache(CacheEntryType.account, new CacheEntry[]{new CacheEntry(CacheEntryBy.id, acct2Id)});
-        dl = mProv.get(DistributionListBy.id, dlId);
+        dl = mProv.get(Key.DistributionListBy.id, dlId);
         assertNotNull(dl);
         assertEquals(dlId, dl.getId());
         assertEquals(dlName, dl.getName());

@@ -20,6 +20,8 @@ import java.util.Map;
 import org.junit.*;
 import static org.junit.Assert.*;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.CacheEntryBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
 
@@ -27,7 +29,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.CacheEntryBy;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.soap.SoapProvisioning;
@@ -81,7 +82,7 @@ public class TestProvCos extends TestLdap {
     
     private void cleanup() {
         try {
-            Cos cos1 = mProv.get(Provisioning.CosBy.name, COS1_NAME);
+            Cos cos1 = mProv.get(Key.CosBy.name, COS1_NAME);
             if (cos1 != null) {
                 // System.out.println("deleting COS " + cos1.getName());
                 mProv.deleteCos(cos1.getId());
@@ -90,7 +91,7 @@ public class TestProvCos extends TestLdap {
         }
         
         try {
-            Cos cos2 = mProv.get(Provisioning.CosBy.name, COS2_NAME);
+            Cos cos2 = mProv.get(Key.CosBy.name, COS2_NAME);
             if (cos2 != null) {
                 // System.out.println("deleting COS " + cos2.getName());
                 mProv.deleteCos(cos2.getId());
@@ -99,7 +100,7 @@ public class TestProvCos extends TestLdap {
         }
         
         try {
-            Cos domainDefaultCos = mProv.get(Provisioning.CosBy.name, DOMAIN_DEFAULT_COS_NAME);
+            Cos domainDefaultCos = mProv.get(Key.CosBy.name, DOMAIN_DEFAULT_COS_NAME);
             if (domainDefaultCos != null) {
                 // System.out.println("deleting COS " + domainDefaultCos.getName());
                 mProv.deleteCos(domainDefaultCos.getId());
@@ -108,7 +109,7 @@ public class TestProvCos extends TestLdap {
         }
         
         try {
-            Account acct = mProv.get(Provisioning.AccountBy.name, ACCT_NAME);
+            Account acct = mProv.get(Key.AccountBy.name, ACCT_NAME);
             if (acct != null) {
                 // System.out.println("deleting COS " + acct.getName());
                 mProv.deleteAccount(acct.getId());
@@ -117,7 +118,7 @@ public class TestProvCos extends TestLdap {
         }
         
         try {
-            Domain domain = mProv.get(Provisioning.DomainBy.name, DOMAIN_NAME);
+            Domain domain = mProv.get(Key.DomainBy.name, DOMAIN_NAME);
             if (domain != null) {
                 // System.out.println("deleting COS " + domain.getName());
                 mProv.deleteDomain(domain.getId());
@@ -129,7 +130,7 @@ public class TestProvCos extends TestLdap {
     
     private void reloadAccountIfSoap() throws ServiceException {
         if (mProv instanceof SoapProvisioning)
-            ACCT = mProv.get(Provisioning.AccountBy.name, ACCT_NAME);
+            ACCT = mProv.get(Key.AccountBy.name, ACCT_NAME);
     }
     
     @Test
@@ -238,9 +239,9 @@ public class TestProvCos extends TestLdap {
     
     
     private void flushAccountCache() throws ServiceException {
-        mProv.flushCache(CacheEntryType.account, new CacheEntry[]{new CacheEntry(CacheEntryBy.name, ACCT_NAME)});
+        mProv.flushCache(CacheEntryType.account, new CacheEntry[]{new CacheEntry(Key.CacheEntryBy.name, ACCT_NAME)});
         // reload the account
-        ACCT = mProv.get(Provisioning.AccountBy.name, ACCT_NAME);
+        ACCT = mProv.get(Key.AccountBy.name, ACCT_NAME);
     }
 
 }

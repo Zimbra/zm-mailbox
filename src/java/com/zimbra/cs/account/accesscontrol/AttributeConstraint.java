@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -640,7 +641,7 @@ public class AttributeConstraint {
         AttributeConstraint.fromString(am, "zimbraPasswordMinLength:min=6:max=64:values=1,2,3");
         AttributeConstraint.fromString(am, "zimbraFeatureMailEnabled:values=FALSE,TRUE");
         
-        Account acct = prov.get(Provisioning.AccountBy.name, "user1@phoebe.mac");
+        Account acct = prov.get(Key.AccountBy.name, "user1@phoebe.mac");
         Cos cos = prov.getCOS(acct);
         cos.unsetConstraint();
         

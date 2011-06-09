@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
@@ -29,7 +31,6 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AclGroups;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
@@ -93,7 +94,7 @@ public abstract class TargetIterator{
             // We require one from prov.getAclGroup(DistributionListBy) here, 
             // call getAclGroup if it is not yet an ACL group.
             if (!((DistributionList)target).isAclGroup())
-                target = prov.getAclGroup(DistributionListBy.id, ((DistributionList)target).getId());
+                target = prov.getAclGroup(Key.DistributionListBy.id, ((DistributionList)target).getId());
             iter =  new TargetIterator.DistributionListTargetIterator(prov, target, expandGroups);
         } else if (target instanceof Server)
             iter =  new TargetIterator.ServerTargetIterator(prov, target);
@@ -160,7 +161,7 @@ public abstract class TargetIterator{
                 }
                 
                 if (mIdxInGroups < mGroups.groupIds().size()) {
-                    grantedOn = mProv.getAclGroup(DistributionListBy.id, mGroups.groupIds().get(mIdxInGroups));
+                    grantedOn = mProv.getAclGroup(Key.DistributionListBy.id, mGroups.groupIds().get(mIdxInGroups));
                     mIdxInGroups++;
                 } else {
                     mCurTargetType = TargetType.domain;
@@ -230,7 +231,7 @@ public abstract class TargetIterator{
                 }
                 
                 if (mIdxInGroups < mGroups.groupIds().size()) {
-                    grantedOn = mProv.getAclGroup(DistributionListBy.id, mGroups.groupIds().get(mIdxInGroups));
+                    grantedOn = mProv.getAclGroup(Key.DistributionListBy.id, mGroups.groupIds().get(mIdxInGroups));
                     mIdxInGroups++;
                 } else {
                     mCurTargetType = TargetType.domain;
@@ -288,7 +289,7 @@ public abstract class TargetIterator{
             int nextDot = 0;
             while ((nextDot = domainName.indexOf('.')) != -1) { // if nextDot is -l we've reached the top
                 domainName = domainName.substring(nextDot+1);
-                Domain parentDomain = mProv.getDomain(Provisioning.DomainBy.name, domainName, true); // check negative cache
+                Domain parentDomain = mProv.getDomain(Key.DomainBy.name, domainName, true); // check negative cache
                 if (parentDomain != null)
                     mSuperDomains.add(parentDomain);
             }

@@ -20,12 +20,13 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.TargetBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
@@ -129,9 +130,9 @@ public class SearchGrants {
             Entry entry = null;
             try {
                 if (tt == TargetType.zimlet)
-                    entry = TargetType.lookupTarget(prov, tt, TargetBy.name, sgr.cn);
+                    entry = TargetType.lookupTarget(prov, tt, Key.TargetBy.name, sgr.cn);
                 else
-                    entry = TargetType.lookupTarget(prov, tt, TargetBy.id, sgr.zimbraId);
+                    entry = TargetType.lookupTarget(prov, tt, Key.TargetBy.id, sgr.zimbraId);
                 if (entry == null) {
                     ZimbraLog.acl.warn("canot find target by id " + sgr.zimbraId);
                     throw ServiceException.FAILURE("canot find target by id " + sgr.zimbraId + ". " + sgr.dump(), null);

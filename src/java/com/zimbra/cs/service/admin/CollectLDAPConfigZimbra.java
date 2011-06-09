@@ -22,6 +22,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.service.ServiceException;
@@ -29,7 +31,6 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.rmgmt.RemoteCommands;
 import com.zimbra.cs.rmgmt.RemoteManager;
 import com.zimbra.cs.rmgmt.RemoteResult;
@@ -51,7 +52,7 @@ public class CollectLDAPConfigZimbra extends ZimbraServlet {
 			if(ldapHost == null) {
 				throw ServiceException.INVALID_REQUEST("Cannot find value for ldap_host in local config", null);
 			}
-			Server server = prov.get(ServerBy.name, ldapHost);
+			Server server = prov.get(Key.ServerBy.name, ldapHost);
 			if (server == null) {
 				throw ServiceException.INVALID_REQUEST("Cannot find server record for LDAP master host: " + ldapHost, null);
 			}		

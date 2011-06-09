@@ -34,6 +34,8 @@ import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -761,7 +763,7 @@ public class LdapProvisioning extends LdapProv {
                 return null;
             
             String domainName = parts[1];
-            domain = getDomain(DomainBy.foreignName, application + ":" + domainName, true);
+            domain = getDomain(Key.DomainBy.foreignName, application + ":" + domainName, true);
         }
         
         if (domain == null)
@@ -953,7 +955,7 @@ public class LdapProvisioning extends LdapProv {
                 entry.setAttr(Provisioning.A_zimbraCOSId, cosId);
             } else {
                 String domainCosId = domain != null ? d.getAttr(Provisioning.A_zimbraDomainDefaultCOSId, null) : null;
-                if (domainCosId != null) cos = get(CosBy.id, domainCosId);
+                if (domainCosId != null) cos = get(Key.CosBy.id, domainCosId);
                 if (cos == null) cos = getCosByName(Provisioning.DEFAULT_COS_NAME, zlc);
             }
 
@@ -1825,7 +1827,7 @@ public class LdapProvisioning extends LdapProv {
 
         // maybe it's a group
         // (note, entries in this DL cache contains only minimal attrs)
-        target = getGroup(DistributionListBy.id, targetId);
+        target = getGroup(Key.DistributionListBy.id, targetId);
 
         return target;
     }
@@ -1954,12 +1956,12 @@ public class LdapProvisioning extends LdapProv {
     }
 
     @Override
-    public Domain get(DomainBy keyType, String key) throws ServiceException {
+    public Domain get(Key.DomainBy keyType, String key) throws ServiceException {
         return getDomain(keyType, key, false);
     }
 
     @Override
-    public Domain getDomain(DomainBy keyType, String key, boolean checkNegativeCache) throws ServiceException {
+    public Domain getDomain(Key.DomainBy keyType, String key, boolean checkNegativeCache) throws ServiceException {
 
         // note: *always* use negative cache for keys from external source
         //       - virtualHostname, foreignName, krb5Realm
@@ -1982,7 +1984,7 @@ public class LdapProvisioning extends LdapProv {
         }
     }
 
-    private Domain getFromCache(DomainBy keyType, String key, GetFromDomainCacheOption option) {
+    private Domain getFromCache(Key.DomainBy keyType, String key, GetFromDomainCacheOption option) {
         switch(keyType) {
             case name:
                 String asciiName = IDNUtil.toAsciiDomainName(key);
@@ -2013,7 +2015,7 @@ public class LdapProvisioning extends LdapProv {
         LdapDomain domain = (LdapDomain)d;
         if (domain == null) {
             domain = getDomainByQuery(filterFactory.domainById(zimbraId), zlc);
-            sDomainCache.put(DomainBy.id, zimbraId, domain);
+            sDomainCache.put(Key.DomainBy.id, zimbraId, domain);
         }
         return domain;
     }
@@ -2035,7 +2037,7 @@ public class LdapProvisioning extends LdapProv {
         LdapDomain domain = (LdapDomain)d;
         if (domain == null) {
             domain = getDomainByQuery(filterFactory.domainByName(name), zlc);
-            sDomainCache.put(DomainBy.name, name, domain);
+            sDomainCache.put(Key.DomainBy.name, name, domain);
         }
         return domain;
     }
@@ -2048,7 +2050,7 @@ public class LdapProvisioning extends LdapProv {
         LdapDomain domain = (LdapDomain)d;
         if (domain == null) {
             domain = getDomainByQuery(filterFactory.domainByVirtualHostame(virtualHostname), null);
-            sDomainCache.put(DomainBy.virtualHostname, virtualHostname, domain);
+            sDomainCache.put(Key.DomainBy.virtualHostname, virtualHostname, domain);
         }
         return domain;
     }
@@ -2061,7 +2063,7 @@ public class LdapProvisioning extends LdapProv {
         LdapDomain domain = (LdapDomain)d;
         if (domain == null) {
             domain = getDomainByQuery(filterFactory.domainByForeignName(foreignName), null);
-            sDomainCache.put(DomainBy.foreignName, foreignName, domain);
+            sDomainCache.put(Key.DomainBy.foreignName, foreignName, domain);
         }
         return domain;
     }
@@ -2074,7 +2076,7 @@ public class LdapProvisioning extends LdapProv {
         LdapDomain domain = (LdapDomain)d;
         if (domain == null) {
             domain = getDomainByQuery(filterFactory.domainByKrb5Realm(krb5Realm), null);
-            sDomainCache.put(DomainBy.krb5Realm, krb5Realm, domain);
+            sDomainCache.put(Key.DomainBy.krb5Realm, krb5Realm, domain);
         }
         return domain;
     }
@@ -2211,7 +2213,7 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public void renameCos(String zimbraId, String newName) throws ServiceException {
-        LdapCos cos = (LdapCos) get(CosBy.id, zimbraId);
+        LdapCos cos = (LdapCos) get(Key.CosBy.id, zimbraId);
         if (cos == null)
             throw AccountServiceException.NO_SUCH_COS(zimbraId);
 
@@ -2263,7 +2265,7 @@ public class LdapProvisioning extends LdapProv {
     }
 
     @Override
-    public Cos get(CosBy keyType, String key) throws ServiceException {
+    public Cos get(Key.CosBy keyType, String key) throws ServiceException {
         switch(keyType) {
             case name:
                 return getCosByName(key, null);
@@ -2274,7 +2276,7 @@ public class LdapProvisioning extends LdapProv {
         }
     }
 
-    private Cos getFromCache(CosBy keyType, String key) {
+    private Cos getFromCache(Key.CosBy keyType, String key) {
         switch(keyType) {
             case name:
                 return sCosCache.getByName(key);
@@ -2668,7 +2670,7 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public void deleteCos(String zimbraId) throws ServiceException {
-        LdapCos c = (LdapCos) get(CosBy.id, zimbraId);
+        LdapCos c = (LdapCos) get(Key.CosBy.id, zimbraId);
         if (c == null)
             throw AccountServiceException.NO_SUCH_COS(zimbraId);
 
@@ -2763,7 +2765,7 @@ public class LdapProvisioning extends LdapProv {
     }
 
     @Override
-    public Server get(ServerBy keyType, String key) throws ServiceException {
+    public Server get(Key.ServerBy keyType, String key) throws ServiceException {
         switch(keyType) {
             case name:
                 return getServerByNameInternal(key);
@@ -3159,7 +3161,7 @@ public class LdapProvisioning extends LdapProv {
     }
 
     @Override
-    public DistributionList get(DistributionListBy keyType, String key) throws ServiceException {
+    public DistributionList get(Key.DistributionListBy keyType, String key) throws ServiceException {
         switch(keyType) {
             case id:
                 return getDistributionListByIdInternal(key);
@@ -3254,7 +3256,7 @@ public class LdapProvisioning extends LdapProv {
      *   to check upward membership.
      *
      */
-    public DistributionList getAclGroup(DistributionListBy keyType, String key) throws ServiceException {
+    public DistributionList getAclGroup(Key.DistributionListBy keyType, String key) throws ServiceException {
         switch(keyType) {
             case id:
                 return getAclGroupById(key);
@@ -3265,7 +3267,7 @@ public class LdapProvisioning extends LdapProv {
         }
     }
 
-    private DistributionList getAclGroupFromCache(DistributionListBy keyType, String key) {
+    private DistributionList getAclGroupFromCache(Key.DistributionListBy keyType, String key) {
         switch(keyType) {
         case id:
             return sAclGroupCache.getById(key);
@@ -3277,7 +3279,7 @@ public class LdapProvisioning extends LdapProv {
     }
 
     // GROUP-TODO: consolidate with sAclGroupCache
-    private DistributionList getDLFromCache(DistributionListBy keyType, String key) {
+    private DistributionList getDLFromCache(Key.DistributionListBy keyType, String key) {
         switch(keyType) {
         case id:
             return sDLCache.getById(key);
@@ -3288,7 +3290,7 @@ public class LdapProvisioning extends LdapProv {
         }
     }
 
-    void removeGroupFromCache(DistributionListBy keyType, String key) {
+    void removeGroupFromCache(Key.DistributionListBy keyType, String key) {
         DistributionList group = getAclGroupFromCache(keyType, key);
         if (group != null)
             removeFromCache(group);
@@ -3425,7 +3427,7 @@ public class LdapProvisioning extends LdapProv {
             return dls;
 
         // reload the entry from ldap because its zimbraMailAlias was trimmed off.
-        DistributionList dl = get(DistributionListBy.id, list.getId());
+        DistributionList dl = get(Key.DistributionListBy.id, list.getId());
         if (dl == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(list.getName());
 
@@ -4330,7 +4332,7 @@ public class LdapProvisioning extends LdapProv {
         return getZimlet(name, null, true);
     }
 
-    private Zimlet getFromCache(ZimletBy keyType, String key) {
+    private Zimlet getFromCache(Key.ZimletBy keyType, String key) {
         switch(keyType) {
         case name:
             return sZimletCache.getByName(key);
@@ -4486,12 +4488,12 @@ public class LdapProvisioning extends LdapProv {
     }
 
     @Override
-    public CalendarResource get(CalendarResourceBy keyType, String key) throws ServiceException {
+    public CalendarResource get(Key.CalendarResourceBy keyType, String key) throws ServiceException {
         return get(keyType, key, false);
     }
 
     @Override
-    public CalendarResource get(CalendarResourceBy keyType, String key, boolean loadFromMaster) throws ServiceException {
+    public CalendarResource get(Key.CalendarResourceBy keyType, String key, boolean loadFromMaster) throws ServiceException {
         switch(keyType) {
             case id:
                 return getCalendarResourceById(key, loadFromMaster);
@@ -4811,7 +4813,7 @@ public class LdapProvisioning extends LdapProv {
             directGroups = new ArrayList<DistributionList>();
             Set<String> idsToRemove = null;
             for (String groupId : directGroupIds) {
-                DistributionList group = prov.getGroup(DistributionListBy.id, groupId);
+                DistributionList group = prov.getGroup(Key.DistributionListBy.id, groupId);
                 if (group == null) {
                     // the group could have been deleted
                     // remove it from our direct group id cache on the entry
@@ -4845,7 +4847,7 @@ public class LdapProvisioning extends LdapProv {
     //     - entry returned only contains minimal DL attrs
     //
     @Override
-    public DistributionList getGroup(DistributionListBy keyType, String key) throws ServiceException {
+    public DistributionList getGroup(Key.DistributionListBy keyType, String key) throws ServiceException {
         switch(keyType) {
         case id:
             return getGroupById(key);
@@ -4952,7 +4954,7 @@ public class LdapProvisioning extends LdapProv {
         // if the dl is not an AclGroup, get one because AclGroup are cached in LdapProvisioning and
         // upward membership are for the group is cached on the AclGroup object
         if (!list.isAclGroup())
-            group = getAclGroup(DistributionListBy.id, list.getId());
+            group = getAclGroup(Key.DistributionListBy.id, list.getId());
 
         AclGroups aclGroups = getAclGroups(group, false);
         return aclGroups.groupIds().contains(zimbraId);
@@ -5403,7 +5405,7 @@ public class LdapProvisioning extends LdapProv {
                     // the upward membership cache for that is computed and cache only when 
                     // the entry is loaded/being cached, instead of lazily computed like we 
                     // do for account.
-                    removeGroupFromCache(DistributionListBy.name, memberName);
+                    removeGroupFromCache(Key.DistributionListBy.name, memberName);
                 }
             }
         }
@@ -5478,7 +5480,7 @@ public class LdapProvisioning extends LdapProv {
                     if (acct != null)
                         clearUpwardMembershipCache(acct);
                 } else {
-                    removeGroupFromCache(DistributionListBy.name, primary);
+                    removeGroupFromCache(Key.DistributionListBy.name, primary);
                 }
             }
         }
@@ -5576,7 +5578,7 @@ public class LdapProvisioning extends LdapProv {
                 primary = acct.getName();
                 aliases = acct.getMailAlias();
             } else {
-                DistributionList dl = get(Provisioning.DistributionListBy.name, name);
+                DistributionList dl = get(Key.DistributionListBy.name, name);
                 if (dl != null) {
                     primary = dl.getName();
                     aliases = dl.getAliases();
@@ -5814,7 +5816,7 @@ public class LdapProvisioning extends LdapProv {
     }
 
     @Override
-    public Identity get(Account account, IdentityBy keyType, String key) throws ServiceException {
+    public Identity get(Account account, Key.IdentityBy keyType, String key) throws ServiceException {
         LdapEntry ldapEntry = (LdapEntry) (account instanceof LdapEntry ? account : getAccountById(account.getId()));
         if (ldapEntry == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
@@ -6097,7 +6099,7 @@ public class LdapProvisioning extends LdapProv {
     }
 
     @Override
-    public Signature get(Account account, SignatureBy keyType, String key) throws ServiceException {
+    public Signature get(Account account, Key.SignatureBy keyType, String key) throws ServiceException {
         LdapEntry ldapEntry = (LdapEntry) (account instanceof LdapEntry ? account : getAccountById(account.getId()));
         if (ldapEntry == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
@@ -6426,7 +6428,7 @@ public class LdapProvisioning extends LdapProv {
     }
 
     @Override
-    public DataSource get(Account account, DataSourceBy keyType, String key) throws ServiceException {
+    public DataSource get(Account account, Key.DataSourceBy keyType, String key) throws ServiceException {
         LdapEntry ldapEntry = (LdapEntry) (account instanceof LdapEntry ? account : getAccountById(account.getId()));
         if (ldapEntry == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
@@ -6570,7 +6572,7 @@ public class LdapProvisioning extends LdapProv {
     }
 
     @Override
-    public XMPPComponent get(XMPPComponentBy keyType, String key) throws ServiceException {
+    public XMPPComponent get(Key.XMPPComponentBy keyType, String key) throws ServiceException {
         switch(keyType) {
             case name:
                 return getXMPPComponentByName(key, false);
@@ -6587,7 +6589,7 @@ public class LdapProvisioning extends LdapProv {
     public void deleteXMPPComponent(XMPPComponent comp) throws ServiceException {
         String zimbraId = comp.getId();
         ZLdapContext zlc = null;
-        LdapXMPPComponent l = (LdapXMPPComponent)get(XMPPComponentBy.id, zimbraId);
+        LdapXMPPComponent l = (LdapXMPPComponent)get(Key.XMPPComponentBy.id, zimbraId);
         try {
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_XMPPCOMPONENT);
             zlc.deleteEntry(l.getDN());
@@ -6601,7 +6603,7 @@ public class LdapProvisioning extends LdapProv {
 
     // Only called from renameDomain for now
     void renameXMPPComponent(String zimbraId, String newName) throws ServiceException {
-        LdapXMPPComponent comp = (LdapXMPPComponent)get(XMPPComponentBy.id, zimbraId);
+        LdapXMPPComponent comp = (LdapXMPPComponent)get(Key.XMPPComponentBy.id, zimbraId);
         if (comp == null)
             throw AccountServiceException.NO_SUCH_XMPP_COMPONENT(zimbraId);
 
@@ -6648,8 +6650,8 @@ public class LdapProvisioning extends LdapProv {
     }
 
     @Override
-    public boolean checkRight(String targetType, TargetBy targetBy, String target,
-                              GranteeBy granteeBy, String grantee,
+    public boolean checkRight(String targetType, Key.TargetBy targetBy, String target,
+                              Key.GranteeBy granteeBy, String grantee,
                               String right, Map<String, Object> attrs,
                               AccessManager.ViaGrant via) throws ServiceException {
         GuestAccount guest = null;
@@ -6668,7 +6670,7 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public RightCommand.AllEffectiveRights getAllEffectiveRights(
-            String granteeType, GranteeBy granteeBy, String grantee,
+            String granteeType, Key.GranteeBy granteeBy, String grantee,
             boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
         return RightCommand.getAllEffectiveRights(this,
                                                   granteeType, granteeBy, grantee,
@@ -6677,8 +6679,8 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public RightCommand.EffectiveRights getEffectiveRights(
-            String targetType, TargetBy targetBy, String target,
-            GranteeBy granteeBy, String grantee,
+            String targetType, Key.TargetBy targetBy, String target,
+            Key.GranteeBy granteeBy, String grantee,
             boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
         return RightCommand.getEffectiveRights(this,
                                                targetType, targetBy, target,
@@ -6688,9 +6690,9 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public EffectiveRights getCreateObjectAttrs(String targetType,
-                                                DomainBy domainBy, String domainStr,
-                                                CosBy cosBy, String cosStr,
-                                                GranteeBy granteeBy, String grantee) throws ServiceException {
+                                                Key.DomainBy domainBy, String domainStr,
+                                                Key.CosBy cosBy, String cosStr,
+                                                Key.GranteeBy granteeBy, String grantee) throws ServiceException {
         return RightCommand.getCreateObjectAttrs(this,
                                                  targetType,
                                                  domainBy, domainStr,
@@ -6699,16 +6701,16 @@ public class LdapProvisioning extends LdapProv {
     }
 
     @Override
-    public RightCommand.Grants getGrants(String targetType, TargetBy targetBy, String target,
-            String granteeType, GranteeBy granteeBy, String grantee,
+    public RightCommand.Grants getGrants(String targetType, Key.TargetBy targetBy, String target,
+            String granteeType, Key.GranteeBy granteeBy, String grantee,
             boolean granteeIncludeGroupsGranteeBelongs) throws ServiceException {
         return RightCommand.getGrants(this, targetType, targetBy, target,
                 granteeType, granteeBy, grantee, granteeIncludeGroupsGranteeBelongs);
     }
 
     @Override
-    public void grantRight(String targetType, TargetBy targetBy, String target,
-                           String granteeType, GranteeBy granteeBy, String grantee, String secret,
+    public void grantRight(String targetType, Key.TargetBy targetBy, String target,
+                           String granteeType, Key.GranteeBy granteeBy, String grantee, String secret,
                            String right, RightModifier rightModifier) throws ServiceException {
         RightCommand.grantRight(this,
                                 null,
@@ -6718,8 +6720,8 @@ public class LdapProvisioning extends LdapProv {
     }
 
     @Override
-    public void revokeRight(String targetType, TargetBy targetBy, String target,
-                            String granteeType, GranteeBy granteeBy, String grantee,
+    public void revokeRight(String targetType, Key.TargetBy targetBy, String target,
+                            String granteeType, Key.GranteeBy granteeBy, String grantee,
                             String right, RightModifier rightModifier) throws ServiceException {
          RightCommand.revokeRight(this,
                                   null,
@@ -6750,7 +6752,7 @@ public class LdapProvisioning extends LdapProv {
         case account:
             if (entries != null) {
                 for (CacheEntry entry : entries) {
-                    AccountBy accountBy = (entry.mEntryBy==CacheEntryBy.id)? AccountBy.id : AccountBy.name;
+                    AccountBy accountBy = (entry.mEntryBy==Key.CacheEntryBy.id)? AccountBy.id : AccountBy.name;
                     Account account = getFromCache(accountBy, entry.mEntryIdentity);
                     /*
                      * We now call removeFromCache instead of reload for flushing an account
@@ -6782,7 +6784,7 @@ public class LdapProvisioning extends LdapProv {
         case group:
             if (entries != null) {
                 for (CacheEntry entry : entries) {
-                    DistributionListBy dlBy = (entry.mEntryBy==CacheEntryBy.id)? DistributionListBy.id : DistributionListBy.name;
+                    Key.DistributionListBy dlBy = (entry.mEntryBy==Key.CacheEntryBy.id)? Key.DistributionListBy.id : Key.DistributionListBy.name;
                     removeGroupFromCache(dlBy, entry.mEntryIdentity);
                 }
             } else {
@@ -6807,7 +6809,7 @@ public class LdapProvisioning extends LdapProv {
         case cos:
             if (entries != null) {
                 for (CacheEntry entry : entries) {
-                    CosBy cosBy = (entry.mEntryBy==CacheEntryBy.id)? CosBy.id : CosBy.name;
+                    Key.CosBy cosBy = (entry.mEntryBy==Key.CacheEntryBy.id)? Key.CosBy.id : Key.CosBy.name;
                     Cos cos = getFromCache(cosBy, entry.mEntryIdentity);
                     if (cos != null)
                         reload(cos, false);
@@ -6818,7 +6820,7 @@ public class LdapProvisioning extends LdapProv {
         case domain:
             if (entries != null) {
                 for (CacheEntry entry : entries) {
-                    DomainBy domainBy = (entry.mEntryBy==CacheEntryBy.id)? DomainBy.id : DomainBy.name;
+                    Key.DomainBy domainBy = (entry.mEntryBy==Key.CacheEntryBy.id)? Key.DomainBy.id : Key.DomainBy.name;
                     Domain domain = getFromCache(domainBy, entry.mEntryIdentity, GetFromDomainCacheOption.BOTH);
                     if (domain != null) {
                         if (domain instanceof DomainCache.NonExistingDomain)
@@ -6836,7 +6838,7 @@ public class LdapProvisioning extends LdapProv {
         case server:
             if (entries != null) {
                 for (CacheEntry entry : entries) {
-                    ServerBy serverBy = (entry.mEntryBy==CacheEntryBy.id)? ServerBy.id : ServerBy.name;
+                    Key.ServerBy serverBy = (entry.mEntryBy==Key.CacheEntryBy.id)? Key.ServerBy.id : Key.ServerBy.name;
                     Server server = get(serverBy, entry.mEntryIdentity);
                     if (server != null)
                         reload(server, false);
@@ -6847,7 +6849,7 @@ public class LdapProvisioning extends LdapProv {
         case zimlet:
             if (entries != null) {
                 for (CacheEntry entry : entries) {
-                    ZimletBy zimletBy = (entry.mEntryBy==CacheEntryBy.id)? ZimletBy.id : ZimletBy.name;
+                    Key.ZimletBy zimletBy = (entry.mEntryBy==Key.CacheEntryBy.id)? Key.ZimletBy.id : Key.ZimletBy.name;
                     Zimlet zimlet = getFromCache(zimletBy, entry.mEntryIdentity);
                     if (zimlet != null)
                         reload(zimlet, false);
@@ -7038,7 +7040,7 @@ public class LdapProvisioning extends LdapProv {
         case domain:
             unresolvedIds = new HashSet<String>();
             for (String id : ids) {
-                entry = getFromCache(DomainBy.id, id, GetFromDomainCacheOption.POSITIVE);
+                entry = getFromCache(Key.DomainBy.id, id, GetFromDomainCacheOption.POSITIVE);
                 if (entry != null)
                     result.put(id, entry.getName());
                 else

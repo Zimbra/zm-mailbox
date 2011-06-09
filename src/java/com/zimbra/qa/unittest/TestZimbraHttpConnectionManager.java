@@ -33,6 +33,8 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.PostMethod;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
@@ -42,7 +44,6 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
-import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 
 public class TestZimbraHttpConnectionManager {
@@ -714,7 +715,7 @@ public class TestZimbraHttpConnectionManager {
                      AdminConstants.ADMIN_SERVICE_URI;
         sp.soapSetURI(uri);
         try {
-            sp.getDomainInfo(DomainBy.name, "phoebe.mac");
+            sp.getDomainInfo(Key.DomainBy.name, "phoebe.mac");
         } catch (ServiceException e) {
             e.printStackTrace();
         }

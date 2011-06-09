@@ -16,9 +16,10 @@ package com.zimbra.cs.account;
 
 import java.util.Map;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Provisioning.DomainBy;
 
 public abstract class MailTarget extends NamedEntry {
     
@@ -62,7 +63,7 @@ public abstract class MailTarget extends NamedEntry {
             try {
                 String dname = getDomainName();
                 Provisioning prov = getProvisioning();
-                Domain domain =  dname == null ? null : (prov == null ? null : prov.get(DomainBy.name, dname));
+                Domain domain =  dname == null ? null : (prov == null ? null : prov.get(Key.DomainBy.name, dname));
                 if (domain != null)
                     domainId = domain.getId();
             } catch (ServiceException e) {

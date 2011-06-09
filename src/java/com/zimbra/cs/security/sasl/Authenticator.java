@@ -15,6 +15,7 @@
 
 package com.zimbra.cs.security.sasl;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
@@ -178,7 +179,7 @@ public abstract class Authenticator {
             return authAccount;
 
         Provisioning prov = Provisioning.getInstance();
-        Account userAcct = prov.get(Provisioning.AccountBy.name, username);
+        Account userAcct = prov.get(Key.AccountBy.name, username);
         if (userAcct == null) {
             // if username not found, check username again using the domain associated with the authorization account
             int i = username.indexOf('@');
@@ -186,7 +187,7 @@ public abstract class Authenticator {
                 String domain = authAccount.getDomainName();
                 if (domain != null) {
                     username = username.substring(0, i) + '@' + domain;
-                    userAcct = prov.get(Provisioning.AccountBy.name, username);
+                    userAcct = prov.get(Key.AccountBy.name, username);
                 }
             }
         }

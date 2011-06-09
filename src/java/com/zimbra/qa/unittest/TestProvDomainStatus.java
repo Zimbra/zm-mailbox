@@ -38,8 +38,9 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.soap.SoapProvisioning;
@@ -199,14 +200,14 @@ public class TestProvDomainStatus {
     }
     
     private Domain getDomain() throws Exception {
-        Domain domain = mProv.get(Provisioning.DomainBy.name, DOMAIN_NAME);
+        Domain domain = mProv.get(Key.DomainBy.name, DOMAIN_NAME);
         assertNotNull(domain);
         return domain;
     }
     
     private Account getAccount(AccountStatus as) throws Exception {
         /*
-        Account acct = mProv.get(Provisioning.AccountBy.name, ACCOUNT_NAME(as));
+        Account acct = mProv.get(Key.AccountBy.name, ACCOUNT_NAME(as));
         assertNotNull(acct);
         return acct;
         */
@@ -569,7 +570,7 @@ public class TestProvDomainStatus {
             // the one in SOapProvisioning requires a Domain obj, so we write our own
             XMLElement req = new XMLElement(AdminConstants.GET_ALL_ACCOUNTS_REQUEST);
             Element eDomain = req.addElement(AdminConstants.E_DOMAIN);
-            eDomain.addAttribute(AdminConstants.A_BY, DomainBy.name.name());
+            eDomain.addAttribute(AdminConstants.A_BY, Key.DomainBy.name.name());
             eDomain.setText(mCtx.mDomainName);
             mCtx.mSoapClient.invoke(req);
         }
@@ -620,12 +621,12 @@ public class TestProvDomainStatus {
         }
         
         public void GET_DOMAIN_REQUEST() throws Exception {
-            mCtx.mSoapClient.get(DomainBy.name, mCtx.mDomainName) ;
+            mCtx.mSoapClient.get(Key.DomainBy.name, mCtx.mDomainName) ;
         }
         
         public void GET_DOMAIN_INFO_REQUEST() throws Exception {
             // KNOWNBU?? what is this API for and why doesn't it require any auth?
-            mCtx.mSoapClient.getDomainInfo(DomainBy.name, mCtx.mDomainName);
+            mCtx.mSoapClient.getDomainInfo(Key.DomainBy.name, mCtx.mDomainName);
         }
        
         public void GET_ALL_DOMAINS_REQUEST() throws Exception {

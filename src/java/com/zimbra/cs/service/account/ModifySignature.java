@@ -18,12 +18,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.SignatureBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.SignatureBy;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.common.soap.Element;
@@ -44,7 +45,7 @@ public class ModifySignature extends DocumentHandler {
         
         Signature signature = null;
         String id = eSignature.getAttribute(AccountConstants.A_ID);
-        signature = prov.get(account, SignatureBy.id, id);
+        signature = prov.get(account, Key.SignatureBy.id, id);
         if (signature == null)
             throw AccountServiceException.NO_SUCH_SIGNATURE(id);
 

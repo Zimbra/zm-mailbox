@@ -27,8 +27,9 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.ServerBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -385,7 +386,7 @@ public abstract class DocumentHandler {
         String hostname = acct.getAttr(Provisioning.A_zimbraMailHost);
         if (hostname == null)
             throw ServiceException.PROXY_ERROR(AccountServiceException.NO_SUCH_SERVER(""), "");
-        Server server = Provisioning.getInstance().get(ServerBy.name, hostname);
+        Server server = Provisioning.getInstance().get(Key.ServerBy.name, hostname);
         if (server == null)
             throw ServiceException.PROXY_ERROR(AccountServiceException.NO_SUCH_SERVER(hostname), "");
         return server;

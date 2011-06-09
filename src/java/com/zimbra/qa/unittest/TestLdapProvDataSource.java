@@ -28,9 +28,10 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DataSourceBy;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
-import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.ldap.LdapConstants;
 
 public class TestLdapProvDataSource extends TestLdap {
@@ -67,14 +68,14 @@ public class TestLdapProvDataSource extends TestLdap {
     static DataSource createDataSource(Provisioning prov, Account acct, 
             String dataSourceName) throws Exception {
         prov.flushCache(CacheEntryType.account, null);
-        DataSource dataSource = prov.get(acct, DataSourceBy.name, dataSourceName);
+        DataSource dataSource = prov.get(acct, Key.DataSourceBy.name, dataSourceName);
         assertNull(dataSource);
         
         dataSource = createDataSourceRaw(prov, acct, dataSourceName);
         assertNotNull(dataSource);
         
         prov.flushCache(CacheEntryType.account, null);
-        dataSource = prov.get(acct, DataSourceBy.name, dataSourceName);
+        dataSource = prov.get(acct, Key.DataSourceBy.name, dataSourceName);
         assertNotNull(dataSource);
         assertEquals(dataSourceName, dataSource.getName());
         
@@ -86,7 +87,7 @@ public class TestLdapProvDataSource extends TestLdap {
         String dataSourceId = dataSource.getId();
         prov.deleteDataSource(acct, dataSourceId);
         prov.flushCache(CacheEntryType.account, null);
-        dataSource = prov.get(acct, DataSourceBy.id, dataSourceId);
+        dataSource = prov.get(acct, Key.DataSourceBy.id, dataSourceId);
         assertNull(dataSource);
     }
     
@@ -170,7 +171,7 @@ public class TestLdapProvDataSource extends TestLdap {
         prov.modifyDataSource(acct, dataSource.getId(), attrs);
         
         acct = getFresh(acct);
-        dataSource = prov.get(acct, DataSourceBy.name, DATA_SOURCE_NAME);
+        dataSource = prov.get(acct, Key.DataSourceBy.name, DATA_SOURCE_NAME);
         assertEquals(MODIFIED_ATTR_VALUE, dataSource.getAttr(MODIFIED_ATTR_NAME));
         
         deleteDataSource(acct,dataSource);
@@ -194,7 +195,7 @@ public class TestLdapProvDataSource extends TestLdap {
         prov.modifyDataSource(acct, dataSource.getId(), attrs);
         
         acct = getFresh(acct);
-        dataSource = prov.get(acct, DataSourceBy.name, NEW_DATA_SOURCE_NAME);
+        dataSource = prov.get(acct, Key.DataSourceBy.name, NEW_DATA_SOURCE_NAME);
         assertEquals(MODIFIED_ATTR_VALUE, dataSource.getAttr(MODIFIED_ATTR_NAME));
         
         deleteDataSource(acct,dataSource);
@@ -242,11 +243,11 @@ public class TestLdapProvDataSource extends TestLdap {
         String dataSourceId = dataSource.getId();
         
         acct = getFresh(acct);
-        dataSource = prov.get(acct, DataSourceBy.id, dataSourceId);
+        dataSource = prov.get(acct, Key.DataSourceBy.id, dataSourceId);
         assertNotNull(dataSource);
         
         acct = getFresh(acct);
-        dataSource = prov.get(acct, DataSourceBy.name, DATA_SOURCE_NAME);
+        dataSource = prov.get(acct, Key.DataSourceBy.name, DATA_SOURCE_NAME);
         assertNotNull(dataSource);
         
         deleteDataSource(acct,dataSource);

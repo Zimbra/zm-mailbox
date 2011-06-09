@@ -32,7 +32,8 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
@@ -140,7 +141,7 @@ public class UrlNamespace {
         }
 
         try {
-            Account a = Provisioning.getInstance().get(Provisioning.AccountBy.name, name);
+            Account a = Provisioning.getInstance().get(Key.AccountBy.name, name);
             if (a == null)
                 throw new DavException("user not found", HttpServletResponse.SC_NOT_FOUND, null);
             return new User(ctxt, a, url);

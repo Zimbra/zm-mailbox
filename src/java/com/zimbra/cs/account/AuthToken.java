@@ -20,6 +20,7 @@ package com.zimbra.cs.account;
 
 import java.util.Map;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -97,7 +98,7 @@ public abstract class AuthToken {
     
     public Account getAccount() throws ServiceException {
         String acctId = getAccountId();
-        Account acct = Provisioning.getInstance().get(Provisioning.AccountBy.id, acctId);
+        Account acct = Provisioning.getInstance().get(Key.AccountBy.id, acctId);
         if (acct == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(acctId);
         

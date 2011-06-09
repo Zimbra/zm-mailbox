@@ -27,6 +27,7 @@ import java.util.Set;
 import org.junit.*;
 import static org.junit.Assert.*;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.util.Constants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeClass;
@@ -56,12 +57,12 @@ public class TestLdapProvEntry extends TestLdap {
     public static void init() throws Exception {
         prov = Provisioning.getInstance();
         
-        domain = prov.get(Provisioning.DomainBy.name, DOMAIN_NAME);
+        domain = prov.get(Key.DomainBy.name, DOMAIN_NAME);
         assertNull(domain);
         domain = prov.createDomain(DOMAIN_NAME, new HashMap<String, Object>());
         assertNotNull(domain);
         
-        cos = prov.get(Provisioning.CosBy.name, Provisioning.DEFAULT_COS_NAME);
+        cos = prov.get(Key.CosBy.name, Provisioning.DEFAULT_COS_NAME);
         
         server = prov.getLocalServer();
         
@@ -71,7 +72,7 @@ public class TestLdapProvEntry extends TestLdap {
         attrs.put(Provisioning.A_userSMIMECertificate, binaryData.getString());
         
         account = prov.createAccount(accountName, "test123", attrs);
-        entry = prov.get(Provisioning.AccountBy.name, accountName);
+        entry = prov.get(Key.AccountBy.name, accountName);
     }
     
     @AfterClass

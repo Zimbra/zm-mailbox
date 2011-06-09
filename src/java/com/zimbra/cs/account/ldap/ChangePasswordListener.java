@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -184,7 +185,7 @@ public abstract class ChangePasswordListener {
         ChangePasswordListener.register("dummy", new DummyChangePasswordListener());
         
         Provisioning prov = Provisioning.getInstance();
-        Account acct = prov.get(Provisioning.AccountBy.name, "user1");
+        Account acct = prov.get(Key.AccountBy.name, "user1");
         
         // setup domain for testing
         Domain domain = prov.getDomain(acct);

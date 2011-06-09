@@ -36,8 +36,9 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.Provisioning.GalMode;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.gal.GalConstants;
@@ -163,7 +164,7 @@ public class TestGal extends TestCase {
      */
     private void setupDomain(String domainName, String domainBaseDn) throws Exception {
         // create the domain and accounts if they have not been created yet
-        Domain domain = mProv.get(DomainBy.name, domainName);
+        Domain domain = mProv.get(Key.DomainBy.name, domainName);
         if (domain == null) {
             Map<String, Object> attrs = new HashMap<String, Object>();
             // setup zimbra OpenLDAP for external GAL
@@ -195,7 +196,7 @@ public class TestGal extends TestCase {
         assertEquals(domain.getAttr(Provisioning.A_zimbraGalSyncLdapFilter), "zimbraAccounts");
         
         setupTokenize(domainName, null, null);
-        domain = mProv.get(DomainBy.name, domainName);
+        domain = mProv.get(Key.DomainBy.name, domainName);
         assertNotNull(domain);
         assertEquals(domain.getAttr(Provisioning.A_zimbraGalTokenizeAutoCompleteKey), null);
         assertEquals(domain.getAttr(Provisioning.A_zimbraGalTokenizeSearchKey), null);
@@ -267,7 +268,7 @@ public class TestGal extends TestCase {
     }
   
     private void setupAutoComplete(GalMode galMode, int pageSize) throws Exception {
-        Domain domain = mProv.get(DomainBy.name, DOMAIN_NAME);
+        Domain domain = mProv.get(Key.DomainBy.name, DOMAIN_NAME);
         assertNotNull(domain);
         
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -282,7 +283,7 @@ public class TestGal extends TestCase {
     
     private void setupSearch(GalMode galMode, int pageSize, int domainLimit) throws Exception {
         // System.out.format("   setupSearch: galMode=%s, pageSize=%d, domainLimit=%d\n", galMode, pageSize, domainLimit);
-        Domain domain = mProv.get(DomainBy.name, DOMAIN_NAME);
+        Domain domain = mProv.get(Key.DomainBy.name, DOMAIN_NAME);
         assertNotNull(domain);
         
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -294,7 +295,7 @@ public class TestGal extends TestCase {
     
     private void setupSync(GalMode galMode, int pageSize, int domainLimit) throws Exception {
         // System.out.format("   setupSync: galMode=%s, pageSize=%d, domainLimit=%d\n", galMode, pageSize, domainLimit);
-        Domain domain = mProv.get(DomainBy.name, DOMAIN_NAME);
+        Domain domain = mProv.get(Key.DomainBy.name, DOMAIN_NAME);
         assertNotNull(domain);
         
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -321,7 +322,7 @@ public class TestGal extends TestCase {
     }
     
     private void autoCompleteGal(int numResultsExpected, int maxWanted) throws Exception {
-        Domain domain = mProv.get(DomainBy.name, DOMAIN_NAME);
+        Domain domain = mProv.get(Key.DomainBy.name, DOMAIN_NAME);
         SearchGalResult galResult = mProv.autoCompleteGal(domain, 
                                                           QUERY,
                                                           Provisioning.GalSearchType.account, // Provisioning.GAL_SEARCH_TYPE.ALL, 
@@ -335,7 +336,7 @@ public class TestGal extends TestCase {
     }
     
     private void searchGal(int numResultsExpected) throws Exception {
-        Domain domain = mProv.get(DomainBy.name, DOMAIN_NAME);
+        Domain domain = mProv.get(Key.DomainBy.name, DOMAIN_NAME);
         SearchGalResult galResult = mProv.searchGal(domain, 
                                                     QUERY,
                                                     Provisioning.GalSearchType.all, 
@@ -352,7 +353,7 @@ public class TestGal extends TestCase {
                               numResultsExpected, numTotal, token);
         */
         
-        Domain domain = mProv.get(DomainBy.name, DOMAIN_NAME);
+        Domain domain = mProv.get(Key.DomainBy.name, DOMAIN_NAME);
         SearchGalResult galResult = mProv.searchGal(domain, 
                                                     QUERY,
                                                     Provisioning.GalSearchType.all, 
@@ -513,7 +514,7 @@ public class TestGal extends TestCase {
     }
     
     private void setupTokenize(String domainName, GalMode galMode, String andOr) throws Exception {
-        Domain domain = mProv.get(DomainBy.name, domainName);
+        Domain domain = mProv.get(Key.DomainBy.name, domainName);
         assertNotNull(domain);
         
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -533,7 +534,7 @@ public class TestGal extends TestCase {
     }
     
     private void tokenizeTest(GalOp galOp, String tokenizeKey, String key, String[] expectedUsers) throws Exception {
-        Domain domain = mProv.get(DomainBy.name, TOKENIZE_TEST_DOMAIN_NAME);
+        Domain domain = mProv.get(Key.DomainBy.name, TOKENIZE_TEST_DOMAIN_NAME);
         SearchGalResult galResult = null;
         
         if (galOp == GalOp.GOP_AUTOCOMPLETE)

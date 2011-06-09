@@ -3,6 +3,9 @@ package com.zimbra.qa.unittest;
 import org.junit.*;
 import static org.junit.Assert.*;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.GranteeBy;
+import com.zimbra.common.account.Key.TargetBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.AccessManager;
@@ -13,8 +16,6 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.GranteeBy;
-import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
@@ -50,8 +51,8 @@ public class TestACPermissionCache extends TestAC {
     throws ServiceException {
         RightCommand.revokeRight(
                 mProv, getGlobalAdminAcct(),
-                targetType.getCode(), TargetBy.name, target.getLabel(),
-                granteeType.getCode(), GranteeBy.name, grantee.getName(), 
+                targetType.getCode(), Key.TargetBy.name, target.getLabel(),
+                granteeType.getCode(), Key.GranteeBy.name, grantee.getName(), 
                 right.getName(), null);
     }
     
@@ -61,8 +62,8 @@ public class TestACPermissionCache extends TestAC {
     throws ServiceException {
         RightCommand.grantRight(
                 mProv, getGlobalAdminAcct(),
-                targetType.getCode(), TargetBy.name, target.getLabel(),
-                granteeType.getCode(), GranteeBy.name, grantee.getName(), secret,
+                targetType.getCode(), Key.TargetBy.name, target.getLabel(),
+                granteeType.getCode(), Key.GranteeBy.name, grantee.getName(), secret,
                 right.getName(), null);
     }
     
@@ -317,12 +318,12 @@ public class TestACPermissionCache extends TestAC {
         String oldName = target.getName();
         String newName = getEmailLocalpart(target.getName()) + "@" + newDomain.getName();
         mProv.renameAccount(id, newName);
-        target = mProv.get(Provisioning.AccountBy.id, id);
+        target = mProv.get(Key.AccountBy.id, id);
         allow = accessMgr.canDo(grantee, target, right, false, null);
         assertFalse(allow); 
         
         mProv.renameAccount(id, oldName);
-        target = mProv.get(Provisioning.AccountBy.id, id);
+        target = mProv.get(Key.AccountBy.id, id);
         allow = accessMgr.canDo(grantee, target, right, false, null);
         assertTrue(allow); 
     }

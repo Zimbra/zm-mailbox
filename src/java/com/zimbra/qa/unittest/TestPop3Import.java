@@ -31,12 +31,13 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DataSourceBy;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.db.DbPop3Message;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -311,7 +312,7 @@ public class TestPop3Import extends TestCase {
     private DataSource getDataSource() throws Exception {
         Provisioning prov = Provisioning.getInstance();
         Account account = TestUtil.getAccount(USER_NAME);
-        return prov.get(account, DataSourceBy.name, DATA_SOURCE_NAME);
+        return prov.get(account, Key.DataSourceBy.name, DATA_SOURCE_NAME);
     }
     
     private void cleanUp() throws Exception {

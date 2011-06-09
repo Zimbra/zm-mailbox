@@ -29,7 +29,7 @@ import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.zclient.ZAuthResult;
 import com.zimbra.cs.zclient.ZFolder;

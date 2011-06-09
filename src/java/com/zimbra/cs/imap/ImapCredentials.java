@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -87,7 +88,7 @@ class ImapCredentials implements java.io.Serializable {
     }
 
     Account getAccount() throws ServiceException {
-        return Provisioning.getInstance().get(Provisioning.AccountBy.id, mAccountId);
+        return Provisioning.getInstance().get(Key.AccountBy.id, mAccountId);
     }
 
     OperationContext getContext() throws ServiceException {

@@ -29,8 +29,9 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.PreAuthKey;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.ldap.LdapConstants;
 
@@ -41,7 +42,7 @@ public class TestPreAuthServlet extends TestCase {
 
     String setUpDomain() throws Exception {
         String domainName = TestUtil.getDomain();
-        Domain domain = Provisioning.getInstance().get(DomainBy.name, domainName);
+        Domain domain = Provisioning.getInstance().get(Key.DomainBy.name, domainName);
         String preAuthKey = PreAuthKey.generateRandomPreAuthKey();
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraPreAuthKey, preAuthKey);

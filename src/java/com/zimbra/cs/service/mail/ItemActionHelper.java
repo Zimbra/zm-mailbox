@@ -26,6 +26,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.dom4j.QName;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -439,7 +440,7 @@ public class ItemActionHelper {
     }
 
     private void executeRemote() throws ServiceException, IOException {
-        Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mIidFolder.getAccountId());
+        Account target = Provisioning.getInstance().get(Key.AccountBy.id, mIidFolder.getAccountId());
 
         AuthToken at = getAuthToken();
         String pxyAuthToken = Provisioning.onLocalServer(target) ? null : at.getProxyAuthToken();
@@ -454,7 +455,7 @@ public class ItemActionHelper {
         ZMailbox.Options zoptions = new ZMailbox.Options(zat, AccountUtil.getSoapUri(target));
         zoptions.setNoSession(true);
         zoptions.setTargetAccount(target.getId());
-        zoptions.setTargetAccountBy(Provisioning.AccountBy.id);
+        zoptions.setTargetAccountBy(Key.AccountBy.id);
         ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
 
         // check for mountpoints before going any further...

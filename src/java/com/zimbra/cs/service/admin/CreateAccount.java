@@ -18,6 +18,8 @@
  */
 package com.zimbra.cs.service.admin;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.CosBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -26,7 +28,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.TargetType;
@@ -80,7 +81,7 @@ public class CreateAccount extends AdminDocumentHandler {
         
         Provisioning prov = Provisioning.getInstance();
 
-        Cos cos = prov.get(CosBy.id, cosId);
+        Cos cos = prov.get(Key.CosBy.id, cosId);
         if (cos == null) {
             throw AccountServiceException.NO_SUCH_COS(cosId);
         }

@@ -34,11 +34,12 @@ import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.account.Provisioning.GranteeBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DomainBy;
+import com.zimbra.common.account.Key.GranteeBy;
+import com.zimbra.common.account.Key.TargetBy;
 import com.zimbra.cs.account.Provisioning.SearchOptions;
-import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
@@ -64,7 +65,7 @@ public class TestSearchDirectory extends TestCase {
         if (prov == null)
             prov = Provisioning.getInstance();
         
-        Domain domain = prov.get(DomainBy.name, domainName);
+        Domain domain = prov.get(Key.DomainBy.name, domainName);
         if (domain == null)
             domain = prov.createDomain(domainName, new HashMap<String, Object>());
         
@@ -144,9 +145,9 @@ public class TestSearchDirectory extends TestCase {
          * and flood our connection pool debug
          */
         
-        Domain domain1 = Provisioning.getInstance().get(Provisioning.DomainBy.name, "test-gal.ldaptest");
-        Domain domain2 = Provisioning.getInstance().get(Provisioning.DomainBy.name, "goodbyewhen-lm-corp-yahoo-com-2.local");
-        Cos cos = Provisioning.getInstance().get(Provisioning.CosBy.name, "default");
+        Domain domain1 = Provisioning.getInstance().get(Key.DomainBy.name, "test-gal.ldaptest");
+        Domain domain2 = Provisioning.getInstance().get(Key.DomainBy.name, "goodbyewhen-lm-corp-yahoo-com-2.local");
+        Cos cos = Provisioning.getInstance().get(Key.CosBy.name, "default");
         
         System.out.flush();
         for (int i=0; i<10; i++) {
@@ -259,12 +260,12 @@ public class TestSearchDirectory extends TestCase {
             //
             // Right right = AdminRight.RT_adminConsoleDomainRights;
             String right = AdminRight.RT_domainAdminConsoleRights;
-            prov.grantRight(TargetType.domain.getCode(), TargetBy.id, domain1.getId(), 
-                    GranteeType.GT_GROUP.getCode(), GranteeBy.id, adminGroup1.getId(), null,
+            prov.grantRight(TargetType.domain.getCode(), Key.TargetBy.id, domain1.getId(), 
+                    GranteeType.GT_GROUP.getCode(), Key.GranteeBy.id, adminGroup1.getId(), null,
                     right, null);
             
-            prov.grantRight(TargetType.domain.getCode(), TargetBy.id, domain2.getId(), 
-                    GranteeType.GT_GROUP.getCode(), GranteeBy.id, adminGroup2.getId(), null,
+            prov.grantRight(TargetType.domain.getCode(), Key.TargetBy.id, domain2.getId(), 
+                    GranteeType.GT_GROUP.getCode(), Key.GranteeBy.id, adminGroup2.getId(), null,
                     right, null);
             
             //
@@ -427,15 +428,15 @@ public class TestSearchDirectory extends TestCase {
             // grant positive adminConsoleDomainRights to both da on globalgrant
             String right = AdminRight.RT_adminConsoleDomainRights;
             prov.grantRight(TargetType.global.getCode(), null, null, 
-                    GranteeType.GT_USER.getCode(), GranteeBy.id, denyAdmin.getId(), null,
+                    GranteeType.GT_USER.getCode(), Key.GranteeBy.id, denyAdmin.getId(), null,
                     right, null);
             prov.grantRight(TargetType.global.getCode(), null, null, 
-                    GranteeType.GT_USER.getCode(), GranteeBy.id, allowAdmin.getId(), null,
+                    GranteeType.GT_USER.getCode(), Key.GranteeBy.id, allowAdmin.getId(), null,
                     right, null);
             
             // grant negative adminConsoleDomainRights to one the the da's on a domain
-            prov.grantRight(TargetType.domain.getCode(), TargetBy.id, denyDomain.getId(), 
-                    GranteeType.GT_USER.getCode(), GranteeBy.id, denyAdmin.getId(), null,
+            prov.grantRight(TargetType.domain.getCode(), Key.TargetBy.id, denyDomain.getId(), 
+                    GranteeType.GT_USER.getCode(), Key.GranteeBy.id, denyAdmin.getId(), null,
                     right, RightModifier.RM_DENY);
             
             

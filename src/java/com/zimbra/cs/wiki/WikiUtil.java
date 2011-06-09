@@ -37,8 +37,9 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
@@ -446,7 +447,7 @@ public abstract class WikiUtil {
         if (domain == null) {
             throw WikiServiceException.ERROR("invalid argument - empty domain");
         }
-        Domain dom = mProv.get(DomainBy.name, domain);
+        Domain dom = mProv.get(Key.DomainBy.name, domain);
         if (dom == null) {
             throw WikiServiceException.ERROR("invalid domain: " + domain);
         }
@@ -485,7 +486,7 @@ public abstract class WikiUtil {
             throw AccountServiceException.NO_SUCH_ACCOUNT(username);
 
         mUsername = username;
-        Account acct = mProv.get(Provisioning.AccountBy.name, mUsername);
+        Account acct = mProv.get(Key.AccountBy.name, mUsername);
         if (!acct.getBooleanAttr(Provisioning.A_zimbraHideInGal, false) ||
                 !acct.getBooleanAttr(Provisioning.A_zimbraIsSystemResource, false)) {
             Map<String,Object> attrs = new HashMap<String, Object>();

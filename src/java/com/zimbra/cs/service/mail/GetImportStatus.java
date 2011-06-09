@@ -17,6 +17,7 @@ package com.zimbra.cs.service.mail;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
@@ -43,7 +44,7 @@ public class GetImportStatus extends MailDocumentHandler {
 
         for (ImportStatus status : statusList) {
             DataSource ds = prov.get(
-                account, Provisioning.DataSourceBy.id, status.getDataSourceId());
+                account, Key.DataSourceBy.id, status.getDataSourceId());
             Element eDataSource = response.addElement(ds.getType().name());
             eDataSource.addAttribute(MailConstants.A_ID, status.getDataSourceId());
             eDataSource.addAttribute(MailConstants.A_DS_IS_RUNNING, status.isRunning());

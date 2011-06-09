@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.CalendarResourceBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -26,7 +28,6 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -59,7 +60,7 @@ public class GetCalendarResource extends AdminDocumentHandler {
         String key = cr.getAttribute(AdminConstants.A_BY);
         String value = cr.getText();
 
-        CalendarResource resource = prov.get(CalendarResourceBy.fromString(key), value);
+        CalendarResource resource = prov.get(Key.CalendarResourceBy.fromString(key), value);
 
         if (resource == null)
             throw AccountServiceException.NO_SUCH_CALENDAR_RESOURCE(value);

@@ -50,7 +50,8 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -549,7 +550,7 @@ public class DavServlet extends ZimbraServlet {
         ZMailbox.Options zoptions = new ZMailbox.Options(authToken.toZAuthToken(), AccountUtil.getSoapUri(acct));
         zoptions.setNoSession(true);
         zoptions.setTargetAccount(target.getAccountId());
-        zoptions.setTargetAccountBy(Provisioning.AccountBy.id);
+        zoptions.setTargetAccountBy(Key.AccountBy.id);
         ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
         ZFolder f = zmbx.getFolderById("" + target.toString());
         if (f == null)

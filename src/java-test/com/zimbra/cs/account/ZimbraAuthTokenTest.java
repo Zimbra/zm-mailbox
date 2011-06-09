@@ -20,7 +20,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key.AccountBy;
 
 /**
  * Unit test for {@link ZimbraAuthToken}.

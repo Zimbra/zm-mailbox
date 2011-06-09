@@ -29,19 +29,20 @@ import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.CalendarResourceBy;
+import com.zimbra.common.account.Key.CosBy;
+import com.zimbra.common.account.Key.DistributionListBy;
+import com.zimbra.common.account.Key.DomainBy;
+import com.zimbra.common.account.Key.GranteeBy;
+import com.zimbra.common.account.Key.ServerBy;
+import com.zimbra.common.account.Key.TargetBy;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
-import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
-import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.CountAccountResult;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.PublishShareInfoAction;
 import com.zimbra.cs.account.Provisioning.PublishedShareInfoVisitor;
 import com.zimbra.cs.account.Provisioning.RightsDoc;
-import com.zimbra.cs.account.Provisioning.ServerBy;
-import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ShareInfoData;
 import com.zimbra.cs.account.accesscontrol.Right;
@@ -140,7 +141,7 @@ public class TestJaxbProvisioning extends TestCase {
         try {
             ZimbraLog.test.debug(
                     "Deleting domain " + name);
-            Domain res = prov.get(DomainBy.name, name);
+            Domain res = prov.get(Key.DomainBy.name, name);
             if (res != null)
                 prov.deleteDomain(res.getId());
         } catch (Exception ex) {
@@ -152,7 +153,7 @@ public class TestJaxbProvisioning extends TestCase {
         try {
             ZimbraLog.test.debug(
                     "Deleting server " + name);
-            Server res = prov.get(ServerBy.name, name);
+            Server res = prov.get(Key.ServerBy.name, name);
             if (res != null)
                 prov.deleteServer(res.getId());
         } catch (Exception ex) {
@@ -164,7 +165,7 @@ public class TestJaxbProvisioning extends TestCase {
         try {
             ZimbraLog.test.debug(
                     "Deleting CalendarResource " + name);
-            CalendarResource res = prov.get(CalendarResourceBy.name, name);
+            CalendarResource res = prov.get(Key.CalendarResourceBy.name, name);
             if (res != null)
                 prov.deleteDomain(res.getId());
         } catch (Exception ex) {
@@ -177,7 +178,7 @@ public class TestJaxbProvisioning extends TestCase {
         try {
             ZimbraLog.test.debug(
                     "Deleting DL " + name);
-            DistributionList res = prov.get(DistributionListBy.name, name);
+            DistributionList res = prov.get(Key.DistributionListBy.name, name);
             if (res != null)
                 prov.deleteDistributionList(res.getId());
         } catch (Exception ex) {
@@ -190,7 +191,7 @@ public class TestJaxbProvisioning extends TestCase {
         try {
             ZimbraLog.test.debug(
                     "Deleting COS " + name);
-            Cos res = prov.get(CosBy.name, name);
+            Cos res = prov.get(Key.CosBy.name, name);
             if (res != null)
                 prov.deleteCos(res.getId());
         } catch (Exception ex) {
@@ -201,7 +202,7 @@ public class TestJaxbProvisioning extends TestCase {
 
     public Domain ensureDomainExists(String name)
     throws Exception {
-        Domain dom = prov.get(DomainBy.name, name);
+        Domain dom = prov.get(Key.DomainBy.name, name);
         if (dom == null)
             dom = prov.createDomain(name, null);
         return dom;
@@ -229,7 +230,7 @@ public class TestJaxbProvisioning extends TestCase {
     throws Exception {
         String domainName = name.substring(name.indexOf('@') + 1);
         ensureDomainExists(domainName);
-        DistributionList dl = prov.get(DistributionListBy.name, name);
+        DistributionList dl = prov.get(Key.DistributionListBy.name, name);
         if (dl == null)
             dl = prov.createDistributionList(name, null);
         return dl;
@@ -239,7 +240,7 @@ public class TestJaxbProvisioning extends TestCase {
     throws Exception {
         String domainName = name.substring(name.indexOf('@') + 1);
         ensureDomainExists(domainName);
-        Cos cos = prov.get(CosBy.name, name);
+        Cos cos = prov.get(Key.CosBy.name, name);
         if (cos == null)
             cos = prov.createCos(name, null);
         return cos;
@@ -259,7 +260,7 @@ public class TestJaxbProvisioning extends TestCase {
         assertNotNull("Domain for " + testAcctDomainName, dom);
         Server svr = prov.createServer(testServer, null);
         assertNotNull("Server for " + testServer, svr);
-        svr = prov.get(ServerBy.id, svr.getId());
+        svr = prov.get(Key.ServerBy.id, svr.getId());
         List <Server> svrs = prov.getAllServers();
         assertNotNull("All Servers" , svrs);
         assertTrue("Number of Servers objects=" + svrs.size() +
@@ -300,11 +301,11 @@ public class TestJaxbProvisioning extends TestCase {
         assertNotNull("All Domains" , domains);
         assertTrue("Number of Domain objects=" + domains.size() +
                 " should be >=1", domains.size() >= 1);
-        dom = prov.get(DomainBy.id, dom.getId());
+        dom = prov.get(Key.DomainBy.id, dom.getId());
         assertNotNull("Domain got by id" , dom);
         CountAccountResult res = prov.countAccount(dom);
         assertNotNull("CountAccountResult", res);
-        dom = prov.getDomainInfo(DomainBy.id, dom.getId());
+        dom = prov.getDomainInfo(Key.DomainBy.id, dom.getId());
         assertNotNull("DomainInfo got by id" , dom);
 
         prov.deleteAccount(acct.getId());
@@ -336,7 +337,7 @@ public class TestJaxbProvisioning extends TestCase {
         assertTrue("Number of Cos objects=" + cosList.size() +
                 " should be >=1", cosList.size() >= 1);
         prov.deleteCos(cos.getId());
-        cos = prov.get(CosBy.name, testCosCopy);
+        cos = prov.get(Key.CosBy.name, testCosCopy);
         prov.deleteCos(cos.getId());
    }
 
@@ -404,7 +405,7 @@ public class TestJaxbProvisioning extends TestCase {
                 dom, Provisioning.getInstance().getLocalServer());
         assertNotNull("CalendarResource List for getAll", resources);
         assertEquals("CalendarResource list size", 1, resources.size());
-        calRes = prov.get(CalendarResourceBy.id, calRes.getId());
+        calRes = prov.get(Key.CalendarResourceBy.id, calRes.getId());
         prov.deleteCalendarResource(calRes.getId());
     }
 
@@ -557,8 +558,8 @@ public class TestJaxbProvisioning extends TestCase {
     public void testGetEffectiveRights() throws Exception {
         ZimbraLog.test.debug("Starting testGetEffectiveRights");
         EffectiveRights er = prov.getEffectiveRights("account" /* targetType */,
-                TargetBy.name /* targetBy */, "admin" /* target */,
-                GranteeBy.name /* granteeBy */, "admin" /* grantee */,
+                Key.TargetBy.name /* targetBy */, "admin" /* target */,
+                Key.GranteeBy.name /* granteeBy */, "admin" /* grantee */,
                 true /* expandSetAttrs */, true /* expandGetAttrs */);
         assertNotNull("EffectiveRights", er);
     }

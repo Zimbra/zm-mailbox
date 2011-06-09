@@ -20,6 +20,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.CosBy;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -31,8 +34,6 @@ import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.CosBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
@@ -259,7 +260,7 @@ public class TestACLTarget extends TestACL {
         TestViaGrant via;
         
         // grant on target domain itself
-        Domain target = mProv.get(DomainBy.name, DOMAIN_NAME);
+        Domain target = mProv.get(Key.DomainBy.name, DOMAIN_NAME);
         grantRight(authedAcct, TargetType.domain, target, GranteeType.GT_USER, grantee, right, ALLOW);
         via = new TestViaGrant(TargetType.domain, target, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
         verify(grantee, target, right, ALLOW, via);
@@ -299,7 +300,7 @@ public class TestACLTarget extends TestACL {
         TestViaGrant via;
         
         // grant on target cos itself
-        Cos target = mProv.get(CosBy.name, "default");
+        Cos target = mProv.get(Key.CosBy.name, "default");
         grantRight(authedAcct, TargetType.cos, target, GranteeType.GT_USER, grantee, right, ALLOW);
         via = new TestViaGrant(TargetType.cos, target, GranteeType.GT_USER, grantee.getName(), right, POSITIVE);
         verify(grantee, target, right, ALLOW, via);

@@ -9,6 +9,10 @@ import java.util.Map;
 import java.util.Set;
 
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DistributionListBy;
+import com.zimbra.common.account.Key.DomainBy;
+import com.zimbra.common.account.Key.TargetBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -17,9 +21,6 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.accesscontrol.RightBearer.GlobalAdmin;
 import com.zimbra.cs.account.accesscontrol.RightBearer.Grantee;
 import com.zimbra.cs.account.accesscontrol.RightCommand.AllEffectiveRights;
@@ -301,7 +302,7 @@ public class CollectAllEffectiveRights {
         for (DistributionList group : groupsWithGrants) {
             // group is an AclGroup, which contains only upward membership, not downward membership.
             // re-get the DistributionList object, which has the downward membership.
-            DistributionList dl = mProv.get(DistributionListBy.id, group.getId());
+            DistributionList dl = mProv.get(Key.DistributionListBy.id, group.getId());
             AllGroupMembers allMembers = getAllGroupMembers(dl);
             GroupShape.shapeMembers(TargetType.account, accountShapes, allMembers);
             GroupShape.shapeMembers(TargetType.calresource, calendarResourceShapes, allMembers);
@@ -377,7 +378,7 @@ public class CollectAllEffectiveRights {
                 // haven't expaned this group yet
                 if (!result.getMembers(TargetType.dl).contains(member)) {
                     result.getMembers(TargetType.dl).add(member);
-                    DistributionList grp = mProv.get(DistributionListBy.name, member);
+                    DistributionList grp = mProv.get(Key.DistributionListBy.name, member);
                     if (grp != null) {
                         getAllGroupMembers(grp, allGroups, allCalendarResources, result);
                     }
@@ -452,7 +453,7 @@ public class CollectAllEffectiveRights {
         String domainName = grantedOnDomain.getLabel();
         
         // create a pseudo object(account, cr, dl) in this domain
-        Entry pseudoTarget = PseudoTarget.createPseudoTarget(mProv, targetType, DomainBy.id, grantedOnDomain.getId(), false, null, null);
+        Entry pseudoTarget = PseudoTarget.createPseudoTarget(mProv, targetType, Key.DomainBy.id, grantedOnDomain.getId(), false, null, null);
         
         // get effective rights on the pseudo target
         EffectiveRights er = new EffectiveRights(
@@ -505,7 +506,7 @@ public class CollectAllEffectiveRights {
             }
             
             try {
-                Domain subDomain = (Domain)TargetType.lookupTarget(mProv, TargetType.domain, TargetBy.id, zimbraId);
+                Domain subDomain = (Domain)TargetType.lookupTarget(mProv, TargetType.domain, Key.TargetBy.id, zimbraId);
                 subDomains.add(subDomain);
             } catch (ServiceException e) {
                 ZimbraLog.acl.warn("canot find domain by id " + zimbraId, e);
@@ -570,7 +571,7 @@ public class CollectAllEffectiveRights {
             Entry target = null;
             EffectiveRights er = null;
             for (String memberName : shape.getMembers()) {
-                target = TargetType.lookupTarget(mProv, targetType, TargetBy.name, memberName, false);
+                target = TargetType.lookupTarget(mProv, targetType, Key.TargetBy.name, memberName, false);
                 if (target != null) {
                     String targetId = TargetType.getId(target);
                     if (!entryIdsHasGrants.contains(targetId)) {
@@ -610,7 +611,7 @@ public class CollectAllEffectiveRights {
     
     private static void groupTest() throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
-        DistributionList dl = prov.get(DistributionListBy.name, "group1@phoebe.mac");
+        DistributionList dl = prov.get(Key.DistributionListBy.name, "group1@phoebe.mac");
         
         AllGroupMembers allMembers = allGroupMembers(dl);
         
@@ -685,10 +686,10 @@ public class CollectAllEffectiveRights {
         // create test
         Set<DistributionList> groupsWithGrants = new HashSet<DistributionList>();
         String domainName = "test.com";
-        groupsWithGrants.add(prov.get(DistributionListBy.name, "groupA@"+domainName));
-        groupsWithGrants.add(prov.get(DistributionListBy.name, "groupB@"+domainName));
-        groupsWithGrants.add(prov.get(DistributionListBy.name, "groupC@"+domainName));
-        groupsWithGrants.add(prov.get(DistributionListBy.name, "groupD@"+domainName));
+        groupsWithGrants.add(prov.get(Key.DistributionListBy.name, "groupA@"+domainName));
+        groupsWithGrants.add(prov.get(Key.DistributionListBy.name, "groupB@"+domainName));
+        groupsWithGrants.add(prov.get(Key.DistributionListBy.name, "groupC@"+domainName));
+        groupsWithGrants.add(prov.get(Key.DistributionListBy.name, "groupD@"+domainName));
         
         Set<GroupShape> accountShapes = new HashSet<GroupShape>();
         Set<GroupShape> calendarResourceShapes = new HashSet<GroupShape>();
@@ -697,7 +698,7 @@ public class CollectAllEffectiveRights {
         for (DistributionList group : groupsWithGrants) {
             // group is an AclGroup, which contains only upward membership, not downward membership.
             // re-get the DistributionList object, which has the downward membership.
-            DistributionList dl = prov.get(DistributionListBy.id, group.getId());
+            DistributionList dl = prov.get(Key.DistributionListBy.id, group.getId());
             AllGroupMembers allMembers = allGroupMembers(dl);
             GroupShape.shapeMembers(TargetType.account, accountShapes, allMembers);
             GroupShape.shapeMembers(TargetType.calresource, calendarResourceShapes, allMembers);

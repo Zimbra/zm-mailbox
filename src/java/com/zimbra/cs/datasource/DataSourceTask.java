@@ -14,13 +14,14 @@
  */
 package com.zimbra.cs.datasource;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DataSourceBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.ScheduledTask;
@@ -67,7 +68,7 @@ public class DataSourceTask extends ScheduledTask {
             Account account = mbox.getAccount();
             ZimbraLog.addAccountNameToContext(account.getName());
             Provisioning prov = Provisioning.getInstance();
-            DataSource ds = prov.get(account, DataSourceBy.id, getDataSourceId());
+            DataSource ds = prov.get(account, Key.DataSourceBy.id, getDataSourceId());
             if (ds != null) {
                 ZimbraLog.addDataSourceNameToContext(ds.getName());
                 if (!ds.isEnabled()) {

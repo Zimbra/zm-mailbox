@@ -28,10 +28,11 @@ import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.CosBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.CosBy;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;
@@ -55,7 +56,7 @@ public class ModifyDomain extends AdminDocumentHandler {
 	    String id = request.getAttribute(AdminConstants.E_ID);
 	    Map<String, Object> attrs = AdminService.getAttrs(request);
 	    
-	    Domain domain = prov.get(DomainBy.id, id);
+	    Domain domain = prov.get(Key.DomainBy.id, id);
         if (domain == null)
             throw AccountServiceException.NO_SUCH_DOMAIN(id);
         
@@ -89,7 +90,7 @@ public class ModifyDomain extends AdminDocumentHandler {
             return; 
         } 
 
-        Cos cos = prov.get(CosBy.id, newDomainCosId);
+        Cos cos = prov.get(Key.CosBy.id, newDomainCosId);
         if (cos == null) {
             throw AccountServiceException.NO_SUCH_COS(newDomainCosId);
         }

@@ -48,7 +48,7 @@ import com.zimbra.cs.service.AuthProviderException;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZGrant;
 import com.zimbra.cs.zclient.ZMailbox;

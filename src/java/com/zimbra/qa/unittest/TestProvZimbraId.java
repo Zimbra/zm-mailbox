@@ -24,6 +24,7 @@ import java.util.Map;
 import org.junit.*;
 import static org.junit.Assert.*;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.ByteUtil;
@@ -98,7 +99,7 @@ public class TestProvZimbraId extends TestLdap {
         assertEquals(acct.getId(), zimbraId);
         
         // try get a ccount by id
-        Account acctById = prov.get(Provisioning.AccountBy.id, zimbraId);
+        Account acctById = prov.get(Key.AccountBy.id, zimbraId);
         assertNotNull(acctById);
     }
     

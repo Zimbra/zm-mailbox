@@ -24,11 +24,12 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.EntryCacheDataKey;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.CacheEntryBy;
+import com.zimbra.common.account.Key.DistributionListBy;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
-import com.zimbra.cs.account.Provisioning.CacheEntryBy;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.service.AuthProvider;
@@ -57,8 +58,8 @@ public abstract class GalGroup {
     public static void flushCache(CacheEntry[] domains) throws ServiceException {
         if (domains != null) {
             for (CacheEntry entry : domains) {
-                DomainBy domainBy = (entry.mEntryBy==CacheEntryBy.id)? DomainBy.id : DomainBy.name;
-                Domain domain = prov.get(Provisioning.DomainBy.name, entry.mEntryIdentity);
+                Key.DomainBy domainBy = (entry.mEntryBy==Key.CacheEntryBy.id)? Key.DomainBy.id : Key.DomainBy.name;
+                Domain domain = prov.get(Key.DomainBy.name, entry.mEntryIdentity);
                 if (domain == null)
                     throw AccountServiceException.NO_SUCH_DOMAIN(entry.mEntryIdentity);
                 GalGroup.flushCache(domain);
@@ -224,7 +225,7 @@ public abstract class GalGroup {
     private static boolean canExpandGroup(Provisioning prov, String groupName, Account authedAcct) {
         try {
             // get the dl object for ACL checking
-            DistributionList dl = prov.getAclGroup(DistributionListBy.name, groupName);
+            DistributionList dl = prov.getAclGroup(Key.DistributionListBy.name, groupName);
 
             // the DL might have been deleted since the last GAL sync account sync, throw.
             // or should we just let the request through?

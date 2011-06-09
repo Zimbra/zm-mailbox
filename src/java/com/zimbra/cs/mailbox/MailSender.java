@@ -55,8 +55,9 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.IdentityBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.IdentityBy;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
@@ -358,7 +359,7 @@ public class MailSender {
         }
         Identity identity = null;
         if (identityId != null) {
-            identity = Provisioning.getInstance().get(authuser, IdentityBy.id, identityId);
+            identity = Provisioning.getInstance().get(authuser, Key.IdentityBy.id, identityId);
         }
         return sendMimeMessage(octxt, mbox, null, mm, uploads, origMsgId, replyType, identity, replyToSender);
     }

@@ -27,8 +27,9 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.ServerBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.ServerBy;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -113,7 +114,7 @@ public class ZimbraRoutingTableImpl extends BasicModule implements RoutingTable 
         try {
             String componentServerName = XMPPServer.getInstance().getServerForComponent(domain);
             if (componentServerName != null) {
-                Server componentServer = Provisioning.getInstance().get(ServerBy.name, componentServerName);
+                Server componentServer = Provisioning.getInstance().get(Key.ServerBy.name, componentServerName);
                 Server localServer = Provisioning.getInstance().getLocalServer();
                 if (localServer == componentServer)
                     return null;

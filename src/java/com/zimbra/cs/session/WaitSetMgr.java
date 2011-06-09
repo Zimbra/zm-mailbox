@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimerTask;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
@@ -345,7 +346,7 @@ public class WaitSetMgr {
      */
     public static void checkRightForAdditionalAccount(String acctId, ZimbraSoapContext zsc) 
     throws ServiceException {
-        Account acct = Provisioning.getInstance().get(Provisioning.AccountBy.id, acctId);
+        Account acct = Provisioning.getInstance().get(Key.AccountBy.id, acctId);
         if (acct == null)
             throw ServiceException.DEFEND_ACCOUNT_HARVEST(acctId);
             

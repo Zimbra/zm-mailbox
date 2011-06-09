@@ -18,6 +18,8 @@
  */
 package com.zimbra.cs.service.admin;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -25,7 +27,6 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.session.AdminSession;
@@ -84,7 +85,7 @@ public class SearchAccounts extends AdminDocumentHandler {
 
         Domain d = null;
         if (domain != null) {
-            d = prov.get(DomainBy.name, domain);
+            d = prov.get(Key.DomainBy.name, domain);
             if (d == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(domain);
         }

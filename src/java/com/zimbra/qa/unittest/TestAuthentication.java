@@ -22,7 +22,7 @@ import junit.framework.TestCase;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.client.LmcSession;
 import com.zimbra.cs.client.soap.LmcSearchRequest;
 import com.zimbra.cs.mailbox.Mailbox;

@@ -25,12 +25,13 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.BooleanClause.Occur;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.rmgmt.RemoteMailQueue;
@@ -51,7 +52,7 @@ public class GetMailQueue extends AdminDocumentHandler {
         Element serverElem = request.getElement(AdminConstants.E_SERVER);
         String serverName = serverElem.getAttribute(AdminConstants.A_NAME);
 
-        Server server = prov.get(ServerBy.name, serverName);
+        Server server = prov.get(Key.ServerBy.name, serverName);
         if (server == null) {
             throw ServiceException.INVALID_REQUEST("server with name " + serverName + " could not be found", null);
         }

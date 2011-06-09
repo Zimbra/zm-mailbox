@@ -32,10 +32,11 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.CosBy;
-import com.zimbra.cs.account.Provisioning.GranteeBy;
-import com.zimbra.cs.account.Provisioning.TargetBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.CosBy;
+import com.zimbra.common.account.Key.GranteeBy;
+import com.zimbra.common.account.Key.TargetBy;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.InlineAttrRight;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
@@ -205,8 +206,8 @@ public class AdminRights extends LegacyLdapUpgrade {
         //
         // domain rights
         //
-        mProv.grantRight(TargetType.domain.getCode(), TargetBy.id, domain.getId(), 
-                GranteeType.GT_USER.getCode(), GranteeBy.id, domainAdmin.getId(), null,
+        mProv.grantRight(TargetType.domain.getCode(), Key.TargetBy.id, domain.getId(), 
+                GranteeType.GT_USER.getCode(), Key.GranteeBy.id, domainAdmin.getId(), null,
                 RightConsts.RT_domainAdminConsoleRights, RightModifier.RM_CAN_DELEGATE);
         
         //
@@ -218,11 +219,11 @@ public class AdminRights extends LegacyLdapUpgrade {
         // zimlet rights
         //
         mProv.grantRight(TargetType.global.getCode(), null, null, 
-                GranteeType.GT_USER.getCode(), GranteeBy.id, domainAdmin.getId(), null,
+                GranteeType.GT_USER.getCode(), Key.GranteeBy.id, domainAdmin.getId(), null,
                 RightConsts.RT_listZimlet, RightModifier.RM_CAN_DELEGATE);
         
         mProv.grantRight(TargetType.global.getCode(), null, null, 
-                GranteeType.GT_USER.getCode(), GranteeBy.id, domainAdmin.getId(), null,
+                GranteeType.GT_USER.getCode(), Key.GranteeBy.id, domainAdmin.getId(), null,
                 RightConsts.RT_getZimlet, RightModifier.RM_CAN_DELEGATE);
         
         //
@@ -235,8 +236,8 @@ public class AdminRights extends LegacyLdapUpgrade {
         //
         long maxQuota = domainAdmin.getLongAttr(Provisioning.A_zimbraDomainAdminMaxMailQuota, -1);
         if (maxQuota == -1)  // they don't have permission to change quota
-            mProv.grantRight(TargetType.domain.getCode(), TargetBy.id, domain.getId(), 
-                    GranteeType.GT_USER.getCode(), GranteeBy.id, domainAdmin.getId(), null,
+            mProv.grantRight(TargetType.domain.getCode(), Key.TargetBy.id, domain.getId(), 
+                    GranteeType.GT_USER.getCode(), Key.GranteeBy.id, domainAdmin.getId(), null,
                     InlineAttrRight.composeSetRight(TargetType.account, Provisioning.A_zimbraMailQuota), RightModifier.RM_DENY);
             
     }
@@ -251,22 +252,22 @@ public class AdminRights extends LegacyLdapUpgrade {
             String cosId = parts[0];
             
             // sanity check
-            Cos cos = mProv.get(CosBy.id, cosId);
+            Cos cos = mProv.get(Key.CosBy.id, cosId);
             if (cos == null) {
                 System.out.println("    cannot find cos " + cosId + ", skipping granting cos right to " + domainAdmin.getName());
                 continue;
             }
             
-            mProv.grantRight(TargetType.cos.getCode(), TargetBy.id, cosId, 
-                    GranteeType.GT_USER.getCode(), GranteeBy.id, domainAdmin.getId(), null,
+            mProv.grantRight(TargetType.cos.getCode(), Key.TargetBy.id, cosId, 
+                    GranteeType.GT_USER.getCode(), Key.GranteeBy.id, domainAdmin.getId(), null,
                     RightConsts.RT_listCos, RightModifier.RM_CAN_DELEGATE);
             
-            mProv.grantRight(TargetType.cos.getCode(), TargetBy.id, cosId, 
-                    GranteeType.GT_USER.getCode(), GranteeBy.id, domainAdmin.getId(), null,
+            mProv.grantRight(TargetType.cos.getCode(), Key.TargetBy.id, cosId, 
+                    GranteeType.GT_USER.getCode(), Key.GranteeBy.id, domainAdmin.getId(), null,
                     RightConsts.RT_getCos, RightModifier.RM_CAN_DELEGATE);
             
-            mProv.grantRight(TargetType.cos.getCode(), TargetBy.id, cosId, 
-                    GranteeType.GT_USER.getCode(), GranteeBy.id, domainAdmin.getId(), null,
+            mProv.grantRight(TargetType.cos.getCode(), Key.TargetBy.id, cosId, 
+                    GranteeType.GT_USER.getCode(), Key.GranteeBy.id, domainAdmin.getId(), null,
                     RightConsts.RT_assignCos, RightModifier.RM_CAN_DELEGATE);
         }
         

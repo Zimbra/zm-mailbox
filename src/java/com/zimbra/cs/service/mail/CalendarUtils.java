@@ -35,8 +35,9 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.cs.gal.GalGroup;
 import com.zimbra.cs.gal.GalGroupMembers;
 import com.zimbra.cs.ldap.LdapUtilCommon;
@@ -480,7 +481,7 @@ public class CalendarUtils {
             for (ZAttendee at : newAttendees) {
                 String addr = at.getAddress();
                 if (addr != null) {
-                    DistributionList dl = prov.get(DistributionListBy.name, addr);
+                    DistributionList dl = prov.get(Key.DistributionListBy.name, addr);
                     if (dl != null)
                         newAtsDL.add(dl);
                     else if (GalGroup.isGroup(addr, account))

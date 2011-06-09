@@ -29,6 +29,10 @@ import org.apache.commons.httpclient.HttpState;
 import junit.framework.TestCase;
 import junit.framework.AssertionFailedError;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.CacheEntryBy;
+import com.zimbra.common.account.Key.GranteeBy;
+import com.zimbra.common.account.Key.TargetBy;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -47,10 +51,7 @@ import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
-import com.zimbra.cs.account.Provisioning.CacheEntryBy;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
-import com.zimbra.cs.account.Provisioning.GranteeBy;
-import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.CheckAttrRight;
@@ -203,7 +204,7 @@ public abstract class TestACL extends TestCase {
     }
     
     protected void flushAccountCache(Account acct) throws ServiceException {
-        mProv.flushCache(CacheEntryType.account, new CacheEntry[]{new CacheEntry(CacheEntryBy.id, acct.getId())});
+        mProv.flushCache(CacheEntryType.account, new CacheEntry[]{new CacheEntry(Key.CacheEntryBy.id, acct.getId())});
     }
     
     protected void makeAccountAdmin(Account acct) throws ServiceException {
@@ -638,10 +639,10 @@ public abstract class TestACL extends TestCase {
         if (target instanceof Zimlet) {
             // must be by name
             String targetName = ((Zimlet)target).getName();
-            targetEntry = TargetType.lookupTarget(mProv, targetType, TargetBy.name, targetName);
+            targetEntry = TargetType.lookupTarget(mProv, targetType, Key.TargetBy.name, targetName);
         } else {
             String targetId = (target instanceof NamedEntry)? ((NamedEntry)target).getId() : null;
-            targetEntry = TargetType.lookupTarget(mProv, targetType, TargetBy.id, targetId);
+            targetEntry = TargetType.lookupTarget(mProv, targetType, Key.TargetBy.id, targetId);
         }
         return ACLUtil.grantRight(mProv, targetEntry, aces);
     }
@@ -655,8 +656,8 @@ public abstract class TestACL extends TestCase {
                               Right right, AllowOrDeny grant) throws ServiceException {
         
         RightCommand.grantRight(mProv, authedAcct,
-                                targetType.getCode(), TargetBy.name, target==null?null:target.getName(),
-                                granteeType.getCode(), GranteeBy.name, grantee.getName(), null,
+                                targetType.getCode(), Key.TargetBy.name, target==null?null:target.getName(),
+                                granteeType.getCode(), Key.GranteeBy.name, grantee.getName(), null,
                                 right.getName(), grant.toRightModifier());
     }
     
@@ -666,8 +667,8 @@ public abstract class TestACL extends TestCase {
                                        Right right) throws ServiceException {
 
         RightCommand.grantRight(mProv, authedAcct,
-                      targetType.getCode(), TargetBy.name, target==null?null:target.getName(),
-                      granteeType.getCode(), GranteeBy.name, grantee.getName(), null,
+                      targetType.getCode(), Key.TargetBy.name, target==null?null:target.getName(),
+                      granteeType.getCode(), Key.GranteeBy.name, grantee.getName(), null,
                       right.getName(), RightModifier.RM_CAN_DELEGATE);
     }
         
@@ -679,10 +680,10 @@ public abstract class TestACL extends TestCase {
         if (target instanceof Zimlet) {
             // must be by name
             String targetName = ((Zimlet)target).getName();
-            targetEntry = TargetType.lookupTarget(mProv, targetType, TargetBy.name, targetName);
+            targetEntry = TargetType.lookupTarget(mProv, targetType, Key.TargetBy.name, targetName);
         } else {
         String targetId = (target instanceof NamedEntry)? ((NamedEntry)target).getId() : null;
-            targetEntry = TargetType.lookupTarget(mProv, targetType, TargetBy.id, targetId);
+            targetEntry = TargetType.lookupTarget(mProv, targetType, Key.TargetBy.id, targetId);
         }
         return ACLUtil.revokeRight(mProv, targetEntry, aces);
     }
@@ -693,8 +694,8 @@ public abstract class TestACL extends TestCase {
                                Right right, AllowOrDeny grant) throws ServiceException {
         
         RightCommand.revokeRight(mProv, authedAcct,
-                                 targetType.getCode(), TargetBy.name, target==null?null:target.getName(),
-                                 granteeType.getCode(), GranteeBy.name, grantee.getName(),
+                                 targetType.getCode(), Key.TargetBy.name, target==null?null:target.getName(),
+                                 granteeType.getCode(), Key.GranteeBy.name, grantee.getName(),
                                  right.getName(), grant.toRightModifier());
     }
     
@@ -704,8 +705,8 @@ public abstract class TestACL extends TestCase {
             Right right) throws ServiceException {
 
         RightCommand.revokeRight(mProv, authedAcct,
-                      targetType.getCode(), TargetBy.name, target==null?null:target.getName(),
-                      granteeType.getCode(), GranteeBy.name, grantee.getName(),
+                      targetType.getCode(), Key.TargetBy.name, target==null?null:target.getName(),
+                      granteeType.getCode(), Key.GranteeBy.name, grantee.getName(),
                       right.getName(), RightModifier.RM_CAN_DELEGATE);
     }
     

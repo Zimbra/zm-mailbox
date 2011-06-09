@@ -17,12 +17,13 @@ package com.zimbra.cs.account.soap;
 
 import java.util.Map;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.soap.admin.type.Attr;
 import com.zimbra.soap.admin.type.ServerInfo;
@@ -53,7 +54,7 @@ class SoapServer extends Server implements SoapEntry {
         XMLElement req = new XMLElement(AdminConstants.GET_SERVER_REQUEST);
         Element a = req.addElement(AdminConstants.E_SERVER);
         a.setText(getId());
-        a.addAttribute(AdminConstants.A_BY, ServerBy.id.name());
+        a.addAttribute(AdminConstants.A_BY, Key.ServerBy.id.name());
         setAttrs(SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminConstants.E_SERVER)));
     }
 }

@@ -37,7 +37,8 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.im.provider.ZimbraRoutingTableImpl;
 import com.zimbra.cs.index.QueryInfo;
@@ -411,7 +412,7 @@ public class Search extends MailDocumentHandler  {
         req.addAttribute(MailConstants.A_CAL_EXPAND_INST_END, params.getCalItemExpandEnd());
         req.addAttribute(MailConstants.E_QUERY, queryStr.toString(), Element.Disposition.CONTENT);
 
-        Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, nominalTargetAcctId);
+        Account target = Provisioning.getInstance().get(Key.AccountBy.id, nominalTargetAcctId);
         String pxyAuthToken = zsc.getAuthToken().getProxyAuthToken();
         ZAuthToken zat = pxyAuthToken == null ? zsc.getRawAuthToken() : new ZAuthToken(pxyAuthToken);
         ZMailbox.Options zoptions = new ZMailbox.Options(zat, AccountUtil.getSoapUri(target));

@@ -32,10 +32,11 @@ import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.CosBy;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.CosBy;
+import com.zimbra.common.account.Key.DistributionListBy;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.Provisioning.SearchOptions;
 import com.zimbra.cs.fb.FreeBusyProvider;
 import com.zimbra.cs.mailbox.ACL;
@@ -275,7 +276,7 @@ public class FolderAction extends ItemAction {
         Provisioning prov = Provisioning.getInstance();
         nentry = prov.get(AccountBy.name, name);
         if (nentry == null)
-            nentry = prov.get(DistributionListBy.name, name);
+            nentry = prov.get(Key.DistributionListBy.name, name);
         return nentry;
     }
 
@@ -295,10 +296,10 @@ public class FolderAction extends ItemAction {
         NamedEntry nentry = null;
         if (name != null)
             switch (type) {
-                case ACL.GRANTEE_COS:     nentry = prov.get(CosBy.name, name);               break;
-                case ACL.GRANTEE_DOMAIN:  nentry = prov.get(DomainBy.name, name);            break;
+                case ACL.GRANTEE_COS:     nentry = prov.get(Key.CosBy.name, name);               break;
+                case ACL.GRANTEE_DOMAIN:  nentry = prov.get(Key.DomainBy.name, name);            break;
                 case ACL.GRANTEE_USER:    nentry = lookupEmailAddress(name);                 break;
-                case ACL.GRANTEE_GROUP:   nentry = prov.get(DistributionListBy.name, name);  break;
+                case ACL.GRANTEE_GROUP:   nentry = prov.get(Key.DistributionListBy.name, name);  break;
             }
 
         if (nentry != null)
@@ -316,10 +317,10 @@ public class FolderAction extends ItemAction {
         Provisioning prov = Provisioning.getInstance();
         try {
             switch (type) {
-                case ACL.GRANTEE_COS:     return prov.get(CosBy.id, zid);
-                case ACL.GRANTEE_DOMAIN:  return prov.get(DomainBy.id, zid);
+                case ACL.GRANTEE_COS:     return prov.get(Key.CosBy.id, zid);
+                case ACL.GRANTEE_DOMAIN:  return prov.get(Key.DomainBy.id, zid);
                 case ACL.GRANTEE_USER:    return prov.get(AccountBy.id, zid);
-                case ACL.GRANTEE_GROUP:   return prov.get(DistributionListBy.id, zid);
+                case ACL.GRANTEE_GROUP:   return prov.get(Key.DistributionListBy.id, zid);
                 case ACL.GRANTEE_GUEST:
                 case ACL.GRANTEE_KEY:
                 case ACL.GRANTEE_AUTHUSER:

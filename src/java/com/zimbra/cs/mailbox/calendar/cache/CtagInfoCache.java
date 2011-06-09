@@ -31,7 +31,8 @@ import com.zimbra.common.util.memcached.MemcachedSerializer;
 import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -199,7 +200,7 @@ public class CtagInfoCache {
             ZMailbox.Options zoptions = new ZMailbox.Options(zat, AccountUtil.getSoapUri(acct));
             zoptions.setNoSession(true);
             zoptions.setTargetAccount(acct.getId());
-            zoptions.setTargetAccountBy(Provisioning.AccountBy.id);
+            zoptions.setTargetAccountBy(Key.AccountBy.id);
             ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
             ItemId iidFolder = new ItemId(accountId, folderId);
             ZFolder zfolder = zmbx.getFolderById(iidFolder.toString());

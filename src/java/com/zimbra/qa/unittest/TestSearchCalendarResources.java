@@ -33,10 +33,11 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.EntrySearchFilter.Operator;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.CalendarResourceBy;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.ZAttrProvisioning.CalResType;
 
@@ -218,7 +219,7 @@ public class TestSearchCalendarResources {
     private static void createDomainObjects(String domainName) throws Exception {
         Provisioning prov = Provisioning.getInstance();
         
-        if (prov.get(DomainBy.name, domainName) == null) {
+        if (prov.get(Key.DomainBy.name, domainName) == null) {
             ZimbraLog.test.info("Creating domain " + domainName);
             prov.createDomain(domainName, new HashMap<String, Object>());
         }
@@ -230,17 +231,17 @@ public class TestSearchCalendarResources {
         String calResName;
         
         calResName = TestUtil.getAddress(ROOM_1, domainName);
-        if (prov.get(CalendarResourceBy.name, calResName) == null) {
+        if (prov.get(Key.CalendarResourceBy.name, calResName) == null) {
             createCalendarResource(calResName, ROOM_1, CalResType.Location, 10, SITE);
         }
         
         calResName = TestUtil.getAddress(ROOM_2, domainName);
-        if (prov.get(CalendarResourceBy.name, calResName) == null) {
+        if (prov.get(Key.CalendarResourceBy.name, calResName) == null) {
             createCalendarResource(calResName, ROOM_2, CalResType.Location, 20, SITE);
         }
         
         calResName = TestUtil.getAddress(ROOM_3, domainName);
-        if (prov.get(CalendarResourceBy.name, calResName) == null) {
+        if (prov.get(Key.CalendarResourceBy.name, calResName) == null) {
             createCalendarResource(calResName, ROOM_3, CalResType.Location, 100, SITE);
         }
     }
@@ -259,24 +260,24 @@ public class TestSearchCalendarResources {
         String calResName;
         
         calResName = TestUtil.getAddress(ROOM_1, domainName);
-        resource = prov.get(CalendarResourceBy.name, calResName);
+        resource = prov.get(Key.CalendarResourceBy.name, calResName);
         if (resource != null) {
             prov.deleteCalendarResource(resource.getId());
         }
         
         calResName = TestUtil.getAddress(ROOM_2, domainName);
-        resource = prov.get(CalendarResourceBy.name, calResName);
+        resource = prov.get(Key.CalendarResourceBy.name, calResName);
         if (resource != null) {
             prov.deleteCalendarResource(resource.getId());
         }
         
         calResName = TestUtil.getAddress(ROOM_3, domainName);
-        resource = prov.get(CalendarResourceBy.name, calResName);
+        resource = prov.get(Key.CalendarResourceBy.name, calResName);
         if (resource != null) {
             prov.deleteCalendarResource(resource.getId());
         }
         
-        Domain domain = prov.get(DomainBy.name, domainName);
+        Domain domain = prov.get(Key.DomainBy.name, domainName);
         if (domain != null) {
             ZimbraLog.test.info("Deleting domain " + domainName);
             prov.deleteDomain(domain.getId());

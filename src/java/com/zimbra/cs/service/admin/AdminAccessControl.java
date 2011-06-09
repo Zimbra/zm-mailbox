@@ -41,7 +41,8 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.AccessManager.AttrRightChecker;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.account.accesscontrol.ACLAccessManager;
 import com.zimbra.cs.account.accesscontrol.AccessControlUtil;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
@@ -502,7 +503,7 @@ public abstract class AdminAccessControl {
                 String domainName, Object needed) throws ServiceException {
             soapOnly();
             
-            Domain domain = Provisioning.getInstance().get(Provisioning.DomainBy.name, domainName);
+            Domain domain = Provisioning.getInstance().get(Key.DomainBy.name, domainName);
             if (domain == null)
                 throw ServiceException.PERM_DENIED("no such domain: " + domainName);
             
@@ -522,7 +523,7 @@ public abstract class AdminAccessControl {
             soapOnly();
             
             String domainName = getDomainFromEmail(email);
-            Domain domain = Provisioning.getInstance().get(Provisioning.DomainBy.name, domainName);
+            Domain domain = Provisioning.getInstance().get(Key.DomainBy.name, domainName);
             if (domain == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(domainName);
             
@@ -740,7 +741,7 @@ public abstract class AdminAccessControl {
             soapOnly();
             
             String domainName = getDomainFromEmail(email);
-            Domain domain = Provisioning.getInstance().get(Provisioning.DomainBy.name, domainName);
+            Domain domain = Provisioning.getInstance().get(Key.DomainBy.name, domainName);
             if (domain == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(domainName);
             
@@ -754,7 +755,7 @@ public abstract class AdminAccessControl {
         public void checkDomainRight(AdminDocumentHandler handler, String domainName, Object needed) throws ServiceException {
             soapOnly();
             
-            Domain domain = Provisioning.getInstance().get(Provisioning.DomainBy.name, domainName);
+            Domain domain = Provisioning.getInstance().get(Key.DomainBy.name, domainName);
             if (domain == null)
                 throw ServiceException.PERM_DENIED("no such domain: " + domainName);
             
@@ -922,7 +923,7 @@ public abstract class AdminAccessControl {
             
             if (mAllEffRights == null)
                 mAllEffRights = mProv.getAllEffectiveRights(GranteeType.GT_USER.getCode(), 
-                        Provisioning.GranteeBy.id, mAC.mAuthedAcct.getId(),
+                        Key.GranteeBy.id, mAC.mAuthedAcct.getId(),
                         false, false);
             
             TargetType targetType = rightNeeded.getTargetType();

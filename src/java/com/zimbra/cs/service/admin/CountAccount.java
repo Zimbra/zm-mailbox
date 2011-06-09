@@ -25,9 +25,10 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.Provisioning.CountAccountResult;
-import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -50,7 +51,7 @@ public class CountAccount extends AdminDocumentHandler {
         String key = d.getAttribute(AdminConstants.A_BY);
         String value = d.getText();
         
-        Domain domain = prov.get(DomainBy.fromString(key), value);
+        Domain domain = prov.get(Key.DomainBy.fromString(key), value);
 
         if (domain == null)
             throw AccountServiceException.NO_SUCH_DOMAIN(value);

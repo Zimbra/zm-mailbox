@@ -17,11 +17,12 @@ package com.zimbra.cs.account.soap;
 
 import java.util.Map;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.CalendarResourceBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.soap.admin.type.Attr;
@@ -57,7 +58,7 @@ class SoapCalendarResource extends CalendarResource implements SoapEntry {
         XMLElement req = new XMLElement(AdminConstants.GET_CALENDAR_RESOURCE_REQUEST);
         Element a = req.addElement(AdminConstants.E_CALENDAR_RESOURCE);
         a.setText(getId());
-        a.addAttribute(AdminConstants.A_BY, CalendarResourceBy.id.name());
+        a.addAttribute(AdminConstants.A_BY, Key.CalendarResourceBy.id.name());
         setAttrs(SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminConstants.E_CALENDAR_RESOURCE)));
     }
 }

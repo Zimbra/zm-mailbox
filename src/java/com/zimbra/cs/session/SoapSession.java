@@ -40,7 +40,8 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.index.ZimbraQueryResults;
@@ -530,7 +531,7 @@ public class SoapSession extends Session {
         }
         // delegate sessions are only for mailboxes on the local host
         try {
-            if (!Provisioning.onLocalServer(Provisioning.getInstance().get(Provisioning.AccountBy.id, targetAccountId))) {
+            if (!Provisioning.onLocalServer(Provisioning.getInstance().get(Key.AccountBy.id, targetAccountId))) {
                 return null;
             }
         } catch (ServiceException e) {
@@ -1053,7 +1054,7 @@ public class SoapSession extends Session {
         }
         try {
             Provisioning prov = Provisioning.getInstance();
-            Account owner = prov.get(Provisioning.AccountBy.id, mpt.getOwnerId(), octxt.getAuthToken());
+            Account owner = prov.get(Key.AccountBy.id, mpt.getOwnerId(), octxt.getAuthToken());
             if (owner == null || owner.getId().equals(mAuthenticatedAccountId))
                 return;
 
@@ -1090,7 +1091,7 @@ public class SoapSession extends Session {
                 if (mptinfo.getValue() != null) {
                     continue;
                 }
-                Account owner = prov.get(Provisioning.AccountBy.id, mptinfo.getKey().getAccountId(), zsc.getAuthToken());
+                Account owner = prov.get(Key.AccountBy.id, mptinfo.getKey().getAccountId(), zsc.getAuthToken());
                 if (owner == null) {
                     continue;
                 }

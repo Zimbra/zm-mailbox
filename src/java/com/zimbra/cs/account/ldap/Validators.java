@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.CosBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -30,7 +32,6 @@ import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.CountObjectsType;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.ZLdapFilter;
@@ -90,7 +91,7 @@ final public class Validators {
             if (domain == null)
                 return;
 
-            Domain d = prov.get(Provisioning.DomainBy.name, domain);
+            Domain d = prov.get(Key.DomainBy.name, domain);
             if (d == null)
                 return;
 
@@ -202,13 +203,13 @@ final public class Validators {
             if (domainName == null)
                 return;
 
-            Domain domain = prov.get(Provisioning.DomainBy.name, domainName);
+            Domain domain = prov.get(Key.DomainBy.name, domainName);
             if (domain == null)
                 return;
 
             String defaultCosId = domain.getAttr(Provisioning.A_zimbraDomainDefaultCOSId);
             if (defaultCosId == null) {
-                Cos defaultCos = prov.get(CosBy.name, Provisioning.DEFAULT_COS_NAME);
+                Cos defaultCos = prov.get(Key.CosBy.name, Provisioning.DEFAULT_COS_NAME);
                 if (defaultCos != null)
                     defaultCosId = defaultCos.getId();
             }
@@ -340,7 +341,7 @@ final public class Validators {
             if (!cosFeatureMap.containsKey(cosId)) {
                 Cos cos = null;
                 if (cosId != null)
-                    cos = prov.get(CosBy.id, cosId);
+                    cos = prov.get(Key.CosBy.id, cosId);
                 if (cos == null) {
                     if (defaultCosId != null) {
                         ZimbraLog.account.debug("COS id %s not found, reverting to %s", cosId, defaultCosId);

@@ -28,8 +28,9 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -81,7 +82,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
 
         Domain d = null;
         if (domain != null) {
-            d = prov.get(DomainBy.name, domain);
+            d = prov.get(Key.DomainBy.name, domain);
             if (d == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(domain);
         }
@@ -180,7 +181,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
             Provisioning prov = Provisioning.getInstance();
             int flags = Provisioning.SA_ACCOUNT_FLAG | Provisioning.SO_NO_ACCOUNT_SECONDARY_DEFAULTS;
             List<NamedEntry> accounts;
-            Domain d = mDomainId.equals("") ? null : prov.get(DomainBy.id, mDomainId);
+            Domain d = mDomainId.equals("") ? null : prov.get(Key.DomainBy.id, mDomainId);
             if (d != null) {
                 accounts = prov.searchAccounts(d, query, null, null, true, flags);
             } else {

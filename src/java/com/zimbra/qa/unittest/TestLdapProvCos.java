@@ -21,11 +21,12 @@ import java.util.Map;
 import org.junit.*;
 import static org.junit.Assert.*;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.CosBy;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
-import com.zimbra.cs.account.Provisioning.CosBy;
 
 public class TestLdapProvCos extends TestLdap {
 
@@ -37,14 +38,14 @@ public class TestLdapProvCos extends TestLdap {
     }
     
     private Cos createCos(String cosName) throws Exception {
-        Cos cos = prov.get(CosBy.name, cosName);
+        Cos cos = prov.get(Key.CosBy.name, cosName);
         assertNull(cos);
         
         cos = prov.createCos(cosName, new HashMap<String, Object>());
         assertNotNull(cos);
         
         prov.flushCache(CacheEntryType.cos, null);
-        cos = prov.get(CosBy.name, cosName);
+        cos = prov.get(Key.CosBy.name, cosName);
         assertNotNull(cos);
         assertEquals(cosName.toLowerCase(), cos.getName().toLowerCase());
         
@@ -55,7 +56,7 @@ public class TestLdapProvCos extends TestLdap {
         String codId = cos.getId();
         prov.deleteCos(codId);
         prov.flushCache(CacheEntryType.cos, null);
-        cos = prov.get(CosBy.id, codId);
+        cos = prov.get(Key.CosBy.id, codId);
         assertNull(cos);
     }
     
@@ -86,7 +87,7 @@ public class TestLdapProvCos extends TestLdap {
     
     @Test
     public void defaultCos() throws Exception {
-        Cos cos = prov.get(Provisioning.CosBy.name, Provisioning.DEFAULT_COS_NAME);
+        Cos cos = prov.get(Key.CosBy.name, Provisioning.DEFAULT_COS_NAME);
         assertNotNull(cos);
     }
     
@@ -97,11 +98,11 @@ public class TestLdapProvCos extends TestLdap {
         String cosId = cos.getId();
         
         prov.flushCache(CacheEntryType.cos, null);
-        cos = prov.get(CosBy.id, cosId);
+        cos = prov.get(Key.CosBy.id, cosId);
         assertEquals(cosId, cos.getId());
         
         prov.flushCache(CacheEntryType.cos, null);
-        cos = prov.get(CosBy.name, COS_NAME);
+        cos = prov.get(Key.CosBy.name, COS_NAME);
         assertEquals(cosId, cos.getId());
         
         deleteCos(cos);
@@ -111,14 +112,14 @@ public class TestLdapProvCos extends TestLdap {
     public void getCosNotExist() throws Exception {
         String COS_NAME = TestLdap.makeCosName("getCosNotExist");
         prov.flushCache(CacheEntryType.cos, null);
-        Cos cos = prov.get(CosBy.name, COS_NAME);
+        Cos cos = prov.get(Key.CosBy.name, COS_NAME);
         assertNull(cos);
     }
     
     @Test
     public void copyCos() throws Exception {
         String COS_NAME = TestLdap.makeCosName("copyCos");
-        Cos defaultCos = prov.get(Provisioning.CosBy.name, Provisioning.DEFAULT_COS_NAME);
+        Cos defaultCos = prov.get(Key.CosBy.name, Provisioning.DEFAULT_COS_NAME);
         Cos copiedCos = prov.copyCos(defaultCos.getId(), COS_NAME);
         
         Map<String, Object> defaultCosAttrs = defaultCos.getAttrs();
@@ -160,7 +161,7 @@ public class TestLdapProvCos extends TestLdap {
     
     @Test
     public void getAllCos() throws Exception {
-        Cos defaultCos = prov.get(Provisioning.CosBy.name, Provisioning.DEFAULT_COS_NAME);
+        Cos defaultCos = prov.get(Key.CosBy.name, Provisioning.DEFAULT_COS_NAME);
         
         List<Cos> allCos = prov.getAllCos();
         assertEquals(1, allCos.size());
@@ -176,7 +177,7 @@ public class TestLdapProvCos extends TestLdap {
         String cosId = cos.getId();
         
         prov.renameCos(cos.getId(), NEW_COS_NAME);
-        Cos renamedCos = prov.get(CosBy.name, NEW_COS_NAME);
+        Cos renamedCos = prov.get(Key.CosBy.name, NEW_COS_NAME);
         assertEquals(cosId, renamedCos.getId());
         
         deleteCos(cos);

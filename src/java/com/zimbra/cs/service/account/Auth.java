@@ -30,8 +30,9 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.service.AuthProvider;
@@ -89,7 +90,7 @@ public class Auth extends AccountDocumentHandler {
 
             if (by == AccountBy.name) {
                 if (virtualHost != null && value.indexOf('@') == -1) {
-                    Domain d = prov.get(DomainBy.virtualHostname, virtualHost);
+                    Domain d = prov.get(Key.DomainBy.virtualHostname, virtualHost);
                     if (d != null)
                         value = value + "@" + d.getName();
                 }

@@ -19,6 +19,7 @@ import java.util.TimeZone;
 
 import org.dom4j.Element;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -39,7 +40,7 @@ public class TimeRange {
 
     public TimeRange(String name) {
         try {
-            Account acct = Provisioning.getInstance().get(Provisioning.AccountBy.name, name);
+            Account acct = Provisioning.getInstance().get(Key.AccountBy.name, name);
             if (acct != null) {
                 mStart = acct.getTimeInterval(Provisioning.A_zimbraCalendarCalDavSyncStart, 0);
                 mEnd = acct.getTimeInterval(Provisioning.A_zimbraCalendarCalDavSyncEnd, 0);

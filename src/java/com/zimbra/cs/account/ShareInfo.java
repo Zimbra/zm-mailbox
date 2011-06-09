@@ -49,11 +49,12 @@ import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
 import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.CosBy;
+import com.zimbra.common.account.Key.DistributionListBy;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.Provisioning.AclGroups;
-import com.zimbra.cs.account.Provisioning.CosBy;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.PublishedShareInfoVisitor;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
@@ -187,15 +188,15 @@ public class ShareInfo {
             if (acct != null)
                 granteeName = acct.getName();
         } else if (granteeType == ACL.GRANTEE_GROUP) {
-            DistributionList dl = prov.getGroup(DistributionListBy.id, granteeId);
+            DistributionList dl = prov.getGroup(Key.DistributionListBy.id, granteeId);
             if (dl != null)
                 granteeName = dl.getName();
         } else if (granteeType == ACL.GRANTEE_COS) {
-            Cos cos = prov.get(CosBy.id, granteeId);
+            Cos cos = prov.get(Key.CosBy.id, granteeId);
             if (cos != null)
                 granteeName = cos.getName();
         } else if (granteeType == ACL.GRANTEE_DOMAIN) {
-            Domain domain = prov.get(DomainBy.id, granteeId);
+            Domain domain = prov.get(Key.DomainBy.id, granteeId);
             if (domain != null)
                 granteeName = domain.getName();
         } else {
@@ -215,15 +216,15 @@ public class ShareInfo {
             if (acct != null)
                 granteeDisplay = acct.getDisplayName();
         } else if (granteeType == ACL.GRANTEE_GROUP) {
-            DistributionList dl = prov.getGroup(DistributionListBy.id, granteeId);
+            DistributionList dl = prov.getGroup(Key.DistributionListBy.id, granteeId);
             if (dl != null)
                 granteeDisplay = dl.getDisplayName();
         } else if (granteeType == ACL.GRANTEE_COS) {
-            Cos cos = prov.get(CosBy.id, granteeId);
+            Cos cos = prov.get(Key.CosBy.id, granteeId);
             if (cos != null)
                 granteeDisplay = cos.getName();
         } else if (granteeType == ACL.GRANTEE_DOMAIN) {
-            Domain domain = prov.get(DomainBy.id, granteeId);
+            Domain domain = prov.get(Key.DomainBy.id, granteeId);
             if (domain != null)
                 granteeDisplay = domain.getName();
         } else {
@@ -761,7 +762,7 @@ public class ShareInfo {
 
                 // get shares published on parents of this dl
                 if (!dl.isAclGroup()) {
-                    dl = prov.getAclGroup(DistributionListBy.id, dl.getId());
+                    dl = prov.getAclGroup(Key.DistributionListBy.id, dl.getId());
                 }
                 AclGroups aclGroups = prov.getAclGroups(dl, false);
                 getSharesPublishedOnGroups(prov, visitor, aclGroups, owner, visited);
@@ -889,7 +890,7 @@ public class ShareInfo {
             throws ServiceException {
 
             for (String groupId : aclGroups.groupIds()) {
-                DistributionList group = prov.getGroup(DistributionListBy.id, groupId);
+                DistributionList group = prov.getGroup(Key.DistributionListBy.id, groupId);
                 getPublishedShares(visitor, group, owner, visited);
             }
         }

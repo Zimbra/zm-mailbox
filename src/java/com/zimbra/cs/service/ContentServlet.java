@@ -40,8 +40,9 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.ServerBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
@@ -257,7 +258,7 @@ public class ContentServlet extends ZimbraServlet {
             if (!FileUploadServlet.isLocalUpload(uploadId)) {
                 // wrong server; proxy to the right one...
                 String serverId = FileUploadServlet.getUploadServerId(uploadId);
-                Server server = Provisioning.getInstance().get(ServerBy.id, serverId);
+                Server server = Provisioning.getInstance().get(Key.ServerBy.id, serverId);
                 proxyServletRequest(req, resp, server, null);
                 return;
             }

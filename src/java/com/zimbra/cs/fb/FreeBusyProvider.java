@@ -29,6 +29,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -191,7 +192,7 @@ public abstract class FreeBusyProvider {
     protected String getEmailAddress(String accountId) {
         Account acct = null;
         try {
-            acct = Provisioning.getInstance().get(Provisioning.AccountBy.id, accountId);
+            acct = Provisioning.getInstance().get(Key.AccountBy.id, accountId);
         } catch (ServiceException e) {
         }
         if (acct == null)

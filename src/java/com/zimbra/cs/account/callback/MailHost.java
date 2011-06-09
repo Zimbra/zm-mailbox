@@ -19,12 +19,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.util.Config;
 
@@ -53,7 +54,7 @@ public class MailHost extends AttributeCallback {
         
         Provisioning prov = Provisioning.getInstance();
         
-        Server server = prov.get(ServerBy.serviceHostname, mailHost);
+        Server server = prov.get(Key.ServerBy.serviceHostname, mailHost);
         if (server == null)
             throw ServiceException.INVALID_REQUEST("specified "+Provisioning.A_zimbraMailHost+" does not correspond to a valid server service hostname: "+mailHost, null);
         else {
@@ -70,7 +71,7 @@ public class MailHost extends AttributeCallback {
         	
                 String oldMailHost = entry.getAttr(Provisioning.A_zimbraMailHost);
                 if (oldMailHost != null) {
-                    Server oldServer = prov.get(ServerBy.serviceHostname, oldMailHost);
+                    Server oldServer = prov.get(Key.ServerBy.serviceHostname, oldMailHost);
                     if (oldServer != null) {
                 	    String curMailTransport = entry.getAttr(Provisioning.A_zimbraMailTransport);
                 	    if (!oldServer.mailTransportMatches(curMailTransport))

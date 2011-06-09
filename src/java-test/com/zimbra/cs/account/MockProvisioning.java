@@ -22,6 +22,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.DataSource.Type;
 import com.zimbra.cs.account.NamedEntry.Visitor;
@@ -260,7 +262,7 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public Domain get(DomainBy keyType, String key) {
+    public Domain get(Key.DomainBy keyType, String key) {
         return null;
     }
 
@@ -290,7 +292,7 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public Cos get(CosBy keyType, String key) {
+    public Cos get(Key.CosBy keyType, String key) {
         throw new UnsupportedOperationException();
     }
 
@@ -310,7 +312,7 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public Server get(ServerBy keyName, String key) {
+    public Server get(Key.ServerBy keyName, String key) {
         throw new UnsupportedOperationException();
     }
 
@@ -335,7 +337,7 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public DistributionList get(DistributionListBy keyType, String key) {
+    public DistributionList get(Key.DistributionListBy keyType, String key) {
         throw new UnsupportedOperationException();
     }
 
@@ -395,7 +397,7 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public CalendarResource get(CalendarResourceBy keyType, String key) {
+    public CalendarResource get(Key.CalendarResourceBy keyType, String key) {
         throw new UnsupportedOperationException();
     }
 
@@ -511,7 +513,7 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public Identity get(Account account, IdentityBy keyType, String key) {
+    public Identity get(Account account, Key.IdentityBy keyType, String key) {
         throw new UnsupportedOperationException();
     }
 
@@ -541,7 +543,7 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public Signature get(Account account, SignatureBy keyType, String key) {
+    public Signature get(Account account, Key.SignatureBy keyType, String key) {
         throw new UnsupportedOperationException();
     }
 
@@ -578,7 +580,7 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public DataSource get(Account account, DataSourceBy keyType, String key) {
+    public DataSource get(Account account, Key.DataSourceBy keyType, String key) {
         throw new UnsupportedOperationException();
     }
 
@@ -588,7 +590,7 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public XMPPComponent get(XMPPComponentBy keyName, String key) {
+    public XMPPComponent get(Key.XMPPComponentBy keyName, String key) {
         throw new UnsupportedOperationException();
     }
 

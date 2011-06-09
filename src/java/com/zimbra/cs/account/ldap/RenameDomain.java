@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.EmailUtil;
@@ -382,7 +383,7 @@ public class RenameDomain {
             newDomain = mProv.createDomain(mNewDomainName, domainAttrs);
         } catch (AccountServiceException e) {
             if (e.getCode().equals(AccountServiceException.DOMAIN_EXISTS)) {
-                newDomain = mProv.get(Provisioning.DomainBy.name, mNewDomainName);
+                newDomain = mProv.get(Key.DomainBy.name, mNewDomainName);
                 if (newDomain == null)  // this should not happen
                     throw ServiceException.FAILURE("failed to load existing domain " + mNewDomainName, null);
                 
@@ -581,7 +582,7 @@ public class RenameDomain {
                 // (the entry will be read from the master, since we forced using LDAP master for the rename domain process - bug 56768)
                 // do not catch here, if we can't refresh - we can't modify, just let it throw and proceed to the next entry
                 try {
-                    refreshedEntry = mProv.get(Provisioning.DistributionListBy.id, entry.getId());
+                    refreshedEntry = mProv.get(Key.DistributionListBy.id, entry.getId());
                 } catch (ServiceException e) {
                     warn(e, "moveDistributionList", "getDistributionListById, entry not modified", "entry=[%s], oldDn=[%s], newDn=[%s]", entry.getName(), oldDn, newDn);
                     // if we can't refresh - we can't modify, just return and proceed to the next entry

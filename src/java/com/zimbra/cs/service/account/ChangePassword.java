@@ -27,8 +27,9 @@ import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -54,7 +55,7 @@ public class ChangePassword extends AccountDocumentHandler {
         String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
         
         if (virtualHost != null && name.indexOf('@') == -1) {
-            Domain d = prov.get(DomainBy.virtualHostname, virtualHost);
+            Domain d = prov.get(Key.DomainBy.virtualHostname, virtualHost);
             if (d != null)
                 name = name + "@" + d.getName();
         }

@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.account.accesscontrol;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -107,7 +108,7 @@ public class DomainACLAccessManager extends DomainAccessManager {
             if (grantee == null)
                 granteeAcct = GuestAccount.ANONYMOUS_ACCT;
             else if (grantee.isZimbraUser())
-                granteeAcct = Provisioning.getInstance().get(Provisioning.AccountBy.id, grantee.getAccountId());
+                granteeAcct = Provisioning.getInstance().get(Key.AccountBy.id, grantee.getAccountId());
             else
                 granteeAcct = new GuestAccount(grantee);
             
@@ -128,7 +129,7 @@ public class DomainACLAccessManager extends DomainAccessManager {
             Account granteeAcct = null;
             
             if (granteeEmail != null)
-                granteeAcct = Provisioning.getInstance().get(Provisioning.AccountBy.name, granteeEmail);
+                granteeAcct = Provisioning.getInstance().get(Key.AccountBy.name, granteeEmail);
             if (granteeAcct == null)
                 granteeAcct = GuestAccount.ANONYMOUS_ACCT;
             

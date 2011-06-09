@@ -38,6 +38,7 @@ import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.junit.*;
 import static org.junit.Assert.*;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
@@ -219,20 +220,20 @@ public class TestProvIDN extends TestLdap {
         
         switch (entryType) {
         case DOMAIN:
-            gotByUName = mProv.get(Provisioning.DomainBy.name, name.uName());
-            gotByAName = mProv.get(Provisioning.DomainBy.name, name.aName());
+            gotByUName = mProv.get(Key.DomainBy.name, name.uName());
+            gotByAName = mProv.get(Key.DomainBy.name, name.aName());
             break;
         case ACCOUNT:
-            gotByUName = mProv.get(Provisioning.AccountBy.name, name.uName());
-            gotByAName = mProv.get(Provisioning.AccountBy.name, name.aName());
+            gotByUName = mProv.get(Key.AccountBy.name, name.uName());
+            gotByAName = mProv.get(Key.AccountBy.name, name.aName());
             break;
         case CR:
-            gotByUName = mProv.get(Provisioning.CalendarResourceBy.name, name.uName());
-            gotByAName = mProv.get(Provisioning.CalendarResourceBy.name, name.aName());
+            gotByUName = mProv.get(Key.CalendarResourceBy.name, name.uName());
+            gotByAName = mProv.get(Key.CalendarResourceBy.name, name.aName());
             break;
         case DL:
-            gotByUName = mProv.get(Provisioning.DistributionListBy.name, name.uName());
-            gotByAName = mProv.get(Provisioning.DistributionListBy.name, name.aName());
+            gotByUName = mProv.get(Key.DistributionListBy.name, name.uName());
+            gotByAName = mProv.get(Key.DistributionListBy.name, name.aName());
             break;
         }
         

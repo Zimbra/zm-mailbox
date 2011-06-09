@@ -16,8 +16,8 @@ package com.zimbra.cs.servlet;
 
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.Entry;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ZAttrProvisioning;
+import com.zimbra.common.account.Key;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.ZimbraLog;
@@ -126,7 +126,7 @@ public class SetHeaderFilter implements Filter {
 					AdminConstants.ADMIN_SERVICE_URI
 				;
 				provisioning.soapSetURI(soapUri);
-				Entry info = provisioning.getDomainInfo(Provisioning.DomainBy.virtualHostname, serverName);
+				Entry info = provisioning.getDomainInfo(Key.DomainBy.virtualHostname, serverName);
 				if (info == null) {
 					info = provisioning.getConfig();
 				}

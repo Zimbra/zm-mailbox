@@ -56,7 +56,8 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.fb.ExchangeFreeBusyProvider.AuthScheme;
 import com.zimbra.cs.fb.ExchangeFreeBusyProvider.ExchangeUserResolver;
 import com.zimbra.cs.fb.ExchangeFreeBusyProvider.ServerInfo;
@@ -987,7 +988,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
     	String ret = null;
         Account acct =
             Provisioning.getInstance()
-                .get(Provisioning.AccountBy.id, accountId);
+                .get(Key.AccountBy.id, accountId);
         if (acct == null)
             return null;
         String[] fps = acct.getForeignPrincipal();

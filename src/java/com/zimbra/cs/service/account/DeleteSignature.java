@@ -16,13 +16,14 @@ package com.zimbra.cs.service.account;
 
 import java.util.Map;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.SignatureBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.SignatureBy;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.common.soap.SoapFaultException;
@@ -45,10 +46,10 @@ public class DeleteSignature extends DocumentHandler {
         Signature signature = null;
         String sigStr = eSignature.getAttribute(AccountConstants.A_ID, null);
         if (sigStr != null) {
-            signature = prov.get(account, SignatureBy.id, sigStr);
+            signature = prov.get(account, Key.SignatureBy.id, sigStr);
         } else {
             sigStr = eSignature.getAttribute(AccountConstants.A_NAME);
-            signature = prov.get(account, SignatureBy.name, sigStr);
+            signature = prov.get(account, Key.SignatureBy.name, sigStr);
         }
         
         if (signature != null)

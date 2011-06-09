@@ -21,10 +21,11 @@ import java.util.Set;
 import org.junit.*;
 import static org.junit.Assert.*;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.CosBy;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.CosBy;
 
 public class TestProvCallbackAvailableZimlets extends TestLdap {
     
@@ -62,13 +63,13 @@ public class TestProvCallbackAvailableZimlets extends TestLdap {
     
     @AfterClass
     public static void cleanup() throws Exception {
-        Cos cos = mProv.get(CosBy.name, COS_NAME);
+        Cos cos = mProv.get(Key.CosBy.name, COS_NAME);
         mProv.deleteCos(cos.getId());
     }
     
     @Test
     public void testReplace() throws Exception {
-        Cos cos = mProv.get(CosBy.name, COS_NAME);
+        Cos cos = mProv.get(Key.CosBy.name, COS_NAME);
         
         Map<String, Object> attrs = new HashMap<String, Object>(); 
         
@@ -92,7 +93,7 @@ public class TestProvCallbackAvailableZimlets extends TestLdap {
     
     @Test
     public void testDelete() throws Exception {
-        Cos cos = mProv.get(CosBy.name, COS_NAME);
+        Cos cos = mProv.get(Key.CosBy.name, COS_NAME);
         
         Map<String, Object> attrs = new HashMap<String, Object>(); 
         
@@ -147,7 +148,7 @@ public class TestProvCallbackAvailableZimlets extends TestLdap {
     
     @Test
     public void testAdd() throws Exception {
-        Cos cos = mProv.get(CosBy.name, COS_NAME);
+        Cos cos = mProv.get(Key.CosBy.name, COS_NAME);
         
         Map<String, Object> attrs = new HashMap<String, Object>(); 
         
@@ -212,7 +213,7 @@ public class TestProvCallbackAvailableZimlets extends TestLdap {
     
     @Test
     public void testDeleteAdd() throws Exception {
-        Cos cos = mProv.get(CosBy.name, COS_NAME);
+        Cos cos = mProv.get(Key.CosBy.name, COS_NAME);
         
         Map<String, Object> attrs = new HashMap<String, Object>(); 
         

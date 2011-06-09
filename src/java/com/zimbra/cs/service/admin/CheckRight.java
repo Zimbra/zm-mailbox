@@ -33,14 +33,15 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
-import com.zimbra.cs.account.Provisioning.CosBy;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.account.Provisioning.GranteeBy;
-import com.zimbra.cs.account.Provisioning.ServerBy;
-import com.zimbra.cs.account.Provisioning.TargetBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.CalendarResourceBy;
+import com.zimbra.common.account.Key.CosBy;
+import com.zimbra.common.account.Key.DistributionListBy;
+import com.zimbra.common.account.Key.DomainBy;
+import com.zimbra.common.account.Key.GranteeBy;
+import com.zimbra.common.account.Key.ServerBy;
+import com.zimbra.common.account.Key.TargetBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
@@ -57,10 +58,10 @@ public class CheckRight extends RightDocumentHandler {
         
         Element eTarget = request.getElement(AdminConstants.E_TARGET);
         String targetType = eTarget.getAttribute(AdminConstants.A_TYPE);
-        TargetBy targetBy = null;
+        Key.TargetBy targetBy = null;
         String target = null;
         if (TargetType.fromCode(targetType).needsTargetIdentity()) {
-            targetBy = TargetBy.fromString(eTarget.getAttribute(AdminConstants.A_BY));
+            targetBy = Key.TargetBy.fromString(eTarget.getAttribute(AdminConstants.A_BY));
             target = eTarget.getText();
         }
             
@@ -68,7 +69,7 @@ public class CheckRight extends RightDocumentHandler {
         String granteeType = eGrantee.getAttribute(AdminConstants.A_TYPE, GranteeType.GT_USER.getCode());
         if (GranteeType.fromCode(granteeType) != GranteeType.GT_USER)
             throw ServiceException.INVALID_REQUEST("invalid grantee type " + granteeType, null);
-        GranteeBy granteeBy = GranteeBy.fromString(eGrantee.getAttribute(AdminConstants.A_BY));
+        Key.GranteeBy granteeBy = Key.GranteeBy.fromString(eGrantee.getAttribute(AdminConstants.A_BY));
         String grantee = eGrantee.getText();
 
         Element eRight = request.getElement(AdminConstants.E_RIGHT);

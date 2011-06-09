@@ -22,6 +22,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
@@ -57,7 +58,7 @@ public final class FolderTest {
 
     @Test
     public void testImapMODSEQ() throws Exception {
-        Account acct = Provisioning.getInstance().get(Provisioning.AccountBy.name, "test@zimbra.com");
+        Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
 
         // initial state: empty folder

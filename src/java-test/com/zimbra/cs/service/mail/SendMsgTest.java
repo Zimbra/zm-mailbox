@@ -31,6 +31,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.testng.Assert;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapProtocol;
@@ -88,7 +89,7 @@ public class SendMsgTest {
 
     @Test
     public void testDeleteDraft() throws Exception {
-        Account acct = Provisioning.getInstance().get(Provisioning.AccountBy.name, "test@zimbra.com");
+        Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
 
         // first, add draft message

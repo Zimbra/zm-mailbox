@@ -23,9 +23,10 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
 
 
 public class TestLdapProvAlias extends TestLdap {
@@ -135,7 +136,7 @@ public class TestLdapProvAlias extends TestLdap {
         prov.addAlias(dl, ALIAS_NAME);
         
         prov.flushCache(CacheEntryType.account, null);
-        DistributionList dlByAlias = prov.get(DistributionListBy.name, ALIAS_NAME);
+        DistributionList dlByAlias = prov.get(Key.DistributionListBy.name, ALIAS_NAME);
         
         assertEquals(DL_ID, dlByAlias.getId());
         
@@ -143,7 +144,7 @@ public class TestLdapProvAlias extends TestLdap {
         
         // get dl by alias again
         prov.flushCache(CacheEntryType.group, null);
-        dlByAlias = prov.get(DistributionListBy.name, ALIAS_NAME);
+        dlByAlias = prov.get(Key.DistributionListBy.name, ALIAS_NAME);
         assertNull(dlByAlias);
     }
     
@@ -159,14 +160,14 @@ public class TestLdapProvAlias extends TestLdap {
         prov.addAlias(dl, ALIAS_NAME);
         
         prov.flushCache(CacheEntryType.group, null);
-        DistributionList dlByAlias = prov.get(DistributionListBy.name, ALIAS_NAME);
+        DistributionList dlByAlias = prov.get(Key.DistributionListBy.name, ALIAS_NAME);
         
         assertEquals(DL_ID, dlByAlias.getId());
         
         prov.removeAlias(dl, ALIAS_NAME);
         
         prov.flushCache(CacheEntryType.group, null);
-        dlByAlias = prov.get(DistributionListBy.name, ALIAS_NAME);
+        dlByAlias = prov.get(Key.DistributionListBy.name, ALIAS_NAME);
         
         assertNull(dlByAlias);
         

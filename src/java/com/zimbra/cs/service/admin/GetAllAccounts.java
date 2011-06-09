@@ -24,6 +24,9 @@ import java.util.Map;
 
 import org.dom4j.QName;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DomainBy;
+import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -32,8 +35,6 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.Server;
@@ -67,9 +68,9 @@ public class GetAllAccounts extends AdminDocumentHandler {
             String key = s.getAttribute(AdminConstants.A_BY);
             String value = s.getText();
             if (key.equals(BY_NAME)) 
-                server = prov.get(ServerBy.name, value);
+                server = prov.get(Key.ServerBy.name, value);
             else if (key.equals(BY_ID))
-                server = prov.get(ServerBy.id, value);
+                server = prov.get(Key.ServerBy.id, value);
             else
                 throw ServiceException.INVALID_REQUEST("unknown value for server by: "+key, null);
                 
@@ -87,9 +88,9 @@ public class GetAllAccounts extends AdminDocumentHandler {
             Domain domain = null;
         
             if (key.equals(BY_NAME)) {
-                domain = prov.get(DomainBy.name, value);
+                domain = prov.get(Key.DomainBy.name, value);
             } else if (key.equals(BY_ID)) {
-                domain = prov.get(DomainBy.id, value);
+                domain = prov.get(Key.DomainBy.id, value);
             } else {
                 throw ServiceException.INVALID_REQUEST("unknown value for domain by: "+key, null);
             }

@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -248,7 +249,7 @@ public class ItemAction extends MailDocumentHandler {
                 ZMailbox.Options zoptions = new ZMailbox.Options(zat, AccountUtil.getSoapUri(owner));
                 zoptions.setNoSession(true);
                 zoptions.setTargetAccount(owner.getId());
-                zoptions.setTargetAccountBy(Provisioning.AccountBy.id);
+                zoptions.setTargetAccountBy(Key.AccountBy.id);
                 ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
                 ZFolder zfolder = zmbx.getFolderById(iidFolder.toString(zsc.getAuthtokenAccountId()));
                 if (!(zfolder instanceof ZMountpoint))

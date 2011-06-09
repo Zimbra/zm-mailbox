@@ -37,7 +37,8 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -253,7 +254,7 @@ public class GetMiniCal extends CalendarRequest {
             ZimbraSoapContext zsc, String remoteAccountId, List<String> remoteFolders, long rangeStart, long rangeEnd,
             Set<String> busyDates, Element response, Map<ItemId, ItemId> reverseIidMap, ItemIdFormatter ifmt) {
         try {
-            Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, remoteAccountId);
+            Account target = Provisioning.getInstance().get(Key.AccountBy.id, remoteAccountId);
             if (target == null)
                 throw AccountServiceException.NO_SUCH_ACCOUNT(remoteAccountId);
             ZMailbox.Options zoptions = new ZMailbox.Options(zsc.getAuthToken().toZAuthToken(), AccountUtil.getSoapUri(target));
@@ -357,7 +358,7 @@ public class GetMiniCal extends CalendarRequest {
                             if (!mp.isLocal()) {
                                 // done resolving if pointing to a different account
                                 targetAccountId = mp.getOwnerId();
-                                Account targetAcct = Provisioning.getInstance().get(Provisioning.AccountBy.id, targetAccountId);
+                                Account targetAcct = Provisioning.getInstance().get(Key.AccountBy.id, targetAccountId);
                                 if (targetAcct == null)
                                     error = AccountServiceException.NO_SUCH_ACCOUNT(targetAccountId);
                                 break;

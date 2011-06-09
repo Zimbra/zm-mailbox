@@ -17,6 +17,9 @@ package com.zimbra.cs.account.accesscontrol;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.CosBy;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -32,8 +35,6 @@ import com.zimbra.cs.account.Provisioning.AclGroups;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
-import com.zimbra.cs.account.Provisioning.CosBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
 
 public class PseudoTarget {
     
@@ -191,8 +192,8 @@ public class PseudoTarget {
     
     public static Entry createPseudoTarget(Provisioning prov,
             TargetType targetType, 
-            DomainBy domainBy, String domainStr, boolean createPseudoDomain,
-            CosBy cosBy, String cosStr) throws ServiceException {
+            Key.DomainBy domainBy, String domainStr, boolean createPseudoDomain,
+            Key.CosBy cosBy, String cosStr) throws ServiceException {
         return createPseudoTarget(prov, targetType, domainBy, domainStr, createPseudoDomain, cosBy, cosStr, null);
     }
     
@@ -226,8 +227,8 @@ public class PseudoTarget {
      */
     public static Entry createPseudoTarget(Provisioning prov,
             TargetType targetType, 
-            DomainBy domainBy, String domainStr, boolean createPseudoDomain,
-            CosBy cosBy, String cosStr,
+            Key.DomainBy domainBy, String domainStr, boolean createPseudoDomain,
+            Key.CosBy cosBy, String cosStr,
             String domainName) throws ServiceException {
         
         Entry targetEntry = null;
@@ -265,8 +266,8 @@ public class PseudoTarget {
                 attrMap.put(Provisioning.A_zimbraCOSId, cos.getId());
             } else {
                 String domainCosId = domain != null ? domain.getAttr(Provisioning.A_zimbraDomainDefaultCOSId, null) : null;
-                if (domainCosId != null) cos = prov.get(CosBy.id, domainCosId);
-                if (cos == null) cos = prov.get(CosBy.name, Provisioning.DEFAULT_COS_NAME);
+                if (domainCosId != null) cos = prov.get(Key.CosBy.id, domainCosId);
+                if (cos == null) cos = prov.get(Key.CosBy.name, Provisioning.DEFAULT_COS_NAME);
             }
             
             if (targetType == TargetType.account)

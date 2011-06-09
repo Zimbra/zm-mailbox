@@ -21,9 +21,10 @@ import java.util.Map;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;
@@ -47,7 +48,7 @@ public class ModifyDistributionList extends AdminDocumentHandler {
         String id = request.getAttribute(AdminConstants.E_ID);
         Map<String, Object> attrs = AdminService.getAttrs(request);
 	    
-        DistributionList distributionList = prov.get(DistributionListBy.id, id);
+        DistributionList distributionList = prov.get(Key.DistributionListBy.id, id);
         if (distributionList == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(id);
 

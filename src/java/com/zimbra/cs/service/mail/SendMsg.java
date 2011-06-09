@@ -31,6 +31,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.calendar.ZCalendar.ZCalendarBuilder;
@@ -302,12 +303,12 @@ public final class SendMsg extends MailDocumentHandler {
                 Mailbox ownerMbox = MailboxManager.getInstance().getMailboxByAccountId(iidDraft.getAccountId());
                 ownerMbox.delete(octxt, iidDraft.getId(), MailItem.Type.MESSAGE);
             } else {
-                Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, iidDraft.getAccountId());
+                Account target = Provisioning.getInstance().get(Key.AccountBy.id, iidDraft.getAccountId());
                 AuthToken at = zsc.getAuthToken();
                 ZAuthToken zat = at.getProxyAuthToken() == null ? at.toZAuthToken() : new ZAuthToken(at.getProxyAuthToken());
                 ZMailbox.Options zoptions = new ZMailbox.Options(zat, AccountUtil.getSoapUri(target));
                 zoptions.setNoSession(true);
-                zoptions.setTargetAccount(target.getId()).setTargetAccountBy(Provisioning.AccountBy.id);
+                zoptions.setTargetAccount(target.getId()).setTargetAccountBy(Key.AccountBy.id);
                 ZMailbox.getMailbox(zoptions).deleteMessage(iidDraft.toString());
             }
         } catch (ServiceException e) {

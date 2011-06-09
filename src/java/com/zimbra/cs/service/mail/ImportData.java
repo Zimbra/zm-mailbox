@@ -16,6 +16,8 @@ package com.zimbra.cs.service.mail;
 
 import java.util.Map;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DataSourceBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -23,7 +25,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -42,12 +43,12 @@ public class ImportData extends MailDocumentHandler {
 
             String name, id = elem.getAttribute(MailConstants.A_ID, null);
             if (id != null) {
-                ds = prov.get(account, DataSourceBy.id, id);
+                ds = prov.get(account, Key.DataSourceBy.id, id);
                 if (ds == null) {
                     throw ServiceException.INVALID_REQUEST("Could not find Data Source with id " + id, null);
                 }
             } else if ((name = elem.getAttribute(MailConstants.A_NAME, null)) != null) {
-                ds = prov.get(account, DataSourceBy.name, name);
+                ds = prov.get(account, Key.DataSourceBy.name, name);
                 if (ds == null) {
                     throw ServiceException.INVALID_REQUEST("Could not find Data Source with name " + name, null);
                 }

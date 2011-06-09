@@ -21,6 +21,7 @@ import java.util.Map;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
@@ -151,7 +152,7 @@ public class TestAccess extends TestCase {
                 attrs.put(Provisioning.A_zimbraDataSourcePort, "8888");
                 attrs.put(Provisioning.A_zimbraDataSourceUsername, "my-pop3-name");
                 attrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer, "TRUE");
-                dataSource = createDataSource(get(Provisioning.AccountBy.name, acctName), 
+                dataSource = createDataSource(get(Key.AccountBy.name, acctName), 
                                               DataSource.Type.pop3, dataSourceName, attrs);
             } catch (ServiceException e) {
                 e.printStackTrace();
@@ -291,7 +292,7 @@ public class TestAccess extends TestCase {
     
     public void DeleteIdentity(Role role, Perm perm) throws Exception {
         String identityName = "identity-delete-"+random();
-        mProvAdmin.createIdentity(mProvAdmin.get(Provisioning.AccountBy.id, ACCT_1_ID), identityName, new HashMap<String, Object>());
+        mProvAdmin.createIdentity(mProvAdmin.get(Key.AccountBy.id, ACCT_1_ID), identityName, new HashMap<String, Object>());
         
         XMLElement req = new XMLElement(AccountConstants.DELETE_IDENTITY_REQUEST);
         Element identity = req.addElement(AccountConstants.E_IDENTITY);
@@ -301,7 +302,7 @@ public class TestAccess extends TestCase {
     
     public void DeleteSignature(Role role, Perm perm) throws Exception {
         String signatureName = "signature-delete-"+random();
-        Signature signature = mProvAdmin.createSignature(mProvAdmin.get(Provisioning.AccountBy.id, ACCT_1_ID), signatureName, new HashMap<String, Object>());
+        Signature signature = mProvAdmin.createSignature(mProvAdmin.get(Key.AccountBy.id, ACCT_1_ID), signatureName, new HashMap<String, Object>());
         
         XMLElement req = new XMLElement(AccountConstants.DELETE_SIGNATURE_REQUEST);
         Element identity = req.addElement(AccountConstants.E_SIGNATURE);
@@ -375,7 +376,7 @@ public class TestAccess extends TestCase {
     
     public void ModifyIdentity(Role role, Perm perm) throws Exception {
         String identityName = "identity-modify-"+random();
-        mProvAdmin.createIdentity(mProvAdmin.get(Provisioning.AccountBy.id, ACCT_1_ID), identityName, new HashMap<String, Object>());
+        mProvAdmin.createIdentity(mProvAdmin.get(Key.AccountBy.id, ACCT_1_ID), identityName, new HashMap<String, Object>());
         
         XMLElement req = new XMLElement(AccountConstants.MODIFY_IDENTITY_REQUEST);
         Element identity = req.addElement(AccountConstants.E_IDENTITY);
@@ -398,7 +399,7 @@ public class TestAccess extends TestCase {
     
     public void ModifySignature(Role role, Perm perm) throws Exception {
         String signatureName = "signature-modify-"+random();
-        Signature signature = mProvAdmin.createSignature(mProvAdmin.get(Provisioning.AccountBy.id, ACCT_1_ID), signatureName, new HashMap<String, Object>());
+        Signature signature = mProvAdmin.createSignature(mProvAdmin.get(Key.AccountBy.id, ACCT_1_ID), signatureName, new HashMap<String, Object>());
         
         XMLElement req = new XMLElement(AccountConstants.MODIFY_SIGNATURE_REQUEST);
         Element identity = req.addElement(AccountConstants.E_SIGNATURE);

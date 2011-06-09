@@ -20,8 +20,9 @@ import com.zimbra.common.util.EmailUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DomainBy;
 
 public class Krb5Principal {
     
@@ -50,7 +51,7 @@ public class Krb5Principal {
              if (idx != -1) {
                  String realm = principal.substring(idx+1);
                  
-                 Domain domain = prov.get(DomainBy.krb5Realm, realm);
+                 Domain domain = prov.get(Key.DomainBy.krb5Realm, realm);
                  if (domain != null) {
                      String localPart = principal.substring(0, idx);
                      String acctName = localPart +  "@" + domain.getName();

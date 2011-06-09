@@ -24,6 +24,8 @@ import java.util.Set;
 import org.junit.*;
 import static org.junit.Assert.*;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -33,7 +35,6 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ZAttrProvisioning;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
-import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.ldap.LdapHelper;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.ldap.IAttributes;
@@ -69,13 +70,13 @@ public class TestLdapProvDomain extends TestLdap {
             attrs = new HashMap<String, Object>();
         }
         
-        Domain domain = prov.get(DomainBy.name, domainName);
+        Domain domain = prov.get(Key.DomainBy.name, domainName);
         assertNull(domain);
         domain = prov.createDomain(domainName, attrs);
         assertNotNull(domain);
         
         prov.flushCache(CacheEntryType.domain, null);
-        domain = prov.get(DomainBy.name, domainName);
+        domain = prov.get(Key.DomainBy.name, domainName);
         assertNotNull(domain);
         assertEquals(IDNUtil.toAsciiDomainName(domainName).toLowerCase(), 
                 domain.getName().toLowerCase());
@@ -86,7 +87,7 @@ public class TestLdapProvDomain extends TestLdap {
     static void deleteDomain(Provisioning prov, Domain domain) throws Exception {
         String domainId = domain.getId();
         prov.deleteDomain(domainId);
-        domain = prov.get(DomainBy.id, domainId);
+        domain = prov.get(Key.DomainBy.id, domainId);
         assertNull(domain);
     }
     
@@ -251,9 +252,9 @@ public class TestLdapProvDomain extends TestLdap {
         String ALIAS_DOMAIN_NAME = makeTestDomainName("testAliasDomain-alias");
         String USER_LOCAL_PART = "user";
         
-        Domain targetDomain = prov.get(DomainBy.name, TARGET_DOMAIN_NAME);
+        Domain targetDomain = prov.get(Key.DomainBy.name, TARGET_DOMAIN_NAME);
         assertNull(targetDomain);
-        Domain aliasDomain = prov.get(DomainBy.name, ALIAS_DOMAIN_NAME);
+        Domain aliasDomain = prov.get(Key.DomainBy.name, ALIAS_DOMAIN_NAME);
         assertNull(aliasDomain);
         
         targetDomain = createDomain(TARGET_DOMAIN_NAME);
@@ -278,32 +279,32 @@ public class TestLdapProvDomain extends TestLdap {
     
     private void getDomainById(String id) throws Exception {
         prov.flushCache(CacheEntryType.domain, null);
-        Domain domain = prov.get(DomainBy.id, id);
+        Domain domain = prov.get(Key.DomainBy.id, id);
         assertEquals(id, domain.getId());
     }
     
     private void getDomainByName(String name) throws Exception {
         prov.flushCache(CacheEntryType.domain, null);
-        Domain domain = prov.get(DomainBy.name, name);
+        Domain domain = prov.get(Key.DomainBy.name, name);
         assertEquals(IDNUtil.toAsciiDomainName(name), domain.getName());
     }
     
     private void getDomainByVirtualHostname(String virtualHostname, String expectedDomainId) 
     throws Exception {
         prov.flushCache(CacheEntryType.domain, null);
-        Domain domain = prov.get(DomainBy.virtualHostname, virtualHostname);
+        Domain domain = prov.get(Key.DomainBy.virtualHostname, virtualHostname);
         assertEquals(expectedDomainId, domain.getId());
     }
     
     private void getDomainByKrb5Realm(String krb5Realm, String expectedDomainId) throws Exception {
         prov.flushCache(CacheEntryType.domain, null);
-        Domain domain = prov.get(DomainBy.krb5Realm, krb5Realm);
+        Domain domain = prov.get(Key.DomainBy.krb5Realm, krb5Realm);
         assertEquals(expectedDomainId, domain.getId());
     }
     
     private void getDomainByForeignName(String foreignName, String expectedDomainId) throws Exception {
         prov.flushCache(CacheEntryType.domain, null);
-        Domain domain = prov.get(DomainBy.foreignName, foreignName);
+        Domain domain = prov.get(Key.DomainBy.foreignName, foreignName);
         assertEquals(expectedDomainId, domain.getId());
     }
 
@@ -336,7 +337,7 @@ public class TestLdapProvDomain extends TestLdap {
     @Test
     public void getDomainNotExist() throws Exception {
         String DOMAIN_NAME = makeTestDomainName("getDomainNotExist");
-        Domain domain = prov.get(DomainBy.name, DOMAIN_NAME);
+        Domain domain = prov.get(Key.DomainBy.name, DOMAIN_NAME);
         assertNull(domain);
     }
 }

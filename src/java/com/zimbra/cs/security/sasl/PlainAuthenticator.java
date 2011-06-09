@@ -17,6 +17,7 @@ package com.zimbra.cs.security.sasl;
 
 import javax.security.sasl.SaslServer;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -82,7 +83,7 @@ public class PlainAuthenticator extends Authenticator {
                                           AuthContext.Protocol protocol, String origRemoteIp, String userAgent)
     throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
-        Account authAccount = prov.get(Provisioning.AccountBy.name, authenticateId);
+        Account authAccount = prov.get(Key.AccountBy.name, authenticateId);
         if (authAccount == null) {
             ZimbraLog.account.info("authentication failed for " + authenticateId + " (no such account)");
             return null;

@@ -47,6 +47,8 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.ParseException;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.Log;
@@ -56,7 +58,6 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.service.ServiceException;
 
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Server;
@@ -794,10 +795,10 @@ public class ProxyConfGen
     }
 
     /* Guess how to find a server object -- taken from ProvUtil::guessServerBy */
-    public static ServerBy guessServerBy(String value) {
+    public static Key.ServerBy guessServerBy(String value) {
         if (Provisioning.isUUID(value))
-            return ServerBy.id;
-        return ServerBy.name;
+            return Key.ServerBy.id;
+        return Key.ServerBy.name;
     }
 
     public static Server getServer (String key)

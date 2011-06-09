@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.account.accesscontrol;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -55,7 +56,7 @@ public class AccessControlUtil {
         Account granteeAcct = null;
         try {
             if (emailAddr != null)
-                granteeAcct = Provisioning.getInstance().get(Provisioning.AccountBy.name, emailAddr);
+                granteeAcct = Provisioning.getInstance().get(Key.AccountBy.name, emailAddr);
             if (granteeAcct == null) {
                 if (rightNeeded.isUserRight())
                     granteeAcct = GuestAccount.ANONYMOUS_ACCT;

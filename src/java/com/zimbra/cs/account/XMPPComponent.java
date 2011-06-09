@@ -18,10 +18,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DomainBy;
+import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.account.Provisioning.ServerBy;
 
 /**
  * Systemwide configuration entry for XMPP component (e.g. conference.mydomain.com) in the cloud
@@ -89,14 +90,14 @@ public class XMPPComponent extends NamedEntry implements Comparable {
         return getAttr(Provisioning.A_zimbraDomainId);
     }
     public Domain getDomain() throws ServiceException {
-        return Provisioning.getInstance().get(DomainBy.id, getDomainId());
+        return Provisioning.getInstance().get(Key.DomainBy.id, getDomainId());
     }
     
     public String getServerId() {
         return getAttr(Provisioning.A_zimbraServerId);
     }
     public Server getServer() throws ServiceException {
-        return Provisioning.getInstance().get(ServerBy.id, getServerId());
+        return Provisioning.getInstance().get(Key.ServerBy.id, getServerId());
     }
      
     

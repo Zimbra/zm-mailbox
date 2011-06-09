@@ -17,6 +17,8 @@ package com.zimbra.cs.account.callback;
 
 import java.util.Map;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.SignatureBy;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
@@ -27,7 +29,6 @@ import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Signature;
-import com.zimbra.cs.account.Provisioning.SignatureBy;
 
 /**
  * Callback to ensure a signature being used for auto-accept/decline has non-empty text/plain content.
@@ -50,7 +51,7 @@ public class PlainTextSignature extends AttributeCallback {
         else
             return;
 
-        Signature sig = Provisioning.getInstance().get(account, SignatureBy.id, mod.value());
+        Signature sig = Provisioning.getInstance().get(account, Key.SignatureBy.id, mod.value());
         if (sig == null) {
             throw ServiceException.INVALID_REQUEST("No such signature " + mod.value() + " for account " + account.getName(), null);
         }

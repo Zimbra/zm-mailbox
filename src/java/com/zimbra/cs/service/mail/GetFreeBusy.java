@@ -22,6 +22,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.zimbra.soap.SoapServlet;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
@@ -73,7 +74,7 @@ public class GetFreeBusy extends MailDocumentHandler {
         String nameParam = request.getAttribute(MailConstants.A_NAME, null); // comma-separated list of account emails
         String exApptUid = request.getAttribute(MailConstants.A_APPT_FREEBUSY_EXCLUDE_UID, null);
 
-        Account requestor = Provisioning.getInstance().get(Provisioning.AccountBy.id, zc.getAuthtokenAccountId());
+        Account requestor = Provisioning.getInstance().get(Key.AccountBy.id, zc.getAuthtokenAccountId());
     	FreeBusyQuery fbQuery = new FreeBusyQuery((HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST), zc, requestor, rangeStart, rangeEnd, exApptUid);
 
         String[] idStrs = null;

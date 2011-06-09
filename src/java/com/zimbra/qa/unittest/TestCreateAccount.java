@@ -19,6 +19,7 @@ import java.util.HashMap;
 
 import junit.framework.TestCase;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.CliUtil;
@@ -63,7 +64,7 @@ public class TestCreateAccount extends TestCase {
         assertTrue(prov instanceof LdapProv);
             
         DOMAIN_NAME = TestProvisioningUtil.baseDomainName(TEST_NAME, null);
-        Domain domain = prov.get(Provisioning.DomainBy.name, DOMAIN_NAME);
+        Domain domain = prov.get(Key.DomainBy.name, DOMAIN_NAME);
         if (domain != null)
             return;
         
@@ -110,7 +111,7 @@ public class TestCreateAccount extends TestCase {
         for (int i=0; i<NUM_ACCTS_PER_THREAD; i++) {
             System.out.println("getAccount: " + threadIdx + ", " + i);
             String acctName = makeAcctName(threadIdx, i);
-            Account acct = prov.get(Provisioning.AccountBy.name, acctName);
+            Account acct = prov.get(Key.AccountBy.name, acctName);
             assertNotNull(acct);
         }
     }

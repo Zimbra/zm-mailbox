@@ -48,7 +48,8 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.httpclient.HttpProxyUtil;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.UserServlet;
@@ -255,7 +256,7 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
         // new context for proxied request has a different "requested account"
         ZimbraSoapContext zscTarget = new ZimbraSoapContext(zsc, acctId);
         Provisioning prov = Provisioning.getInstance();
-        Account acct = prov.get(Provisioning.AccountBy.id, acctId);
+        Account acct = prov.get(Key.AccountBy.id, acctId);
         Server server = prov.getServer(acct);
 
         // executing remotely; find out target and proxy there

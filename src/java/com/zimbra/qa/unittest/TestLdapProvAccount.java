@@ -30,9 +30,10 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DataSourceBy;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
-import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.ldap.LdapConstants;
 
 public class TestLdapProvAccount extends TestLdap {
@@ -261,9 +262,9 @@ public class TestLdapProvAccount extends TestLdap {
         assertEquals(ACCT_NEW_NAME, renamedAcct.getName());
         
         // make sure children are moved
-        assertEquals(DATA_SOURCE_ID_1, prov.get(renamedAcct, DataSourceBy.name, DATA_SOURCE_NAME_1).getId());
-        assertEquals(DATA_SOURCE_ID_2, prov.get(renamedAcct, DataSourceBy.name, DATA_SOURCE_NAME_2).getId());
-        assertEquals(DATA_SOURCE_ID_3, prov.get(renamedAcct, DataSourceBy.name, DATA_SOURCE_NAME_3).getId());
+        assertEquals(DATA_SOURCE_ID_1, prov.get(renamedAcct, Key.DataSourceBy.name, DATA_SOURCE_NAME_1).getId());
+        assertEquals(DATA_SOURCE_ID_2, prov.get(renamedAcct, Key.DataSourceBy.name, DATA_SOURCE_NAME_2).getId());
+        assertEquals(DATA_SOURCE_ID_3, prov.get(renamedAcct, Key.DataSourceBy.name, DATA_SOURCE_NAME_3).getId());
         
         deleteAccount(renamedAcct);
     }
@@ -312,9 +313,9 @@ public class TestLdapProvAccount extends TestLdap {
         assertEquals(ACCT_NEW_NAME, renamedAcct.getName());
         
         // make sure children are moved
-        assertEquals(DATA_SOURCE_ID_1, prov.get(renamedAcct, DataSourceBy.name, DATA_SOURCE_NAME_1).getId());
-        assertEquals(DATA_SOURCE_ID_2, prov.get(renamedAcct, DataSourceBy.name, DATA_SOURCE_NAME_2).getId());
-        assertEquals(DATA_SOURCE_ID_3, prov.get(renamedAcct, DataSourceBy.name, DATA_SOURCE_NAME_3).getId());
+        assertEquals(DATA_SOURCE_ID_1, prov.get(renamedAcct, Key.DataSourceBy.name, DATA_SOURCE_NAME_1).getId());
+        assertEquals(DATA_SOURCE_ID_2, prov.get(renamedAcct, Key.DataSourceBy.name, DATA_SOURCE_NAME_2).getId());
+        assertEquals(DATA_SOURCE_ID_3, prov.get(renamedAcct, Key.DataSourceBy.name, DATA_SOURCE_NAME_3).getId());
         
         deleteAccount(renamedAcct);
         TestLdapProvDomain.deleteDomain(prov, newDomain);
