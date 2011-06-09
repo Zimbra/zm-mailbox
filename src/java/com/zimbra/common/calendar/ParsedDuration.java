@@ -190,7 +190,7 @@ public final class ParsedDuration
         mMins = 0;
         mSecs = 0;
     }
-    
+
     public Element toXml(Element parent) {
         return toXml(parent, MailConstants.E_CAL_DURATION);
     }
