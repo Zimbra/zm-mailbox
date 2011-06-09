@@ -13,42 +13,39 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.mail.message;
+package com.zimbra.soap.mail.type;
 
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.type.Id;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=MailConstants.E_GET_NOTE_REQUEST)
-public class GetNoteRequest {
+public class Part {
 
-    @XmlElement(name=MailConstants.E_NOTE /* note */, required=true)
-    private final Id note;
+    @XmlAttribute(name=MailConstants.A_PART /* part */, required=true)
+    private final String part;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private GetNoteRequest() {
-        this((Id) null);
+    private Part() {
+        this((String) null);
     }
 
-    public GetNoteRequest(Id note) {
-        this.note = note;
+    public Part(String part) {
+        this.part = part;
     }
 
-    public Id getNote() { return note; }
+    public String getPart() { return part; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("note", note);
+            .add("part", part);
     }
 
     @Override

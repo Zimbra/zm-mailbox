@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -25,20 +25,17 @@ import com.zimbra.common.soap.MailConstants;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class DocumentInfo extends CommonDocumentInfo {
 
-    @XmlAttribute(name=MailConstants.A_LOCKOWNER_ID, required=false)
+    @XmlAttribute(name=MailConstants.A_LOCKOWNER_ID /* loid */, required=false)
     private String lockOwnerId;
 
-    @XmlAttribute(name=MailConstants.A_LOCKOWNER_EMAIL, required=false)
+    @XmlAttribute(name=MailConstants.A_LOCKOWNER_EMAIL /* loe */,
+                                    required=false)
     private String lockOwnerEmail;
 
-    @XmlAttribute(name=MailConstants.A_LOCKTIMESTAMP, required=false)
+    @XmlAttribute(name=MailConstants.A_LOCKTIMESTAMP /* lt */, required=false)
     private String lockOwnerTimestamp;
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private DocumentInfo() {
+    public DocumentInfo() {
         this((String) null);
     }
 
@@ -59,12 +56,17 @@ public class DocumentInfo extends CommonDocumentInfo {
     public String getLockOwnerEmail() { return lockOwnerEmail; }
     public String getLockOwnerTimestamp() { return lockOwnerTimestamp; }
 
-    @Override
-    public String toString() {
-        return Objects.toStringHelper(this)
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        return helper
             .add("lockOwnerId", lockOwnerId)
             .add("lockOwnerEmail", lockOwnerEmail)
-            .add("lockOwnerTimestamp", lockOwnerTimestamp)
-            .toString();
+            .add("lockOwnerTimestamp", lockOwnerTimestamp);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }

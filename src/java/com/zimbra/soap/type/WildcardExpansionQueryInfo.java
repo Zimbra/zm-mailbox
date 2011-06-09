@@ -13,42 +13,52 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.mail.message;
+package com.zimbra.soap.type;
 
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlAttribute;
 
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.type.Id;
+import com.zimbra.soap.type.BaseQueryInfo;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=MailConstants.E_GET_NOTE_REQUEST)
-public class GetNoteRequest {
+public class WildcardExpansionQueryInfo implements BaseQueryInfo {
 
-    @XmlElement(name=MailConstants.E_NOTE /* note */, required=true)
-    private final Id note;
+    @XmlAttribute(name="str", required=true)
+    private final String str;
+
+    @XmlAttribute(name="expanded", required=true)
+    private final boolean expanded;
+
+    @XmlAttribute(name="numExpanded", required=true)
+    private final int numExpanded;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private GetNoteRequest() {
-        this((Id) null);
+    private WildcardExpansionQueryInfo() {
+        this((String) null, false, -1);
     }
 
-    public GetNoteRequest(Id note) {
-        this.note = note;
+    public WildcardExpansionQueryInfo(String str, boolean expanded,
+                            int numExpanded) {
+        this.str = str;
+        this.expanded = expanded;
+        this.numExpanded = numExpanded;
     }
 
-    public Id getNote() { return note; }
+    public String getStr() { return str; }
+    public boolean getExpanded() { return expanded; }
+    public int getNumExpanded() { return numExpanded; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("note", note);
+            .add("str", str)
+            .add("expanded", expanded)
+            .add("numExpanded", numExpanded);
     }
 
     @Override

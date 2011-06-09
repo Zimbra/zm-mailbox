@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -35,75 +35,74 @@ import com.zimbra.soap.type.CustomMetadata;
 @XmlType(propOrder = { "metadatas", "fragment" })
 public class CommonDocumentInfo {
 
-    @XmlAttribute(name=MailConstants.A_ID, required=true)
-    private final String id;
+    @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
+    private String id;
 
-    @XmlAttribute(name=MailConstants.A_NAME, required=false)
+    @XmlAttribute(name=MailConstants.A_NAME /* name */, required=false)
     private String name;
 
-    @XmlAttribute(name=MailConstants.A_SIZE, required=false)
+    @XmlAttribute(name=MailConstants.A_SIZE /* s */, required=false)
     private Long size;
 
-    @XmlAttribute(name=MailConstants.A_DATE, required=false)
+    @XmlAttribute(name=MailConstants.A_DATE /* d */, required=false)
     private Long date;
 
-    @XmlAttribute(name=MailConstants.A_FOLDER, required=false)
+    @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
     private String folderId;
 
-    @XmlAttribute(name=MailConstants.A_MODIFIED_SEQUENCE, required=false)
+    @XmlAttribute(name=MailConstants.A_MODIFIED_SEQUENCE /* ms */,
+                                    required=false)
     private Integer modifiedSequence;
 
-    @XmlAttribute(name=MailConstants.A_CHANGE_DATE, required=false)
+    @XmlAttribute(name=MailConstants.A_CHANGE_DATE /* md */, required=false)
     private Long changeDate;
 
-    @XmlAttribute(name=MailConstants.A_REVISION, required=false)
+    @XmlAttribute(name=MailConstants.A_REVISION /* rev */, required=false)
     private Integer revision;
 
-    @XmlAttribute(name=MailConstants.A_FLAGS, required=false)
+    @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
     private String flags;
 
-    @XmlAttribute(name=MailConstants.A_TAGS, required=false)
+    @XmlAttribute(name=MailConstants.A_TAGS /* t */, required=false)
     private String tags;
 
-    @XmlAttribute(name=MailConstants.A_DESC, required=false)
+    @XmlAttribute(name=MailConstants.A_DESC /* desc */, required=false)
     private String description;
 
-    @XmlAttribute(name=MailConstants.A_CONTENT_TYPE, required=false)
+    @XmlAttribute(name=MailConstants.A_CONTENT_TYPE /* ct */, required=false)
     private String contentType;
 
-    @XmlAttribute(name=MailConstants.A_DESC_ENABLED, required=false)
+    @XmlAttribute(name=MailConstants.A_DESC_ENABLED /* descEnabled */,
+                                    required=false)
     private Boolean descEnabled;
 
-    @XmlAttribute(name=MailConstants.A_VERSION, required=false)
+    @XmlAttribute(name=MailConstants.A_VERSION /* ver */, required=false)
     private Integer version;
 
-    @XmlAttribute(name=MailConstants.A_LAST_EDITED_BY, required=false)
+    @XmlAttribute(name=MailConstants.A_LAST_EDITED_BY /* leb */, required=false)
     private String lastEditedBy;
 
-    @XmlAttribute(name=MailConstants.A_CREATOR, required=false)
+    @XmlAttribute(name=MailConstants.A_CREATOR /* cr */, required=false)
     private String creator;
 
-    @XmlAttribute(name=MailConstants.A_CREATED_DATE, required=false)
+    @XmlAttribute(name=MailConstants.A_CREATED_DATE /* cd */, required=false)
     private Long createdDate;
 
-    @XmlElement(name=MailConstants.E_METADATA, required=false)
+    @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
     private List<CustomMetadata> metadatas = Lists.newArrayList();
 
-    @XmlElement(name=MailConstants.E_FRAG, required=false)
+    @XmlElement(name=MailConstants.E_FRAG /* fr */, required=false)
     private String fragment;
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private CommonDocumentInfo() {
+    public CommonDocumentInfo() {
         this((String) null);
     }
 
     public CommonDocumentInfo(String id) {
-        this.id = id;
+        this.setId(id);
     }
 
+    public void setId(String id) { this.id = id; }
     public void setName(String name) { this.name = name; }
     public void setSize(Long size) { this.size = size; }
     public void setDate(Long date) { this.date = date; }
@@ -167,9 +166,9 @@ public class CommonDocumentInfo {
     }
     public String getFragment() { return fragment; }
 
-    @Override
-    public String toString() {
-        return Objects.toStringHelper(this)
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        return helper
             .add("id", id)
             .add("name", name)
             .add("size", size)
@@ -188,7 +187,12 @@ public class CommonDocumentInfo {
             .add("creator", creator)
             .add("createdDate", createdDate)
             .add("metadatas", metadatas)
-            .add("fragment", fragment)
-            .toString();
+            .add("fragment", fragment);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }

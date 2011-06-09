@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -36,48 +36,44 @@ import com.zimbra.soap.type.CustomMetadata;
 @XmlType(propOrder = { "metadatas", "subject", "messages"})
 public class ConversationInfo {
 
-    @XmlAttribute(name=MailConstants.A_ID, required=true)
-    private final String id;
+    @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
+    private String id;
 
-    @XmlAttribute(name=MailConstants.A_NUM, required=false)
+    @XmlAttribute(name=MailConstants.A_NUM /* n */, required=false)
     private Integer num;
 
-    @XmlAttribute(name=MailConstants.A_TOTAL_SIZE, required=false)
+    @XmlAttribute(name=MailConstants.A_TOTAL_SIZE /* total */, required=false)
     private Integer totalSize;
 
-    @XmlAttribute(name=MailConstants.A_FLAGS, required=false)
+    @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
     private String flags;
 
-    @XmlAttribute(name=MailConstants.A_TAGS, required=false)
+    @XmlAttribute(name=MailConstants.A_TAGS /* t */, required=false)
     private String tags;
 
-    @XmlElement(name=MailConstants.E_METADATA, required=false)
+    @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
     private List<CustomMetadata> metadatas = Lists.newArrayList();
 
-    @XmlElement(name=MailConstants.E_SUBJECT, required=false)
+    @XmlElement(name=MailConstants.E_SUBJECT /* su */, required=false)
     private String subject;
 
     @XmlElements({
-
-        @XmlElement(name=MailConstants.E_CHAT,
+        @XmlElement(name=MailConstants.E_CHAT /* chat */,
             type=ChatMessageInfo.class),
-        @XmlElement(name=MailConstants.E_MSG,
+        @XmlElement(name=MailConstants.E_MSG /* m */,
             type=MessageInfo.class)
     })
     private List<MessageInfo> messages = Lists.newArrayList();
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private ConversationInfo() {
+    public ConversationInfo() {
         this((String) null);
     }
 
     public ConversationInfo(String id) {
-        this.id = id;
+        this.setId(id);
     }
 
+    public void setId(String id) { this.id = id; }
     public void setNum(Integer num) { this.num = num; }
     public void setTotalSize(Integer totalSize) { this.totalSize = totalSize; }
     public void setFlags(String flags) { this.flags = flags; }
@@ -120,9 +116,9 @@ public class ConversationInfo {
         return Collections.unmodifiableList(messages);
     }
 
-    @Override
-    public String toString() {
-        return Objects.toStringHelper(this)
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        return helper
             .add("id", id)
             .add("num", num)
             .add("totalSize", totalSize)
@@ -130,7 +126,12 @@ public class ConversationInfo {
             .add("tags", tags)
             .add("metadatas", metadatas)
             .add("subject", subject)
-            .add("messages", messages)
-            .toString();
+            .add("messages", messages);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }

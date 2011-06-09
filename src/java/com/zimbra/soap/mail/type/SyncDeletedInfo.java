@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -35,35 +35,35 @@ import com.zimbra.common.soap.MailConstants;
 @XmlType(propOrder = {})
 public class SyncDeletedInfo {
 
-    @XmlAttribute(name=MailConstants.A_IDS, required=true)
+    @XmlAttribute(name=MailConstants.A_IDS /* ids */, required=true)
     private final String ids;
 
     @XmlElements({
-        @XmlElement(name=MailConstants.E_FOLDER,
+        @XmlElement(name=MailConstants.E_FOLDER /* folder */,
             type=IdsAttr.class),
-        @XmlElement(name=MailConstants.E_SEARCH,
+        @XmlElement(name=MailConstants.E_SEARCH /* search */,
             type=IdsAttr.class),
-        @XmlElement(name=MailConstants.E_MOUNT,
+        @XmlElement(name=MailConstants.E_MOUNT /* link */,
             type=IdsAttr.class),
-        @XmlElement(name=MailConstants.E_TAG,
+        @XmlElement(name=MailConstants.E_TAG /* tag */,
             type=IdsAttr.class),
-        @XmlElement(name=MailConstants.E_CONV,
+        @XmlElement(name=MailConstants.E_CONV /* c */,
             type=IdsAttr.class),
-        @XmlElement(name=MailConstants.E_CHAT,
+        @XmlElement(name=MailConstants.E_CHAT /* chat */,
             type=IdsAttr.class),
-        @XmlElement(name=MailConstants.E_MSG,
+        @XmlElement(name=MailConstants.E_MSG /* m */,
             type=IdsAttr.class),
-        @XmlElement(name=MailConstants.E_CONTACT,
+        @XmlElement(name=MailConstants.E_CONTACT /* cn */,
             type=IdsAttr.class),
-        @XmlElement(name=MailConstants.E_APPOINTMENT,
+        @XmlElement(name=MailConstants.E_APPOINTMENT /* appt */,
             type=IdsAttr.class),
-        @XmlElement(name=MailConstants.E_TASK,
+        @XmlElement(name=MailConstants.E_TASK /* task */,
             type=IdsAttr.class),
-        @XmlElement(name=MailConstants.E_NOTES,
+        @XmlElement(name=MailConstants.E_NOTES /* notes */,
             type=IdsAttr.class),
-        @XmlElement(name=MailConstants.E_WIKIWORD,
+        @XmlElement(name=MailConstants.E_WIKIWORD /* w */,
             type=IdsAttr.class),
-        @XmlElement(name=MailConstants.E_DOC,
+        @XmlElement(name=MailConstants.E_DOC /* doc */,
             type=IdsAttr.class)
     })
     private List<IdsAttr> types = Lists.newArrayList();
@@ -87,8 +87,8 @@ public class SyncDeletedInfo {
         }
     }
 
-    public SyncDeletedInfo addTyp(IdsAttr typ) {
-        this.types.add(typ);
+    public SyncDeletedInfo addType(IdsAttr type) {
+        this.types.add(type);
         return this;
     }
 
@@ -97,11 +97,16 @@ public class SyncDeletedInfo {
         return Collections.unmodifiableList(types);
     }
 
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        return helper
+            .add("ids", ids)
+            .add("types", types);
+    }
+
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
-            .add("ids", ids)
-            .add("types", types)
-            .toString();
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }

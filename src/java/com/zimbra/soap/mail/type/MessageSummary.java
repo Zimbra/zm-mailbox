@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -34,22 +34,23 @@ import com.zimbra.common.soap.MailConstants;
 @XmlType(propOrder = {"emails", "subject", "fragment", "invite"})
 public class MessageSummary extends MessageCommon {
 
-    @XmlAttribute(name=MailConstants.A_ID, required=true)
+    @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     private final String id;
 
-    @XmlAttribute(name=MailConstants.A_AUTO_SEND_TIME, required=false)
+    @XmlAttribute(name=MailConstants.A_AUTO_SEND_TIME /* autoSendTime */,
+                            required=false)
     private Long autoSendTime;
 
-    @XmlElement(name=MailConstants.E_EMAIL, required=false)
+    @XmlElement(name=MailConstants.E_EMAIL /* e */, required=false)
     private List<EmailInfo> emails = Lists.newArrayList();
 
-    @XmlElement(name=MailConstants.E_SUBJECT, required=false)
+    @XmlElement(name=MailConstants.E_SUBJECT /* su */, required=false)
     private String subject;
 
-    @XmlElement(name=MailConstants.E_FRAG, required=false)
+    @XmlElement(name=MailConstants.E_FRAG /* fr */, required=false)
     private String fragment;
 
-    @XmlElement(name=MailConstants.E_INVITE, required=false)
+    @XmlElement(name=MailConstants.E_INVITE /* inv */, required=false)
     private InviteInfo invite;
 
     /**

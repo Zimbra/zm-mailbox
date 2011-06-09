@@ -20,6 +20,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.zimbra.common.calendar.Geo;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -42,6 +43,11 @@ public class GeoInfo {
     public GeoInfo(String latitude, String longitude) {
         this.latitude = latitude;
         this.longitude = longitude;
+    }
+
+    public GeoInfo(Geo geo) {
+        this.latitude = geo.getLatitude();
+        this.longitude = geo.getLongitude();
     }
 
     public String getLatitude() { return latitude; }

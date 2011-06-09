@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -35,28 +35,28 @@ import com.zimbra.common.soap.MailConstants;
                         "summary", "attendees", "xProps"})
 public class AlarmInfo {
 
-    @XmlAttribute(name=MailConstants.A_CAL_ALARM_ACTION, required=true)
+    @XmlAttribute(name=MailConstants.A_CAL_ALARM_ACTION /* action */, required=true)
     private final String action;
 
-    @XmlElement(name=MailConstants.E_CAL_ALARM_TRIGGER, required=false)
+    @XmlElement(name=MailConstants.E_CAL_ALARM_TRIGGER /* trigger */, required=false)
     private AlarmTriggerInfo trigger;
 
-    @XmlElement(name=MailConstants.E_CAL_ALARM_REPEAT, required=false)
+    @XmlElement(name=MailConstants.E_CAL_ALARM_REPEAT /* repeat */, required=false)
     private DurationInfo repeat;
 
-    @XmlElement(name=MailConstants.E_CAL_ALARM_DESCRIPTION, required=false)
+    @XmlElement(name=MailConstants.E_CAL_ALARM_DESCRIPTION /* desc */, required=false)
     private String description;
 
-    @XmlElement(name=MailConstants.E_CAL_ATTACH, required=false)
+    @XmlElement(name=MailConstants.E_CAL_ATTACH /* attach */, required=false)
     private CalendarAttach attach;
 
-    @XmlElement(name=MailConstants.E_CAL_ALARM_SUMMARY, required=false)
+    @XmlElement(name=MailConstants.E_CAL_ALARM_SUMMARY /* summary */, required=false)
     private String summary;
 
-    @XmlElement(name=MailConstants.E_CAL_ATTENDEE, required=false)
+    @XmlElement(name=MailConstants.E_CAL_ATTENDEE /* at */, required=false)
     private List<CalendarAttendee> attendees = Lists.newArrayList();
 
-    @XmlElement(name=MailConstants.E_CAL_XPROP, required=false)
+    @XmlElement(name=MailConstants.E_CAL_XPROP /* xprop */, required=false)
     private List<XProp> xProps = Lists.newArrayList();
 
     /**
@@ -89,9 +89,8 @@ public class AlarmInfo {
         }
     }
 
-    public AlarmInfo addAttende(CalendarAttendee attende) {
-        this.attendees.add(attende);
-        return this;
+    public void addAttendee(CalendarAttendee attendee) {
+        this.attendees.add(attendee);
     }
 
     public void setXProps(Iterable <XProp> xProps) {
@@ -101,9 +100,8 @@ public class AlarmInfo {
         }
     }
 
-    public AlarmInfo addXProp(XProp xProp) {
+    public void addXProp(XProp xProp) {
         this.xProps.add(xProp);
-        return this;
     }
 
     public String getAction() { return action; }
@@ -119,9 +117,9 @@ public class AlarmInfo {
         return Collections.unmodifiableList(xProps);
     }
 
-    @Override
-    public String toString() {
-        return Objects.toStringHelper(this)
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        return helper
             .add("action", action)
             .add("trigger", trigger)
             .add("repeat", repeat)
@@ -129,7 +127,12 @@ public class AlarmInfo {
             .add("attach", attach)
             .add("summary", summary)
             .add("attendees", attendees)
-            .add("xProps", xProps)
-            .toString();
+            .add("xProps", xProps);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }

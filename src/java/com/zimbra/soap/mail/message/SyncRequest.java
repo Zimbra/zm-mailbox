@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -27,16 +27,18 @@ import com.zimbra.common.soap.MailConstants;
 @XmlRootElement(name=MailConstants.E_SYNC_REQUEST)
 public class SyncRequest {
 
-    @XmlAttribute(name=MailConstants.A_TOKEN, required=false)
+    @XmlAttribute(name=MailConstants.A_TOKEN /* token */, required=false)
     private String token;
 
-    @XmlAttribute(name=MailConstants.A_CALENDAR_CUTOFF, required=false)
+    @XmlAttribute(name=MailConstants.A_CALENDAR_CUTOFF /* calCutoff */,
+                                    required=false)
     private Long calendarCutoff;
 
-    @XmlAttribute(name=MailConstants.A_FOLDER, required=false)
+    @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
     private String folderId;
 
-    @XmlAttribute(name=MailConstants.A_TYPED_DELETES, required=false)
+    @XmlAttribute(name=MailConstants.A_TYPED_DELETES /* typed */,
+                                    required=false)
     private Boolean typedDeletes;
 
     public SyncRequest() {
@@ -55,13 +57,18 @@ public class SyncRequest {
     public String getFolderId() { return folderId; }
     public Boolean getTypedDeletes() { return typedDeletes; }
 
-    @Override
-    public String toString() {
-        return Objects.toStringHelper(this)
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        return helper
             .add("token", token)
             .add("calendarCutoff", calendarCutoff)
             .add("folderId", folderId)
-            .add("typedDeletes", typedDeletes)
-            .toString();
+            .add("typedDeletes", typedDeletes);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }

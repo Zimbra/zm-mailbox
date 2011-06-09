@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -36,31 +36,34 @@ import com.zimbra.common.soap.MailConstants;
 public class Invitation {
 
     // Valid values - "appt" and "task"
-    @XmlAttribute(name=MailConstants.A_CAL_ITEM_TYPE, required=true)
+    @XmlAttribute(name=MailConstants.A_CAL_ITEM_TYPE /* type */, required=true)
     private final String calItemType;
 
-    @XmlAttribute(name=MailConstants.A_CAL_SEQUENCE, required=true)
+    @XmlAttribute(name=MailConstants.A_CAL_SEQUENCE /* seq */, required=true)
     private final Integer sequence;
 
-    @XmlAttribute(name=MailConstants.A_ID, required=true)
+    @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     private final Integer id;
 
-    @XmlAttribute(name=MailConstants.A_CAL_COMPONENT_NUM, required=true)
+    @XmlAttribute(name=MailConstants.A_CAL_COMPONENT_NUM /* compNum */,
+                                            required=true)
     private final Integer componentNum;
 
-    @XmlAttribute(name=MailConstants.A_CAL_RECURRENCE_ID, required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_RECURRENCE_ID /* recurId */,
+                                            required=false)
     private String recurrenceId;
 
-    @XmlElement(name=MailConstants.E_CAL_TZ, required=false)
+    @XmlElement(name=MailConstants.E_CAL_TZ /* tz */, required=false)
     private List<CalTZInfo> timezones = Lists.newArrayList();
 
-    @XmlElement(name=MailConstants.E_INVITE_COMPONENT, required=false)
+    @XmlElement(name=MailConstants.E_INVITE_COMPONENT /* comp */,
+                                            required=false)
     private InviteComponent inviteComponent;
 
     @XmlElements({
-        @XmlElement(name=MailConstants.E_MIMEPART,
+        @XmlElement(name=MailConstants.E_MIMEPART /* mp */,
             type=PartInfo.class),
-        @XmlElement(name=MailConstants.E_SHARE_NOTIFICATION,
+        @XmlElement(name=MailConstants.E_SHARE_NOTIFICATION /* shr */,
             type=ShareNotification.class)
     })
     private List<Object> contentElems = Lists.newArrayList();
@@ -124,9 +127,9 @@ public class Invitation {
         return Collections.unmodifiableList(contentElems);
     }
 
-    @Override
-    public String toString() {
-        return Objects.toStringHelper(this)
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        return helper
             .add("calItemType", calItemType)
             .add("sequence", sequence)
             .add("id", id)
@@ -134,7 +137,12 @@ public class Invitation {
             .add("recurrenceId", recurrenceId)
             .add("timezones", timezones)
             .add("inviteComponent", inviteComponent)
-            .add("contentElems", contentElems)
-            .toString();
+            .add("contentElems", contentElems);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }

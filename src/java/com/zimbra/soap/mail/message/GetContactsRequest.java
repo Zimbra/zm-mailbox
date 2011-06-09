@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -37,23 +37,24 @@ import com.zimbra.soap.type.Id;
 @XmlRootElement(name=MailConstants.E_GET_CONTACTS_REQUEST)
 public class GetContactsRequest {
 
-    @XmlAttribute(name=MailConstants.A_SYNC, required=false)
+    @XmlAttribute(name=MailConstants.A_SYNC /* sync */, required=false)
     private Boolean sync;
 
-    @XmlAttribute(name=MailConstants.A_FOLDER, required=false)
+    @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
     private String folderId;
 
-    // Valid values are case insensitive "names" from enum com.zimbra.cs.index.SortBy
-    @XmlAttribute(name=MailConstants.A_SORTBY, required=false)
+    // Valid values are case insensitive "names" from enum:
+    //     com.zimbra.cs.index.SortBy
+    @XmlAttribute(name=MailConstants.A_SORTBY /* sortBy */, required=false)
     private String sortBy;
 
     // TODO:need methods to get/set lists of attribs and contacts
     // The Server side handler copes with mixed order of attibutes and contacts
 
     @XmlElements({
-        @XmlElement(name=MailConstants.E_ATTRIBUTE,
+        @XmlElement(name=MailConstants.E_ATTRIBUTE /* a */,
             type=AttributeName.class),
-        @XmlElement(name=MailConstants.E_CONTACT,
+        @XmlElement(name=MailConstants.E_CONTACT /* cn */,
             type=Id.class)
     })
     private List<Object> elements = Lists.newArrayList();
@@ -83,13 +84,18 @@ public class GetContactsRequest {
         return Collections.unmodifiableList(elements);
     }
 
-    @Override
-    public String toString() {
-        return Objects.toStringHelper(this)
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        return helper
             .add("sync", sync)
             .add("folderId", folderId)
             .add("sortBy", sortBy)
-            .add("elements", elements)
-            .toString();
+            .add("elements", elements);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }

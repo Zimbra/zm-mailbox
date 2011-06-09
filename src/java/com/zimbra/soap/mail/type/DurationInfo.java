@@ -20,6 +20,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.zimbra.common.calendar.ParsedDuration;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -50,6 +51,28 @@ public class DurationInfo {
     private Integer repeatCount;
 
     public DurationInfo() {
+    }
+
+    public DurationInfo(ParsedDuration parsedDuration) {
+        this.weeks = adjustDuration(parsedDuration.getWeeks());
+        if (this.weeks == null) {
+            this.days = adjustDuration(parsedDuration.getDays());
+            this.hours = adjustDuration(parsedDuration.getHours());
+            this.minutes = adjustDuration(parsedDuration.getMins());
+            this.seconds = adjustDuration(parsedDuration.getSecs());
+        }
+    }
+
+    private Integer adjustDuration(Integer pdVal) {
+        if (pdVal == 0) {
+            return null;
+        }
+        if (pdVal < 0) {
+            this.durationNegative = true;
+            return -pdVal;
+        } else {
+            return pdVal;
+        }
     }
 
     public void setDurationNegative(Boolean durationNegative) {

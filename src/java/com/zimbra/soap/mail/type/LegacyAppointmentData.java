@@ -16,5 +16,15 @@
 package com.zimbra.soap.mail.type;
 
 public class LegacyAppointmentData extends LegacyCalendaringData {
+    /**
+     * no-argument constructor wanted by JAXB
+     */
+    @SuppressWarnings("unused")
+    private LegacyAppointmentData() {
+        this((String) null, (String) null);
+    }
 
+    public LegacyAppointmentData(String xUid, String uid) {
+        super(xUid, uid);
+    }
 }

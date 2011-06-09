@@ -19,9 +19,11 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
 import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.namespace.QName;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
@@ -39,6 +41,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.Log;
@@ -306,6 +309,8 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.SaveDocumentResponse.class,
             com.zimbra.soap.mail.message.SaveRulesRequest.class,
             com.zimbra.soap.mail.message.SaveRulesResponse.class,
+            com.zimbra.soap.mail.message.SearchRequest.class,
+            com.zimbra.soap.mail.message.SearchResponse.class,
             com.zimbra.soap.mail.message.SendInviteReplyRequest.class,
             com.zimbra.soap.mail.message.SendInviteReplyResponse.class,
             com.zimbra.soap.mail.message.SendVerificationCodeRequest.class,
@@ -671,7 +676,7 @@ public final class JaxbUtil {
     }
 
     /**
-     * @param o
+     * @param o - associated class must have an @XmlRootElement annotation
      * @param factory - e.g. XmlElement.mFactory or JSONElement.mFactory
      * @return
      * @throws ServiceException
@@ -695,6 +700,43 @@ public final class JaxbUtil {
     public static Element jaxbToElement(Object o)
     throws ServiceException {
         return jaxbToElement(o, XMLElement.mFactory);
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static Element jaxbToNamedElement(String name,
+            String namespace, Object o, Element.ElementFactory factory)
+    throws ServiceException {
+        try {
+            JAXBContext jaxb = JAXBContext.newInstance(o.getClass());
+            Marshaller marshaller = jaxb.createMarshaller();
+            // marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+            DocumentResult dr = new DocumentResult();
+            marshaller.marshal(new JAXBElement(
+                    new QName(namespace, name), o.getClass(), o) , dr);
+            Document theDoc = dr.getDocument();
+            org.dom4j.Element rootElem = theDoc.getRootElement();
+            return Element.convertDOM(rootElem, factory);
+        } catch (Exception e) {
+            throw ServiceException.FAILURE("Unable to convert " +
+                    o.getClass().getName() + " to Element", e);
+        }
+    }
+
+    public static Element addChildElementFromJaxb(Element parent,
+            String name, String namespace, Object o) {
+        Element.ElementFactory factory;
+        if (parent instanceof XMLElement)
+            factory = XMLElement.mFactory;
+        else
+            factory = JSONElement.mFactory;
+        Element child = null;
+        try {
+            child = jaxbToNamedElement(name, namespace, o, factory);
+        } catch (ServiceException e) {
+            ZimbraLog.misc.info("JAXB Problem making " + name + " element", e);
+        }
+        parent.addElement(child);
+        return child;
     }
 
     /**

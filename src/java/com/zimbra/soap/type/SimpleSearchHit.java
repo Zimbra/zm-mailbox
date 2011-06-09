@@ -13,42 +13,38 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.mail.message;
+package com.zimbra.soap.type;
 
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.type.Id;
+import com.zimbra.soap.type.SearchHit;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=MailConstants.E_GET_NOTE_REQUEST)
-public class GetNoteRequest {
+public class SimpleSearchHit implements SearchHit {
 
-    @XmlElement(name=MailConstants.E_NOTE /* note */, required=true)
-    private final Id note;
+    @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
+    private String id;
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private GetNoteRequest() {
-        this((Id) null);
+    @XmlAttribute(name=MailConstants.A_SORT_FIELD /* sf */, required=false)
+    private String sortField;
+
+    public SimpleSearchHit() {
     }
 
-    public GetNoteRequest(Id note) {
-        this.note = note;
-    }
-
-    public Id getNote() { return note; }
+    public void setId(String id) { this.id = id; }
+    public void setSortField(String sortField) { this.sortField = sortField; }
+    public String getId() { return id; }
+    public String getSortField() { return sortField; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("note", note);
+            .add("id", id)
+            .add("sortField", sortField);
     }
 
     @Override

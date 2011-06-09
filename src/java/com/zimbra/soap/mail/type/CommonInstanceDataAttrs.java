@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -25,73 +25,73 @@ import com.zimbra.common.soap.MailConstants;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class CommonInstanceDataAttrs {
 
-    @XmlAttribute(name=MailConstants.A_CAL_PARTSTAT, required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_PARTSTAT /* ptst */, required=false)
     private String partStat;
 
-    @XmlAttribute(name=MailConstants.A_CAL_RECURRENCE_ID_Z, required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_RECURRENCE_ID_Z /* ridZ */, required=false)
     private String recurIdZ;
 
-    @XmlAttribute(name=MailConstants.A_CAL_TZ_OFFSET, required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_TZ_OFFSET /* tzo */, required=false)
     private Long tzOffset;
 
-    @XmlAttribute(name=MailConstants.A_APPT_FREEBUSY_ACTUAL, required=false)
+    @XmlAttribute(name=MailConstants.A_APPT_FREEBUSY_ACTUAL /* fba */, required=false)
     private String freeBusyActual;
 
-    @XmlAttribute(name=MailConstants.A_TASK_PERCENT_COMPLETE, required=false)
+    @XmlAttribute(name=MailConstants.A_TASK_PERCENT_COMPLETE /* percentComplete */, required=false)
     private String taskPercentComplete;
 
-    @XmlAttribute(name=MailConstants.A_CAL_RECUR, required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_RECUR /* recur */, required=false)
     private Boolean isRecurring;
 
-    @XmlAttribute(name=MailConstants.A_CAL_PRIORITY, required=false)
-    private Boolean priority;
+    @XmlAttribute(name=MailConstants.A_CAL_PRIORITY /* priority */, required=false)
+    private String priority;
 
-    @XmlAttribute(name=MailConstants.A_APPT_FREEBUSY, required=false)
+    @XmlAttribute(name=MailConstants.A_APPT_FREEBUSY /* fb */, required=false)
     private String freeBusyIntended;
 
-    @XmlAttribute(name=MailConstants.A_APPT_TRANSPARENCY, required=false)
+    @XmlAttribute(name=MailConstants.A_APPT_TRANSPARENCY /* transp */, required=false)
     private String transparency;
 
-    @XmlAttribute(name=MailConstants.A_NAME, required=false)
+    @XmlAttribute(name=MailConstants.A_NAME /* name */, required=false)
     private String name;
 
-    @XmlAttribute(name=MailConstants.A_CAL_LOCATION, required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_LOCATION /* loc */, required=false)
     private String location;
 
-    @XmlAttribute(name=MailConstants.A_CAL_OTHER_ATTENDEES, required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_OTHER_ATTENDEES /* otherAtt */, required=false)
     private Boolean hasOtherAttendees;
 
-    @XmlAttribute(name=MailConstants.A_CAL_ALARM, required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_ALARM /* alarm */, required=false)
     private Boolean hasAlarm;
 
-    @XmlAttribute(name=MailConstants.A_CAL_ISORG, required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_ISORG /* isOrg */, required=false)
     private Boolean isOrganizer;
 
-    @XmlAttribute(name=MailConstants.A_CAL_INV_ID, required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_INV_ID /* invId */, required=false)
     private String invId;
 
-    @XmlAttribute(name=MailConstants.A_CAL_COMPONENT_NUM, required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_COMPONENT_NUM /* compNum */, required=false)
     private Integer componentNum;
 
-    @XmlAttribute(name=MailConstants.A_CAL_STATUS, required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_STATUS /* status */, required=false)
     private String status;
 
-    @XmlAttribute(name=MailConstants.A_CAL_CLASS, required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_CLASS /* class */, required=false)
     private String calClass;
 
-    @XmlAttribute(name=MailConstants.A_CAL_ALLDAY, required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_ALLDAY /* allDay */, required=false)
     private Boolean allDay;
 
-    @XmlAttribute(name=MailConstants.A_CAL_DRAFT, required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_DRAFT /* draft */, required=false)
     private Boolean draft;
 
-    @XmlAttribute(name=MailConstants.A_CAL_NEVER_SENT, required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_NEVER_SENT /* neverSent */, required=false)
     private Boolean neverSent;
 
-    @XmlAttribute(name=MailConstants.A_TASK_DUE_DATE, required=false)
+    @XmlAttribute(name=MailConstants.A_TASK_DUE_DATE /* dueDate */, required=false)
     private Long taskDueDate;
 
-    @XmlAttribute(name=MailConstants.A_CAL_TZ_OFFSET_DUE, required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_TZ_OFFSET_DUE /* tzoDue */, required=false)
     private Integer taskTzOffsetDue;
 
     public CommonInstanceDataAttrs() {
@@ -109,7 +109,7 @@ public class CommonInstanceDataAttrs {
     public void setIsRecurring(Boolean isRecurring) {
         this.isRecurring = isRecurring;
     }
-    public void setPriority(Boolean priority) { this.priority = priority; }
+    public void setPriority(String priority) { this.priority = priority; }
     public void setFreeBusyIntended(String freeBusyIntended) {
         this.freeBusyIntended = freeBusyIntended;
     }
@@ -146,7 +146,7 @@ public class CommonInstanceDataAttrs {
     public String getFreeBusyActual() { return freeBusyActual; }
     public String getTaskPercentComplete() { return taskPercentComplete; }
     public Boolean getIsRecurring() { return isRecurring; }
-    public Boolean getPriority() { return priority; }
+    public String getPriority() { return priority; }
     public String getFreeBusyIntended() { return freeBusyIntended; }
     public String getTransparency() { return transparency; }
     public String getName() { return name; }

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -37,78 +37,73 @@ import com.zimbra.soap.type.KeyValuePair;
     "messageIdHdr", "inReplyTo", "invite", "headers", "contentElems" })
 public class MessageInfo extends MessageCommon {
 
-    @XmlAttribute(name=MailConstants.A_ID, required=true)
-    private final String id;
+    @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
+    private String id;
 
-    @XmlAttribute(name=MailConstants.A_CAL_INTENDED_FOR, required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_INTENDED_FOR /* cif */, required=false)
     private String calendarIntendedFor;
 
-    @XmlAttribute(name=MailConstants.A_ORIG_ID, required=false)
+    @XmlAttribute(name=MailConstants.A_ORIG_ID /* origid */, required=false)
     private String origId;
 
-    @XmlAttribute(name=MailConstants.A_REPLY_TYPE, required=false)
+    @XmlAttribute(name=MailConstants.A_REPLY_TYPE /* rt */, required=false)
     private String draftReplyType;
 
-    @XmlAttribute(name=MailConstants.A_IDENTITY_ID, required=false)
+    @XmlAttribute(name=MailConstants.A_IDENTITY_ID /* idnt */, required=false)
     private String identityId;
 
-    @XmlAttribute(name=MailConstants.A_FOR_ACCOUNT, required=false)
+    @XmlAttribute(name=MailConstants.A_FOR_ACCOUNT /* forAcct */, required=false)
     private String draftAccountId;
 
-    @XmlAttribute(name=MailConstants.A_AUTO_SEND_TIME, required=false)
+    @XmlAttribute(name=MailConstants.A_AUTO_SEND_TIME /* autoSendTime */, required=false)
     private Long draftAutoSendTime;
 
-    @XmlAttribute(name=MailConstants.A_SENT_DATE, required=false)
+    @XmlAttribute(name=MailConstants.A_SENT_DATE /* sd */, required=false)
     private Long sentDate;
 
-    @XmlAttribute(name=MailConstants.A_RESENT_DATE, required=false)
+    @XmlAttribute(name=MailConstants.A_RESENT_DATE /* rd */, required=false)
     private Long resentDate;
 
-    @XmlAttribute(name=MailConstants.A_PART, required=false)
+    @XmlAttribute(name=MailConstants.A_PART /* part */, required=false)
     private String part;
 
-    @XmlElement(name=MailConstants.E_FRAG, required=false)
+    @XmlElement(name=MailConstants.E_FRAG /* fr */, required=false)
     private String fragment;
 
-    @XmlElement(name=MailConstants.E_EMAIL, required=false)
+    @XmlElement(name=MailConstants.E_EMAIL /* e */, required=false)
     private List<EmailInfo> emails = Lists.newArrayList();
 
-    @XmlElement(name=MailConstants.E_SUBJECT, required=false)
+    @XmlElement(name=MailConstants.E_SUBJECT /* su */, required=false)
     private String subject;
 
-    @XmlElement(name=MailConstants.E_MSG_ID_HDR, required=false)
+    @XmlElement(name=MailConstants.E_MSG_ID_HDR /* mid */, required=false)
     private String messageIdHdr;
 
-    @XmlElement(name=MailConstants.E_IN_REPLY_TO, required=false)
+    @XmlElement(name=MailConstants.E_IN_REPLY_TO /* irt */, required=false)
     private String inReplyTo;
 
-    @XmlElement(name=MailConstants.E_INVITE, required=false)
+    @XmlElement(name=MailConstants.E_INVITE /* inv */, required=false)
     private InviteInfo invite;
 
-    @XmlElement(name=MailConstants.A_HEADER, required=false)
+    @XmlElement(name=MailConstants.A_HEADER /* header */, required=false)
     private List<KeyValuePair> headers = Lists.newArrayList();
 
     @XmlElements({
-        @XmlElement(name=MailConstants.E_MIMEPART,
+        @XmlElement(name=MailConstants.E_MIMEPART /* mp */,
             type=PartInfo.class),
-        @XmlElement(name=MailConstants.E_SHARE_NOTIFICATION,
+        @XmlElement(name=MailConstants.E_SHARE_NOTIFICATION /* shr */,
             type=ShareNotification.class)
     })
     private List<Object> contentElems = Lists.newArrayList();
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    protected MessageInfo() {
-        this((String) null);
+    public MessageInfo() {
     }
 
     public MessageInfo(String id) {
         this.id = id;
     }
 
-
+    public void setId(String id) { this.id = id; }
     public void setCalendarIntendedFor(String calendarIntendedFor) {
         this.calendarIntendedFor = calendarIntendedFor;
     }

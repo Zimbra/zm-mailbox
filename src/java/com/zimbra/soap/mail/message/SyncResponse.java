@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -49,45 +49,45 @@ import com.zimbra.soap.mail.type.TaskItemInfo;
 @XmlType(propOrder = {"deleted", "items"})
 public class SyncResponse {
 
-    @XmlAttribute(name=MailConstants.A_CHANGE_DATE, required=true)
+    @XmlAttribute(name=MailConstants.A_CHANGE_DATE /* md */, required=true)
     private final long changeDate;
 
-    @XmlAttribute(name=MailConstants.A_TOKEN, required=false)
+    @XmlAttribute(name=MailConstants.A_TOKEN /* token */, required=false)
     private String token;
 
-    @XmlAttribute(name=MailConstants.A_SIZE, required=false)
+    @XmlAttribute(name=MailConstants.A_SIZE /* s */, required=false)
     private Long size;
 
-    @XmlAttribute(name=MailConstants.A_QUERY_MORE, required=false)
+    @XmlAttribute(name=MailConstants.A_QUERY_MORE /* more */, required=false)
     private Boolean more;
 
-    @XmlElement(name=MailConstants.E_DELETED, required=false)
+    @XmlElement(name=MailConstants.E_DELETED /* deleted */, required=false)
     private SyncDeletedInfo deleted;
 
-    // TODO:Create an interface instead of using Objects?
     @XmlElements({
-        @XmlElement(name=MailConstants.E_FOLDER,
+        @XmlElement(name=MailConstants.E_FOLDER /* folder */,
             type=Folder.class),
-        @XmlElement(name=MailConstants.E_TAG,
+        @XmlElement(name=MailConstants.E_TAG /* tag */,
             type=TagInfo.class),
-        @XmlElement(name=MailConstants.E_NOTE,
+        @XmlElement(name=MailConstants.E_NOTE /* note */,
             type=NoteInfo.class),
-        @XmlElement(name=MailConstants.E_CONTACT,
+        @XmlElement(name=MailConstants.E_CONTACT /* cn */,
             type=ContactInfo.class),
-        @XmlElement(name=MailConstants.E_APPOINTMENT,
+        @XmlElement(name=MailConstants.E_APPOINTMENT /* appt */,
             type=CalendarItemInfo.class),
-        @XmlElement(name=MailConstants.E_TASK,
+        @XmlElement(name=MailConstants.E_TASK /* task */,
             type=TaskItemInfo.class),
-        @XmlElement(name=MailConstants.E_CONV,
+        @XmlElement(name=MailConstants.E_CONV /* c */,
             type=ConversationSummary.class),
-        @XmlElement(name=MailConstants.E_WIKIWORD,
+        @XmlElement(name=MailConstants.E_WIKIWORD /* w */,
             type=CommonDocumentInfo.class),
-        @XmlElement(name=MailConstants.E_DOC,
+        @XmlElement(name=MailConstants.E_DOC /* doc */,
             type=DocumentInfo.class),
-        @XmlElement(name=MailConstants.E_MSG,
+        @XmlElement(name=MailConstants.E_MSG /* m */,
             type=MessageSummary.class),
-        @XmlElement(name=MailConstants.E_CHAT,
+        @XmlElement(name=MailConstants.E_CHAT /* chat */,
             type=ChatSummary.class)
+    // TODO:Create an interface instead of using Objects?
     })
     private List<Object> items = Lists.newArrayList();
 
@@ -128,15 +128,20 @@ public class SyncResponse {
         return Collections.unmodifiableList(items);
     }
 
-    @Override
-    public String toString() {
-        return Objects.toStringHelper(this)
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        return helper
             .add("changeDate", changeDate)
             .add("token", token)
             .add("size", size)
             .add("more", more)
             .add("deleted", deleted)
-            .add("items", items)
-            .toString();
+            .add("items", items);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }

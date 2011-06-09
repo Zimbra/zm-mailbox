@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -29,66 +29,67 @@ public class SearchParamsInfo {
     // Elements processed by SearchParams.parse are NOT included here to
     // avoid namespace issues.
 
-    @XmlAttribute(name=MailConstants.A_INCLUDE_TAG_DELETED, required=false)
+    @XmlAttribute(name=MailConstants.A_INCLUDE_TAG_DELETED /* includeTagDeleted */, required=false)
     private Boolean includeTagDeleted;
 
-    @XmlAttribute(name=MailConstants.A_ALLOWABLE_TASK_STATUS, required=false)
+    @XmlAttribute(name=MailConstants.A_ALLOWABLE_TASK_STATUS /* allowableTaskStatus */, required=false)
     private String allowableTaskStatus;
 
-    @XmlAttribute(name=MailConstants.A_CAL_EXPAND_INST_START, required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_EXPAND_INST_START /* calExpandInstStart */, required=false)
     private Long calItemExpandStart;
 
-    @XmlAttribute(name=MailConstants.A_CAL_EXPAND_INST_END, required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_EXPAND_INST_END /* calExpandInstEnd */, required=false)
     private Long calItemExpandEnd;
 
-    @XmlAttribute(name=MailConstants.E_QUERY, required=false)
+    @XmlAttribute(name=MailConstants.E_QUERY /* query */, required=false)
     private String query;
 
-    @XmlAttribute(name=MailConstants.A_IN_DUMPSTER, required=false)
+    @XmlAttribute(name=MailConstants.A_IN_DUMPSTER /* inDumpster */, required=false)
     private Boolean inDumpster;
 
-    @XmlAttribute(name=MailConstants.A_SEARCH_TYPES, required=false)
+    @XmlAttribute(name=MailConstants.A_SEARCH_TYPES /* types */, required=false)
     private String searchTypes;
 
-    @XmlAttribute(name=MailConstants.A_GROUPBY, required=false)
+    @XmlAttribute(name=MailConstants.A_GROUPBY /* groupBy */, required=false)
     private String groupBy;
 
-    // Based on SortBy which is NOT an enum and appears to support runtime
-    // construction
-    @XmlAttribute(name=MailConstants.A_SORTBY, required=false)
+    // Based on SortBy which is NOT an enum and appears to support runtime construction
+    @XmlAttribute(name=MailConstants.A_SORTBY /* sortBy */, required=false)
     private String sortBy;
 
-    // Based on ExpandResults but allows "0" and "false" as synonyms for
-    // "none" + "1" for "first"
-    @XmlAttribute(name=MailConstants.A_FETCH, required=false)
+    // Based on ExpandResults but allows "0" and "false" as synonyms for "none" + "1" for "first"
+    @XmlAttribute(name=MailConstants.A_FETCH /* fetch */, required=false)
     private String fetch;
 
-    @XmlAttribute(name=MailConstants.A_MARK_READ, required=false)
+    @XmlAttribute(name=MailConstants.A_MARK_READ /* read */, required=false)
     private Boolean markRead;
 
-    @XmlAttribute(name=MailConstants.A_MAX_INLINED_LENGTH, required=false)
+    @XmlAttribute(name=MailConstants.A_MAX_INLINED_LENGTH /* max */, required=false)
     private Integer maxInlinedLength;
 
-    @XmlAttribute(name=MailConstants.A_WANT_HTML, required=false)
+    @XmlAttribute(name=MailConstants.A_WANT_HTML /* html */, required=false)
     private Boolean wantHtml;
 
-    @XmlAttribute(name=MailConstants.A_NEUTER, required=false)
+    @XmlAttribute(name=MailConstants.A_NEUTER /* neuter */, required=false)
     private Boolean neuterImages;
 
-    @XmlAttribute(name=MailConstants.A_RECIPIENTS, required=false)
+    @XmlAttribute(name=MailConstants.A_RECIPIENTS /* recip */, required=false)
     private Boolean wantRecipients;
 
-    @XmlAttribute(name=MailConstants.A_PREFETCH, required=false)
+    @XmlAttribute(name=MailConstants.A_PREFETCH /* prefetch */, required=false)
     private Boolean prefetch;
 
     // Valid if is a case insensitive match to a value in enum SearchResultMode
-    @XmlAttribute(name=MailConstants.A_RESULT_MODE, required=false)
+    @XmlAttribute(name=MailConstants.A_RESULT_MODE /* resultMode */, required=false)
     private String resultMode;
 
-    @XmlAttribute(name=MailConstants.A_FIELD, required=false)
+    @XmlAttribute(name=MailConstants.A_FIELD /* field */, required=false)
     private String field;
 
-    @XmlAttribute(name=MailConstants.A_QUERY_OFFSET, required=false)
+    @XmlAttribute(name=MailConstants.A_QUERY_LIMIT /* limit */, required=false)
+    private Integer limit;
+
+    @XmlAttribute(name=MailConstants.A_QUERY_OFFSET /* offset */, required=false)
     private Integer offset;
 
     public SearchParamsInfo() {
@@ -132,6 +133,7 @@ public class SearchParamsInfo {
         this.resultMode = resultMode;
     }
     public void setField(String field) { this.field = field; }
+    public void setLimit(Integer limit) { this.limit = limit; }
     public void setOffset(Integer offset) { this.offset = offset; }
     public Boolean getIncludeTagDeleted() { return includeTagDeleted; }
     public String getAllowableTaskStatus() { return allowableTaskStatus; }
@@ -151,11 +153,13 @@ public class SearchParamsInfo {
     public Boolean getPrefetch() { return prefetch; }
     public String getResultMode() { return resultMode; }
     public String getField() { return field; }
+    public Integer getLimit() { return limit; }
     public Integer getOffset() { return offset; }
 
     public Objects.ToStringHelper addToStringInfo(
-            Objects.ToStringHelper helper) {
-        return helper.add("includeTagDeleted", includeTagDeleted)
+                Objects.ToStringHelper helper) {
+        return helper
+            .add("includeTagDeleted", includeTagDeleted)
             .add("allowableTaskStatus", allowableTaskStatus)
             .add("calItemExpandStart", calItemExpandStart)
             .add("calItemExpandEnd", calItemExpandEnd)
@@ -173,11 +177,13 @@ public class SearchParamsInfo {
             .add("prefetch", prefetch)
             .add("resultMode", resultMode)
             .add("field", field)
+            .add("limit", limit)
             .add("offset", offset);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }

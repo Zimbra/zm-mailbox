@@ -13,42 +13,50 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.mail.message;
+package com.zimbra.soap.type;
 
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlAttribute;
 
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.type.Id;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=MailConstants.E_GET_NOTE_REQUEST)
-public class GetNoteRequest {
+public class SpellingSuggestion {
 
-    @XmlElement(name=MailConstants.E_NOTE /* note */, required=true)
-    private final Id note;
+    @XmlAttribute(name="dist", required=true)
+    private final int dist;
+
+    @XmlAttribute(name="numDocs", required=true)
+    private final int numDocs;
+
+    @XmlAttribute(name="value", required=true)
+    private final String value;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private GetNoteRequest() {
-        this((Id) null);
+    private SpellingSuggestion() {
+        this(-1, -1, (String) null);
     }
 
-    public GetNoteRequest(Id note) {
-        this.note = note;
+    public SpellingSuggestion(int dist, int numDocs, String value) {
+        this.dist = dist;
+        this.numDocs = numDocs;
+        this.value = value;
     }
 
-    public Id getNote() { return note; }
+    public int getDist() { return dist; }
+    public int getNumDocs() { return numDocs; }
+    public String getValue() { return value; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("note", note);
+            .add("dist", dist)
+            .add("numDocs", numDocs)
+            .add("value", value);
     }
 
     @Override

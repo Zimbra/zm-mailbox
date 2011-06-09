@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -36,47 +36,47 @@ import com.zimbra.soap.type.CustomMetadata;
 @XmlType(propOrder = {"invites", "calendarReplies", "metadatas"})
 public class CalendarItemInfo {
 
-    @XmlAttribute(name=MailConstants.A_FLAGS, required=false)
+    @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
     private String flags;
 
-    @XmlAttribute(name=MailConstants.A_TAGS, required=false)
+    @XmlAttribute(name=MailConstants.A_TAGS /* t */, required=false)
     private String tags;
 
-    @XmlAttribute(name=MailConstants.A_UID, required=false)
+    @XmlAttribute(name=MailConstants.A_UID /* uid */, required=false)
     private String uid;
 
-    @XmlAttribute(name=MailConstants.A_ID, required=false)
+    @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private String id;
 
-    @XmlAttribute(name=MailConstants.A_REVISION, required=false)
+    @XmlAttribute(name=MailConstants.A_REVISION /* rev */, required=false)
     private Integer revision;
 
-    @XmlAttribute(name=MailConstants.A_SIZE, required=false)
+    @XmlAttribute(name=MailConstants.A_SIZE /* s */, required=false)
     private Long size;
 
-    @XmlAttribute(name=MailConstants.A_DATE, required=false)
+    @XmlAttribute(name=MailConstants.A_DATE /* d */, required=false)
     private Long date;
 
-    @XmlAttribute(name=MailConstants.A_FOLDER, required=false)
+    @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
     private String folder;
 
-    @XmlAttribute(name=MailConstants.A_CHANGE_DATE, required=false)
+    @XmlAttribute(name=MailConstants.A_CHANGE_DATE /* md */, required=false)
     private Long changeDate;
 
-    @XmlAttribute(name=MailConstants.A_MODIFIED_SEQUENCE, required=false)
+    @XmlAttribute(name=MailConstants.A_MODIFIED_SEQUENCE /* ms */, required=false)
     private Integer modifiedSequence;
 
-    @XmlAttribute(name=MailConstants.A_CAL_NEXT_ALARM, required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_NEXT_ALARM /* nextAlarm */, required=false)
     private Long nextAlarm;
 
-    @XmlElement(name=MailConstants.E_INVITE, required=false)
+    @XmlElement(name=MailConstants.E_INVITE /* inv */, required=false)
     private List<Invitation> invites = Lists.newArrayList();
 
-    @XmlElementWrapper(name=MailConstants.E_CAL_REPLIES, required=false)
-    @XmlElement(name=MailConstants.E_CAL_REPLY, required=false)
+    @XmlElementWrapper(name=MailConstants.E_CAL_REPLIES /* replies */, required=false)
+    @XmlElement(name=MailConstants.E_CAL_REPLY /* reply */, required=false)
     private List<CalendarReply> calendarReplies = Lists.newArrayList();
 
-    @XmlElement(name=MailConstants.E_METADATA, required=false)
+    @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
     private List<CustomMetadata> metadatas = Lists.newArrayList();
 
     public CalendarItemInfo() {
@@ -102,8 +102,8 @@ public class CalendarItemInfo {
         }
     }
 
-    public CalendarItemInfo addInvit(Invitation invit) {
-        this.invites.add(invit);
+    public CalendarItemInfo addInvite(Invitation invite) {
+        this.invites.add(invite);
         return this;
     }
 
@@ -152,9 +152,9 @@ public class CalendarItemInfo {
         return Collections.unmodifiableList(metadatas);
     }
 
-    @Override
-    public String toString() {
-        return Objects.toStringHelper(this)
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        return helper
             .add("flags", flags)
             .add("tags", tags)
             .add("uid", uid)
@@ -168,7 +168,12 @@ public class CalendarItemInfo {
             .add("nextAlarm", nextAlarm)
             .add("invites", invites)
             .add("calendarReplies", calendarReplies)
-            .add("metadatas", metadatas)
-            .toString();
+            .add("metadatas", metadatas);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }

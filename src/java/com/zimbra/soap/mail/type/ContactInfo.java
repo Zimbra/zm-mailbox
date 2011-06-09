@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -32,45 +32,47 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ContactAttr;
 import com.zimbra.soap.type.CustomMetadata;
+import com.zimbra.soap.type.SearchHit;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(propOrder = { "metadatas", "attrs" })
-public class ContactInfo {
+public class ContactInfo
+implements SearchHit {
 
     // This is similar to AutoCompleteGalContactInfo.
     // Namespace issues when have sub-elements prevent sharing.
 
-    @XmlAttribute(name=MailConstants.A_SORT_FIELD, required=false)
-    private final String sortField;
+    @XmlAttribute(name=MailConstants.A_SORT_FIELD /* sf */, required=false)
+    private String sortField;
 
-    @XmlAttribute(name=AccountConstants.A_EXP, required=false)
+    @XmlAttribute(name=AccountConstants.A_EXP /* exp */, required=false)
     private Boolean canExpand;
 
-    @XmlAttribute(name=MailConstants.A_ID, required=true)
-    private final String id;
+    @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
+    private String id;
 
-    @XmlAttribute(name=MailConstants.A_FOLDER, required=false)
+    @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
     private String folder;
 
-    @XmlAttribute(name=MailConstants.A_FLAGS, required=false)
+    @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
     private String flags;
 
-    @XmlAttribute(name=MailConstants.A_TAGS, required=false)
+    @XmlAttribute(name=MailConstants.A_TAGS /* t */, required=false)
     private String tags;
 
-    @XmlAttribute(name=MailConstants.A_CHANGE_DATE, required=false)
+    @XmlAttribute(name=MailConstants.A_CHANGE_DATE /* md */, required=false)
     private Long changeDate;
 
-    @XmlAttribute(name=MailConstants.A_MODIFIED_SEQUENCE, required=false)
+    @XmlAttribute(name=MailConstants.A_MODIFIED_SEQUENCE /* ms */, required=false)
     private Integer modifiedSequenceId;
 
-    @XmlAttribute(name=MailConstants.A_DATE, required=false)
+    @XmlAttribute(name=MailConstants.A_DATE /* d */, required=false)
     private Long date;
 
-    @XmlAttribute(name=MailConstants.A_REVISION, required=false)
+    @XmlAttribute(name=MailConstants.A_REVISION /* rev */, required=false)
     private Integer revisionId;
 
-    @XmlAttribute(name=MailConstants.A_FILE_AS_STR, required=false)
+    @XmlAttribute(name=MailConstants.A_FILE_AS_STR /* fileAsStr */, required=false)
     private String fileAs;
 
     @XmlAttribute(name="email", required=false)
@@ -88,26 +90,22 @@ public class ContactInfo {
     @XmlAttribute(name="dlist", required=false)
     private String dlist;
 
-    @XmlElement(name=MailConstants.E_METADATA, required=false)
+    @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
     private List<CustomMetadata> metadatas = Lists.newArrayList();
 
-    @XmlElement(name=MailConstants.E_A, required=false)
+    @XmlElement(name=MailConstants.E_A /* a */, required=false)
     private List<ContactAttr> attrs = Lists.newArrayList();
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private ContactInfo() {
-        this((String) null, (String) null);
+    public ContactInfo() {
     }
 
-    public ContactInfo(String sortField, String id) {
-        this.sortField = sortField;
+    public ContactInfo(String id) {
         this.id = id;
     }
 
+    public void setSortField(String sortField) { this.sortField = sortField; }
     public void setCanExpand(Boolean canExpand) { this.canExpand = canExpand; }
+    public void setId(String id) { this.id = id; }
     public void setFolder(String folder) { this.folder = folder; }
     public void setFlags(String flags) { this.flags = flags; }
     public void setTags(String tags) { this.tags = tags; }
@@ -172,9 +170,9 @@ public class ContactInfo {
         return Collections.unmodifiableList(attrs);
     }
 
-    @Override
-    public String toString() {
-        return Objects.toStringHelper(this)
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        return helper
             .add("sortField", sortField)
             .add("canExpand", canExpand)
             .add("id", id)
@@ -192,7 +190,12 @@ public class ContactInfo {
             .add("type", type)
             .add("dlist", dlist)
             .add("metadatas", metadatas)
-            .add("attrs", attrs)
-            .toString();
+            .add("attrs", attrs);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -32,24 +32,26 @@ import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(propOrder = {"organizer", "categories", "geo", "fragment"})
-public class LegacyInstanceDataInfo extends LegacyInstanceDataAttrs {
+public class LegacyInstanceDataInfo
+extends LegacyInstanceDataAttrs
+implements InstanceDataInterface {
 
-    @XmlAttribute(name=MailConstants.A_CAL_START_TIME, required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_START_TIME /* s */, required=false)
     private Long startTime;
 
-    @XmlAttribute(name=MailConstants.A_CAL_IS_EXCEPTION, required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_IS_EXCEPTION /* ex */, required=false)
     private Boolean isException;
 
-    @XmlElement(name=MailConstants.E_CAL_ORGANIZER, required=false)
+    @XmlElement(name=MailConstants.E_CAL_ORGANIZER /* or */, required=false)
     private CalOrganizer organizer;
 
-    @XmlElement(name=MailConstants.E_CAL_CATEGORY, required=false)
+    @XmlElement(name=MailConstants.E_CAL_CATEGORY /* category */, required=false)
     private List<String> categories = Lists.newArrayList();
 
-    @XmlElement(name=MailConstants.E_CAL_GEO, required=false)
+    @XmlElement(name=MailConstants.E_CAL_GEO /* geo */, required=false)
     private GeoInfo geo;
 
-    @XmlElement(name=MailConstants.E_FRAG, required=false)
+    @XmlElement(name=MailConstants.E_FRAG /* fr */, required=false)
     private String fragment;
 
     public LegacyInstanceDataInfo() {
@@ -69,9 +71,8 @@ public class LegacyInstanceDataInfo extends LegacyInstanceDataAttrs {
         }
     }
 
-    public LegacyInstanceDataInfo addCategory(String category) {
+    public void addCategory(String category) {
         this.categories.add(category);
-        return this;
     }
 
     public void setGeo(GeoInfo geo) { this.geo = geo; }

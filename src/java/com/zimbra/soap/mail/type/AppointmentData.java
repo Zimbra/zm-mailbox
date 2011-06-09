@@ -16,4 +16,15 @@
 package com.zimbra.soap.mail.type;
 
 public class AppointmentData extends CalendaringData {
+    /**
+     * no-argument constructor wanted by JAXB
+     */
+    @SuppressWarnings("unused")
+    private AppointmentData() {
+        this((String) null, (String) null);
+    }
+
+    public AppointmentData(String xUid, String uid) {
+        super(xUid, uid);
+    }
 }

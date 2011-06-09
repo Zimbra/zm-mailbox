@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -35,57 +35,55 @@ import com.zimbra.soap.type.CustomMetadata;
 @XmlType(propOrder = {"metadatas", "subject", "fragment", "emails"})
 public class ConversationSummary {
 
-    @XmlAttribute(name=MailConstants.A_ID, required=true)
-    private final String id;
+    @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
+    private String id;
 
-    @XmlAttribute(name=MailConstants.A_NUM, required=false)
+    @XmlAttribute(name=MailConstants.A_NUM /* n */, required=false)
     private Integer num;
 
-    @XmlAttribute(name=MailConstants.A_TOTAL_SIZE, required=false)
+    @XmlAttribute(name=MailConstants.A_TOTAL_SIZE /* total */, required=false)
     private Integer totalSize;
 
-    @XmlAttribute(name=MailConstants.A_FLAGS, required=false)
+    @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
     private String flags;
 
-    @XmlAttribute(name=MailConstants.A_TAGS, required=false)
+    @XmlAttribute(name=MailConstants.A_TAGS /* t */, required=false)
     private String tags;
 
-    @XmlAttribute(name=MailConstants.A_DATE, required=false)
+    @XmlAttribute(name=MailConstants.A_DATE /* d */, required=false)
     private Long date;
 
-    @XmlAttribute(name=MailConstants.A_ELIDED, required=false)
+    @XmlAttribute(name=MailConstants.A_ELIDED /* elided */, required=false)
     private Boolean elided;
 
-    @XmlAttribute(name=MailConstants.A_CHANGE_DATE, required=false)
+    @XmlAttribute(name=MailConstants.A_CHANGE_DATE /* md */, required=false)
     private Long changeDate;
 
-    @XmlAttribute(name=MailConstants.A_MODIFIED_SEQUENCE, required=false)
+    @XmlAttribute(name=MailConstants.A_MODIFIED_SEQUENCE /* ms */,
+                                            required=false)
     private Integer modifiedSequence;
 
-    @XmlElement(name=MailConstants.E_METADATA, required=false)
+    @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
     private List<CustomMetadata> metadatas = Lists.newArrayList();
 
-    @XmlElement(name=MailConstants.E_SUBJECT, required=false)
+    @XmlElement(name=MailConstants.E_SUBJECT /* su */, required=false)
     private String subject;
 
-    @XmlElement(name=MailConstants.E_FRAG, required=false)
+    @XmlElement(name=MailConstants.E_FRAG /* fr */, required=false)
     private String fragment;
 
-    @XmlElement(name=MailConstants.E_EMAIL, required=false)
+    @XmlElement(name=MailConstants.E_EMAIL /* e */, required=false)
     private List<EmailInfo> emails = Lists.newArrayList();
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private ConversationSummary() {
+    public ConversationSummary() {
         this((String) null);
     }
 
     public ConversationSummary(String id) {
-        this.id = id;
+        this.setId(id);
     }
 
+    public void setId(String id) { this.id = id; }
     public void setNum(Integer num) { this.num = num; }
     public void setTotalSize(Integer totalSize) { this.totalSize = totalSize; }
     public void setFlags(String flags) { this.flags = flags; }
@@ -140,9 +138,9 @@ public class ConversationSummary {
         return Collections.unmodifiableList(emails);
     }
 
-    @Override
-    public String toString() {
-        return Objects.toStringHelper(this)
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        return helper
             .add("id", id)
             .add("num", num)
             .add("totalSize", totalSize)
@@ -155,7 +153,12 @@ public class ConversationSummary {
             .add("metadatas", metadatas)
             .add("subject", subject)
             .add("fragment", fragment)
-            .add("emails", emails)
-            .toString();
+            .add("emails", emails);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }
