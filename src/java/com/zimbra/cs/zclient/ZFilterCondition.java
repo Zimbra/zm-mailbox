@@ -14,16 +14,16 @@
  */
 package com.zimbra.cs.zclient;
 
+import com.zimbra.common.filter.Sieve;
+import com.zimbra.common.filter.Sieve.AddressPart;
+import com.zimbra.common.filter.Sieve.DateComparison;
+import com.zimbra.common.filter.Sieve.NumberComparison;
+import com.zimbra.common.filter.Sieve.StringComparison;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.zclient.ZClientException;
-import com.zimbra.cs.filter.FilterUtil;
-import com.zimbra.cs.filter.FilterUtil.AddressPart;
-import com.zimbra.cs.filter.FilterUtil.DateComparison;
-import com.zimbra.cs.filter.FilterUtil.NumberComparison;
-import com.zimbra.cs.filter.FilterUtil.StringComparison;
 import org.json.JSONException;
 
 import java.text.ParseException;
@@ -65,24 +65,24 @@ public abstract class ZFilterCondition implements ToZJSONObject {
             }
         }
         
-        public static HeaderOp fromStringComparison(StringComparison comparison, boolean isNegative) {
-            if (comparison == StringComparison.is) {
+        public static HeaderOp fromStringComparison(Sieve.StringComparison comparison, boolean isNegative) {
+            if (comparison == Sieve.StringComparison.is) {
                 return (isNegative ? NOT_IS : IS);
             }
-            if (comparison == StringComparison.contains) {
+            if (comparison == Sieve.StringComparison.contains) {
                 return (isNegative ? NOT_CONTAINS : CONTAINS);
             }
             return (isNegative ? NOT_MATCHES : MATCHES);
         }
         
-        public StringComparison toStringComparison() {
+        public Sieve.StringComparison toStringComparison() {
             if (this == IS || this == NOT_IS) {
-                return StringComparison.is;
+                return Sieve.StringComparison.is;
             }
             if (this == CONTAINS || this == NOT_CONTAINS) {
-                return StringComparison.contains;
+                return Sieve.StringComparison.contains;
             }
-            return StringComparison.matches;
+            return Sieve.StringComparison.matches;
         }
         
         public boolean isNegative() {
@@ -102,18 +102,18 @@ public abstract class ZFilterCondition implements ToZJSONObject {
             }
         }
         
-        public static DateOp fromDateComparison(DateComparison comparison, boolean isNegative) {
-            if (comparison == DateComparison.before) {
+        public static DateOp fromDateComparison(Sieve.DateComparison comparison, boolean isNegative) {
+            if (comparison == Sieve.DateComparison.before) {
                 return (isNegative ? NOT_BEFORE : BEFORE);
             }
             return (isNegative ? NOT_AFTER : AFTER);
         }
         
-        public DateComparison toDateComparison() {
+        public Sieve.DateComparison toDateComparison() {
             if (this == BEFORE || this == NOT_BEFORE) {
-                return DateComparison.before;
+                return Sieve.DateComparison.before;
             }
-            return DateComparison.after;
+            return Sieve.DateComparison.after;
         }
         
         public boolean isNegative() {
@@ -132,18 +132,18 @@ public abstract class ZFilterCondition implements ToZJSONObject {
             }
         }
         
-        public static SizeOp fromNumberComparison(NumberComparison comparison, boolean isNegative) {
-            if (comparison == NumberComparison.over) {
+        public static SizeOp fromNumberComparison(Sieve.NumberComparison comparison, boolean isNegative) {
+            if (comparison == Sieve.NumberComparison.over) {
                 return (isNegative ? NOT_OVER : OVER);
             }
             return (isNegative ? NOT_UNDER : UNDER);
         }
         
-        public NumberComparison toNumberComparison() {
+        public Sieve.NumberComparison toNumberComparison() {
             if (this == UNDER || this == NOT_UNDER) {
-                return NumberComparison.under;
+                return Sieve.NumberComparison.under;
             } else {
-                return NumberComparison.over;
+                return Sieve.NumberComparison.over;
             }
         }
         
@@ -195,26 +195,26 @@ public abstract class ZFilterCondition implements ToZJSONObject {
 
         if (name.equals(MailConstants.E_HEADER_TEST)) {
             String header = condEl.getAttribute(MailConstants.A_HEADER);
-            StringComparison comparison =
-                    StringComparison.fromString(condEl.getAttribute(MailConstants.A_STRING_COMPARISON).toLowerCase());
+            Sieve.StringComparison comparison =
+                    Sieve.StringComparison.fromString(condEl.getAttribute(MailConstants.A_STRING_COMPARISON).toLowerCase());
             boolean caseSensitive = condEl.getAttributeBool(MailConstants.A_CASE_SENSITIVE, false);
             String value = condEl.getAttribute(MailConstants.A_VALUE);
             return new ZHeaderCondition(header, HeaderOp.fromStringComparison(comparison, isNegative),
                                         caseSensitive, value);
         } else if (name.equals(MailConstants.E_MIME_HEADER_TEST)) {
             String header = condEl.getAttribute(MailConstants.A_HEADER);
-            StringComparison comparison =
-                    StringComparison.fromString(condEl.getAttribute(MailConstants.A_STRING_COMPARISON).toLowerCase());
+            Sieve.StringComparison comparison =
+                    Sieve.StringComparison.fromString(condEl.getAttribute(MailConstants.A_STRING_COMPARISON).toLowerCase());
             boolean caseSensitive = condEl.getAttributeBool(MailConstants.A_CASE_SENSITIVE, false);
             String value = condEl.getAttribute(MailConstants.A_VALUE);
             return new ZMimeHeaderCondition(header, HeaderOp.fromStringComparison(comparison, isNegative),
                                             caseSensitive, value);
         } else if (name.equals(MailConstants.E_ADDRESS_TEST)) {
             String header = condEl.getAttribute(MailConstants.A_HEADER);
-            AddressPart part =
-                    AddressPart.fromString(condEl.getAttribute(MailConstants.A_PART, AddressPart.all.toString()));
-            StringComparison comparison =
-                    StringComparison.fromString(condEl.getAttribute(MailConstants.A_STRING_COMPARISON).toLowerCase());
+            Sieve.AddressPart part =
+                    Sieve.AddressPart.fromString(condEl.getAttribute(MailConstants.A_PART, Sieve.AddressPart.all.toString()));
+            Sieve.StringComparison comparison =
+                    Sieve.StringComparison.fromString(condEl.getAttribute(MailConstants.A_STRING_COMPARISON).toLowerCase());
             boolean caseSensitive = condEl.getAttributeBool(MailConstants.A_CASE_SENSITIVE, false);
             String value = condEl.getAttribute(MailConstants.A_VALUE);
             return new ZAddressCondition(header, part, HeaderOp.fromStringComparison(comparison, isNegative),
@@ -223,19 +223,19 @@ public abstract class ZFilterCondition implements ToZJSONObject {
             String header = condEl.getAttribute(MailConstants.A_HEADER);
             return new ZHeaderExistsCondition(header, !isNegative);
         } else if (name.equals(MailConstants.E_SIZE_TEST)) {
-            NumberComparison comparison =
-                    NumberComparison.fromString(condEl.getAttribute(MailConstants.A_NUMBER_COMPARISON).toLowerCase());
+            Sieve.NumberComparison comparison =
+                    Sieve.NumberComparison.fromString(condEl.getAttribute(MailConstants.A_NUMBER_COMPARISON).toLowerCase());
             String size = condEl.getAttribute(MailConstants.A_SIZE);
             return new ZSizeCondition(SizeOp.fromNumberComparison(comparison, isNegative), size);
         } else if (name.equals(MailConstants.E_DATE_TEST)) {
             String s = condEl.getAttribute(MailConstants.A_DATE_COMPARISON);
             s = s.toLowerCase();
-            DateComparison comparison = DateComparison.fromString(s);
+            Sieve.DateComparison comparison = Sieve.DateComparison.fromString(s);
             Date date = new Date(condEl.getAttributeLong(MailConstants.A_DATE) * 1000);
             return new ZDateCondition(DateOp.fromDateComparison(comparison, isNegative), date);
         } else if (name.equals(MailConstants.E_CURRENT_TIME_TEST)) {
-            DateComparison comparison =
-                    DateComparison.fromString(condEl.getAttribute(MailConstants.A_DATE_COMPARISON).toLowerCase());
+            Sieve.DateComparison comparison =
+                    Sieve.DateComparison.fromString(condEl.getAttribute(MailConstants.A_DATE_COMPARISON).toLowerCase());
             String timeStr = condEl.getAttribute(MailConstants.A_TIME);
             return new ZCurrentTimeCondition(DateOp.fromDateComparison(comparison, isNegative), timeStr);
         } else if (name.equals(MailConstants.E_BODY_TEST)) {
@@ -486,7 +486,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
 
         public DateOp getDateOp() { return mDateOp; }
         public Date getDate() { return mDate; }
-        public String getDateString() { return FilterUtil.SIEVE_DATE_PARSER.format(mDate); }
+        public String getDateString() { return Sieve.DATE_PARSER.format(mDate); }
 
         @Override
         public String toConditionString() {
@@ -665,13 +665,13 @@ public abstract class ZFilterCondition implements ToZJSONObject {
 
     public static class ZAddressCondition extends ZFilterCondition {
         private String headerName;
-        private AddressPart part;
+        private Sieve.AddressPart part;
         private HeaderOp headerOp;
         private boolean caseSensitive;
         private String value;
 
         public ZAddressCondition(
-                String headerName, AddressPart part, HeaderOp op, boolean caseSensitive, String value) {
+                String headerName, Sieve.AddressPart part, HeaderOp op, boolean caseSensitive, String value) {
             this.headerName = headerName;
             this.part = part;
             this.headerOp = op;

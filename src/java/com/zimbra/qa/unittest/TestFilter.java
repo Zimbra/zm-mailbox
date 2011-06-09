@@ -16,6 +16,7 @@ package com.zimbra.qa.unittest;
 
 import com.google.common.base.Strings;
 
+import com.zimbra.common.filter.Sieve;
 import com.zimbra.common.mime.MimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -649,7 +650,7 @@ extends TestCase {
 
         // now use the address test
         conditions.add(new ZFilterCondition.ZAddressCondition(
-                "From", FilterUtil.AddressPart.all, HeaderOp.IS, false, "john.doe@example.com"));
+                "From", Sieve.AddressPart.all, HeaderOp.IS, false, "john.doe@example.com"));
         actions.add(new ZMarkAction(MarkOp.FLAGGED));
         rules.add(new ZFilterRule("testAddressTest2", true, false, conditions, actions));
         saveIncomingRules(mMbox, new ZFilterRules(rules));
@@ -669,7 +670,7 @@ extends TestCase {
 
         // use address test for address domain match
         conditions.add(new ZFilterCondition.ZAddressCondition(
-                "From", FilterUtil.AddressPart.domain, HeaderOp.IS, false, "example.com"));
+                "From", Sieve.AddressPart.domain, HeaderOp.IS, false, "example.com"));
         actions.add(new ZMarkAction(MarkOp.FLAGGED));
         rules.add(new ZFilterRule("testAddressTestPart1", true, false, conditions, actions));
         saveIncomingRules(mMbox, new ZFilterRules(rules));
@@ -682,7 +683,7 @@ extends TestCase {
 
         // use address test for address local-part match
         conditions.add(new ZFilterCondition.ZAddressCondition(
-                "From", FilterUtil.AddressPart.localpart, HeaderOp.MATCHES, true, "j*doe"));
+                "From", Sieve.AddressPart.localpart, HeaderOp.MATCHES, true, "j*doe"));
         actions.add(new ZMarkAction(MarkOp.FLAGGED));
         rules.add(new ZFilterRule("testAddressTestPart2", true, false, conditions, actions));
         saveIncomingRules(mMbox, new ZFilterRules(rules));

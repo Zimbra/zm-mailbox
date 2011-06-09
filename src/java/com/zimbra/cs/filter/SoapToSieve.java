@@ -14,25 +14,19 @@
  */
 package com.zimbra.cs.filter;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.filter.FilterUtil.AddressPart;
-import com.zimbra.cs.filter.FilterUtil.Comparator;
-import com.zimbra.cs.filter.FilterUtil.Condition;
-import com.zimbra.cs.filter.FilterUtil.DateComparison;
-import com.zimbra.cs.filter.FilterUtil.Flag;
-import com.zimbra.cs.filter.FilterUtil.NumberComparison;
-import com.zimbra.cs.filter.FilterUtil.StringComparison;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+
+import com.zimbra.common.filter.Sieve;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 
 public class SoapToSieve {
     
@@ -67,9 +61,9 @@ public class SoapToSieve {
         boolean isActive = rule.getAttributeBool(MailConstants.A_ACTIVE, true);
         
         Element testsElement = rule.getElement(MailConstants.E_FILTER_TESTS);
-        String s = testsElement.getAttribute(MailConstants.A_CONDITION, Condition.allof.toString());
+        String s = testsElement.getAttribute(MailConstants.A_CONDITION, Sieve.Condition.allof.toString());
         s = s.toLowerCase();
-        Condition condition = Condition.fromString(s);
+        Sieve.Condition condition = Sieve.Condition.fromString(s);
         
         // Rule name
         mBuf.append("# ").append(name).append("\n");
@@ -126,7 +120,7 @@ public class SoapToSieve {
         } else if (name.equals(MailConstants.E_SIZE_TEST)) {
             String s = test.getAttribute(MailConstants.A_NUMBER_COMPARISON);
             s = s.toLowerCase();
-            NumberComparison comparison = NumberComparison.fromString(s);
+            Sieve.NumberComparison comparison = Sieve.NumberComparison.fromString(s);
             String sizeString = test.getAttribute(MailConstants.A_SIZE);
             try {
                 FilterUtil.parseSize(sizeString);
@@ -137,10 +131,10 @@ public class SoapToSieve {
         } else if (name.equals(MailConstants.E_DATE_TEST)) {
             String s = test.getAttribute(MailConstants.A_DATE_COMPARISON);
             s = s.toLowerCase();
-            DateComparison comparison = DateComparison.fromString(s);
+            Sieve.DateComparison comparison = Sieve.DateComparison.fromString(s);
             Date date = new Date(test.getAttributeLong(MailConstants.A_DATE) * 1000);
             snippet = String.format("date :%s \"%s\"",
-                comparison, FilterUtil.SIEVE_DATE_PARSER.format(date));
+                comparison, Sieve.DATE_PARSER.format(date));
         } else if (name.equals(MailConstants.E_BODY_TEST)) {
             boolean caseSensitive = test.getAttributeBool(MailConstants.A_CASE_SENSITIVE, false);
             String value = test.getAttribute(MailConstants.A_VALUE);
@@ -158,7 +152,7 @@ public class SoapToSieve {
         } else if (name.equals(MailConstants.E_CURRENT_TIME_TEST)) {
             String s = test.getAttribute(MailConstants.A_DATE_COMPARISON);
             s = s.toLowerCase();
-            DateComparison comparison = DateComparison.fromString(s);
+            Sieve.DateComparison comparison = Sieve.DateComparison.fromString(s);
             String time = test.getAttribute(MailConstants.A_TIME);
             // validate time value
             String timeFormat = "HHmm";
@@ -207,33 +201,33 @@ public class SoapToSieve {
     
     private static String generateHeaderTest(Element test, String testName) throws ServiceException {
         String header = getSieveHeaderList(test);
-        StringComparison comparison =
-                StringComparison.fromString(test.getAttribute(MailConstants.A_STRING_COMPARISON).toLowerCase());
+        Sieve.StringComparison comparison =
+                Sieve.StringComparison.fromString(test.getAttribute(MailConstants.A_STRING_COMPARISON).toLowerCase());
         boolean caseSensitive = test.getAttributeBool(MailConstants.A_CASE_SENSITIVE, false);
         String value = test.getAttribute(MailConstants.A_VALUE);
         checkValue(comparison, value);
         String snippetFormat =
-                caseSensitive ? "%s :%s :comparator \"" + Comparator.ioctet + "\" %s \"%s\"" : "%s :%s %s \"%s\"";
+                caseSensitive ? "%s :%s :comparator \"" + Sieve.Comparator.ioctet + "\" %s \"%s\"" : "%s :%s %s \"%s\"";
         return String.format(snippetFormat, testName, comparison, header, FilterUtil.escape(value));
     }
 
     private static String generateAddressTest(Element test) throws ServiceException {
         String header = getSieveHeaderList(test);
-        AddressPart part =
-                AddressPart.fromString(test.getAttribute(MailConstants.A_ADDRESS_PART, AddressPart.all.name()));
-        StringComparison comparison =
-                StringComparison.fromString(test.getAttribute(MailConstants.A_STRING_COMPARISON).toLowerCase());
+        Sieve.AddressPart part =
+                Sieve.AddressPart.fromString(test.getAttribute(MailConstants.A_ADDRESS_PART, Sieve.AddressPart.all.name()));
+        Sieve.StringComparison comparison =
+                Sieve.StringComparison.fromString(test.getAttribute(MailConstants.A_STRING_COMPARISON).toLowerCase());
         boolean caseSensitive = test.getAttributeBool(MailConstants.A_CASE_SENSITIVE, false);
         String value = test.getAttribute(MailConstants.A_VALUE);
         checkValue(comparison, value);
         return String.format("address :%s :%s :comparator \"%s\" %s \"%s\"", part, comparison,
-                             caseSensitive ? Comparator.ioctet : Comparator.iasciicasemap,
+                             caseSensitive ? Sieve.Comparator.ioctet : Sieve.Comparator.iasciicasemap,
                              header, FilterUtil.escape(value));
     }
 
-    private static void checkValue(StringComparison comparison, String value) throws ServiceException {
+    private static void checkValue(Sieve.StringComparison comparison, String value) throws ServiceException {
         // Bug 35983: disallow more than four asterisks in a row.
-        if (comparison == StringComparison.matches && value != null && value.contains("*****")) {
+        if (comparison == Sieve.StringComparison.matches && value != null && value.contains("*****")) {
             throw ServiceException.INVALID_REQUEST(
                 "Wildcard match value cannot contain more than four asterisks in a row.", null);
         }
@@ -287,7 +281,7 @@ public class SoapToSieve {
             return String.format("tag \"%s\"", FilterUtil.escape(tagName));
         } else if (name.equals(MailConstants.E_ACTION_FLAG)) {
             String s = action.getAttribute(MailConstants.A_FLAG_NAME);
-            Flag flag = Flag.valueOf(s);
+            Sieve.Flag flag = Sieve.Flag.valueOf(s);
             return String.format("flag \"%s\"", flag);
         } else if (name.equals(MailConstants.E_ACTION_REDIRECT)) {
             String address = action.getAttribute(MailConstants.A_ADDRESS);

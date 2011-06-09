@@ -19,13 +19,14 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
+import com.zimbra.common.filter.Sieve;
+import com.zimbra.common.filter.Sieve.Comparator;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HtmlTextExtractor;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.filter.FilterUtil.Comparator;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
@@ -94,7 +95,7 @@ public class BodyTest extends AbstractTest {
                         if (argument instanceof StringListArgument) {
                             StringListArgument strList = (StringListArgument) argument;
                             try {
-                                caseSensitive = Comparator.ioctet == Comparator.fromString(strList.getList().get(0));
+                                caseSensitive = Sieve.Comparator.ioctet == Sieve.Comparator.fromString(strList.getList().get(0));
                             } catch (ServiceException e) {
                                 throw new SyntaxException(e.getMessage());
                             }

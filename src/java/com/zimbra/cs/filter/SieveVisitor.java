@@ -14,16 +14,17 @@
  */
 package com.zimbra.cs.filter;
 
+import com.zimbra.common.filter.Sieve;
+import com.zimbra.common.filter.Sieve.AddressPart;
+import com.zimbra.common.filter.Sieve.Comparator;
+import com.zimbra.common.filter.Sieve.Condition;
+import com.zimbra.common.filter.Sieve.DateComparison;
+import com.zimbra.common.filter.Sieve.Flag;
+import com.zimbra.common.filter.Sieve.NumberComparison;
+import com.zimbra.common.filter.Sieve.StringComparison;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.filter.FilterUtil.AddressPart;
-import com.zimbra.cs.filter.FilterUtil.Comparator;
-import com.zimbra.cs.filter.FilterUtil.Condition;
-import com.zimbra.cs.filter.FilterUtil.DateComparison;
-import com.zimbra.cs.filter.FilterUtil.Flag;
-import com.zimbra.cs.filter.FilterUtil.NumberComparison;
-import com.zimbra.cs.filter.FilterUtil.StringComparison;
 import org.apache.jsieve.TagArgument;
 import org.apache.jsieve.parser.SieveNode;
 import org.apache.jsieve.parser.generated.ASTcommand;
@@ -59,26 +60,26 @@ public abstract class SieveVisitor {
     throws ServiceException { }
     
     protected void visitHeaderTest(String testEltName, Node node, VisitPhase phase, RuleProperties props,
-                                   List<String> headers, StringComparison comparison, boolean caseSensitive, String value)
+                                   List<String> headers, Sieve.StringComparison comparison, boolean caseSensitive, String value)
     throws ServiceException { }
 
     protected void visitAddressTest(Node node, VisitPhase phase, RuleProperties props, List<String> headers,
-                                    AddressPart part, StringComparison comparison, boolean caseSensitive, String value)
+                                    Sieve.AddressPart part, Sieve.StringComparison comparison, boolean caseSensitive, String value)
     throws ServiceException { }
 
     protected void visitHeaderExistsTest(Node node, VisitPhase phase, RuleProperties props, String header)
     throws ServiceException { }
     
     protected void visitSizeTest(Node node, VisitPhase phase, RuleProperties props,
-        NumberComparison comparison, int size, String sizeString)
+        Sieve.NumberComparison comparison, int size, String sizeString)
     throws ServiceException { }
     
     protected void visitDateTest(Node node, VisitPhase phase, RuleProperties props,
-        DateComparison comparison, Date date)
+        Sieve.DateComparison comparison, Date date)
     throws ServiceException { }
     
     protected void visitCurrentTimeTest(Node node, VisitPhase phase, RuleProperties props,
-        DateComparison comparison, String timeStr)
+        Sieve.DateComparison comparison, String timeStr)
     throws ServiceException { }
 
     protected void visitCurrentDayOfWeekTest(Node node, VisitPhase phase, RuleProperties props, List<String> days)
@@ -109,7 +110,7 @@ public abstract class SieveVisitor {
     protected void visitFileIntoAction(Node node, VisitPhase phase, RuleProperties props, String folderPath)
     throws ServiceException { }
     
-    protected void visitFlagAction(Node node, VisitPhase phase, RuleProperties props, Flag flag)
+    protected void visitFlagAction(Node node, VisitPhase phase, RuleProperties props, Sieve.Flag flag)
     throws ServiceException { }
     
     protected void visitTagAction(Node node, VisitPhase phase, RuleProperties props, String tagName)
@@ -140,7 +141,7 @@ public abstract class SieveVisitor {
     public class RuleProperties {
         boolean isEnabled = true;
         boolean isNegativeTest = false;
-        Condition condition = Condition.allof;
+        Sieve.Condition condition = Sieve.Condition.allof;
     }
     
     public void accept(Node node)
@@ -185,17 +186,17 @@ public abstract class SieveVisitor {
             accept(node, props);
         } else {
             if ("allof".equalsIgnoreCase(nodeName)) {
-                props.condition = Condition.allof;
+                props.condition = Sieve.Condition.allof;
                 visitRule(node, VisitPhase.begin, props);
                 accept(node, props);
                 visitRule(node, VisitPhase.end, props);
             } else if ("anyof".equalsIgnoreCase(nodeName)) {
-                props.condition = Condition.anyof;
+                props.condition = Sieve.Condition.anyof;
                 visitRule(node, VisitPhase.begin, props);
                 accept(node, props);
                 visitRule(node, VisitPhase.end, props);
             } else if ("header".equalsIgnoreCase(nodeName) || "mime_header".equalsIgnoreCase(nodeName)) {
-                StringComparison comparison = StringComparison.is;
+                Sieve.StringComparison comparison = Sieve.StringComparison.is;
                 boolean caseSensitive = false;
                 List<String> headers;
                 String value;
@@ -208,21 +209,21 @@ public abstract class SieveVisitor {
                     String argStr = stripLeadingColon(firstTagArgNode.getValue().toString());
                     try {
                         // assume that the first tag arg is match-type arg
-                        comparison = StringComparison.valueOf(argStr);
+                        comparison = Sieve.StringComparison.valueOf(argStr);
                         headersArgIndex ++;
                         secondTagArgNode = (SieveNode) getNode(node, 0 , 1);
                         if (secondTagArgNode.getValue() instanceof TagArgument) {
-                            caseSensitive = Comparator.ioctet == Comparator.fromString(getValue(node, 0, 2, 0, 0));
+                            caseSensitive = Sieve.Comparator.ioctet == Sieve.Comparator.fromString(getValue(node, 0, 2, 0, 0));
                             headersArgIndex += 2;
                         }
                     } catch (IllegalArgumentException e) {
                         // so the first tag arg is not match-type arg, it must be :comparator arg then
-                        caseSensitive = Comparator.ioctet == Comparator.fromString(getValue(node, 0, 1, 0, 0));
+                        caseSensitive = Sieve.Comparator.ioctet == Sieve.Comparator.fromString(getValue(node, 0, 1, 0, 0));
                         headersArgIndex += 2;
                         secondTagArgNode = (SieveNode) getNode(node, 0 , 2);
                         if (secondTagArgNode.getValue() instanceof TagArgument) {
                             argStr = stripLeadingColon(secondTagArgNode.getValue().toString());
-                            comparison = StringComparison.fromString(argStr);
+                            comparison = Sieve.StringComparison.fromString(argStr);
                             headersArgIndex ++;
                         }
                     }
@@ -237,8 +238,8 @@ public abstract class SieveVisitor {
                 accept(node, props);
                 visitHeaderTest(testEltName, node, VisitPhase.end, props, headers, comparison, caseSensitive, value);
             } else if ("address".equalsIgnoreCase(nodeName)) {
-                AddressPart part = AddressPart.all;
-                StringComparison comparison = StringComparison.is;
+                Sieve.AddressPart part = Sieve.AddressPart.all;
+                Sieve.StringComparison comparison = Sieve.StringComparison.is;
                 boolean caseSensitive = false;
                 List<String> headers;
                 String value;
@@ -250,16 +251,16 @@ public abstract class SieveVisitor {
                     TagArgument tagArg = (TagArgument) argNode.getValue();
                     if (tagArg.isComparator()) {
                         caseSensitive =
-                                Comparator.ioctet == Comparator.fromString(getValue(node, 0, nextArgIndex + 1, 0, 0));
+                                Sieve.Comparator.ioctet == Sieve.Comparator.fromString(getValue(node, 0, nextArgIndex + 1, 0, 0));
                         nextArgIndex += 2;
                     } else {
                         String argStr = stripLeadingColon(argNode.getValue().toString());
                         try {
                             // first assume that the next tag arg is match-type arg
-                            comparison = StringComparison.valueOf(argStr);
+                            comparison = Sieve.StringComparison.valueOf(argStr);
                         } catch (IllegalArgumentException e) {
                             // so the next tag arg is not match-type arg, it must be address-part arg then
-                            part = AddressPart.fromString(argStr);
+                            part = Sieve.AddressPart.fromString(argStr);
                         }
                         nextArgIndex ++;
                     }
@@ -280,7 +281,7 @@ public abstract class SieveVisitor {
                 visitHeaderExistsTest(node, VisitPhase.end, props, header);
             } else if ("size".equalsIgnoreCase(nodeName)) {
                 String s = stripLeadingColon(getValue(node, 0, 0));
-                NumberComparison comparison = NumberComparison.fromString(s);
+                Sieve.NumberComparison comparison = Sieve.NumberComparison.fromString(s);
                 SieveNode sizeNode = (SieveNode) getNode(node, 0, 1);
                 String sizeString = sizeNode.getFirstToken().toString();
                 int size;
@@ -295,9 +296,9 @@ public abstract class SieveVisitor {
                 visitSizeTest(node, VisitPhase.end, props, comparison, size, sizeString);
             } else if ("date".equalsIgnoreCase(nodeName)) {
                 String s = stripLeadingColon(getValue(node, 0, 0));
-                DateComparison comparison = DateComparison.fromString(s);
+                Sieve.DateComparison comparison = Sieve.DateComparison.fromString(s);
                 String dateString = getValue(node, 0, 1, 0, 0);
-                Date date = FilterUtil.SIEVE_DATE_PARSER.parse(dateString);
+                Date date = Sieve.DATE_PARSER.parse(dateString);
                 if (date == null) {
                     throw ServiceException.PARSE_ERROR("Invalid date value: " + dateString, null);
                 }
@@ -312,7 +313,7 @@ public abstract class SieveVisitor {
                     // must be :comparator
                     if (!":comparator".equals(getValue(node, 0, 1)))
                         throw ServiceException.PARSE_ERROR("Expected :comparator argument", null);
-                    caseSensitive = Comparator.ioctet == Comparator.fromString(getValue(node, 0, 2, 0, 0));
+                    caseSensitive = Sieve.Comparator.ioctet == Sieve.Comparator.fromString(getValue(node, 0, 2, 0, 0));
                     value = getValue(node, 0, 3, 0, 0);
                 } else {
                     value = getValue(node, 0, 1, 0, 0);
@@ -342,7 +343,7 @@ public abstract class SieveVisitor {
                 visitInviteTest(node, VisitPhase.end, props, methods);
             } else if ("current_time".equalsIgnoreCase(nodeName)) {
                 String s = stripLeadingColon(getValue(node, 0, 0));
-                DateComparison comparison = DateComparison.fromString(s);
+                Sieve.DateComparison comparison = Sieve.DateComparison.fromString(s);
                 String timeString = getValue(node, 0, 1, 0, 0);
 
                 visitCurrentTimeTest(node, VisitPhase.begin, props, comparison, timeString);
@@ -391,7 +392,7 @@ public abstract class SieveVisitor {
             visitFileIntoAction(node, VisitPhase.end, props, folderPath);
         } else if ("flag".equalsIgnoreCase(nodeName)) {
             String s = getValue(node, 0, 0, 0, 0);
-            Flag flag = Flag.fromString(s);
+            Sieve.Flag flag = Sieve.Flag.fromString(s);
             
             visitFlagAction(node, VisitPhase.begin, props, flag);
             accept(node, props);

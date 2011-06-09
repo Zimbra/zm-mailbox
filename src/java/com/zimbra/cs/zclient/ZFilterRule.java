@@ -14,12 +14,13 @@
  */
 package com.zimbra.cs.zclient;
 
+import com.zimbra.common.filter.Sieve;
+import com.zimbra.common.filter.Sieve.AddressPart;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
-import com.zimbra.cs.filter.FilterUtil.AddressPart;
 import com.zimbra.cs.zclient.ZFilterAction.MarkOp;
 import com.zimbra.cs.zclient.ZFilterAction.ZDiscardAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZFileIntoAction;
@@ -312,7 +313,7 @@ public class ZFilterRule implements ToZJSONObject {
                     if (i + 1 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
                     nextArg = args[i++];
                 }
-                conditions.add(new ZAddressCondition(headerName, AddressPart.fromString(part),
+                conditions.add(new ZAddressCondition(headerName, Sieve.AddressPart.fromString(part),
                                                      HeaderOp.fromString(op), caseSensitive, nextArg));
             } else if (a.equals("invite")) {
                 if (i + 1 > args.length) throw ZClientException.CLIENT_ERROR("missing exists arg", null);

@@ -16,7 +16,6 @@ package com.zimbra.cs.filter;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
@@ -38,7 +37,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ArrayUtil;
-import com.zimbra.common.util.DateParser;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -68,138 +66,6 @@ import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMailbox;
 
 public class FilterUtil {
-
-    public static final DateParser SIEVE_DATE_PARSER = new DateParser("yyyyMMdd");
-
-    public enum Condition {
-        allof, anyof;
-
-        public static Condition fromString(String value)
-        throws ServiceException {
-            if (value == null) {
-                return null;
-            }
-            try {
-                return Condition.valueOf(value);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.PARSE_ERROR(
-                    "Invalid value: " + value + ", valid values: " + Arrays.asList(Condition.values()), e);
-            }
-        }
-
-    }
-
-    public enum Flag {
-        read, flagged;
-
-        public static Flag fromString(String value)
-        throws ServiceException {
-            if (value == null) {
-                return null;
-            }
-            try {
-                return Flag.valueOf(value);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.PARSE_ERROR(
-                    "Invalid value: " + value + ", valid values: " + Arrays.asList(Flag.values()), e);
-            }
-        }
-    }
-
-    public enum StringComparison {
-        is, contains, matches;
-
-        public static StringComparison fromString(String value)
-        throws ServiceException {
-            if (value == null) {
-                return null;
-            }
-            try {
-                return StringComparison.valueOf(value);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.PARSE_ERROR(
-                    "Invalid value: "+ value +", valid values: " + Arrays.asList(StringComparison.values()), e);
-            }
-        }
-    }
-
-    public enum AddressPart {
-        all, localpart, domain;
-
-        public static AddressPart fromString(String value)
-        throws ServiceException {
-            if (value == null) {
-                return null;
-            }
-            try {
-                return AddressPart.valueOf(value);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.PARSE_ERROR(
-                    "Invalid value: "+ value +", valid values: " + Arrays.asList(AddressPart.values()), e);
-            }
-        }
-    }
-
-    public enum Comparator {
-        ioctet("i;octet"),
-        iasciicasemap("i;ascii-casemap");
-
-        private String value;
-
-        private Comparator(String value) {
-            this.value = value;
-        }
-
-        public static Comparator fromString(String value)
-        throws ServiceException {
-            if (value == null)
-                return null;
-            for (Comparator comparator : Comparator.values()) {
-                if (comparator.toString().equals(value))
-                    return comparator;
-            }
-            throw ServiceException.PARSE_ERROR("Invalid Comparator value: " + value, null);
-        }
-
-        @Override
-        public String toString() {
-            return value;
-        }
-    }
-
-    public enum NumberComparison {
-        over, under;
-
-        public static NumberComparison fromString(String value)
-        throws ServiceException {
-            if (value == null) {
-                return null;
-            }
-            try {
-                return NumberComparison.valueOf(value);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.PARSE_ERROR(
-                    "Invalid value: "+ value +", valid values: " + Arrays.asList(NumberComparison.values()), e);
-            }
-        }
-    }
-
-    public enum DateComparison {
-        before, after;
-
-        public static DateComparison fromString(String value)
-        throws ServiceException {
-            if (value == null) {
-                return null;
-            }
-            try {
-                return DateComparison.valueOf(value);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.PARSE_ERROR(
-                    "Invalid value: "+ value +", valid values: " + Arrays.asList(StringComparison.values()), e);
-            }
-        }
-    }
 
     /**
      * Returns a Sieve-escaped version of the given string.  Replaces <tt>\</tt> with

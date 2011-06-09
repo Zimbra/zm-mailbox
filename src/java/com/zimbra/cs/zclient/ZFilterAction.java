@@ -14,12 +14,13 @@
  */
 package com.zimbra.cs.zclient;
 
+import com.zimbra.common.filter.Sieve;
+import com.zimbra.common.filter.Sieve.Flag;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.zclient.ZClientException;
-import com.zimbra.cs.filter.FilterUtil.Flag;
 
 import org.json.JSONException;
 
@@ -111,8 +112,8 @@ public abstract class ZFilterAction implements ToZJSONObject {
             int maxBodyBytes = actionElement.getAttributeInt(MailConstants.A_MAX_BODY_SIZE, -1);
             return new ZNotifyAction(emailAddr, subjectTemplate, bodyTemplate, maxBodyBytes);
         } else if (n.equals(MailConstants.E_ACTION_FLAG)) {
-            Flag flag = Flag.fromString(actionElement.getAttribute(MailConstants.A_FLAG_NAME));
-            MarkOp op = (flag == Flag.flagged ? MarkOp.FLAGGED : MarkOp.READ); 
+            Sieve.Flag flag = Sieve.Flag.fromString(actionElement.getAttribute(MailConstants.A_FLAG_NAME));
+            MarkOp op = (flag == Sieve.Flag.flagged ? MarkOp.FLAGGED : MarkOp.READ); 
             return new ZMarkAction(op);
         } else
             throw ZClientException.CLIENT_ERROR("unknown filter action: "+n, null);
@@ -187,7 +188,7 @@ public abstract class ZFilterAction implements ToZJSONObject {
         
         Element toElement(Element parent) {
             Element action = parent.addElement(MailConstants.E_ACTION_FLAG);
-            Flag flag = (mMarkOp == MarkOp.FLAGGED ? Flag.flagged : Flag.read);
+            Sieve.Flag flag = (mMarkOp == MarkOp.FLAGGED ? Sieve.Flag.flagged : Sieve.Flag.read);
             action.addAttribute(MailConstants.A_FLAG_NAME, flag.toString());
             return action;
         }

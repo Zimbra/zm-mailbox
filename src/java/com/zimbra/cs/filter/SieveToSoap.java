@@ -14,16 +14,17 @@
  */
 package com.zimbra.cs.filter;
 
+import com.zimbra.common.filter.Sieve;
+import com.zimbra.common.filter.Sieve.AddressPart;
+import com.zimbra.common.filter.Sieve.DateComparison;
+import com.zimbra.common.filter.Sieve.Flag;
+import com.zimbra.common.filter.Sieve.NumberComparison;
+import com.zimbra.common.filter.Sieve.StringComparison;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.ElementFactory;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.cs.filter.FilterUtil.AddressPart;
-import com.zimbra.cs.filter.FilterUtil.DateComparison;
-import com.zimbra.cs.filter.FilterUtil.Flag;
-import com.zimbra.cs.filter.FilterUtil.NumberComparison;
-import com.zimbra.cs.filter.FilterUtil.StringComparison;
 import org.apache.jsieve.parser.generated.Node;
 
 import java.util.Date;
@@ -115,7 +116,7 @@ public class SieveToSoap extends SieveVisitor {
 
     @Override
     protected void visitDateTest(Node node, VisitPhase phase, RuleProperties props,
-                                 DateComparison comparison, Date date)
+                                 Sieve.DateComparison comparison, Date date)
     throws ServiceException {
         if (phase == VisitPhase.begin) {
             Element test = addTest(MailConstants.E_DATE_TEST, props);
@@ -126,7 +127,7 @@ public class SieveToSoap extends SieveVisitor {
 
     @Override
     protected void visitCurrentTimeTest(Node node, VisitPhase phase, RuleProperties props,
-                                        DateComparison comparison, String timeStr)
+                                        Sieve.DateComparison comparison, String timeStr)
     throws ServiceException {
         if (phase == VisitPhase.begin) {
             Element test = addTest(MailConstants.E_CURRENT_TIME_TEST, props);
@@ -164,7 +165,7 @@ public class SieveToSoap extends SieveVisitor {
 
     @Override
     protected void visitHeaderTest(String testEltName, Node node, VisitPhase phase, RuleProperties props,
-                                   List<String> headers, StringComparison comparison, boolean caseSensitive, String value)
+                                   List<String> headers, Sieve.StringComparison comparison, boolean caseSensitive, String value)
     throws ServiceException {
         if (phase == VisitPhase.begin) {
             Element test = addTest(testEltName, props);
@@ -178,7 +179,7 @@ public class SieveToSoap extends SieveVisitor {
 
     @Override
     protected void visitAddressTest(Node node, VisitPhase phase, RuleProperties props, List<String> headers,
-                                    AddressPart part, StringComparison comparison, boolean caseSensitive, String value)
+                                    Sieve.AddressPart part, Sieve.StringComparison comparison, boolean caseSensitive, String value)
     throws ServiceException {
         if (phase == VisitPhase.begin) {
             Element test = addTest(MailConstants.E_ADDRESS_TEST, props);
@@ -193,7 +194,7 @@ public class SieveToSoap extends SieveVisitor {
 
     @Override
     protected void visitSizeTest(Node node, VisitPhase phase, RuleProperties props,
-                                 NumberComparison comparison, int size, String sizeString)
+                                 Sieve.NumberComparison comparison, int size, String sizeString)
     throws ServiceException {
         if (phase == VisitPhase.begin) {
             Element test = addTest(MailConstants.E_SIZE_TEST, props);
@@ -247,7 +248,7 @@ public class SieveToSoap extends SieveVisitor {
     }
 
     @Override
-    protected void visitFlagAction(Node node, VisitPhase phase, RuleProperties props, Flag flag)
+    protected void visitFlagAction(Node node, VisitPhase phase, RuleProperties props, Sieve.Flag flag)
     throws ServiceException {
         if (phase == VisitPhase.begin) {
             addAction(MailConstants.E_ACTION_FLAG).addAttribute(MailConstants.A_FLAG_NAME, flag.toString());
