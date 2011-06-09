@@ -14,11 +14,23 @@
  */
 package com.zimbra.cs.account;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+
+import javax.mail.internet.InternetAddress;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ExceptionToString;
+import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
@@ -26,32 +38,17 @@ import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.names.NameUtil;
-import com.zimbra.cs.mime.MimeTypeInfo;
-import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.common.util.L10nUtil;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.gal.GalSearchParams;
-import com.zimbra.soap.admin.type.CacheEntrySelector;
-import com.zimbra.soap.admin.type.CalendarResourceSelector;
+import com.zimbra.cs.mime.MimeTypeInfo;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.admin.type.CmdRightsInfo;
-import com.zimbra.soap.admin.type.CosSelector;
 import com.zimbra.soap.admin.type.DistributionListSelector;
 import com.zimbra.soap.admin.type.DomainSelector;
-import com.zimbra.soap.admin.type.EffectiveRightsTargetSelector;
-import com.zimbra.soap.admin.type.GranteeSelector;
 import com.zimbra.soap.admin.type.ServerSelector;
 import com.zimbra.soap.admin.type.ShareInfoSelector;
 import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.NamedElement;
-
-import javax.mail.internet.InternetAddress;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * @since Sep 23, 2004
@@ -372,7 +369,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public Domain getDomain(Account acct) throws ServiceException {
         String dname = acct.getDomainName();
         boolean checkNegativeCache = (acct instanceof GuestAccount);
-        return dname == null ? null : getDomain(DomainBy.name, dname, checkNegativeCache);
+        return dname == null ? null : getDomain(Key.DomainBy.name, dname, checkNegativeCache);
     }
 
     /**
@@ -381,7 +378,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
      */
     public Domain getDomain(Alias alias) throws ServiceException {
         String dname = alias.getDomainName();
-        return dname == null ? null : getDomain(DomainBy.name, dname, false);
+        return dname == null ? null : getDomain(Key.DomainBy.name, dname, false);
     }
 
 
@@ -404,13 +401,13 @@ public abstract class Provisioning extends ZAttrProvisioning {
         Cos cos = (Cos) acct.getCachedData(EntryCacheDataKey.ACCOUNT_COS);
         if (cos == null) {
             String id = acct.getCOSId();
-                if (id != null) cos = get(CosBy.id, id);
+                if (id != null) cos = get(Key.CosBy.id, id);
                 if (cos == null) {
                     Domain domain = getDomain(acct);
                     String domainCosId = domain != null ? domain.getAttr(Provisioning.A_zimbraDomainDefaultCOSId, null) : null;
-                    if (domainCosId != null) cos = get(CosBy.id, domainCosId);
+                    if (domainCosId != null) cos = get(Key.CosBy.id, domainCosId);
                 }
-                if (cos == null) cos = get(CosBy.name, Provisioning.DEFAULT_COS_NAME);
+                if (cos == null) cos = get(Key.CosBy.name, Provisioning.DEFAULT_COS_NAME);
                 if (cos != null) acct.setCachedData(EntryCacheDataKey.ACCOUNT_COS, cos);
         }
         return cos;
@@ -421,7 +418,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
         String parts[] = emailAddress.split("@");
         if (parts.length == 2) {
-            Domain domain = getDomain(DomainBy.name, parts[1], true);
+            Domain domain = getDomain(Key.DomainBy.name, parts[1], true);
             if (domain != null) {
                 String domainType = domain.getAttr(A_zimbraDomainType);
                 if (DOMAIN_TYPE_ALIAS.equals(domainType)) {
@@ -485,7 +482,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     //
     // AclGroup
     //
-    public DistributionList getAclGroup(DistributionListBy keyType, String key) throws ServiceException {
+    public DistributionList getAclGroup(Key.DistributionListBy keyType, String key) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
 
@@ -567,7 +564,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
      */
     public Domain getDomain(DistributionList dl) throws ServiceException {
         String dname = dl.getDomainName();
-        return dname == null ? null : get(DomainBy.name, dname);
+        return dname == null ? null : get(Key.DomainBy.name, dname);
     }
 
     public abstract boolean healthCheck() throws ServiceException;
@@ -648,28 +645,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @throws ServiceException
      */
     public abstract void renameAccount(String zimbraId, String newName) throws ServiceException;
-
-    public static enum AccountBy {
-
-        // case must match protocol
-        adminName, appAdminName, id, foreignPrincipal, name, krb5Principal;
-
-        public static AccountBy fromString(String s) throws ServiceException {
-            try {
-                return AccountBy.valueOf(s);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
-            }
-        }
-
-        /* Convert to equivalent JAXB object */
-        public static com.zimbra.soap.type.AccountBy toJaxb(
-                AccountBy provAccountBy)
-        throws ServiceException {
-            return com.zimbra.soap.type.AccountBy.fromString(
-                    provAccountBy.toString());
-        }
-    }
 
     /**
      * Looks up an account by the specified key.
@@ -1011,26 +986,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
      */
     public abstract Domain createDomain(String name, Map<String, Object> attrs) throws ServiceException;
 
-    public static enum DomainBy {
-
-        // case must match protocol
-        id, name, virtualHostname, krb5Realm, foreignName;
-
-        public static DomainBy fromString(String s) throws ServiceException {
-            try {
-                return DomainBy.valueOf(s);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
-            }
-        }
-
-        /* Convert to equivalent JAXB object */
-        public static DomainSelector.DomainBy toJaxb(DomainBy provDomainBy) throws ServiceException {
-            return DomainSelector.DomainBy.fromString(provDomainBy.toString());
-        }
-    }
-
-    public abstract Domain get(DomainBy keyType, String key) throws ServiceException;
+    public abstract Domain get(Key.DomainBy keyType, String key) throws ServiceException;
 
     /**
      * @param keyType
@@ -1042,15 +998,15 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @return
      * @throws ServiceException
      */
-    public Domain getDomain(DomainBy keyType, String key, boolean checkNegativeCache) throws ServiceException {
+    public Domain getDomain(Key.DomainBy keyType, String key, boolean checkNegativeCache) throws ServiceException {
         return get(keyType, key);
     }
 
-    public Domain getDomainByName(String name) throws ServiceException { return get(DomainBy.name, name); }
-    public Domain getDomainById(String id) throws ServiceException { return get(DomainBy.id, id); }
-    public Domain getDomainByVirtualHostname(String host) throws ServiceException { return get(DomainBy.virtualHostname, host); }
-    public Domain getDomainByKrb5Realm(String realm) throws ServiceException { return get(DomainBy.krb5Realm, realm); }
-    public Domain getDomainByForeignName(String realm) throws ServiceException { return get(DomainBy.foreignName, realm); }
+    public Domain getDomainByName(String name) throws ServiceException { return get(Key.DomainBy.name, name); }
+    public Domain getDomainById(String id) throws ServiceException { return get(Key.DomainBy.id, id); }
+    public Domain getDomainByVirtualHostname(String host) throws ServiceException { return get(Key.DomainBy.virtualHostname, host); }
+    public Domain getDomainByKrb5Realm(String realm) throws ServiceException { return get(Key.DomainBy.krb5Realm, realm); }
+    public Domain getDomainByForeignName(String realm) throws ServiceException { return get(Key.DomainBy.foreignName, realm); }
 
 
     public abstract List<Domain> getAllDomains()  throws ServiceException;
@@ -1067,29 +1023,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public abstract void renameCos(String zimbraId, String newName) throws ServiceException;
 
-    public static enum CosBy {
+    public abstract Cos get(Key.CosBy keyType, String key) throws ServiceException;
 
-        // case must match protocol
-        id, name;
-
-        public static CosBy fromString(String s) throws ServiceException {
-            try {
-                return CosBy.valueOf(s);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
-            }
-        }
-
-        /* Convert to equivalent JAXB object */
-        public static CosSelector.CosBy toJaxb(CosBy provCosBy) throws ServiceException {
-            return CosSelector.CosBy.fromString(provCosBy.toString());
-        }
-    }
-
-    public abstract Cos get(CosBy keyType, String key) throws ServiceException;
-
-    public Cos getCosByName(String name) throws ServiceException { return get(CosBy.name, name); }
-    public Cos getCosById(String id) throws ServiceException { return get(CosBy.id, id); }
+    public Cos getCosByName(String name) throws ServiceException { return get(Key.CosBy.name, name); }
+    public Cos getCosById(String id) throws ServiceException { return get(Key.CosBy.id, id); }
 
     public abstract List<Cos> getAllCos()  throws ServiceException;
 
@@ -1105,30 +1042,11 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public abstract Server createServer(String name, Map<String, Object> attrs) throws ServiceException;
 
-    public static enum ServerBy {
+    public abstract Server get(Key.ServerBy keyName, String key) throws ServiceException;
 
-        // case must match protocol
-        id, name, serviceHostname;
-
-        public static ServerBy fromString(String s) throws ServiceException {
-            try {
-                return ServerBy.valueOf(s);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
-            }
-        }
-
-        /* Convert to equivalent JAXB object */
-        public static ServerSelector.ServerBy toJaxb(ServerBy provServerBy) throws ServiceException {
-            return ServerSelector.ServerBy.fromString(provServerBy.toString());
-        }
-    }
-
-    public abstract Server get(ServerBy keyName, String key) throws ServiceException;
-
-    public Server getServerByName(String name) throws ServiceException { return get(ServerBy.name, name); }
-    public Server getServerById(String id) throws ServiceException { return get(ServerBy.id, id); }
-    public Server getServerByServiceHostname(String name) throws ServiceException { return get(ServerBy.serviceHostname, name); }
+    public Server getServerByName(String name) throws ServiceException { return get(Key.ServerBy.name, name); }
+    public Server getServerById(String id) throws ServiceException { return get(Key.ServerBy.id, id); }
+    public Server getServerByServiceHostname(String name) throws ServiceException { return get(Key.ServerBy.serviceHostname, name); }
 
     public abstract List<Server> getAllServers()  throws ServiceException;
 
@@ -1138,31 +1056,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public abstract DistributionList createDistributionList(String listAddress, Map<String, Object> listAttrs) throws ServiceException;
 
-    public static enum DistributionListBy {
+    public abstract DistributionList get(Key.DistributionListBy keyType, String key) throws ServiceException;
 
-        // case must match protocol
-        id, name;
-
-        public static DistributionListBy fromString(String s) throws ServiceException {
-            try {
-                return DistributionListBy.valueOf(s);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
-            }
-        }
-
-        /* Convert to equivalent JAXB object */
-        public DistributionListSelector.DistributionListBy toJaxb()
-        throws ServiceException {
-            return DistributionListSelector.DistributionListBy.fromString(
-                    this.toString());
-        }
-    }
-
-    public abstract DistributionList get(DistributionListBy keyType, String key) throws ServiceException;
-
-    public DistributionList getDistributionListByName(String name) throws ServiceException { return get(DistributionListBy.name, name); }
-    public DistributionList getDistributionListById(String id) throws ServiceException { return get(DistributionListBy.id, id); }
+    public DistributionList getDistributionListByName(String name) throws ServiceException { return get(Key.DistributionListBy.name, name); }
+    public DistributionList getDistributionListById(String id) throws ServiceException { return get(Key.DistributionListBy.id, id); }
 
     public abstract void deleteDistributionList(String zimbraId) throws ServiceException;
 
@@ -1187,7 +1084,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * Callsites should use this API if all they need is basic info on the DL, like
      * id or name.
      */
-    public DistributionList getGroup(DistributionListBy keyType, String key) throws ServiceException {
+    public DistributionList getGroup(Key.DistributionListBy keyType, String key) throws ServiceException {
         return get(keyType, key);
     }
 
@@ -1198,21 +1095,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract Zimlet createZimlet(String name, Map<String, Object> attrs) throws ServiceException;
 
     public abstract void deleteZimlet(String name) throws ServiceException;
-
-    public static enum ZimletBy {
-
-        // case must match protocol
-        id, name;
-
-        public static ZimletBy fromString(String s) throws ServiceException {
-            try {
-                return ZimletBy.valueOf(s);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
-            }
-        }
-
-    }
 
     /**
      * Creates the specified calendar resource. The A_zimbraId and A_uid attributes are automatically
@@ -1249,34 +1131,12 @@ public abstract class Provisioning extends ZAttrProvisioning {
      */
     public abstract void renameCalendarResource(String zimbraId, String newName) throws ServiceException;
 
-    public static enum CalendarResourceBy {
+    public abstract CalendarResource get(Key.CalendarResourceBy keyType, String key) throws ServiceException;
 
-        // case must match protocol
-        id, foreignPrincipal, name;
+    public CalendarResource getCalendarResourceByName(String name) throws ServiceException { return get(Key.CalendarResourceBy.name, name); }
+    public CalendarResource getCalendarResourceById(String id) throws ServiceException { return get(Key.CalendarResourceBy.id, id); }
 
-        public static CalendarResourceBy fromString(String s) throws ServiceException {
-            try {
-                return CalendarResourceBy.valueOf(s);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
-            }
-        }
-
-        /* Convert to equivalent JAXB object */
-        public static CalendarResourceSelector.CalendarResourceBy toJaxb(
-                CalendarResourceBy provCalendarResourceBy)
-        throws ServiceException {
-            return CalendarResourceSelector.CalendarResourceBy.fromString(
-                    provCalendarResourceBy.toString());
-        }
-    }
-
-    public abstract CalendarResource get(CalendarResourceBy keyType, String key) throws ServiceException;
-
-    public CalendarResource getCalendarResourceByName(String name) throws ServiceException { return get(CalendarResourceBy.name, name); }
-    public CalendarResource getCalendarResourceById(String id) throws ServiceException { return get(CalendarResourceBy.id, id); }
-
-    public CalendarResource get(CalendarResourceBy keyType, String key, boolean loadFromMaster) throws ServiceException {
+    public CalendarResource get(Key.CalendarResourceBy keyType, String key, boolean loadFromMaster) throws ServiceException {
         return get(keyType, key);
     }
 
@@ -1680,20 +1540,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public abstract void removeMembers(DistributionList list, String[] member) throws ServiceException;
 
-    // identities
-    public static enum IdentityBy {
-
-        id, name;
-
-        public static IdentityBy fromString(String s) throws ServiceException {
-            try {
-                return IdentityBy.valueOf(s);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
-            }
-        }
-    }
-
     public Identity getDefaultIdentity(Account account) throws ServiceException {
         Map<String, Object> attrs = new HashMap<String, Object>();
         Set<String> identityAttrs = AttributeManager.getInstance().getAttrsInClass(AttributeClass.identity);
@@ -1751,21 +1597,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * Returns the <tt>Identity</tt>, or <tt>null</tt> if an identity with the given
      * key does not exist.
      */
-    public abstract Identity get(Account account, IdentityBy keyType, String key) throws ServiceException;
-
-    // signatures
-    public static enum SignatureBy {
-
-        id, name;
-
-        public static SignatureBy fromString(String s) throws ServiceException {
-            try {
-                return SignatureBy.valueOf(s);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
-            }
-        }
-    }
+    public abstract Identity get(Account account, Key.IdentityBy keyType, String key) throws ServiceException;
 
     public abstract Signature createSignature(Account account, String signatureName, Map<String, Object> attrs) throws ServiceException;
 
@@ -1777,21 +1609,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public abstract List<Signature> getAllSignatures(Account account) throws ServiceException;
 
-    public abstract Signature get(Account account, SignatureBy keyType, String key) throws ServiceException;
-
-    // data sources
-    public static enum DataSourceBy {
-
-        id, name;
-
-        public static DataSourceBy fromString(String s) throws ServiceException {
-            try {
-                return DataSourceBy.valueOf(s);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
-            }
-        }
-    }
+    public abstract Signature get(Account account, Key.SignatureBy keyType, String key) throws ServiceException;
 
     public abstract DataSource createDataSource(Account account, DataSource.Type type, String dataSourceName, Map<String, Object> attrs) throws ServiceException;
     public abstract DataSource createDataSource(Account account, DataSource.Type type, String dataSourceName, Map<String, Object> attrs, boolean passwdAlreadyEncrypted) throws ServiceException;
@@ -1811,73 +1629,16 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * with the given key exists.
      * @throws ServiceException if the key is malformed
      */
-    public abstract DataSource get(Account account, DataSourceBy keyType, String key) throws ServiceException;
-
-    public static enum XMPPComponentBy {
-
-        // case must match protocol
-        id, name, serviceHostname;
-
-        public static XMPPComponentBy fromString(String s) throws ServiceException {
-            try {
-                return XMPPComponentBy.valueOf(s);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
-            }
-        }
-    }
+    public abstract DataSource get(Account account, Key.DataSourceBy keyType, String key) throws ServiceException;
 
     // XMPPComponents
     public abstract XMPPComponent createXMPPComponent(String name, Domain domain, Server server, Map<String, Object> attrs) throws ServiceException;
 
-    public abstract XMPPComponent get(XMPPComponentBy keyName, String key) throws ServiceException;
+    public abstract XMPPComponent get(Key.XMPPComponentBy keyName, String key) throws ServiceException;
 
     public abstract List<XMPPComponent> getAllXMPPComponents() throws ServiceException;
 
     public abstract void deleteXMPPComponent(XMPPComponent comp) throws ServiceException;
-
-    //
-    // rights
-    //
-    public static enum TargetBy {
-
-        // case must match protocol
-        id, name;
-
-        public static TargetBy fromString(String s) throws ServiceException {
-            try {
-                return TargetBy.valueOf(s);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
-            }
-        }
-
-        /* Convert to equivalent JAXB object */
-        public EffectiveRightsTargetSelector.TargetBy toJaxb()
-        throws ServiceException {
-            return EffectiveRightsTargetSelector.TargetBy.fromString(this.name());
-        }
-    }
-
-    public static enum GranteeBy {
-
-        // case must match protocol
-        id, name;
-
-        public static GranteeBy fromString(String s) throws ServiceException {
-            try {
-                return GranteeBy.valueOf(s);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
-            }
-        }
-
-        /* Convert to equivalent JAXB object */
-        public GranteeSelector.GranteeBy toJaxb()
-        throws ServiceException {
-            return GranteeSelector.GranteeBy.fromString(this.name());
-        }
-    }
 
     public static class RightsDoc {
         String mCmd;
@@ -1932,51 +1693,51 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     public boolean checkRight(
-            String targetType, TargetBy targetBy, String target,
-            GranteeBy granteeBy, String grantee,
+            String targetType, Key.TargetBy targetBy, String target,
+            Key.GranteeBy granteeBy, String grantee,
             String right, Map<String, Object> attrs,
             AccessManager.ViaGrant via) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
 
     public RightCommand.AllEffectiveRights getAllEffectiveRights(
-            String granteeType, GranteeBy granteeBy, String grantee,
+            String granteeType, Key.GranteeBy granteeBy, String grantee,
             boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
 
     public RightCommand.EffectiveRights getEffectiveRights(
-            String targetType, TargetBy targetBy, String target,
-            GranteeBy granteeBy, String grantee,
+            String targetType, Key.TargetBy targetBy, String target,
+            Key.GranteeBy granteeBy, String grantee,
             boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
 
     public RightCommand.EffectiveRights getCreateObjectAttrs(
             String targetType,
-            DomainBy domainBy, String domainStr,
-            CosBy cosBy, String cosStr,
-            GranteeBy granteeBy, String grantee) throws ServiceException {
+            Key.DomainBy domainBy, String domainStr,
+            Key.CosBy cosBy, String cosStr,
+            Key.GranteeBy granteeBy, String grantee) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
 
     public RightCommand.Grants getGrants(
-            String targetType, TargetBy targetBy, String target,
-            String granteeType, GranteeBy granteeBy, String grantee,
+            String targetType, Key.TargetBy targetBy, String target,
+            String granteeType, Key.GranteeBy granteeBy, String grantee,
             boolean granteeIncludeGroupsGranteeBelongs) throws ServiceException{
         throw ServiceException.FAILURE("unsupported", null);
     }
 
     public void grantRight(
-            String targetType, TargetBy targetBy, String target,
-            String granteeType, GranteeBy granteeBy, String grantee, String secret,
+            String targetType, Key.TargetBy targetBy, String target,
+            String granteeType, Key.GranteeBy granteeBy, String grantee, String secret,
             String right, RightModifier rightModifier) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
 
     public void revokeRight(
-            String targetType, TargetBy targetBy, String target,
-            String granteeType, GranteeBy granteeBy, String grantee,
+            String targetType, Key.TargetBy targetBy, String target,
+            String granteeType, Key.GranteeBy granteeBy, String grantee,
             String right, RightModifier rightModifier) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
@@ -2022,26 +1783,12 @@ public abstract class Provisioning extends ZAttrProvisioning {
         }
     }
 
-    public static enum CacheEntryBy {
-
-        // case must match protocol
-        id, name;
-
-        /* Convert to equivalent JAXB object */
-        public static CacheEntrySelector.CacheEntryBy toJaxb(
-                CacheEntryBy provCacheEntryBy)
-        throws ServiceException {
-            return CacheEntrySelector.CacheEntryBy.fromString(
-                    provCacheEntryBy.toString());
-        }
-    }
-
     public static class CacheEntry {
-        public CacheEntry(CacheEntryBy entryBy, String entryIdentity) {
+        public CacheEntry(Key.CacheEntryBy entryBy, String entryIdentity) {
             mEntryBy = entryBy;
             mEntryIdentity = entryIdentity;
         }
-        public CacheEntryBy mEntryBy;
+        public Key.CacheEntryBy mEntryBy;
         public String mEntryIdentity;
     }
 

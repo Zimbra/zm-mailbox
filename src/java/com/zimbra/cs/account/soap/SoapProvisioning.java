@@ -30,6 +30,19 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import com.google.common.collect.Lists;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.CalendarResourceBy;
+import com.zimbra.common.account.Key.CosBy;
+import com.zimbra.common.account.Key.DataSourceBy;
+import com.zimbra.common.account.Key.DistributionListBy;
+import com.zimbra.common.account.Key.DomainBy;
+import com.zimbra.common.account.Key.GranteeBy;
+import com.zimbra.common.account.Key.IdentityBy;
+import com.zimbra.common.account.Key.ServerBy;
+import com.zimbra.common.account.Key.SignatureBy;
+import com.zimbra.common.account.Key.TargetBy;
+import com.zimbra.common.account.Key.XMPPComponentBy;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -67,42 +80,8 @@ import com.zimbra.soap.account.message.GetIdentitiesResponse;
 import com.zimbra.soap.account.message.ModifyIdentityRequest;
 import com.zimbra.soap.account.type.NameId;
 import com.zimbra.soap.admin.message.*;
-import com.zimbra.soap.admin.type.AccountInfo;
-import com.zimbra.soap.admin.type.AccountLoggerInfo;
-import com.zimbra.soap.admin.type.AccountQuotaInfo;
+import com.zimbra.soap.admin.type.*;
 import com.zimbra.soap.type.AccountSelector;
-import com.zimbra.soap.admin.type.AliasInfo;
-import com.zimbra.soap.admin.type.Attr;
-import com.zimbra.soap.admin.type.CacheEntrySelector;
-import com.zimbra.soap.admin.type.CacheSelector;
-import com.zimbra.soap.admin.type.CalendarResourceInfo;
-import com.zimbra.soap.admin.type.CalendarResourceSelector;
-import com.zimbra.soap.admin.type.CmdRightsInfo;
-import com.zimbra.soap.admin.type.CosCountInfo;
-import com.zimbra.soap.admin.type.CosInfo;
-import com.zimbra.soap.admin.type.CosSelector;
-import com.zimbra.soap.admin.type.DLInfo;
-import com.zimbra.soap.admin.type.DistributionListInfo;
-import com.zimbra.soap.admin.type.DistributionListMembershipInfo;
-import com.zimbra.soap.admin.type.DistributionListSelector;
-import com.zimbra.soap.admin.type.DomainSelector;
-import com.zimbra.soap.admin.type.DomainInfo;
-import com.zimbra.soap.admin.type.EffectiveRightsTarget;
-import com.zimbra.soap.admin.type.EffectiveRightsTargetSelector;
-import com.zimbra.soap.admin.type.GranteeInfo;
-import com.zimbra.soap.admin.type.GranteeSelector;
-import com.zimbra.soap.admin.type.LoggerInfo;
-import com.zimbra.soap.admin.type.MailboxByAccountIdSelector;
-import com.zimbra.soap.admin.type.MailboxWithMailboxId;
-import com.zimbra.soap.admin.type.PackageRightsInfo;
-import com.zimbra.soap.admin.type.PackageSelector;
-import com.zimbra.soap.admin.type.PublishFolderInfo;
-import com.zimbra.soap.admin.type.ReindexMailboxInfo;
-import com.zimbra.soap.admin.type.ReindexProgressInfo;
-import com.zimbra.soap.admin.type.RightInfo;
-import com.zimbra.soap.admin.type.ServerInfo;
-import com.zimbra.soap.admin.type.ServerSelector;
-import com.zimbra.soap.admin.type.ShareInfoSelector;
 
 public class SoapProvisioning extends Provisioning {
 
@@ -678,7 +657,7 @@ public class SoapProvisioning extends Provisioning {
     public SoapAccountInfo getAccountInfo(AccountBy keyType, String key)
     throws ServiceException {
         GetAccountInfoResponse resp = invokeJaxb(new GetAccountInfoRequest(
-                new AccountSelector(AccountBy.toJaxb(keyType), key)));
+                new AccountSelector(SoapProvisioning.toJaxb(keyType), key)));
         return new SoapAccountInfo(resp);
     }
 
@@ -715,7 +694,7 @@ public class SoapProvisioning extends Provisioning {
     throws ServiceException {
         try {
             GetAccountResponse resp = invokeJaxb(new GetAccountRequest(
-                    new AccountSelector(AccountBy.toJaxb(keyType), key),
+                    new AccountSelector(SoapProvisioning.toJaxb(keyType), key),
                                         applyDefault));
             return new SoapAccount(resp.getAccount(), this);
         } catch (ServiceException e) {
@@ -1046,7 +1025,7 @@ public class SoapProvisioning extends Provisioning {
             GetCalendarResourceRequest req =
                 new GetCalendarResourceRequest(
                     new CalendarResourceSelector(
-                            CalendarResourceBy.toJaxb(keyType), key));
+                            SoapProvisioning.toJaxb(keyType), key));
             GetCalendarResourceResponse resp = invokeJaxb(req);
             return new SoapCalendarResource(resp.getCalResource(), this);
         } catch (ServiceException e) {
@@ -1082,7 +1061,7 @@ public class SoapProvisioning extends Provisioning {
     public Cos get(CosBy keyType, String key) throws ServiceException {
         try {
             GetCosResponse resp = invokeJaxb(new GetCosRequest(
-                            new CosSelector(CosBy.toJaxb(keyType), key)));
+                            new CosSelector(SoapProvisioning.toJaxb(keyType), key)));
             return new SoapCos(resp.getCos(), this);
         } catch (ServiceException e) {
             if (e.getCode().equals(AccountServiceException.NO_SUCH_COS))
@@ -1096,7 +1075,7 @@ public class SoapProvisioning extends Provisioning {
     public DistributionList get(DistributionListBy keyType, String key) throws ServiceException {
         try {
             GetDistributionListResponse resp = invokeJaxb(new GetDistributionListRequest(
-                            new DistributionListSelector(keyType.toJaxb(), key)));
+                            new DistributionListSelector(toJaxb(keyType), key)));
             return new SoapDistributionList(resp.getDl(), this);
         } catch (ServiceException e) {
             if (e.getCode().equals(AccountServiceException.NO_SUCH_DISTRIBUTION_LIST))
@@ -1109,7 +1088,7 @@ public class SoapProvisioning extends Provisioning {
     public Domain getDomainInfo(DomainBy keyType, String key)
     throws ServiceException {
         DomainSelector domSel =
-                new DomainSelector(DomainBy.toJaxb(keyType), key);
+                new DomainSelector(toJaxb(keyType), key);
         try {
             GetDomainInfoResponse resp =
                 invokeJaxb(new GetDomainInfoRequest(domSel, null));
@@ -1132,7 +1111,7 @@ public class SoapProvisioning extends Provisioning {
     public Domain get(DomainBy keyType, String key, boolean applyDefault)
     throws ServiceException {
         DomainSelector domSel =
-                new DomainSelector(DomainBy.toJaxb(keyType), key);
+                new DomainSelector(toJaxb(keyType), key);
         try {
             GetDomainResponse resp =
                 invokeJaxb(new GetDomainRequest(domSel, applyDefault));
@@ -1182,7 +1161,7 @@ public class SoapProvisioning extends Provisioning {
     public Server get(ServerBy keyType, String key, boolean applyDefault)
     throws ServiceException {
         ServerSelector sel =
-                new ServerSelector(ServerBy.toJaxb(keyType), key);
+                new ServerSelector(SoapProvisioning.toJaxb(keyType), key);
         try {
             GetServerResponse resp =
                 invokeJaxb(new GetServerRequest(sel, applyDefault));
@@ -2089,7 +2068,7 @@ public class SoapProvisioning extends Provisioning {
         if (granteeType != null && granteeBy != null && grantee != null) {
             granteeSel = new GranteeSelector(
                     GranteeInfo.GranteeType.fromString(granteeType),
-                    granteeBy.toJaxb(), grantee);
+                    toJaxb(granteeBy), grantee);
         }
         GetAllEffectiveRightsResponse resp =
             invokeJaxb(new GetAllEffectiveRightsRequest(granteeSel,
@@ -2106,12 +2085,12 @@ public class SoapProvisioning extends Provisioning {
         GranteeSelector granteeSel = null;
         if (granteeBy != null && grantee != null) {
             granteeSel = new GranteeSelector(
-                    granteeBy.toJaxb(), grantee);
+                    toJaxb(granteeBy), grantee);
         }
         EffectiveRightsTargetSelector targetSel =
             new EffectiveRightsTargetSelector(
                     com.zimbra.soap.type.TargetType.fromString(targetType),
-                    targetBy.toJaxb(), target);
+                    toJaxb(targetBy), target);
         GetEffectiveRightsResponse resp =
             invokeJaxb(new GetEffectiveRightsRequest(targetSel, granteeSel,
                     expandSetAttrs, expandGetAttrs));
@@ -2208,7 +2187,7 @@ public class SoapProvisioning extends Provisioning {
         if (entries != null) {
             for (CacheEntry entry : entries) {
                 sel.addEntry(new CacheEntrySelector(
-                        CacheEntryBy.toJaxb(entry.mEntryBy),
+                        SoapProvisioning.toJaxb(entry.mEntryBy),
                         entry.mEntryIdentity));
             }
         }
@@ -2391,6 +2370,64 @@ public class SoapProvisioning extends Provisioning {
         invoke(req);
     }
 
+    /* Convert to equivalent JAXB object */
+    private static CalendarResourceSelector.CalendarResourceBy toJaxb(
+            Key.CalendarResourceBy provCalendarResourceBy)
+    throws ServiceException {
+        return CalendarResourceSelector.CalendarResourceBy.fromString(
+                provCalendarResourceBy.toString());
+    }
+
+    /* Convert to equivalent JAXB object */
+    private static CosSelector.CosBy toJaxb(Key.CosBy provCosBy) throws ServiceException {
+        return CosSelector.CosBy.fromString(provCosBy.toString());
+    }
+
+    /* Convert to equivalent JAXB object */
+    private static CacheEntrySelector.CacheEntryBy toJaxb(
+            Key.CacheEntryBy provCacheEntryBy)
+    throws ServiceException {
+        return CacheEntrySelector.CacheEntryBy.fromString(
+                provCacheEntryBy.toString());
+    }
+
+    /* Convert to equivalent JAXB object */
+    private static EffectiveRightsTargetSelector.TargetBy toJaxb(Key.TargetBy t)
+    throws ServiceException {
+        return EffectiveRightsTargetSelector.TargetBy.fromString(t.name());
+    }
+
+    /* Convert to equivalent JAXB object */
+    private static ServerSelector.ServerBy toJaxb(Key.ServerBy provServerBy) throws ServiceException {
+        return ServerSelector.ServerBy.fromString(provServerBy.toString());
+    }
+
+    /* Convert to equivalent JAXB object */
+    private static com.zimbra.soap.type.AccountBy toJaxb(AccountBy provAccountBy)
+    throws ServiceException {
+        return com.zimbra.soap.type.AccountBy.fromString(provAccountBy.toString());
+    }
+
+    /* Convert to equivalent JAXB object */
+    private static DomainSelector.DomainBy toJaxb(DomainBy provDomainBy) throws ServiceException {
+        return DomainSelector.DomainBy.fromString(provDomainBy.toString());
+    }
+    
+
+    /* Convert to equivalent JAXB object */
+    private static GranteeSelector.GranteeBy toJaxb(Key.GranteeBy g)
+    throws ServiceException {
+        return GranteeSelector.GranteeBy.fromString(g.name());
+    }
+    
+
+    /* Convert to equivalent JAXB object */
+    private static DistributionListSelector.DistributionListBy toJaxb(Key.DistributionListBy d)
+    throws ServiceException {
+        return DistributionListSelector.DistributionListBy.fromString(
+                d.toString());
+    }
+    
     public static void main(String[] args) throws Exception {
         CliUtil.toolSetup();
 
