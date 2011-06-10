@@ -531,6 +531,20 @@ public class Folder extends MailItem {
     }
 
     /** Returns a <tt>List</tt> that includes this folder and all its
+     *  subfolders visible to the user in OperationContext.
+     */
+    public List<Folder> getSubfolderHierarchy(OperationContext octxt) throws ServiceException {
+        ArrayList<Folder> subfolders = new ArrayList<Folder>();
+        subfolders.add(this);
+        List<Folder> visible = getSubfolders(octxt);
+        for (Folder f : visible) {
+            subfolders.add(f);
+            subfolders.addAll(f.getSubfolderHierarchy(octxt));
+        }
+        return subfolders;
+    }
+    
+    /** Returns a <tt>List</tt> that includes this folder and all its
      *  subfolders.  The tree traversal is done depth-first, so this folder
      *  is the first element in the list, followed by its children, then
      *  its grandchildren, etc. */
