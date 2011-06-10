@@ -708,9 +708,11 @@ extends TestCase {
         String subject = NAME_PREFIX + " testReplyAction";
         String body = "Hi, How r u?";
         String msg = new MessageBuilder().withFrom(REMOTE_USER_NAME).withSubject(subject).withBody(body).create();
-        // send msg to user1
+        // send msg from user2 to user1
         TestUtil.addMessageLmtp(new String[] { USER_NAME }, REMOTE_USER_NAME, msg);
-        // get auto reply from user1
+        // check msg got filed into user1's mailbox
+        TestUtil.getMessage(mMbox, "in:inbox subject:\"" + subject + "\"");
+        // check auto reply from user1 in user2's mailbox
         ZMessage zMessage =
                 TestUtil.waitForMessage(TestUtil.getZMailbox(REMOTE_USER_NAME),
                                         "in:inbox subject:\"Re: " + subject + "\"");
@@ -725,6 +727,7 @@ extends TestCase {
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
         conditions.add(new ZFilterCondition.ZTrueCondition());
+        // add an action to notify user2
         actions.add(new ZFilterAction.ZNotifyAction(
                 TestUtil.getAddress(REMOTE_USER_NAME), "${SUBJECT}", "From: ${FROM}, Message: ${BODY}"));
         rules.add(new ZFilterRule("testNotifyAction", true, false, conditions, actions));
@@ -735,7 +738,9 @@ extends TestCase {
         String msg = new MessageBuilder().withFrom(REMOTE_USER_NAME).withSubject(subject).withBody(body).create();
         // send msg to user1
         TestUtil.addMessageLmtp(new String[] { USER_NAME }, REMOTE_USER_NAME, msg);
-        // get notification msg from user1, it should have the same subject
+        // check msg got filed into user1's mailbox
+        TestUtil.getMessage(mMbox, "in:inbox subject:\"" + subject + "\"");
+        // check notification msg from user1 in user2's mailbox, it should have the same subject
         ZMessage zMessage =
                 TestUtil.waitForMessage(TestUtil.getZMailbox(REMOTE_USER_NAME),
                                         "in:inbox subject:\"" + subject + "\"");
