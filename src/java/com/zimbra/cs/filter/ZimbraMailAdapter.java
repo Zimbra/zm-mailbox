@@ -196,12 +196,11 @@ public class ZimbraMailAdapter implements MailAdapter
             // If only tag/flag actions are specified, JSieve does not generate an
             // implicit keep.
             List<Action> deliveryActions = getDeliveryActions();
-            
             if (deliveryActions.size() == 0) {
-                doDefaultFiling();
+                explicitKeep();
             }
             
-            for (Action action : deliveryActions) {
+            for (Action action : mActions) {
                 if (action instanceof ActionKeep) {
                     if (mContext == null) {
                         ZimbraLog.filter.warn("SieveContext has unexpectedly not been set");
@@ -247,9 +246,7 @@ public class ZimbraMailAdapter implements MailAdapter
                     try {
                         mHandler.reply(reply.getBodyTemplate());
                     } catch (Exception e) {
-                        ZimbraLog.filter.warn(
-                                "Unable to reply.  Filing message to %s.", mHandler.getDefaultFolderPath(), e);
-                        explicitKeep();
+                        ZimbraLog.filter.warn("Unable to reply.", e);
                     }
                 } else if (action instanceof ActionNotify) {
                     ActionNotify notify = (ActionNotify) action;
@@ -259,12 +256,8 @@ public class ZimbraMailAdapter implements MailAdapter
                                         notify.getBodyTemplate(),
                                         notify.getMaxBodyBytes());
                     } catch (Exception e) {
-                        ZimbraLog.filter.warn(
-                                "Unable to notify.  Filing message to %s.", mHandler.getDefaultFolderPath(), e);
-                        explicitKeep();
+                        ZimbraLog.filter.warn("Unable to notify.", e);
                     }
-                } else {
-                    throw new SieveException("unknown action " + action);
                 }
             }
             mHandler.afterFiltering();
@@ -288,9 +281,7 @@ public class ZimbraMailAdapter implements MailAdapter
         for (Action action : mActions) {
             if (action instanceof ActionKeep ||
                 action instanceof ActionFileInto ||
-                action instanceof ActionRedirect ||
-                action instanceof ActionReply ||
-                action instanceof ActionNotify) {
+                action instanceof ActionRedirect) {
                 actions.add(action);
             }
         }
