@@ -39,6 +39,8 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.dbcp.DelegatingConnection;
 import org.apache.commons.pool.impl.GenericObjectPool;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -529,5 +531,21 @@ public final class SQLite extends Db {
             e.printStackTrace();
             System.exit(-1);
         }
+    }
+
+    @Override
+    public String concat(String... fieldsToConcat) {
+        Joiner joiner = Joiner.on(" || ").skipNulls();
+        return joiner.join(fieldsToConcat);
+    }
+
+    @Override
+    public String sign(String field) {
+        return "CASE WHEN(" + field + ")>0 THEN '1' WHEN(" + field + ")<0 THEN '-1' ELSE '0' END";
+    }
+
+    @Override
+    public String lpad(String field, int padSize, String padString) {
+        return "SUBSTR('" + Strings.repeat(padString, padSize) + "' || " + field + ", -" + padSize + ", " + padSize + ")";
     }
 }

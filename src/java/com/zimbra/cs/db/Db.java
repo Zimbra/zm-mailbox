@@ -273,4 +273,19 @@ public abstract class Db {
 
     /** Force the database engine to flush committed changes to physical disk. */
     public abstract void flushToDisk();
+    
+    /**
+     * Concatenates two or more fields.
+     */
+    public abstract String concat(String... fieldsToConcat);
+    
+    /**
+     * Generates the sign value of the field.
+     */
+    public abstract String sign(String field);
+    
+    /**
+     * Pads to the left end of the field.
+     */
+    public abstract String lpad(String field, int padSize, String padString);
 }

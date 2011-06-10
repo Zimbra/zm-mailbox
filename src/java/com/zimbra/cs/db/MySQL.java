@@ -30,6 +30,7 @@ import java.util.Properties;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 
+import com.google.common.base.Joiner;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -274,5 +275,21 @@ public class MySQL extends Db {
             e.printStackTrace();
             System.exit(-1);
         }
+    }
+
+    @Override
+    public String concat(String... fieldsToConcat) {
+        Joiner joiner = Joiner.on(", ").skipNulls();
+        return "CONCAT(" + joiner.join(fieldsToConcat) + ")";
+    }
+
+    @Override
+    public String sign(String field) {
+        return "SIGN(" + field + ")";
+    }
+
+    @Override
+    public String lpad(String field, int padSize, String padString) {
+        return "LPAD(" + field + ", " + padSize + ", '" + padString + "')";
     }
 }

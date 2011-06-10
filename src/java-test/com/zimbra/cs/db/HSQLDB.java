@@ -24,6 +24,7 @@ import java.util.Properties;
 
 import org.hsqldb.cmdline.SqlFile;
 
+import com.google.common.base.Joiner;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbPool.PoolConfig;
 
@@ -151,4 +152,19 @@ public final class HSQLDB extends Db {
         }
     }
 
+    @Override
+    public String concat(String... fieldsToConcat) {
+        Joiner joiner = Joiner.on(", ").skipNulls();
+        return "CONCAT(" + joiner.join(fieldsToConcat) + ")";
+    }
+
+    @Override
+    public String sign(String field) {
+        return "SIGN(" + field + ")";
+    }
+
+    @Override
+    public String lpad(String field, int padSize, String padString) {
+        return "LPAD(" + field + ", " + padSize + ", '" + padString + "')";
+    }
 }
