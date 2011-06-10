@@ -14,17 +14,12 @@
  */
 package com.zimbra.cs.zclient;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.json.JSONException;
 
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.SystemUtil;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.DataSource.Type;
-import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.soap.type.DataSources;
 import com.zimbra.soap.type.RssDataSource;
 
