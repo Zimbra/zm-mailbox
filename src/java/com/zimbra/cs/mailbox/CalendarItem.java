@@ -1473,6 +1473,13 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             }
         }
 
+        // Clear all replies if replacing appointment in trash folder with a new invite.  All existing invites are
+        // being discarded, and so all existing replies must be discarded as well.
+        Folder folder = getMailbox().getFolderById(folderId);
+        if (!isCancel && discardExistingInvites && inTrash() && !folder.inTrash()) {
+            mReplyList.mReplies.clear();
+        }
+
         // If modifying recurrence series (rather than an instance) and the
         // start time (HH:MM:SS) is changing, we need to update the time
         // component of RECURRENCE-ID in all exception instances.
@@ -1882,7 +1889,6 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
 
         if (getFolderId() != folderId) {
             // Move appointment/task to a different folder.
-            Folder folder = getMailbox().getFolderById(folderId);
             move(folder);
         }
 
