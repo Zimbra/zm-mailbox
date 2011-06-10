@@ -40,12 +40,13 @@ import javax.mail.internet.MimeUtility;
 import org.json.JSONException;
 
 import com.google.common.collect.Lists;
+import com.zimbra.common.calendar.CalendarUtil;
 import com.zimbra.common.calendar.Geo;
 import com.zimbra.common.calendar.ICalTimeZone;
+import com.zimbra.common.calendar.ICalTimeZone.SimpleOnset;
 import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.calendar.ParsedDuration;
 import com.zimbra.common.calendar.TimeZoneMap;
-import com.zimbra.common.calendar.ICalTimeZone.SimpleOnset;
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.calendar.ZCalendar.ZParameter;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
@@ -78,34 +79,11 @@ import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.gal.GalGroupInfoProvider;
-import com.zimbra.cs.gal.GalGroup.GroupInfo;
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.index.SearchParams;
-import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.SearchParams.ExpandResults;
-import com.zimbra.cs.mailbox.ACL;
-import com.zimbra.cs.mailbox.Appointment;
-import com.zimbra.cs.mailbox.CalendarItem;
-import com.zimbra.cs.mailbox.Chat;
-import com.zimbra.cs.mailbox.Comment;
-import com.zimbra.cs.mailbox.Contact;
-import com.zimbra.cs.mailbox.Conversation;
-import com.zimbra.cs.mailbox.Document;
-import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.Link;
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.Mountpoint;
-import com.zimbra.cs.mailbox.Note;
-import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.OperationContextData;
-import com.zimbra.cs.mailbox.SearchFolder;
-import com.zimbra.cs.mailbox.SenderList;
-import com.zimbra.cs.mailbox.Tag;
-import com.zimbra.cs.mailbox.WikiItem;
+import com.zimbra.cs.index.SortBy;
+import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
 import com.zimbra.cs.mailbox.CalendarItem.Instance;
 import com.zimbra.cs.mailbox.Contact.Attachment;
@@ -116,9 +94,9 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteChanges;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.Recurrence;
+import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
-import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedAddress;
@@ -1670,22 +1648,6 @@ public class ToXML {
         return Collections.unmodifiableList(xparams);
     }
 
-    /**
-     * Use {@link jaxbXParams} where possible instead of this
-     */
-    public static void encodeXParams(Element parent, Iterator<ZParameter> xparamsIterator) {
-        while (xparamsIterator.hasNext()) {
-            ZParameter xparam = xparamsIterator.next();
-            String paramName = xparam.getName();
-            if (paramName == null) continue;
-            Element paramElem = parent.addElement(MailConstants.E_CAL_XPARAM);
-            paramElem.addAttribute(MailConstants.A_NAME, paramName);
-            String paramValue = xparam.getValue();
-            if (paramValue != null)
-                paramElem.addAttribute(MailConstants.A_VALUE, paramValue);
-        }
-    }
-
     public static List<XProp> jaxbXProps(Iterator<ZProperty> xpropsIterator) {
         List<XProp> xprops = Lists.newArrayList();
         while (xpropsIterator.hasNext()) {
@@ -1712,7 +1674,7 @@ public class ToXML {
             propElem.addAttribute(MailConstants.A_NAME, propName);
             if (propValue != null)
                 propElem.addAttribute(MailConstants.A_VALUE, propValue);
-            encodeXParams(propElem, xprop.parameterIterator());
+            CalendarUtil.encodeXParams(propElem, xprop.parameterIterator());
         }
     }
 

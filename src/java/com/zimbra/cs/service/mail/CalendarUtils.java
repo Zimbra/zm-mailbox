@@ -15,14 +15,26 @@
 
 package com.zimbra.cs.service.mail;
 
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.calendar.CalendarUtil;
 import com.zimbra.common.calendar.Geo;
 import com.zimbra.common.calendar.ICalTimeZone;
+import com.zimbra.common.calendar.ICalTimeZone.SimpleOnset;
 import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.calendar.ParsedDuration;
 import com.zimbra.common.calendar.TZIDMapper;
 import com.zimbra.common.calendar.TimeZoneMap;
 import com.zimbra.common.calendar.WellKnownTimeZones;
-import com.zimbra.common.calendar.ICalTimeZone.SimpleOnset;
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.common.calendar.ZCalendar.ZParameter;
@@ -32,18 +44,17 @@ import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.cs.gal.GalGroup;
 import com.zimbra.cs.gal.GalGroupMembers;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.mailbox.CalendarItem;
-import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.calendar.Alarm;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
@@ -59,17 +70,6 @@ import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZRecur;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.common.util.L10nUtil;
-import com.zimbra.common.util.L10nUtil.MsgKey;
-
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
 
 public class CalendarUtils {
     /**
@@ -1233,19 +1233,6 @@ public class CalendarUtils {
         }
     }
 
-    public static List<ZParameter> parseXParams(Element element) throws ServiceException {
-        List<ZParameter> params = new ArrayList<ZParameter>();
-        for (Iterator<Element> paramIter = element.elementIterator(MailConstants.E_CAL_XPARAM);
-             paramIter.hasNext(); ) {
-            Element paramElem = paramIter.next();
-            String paramName = paramElem.getAttribute(MailConstants.A_NAME);
-            String paramValue = paramElem.getAttribute(MailConstants.A_VALUE, null);
-            ZParameter xparam = new ZParameter(paramName, paramValue);
-            params.add(xparam);
-        }
-        return params;
-    }
-
     public static List<ZProperty> parseXProps(Element element) throws ServiceException {
         List<ZProperty> props = new ArrayList<ZProperty>();
         for (Iterator<Element> propIter = element.elementIterator(MailConstants.E_CAL_XPROP);
@@ -1255,7 +1242,7 @@ public class CalendarUtils {
             String propValue = propElem.getAttribute(MailConstants.A_VALUE, null);
             ZProperty xprop = new ZProperty(propName);
             xprop.setValue(propValue);
-            List<ZParameter> xparams = parseXParams(propElem);
+            List<ZParameter> xparams = CalendarUtil.parseXParams(propElem);
             for (ZParameter xparam : xparams) {
                 xprop.addParameter(xparam);
             }

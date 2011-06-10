@@ -18,8 +18,8 @@ import java.util.List;
 
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.mailbox.Metadata;
-import com.zimbra.cs.service.mail.CalendarUtils;
 import com.zimbra.cs.service.mail.ToXML;
+import com.zimbra.common.calendar.CalendarUtil;
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.calendar.ZCalendar.ZParameter;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
@@ -336,7 +336,7 @@ public class ZAttendee extends CalendarUser {
         if (hasDelegatedFrom())
             atElt.addAttribute(MailConstants.A_CAL_DELEGATED_FROM, getDelegatedFrom());
 
-        ToXML.encodeXParams(atElt, xparamsIterator());
+        CalendarUtil.encodeXParams(atElt, xparamsIterator());
 
         return atElt;
     }
@@ -375,7 +375,7 @@ public class ZAttendee extends CalendarUser {
 //        if (partStat.equals(IcalXmlStrMap.PARTSTAT_NEEDS_ACTION))
 //            rsvp = true;
 
-        List<ZParameter> xparams = CalendarUtils.parseXParams(element);
+        List<ZParameter> xparams = CalendarUtil.parseXParams(element);
 
         ZAttendee at =
             new ZAttendee(address, cn, sentBy, dir, lang,

@@ -16,6 +16,7 @@ package com.zimbra.cs.mailbox.calendar;
 
 import java.util.List;
 
+import com.zimbra.common.calendar.CalendarUtil;
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.calendar.ZCalendar.ZParameter;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
@@ -24,7 +25,6 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.mailbox.Metadata;
-import com.zimbra.cs.service.mail.CalendarUtils;
 import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.mail.type.CalOrganizer;
@@ -96,7 +96,7 @@ public class ZOrganizer extends CalendarUser {
         String dir = element.getAttribute(MailConstants.A_CAL_DIR, null);
         String lang = element.getAttribute(MailConstants.A_CAL_LANGUAGE, null);
 
-        List<ZParameter> xparams = CalendarUtils.parseXParams(element);
+        List<ZParameter> xparams = CalendarUtil.parseXParams(element);
 
         ZOrganizer org = new ZOrganizer(address, cn, sentBy, dir, lang, xparams);
         return org;

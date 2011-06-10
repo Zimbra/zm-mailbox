@@ -15,6 +15,7 @@
 
 package com.zimbra.cs.zclient;
 
+import com.zimbra.common.calendar.CalendarUtil;
 import com.zimbra.common.calendar.Geo;
 import com.zimbra.common.calendar.ZCalendar.ZParameter;
 import com.zimbra.common.service.ServiceException;
@@ -22,8 +23,6 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.zclient.ZClientException;
-import com.zimbra.cs.service.mail.CalendarUtils;
-import com.zimbra.cs.service.mail.ToXML;
 import org.json.JSONException;
 
 import java.util.ArrayList;
@@ -1310,7 +1309,7 @@ public class ZInvite implements ToZJSONObject {
             mSentBy = e.getAttribute(MailConstants.A_CAL_SENTBY, null);
             mDirectoryUrl = e.getAttribute(MailConstants.A_CAL_DIR, null);
             mLanguage = e.getAttribute(MailConstants.A_CAL_LANGUAGE, null);
-            mXParams = CalendarUtils.parseXParams(e);
+            mXParams = CalendarUtil.parseXParams(e);
         }
 
         public String getAddress() {
@@ -1417,7 +1416,7 @@ public class ZInvite implements ToZJSONObject {
             if (getSentBy() != null) orEl.addAttribute(MailConstants.A_CAL_SENTBY, getSentBy());
             if (getDirectoryUrl() != null) orEl.addAttribute(MailConstants.A_CAL_DIR, getDirectoryUrl());
             if (getLanguage() != null) orEl.addAttribute(MailConstants.A_CAL_LANGUAGE, getLanguage());
-            ToXML.encodeXParams(orEl, xparamsIterator());
+            CalendarUtil.encodeXParams(orEl, xparamsIterator());
             return orEl;
         }
 
@@ -1467,7 +1466,7 @@ public class ZInvite implements ToZJSONObject {
             if (mMember != null) attEl.addAttribute(MailConstants.A_CAL_MEMBER, mMember);
             if (mDelegatedTo != null) attEl.addAttribute(MailConstants.A_CAL_DELEGATED_TO, mDelegatedTo);
             if (mDelegatedFrom != null) attEl.addAttribute(MailConstants.A_CAL_DELEGATED_FROM, mDelegatedFrom);
-            ToXML.encodeXParams(attEl, xparamsIterator());
+            CalendarUtil.encodeXParams(attEl, xparamsIterator());
             return attEl;
         }
 
