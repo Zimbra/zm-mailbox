@@ -929,7 +929,7 @@ public class Message extends MailItem {
                                 // use default calendar folder and discard all existing invites.
                                 boolean discardExistingInvites = false;
                                 int calFolderId = calItem.getFolderId();
-                                if (!cur.isCancel() && calFolderId == Mailbox.ID_FOLDER_TRASH) {
+                                if (!cur.isCancel() && calItem.inTrash()) {
                                     discardExistingInvites = true;
                                     if (calItem.getType() == MailItem.Type.TASK) {
                                         calFolderId = Mailbox.ID_FOLDER_TASKS;
