@@ -81,10 +81,6 @@ import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.DataSourceBy;
-import com.zimbra.common.account.Key.IdentityBy;
-import com.zimbra.cs.fb.FreeBusyQuery;
-import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.zclient.ZFolder.Color;
 import com.zimbra.cs.zclient.ZGrant.GranteeType;
 import com.zimbra.cs.zclient.ZInvite.ZTimeZone;
@@ -134,6 +130,8 @@ public class ZMailbox implements ToZJSONObject {
 
     public final static char PATH_SEPARATOR_CHAR = '/';
 
+    private static final int CALENDAR_FOLDER_ALL = -1;
+    
     static {
         SocketFactories.registerProtocols();
     }
@@ -2581,7 +2579,7 @@ public class ZMailbox implements ToZJSONObject {
      * @param parentId parent folder id
      * @param name name of new folder
      * @param query search query (required)
-     * @param types comma-sep list of types to search for. See {@link SearchParams} for more info. Use null for default value.
+     * @param types comma-sep list of types to search for.  Use null for default value.
      * @param sortBy how to sort the result. Use null for default value.
      * @see {@link ZSearchParams#TYPE_MESSAGE}
      * @return newly created search folder
@@ -4437,7 +4435,7 @@ public class ZMailbox implements ToZJSONObject {
         req.addAttribute(MailConstants.A_CAL_END_TIME, endTime);
         Element userElem = req.addElement(MailConstants.E_FREEBUSY_USER);
         userElem.addAttribute(MailConstants.A_NAME, email);
-        if (folder != FreeBusyQuery.CALENDAR_FOLDER_ALL)
+        if (folder != CALENDAR_FOLDER_ALL)
             userElem.addAttribute(MailConstants.A_FOLDER, folder);
         Element resp = invoke(req);
         List<ZGetFreeBusyResult> result = new ArrayList<ZGetFreeBusyResult>();
