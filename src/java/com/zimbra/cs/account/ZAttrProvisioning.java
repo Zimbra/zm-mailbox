@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20110531-1052 */
+    /* build: 8.0.0_BETA1_1111 administrator 20110613-1038 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -2050,17 +2050,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=243)
     public static final String A_zimbraCalendarCompatibilityMode = "zimbraCalendarCompatibilityMode";
-
-    /**
-     * default appointment duration. Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1187)
-    public static final String A_zimbraCalendarDefaultApptDuration = "zimbraCalendarDefaultApptDuration";
 
     /**
      * maximum number of revisions to keep for calendar items (appointments
@@ -6423,6 +6412,17 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1204)
     public static final String A_zimbraPrefCalendarDeclineSignatureId = "zimbraPrefCalendarDeclineSignatureId";
+
+    /**
+     * default appointment duration. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1187)
+    public static final String A_zimbraPrefCalendarDefaultApptDuration = "zimbraPrefCalendarDefaultApptDuration";
 
     /**
      * first day of week to show in calendar (0=sunday, 6=saturday)
