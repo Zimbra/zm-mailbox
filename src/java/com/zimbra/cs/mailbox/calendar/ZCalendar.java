@@ -45,6 +45,8 @@ public class ZCalendar {
     public static final String sIcalVersion = "2.0";
     public static final String sObsoleteVcalVersion = "1.0";
     
+    // Gratuitous comment for testing integration from HELIX to main.
+    
     public static enum ICalTok {
         ACTION, ALTREP, ATTACH, ATTENDEE, BINARY, BOOLEAN,
         CAL_ADDRESS, CALSCALE, CATEGORIES, CLASS, CN, COMMENT,
