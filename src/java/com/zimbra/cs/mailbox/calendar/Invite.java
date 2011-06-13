@@ -1467,11 +1467,7 @@ public class Invite {
                 }
                 continue;
             }
-
-            // Attendee in the reply was not in the appointment's invite.  Add the new attendee if not
-            // a decline reply.
-            if (!IcalXmlStrMap.PARTSTAT_DECLINED.equalsIgnoreCase(replyAt.getPartStat()))
-                toAdd.add(replyAt);
+            toAdd.add(replyAt);
         }
 
         if (toAdd.size() > 0) {
