@@ -78,6 +78,9 @@
   </doc>
 </SaveDocumentRequest>
 
+{flags} = any of the flags specified in soap.txt, with the addition of "t", which specifies
+that the document is a note.
+
 <SaveDocumentResponse>
   <doc id="{item-id}" ver="{version}" name="{item-name}"/>
 </SaveDocumentResponse>
