@@ -20,7 +20,7 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
-import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.common.mailbox.Color;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -44,7 +44,7 @@ public class CreateNote extends RedoableOp {
     }
 
     public CreateNote(int mailboxId, int folderId,
-                      String content, MailItem.Color color, Note.Rectangle bounds) {
+                      String content, Color color, Note.Rectangle bounds) {
         this();
         setMailboxId(mailboxId);
         mId = UNKNOWN_ID;
@@ -106,7 +106,7 @@ public class CreateNote extends RedoableOp {
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         try {
-            mailbox.createNote(getOperationContext(), mContent, mBounds, MailItem.Color.fromMetadata(mColor), mFolderId);
+            mailbox.createNote(getOperationContext(), mContent, mBounds, Color.fromMetadata(mColor), mFolderId);
         } catch (MailServiceException e) {
             String code = e.getCode();
             if (code.equals(MailServiceException.ALREADY_EXISTS)) {

@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.service.mail;
 
+import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -86,7 +87,7 @@ public class SaveDraft extends MailDocumentHandler {
             throw MailServiceException.NO_SUCH_FOLDER(iidFolder.getId());
         String flags = msgElem.getAttribute(MailConstants.A_FLAGS, null);
         String tags  = msgElem.getAttribute(MailConstants.A_TAGS, null);
-        MailItem.Color color = ItemAction.getColor(msgElem);
+        Color color = ItemAction.getColor(msgElem);
 
         // check to see whether the entire message has been uploaded under separate cover
         String attachment = msgElem.getAttribute(MailConstants.A_ATTACHMENT_ID, null);

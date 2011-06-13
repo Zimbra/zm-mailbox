@@ -20,6 +20,7 @@ package com.zimbra.cs.service.mail;
 
 import java.util.Map;
 
+import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
@@ -47,7 +48,7 @@ public class CreateTag extends MailDocumentHandler  {
 
         Tag tag;
         if (rgb != null) {
-            MailItem.Color color = new MailItem.Color(rgb);
+            Color color = new Color(rgb);
             tag = mbox.createTag(octxt, name, color);
         }
         else {

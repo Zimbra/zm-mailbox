@@ -31,6 +31,7 @@ import org.dom4j.QName;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
 
+import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ZimbraLog;
@@ -68,7 +69,7 @@ public abstract class MailItemResource extends DavResource {
     protected int  mFolderId;
     protected int  mId;
     protected MailItem.Type type;
-    protected MailItem.Color mColor;
+    protected Color mColor;
     protected String mEtag;
     protected String mSubject;
     protected String mPath;
@@ -398,7 +399,7 @@ public abstract class MailItemResource extends DavResource {
                     (type == MailItem.Type.FOLDER || type == MailItem.Type.MOUNTPOINT)) {
                 // change color
                 String colorStr = e.getText();
-                MailItem.Color color = new MailItem.Color(colorStr.substring(0, 7));
+                Color color = new Color(colorStr.substring(0, 7));
                 byte col = (byte) COLOR_LIST.indexOf(colorStr);
                 if (col >= 0)
                     color.setColor(col);

@@ -19,6 +19,7 @@ package com.zimbra.cs.service.mail;
 
 import java.util.Map;
 
+import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
@@ -96,7 +97,7 @@ public class CreateMountpoint extends MailDocumentHandler {
 
         Mountpoint mpt;
         try {
-            MailItem.Color itemColor = rgb != null ? new MailItem.Color(rgb) : new MailItem.Color(color);
+            Color itemColor = rgb != null ? new Color(rgb) : new Color(color);
             mpt = mbox.createMountpoint(octxt, iidParent.getId(), name, ownerId, remoteId, MailItem.Type.of(view),
                     Flag.toBitmask(flags), itemColor, reminderEnabled);
         } catch (ServiceException se) {

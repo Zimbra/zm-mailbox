@@ -51,6 +51,7 @@ import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.calendar.ZCalendar.ZParameter;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.localconfig.DebugConfig;
+import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
@@ -639,7 +640,7 @@ public class ToXML {
 
     public static Element encodeColor(Element elem, MailItem item, int fields) {
         if (needToOutput(fields, Change.MODIFIED_COLOR)) {
-            MailItem.Color color = item.getRgbColor();
+            Color color = item.getRgbColor();
             if (color.hasMapping()) {
                 byte mappedColor = color.getMappedColor();
                 if (mappedColor != MailItem.DEFAULT_COLOR || fields != NOTIFY_FIELDS) {

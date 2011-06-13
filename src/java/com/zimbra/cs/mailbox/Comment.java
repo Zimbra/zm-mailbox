@@ -15,6 +15,7 @@
 package com.zimbra.cs.mailbox;
 
 import com.google.common.base.Objects;
+import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;

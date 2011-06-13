@@ -26,6 +26,7 @@ import java.util.Set;
 
 import com.google.common.base.Objects;
 import com.zimbra.common.localconfig.DebugConfig;
+import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.ListUtil;

@@ -16,6 +16,7 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
+import com.zimbra.common.mailbox.Color;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -45,7 +46,7 @@ public class CreateMountpoint extends RedoableOp {
     }
 
     public CreateMountpoint(int mailboxId, int folderId, String name, String ownerId, int remoteId, MailItem.Type view,
-            int flags, MailItem.Color color, boolean reminderEnabled) {
+            int flags, Color color, boolean reminderEnabled) {
         this();
         setMailboxId(mailboxId);
         mId = UNKNOWN_ID;
@@ -116,7 +117,7 @@ public class CreateMountpoint extends RedoableOp {
 
         try {
             mailbox.createMountpoint(getOperationContext(), mFolderId, mName, mOwnerId, mRemoteId, defaultView, mFlags,
-                    MailItem.Color.fromMetadata(mColor), mReminderEnabled);
+                    Color.fromMetadata(mColor), mReminderEnabled);
         } catch (MailServiceException e) {
             if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
                 if (mLog.isInfoEnabled()) {

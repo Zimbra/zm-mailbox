@@ -14,10 +14,10 @@
  */
 package com.zimbra.cs.zclient;
 
+import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.event.ZModifyTagEvent;
 import org.json.JSONException;
@@ -48,7 +48,7 @@ public class ZTag implements Comparable, ZItem, ToZJSONObject {
         public int getValue() { return mValue; }
 
         public static Color fromString(String s) throws ServiceException {
-            return Color.values()[MailItem.Color.getMappedColor(s)];
+            return Color.values()[com.zimbra.common.mailbox.Color.getMappedColor(s)];
         }
 
         Color(int value) { mValue = value; } 

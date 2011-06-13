@@ -16,6 +16,7 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
+import com.zimbra.common.mailbox.Color;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -40,12 +41,12 @@ public class CreateFolder extends RedoableOp {
     }
 
     public CreateFolder(int mailboxId, String name, int parentId, MailItem.Type view, int flags,
-            MailItem.Color color, String url) {
+            Color color, String url) {
         this(mailboxId, name, parentId, (byte) 0, view, flags, color, url);
     }
 
     public CreateFolder(int mailboxId, String name, int parentId, byte attrs, MailItem.Type view, int flags,
-            MailItem.Color color, String url) {
+            Color color, String url) {
         this();
         setMailboxId(mailboxId);
         mName = name == null ? "" : name;
@@ -114,7 +115,7 @@ public class CreateFolder extends RedoableOp {
 
         try {
             mailbox.createFolder(getOperationContext(), mName, mParentId, mAttrs, defaultView, mFlags,
-                    MailItem.Color.fromMetadata(mColor), mUrl);
+                    Color.fromMetadata(mColor), mUrl);
         } catch (MailServiceException e) {
             String code = e.getCode();
             if (code.equals(MailServiceException.ALREADY_EXISTS)) {

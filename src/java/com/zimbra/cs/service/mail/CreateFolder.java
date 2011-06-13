@@ -25,6 +25,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
+import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.MailConstants;
@@ -66,7 +67,7 @@ public class CreateFolder extends MailDocumentHandler {
         boolean alreadyExisted = false;
 
         try {
-            MailItem.Color itemColor = rgb != null ? new MailItem.Color(rgb) : new MailItem.Color(color);
+            Color itemColor = rgb != null ? new Color(rgb) : new Color(color);
             if (iidParent != null) {
                 folder = mbox.createFolder(octxt, name, iidParent.getId(), (byte) 0, MailItem.Type.of(view),
                         Flag.toBitmask(flags), itemColor, url);

@@ -20,7 +20,7 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
-import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.common.mailbox.Color;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -40,7 +40,7 @@ public class CreateTag extends RedoableOp {
         mColor = 0;
     }
 
-    public CreateTag(int mailboxId, String name, MailItem.Color color) {
+    public CreateTag(int mailboxId, String name, Color color) {
         this();
         setMailboxId(mailboxId);
         mTagId = UNKNOWN_ID;
@@ -83,7 +83,7 @@ public class CreateTag extends RedoableOp {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         try {
-            mbox.createTag(getOperationContext(), mName, MailItem.Color.fromMetadata(mColor));
+            mbox.createTag(getOperationContext(), mName, Color.fromMetadata(mColor));
         } catch (MailServiceException e) {
             String code = e.getCode();
             if (code.equals(MailServiceException.ALREADY_EXISTS)) {

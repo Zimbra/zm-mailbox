@@ -16,6 +16,7 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
+import com.zimbra.common.mailbox.Color;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -42,7 +43,7 @@ public class CreateFolderPath extends RedoableOp {
     }
 
     public CreateFolderPath(int mailboxId, String name, byte attrs, MailItem.Type view, int flags,
-            MailItem.Color color, String url) {
+            Color color, String url) {
         this();
         setMailboxId(mailboxId);
         mPath = name == null ? "" : name;
@@ -127,7 +128,7 @@ public class CreateFolderPath extends RedoableOp {
 
         try {
             mailbox.createFolder(getOperationContext(), mPath, mAttrs, defaultView, mFlags,
-                    MailItem.Color.fromMetadata(mColor), mUrl);
+                    Color.fromMetadata(mColor), mUrl);
         } catch (MailServiceException e) {
             String code = e.getCode();
             if (code.equals(MailServiceException.ALREADY_EXISTS)) {

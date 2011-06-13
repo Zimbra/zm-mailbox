@@ -23,6 +23,7 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.index.SortBy;
+import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.util.SyncToken;
 
@@ -87,11 +88,11 @@ public final class MailboxUpgrade {
     public static void upgradeTo1_7(Mailbox mbox) throws ServiceException {
         OperationContext octxt = new OperationContext(mbox);
         for (Folder folder : mbox.getFolderList(octxt, SortBy.NONE)) {
-            MailItem.Color color = folder.getRgbColor();
+            Color color = folder.getRgbColor();
             if (!color.hasMapping()) {
                 Byte value = UPGRADE_TO_1_7_COLORS.get(color.getValue());
                 if (value != null) {
-                    MailItem.Color newcolor = new MailItem.Color(value);
+                    Color newcolor = new Color(value);
                     mbox.setColor(octxt, new int[] { folder.getId() }, folder.getType(), newcolor);
                 }
             }
@@ -104,11 +105,11 @@ public final class MailboxUpgrade {
     public static void upgradeTo1_8(Mailbox mbox) throws ServiceException {
         OperationContext octxt = new OperationContext(mbox);
         for (Tag tag : mbox.getTagList(octxt)) {
-            MailItem.Color color = tag.getRgbColor();
+            Color color = tag.getRgbColor();
             if (!color.hasMapping()) {
                 Byte value = UPGRADE_TO_1_8_COLORS.get(color.getValue());
                 if (value != null) {
-                    MailItem.Color newcolor = new MailItem.Color(value);
+                    Color newcolor = new Color(value);
                     mbox.setColor(octxt, new int[] { tag.getId() }, tag.getType(), newcolor);
                 }
             }

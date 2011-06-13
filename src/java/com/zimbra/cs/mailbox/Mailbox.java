@@ -28,6 +28,7 @@ import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.mime.Rfc822ValidationInputStream;
 import com.zimbra.common.service.ServiceException;
@@ -5301,10 +5302,10 @@ public class Mailbox {
 
     public void setColor(OperationContext octxt, int[] itemIds, MailItem.Type type, byte color)
             throws ServiceException {
-        setColor(octxt, itemIds, type, new MailItem.Color(color));
+        setColor(octxt, itemIds, type, new Color(color));
     }
 
-    public void setColor(OperationContext octxt, int[] itemIds, MailItem.Type type, MailItem.Color color)
+    public void setColor(OperationContext octxt, int[] itemIds, MailItem.Type type, Color color)
             throws ServiceException {
         ColorItem redoRecorder = new ColorItem(mId, itemIds, type, color);
 
@@ -6100,10 +6101,10 @@ public class Mailbox {
     }
 
     public Tag createTag(OperationContext octxt, String name, byte color) throws ServiceException {
-        return createTag(octxt, name, new MailItem.Color(color));
+        return createTag(octxt, name, new Color(color));
     }
 
-    public Tag createTag(OperationContext octxt, String name, MailItem.Color color) throws ServiceException {
+    public Tag createTag(OperationContext octxt, String name, Color color) throws ServiceException {
         name = StringUtil.stripControlCharacters(name);
         if (Strings.isNullOrEmpty(name)) {
             throw ServiceException.INVALID_REQUEST("tag must have a name", null);
@@ -6143,10 +6144,10 @@ public class Mailbox {
 
     public Note createNote(OperationContext octxt, String content, Rectangle location, byte color, int folderId)
             throws ServiceException {
-        return createNote(octxt, content, location, new MailItem.Color(color), folderId);
+        return createNote(octxt, content, location, new Color(color), folderId);
     }
 
-    public Note createNote(OperationContext octxt, String content, Rectangle location, MailItem.Color color, int folderId)
+    public Note createNote(OperationContext octxt, String content, Rectangle location, Color color, int folderId)
             throws ServiceException {
         content = StringUtil.stripControlCharacters(content);
         if (Strings.isNullOrEmpty(content)) {
@@ -6414,11 +6415,11 @@ public class Mailbox {
 
     public Folder createFolder(OperationContext octxt, String name, int parentId, byte attrs, MailItem.Type defaultView,
             int flags, byte color, String url) throws ServiceException {
-        return createFolder(octxt, name, parentId, attrs, defaultView, flags, new MailItem.Color(color), url);
+        return createFolder(octxt, name, parentId, attrs, defaultView, flags, new Color(color), url);
     }
 
     public Folder createFolder(OperationContext octxt, String name, int parentId, byte attrs, MailItem.Type defaultView,
-            int flags, MailItem.Color color, String url) throws ServiceException {
+            int flags, Color color, String url) throws ServiceException {
         CreateFolder redoRecorder = new CreateFolder(mId, name, parentId, attrs, defaultView, flags, color, url);
 
         boolean success = false;
@@ -6461,11 +6462,11 @@ public class Mailbox {
      */
     public Folder createFolder(OperationContext octxt, String path, byte attrs, MailItem.Type defaultView,
             int flags, byte color, String url) throws ServiceException {
-        return createFolder(octxt, path, attrs, defaultView, flags, new MailItem.Color(color), url);
+        return createFolder(octxt, path, attrs, defaultView, flags, new Color(color), url);
     }
 
     public Folder createFolder(OperationContext octxt, String path, byte attrs, MailItem.Type defaultView,
-            int flags, MailItem.Color color, String url) throws ServiceException {
+            int flags, Color color, String url) throws ServiceException {
         if (path == null) {
             throw ServiceException.FAILURE("null path passed to Mailbox.createFolderPath", null);
         }
@@ -6907,11 +6908,11 @@ public class Mailbox {
 
     public SearchFolder createSearchFolder(OperationContext octxt, int folderId, String name, String query,
             String types, String sort, int flags, byte color) throws ServiceException {
-        return createSearchFolder(octxt, folderId, name, query, types, sort, flags, new MailItem.Color(color));
+        return createSearchFolder(octxt, folderId, name, query, types, sort, flags, new Color(color));
     }
 
     public SearchFolder createSearchFolder(OperationContext octxt, int folderId, String name, String query,
-            String types, String sort, int flags, MailItem.Color color) throws ServiceException {
+            String types, String sort, int flags, Color color) throws ServiceException {
         CreateSavedSearch redoRecorder = new CreateSavedSearch(mId, folderId, name, query, types, sort, flags, color);
 
         boolean success = false;
@@ -6950,12 +6951,12 @@ public class Mailbox {
 
     public Mountpoint createMountpoint(OperationContext octxt, int folderId, String name, String ownerId, int remoteId,
             MailItem.Type view, int flags, byte color, boolean showReminders) throws ServiceException {
-        return createMountpoint(octxt, folderId, name, ownerId, remoteId, view, flags, new MailItem.Color(color),
+        return createMountpoint(octxt, folderId, name, ownerId, remoteId, view, flags, new Color(color),
                 showReminders);
     }
 
     public Mountpoint createMountpoint(OperationContext octxt, int folderId, String name, String ownerId, int remoteId,
-            MailItem.Type view, int flags, MailItem.Color color, boolean showReminders) throws ServiceException {
+            MailItem.Type view, int flags, Color color, boolean showReminders) throws ServiceException {
         CreateMountpoint redoRecorder = new CreateMountpoint(mId, folderId, name, ownerId, remoteId, view, flags, color,
                 showReminders);
 

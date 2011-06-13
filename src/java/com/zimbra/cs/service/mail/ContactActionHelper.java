@@ -16,6 +16,7 @@ package com.zimbra.cs.service.mail;
 
 import java.util.List;
 
+import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.mailbox.MailItem;
@@ -29,7 +30,7 @@ public class ContactActionHelper extends ItemActionHelper {
 
     public static ContactActionHelper UPDATE(ZimbraSoapContext zsc, OperationContext octxt,
             Mailbox mbox, List<Integer> ids, ItemId iidFolder,
-            String flags, String tags, MailItem.Color color, ParsedContact pc)
+            String flags, String tags, Color color, ParsedContact pc)
     throws ServiceException {
         ContactActionHelper ca = new ContactActionHelper(octxt, mbox, zsc.getResponseProtocol(), ids, Op.UPDATE);
         ca.setIidFolder(iidFolder);

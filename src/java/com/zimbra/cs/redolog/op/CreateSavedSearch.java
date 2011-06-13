@@ -20,7 +20,7 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
-import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.common.mailbox.Color;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -44,7 +44,7 @@ public class CreateSavedSearch extends RedoableOp {
         mSearchId = UNKNOWN_ID;
     }
 
-    public CreateSavedSearch(int mailboxId, int folderId, String name, String query, String types, String sort, int flags, MailItem.Color color) {
+    public CreateSavedSearch(int mailboxId, int folderId, String name, String query, String types, String sort, int flags, Color color) {
         this();
         setMailboxId(mailboxId);
         mSearchId = UNKNOWN_ID;
@@ -106,7 +106,7 @@ public class CreateSavedSearch extends RedoableOp {
 
         try {
             mailbox.createSearchFolder(getOperationContext(), mFolderId, mName,
-                mQuery, mTypes, mSort, mFlags, MailItem.Color.fromMetadata(mColor));
+                mQuery, mTypes, mSort, mFlags, Color.fromMetadata(mColor));
         } catch (MailServiceException e) {
             String code = e.getCode();
             if (code.equals(MailServiceException.ALREADY_EXISTS)) {

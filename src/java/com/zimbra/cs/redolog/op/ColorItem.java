@@ -17,6 +17,7 @@ package com.zimbra.cs.redolog.op;
 import java.io.IOException;
 import java.util.Arrays;
 
+import com.zimbra.common.mailbox.Color;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -37,7 +38,7 @@ public class ColorItem extends RedoableOp {
         super(MailboxOperation.ColorItem);
     }
 
-    public ColorItem(int mailboxId, int[] ids, MailItem.Type type, MailItem.Color color) {
+    public ColorItem(int mailboxId, int[] ids, MailItem.Type type, Color color) {
         this();
         setMailboxId(mailboxId);
         mIds = ids;
@@ -86,6 +87,6 @@ public class ColorItem extends RedoableOp {
     public void redo() throws Exception {
         int mboxId = getMailboxId();
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
-        mailbox.setColor(getOperationContext(), mIds, type, MailItem.Color.fromMetadata(mColor));
+        mailbox.setColor(getOperationContext(), mIds, type, Color.fromMetadata(mColor));
     }
 }

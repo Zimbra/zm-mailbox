@@ -37,6 +37,7 @@ import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
@@ -86,7 +87,7 @@ public class ItemActionHelper {
     }
 
     public static ItemActionHelper COLOR(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
-            List<Integer> ids, MailItem.Type type, TargetConstraint tcon, MailItem.Color color)
+            List<Integer> ids, MailItem.Type type, TargetConstraint tcon, Color color)
             throws ServiceException {
         ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.COLOR, type, true, tcon);
         ia.setColor(color);
@@ -154,7 +155,7 @@ public class ItemActionHelper {
 
     public static ItemActionHelper UPDATE(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
             List<Integer> ids, MailItem.Type type, TargetConstraint tcon, String name, ItemId iidFolder, String flags,
-            String tags, MailItem.Color color) throws ServiceException {
+            String tags, Color color) throws ServiceException {
         ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.UPDATE, type, true, tcon);
         ia.setName(name);
         ia.setIidFolder(iidFolder);
@@ -217,7 +218,7 @@ public class ItemActionHelper {
     protected int mTagId;
 
     // only when OP=COLOR or OP=UPDATE
-    protected MailItem.Color mColor;
+    protected Color mColor;
 
     // only when OP=RENAME or OP=UPDATE
     protected String mName;
@@ -265,7 +266,7 @@ public class ItemActionHelper {
         assert(mOperation == Op.TAG);
         mTagId = tagId;
     }
-    public void setColor(MailItem.Color color) {
+    public void setColor(Color color) {
         assert(mOperation == Op.COLOR || mOperation == Op.UPDATE);
         mColor = color;
     }
