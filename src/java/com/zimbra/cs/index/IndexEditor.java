@@ -139,51 +139,6 @@ public class IndexEditor {
         }
     }
 
-    public class MultiQueryRunner implements QueryRunner {
-        int[] mMailboxId;
-
-        MultiQueryRunner(int[] mailboxId) {
-            mMailboxId = new int[mailboxId.length];
-            for (int i = 0; i < mailboxId.length; i++) {
-                mMailboxId[i] = mailboxId[i];
-            }
-        }
-
-        MultiQueryRunner(List<Integer> mailboxId) {
-            mMailboxId = new int[mailboxId.size()];
-            for (int i = 0; i < mailboxId.size(); i++) {
-                mMailboxId[i] = mailboxId.get(i).intValue();
-            }
-        }
-
-        @Override
-        public ZimbraQueryResults runQuery(String qstr, Set<MailItem.Type> types, SortBy sortBy)
-            throws IOException, MailServiceException, ServiceException {
-
-            MultiQueryResults all = new MultiQueryResults(100, sortBy);
-            for (int i = 0; i < mMailboxId.length; i++) {
-                Mailbox mbox = MailboxManager.getInstance().getMailboxById(mMailboxId[i]);
-                SearchParams params = new SearchParams();
-                params.setQueryStr(qstr);
-                params.setTypes(types);
-                params.setSortBy(sortBy);
-                params.setOffset(0);
-                params.setLimit(100);
-                params.setPrefetch(true);
-                params.setMode(SearchResultMode.NORMAL);
-                ZimbraQuery zq = new ZimbraQuery(null, SoapProtocol.Soap12, mbox, params);
-                ZimbraQueryResults result = zq.execute(/*null, SoapProtocol.Soap12*/);
-                try {
-                    all.add(result);
-                } finally {
-                    result.close();
-                }
-            }
-            return all;
-        }
-    }
-
-
     public void doQuery(QueryRunner runner, boolean dump, int groupBy)
         throws MailServiceException, IOException, ServiceException {
 
@@ -642,20 +597,6 @@ public class IndexEditor {
                 } else if (command.equals("qp") || command.equals("queryconv")) {
                     QueryRunner runner = new SingleQueryRunner(mailboxId);
                     doQuery(runner,true, SEARCH_RETURN_DOCUMENTS);
-                } else if (command.equals("mq")) {
-                    ArrayList<Integer> ids = new ArrayList<Integer>();
-                    do {
-                        outputStream.print("Enter Mailbox ID (blank when done): ");
-                        mailboxIdStr = inputReader.readLine();
-
-                        if (!mailboxIdStr.equals("")) {
-                            int id = getMailboxIdFromString(mailboxIdStr);
-                            outputStream.println("\tAdded mailbox ID "+id);
-                            ids.add(new Integer(id));
-                        }
-                    } while (!mailboxIdStr.equals(""));
-                    QueryRunner runner = new MultiQueryRunner(ids);
-                    doQuery(runner, false, SEARCH_RETURN_CONVERSATIONS);
                 } else if (command.equals("mbox")) {
                     outputStream.print("Enter New Mailbox ID: ");
                     mailboxIdStr = inputReader.readLine();

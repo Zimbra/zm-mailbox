@@ -17,7 +17,6 @@ package com.zimbra.cs.index;
 
 import com.google.common.base.Objects;
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -30,7 +29,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.service.util.ParseMailboxID;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ProxyTarget;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -38,8 +36,6 @@ import com.zimbra.soap.ZimbraSoapContext;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
-import org.dom4j.QName;
 
 /**
  * Represents the results of a query made on a remote server. This class takes
@@ -55,11 +51,6 @@ import org.dom4j.QName;
  * @since Mar 28, 2005
  */
 public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
-    /**
-     * magic # for parameter checking.
-     */
-    public static final int SEARCH_ALL_MAILBOXES = 1234;
-
     /**
      * minimum number of hits to request each time we make a round-trip to the remote server.
      */
@@ -78,14 +69,8 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
 
     private SearchParams searchParams;
 
-    // mailbox specifier
-    private boolean isMultipleMailboxes = false;
-    private boolean isAllMailboxes = false;
-    private List<ParseMailboxID> mailboxes;
-
     /**
-     * read timeout for the proxy SOAP request. -1 mean use default SOAP http
-     * client timeout.
+     * read timeout for the proxy SOAP request. -1 mean use default SOAP http client timeout.
      */
     private long mTimeout = -1;
 
@@ -130,44 +115,6 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
         this.authToken = authToken;
         this.server = server;
         this.responseProto = respProto;
-    }
-
-    /**
-     * An admin-only request to search ALL mailboxes on the remote server
-     *
-     * @param authToken (call ZimbraContext.getAuthToken().getEncoded() if necessary)
-     * @param server server ID
-     * @param params search query parameters
-     * @param searchAllMailboxes must be set to SEARCH_ALL_MAILBOXES
-     */
-    public ProxiedQueryResults(SoapProtocol respProto, AuthToken authToken, String server, SearchParams params,
-            Mailbox.SearchResultMode mode, int searchAllMailboxes) {
-        super(params.getTypes(), params.getSortBy(), mode);
-        assert(searchAllMailboxes == SEARCH_ALL_MAILBOXES);
-        setSearchParams(params);
-        this.authToken = authToken;
-        this.server = server;
-        this.isMultipleMailboxes = true;
-        this.isAllMailboxes = true;
-        this.responseProto = respProto;
-    }
-
-    /**
-     * An admin-only request to search a set of mailboxes on the remote server
-     *
-     * @param encodedAuthToken (call ZimbraContext.getAuthToken().getEncoded() if necessary)
-     * @param server
-     * @param params
-     */
-    public ProxiedQueryResults(SoapProtocol respProto, AuthToken authToken, String server, SearchParams params,
-            Mailbox.SearchResultMode mode, List<ParseMailboxID> mailboxes) {
-        super(params.getTypes(), params.getSortBy(), mode);
-        setSearchParams(params);
-        this.authToken = authToken;
-        this.server = server;
-        this.isMultipleMailboxes = true;
-        this.responseProto = respProto;
-        this.mailboxes = mailboxes;
     }
 
     private void setSearchParams(SearchParams params) {
@@ -285,44 +232,23 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
         bufferEndOffset = bufferStartOffset + chunkSizeToUse;
         hitBuffer = new ArrayList<ProxiedHit>(chunkSizeToUse);
 
-        QName qnrequest = (isMultipleMailboxes ?
-                AdminConstants.SEARCH_MULTIPLE_MAILBOXES_REQUEST : MailConstants.SEARCH_REQUEST);
-        Element searchElt = Element.create(responseProto, qnrequest);
+        Element searchElt = Element.create(responseProto, MailConstants.SEARCH_REQUEST);
 
         searchParams.setOffset(bufferStartOffset);
         searchParams.setLimit(chunkSizeToUse);
         searchParams.encodeParams(searchElt);
 
-        if (isMultipleMailboxes) {
-            if (isAllMailboxes) {
-                Element mbxElt = searchElt.addElement(MailConstants.E_MAILBOX);
-                ParseMailboxID id = ParseMailboxID.serverAll(server);
-                mbxElt.addAttribute(MailConstants.A_ID, id.getString());
-            } else {
-                for (ParseMailboxID id : mailboxes) {
-                    Element mboxEl = searchElt.addElement(MailConstants.E_MAILBOX);
-                    if (id.getAccount() != null) {
-                        mboxEl.addAttribute(MailConstants.A_NAME, id.getAccount().getName());
-                    } else {
-                        mboxEl.addAttribute(MailConstants.A_ID, id.getMailboxId());
-                    }
-                }
-            }
-        }
-
         // call the remote server now!
         Server targetServer = Provisioning.getInstance().get(Key.ServerBy.name, server);
         String baseurl = null;
-        if (!isMultipleMailboxes) {
-            try {
-                baseurl = URLUtil.getSoapURL(targetServer, false);
-            } catch (ServiceException e) {
-            }
+        try {
+            baseurl = URLUtil.getSoapURL(targetServer, false);
+        } catch (ServiceException e) {
         }
         if (baseurl == null) {
             baseurl = URLUtil.getAdminURL(targetServer, AdminConstants.ADMIN_SERVICE_URI, true);
         }
-        ProxyTarget proxy = new ProxyTarget(targetServer, authToken, baseurl + qnrequest.getName());
+        ProxyTarget proxy = new ProxyTarget(targetServer, authToken, baseurl + MailConstants.SEARCH_REQUEST.getName());
         if (mTimeout != -1) {
             proxy.setTimeouts(mTimeout);
         }

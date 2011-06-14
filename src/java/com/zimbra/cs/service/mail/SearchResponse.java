@@ -70,12 +70,11 @@ public class SearchResponse {
     private ExpandResults expand;
     private SortBy sortOrder = SortBy.NONE;;
 
-    public SearchResponse(ZimbraSoapContext zsc, OperationContext octxt,
-            Element element, SearchParams params) {
+    public SearchResponse(ZimbraSoapContext zsc, OperationContext octxt, Element el, SearchParams params) {
         this.zsc = zsc;
         this.params = params;
         this.octxt = octxt;
-        this.element = element;
+        this.element = el;
         ifmt = new ItemIdFormatter(zsc);
         expand = params.getInlineRule();
     }
