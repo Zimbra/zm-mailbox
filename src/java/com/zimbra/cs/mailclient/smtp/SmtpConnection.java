@@ -199,14 +199,19 @@ public final class SmtpConnection extends MailConnection {
 
     @Override
     protected void processGreeting() throws IOException {
-        // Server greeting.
-        Reply reply = Reply.parse(mailIn.readLine());
-        mailIn.trace();
-        if (reply == null) {
-            throw new MailException("Did not receive greeting from server");
-        }
-        if (reply.code != 220) {
-            throw new IOException("Expected greeting, but got: " + reply);
+        // Server greeting, can be multiline.
+        while (true) {
+            Reply reply = Reply.parse(mailIn.readLine());
+            mailIn.trace();
+            if (reply == null) {
+                throw new MailException("Did not receive greeting from server");
+            }
+            if (reply.code != 220) {
+                throw new IOException("Expected greeting, but got: " + reply);
+            }
+            if (reply.last) {
+                break;
+            }
         }
 
         // Send hello, read extensions and auth mechanisms.
