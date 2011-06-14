@@ -46,6 +46,7 @@ public class RemoteCollection extends Collection {
     protected String mRemoteOwnerId;
     protected int mRemoteId;
     protected String mCtag;
+    protected short mRights = 0;
 
     public RemoteCollection(DavContext ctxt, Mountpoint mp) throws DavException, ServiceException {
         super(ctxt, mp);
@@ -107,9 +108,9 @@ public class RemoteCollection extends Collection {
             return;
         mCtag = CtagInfo.makeCtag(folder);
         setProperty(DavElements.E_GETCTAG, mCtag);
-        short rights = ACL.stringToRights(folder.getEffectivePerms());
-        addProperty(Acl.getCurrentUserPrivilegeSet(rights));
-        addProperty(Acl.getMountpointTargetPrivilegeSet(rights));
+        mRights = ACL.stringToRights(folder.getEffectivePerms());
+        addProperty(Acl.getCurrentUserPrivilegeSet(mRights));
+        addProperty(Acl.getMountpointTargetPrivilegeSet(mRights));
         String targetUrl = UrlNamespace.getResourceUrl(Provisioning.getInstance().get(Key.AccountBy.id, mRemoteOwnerId), folder.getPath() + "/");
         ResourceProperty mp = new ResourceProperty(DavElements.E_MOUNTPOINT_TARGET_URL);
         mp.addChild(DavElements.E_HREF).setText(targetUrl);

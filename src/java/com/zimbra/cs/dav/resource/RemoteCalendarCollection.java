@@ -52,4 +52,8 @@ public class RemoteCalendarCollection extends RemoteCollection {
 		setProperty(DavElements.E_GROUP_MEMBER_SET, null, true);
 		setProperty(DavElements.E_GROUP_MEMBERSHIP, null, true);
     }
+    
+    public short getRights() {
+    	return mRights;
+    }
 }

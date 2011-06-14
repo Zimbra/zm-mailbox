@@ -37,7 +37,9 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
+import com.zimbra.cs.dav.property.Acl;
 import com.zimbra.cs.dav.service.DavServlet;
+import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Document;
@@ -478,6 +480,11 @@ public class UrlNamespace {
                 // don't expose mounted calendars when using iCal style delegation model.
                 if (!ctxt.useIcalDelegation() && viewType == MailItem.Type.APPOINTMENT) {
                     resource = new RemoteCalendarCollection(ctxt, mp);
+                    // force read permissions on mounted calendars even for writable calendars.
+                    short rights = ((RemoteCalendarCollection)resource).getRights();
+                    // clear the write and delete bits.
+                    rights = (short) (rights & ~(ACL.RIGHT_WRITE | ACL.RIGHT_DELETE | ACL.RIGHT_INSERT | ACL.RIGHT_ACTION | ACL.RIGHT_ADMIN | ACL.RIGHT_SUBFOLDER));
+                   	resource.addProperty(Acl.getCurrentUserPrivilegeSet(rights));                    
                 } else {
                     resource = new RemoteCollection(ctxt, mp);
                 }
