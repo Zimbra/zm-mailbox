@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20110613-1038 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110613-2214 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -4513,8 +4513,17 @@ public class ZAttrProvisioning {
     public static final String A_zimbraIsMonitorHost = "zimbraIsMonitorHost";
 
     /**
-     * Indicates the account is a resource used by the system such as spam
+     * Indicates the account is an account used by the system such as spam
      * accounts or Notebook accounts.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1214)
+    public static final String A_zimbraIsSystemAccount = "zimbraIsSystemAccount";
+
+    /**
+     * Indicates the account is a resource used by the system. System
+     * resource accounts are not counted against license quota.
      */
     @ZAttr(id=376)
     public static final String A_zimbraIsSystemResource = "zimbraIsSystemResource";
@@ -9036,6 +9045,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
+
+    /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
+
+    /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled

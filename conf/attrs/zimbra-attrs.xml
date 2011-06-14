@@ -1936,7 +1936,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="376" name="zimbraIsSystemResource" type="boolean" cardinality="single" optionalIn="account">
-  <desc>Indicates the account is a resource used by the system such as spam accounts or Notebook accounts.</desc>
+  <desc>Indicates the account is a resource used by the system.  System resource accounts are not counted against license quota.</desc>
 </attr>
 
 <attr id="377" name="zimbraPublicServiceHostname" type="string" max="256" cardinality="single" optionalIn="domain,globalConfig" flags="domainInfo,domainInherited">
@@ -5699,5 +5699,10 @@ TODO: delete them permerntly from here
   <defaultCOSValue>70</defaultCOSValue>
   <desc>max size in KB of text emails that will automatically highlight objects</desc>
 </attr>
+
+<attr id="1214" name="zimbraIsSystemAccount" type="boolean" cardinality="single" optionalIn="account" since="8.0.0">
+  <desc>Indicates the account is an account used by the system such as spam accounts or Notebook accounts.</desc>
+</attr>
+
 
 </attrs>
