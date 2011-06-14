@@ -302,6 +302,10 @@ public class DbDataSource {
     }
 
     public static Collection<DataSourceItem> deleteAllMappingsInFolder(DataSource ds, int folderId) throws ServiceException {
+        return deleteAllMappingsInFolder(ds, folderId, false);
+    }
+    
+    public static Collection<DataSourceItem> deleteAllMappingsInFolder(DataSource ds, int folderId, boolean isBatch) throws ServiceException {
         Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
 
         ArrayList<DataSourceItem> items = new ArrayList<DataSourceItem>();
@@ -313,7 +317,11 @@ public class DbDataSource {
             DbConnection conn = null;
             PreparedStatement stmt = null;
             try {
-                conn = DbPool.getConnection(mbox);
+                if (isBatch) {
+                    conn = mbox.getOperationConnection();
+                } else {
+                    conn = DbPool.getConnection(mbox);
+                }
                 String dataSourceTable = getTableName(mbox);
                 String IN_THIS_MAILBOX_AND = DebugConfig.disableMailboxGroups ? "" : dataSourceTable + ".mailbox_id = ? AND ";
                 StringBuilder sb = new StringBuilder();
@@ -328,14 +336,18 @@ public class DbDataSource {
                 stmt.setString(pos++, ds.getId());
                 stmt.setInt(pos++, folderId);
                 int numRows = stmt.executeUpdate();
-                conn.commit();
+                if (!isBatch) {
+                    conn.commit();    
+                }
                 stmt.close();
                 ZimbraLog.datasource.debug("Deleted %d mappings for %s", numRows, ds.getName());
             } catch (SQLException e) {
                 throw ServiceException.FAILURE("Unable to delete mapping for dataSource "+ds.getName(), e);
             } finally {
                 DbPool.closeStatement(stmt);
-                DbPool.quietClose(conn);
+                if (!isBatch) {
+                    DbPool.quietClose(conn);
+                }
             }
         } finally {
             mbox.lock.release();
