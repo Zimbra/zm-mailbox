@@ -17,7 +17,6 @@ package com.zimbra.soap;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.UnsupportedEncodingException;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -37,6 +36,7 @@ import org.dom4j.io.DocumentSource;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import com.google.common.base.Charsets;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
@@ -52,12 +52,9 @@ public final class JaxbUtil {
 
     private static final Log LOG = ZimbraLog.soap;
     private static final Class<?>[] MESSAGE_CLASSES;
-    private static final String ACCOUNT_JAXB_PACKAGE =
-        "com.zimbra.soap.account.message";
-    private static final String ADMIN_JAXB_PACKAGE =
-        "com.zimbra.soap.admin.message";
-    private static final String MAIL_JAXB_PACKAGE =
-        "com.zimbra.soap.mail.message";
+    private static final String ACCOUNT_JAXB_PACKAGE = "com.zimbra.soap.account.message";
+    private static final String ADMIN_JAXB_PACKAGE = "com.zimbra.soap.admin.message";
+    private static final String MAIL_JAXB_PACKAGE = "com.zimbra.soap.mail.message";
     private static JAXBContext JAXB_CONTEXT;
 
     static {
@@ -664,7 +661,7 @@ public final class JaxbUtil {
         try {
             JAXB_CONTEXT = JAXBContext.newInstance(MESSAGE_CLASSES);
         } catch (JAXBException e) {
-            LOG.error("Unable to initialize JAXB", e);
+            throw new RuntimeException("Unable to initialize JAXB", e);
         }
     }
 
@@ -681,8 +678,7 @@ public final class JaxbUtil {
      * @return
      * @throws ServiceException
      */
-    public static Element jaxbToElement(Object o, Element.ElementFactory factory)
-    throws ServiceException {
+    public static Element jaxbToElement(Object o, Element.ElementFactory factory) throws ServiceException {
         try {
             Marshaller marshaller = getContext().createMarshaller();
             // marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
@@ -692,43 +688,38 @@ public final class JaxbUtil {
             org.dom4j.Element rootElem = theDoc.getRootElement();
             return Element.convertDOM(rootElem, factory);
         } catch (Exception e) {
-            throw ServiceException.FAILURE("Unable to convert " +
-                    o.getClass().getName() + " to Element", e);
+            throw ServiceException.FAILURE("Unable to convert " + o.getClass().getName() + " to Element", e);
         }
     }
 
-    public static Element jaxbToElement(Object o)
-    throws ServiceException {
+    public static Element jaxbToElement(Object o) throws ServiceException {
         return jaxbToElement(o, XMLElement.mFactory);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public static Element jaxbToNamedElement(String name,
-            String namespace, Object o, Element.ElementFactory factory)
-    throws ServiceException {
+    public static Element jaxbToNamedElement(String name, String namespace, Object o, Element.ElementFactory factory)
+            throws ServiceException {
         try {
             JAXBContext jaxb = JAXBContext.newInstance(o.getClass());
             Marshaller marshaller = jaxb.createMarshaller();
             // marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
             DocumentResult dr = new DocumentResult();
-            marshaller.marshal(new JAXBElement(
-                    new QName(namespace, name), o.getClass(), o) , dr);
+            marshaller.marshal(new JAXBElement(new QName(namespace, name), o.getClass(), o) , dr);
             Document theDoc = dr.getDocument();
             org.dom4j.Element rootElem = theDoc.getRootElement();
             return Element.convertDOM(rootElem, factory);
         } catch (Exception e) {
-            throw ServiceException.FAILURE("Unable to convert " +
-                    o.getClass().getName() + " to Element", e);
+            throw ServiceException.FAILURE("Unable to convert " + o.getClass().getName() + " to Element", e);
         }
     }
 
-    public static Element addChildElementFromJaxb(Element parent,
-            String name, String namespace, Object o) {
+    public static Element addChildElementFromJaxb(Element parent, String name, String namespace, Object o) {
         Element.ElementFactory factory;
-        if (parent instanceof XMLElement)
+        if (parent instanceof XMLElement) {
             factory = XMLElement.mFactory;
-        else
+        } else {
             factory = JSONElement.mFactory;
+        }
         Element child = null;
         try {
             child = jaxbToNamedElement(name, namespace, o, factory);
@@ -747,19 +738,13 @@ public final class JaxbUtil {
      */
     @Deprecated
     @SuppressWarnings("unchecked")
-    public static <T> T elementToJaxbUsingByteArray(Element e)
-    throws ServiceException {
+    public static <T> T elementToJaxbUsingByteArray(Element e) throws ServiceException {
         try {
             Unmarshaller unmarshaller = getContext().createUnmarshaller();
             org.dom4j.Element rootElem = e.toXML();
-            return (T) unmarshaller.unmarshal(new ByteArrayInputStream(
-                        rootElem.asXML().getBytes("utf-8")));
+            return (T) unmarshaller.unmarshal(new ByteArrayInputStream(rootElem.asXML().getBytes(Charsets.UTF_8)));
         } catch (JAXBException ex) {
-            throw ServiceException.FAILURE(
-                    "Unable to unmarshal response for " + e.getName(), ex);
-        } catch (UnsupportedEncodingException ex) {
-            throw ServiceException.FAILURE(
-                    "Unable to unmarshal response for " + e.getName(), ex);
+            throw ServiceException.FAILURE("Unable to unmarshal response for " + e.getName(), ex);
         }
     }
 
@@ -775,16 +760,14 @@ public final class JaxbUtil {
      */
     @Deprecated
     @SuppressWarnings("unchecked")
-    public static <T> T elementToJaxbUsingDom4j(Element e)
-    throws ServiceException {
+    public static <T> T elementToJaxbUsingDom4j(Element e) throws ServiceException {
         try {
             Unmarshaller unmarshaller = getContext().createUnmarshaller();
             org.dom4j.Element rootElem = e.toXML();
             DocumentSource docSrc = new DocumentSource(rootElem);
             return (T) unmarshaller.unmarshal(docSrc);
         } catch (JAXBException ex) {
-            throw ServiceException.FAILURE(
-                    "Unable to unmarshal response for " + e.getName(), ex);
+            throw ServiceException.FAILURE("Unable to unmarshal response for " + e.getName(), ex);
         }
     }
 
@@ -794,8 +777,7 @@ public final class JaxbUtil {
      * e.g. Zimbra allows attributes to be specified as elements.
      * @param klass is the JAXB class for {@link elem}
      */
-    public static void fixupStructureForJaxb(org.w3c.dom.Element elem,
-                    Class<?> klass) {
+    public static void fixupStructureForJaxb(org.w3c.dom.Element elem, Class<?> klass) {
         if (elem == null) {
             return;
         }
@@ -906,9 +888,8 @@ public final class JaxbUtil {
      * @return a JAXB object
      */
     @SuppressWarnings("unchecked")
-    public static <T> T w3cDomDocToJaxb(org.w3c.dom.Document doc)
-    throws ServiceException {
-        fixupStructureForJaxb((org.w3c.dom.Element)doc.getDocumentElement());
+    public static <T> T w3cDomDocToJaxb(org.w3c.dom.Document doc) throws ServiceException {
+        fixupStructureForJaxb(doc.getDocumentElement());
         return (T) rawW3cDomDocToJaxb(doc);
     }
 
@@ -918,8 +899,7 @@ public final class JaxbUtil {
      * than using a DocumentSource based on org.dom4j.Element
      */
     @SuppressWarnings("unchecked")
-    private static <T> T rawW3cDomDocToJaxb(org.w3c.dom.Document doc)
-    throws ServiceException {
+    private static <T> T rawW3cDomDocToJaxb(org.w3c.dom.Document doc) throws ServiceException {
         if ((doc == null || doc.getDocumentElement() == null)) {
             return null;
         }
@@ -928,8 +908,7 @@ public final class JaxbUtil {
             // LOG.warn("Dom to Xml:\n" + domToString(doc));
             return (T) unmarshaller.unmarshal(doc);
         } catch (JAXBException ex) {
-            throw ServiceException.FAILURE(
-                    "Unable to unmarshal response for " +
+            throw ServiceException.FAILURE("Unable to unmarshal response for " +
                     doc.getDocumentElement().getNodeName(), ex);
         }
     }
@@ -940,8 +919,7 @@ public final class JaxbUtil {
      * than using a DocumentSource based on org.dom4j.Element
      */
     @SuppressWarnings("unchecked")
-    public static <T> T elementToJaxb(Element e)
-    throws ServiceException {
+    public static <T> T elementToJaxb(Element e) throws ServiceException {
         return (T) w3cDomDocToJaxb(e.toW3cDom());
     }
 
@@ -962,10 +940,25 @@ public final class JaxbUtil {
         return null;
     }
 
-    private static JAXBContext getContext()
-    throws ServiceException {
+    public static Marshaller createMarshaller() {
+        try {
+            return getContext().createMarshaller();
+        } catch (JAXBException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static Unmarshaller createUnmarshaller() {
+        try {
+            return getContext().createUnmarshaller();
+        } catch (JAXBException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static JAXBContext getContext() {
         if (JAXB_CONTEXT == null) {
-            throw ServiceException.FAILURE("JAXB has not been initialized", null);
+            throw new IllegalStateException("JAXB has not been initialized");
         }
         return JAXB_CONTEXT;
     }
