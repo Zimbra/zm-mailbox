@@ -110,7 +110,7 @@ public final class DbSearch {
                     String.valueOf(Flag.BITMASK_ATTACHED))), Db.getInstance().lpad("mi.id", 10, "0"));
         case FLAG: // 0 or 1
             return Db.getInstance().concat(Db.getInstance().sign(Db.getInstance().bitAND("mi.flags",
-                    String.valueOf(Flag.BITMASK_ATTACHED))), Db.getInstance().lpad("mi.id", 10, "0"));
+                    String.valueOf(Flag.BITMASK_FLAGGED))), Db.getInstance().lpad("mi.id", 10, "0"));
         case PRIORITY: // 0 or 1 or 2
             return Db.getInstance().concat("(1 + " + Db.getInstance().sign(Db.getInstance().bitAND("mi.flags",
                     String.valueOf(Flag.BITMASK_HIGH_PRIORITY))) + " - " +
