@@ -26,6 +26,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
@@ -53,11 +54,18 @@ public class GetFolder extends MailDocumentHandler {
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
+        MailItem.Type view = null;
+        boolean recursive = true;
 
         ItemId iid;
         Element eFolder = request.getOptionalElement(MailConstants.E_FOLDER);
         if (eFolder != null) {
             iid = new ItemId(eFolder.getAttribute(MailConstants.A_FOLDER, DEFAULT_FOLDER_ID), zsc);
+            String v = eFolder.getAttribute(MailConstants.A_DEFAULT_VIEW, null);
+            if (v != null) {
+                view = MailItem.Type.of(v);
+            }
+            recursive = eFolder.getAttributeBool(MailConstants.A_RECURSIVE, true);
 
             String path = eFolder.getAttribute(MailConstants.A_PATH, null);
             if (path != null) {
@@ -91,7 +99,7 @@ public class GetFolder extends MailDocumentHandler {
                 OperationContextData.addGranteeNames(octxt, rootnode);
             else
                 OperationContextData.setNeedGranteeName(octxt, false);
-            Element folderRoot = encodeFolderNode(ifmt, octxt, response, rootnode, true);
+            Element folderRoot = encodeFolderNode(ifmt, octxt, response, rootnode, true, recursive ? -1 : 1, view);
             if (rootnode.mFolder != null && rootnode.mFolder instanceof Mountpoint)
                 handleMountpoint(request, context, iid, (Mountpoint) rootnode.mFolder, folderRoot);			
         }
@@ -100,18 +108,29 @@ public class GetFolder extends MailDocumentHandler {
     }
 
     public static Element encodeFolderNode(ItemIdFormatter ifmt, OperationContext octxt, Element parent, FolderNode node) {
-        return encodeFolderNode(ifmt, octxt, parent, node, false);
+        return encodeFolderNode(ifmt, octxt, parent, node, false, -1, null);
     }
 
-    private static Element encodeFolderNode(ItemIdFormatter ifmt, OperationContext octxt, Element parent, FolderNode node, boolean exposeAclAccessKey) {
+    private static Element encodeFolderNode(ItemIdFormatter ifmt, OperationContext octxt, Element parent, FolderNode node, boolean exposeAclAccessKey, int depth, MailItem.Type view) {
         Element eFolder;
-        if (node.mFolder != null)
+        if (node.mFolder != null) {
+            if (node.mFolder.getId() != Mailbox.ID_FOLDER_USER_ROOT && view != null && !node.mFolder.getDefaultView().equals(view)) {
+                return null;
+            }
             eFolder = ToXML.encodeFolder(parent, ifmt, octxt, node.mFolder, ToXML.NOTIFY_FIELDS, exposeAclAccessKey);
-        else
+        } else {
             eFolder = parent.addElement(MailConstants.E_FOLDER).addAttribute(MailConstants.A_ID, ifmt.formatItemId(node.mId)).addAttribute(MailConstants.A_NAME, node.mName);
+        }
 
+        if (depth == 0) {
+            return eFolder;
+        }
+        if (depth > 0) {
+            depth--;
+        }
+        
         for (FolderNode subNode : node.mSubfolders)
-            encodeFolderNode(ifmt, octxt, eFolder, subNode, exposeAclAccessKey);
+            encodeFolderNode(ifmt, octxt, eFolder, subNode, exposeAclAccessKey, depth, view);
 
         return eFolder;
     }
