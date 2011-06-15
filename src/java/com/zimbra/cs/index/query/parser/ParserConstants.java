@@ -93,61 +93,63 @@ interface ParserConstants {
   /** RegularExpression Id. */
   int DATE = 43;
   /** RegularExpression Id. */
-  int DAY = 44;
+  int MDATE = 44;
   /** RegularExpression Id. */
-  int WEEK = 45;
+  int DAY = 45;
   /** RegularExpression Id. */
-  int MONTH = 46;
+  int WEEK = 46;
   /** RegularExpression Id. */
-  int YEAR = 47;
+  int MONTH = 47;
   /** RegularExpression Id. */
-  int AFTER = 48;
+  int YEAR = 48;
   /** RegularExpression Id. */
-  int BEFORE = 49;
+  int AFTER = 49;
   /** RegularExpression Id. */
-  int APPT_START = 50;
+  int BEFORE = 50;
   /** RegularExpression Id. */
-  int APPT_END = 51;
+  int APPT_START = 51;
   /** RegularExpression Id. */
-  int CONV_START = 52;
+  int APPT_END = 52;
   /** RegularExpression Id. */
-  int CONV_END = 53;
+  int CONV_START = 53;
   /** RegularExpression Id. */
-  int SIZE = 54;
+  int CONV_END = 54;
   /** RegularExpression Id. */
-  int BIGGER = 55;
+  int SIZE = 55;
   /** RegularExpression Id. */
-  int SMALLER = 56;
+  int BIGGER = 56;
   /** RegularExpression Id. */
-  int CONV = 57;
+  int SMALLER = 57;
   /** RegularExpression Id. */
-  int CONV_COUNT = 58;
+  int CONV = 58;
   /** RegularExpression Id. */
-  int CONV_MINM = 59;
+  int CONV_COUNT = 59;
   /** RegularExpression Id. */
-  int CONV_MAXM = 60;
+  int CONV_MINM = 60;
   /** RegularExpression Id. */
-  int MODSEQ = 61;
+  int CONV_MAXM = 61;
   /** RegularExpression Id. */
-  int PRIORITY = 62;
+  int MODSEQ = 62;
   /** RegularExpression Id. */
-  int IS = 63;
+  int PRIORITY = 63;
   /** RegularExpression Id. */
-  int INID = 64;
+  int IS = 64;
   /** RegularExpression Id. */
-  int UNDERID = 65;
+  int INID = 65;
   /** RegularExpression Id. */
-  int HAS = 66;
+  int UNDERID = 66;
   /** RegularExpression Id. */
-  int TYPE = 67;
+  int HAS = 67;
   /** RegularExpression Id. */
-  int ATTACHMENT = 68;
+  int TYPE = 68;
   /** RegularExpression Id. */
-  int ITEM = 69;
+  int ATTACHMENT = 69;
   /** RegularExpression Id. */
-  int SORTBY = 70;
+  int ITEM = 70;
   /** RegularExpression Id. */
-  int SORT = 71;
+  int SORTBY = 71;
+  /** RegularExpression Id. */
+  int SORT = 72;
 
   /** Lexical state. */
   int TEXT = 0;
@@ -200,6 +202,7 @@ interface ParserConstants {
     "<_FIELD1>",
     "<_FIELD2>",
     "\"date:\"",
+    "\"mdate:\"",
     "\"day:\"",
     "\"week:\"",
     "\"month:\"",

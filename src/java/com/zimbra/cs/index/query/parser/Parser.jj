@@ -84,6 +84,7 @@ final class Parser/*@bgen(jjtree)*/implements ParserTreeConstants/*@egen*/ {/*@b
 }
 
 <DEFAULT> TOKEN : {    <DATE: "date:">
+|   <MDATE: "mdate:">
 |   <DAY: "day:">
 |   <WEEK: "week:">
 |   <MONTH: "month:">
@@ -356,7 +357,7 @@ private void TextField()       : {
 
 private void DateField()       : {
 }
-{    <DATE> | <DAY> | <MONTH> | <WEEK> | <YEAR>
+{    <DATE> | <MDATE> | <DAY> | <MONTH> | <WEEK> | <YEAR>
 |   <AFTER> | <BEFORE> | <CONV_START> | <CONV_END> | <APPT_START> | <APPT_END>
 }
 

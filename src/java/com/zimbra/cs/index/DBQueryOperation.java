@@ -282,6 +282,11 @@ public class DBQueryOperation extends QueryOperation {
         getTopLeafConstraint().addDateRange(min, minInclusive, max, maxInclusive, bool);
     }
 
+    public void addMDateRange(long min, boolean minInclusive, long max, boolean maxInclusive, boolean bool) {
+        allResultsQuery = false;
+        getTopLeafConstraint().addMDateRange(min, minInclusive, max, maxInclusive, bool);
+    }
+
     public void addCalStartDateRange(long min, boolean minInclusive, long max, boolean maxInclusive, boolean bool) {
         allResultsQuery = false;
         getTopLeafConstraint().addCalStartDateRange(min, minInclusive, max, maxInclusive, bool);

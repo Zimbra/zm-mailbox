@@ -17,16 +17,20 @@ package com.zimbra.cs.index;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
+import com.google.common.base.Supplier;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbSearch;
@@ -200,14 +204,14 @@ public interface DbSearchConstraints extends Cloneable {
         // A possible result must match *ALL* the range constraints below.  It might seem strange that we don't
         // just combine the ranges -- yes this would be easy for positive ranges (foo>5 AND foo >7 and foo<10)
         // but it quickly gets very complicated with negative ranges such as (3<foo<100 AND NOT 7<foo<20)
-        public Set<NumericRange> dateRanges = new HashSet<NumericRange>(); // optional
-        public Set<NumericRange> calStartDateRanges = new HashSet<NumericRange>(); // optional
-        public Set<NumericRange> calEndDateRanges = new HashSet<NumericRange>(); // optional
-        public Set<NumericRange> modSeqRanges = new HashSet<NumericRange>(); // optional
-        public Set<NumericRange> sizeRanges = new HashSet<NumericRange>(); // optional
-        public Set<NumericRange> convCountRanges = new HashSet<NumericRange>(); // optional
-        public Set<StringRange> subjectRanges = new HashSet<StringRange>(); // optional
-        public Set<StringRange> senderRanges = new HashSet<StringRange>(); // optional
+        public Multimap<RangeType, Range> ranges = Multimaps.newMultimap(
+                new EnumMap<RangeType, Collection<Range>>(RangeType.class), new Supplier<Set<Range>>() {
+                    @Override
+                    public Set<Range> get() {
+                        return new HashSet<Range>();
+                    }
+                }
+        );
         public CursorRange cursorRange; // optional
 
         private Set<MailItem.Type> calcTypes() {
@@ -239,9 +243,9 @@ public interface DbSearchConstraints extends Cloneable {
          * Returns TRUE if these constraints have a constraint that requires a join with the Appointment table.
          */
         public boolean hasAppointmentTableConstraints() {
-            Set<MailItem.Type> fullTypes = calcTypes();
-            return ((!calStartDateRanges.isEmpty() || !calEndDateRanges.isEmpty()) &&
-                    (fullTypes.contains(MailItem.Type.APPOINTMENT) || fullTypes.contains(MailItem.Type.TASK)));
+            Set<MailItem.Type> types = calcTypes();
+            return ((ranges.containsKey(RangeType.CAL_START_DATE) || ranges.containsKey(RangeType.CAL_END_DATE)) &&
+                    (types.contains(MailItem.Type.APPOINTMENT) || types.contains(MailItem.Type.TASK)));
         }
 
         /**
@@ -249,13 +253,10 @@ public interface DbSearchConstraints extends Cloneable {
          * {@link MailItem.Type#MESSAGE}, and no other conditions are specified. Otherwise returns null.
          */
         public Folder getOnlyFolder() {
-            if (folders.size() == 1 && excludeFolders.isEmpty() &&
+            if (folders.size() == 1 && excludeFolders.isEmpty() && indexIds.isEmpty() && ranges.isEmpty() &&
                     types.contains(MailItem.Type.MESSAGE) && !excludeTypes.contains(MailItem.Type.MESSAGE) &&
                     tags.isEmpty() && excludeTags.isEmpty() && convId == 0 &&
-                    prohibitedConvIds.isEmpty() && itemIds.isEmpty() && prohibitedItemIds.isEmpty() &&
-                    indexIds.isEmpty() && dateRanges.isEmpty() && calStartDateRanges.isEmpty() &&
-                    calEndDateRanges.isEmpty() && modSeqRanges.isEmpty() && sizeRanges.isEmpty() &&
-                    convCountRanges.isEmpty() && subjectRanges.isEmpty() && senderRanges.isEmpty()) {
+                    prohibitedConvIds.isEmpty() && itemIds.isEmpty() && prohibitedItemIds.isEmpty()) {
                 return Iterables.getOnlyElement(folders);
             } else {
                 return null;
@@ -272,10 +273,11 @@ public interface DbSearchConstraints extends Cloneable {
          *    null   everything else
          */
         public Boolean getIsSoloPart() {
+            Collection<Range> convCountRanges = ranges.get(RangeType.CONV_COUNT);
             if (convCountRanges.size() != 1) {
                 return null;
             }
-            NumericRange range = Iterables.getOnlyElement(convCountRanges);
+            NumericRange range = (NumericRange) Iterables.getOnlyElement(convCountRanges);
             if (range.max == 1 && range.maxInclusive && range.min == 1 && range.minInclusive) {
                 return range.bool;
             } else {
@@ -308,14 +310,7 @@ public interface DbSearchConstraints extends Cloneable {
             result.indexIds = new HashSet<Integer>(indexIds);
             result.types = EnumSet.copyOf(types);
             result.excludeTypes = EnumSet.copyOf(excludeTypes);
-            result.dateRanges = new HashSet<NumericRange>(dateRanges);
-            result.calStartDateRanges = new HashSet<NumericRange>(calStartDateRanges);
-            result.calEndDateRanges = new HashSet<NumericRange>(calEndDateRanges);
-            result.modSeqRanges = new HashSet<NumericRange>(modSeqRanges);
-            result.sizeRanges = new HashSet<NumericRange>(sizeRanges);
-            result.convCountRanges = new HashSet<NumericRange>(convCountRanges);
-            result.subjectRanges = new HashSet<StringRange>(subjectRanges);
-            result.senderRanges = new HashSet<StringRange>(senderRanges);
+            result.ranges.putAll(ranges);
             result.fromContact = fromContact;
             return result;
         }
@@ -431,29 +426,8 @@ public interface DbSearchConstraints extends Cloneable {
                 Joiner.on(' ').appendTo(out, excludeTypes);
                 out.append(") ");
             }
-            for (NumericRange range : dateRanges) {
-                range.toQueryString("DATE", out).append(' ');
-            }
-            for (NumericRange range : calStartDateRanges) {
-                range.toQueryString("APPT-START", out).append(' ');
-            }
-            for (NumericRange range : calEndDateRanges) {
-                range.toQueryString("APPT-END", out).append(' ');
-            }
-            for (NumericRange range : modSeqRanges) {
-                range.toQueryString("MODSEQ", out).append(' ');
-            }
-            for (NumericRange range : sizeRanges) {
-                range.toQueryString("SIZE", out).append(' ');
-            }
-            for (NumericRange range : convCountRanges) {
-                range.toQueryString("CONV-COUNT", out).append(' ');
-            }
-            for (StringRange range : subjectRanges) {
-                range.toQueryString("SUBJECT", out).append(' ');
-            }
-            for (StringRange range : senderRanges) {
-                range.toQueryString("FROM", out).append(' ');
+            for (Map.Entry<RangeType, Range> entry : ranges.entries()) {
+                entry.getValue().toQueryString(entry.getKey().toQuery(), out).append(' ');
             }
             if (fromContact != null) {
                 out.append(fromContact ? "IS:fromcontact" : "-IS:fromcontact");
@@ -596,14 +570,7 @@ public interface DbSearchConstraints extends Cloneable {
             }
 
             excludeTypes.addAll(other.excludeTypes);
-            dateRanges.addAll(other.dateRanges);
-            calStartDateRanges.addAll(other.calStartDateRanges);
-            calEndDateRanges.addAll(other.calEndDateRanges);
-            modSeqRanges.addAll(other.modSeqRanges);
-            sizeRanges.addAll(other.sizeRanges);
-            convCountRanges.addAll(other.convCountRanges);
-            subjectRanges.addAll(other.subjectRanges);
-            senderRanges.addAll(other.senderRanges);
+            ranges.putAll(other.ranges);
 
             if (other.fromContact != null) {
                 if (fromContact != null) {
@@ -612,23 +579,6 @@ public interface DbSearchConstraints extends Cloneable {
                     }
                 } else {
                     fromContact = other.fromContact;
-                }
-            }
-        }
-
-        public void validate() {
-            validate(dateRanges);
-            validate(calStartDateRanges);
-            validate(calEndDateRanges);
-            validate(modSeqRanges);
-            validate(convCountRanges);
-        }
-
-        void validate(Collection<NumericRange> ranges) {
-            for (Iterator<NumericRange> itr = ranges.iterator(); itr.hasNext(); ) {
-                NumericRange range = itr.next();
-                if (!range.isValid()) {
-                    itr.remove();
                 }
             }
         }
@@ -755,36 +705,67 @@ public interface DbSearchConstraints extends Cloneable {
             }
         }
 
-        void addDateRange(long min, boolean minInclusive, long max, boolean maxInclusive, boolean bool) {
-            dateRanges.add(new NumericRange(min, minInclusive, max, maxInclusive, bool));
+        public void addDateRange(long min, boolean minInclusive, long max, boolean maxInclusive, boolean bool) {
+            if (min < 0 && max < 0) {
+                return;
+            }
+            ranges.put(RangeType.DATE, new NumericRange(min, minInclusive, max, maxInclusive, bool));
         }
 
-        void addCalStartDateRange(long min, boolean minInclusive, long max, boolean maxInclusive, boolean bool) {
-            calStartDateRanges.add(new NumericRange(min, minInclusive, max, maxInclusive, bool));
+        public void addMDateRange(long min, boolean minInclusive, long max, boolean maxInclusive, boolean bool) {
+            if (min < 0 && max < 0) {
+                return;
+            }
+            ranges.put(RangeType.MDATE, new NumericRange(min, minInclusive, max, maxInclusive, bool));
         }
 
-        void addCalEndDateRange(long min, boolean minInclusive, long max, boolean maxInclusive, boolean bool) {
-            calEndDateRanges.add(new NumericRange(min, minInclusive, max, maxInclusive, bool));
+        public void addCalStartDateRange(long min, boolean minInclusive, long max, boolean maxInclusive, boolean bool) {
+            if (min < 0 && max < 0) {
+                return;
+            }
+            ranges.put(RangeType.CAL_START_DATE, new NumericRange(min, minInclusive, max, maxInclusive, bool));
         }
 
-        void addModSeqRange(long min, boolean minInclusive, long max, boolean maxInclusive, boolean bool) {
-            modSeqRanges.add(new NumericRange(min, minInclusive, max, maxInclusive, bool));
+        public void addCalEndDateRange(long min, boolean minInclusive, long max, boolean maxInclusive, boolean bool) {
+            if (min < 0 && max < 0) {
+                return;
+            }
+            ranges.put(RangeType.CAL_END_DATE, new NumericRange(min, minInclusive, max, maxInclusive, bool));
         }
 
-        void addConvCountRange(long min, boolean minInclusive, long max, boolean maxInclusive, boolean bool) {
-            convCountRanges.add(new NumericRange(min, minInclusive, max, maxInclusive, bool));
+        public void addModSeqRange(long min, boolean minInclusive, long max, boolean maxInclusive, boolean bool) {
+            if (min < 0 && max < 0) {
+                return;
+            }
+            ranges.put(RangeType.CAL_END_DATE, new NumericRange(min, minInclusive, max, maxInclusive, bool));
         }
 
-        void addSizeRange(long min, boolean minInclusive, long max, boolean maxInclusive, boolean bool) {
-            sizeRanges.add(new NumericRange(min, minInclusive, max, maxInclusive, bool));
+        public void addConvCountRange(long min, boolean minInclusive, long max, boolean maxInclusive, boolean bool) {
+            if (min < 0 && max < 0) {
+                return;
+            }
+            ranges.put(RangeType.CONV_COUNT, new NumericRange(min, minInclusive, max, maxInclusive, bool));
         }
 
-        void addSubjectRange(String min, boolean minInclusive, String max, boolean maxInclusive, boolean bool) {
-            subjectRanges.add(new StringRange(min, minInclusive, max, maxInclusive, bool));
+        public void addSizeRange(long min, boolean minInclusive, long max, boolean maxInclusive, boolean bool) {
+            if (min < 0 && max < 0) {
+                return;
+            }
+            ranges.put(RangeType.SIZE, new NumericRange(min, minInclusive, max, maxInclusive, bool));
         }
 
-        void addSenderRange(String min, boolean minInclusive, String max, boolean maxInclusive, boolean bool) {
-            senderRanges.add(new StringRange(min, minInclusive, max, maxInclusive, bool));
+        public void addSubjectRange(String min, boolean minInclusive, String max, boolean maxInclusive, boolean bool) {
+            if (min == null && max == null) {
+                return;
+            }
+            ranges.put(RangeType.SUBJECT, new StringRange(min, minInclusive, max, maxInclusive, bool));
+        }
+
+        public void addSenderRange(String min, boolean minInclusive, String max, boolean maxInclusive, boolean bool) {
+            if (min == null && max == null) {
+                return;
+            }
+            ranges.put(RangeType.SENDER, new StringRange(min, minInclusive, max, maxInclusive, bool));
         }
 
         void setCursorRange(String min, boolean minInclusive, String max, boolean maxInclusive, SortBy sort) {
@@ -1186,19 +1167,29 @@ public interface DbSearchConstraints extends Cloneable {
         }
     }
 
-    public static final class StringRange {
+    static abstract class Range {
         public final boolean bool;
-        public final String min;
         public final boolean minInclusive;
-        public final String max;
         public final boolean maxInclusive;
 
-        public StringRange(String min, boolean minInclusive, String max, boolean maxInclusive, boolean bool) {
-            this.min = min;
+        Range(boolean minInclusive, boolean maxInclusive, boolean bool) {
             this.minInclusive = minInclusive;
-            this.max = max;
             this.maxInclusive = maxInclusive;
             this.bool = bool;
+        }
+
+        abstract StringBuilder toQueryString(String name, StringBuilder out);
+    }
+
+    static final class StringRange extends Range {
+
+        public final String min;
+        public final String max;
+
+        public StringRange(String min, boolean minInclusive, String max, boolean maxInclusive, boolean bool) {
+            super(minInclusive, maxInclusive, bool);
+            this.min = min;
+            this.max = max;
         }
 
         @Override
@@ -1217,7 +1208,8 @@ public interface DbSearchConstraints extends Cloneable {
             return Objects.hashCode(bool, min, minInclusive, max, maxInclusive);
         }
 
-        private StringBuilder toQueryString(String name, StringBuilder out) {
+        @Override
+        StringBuilder toQueryString(String name, StringBuilder out) {
             if (!bool) {
                 out.append('-');
             }
@@ -1247,25 +1239,32 @@ public interface DbSearchConstraints extends Cloneable {
         public String toString() {
             return toQueryString("RANGE", new StringBuilder()).toString();
         }
+    }
 
-        boolean isValid() {
-            return min != null || max != null;
+    enum RangeType {
+        DATE("DATE"), MDATE("MDATE"), MODSEQ("MODSEQ"), SIZE("SIZE"), CONV_COUNT("CONV-COUNT"),
+        CAL_START_DATE("APPT-START"), CAL_END_DATE("APPT-END"), SUBJECT("SUBJECT"), SENDER("FROM");
+
+        private String query;
+
+        private RangeType(String query) {
+            this.query = query;
+        }
+
+        String toQuery() {
+            return query;
         }
     }
 
-    public static final class NumericRange {
-        public final boolean bool;
+    static final class NumericRange extends Range {
+
         public final long min;;
-        public final boolean minInclusive;
         public final long max;
-        public final boolean maxInclusive;
 
         public NumericRange(long min, boolean minInclusive, long max, boolean maxInclusive, boolean bool) {
+            super(minInclusive, maxInclusive, bool);
             this.min = min;
-            this.minInclusive = minInclusive;
             this.max = max;
-            this.maxInclusive = maxInclusive;
-            this.bool = bool;
         }
 
         @Override
@@ -1284,11 +1283,8 @@ public interface DbSearchConstraints extends Cloneable {
             return Objects.hashCode(bool, min, minInclusive, max, maxInclusive);
         }
 
-        boolean isValid() {
-            return min >= 0 || max >= 0;
-        }
-
-        private StringBuilder toQueryString(String name, StringBuilder out) {
+        @Override
+        StringBuilder toQueryString(String name, StringBuilder out) {
             if (!bool) {
                 out.append('-');
             }

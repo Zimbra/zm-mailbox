@@ -28,6 +28,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbUtil;
+import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -134,6 +137,48 @@ public final class ZimbraQueryTest {
         // The order of HashSet iteration may be different on different platforms.
         Assert.assertTrue(query.toQueryString().matches(
                 "\\(\\( content:test\\) AND -ID:/(Junk|Trash) -ID:/(Junk|Trash) \\)"));
+    }
+
+    @Test
+    public void mdate() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        DbConnection conn = DbPool.getConnection();
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, folder_id, type, flags, date, change_date, size, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 101, Mailbox.ID_FOLDER_INBOX,
+                MailItem.Type.MESSAGE.toByte(), 100, 1000);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, folder_id, type, flags, date, change_date, size, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 102, Mailbox.ID_FOLDER_INBOX,
+                MailItem.Type.MESSAGE.toByte(), 200, 2000);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, folder_id, type, flags, date, change_date, size, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 103, Mailbox.ID_FOLDER_INBOX,
+                MailItem.Type.MESSAGE.toByte(), 300, 3000);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, folder_id, type, flags, date, change_date, size, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 104, Mailbox.ID_FOLDER_INBOX,
+                MailItem.Type.MESSAGE.toByte(), 400, 4000);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, folder_id, type, flags, date, change_date, size, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 105, Mailbox.ID_FOLDER_INBOX,
+                MailItem.Type.MESSAGE.toByte(), 500, 5000);
+        conn.commit();
+        conn.closeQuietly();
+
+        SearchParams params = new SearchParams();
+        params.setQueryStr("mdate:>3000000");
+        params.setSortBy(SortBy.DATE_ASC);
+        params.setTypes(EnumSet.of(MailItem.Type.MESSAGE));
+        params.setMode(Mailbox.SearchResultMode.IDS);
+
+        ZimbraQuery query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
+        Assert.assertEquals("ZQ: Q(DATE:MDATE,197001010050-196912312359)", query.toString());
+        ZimbraQueryResults results = query.execute();
+        Assert.assertEquals(104, results.getNext().getItemId());
+        Assert.assertEquals(105, results.getNext().getItemId());
+        Assert.assertEquals(null, results.getNext());
     }
 
 }

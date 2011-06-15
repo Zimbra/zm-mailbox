@@ -212,4 +212,44 @@ public final class DbSearchTest {
         conn.closeQuietly();
     }
 
+    @Test
+    public void mdate() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        DbConnection conn = DbPool.getConnection();
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, flags, date, change_date, size, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 101, MailItem.Type.MESSAGE.toByte(), 100, 1000);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, flags, date, change_date, size, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 102, MailItem.Type.MESSAGE.toByte(), 200, 2000);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, flags, date, change_date, size, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 103, MailItem.Type.MESSAGE.toByte(), 300, 3000);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, flags, date, change_date, size, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 104, MailItem.Type.MESSAGE.toByte(), 400, 4000);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, flags, date, change_date, size, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 105, MailItem.Type.MESSAGE.toByte(), 500, 5000);
+
+        DbSearchConstraints.Leaf constraints = new DbSearchConstraints.Leaf();
+        constraints.addDateRange(200000, true, 400000, false, true);
+        List<DbSearch.Result> result = DbSearch.search(conn, mbox, constraints, SortBy.DATE_ASC, 0, 100,
+                DbSearch.FetchMode.ID, false);
+        Assert.assertEquals(2, result.size());
+        Assert.assertEquals(102, result.get(0).getId());
+        Assert.assertEquals(103, result.get(1).getId());
+
+        constraints = new DbSearchConstraints.Leaf();
+        constraints.addMDateRange(2000000, true, 4000000, false, true);
+        result = DbSearch.search(conn, mbox, constraints, SortBy.DATE_ASC, 0, 100,
+                DbSearch.FetchMode.ID, false);
+        Assert.assertEquals(2, result.size());
+        Assert.assertEquals(102, result.get(0).getId());
+        Assert.assertEquals(103, result.get(1).getId());
+
+        conn.closeQuietly();
+    }
+
 }

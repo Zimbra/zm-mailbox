@@ -104,7 +104,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 public final class DateQuery extends Query {
 
     public enum Type {
-        APPT_START, APPT_END, CONV_START, CONV_END, BEFORE, AFTER, DATE, DAY, WEEK, MONTH, YEAR
+        APPT_START, APPT_END, CONV_START, CONV_END, BEFORE, AFTER, DATE, MDATE, DAY, WEEK, MONTH, YEAR
     }
 
     private static final Pattern NUMERIC_DATE_PATTERN = Pattern.compile("^[0-9]+$");
@@ -151,6 +151,9 @@ public final class DateQuery extends Query {
                 break;
             case APPT_END:
                 op.addCalEndDateRange(lowestTime, lowerEq, highestTime, higherEq, evalBool(bool));
+                break;
+            case MDATE:
+                op.addMDateRange(lowestTime, lowerEq, highestTime, higherEq, evalBool(bool));
                 break;
             default:
                 op.addDateRange(lowestTime, lowerEq, highestTime, higherEq, evalBool(bool));

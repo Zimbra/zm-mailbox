@@ -525,6 +525,8 @@ public final class QueryParser {
                 return ConvCountQuery.create(text);
             case DATE:
                 return createDateQuery(DateQuery.Type.DATE, term, text);
+            case MDATE:
+                return createDateQuery(DateQuery.Type.MDATE, term, text);
             case DAY:
                 return createDateQuery(DateQuery.Type.DAY, term, text);
             case WEEK:

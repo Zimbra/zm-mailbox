@@ -24,7 +24,8 @@ Query Syntax
   is:(anywhere|unread|read|flagged|unflagged|sent|received|replied|unreplied|
       forwarded|unforwarded|invite|solo|tome|fromme|ccme|tofromme|fromccme|
       tofromccme|local|remote)
-  date:[>,<,>=,<=](DATE)
+  date:[>,<,>=,<=](DATE) // created date
+  mdate:[>,<,>=,<=](DATE) // modified date
   day:[>,<,>=,<=](DATE)
   week:[>,<,>=,<=](DATE)
   month:[>,<,>=,<=](DATE)

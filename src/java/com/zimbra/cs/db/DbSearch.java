@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.common.base.Objects;
@@ -293,7 +294,6 @@ public final class DbSearch {
         // we're here, so we must be in a DbSearchConstraints leaf node
         DbSearchConstraints.Leaf constraint = node.toLeaf();
         assert(node instanceof DbSearchConstraints.Leaf && constraint != null);
-        constraint.validate();
 
         // if there are no possible matches, short-circuit here...
         TagConstraints tc = TagConstraints.getTagConstraints(mbox, constraint, conn);
@@ -330,11 +330,42 @@ public final class DbSearch {
         if (constraint.cursorRange != null) {
             num += encodeRange(out, constraint.cursorRange);
         }
-        num += encodeRange(out, "mi.date", constraint.dateRanges, 1);
-        num += encodeRange(out, "mi.mod_metadata", constraint.modSeqRanges, 1);
-        num += encodeRange(out, "mi.size", constraint.sizeRanges, 0);
-        num += encodeRange(out, "mi.subject", constraint.subjectRanges);
-        num += encodeRange(out, "mi.sender", constraint.senderRanges);
+
+        for (Map.Entry<DbSearchConstraints.RangeType, DbSearchConstraints.Range> entry : constraint.ranges.entries()) {
+            switch (entry.getKey()) {
+                case DATE:
+                    num += encodeRange(out, "mi.date", (DbSearchConstraints.NumericRange) entry.getValue(), 1);
+                    break;
+                case MDATE:
+                    num += encodeRange(out, "mi.change_date", (DbSearchConstraints.NumericRange) entry.getValue(), 1);
+                    break;
+                case MODSEQ:
+                    num += encodeRange(out, "mi.mod_metadata", (DbSearchConstraints.NumericRange) entry.getValue(), 1);
+                    break;
+                case SIZE:
+                    num += encodeRange(out, "mi.size", (DbSearchConstraints.NumericRange) entry.getValue(), 0);
+                    break;
+                case CAL_START_DATE:
+                    if (inCalTable) {
+                        num += encodeRange(out, "ap.start_time", (DbSearchConstraints.NumericRange) entry.getValue(), 1);
+                    }
+                    break;
+                case CAL_END_DATE:
+                    if (inCalTable) {
+                        num += encodeRange(out, "ap.end_time", (DbSearchConstraints.NumericRange) entry.getValue(), 1);
+                    }
+                    break;
+                case SENDER:
+                    num += encodeRange(out, "mi.sender", (DbSearchConstraints.StringRange) entry.getValue());
+                    break;
+                case SUBJECT:
+                    num += encodeRange(out, "mi.subject", (DbSearchConstraints.StringRange) entry.getValue());
+                    break;
+                case CONV_COUNT:
+                default:
+                    break;
+            }
+        }
 
         Boolean isSoloPart = node.toLeaf().getIsSoloPart();
         if (isSoloPart != null) {
@@ -351,11 +382,6 @@ public final class DbSearch {
             } else {
                 out.append(" AND mi.index_id is NULL ");
             }
-        }
-
-        if (inCalTable) {
-            num += encodeRange(out, "ap.start_time", constraint.calStartDateRanges, 1);
-            num += encodeRange(out, "ap.end_time", constraint.calEndDateRanges, 1);
         }
 
         if (constraint.fromContact != null) {
@@ -607,66 +633,56 @@ public final class DbSearch {
     }
 
     private static final int setDateRange(PreparedStatement stmt, int param,
-            Collection<DbSearchConstraints.NumericRange> ranges) throws SQLException {
-        for (DbSearchConstraints.NumericRange range : ranges) {
-            if (range.min > 0) {
-                stmt.setInt(param++, (int) Math.min(range.min / 1000, Integer.MAX_VALUE));
-            }
-            if (range.max > 0) {
-                stmt.setInt(param++, (int) Math.min(range.max / 1000, Integer.MAX_VALUE));
-            }
+            DbSearchConstraints.NumericRange range) throws SQLException {
+        if (range.min > 0) {
+            stmt.setInt(param++, (int) Math.min(range.min / 1000, Integer.MAX_VALUE));
+        }
+        if (range.max > 0) {
+            stmt.setInt(param++, (int) Math.min(range.max / 1000, Integer.MAX_VALUE));
         }
         return param;
     }
 
     private static final int setTimestampRange(PreparedStatement stmt, int param,
-            Collection<DbSearchConstraints.NumericRange> ranges) throws SQLException {
-        for (DbSearchConstraints.NumericRange range : ranges) {
-            if (range.min > 0) {
-                stmt.setTimestamp(param++, new Timestamp(range.min));
-            }
-            if (range.max > 0) {
-                stmt.setTimestamp(param++, new Timestamp(range.max));
-            }
+            DbSearchConstraints.NumericRange range) throws SQLException {
+        if (range.min > 0) {
+            stmt.setTimestamp(param++, new Timestamp(range.min));
+        }
+        if (range.max > 0) {
+            stmt.setTimestamp(param++, new Timestamp(range.max));
         }
         return param;
     }
 
     private static final int setLongRange(PreparedStatement stmt, int param,
-            Collection<DbSearchConstraints.NumericRange> ranges, int min) throws SQLException {
-        for (DbSearchConstraints.NumericRange range : ranges) {
-            if (range.min >= min) {
-                stmt.setLong(param++, range.min);
-            }
-            if (range.max >= min) {
-                stmt.setLong(param++, range.max);
-            }
+            DbSearchConstraints.NumericRange range, int min) throws SQLException {
+        if (range.min >= min) {
+            stmt.setLong(param++, range.min);
+        }
+        if (range.max >= min) {
+            stmt.setLong(param++, range.max);
         }
         return param;
     }
 
     private static final int setIntRange(PreparedStatement stmt, int param,
-            Collection<DbSearchConstraints.NumericRange> ranges, int min) throws SQLException {
-        for (DbSearchConstraints.NumericRange range : ranges) {
-            if (range.min >= min) {
-                stmt.setInt(param++, (int) range.min);
-            }
-            if (range.max >= min) {
-                stmt.setInt(param++, (int) range.max);
-            }
+            DbSearchConstraints.NumericRange range, int min) throws SQLException {
+        if (range.min >= min) {
+            stmt.setInt(param++, (int) range.min);
+        }
+        if (range.max >= min) {
+            stmt.setInt(param++, (int) range.max);
         }
         return param;
     }
 
     private static final int setStringRange(PreparedStatement stmt, int param,
-            Collection<DbSearchConstraints.StringRange> ranges) throws SQLException {
-        for (DbSearchConstraints.StringRange range: ranges) {
-            if (range.min != null) {
-                stmt.setString(param++, range.min.replace("\\\"", "\""));
-            }
-            if (range.max != null) {
-                stmt.setString(param++, range.max.replace("\\\"", "\""));
-            }
+            DbSearchConstraints.StringRange range) throws SQLException {
+        if (range.min != null) {
+            stmt.setString(param++, range.min.replace("\\\"", "\""));
+        }
+        if (range.max != null) {
+            stmt.setString(param++, range.max.replace("\\\"", "\""));
         }
         return param;
     }
@@ -769,65 +785,54 @@ public final class DbSearch {
     /**
      * @return number of parameters bound
      */
-    private static final int encodeRange(StringBuilder out, String column,
-            Collection<DbSearchConstraints.NumericRange> ranges, long min) {
-        if (ranges.isEmpty()) {
-            return 0;
-        }
-        if (Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON) && isCaseSensitiveField(column) ) {
+    private static final int encodeRange(StringBuilder out, String column, DbSearchConstraints.NumericRange range,
+            long min) {
+        if (Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON) && isCaseSensitiveField(column)) {
             column = "UPPER(" + column + ")";
         }
-        int params = 0;
-        for (DbSearchConstraints.NumericRange range : ranges) {
-            boolean lowValid = range.min >= min;
-            boolean highValid = range.max >= min;
-            if (!(lowValid || highValid)) {
-                continue;
-            }
-            out.append(range.bool ? " AND (" : " AND NOT (");
-            if (lowValid) {
-                out.append(column).append(range.minInclusive ? " >= ?" : " > ?");
-                params++;
-            }
-            if (highValid) {
-                if (lowValid) {
-                    out.append(" AND ");
-                }
-                out.append(column).append(range.maxInclusive ? " <= ?" : " < ?");
-                params++;
-            }
-            out.append(')');
+        boolean lowValid = range.min >= min;
+        boolean highValid = range.max >= min;
+        if (!(lowValid || highValid)) {
+            return 0;
         }
+        int params = 0;
+        out.append(range.bool ? " AND (" : " AND NOT (");
+        if (lowValid) {
+            out.append(column).append(range.minInclusive ? " >= ?" : " > ?");
+            params++;
+        }
+        if (highValid) {
+            if (lowValid) {
+                out.append(" AND ");
+            }
+            out.append(column).append(range.maxInclusive ? " <= ?" : " < ?");
+            params++;
+        }
+        out.append(')');
         return params;
     }
 
     /**
      * @return number of parameters bound
      */
-    private static final int encodeRange(StringBuilder out, String column,
-            Collection<DbSearchConstraints.StringRange> ranges) {
-        if (ranges.isEmpty()) {
-            return 0;
-        }
+    private static final int encodeRange(StringBuilder out, String column, DbSearchConstraints.StringRange range) {
         if (Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON) && isCaseSensitiveField(column)) {
             column = "UPPER(" + column + ")";
         }
         int params = 0;
-        for (DbSearchConstraints.StringRange range : ranges) {
-            out.append(range.bool ?  " AND (" : " AND NOT (");
-            if (range.min != null) {
-                params++;
-                out.append(column).append(range.minInclusive ? " >= ?" : " > ?");
-            }
-            if (range.max != null) {
-                if (range.min != null) {
-                    out.append(" AND ");
-                }
-                params++;
-                out.append(column).append(range.maxInclusive ? " <= ?" : " < ?");
-            }
-            out.append(')');
+        out.append(range.bool ?  " AND (" : " AND NOT (");
+        if (range.min != null) {
+            params++;
+            out.append(column).append(range.minInclusive ? " >= ?" : " > ?");
         }
+        if (range.max != null) {
+            if (range.min != null) {
+                out.append(" AND ");
+            }
+            params++;
+            out.append(column).append(range.maxInclusive ? " <= ?" : " < ?");
+        }
+        out.append(')');
         return params;
     }
 
@@ -983,17 +988,41 @@ public final class DbSearch {
         if (leaf.cursorRange != null) {
             param = setCursorRange(stmt, param, leaf.cursorRange);
         }
-        param = setDateRange(stmt, param, leaf.dateRanges);
-        param = setLongRange(stmt, param, leaf.modSeqRanges, 1);
-        param = setIntRange(stmt, param, leaf.sizeRanges, 0);
-        param = setStringRange(stmt, param, leaf.subjectRanges);
-        param = setStringRange(stmt, param, leaf.senderRanges);
 
-        if (inCalTable) {
-            param = setTimestampRange(stmt, param, leaf.calStartDateRanges);
-            param = setTimestampRange(stmt, param, leaf.calEndDateRanges);
+        for (Map.Entry<DbSearchConstraints.RangeType, DbSearchConstraints.Range> entry : leaf.ranges.entries()) {
+            switch (entry.getKey()) {
+                case DATE:
+                    param = setDateRange(stmt, param, (DbSearchConstraints.NumericRange) entry.getValue());
+                    break;
+                case MDATE:
+                    param = setDateRange(stmt, param, (DbSearchConstraints.NumericRange) entry.getValue());
+                    break;
+                case MODSEQ:
+                    param = setLongRange(stmt, param, (DbSearchConstraints.NumericRange) entry.getValue(), 1);
+                    break;
+                case SIZE:
+                    param = setIntRange(stmt, param, (DbSearchConstraints.NumericRange) entry.getValue(), 0);
+                    break;
+                case CAL_START_DATE:
+                    if (inCalTable) {
+                        param = setTimestampRange(stmt, param, (DbSearchConstraints.NumericRange) entry.getValue());
+                    }
+                    break;
+                case CAL_END_DATE:
+                    if (inCalTable) {
+                        param = setTimestampRange(stmt, param, (DbSearchConstraints.NumericRange) entry.getValue());
+                    }
+                    break;
+                case SUBJECT:
+                    param = setStringRange(stmt, param, (DbSearchConstraints.StringRange) entry.getValue());
+                    break;
+                case SENDER:
+                    param = setStringRange(stmt, param, (DbSearchConstraints.StringRange) entry.getValue());
+                case CONV_COUNT:
+                default:
+                    break;
+            }
         }
-
         return param;
     }
 
