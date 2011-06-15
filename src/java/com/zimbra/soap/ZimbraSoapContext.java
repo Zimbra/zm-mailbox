@@ -31,6 +31,7 @@ import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
@@ -258,14 +259,22 @@ public final class ZimbraSoapContext {
                 mRequestedAccountId = null;
             } else if (key.equals(HeaderConstants.BY_NAME)) {
                 Account account = prov.get(AccountBy.name, value, mAuthToken);
-                if (account == null)
-                    throw ServiceException.DEFEND_ACCOUNT_HARVEST(value);
+                if (account == null) {
+                    if (mAuthToken == null || !mAuthToken.isAdmin())
+                        throw ServiceException.DEFEND_ACCOUNT_HARVEST(value);
+                    else
+                        throw AccountServiceException.NO_SUCH_ACCOUNT(value);
+                }
 
                 mRequestedAccountId = account.getId();
             } else if (key.equals(HeaderConstants.BY_ID)) {
                 Account account = prov.get(AccountBy.id, value, mAuthToken);
-                if (account == null)
-                    throw ServiceException.DEFEND_ACCOUNT_HARVEST(value);
+                if (account == null) {
+                    if (mAuthToken == null || !mAuthToken.isAdmin())
+                        throw ServiceException.DEFEND_ACCOUNT_HARVEST(value);
+                    else
+                        throw AccountServiceException.NO_SUCH_ACCOUNT(value);
+                }
 
                 mRequestedAccountId = value;
             } else {
