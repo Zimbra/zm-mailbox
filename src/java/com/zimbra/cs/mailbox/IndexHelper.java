@@ -947,6 +947,12 @@ public class IndexHelper {
     }
 
     void indexingPartOfEndTransaction(List<IndexItemEntry> itemsToIndex, List<Integer> itemsToDelete) {
+        // if reindex is in progress, don't update HighestSubmittedToIndex.
+        if (mFullReindexInProgress && !Thread.currentThread().getName().startsWith(sReIndexThreadPool.getName())) {
+            ZimbraLog.index.warn("Reindex is in progress");
+            return;
+        }
+
         if (itemsToDelete != null && !itemsToDelete.isEmpty()) {
             try {
                 getMailboxIndex().deleteDocuments(itemsToDelete);
