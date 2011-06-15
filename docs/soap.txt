@@ -606,7 +606,7 @@ effect if called in a <nosession> context.
    <attr name="{name}">{value}</a>+
    <soapURL>{mail-url}</soapURL>+
    <publicURL>{account-base-public-url}</publicURL>
-</GetInfoResponse>
+</GetAccountInfoResponse>
 
   {account-name} = email address (user@domain)
 
@@ -2741,7 +2741,7 @@ Actions:
   </actionReply>
   <actionNotify a="email-address" [su="subject-template"] [maxBodySize="{num-bytes}"]>
     <content>{body-template}</content> ?
-  </actionReply>
+  </actionNotify>
 
 Each action has an optional "index" attribute which specifies a guaranteed order
 for the action elements.
