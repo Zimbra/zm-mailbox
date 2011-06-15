@@ -99,4 +99,33 @@ public final class LuceneQueryOperationTest {
         results.close();
     }
 
+    @Test
+    public void subjectQuery() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
+        Message msg = mbox.addMessage(null, new ParsedMessage("Subject: one two three".getBytes(), false), dopt, null);
+        MailboxTestUtil.index(mbox);
+
+        // phrase query
+        SearchParams params = new SearchParams();
+        params.setQueryStr("subject:\"one two three\"");
+        params.setTypes(EnumSet.of(MailItem.Type.MESSAGE));
+        params.setSortBy(SortBy.NONE);
+        ZimbraQuery query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
+        ZimbraQueryResults results = query.execute();
+        Assert.assertTrue(results.hasNext());
+        Assert.assertEquals(msg.getId(), results.getNext().getItemId());
+        results.close();
+
+        // verify subject is not repeated during index
+        params = new SearchParams();
+        params.setQueryStr("subject:\"three one\"");
+        params.setTypes(EnumSet.of(MailItem.Type.MESSAGE));
+        params.setSortBy(SortBy.NONE);
+        query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
+        results = query.execute();
+        Assert.assertFalse(results.hasNext());
+        results.close();
+    }
+
 }
