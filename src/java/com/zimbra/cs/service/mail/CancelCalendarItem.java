@@ -117,21 +117,23 @@ public class CancelCalendarItem extends CalendarRequest {
                 if (seriesInv.getMethod().equals(ICalTok.REQUEST.toString()) ||
                     seriesInv.getMethod().equals(ICalTok.PUBLISH.toString())) {
 
-                    // Send cancel notice to attendees who were invited to exception instances only.
-                    // These attendees need to be notified separately because they aren't included in the series
-                    // cancel notice.
-                    List<ZAttendee> atsSeries = seriesInv.getAttendees();
-                    Invite[] invs = calItem.getInvites();
-                    for (Invite exceptInv : invs) {
-                        if (exceptInv != seriesInv) {
-                            String mthd = exceptInv.getMethod();
-                            if (mthd.equals(ICalTok.REQUEST.toString()) || mthd.equals(ICalTok.PUBLISH.toString())) {
-                                List<ZAttendee> atsExcept = exceptInv.getAttendees();
-                                // Find exception instance attendees who aren't series attendees.
-                                List<ZAttendee> ats = CalendarUtils.getRemovedAttendees(atsExcept, atsSeries, false, acct);
-                                if (!ats.isEmpty()) {
-                                    // notify ats
-                                    cancelInstance(zsc, octxt, null, acct, mbox, calItem, exceptInv, exceptInv.getRecurId(), ats);
+                    if (seriesInv.isOrganizer()) {
+                        // Send cancel notice to attendees who were invited to exception instances only.
+                        // These attendees need to be notified separately because they aren't included in the series
+                        // cancel notice.
+                        List<ZAttendee> atsSeries = seriesInv.getAttendees();
+                        Invite[] invs = calItem.getInvites();
+                        for (Invite exceptInv : invs) {
+                            if (exceptInv != seriesInv) {
+                                String mthd = exceptInv.getMethod();
+                                if (mthd.equals(ICalTok.REQUEST.toString()) || mthd.equals(ICalTok.PUBLISH.toString())) {
+                                    List<ZAttendee> atsExcept = exceptInv.getAttendees();
+                                    // Find exception instance attendees who aren't series attendees.
+                                    List<ZAttendee> ats = CalendarUtils.getRemovedAttendees(atsExcept, atsSeries, false, acct);
+                                    if (!ats.isEmpty()) {
+                                        // notify ats
+                                        cancelInstance(zsc, octxt, null, acct, mbox, calItem, exceptInv, exceptInv.getRecurId(), ats);
+                                    }
                                 }
                             }
                         }
