@@ -124,7 +124,7 @@ public class ParsedMessage {
     private String mSubject;
     private String mNormalizedSubject;
     private boolean mSubjectIsReply;
-    private List<IndexDocument> mZDocuments = new ArrayList<IndexDocument>();
+    private final List<IndexDocument> luceneDocuments = new ArrayList<IndexDocument>(2);
     private CalendarPartInfo mCalendarPartInfo;
 
     private boolean mWasMutated;
@@ -425,7 +425,7 @@ public class ParsedMessage {
             }
 
             // requires FULL content (all parts)
-            mZDocuments.add(setLuceneHeadersFromContainer(getMainBodyLuceneDocument(fullContent)));
+            luceneDocuments.add(getMainBodyLuceneDocument(fullContent));
 
             // we're done with the body content (saved from analyzeBodyParts()) now
             mBodyContent = "";
@@ -803,7 +803,7 @@ public class ParsedMessage {
         } catch (ServiceException e) {
             sLog.warn("message analysis failed when getting lucene documents");
         }
-        return mZDocuments;
+        return luceneDocuments;
     }
 
     /**
@@ -1072,7 +1072,7 @@ public class ParsedMessage {
                         mFilenames.add(filename);
                     }
                     doc.addSortSize(mpi.getMimePart().getSize());
-                    mZDocuments.add(setLuceneHeadersFromContainer(doc));
+                    luceneDocuments.add(setLuceneHeadersFromContainer(doc));
                 }
             }
 
@@ -1132,7 +1132,7 @@ public class ParsedMessage {
             doc.addSortSize(mpi.getMimePart().getSize());
         } catch (MessagingException ignore) {
         }
-        mZDocuments.add(setLuceneHeadersFromContainer(doc));
+        luceneDocuments.add(setLuceneHeadersFromContainer(doc));
     }
 
     private static final void appendToContent(StringBuilder sb, String s) {
