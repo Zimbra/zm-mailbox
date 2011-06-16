@@ -243,11 +243,43 @@ public final class DbSearchTest {
 
         constraints = new DbSearchConstraints.Leaf();
         constraints.addMDateRange(2000000, true, 4000000, false, true);
-        result = DbSearch.search(conn, mbox, constraints, SortBy.DATE_ASC, 0, 100,
-                DbSearch.FetchMode.ID, false);
+        result = DbSearch.search(conn, mbox, constraints, SortBy.DATE_ASC, 0, 100, DbSearch.FetchMode.ID, false);
         Assert.assertEquals(2, result.size());
         Assert.assertEquals(102, result.get(0).getId());
         Assert.assertEquals(103, result.get(1).getId());
+
+        conn.closeQuietly();
+    }
+
+    @Test
+    public void caseInsensitiveSort() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        DbConnection conn = DbPool.getConnection();
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, flags, date, size, tags, mod_metadata, mod_content, sender) " +
+                "VALUES(?, ?, ?, 0, 0, 0, 0, 0, 0, ?)", mbox.getId(), 101, MailItem.Type.CONTACT.toByte(), "Zimbra");
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, flags, date, size, tags, mod_metadata, mod_content, sender) " +
+                "VALUES(?, ?, ?, 0, 0, 0, 0, 0, 0, ?)", mbox.getId(), 102, MailItem.Type.CONTACT.toByte(), "AAA");
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, flags, date, size, tags, mod_metadata, mod_content, sender) " +
+                "VALUES(?, ?, ?, 0, 0, 0, 0, 0, 0, ?)", mbox.getId(), 103, MailItem.Type.CONTACT.toByte(), "aaa");
+
+        DbSearchConstraints.Leaf constraints = new DbSearchConstraints.Leaf();
+        List<DbSearch.Result> result = DbSearch.search(conn, mbox, constraints, SortBy.NAME_ASC, 0, 100,
+                DbSearch.FetchMode.ID, false);
+        Assert.assertEquals(3, result.size());
+        Assert.assertEquals(102, result.get(0).getId());
+        Assert.assertEquals(103, result.get(1).getId());
+        Assert.assertEquals(101, result.get(2).getId());
+
+        constraints = new DbSearchConstraints.Leaf();
+        result = DbSearch.search(conn, mbox, constraints, SortBy.NAME_DESC, 0, 100, DbSearch.FetchMode.ID, false);
+        Assert.assertEquals(3, result.size());
+        Assert.assertEquals(101, result.get(0).getId());
+        Assert.assertEquals(103, result.get(1).getId());
+        Assert.assertEquals(102, result.get(2).getId());
 
         conn.closeQuietly();
     }

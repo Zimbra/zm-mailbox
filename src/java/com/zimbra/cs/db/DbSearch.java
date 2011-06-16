@@ -90,42 +90,46 @@ public final class DbSearch {
     }
 
     private static String toSortField(SortBy sort) {
+        Db db = Db.getInstance();
         switch (sort.getKey()) {
-        case NONE:
-            return null;
-        case SENDER:
-            return toStringSortField("mi.sender");
-        case RCPT:
-            return toStringSortField("mi.recipients");
-        case SUBJECT:
-            return toStringSortField("mi.subject");
-        case NAME:
-        case NAME_NATURAL_ORDER:
-            return toStringSortField("mi.name");
-        case ID:
-            return "mi.id";
-        case SIZE:
-            return "mi.size";
-        case ATTACHMENT: // 0 or 1
-            return Db.getInstance().concat(Db.getInstance().sign(Db.getInstance().bitAND("mi.flags",
-                    String.valueOf(Flag.BITMASK_ATTACHED))), Db.getInstance().lpad("mi.id", 10, "0"));
-        case FLAG: // 0 or 1
-            return Db.getInstance().concat(Db.getInstance().sign(Db.getInstance().bitAND("mi.flags",
-                    String.valueOf(Flag.BITMASK_FLAGGED))), Db.getInstance().lpad("mi.id", 10, "0"));
-        case PRIORITY: // 0 or 1 or 2
-            return Db.getInstance().concat("(1 + " + Db.getInstance().sign(Db.getInstance().bitAND("mi.flags",
-                    String.valueOf(Flag.BITMASK_HIGH_PRIORITY))) + " - " +
-                    Db.getInstance().sign(Db.getInstance().bitAND("mi.flags",
-                    String.valueOf(Flag.BITMASK_LOW_PRIORITY))) + ")", Db.getInstance().lpad("mi.id", 10, "0"));
-        case DATE:
-        default:
-            return "mi.date";
+            case NONE:
+                return null;
+            case SENDER:
+                return toStringSortField("mi.sender");
+            case RCPT:
+                return toStringSortField("mi.recipients");
+            case SUBJECT:
+                return toStringSortField("mi.subject");
+            case NAME:
+            case NAME_NATURAL_ORDER:
+                return toStringSortField("mi.name");
+            case ID:
+                return "mi.id";
+            case SIZE:
+                return "mi.size";
+            case ATTACHMENT: // 0 or 1
+                return db.concat(db.sign(db.bitAND("mi.flags", String.valueOf(Flag.BITMASK_ATTACHED))),
+                        db.lpad("mi.id", 10, "0"));
+            case FLAG: // 0 or 1
+                return db.concat(db.sign(db.bitAND("mi.flags", String.valueOf(Flag.BITMASK_FLAGGED))),
+                        db.lpad("mi.id", 10, "0"));
+            case PRIORITY: // 0 or 1 or 2
+                return db.concat("(1 + " + db.sign(db.bitAND("mi.flags", String.valueOf(Flag.BITMASK_HIGH_PRIORITY))) +
+                        " - " + db.sign(db.bitAND("mi.flags", String.valueOf(Flag.BITMASK_LOW_PRIORITY))) + ")",
+                        db.lpad("mi.id", 10, "0"));
+            case DATE:
+            default:
+                return "mi.date";
         }
     }
 
     private static String toStringSortField(String col) {
-        return Db.getInstance().concat((Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON) ? "UPPER(" + col + ")"
-                        : col), Db.getInstance().lpad("mi.id", 10, "0"));
+        Db db = Db.getInstance();
+        if (Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON)) {
+            return db.concat("UPPER(" + col + ")", db.lpad("mi.id", 10, "0"));
+        } else {
+            return db.concat(col, db.lpad("CAST(mi.id AS CHAR)", 10, "0"));
+        }
     }
 
     /**
