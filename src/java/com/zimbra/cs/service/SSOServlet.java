@@ -131,6 +131,7 @@ public abstract class SSOServlet extends ZimbraServlet {
             throw ServiceException.INVALID_REQUEST("cannot redirect to non-secure protocol: " + redirectUrl, null);
         }
         
+        ZimbraLog.account.debug("SSOServlet - redirecting (with auth token) to: " + redirectUrl);
         resp.sendRedirect(redirectUrl);
     }
     
@@ -158,6 +159,7 @@ public abstract class SSOServlet extends ZimbraServlet {
             redirectUrl = errorUrl;
         }
         
+        ZimbraLog.account.debug("SSOServlet - redirecting to: " + redirectUrl);
         resp.sendRedirect(redirectUrl);
     }
     

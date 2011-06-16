@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 administrator 20110601-1620 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110615-2246 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -4998,6 +4998,29 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1199)
     public static final String A_zimbraMailSSLClientCertPort = "zimbraMailSSLClientCertPort";
+
+    /**
+     * Map from a certificate field to a Zimbra account key that can uniquely
+     * identify a Zimbra account. Value is a comma-seperated list of
+     * mappings, each mapping maps a certificate field to a Zimbra account
+     * key. Each is attempted in sequence untill a unique account can be
+     * resolved. A mapping must be in the format of: {certificate
+     * field}={Zimbra account key} Supported certificate fields: SUBJECT_DN:
+     * DN of Subject SUBJECT_CN: CN in DN of Subject SUBJECT_EMAILADDRESS:
+     * EMAILADDRESS in DN of Subject SUBJECTALTNAME_OTHERNAME_UPN: UPN(aka
+     * Principal Name) in otherName in subjectAltName extension
+     * SUBJECTALTNAME_RFC822NAME: rfc822Name in subjectAltName extension
+     * Supported Zimbra account key: name: primary name or any of the aliases
+     * of an account zimbraId: zimbraId of an account zimbraForeignPrincipal:
+     * zimbraForeignPrincipal of an account. The matching value on the
+     * zimbraForeignPrincipal must be prefixed with &quot;cert
+     * {supported-certificate-filed}:&quot; e.g. cert
+     * SUBJECTALTNAME_OTHERNAME_UPN:123456@mydomain
+     *
+     * @since ZCS 7.1.2
+     */
+    @ZAttr(id=1215)
+    public static final String A_zimbraMailSSLClientCertPrincipalMap = "zimbraMailSSLClientCertPrincipalMap";
 
     /**
      * SSL port for end-user UI

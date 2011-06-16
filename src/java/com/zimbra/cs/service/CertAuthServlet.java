@@ -68,6 +68,7 @@ public class CertAuthServlet extends SSOServlet {
                 if (SSOAuthenticatorServiceException.NO_CLIENT_CERTIFICATE.equals(e.getCode())) {
                     if (missingClientCertOK()) {
                         redirectToErrorPage(req, resp, isAdminRequest, null);
+                        return;
                     } else {
                         throw e;
                     }
@@ -80,9 +81,9 @@ public class CertAuthServlet extends SSOServlet {
         } catch (ServiceException e) {
             if (e instanceof AuthFailedServiceException) {
                 AuthFailedServiceException afe = (AuthFailedServiceException)e;
-                ZimbraLog.account.info("client certificate auth failed: " + afe.getMessage() + afe.getReason(", %s"));
+                ZimbraLog.account.debug("client certificate auth failed: " + afe.getMessage() + afe.getReason(", %s"), e);
             } else {
-                ZimbraLog.account.info("client certificate auth failed: " + e.getMessage());
+                ZimbraLog.account.warn("client certificate auth failed: " + e.getMessage(), e);
             }
             ZimbraLog.account.debug("client certificate auth failed", e);
             resp.sendError(HttpServletResponse.SC_FORBIDDEN, e.getMessage());

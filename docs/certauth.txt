@@ -271,6 +271,55 @@ $ zmprov ms {server} zimbraMailSSLClientCertMode WantClientAuth
 or
 $ zmprov ms {server} zimbraMailSSLClientCertMode NeedClientAuth
    
+   
+(D) Configure Principal map on domain
+Domain is resolved by virtual host, set virtual host for a domain:
+$ zmprov md {domain} +zimbraVirtualHostname {server}
+
+Configure principal mapping on the domain:
+$ zmprov md {domain} zimbraMailSSLClientCertPrincipalMap {mappings}
+
+    Map from a certificate field to a Zimbra account key that can uniquely identify a Zimbra account.
+    Value is a comma-seperated list of mappings, each mapping maps a certificate field to a Zimbra account key.
+    Each is attempted in sequence untill a unique account can be resolved.  
+    
+    A mapping must be in the format of:
+    {certificate field}={Zimbra account key}
+    
+    Supported certificate fields:
+        SUBJECT_DN:                   DN of Subject
+        SUBJECT_CN:                   CN in DN of Subject  
+        SUBJECT_EMAILADDRESS:         EMAILADDRESS in DN of Subject  
+        SUBJECTALTNAME_OTHERNAME_UPN: UPN(aka Principal Name) in otherName in subjectAltName extension 
+        SUBJECTALTNAME_RFC822NAME:    rfc822Name in subjectAltName extension 
+    
+    Supported Zimbra account key:
+        name:                   primary name or any of the aliases of an account
+        zimbraId:               zimbraId of an account
+        zimbraForeignPrincipal: zimbraForeignPrincipal of an account.  
+                                The matching value on the zimbraForeignPrincipal must be prefixed with "cert {supported-certificate-filed}:"
+                                e.g. cert SUBJECTALTNAME_OTHERNAME_UPN:123456@mydomain
+                          
+    Example of valid mapping:
+        SUBJECT_CN=zimbraForeignPrincipal
+        SUBJECT_CN=zimbraId
+        SUBJECT_CN=name
+        SUBJECT_DN=zimbraForeignPrincipal
+        SUBJECT_EMAILADDRESS=name
+        SUBJECTALTNAME_OTHERNAME_UPN=name
+        SUBJECTALTNAME_OTHERNAME_UPN=zimbraForeignPrincipal
+        
+    Example of valid value for the attribute:
+        - map SUBJECTALTNAME_OTHERNAME_UPN to zimbraForeignPrincipal
+        SUBJECTALTNAME_OTHERNAME_UPN=zimbraForeignPrincipal 
+        
+        - map SUBJECT_EMAILADDRESS to a primary or alias email address of an account, 
+          if no match, map SUBJECTALTNAME_OTHERNAME_UPN to zimbraForeignPrincipal
+        SUBJECT_EMAILADDRESS=name,SUBJECTALTNAME_OTHERNAME_UPN=zimbraForeignPrincipal   
+        
+        In the above examples, zimbrasForeignPrincipal for the account must be set to:
+        zmprov ma user1@test.com zimbrasForeignPrincipal 'cert SUBJECTALTNAME_OTHERNAME_UPN:123456@mydomain'
+        
 
 ----------------
 6. Restart mailbox server

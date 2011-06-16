@@ -51,6 +51,9 @@ public abstract class SSOAuthenticator {
                 throw ServiceException.DEFEND_ACCOUNT_HARVEST(authenticationName);
             }
             
+            ZimbraLog.account.debug("SSOAuthenticator - %s resolved to Zimbra account %s",
+                    authenticationName, account.getName());
+            
             this.authenticationName = authenticationName;
             this.account = account;
         }
