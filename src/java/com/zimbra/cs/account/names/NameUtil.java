@@ -22,7 +22,7 @@ import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 
 public class NameUtil {
-    private static final int MAX_DOMIAN_NAME_LEN = 255; // bug 15919, (RFC 1035)
+    private static final int MAX_DOMAIN_NAME_LEN = 255; // bug 15919, (RFC 1035)
     
     private static boolean isDot(int c) {
         if (c == '.' || c == '\u3002' || c == '\uff0e' || c == '\uff61')
@@ -73,9 +73,9 @@ public class NameUtil {
     public static void validNewDomainName(String domain) throws ServiceException {
         
         // bug 15919, domain name should be restricted to 255 chars (RFC 1035)
-        if (domain.length() > MAX_DOMIAN_NAME_LEN)
+        if (domain.length() > MAX_DOMAIN_NAME_LEN)
             throw ServiceException.INVALID_REQUEST("invalid domain name " + domain + 
-                    ", domain name cannot exceed " + MAX_DOMIAN_NAME_LEN + " chars", null);
+                    ", domain name cannot exceed " + MAX_DOMAIN_NAME_LEN + " chars", null);
         
         String email = "test" + "@" + domain;
         try {
