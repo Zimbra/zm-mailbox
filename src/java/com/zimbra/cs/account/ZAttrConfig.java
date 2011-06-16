@@ -41,7 +41,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110613-2214 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110616-1432 */
 
     /**
      * RFC2256: descriptive information
@@ -15397,6 +15397,153 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetMailSSLClientCertPort(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailSSLClientCertPort, "");
+        return attrs;
+    }
+
+    /**
+     * Map from a certificate field to a Zimbra account key that can uniquely
+     * identify a Zimbra account. Value is a comma-seperated list of
+     * mappings, each mapping maps a certificate field to a Zimbra account
+     * key. Each is attempted in sequence untill a unique account can be
+     * resolved. A mapping must be in the format of: {certificate
+     * field}={Zimbra account key} Supported certificate fields: SUBJECT_DN:
+     * DN of Subject SUBJECT_CN: CN in DN of Subject SUBJECT_EMAILADDRESS:
+     * EMAILADDRESS in DN of Subject SUBJECTALTNAME_OTHERNAME_UPN: UPN(aka
+     * Principal Name) in otherName in subjectAltName extension
+     * SUBJECTALTNAME_RFC822NAME: rfc822Name in subjectAltName extension
+     * Supported Zimbra account key: name: primary name or any of the aliases
+     * of an account zimbraId: zimbraId of an account zimbraForeignPrincipal:
+     * zimbraForeignPrincipal of an account. The matching value on the
+     * zimbraForeignPrincipal must be prefixed with &quot;cert
+     * {supported-certificate-filed}:&quot; e.g. cert
+     * SUBJECTALTNAME_OTHERNAME_UPN:123456@mydomain
+     *
+     * @return zimbraMailSSLClientCertPrincipalMap, or "SUBJECT_EMAILADDRESS=name" if unset
+     *
+     * @since ZCS 7.1.2
+     */
+    @ZAttr(id=1215)
+    public String getMailSSLClientCertPrincipalMap() {
+        return getAttr(Provisioning.A_zimbraMailSSLClientCertPrincipalMap, "SUBJECT_EMAILADDRESS=name");
+    }
+
+    /**
+     * Map from a certificate field to a Zimbra account key that can uniquely
+     * identify a Zimbra account. Value is a comma-seperated list of
+     * mappings, each mapping maps a certificate field to a Zimbra account
+     * key. Each is attempted in sequence untill a unique account can be
+     * resolved. A mapping must be in the format of: {certificate
+     * field}={Zimbra account key} Supported certificate fields: SUBJECT_DN:
+     * DN of Subject SUBJECT_CN: CN in DN of Subject SUBJECT_EMAILADDRESS:
+     * EMAILADDRESS in DN of Subject SUBJECTALTNAME_OTHERNAME_UPN: UPN(aka
+     * Principal Name) in otherName in subjectAltName extension
+     * SUBJECTALTNAME_RFC822NAME: rfc822Name in subjectAltName extension
+     * Supported Zimbra account key: name: primary name or any of the aliases
+     * of an account zimbraId: zimbraId of an account zimbraForeignPrincipal:
+     * zimbraForeignPrincipal of an account. The matching value on the
+     * zimbraForeignPrincipal must be prefixed with &quot;cert
+     * {supported-certificate-filed}:&quot; e.g. cert
+     * SUBJECTALTNAME_OTHERNAME_UPN:123456@mydomain
+     *
+     * @param zimbraMailSSLClientCertPrincipalMap new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.2
+     */
+    @ZAttr(id=1215)
+    public void setMailSSLClientCertPrincipalMap(String zimbraMailSSLClientCertPrincipalMap) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSSLClientCertPrincipalMap, zimbraMailSSLClientCertPrincipalMap);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Map from a certificate field to a Zimbra account key that can uniquely
+     * identify a Zimbra account. Value is a comma-seperated list of
+     * mappings, each mapping maps a certificate field to a Zimbra account
+     * key. Each is attempted in sequence untill a unique account can be
+     * resolved. A mapping must be in the format of: {certificate
+     * field}={Zimbra account key} Supported certificate fields: SUBJECT_DN:
+     * DN of Subject SUBJECT_CN: CN in DN of Subject SUBJECT_EMAILADDRESS:
+     * EMAILADDRESS in DN of Subject SUBJECTALTNAME_OTHERNAME_UPN: UPN(aka
+     * Principal Name) in otherName in subjectAltName extension
+     * SUBJECTALTNAME_RFC822NAME: rfc822Name in subjectAltName extension
+     * Supported Zimbra account key: name: primary name or any of the aliases
+     * of an account zimbraId: zimbraId of an account zimbraForeignPrincipal:
+     * zimbraForeignPrincipal of an account. The matching value on the
+     * zimbraForeignPrincipal must be prefixed with &quot;cert
+     * {supported-certificate-filed}:&quot; e.g. cert
+     * SUBJECTALTNAME_OTHERNAME_UPN:123456@mydomain
+     *
+     * @param zimbraMailSSLClientCertPrincipalMap new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.2
+     */
+    @ZAttr(id=1215)
+    public Map<String,Object> setMailSSLClientCertPrincipalMap(String zimbraMailSSLClientCertPrincipalMap, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSSLClientCertPrincipalMap, zimbraMailSSLClientCertPrincipalMap);
+        return attrs;
+    }
+
+    /**
+     * Map from a certificate field to a Zimbra account key that can uniquely
+     * identify a Zimbra account. Value is a comma-seperated list of
+     * mappings, each mapping maps a certificate field to a Zimbra account
+     * key. Each is attempted in sequence untill a unique account can be
+     * resolved. A mapping must be in the format of: {certificate
+     * field}={Zimbra account key} Supported certificate fields: SUBJECT_DN:
+     * DN of Subject SUBJECT_CN: CN in DN of Subject SUBJECT_EMAILADDRESS:
+     * EMAILADDRESS in DN of Subject SUBJECTALTNAME_OTHERNAME_UPN: UPN(aka
+     * Principal Name) in otherName in subjectAltName extension
+     * SUBJECTALTNAME_RFC822NAME: rfc822Name in subjectAltName extension
+     * Supported Zimbra account key: name: primary name or any of the aliases
+     * of an account zimbraId: zimbraId of an account zimbraForeignPrincipal:
+     * zimbraForeignPrincipal of an account. The matching value on the
+     * zimbraForeignPrincipal must be prefixed with &quot;cert
+     * {supported-certificate-filed}:&quot; e.g. cert
+     * SUBJECTALTNAME_OTHERNAME_UPN:123456@mydomain
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.2
+     */
+    @ZAttr(id=1215)
+    public void unsetMailSSLClientCertPrincipalMap() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSSLClientCertPrincipalMap, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Map from a certificate field to a Zimbra account key that can uniquely
+     * identify a Zimbra account. Value is a comma-seperated list of
+     * mappings, each mapping maps a certificate field to a Zimbra account
+     * key. Each is attempted in sequence untill a unique account can be
+     * resolved. A mapping must be in the format of: {certificate
+     * field}={Zimbra account key} Supported certificate fields: SUBJECT_DN:
+     * DN of Subject SUBJECT_CN: CN in DN of Subject SUBJECT_EMAILADDRESS:
+     * EMAILADDRESS in DN of Subject SUBJECTALTNAME_OTHERNAME_UPN: UPN(aka
+     * Principal Name) in otherName in subjectAltName extension
+     * SUBJECTALTNAME_RFC822NAME: rfc822Name in subjectAltName extension
+     * Supported Zimbra account key: name: primary name or any of the aliases
+     * of an account zimbraId: zimbraId of an account zimbraForeignPrincipal:
+     * zimbraForeignPrincipal of an account. The matching value on the
+     * zimbraForeignPrincipal must be prefixed with &quot;cert
+     * {supported-certificate-filed}:&quot; e.g. cert
+     * SUBJECTALTNAME_OTHERNAME_UPN:123456@mydomain
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.2
+     */
+    @ZAttr(id=1215)
+    public Map<String,Object> unsetMailSSLClientCertPrincipalMap(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSSLClientCertPrincipalMap, "");
         return attrs;
     }
 

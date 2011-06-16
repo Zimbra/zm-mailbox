@@ -26,13 +26,15 @@ import javax.naming.ldap.Rdn;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key.AccountBy;
-
+import com.zimbra.cs.service.authenticator.ClientCertPrincipalMap.CertField;
+import com.zimbra.cs.service.authenticator.ClientCertPrincipalMap.Rule;
+import com.zimbra.cs.service.authenticator.ClientCertPrincipalMap.ZimbraKey;
 
 public class ClientCertAuthenticator extends SSOAuthenticator {
 
@@ -47,40 +49,78 @@ public class ClientCertAuthenticator extends SSOAuthenticator {
     
     @Override
     public ZimbraPrincipal authenticate() throws ServiceException {
+        X509Certificate cert = getCert();
+
+        ClientCertPrincipalMap principalMap = new ClientCertPrincipalMap(req);
+        List<Rule> rules = principalMap.getRules();
         
-        Principal principal = getPrincipal();
-        Account acct = getAccountByPrincipal(principal);
+        String certFieldValue = null;
+        Account acct = null;
         
-        return new ZimbraPrincipal(principal.getName(), acct);
+        for (Rule rule : rules) {
+            try {
+                ZimbraLog.account.debug("ClientCertAuthenticator - Attempting rule " + rule.toString());
+                
+                certFieldValue = getCertField(rule.getCertFiled(), cert);
+                if (certFieldValue != null) {
+                    acct = getZimbraAccount(rule.getZimbraKey(), rule.getCertFiled(), certFieldValue);
+                    if (acct != null) {
+                        return new ZimbraPrincipal(certFieldValue, acct);
+                    }
+                }
+            } catch (ServiceException e) {
+                ZimbraLog.account.debug("ClientCertAuthenticator - Rule " + rule.toString() + " not applied", e);
+            }
+        }
+        
+        throw AuthFailedServiceException.AUTH_FAILED(cert.toString(),
+                "ClientCertAuthenticator - no matching Zimbra principal from client certificate.", (Throwable)null);
     }
     
-    private Principal getPrincipal() throws ServiceException {
+    private X509Certificate getCert() throws ServiceException {
         X509Certificate[] certs = (X509Certificate[])req.getAttribute("javax.servlet.request.X509Certificate");
-            
+        
         if (certs==null || certs.length==0 || certs[0]==null) {
             throw SSOAuthenticatorServiceException.NO_CLIENT_CERTIFICATE();
         }
         
-        validateClientCert(certs);
-        
-        Principal principal = certs[0].getSubjectDN();
-        
-        if (principal == null) {
-            throw AuthFailedServiceException.AUTH_FAILED("missing subject in cert", (Throwable)null);
-        }
-        
-        return principal;
+        return certs[0];
     }
     
-    private Account getAccountByPrincipal(Principal principal) throws ServiceException {
-        String x509SubjectDN = principal.getName();
-        if (x509SubjectDN == null) {
-            throw AuthFailedServiceException.AUTH_FAILED("missing name in principal", (Throwable)null);
-        }
-        
-        return getAccountByX509SubjectDN(x509SubjectDN);
+    private String getCertField(CertField certField, X509Certificate cert) throws ServiceException {
+        CertUtil certUtil = new CertUtil(cert);
+        return certUtil.getCertField(certField);
     }
     
+    private Account getZimbraAccount(ZimbraKey zimbraKey, CertField certField, String certFieldValue) {
+        ZimbraLog.account.debug("ClientCertAuthenticator - get account by " +
+                zimbraKey.name() + ", " + certField.name() + "=" + certFieldValue);
+        
+        Provisioning prov = Provisioning.getInstance();
+        Account acct = null;
+        
+        try {
+            switch (zimbraKey) {
+                case name:
+                    acct = prov.get(AccountBy.name, certFieldValue);
+                    break;
+                case zimbraId:
+                    acct = prov.get(AccountBy.id, certFieldValue);
+                    break;
+                case zimbraForeignPrincipal:
+                    String foreignPrincipal = 
+                        String.format(Provisioning.FP_PREFIX_CERT, certField.name(),certFieldValue);
+                    acct = prov.get(AccountBy.foreignPrincipal, foreignPrincipal);
+                    break;
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.account.debug("ClientCertAuthenticator - no matching account by " +
+                    zimbraKey.name() + ", " + certField.name() + "=" + certFieldValue, e);
+        }
+        return acct;
+    }
+    
+    // Still called from nginx lookup servlet, TODO: retire
     public static Account getAccountByX509SubjectDN(String x509SubjectDN) throws ServiceException {
         try {
             LdapName dn = new LdapName(x509SubjectDN);
@@ -98,13 +138,13 @@ public class ClientCertAuthenticator extends SSOAuthenticator {
                         if (acct != null) {
                             return acct;
                         } else {
-                            ZimbraLog.account.debug("account not found: " + email);
+                            ZimbraLog.account.debug("ClientCertAuthenticator - account not found: " + email);
                         }
                     }
                 }
             }
         } catch (InvalidNameException e) {
-            throw AuthFailedServiceException.AUTH_FAILED("invalid X509 subject: " + x509SubjectDN, e);
+            throw AuthFailedServiceException.AUTH_FAILED("ClientCertAuthenticator - invalid X509 subject: " + x509SubjectDN, e);
         }
         
         return null;
