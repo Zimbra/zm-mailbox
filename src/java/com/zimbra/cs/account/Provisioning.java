@@ -110,6 +110,12 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * replication from Zimbra to Exchange.
      */
     public static final String FP_PREFIX_AD = "ad:";
+    
+    /**
+     * Foreign principal format for two-way SSL authentication
+     */
+    public static final String FP_PREFIX_CERT = "cert %s:%s";
+    
 
     /**
      * the account is active, and allows logins, etc.
