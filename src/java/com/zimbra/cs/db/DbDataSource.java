@@ -273,7 +273,7 @@ public class DbDataSource {
         deleteMapping(ds, itemId, false);
     }
 
-    public static void deleteMapping(DataSource ds, int itemId) throws ServiceException {
+    public static void deleteMapping(DataSource ds, int itemId, boolean isBatch) throws ServiceException {
         Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
 
     	ZimbraLog.datasource.debug("Deleting mappings for dataSource %s itemId %d", ds.getName(), itemId);
@@ -307,9 +307,6 @@ public class DbDataSource {
             throw ServiceException.FAILURE("Unable to delete mapping for dataSource " + ds.getName(), e);
         } finally {
             DbPool.closeStatement(stmt);
-            if (!isBatch) {
-                conn.commit();
-            }
             if (!isBatch) {
                 DbPool.quietClose(conn);
             }
