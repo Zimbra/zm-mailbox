@@ -472,7 +472,8 @@ public final class MailboxIndex {
                 }
                 ZimbraLog.index.info("Re-indexing all items");
                 indexDeferredItems(EnumSet.noneOf(MailItem.Type.class), status, true);
-
+                ZimbraLog.index.info("Optimizing index");
+                optimize();
                 ZimbraLog.index.info("Rebuilding MAIL_ADDRESS table");
                 mailbox.rebuildMailAddressTable();
             } else { // partial re-index
@@ -760,6 +761,22 @@ public final class MailboxIndex {
         for (MailItem item : indexed) {
             item.mData.indexId = item.getId();
             removeDeferredId(item.getId());
+        }
+    }
+
+    /**
+     * Primes the index for the fastest available search. This is a very expensive operation especially on large index.
+     */
+    public void optimize() {
+        try {
+            Indexer indexer = indexStore.openIndexer();
+            try {
+                indexer.optimize();
+            } finally {
+                indexer.close();
+            }
+        } catch (IOException e) {
+            ZimbraLog.index.error("Failed to optimize index", e);
         }
     }
 

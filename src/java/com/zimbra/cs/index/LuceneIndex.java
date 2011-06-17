@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.lucene.index.CheckIndex;
 import org.apache.lucene.index.CorruptIndexException;
@@ -492,7 +492,14 @@ public final class LuceneIndex implements IndexStore {
      * attempts simply skip the merge.
      */
     private static final class MergeScheduler extends SerialMergeScheduler {
-        private AtomicReference<Thread> lock = new AtomicReference<Thread>();
+        private final ReentrantLock lock = new ReentrantLock();
+
+        /**
+         * Acquires the lock.
+         */
+        void lock() {
+            lock.lock();
+        }
 
         /**
          * Try to hold the lock.
@@ -500,11 +507,14 @@ public final class LuceneIndex implements IndexStore {
          * @return true if the lock is held, false the lock is currently held by the other thread.
          */
         boolean tryLock() {
-            return lock.compareAndSet(null, Thread.currentThread());
+            return lock.tryLock();
         }
 
         void release() {
-            lock.compareAndSet(Thread.currentThread(), null);
+            try {
+                lock.unlock();
+            } catch (IllegalMonitorStateException ignore) {
+            }
         }
 
         /**
@@ -512,7 +522,7 @@ public final class LuceneIndex implements IndexStore {
          */
         @Override
         public void merge(IndexWriter writer) throws CorruptIndexException, IOException {
-            if (lock.get() == Thread.currentThread()) {
+            if (lock.isHeldByCurrentThread()) {
                 super.merge(writer);
             }
         }
@@ -523,7 +533,7 @@ public final class LuceneIndex implements IndexStore {
         @Override
         public void close() {
             super.close();
-            lock.set(null);
+            release();
         }
     }
 
@@ -544,8 +554,9 @@ public final class LuceneIndex implements IndexStore {
         @Override
         public void exec() throws IOException {
             IndexWriter writer = ref.get();
+            MergeScheduler scheduler = (MergeScheduler) writer.getConfig().getMergeScheduler();
             try {
-                if (((MergeScheduler) writer.getConfig().getMergeScheduler()).tryLock()) {
+                if (scheduler.tryLock()) {
                     int dels = writer.maxDoc() - writer.numDocs();
                     if (dels >= LC.zimbra_index_max_pending_deletes.intValue()) {
                         ZimbraLog.index.debug("Expunge deletes %d", dels);
@@ -570,7 +581,7 @@ public final class LuceneIndex implements IndexStore {
             } catch (IOException e) {
                 ZimbraLog.index.error("Failed to merge IndexWriter", e);
             } finally {
-                ((MergeScheduler) ref.get().getConfig().getMergeScheduler()).release();
+                scheduler.release();
                 ref.dec();
             }
         }
@@ -691,6 +702,19 @@ public final class LuceneIndex implements IndexStore {
         public void close() throws IOException {
             writer.index.commitWriter();
             writer.getIndex().readersCache.stale(writer.index); // let the reader reopen
+        }
+
+        @Override
+        public void optimize() {
+            MergeScheduler scheduler = (MergeScheduler) writer.get().getConfig().getMergeScheduler();
+            scheduler.lock();
+            try {
+                writer.get().optimize(true);
+            } catch (IOException e) {
+                ZimbraLog.index.error("Failed to optimize index", e);
+            } finally {
+                scheduler.release();
+            }
         }
 
         /**

@@ -314,6 +314,13 @@ public final class CassandraIndex implements IndexStore {
         public void close() {
             mutator.execute();
         }
+
+        /**
+         * Does nothing.
+         */
+        @Override
+        public void optimize() {
+        }
     }
 
     private static final class TermInfo {

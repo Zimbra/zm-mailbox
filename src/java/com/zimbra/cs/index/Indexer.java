@@ -40,4 +40,8 @@ public interface Indexer extends Closeable {
      */
     void deleteDocument(List<Integer> ids) throws IOException;
 
+    /**
+     * Requests an "optimize" operation on the index, priming the index for the fastest available search.
+     */
+    void optimize();
 }
