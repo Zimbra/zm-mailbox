@@ -43,7 +43,8 @@ public class CalendarUtil {
     }
 
     /**
-     * Use {@link jaxbXParams} where possible instead of this
+     * Use JAXB e.g. {@link com.zimbra.soap.mail.type.XParam} where possible
+     * instead of using this
      */
     public static void encodeXParams(Element parent, Iterator<ZParameter> xparamsIterator) {
         while (xparamsIterator.hasNext()) {
