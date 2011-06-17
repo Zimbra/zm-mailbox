@@ -796,6 +796,10 @@ public class MailSender {
                 }
             }
         } catch (SendFailedException e) {
+            //skip roll backs for partial send failure cases
+            if (sendPartial)
+                throw new SafeSendFailedException(e);
+        
             for (RollbackData rdata : rollback)
                 if (rdata != null)
                     rdata.rollback();
