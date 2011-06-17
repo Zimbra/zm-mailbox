@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -25,16 +25,16 @@ import com.zimbra.common.soap.MailConstants;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class EmailInfo {
 
-    @XmlAttribute(name=MailConstants.A_ADDRESS, required=true)
+    @XmlAttribute(name=MailConstants.A_ADDRESS /* a */, required=true)
     private final String address;
 
-    @XmlAttribute(name=MailConstants.A_DISPLAY, required=true)
+    @XmlAttribute(name=MailConstants.A_DISPLAY /* d */, required=true)
     private final String display;
 
-    @XmlAttribute(name=MailConstants.A_PERSONAL, required=true)
+    @XmlAttribute(name=MailConstants.A_PERSONAL /* p */, required=true)
     private final String personal;
 
-    @XmlAttribute(name=MailConstants.A_ADDRESS_TYPE, required=true)
+    @XmlAttribute(name=MailConstants.A_ADDRESS_TYPE /* t */, required=true)
     private final String addressType;
 
     /**
@@ -58,13 +58,18 @@ public class EmailInfo {
     public String getPersonal() { return personal; }
     public String getAddressType() { return addressType; }
 
-    @Override
-    public String toString() {
-        return Objects.toStringHelper(this)
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        return helper
             .add("address", address)
             .add("display", display)
             .add("personal", personal)
-            .add("addressType", addressType)
-            .toString();
+            .add("addressType", addressType);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }

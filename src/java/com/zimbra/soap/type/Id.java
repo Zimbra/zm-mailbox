@@ -24,7 +24,7 @@ import com.zimbra.common.soap.AdminConstants;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Id {
 
-    @XmlAttribute(name=AdminConstants.A_ID, required=true)
+    @XmlAttribute(name=AdminConstants.A_ID, required=false)
     private final String id;
 
     /**

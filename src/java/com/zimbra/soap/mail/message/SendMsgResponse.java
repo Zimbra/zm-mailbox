@@ -16,58 +16,41 @@
 package com.zimbra.soap.mail.message;
 
 import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
-import java.util.Collections;
-import java.util.List;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.mail.type.ChatSummary;
-import com.zimbra.soap.mail.type.MessageSummary;
+import com.zimbra.soap.type.Id;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=MailConstants.E_GET_MSG_METADATA_RESPONSE)
+@XmlRootElement(name=MailConstants.E_SEND_MSG_RESPONSE)
 @XmlType(propOrder = {})
-public class GetMsgMetadataResponse {
+public class SendMsgResponse {
 
-    @XmlElements({
-        @XmlElement(name=MailConstants.E_CHAT /* chat */,
-            type=ChatSummary.class),
-        @XmlElement(name=MailConstants.E_MSG /* m */,
-            type=MessageSummary.class)
-    })
-    private List<MessageSummary> messages = Lists.newArrayList();
+    @XmlElement(name=MailConstants.E_MSG /* m */, required=true)
+    private final Id msg;
 
-    public GetMsgMetadataResponse() {
+    /**
+     * no-argument constructor wanted by JAXB
+     */
+    @SuppressWarnings("unused")
+    private SendMsgResponse() {
+        this((Id) null);
     }
 
-    public void setMessages(Iterable <MessageSummary> messages) {
-        this.messages.clear();
-        if (messages != null) {
-            Iterables.addAll(this.messages,messages);
-        }
+    public SendMsgResponse(Id msg) {
+        this.msg = msg;
     }
 
-    public void addMessage(MessageSummary message) {
-        this.messages.add(message);
-    }
-
-    public List<MessageSummary> getMessages() {
-        return Collections.unmodifiableList(messages);
-    }
+    public Id getMsg() { return msg; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("messages", messages);
+            .add("msg", msg);
     }
 
     @Override

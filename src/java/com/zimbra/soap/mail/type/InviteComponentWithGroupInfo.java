@@ -34,12 +34,13 @@ import com.zimbra.common.soap.MailConstants;
     "attendees", "alarms", "xProps", "fragment",
     "description", "htmlDescription", "organizer",
     "recurrence", "exceptionId", "dtStart", "dtEnd", "duration" })
-public class InviteComponent 
-extends InviteComponentCommon {
-    // {@link InviteComponent} and {@link InviteComponentWithGroupInfo} only 
+public class InviteComponentWithGroupInfo extends InviteComponentCommon {
+
+    // {@link InviteComponent} and {@link InviteComponentWithGroupInfo} only
     // differ in the object representing E_CAL_ATTENDEE
+
     @XmlElement(name=MailConstants.E_CAL_CATEGORY /* category */,
-                    required=false)
+                        required=false)
     private List<String> categories = Lists.newArrayList();
 
     @XmlElement(name=MailConstants.E_CAL_COMMENT /* comment */, required=false)
@@ -52,7 +53,8 @@ extends InviteComponentCommon {
     private GeoInfo geo;
 
     @XmlElement(name=MailConstants.E_CAL_ATTENDEE /* at */, required=false)
-    private List<CalendarAttendee> attendees = Lists.newArrayList();
+    private List<CalendarAttendeeWithGroupInfo> attendees =
+                        Lists.newArrayList();
 
     @XmlElement(name=MailConstants.E_CAL_ALARM /* alarm */, required=false)
     private List<AlarmInfo> alarms = Lists.newArrayList();
@@ -63,11 +65,12 @@ extends InviteComponentCommon {
     @XmlElement(name=MailConstants.E_FRAG /* fr */, required=false)
     private String fragment;
 
-    @XmlElement(name=MailConstants.E_CAL_DESCRIPTION /* desc */, required=false)
+    @XmlElement(name=MailConstants.E_CAL_DESCRIPTION /* desc */,
+                            required=false)
     private String description;
 
     @XmlElement(name=MailConstants.E_CAL_DESC_HTML /* descHtml */,
-                    required=false)
+                            required=false)
     private String htmlDescription;
 
     @XmlElement(name=MailConstants.E_CAL_ORGANIZER /* or */, required=false)
@@ -77,7 +80,7 @@ extends InviteComponentCommon {
     private RecurrenceInfo recurrence;
 
     @XmlElement(name=MailConstants.E_CAL_EXCEPTION_ID /* exceptId */,
-                    required=false)
+                            required=false)
     private ExceptionRecurIdInfo exceptionId;
 
     @XmlElement(name=MailConstants.E_CAL_START_TIME /* s */, required=false)
@@ -92,11 +95,12 @@ extends InviteComponentCommon {
     /**
      * no-argument constructor wanted by JAXB
      */
-    protected InviteComponent() {
+    protected InviteComponentWithGroupInfo() {
         this((String) null, -1, false);
     }
 
-    public InviteComponent(String method, int componentNum, boolean rsvp) {
+    public InviteComponentWithGroupInfo(String method, int componentNum,
+                        boolean rsvp) {
         super(method, componentNum, rsvp);
     }
 
@@ -134,14 +138,15 @@ extends InviteComponentCommon {
     }
 
     public void setGeo(GeoInfo geo) { this.geo = geo; }
-    public void setAttendees(Iterable <CalendarAttendee> attendees) {
+    public void setAttendees(
+                Iterable <CalendarAttendeeWithGroupInfo> attendees) {
         this.attendees.clear();
         if (attendees != null) {
             Iterables.addAll(this.attendees,attendees);
         }
     }
 
-    public void addAttendee(CalendarAttendee attendee) {
+    public void addAttendee(CalendarAttendeeWithGroupInfo attendee) {
         this.attendees.add(attendee);
     }
 
@@ -186,7 +191,6 @@ extends InviteComponentCommon {
     public void setDtStart(DtTimeInfo dtStart) { this.dtStart = dtStart; }
     public void setDtEnd(DtTimeInfo dtEnd) { this.dtEnd = dtEnd; }
     public void setDuration(DurationInfo duration) { this.duration = duration; }
-
     public List<String> getCategories() {
         return Collections.unmodifiableList(categories);
     }
@@ -197,7 +201,7 @@ extends InviteComponentCommon {
         return Collections.unmodifiableList(contacts);
     }
     public GeoInfo getGeo() { return geo; }
-    public List<CalendarAttendee> getAttendees() {
+    public List<CalendarAttendeeWithGroupInfo> getAttendees() {
         return Collections.unmodifiableList(attendees);
     }
     public List<AlarmInfo> getAlarms() {

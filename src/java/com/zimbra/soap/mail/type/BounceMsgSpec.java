@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.mail.message;
+package com.zimbra.soap.mail.type;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
@@ -24,50 +24,55 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElements;
-import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.mail.type.ChatSummary;
-import com.zimbra.soap.mail.type.MessageSummary;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=MailConstants.E_GET_MSG_METADATA_RESPONSE)
 @XmlType(propOrder = {})
-public class GetMsgMetadataResponse {
+public class BounceMsgSpec {
 
-    @XmlElements({
-        @XmlElement(name=MailConstants.E_CHAT /* chat */,
-            type=ChatSummary.class),
-        @XmlElement(name=MailConstants.E_MSG /* m */,
-            type=MessageSummary.class)
-    })
-    private List<MessageSummary> messages = Lists.newArrayList();
+    @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
+    private final String id;
 
-    public GetMsgMetadataResponse() {
+    @XmlElement(name=MailConstants.E_EMAIL /* e */, required=false)
+    private List<EmailAddrInfo> emailAddresses = Lists.newArrayList();
+
+    /**
+     * no-argument constructor wanted by JAXB
+     */
+    @SuppressWarnings("unused")
+    private BounceMsgSpec() {
+        this((String) null);
     }
 
-    public void setMessages(Iterable <MessageSummary> messages) {
-        this.messages.clear();
-        if (messages != null) {
-            Iterables.addAll(this.messages,messages);
+    public BounceMsgSpec(String id) {
+        this.id = id;
+    }
+
+    public void setEmailAddresses(Iterable <EmailAddrInfo> emailAddresses) {
+        this.emailAddresses.clear();
+        if (emailAddresses != null) {
+            Iterables.addAll(this.emailAddresses,emailAddresses);
         }
     }
 
-    public void addMessage(MessageSummary message) {
-        this.messages.add(message);
+    public void addEmailAddresse(EmailAddrInfo emailAddresse) {
+        this.emailAddresses.add(emailAddresse);
     }
 
-    public List<MessageSummary> getMessages() {
-        return Collections.unmodifiableList(messages);
+    public String getId() { return id; }
+    public List<EmailAddrInfo> getEmailAddresses() {
+        return Collections.unmodifiableList(emailAddresses);
     }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("messages", messages);
+            .add("id", id)
+            .add("emailAddresses", emailAddresses);
     }
 
     @Override

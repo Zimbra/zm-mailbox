@@ -23,29 +23,22 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class IdsAttr {
+public class MsgToSend extends CalendarItemMsg {
 
-    @XmlAttribute(name=MailConstants.A_IDS /* ids */, required=true)
-    private final String ids;
+    @XmlAttribute(name=MailConstants.A_DRAFT_ID /* did */, required=false)
+    private String draftId;
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private IdsAttr() {
-        this((String) null);
+    public MsgToSend() {
     }
 
-    public IdsAttr(String ids) {
-        this.ids = ids;
-    }
-
-    public String getIds() { return ids; }
+    public void setDraftId(String draftId) { this.draftId = draftId; }
+    public String getDraftId() { return draftId; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
+        helper = super.addToStringInfo(helper);
         return helper
-            .add("ids", ids);
+            .add("draftId", draftId);
     }
 
     @Override

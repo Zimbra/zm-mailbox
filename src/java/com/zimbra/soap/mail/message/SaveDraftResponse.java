@@ -16,12 +16,6 @@
 package com.zimbra.soap.mail.message;
 
 import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
-import java.util.Collections;
-import java.util.List;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -30,44 +24,32 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.mail.type.ChatSummary;
-import com.zimbra.soap.mail.type.MessageSummary;
+import com.zimbra.soap.mail.type.ChatMessageInfo;
+import com.zimbra.soap.mail.type.MessageInfo;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=MailConstants.E_GET_MSG_METADATA_RESPONSE)
+@XmlRootElement(name=MailConstants.E_SAVE_DRAFT_RESPONSE)
 @XmlType(propOrder = {})
-public class GetMsgMetadataResponse {
+public class SaveDraftResponse {
 
     @XmlElements({
         @XmlElement(name=MailConstants.E_CHAT /* chat */,
-            type=ChatSummary.class),
+            type=ChatMessageInfo.class),
         @XmlElement(name=MailConstants.E_MSG /* m */,
-            type=MessageSummary.class)
+            type=MessageInfo.class)
     })
-    private List<MessageSummary> messages = Lists.newArrayList();
+    private MessageInfo message;
 
-    public GetMsgMetadataResponse() {
+    public SaveDraftResponse() {
     }
 
-    public void setMessages(Iterable <MessageSummary> messages) {
-        this.messages.clear();
-        if (messages != null) {
-            Iterables.addAll(this.messages,messages);
-        }
-    }
-
-    public void addMessage(MessageSummary message) {
-        this.messages.add(message);
-    }
-
-    public List<MessageSummary> getMessages() {
-        return Collections.unmodifiableList(messages);
-    }
+    public void setMessage(MessageInfo message) { this.message = message; }
+    public MessageInfo getMessage() { return message; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("messages", messages);
+            .add("message", message);
     }
 
     @Override

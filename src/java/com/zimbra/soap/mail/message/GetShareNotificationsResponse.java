@@ -25,49 +25,42 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.mail.type.ChatSummary;
-import com.zimbra.soap.mail.type.MessageSummary;
+import com.zimbra.soap.mail.type.ShareNotificationInfo;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=MailConstants.E_GET_MSG_METADATA_RESPONSE)
+@XmlRootElement(name=MailConstants.E_GET_SHARE_NOTIFICATIONS_RESPONSE)
 @XmlType(propOrder = {})
-public class GetMsgMetadataResponse {
+public class GetShareNotificationsResponse {
 
-    @XmlElements({
-        @XmlElement(name=MailConstants.E_CHAT /* chat */,
-            type=ChatSummary.class),
-        @XmlElement(name=MailConstants.E_MSG /* m */,
-            type=MessageSummary.class)
-    })
-    private List<MessageSummary> messages = Lists.newArrayList();
+    @XmlElement(name=MailConstants.E_SHARE /* share */, required=false)
+    private List<ShareNotificationInfo> shares = Lists.newArrayList();
 
-    public GetMsgMetadataResponse() {
+    public GetShareNotificationsResponse() {
     }
 
-    public void setMessages(Iterable <MessageSummary> messages) {
-        this.messages.clear();
-        if (messages != null) {
-            Iterables.addAll(this.messages,messages);
+    public void setShares(Iterable <ShareNotificationInfo> shares) {
+        this.shares.clear();
+        if (shares != null) {
+            Iterables.addAll(this.shares,shares);
         }
     }
 
-    public void addMessage(MessageSummary message) {
-        this.messages.add(message);
+    public void addShare(ShareNotificationInfo share) {
+        this.shares.add(share);
     }
 
-    public List<MessageSummary> getMessages() {
-        return Collections.unmodifiableList(messages);
+    public List<ShareNotificationInfo> getShares() {
+        return Collections.unmodifiableList(shares);
     }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("messages", messages);
+            .add("shares", shares);
     }
 
     @Override

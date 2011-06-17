@@ -27,15 +27,13 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.KeyValuePair;
+import com.zimbra.soap.type.UrlAndValue;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = { "fragment", "emails", "subject",
-    "messageIdHeader", "inReplyTo", "invite", "headers", "contentElems" })
-public class MessageInfo extends MessageCommon {
+public class MsgWithGroupInfo extends MessageCommon {
 
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private String id;
@@ -74,7 +72,7 @@ public class MessageInfo extends MessageCommon {
     private String fragment;
 
     @XmlElement(name=MailConstants.E_EMAIL /* e */, required=false)
-    private List<EmailInfo> emails = Lists.newArrayList();
+    private List<EmailWithGroupInfo> emails = Lists.newArrayList();
 
     @XmlElement(name=MailConstants.E_SUBJECT /* su */, required=false)
     private String subject;
@@ -86,7 +84,7 @@ public class MessageInfo extends MessageCommon {
     private String inReplyTo;
 
     @XmlElement(name=MailConstants.E_INVITE /* inv */, required=false)
-    private InviteInfo invite;
+    private InviteWithGroupInfo invite;
 
     @XmlElement(name=MailConstants.A_HEADER /* header */, required=false)
     private List<KeyValuePair> headers = Lists.newArrayList();
@@ -99,50 +97,41 @@ public class MessageInfo extends MessageCommon {
     })
     private List<Object> contentElems = Lists.newArrayList();
 
-    public MessageInfo() {
-    }
+    @XmlElement(name=MailConstants.E_CONTENT /* content */, required=false)
+    private UrlAndValue content;
 
-    public MessageInfo(String id) {
-        this.id = id;
+    public MsgWithGroupInfo() {
     }
 
     public void setId(String id) { this.id = id; }
     public void setCalendarIntendedFor(String calendarIntendedFor) {
         this.calendarIntendedFor = calendarIntendedFor;
     }
-
     public void setOrigId(String origId) { this.origId = origId; }
     public void setDraftReplyType(String draftReplyType) {
         this.draftReplyType = draftReplyType;
     }
-
     public void setIdentityId(String identityId) {
         this.identityId = identityId;
     }
-
     public void setDraftAccountId(String draftAccountId) {
         this.draftAccountId = draftAccountId;
     }
-
     public void setDraftAutoSendTime(Long draftAutoSendTime) {
         this.draftAutoSendTime = draftAutoSendTime;
     }
-
     public void setSentDate(Long sentDate) { this.sentDate = sentDate; }
-    public void setResentDate(Long resentDate) {
-        this.resentDate = resentDate;
-    }
-
+    public void setResentDate(Long resentDate) { this.resentDate = resentDate; }
     public void setPart(String part) { this.part = part; }
     public void setFragment(String fragment) { this.fragment = fragment; }
-    public void setEmails(Iterable <EmailInfo> emails) {
+    public void setEmails(Iterable <EmailWithGroupInfo> emails) {
         this.emails.clear();
         if (emails != null) {
             Iterables.addAll(this.emails,emails);
         }
     }
 
-    public void addEmail(EmailInfo email) {
+    public void addEmail(EmailWithGroupInfo email) {
         this.emails.add(email);
     }
 
@@ -151,7 +140,7 @@ public class MessageInfo extends MessageCommon {
         this.messageIdHeader = messageIdHeader;
     }
     public void setInReplyTo(String inReplyTo) { this.inReplyTo = inReplyTo; }
-    public void setInvite(InviteInfo invite) { this.invite = invite; }
+    public void setInvite(InviteWithGroupInfo invite) { this.invite = invite; }
     public void setHeaders(Iterable <KeyValuePair> headers) {
         this.headers.clear();
         if (headers != null) {
@@ -174,6 +163,7 @@ public class MessageInfo extends MessageCommon {
         this.contentElems.add(contentElem);
     }
 
+    public void setContent(UrlAndValue content) { this.content = content; }
     public String getId() { return id; }
     public String getCalendarIntendedFor() { return calendarIntendedFor; }
     public String getOrigId() { return origId; }
@@ -185,19 +175,20 @@ public class MessageInfo extends MessageCommon {
     public Long getResentDate() { return resentDate; }
     public String getPart() { return part; }
     public String getFragment() { return fragment; }
-    public List<EmailInfo> getEmails() {
+    public List<EmailWithGroupInfo> getEmails() {
         return Collections.unmodifiableList(emails);
     }
     public String getSubject() { return subject; }
     public String getMessageIdHeader() { return messageIdHeader; }
     public String getInReplyTo() { return inReplyTo; }
-    public InviteInfo getInvite() { return invite; }
+    public InviteWithGroupInfo getInvite() { return invite; }
     public List<KeyValuePair> getHeaders() {
         return Collections.unmodifiableList(headers);
     }
     public List<Object> getContentElems() {
         return Collections.unmodifiableList(contentElems);
     }
+    public UrlAndValue getContent() { return content; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
@@ -220,7 +211,8 @@ public class MessageInfo extends MessageCommon {
             .add("inReplyTo", inReplyTo)
             .add("invite", invite)
             .add("headers", headers)
-            .add("contentElems", contentElems);
+            .add("contentElems", contentElems)
+            .add("content", content);
     }
 
     @Override

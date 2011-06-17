@@ -23,29 +23,36 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class IdsAttr {
+public class MsgPartIds {
 
-    @XmlAttribute(name=MailConstants.A_IDS /* ids */, required=true)
-    private final String ids;
+    @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
+    private final String id;
+
+    // Comma separated list of partIds
+    @XmlAttribute(name=MailConstants.A_PART /* part */, required=true)
+    private final String partIds;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private IdsAttr() {
-        this((String) null);
+    private MsgPartIds() {
+        this((String) null, (String) null);
     }
 
-    public IdsAttr(String ids) {
-        this.ids = ids;
+    public MsgPartIds(String id, String partIds) {
+        this.id = id;
+        this.partIds = partIds;
     }
 
-    public String getIds() { return ids; }
+    public String getId() { return id; }
+    public String getPartIds() { return partIds; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("ids", ids);
+            .add("id", id)
+            .add("partIds", partIds);
     }
 
     @Override

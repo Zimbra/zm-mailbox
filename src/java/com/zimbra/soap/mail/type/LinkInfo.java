@@ -23,29 +23,47 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class IdsAttr {
+public class LinkInfo {
 
-    @XmlAttribute(name=MailConstants.A_IDS /* ids */, required=true)
-    private final String ids;
+    @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
+    private final String id;
+
+    @XmlAttribute(name=MailConstants.A_NAME /* name */, required=true)
+    private final String name;
+
+    @XmlAttribute(name=MailConstants.A_DEFAULT_VIEW /* view */, required=true)
+    private final String defaultView;
+
+    @XmlAttribute(name=MailConstants.A_RIGHTS /* perm */, required=true)
+    private final String rights;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private IdsAttr() {
-        this((String) null);
+    private LinkInfo() {
+        this((String) null, (String) null, (String) null, (String) null);
     }
 
-    public IdsAttr(String ids) {
-        this.ids = ids;
+    public LinkInfo(String id, String name, String defaultView, String rights) {
+        this.id = id;
+        this.name = name;
+        this.defaultView = defaultView;
+        this.rights = rights;
     }
 
-    public String getIds() { return ids; }
+    public String getId() { return id; }
+    public String getName() { return name; }
+    public String getDefaultView() { return defaultView; }
+    public String getRights() { return rights; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("ids", ids);
+            .add("id", id)
+            .add("name", name)
+            .add("defaultView", defaultView)
+            .add("rights", rights);
     }
 
     @Override

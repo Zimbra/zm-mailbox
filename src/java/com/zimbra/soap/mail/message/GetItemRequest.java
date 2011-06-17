@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -28,7 +28,7 @@ import com.zimbra.soap.mail.type.ItemSpec;
 @XmlRootElement(name=MailConstants.E_GET_ITEM_REQUEST)
 public class GetItemRequest {
 
-    @XmlElement(name=MailConstants.E_ITEM, required=false)
+    @XmlElement(name=MailConstants.E_ITEM /* item */, required=false)
     private ItemSpec item;
 
     public GetItemRequest() {
@@ -37,10 +37,15 @@ public class GetItemRequest {
     public void setItem(ItemSpec item) { this.item = item; }
     public ItemSpec getItem() { return item; }
 
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        return helper
+            .add("item", item);
+    }
+
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
-            .add("item", item)
-            .toString();
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }

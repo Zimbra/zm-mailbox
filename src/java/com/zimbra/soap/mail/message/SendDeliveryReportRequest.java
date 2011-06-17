@@ -13,39 +13,41 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.mail.type;
+package com.zimbra.soap.mail.message;
 
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class IdsAttr {
+@XmlRootElement(name=MailConstants.E_SEND_REPORT_REQUEST)
+public class SendDeliveryReportRequest {
 
-    @XmlAttribute(name=MailConstants.A_IDS /* ids */, required=true)
-    private final String ids;
+    @XmlAttribute(name=MailConstants.A_MESSAGE_ID /* mid */, required=true)
+    private final String messageId;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private IdsAttr() {
+    private SendDeliveryReportRequest() {
         this((String) null);
     }
 
-    public IdsAttr(String ids) {
-        this.ids = ids;
+    public SendDeliveryReportRequest(String messageId) {
+        this.messageId = messageId;
     }
 
-    public String getIds() { return ids; }
+    public String getMessageId() { return messageId; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("ids", ids);
+            .add("messageId", messageId);
     }
 
     @Override

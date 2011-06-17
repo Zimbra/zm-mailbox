@@ -13,39 +13,46 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.mail.type;
+package com.zimbra.soap.admin.message;
 
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
 
-import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class IdsAttr {
+@XmlRootElement(name=AdminConstants.E_GET_ATTRIBUTE_INFO_REQUEST)
+public class GetAttributeInfoRequest {
 
-    @XmlAttribute(name=MailConstants.A_IDS /* ids */, required=true)
-    private final String ids;
+    // Only one of A_ATTRS or A_ENTRY_TYPES allowed
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private IdsAttr() {
-        this((String) null);
+    // Comma Separated list
+    @XmlAttribute(name=AdminConstants.A_ATTRS /* attrs */, required=false)
+    private String attrs;
+
+    // Comma Separated list
+    @XmlAttribute(name=AdminConstants.A_ENTRY_TYPES /* entryTypes */,
+                    required=false)
+    private String entryTypes;
+
+    public GetAttributeInfoRequest() {
     }
 
-    public IdsAttr(String ids) {
-        this.ids = ids;
+    public void setAttrs(String attrs) { this.attrs = attrs; }
+    public void setEntryTypes(String entryTypes) {
+        this.entryTypes = entryTypes;
     }
-
-    public String getIds() { return ids; }
+    public String getAttrs() { return attrs; }
+    public String getEntryTypes() { return entryTypes; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("ids", ids);
+            .add("attrs", attrs)
+            .add("entryTypes", entryTypes);
     }
 
     @Override

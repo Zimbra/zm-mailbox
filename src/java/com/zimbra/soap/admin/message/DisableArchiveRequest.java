@@ -13,39 +13,43 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.mail.type;
+package com.zimbra.soap.admin.message;
 
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
-import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.ArchiveConstants;
+import com.zimbra.soap.type.AccountSelector;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class IdsAttr {
+@XmlRootElement(name=ArchiveConstants.E_DISABLE_ARCHIVE_REQUEST)
+public class DisableArchiveRequest {
 
-    @XmlAttribute(name=MailConstants.A_IDS /* ids */, required=true)
-    private final String ids;
+    @XmlElement(name=AdminConstants.E_ACCOUNT /* account */, required=true)
+    private final AccountSelector account;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private IdsAttr() {
-        this((String) null);
+    private DisableArchiveRequest() {
+        this((AccountSelector) null);
     }
 
-    public IdsAttr(String ids) {
-        this.ids = ids;
+    public DisableArchiveRequest(AccountSelector account) {
+        this.account = account;
     }
 
-    public String getIds() { return ids; }
+    public AccountSelector getAccount() { return account; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("ids", ids);
+            .add("account", account);
     }
 
     @Override

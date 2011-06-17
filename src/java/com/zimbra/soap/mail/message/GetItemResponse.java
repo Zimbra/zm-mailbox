@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -21,6 +21,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.CalendarItemInfo;
@@ -37,32 +38,33 @@ import com.zimbra.soap.mail.type.TaskItemInfo;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=MailConstants.E_GET_ITEM_RESPONSE)
+@XmlType(propOrder = {})
 public class GetItemResponse {
 
-    // TODO:Create an interface instead of using Objects?
     @XmlElements({
-        @XmlElement(name=MailConstants.E_FOLDER,
+        @XmlElement(name=MailConstants.E_FOLDER /* folder */,
             type=Folder.class),
-        @XmlElement(name=MailConstants.E_TAG,
+        @XmlElement(name=MailConstants.E_TAG /* tag */,
             type=TagInfo.class),
-        @XmlElement(name=MailConstants.E_NOTE,
+        @XmlElement(name=MailConstants.E_NOTE /* note */,
             type=NoteInfo.class),
-        @XmlElement(name=MailConstants.E_CONTACT,
+        @XmlElement(name=MailConstants.E_CONTACT /* cn */,
             type=ContactInfo.class),
-        @XmlElement(name=MailConstants.E_APPOINTMENT,
+        @XmlElement(name=MailConstants.E_APPOINTMENT /* appt */,
             type=CalendarItemInfo.class),
-        @XmlElement(name=MailConstants.E_TASK,
+        @XmlElement(name=MailConstants.E_TASK /* task */,
             type=TaskItemInfo.class),
-        @XmlElement(name=MailConstants.E_CONV,
+        @XmlElement(name=MailConstants.E_CONV /* c */,
             type=ConversationSummary.class),
-        @XmlElement(name=MailConstants.E_WIKIWORD,
+        @XmlElement(name=MailConstants.E_WIKIWORD /* w */,
             type=CommonDocumentInfo.class),
-        @XmlElement(name=MailConstants.E_DOC,
+        @XmlElement(name=MailConstants.E_DOC /* doc */,
             type=DocumentInfo.class),
-        @XmlElement(name=MailConstants.E_MSG,
+        @XmlElement(name=MailConstants.E_MSG /* m */,
             type=MessageSummary.class),
-        @XmlElement(name=MailConstants.E_CHAT,
+        @XmlElement(name=MailConstants.E_CHAT /* chat */,
             type=ChatSummary.class)
+    // TODO:Create an interface instead of using Objects?
     })
     private Object item;
 
@@ -72,10 +74,15 @@ public class GetItemResponse {
     public void setItem(Object item) { this.item = item; }
     public Object getItem() { return item; }
 
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        return helper
+            .add("item", item);
+    }
+
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
-            .add("item", item)
-            .toString();
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }

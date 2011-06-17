@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.mail.message;
+package com.zimbra.soap.admin.message;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
@@ -25,49 +25,42 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.mail.type.ChatSummary;
-import com.zimbra.soap.mail.type.MessageSummary;
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.admin.type.AttributeDescription;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=MailConstants.E_GET_MSG_METADATA_RESPONSE)
+@XmlRootElement(name=AdminConstants.E_GET_ATTRIBUTE_INFO_RESPONSE)
 @XmlType(propOrder = {})
-public class GetMsgMetadataResponse {
+public class GetAttributeInfoResponse {
 
-    @XmlElements({
-        @XmlElement(name=MailConstants.E_CHAT /* chat */,
-            type=ChatSummary.class),
-        @XmlElement(name=MailConstants.E_MSG /* m */,
-            type=MessageSummary.class)
-    })
-    private List<MessageSummary> messages = Lists.newArrayList();
+    @XmlElement(name=AdminConstants.E_A /* a */, required=false)
+    private List<AttributeDescription> attrs = Lists.newArrayList();
 
-    public GetMsgMetadataResponse() {
+    public GetAttributeInfoResponse() {
     }
 
-    public void setMessages(Iterable <MessageSummary> messages) {
-        this.messages.clear();
-        if (messages != null) {
-            Iterables.addAll(this.messages,messages);
+    public void setAttrs(Iterable <AttributeDescription> attrs) {
+        this.attrs.clear();
+        if (attrs != null) {
+            Iterables.addAll(this.attrs,attrs);
         }
     }
 
-    public void addMessage(MessageSummary message) {
-        this.messages.add(message);
+    public void addAttr(AttributeDescription attr) {
+        this.attrs.add(attr);
     }
 
-    public List<MessageSummary> getMessages() {
-        return Collections.unmodifiableList(messages);
+    public List<AttributeDescription> getAttrs() {
+        return Collections.unmodifiableList(attrs);
     }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("messages", messages);
+            .add("attrs", attrs);
     }
 
     @Override

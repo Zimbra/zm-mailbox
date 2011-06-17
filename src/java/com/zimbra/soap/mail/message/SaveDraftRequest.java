@@ -13,39 +13,35 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.mail.type;
+package com.zimbra.soap.mail.message;
 
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.mail.type.SaveDraftMsg;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class IdsAttr {
+@XmlRootElement(name=MailConstants.E_SAVE_DRAFT_REQUEST)
+public class SaveDraftRequest {
 
-    @XmlAttribute(name=MailConstants.A_IDS /* ids */, required=true)
-    private final String ids;
+    // E_INVITE child is not allowed
+    @XmlElement(name=MailConstants.E_MSG /* m */, required=false)
+    private SaveDraftMsg msg;
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private IdsAttr() {
-        this((String) null);
+    public SaveDraftRequest() {
     }
 
-    public IdsAttr(String ids) {
-        this.ids = ids;
-    }
-
-    public String getIds() { return ids; }
+    public void setMsg(SaveDraftMsg msg) { this.msg = msg; }
+    public SaveDraftMsg getMsg() { return msg; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("ids", ids);
+            .add("msg", msg);
     }
 
     @Override

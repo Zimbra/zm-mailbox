@@ -13,39 +13,48 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.mail.type;
+package com.zimbra.soap.mail.message;
 
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.mail.type.SendShareNotificationSpec;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class IdsAttr {
+@XmlRootElement(name=MailConstants.E_SEND_SHARE_NOTIFICATION_REQUEST)
+public class SendShareNotificationRequest {
 
-    @XmlAttribute(name=MailConstants.A_IDS /* ids */, required=true)
-    private final String ids;
+    @XmlElement(name=MailConstants.E_SHARE /* share */, required=true)
+    private final SendShareNotificationSpec share;
+
+    @XmlElement(name=MailConstants.E_NOTES /* notes */, required=false)
+    private String notes;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private IdsAttr() {
-        this((String) null);
+    private SendShareNotificationRequest() {
+        this((SendShareNotificationSpec) null);
     }
 
-    public IdsAttr(String ids) {
-        this.ids = ids;
+    public SendShareNotificationRequest(SendShareNotificationSpec share) {
+        this.share = share;
     }
 
-    public String getIds() { return ids; }
+    public void setNotes(String notes) { this.notes = notes; }
+    public SendShareNotificationSpec getShare() { return share; }
+    public String getNotes() { return notes; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("ids", ids);
+            .add("share", share)
+            .add("notes", notes);
     }
 
     @Override

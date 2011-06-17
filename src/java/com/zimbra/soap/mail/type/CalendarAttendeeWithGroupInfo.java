@@ -23,29 +23,30 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class IdsAttr {
+public class CalendarAttendeeWithGroupInfo extends CalendarAttendee {
 
-    @XmlAttribute(name=MailConstants.A_IDS /* ids */, required=true)
-    private final String ids;
+    @XmlAttribute(name=MailConstants.A_IS_GROUP /* isGroup */, required=false)
+    private Boolean group;
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private IdsAttr() {
-        this((String) null);
+    @XmlAttribute(name=MailConstants.A_EXP /* exp */, required=false)
+    private Boolean canExpandGroupMembers;
+
+    public CalendarAttendeeWithGroupInfo() {
     }
 
-    public IdsAttr(String ids) {
-        this.ids = ids;
+    public void setGroup(Boolean group) { this.group = group; }
+    public void setCanExpandGroupMembers(Boolean canExpandGroupMembers) {
+        this.canExpandGroupMembers = canExpandGroupMembers;
     }
-
-    public String getIds() { return ids; }
+    public Boolean getGroup() { return group; }
+    public Boolean getCanExpandGroupMembers() { return canExpandGroupMembers; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
+        helper = super.addToStringInfo(helper);
         return helper
-            .add("ids", ids);
+            .add("group", group)
+            .add("canExpandGroupMembers", canExpandGroupMembers);
     }
 
     @Override

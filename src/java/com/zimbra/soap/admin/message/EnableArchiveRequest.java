@@ -13,39 +13,50 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.mail.type;
+package com.zimbra.soap.admin.message;
 
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
-import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.ArchiveConstants;
+import com.zimbra.soap.admin.type.ArchiveSpec;
+import com.zimbra.soap.type.AccountSelector;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class IdsAttr {
+@XmlRootElement(name=ArchiveConstants.E_ENABLE_ARCHIVE_REQUEST)
+public class EnableArchiveRequest {
 
-    @XmlAttribute(name=MailConstants.A_IDS /* ids */, required=true)
-    private final String ids;
+    @XmlElement(name=AdminConstants.E_ACCOUNT /* account */, required=true)
+    private final AccountSelector account;
+
+    @XmlElement(name=ArchiveConstants.E_ARCHIVE /* archive */, required=false)
+    private ArchiveSpec archive;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private IdsAttr() {
-        this((String) null);
+    private EnableArchiveRequest() {
+        this((AccountSelector) null);
     }
 
-    public IdsAttr(String ids) {
-        this.ids = ids;
+    public EnableArchiveRequest(AccountSelector account) {
+        this.account = account;
     }
 
-    public String getIds() { return ids; }
+    public void setArchive(ArchiveSpec archive) { this.archive = archive; }
+    public AccountSelector getAccount() { return account; }
+    public ArchiveSpec getArchive() { return archive; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("ids", ids);
+            .add("account", account)
+            .add("archive", archive);
     }
 
     @Override

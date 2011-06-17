@@ -23,29 +23,41 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class IdsAttr {
+public class Grantor {
 
-    @XmlAttribute(name=MailConstants.A_IDS /* ids */, required=true)
-    private final String ids;
+    @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
+    private final String id;
+
+    @XmlAttribute(name=MailConstants.A_EMAIL /* email */, required=true)
+    private final String email;
+
+    @XmlAttribute(name=MailConstants.A_NAME /* name */, required=true)
+    private final String name;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private IdsAttr() {
-        this((String) null);
+    private Grantor() {
+        this((String) null, (String) null, (String) null);
     }
 
-    public IdsAttr(String ids) {
-        this.ids = ids;
+    public Grantor(String id, String email, String name) {
+        this.id = id;
+        this.email = email;
+        this.name = name;
     }
 
-    public String getIds() { return ids; }
+    public String getId() { return id; }
+    public String getEmail() { return email; }
+    public String getName() { return name; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("ids", ids);
+            .add("id", id)
+            .add("email", email)
+            .add("name", name);
     }
 
     @Override

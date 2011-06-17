@@ -34,9 +34,9 @@ import com.zimbra.soap.mail.type.ChatSummary;
 import com.zimbra.soap.mail.type.MessageSummary;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=MailConstants.E_GET_MSG_METADATA_RESPONSE)
+@XmlRootElement(name=MailConstants.E_ADD_MSG_RESPONSE)
 @XmlType(propOrder = {})
-public class GetMsgMetadataResponse {
+public class AddMsgResponse {
 
     @XmlElements({
         @XmlElement(name=MailConstants.E_CHAT /* chat */,
@@ -46,7 +46,7 @@ public class GetMsgMetadataResponse {
     })
     private List<MessageSummary> messages = Lists.newArrayList();
 
-    public GetMsgMetadataResponse() {
+    public AddMsgResponse() {
     }
 
     public void setMessages(Iterable <MessageSummary> messages) {
