@@ -36,7 +36,7 @@ import com.zimbra.cs.mailbox.Metadata;
 public class DbDataSource {
 
     public static class DataSourceItem {
-        public int folderId;
+    public int folderId;
 	public int itemId;
 	public String remoteId;
 	public Metadata md;
@@ -193,43 +193,55 @@ public class DbDataSource {
     }
 
     public static void deleteMappings(DataSource ds, Collection<Integer> itemIds) throws ServiceException {
-    	Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
+        deleteMappings(ds, itemIds, false);
+    }
 
-    	ZimbraLog.datasource.debug("Deleting %d mappings for dataSource %s", itemIds.size(), ds.getName());
+    public static void deleteMappings(DataSource ds, Collection<Integer> itemIds, boolean isBatch) throws ServiceException {
+        Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
+
+        ZimbraLog.datasource.debug("Deleting %d mappings for dataSource %s", itemIds.size(), ds.getName());
         List<List<Integer>> splitIds = ListUtil.split(itemIds, Db.getINClauseBatchSize());
         synchronized (getSynchronizer(mbox)) {
             Connection conn = null;
             PreparedStatement stmt = null;
-            try {
-                conn = DbPool.getConnection(mbox);
-                int numRows = 0;
-                for (List<Integer> curIds : splitIds) {
-                    StringBuilder sb = new StringBuilder();
-                    sb.append("DELETE FROM ");
-                    sb.append(getTableName(mbox));
-                    sb.append(" WHERE ");
-                    sb.append(DbMailItem.IN_THIS_MAILBOX_AND);
-                    sb.append(" data_source_id = ? AND ");
-                    sb.append(DbUtil.whereIn("item_id", curIds.size()));
-                    stmt = conn.prepareStatement(sb.toString());
-    
-                    int i = 1;
-                    i = DbMailItem.setMailboxId(stmt, mbox, i);
-                    stmt.setString(i++, ds.getId());
-                    for (int itemId : curIds)
-                        stmt.setInt(i++, itemId);
-    
-                    numRows += stmt.executeUpdate();
-                    conn.commit();
-                    stmt.close();
-                }
-                ZimbraLog.datasource.debug("Deleted %d mappings for %s", numRows, ds.getName());
-            } catch (SQLException e) {
-                throw ServiceException.FAILURE("Unable to delete mapping for dataSource "+ds.getName(), e);
-            } finally {
-                DbPool.closeStatement(stmt);
-                DbPool.quietClose(conn);
-            }
+	        try {
+	            if (isBatch) {
+	                conn = mbox.getOperationConnection();
+	            } else {
+	                conn = DbPool.getConnection(mbox);    
+	            }
+	            int numRows = 0;
+	            for (List<Integer> curIds : splitIds) {
+	                StringBuilder sb = new StringBuilder();
+	                sb.append("DELETE FROM ");
+	                sb.append(getTableName(mbox));
+	                sb.append(" WHERE ");
+	                sb.append(DbMailItem.IN_THIS_MAILBOX_AND);
+	                sb.append(" data_source_id = ? AND ");
+	                sb.append(DbUtil.whereIn("item_id", curIds.size()));
+	                stmt = conn.prepareStatement(sb.toString());
+	
+	                int i = 1;
+	                i = DbMailItem.setMailboxId(stmt, mbox, i);
+	                stmt.setString(i++, ds.getId());
+	                for (int itemId : curIds)
+	                    stmt.setInt(i++, itemId);
+	
+	                numRows += stmt.executeUpdate();
+	                if (!isBatch) {
+	                    conn.commit();    
+	                }
+	                stmt.close();
+	            }
+	            ZimbraLog.datasource.debug("Deleted %d mappings for %s", numRows, ds.getName());
+	        } catch (SQLException e) {
+	            throw ServiceException.FAILURE("Unable to delete mapping for dataSource " + ds.getName(), e);
+	        } finally {
+	            DbPool.closeStatement(stmt);
+	            if (!isBatch) {
+	                DbPool.quietClose(conn);
+	            }
+	        }
         }
     }
 
@@ -265,15 +277,23 @@ public class DbDataSource {
     }
 
     public static void deleteMapping(DataSource ds, int itemId) throws ServiceException {
-    	Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
+        deleteMapping(ds, itemId, false);
+    }
 
-    	ZimbraLog.datasource.debug("Deleting mappings for dataSource %s itemId %d", ds.getName(), itemId);
+    public static void deleteMapping(DataSource ds, int itemId, boolean isBatch) throws ServiceException {
+        Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
+
+        ZimbraLog.datasource.debug("Deleting mapping for dataSource %s: itemId(%d)", ds.getName(), itemId);
 
         synchronized (getSynchronizer(mbox)) {
             Connection conn = null;
             PreparedStatement stmt = null;
             try {
-                conn = DbPool.getConnection(mbox);
+                if (isBatch) {
+                    conn = mbox.getOperationConnection();
+                } else {
+                    conn = DbPool.getConnection(mbox);
+                }
                 StringBuilder sb = new StringBuilder();
                 sb.append("DELETE FROM ");
                 sb.append(getTableName(mbox));
@@ -287,54 +307,70 @@ public class DbDataSource {
                 stmt.setString(i++, ds.getId());
                 stmt.setInt(i++, itemId);
                 int numRows = stmt.executeUpdate();
-                conn.commit();
+                if (!isBatch) {
+                    conn.commit();
+                }
                 ZimbraLog.datasource.debug("Deleted %d mappings for %s", numRows, ds.getName());
             } catch (SQLException e) {
                 throw ServiceException.FAILURE("Unable to delete mapping for dataSource "+ds.getName(), e);
             } finally {
                 DbPool.closeStatement(stmt);
-                DbPool.quietClose(conn);
+                if (!isBatch) {
+                    DbPool.quietClose(conn);
+                }
             }
-    	}
+        }
     }
 
     public static Collection<DataSourceItem> deleteAllMappingsInFolder(DataSource ds, int folderId) throws ServiceException {
-    	Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
+        return deleteAllMappingsInFolder(ds, folderId, false);
+    }
 
-    	ArrayList<DataSourceItem> items = new ArrayList<DataSourceItem>();
+    public static Collection<DataSourceItem> deleteAllMappingsInFolder(DataSource ds, int folderId, boolean isBatch) throws ServiceException {
+        Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
 
-    	ZimbraLog.datasource.debug("Deleting all mappings for dataSource %s in folder %d", ds.getName(), folderId);
+        ArrayList<DataSourceItem> items = new ArrayList<DataSourceItem>();
 
-    	synchronized (mbox) {
-    	    Connection conn = null;
-    	    PreparedStatement stmt = null;
-    	    try {
-    	        conn = DbPool.getConnection(mbox);
-    	        String dataSourceTable = getTableName(mbox);
-    	        String IN_THIS_MAILBOX_AND = DebugConfig.disableMailboxGroups ? "" : dataSourceTable + ".mailbox_id = ? AND ";
-    	        StringBuilder sb = new StringBuilder();
-    	        sb.append("DELETE FROM ");
-    	        sb.append(dataSourceTable);
-    	        sb.append(" WHERE ");
-    	        sb.append(IN_THIS_MAILBOX_AND);
-    	        sb.append("  data_source_id = ? AND folder_id = ?");
-    	        stmt = conn.prepareStatement(sb.toString());
-    	        int pos = 1;
-    	        pos = DbMailItem.setMailboxId(stmt, mbox, pos);
-    	        stmt.setString(pos++, ds.getId());
-    	        stmt.setInt(pos++, folderId);
-    	        int numRows = stmt.executeUpdate();
-    	        conn.commit();
-    	        stmt.close();
-    	        ZimbraLog.datasource.debug("Deleted %d mappings for %s", numRows, ds.getName());
-    	    } catch (SQLException e) {
-    	        throw ServiceException.FAILURE("Unable to delete mapping for dataSource "+ds.getName(), e);
-    	    } finally {
-    	        DbPool.closeStatement(stmt);
-    	        DbPool.quietClose(conn);
-    	    }
-    	}
-    	return items;
+        ZimbraLog.datasource.debug("Deleting all mappings for dataSource %s in folder %d", ds.getName(), folderId);
+
+        synchronized (getSynchronizer(mbox)) {
+            Connection conn = null;
+            PreparedStatement stmt = null;
+            try {
+                if (isBatch) {
+                    conn = mbox.getOperationConnection();
+                } else {
+                    conn = DbPool.getConnection(mbox);
+                }
+                String dataSourceTable = getTableName(mbox);
+                String IN_THIS_MAILBOX_AND = DebugConfig.disableMailboxGroups ? "" : dataSourceTable + ".mailbox_id = ? AND ";
+                StringBuilder sb = new StringBuilder();
+                sb.append("DELETE FROM ");
+                sb.append(dataSourceTable);
+                sb.append(" WHERE ");
+                sb.append(IN_THIS_MAILBOX_AND);
+                sb.append("  data_source_id = ? AND folder_id = ?");
+                stmt = conn.prepareStatement(sb.toString());
+                int pos = 1;
+                pos = DbMailItem.setMailboxId(stmt, mbox, pos);
+                stmt.setString(pos++, ds.getId());
+                stmt.setInt(pos++, folderId);
+                int numRows = stmt.executeUpdate();
+                if (!isBatch) {
+                    conn.commit();    
+                }
+                stmt.close();
+                ZimbraLog.datasource.debug("Deleted %d mappings for %s", numRows, ds.getName());
+            } catch (SQLException e) {
+                throw ServiceException.FAILURE("Unable to delete mapping for dataSource "+ds.getName(), e);
+            } finally {
+                DbPool.closeStatement(stmt);
+                if (!isBatch) {
+                    DbPool.quietClose(conn);
+                }
+            }
+        }
+        return items;
     }
 
     public static boolean hasMapping(DataSource ds, int itemId) throws ServiceException {
@@ -744,3 +780,5 @@ public class DbDataSource {
         return Db.supports(Db.Capability.ROW_LEVEL_LOCKING) ? new Object() : mbox;
     }
 }
+
+
