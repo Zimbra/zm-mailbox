@@ -270,14 +270,22 @@ public class DbDataSource {
     }
 
     public static void deleteMapping(DataSource ds, int itemId) throws ServiceException {
+        deleteMapping(ds, itemId, false);
+    }
+
+    public static void deleteMapping(DataSource ds, int itemId) throws ServiceException {
         Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
 
-        ZimbraLog.datasource.debug("Deleting mappings for dataSource %s itemId %d", ds.getName(), itemId);
+    	ZimbraLog.datasource.debug("Deleting mappings for dataSource %s itemId %d", ds.getName(), itemId);
 
         DbConnection conn = null;
         PreparedStatement stmt = null;
         try {
-            conn = DbPool.getConnection(mbox);
+            if (isBatch) {
+                conn = mbox.getOperationConnection();
+            } else {
+                conn = DbPool.getConnection(mbox);
+            }
             StringBuilder sb = new StringBuilder();
             sb.append("DELETE FROM ");
             sb.append(getTableName(mbox));
@@ -291,20 +299,27 @@ public class DbDataSource {
             stmt.setString(i++, ds.getId());
             stmt.setInt(i++, itemId);
             int numRows = stmt.executeUpdate();
-            conn.commit();
+            if (!isBatch) {
+                conn.commit();
+            }
             ZimbraLog.datasource.debug("Deleted %d mappings for %s", numRows, ds.getName());
         } catch (SQLException e) {
             throw ServiceException.FAILURE("Unable to delete mapping for dataSource " + ds.getName(), e);
         } finally {
             DbPool.closeStatement(stmt);
-            DbPool.quietClose(conn);
+            if (!isBatch) {
+                conn.commit();
+            }
+            if (!isBatch) {
+                DbPool.quietClose(conn);
+            }
         }
     }
 
     public static Collection<DataSourceItem> deleteAllMappingsInFolder(DataSource ds, int folderId) throws ServiceException {
         return deleteAllMappingsInFolder(ds, folderId, false);
     }
-    
+
     public static Collection<DataSourceItem> deleteAllMappingsInFolder(DataSource ds, int folderId, boolean isBatch) throws ServiceException {
         Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
 
