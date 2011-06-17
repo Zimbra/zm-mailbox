@@ -24,6 +24,7 @@ import org.dom4j.DocumentException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.ZimletConstants;
 
 /**
  * Parses the Zimlet description files, <zimlet>.xml and config.xml.
@@ -32,36 +33,6 @@ import com.zimbra.common.soap.Element;
  *
  */
 public abstract class ZimletMeta {
-	/* top level */
-	public static final String ZIMLET_TAG_ZIMLET = "zimlet";
-
-	/* first level */
-	public static final String ZIMLET_ATTR_VERSION         = "version";
-	public static final String ZIMLET_ATTR_DESCRIPTION     = "description";
-	public static final String ZIMLET_ATTR_NAME            = "name";
-	public static final String ZIMLET_ATTR_EXTENSION       = "extension";
-
-	public static final String ZIMLET_TAG_SCRIPT           = "include";
-	public static final String ZIMLET_TAG_CSS              = "includeCSS";
-	public static final String ZIMLET_TAG_CONTENT_OBJECT   = "contentObject";
-	public static final String ZIMLET_TAG_PANEL_ITEM       = "panelItem";
-	
-	/* for serverExtension branch */
-	public static final String ZIMLET_TAG_SERVER_EXTENSION = "serverExtension";
-	public static final String ZIMLET_ATTR_HAS_KEYWORD     = "hasKeyword";
-	public static final String ZIMLET_ATTR_MATCH_ON        = "matchOn";
-	public static final String ZIMLET_ATTR_EXTENSION_CLASS = "extensionClass";
-	public static final String ZIMLET_ATTR_REGEX           = "regex";
-	
-	/* config description file */
-	public static final String ZIMLET_TAG_CONFIG           = "zimletConfig";
-	
-	public static final String ZIMLET_TAG_GLOBAL           = "global";
-	public static final String ZIMLET_TAG_HOST             = "host";
-	public static final String ZIMLET_TAG_PROPERTY         = "property";
-
-	public static final String ZIMLET_TAG_TARGET		   = "target";
-	public static final String ZIMLET_DISABLE_UI_UNDEPLOY   = "disableUIUndeploy";
 	protected Element mTopElement;
 	
 	protected String mName;
@@ -108,15 +79,15 @@ public abstract class ZimletMeta {
 			throw ZimletException.INVALID_ZIMLET_DESCRIPTION("Null DOM element");
 		}
 		String name = mTopElement.getName();
-		if (!name.equals(ZIMLET_TAG_ZIMLET) && !name.equals(ZIMLET_TAG_CONFIG)) {
+		if (!name.equals(ZimletConstants.ZIMLET_TAG_ZIMLET) && !name.equals(ZimletConstants.ZIMLET_TAG_CONFIG)) {
 			throw ZimletException.INVALID_ZIMLET_DESCRIPTION("Top level tag not recognized " + name);
 		}
 		
-		mName = mTopElement.getAttribute(ZIMLET_ATTR_NAME, "");
-		mVersion = new Version(mTopElement.getAttribute(ZIMLET_ATTR_VERSION, ""));
-		mDescription = mTopElement.getAttribute(ZIMLET_ATTR_DESCRIPTION, "");
+		mName = mTopElement.getAttribute(ZimletConstants.ZIMLET_ATTR_NAME, "");
+		mVersion = new Version(mTopElement.getAttribute(ZimletConstants.ZIMLET_ATTR_VERSION, ""));
+		mDescription = mTopElement.getAttribute(ZimletConstants.ZIMLET_ATTR_DESCRIPTION, "");
 		try {
-			mIsExtension = mTopElement.getAttributeBool(ZIMLET_ATTR_EXTENSION, false);
+			mIsExtension = mTopElement.getAttributeBool(ZimletConstants.ZIMLET_ATTR_EXTENSION, false);
 		} catch (Exception se) {
 			mIsExtension = false;
 		}
