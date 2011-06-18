@@ -176,6 +176,9 @@ public final class DebugConfig {
     public static final boolean enableThisAndFuture = value("debug_enable_calendar_thisandfuture", false);
     public static final boolean caldavAllowAttendeeForOrganizer =
             value("debug_caldav_allow_attendee_for_organizer", false);
+    
+    public static boolean certAuthCaptureClientCertificate = 
+        value("debug_certauth_capture_client_certificate", false);
 
     private static boolean value(String key, boolean defaultValue) {
         String value = LC.get(key);
