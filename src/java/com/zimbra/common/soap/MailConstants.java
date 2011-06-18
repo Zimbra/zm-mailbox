@@ -1102,4 +1102,5 @@ public final class MailConstants {
     public static final String E_ARG = "arg";
     
     public static final String E_GRANTOR = "grantor";
+    public static final String E_GRANTEE = "grantee";
 }
