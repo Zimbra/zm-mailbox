@@ -1,3 +1,17 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2011 Zimbra, Inc.
+ * 
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.cs.service.authenticator;
 
 import java.io.FileInputStream;
@@ -11,7 +25,9 @@ import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
@@ -43,18 +59,32 @@ import org.bouncycastle.asn1.x509.X509Extension;
 
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.service.authenticator.ClientCertPrincipalMap.CertField;
+import com.zimbra.cs.service.authenticator.ClientCertPrincipalMap.KnownCertField;
+import com.zimbra.cs.service.authenticator.ClientCertPrincipalMap.SubjectCertField;
 
 public class CertUtil {
+    static final String LOG_PREFIX = ClientCertAuthenticator.LOG_PREFIX;
     
-    private static final String ATTR_CN = "CN";
-    private static final String ATTR_EMAILADDRESS = "EMAILADDRESS";
-    
-    private static final String OID_CN           = "2.5.4.3";
-    private static final String OID_EMAILADDRESS = "1.2.840.113549.1.9.1";
+    static final String ATTR_EMAILADDRESS = "EMAILADDRESS";
     
     /* ObjectID for UPN in SubjectaltName for windows smart card logon */
     private static final String OID_UPN          = "1.3.6.1.4.1.311.20.2.3";
     
+    /*
+     * RFC 2253 2.3
+     * 
+     * If the AttributeType is in a published table of attribute types
+     * associated with LDAP [4] (RFC 2252), then the type name string from that table
+     * is used, otherwise it is encoded as the dotted-decimal encoding of
+     * the AttributeType's OBJECT IDENTIFIER.
+     * 
+     * 
+     */
+    private static final Map<String, String> KNOWN_NON_RFC2252_ATTRS = new HashMap<String, String>();
+    
+    static {
+        KNOWN_NON_RFC2252_ATTRS.put(ATTR_EMAILADDRESS, "1.2.840.113549.1.9.1");
+    }
 
     X509Certificate cert;
     
@@ -66,18 +96,20 @@ public class CertUtil {
     }
     
     String getCertField(CertField certField) {
-        
+        if (certField instanceof KnownCertField) {
+            return getKnownCertField((KnownCertField) certField);
+        } else if (certField instanceof SubjectCertField) {
+            return getSubjectCertField((SubjectCertField) certField);
+        }
+        return null;
+    }
+    
+    private String getKnownCertField(KnownCertField certField) {
         String value = null;
         
-        switch (certField) {
+        switch (certField.getField()) {
             case SUBJECT_DN:
                 value = getSubjectDN();
-                break;
-            case SUBJECT_CN:
-                value = getSubjectCN();
-                break;
-            case SUBJECT_EMAILADDRESS:
-                value = getSubjectEmailAddress();
                 break;
             case SUBJECTALTNAME_OTHERNAME_UPN:
                 value = getSubjectAltNameOtherNameUPN();
@@ -87,6 +119,11 @@ public class CertUtil {
                 break;
         }
         return value;
+    }
+    
+    private String getSubjectCertField(SubjectCertField certField) {
+        String rdnAttrType = certField.getRDNAttrType();
+        return getSubjectAttr(rdnAttrType, KNOWN_NON_RFC2252_ATTRS.get(rdnAttrType));
     }
 
     String getSubjectDN() {
@@ -106,20 +143,12 @@ public class CertUtil {
         return subjectPrincipal.getName();
     }
     
-    String getSubjectCN() {
-        return getSubjectAttr(ATTR_CN, OID_CN);
-    }
-    
-    String getSubjectEmailAddress() {
-        return getSubjectAttr(ATTR_EMAILADDRESS, OID_EMAILADDRESS);
-    }
-    
     String getSubjectAltNameOtherNameUPN() {
         Collection<List<?>> generalNames = null;
         try {
             generalNames = cert.getSubjectAlternativeNames();
         } catch (CertificateParsingException e) {
-            ZimbraLog.account.warn("ClientCertAuthenticator - unable to get subject alternative names", e);
+            ZimbraLog.account.warn(LOG_PREFIX + "unable to get subject alternative names", e);
         }
     
         if (generalNames == null) {
@@ -150,7 +179,7 @@ public class CertUtil {
                 }
             }
         } catch (IOException e) {
-            ZimbraLog.account.warn("ClientCertAuthenticator - unable to process ASN.1 data", e);
+            ZimbraLog.account.warn(LOG_PREFIX + "unable to process ASN.1 data", e);
         }
         
         return null;
@@ -161,7 +190,7 @@ public class CertUtil {
         try {
             generalNames = cert.getSubjectAlternativeNames();
         } catch (CertificateParsingException e) {
-            ZimbraLog.account.warn("ClientCertAuthenticator - unable to get subject alternative names", e);
+            ZimbraLog.account.warn(LOG_PREFIX + "unable to get subject alternative names", e);
         }
     
         if (generalNames == null) {
@@ -186,8 +215,6 @@ public class CertUtil {
             LdapName dn = new LdapName(subjectDN);
             List<Rdn> rdns = dn.getRdns();
             
-            String attrValue = null;
-            
             for (Rdn rdn : rdns) {
                 String type = rdn.getType();
                 
@@ -209,8 +236,7 @@ public class CertUtil {
                             DERIA5String str = DERIA5String.getInstance(encoded);
                             return str.getString();
                         } catch (IOException e) {
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
+                            ZimbraLog.account.warn(LOG_PREFIX + "unable to decode " + type, e);
                         }
                         
                     } else {
@@ -219,7 +245,7 @@ public class CertUtil {
                 }
             }
         } catch (InvalidNameException e) {
-            ZimbraLog.account.warn("ClientCertAuthenticator - Invalid subject dn value" + subjectDN, e);
+            ZimbraLog.account.warn(LOG_PREFIX + "Invalid subject dn value" + subjectDN, e);
         }
         
         return null;
@@ -228,9 +254,9 @@ public class CertUtil {
 
     
     /* 
-     * =============================================
-     * Printing methods below - Not production code
-     * =============================================
+     * ======================================================
+     * Printing methods below for CLI - Not production code
+     * ======================================================
      */
     
     private void loadCert(String certFilePath) throws Exception {
@@ -487,7 +513,8 @@ public class CertUtil {
         Options options = new Options();
         options.addOption(O_CERT, true, "file path of the certificate");
         options.addOption(O_DUMP, false, "dump the certificate (print toString() value of the certificate)");
-        options.addOption(O_GET, true, "get a field in the certificate, valid fields:" + ClientCertPrincipalMap.CertField.names());
+        options.addOption(O_GET, true, "get a field in the certificate, valid fields:" + 
+                KnownCertField.names() + "|" + SubjectCertField.names());
         options.addOption(O_HELP, false, "print usage");
         options.addOption(O_PRINT, false, "print the certificate(print each parsed certificate fields)");
         
@@ -523,10 +550,12 @@ public class CertUtil {
             certUtil.loadCert(certFilePath);
             
             if (cl.hasOption(O_DUMP)) {
+                certUtil.dumpCert((String)null);
+            } else if (cl.hasOption(O_PRINT)) {
                 certUtil.printCert((String)null);
             } else if (cl.hasOption(O_GET)) {
                 String field = cl.getOptionValue(O_GET);
-                CertField certField = CertField.valueOf(field);
+                CertField certField = ClientCertPrincipalMap.parseCertField(field);
                 String value = certUtil.getCertField(certField);
                 System.out.println(field + ": " + value);
             }

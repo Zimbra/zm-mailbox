@@ -41,7 +41,7 @@ public class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110615-2246 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110616-1720 */
 
     /**
      * RFC2256: descriptive information
@@ -8893,21 +8893,32 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * Map from a certificate field to a Zimbra account key that can uniquely
-     * identify a Zimbra account. Value is a comma-seperated list of
-     * mappings, each mapping maps a certificate field to a Zimbra account
-     * key. Each is attempted in sequence untill a unique account can be
-     * resolved. A mapping must be in the format of: {certificate
-     * field}={Zimbra account key} Supported certificate fields: SUBJECT_DN:
-     * DN of Subject SUBJECT_CN: CN in DN of Subject SUBJECT_EMAILADDRESS:
-     * EMAILADDRESS in DN of Subject SUBJECTALTNAME_OTHERNAME_UPN: UPN(aka
-     * Principal Name) in otherName in subjectAltName extension
+     * identify a Zimbra account for client certificate authentication. Value
+     * is a comma-seperated list of mappings, each mapping maps a certificate
+     * field to a Zimbra account key. Each is attempted in sequence untill a
+     * unique account can be resolved. e.g. a value can be:
+     * SUBJECTALTNAME_OTHERNAME_UPN=zimbraForeignPrincipal,(uid=%{SUBJECT_CN})
+     * mapping: {certificate-field}={Zimbra-account-key} | {LDAP-filter}
+     * certificate-field: SUBJECT_{an RDN attr, e.g. CN}: a RND in DN of
+     * Subject SUBJECT_DN: entire DN of Subject SUBJECTALTNAME_OTHERNAME_UPN:
+     * UPN(aka Principal Name) in otherName in subjectAltName extension
      * SUBJECTALTNAME_RFC822NAME: rfc822Name in subjectAltName extension
-     * Supported Zimbra account key: name: primary name or any of the aliases
-     * of an account zimbraId: zimbraId of an account zimbraForeignPrincipal:
+     * Zimbra-account-key: name: primary name or any of the aliases of an
+     * account zimbraId: zimbraId of an account zimbraForeignPrincipal:
      * zimbraForeignPrincipal of an account. The matching value on the
      * zimbraForeignPrincipal must be prefixed with &quot;cert
      * {supported-certificate-filed}:&quot; e.g. cert
-     * SUBJECTALTNAME_OTHERNAME_UPN:123456@mydomain
+     * SUBJECTALTNAME_OTHERNAME_UPN:123456@mydomain LDAP-filter: An LDAP
+     * filter with certificate-field placeholders to be substituted by
+     * certificate fields. (objectClass=zimbraAccount) is internally ANDed
+     * with the supplied filter. e.g.
+     * (|(uid=%{SUBJECT_CN})(mail=%{SUBJECTALTNAME_RFC822NAME})) Note: it is
+     * highly recommended not to use LDAP-filter, as it will trigger an LDAP
+     * search for each cert auth request. LDAP-filter is disabled by default.
+     * To enable it globally, set
+     * zimbraMailSSLClientCertPrincipalMapLdapFilterEnabled on global config
+     * to TRUE. If LDAP-filter is not enabled, all client certificate
+     * authentication will fail on domains configured with LDAP-filter.
      *
      * @return zimbraMailSSLClientCertPrincipalMap, or "SUBJECT_EMAILADDRESS=name" if unset
      *
@@ -8920,21 +8931,32 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * Map from a certificate field to a Zimbra account key that can uniquely
-     * identify a Zimbra account. Value is a comma-seperated list of
-     * mappings, each mapping maps a certificate field to a Zimbra account
-     * key. Each is attempted in sequence untill a unique account can be
-     * resolved. A mapping must be in the format of: {certificate
-     * field}={Zimbra account key} Supported certificate fields: SUBJECT_DN:
-     * DN of Subject SUBJECT_CN: CN in DN of Subject SUBJECT_EMAILADDRESS:
-     * EMAILADDRESS in DN of Subject SUBJECTALTNAME_OTHERNAME_UPN: UPN(aka
-     * Principal Name) in otherName in subjectAltName extension
+     * identify a Zimbra account for client certificate authentication. Value
+     * is a comma-seperated list of mappings, each mapping maps a certificate
+     * field to a Zimbra account key. Each is attempted in sequence untill a
+     * unique account can be resolved. e.g. a value can be:
+     * SUBJECTALTNAME_OTHERNAME_UPN=zimbraForeignPrincipal,(uid=%{SUBJECT_CN})
+     * mapping: {certificate-field}={Zimbra-account-key} | {LDAP-filter}
+     * certificate-field: SUBJECT_{an RDN attr, e.g. CN}: a RND in DN of
+     * Subject SUBJECT_DN: entire DN of Subject SUBJECTALTNAME_OTHERNAME_UPN:
+     * UPN(aka Principal Name) in otherName in subjectAltName extension
      * SUBJECTALTNAME_RFC822NAME: rfc822Name in subjectAltName extension
-     * Supported Zimbra account key: name: primary name or any of the aliases
-     * of an account zimbraId: zimbraId of an account zimbraForeignPrincipal:
+     * Zimbra-account-key: name: primary name or any of the aliases of an
+     * account zimbraId: zimbraId of an account zimbraForeignPrincipal:
      * zimbraForeignPrincipal of an account. The matching value on the
      * zimbraForeignPrincipal must be prefixed with &quot;cert
      * {supported-certificate-filed}:&quot; e.g. cert
-     * SUBJECTALTNAME_OTHERNAME_UPN:123456@mydomain
+     * SUBJECTALTNAME_OTHERNAME_UPN:123456@mydomain LDAP-filter: An LDAP
+     * filter with certificate-field placeholders to be substituted by
+     * certificate fields. (objectClass=zimbraAccount) is internally ANDed
+     * with the supplied filter. e.g.
+     * (|(uid=%{SUBJECT_CN})(mail=%{SUBJECTALTNAME_RFC822NAME})) Note: it is
+     * highly recommended not to use LDAP-filter, as it will trigger an LDAP
+     * search for each cert auth request. LDAP-filter is disabled by default.
+     * To enable it globally, set
+     * zimbraMailSSLClientCertPrincipalMapLdapFilterEnabled on global config
+     * to TRUE. If LDAP-filter is not enabled, all client certificate
+     * authentication will fail on domains configured with LDAP-filter.
      *
      * @param zimbraMailSSLClientCertPrincipalMap new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -8950,21 +8972,32 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * Map from a certificate field to a Zimbra account key that can uniquely
-     * identify a Zimbra account. Value is a comma-seperated list of
-     * mappings, each mapping maps a certificate field to a Zimbra account
-     * key. Each is attempted in sequence untill a unique account can be
-     * resolved. A mapping must be in the format of: {certificate
-     * field}={Zimbra account key} Supported certificate fields: SUBJECT_DN:
-     * DN of Subject SUBJECT_CN: CN in DN of Subject SUBJECT_EMAILADDRESS:
-     * EMAILADDRESS in DN of Subject SUBJECTALTNAME_OTHERNAME_UPN: UPN(aka
-     * Principal Name) in otherName in subjectAltName extension
+     * identify a Zimbra account for client certificate authentication. Value
+     * is a comma-seperated list of mappings, each mapping maps a certificate
+     * field to a Zimbra account key. Each is attempted in sequence untill a
+     * unique account can be resolved. e.g. a value can be:
+     * SUBJECTALTNAME_OTHERNAME_UPN=zimbraForeignPrincipal,(uid=%{SUBJECT_CN})
+     * mapping: {certificate-field}={Zimbra-account-key} | {LDAP-filter}
+     * certificate-field: SUBJECT_{an RDN attr, e.g. CN}: a RND in DN of
+     * Subject SUBJECT_DN: entire DN of Subject SUBJECTALTNAME_OTHERNAME_UPN:
+     * UPN(aka Principal Name) in otherName in subjectAltName extension
      * SUBJECTALTNAME_RFC822NAME: rfc822Name in subjectAltName extension
-     * Supported Zimbra account key: name: primary name or any of the aliases
-     * of an account zimbraId: zimbraId of an account zimbraForeignPrincipal:
+     * Zimbra-account-key: name: primary name or any of the aliases of an
+     * account zimbraId: zimbraId of an account zimbraForeignPrincipal:
      * zimbraForeignPrincipal of an account. The matching value on the
      * zimbraForeignPrincipal must be prefixed with &quot;cert
      * {supported-certificate-filed}:&quot; e.g. cert
-     * SUBJECTALTNAME_OTHERNAME_UPN:123456@mydomain
+     * SUBJECTALTNAME_OTHERNAME_UPN:123456@mydomain LDAP-filter: An LDAP
+     * filter with certificate-field placeholders to be substituted by
+     * certificate fields. (objectClass=zimbraAccount) is internally ANDed
+     * with the supplied filter. e.g.
+     * (|(uid=%{SUBJECT_CN})(mail=%{SUBJECTALTNAME_RFC822NAME})) Note: it is
+     * highly recommended not to use LDAP-filter, as it will trigger an LDAP
+     * search for each cert auth request. LDAP-filter is disabled by default.
+     * To enable it globally, set
+     * zimbraMailSSLClientCertPrincipalMapLdapFilterEnabled on global config
+     * to TRUE. If LDAP-filter is not enabled, all client certificate
+     * authentication will fail on domains configured with LDAP-filter.
      *
      * @param zimbraMailSSLClientCertPrincipalMap new value
      * @param attrs existing map to populate, or null to create a new map
@@ -8981,21 +9014,32 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * Map from a certificate field to a Zimbra account key that can uniquely
-     * identify a Zimbra account. Value is a comma-seperated list of
-     * mappings, each mapping maps a certificate field to a Zimbra account
-     * key. Each is attempted in sequence untill a unique account can be
-     * resolved. A mapping must be in the format of: {certificate
-     * field}={Zimbra account key} Supported certificate fields: SUBJECT_DN:
-     * DN of Subject SUBJECT_CN: CN in DN of Subject SUBJECT_EMAILADDRESS:
-     * EMAILADDRESS in DN of Subject SUBJECTALTNAME_OTHERNAME_UPN: UPN(aka
-     * Principal Name) in otherName in subjectAltName extension
+     * identify a Zimbra account for client certificate authentication. Value
+     * is a comma-seperated list of mappings, each mapping maps a certificate
+     * field to a Zimbra account key. Each is attempted in sequence untill a
+     * unique account can be resolved. e.g. a value can be:
+     * SUBJECTALTNAME_OTHERNAME_UPN=zimbraForeignPrincipal,(uid=%{SUBJECT_CN})
+     * mapping: {certificate-field}={Zimbra-account-key} | {LDAP-filter}
+     * certificate-field: SUBJECT_{an RDN attr, e.g. CN}: a RND in DN of
+     * Subject SUBJECT_DN: entire DN of Subject SUBJECTALTNAME_OTHERNAME_UPN:
+     * UPN(aka Principal Name) in otherName in subjectAltName extension
      * SUBJECTALTNAME_RFC822NAME: rfc822Name in subjectAltName extension
-     * Supported Zimbra account key: name: primary name or any of the aliases
-     * of an account zimbraId: zimbraId of an account zimbraForeignPrincipal:
+     * Zimbra-account-key: name: primary name or any of the aliases of an
+     * account zimbraId: zimbraId of an account zimbraForeignPrincipal:
      * zimbraForeignPrincipal of an account. The matching value on the
      * zimbraForeignPrincipal must be prefixed with &quot;cert
      * {supported-certificate-filed}:&quot; e.g. cert
-     * SUBJECTALTNAME_OTHERNAME_UPN:123456@mydomain
+     * SUBJECTALTNAME_OTHERNAME_UPN:123456@mydomain LDAP-filter: An LDAP
+     * filter with certificate-field placeholders to be substituted by
+     * certificate fields. (objectClass=zimbraAccount) is internally ANDed
+     * with the supplied filter. e.g.
+     * (|(uid=%{SUBJECT_CN})(mail=%{SUBJECTALTNAME_RFC822NAME})) Note: it is
+     * highly recommended not to use LDAP-filter, as it will trigger an LDAP
+     * search for each cert auth request. LDAP-filter is disabled by default.
+     * To enable it globally, set
+     * zimbraMailSSLClientCertPrincipalMapLdapFilterEnabled on global config
+     * to TRUE. If LDAP-filter is not enabled, all client certificate
+     * authentication will fail on domains configured with LDAP-filter.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -9010,21 +9054,32 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * Map from a certificate field to a Zimbra account key that can uniquely
-     * identify a Zimbra account. Value is a comma-seperated list of
-     * mappings, each mapping maps a certificate field to a Zimbra account
-     * key. Each is attempted in sequence untill a unique account can be
-     * resolved. A mapping must be in the format of: {certificate
-     * field}={Zimbra account key} Supported certificate fields: SUBJECT_DN:
-     * DN of Subject SUBJECT_CN: CN in DN of Subject SUBJECT_EMAILADDRESS:
-     * EMAILADDRESS in DN of Subject SUBJECTALTNAME_OTHERNAME_UPN: UPN(aka
-     * Principal Name) in otherName in subjectAltName extension
+     * identify a Zimbra account for client certificate authentication. Value
+     * is a comma-seperated list of mappings, each mapping maps a certificate
+     * field to a Zimbra account key. Each is attempted in sequence untill a
+     * unique account can be resolved. e.g. a value can be:
+     * SUBJECTALTNAME_OTHERNAME_UPN=zimbraForeignPrincipal,(uid=%{SUBJECT_CN})
+     * mapping: {certificate-field}={Zimbra-account-key} | {LDAP-filter}
+     * certificate-field: SUBJECT_{an RDN attr, e.g. CN}: a RND in DN of
+     * Subject SUBJECT_DN: entire DN of Subject SUBJECTALTNAME_OTHERNAME_UPN:
+     * UPN(aka Principal Name) in otherName in subjectAltName extension
      * SUBJECTALTNAME_RFC822NAME: rfc822Name in subjectAltName extension
-     * Supported Zimbra account key: name: primary name or any of the aliases
-     * of an account zimbraId: zimbraId of an account zimbraForeignPrincipal:
+     * Zimbra-account-key: name: primary name or any of the aliases of an
+     * account zimbraId: zimbraId of an account zimbraForeignPrincipal:
      * zimbraForeignPrincipal of an account. The matching value on the
      * zimbraForeignPrincipal must be prefixed with &quot;cert
      * {supported-certificate-filed}:&quot; e.g. cert
-     * SUBJECTALTNAME_OTHERNAME_UPN:123456@mydomain
+     * SUBJECTALTNAME_OTHERNAME_UPN:123456@mydomain LDAP-filter: An LDAP
+     * filter with certificate-field placeholders to be substituted by
+     * certificate fields. (objectClass=zimbraAccount) is internally ANDed
+     * with the supplied filter. e.g.
+     * (|(uid=%{SUBJECT_CN})(mail=%{SUBJECTALTNAME_RFC822NAME})) Note: it is
+     * highly recommended not to use LDAP-filter, as it will trigger an LDAP
+     * search for each cert auth request. LDAP-filter is disabled by default.
+     * To enable it globally, set
+     * zimbraMailSSLClientCertPrincipalMapLdapFilterEnabled on global config
+     * to TRUE. If LDAP-filter is not enabled, all client certificate
+     * authentication will fail on domains configured with LDAP-filter.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

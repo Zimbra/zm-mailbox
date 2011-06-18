@@ -279,28 +279,45 @@ $ zmprov md {domain} +zimbraVirtualHostname {server}
 Configure principal mapping on the domain:
 $ zmprov md {domain} zimbraMailSSLClientCertPrincipalMap {mappings}
 
-    Map from a certificate field to a Zimbra account key that can uniquely identify a Zimbra account.
-    Value is a comma-seperated list of mappings, each mapping maps a certificate field to a Zimbra account key.
+    Map from a certificate field to a Zimbra account key that can uniquely identify a Zimbra account for client certificate authentication.
+    Value is a comma-separated  list of mapping rules, each mapping maps a certificate field to a Zimbra account key.
     Each is attempted in sequence untill a unique account can be resolved.  
     
-    A mapping must be in the format of:
-    {certificate field}={Zimbra account key}
+    e.g. a value can be: 
+         SUBJECTALTNAME_OTHERNAME_UPN=zimbraForeignPrincipal,(uid=%{SUBJECT_CN})
     
-    Supported certificate fields:
-        SUBJECT_DN:                   DN of Subject
-        SUBJECT_CN:                   CN in DN of Subject  
-        SUBJECT_EMAILADDRESS:         EMAILADDRESS in DN of Subject  
+    value:
+        comma-separated mapping-rule
+    
+    mapping-rule:
+        {cert-field-to-zimbra-key-map} | {LDAP-filter}
+        
+    cert-field-to-zimbra-key-map:     
+        {certificate-field}={Zimbra-account-key}
+    
+    certificate-field:
+        SUBJECT_{an RDN attr, e.g. CN}: a RND in DN of Subject
+        SUBJECT_DN:                   entire DN of Subject
         SUBJECTALTNAME_OTHERNAME_UPN: UPN(aka Principal Name) in otherName in subjectAltName extension 
         SUBJECTALTNAME_RFC822NAME:    rfc822Name in subjectAltName extension 
     
-    Supported Zimbra account key:
+    Zimbra-account-key:
         name:                   primary name or any of the aliases of an account
         zimbraId:               zimbraId of an account
         zimbraForeignPrincipal: zimbraForeignPrincipal of an account.  
                                 The matching value on the zimbraForeignPrincipal must be prefixed with "cert {supported-certificate-filed}:"
                                 e.g. cert SUBJECTALTNAME_OTHERNAME_UPN:123456@mydomain
-                          
-    Example of valid mapping:
+                                
+    LDAP-filter: An LDAP filter template with placeholders to be substituted by certificate field values.  
+                 (objectClass=zimbraAccount) is internally ANDed with the supplied filter. 
+                 e.g. (|(uid=%{SUBJECT_CN})(mail=%{SUBJECTALTNAME_RFC822NAME}))
+                 
+    Note: it is recommended not to use LDAP-filter rule, as it will trigger an LDAP search for each cert auth request.
+          LDAP-filter is disabled by default.  To enable it globally, set zimbraMailSSLClientCertPrincipalMapLdapFilterEnabled 
+          on global config to TRUE.  If LDAP-filter is not enabled, all client certificate authentication will fail on domains 
+          configured with LDAP-filter.
+                            
+    Examples of valid mapping:
         SUBJECT_CN=zimbraForeignPrincipal
         SUBJECT_CN=zimbraId
         SUBJECT_CN=name
@@ -309,7 +326,7 @@ $ zmprov md {domain} zimbraMailSSLClientCertPrincipalMap {mappings}
         SUBJECTALTNAME_OTHERNAME_UPN=name
         SUBJECTALTNAME_OTHERNAME_UPN=zimbraForeignPrincipal
         
-    Example of valid value for the attribute:
+    Examples of valid value for the attribute:
         - map SUBJECTALTNAME_OTHERNAME_UPN to zimbraForeignPrincipal
         SUBJECTALTNAME_OTHERNAME_UPN=zimbraForeignPrincipal 
         
@@ -320,6 +337,13 @@ $ zmprov md {domain} zimbraMailSSLClientCertPrincipalMap {mappings}
         In the above examples, zimbrasForeignPrincipal for the account must be set to:
         zmprov ma user1@test.com zimbrasForeignPrincipal 'cert SUBJECTALTNAME_OTHERNAME_UPN:123456@mydomain'
         
+        - map SUBJECT_CN to zimbraId,
+          if no match, do LDAP search to find the entry that has mail equals to SUBJECT_EMAILADDRESS in the certificate.
+        SUBJECT_CN=zimbraId,(mail=%SUBJECT_CN)
+      
+      
+To enable LDAP-filter in zimbraMailSSLClientCertPrincipalMap, do          
+$ zmprov mcf zimbraMailSSLClientCertPrincipalMapLdapFilterEnabled TRUE
 
 ----------------
 6. Restart mailbox server

@@ -181,6 +181,8 @@ public class DebugConfig {
     public static boolean enableThisAndFuture;
 
     public static boolean caldavAllowAttendeeForOrganizer;
+    
+    public static boolean certAuthCaptureClientCertificate;
 
     static {
         calendarAllowProcedureAlarms = booleanValue("debug_calendar_allow_procedure_alarms", false);
@@ -258,6 +260,8 @@ public class DebugConfig {
         enableThisAndFuture = booleanValue("debug_enable_calendar_thisandfuture", false);
 
         caldavAllowAttendeeForOrganizer = booleanValue("debug_caldav_allow_attendee_for_organizer", false);
+        
+        certAuthCaptureClientCertificate = booleanValue("debug_certauth_capture_client_certificate", false);
     }
 
     protected static boolean booleanValue(String key, boolean defaultValue) {
