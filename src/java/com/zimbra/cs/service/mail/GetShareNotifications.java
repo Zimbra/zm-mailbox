@@ -26,6 +26,7 @@ import org.dom4j.DocumentException;
 import com.google.common.io.Closeables;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.share.ShareNotification;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.StringUtil;
@@ -64,20 +65,18 @@ public class GetShareNotifications extends MailDocumentHandler {
                         for (MPartInfo part : Mime.getParts(message.getMimeMessage())) {
                             String ctype = StringUtil.stripControlCharacters(part.getContentType());
                             if (MimeConstants.CT_XML_ZIMBRA_SHARE.equals(ctype)) {
-                                Element content = Element.parseXML(part.getMimePart().getInputStream());
-                                Element grantor = content.getElement(MailConstants.E_GRANTOR);
-                                Element link = content.getElement(MailConstants.E_MOUNT);
+                                ShareNotification sn = ShareNotification.fromMimePart(part.getMimePart());
                                 
                                 Element share = response.addElement(MailConstants.E_SHARE);
                                 Element g = share.addElement(MailConstants.E_GRANTOR);
-                                g.addAttribute(MailConstants.A_ID, grantor.getAttribute(MailConstants.A_ID));
-                                g.addAttribute(MailConstants.A_EMAIL, grantor.getAttribute(MailConstants.A_EMAIL));
-                                g.addAttribute(MailConstants.A_NAME, grantor.getAttribute(MailConstants.A_NAME));
+                                g.addAttribute(MailConstants.A_ID, sn.getGrantorId());
+                                g.addAttribute(MailConstants.A_EMAIL, sn.getGrantorEmail());
+                                g.addAttribute(MailConstants.A_NAME, sn.getGrantorName());
                                 Element l = share.addElement(MailConstants.E_MOUNT);
-                                l.addAttribute(MailConstants.A_ID, link.getAttribute(MailConstants.A_ID));
-                                l.addAttribute(MailConstants.A_NAME, link.getAttribute(MailConstants.A_NAME));
-                                l.addAttribute(MailConstants.A_DEFAULT_VIEW, link.getAttribute(MailConstants.A_DEFAULT_VIEW));
-                                l.addAttribute(MailConstants.A_RIGHTS, link.getAttribute(MailConstants.A_RIGHTS));
+                                l.addAttribute(MailConstants.A_ID, sn.getItemId());
+                                l.addAttribute(MailConstants.A_NAME, sn.getItemName());
+                                l.addAttribute(MailConstants.A_DEFAULT_VIEW, sn.getView());
+                                l.addAttribute(MailConstants.A_RIGHTS, sn.getPermissions());
                                 String status = (message.isUnread() ? "new" : "seen");
                                 share.addAttribute(MailConstants.A_STATUS, status);
                                 share.addAttribute(MailConstants.A_ID, "" + message.getId());
