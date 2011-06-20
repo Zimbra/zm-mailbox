@@ -472,9 +472,10 @@ public abstract class MailItemResource extends DavResource {
 
     public void setAce(DavContext ctxt, List<Ace> aceList) throws ServiceException, DavException {
         ACL acl = new ACL();
-        for (Ace ace : aceList)
-            acl.grantAccess(ace.getZimbraId(), ace.getGranteeType(), ace.getRights(), null);
-
+        for (Ace ace : aceList) {
+            if (ace.getRights() > 0)
+                acl.grantAccess(ace.getZimbraId(), ace.getGranteeType(), ace.getRights(), null);
+        }    
         Mailbox mbox = getMailbox(ctxt);
         mbox.setPermissions(ctxt.getOperationContext(), getId(), acl);
     }
