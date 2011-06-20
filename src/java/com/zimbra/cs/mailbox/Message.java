@@ -54,6 +54,7 @@ import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteChanges;
+import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
@@ -669,18 +670,21 @@ public class Message extends MailItem {
             ZOrganizer seriesOrganizer = null;
             boolean seriesIsOrganizer = false;
             List<ZAttendee> seriesAttendees = null;
+            ParsedDateTime seriesDtStart = null;
             // Get organizer and attendees from series VEVENT.
             for (Invite inv : invites) {
                 if (!inv.hasRecurId()) {
                     seriesOrganizer = inv.getOrganizer();
                     seriesIsOrganizer = inv.isOrganizer();
                     seriesAttendees = inv.getAttendees();
+                    seriesDtStart = inv.getStartTime();
                     break;
                 }
             }
-            if (seriesOrganizer != null) {
-                for (Invite inv : invites) {
-                    if (inv.hasRecurId() && !inv.hasOrganizer()) {
+            for (Invite inv : invites) {
+                RecurId rid = inv.getRecurId();
+                if (rid != null) {
+                    if (seriesOrganizer != null && !inv.hasOrganizer()) {
                         inv.setOrganizer(seriesOrganizer);
                         inv.setIsOrganizer(seriesIsOrganizer);
                         // Inherit attendees from series, iff no attendee is listed and also no organizer
@@ -690,6 +694,19 @@ public class Message extends MailItem {
                             for (ZAttendee at : seriesAttendees) {
                                 inv.addAttendee(at);
                             }
+                        }
+                    }
+                    if (!inv.isAllDayEvent() && seriesDtStart != null) {
+                        // Exchange can send invalid RECURRENCE-ID with HHMMSS set to 000000.  Detect it and fix it up
+                        // by copying the time from series DTSTART.
+                        ParsedDateTime ridDt = rid.getDt();
+                        if (ridDt != null && ridDt.hasZeroTime() &&
+                            !seriesDtStart.hasZeroTime() && ridDt.sameTimeZone(seriesDtStart)) {
+                            ParsedDateTime fixedDt = seriesDtStart.cloneWithNewDate(ridDt);
+                            RecurId fixedRid = new RecurId(fixedDt, rid.getRange());
+                            ZimbraLog.calendar.debug("Fixed up invalid RECURRENCE-ID with zero time; before=[%s], after=[%s]",
+                                    rid, fixedRid);
+                            inv.setRecurId(fixedRid);
                         }
                     }
                 }
