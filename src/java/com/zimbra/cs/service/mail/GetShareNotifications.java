@@ -68,11 +68,11 @@ public class GetShareNotifications extends MailDocumentHandler {
                                 ShareNotification sn = ShareNotification.fromMimePart(part.getMimePart());
                                 
                                 Element share = response.addElement(MailConstants.E_SHARE);
-                                Element g = share.addElement(MailConstants.E_GRANTOR);
+                                Element g = share.addUniqueElement(MailConstants.E_GRANTOR);
                                 g.addAttribute(MailConstants.A_ID, sn.getGrantorId());
                                 g.addAttribute(MailConstants.A_EMAIL, sn.getGrantorEmail());
                                 g.addAttribute(MailConstants.A_NAME, sn.getGrantorName());
-                                Element l = share.addElement(MailConstants.E_MOUNT);
+                                Element l = share.addUniqueElement(MailConstants.E_MOUNT);
                                 l.addAttribute(MailConstants.A_ID, sn.getItemId());
                                 l.addAttribute(MailConstants.A_NAME, sn.getItemName());
                                 l.addAttribute(MailConstants.A_DEFAULT_VIEW, sn.getView());
