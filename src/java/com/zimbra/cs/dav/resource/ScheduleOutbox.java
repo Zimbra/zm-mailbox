@@ -302,7 +302,7 @@ public class ScheduleOutbox extends Collection {
             resp.addElement(DavElements.E_REQUEST_STATUS).setText("3.7;"+rcpt);
             return;
         }
-        String subject, uid, desc, descHtml, status, method;
+        String subject = "", uid, desc, descHtml, status, method;
 
         status = req.getPropVal(ICalTok.STATUS, "");
         method = cal.getPropVal(ICalTok.METHOD, "REQUEST");
@@ -315,7 +315,6 @@ public class ScheduleOutbox extends Collection {
                     ZimbraLog.dav.debug("scheduling appointment on behalf of %s", organizerStr);
                 }
             }
-            subject = "Meeting Request: ";
         } else if (method.equals("REPLY")) {
             ZProperty attendeeProp = req.getProperty(ICalTok.ATTENDEE);
             if (attendeeProp == null)
@@ -323,20 +322,16 @@ public class ScheduleOutbox extends Collection {
             ZAttendee attendee = new ZAttendee(attendeeProp);
             String partStat = attendee.getPartStat();
             if (partStat.equals(IcalXmlStrMap.PARTSTAT_ACCEPTED)) {
-                subject = "Accepted: ";
+                subject = "Accept: ";
             } else if (partStat.equals(IcalXmlStrMap.PARTSTAT_TENTATIVE)) {
                 subject = "Tentative: ";
             } else if (partStat.equals(IcalXmlStrMap.PARTSTAT_DECLINED)) {
-                subject = "Declined: ";
-            } else {
-                subject = "Meeting Reply: ";
+                subject = "Decline: ";
             }
-        } else {
-            subject = "Meeting: ";
         }
 
         if (status.equals("CANCELLED"))
-            subject = "Meeting Cancelled: ";
+            subject = "Cancelled: ";
         subject += req.getPropVal(ICalTok.SUMMARY, "");
         uid = req.getPropVal(ICalTok.UID, null);
         if (uid == null) {
