@@ -14,9 +14,6 @@
  */
 package com.zimbra.cs.service.mail;
 
-
-import org.dom4j.QName;
-
 import com.zimbra.soap.DocumentDispatcher;
 import com.zimbra.soap.DocumentService;
 import com.zimbra.common.localconfig.LC;
@@ -214,13 +211,10 @@ public class MailService implements DocumentService {
         dispatcher.registerHandler(MailConstants.AUTO_COMPLETE_REQUEST, new AutoComplete());
         dispatcher.registerHandler(MailConstants.RANKING_ACTION_REQUEST, new RankingAction());
 
-        //TODO: Priority Inbox prototype
-        dispatcher.registerHandler(QName.get("PriorityInboxRequest", MailConstants.NAMESPACE), new PriorityInbox());
-        
         // comments
         dispatcher.registerHandler(MailConstants.ADD_COMMENT_REQUEST, new AddComment());
         dispatcher.registerHandler(MailConstants.GET_COMMENTS_REQUEST, new GetComments());
-        
+
         // share
         dispatcher.registerHandler(MailConstants.GET_SHARE_NOTIFICATIONS_REQUEST, new GetShareNotifications());
     }
