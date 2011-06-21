@@ -26,6 +26,7 @@ import com.zimbra.cs.session.IWaitSet;
 import com.zimbra.cs.session.WaitSetAccount;
 import com.zimbra.cs.session.WaitSetError;
 import com.zimbra.cs.session.WaitSetMgr;
+import com.zimbra.cs.zclient.ZFolder;
 
 import junit.framework.TestCase;
 
@@ -165,6 +166,23 @@ public class TestWaitSet extends TestCase {
                 try { Thread.sleep(500); } catch (Exception e) {}
                 assertEquals(0, errors.size());
                 synchronized(cb) { assertEquals(true, cb.completed); }
+                curSeqNo = cb.seqNo;
+            }
+
+            { // waitset shouldn't signal until a document is added
+                WaitSetRequest.Callback cb = new WaitSetRequest.Callback();
+                // wait shouldn't find anything yet
+                IWaitSet ws = WaitSetMgr.lookup(waitSetId);
+                errors = ws.doWait(cb, curSeqNo, null, null);
+                assertEquals(0, errors.size());
+                synchronized(cb) { assertEquals(false, cb.completed); }
+
+                // creating a document in existing account should trigger waitset
+                String subject = NAME_PREFIX + " testWaitSet document 1";
+                TestUtil.createDocument(TestUtil.getZMailbox(USER_2_NAME),
+                        ZFolder.ID_BRIEFCASE, subject, "text/plain", "Hello, world!".getBytes());
+                try { Thread.sleep(500); } catch (Exception e) {}
+                synchronized(cb) { assertEquals("document waitset", true, cb.completed); }
                 curSeqNo = cb.seqNo;
             }
 

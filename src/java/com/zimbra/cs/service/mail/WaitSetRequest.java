@@ -362,7 +362,10 @@ public class WaitSetRequest extends MailDocumentHandler {
         m(EnumSet.of(MailItem.Type.MESSAGE)),
         c(EnumSet.of(MailItem.Type.CONTACT)),
         a(EnumSet.of(MailItem.Type.APPOINTMENT)),
-        all(EnumSet.of(MailItem.Type.MESSAGE, MailItem.Type.CONTACT, MailItem.Type.APPOINTMENT));
+        t(EnumSet.of(MailItem.Type.TASK)),
+        d(EnumSet.of(MailItem.Type.DOCUMENT)),
+        all(EnumSet.of(MailItem.Type.MESSAGE, MailItem.Type.CONTACT,
+                       MailItem.Type.APPOINTMENT, MailItem.Type.TASK, MailItem.Type.DOCUMENT));
 
         private final Set<MailItem.Type> types;
 
@@ -391,6 +394,12 @@ public class WaitSetRequest extends MailDocumentHandler {
                 break;
             case APPOINTMENT:
                 result.append(TypeEnum.a.name());
+                break;
+            case TASK:
+                result.append(TypeEnum.t.name());
+                break;
+            case DOCUMENT:
+                result.append(TypeEnum.d.name());
                 break;
             }
         }
@@ -430,6 +439,12 @@ public class WaitSetRequest extends MailDocumentHandler {
                 break;
             case APPOINTMENT:
                 result.add(TypeEnum.a);
+                break;
+            case TASK:
+                result.add(TypeEnum.t);
+                break;
+            case DOCUMENT:
+                result.add(TypeEnum.d);
                 break;
             }
         }

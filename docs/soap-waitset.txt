@@ -35,7 +35,9 @@ INTEREST_TYPES: comma-separated list.  Currently:
    c: contacts
    m: msgs (and subclasses)
    a: appointments
-   all: all types (equiv to "c,m,a")
+   t: tasks
+   d: documents
+   all: all types (equiv to "c,m,a,t,d")
 
 
 *************************************
