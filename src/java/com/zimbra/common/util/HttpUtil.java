@@ -168,7 +168,7 @@ public final class HttpUtil {
         String encoded = path;
         try {
             URI uri = new URI(null, null, path, null);
-            encoded = uri.toString();
+            encoded = uri.toASCIIString();
         } catch (URISyntaxException e) {
             // ignore and just return the orig path
         }
