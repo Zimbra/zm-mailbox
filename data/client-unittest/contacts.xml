@@ -1,0 +1,512 @@
+<t:tests xmlns:t="urn:zimbraTestHarness">
+
+  <t:property name="uri" value="http://localhost:7070/service/soap/"/>
+
+  <!-- system properties: 
+           SAMPLE_USER
+  --> 
+  <t:property name="user" value="${SAMPLE_USER}"/>
+  <t:property name="password" value="test123"/>
+
+  <t:test id="auth" required="true">
+    <t:request>
+      <AuthRequest xmlns="urn:zimbraAccount">
+        <account by="name">${user}</account>
+        <password>${password}</password>
+        <!--<prefs/>-->
+      </AuthRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//acct:AuthResponse/acct:lifetime"  match="^\d+$"/>
+      <t:select path="//acct:AuthResponse/acct:authToken" set="authToken"/>
+      <t:select path="//acct:AuthResponse/acct:session" set="sessionId"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:zimbraMail">
+        <cn>
+          <a n="firstName">Ross</a>
+          <a n="lastName">Davidson</a>
+          <a n="middleName">Davidson</a>
+          <a n="email">rossd@example.zimbra.com</a>
+          <a n="email2">rdavidson@example.yahoo.com</a>
+          <a n="email3">rdavidson@example.google.com</a>
+          <a n="jobTitle">VP of Engineering</a>
+          <a n="company">Zimbra</a>
+          <a n="workStreet">1500 Fashion Island Blvd.</a>
+          <a n="workCity">San Mateo</a>
+          <a n="workPostalCode">94404</a>
+          <a n="workState">CA</a>
+          <a n="workCountry">USA</a>
+          <a n="workURL">http://www.example.zimbra.com</a>
+          <a n="homeStreet">1010 Folsom</a>
+          <a n="homeCity">San Francisco</a>
+          <a n="homeState">CA</a>
+          <a n="homePostalCode">94110</a>
+          <a n="homeCountry">USA</a>
+          <a n="homeURL">http://www.google.com</a>
+          <a n="otherStreet">1221 Melrose Place</a>
+          <a n="otherCity">Beverly Hills</a>
+          <a n="otherState">CA</a>
+          <a n="otherPostalCode">90210</a>
+          <a n="otherCountry">USA</a>
+          <a n="otherURL">http://www.yahoo.com</a>
+          <a n="notes">These are random notes</a>
+          <a n="fileAs">1</a>
+          <a n="assistantPhone">111-111-1111</a>
+          <a n="callbackPhone">222-222-2222</a>
+          <a n="carPhone">333-333-3333</a>
+          <a n="companyPhone">444-444-4444</a>
+          <a n="homeFax">555-555-5555</a>
+          <a n="homePhone">666-666-6666</a>
+          <a n="homePhone2">777-777-7777</a>
+          <a n="mobilePhone">888-888-8888</a>
+          <a n="otherFax">999-999-9999</a>
+          <a n="otherPhone">000-000-0000</a>
+          <a n="pager">111-222-2222</a>
+          <a n="workFax">111-333-3333</a>
+          <a n="workPhone">(408) 123-4567 x112</a>
+          <a n="workPhone2">650-123-4567</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:zimbraMail">
+        <cn>
+          <a n="firstName">Samuel</a>
+          <a n="lastName">Darmo</a>
+          <a n="email">samuel@example.zimbra.com</a>
+          <a n="jobTitle">CEO</a>
+          <a n="company">Zimbra</a>
+          <a n="workPhone">(408) 123-4567 x111</a>
+          <a n="fileAs">2</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:zimbraMail">
+        <cn>
+          <a n="firstName">Roland</a>
+          <a n="lastName">Smith</a>
+          <a n="email">rsmith@example.zimbra.com</a>
+          <a n="jobTitle">VP of Technology</a>
+          <a n="company">Zimbra</a>
+          <a n="workPhone">(408) 123-4567 x113</a>
+          <a n="workState">CA</a>
+          <a n="workCountry">US</a>
+          <a n="workURL">http://www.example.zimbra.com</a>
+          <a n="fileAs">3</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:zimbraMail">
+        <cn>
+          <a n="firstName">Dave</a>
+          <a n="lastName">Edwards</a>
+          <a n="email">dave@example.zimbra.com</a>
+          <a n="company">Zimbra</a>
+          <a n="workPhone">(408) 123-4567 x199</a>
+          <a n="fileAs">4</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:zimbraMail">
+        <cn>
+          <a n="firstName">James</a>
+          <a n="lastName">Pond</a>
+          <a n="fileAs">8:Special Agent Jimmy Pond</a>
+          <a n="email">pond@gov.uk</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:zimbraMail">
+        <cn>
+          <a n="firstName">Cindy</a>
+          <a n="lastName">Shannon</a>
+          <a n="company">Zimbra</a>
+          <a n="email">cindy@example.zimbra.com</a>
+          <a n="workPhone">(650) 761-4759</a>
+          <a n="mobilePhone">(650) 281-6692</a>
+          <a n="fileAs">5</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:zimbraMail">
+        <cn>
+          <a n="firstName">Mike</a>
+          <a n="lastName">Conners</a>
+          <a n="company">Sun</a>
+          <a n="fileAs">6</a>
+          <a n="email">mike.conners@sun.com</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:zimbraMail">
+        <cn>
+          <a n="firstName">John</a>
+          <a n="lastName">Doe</a>
+          <a n="email">jdoe@hotmail.com</a>
+          <a n="company">Doe Enterprises</a>
+          <a n="fileAs">7</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:zimbraMail">
+        <cn>
+          <a n="firstName">Johnnie</a>
+          <a n="lastName">Ruiz</a>
+          <a n="company">Zimbra</a>
+          <a n="workPhone">(408) 123-4567 x123</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:zimbraMail">
+        <cn>
+          <a n="firstName">Phil</a>
+          <a n="lastName">Bates</a>
+          <a n="email">philb@foobarbaz.com</a>
+          <a n="company">FooBarBaz</a>
+          <a n="jobTitle">Chairman &amp; Chief Software Architect</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:zimbraMail">
+        <cn>
+          <a n="firstName">Bob</a>
+          <a n="lastName">Smith</a>
+          <a n="email">smith@example.zimbra.com</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:zimbraMail">
+        <cn>
+          <a n="firstName">Dan</a>
+          <a n="lastName">Brady</a>
+          <a n="email">dan@example.zimbra.com</a>
+          <a n="workState">CA</a>
+          <a n="workCountry">US</a>
+          <a n="workURL">http://www.example.zimbra.com</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:zimbraMail">
+        <cn>
+          <a n="firstName">Kevin</a>
+          <a n="lastName">Young</a>
+          <a n="email">kevin_young@yahoo.com</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:zimbraMail">
+        <cn>
+          <a n="firstName">DaveVeryLongNameWithNoSpacesBreaksColumns</a>
+          <a n="lastName">Householder</a>
+          <a n="email">dave.h@gmail.com</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:zimbraMail">
+        <cn>
+          <a n="firstName">Edward</a>
+          <a n="lastName">Van Halen</a>
+          <a n="email">eddie@vanhalen.com</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:zimbraMail">
+        <cn>
+          <a n="firstName">Martha</a>
+          <a n="lastName">Ballard</a>
+          <a n="email">martha34@aol.com</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:zimbraMail">
+        <cn>
+          <a n="firstName">Zachary</a>
+          <a n="lastName">Thomas</a>
+          <a n="email">zach@apple.com</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:zimbraMail">
+        <cn>
+          <a n="firstName">Jane</a>
+          <a n="lastName">Doe</a>
+          <a n="email">janedoe@hotmail.com</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:zimbraMail">
+        <cn>
+          <a n="firstName">Tim</a>
+          <a n="lastName">Davis</a>
+          <a n="company">HP</a>
+          <a n="workPhone">(408) 234-5678</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:zimbraMail">
+        <cn>
+          <a n="firstName">Paul</a>
+          <a n="lastName">Shah</a>
+          <a n="email">pshah@example.zimbra.com</a>
+          <a n="workPhone">(408) 123-4567</a>
+          <a n="workState">CA</a>
+          <a n="workCountry">US</a>
+          <a n="workURL">http://www.example.zimbra.com</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:zimbraMail">
+        <cn>
+          <a n="firstName">Conrad</a>
+          <a n="lastName">James</a>
+          <a n="email">cjames@example.zimbra.com</a>
+          <a n="workPhone">(408) 123-4567</a>
+          <a n="workState">CA</a>
+          <a n="workCountry">US</a>
+          <a n="workURL">http://www.example.zimbra.com</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:zimbraMail">
+        <cn>
+          <a n="firstName">Enrique</a>
+          <a n="lastName">Johnson</a>
+          <a n="email">enrique@example.zimbra.com</a>
+          <a n="workPhone">(408) 123-4567</a>
+          <a n="workState">CA</a>
+          <a n="workCountry">US</a>
+          <a n="workURL">http://www.example.zimbra.com</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:zimbraMail">
+        <cn>
+          <a n="firstName">Greg</a>
+          <a n="lastName">Solo</a>
+          <a n="email">greg@example.zimbra.com</a>
+          <a n="workPhone">(408) 123-4567</a>
+          <a n="workState">CA</a>
+          <a n="workCountry">US</a>
+          <a n="workURL">http://www.example.zimbra.com</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:zimbraMail">
+        <cn>
+          <a n="firstName">Jay</a>
+          <a n="lastName">Hahn</a>
+          <a n="email">jhahn@example.zimbra.com</a>
+          <a n="company">Zimbra</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:zimbraMail">
+        <cn>
+          <a n="firstName">Curt</a>
+          <a n="lastName">Chin</a>
+          <a n="email">cchin@example.zimbra.com</a>
+          <a n="company">Zimbra</a>
+          <a n="workPhone">(408) 123-4567</a>
+          <a n="workState">CA</a>
+          <a n="workCountry">US</a>
+          <a n="workURL">http://www.example.zimbra.com</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:zimbraMail">
+        <cn>
+          <a n="firstName">Mark</a>
+          <a n="lastName">Mack</a>
+          <a n="email">markmack@example.zimbra.com</a>
+          <a n="company">Zimbra</a>
+          <a n="workPhone">(408) 123-4567</a>
+          <a n="workState">CA</a>
+          <a n="workCountry">US</a>
+          <a n="workURL">http://www.example.zimbra.com</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+</t:tests>

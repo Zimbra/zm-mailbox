@@ -2172,4 +2172,80 @@
     <fail if="junit.failure" message="Unit test failed"/>
   </target>
 
+  <target name="enable-client-unittest" description="Sets up the unittest accounts for client-side unit testing.">
+    <echo>Setting up client unittest accounts</echo>
+    <antcall target="zmprov">
+      <param name="args" value="-l ca unittest1@${defaultdomain.name} test123
+						  zimbraMailHost ${zimbra.server.hostname}
+						  cn 'UnitTest 1'
+						  displayName 'UnitTest User One'
+						  zimbraAttachmentsIndexingEnabled FALSE
+						  zimbraPrefTimeZoneId '(GMT-07.00) Arizona'
+						  zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
+						  zimbraPrefMailPollingInterval 12h
+						  zimbraPrefWarnOnExit FALSE
+						  telephoneNumber '+1 650 555 5555'"/>
+    </antcall>
+    <antcall target="zmprov">
+	  <param name="args" value="-l ca unittest2@${defaultdomain.name} test123
+						  zimbraMailHost ${zimbra.server.hostname}
+						  cn 'UnitTest 2'
+						  displayName 'UnitTest User Two'
+						  zimbraAttachmentsIndexingEnabled FALSE
+						  zimbraPrefTimeZoneId '(GMT-07.00) Arizona'
+						  zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
+						  zimbraPrefMailPollingInterval 12h
+						  zimbraPrefWarnOnExit FALSE
+						  telephoneNumber '+1 650 555 6666'"/>
+    </antcall>
+    <echo>Injecting contacts, search folders, and mail into client unittest accounts</echo>
+    <antcall target="inject-client-unittest">
+      <param name="account-to-inject.email" value="unittest1@${defaultdomain.name}"/>
+    </antcall>
+  </target>
+
+  <target name="inject-client-unittest" depends="compile">
+    <echo>Inserting default contacts:
+          ${account-to-inject.email}
+    </echo>
+    <java classname="com.zimbra.common.soap.SoapTestHarness"
+      fork="true" classpathref="class.path" failonerror="true">
+      <sysproperty key="SAMPLE_USER"
+        value="${account-to-inject.email}" />
+      <arg line="-s -f data/client-unittest/contacts.xml" />
+    </java>
+    <echo>Creating default search folders:
+      ${account-to-inject.email}</echo>
+    <java classname="com.zimbra.common.soap.SoapTestHarness"
+      fork="true" classpathref="class.path" failonerror="true">
+      <sysproperty key="SAMPLE_USER" value="${account-to-inject.email}" />
+      <arg line="-s -f data/client-unittest/searchfolders.xml" />
+    </java>
+    <echo message="Wait for lmtp host=${lmtp.host} port=${lmtp.port}" />
+    <waitfor checkevery="1" checkeveryunit="second" maxwait="60"
+      maxwaitunit="second" timeoutproperty="lmtp.timeout">
+      <socket server="${lmtp.host}" port="${lmtp.port}" />
+    </waitfor>
+    <fail message="lmtp port ${lmtp.port} not open.">
+      <condition>
+        <isset property="lmtp.timeout" />
+      </condition>
+    </fail>
+
+    <if>
+      <available file="data/client-unittest/mail" /> <!-- Not available for community builds -->
+      <then>
+        <echo>LmtpInject messages for
+          ${account-to-inject.email}
+        </echo>
+        <java classname="com.zimbra.cs.lmtpserver.utils.LmtpInject"
+          fork="true" classpathref="class.path" failonerror="true">
+          <arg
+            line="-t ${lmtpinject.numthreads} -a ${lmtp.host} -p ${lmtp.port} -r ${account-to-inject.email} -s ho@example.zimbra.com -d" />
+          <arg path="data/client-unittest/mail" />
+        </java>
+      </then>
+    </if>
+  </target>
+  
 </project>

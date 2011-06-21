@@ -1,0 +1,123 @@
+Received: from example.zimbra.com (exch1.example.zimbra.com [10.10.130.37])
+	by dogfood.example.zimbra.com (Postfix) with ESMTP id EFBA688991
+	for <smith@dogfood.example.zimbra.com>; Thu, 10 Mar 2005 17:39:00 -0800 (PST)
+Content-class: urn:content-classes:calendarmessage
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+	boundary="----_=_NextPart_001_01C525DA.4CB6EC01"
+X-MimeOLE: Produced By Microsoft Exchange V6.5.7226.0
+Subject: Recurring Meeting Test
+Date: Thu, 10 Mar 2005 17:33:17 -0800
+Message-ID: <062EF322A9DDF14B887BCAE6C5F7E075B560@exch1.example.zimbra.com>
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+From: "Roland Smith" <smith@example.zimbra.com>
+To: "Roland Smith" <smith@example.zimbra.com>
+
+This is a multi-part message in MIME format.
+
+------_=_NextPart_001_01C525DA.4CB6EC01
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
+
+VHlwZTpTaW5nbGUgTWVldGluZw0KT3JnYW5pemVyOlJvbGFuZCBTY2hlbWVycw0KU3RhcnQgVGlt
+ZTpGcmlkYXksIE1hcmNoIDExLCAyMDA1IDEwOjMwIEFNDQpFbmQgVGltZTpGcmlkYXksIE1hcmNo
+IDExLCAyMDA1IDExOjMwIEFNDQpUaW1lIFpvbmU6KEdNVC0wODowMCkgUGFjaWZpYyBUaW1lIChV
+UyAmIENhbmFkYSk7IFRpanVhbmENCkxvY2F0aW9uOkZyb250IENvbmZlcmVuY2UgUm9vbQ0KDQoq
+fip+Kn4qfip+Kn4qfip+Kn4qDQoNCg0K
+
+------_=_NextPart_001_01C525DA.4CB6EC01
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+
+We had a great meeting with MySQL at LinuxWorld.  You can read more 
+about their new offer at http://www.mysql.com/products/database/cluster/.  
+They want to meet with us in Seattle to talk about how we can improve
+the performance of our product even more by leveraging their new 
+release.  Additionally, they want us to bring the performance test
+server that you ordered.
+
+Can you meet with them next Friday?  If not, I am free on Sept 26th.
+
+They want to meet at their office:
+2510 Fairview Ave Seattle WA 98102
+
+We are going to be meeting with Bob Thomas and Jill Marks.  In you have 
+any questions they recommended that you send Jill a note at 
+jill.marks@mysql.com.
+
+You should also read up on MySQL's latest release.  I'd recommend a couple books:
+
+The Definitive Guide to MySQL (ISBN 1590591445)
+MySQL Developer's Guide (ISBN 0 67232 871 2)
+
+Additionally, Ari placed the order for the test server.  You need to approve
+the PO - GR733454-8788Q and you can track the server with the FedEx tracking
+number 792806493888.
+
+
+------_=_NextPart_001_01C525DA.4CB6EC01
+Content-class: urn:content-classes:calendarmessage
+Content-Type: text/calendar;
+	method=REQUEST;
+	name="meeting.ics"
+Content-Transfer-Encoding: 8bit
+
+BEGIN:VCALENDAR
+METHOD:REQUEST
+PRODID:Microsoft CDO for Microsoft Exchange
+VERSION:2.0
+BEGIN:VTIMEZONE
+TZID:GMT -0800 (Standard) / GMT -0700 (Daylight)
+BEGIN:STANDARD
+DTSTART:16010101T020000
+TZOFFSETFROM:-0700
+TZOFFSETTO:-0800
+RRULE:FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=10;BYDAY=-1SU
+END:STANDARD
+BEGIN:DAYLIGHT
+DTSTART:16010101T020000
+TZOFFSETFROM:-0800
+TZOFFSETTO:-0700
+RRULE:FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=4;BYDAY=1SU
+END:DAYLIGHT
+END:VTIMEZONE
+BEGIN:VEVENT
+DTSTAMP:20050526T012647Z
+DTSTART;TZID="GMT -0800 (Standard) / GMT -0700 (Daylight)":20050523T040000
+SUMMARY:Recurring every Monday 4am - 5am
+UID:040000008200E00074C5B7101A82E00800000000F0BC424F5761C501000000000000000
+ 0100000002C10E79C9140CF41B7E18816DF121033
+ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE;CN="tim@examp
+ lee.com":MAILTO:tim@example.com.com
+ORGANIZER;CN="Tom":MAILTO:tom@example.zimbra.com
+LOCATION:Loc
+DTEND;TZID="GMT -0800 (Standard) / GMT -0700 (Daylight)":20050523T050000
+RRULE:FREQ=WEEKLY;INTERVAL=1;BYDAY=MO;WKST=SU
+DESCRIPTION:This is a test recurring appointment\N
+SEQUENCE:2
+PRIORITY:5
+CLASS:
+CREATED:20050526T012651Z
+LAST-MODIFIED:20050526T012651Z
+STATUS:CONFIRMED
+TRANSP:OPAQUE
+X-MICROSOFT-CDO-BUSYSTATUS:BUSY
+X-MICROSOFT-CDO-INSTTYPE:1
+X-MICROSOFT-CDO-INTENDEDSTATUS:BUSY
+X-MICROSOFT-CDO-ALLDAYEVENT:FALSE
+X-MICROSOFT-CDO-IMPORTANCE:1
+X-MICROSOFT-CDO-OWNERAPPTID:-2108074027
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:REMINDER
+TRIGGER;RELATED=START:-PT00H15M00S
+END:VALARM
+END:VEVENT
+END:VCALENDAR
+ 
+------_=_NextPart_001_01C525DA.4CB6EC01--
+
+
