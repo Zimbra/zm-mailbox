@@ -83,4 +83,10 @@ public class DavException extends Exception {
 			setError(DavElements.E_CANNOT_MODIFY_PROTECTED_PROPERTY);
 		}
 	}
+	public static class PropFindInfiniteDepthForbidden extends DavExceptionWithErrorMessage {
+	    public PropFindInfiniteDepthForbidden() {
+	        super("PROPFIND with infinite depth forbidden", HttpServletResponse.SC_FORBIDDEN);
+	        setError(DavElements.E_PROPFIND_FINITE_DEPTH);
+	    }
+	}
 }
