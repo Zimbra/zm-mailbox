@@ -19,6 +19,7 @@ import java.util.Set;
 import com.google.common.base.Objects;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -84,7 +85,13 @@ public class WaitSetAccount {
         } catch (ServiceException e) {
             sessionId = null;
             ZimbraLog.session.warn("Error initializing WaitSetSession for accountId "+accountId+" -- ServiceException", e);
-            return new WaitSetError(accountId, WaitSetError.Type.ERROR_LOADING_MAILBOX);
+            if (e.getCode() == AccountServiceException.NO_SUCH_ACCOUNT) {
+                return new WaitSetError(accountId, WaitSetError.Type.NO_SUCH_ACCOUNT);
+            } else if (e.getCode() == ServiceException.WRONG_HOST) {
+                return new WaitSetError(accountId, WaitSetError.Type.WRONG_HOST_FOR_ACCOUNT);
+            } else {
+                return new WaitSetError(accountId, WaitSetError.Type.ERROR_LOADING_MAILBOX);
+            }
         } finally {
             mbox.lock.release();
         }
