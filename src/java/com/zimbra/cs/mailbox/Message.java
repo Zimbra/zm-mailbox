@@ -667,6 +667,7 @@ public class Message extends MailItem {
         // organizer/attendee from series, but that's wrong.  Fix the data by duplicating the missing
         // properties.
         if (invites.size() > 1) {
+            boolean hasSeries = false;
             ZOrganizer seriesOrganizer = null;
             boolean seriesIsOrganizer = false;
             List<ZAttendee> seriesAttendees = null;
@@ -674,6 +675,7 @@ public class Message extends MailItem {
             // Get organizer and attendees from series VEVENT.
             for (Invite inv : invites) {
                 if (!inv.hasRecurId()) {
+                    hasSeries = true;
                     seriesOrganizer = inv.getOrganizer();
                     seriesIsOrganizer = inv.isOrganizer();
                     seriesAttendees = inv.getAttendees();
@@ -681,33 +683,39 @@ public class Message extends MailItem {
                     break;
                 }
             }
-            for (Invite inv : invites) {
-                RecurId rid = inv.getRecurId();
-                if (rid != null) {
-                    if (seriesOrganizer != null && !inv.hasOrganizer()) {
-                        inv.setOrganizer(seriesOrganizer);
-                        inv.setIsOrganizer(seriesIsOrganizer);
-                        // Inherit attendees from series, iff no attendee is listed and also no organizer
-                        // is given.  If organizer is specified, we will assume they really meant for this
-                        // exception instance to have no attendee.
-                        if (!inv.hasOtherAttendees() && seriesAttendees != null) {
-                            for (ZAttendee at : seriesAttendees) {
-                                inv.addAttendee(at);
+            if (hasSeries) {
+                for (Invite inv : invites) {
+                    RecurId rid = inv.getRecurId();
+                    if (rid != null) {
+                        if (seriesOrganizer != null && !inv.hasOrganizer()) {
+                            inv.setOrganizer(seriesOrganizer);
+                            inv.setIsOrganizer(seriesIsOrganizer);
+                            // Inherit attendees from series, iff no attendee is listed and also no organizer
+                            // is given.  If organizer is specified, we will assume they really meant for this
+                            // exception instance to have no attendee.
+                            if (!inv.hasOtherAttendees() && seriesAttendees != null) {
+                                for (ZAttendee at : seriesAttendees) {
+                                    inv.addAttendee(at);
+                                }
                             }
                         }
-                    }
-                    if (!inv.isAllDayEvent() && seriesDtStart != null) {
-                        // Exchange can send invalid RECURRENCE-ID with HHMMSS set to 000000.  Detect it and fix it up
-                        // by copying the time from series DTSTART.
-                        ParsedDateTime ridDt = rid.getDt();
-                        if (ridDt != null && ridDt.hasZeroTime() &&
-                            !seriesDtStart.hasZeroTime() && ridDt.sameTimeZone(seriesDtStart)) {
-                            ParsedDateTime fixedDt = seriesDtStart.cloneWithNewDate(ridDt);
-                            RecurId fixedRid = new RecurId(fixedDt, rid.getRange());
-                            ZimbraLog.calendar.debug("Fixed up invalid RECURRENCE-ID with zero time; before=[%s], after=[%s]",
-                                    rid, fixedRid);
-                            inv.setRecurId(fixedRid);
+                        if (!inv.isAllDayEvent() && seriesDtStart != null) {
+                            // Exchange can send invalid RECURRENCE-ID with HHMMSS set to 000000.  Detect it and fix it up
+                            // by copying the time from series DTSTART.
+                            ParsedDateTime ridDt = rid.getDt();
+                            if (ridDt != null && ridDt.hasZeroTime() &&
+                                !seriesDtStart.hasZeroTime() && ridDt.sameTimeZone(seriesDtStart)) {
+                                ParsedDateTime fixedDt = seriesDtStart.cloneWithNewDate(ridDt);
+                                RecurId fixedRid = new RecurId(fixedDt, rid.getRange());
+                                ZimbraLog.calendar.debug("Fixed up invalid RECURRENCE-ID with zero time; before=[%s], after=[%s]",
+                                        rid, fixedRid);
+                                inv.setRecurId(fixedRid);
+                            }
                         }
+                        // Exception instance invites shouldn't point to the same MIME part in the appointment blob
+                        // as the series invite.  If they do, we will lose the series attachment when a new exception
+                        // instance update is received.
+                        inv.setMailItemId(0);
                     }
                 }
             }
