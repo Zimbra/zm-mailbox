@@ -659,26 +659,6 @@ public class StringUtil {
     }
 
     /**
-     * Returns the simple class name (the name after the last dot)
-     * from a fully-qualified class name.  Behavior is the same as
-     * {@link FileUtil#getExtension}.
-     */
-    public static String getSimpleClassName(String className) {
-        return FileUtil.getExtension(className);
-    }
-
-    /**
-     * Returns the simple class name (the name after the last dot)
-     * for the specified object.
-     */
-    public static String getSimpleClassName(Object o) {
-        if (o == null) {
-            return null;
-        }
-        return FileUtil.getExtension(o.getClass().getName());
-    }
-
-    /**
      * Returns <code>true</code> if the secified string is <code>null</code> or its
      * length is <code>0</code>.
      */
@@ -850,9 +830,9 @@ public class StringUtil {
     public static String enclose(String strToEnclose, char encloseWith) {
         return new StringBuilder().append(encloseWith).append(strToEnclose).append(encloseWith).toString();
     }
-    
+
     private static Map<String, Pattern> patternCache = MapUtil.newLruMap(1000);
-    
+
     /**
      * Returns a new {@code Matcher} object for the given regular expression and
      * string.  The underlying {@link Pattern} is cached, so that regular expressions
@@ -870,7 +850,7 @@ public class StringUtil {
         synchronized (patternCache) {
             pattern = patternCache.get(regex);
         }
-        
+
         if (pattern == null) {
             pattern = Pattern.compile(regex);
             synchronized (patternCache) {
@@ -879,7 +859,7 @@ public class StringUtil {
         }
         return pattern;
     }
-    
+
     /**
      * Does the same thing as {@link String#replaceAll(String, String)}, but uses
      * the pattern cache to avoid recompiling.

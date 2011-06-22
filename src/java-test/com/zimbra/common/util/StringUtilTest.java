@@ -88,13 +88,6 @@ public class StringUtilTest {
     }
 
     @Test
-    public void testSimpleClassName() {
-        Assert.assertEquals("MyClass", StringUtil.getSimpleClassName("my.package.MyClass"));
-        Integer i = 0;
-        Assert.assertEquals("Integer", StringUtil.getSimpleClassName(i));
-    }
-
-    @Test
     public void testStripControlCharacters() {
         Assert.assertEquals("null string", StringUtil.stripControlCharacters(null), null);
         Assert.assertEquals("empty string", StringUtil.stripControlCharacters(""), "");
@@ -135,7 +128,7 @@ public class StringUtilTest {
         Assert.assertTrue(m.find());
         Assert.assertEquals("ghij", m.group(1));
     }
-    
+
     @Test
     public void testReplaceAll() {
         Assert.assertEquals("abc456def456ghi", StringUtil.replaceAll("abc123def12223ghi", "1\\d+3", "456"));
