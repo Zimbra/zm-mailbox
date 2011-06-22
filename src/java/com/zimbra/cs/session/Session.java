@@ -18,10 +18,10 @@ package com.zimbra.cs.session;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.im.IMPersona;
@@ -345,8 +345,12 @@ public abstract class Session {
         return !mAuthenticatedAccountId.equalsIgnoreCase(mTargetAccountId);
     }
 
-    @Override public String toString() {
-        String dateString = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS").format(new Date(mLastAccessed));
-        return StringUtil.getSimpleClassName(this) + ": {sessionId: " + mSessionId + ", accountId: " + mAuthenticatedAccountId + ", lastAccessed: " + dateString + "}";
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this)
+            .add("sessionId", mSessionId)
+            .add("accountId", mAuthenticatedAccountId)
+            .add("lastAccessed", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS").format(new Date(mLastAccessed)))
+            .toString();
     }
 }

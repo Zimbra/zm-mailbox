@@ -363,11 +363,10 @@ public class Mailbox {
         boolean endChange() {
             if (ZimbraLog.mailbox.isDebugEnabled()) {
                 if (depth <= 1) {
-                    if (ZimbraLog.mailbox.isDebugEnabled())
-                        ZimbraLog.mailbox.debug("ending operation" + (recorder == null ? "" : ": " + StringUtil.getSimpleClassName(recorder)));
+                    ZimbraLog.mailbox.debug("ending operation %s",
+                            recorder == null ? "" : recorder.getClass().getSimpleName());
                 } else {
-                    if (ZimbraLog.mailbox.isDebugEnabled())
-                        ZimbraLog.mailbox.debug("  decreasing stack depth to " + (depth - 1));
+                    ZimbraLog.mailbox.debug("  decreasing stack depth to %d", depth - 1);
                 }
             }
             return (--depth == 0);

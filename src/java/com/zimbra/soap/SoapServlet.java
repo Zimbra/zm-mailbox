@@ -41,7 +41,6 @@ import com.zimbra.common.util.BufferStream;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.RemoteIP;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.ZimbraServletOutputStream;
 import com.zimbra.cs.account.Provisioning;
@@ -52,7 +51,6 @@ import com.zimbra.cs.util.Zimbra;
 /**
  * The soap service servlet
  */
-
 public class SoapServlet extends ZimbraServlet {
     private static final long serialVersionUID = 38710345271877593L;
 
@@ -187,8 +185,8 @@ public class SoapServlet extends ZimbraServlet {
             if (servlet != null) {
                 ((SoapServlet) servlet).addService(service);
             } else {
-                sLog.debug("addService(" + servletName + ", " +
-                    StringUtil.getSimpleClassName(service) + "): servlet has not been initialized");
+                sLog.debug("addService(%s, %s): servlet has not been initialized",
+                        servletName, service.getClass().getSimpleName());
                 List<DocumentService> services = sExtraServices.get(servletName);
                 services.add(service);
             }
@@ -196,7 +194,7 @@ public class SoapServlet extends ZimbraServlet {
     }
 
     private void addService(DocumentService service) {
-        ZimbraLog.soap.info("Adding service " + StringUtil.getSimpleClassName(service) + " to " + getServletName());
+        ZimbraLog.soap.info("Adding service %s to %s", service.getClass().getSimpleName(), getServletName());
         service.registerHandlers(mEngine.getDocumentDispatcher());
     }
 
