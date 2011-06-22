@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110617-1948 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110621-2055 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -7186,6 +7186,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=111)
     public static final String A_zimbraPrefMailPollingInterval = "zimbraPrefMailPollingInterval";
+
+    /**
+     * whether web UI should always request read receipts for outgoing
+     * messages
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1217)
+    public static final String A_zimbraPrefMailRequestReadReceipts = "zimbraPrefMailRequestReadReceipts";
 
     /**
      * After deleting a message in list, which message should be selected
