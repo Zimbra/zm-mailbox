@@ -86,7 +86,7 @@ public class ImapSession extends Session {
     }
 
     ImapFolder getImapFolder() throws IOException {
-        ImapSessionManager.recordAccess(this);
+        ImapSessionManager.getInstance().recordAccess(this);
         return reload();
     }
 
@@ -177,15 +177,18 @@ public class ImapSession extends Session {
         }
     }
 
-    @Override protected boolean isMailboxListener() {
+    @Override
+    protected boolean isMailboxListener() {
         return true;
     }
 
-    @Override protected boolean isRegisteredInCache() {
+    @Override
+    protected boolean isRegisteredInCache() {
         return true;
     }
 
-    @Override public void doEncodeState(Element parent) {
+    @Override
+    public void doEncodeState(Element parent) {
         mFolder.doEncodeState(parent.addElement("imap"));
     }
 
@@ -195,17 +198,19 @@ public class ImapSession extends Session {
     }
 
     // XXX: need to handle the abrupt disconnect case, the LOGOUT case, the timeout case, and the too-many-sessions disconnect case
-    @Override public Session unregister() {
-        ImapSessionManager.closeFolder(this, true);
+    @Override
+    public Session unregister() {
+        ImapSessionManager.getInstance().closeFolder(this, true);
         return detach();
     }
 
     Session detach() {
-        ImapSessionManager.uncacheSession(this);
+        ImapSessionManager.getInstance().uncacheSession(this);
         return isRegistered() ? super.unregister() : this;
     }
 
-    @Override protected void cleanup() {
+    @Override
+    protected void cleanup() {
         // XXX: is there a synchronization issue here?
         ImapHandler handler = mHandler;
         if (handler != null) {

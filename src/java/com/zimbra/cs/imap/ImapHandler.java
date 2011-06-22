@@ -808,7 +808,7 @@ abstract class ImapHandler extends ProtocolHandler {
         ImapSession i4selected = mSelectedFolder;
         mSelectedFolder = null;
         if (i4selected != null) {
-            ImapSessionManager.closeFolder(i4selected, false);
+            ImapSessionManager.getInstance().closeFolder(i4selected, false);
             if (sendClosed && sessionActivated(ImapExtension.QRESYNC))
                 sendUntagged("OK [CLOSED] mailbox closed");
         }
@@ -827,7 +827,7 @@ abstract class ImapHandler extends ProtocolHandler {
         if (path == null)
             return new Pair<ImapSession, InitialFolderValues>(null, null);
 
-        Pair<ImapSession, InitialFolderValues> selectdata = ImapSessionManager.openFolder(path, params, this);
+        Pair<ImapSession, InitialFolderValues> selectdata = ImapSessionManager.getInstance().openFolder(path, params, this);
         mSelectedFolder = selectdata.getFirst();
 
         ZimbraLog.imap.info("selected folder " + selectdata.getFirst().getPath());

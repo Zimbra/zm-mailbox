@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -53,57 +53,70 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.Zimbra;
 
-public class ImapSessionManager {
-    private static final LinkedHashMap<ImapSession, Object> sSessionMap = new LinkedHashMap<ImapSession, Object>(128, (float) 0.75, true);
+final class ImapSessionManager {
+    private static final long SERIALIZER_INTERVAL_MSEC =
+        DebugConfig.imapSessionSerializerFrequency * Constants.MILLIS_PER_SECOND;
+    private static final long SESSION_INACTIVITY_SERIALIZATION_TIME =
+        DebugConfig.imapSessionInactivitySerializationTime * Constants.MILLIS_PER_SECOND;
+    private static final int TOTAL_SESSION_FOOTPRINT_LIMIT = DebugConfig.imapTotalNonserializedSessionFootprintLimit;
+    private static final int MAX_NONINTERACTIVE_SESSIONS = DebugConfig.imapNoninteractiveSessionLimit;
+    private static final boolean CONSISTENCY_CHECK = DebugConfig.imapCacheConsistencyCheck;
 
-    static void recordAccess(ImapSession session) {
-        synchronized (sSessionMap) {
+    private static final boolean TERMINATE_ON_CLOSE = DebugConfig.imapTerminateSessionOnClose;
+    private static final boolean SERIALIZE_ON_CLOSE = DebugConfig.imapSerializeSessionOnClose;
+
+    private final LinkedHashMap<ImapSession, Object> sessions = new LinkedHashMap<ImapSession, Object>(128, 0.75F, true);
+    private static final ImapSessionManager SINGLETON = new ImapSessionManager();
+
+    private ImapSessionManager() {
+        if (SERIALIZER_INTERVAL_MSEC > 0) {
+            Zimbra.sTimer.schedule(new SessionSerializerTask(), SERIALIZER_INTERVAL_MSEC, SERIALIZER_INTERVAL_MSEC);
+            ZimbraLog.imap.debug("initializing IMAP session serializer task");
+        }
+    }
+
+    static ImapSessionManager getInstance() {
+        return SINGLETON;
+    }
+
+    void recordAccess(ImapSession session) {
+        synchronized (sessions) {
             // LinkedHashMap bumps to beginning of iterator order on access
-            sSessionMap.get(session);
+            sessions.get(session);
         }
     }
 
-    static void uncacheSession(ImapSession session) {
-        synchronized (sSessionMap) {
-            sSessionMap.remove(session);
+    void uncacheSession(ImapSession session) {
+        synchronized (sessions) {
+            sessions.remove(session);
         }
     }
 
-    private static final long SERIALIZER_INTERVAL_MSEC = DebugConfig.imapSessionSerializerFrequency * Constants.MILLIS_PER_SECOND;
-    private static SessionSerializerTask sSerializerTask = null;
+    /**
+     * <ol>
+     *  <li>deserialize/reserialize sessions with notification overflow
+     *  <li>serialize enough sessions to get under the max memory footprint
+     *  <li>prune noninteractive sessions beyond a specified count
+     *  <li>maybe checkpoint a few "dirty" sessions if we're not doing anything else?
+     * </ol>
+     */
+    final class SessionSerializerTask extends TimerTask {
 
-    static void startup() {
-        synchronized (sSessionMap) {
-            if (SERIALIZER_INTERVAL_MSEC > 0 && sSerializerTask == null) {
-                Zimbra.sTimer.schedule(sSerializerTask = new SessionSerializerTask(), SERIALIZER_INTERVAL_MSEC, SERIALIZER_INTERVAL_MSEC);
-                ZimbraLog.imap.debug("initializing IMAP session serializer task");
-            }
-        }
-    }
-
-    // things to do during the task:
-    //   1. deserialize/reserialize sessions with notification overflow
-    //   2. serialize enough sessions to get under the max memory footprint
-    //   3. prune noninteractive sessions beyond a specified count
-    //   4. maybe checkpoint a few "dirty" sessions if we're not doing anything else?
-    static class SessionSerializerTask extends TimerTask {
-        private static final long SESSION_INACTIVITY_SERIALIZATION_TIME = DebugConfig.imapSessionInactivitySerializationTime * Constants.MILLIS_PER_SECOND;
-        private static final int TOTAL_SESSION_FOOTPRINT_LIMIT = DebugConfig.imapTotalNonserializedSessionFootprintLimit;
-        private static final int MAX_NONINTERACTIVE_SESSIONS = DebugConfig.imapNoninteractiveSessionLimit;
-
-        @Override public void run() {
+        @Override
+        public void run() {
             ZimbraLog.imap.debug("running IMAP session serializer task");
 
-            long cutoff = SESSION_INACTIVITY_SERIALIZATION_TIME > 0 ? System.currentTimeMillis() - SESSION_INACTIVITY_SERIALIZATION_TIME : Long.MIN_VALUE;
+            long cutoff = SESSION_INACTIVITY_SERIALIZATION_TIME > 0 ?
+                    System.currentTimeMillis() - SESSION_INACTIVITY_SERIALIZATION_TIME : Long.MIN_VALUE;
 
             List<ImapSession> overflow = new ArrayList<ImapSession>();
             List<ImapSession> pageable = new ArrayList<ImapSession>();
             List<ImapSession> droppable = new ArrayList<ImapSession>();
 
-            synchronized (sSessionMap) {
+            synchronized (sessions) {
                 // first, figure out the set of sessions that'll need to be brought into memory and reserialized
                 int footprint = 0, maxOverflow = 0, noninteractive = 0;
-                for (ImapSession session : sSessionMap.keySet()) {
+                for (ImapSession session : sessions.keySet()) {
                     if (session.requiresReload()) {
                         overflow.add(session);
                         // note that these will add to the memory footprint temporarily, so need the largest size...
@@ -113,7 +126,7 @@ public class ImapSessionManager {
                 footprint += Math.min(maxOverflow, TOTAL_SESSION_FOOTPRINT_LIMIT - 1000);
 
                 // next, get the set of in-memory sessions that need to get serialized out
-                for (ImapSession session : sSessionMap.keySet()) {
+                for (ImapSession session : sessions.keySet()) {
                     int size = session.getEstimatedSize();
                     // want to serialize enough sessions to get below the memory threshold
                     // also going to serialize anything that's been idle for a while
@@ -131,7 +144,8 @@ public class ImapSessionManager {
 
             for (ImapSession session : pageable) {
                 try {
-                    ZimbraLog.imap.debug("paging out session due to staleness or total memory footprint: %s (sid %s)", session.getPath(), session.getSessionId());
+                    ZimbraLog.imap.debug("paging out session due to staleness or total memory footprint: %s (sid %s)",
+                            session.getPath(), session.getSessionId());
                     session.unload();
                 } catch (Exception e) {
                     ZimbraLog.imap.warn("error serializing session; clearing", e);
@@ -142,7 +156,8 @@ public class ImapSessionManager {
 
             for (ImapSession session : overflow) {
                 try {
-                    ZimbraLog.imap.debug("loading/unloading paged session due to queued notification overflow: %s (sid %s)", session.getPath(), session.getSessionId());
+                    ZimbraLog.imap.debug("loading/unloading paged session due to queued notification overflow: %s (sid %s)",
+                            session.getPath(), session.getSessionId());
                     session.reload();
                     session.unload();
                 } catch (Exception e) {
@@ -153,13 +168,14 @@ public class ImapSessionManager {
             }
 
             for (ImapSession session : droppable) {
-                ZimbraLog.imap.debug("removing session due to having too many noninteractive sessions: %s (sid %s)", session.getPath(), session.getSessionId());
+                ZimbraLog.imap.debug("removing session due to having too many noninteractive sessions: %s (sid %s)",
+                        session.getPath(), session.getSessionId());
                 // only noninteractive sessions get added to droppable list, so this next conditional should never be true
                 quietRemoveSession(session);
             }
         }
 
-        private static void quietRemoveSession(ImapSession session) {
+        private void quietRemoveSession(ImapSession session) {
             // XXX: make sure this doesn't result in a loop
             try {
                 if (session.isInteractive()) {
@@ -172,7 +188,6 @@ public class ImapSessionManager {
         }
     }
 
-
     static class InitialFolderValues {
         final int uidnext, modseq;
         int firstUnread = -1;
@@ -183,11 +198,8 @@ public class ImapSessionManager {
         }
     }
 
-    static final boolean CONSISTENCY_CHECK = DebugConfig.imapCacheConsistencyCheck;
-
-    static Pair<ImapSession, InitialFolderValues> openFolder(ImapPath path, byte params, ImapHandler handler) throws ServiceException {
-        boolean debug = ZimbraLog.imap.isDebugEnabled();
-        if (debug)  ZimbraLog.imap.debug("opening folder: %s", path);
+    Pair<ImapSession, InitialFolderValues> openFolder(ImapPath path, byte params, ImapHandler handler) throws ServiceException {
+        ZimbraLog.imap.debug("opening folder: %s", path);
 
         if (!path.isSelectable()) {
             throw ServiceException.PERM_DENIED("cannot select folder: " + path);
@@ -245,22 +257,21 @@ public class ImapSessionManager {
             // can't set these until *after* loading the folder because UID renumbering affects them
             InitialFolderValues initial = new InitialFolderValues(folder);
 
-            StringBuilder added = debug ? new StringBuilder("  ** added: ") : null;
             for (ImapMessage i4msg : i4list) {
                 i4folder.cache(i4msg, i4msg.imapUid > recentCutoff);
-                if (initial.firstUnread == -1 && (i4msg.flags & Flag.BITMASK_UNREAD) != 0)
+                if (initial.firstUnread == -1 && (i4msg.flags & Flag.BITMASK_UNREAD) != 0) {
                     initial.firstUnread = i4msg.sequence;
-                if (debug)  added.append(' ').append(i4msg.msgId);
+                }
             }
             i4folder.setInitialSize();
-            if (debug)  ZimbraLog.imap.debug(added);
+            ZimbraLog.imap.debug("added %s", i4list);
 
             ImapSession session = null;
             try {
                 session = new ImapSession(i4folder, handler);
                 session.register();
-                synchronized (sSessionMap) {
-                    sSessionMap.put(session, null);
+                synchronized (sessions) {
+                    sessions.put(session, null);
                 }
                 return new Pair<ImapSession, InitialFolderValues>(session, initial);
             } catch (ServiceException e) {
@@ -283,8 +294,9 @@ public class ImapSessionManager {
         List<ImapMessage> i4list = new ArrayList<ImapMessage>();
 
         byte[] types = ImapFolder.getTypeConstraint(search);
-        if (types.length == 0)
+        if (types.length == 0) {
             return i4list;
+        }
 
         SearchParams params = new SearchParams();
         params.setQueryStr(search.getQuery());
@@ -424,11 +436,7 @@ public class ImapSessionManager {
         }
     }
 
-
-    private static final boolean TERMINATE_ON_CLOSE = DebugConfig.imapTerminateSessionOnClose;
-    private static final boolean SERIALIZE_ON_CLOSE = DebugConfig.imapSerializeSessionOnClose;
-
-    static void closeFolder(ImapSession session, boolean isUnregistering) {
+    void closeFolder(ImapSession session, boolean isUnregistering) {
         // XXX: does this require synchronization?
 
         // detach session from handler and jettison session state from folder
