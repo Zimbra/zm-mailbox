@@ -59,8 +59,12 @@ public abstract class RightBearer {
         Domain mGranteeDomain;
         Set<String> mIdAndGroupIds;
         
-        // public only for unit test. TODO: cleanup unit test
         public Grantee(NamedEntry grantee) throws ServiceException {
+            this(grantee, true);
+        }
+        
+        // public only for unit test. TODO: cleanup unit test
+        public Grantee(NamedEntry grantee, boolean adminOnly) throws ServiceException {
             super(grantee);
             
             Provisioning prov = grantee.getProvisioning();
@@ -69,19 +73,22 @@ public abstract class RightBearer {
             if (grantee instanceof Account) {
                 mGranteeType = GranteeType.GT_USER;
                 mGranteeDomain = prov.getDomain((Account)grantee);
-                granteeGroups = prov.getAclGroups((Account)grantee, true);
+                granteeGroups = prov.getAclGroups((Account)grantee, adminOnly);
                 
             } else if (grantee instanceof DistributionList) {
                 mGranteeType = GranteeType.GT_GROUP;
                 mGranteeDomain = prov.getDomain((DistributionList)grantee);
-                granteeGroups = prov.getAclGroups((DistributionList)grantee, true);
+                granteeGroups = prov.getAclGroups((DistributionList)grantee, adminOnly);
                 
             } else
                 throw ServiceException.INVALID_REQUEST("invalid grantee type", null);
             
-            if (!RightBearer.isValidGranteeForAdminRights(mGranteeType, grantee))
-                throw ServiceException.INVALID_REQUEST("invalid grantee", null);
-
+            if (adminOnly) {
+                if (!RightBearer.isValidGranteeForAdminRights(mGranteeType, grantee)) {
+                    throw ServiceException.INVALID_REQUEST("invalid grantee", null);
+                }
+            }
+            
             if (mGranteeDomain == null)
                 throw ServiceException.FAILURE("internal error, cannot get domain for grantee", null);
             

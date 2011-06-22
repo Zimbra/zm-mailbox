@@ -140,11 +140,17 @@ public class RightCommand {
          * called in server
          */
         private void addGrants(TargetType targetType, Entry target, ZimbraACL acl,
-                Set<String> granteeFilter) {
+                Set<String> granteeFilter, Boolean isGranteeAnAdmin) {
             if (acl == null)
                 return;
                 
             for (ZimbraACE ace : acl.getAllACEs()) {
+                boolean isAdminRight = !ace.getRight().isUserRight();
+                
+                if (isAdminRight && Boolean.FALSE == isGranteeAnAdmin) {
+                    continue;
+                }
+                    
                 if (granteeFilter == null || granteeFilter.contains(ace.getGrantee()))
                     addACE(new ACE(targetType, target, ace));
             }
@@ -1063,15 +1069,16 @@ public class RightCommand {
         GranteeType gt = null;
         NamedEntry granteeEntry = null; 
         Set<String> granteeFilter = null;
+        Boolean isGranteeAnAdmin = null;
         if (granteeType != null) {
             gt = GranteeType.fromCode(granteeType);
             granteeEntry = GranteeType.lookupGrantee(prov, gt, granteeBy, grantee);  
+            isGranteeAnAdmin = RightBearer.isValidGranteeForAdminRights(gt, granteeEntry);
             
-            Grantee theGrantee = new Grantee(granteeEntry);
-            
-            if (granteeIncludeGroupsGranteeBelongs)
+            if (granteeIncludeGroupsGranteeBelongs) {
+                Grantee theGrantee = new Grantee(granteeEntry, false);
                 granteeFilter = theGrantee.getIdAndGroupIds();
-            else {
+            } else {
                 granteeFilter = new HashSet<String>();
                 granteeFilter.add(granteeEntry.getId());
             }
@@ -1082,7 +1089,7 @@ public class RightCommand {
         if (targetEntry != null) {
             // get ACL from the target
             ZimbraACL zimbraAcl = ACLUtil.getACL(targetEntry);
-            grants.addGrants(tt, targetEntry, zimbraAcl, granteeFilter);
+            grants.addGrants(tt, targetEntry, zimbraAcl, granteeFilter, isGranteeAnAdmin);
             
         } else {
             /*
@@ -1104,7 +1111,7 @@ public class RightCommand {
                 Entry grantedOnEntry = grantsOnTarget.getTargetEntry();
                 ZimbraACL acl = grantsOnTarget.getAcl();
                 TargetType grantedOnTargetType = TargetType.getTargetType(grantedOnEntry);
-                grants.addGrants(grantedOnTargetType, grantedOnEntry, acl, granteeFilter);
+                grants.addGrants(grantedOnTargetType, grantedOnEntry, acl, granteeFilter, isGranteeAnAdmin);
             }
         }
         
