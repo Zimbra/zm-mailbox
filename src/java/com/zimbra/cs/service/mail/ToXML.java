@@ -978,11 +978,20 @@ public class ToXML {
 
         if (needToOutput(fields, Change.MODIFIED_CONTENT) && encodeInvites) {
             boolean isPublic = true;
-            for (int i = 0; i < calItem.numInvites(); i++) {
-                Invite inv = calItem.getInvite(i);
-                encodeInvite(calItemElem, ifmt, octxt, calItem, calItem.getInvite(i), includeContent, neuter);
+            boolean hasSeries = false;
+            boolean hasExceptions = false;
+            Invite[] invites = calItem.getInvites();
+            for (Invite inv : invites) {
+                if (inv.isRecurrence())
+                    hasSeries = true;
+                else if (inv.hasRecurId())
+                    hasExceptions = true;
                 if (!inv.isPublic())
                     isPublic = false;
+                encodeInvite(calItemElem, ifmt, octxt, calItem, inv, includeContent, neuter);
+            }
+            if (hasExceptions && !hasSeries) {
+                calItemElem.addAttribute(MailConstants.A_CAL_ORPHAN, true);
             }
             if (isPublic || allowPrivateAccess(octxt, calItem))
                 encodeCalendarReplies(calItemElem, calItem);
