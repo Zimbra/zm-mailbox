@@ -2052,6 +2052,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraCalendarCompatibilityMode = "zimbraCalendarCompatibilityMode";
 
     /**
+     * list of disabled fields in calendar location web UI
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1218)
+    public static final String A_zimbraCalendarLocationDisabledFields = "zimbraCalendarLocationDisabledFields";
+
+    /**
      * maximum number of revisions to keep for calendar items (appointments
      * and tasks). 0 means unlimited.
      *

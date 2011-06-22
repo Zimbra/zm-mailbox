@@ -4900,6 +4900,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * list of disabled fields in calendar location web UI
+     *
+     * @return zimbraCalendarLocationDisabledFields, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1218)
+    public String getCalendarLocationDisabledFields() {
+        return getAttr(Provisioning.A_zimbraCalendarLocationDisabledFields, null);
+    }
+
+    /**
+     * list of disabled fields in calendar location web UI
+     *
+     * @param zimbraCalendarLocationDisabledFields new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1218)
+    public void setCalendarLocationDisabledFields(String zimbraCalendarLocationDisabledFields) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarLocationDisabledFields, zimbraCalendarLocationDisabledFields);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * list of disabled fields in calendar location web UI
+     *
+     * @param zimbraCalendarLocationDisabledFields new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1218)
+    public Map<String,Object> setCalendarLocationDisabledFields(String zimbraCalendarLocationDisabledFields, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarLocationDisabledFields, zimbraCalendarLocationDisabledFields);
+        return attrs;
+    }
+
+    /**
+     * list of disabled fields in calendar location web UI
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1218)
+    public void unsetCalendarLocationDisabledFields() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarLocationDisabledFields, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * list of disabled fields in calendar location web UI
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1218)
+    public Map<String,Object> unsetCalendarLocationDisabledFields(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarLocationDisabledFields, "");
+        return attrs;
+    }
+
+    /**
      * maximum number of revisions to keep for calendar items (appointments
      * and tasks). 0 means unlimited.
      *

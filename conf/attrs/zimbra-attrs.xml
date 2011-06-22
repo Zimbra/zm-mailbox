@@ -2016,7 +2016,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>The registered name of the Zimbra Analyzer Extension for this account to use</desc>
 </attr>
 
-<attr id="394" name="zimbraPrefReadingPaneEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" deprecatedSince="6.0.0_BETA2">
+<attr id="394" name="zimbraPrefReadingPaneEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" deprecatedSince="6.0.0_BETA2">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether reading pane is shown by default</desc>
   <deprecateDesc>deprecated in favor of zimbraPrefReadingPaneLocation and zimbraPrefConvReadingPaneLocation</deprecateDesc>
@@ -2027,7 +2027,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>When composing and sending mail, whether to use RFC 2231 MIME parameter value encoding. If set to FALSE, then RFC 2047 style encoding is used.</desc>
 </attr>
 
-<attr id="396" name="zimbraPrefShortcuts" type="string" max="2048" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="396" name="zimbraPrefShortcuts" type="string" max="2048" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <desc>keyboard shortcuts</desc>
 </attr>
 
@@ -2869,7 +2869,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether IMAP SASL GSSAPI is enabled for a given server</desc>
 </attr>
 
-<attr id="556" name="zimbraPrefIMLogChats" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="5.0.0">
+<attr id="556" name="zimbraPrefIMLogChats" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether to log IM chats to the Chats folder</desc>
 </attr>  
@@ -4520,7 +4520,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>how many seconds worth of committed redo ops to re-execute during crash recovery; related to mysql parameter innodb_flush_log_at_trx_commit=0</desc>
 </attr>
 
-<attr id="1010" name="zimbraPrefConvReadingPaneLocation" type="enum" value="bottom,right,off" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0.0_BETA2">
+<attr id="1010" name="zimbraPrefConvReadingPaneLocation" type="enum" value="bottom,right,off" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.0_BETA2">
   <defaultCOSValue>bottom</defaultCOSValue>
   <desc>where the message reading pane is displayed in conv view</desc>
 </attr>
@@ -5752,9 +5752,13 @@ TODO: delete them permerntly from here
   <desc>whether to enable LDAP-filter in zimbraMailSSLClientCertPrincipalMap</desc>
 </attr>
 
-<attr id="1217" name="zimbraPrefMailRequestReadReceipts" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.0.0">
+<attr id="1217" name="zimbraPrefMailRequestReadReceipts" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether web UI should always request read receipts for outgoing messages</desc>
+</attr>
+
+<attr id="1218" name="zimbraCalendarLocationDisabledFields" type="string" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.0.0">
+  <desc>list of disabled fields in calendar location web UI</desc>
 </attr>
 
 
