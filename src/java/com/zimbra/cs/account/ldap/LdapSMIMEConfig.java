@@ -72,7 +72,9 @@ public abstract class LdapSMIMEConfig {
     
     public interface ResultCallback {
         public void add(String field, String cert);
+        public boolean continueWithNextConfig();
     }
     
-    public abstract void lookupPublicKeys(Account acct, String email, ResultCallback resultCallback) throws ServiceException;
+    public abstract void lookupPublicKeys(Account acct, String email, ResultCallback resultCallback) 
+    throws ServiceException;
 };
