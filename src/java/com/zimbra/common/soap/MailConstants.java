@@ -745,6 +745,8 @@ public final class MailConstants {
     public static final String A_CAL_ECHO = "echo";
     public static final String A_CAL_CODE = "code";
 
+    public static final String A_CAL_ORPHAN = "orphan";
+
     // spell checking
     public static final String A_AVAILABLE = "available";
     public static final String E_MISSPELLED = "misspelled";
