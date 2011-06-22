@@ -1182,6 +1182,7 @@ creation, an INVITE_OUT_OF_DATE exception will be thrown.
 <GetAppointmentResponse>
   <appt uid="UID" id="appointment_id" [f="{flags}"] [t="{tags}"] s="{size}" d="{date}" l="{folder}"
         [nextAlarm="next alarm will go off at"]
+        [orphan="1"]  // if appointment has exception instances only without the recurrence series
   >
     [<inv id="invite-original-mail-item-id" compNum="component-number" seq="num">
       ...
