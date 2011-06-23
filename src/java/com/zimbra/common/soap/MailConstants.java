@@ -692,6 +692,11 @@ public final class MailConstants {
     public static final String A_INVALID = "invalid";
     public static final String A_REMINDER = "reminder";
 
+    // contact group
+    public static final String E_CONTACT_GROUP_MEMBER = "m";
+    public static final String A_CONTACT_GROUP_MEMBER_TYPE = "type";
+    public static final String A_CONTACT_GROUP_MEMBER_VALUE = "value";
+    public static final String A_DEREF_CONATC_GROUP_MEMBER = "derefGroupMember";
 
     // messages
     public static final String E_MIMEPART = "mp";

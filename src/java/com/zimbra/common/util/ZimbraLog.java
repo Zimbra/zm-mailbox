@@ -386,6 +386,11 @@ public final class ZimbraLog {
 
 
     public static final Log nginxlookup = LogFactory.getLog("zimbra.nginxlookup");
+    
+    /**
+     * the "zimbra.contact" logger.  Logs contact operations.
+     */
+    public static final Log contact = LogFactory.getLog("zimbra.contact");
 
 
     /**
