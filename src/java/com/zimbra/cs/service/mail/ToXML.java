@@ -24,6 +24,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -2265,6 +2266,9 @@ public class ToXML {
             }
         }
 
+        for (ToXMLExtension ext : extensions) {
+            ext.encodeDocumentAdditionalAttribute(m, ifmt, octxt, doc, fields);
+        }
         return m;
     }
     public static Element encodeDataSource(Element parent, DataSource ds) {
@@ -2652,5 +2656,13 @@ public class ToXML {
             l.addAttribute(MailConstants.A_OWNER_NAME, nentry == null ? null : nentry.getName());
         }
         return l;
+    }
+    
+    public interface ToXMLExtension {
+        public Element encodeDocumentAdditionalAttribute(Element elem, ItemIdFormatter ifmt, OperationContext octxt, Document doc, int fields);
+    }
+    private static HashSet<ToXMLExtension> extensions = new HashSet<ToXMLExtension>();
+    public static void addExtension(ToXMLExtension e) {
+        extensions.add(e);
     }
 }
