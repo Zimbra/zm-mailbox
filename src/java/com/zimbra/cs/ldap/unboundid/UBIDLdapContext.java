@@ -306,10 +306,10 @@ public class UBIDLdapContext extends ZLdapContext {
     }
     
     @Override
-    public ZAttributes getAttributes(String dn) throws LdapException {
+    public ZAttributes getAttributes(String dn, String[] attrs) throws LdapException {
         try {
             Timer timer = UBIDLogger.beforeTimedOp();
-            SearchResultEntry entry = conn.getEntry(dn);
+            SearchResultEntry entry = (attrs == null) ? conn.getEntry(dn) : conn.getEntry(dn, attrs);
             UBIDLogger.afterTimedOp(LdapOp.GET_ENTRY, timer, usage, conn, dn);
             
             if (entry == null) {

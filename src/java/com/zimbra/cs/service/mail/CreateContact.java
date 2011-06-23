@@ -26,6 +26,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimePart;
 import javax.mail.internet.MimePartDataSource;
 
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.MimeDetect;
@@ -37,6 +38,7 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.ContactGroup;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.DocumentDataSource;
 import com.zimbra.cs.mailbox.MailItem;
@@ -47,8 +49,10 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.MessageDataSource;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Contact.Attachment;
+import com.zimbra.cs.mailbox.ContactGroup.Member;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedContact;
+import com.zimbra.cs.mime.ParsedContact.FieldDelta;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.UploadDataSource;
 import com.zimbra.cs.service.UserServlet;
@@ -114,32 +118,83 @@ public class CreateContact extends MailDocumentHandler  {
         return parseContact(cn, zsc, octxt, null);
     }
 
+    /*
+     * for CreateContact and ModifyContact replace mode
+     */
     static Pair<Map<String,Object>, List<Attachment>> parseContact(
             Element cn, ZimbraSoapContext zsc, OperationContext octxt, Contact existing)
     throws ServiceException {
         Map<String, Object> fields = new HashMap<String, Object>();
         List<Attachment> attachments = new ArrayList<Attachment>();
-
+        boolean isContactGroup = false;
+        
         for (Element elt : cn.listElements(MailConstants.E_ATTRIBUTE)) {
             String name = elt.getAttribute(MailConstants.A_ATTRIBUTE_NAME);
-            if (name.trim().equals(""))
+            if (name.trim().equals("")) {
                 throw ServiceException.INVALID_REQUEST("at least one contact field name is blank", null);
-
+            }
+            
+            // do not allow specifying groupMember as attribute directly
+            disallowGroupMemberAttr(name);
+            
             Attachment attach = parseAttachment(elt, name, zsc, octxt, existing);
             if (attach == null) {
-                String opStr = elt.getAttribute(MailConstants.A_OPERATION, null);
-                if (opStr != null) {
-                    throw ServiceException.INVALID_REQUEST(MailConstants.A_OPERATION +
-                            " is not allowed", null);
-                }
+                disallowOperation(elt);
 
-                StringUtil.addToMultiMap(fields, name, elt.getText());
+                String value = elt.getText();
+                StringUtil.addToMultiMap(fields, name, value);
+                
+                if (ContactConstants.A_type.equals(name) && ContactConstants.TYPE_GROUP.equals(value)) {
+                    isContactGroup = true;
+                }
             } else {
                 attachments.add(attach);
             }
         }
+        
+        // parse contact group members
+        ContactGroup contactGroup = null;
+        for (Element elt : cn.listElements(MailConstants.E_CONTACT_GROUP_MEMBER)) {
+            if (!isContactGroup) {
+                // do not check existing contact, because this is replace mode or creating
+                throw ServiceException.INVALID_REQUEST(MailConstants.E_CONTACT_GROUP_MEMBER +
+                        " is only allowed for contact group", null);
+            }
+            
+            disallowOperation(elt);
+            
+            if (contactGroup == null) {
+                contactGroup = ContactGroup.init(null, existing, false);
+                if (existing != null) {
+                    contactGroup.deleteAllMembers();
+                }
+            }
+            String memberType = elt.getAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_TYPE);
+            String memberValue = elt.getAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_VALUE);
+                
+            Member.Type type = Member.Type.fromSoap(memberType);
+            contactGroup.addMember(type, memberValue);
+        }
+        if (contactGroup != null) {
+            fields.put(ContactConstants.A_groupMember, contactGroup);
+        }
 
         return new Pair<Map<String,Object>, List<Attachment>>(fields, attachments);
+    }
+    
+    static void disallowOperation(Element elt) throws ServiceException {
+        String opStr = elt.getAttribute(MailConstants.A_OPERATION, null);
+        if (opStr != null) {
+            throw ServiceException.INVALID_REQUEST(MailConstants.A_OPERATION +
+                    " is not allowed", null);
+        }
+    }
+    
+    static void disallowGroupMemberAttr(String attrName) throws ServiceException {
+        if (attrName.trim().equals(ContactConstants.A_groupMember)) {
+            throw ServiceException.INVALID_REQUEST(ContactConstants.A_groupMember + 
+                    " cannot be specified as an attribute", null);
+        }
     }
 
     static Pair<ParsedContact.FieldDeltaList, List<Attachment>> parseContactMergeMode(
@@ -147,7 +202,8 @@ public class CreateContact extends MailDocumentHandler  {
     throws ServiceException {
         ParsedContact.FieldDeltaList deltaList = new ParsedContact.FieldDeltaList();
         List<Attachment> attachments = new ArrayList<Attachment>();
-
+        boolean isContactGroup = false;
+        
         for (Element elt : cn.listElements(MailConstants.E_ATTRIBUTE)) {
             String name = elt.getAttribute(MailConstants.A_ATTRIBUTE_NAME);
             if (name.trim().equals(""))
@@ -156,10 +212,87 @@ public class CreateContact extends MailDocumentHandler  {
             Attachment attach = parseAttachment(elt, name, zsc, octxt, existing);
             if (attach == null) {
                 String opStr = elt.getAttribute(MailConstants.A_OPERATION, null);
-                deltaList.addDelta(name, elt.getText(), opStr);
+                ParsedContact.FieldDelta.Op op = FieldDelta.Op.fromString(opStr);
+                String value = elt.getText();
+                deltaList.addAttrDelta(name, value, op);
+                
+                if (ContactConstants.A_type.equals(name) && ContactConstants.TYPE_GROUP.equals(value) &&
+                        ParsedContact.FieldDelta.Op.REMOVE != op) {
+                    isContactGroup = true;
+                }
             } else {
                 attachments.add(attach);
             }
+        }
+        
+        for (Element elt : cn.listElements(MailConstants.E_CONTACT_GROUP_MEMBER)) {
+            if (!isContactGroup && !existing.isGroup()) {
+                throw ServiceException.INVALID_REQUEST(MailConstants.E_CONTACT_GROUP_MEMBER +
+                        " is only allowed for contact group", null);
+            }
+            
+            String opStr = elt.getAttribute(MailConstants.A_OPERATION, null);
+            ParsedContact.FieldDelta.Op op = FieldDelta.Op.fromString(opStr);
+            
+            String memberIdStr = elt.getAttribute(MailConstants.A_ID, null);
+            ContactGroup.MemberId memberId = null;
+            if (memberIdStr != null) {
+                memberId = ContactGroup.MemberId.fromString(memberIdStr);
+            }
+            
+            ContactGroup.Member.Type memberType = 
+                ContactGroup.Member.Type.fromSoap(elt.getAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_TYPE, null));
+            String memberValue = elt.getAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_VALUE, null);
+            
+            // validate
+            /*
+            (1) if op is not present (modify an existing member):
+                   {member-id} is required
+                   {member-type} is optional: 
+                       - if present, type is changed to the specified type
+                       - if not present: type is not changed
+                   {member-value} is required
+    
+            (2) if op is present (add or remove a member):
+                   +: {member-id} is not allowed
+                      {member-type} is required
+                      {member-value} is required
+                   -: {member-id} is required
+                      {member-type} is not allowed
+                      {member-value} is not allowed
+             */
+            if (op == null) {
+                if (memberId == null) {
+                    throw ServiceException.INVALID_REQUEST("missing member id", null);
+                }
+                if (StringUtil.isNullOrEmpty(memberValue)) {
+                    throw ServiceException.INVALID_REQUEST("missing member value", null);
+                }
+            } else if (op == ParsedContact.FieldDelta.Op.ADD) {
+                if (memberId != null) {
+                    throw ServiceException.INVALID_REQUEST("member id is not allowed for adding member", null);
+                }
+                if (memberType == null) {
+                    throw ServiceException.INVALID_REQUEST("missing member type", null);
+                }
+                if (StringUtil.isNullOrEmpty(memberValue)) {
+                    throw ServiceException.INVALID_REQUEST("missing member value", null);
+                }
+            } else if (op == ParsedContact.FieldDelta.Op.REMOVE) {
+                if (memberId == null) {
+                    throw ServiceException.INVALID_REQUEST("missing member id", null);
+                }
+                if (memberType != null) {
+                    throw ServiceException.INVALID_REQUEST("member type is not allowed for removing member", null);
+                }
+                if (!StringUtil.isNullOrEmpty(memberValue)) {
+                    throw ServiceException.INVALID_REQUEST("member value is not allowed for removing member", null);
+                }
+            } else {
+                throw ServiceException.INVALID_REQUEST("invalid op", null);
+            }
+            
+            deltaList.addGroupMemberDelta(memberId, memberType, memberValue, op);
         }
 
         return new Pair<ParsedContact.FieldDeltaList, List<Attachment>>(deltaList, attachments);

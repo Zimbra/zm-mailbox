@@ -23,6 +23,7 @@ import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
 import com.zimbra.cs.ldap.LdapConstants;
+import com.zimbra.cs.ldap.LdapException.LdapEntryNotFoundException;
 import com.zimbra.cs.ldap.LdapException.LdapSizeLimitExceededException;
 import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.IAttributes;
@@ -31,6 +32,7 @@ import com.zimbra.cs.ldap.LdapTODO;
 import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.ldap.SearchLdapOptions;
+import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.ZSearchScope;
 
@@ -205,15 +207,20 @@ public class LdapGalSearch {
                 zlc = LdapClient.getExternalContext(ldapConfig, LdapUsage.fromGalOp(params.getOp()));
             }
             
-            searchGal(zlc,
-                      galType,
-                      cfg.getPageSize(),
-                      cfg.getSearchBase(),
-                      params.generateLdapQuery(),
-                      params.getLimit(),
-                      cfg.getRules(),
-                      params.getSyncToken(),
-                      params.getResult());
+            String fetchEntryByDn = params.getSearchEntryByDn();
+            if (fetchEntryByDn == null) {
+                searchGal(zlc,
+                          galType,
+                          cfg.getPageSize(),
+                          cfg.getSearchBase(),
+                          params.generateLdapQuery(),
+                          params.getLimit(),
+                          cfg.getRules(),
+                          params.getSyncToken(),
+                          params.getResult());
+            } else {
+                getGalEntryByDn(zlc, galType, fetchEntryByDn, cfg.getRules(), params.getResult());
+            }
         } finally {
             LdapClient.closeContext(zlc);
         }
@@ -290,7 +297,6 @@ public class LdapGalSearch {
         
     }
     
-    @TODO
     public static void searchGal(ZLdapContext zlc,
                                  GalSearchConfig.GalType galType,
                                  int pageSize,
@@ -303,23 +309,17 @@ public class LdapGalSearch {
 
         String tk = token != null && !token.equals("")? token : LdapConstants.EARLIEST_SYNC_TOKEN;
         result.setToken(tk);
+        
+        String reqAttrs[] = rules.getLdapAttrs();
       
         if (ZimbraLog.gal.isDebugEnabled()) {
-          
-            LdapTODO.TODO();
             StringBuffer returnAttrs = new StringBuffer();
-            String attrs[] = rules.getLdapAttrs();
-            for (String a: attrs) {
+            for (String a: reqAttrs) {
                 returnAttrs.append(a + ",");
             }
           
-            String url = null;
-            String binddn = null;
             zlc.debug();
-          
             ZimbraLog.gal.debug("searchGal: " +
-                    "url=" + url +
-                    ", binddn=" + binddn + 
                     ", page size=" + pageSize + 
                     ", max results=" + maxResults + 
                     ", base=" + base + 
@@ -330,8 +330,7 @@ public class LdapGalSearch {
         SearhcGalVisitor visitor = new SearhcGalVisitor(zlc, galType, base, rules, result);
       
         SearchLdapOptions searchOpts = new SearchLdapOptions(base, query, 
-                rules.getLdapAttrs(), maxResults, null, 
-                ZSearchScope.SEARCH_SCOPE_SUBTREE, visitor);
+                reqAttrs, maxResults, null, ZSearchScope.SEARCH_SCOPE_SUBTREE, visitor);
         
         searchOpts.setResultPageSize(pageSize);
       
@@ -367,4 +366,36 @@ public class LdapGalSearch {
         }
     }
     
+    public static void getGalEntryByDn(ZLdapContext zlc,
+            GalSearchConfig.GalType galType,
+            String dn,
+            LdapGalMapRules rules,
+            SearchGalResult result) throws ServiceException {
+      
+        String reqAttrs[] = rules.getLdapAttrs();
+        
+        if (ZimbraLog.gal.isDebugEnabled()) {
+            StringBuffer returnAttrs = new StringBuffer();
+            for (String a: reqAttrs) {
+                returnAttrs.append(a + ",");
+            }
+          
+            zlc.debug();
+            ZimbraLog.gal.debug("getGalEntryByDn: " +
+                    ", dn=" + dn +
+                    ", attrs=" + returnAttrs);
+        }
+      
+        SearhcGalVisitor visitor = new SearhcGalVisitor(zlc, galType, null, rules, result);  // TODO, we set base to null, verify!
+      
+        try {
+            ZAttributes attrs = zlc.getAttributes(dn, reqAttrs);
+            visitor.visit(dn, attrs);
+        } catch (LdapEntryNotFoundException e) {
+            ZimbraLog.gal.debug("getGalEntryByDn: no such dn: " + dn, e);
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE("unable to search gal", e);
+        }
+    }    
+
 }

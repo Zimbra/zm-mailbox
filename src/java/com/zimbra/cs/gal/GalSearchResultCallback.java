@@ -104,16 +104,21 @@ public class GalSearchResultCallback implements GalContact.Visitor {
     	    eContact = ToXML.encodeContact(mResponse, mFormatter, c, true, fieldSet);
     	}
     	
+    	eContact.addAttribute(AccountConstants.A_REF, c.get(ContactConstants.A_dn));
+    	
     	if (mNeedsCanExpandInfo && c.isGroup()) {
     	    boolean canExpand = GalSearchControl.canExpandGalGroup(c.get(ContactConstants.A_email), 
                     c.get(ContactConstants.A_zimbraId), mAuthAcct);
             eContact.addAttribute(AccountConstants.A_EXP, canExpand);
     	}
+    	
     	return eContact;
     }
     
     public void handleContact(GalContact c) throws ServiceException {
 		Element eGalContact = ToXML.encodeGalContact(mResponse, c);
+		eGalContact.addAttribute(AccountConstants.A_REF, c.getId());
+		
 		if (mNeedsCanExpandInfo && c.isGroup()) {
 		    boolean canExpand = GalSearchControl.canExpandGalGroup(c.getSingleAttr(ContactConstants.A_email), 
 		            c.getSingleAttr(ContactConstants.A_zimbraId), mAuthAcct);

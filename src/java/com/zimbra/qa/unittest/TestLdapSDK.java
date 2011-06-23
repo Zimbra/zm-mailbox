@@ -232,7 +232,7 @@ public class TestLdapSDK extends TestLdap {
         UBIDLdapContext zlc1 = getContext();
         assertEquals(expectedPort, zlc1.getNative().getConnectedPort());
         
-        ZAttributes attrs = zlc1.getAttributes("cn=zimbra");
+        ZAttributes attrs = zlc1.getAttributes("cn=zimbra", null);
         assertEquals("Zimbra Systems Application Data", attrs.getAttrString("description"));
         
         UBIDLdapContext zlc2 = getContext();

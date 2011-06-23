@@ -42,6 +42,7 @@ public class GalSearchParams {
     private Integer mLdapLimit; // ldap search does not support paging, allow a different limit for ldap search
     private int mPageSize;
     private String mQuery;
+    private String mSearchEntryByDn;  // if not null, search the entry by a DN instead of using query
     private GalSyncToken mSyncToken;
     private SearchGalResult mResult;
     private ZimbraSoapContext mSoapContext;
@@ -105,6 +106,10 @@ public class GalSearchParams {
 
     public String getQuery() {
         return mQuery;
+    }
+    
+    public String getSearchEntryByDn() {
+        return mSearchEntryByDn;
     }
 
     public String getSyncToken() {
@@ -226,6 +231,10 @@ public class GalSearchParams {
     public void setQuery(String query) {
         mQuery = query;
     }
+    
+    public void setSearchEntryByDn(String dn) {
+        mSearchEntryByDn = dn;
+    }    
 
     public void setToken(String token) {
         mSyncToken = new GalSyncToken(token);

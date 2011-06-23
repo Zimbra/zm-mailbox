@@ -668,7 +668,7 @@ import and export of addressbook.
  </SearchGalRequest>
 
  <SearchGalResponse more="{more}" sortBy="sort-by" offset="..." [tokenizeKey="{tokenize-key-op}"]>
-   <cn [exp="1|0"]>
+   <cn [exp="1|0"] ref="{gal-entry-ref}">
      <a n="...">...</a>+
    </cn>*
  </SearchGalResponse>
@@ -691,6 +691,9 @@ import and export of addressbook.
 
   needExp: if the "exp" flag is needed in the response for group entries.
            default is 0
+           
+  {gal-entry-ref}: a unigue reference id for the GAL entry.  This is the ref id to be used for the value 
+                   of type="G" contact group members.  See CreateContactRequest and ModifyContactRequest.         
 
   exp: if the user can (has right to) expand group members
        returned only if needExp is 1 in the request and only on group entries (type=group in attrs on a <cn>).
@@ -2315,6 +2318,7 @@ Contacts:
     <a n="{attr-name}" aid="{upload-id}"/>*
     <a n="{attr-name}" id="{item-id}" [part="{subpart-name}"]/>*
     <a n="{attr-name}" part="{part-id}"/>*  <-- only valid when modifying an existing contact -->
+    <m [id="{member-id}"] type="{member-type}" value="{member-value}"/>*
   </cn>
 
   {contact-id} = unique contact id
@@ -2322,6 +2326,7 @@ Contacts:
   {modified-date}  = secs since epoch, date contact was modified
   {file-as} = current "file as" string for display/sorting purposes; *cannot* be used to *set* the file-as value
   {attr-name} = name of the attribute (firstName, etc)
+  {member-id} = unique member id within the contact group
 
   {folder-id} = id of folder to create contact in. Un-specified means use the default Contacts folder.
 
@@ -2341,9 +2346,22 @@ Contacts:
 <CreateContactRequest [verbose="0|1"]>
   <cn [l="{folder-id}"] [t="{tags}"]>
      <a>...</a>+
+     <m type="{member-type}" value="{member-value}"/>*
   </cn>
 </CreateContactRequest>
 
+  <m> : valid only if the contact being created is a contact group (has attribute type="group")
+  {member-type} = C|G|I
+                  C: reference to another contact
+                  G: reference to a GAL entry
+                  I: inlined member (member name and email address is embeded in the contact group)
+                    
+  {member-value} = if type=C: itemId of another contact.  If the referenced contact is in a 
+                              shared folder, the itemId must be qualified by zimbraId of the 
+                              owner.  e.g. {zimbraId}:{itemId}
+                   if type=G: GAL entry ref (returned in SearcgGalResponse)     
+                   if type=I: name and email address in the form of: "{name}" <{email}>
+                   
   or, if you have an existing vCard to add, you can specify a <vcard> element with *one* of
     -- inlined content
     -- mid/part attributes specifying an existing message part
@@ -2375,6 +2393,7 @@ END:VCARD]
 <ModifyContactRequest [replace="{replace-mode}"] [verbose="0|1"]>
   <cn id="...">
     <a n="{name}" [op="{op}"]>{attr-value}</a>+
+    <m [op="{op}"] [id="{member-id}"] [type="{member-type}"] [value="{member-value}"]/>*
   </cn>
 </ModifyContactRequest>
 
@@ -2382,29 +2401,48 @@ END:VCARD]
 
  {replace-mode} = 0|1 (0 is default)
 
-  if replace-mode is 1, all attrs in the specified contact are replaced with specified attrs, otherwise
-  the attrs are merged with the existing contact.
+  if replace-mode is 1, all attrs and group members in the specified contact are replaced with specified attrs 
+  and group members, otherwise the attrs and group members are merged with the existing contact.
+  
+  if replace-mode is 1, {member-id} is not allowed on <m> elements.
   
  {op} = + | -
         + : add the value
-        - : remvoe the value
+        - : remove the value
         
         {op} is not allowed if replace-mode is 1, if specified when replace=1, INVALID_REQUEST will be thrown
         
         When replace=0:
-        (1) if op is not present:
-               if {attr-value} is empty, remove the field
-               otherwise, replace the field with this value
-
-        (2) if op is present:
-               if {attr-value} is empty, throw INVALID_REQUEST
-               - otherwise, add/remove the specified value.
+        For <a> elements:
+            (1) if op is not present:
+                   if {attr-value} is empty, remove the field
+                   otherwise, replace the field with this value
+    
+            (2) if op is present:
+                   if {attr-value} is empty, throw INVALID_REQUEST
+                   - otherwise, add/remove the specified value.
+               
+        For <m> elements:
+            (1) if op is not present (modify an existing member):
+                   {member-id} is required
+                   {member-type} is optional: 
+                       - if present, type is changed to the specified type
+                       - if not present: type is not changed
+                   {member-value} is required
+    
+            (2) if op is present (add or remove a member):
+                   +: {member-id} is not allowed
+                      {member-type} is required
+                      {member-value} is required
+                   -: {member-id} is required
+                      {member-type} is not allowed
+                      {member-value} is not allowed
   
 
 <ModifyContactResponse>
    <cn ...>
      <a n="...">...</a>
-     ...
+     <m [id="{member-id}"] type="{member-type}" value="{member-value}"/>*
    </cn>
 </ModifyContactResponse>
 
@@ -2415,7 +2453,7 @@ NOTE: should we return modified attrs in response?
 
 ----------
 
-<GetContactsRequest [sortBy="nameAsc|nameDesc"] [sync="1"] [l="{folder-id}"]>
+<GetContactsRequest [sortBy="nameAsc|nameDesc"] [sync="1"] [l="{folder-id}"] [derefGroupMember="1"]>
   <a n="..."/>*
   <cn id="{contact-id}[,{contact-id}...]"/>*
 </GetContactsRequest>
@@ -2424,9 +2462,70 @@ NOTE: should we return modified attrs in response?
   if l="{folder-id}" is present, return only contacts in the specified folder.
   if <a n="..."/> present, return only the specified attribute(s).
   if <cn id="..."/> present, only get the specified contact(s).
+  
+  {derefGroupMember} : Contact members can be:
+                           - inline data of name and email address
+                           - a reference to a local contact or a shared contact, 
+                           - a GAL entry
+                       0 (default) - do not deref contact group members
+                       1 - deref contact group members 
+                       Note: for performance reason, derefGroupMember is supported 
+                       only when specific contact ids are specified.
 
 <GetContactsResponse>
   <cn [md="{metadata-change-date}"]>...</cn>*
+</GetContactsResponse>
+
+
+Contact group members are returned as <m> elements.
+If derefGroupMember is not "1", group members are returned in the ordered they were inserted 
+in the group.
+
+If derefGroupMember="1", group members are returned in the ordered of "key" of member.
+Key is: 
+    * for contact ref (type="C"): the fileAs field of the Contact
+    * for GAL ref (type="G"): email address of the GAL entry
+    * for inlined member (type="I"): the value
+
+contact group members are returned as sub-elements of <m>.  
+If for any(transient or permanent) reason a member cannot be dereferenced, then there will be no sub-element under <m>. 
+
+For example:
+<GetContactsResponse xmlns="urn:zimbraMail">
+  <cn id="680" fileAsStr="group1" d="1308612784000" rev="900" l="7">
+    <a n="nickname">group one</a>
+    <a n="type">group</a>
+    <a n="fileAs">8:group1</a>
+    <m id="1" value="user@zimbra.com" type="I"/>
+    <m id="3" value="282" type="C">
+      <cn id="282" fileAsStr="Smith, John" d="1308547353000" rev="27" l="7">
+        <a n="lastName">Smith</a>
+        <a n="email">jsmith@example.zimbra.com</a>
+        <a n="workURL">http://www.example.zimbra.com</a>
+        <a n="company">Zimbra</a>
+        <a n="workCountry">US</a>
+        <a n="workState">CA</a>
+        <a n="workPhone">(408) 123-4567</a>
+        <a n="firstName">Mark</a>
+      </cn>
+    </m>
+    <m id="4" value="uid=user1,ou=people,dc=phoebe,dc=mbp" type="G">
+      <cn id="2a692f57-1a5b-4542-9f8e-28dfdd0e3f43:260" fileAsStr="Demo User One" d="1308626790000" rev="22" l="257">
+        <a n="createTimeStamp">20110620052132Z</a>
+        <a n="lastName">user1</a>
+        <a n="email">user1@phoebe.mbp</a>
+        <a n="zimbraId">b4bf7953-c10f-449e-b7fe-3df48eea36f8</a>
+        <a n="objectClass">organizationalPerson</a>
+        <a n="objectClass">zimbraAccount</a>
+        <a n="objectClass">amavisAccount</a>
+        <a n="fullName">Demo User One</a>
+        <a n="dn">uid=user1,ou=people,dc=phoebe,dc=mbp</a>
+        <a n="workPhone">+1 650 555 1111</a>
+        <a n="modifyTimeStamp">20110620052229Z</a>
+        <a n="fileAs">8:Demo User One</a>
+      </cn>
+    </m>
+  </cn>
 </GetContactsResponse>
 
 ----------

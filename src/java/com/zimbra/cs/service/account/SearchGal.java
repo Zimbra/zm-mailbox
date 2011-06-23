@@ -65,7 +65,14 @@ public class SearchGal extends GalDocumentHandler {
     
     private static Element searchGal(ZimbraSoapContext zsc, Account account, Element request) throws ServiceException {
         
-        String name = request.getAttribute(AccountConstants.E_NAME);
+        // if searhc by ref is requested, honor it
+        String ref = request.getAttribute(AccountConstants.A_REF, null);
+        
+        // otherwise require a query
+        String name = null;
+        if (ref == null) {
+            request.getAttribute(AccountConstants.E_NAME);
+        }
         
         EntrySearchFilter filter = GalExtraSearchFilter.parseSearchFilter(request);
                 
@@ -80,7 +87,12 @@ public class SearchGal extends GalDocumentHandler {
         
         GalSearchParams params = new GalSearchParams(account, zsc);
         
-        params.setQuery(name);
+        if (ref == null) {
+            params.setQuery(name);
+        } else {
+            // search GAL by ref, which is a dn
+            params.setSearchEntryByDn(ref);
+        }
         params.setType(type);
         params.setRequest(request);
         params.setNeedCanExpand(needCanExpand);

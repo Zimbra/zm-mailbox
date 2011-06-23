@@ -898,14 +898,21 @@ public class Contact extends MailItem {
         return decodeXProps(fields.get(ContactConstants.A_vCardXProps));
     }
 
+    // could be a GAL group or a local group
+    // GAL group: members are stored in the member field, encoded as a json array.
+    // local group: members are stored in the groupMember field, encoded as Metadata
     public boolean isGroup() {
         return ContactConstants.TYPE_GROUP.equals(get(ContactConstants.A_type));
     }
-
+    
     public static boolean isGroup(Map<String,? extends Object> attrs) {
         return ContactConstants.TYPE_GROUP.equals(attrs.get(ContactConstants.A_type));
     }
 
+    public boolean isLocalGroup() {
+        return isGroup() && get(ContactConstants.A_groupMember) != null;
+    }
+    
     private static Set<String> SMIME_FIELDS = ImmutableSet.of(
             ContactConstants.A_userCertificate, ContactConstants.A_userSMIMECertificate);
 

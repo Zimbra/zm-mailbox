@@ -185,7 +185,7 @@ public class GalImport extends MailItemImport {
             Map<String,Object> attrs = contact.getAttrs();
             String id = contact.getId();
             mappings.remove(id);
-            attrs.put("dn", id);
+            attrs.put(ContactConstants.A_dn, id);
             ZimbraLog.gal.debug("processing gal contact "+id);
             DataSourceItem dsItem = DbDataSource.getReverseMapping(getDataSource(), id);
             addFileAsStr(attrs);

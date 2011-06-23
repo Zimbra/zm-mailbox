@@ -114,6 +114,14 @@ public abstract class LdapHelper {
             ZLdapContext initZlc, boolean useMaster) 
     throws LdapMultipleEntriesMatchedException, ServiceException;
     
+    public ZSearchResultEntry searchForEntry(String base, ZLdapFilter filter, ZLdapContext initZlc) 
+    throws LdapMultipleEntriesMatchedException, ServiceException {
+        if (initZlc == null) {
+            throw ServiceException.FAILURE("internal error", null);
+        }
+        return searchForEntry(base, filter, initZlc, false); 
+    }
+    
     /**
      * Get all attributes of the LDAP entry at the specified DN.
      * 
@@ -131,6 +139,14 @@ public abstract class LdapHelper {
     public abstract ZAttributes getAttributes(String dn, ZLdapContext initZlc, 
             LdapServerType ldapServerType) 
     throws LdapEntryNotFoundException, ServiceException;
+    
+    public ZAttributes getAttributes(String dn, ZLdapContext initZlc) 
+    throws LdapEntryNotFoundException, ServiceException {
+        if (initZlc == null) {
+            throw ServiceException.FAILURE("internal error", null);
+        }
+        return getAttributes(dn, null, null);
+    }
     
     public ZAttributes getAttributes(String dn) 
     throws LdapEntryNotFoundException, ServiceException {

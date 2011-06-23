@@ -218,7 +218,7 @@ public class ZLdapHelper extends LdapHelper {
             if (zlc == null) {
                 zlc = LdapClient.getContext(ldapServerType, LdapUsage.GET_ENTRY);
             }
-            return zlc.getAttributes(dn);
+            return zlc.getAttributes(dn, null);
         /*  all callsites with the following @TODOEXCEPTIONMAPPING pattern can have ease of mind now and remove the 
          * TODOEXCEPTIONMAPPING annotation
          *     

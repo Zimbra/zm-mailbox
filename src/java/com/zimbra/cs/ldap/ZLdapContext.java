@@ -39,7 +39,7 @@ public abstract class ZLdapContext extends ZLdapElement implements ILdapContext 
     
     public abstract void deleteChildren(String dn) throws ServiceException;
     
-    public abstract ZAttributes getAttributes(String dn) throws LdapException;
+    public abstract ZAttributes getAttributes(String dn, String[] attrs) throws LdapException;
     
     public abstract ZLdapSchema getSchema() throws LdapException;
     

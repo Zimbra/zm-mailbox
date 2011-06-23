@@ -480,11 +480,18 @@ public class ToXML {
         return serialized;
     }
 
-    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact, boolean summary, Collection<String> attrFilter) {
+    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact, 
+            boolean summary, Collection<String> attrFilter) {
         return encodeContact(parent, ifmt, contact, summary, attrFilter, NOTIFY_FIELDS);
     }
+    
+    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact, 
+            boolean summary, Collection<String> attrFilter, int fields) {
+        return encodeContact(parent, ifmt, contact, null, summary, attrFilter,  fields);
+    }
 
-    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact, boolean summary, Collection<String> attrFilter, int fields) {
+    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact, 
+            ContactGroup contactGroup, boolean summary, Collection<String> attrFilter, int fields) {
         Element elem = parent.addElement(MailConstants.E_CONTACT);
         elem.addAttribute(MailConstants.A_ID, ifmt.formatItemId(contact));
         if (needToOutput(fields, Change.MODIFIED_FOLDER))
@@ -532,13 +539,18 @@ public class ToXML {
         } catch (ServiceException e) { }
 
         List<Attachment> attachments = contact.getAttachments();
+        
+        // encode contact group members (not derefed) if we don't have a 
+        // already derefed contactGroup
+        boolean encodeContactGroupMembersBasic = (contactGroup == null);
+        
         if (attrFilter != null) {
             for (String name : attrFilter) {
                 // XXX: How to distinguish between a non-existent attribute and
                 //      an existing attribute with null or empty string value?
                 String value = contact.get(name);
                 if (value != null && !value.equals("")) {
-                    encodeContactAttr(elem, name, value);
+                    encodeContactAttr(elem, name, value, encodeContactGroupMembersBasic);
                 } else if (attachments != null) {
                     for (Attachment attach : attachments) {
                         if (attach.getName().equals(name))
@@ -546,32 +558,83 @@ public class ToXML {
                     }
                 }
             }
+            if (contactGroup != null) {
+                encodeContactGroup(elem, contactGroup, ifmt, summary, attrFilter, fields);
+            }
         } else {
             for (Map.Entry<String, String> me : contact.getFields().entrySet()) {
                 String name = me.getKey();
                 String value = me.getValue();
                 if (name != null && !name.trim().equals("") && value != null && !value.equals("")) {
-                    encodeContactAttr(elem, name, value);
+                    encodeContactAttr(elem, name, value, encodeContactGroupMembersBasic);
                 }
             }
             if (attachments != null) {
                 for (Attachment attach : attachments)
                     encodeContactAttachment(elem, attach);
             }
+            if (contactGroup != null) {
+                encodeContactGroup(elem, contactGroup, ifmt, summary, attrFilter, fields);
+            }
         }
 
         return elem;
     }
 
-    private static void encodeContactAttr(Element elem, String name, String value) {
+    private static void encodeContactAttr(Element elem, String name, String value, 
+            boolean encodeContactGroupMembers) {
         if (Contact.isMultiValueAttr(value)) {
             try {
-                for (String v : Contact.parseMultiValueAttr(value))
+                for (String v : Contact.parseMultiValueAttr(value)) {
                     elem.addKeyValuePair(name, v);
+                }
                 return;
             } catch (JSONException e) {}
+        } else if (ContactConstants.A_groupMember.equals(name)) {  
+            if (encodeContactGroupMembers) {
+                try {
+                    ContactGroup contactGroup = ContactGroup.init(value);
+                    for (ContactGroup.Member member : contactGroup.getMembers(true)) {
+                        Element eMember = elem.addElement(MailConstants.E_CONTACT_GROUP_MEMBER);
+                        encodeContactGroupMemberBasic(eMember, member);
+                    }
+                } catch (ServiceException e) {
+                    ZimbraLog.contact.warn("unable to init contact group", e);
+                }
+            }
+        } else {
+            elem.addKeyValuePair(name, value);
         }
-        elem.addKeyValuePair(name, value);
+    }
+    
+    private static void encodeContactGroupMemberBasic(Element eMember, ContactGroup.Member member) {
+        eMember.addAttribute(MailConstants.A_ID, member.getId().toString());
+        eMember.addAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_TYPE, member.getType().getSoapEncoded());
+        eMember.addAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_VALUE, member.getValue());
+    }
+    
+    private static void encodeContactGroup(Element elem, ContactGroup contactGroup, 
+        ItemIdFormatter ifmt, boolean summary, Collection<String> attrFilter, int fields) {
+        
+        for (ContactGroup.Member member : contactGroup.getMembers(true)) {
+            Element eMember = elem.addElement(MailConstants.E_CONTACT_GROUP_MEMBER);
+            encodeContactGroupMemberBasic(eMember, member);
+            Object derefedMember = member.getDerefedObj();
+            if (derefedMember != null) {
+                if (derefedMember instanceof String) {
+                    // inline member, do nothing    
+                } else if (derefedMember instanceof Contact) {
+                    // only expand one level for now. 
+                    // If this member is a group, do not create/apss down a ContactGroup object from the member.
+                    encodeContact(eMember, ifmt, (Contact) derefedMember, summary, attrFilter, fields);
+                } else if (derefedMember instanceof GalContact) {
+                    encodeGalContact(eMember, (GalContact) derefedMember);
+                }  else if (derefedMember instanceof Element) {
+                    // proxied GAL entry
+                    eMember.addElement((Element) derefedMember);
+                }
+            }
+        }
     }
 
     private static void encodeContactAttachment(Element elem, Attachment attach) {

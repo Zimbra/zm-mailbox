@@ -147,7 +147,11 @@ public class JNDILdapContext extends ZLdapContext {
     }
     
     @Override
-    public ZAttributes getAttributes(String dn) throws LdapException {
+    @TODO
+    public ZAttributes getAttributes(String dn, String[] attrs) throws LdapException {
+        if (attrs != null) {
+            LdapTODO.TODO(); 
+        }
         try {
             Attributes attributes = zlc.getAttributes(dn);
             return new JNDIAttributes(attributes);

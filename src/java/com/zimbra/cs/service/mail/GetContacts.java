@@ -25,6 +25,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.ContactGroup;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
@@ -54,6 +55,8 @@ public final class GetContacts extends MailDocumentHandler  {
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
         boolean sync = request.getAttributeBool(MailConstants.A_SYNC, false);
+        boolean derefContactGroupMember = request.getAttributeBool(MailConstants.A_DEREF_CONATC_GROUP_MEMBER, false);
+        
         String folderIdStr  = request.getAttribute(MailConstants.A_FOLDER, null);
         int folderId = ALL_FOLDERS;
         if (folderIdStr != null) {
@@ -99,7 +102,14 @@ public final class GetContacts extends MailDocumentHandler  {
         if (sync)
             fields |= Change.MODIFIED_CONFLICT;
 
-
+        // for perf reason, derefContactGroupMember is not supported in this mode
+        if (derefContactGroupMember) {
+            if (ids == null) {
+                throw ServiceException.INVALID_REQUEST(MailConstants.A_DEREF_CONATC_GROUP_MEMBER + 
+                        " is supported only when specific contact ids are specified", null);
+            }
+        }
+        
         if (ids != null) {
             ArrayList<Integer> local = new ArrayList<Integer>();
             HashMap<String, StringBuffer> remote = new HashMap<String, StringBuffer>();
@@ -120,7 +130,14 @@ public final class GetContacts extends MailDocumentHandler  {
                     for (int id : local) {
                         Contact con = mbox.getContactById(octxt, id);
                         if (con != null && (folderId == ALL_FOLDERS || folderId == con.getFolderId())) {
-                            ToXML.encodeContact(response, ifmt, con, false, attrs, fields);
+                            ContactGroup contactGroup = null;
+                            if (con.isLocalGroup()) {
+                                contactGroup = ContactGroup.init(con);
+                                if (derefContactGroupMember) {
+                                    contactGroup.derefAllMembers(con.getMailbox(), octxt);
+                                }
+                            }
+                            ToXML.encodeContact(response, ifmt, con, contactGroup, false, attrs, fields);
                         }
                     }
                 } finally {
@@ -129,8 +146,9 @@ public final class GetContacts extends MailDocumentHandler  {
             }
         } else {
             for (Contact con : mbox.getContactList(octxt, folderId, sort)) {
-                if (con != null)
+                if (con != null) {
                     ToXML.encodeContact(response, ifmt, con, false, attrs, fields);
+                }
             }
         }
         return response;

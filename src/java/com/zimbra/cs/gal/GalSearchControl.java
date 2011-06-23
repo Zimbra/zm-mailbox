@@ -257,9 +257,14 @@ public class GalSearchControl {
 
     private void generateSearchQuery(Account galAcct) throws ServiceException {
         String query = mParams.getQuery();
+        String searchByDn = mParams.getSearchEntryByDn();
+        
         Provisioning.GalSearchType type = mParams.getType();
         StringBuilder searchQuery = new StringBuilder();
-        if (!Strings.isNullOrEmpty(query)) {
+        
+        if (searchByDn != null) {
+            searchQuery.append("#dn:(" + searchByDn + ")");
+        } else if (!Strings.isNullOrEmpty(query)) {
             searchQuery.append("contact:\"");
             searchQuery.append(query.replace("\"", "\\\"")); // escape quotes
             searchQuery.append("\" AND");
@@ -535,6 +540,7 @@ public class GalSearchControl {
                 req.addAttribute(AccountConstants.A_TYPE, mParams.getType().toString());
                 req.addAttribute(AccountConstants.A_LIMIT, mParams.getLimit());
                 req.addAttribute(AccountConstants.A_NAME, mParams.getQuery());
+                req.addAttribute(AccountConstants.A_REF, mParams.getSearchEntryByDn());
             }
             req.addAttribute(AccountConstants.A_GAL_ACCOUNT_ID, galSyncAcct.getId());
             Element resp = transport.invokeWithoutSession(req.detach());
