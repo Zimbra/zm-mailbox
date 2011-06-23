@@ -976,27 +976,28 @@ public class ToXML {
             calItemElem.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, calItem.getModifiedSequence());
         }
 
-        if (needToOutput(fields, Change.MODIFIED_CONTENT) && encodeInvites) {
-            boolean isPublic = true;
-            boolean hasSeries = false;
-            boolean hasExceptions = false;
-            Invite[] invites = calItem.getInvites();
-            for (Invite inv : invites) {
-                if (inv.isRecurrence())
-                    hasSeries = true;
-                else if (inv.hasRecurId())
-                    hasExceptions = true;
-                if (!inv.isPublic())
-                    isPublic = false;
+        boolean doDetails = needToOutput(fields, Change.MODIFIED_CONTENT) && encodeInvites;
+        boolean isPublic = true;
+        boolean hasSeries = false;
+        boolean hasExceptions = false;
+        Invite[] invites = calItem.getInvites();
+        for (Invite inv : invites) {
+            if (inv.isRecurrence())
+                hasSeries = true;
+            else if (inv.hasRecurId())
+                hasExceptions = true;
+            if (!inv.isPublic())
+                isPublic = false;
+            if (doDetails)
                 encodeInvite(calItemElem, ifmt, octxt, calItem, inv, includeContent, neuter);
-            }
-            if (hasExceptions && !hasSeries) {
-                calItemElem.addAttribute(MailConstants.A_CAL_ORPHAN, true);
-            }
+        }
+        if (doDetails) {
             if (isPublic || allowPrivateAccess(octxt, calItem))
                 encodeCalendarReplies(calItemElem, calItem);
-
             encodeAlarmTimes(calItemElem, calItem);
+        }
+        if (hasExceptions && !hasSeries) {
+            calItemElem.addAttribute(MailConstants.A_CAL_ORPHAN, true);
         }
     }
 
