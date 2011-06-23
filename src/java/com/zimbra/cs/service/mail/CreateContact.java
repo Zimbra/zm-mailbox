@@ -164,7 +164,7 @@ public class CreateContact extends MailDocumentHandler  {
             disallowOperation(elt);
             
             if (contactGroup == null) {
-                contactGroup = ContactGroup.init(null, existing, false);
+                contactGroup = ContactGroup.init(existing);
                 if (existing != null) {
                     contactGroup.deleteAllMembers();
                 }

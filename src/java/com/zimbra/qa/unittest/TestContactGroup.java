@@ -45,7 +45,7 @@ public class TestContactGroup {
     }
         
     private ContactGroup createContactGroup(MemberData[] members) throws Exception {
-        ContactGroup contactGroup = ContactGroup.init(null, null, false);
+        ContactGroup contactGroup = ContactGroup.init((String)null);
         for (MemberData member : members) {
             contactGroup.addMember(member.type, member.value);
         }
@@ -233,7 +233,7 @@ public class TestContactGroup {
         
         String prevMemberKey = null;
         for (Member member : contactGroup.getDerefedMembers()) {
-            String memberKey = member.getKey();
+            String memberKey = member.getDerefedKey();
             if (prevMemberKey != null) {
                 assertTrue(prevMemberKey.compareTo(memberKey) < 0);
             }
@@ -258,7 +258,7 @@ public class TestContactGroup {
         
         String prevMemberKey = null;
         for (Member member : contactGroup.getDerefedMembers()) {
-            String memberKey = member.getKey();
+            String memberKey = member.getDerefedKey();
             if (prevMemberKey != null) {
                 assertTrue(prevMemberKey.compareTo(memberKey) < 0);
             }
