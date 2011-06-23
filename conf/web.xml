@@ -293,6 +293,16 @@
     </init-param>
     <load-on-startup>9</load-on-startup>
   </servlet>
+  
+  <servlet>
+    <servlet-name>DavWellKnownServlet</servlet-name>
+    <servlet-class>com.zimbra.cs.dav.service.DavWellKnownServlet</servlet-class>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>443, 7070, 7071</param-value>
+    </init-param>
+    <load-on-startup>9</load-on-startup>
+  </servlet>
 
   <servlet>
     <servlet-name>ZimletResources</servlet-name>
@@ -427,6 +437,11 @@
   <servlet-mapping>
     <servlet-name>DavServlet</servlet-name>
     <url-pattern>/dav/*</url-pattern>
+  </servlet-mapping>
+  
+  <servlet-mapping>
+    <servlet-name>DavWellKnownServlet</servlet-name>
+    <url-pattern>/.well-known/*</url-pattern>
   </servlet-mapping>
 
   <servlet-mapping>
