@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -33,10 +33,11 @@ import com.zimbra.cs.index.analysis.RFC822AddressTokenStream;
  *
  * @author ysasaki
  */
-public class ParsedMessageTest {
+public final class ParsedMessageTest {
 
     @BeforeClass
     public static void init() {
+        System.setProperty("log4j.configuration", "log4j-test.properties");
         Provisioning.setInstance(new MockProvisioning());
     }
 
@@ -66,34 +67,29 @@ public class ParsedMessageTest {
         Assert.assertEquals(1, docs.size());
         Document doc = docs.get(0).toDocument();
 
-        RFC822AddressTokenStream from = (RFC822AddressTokenStream) doc.getField(
+        RFC822AddressTokenStream from = (RFC822AddressTokenStream) doc.getFieldable(
                 LuceneFields.L_H_FROM).tokenStreamValue();
-        Assert.assertEquals(Arrays.asList("pete", "wonderful", "chap", "pete",
-                "his", "account", "comment", "silly.test", "his", "host",
-                "pete@silly.test", "pete", "@silly.test", "silly.test"),
+        Assert.assertEquals(Arrays.asList("pete", "a", "wonderful", "chap", "pete", "his", "account", "comment",
+                "silly.test", "his", "host", "pete@silly.test", "pete", "@silly.test", "silly.test"),
                 from.getAllTokens());
 
-        RFC822AddressTokenStream to = (RFC822AddressTokenStream) doc.getField(
+        RFC822AddressTokenStream to = (RFC822AddressTokenStream) doc.getFieldable(
                 LuceneFields.L_H_TO).tokenStreamValue();
-        Assert.assertEquals(Arrays.asList("chris", "c@", "c", "xxx", "bbb",
-                "public.example", "joe@example.org", "joe", "@example.org",
-                "example.org", "example", "@example", "john", "jdoe@one.test",
-                "jdoe", "@one.test", "one.test", "my", "dear", "friend", "the",
-                "end", "of", "the", "group", "c@public.example", "c",
-                "@public.example", "public.example"),
-                to.getAllTokens());
+        Assert.assertEquals(Arrays.asList("chris", "c@", "c", "xxx", "bbb", "public.example", "joe@example.org", "joe",
+                "@example.org", "example.org", "example", "@example", "john", "jdoe@one.test", "jdoe", "@one.test",
+                "one.test", "my", "dear", "friend", "the", "end", "of", "the", "group", "c@public.example", "c",
+                "@public.example", "public.example"), to.getAllTokens());
 
-        RFC822AddressTokenStream cc = (RFC822AddressTokenStream) doc.getField(
+        RFC822AddressTokenStream cc = (RFC822AddressTokenStream) doc.getFieldable(
                 LuceneFields.L_H_CC).tokenStreamValue();
-        Assert.assertEquals(Arrays.asList("empty", "list", "start",
-                "undisclosed", "recipients", "nobody", "that", "know"),
-                cc.getAllTokens());
+        Assert.assertEquals(Arrays.asList("empty", "list", "start", "undisclosed", "recipients", "nobody", "that", "i",
+                "know"), cc.getAllTokens());
 
-        RFC822AddressTokenStream xEnvFrom = (RFC822AddressTokenStream) doc.getField(
+        RFC822AddressTokenStream xEnvFrom = (RFC822AddressTokenStream) doc.getFieldable(
                 LuceneFields.L_H_X_ENV_FROM).tokenStreamValue();
         Assert.assertEquals(0, xEnvFrom.getAllTokens().size());
 
-        RFC822AddressTokenStream xEnvTo = (RFC822AddressTokenStream) doc.getField(
+        RFC822AddressTokenStream xEnvTo = (RFC822AddressTokenStream) doc.getFieldable(
                 LuceneFields.L_H_X_ENV_TO).tokenStreamValue();
         Assert.assertEquals(0, xEnvTo.getAllTokens().size());
     }
