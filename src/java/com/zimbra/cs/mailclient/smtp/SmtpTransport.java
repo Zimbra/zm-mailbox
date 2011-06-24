@@ -157,9 +157,9 @@ public class SmtpTransport extends Transport {
         config.setAllowPartialSend(PropUtil.getBooleanSessionProperty(session,
                 "mail." + protocol + ".sendpartial", false));
         config.setConnectTimeout(PropUtil.getIntSessionProperty(session,
-                "mail." + protocol + ".connectiontimeout", 0));
+                "mail." + protocol + ".connectiontimeout", 0) / 1000); // msec to sec
         config.setReadTimeout(PropUtil.getIntSessionProperty(session,
-                "mail." + protocol + ".timeout", 0));
+                "mail." + protocol + ".timeout", 0) / 1000); // msec to sec
 
         Properties props = session.getProperties();
         Object socketFactory = props.get("mail." + protocol + ".socketFactory");
