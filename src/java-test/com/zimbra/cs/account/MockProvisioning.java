@@ -27,6 +27,8 @@ import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.AuthContext.Protocol;
 import com.zimbra.cs.mime.MimeTypeInfo;
+import com.zimbra.cs.mime.MockMimeTypeInfo;
+import com.zimbra.cs.mime.handler.UnknownTypeHandler;
 
 /**
  * Mock implementation of {@link Provisioning} for testing.
@@ -75,7 +77,14 @@ public final class MockProvisioning extends Provisioning {
 
     @Override
     public List<MimeTypeInfo> getMimeTypes(String mime) {
-        return mimeConfig.get(mime);
+        List<MimeTypeInfo> result = mimeConfig.get(mime);
+        if (result != null) {
+            return result;
+        } else {
+            MockMimeTypeInfo info = new MockMimeTypeInfo();
+            info.setHandlerClass(UnknownTypeHandler.class.getName());
+            return Collections.<MimeTypeInfo>singletonList(info);
+        }
     }
 
     @Override
@@ -222,9 +231,9 @@ public final class MockProvisioning extends Provisioning {
             Map<String, Object> authCtxt) {
         throw new UnsupportedOperationException();
     }
-    
+
     @Override
-    public void ssoAuthAccount(Account acct, AuthContext.Protocol proto, Map<String, Object> authCtxt) 
+    public void ssoAuthAccount(Account acct, AuthContext.Protocol proto, Map<String, Object> authCtxt)
     throws ServiceException {
         throw new UnsupportedOperationException();
     }
@@ -368,7 +377,7 @@ public final class MockProvisioning extends Provisioning {
 
     @Override
     public List<Zimlet> listAllZimlets() {
-        throw new UnsupportedOperationException();
+        return Collections.emptyList();
     }
 
     @Override

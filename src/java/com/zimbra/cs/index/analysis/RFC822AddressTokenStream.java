@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -83,10 +83,10 @@ public final class RFC822AddressTokenStream extends TokenStream {
         TermAttribute term = tokenizer.addAttribute(TermAttribute.class);
         try {
             while (tokenizer.incrementToken()) {
-                String token = term.term();
-                if (token.length() > 1) { // ignore short term text
-                    tokenize(token, emails);
+                if (term.termLength() == 1 && !Character.isLetter(term.termBuffer()[0])) { // ignore single signs
+                    continue;
                 }
+                tokenize(term.term(), emails);
             }
             tokenizer.close();
         } catch (IOException ignore) {
