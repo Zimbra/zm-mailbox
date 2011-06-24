@@ -464,11 +464,10 @@ First, user will be redirected to the certauth servlet.
 
 then, the 4 possible scenarios descried above for method (1) will apply too.
 
-One point worth noting in the implementation is that for "scenarios 2 and 4, 
-if zimbraMailSSLClientCertMode is WantClientAuth", the redirect back to webapp 
-will contain "?ignoreLoginURL=1".  This query paramter instruct the webapp to 
-ignore zimbraXXXLoginURL.  The net user experience is seeing the username/password 
-screen like described in the scenarios.
+One point worth noting in the implementation is that whenever we redirect from 
+the certauth servlet to the webapp, we always append "?ignoreLoginURL=1" in the 
+URL.  This is to prevent possible redirect loop, in cases when the auth token 
+is not accepted by the server for any reason.
    
           
 ---------------
