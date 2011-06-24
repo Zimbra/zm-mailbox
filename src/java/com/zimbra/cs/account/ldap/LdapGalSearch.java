@@ -386,7 +386,7 @@ public class LdapGalSearch {
                     ", attrs=" + returnAttrs);
         }
       
-        SearhcGalVisitor visitor = new SearhcGalVisitor(zlc, galType, null, rules, result);  // TODO, we set base to null, verify!
+        SearhcGalVisitor visitor = new SearhcGalVisitor(zlc, galType, null, rules, result);
       
         try {
             ZAttributes attrs = zlc.getAttributes(dn, reqAttrs);

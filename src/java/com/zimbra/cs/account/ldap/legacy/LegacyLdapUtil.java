@@ -36,7 +36,6 @@ import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.LdapTODO.*;
-import com.zimbra.cs.ldap.SearchLdapOptions.StopIteratingException;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 
 import javax.naming.NamingEnumeration;
@@ -592,16 +591,8 @@ public class LegacyLdapUtil {
                         
                         SearchResult sr = (SearchResult) ne.next();
                         String dn = sr.getNameInNamespace();
-                        LegacyJNDIAttributes attrs = new LegacyJNDIAttributes(sr.getAttributes());
-                        
-                        GalContact lgc = new GalContact(galType, dn, rules.apply(zlc, base, dn, attrs));
-                        String mts = (String) lgc.getAttrs().get("modifyTimeStamp");
-                        result.setToken(LdapUtilCommon.getLaterTimestamp(result.getToken(), mts));
-                        String cts = (String) lgc.getAttrs().get("createTimeStamp");
-                        result.setToken(LdapUtilCommon.getLaterTimestamp(result.getToken(), cts));
-                        result.addMatch(lgc);
-                        ZimbraLog.gal.debug("dn=" + dn + ", mts=" + mts + ", cts=" + cts);
-                    
+                        Attributes attributes = sr.getAttributes();
+                        addGalResult(zlc, galType, dn, base, rules, attributes, result);
                     }
                     if (pageSize > 0)
                         cookie = zlc.getCookie();
@@ -669,6 +660,46 @@ public class LegacyLdapUtil {
         }
     }
   
+    private static void addGalResult(LegacyZimbraLdapContext zlc,
+            GalSearchConfig.GalType galType, String dn, String base, LdapGalMapRules rules,
+            Attributes attributes, SearchGalResult result) throws ServiceException {
+        
+        LegacyJNDIAttributes attrs = new LegacyJNDIAttributes(attributes);
+        
+        GalContact lgc = new GalContact(galType, dn, rules.apply(zlc, base, dn, attrs));
+        String mts = (String) lgc.getAttrs().get("modifyTimeStamp");
+        result.setToken(LdapUtilCommon.getLaterTimestamp(result.getToken(), mts));
+        String cts = (String) lgc.getAttrs().get("createTimeStamp");
+        result.setToken(LdapUtilCommon.getLaterTimestamp(result.getToken(), cts));
+        result.addMatch(lgc);
+        ZimbraLog.gal.debug("dn=" + dn + ", mts=" + mts + ", cts=" + cts);
+    }
+    
+    private static void getGalEntryByDn(LegacyZimbraLdapContext zlc,
+            GalSearchConfig.GalType galType,
+            String dn,
+            LdapGalMapRules rules,
+            SearchGalResult result) throws ServiceException {
+        String reqAttrs[] = rules.getLdapAttrs();
+          
+        if (ZimbraLog.gal.isDebugEnabled()) {
+            StringBuffer returnAttrs = new StringBuffer();
+            for (String a: reqAttrs) {
+                returnAttrs.append(a + ",");
+            }
+           
+            ZimbraLog.gal.debug("getGalEntryByDn: " +
+                    ", dn=" + dn + 
+                    ", attrs=" + returnAttrs);
+        }
+        
+        try {
+            Attributes attributes = zlc.getAttributes(dn);
+            addGalResult(zlc, galType, dn, null, rules, attributes, result);
+        } catch (NamingException e) {
+            ZimbraLog.gal.debug("getGalEntryByDn: no such dn: " + dn, e);
+        }
+    }  
       
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#searchGal(java.lang.String)
@@ -830,6 +861,8 @@ public class LegacyLdapUtil {
                         cfg.getBindDn(), cfg.getBindPassword(), cfg.getRules().getBinaryLdapAttrs(), "external GAL");
             }
             
+            String fetchEntryByDn = params.getSearchEntryByDn();
+            if (fetchEntryByDn == null) {
             searchGal(zlc,
                       galType,
                       cfg.getPageSize(),
@@ -839,6 +872,9 @@ public class LegacyLdapUtil {
                       cfg.getRules(),
                       params.getSyncToken(),
                       params.getResult());
+            } else {
+                getGalEntryByDn(zlc, galType, fetchEntryByDn, cfg.getRules(), params.getResult());
+            }
         } finally {
             LegacyZimbraLdapContext.closeContext(zlc);
         }
