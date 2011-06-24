@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -98,7 +98,7 @@ public class ZFilterRule implements ToZJSONObject {
         mName = e.getAttribute(MailConstants.A_NAME);
         mActive = e.getAttributeBool(MailConstants.A_ACTIVE, false);
         Element testsEl = e.getElement(MailConstants.E_FILTER_TESTS);
-        
+
         // Conditions
         Map<Integer, ZFilterCondition> conditions = new TreeMap<Integer, ZFilterCondition>(); // Orders by index
         mAllConditions = testsEl.getAttribute(MailConstants.A_CONDITION, "allof").equalsIgnoreCase("allof");
@@ -109,7 +109,7 @@ public class ZFilterRule implements ToZJSONObject {
         }
         mConditions = new ArrayList<ZFilterCondition>();
         mConditions.addAll(conditions.values());
-        
+
         // Actions
         Element actionsEl = e.getElement(MailConstants.E_FILTER_ACTIONS);
         Map<Integer, ZFilterAction> actions = new TreeMap<Integer, ZFilterAction>(); // Orders by index
@@ -156,7 +156,7 @@ public class ZFilterRule implements ToZJSONObject {
         Element r = parent.addElement(MailConstants.E_FILTER_RULE);
         r.addAttribute(MailConstants.A_NAME, mName);
         r.addAttribute(MailConstants.A_ACTIVE, mActive);
-        
+
         Element tests = r.addElement(MailConstants.E_FILTER_TESTS);
         tests.addAttribute(MailConstants.A_CONDITION, mAllConditions ? "allof" : "anyof");
         for (ZFilterCondition condition : mConditions) {
@@ -164,7 +164,7 @@ public class ZFilterRule implements ToZJSONObject {
             Element conditionEl = condition.toElement(tests);
             conditionEl.addAttribute(MailConstants.A_INDEX, index);
         }
-        
+
         Element actions = r.addElement(MailConstants.E_FILTER_ACTIONS);
         for (ZFilterAction action : mActions) {
             int index = actions.listElements().size();
@@ -240,10 +240,9 @@ public class ZFilterRule implements ToZJSONObject {
             } else if (a.equals("all")) {
                 all = true;
             } else if (a.equals("addressbook")) {
-                if (i + 2 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
+                if (i + 3 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
                 conditions.add(new ZAddressBookCondition(
-                        args[i++].equals("in") ? AddressBookOp.IN : AddressBookOp.NOT_IN,
-                        args[i++]));
+                        args[i++].equals("in") ? AddressBookOp.IN : AddressBookOp.NOT_IN, args[i++], args[i++]));
             } else if (a.equals("attachment")) {
                 if (i + 1 > args.length) throw ZClientException.CLIENT_ERROR("missing exists arg", null);
                 conditions.add(new ZAttachmentExistsCondition(args[i++].equals("exists")));

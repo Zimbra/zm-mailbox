@@ -43,6 +43,7 @@ public final class MailboxTestUtil {
      * Initializes the database, index, store manager, and provisioning.
      */
     public static void initServer() throws Exception {
+        System.setProperty("log4j.configuration", "log4j-test.properties");
         // Don't load from /opt/zimbra/conf
         System.setProperty("zimbra.config", "src/java-test/localconfig-test.xml");
         LC.reload();

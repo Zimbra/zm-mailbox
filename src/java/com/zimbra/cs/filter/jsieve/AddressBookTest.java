@@ -15,9 +15,10 @@
 package com.zimbra.cs.filter.jsieve;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.jsieve.Argument;
@@ -30,10 +31,12 @@ import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
 
+import com.google.common.collect.ImmutableMap;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
+import com.zimbra.cs.mailbox.ContactRankings;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
@@ -41,8 +44,28 @@ import com.zimbra.cs.mailbox.Mailbox;
  */
 public final class AddressBookTest extends AbstractTest {
     private static final String IN = ":in";
-    private static final String CONTACTS = "contacts";
-    private static final String GAL = "GAL";
+
+    private enum Type {
+        CONTACTS("contacts"), GAL("GAL"), RANKING("ranking");
+
+        private static final Map<String, Type> NAME2TYPE;
+        static {
+            ImmutableMap.Builder<String, Type> builder = ImmutableMap.builder();
+            for (Type type : values()) {
+                builder.put(type.name, type);
+            }
+            NAME2TYPE = builder.build();
+        }
+        private final String name;
+
+        Type(String name) {
+            this.name = name;
+        }
+
+        static Type of(String name) {
+            return NAME2TYPE.get(name);
+        }
+    }
 
     @Override
     protected boolean executeBasic(MailAdapter mail, Arguments arguments, SieveContext context) throws SieveException {
@@ -79,24 +102,22 @@ public final class AddressBookTest extends AbstractTest {
         if (headers == null) {
             throw new SyntaxException("No headers are found");
         }
-        Set<String> abooks = null;
-        // Third argument MUST be either contacts or GAL
+        Set<Type> abooks = EnumSet.noneOf(Type.class);
+        // Third argument MUST be one or more Type
         if (argumentsIter.hasNext()) {
             Object argument = argumentsIter.next();
             if (argument instanceof StringListArgument) {
                 StringListArgument strList = (StringListArgument) argument;
-                abooks = new HashSet<String>();
-                for (int i=0; i< strList.getList().size(); i++) {
-                    String abookName = strList.getList().get(i);
-                    if (!CONTACTS.equals(abookName) && !GAL.equals(abookName)) {
-                        throw new SyntaxException("Unknown address book name: " + abookName);
+                for (String name : strList.getList()) {
+                    Type type = Type.of(name);
+                    if (type == null) {
+                        throw new SyntaxException("Unknown address book name: " + name);
                     }
-                    // eliminate duplicates by adding it to the set
-                    abooks.add(abookName);
+                    abooks.add(type);
                 }
             }
         }
-        if (abooks == null || abooks.isEmpty()) {
+        if (abooks.isEmpty()) {
             throw new SyntaxException("Expecting address book name(s)");
         }
         // There MUST NOT be any further arguments
@@ -109,24 +130,45 @@ public final class AddressBookTest extends AbstractTest {
         return test(mail, headers, abooks);
     }
 
-    private boolean test(MailAdapter mail, String[] headers, Set<String> abooks) throws SieveException {
+    private boolean test(MailAdapter mail, String[] headers, Set<Type> abooks) throws SieveException {
         Mailbox mbox = ((ZimbraMailAdapter) mail).getMailbox();
-        if (abooks.contains(CONTACTS)) {
-            List<InternetAddress> addrs = new ArrayList<InternetAddress>();
-            // get values for header that should contains address, like From, To, etc.
-            for (String header : headers) {
-                // each header may contain multiple values; e.g., To: may contain many recipients
-                for (String value : mail.getHeader(header)) {
-                    addrs.add(new InternetAddress(value));
-                }
-            }
-            try {
-                return mbox.existsInContacts(addrs);
-            } catch (ServiceException e) {
-                ZimbraLog.filter.error("Failed to process AddressBookTest", e);
+        List<InternetAddress> addrs = new ArrayList<InternetAddress>();
+        // get values for header that should contains address, like From, To, etc.
+        for (String header : headers) {
+            // each header may contain multiple values; e.g., To: may contain many recipients
+            for (String value : mail.getHeader(header)) {
+                addrs.add(new InternetAddress(value));
             }
         }
-        //TODO searching other address database like GAL
+
+        for (Type type : abooks) {
+            switch (type) {
+                case CONTACTS:
+                    try {
+                        return mbox.existsInContacts(addrs);
+                    } catch (ServiceException e) {
+                        ZimbraLog.filter.error("Failed to lookup contacts", e);
+                    }
+                    break;
+                case RANKING:
+                    try {
+                        ContactRankings ranking = new ContactRankings(mbox.getAccountId());
+                        for (InternetAddress addr : addrs) {
+                            if (ranking.query(addr.getAddress()) > 0) {
+                                return true;
+                            }
+                        }
+                    } catch (ServiceException e) {
+                        ZimbraLog.filter.error("Failed to lookup ranking", e);
+                    }
+                    break;
+                case GAL: //TODO
+                    break;
+                default:
+                    assert false : type;
+            }
+        }
+
         return false;
     }
 

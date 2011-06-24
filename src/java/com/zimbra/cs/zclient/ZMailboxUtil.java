@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -249,7 +249,7 @@ public class ZMailboxUtil implements DebugListener {
                         "    date before|not_before|after|not_after \"YYYYMMDD\"\n" +
                         "    size under|not_under|over|not_over \"1|1K|1M\"\n" +
                         "    body contains|not_contains [case_sensitive] \"text\"\n" +
-                        "    addressbook in|not_in \"header-name\"\n" +
+                        "    addressbook in|not_in \"header-name\" \"contacts|ranking\"\n" +
                         "    attachment exists|not_exists\n" +
                         "    invite exists|not_exists\n" +
                         "    current_time before|not_before|after|not_after \"HHmm\"\n" +
@@ -1893,7 +1893,7 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     private void doEnableSharedReminder(String args[]) throws ServiceException {
-        
+
     }
 
     private void doSearch(String[] args) throws ServiceException {

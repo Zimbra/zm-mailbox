@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -29,19 +29,19 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 public class SoapToSieve {
-    
+
     private Element mRoot;
     private StringBuilder mBuf;
 
     public SoapToSieve(Element filterRulesRoot)
     throws ServiceException {
-        String name = filterRulesRoot.getName(); 
+        String name = filterRulesRoot.getName();
         if (!name.equals(MailConstants.E_FILTER_RULES)) {
             throw ServiceException.FAILURE("Invalid element: " + name, null);
         }
         mRoot = filterRulesRoot;
     }
-    
+
     public String getSieveScript()
     throws ServiceException {
         if (mBuf == null) {
@@ -54,17 +54,17 @@ public class SoapToSieve {
         }
         return mBuf.toString();
     }
-    
+
     private void handleRule(Element rule)
     throws ServiceException {
         String name = rule.getAttribute(MailConstants.A_NAME);
         boolean isActive = rule.getAttributeBool(MailConstants.A_ACTIVE, true);
-        
+
         Element testsElement = rule.getElement(MailConstants.E_FILTER_TESTS);
         String s = testsElement.getAttribute(MailConstants.A_CONDITION, Sieve.Condition.allof.toString());
         s = s.toLowerCase();
         Sieve.Condition condition = Sieve.Condition.fromString(s);
-        
+
         // Rule name
         mBuf.append("# ").append(name).append("\n");
         if (isActive) {
@@ -73,7 +73,7 @@ public class SoapToSieve {
             mBuf.append("disabled_if ");
         }
         mBuf.append(condition).append(" (");
-        
+
         // Handle tests
         List<Element> testElements = testsElement.listElements();
         Map<Integer, String> tests = new TreeMap<Integer, String>();
@@ -86,10 +86,10 @@ public class SoapToSieve {
         }
         mBuf.append(StringUtil.join(",\n  ", tests.values()));
         mBuf.append(") {\n");
-        
+
         // Handle actions
         Element actionsElement = rule.getElement(MailConstants.E_FILTER_ACTIONS);
-        Map<Integer, String> actions = new TreeMap<Integer, String>(); // Sorts by index 
+        Map<Integer, String> actions = new TreeMap<Integer, String>(); // Sorts by index
         for (Element action : actionsElement.listElements()) {
             s = handleAction(action);
             if (s != null) {
@@ -102,12 +102,12 @@ public class SoapToSieve {
         }
         mBuf.append("}\n");
     }
-    
+
     private String handleTest(Element test)
     throws ServiceException {
         String name = test.getName();
         String snippet = null;
-        
+
         if (name.equals(MailConstants.E_HEADER_TEST)) {
             snippet = generateHeaderTest(test, "header");
         } else if (name.equals(MailConstants.E_MIME_HEADER_TEST)) {
@@ -142,9 +142,9 @@ public class SoapToSieve {
             snippet = String.format(snippetFormat, FilterUtil.escape(value));
         } else if (name.equals(MailConstants.E_ADDRESS_BOOK_TEST)) {
             String header = test.getAttribute(MailConstants.A_HEADER);
-            String folderPath = test.getAttribute(MailConstants.A_FOLDER_PATH);
+            String type = test.getAttribute(MailConstants.A_CONTACT_TYPE, "contacts");
             snippet = String.format("addressbook :in \"%s\" \"%s\"",
-                FilterUtil.escape(header), FilterUtil.escape(folderPath));
+                    FilterUtil.escape(header), FilterUtil.escape(type));
         } else if (name.equals(MailConstants.E_ATTACHMENT_TEST)) {
             snippet = "attachment";
         } else if (name.equals(MailConstants.E_INVITE_TEST)) {
@@ -192,13 +192,13 @@ public class SoapToSieve {
         } else {
             ZimbraLog.soap.debug("Ignoring unexpected test %s.", name);
         }
-        
+
         if (snippet != null && test.getAttributeBool(MailConstants.A_NEGATIVE, false)) {
             snippet = "not " + snippet;
         }
         return snippet;
     }
-    
+
     private static String generateHeaderTest(Element test, String testName) throws ServiceException {
         String header = getSieveHeaderList(test);
         Sieve.StringComparison comparison =
@@ -265,7 +265,7 @@ public class SoapToSieve {
         }
         return buf.toString();
     }
-    
+
     private static String handleAction(Element action)
     throws ServiceException {
         String name = action.getName();

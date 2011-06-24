@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -15,10 +15,6 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.common.filter.Sieve;
-import com.zimbra.common.filter.Sieve.AddressPart;
-import com.zimbra.common.filter.Sieve.DateComparison;
-import com.zimbra.common.filter.Sieve.NumberComparison;
-import com.zimbra.common.filter.Sieve.StringComparison;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -64,7 +60,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
                 throw ZClientException.CLIENT_ERROR("invalid op: "+s+", value values: "+Arrays.asList(HeaderOp.values()), null);
             }
         }
-        
+
         public static HeaderOp fromStringComparison(Sieve.StringComparison comparison, boolean isNegative) {
             if (comparison == Sieve.StringComparison.is) {
                 return (isNegative ? NOT_IS : IS);
@@ -74,7 +70,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
             }
             return (isNegative ? NOT_MATCHES : MATCHES);
         }
-        
+
         public Sieve.StringComparison toStringComparison() {
             if (this == IS || this == NOT_IS) {
                 return Sieve.StringComparison.is;
@@ -84,7 +80,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
             }
             return Sieve.StringComparison.matches;
         }
-        
+
         public boolean isNegative() {
             return (this == NOT_IS || this == NOT_CONTAINS || this == NOT_MATCHES);
         }
@@ -101,21 +97,21 @@ public abstract class ZFilterCondition implements ToZJSONObject {
                 throw ZClientException.CLIENT_ERROR("invalid op: "+s+", value values: "+Arrays.asList(DateOp.values()), null);
             }
         }
-        
+
         public static DateOp fromDateComparison(Sieve.DateComparison comparison, boolean isNegative) {
             if (comparison == Sieve.DateComparison.before) {
                 return (isNegative ? NOT_BEFORE : BEFORE);
             }
             return (isNegative ? NOT_AFTER : AFTER);
         }
-        
+
         public Sieve.DateComparison toDateComparison() {
             if (this == BEFORE || this == NOT_BEFORE) {
                 return Sieve.DateComparison.before;
             }
             return Sieve.DateComparison.after;
         }
-        
+
         public boolean isNegative() {
             return (this == NOT_BEFORE || this == NOT_AFTER);
         }
@@ -131,14 +127,14 @@ public abstract class ZFilterCondition implements ToZJSONObject {
                 throw ZClientException.CLIENT_ERROR("invalid op: "+s+", value values: "+Arrays.asList(SizeOp.values()), null);
             }
         }
-        
+
         public static SizeOp fromNumberComparison(Sieve.NumberComparison comparison, boolean isNegative) {
             if (comparison == Sieve.NumberComparison.over) {
                 return (isNegative ? NOT_OVER : OVER);
             }
             return (isNegative ? NOT_UNDER : UNDER);
         }
-        
+
         public Sieve.NumberComparison toNumberComparison() {
             if (this == UNDER || this == NOT_UNDER) {
                 return Sieve.NumberComparison.under;
@@ -146,7 +142,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
                 return Sieve.NumberComparison.over;
             }
         }
-        
+
         public boolean isNegative() {
             return (this == NOT_UNDER || this == NOT_OVER);
         }
@@ -249,10 +245,8 @@ public abstract class ZFilterCondition implements ToZJSONObject {
             return new ZCurrentDayOfWeekCondition(op, value);
         } else if (name.equals(MailConstants.E_ADDRESS_BOOK_TEST)) {
             String header = condEl.getAttribute(MailConstants.A_HEADER);
-            // String folderPath = condEl.getAttribute(MailConstants.A_FOLDER_PATH);
-            // TODO: support path to contacts folder
-            AddressBookOp op = (isNegative ? AddressBookOp.NOT_IN : AddressBookOp.IN);
-            return new ZAddressBookCondition(op, header);
+            String type = condEl.getAttribute(MailConstants.A_CONTACT_TYPE, "contacts");
+            return new ZAddressBookCondition(isNegative ? AddressBookOp.NOT_IN : AddressBookOp.IN, header, type);
         } else if (name.equals(MailConstants.E_ATTACHMENT_TEST)) {
             return new ZAttachmentExistsCondition(!isNegative);
         } else if (name.equals(MailConstants.E_INVITE_TEST)) {
@@ -281,6 +275,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
 
     public abstract String getName();
 
+    @Override
     public ZJSONObject toZJSONObject() throws JSONException {
         // TODO: Implement in subclasses?
         ZJSONObject jo = new ZJSONObject();
@@ -288,6 +283,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         return jo;
     }
 
+    @Override
     public String toString() {
         return String.format("[ZFilterCondition %s]", getName());
     }
@@ -300,39 +296,39 @@ public abstract class ZFilterCondition implements ToZJSONObject {
 
 
     public static class ZAddressBookCondition extends ZFilterCondition {
-        private AddressBookOp mAddressBookOp;
-        private String mHeader;
+        private final AddressBookOp addressBookOp;
+        private final String header;
+        private final String type;
 
-        public ZAddressBookCondition(AddressBookOp op, String header) {
-            mAddressBookOp = op;
-            mHeader = header;
+        public ZAddressBookCondition(AddressBookOp op, String header, String type) {
+            this.addressBookOp = op;
+            this.header = header;
+            this.type = type;
         }
 
         @Override
         public String getName() {
             return C_ADDRESSBOOK;
         }
-        
+
         @Override
         Element toElement(Element parent) {
             Element test = parent.addElement(MailConstants.E_ADDRESS_BOOK_TEST);
-            test.addAttribute(MailConstants.A_HEADER, mHeader);
-            test.addAttribute(MailConstants.A_FOLDER_PATH, "contacts");
-            if (mAddressBookOp == AddressBookOp.NOT_IN) {
+            test.addAttribute(MailConstants.A_HEADER, header);
+            test.addAttribute(MailConstants.A_CONTACT_TYPE, type);
+            if (addressBookOp == AddressBookOp.NOT_IN) {
                 test.addAttribute(MailConstants.A_NEGATIVE, true);
             }
             return test;
         }
 
-        public String getHeader() { return mHeader; }
-        public AddressBookOp getAddressBookOp() { return mAddressBookOp; }
-
         @Override
         public String toConditionString() {
-            return (mAddressBookOp == AddressBookOp.IN ? "addressbook in " : "addressbook not_in ") + ZFilterRule.quotedString(getHeader());
+            return (addressBookOp == AddressBookOp.IN ? "addressbook in " : "addressbook not_in ") +
+                ZFilterRule.quotedString(header) + ' ' + ZFilterRule.quotedString(type);
         }
     }
-    
+
     public static class ZBodyCondition extends ZFilterCondition {
         private BodyOp bodyOp;
         private boolean caseSensitive;
@@ -368,9 +364,9 @@ public abstract class ZFilterCondition implements ToZJSONObject {
             Element test = parent.addElement(MailConstants.E_BODY_TEST);
             if (caseSensitive)
                 test.addAttribute(MailConstants.A_CASE_SENSITIVE, caseSensitive);
-			if (!StringUtil.isNullOrEmpty(text)) {
-            	test.addAttribute(MailConstants.A_VALUE, text);
-			}
+            if (!StringUtil.isNullOrEmpty(text)) {
+                test.addAttribute(MailConstants.A_VALUE, text);
+            }
             if (bodyOp == BodyOp.NOT_CONTAINS) {
                 test.addAttribute(MailConstants.A_NEGATIVE, true);
             }
@@ -465,7 +461,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
             return test;
         }
     }
-    
+
     public static class ZDateCondition extends ZFilterCondition {
         private DateOp mDateOp;
         private Date mDate;
@@ -508,7 +504,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
             test.addAttribute(MailConstants.A_DATE, mDate.getTime() / 1000);
             return test;
         }
-        
+
     }
 
     public static class ZCurrentTimeCondition extends ZFilterCondition {
@@ -606,9 +602,9 @@ public abstract class ZFilterCondition implements ToZJSONObject {
             if (headerOp.isNegative()) {
                 test.addAttribute(MailConstants.A_NEGATIVE, true);
             }
-			if (!StringUtil.isNullOrEmpty(value)) {
-            	test.addAttribute(MailConstants.A_VALUE, value);
-			}
+            if (!StringUtil.isNullOrEmpty(value)) {
+                test.addAttribute(MailConstants.A_VALUE, value);
+            }
             return test;
         }
     }
@@ -781,30 +777,30 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         public static final String METHOD_CANCEL = "cancel";
         public static final String METHOD_REFRESH = "refresh";
         public static final String METHOD_DECLINECOUNTER = "declinecounter";
-        
+
         private boolean mIsInvite;
         private List<String> mMethods = new ArrayList<String>();
 
         public ZInviteCondition(boolean isInvite) {
             mIsInvite = isInvite;
         }
-        
+
         public ZInviteCondition(boolean isInvite, String method) {
             this(isInvite, Arrays.asList(method));
         }
-        
+
         public ZInviteCondition(boolean isInvite, List<String> methods) {
             mIsInvite = isInvite;
             if (methods != null) {
                 mMethods.addAll(methods);
             }
         }
-        
+
         public void setMethods(String ... methods) {
             mMethods.clear();
             Collections.addAll(mMethods, methods);
         }
-        
+
         public boolean isInvite() { return mIsInvite; }
 
         @Override

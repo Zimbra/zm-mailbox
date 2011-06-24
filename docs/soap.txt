@@ -691,9 +691,9 @@ import and export of addressbook.
 
   needExp: if the "exp" flag is needed in the response for group entries.
            default is 0
-           
-  {gal-entry-ref}: a unigue reference id for the GAL entry.  This is the ref id to be used for the value 
-                   of type="G" contact group members.  See CreateContactRequest and ModifyContactRequest.         
+
+  {gal-entry-ref}: a unigue reference id for the GAL entry.  This is the ref id to be used for the value
+                   of type="G" contact group members.  See CreateContactRequest and ModifyContactRequest.
 
   exp: if the user can (has right to) expand group members
        returned only if needExp is 1 in the request and only on group entries (type=group in attrs on a <cn>).
@@ -774,8 +774,8 @@ import and export of addressbook.
   id attribute without all the contact fields populated.  The sync client
   then should make batch request to the server to fetch the contact fields
   with <GetContactsRequest/>.
-  Note: idOnly only works when GAL sync account is configured/enabled.  
-  If idOnly is specified and GAL sync account is not enabled, idOnly will 
+  Note: idOnly only works when GAL sync account is configured/enabled.
+  If idOnly is specified and GAL sync account is not enabled, idOnly will
   be ignored.
 
 ----------------------------
@@ -1702,9 +1702,9 @@ msg ID, two additional flags will be included in <e> elements for the message:
 
   - if "needGranteeName" is 0, grantee names in in forlder grants (the d attribute in <grant>) are omitted.
     default for needGranteeName is 1.
-    
+
   - if "view" is set then only the folders with matching view will be returned.  otherwise folders with any default views will be returned.
-  
+
   - if "recursive" is set to "no" then only the requested folder and its immediate subfolders will be returned.  default value is "yes".
 
 <GetFolderResponse>
@@ -2355,13 +2355,13 @@ Contacts:
                   C: reference to another contact
                   G: reference to a GAL entry
                   I: inlined member (member name and email address is embeded in the contact group)
-                    
-  {member-value} = if type=C: itemId of another contact.  If the referenced contact is in a 
-                              shared folder, the itemId must be qualified by zimbraId of the 
+
+  {member-value} = if type=C: itemId of another contact.  If the referenced contact is in a
+                              shared folder, the itemId must be qualified by zimbraId of the
                               owner.  e.g. {zimbraId}:{itemId}
-                   if type=G: GAL entry ref (returned in SearcgGalResponse)     
+                   if type=G: GAL entry ref (returned in SearcgGalResponse)
                    if type=I: name and email address in the form of: "{name}" <{email}>
-                   
+
   or, if you have an existing vCard to add, you can specify a <vcard> element with *one* of
     -- inlined content
     -- mid/part attributes specifying an existing message part
@@ -2401,35 +2401,35 @@ END:VCARD]
 
  {replace-mode} = 0|1 (0 is default)
 
-  if replace-mode is 1, all attrs and group members in the specified contact are replaced with specified attrs 
+  if replace-mode is 1, all attrs and group members in the specified contact are replaced with specified attrs
   and group members, otherwise the attrs and group members are merged with the existing contact.
-  
+
   if replace-mode is 1, {member-id} is not allowed on <m> elements.
-  
+
  {op} = + | -
         + : add the value
         - : remove the value
-        
+
         {op} is not allowed if replace-mode is 1, if specified when replace=1, INVALID_REQUEST will be thrown
-        
+
         When replace=0:
         For <a> elements:
             (1) if op is not present:
                    if {attr-value} is empty, remove the field
                    otherwise, replace the field with this value
-    
+
             (2) if op is present:
                    if {attr-value} is empty, throw INVALID_REQUEST
                    - otherwise, add/remove the specified value.
-               
+
         For <m> elements:
             (1) if op is not present (modify an existing member):
                    {member-id} is required
-                   {member-type} is optional: 
+                   {member-type} is optional:
                        - if present, type is changed to the specified type
                        - if not present: type is not changed
                    {member-value} is required
-    
+
             (2) if op is present (add or remove a member):
                    +: {member-id} is not allowed
                       {member-type} is required
@@ -2437,7 +2437,7 @@ END:VCARD]
                    -: {member-id} is required
                       {member-type} is not allowed
                       {member-value} is not allowed
-  
+
 
 <ModifyContactResponse>
    <cn ...>
@@ -2462,14 +2462,14 @@ NOTE: should we return modified attrs in response?
   if l="{folder-id}" is present, return only contacts in the specified folder.
   if <a n="..."/> present, return only the specified attribute(s).
   if <cn id="..."/> present, only get the specified contact(s).
-  
+
   {derefGroupMember} : Contact members can be:
                            - inline data of name and email address
-                           - a reference to a local contact or a shared contact, 
+                           - a reference to a local contact or a shared contact,
                            - a GAL entry
                        0 (default) - do not deref contact group members
-                       1 - deref contact group members 
-                       Note: for performance reason, derefGroupMember is supported 
+                       1 - deref contact group members
+                       Note: for performance reason, derefGroupMember is supported
                        only when specific contact ids are specified.
 
 <GetContactsResponse>
@@ -2478,17 +2478,17 @@ NOTE: should we return modified attrs in response?
 
 
 Contact group members are returned as <m> elements.
-If derefGroupMember is not "1", group members are returned in the ordered they were inserted 
+If derefGroupMember is not "1", group members are returned in the ordered they were inserted
 in the group.
 
 If derefGroupMember="1", group members are returned in the ordered of "key" of member.
-Key is: 
+Key is:
     * for contact ref (type="C"): the fileAs field of the Contact
     * for GAL ref (type="G"): email address of the GAL entry
     * for inlined member (type="I"): the value
 
-contact group members are returned as sub-elements of <m>.  
-If for any(transient or permanent) reason a member cannot be dereferenced, then there will be no sub-element under <m>. 
+contact group members are returned as sub-elements of <m>.
+If for any(transient or permanent) reason a member cannot be dereferenced, then there will be no sub-element under <m>.
 
 For example:
 <GetContactsResponse xmlns="urn:zimbraMail">
@@ -2848,7 +2848,7 @@ Tests:
   <dateTest dateComparison="{before|after}" d="{date}" />
   <bodyTest [caseSensitive="{0|1}"] value="{value}" />
   <attachmentTest />
-  <addressBookTest header="{header-name}" folderPath="{folder-path}" />
+  <addressBookTest header="{header-name}" type="{contacts|ranking}" />
   <inviteTest>
     <method>{method}</method>+
   </inviteTest>
@@ -3693,5 +3693,5 @@ added to Documents only.
 </GetShareNotificationsResponse>
 
     perm = combination of r (read) w (write) i (insert) d (delete) x (action) a (admin)
-    
+
 -----------------------------

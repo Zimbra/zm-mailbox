@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -15,11 +15,6 @@
 package com.zimbra.cs.filter;
 
 import com.zimbra.common.filter.Sieve;
-import com.zimbra.common.filter.Sieve.AddressPart;
-import com.zimbra.common.filter.Sieve.DateComparison;
-import com.zimbra.common.filter.Sieve.Flag;
-import com.zimbra.common.filter.Sieve.NumberComparison;
-import com.zimbra.common.filter.Sieve.StringComparison;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.ElementFactory;
@@ -40,22 +35,22 @@ public class SieveToSoap extends SieveVisitor {
     private List<String> mRuleNames;
     private Element mCurrentRule;
     private int mCurrentRuleIndex = 0;
-    
+
     public SieveToSoap(ElementFactory factory, List<String> ruleNames) {
         mRoot = factory.createElement(MailConstants.E_FILTER_RULES);
         mRuleNames = ruleNames;
     }
-    
+
     public Element getRootElement() {
         return mRoot;
     }
-    
+
     @Override
     protected void visitRule(Node ruleNode, VisitPhase phase, RuleProperties props) {
         if (phase == VisitPhase.end) {
             return;
         }
-        
+
         // rule element
         mCurrentRule = mRoot.addElement(MailConstants.E_FILTER_RULE);
         String name = getCurrentRuleName();
@@ -67,13 +62,13 @@ public class SieveToSoap extends SieveVisitor {
         // filterTests element
         Element filterTests = mCurrentRule.addElement(MailConstants.E_FILTER_TESTS);
         filterTests.addAttribute(MailConstants.A_CONDITION, props.condition.toString());
-        
+
         // filterActions element
         mCurrentRule.addElement(MailConstants.E_FILTER_ACTIONS);
 
         mCurrentRuleIndex++;
     }
-    
+
     private Element addTest(String elementName, RuleProperties props)
     throws ServiceException {
         Element tests = mCurrentRule.getElement(MailConstants.E_FILTER_TESTS);
@@ -85,7 +80,7 @@ public class SieveToSoap extends SieveVisitor {
         test.addAttribute(MailConstants.A_INDEX, index);
         return test;
     }
-    
+
     private Element addAction(String elementName)
     throws ServiceException {
         Element actions = mCurrentRule.getElement(MailConstants.E_FILTER_ACTIONS);
@@ -94,7 +89,7 @@ public class SieveToSoap extends SieveVisitor {
         action.addAttribute(MailConstants.A_INDEX, Integer.toString(index));
         return action;
     }
-    
+
     @Override
     protected void visitAttachmentTest(Node node, VisitPhase phase, RuleProperties props)
     throws ServiceException {
@@ -204,12 +199,12 @@ public class SieveToSoap extends SieveVisitor {
     }
 
     @Override
-    protected void visitAddressBookTest(Node node, VisitPhase phase, RuleProperties props,
-                                        String header, String folderPath) throws ServiceException {
+    protected void visitAddressBookTest(Node node, VisitPhase phase, RuleProperties props, String header, String type)
+            throws ServiceException {
         if (phase == VisitPhase.begin) {
             Element test = addTest(MailConstants.E_ADDRESS_BOOK_TEST, props);
             test.addAttribute(MailConstants.A_HEADER, header);
-            test.addAttribute(MailConstants.A_FOLDER_PATH, folderPath);
+            test.addAttribute(MailConstants.A_CONTACT_TYPE, type);
         }
     }
 
