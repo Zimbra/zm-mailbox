@@ -59,8 +59,9 @@ public final class RFC822AddressTokenStreamTest {
     public void comment() throws Exception {
         TokenStream stream = new RFC822AddressTokenStream(
                 "Pete(A wonderful \\) chap) <pete(his account)@silly.test(his host)>");
-        Assert.assertEquals(Arrays.asList("pete", "wonderful", "chap", "pete", "his", "account", "@silly.test", "his",
-                "host", "pete@silly.test", "pete", "@silly.test", "silly.test"), ZimbraAnalyzerTest.toTokens(stream));
+        Assert.assertEquals(Arrays.asList("pete", "a", "wonderful", "chap", "pete", "his", "account", "@silly.test",
+                "his", "host", "pete@silly.test", "pete", "@silly.test", "silly.test"),
+                ZimbraAnalyzerTest.toTokens(stream));
     }
 
     @Test
@@ -93,6 +94,13 @@ public final class RFC822AddressTokenStreamTest {
     public void limit() throws Exception {
         TokenStream stream = new RFC822AddressTokenStream("<" + Strings.repeat("x.", 200) + "x@zimbra.com>");
         Assert.assertEquals(100, ZimbraAnalyzerTest.toTokens(stream).size());
+    }
+
+    @Test
+    public void japanese() throws Exception {
+        TokenStream stream = new RFC822AddressTokenStream("=?utf-8?B?5qOu44CA5qyh6YOO?= <jiro.mori@zimbra.com>");
+        Assert.assertEquals(Arrays.asList("\u68ee", "\u6b21\u90ce", "jiro.mori@zimbra.com", "jiro.mori", "jiro", "mori",
+                "@zimbra.com", "zimbra.com", "zimbra", "@zimbra"),  ZimbraAnalyzerTest.toTokens(stream));
     }
 
 }

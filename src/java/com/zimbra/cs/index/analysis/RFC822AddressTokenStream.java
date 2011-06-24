@@ -83,9 +83,10 @@ public final class RFC822AddressTokenStream extends TokenStream {
         CharTermAttribute term = tokenizer.addAttribute(CharTermAttribute.class);
         try {
             while (tokenizer.incrementToken()) {
-                if (term.length() > 1) { // ignore short term text
-                    tokenize(term.toString(), emails);
+                if (term.length() == 1 && !Character.isLetter(term.charAt(0))) { // ignore single signs
+                    continue;
                 }
+                tokenize(term.toString(), emails);
             }
             tokenizer.close();
         } catch (IOException ignore) {

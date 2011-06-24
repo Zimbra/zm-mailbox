@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -33,38 +33,35 @@ public class AddrCharTokenizerTest {
 
     @Test
     public void addrCharTokenizer() throws Exception {
-        Tokenizer tokenizer = new AddrCharTokenizer(
-                new StringReader("all-snv"));
-        Assert.assertEquals(Collections.singletonList("all-snv"),
-                ZimbraAnalyzerTest.toTokens(tokenizer));
+        Tokenizer tokenizer = new AddrCharTokenizer(new StringReader("all-snv"));
+        Assert.assertEquals(Collections.singletonList("all-snv"), ZimbraAnalyzerTest.toTokens(tokenizer));
 
         tokenizer.reset(new StringReader("."));
-        Assert.assertEquals(Collections.singletonList("."),
-                ZimbraAnalyzerTest.toTokens(tokenizer));
+        Assert.assertEquals(Collections.singletonList("."), ZimbraAnalyzerTest.toTokens(tokenizer));
 
         tokenizer.reset(new StringReader(".. ."));
-        Assert.assertEquals(Arrays.asList("..", "."),
-                ZimbraAnalyzerTest.toTokens(tokenizer));
+        Assert.assertEquals(Arrays.asList("..", "."), ZimbraAnalyzerTest.toTokens(tokenizer));
 
         tokenizer.reset(new StringReader(".abc"));
-        Assert.assertEquals(Collections.singletonList(".abc"),
-                ZimbraAnalyzerTest.toTokens(tokenizer));
+        Assert.assertEquals(Collections.singletonList(".abc"), ZimbraAnalyzerTest.toTokens(tokenizer));
 
         tokenizer.reset(new StringReader("a"));
-        Assert.assertEquals(Collections.singletonList("a"),
-                ZimbraAnalyzerTest.toTokens(tokenizer));
+        Assert.assertEquals(Collections.singletonList("a"), ZimbraAnalyzerTest.toTokens(tokenizer));
 
         tokenizer.reset(new StringReader("test.com"));
-        Assert.assertEquals(Collections.singletonList("test.com"),
-                ZimbraAnalyzerTest.toTokens(tokenizer));
+        Assert.assertEquals(Collections.singletonList("test.com"), ZimbraAnalyzerTest.toTokens(tokenizer));
 
         tokenizer.reset(new StringReader("user1@zim"));
-        Assert.assertEquals(Collections.singletonList("user1@zim"),
-                ZimbraAnalyzerTest.toTokens(tokenizer));
+        Assert.assertEquals(Collections.singletonList("user1@zim"), ZimbraAnalyzerTest.toTokens(tokenizer));
 
         tokenizer.reset(new StringReader("user1@zimbra.com"));
-        Assert.assertEquals(Collections.singletonList("user1@zimbra.com"),
-                ZimbraAnalyzerTest.toTokens(tokenizer));
+        Assert.assertEquals(Collections.singletonList("user1@zimbra.com"), ZimbraAnalyzerTest.toTokens(tokenizer));
+    }
+
+    @Test
+    public void japanese() throws Exception {
+        Tokenizer tokenizer = new AddrCharTokenizer(new StringReader("\u68ee\u3000\u6b21\u90ce"));
+        Assert.assertEquals(Arrays.asList("\u68ee", "\u6b21\u90ce"), ZimbraAnalyzerTest.toTokens(tokenizer));
     }
 
 }

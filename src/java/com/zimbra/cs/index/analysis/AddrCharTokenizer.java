@@ -33,9 +33,10 @@ public final class AddrCharTokenizer extends CharTokenizer {
     }
 
     @Override
-    protected boolean isTokenChar(char ch) {
+    protected boolean isTokenChar(int ch) {
         switch (ch) {
             case ' ':
+            case '\u3000': // fullwidth space
             case '\r':
             case '\n':
             case '<':
@@ -53,7 +54,7 @@ public final class AddrCharTokenizer extends CharTokenizer {
     }
 
     @Override
-    protected char normalize(char c) {
+    protected int normalize(int c) {
         return (char) NormalizeTokenFilter.normalize(c);
     }
 
