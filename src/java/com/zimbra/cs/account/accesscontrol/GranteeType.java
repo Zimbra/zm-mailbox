@@ -23,9 +23,6 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.DistributionListBy;
-import com.zimbra.common.account.Key.DomainBy;
-import com.zimbra.common.account.Key.GranteeBy;
 import com.zimbra.soap.admin.type.GranteeInfo;
 
 public enum GranteeType {

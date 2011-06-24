@@ -68,20 +68,26 @@ public abstract class RightBearer {
             super(grantee);
             
             Provisioning prov = grantee.getProvisioning();
-            AclGroups granteeGroups;
+            AclGroups granteeGroups = null;
             
             if (grantee instanceof Account) {
                 mGranteeType = GranteeType.GT_USER;
                 mGranteeDomain = prov.getDomain((Account)grantee);
                 granteeGroups = prov.getAclGroups((Account)grantee, adminOnly);
-                
             } else if (grantee instanceof DistributionList) {
                 mGranteeType = GranteeType.GT_GROUP;
                 mGranteeDomain = prov.getDomain((DistributionList)grantee);
                 granteeGroups = prov.getAclGroups((DistributionList)grantee, adminOnly);
-                
-            } else
-                throw ServiceException.INVALID_REQUEST("invalid grantee type", null);
+            } else {
+                if (adminOnly) {
+                    throw ServiceException.INVALID_REQUEST("invalid grantee type", null);
+                } else {
+                    if (grantee instanceof Domain) {
+                        mGranteeType = GranteeType.GT_DOMAIN;
+                        mGranteeDomain = (Domain) grantee;
+                    }
+                }
+            }
             
             if (adminOnly) {
                 if (!RightBearer.isValidGranteeForAdminRights(mGranteeType, grantee)) {
@@ -95,7 +101,9 @@ public abstract class RightBearer {
             // setup grantees ids 
             mIdAndGroupIds = new HashSet<String>();
             mIdAndGroupIds.add(grantee.getId());
-            mIdAndGroupIds.addAll(granteeGroups.groupIds());
+            if (granteeGroups != null) {
+                mIdAndGroupIds.addAll(granteeGroups.groupIds());
+            }
         }
         
         boolean isAccount() {
