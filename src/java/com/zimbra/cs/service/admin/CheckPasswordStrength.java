@@ -23,7 +23,9 @@ import java.util.Map;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
@@ -60,7 +62,13 @@ public class CheckPasswordStrength extends AdminDocumentHandler {
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
         
-        checkAccountRight(zsc, account, Admin.R_checkPasswordStrength);
+        if (account.isCalendarResource()) {
+            // need a CalendarResource instance for RightChecker
+            CalendarResource resource = prov.get(Key.CalendarResourceBy.id, id);
+            checkCalendarResourceRight(zsc, resource, Admin.R_checkCalendarResourcePasswordStrength);
+        } else {
+            checkAccountRight(zsc, account, Admin.R_checkPasswordStrength);
+        }
         
         prov.checkPasswordStrength(account, password);
         
@@ -74,6 +82,7 @@ public class CheckPasswordStrength extends AdminDocumentHandler {
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_checkPasswordStrength);
+        relatedRights.add(Admin.R_checkCalendarResourcePasswordStrength);
     }
 
 }
