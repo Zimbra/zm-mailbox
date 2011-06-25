@@ -59,12 +59,12 @@ ${DOMAIN_ATTRS}
   good enough for now
   =========================================================
 -->
-
     <right type="combo" name="domainAdminAccountRights">
       <desc>domain admin account right</desc>
       <rights>
         <r n="addAccountAlias"/>
         <r n="adminLoginAs"/>
+        <r n="checkPasswordStrength"/>
         <r n="deleteAccount"/>
         <r n="getAccount"/>
         <r n="getAccountInfo"/>
@@ -79,14 +79,14 @@ ${DOMAIN_ATTRS}
         <r n="setDomainAdminAccountAndCalendarResourceAttrs"/>
         <r n="viewAccountAdminUI"/>
         <r n="viewAdminSavedSearch"/>
-        <r n="checkPasswordStrength"/>
       </rights>
     </right>
-    <right type="combo" name="domainAdminCalendarResourceRights">
+    <right name="domainAdminCalendarResourceRights" type="combo">
       <desc>domain admin calresource right</desc>
       <rights>
         <r n="addCalendarResourceAlias"/>
         <r n="adminLoginCalendarResourceAs"/>
+        <r n="checkCalendarResourcePasswordStrength"/>
         <r n="deleteCalendarResource"/>
         <r n="getCalendarResource"/>
         <r n="getCalendarResourceInfo"/>
@@ -99,19 +99,17 @@ ${DOMAIN_ATTRS}
         <r n="setDomainAdminAccountAndCalendarResourceAttrs"/>
         <r n="setDomainAdminCalendarResourceAttrs"/>
         <r n="viewAdminSavedSearch"/>
-        <r n="checkPasswordStrength"/>
       </rights>
     </right>
-    <right type="combo" name="domainAdminCosRights">
+    <right name="domainAdminCosRights" type="combo">
       <desc>domain admin cos right</desc>
       <rights>
         <r n="assignCos"/>
         <r n="getCos"/>
         <r n="listCos"/>
-        <r n="checkPasswordStrength"/>
       </rights>
     </right>
-    <right type="combo" name="domainAdminDistributionListRights">
+    <right name="domainAdminDistributionListRights" type="combo">
       <desc>domain admin dl right</desc>
       <rights>
         <r n="addDistributionListAlias"/>
@@ -129,7 +127,7 @@ ${DOMAIN_ATTRS}
         <r n="viewDistributionListAdminUI"/>
       </rights>
     </right>
-    <right type="combo" name="domainAdminDomainRights">
+    <right name="domainAdminDomainRights" type="combo">
       <desc>domain admin domain right</desc>
       <rights>
         <r n="accessGAL"/>
@@ -145,20 +143,20 @@ ${DOMAIN_ATTRS}
         <r n="setDomainAdminDomainAttrs"/>
       </rights>
     </right>
-    <right type="combo" name="domainAdminServerRights">
+    <right name="domainAdminServerRights" type="combo">
       <desc>domain admin server right</desc>
       <rights>
         <r n="flushCache"/>
       </rights>
     </right>
-    <right type="combo" name="domainAdminZimletRights">
+    <right name="domainAdminZimletRights" type="combo">
       <desc>domain admin zimlet right</desc>
       <rights>
         <r n="getZimlet"/>
         <r n="listZimlet"/>
       </rights>
     </right>
-
+    
 <!--
   =========================================================
                          end generated
