@@ -1157,7 +1157,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Value for postconf disable_dns_lookups (note enable v. disable)</desc>
 </attr>
 
-<attr id="198" name="zimbraMtaMaxMessageSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig" flags="accountInfo" requiresRestart="mta">
+<attr id="198" name="zimbraMtaMaxMessageSize" type="long" min="0" cardinality="single" optionalIn="globalConfig" flags="accountInfo" requiresRestart="mta">
   <globalConfigValue>10240000</globalConfigValue>
   <desc>Value for postconf message_size_limit</desc>
 </attr>

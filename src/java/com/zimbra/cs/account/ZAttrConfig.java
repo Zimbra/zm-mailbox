@@ -41,7 +41,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110616-1720 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110625-1519 */
 
     /**
      * RFC2256: descriptive information
@@ -15254,11 +15254,13 @@ public class ZAttrConfig extends Entry {
     /**
      * Map from a certificate field to a Zimbra account key that can uniquely
      * identify a Zimbra account for client certificate authentication. Value
-     * is a comma-seperated list of mappings, each mapping maps a certificate
-     * field to a Zimbra account key. Each is attempted in sequence untill a
-     * unique account can be resolved. e.g. a value can be:
+     * is a comma-separated list of mapping rules, each mapping maps a
+     * certificate field to a Zimbra account key. Each is attempted in
+     * sequence untill a unique account can be resolved. e.g. a value can be:
      * SUBJECTALTNAME_OTHERNAME_UPN=zimbraForeignPrincipal,(uid=%{SUBJECT_CN})
-     * mapping: {certificate-field}={Zimbra-account-key} | {LDAP-filter}
+     * value: comma-separated mapping-rule mapping-rule:
+     * {cert-field-to-zimbra-key-map} | {LDAP-filter}
+     * cert-field-to-zimbra-key-map: {certificate-field}={Zimbra-account-key}
      * certificate-field: SUBJECT_{an RDN attr, e.g. CN}: a RND in DN of
      * Subject SUBJECT_DN: entire DN of Subject SUBJECTALTNAME_OTHERNAME_UPN:
      * UPN(aka Principal Name) in otherName in subjectAltName extension
@@ -15269,11 +15271,11 @@ public class ZAttrConfig extends Entry {
      * zimbraForeignPrincipal must be prefixed with &quot;cert
      * {supported-certificate-filed}:&quot; e.g. cert
      * SUBJECTALTNAME_OTHERNAME_UPN:123456@mydomain LDAP-filter: An LDAP
-     * filter with certificate-field placeholders to be substituted by
-     * certificate fields. (objectClass=zimbraAccount) is internally ANDed
-     * with the supplied filter. e.g.
+     * filter template with placeholders to be substituted by certificate
+     * field values. (objectClass=zimbraAccount) is internally ANDed with the
+     * supplied filter. e.g.
      * (|(uid=%{SUBJECT_CN})(mail=%{SUBJECTALTNAME_RFC822NAME})) Note: it is
-     * highly recommended not to use LDAP-filter, as it will trigger an LDAP
+     * recommended not to use LDAP-filter rule, as it will trigger an LDAP
      * search for each cert auth request. LDAP-filter is disabled by default.
      * To enable it globally, set
      * zimbraMailSSLClientCertPrincipalMapLdapFilterEnabled on global config
@@ -15292,11 +15294,13 @@ public class ZAttrConfig extends Entry {
     /**
      * Map from a certificate field to a Zimbra account key that can uniquely
      * identify a Zimbra account for client certificate authentication. Value
-     * is a comma-seperated list of mappings, each mapping maps a certificate
-     * field to a Zimbra account key. Each is attempted in sequence untill a
-     * unique account can be resolved. e.g. a value can be:
+     * is a comma-separated list of mapping rules, each mapping maps a
+     * certificate field to a Zimbra account key. Each is attempted in
+     * sequence untill a unique account can be resolved. e.g. a value can be:
      * SUBJECTALTNAME_OTHERNAME_UPN=zimbraForeignPrincipal,(uid=%{SUBJECT_CN})
-     * mapping: {certificate-field}={Zimbra-account-key} | {LDAP-filter}
+     * value: comma-separated mapping-rule mapping-rule:
+     * {cert-field-to-zimbra-key-map} | {LDAP-filter}
+     * cert-field-to-zimbra-key-map: {certificate-field}={Zimbra-account-key}
      * certificate-field: SUBJECT_{an RDN attr, e.g. CN}: a RND in DN of
      * Subject SUBJECT_DN: entire DN of Subject SUBJECTALTNAME_OTHERNAME_UPN:
      * UPN(aka Principal Name) in otherName in subjectAltName extension
@@ -15307,11 +15311,11 @@ public class ZAttrConfig extends Entry {
      * zimbraForeignPrincipal must be prefixed with &quot;cert
      * {supported-certificate-filed}:&quot; e.g. cert
      * SUBJECTALTNAME_OTHERNAME_UPN:123456@mydomain LDAP-filter: An LDAP
-     * filter with certificate-field placeholders to be substituted by
-     * certificate fields. (objectClass=zimbraAccount) is internally ANDed
-     * with the supplied filter. e.g.
+     * filter template with placeholders to be substituted by certificate
+     * field values. (objectClass=zimbraAccount) is internally ANDed with the
+     * supplied filter. e.g.
      * (|(uid=%{SUBJECT_CN})(mail=%{SUBJECTALTNAME_RFC822NAME})) Note: it is
-     * highly recommended not to use LDAP-filter, as it will trigger an LDAP
+     * recommended not to use LDAP-filter rule, as it will trigger an LDAP
      * search for each cert auth request. LDAP-filter is disabled by default.
      * To enable it globally, set
      * zimbraMailSSLClientCertPrincipalMapLdapFilterEnabled on global config
@@ -15333,11 +15337,13 @@ public class ZAttrConfig extends Entry {
     /**
      * Map from a certificate field to a Zimbra account key that can uniquely
      * identify a Zimbra account for client certificate authentication. Value
-     * is a comma-seperated list of mappings, each mapping maps a certificate
-     * field to a Zimbra account key. Each is attempted in sequence untill a
-     * unique account can be resolved. e.g. a value can be:
+     * is a comma-separated list of mapping rules, each mapping maps a
+     * certificate field to a Zimbra account key. Each is attempted in
+     * sequence untill a unique account can be resolved. e.g. a value can be:
      * SUBJECTALTNAME_OTHERNAME_UPN=zimbraForeignPrincipal,(uid=%{SUBJECT_CN})
-     * mapping: {certificate-field}={Zimbra-account-key} | {LDAP-filter}
+     * value: comma-separated mapping-rule mapping-rule:
+     * {cert-field-to-zimbra-key-map} | {LDAP-filter}
+     * cert-field-to-zimbra-key-map: {certificate-field}={Zimbra-account-key}
      * certificate-field: SUBJECT_{an RDN attr, e.g. CN}: a RND in DN of
      * Subject SUBJECT_DN: entire DN of Subject SUBJECTALTNAME_OTHERNAME_UPN:
      * UPN(aka Principal Name) in otherName in subjectAltName extension
@@ -15348,11 +15354,11 @@ public class ZAttrConfig extends Entry {
      * zimbraForeignPrincipal must be prefixed with &quot;cert
      * {supported-certificate-filed}:&quot; e.g. cert
      * SUBJECTALTNAME_OTHERNAME_UPN:123456@mydomain LDAP-filter: An LDAP
-     * filter with certificate-field placeholders to be substituted by
-     * certificate fields. (objectClass=zimbraAccount) is internally ANDed
-     * with the supplied filter. e.g.
+     * filter template with placeholders to be substituted by certificate
+     * field values. (objectClass=zimbraAccount) is internally ANDed with the
+     * supplied filter. e.g.
      * (|(uid=%{SUBJECT_CN})(mail=%{SUBJECTALTNAME_RFC822NAME})) Note: it is
-     * highly recommended not to use LDAP-filter, as it will trigger an LDAP
+     * recommended not to use LDAP-filter rule, as it will trigger an LDAP
      * search for each cert auth request. LDAP-filter is disabled by default.
      * To enable it globally, set
      * zimbraMailSSLClientCertPrincipalMapLdapFilterEnabled on global config
@@ -15375,11 +15381,13 @@ public class ZAttrConfig extends Entry {
     /**
      * Map from a certificate field to a Zimbra account key that can uniquely
      * identify a Zimbra account for client certificate authentication. Value
-     * is a comma-seperated list of mappings, each mapping maps a certificate
-     * field to a Zimbra account key. Each is attempted in sequence untill a
-     * unique account can be resolved. e.g. a value can be:
+     * is a comma-separated list of mapping rules, each mapping maps a
+     * certificate field to a Zimbra account key. Each is attempted in
+     * sequence untill a unique account can be resolved. e.g. a value can be:
      * SUBJECTALTNAME_OTHERNAME_UPN=zimbraForeignPrincipal,(uid=%{SUBJECT_CN})
-     * mapping: {certificate-field}={Zimbra-account-key} | {LDAP-filter}
+     * value: comma-separated mapping-rule mapping-rule:
+     * {cert-field-to-zimbra-key-map} | {LDAP-filter}
+     * cert-field-to-zimbra-key-map: {certificate-field}={Zimbra-account-key}
      * certificate-field: SUBJECT_{an RDN attr, e.g. CN}: a RND in DN of
      * Subject SUBJECT_DN: entire DN of Subject SUBJECTALTNAME_OTHERNAME_UPN:
      * UPN(aka Principal Name) in otherName in subjectAltName extension
@@ -15390,11 +15398,11 @@ public class ZAttrConfig extends Entry {
      * zimbraForeignPrincipal must be prefixed with &quot;cert
      * {supported-certificate-filed}:&quot; e.g. cert
      * SUBJECTALTNAME_OTHERNAME_UPN:123456@mydomain LDAP-filter: An LDAP
-     * filter with certificate-field placeholders to be substituted by
-     * certificate fields. (objectClass=zimbraAccount) is internally ANDed
-     * with the supplied filter. e.g.
+     * filter template with placeholders to be substituted by certificate
+     * field values. (objectClass=zimbraAccount) is internally ANDed with the
+     * supplied filter. e.g.
      * (|(uid=%{SUBJECT_CN})(mail=%{SUBJECTALTNAME_RFC822NAME})) Note: it is
-     * highly recommended not to use LDAP-filter, as it will trigger an LDAP
+     * recommended not to use LDAP-filter rule, as it will trigger an LDAP
      * search for each cert auth request. LDAP-filter is disabled by default.
      * To enable it globally, set
      * zimbraMailSSLClientCertPrincipalMapLdapFilterEnabled on global config
@@ -15415,11 +15423,13 @@ public class ZAttrConfig extends Entry {
     /**
      * Map from a certificate field to a Zimbra account key that can uniquely
      * identify a Zimbra account for client certificate authentication. Value
-     * is a comma-seperated list of mappings, each mapping maps a certificate
-     * field to a Zimbra account key. Each is attempted in sequence untill a
-     * unique account can be resolved. e.g. a value can be:
+     * is a comma-separated list of mapping rules, each mapping maps a
+     * certificate field to a Zimbra account key. Each is attempted in
+     * sequence untill a unique account can be resolved. e.g. a value can be:
      * SUBJECTALTNAME_OTHERNAME_UPN=zimbraForeignPrincipal,(uid=%{SUBJECT_CN})
-     * mapping: {certificate-field}={Zimbra-account-key} | {LDAP-filter}
+     * value: comma-separated mapping-rule mapping-rule:
+     * {cert-field-to-zimbra-key-map} | {LDAP-filter}
+     * cert-field-to-zimbra-key-map: {certificate-field}={Zimbra-account-key}
      * certificate-field: SUBJECT_{an RDN attr, e.g. CN}: a RND in DN of
      * Subject SUBJECT_DN: entire DN of Subject SUBJECTALTNAME_OTHERNAME_UPN:
      * UPN(aka Principal Name) in otherName in subjectAltName extension
@@ -15430,11 +15440,11 @@ public class ZAttrConfig extends Entry {
      * zimbraForeignPrincipal must be prefixed with &quot;cert
      * {supported-certificate-filed}:&quot; e.g. cert
      * SUBJECTALTNAME_OTHERNAME_UPN:123456@mydomain LDAP-filter: An LDAP
-     * filter with certificate-field placeholders to be substituted by
-     * certificate fields. (objectClass=zimbraAccount) is internally ANDed
-     * with the supplied filter. e.g.
+     * filter template with placeholders to be substituted by certificate
+     * field values. (objectClass=zimbraAccount) is internally ANDed with the
+     * supplied filter. e.g.
      * (|(uid=%{SUBJECT_CN})(mail=%{SUBJECTALTNAME_RFC822NAME})) Note: it is
-     * highly recommended not to use LDAP-filter, as it will trigger an LDAP
+     * recommended not to use LDAP-filter rule, as it will trigger an LDAP
      * search for each cert auth request. LDAP-filter is disabled by default.
      * To enable it globally, set
      * zimbraMailSSLClientCertPrincipalMapLdapFilterEnabled on global config
@@ -18554,8 +18564,8 @@ public class ZAttrConfig extends Entry {
      * @return zimbraMtaMaxMessageSize, or 10240000 if unset
      */
     @ZAttr(id=198)
-    public int getMtaMaxMessageSize() {
-        return getIntAttr(Provisioning.A_zimbraMtaMaxMessageSize, 10240000);
+    public long getMtaMaxMessageSize() {
+        return getLongAttr(Provisioning.A_zimbraMtaMaxMessageSize, 10240000L);
     }
 
     /**
@@ -18565,9 +18575,9 @@ public class ZAttrConfig extends Entry {
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=198)
-    public void setMtaMaxMessageSize(int zimbraMtaMaxMessageSize) throws com.zimbra.common.service.ServiceException {
+    public void setMtaMaxMessageSize(long zimbraMtaMaxMessageSize) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMtaMaxMessageSize, Integer.toString(zimbraMtaMaxMessageSize));
+        attrs.put(Provisioning.A_zimbraMtaMaxMessageSize, Long.toString(zimbraMtaMaxMessageSize));
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -18579,9 +18589,9 @@ public class ZAttrConfig extends Entry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=198)
-    public Map<String,Object> setMtaMaxMessageSize(int zimbraMtaMaxMessageSize, Map<String,Object> attrs) {
+    public Map<String,Object> setMtaMaxMessageSize(long zimbraMtaMaxMessageSize, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMtaMaxMessageSize, Integer.toString(zimbraMtaMaxMessageSize));
+        attrs.put(Provisioning.A_zimbraMtaMaxMessageSize, Long.toString(zimbraMtaMaxMessageSize));
         return attrs;
     }
 
