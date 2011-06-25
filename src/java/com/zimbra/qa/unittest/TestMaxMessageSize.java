@@ -37,7 +37,7 @@ extends TestCase {
 
     private static final String USER_NAME = "user1";
     private static final String NAME_PREFIX = TestMaxMessageSize.class.getSimpleName();
-    private static final int TEST_MAX_MESSAGE_SIZE = 2000;
+    private static final long TEST_MAX_MESSAGE_SIZE = 2000;
     
     private String mOrigMaxMessageSize;
     private String mOrigFileUploadMaxSize;
@@ -147,11 +147,11 @@ extends TestCase {
     private void validateMessageTooBigFault(SoapFaultException e)
     throws Exception {
         Provisioning prov = Provisioning.getInstance();
-        int maxSize = prov.getConfig().getIntAttr(Provisioning.A_zimbraMtaMaxMessageSize, -1);
+        long maxSize = prov.getConfig().getLongAttr(Provisioning.A_zimbraMtaMaxMessageSize, -1);
         assertTrue("Unexpected error: " + e.getReason(),
             e.getReason().matches("Message of size \\d+ exceeded allowed size"));
         assertEquals(MailServiceException.MESSAGE_TOO_BIG, e.getCode());
-        assertEquals(Integer.toString(maxSize), e.getArgumentValue("maxSize"));
+        assertEquals(Long.toString(maxSize), e.getArgumentValue("maxSize"));
     }
     
     public void tearDown()
@@ -161,12 +161,12 @@ extends TestCase {
         TestUtil.setConfigAttr(Provisioning.A_zimbraMtaMaxMessageSize, mOrigMaxMessageSize);
     }
     
-    private void setMaxMessageSize(int numBytes)
+    private void setMaxMessageSize(long numBytes)
     throws Exception {
         Provisioning prov = Provisioning.getInstance();
         Config config = prov.getConfig();
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraMtaMaxMessageSize, Integer.toString(numBytes));
+        attrs.put(Provisioning.A_zimbraMtaMaxMessageSize, Long.toString(numBytes));
         prov.modifyAttrs(config, attrs);
     }
     

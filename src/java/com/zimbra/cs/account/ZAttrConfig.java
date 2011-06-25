@@ -41,7 +41,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110621-2055 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110625-1605 */
 
     /**
      * RFC2256: descriptive information
@@ -18790,8 +18790,8 @@ public abstract class ZAttrConfig extends Entry {
      * @return zimbraMtaMaxMessageSize, or 10240000 if unset
      */
     @ZAttr(id=198)
-    public int getMtaMaxMessageSize() {
-        return getIntAttr(Provisioning.A_zimbraMtaMaxMessageSize, 10240000);
+    public long getMtaMaxMessageSize() {
+        return getLongAttr(Provisioning.A_zimbraMtaMaxMessageSize, 10240000L);
     }
 
     /**
@@ -18801,9 +18801,9 @@ public abstract class ZAttrConfig extends Entry {
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=198)
-    public void setMtaMaxMessageSize(int zimbraMtaMaxMessageSize) throws com.zimbra.common.service.ServiceException {
+    public void setMtaMaxMessageSize(long zimbraMtaMaxMessageSize) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMtaMaxMessageSize, Integer.toString(zimbraMtaMaxMessageSize));
+        attrs.put(Provisioning.A_zimbraMtaMaxMessageSize, Long.toString(zimbraMtaMaxMessageSize));
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -18815,9 +18815,9 @@ public abstract class ZAttrConfig extends Entry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=198)
-    public Map<String,Object> setMtaMaxMessageSize(int zimbraMtaMaxMessageSize, Map<String,Object> attrs) {
+    public Map<String,Object> setMtaMaxMessageSize(long zimbraMtaMaxMessageSize, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMtaMaxMessageSize, Integer.toString(zimbraMtaMaxMessageSize));
+        attrs.put(Provisioning.A_zimbraMtaMaxMessageSize, Long.toString(zimbraMtaMaxMessageSize));
         return attrs;
     }
 
@@ -25575,7 +25575,7 @@ public abstract class ZAttrConfig extends Entry {
      */
     @ZAttr(id=719)
     public String[] getReverseProxyImapEnabledCapability() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraReverseProxyImapEnabledCapability); return value.length > 0 ? value : new String[] {"IMAP4rev1","ACL","BINARY","CATENATE","CHILDREN","CONDSTORE","ENABLE","ESEARCH","ESORT","I18NLEVEL=1","ID","IDLE","LIST-EXTENDED","LITERAL+","MULTIAPPEND","NAMESPACE","QRESYNC","QUOTA","RIGHTS=ektx","SASL-IR","SEARCHRES","SORT","THREAD=ORDEREDSUBJECT","UIDPLUS","UNSELECT","WITHIN"};
+        String[] value = getMultiAttr(Provisioning.A_zimbraReverseProxyImapEnabledCapability); return value.length > 0 ? value : new String[] {"IMAP4rev1","ACL","BINARY","CATENATE","CHILDREN","CONDSTORE","ENABLE","ESEARCH","ESORT","I18NLEVEL=1","ID","IDLE","LIST-EXTENDED","LIST-STATUS","LITERAL+","MULTIAPPEND","NAMESPACE","QRESYNC","QUOTA","RIGHTS=ektx","SASL-IR","SEARCHRES","SORT","THREAD=ORDEREDSUBJECT","UIDPLUS","UNSELECT","WITHIN","XLIST"};
     }
 
     /**
