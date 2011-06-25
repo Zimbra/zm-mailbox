@@ -946,7 +946,8 @@ abstract class ImapHandler {
             }
             AuthenticatorUser authUser = new ImapAuthenticatorUser(this, null);
             for (String mechanism : Authenticator.listMechanisms()) {
-                if (mechanismEnabled(mechanism) && Authenticator.getAuthenticator(mechanism, authUser) != null)
+                if (mechanismEnabled(mechanism) && Authenticator.getAuthenticator(mechanism, authUser) != null
+                		&& !mechanism.equalsIgnoreCase("X-ZIMBRA")) //bug 57205, hide X-ZIMBRA auth mech
                     capability.append(" AUTH=").append(mechanism);
             }
         }

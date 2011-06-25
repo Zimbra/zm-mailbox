@@ -3711,6 +3711,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <globalConfigValue>ID</globalConfigValue>
   <globalConfigValue>IDLE</globalConfigValue>
   <globalConfigValue>LIST-EXTENDED</globalConfigValue>
+  <globalConfigValue>LIST-STATUS</globalConfigValue>
   <globalConfigValue>LITERAL+</globalConfigValue>
   <globalConfigValue>MULTIAPPEND</globalConfigValue>
   <globalConfigValue>NAMESPACE</globalConfigValue>
@@ -3724,6 +3725,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <globalConfigValue>UIDPLUS</globalConfigValue>
   <globalConfigValue>UNSELECT</globalConfigValue>
   <globalConfigValue>WITHIN</globalConfigValue>
+  <globalConfigValue>XLIST</globalConfigValue>
   <desc>NGINX reverse proxy imap capabilities</desc>
 </attr>
 
