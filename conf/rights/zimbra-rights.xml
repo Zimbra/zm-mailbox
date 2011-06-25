@@ -189,7 +189,11 @@
        
 <right name="setCalendarResourcePassword" type="preset" targetType="calresource">
   <desc>set calendar resource password</desc>
-</right>     
+</right> 
+
+<right name="checkCalendarResourcePasswordStrength" type="preset" targetType="calresource">
+  <desc>check password strength</desc>
+</right>    
 
 <right name="reindexCalendarResourceMailbox" type="preset" targetType="calresource">
   <desc>reindex mailbox</desc>

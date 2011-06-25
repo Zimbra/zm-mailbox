@@ -92,6 +92,7 @@
     <a n="zimbraDataSourcePop3PollingInterval"/>
     <a n="zimbraDataSourceRssPollingInterval"/>
     <a n="zimbraDataSourceYabPollingInterval"/>
+    <a n="zimbraDefaultFolderFlags"/>
     <a n="zimbraDumpsterEnabled"/>
     <a n="zimbraExternalImapHostname"/>
     <a n="zimbraExternalImapPort"/>
@@ -101,6 +102,7 @@
     <a n="zimbraExternalPop3Port"/>
     <a n="zimbraExternalPop3SSLHostname"/>
     <a n="zimbraExternalPop3SSLPort"/>
+    <a n="zimbraFeatureAntispamEnabled"/>
     <a n="zimbraFeatureCalendarUpsellURL"/>
     <a n="zimbraFeatureContactsUpsellURL"/>
     <a n="zimbraFeatureDiscardInFiltersEnabled"/>
@@ -146,6 +148,7 @@
     <a n="zimbraNewMailNotificationFrom"/>
     <a n="zimbraNewMailNotificationSubject"/>
     <a n="zimbraNotes"/>
+    <a n="zimbraPasswordAllowedChars"/>
     <a n="zimbraPasswordEnforceHistory"/>
     <a n="zimbraPasswordLocked"/>
     <a n="zimbraPasswordLockoutDuration"/>
@@ -157,6 +160,7 @@
     <a n="zimbraPasswordMaxAge"/>
     <a n="zimbraPasswordMaxLength"/>
     <a n="zimbraPasswordMinAge"/>
+    <a n="zimbraPasswordMinAlphaChars"/>
     <a n="zimbraPasswordMinLength"/>
     <a n="zimbraPasswordMinLowerCaseChars"/>
     <a n="zimbraPasswordMinNumericChars"/>
@@ -311,12 +315,14 @@
     <a n="zimbraPrefSentLifetime"/>
     <a n="zimbraPrefSentMailFolder"/>
     <a n="zimbraPrefSharedAddrBookAutoCompleteEnabled"/>
+    <a n="zimbraPrefShortEmailAddress"/>
     <a n="zimbraPrefShortcuts"/>
     <a n="zimbraPrefShowCalendarWeek"/>
     <a n="zimbraPrefShowFragments"/>
     <a n="zimbraPrefShowSearchString"/>
     <a n="zimbraPrefShowSelectionCheckbox"/>
     <a n="zimbraPrefSkin"/>
+    <a n="zimbraPrefSortOrder"/>
     <a n="zimbraPrefSpellDictionary"/>
     <a n="zimbraPrefSpellIgnoreWord"/>
     <a n="zimbraPrefStandardClientAccessibilityMode"/>
@@ -409,6 +415,7 @@
     <a n="zimbraExternalPop3Port"/>
     <a n="zimbraExternalPop3SSLHostname"/>
     <a n="zimbraExternalPop3SSLPort"/>
+    <a n="zimbraFreebusyExchangeServerType"/>
     <a n="zimbraGalAlwaysIncludeLocalCalendarResources"/>
     <a n="zimbraGalSyncMaxConcurrentClients"/>
     <a n="zimbraHelpAdminURL"/>
@@ -453,11 +460,12 @@
   =========================================================
 -->
 
-    <right type="combo" name="domainAdminAccountRights">
+    <right name="domainAdminAccountRights" type="combo">
       <desc>domain admin account right</desc>
       <rights>
         <r n="addAccountAlias"/>
         <r n="adminLoginAs"/>
+        <r n="checkPasswordStrength"/>
         <r n="deleteAccount"/>
         <r n="getAccount"/>
         <r n="getAccountInfo"/>
@@ -472,14 +480,14 @@
         <r n="setDomainAdminAccountAndCalendarResourceAttrs"/>
         <r n="viewAccountAdminUI"/>
         <r n="viewAdminSavedSearch"/>
-        <r n="checkPasswordStrength"/>
       </rights>
     </right>
-    <right type="combo" name="domainAdminCalendarResourceRights">
+    <right name="domainAdminCalendarResourceRights" type="combo">
       <desc>domain admin calresource right</desc>
       <rights>
         <r n="addCalendarResourceAlias"/>
         <r n="adminLoginCalendarResourceAs"/>
+        <r n="checkCalendarResourcePasswordStrength"/>
         <r n="deleteCalendarResource"/>
         <r n="getCalendarResource"/>
         <r n="getCalendarResourceInfo"/>
@@ -492,19 +500,17 @@
         <r n="setDomainAdminAccountAndCalendarResourceAttrs"/>
         <r n="setDomainAdminCalendarResourceAttrs"/>
         <r n="viewAdminSavedSearch"/>
-        <r n="checkPasswordStrength"/>
       </rights>
     </right>
-    <right type="combo" name="domainAdminCosRights">
+    <right name="domainAdminCosRights" type="combo">
       <desc>domain admin cos right</desc>
       <rights>
         <r n="assignCos"/>
         <r n="getCos"/>
         <r n="listCos"/>
-        <r n="checkPasswordStrength"/>
       </rights>
     </right>
-    <right type="combo" name="domainAdminDistributionListRights">
+    <right name="domainAdminDistributionListRights" type="combo">
       <desc>domain admin dl right</desc>
       <rights>
         <r n="addDistributionListAlias"/>
@@ -522,7 +528,7 @@
         <r n="viewDistributionListAdminUI"/>
       </rights>
     </right>
-    <right type="combo" name="domainAdminDomainRights">
+    <right name="domainAdminDomainRights" type="combo">
       <desc>domain admin domain right</desc>
       <rights>
         <r n="accessGAL"/>
@@ -538,20 +544,20 @@
         <r n="setDomainAdminDomainAttrs"/>
       </rights>
     </right>
-    <right type="combo" name="domainAdminServerRights">
+    <right name="domainAdminServerRights" type="combo">
       <desc>domain admin server right</desc>
       <rights>
         <r n="flushCache"/>
       </rights>
     </right>
-    <right type="combo" name="domainAdminZimletRights">
+    <right name="domainAdminZimletRights" type="combo">
       <desc>domain admin zimlet right</desc>
       <rights>
         <r n="getZimlet"/>
         <r n="listZimlet"/>
       </rights>
     </right>
-
+    
 <!--
   =========================================================
                          end generated
