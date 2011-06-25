@@ -24,7 +24,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110520-1711 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110625-1519 */
 
 
     /*
@@ -540,6 +540,11 @@ public class RightConsts {
      * backup accounts on a server
      */
     public static final String RT_backupAccount = "backupAccount";
+
+    /**
+     * check password strength
+     */
+    public static final String RT_checkCalendarResourcePasswordStrength = "checkCalendarResourcePasswordStrength";
 
     /**
      * check and create directory on file system
