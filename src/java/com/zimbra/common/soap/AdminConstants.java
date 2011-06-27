@@ -430,6 +430,10 @@ public final class AdminConstants {
     public static final String E_MODIFY_SMIME_CONFIG_REQUEST = "ModifySMIMEConfigRequest";
     public static final String E_MODIFY_SMIME_CONFIG_RESPONSE = "ModifySMIMEConfigResponse";
 
+    // Version Check
+    public static final String E_VC_REQUEST = "VersionCheckRequest";
+    public static final String E_VC_RESPONSE = "VersionCheckResponse";
+
     public static final QName PING_REQUEST = QName.get(E_PING_REQUEST, NAMESPACE);
     public static final QName PING_RESPONSE = QName.get(E_PING_RESPONSE, NAMESPACE);
     public static final QName CHECK_HEALTH_REQUEST = QName.get(E_CHECK_HEALTH_REQUEST, NAMESPACE);
@@ -835,6 +839,10 @@ public final class AdminConstants {
     public static final QName MODIFY_SMIME_CONFIG_REQUEST = QName.get(E_MODIFY_SMIME_CONFIG_REQUEST, NAMESPACE);
     public static final QName MODIFY_SMIME_CONFIG_RESPONSE = QName.get(E_MODIFY_SMIME_CONFIG_RESPONSE, NAMESPACE);
 
+    // Version Check
+    public static final QName VC_REQUEST = QName.get(E_VC_REQUEST, NAMESPACE);
+    public static final QName VC_RESPONSE = QName.get(E_VC_RESPONSE, NAMESPACE);
+
     // DumpSessions
     public static final String E_SESSION = "session";
     public static final String A_ZIMBRA_ID = "zid";
@@ -1165,4 +1173,20 @@ public final class AdminConstants {
 
     public static final String OP_MODIFY = "modify";
     public static final String OP_REMOVE = "remove";
+
+    // Version Check
+    public static final String VERSION_CHECK_STATUS = "status";
+    public static final String VERSION_CHECK_CHECK = "check";
+    public static final String E_VERSION_CHECK = "versionCheck";
+    public static final String A_UPDATE_TYPE = "type";
+    public static final String E_UPDATES= "updates";
+    public static final String E_UPDATE = "update";
+    public static final String A_VERSION_CHECK_STATUS = "status";
+    public static final String A_CRITICAL = "critical";
+    public static final String A_UPDATE_URL = "updateURL";
+    public static final String A_SHORT_VERSION = "shortversion";
+    public static final String A_VERSION = "version";
+    public static final String A_RELEASE = "release";
+    public static final String A_PLATFORM = "platform";
+    public static final String A_BUILDTYPE = "buildtype";
 }
