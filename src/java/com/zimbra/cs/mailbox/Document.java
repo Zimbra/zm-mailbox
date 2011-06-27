@@ -32,7 +32,7 @@ import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-
+import com.zimbra.common.localconfig.LC;
 /**
  * @since Aug 23, 2004
  */
@@ -172,7 +172,10 @@ public class Document extends MailItem {
 
         contentType = pd.getContentType();
         creator = pd.getCreator();
-        fragment = pd.getFragment();
+        
+        if(!LC.documents_disable_instant_parsing.booleanValue())
+        	fragment = pd.getFragment();
+        
         mData.date = (int) (pd.getCreatedDate() / 1000L);
         mData.name = pd.getFilename();
         mData.setSubject(pd.getFilename());
@@ -192,6 +195,12 @@ public class Document extends MailItem {
 
     protected static UnderlyingData prepareCreate(MailItem.Type type, int id, Folder folder, String name,
             String mimeType, ParsedDocument pd, Metadata meta, CustomMetadata custom, int flags) throws ServiceException {
+    	
+    	return prepareCreate(type, id, folder, name, mimeType, pd, meta, custom, flags, LC.documents_disable_instant_parsing.booleanValue());
+    }
+    
+    protected static UnderlyingData prepareCreate(MailItem.Type type, int id, Folder folder, String name,
+            String mimeType, ParsedDocument pd, Metadata meta, CustomMetadata custom, int flags, boolean skipParsing) throws ServiceException {
         if (folder == null || !folder.canContain(Type.DOCUMENT)) {
             throw MailServiceException.CANNOT_CONTAIN();
         }
@@ -218,7 +227,7 @@ public class Document extends MailItem {
         data.setSubject(name);
         data.setBlobDigest(pd.getDigest());
         data.metadata = encodeMetadata(meta, DEFAULT_COLOR_RGB, 1, extended, mimeType, pd.getCreator(),
-                pd.getFragment(), null, 0, pd.getDescription(), pd.isDescriptionEnabled()).toString();
+        		skipParsing ? null : pd.getFragment(), null, 0, pd.getDescription(), pd.isDescriptionEnabled()).toString();
         data.setFlags(flags);
        return data;
     }
