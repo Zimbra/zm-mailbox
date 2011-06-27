@@ -1405,13 +1405,6 @@
     <antcall target="run-zmprov-commands"/>
   </target>
 
-  <target name="zmlocalconfig">
-    <echo>Running localconfig with with argument: ${localconfig-args}</echo>
-    <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
-      <arg line="${localconfig-args}"/>
-    </java>
-  </target>
-
   <target name="run-zmprov-commands" depends="zmprov-commands">
     <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
         <arg line="-l -f ${build.zmprov} -v"/>
