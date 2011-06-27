@@ -433,7 +433,7 @@ public class ParsedContact {
         ContactGroup contactGroup = null;
         String encodedContactGroup = contactFields.get(ContactConstants.A_groupMember);
         contactGroup = encodedContactGroup == null? 
-                ContactGroup.init(encodedContactGroup) : ContactGroup.init();
+                ContactGroup.init() : ContactGroup.init(encodedContactGroup);
         
         boolean contactGroupMemberChanged = false;
         for (FieldDelta delta : fieldDeltaList.getDeltaList()) {
