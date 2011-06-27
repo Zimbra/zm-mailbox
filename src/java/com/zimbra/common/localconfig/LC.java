@@ -1105,6 +1105,9 @@ public final class LC {
 
     public static final KnownKey max_image_size_to_resize = KnownKey.newKey(10 * 1024 * 1024);
 
+    //octopus
+    public static final KnownKey documents_disable_instant_parsing = KnownKey.newKey(false);
+    
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
