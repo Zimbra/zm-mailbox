@@ -509,6 +509,16 @@ public class ZCalendar {
             toRet.append(INDENT).append("END:").append(mName).append('\n');
             return toRet.toString();
         }
+        
+        private static final Pattern CONTROL_CHARS = Pattern.compile("[\\x00-\\x08\\x0A-\\x1F\\x7F]");
+        
+        private String sanitize(String str) {
+            // Sanitize control characters
+            if (str != null) {
+                return CONTROL_CHARS.matcher(str).replaceAll("?");
+            }
+            return str;
+        }
 
         private static final int CHARS_PER_FOLDED_LINE = 76;
 
@@ -556,7 +566,7 @@ public class ZCalendar {
             }
 
             // Write with folding.
-            String rawval = sw.toString();
+            String rawval = sanitize(sw.toString());
 
             if (escapeHtmlTags) { // Use only escapeHtmlTags when the file isn't supposed to be downloaded (ie. it's supposed to be shown in the browser)
                 w.write(htmlPattern.matcher(rawval).replaceAll("&lt;$1&gt;"));
