@@ -11,8 +11,6 @@ import static org.junit.Assert.*;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.util.CliUtil;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.entry.LdapAccount;
@@ -45,7 +43,7 @@ public class TestContactGroup {
     }
         
     private ContactGroup createContactGroup(MemberData[] members) throws Exception {
-        ContactGroup contactGroup = ContactGroup.init((String)null);
+        ContactGroup contactGroup = ContactGroup.init();
         for (MemberData member : members) {
             contactGroup.addMember(member.type, member.value);
         }
@@ -221,16 +219,20 @@ public class TestContactGroup {
         OperationContext octxt = null;  //TODO
         
         Map<String, Object> fields = new HashMap<String, Object>();
+        fields.put(ContactConstants.A_fileAs, ContactConstants.FA_FIRST_LAST);
         fields.put(ContactConstants.A_firstName, "test");
         fields.put(ContactConstants.A_email, "test1@zimbra.com");
         fields.put(ContactConstants.A_workEmail1, "test2@zimbra.com");
         Contact contact = mbox.createContact(octxt, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
         
         ContactGroup contactGroup = createContactGroup(new MemberData[] {
-                new MemberData(Member.Type.CONTACT_REF, "" + contact.getId())});
+                new MemberData(Member.Type.CONTACT_REF, "" + contact.getId()),
+                new MemberData(Member.Type.INLINE, "aaa@test.com"), 
+                new MemberData(Member.Type.INLINE, "zzz@test.com")});
         
         contactGroup.derefAllMembers(mbox, octxt);
         
+        boolean gotContactRefMember = false;
         String prevMemberKey = null;
         for (Member member : contactGroup.getDerefedMembers()) {
             String memberKey = member.getDerefedKey();
@@ -238,8 +240,23 @@ public class TestContactGroup {
                 assertTrue(prevMemberKey.compareTo(memberKey) < 0);
             }
             prevMemberKey = memberKey;
-            System.out.println(memberKey);
+            
+            Member.Type type = member.getType();
+            if (type == Member.Type.CONTACT_REF) {
+                assertEquals("test", memberKey);
+                gotContactRefMember = true;
+            }
+            // System.out.println(memberKey);
         }
+        
+        List<String> emailAddrs = contactGroup.getAllEmailAddresses(false, mbox, octxt);
+        assertEquals(4, emailAddrs.size());
+        assertTrue(emailAddrs.contains("test1@zimbra.com"));
+        assertTrue(emailAddrs.contains("test2@zimbra.com"));
+        assertTrue(emailAddrs.contains("aaa@test.com"));
+        assertTrue(emailAddrs.contains("zzz@test.com"));
+        
+        assertTrue(gotContactRefMember);
     }
 
     @Test
@@ -248,14 +265,19 @@ public class TestContactGroup {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         OperationContext octxt = null;  //TODO
         
-        LdapAccount ldapAccount = (LdapAccount) account;
+        Account galMember = Provisioning.getInstance().get(AccountBy.name, TestUtil.getAddress("user2"));
+        LdapAccount ldapAccount = (LdapAccount) galMember;
         String dn = ldapAccount.getDN();
+        String email = galMember.getName();
         
         ContactGroup contactGroup = createContactGroup(new MemberData[] {
-                new MemberData(Member.Type.GAL_REF, dn)});
+                new MemberData(Member.Type.GAL_REF, dn),
+                new MemberData(Member.Type.INLINE, "aaa@test.com"), 
+                new MemberData(Member.Type.INLINE, "zzz@test.com")});
         
         contactGroup.derefAllMembers(mbox, octxt);
         
+        boolean gotGalRefMember = false;
         String prevMemberKey = null;
         for (Member member : contactGroup.getDerefedMembers()) {
             String memberKey = member.getDerefedKey();
@@ -263,8 +285,22 @@ public class TestContactGroup {
                 assertTrue(prevMemberKey.compareTo(memberKey) < 0);
             }
             prevMemberKey = memberKey;
-            System.out.println(memberKey);
+            
+            Member.Type type = member.getType();
+            if (type == Member.Type.GAL_REF) {
+                assertEquals(email, memberKey);
+                gotGalRefMember = true;
+            }
+            // System.out.println(memberKey);
         }
+        
+        List<String> emailAddrs = contactGroup.getAllEmailAddresses(false, mbox, octxt);
+        assertEquals(3, emailAddrs.size());
+        assertTrue(emailAddrs.contains(email));
+        assertTrue(emailAddrs.contains("aaa@test.com"));
+        assertTrue(emailAddrs.contains("zzz@test.com"));
+        
+        assertTrue(gotGalRefMember);
     }
     
 }

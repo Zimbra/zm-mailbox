@@ -551,7 +551,7 @@ public class ToXML {
                 //      an existing attribute with null or empty string value?
                 String value = contact.get(name);
                 if (value != null && !value.equals("")) {
-                    encodeContactAttr(elem, name, value, encodeContactGroupMembersBasic);
+                    encodeContactAttr(elem, name, value, contact, encodeContactGroupMembersBasic);
                 } else if (attachments != null) {
                     for (Attachment attach : attachments) {
                         if (attach.getName().equals(name))
@@ -567,7 +567,7 @@ public class ToXML {
                 String name = me.getKey();
                 String value = me.getValue();
                 if (name != null && !name.trim().equals("") && value != null && !value.equals("")) {
-                    encodeContactAttr(elem, name, value, encodeContactGroupMembersBasic);
+                    encodeContactAttr(elem, name, value, contact, encodeContactGroupMembersBasic);
                 }
             }
             if (attachments != null) {
@@ -583,7 +583,7 @@ public class ToXML {
     }
 
     private static void encodeContactAttr(Element elem, String name, String value, 
-            boolean encodeContactGroupMembers) {
+            Contact contact, boolean encodeContactGroupMembers) {
         if (Contact.isMultiValueAttr(value)) {
             try {
                 for (String v : Contact.parseMultiValueAttr(value)) {
@@ -594,10 +594,12 @@ public class ToXML {
         } else if (ContactConstants.A_groupMember.equals(name)) {  
             if (encodeContactGroupMembers) {
                 try {
-                    ContactGroup contactGroup = ContactGroup.init(value);
-                    for (ContactGroup.Member member : contactGroup.getMembers(true)) {
-                        Element eMember = elem.addElement(MailConstants.E_CONTACT_GROUP_MEMBER);
-                        encodeContactGroupMemberBasic(eMember, member);
+                    ContactGroup contactGroup = ContactGroup.init(contact, false);
+                    if (contactGroup != null) {
+                        for (ContactGroup.Member member : contactGroup.getMembers(true)) {
+                            Element eMember = elem.addElement(MailConstants.E_CONTACT_GROUP_MEMBER);
+                            encodeContactGroupMemberBasic(eMember, member);
+                        }
                     }
                 } catch (ServiceException e) {
                     ZimbraLog.contact.warn("unable to init contact group", e);
@@ -631,7 +633,7 @@ public class ToXML {
                 } else if (derefedMember instanceof GalContact) {
                     encodeGalContact(eMember, (GalContact) derefedMember);
                 }  else if (derefedMember instanceof Element) {
-                    // proxied GAL entry
+                    // proxied GAL or Contact entry
                     eMember.addElement((Element) derefedMember);
                 }
             }

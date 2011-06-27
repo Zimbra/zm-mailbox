@@ -130,9 +130,8 @@ public final class GetContacts extends MailDocumentHandler  {
                     for (int id : local) {
                         Contact con = mbox.getContactById(octxt, id);
                         if (con != null && (folderId == ALL_FOLDERS || folderId == con.getFolderId())) {
-                            ContactGroup contactGroup = null;
-                            if (con.isLocalGroup()) {
-                                contactGroup = ContactGroup.init(con);
+                            ContactGroup contactGroup = ContactGroup.init(con, false);
+                            if (contactGroup != null) {
                                 if (derefContactGroupMember) {
                                     contactGroup.derefAllMembers(con.getMailbox(), octxt);
                                 }

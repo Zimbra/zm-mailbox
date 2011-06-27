@@ -394,6 +394,14 @@ public class ParsedContact {
         }
     }
     
+    public ParsedContact modifyField(String name, String newValue) {
+        if (Strings.isNullOrEmpty(newValue))
+            contactFields.remove(name);
+        else
+            contactFields.put(name, newValue);
+        return this;
+    }
+    
     // convert legacy API to the new API
     public ParsedContact modify(Map<String, String> fieldDelta, List<Attachment> attachDelta) 
     throws ServiceException {
@@ -424,7 +432,8 @@ public class ParsedContact {
         
         ContactGroup contactGroup = null;
         String encodedContactGroup = contactFields.get(ContactConstants.A_groupMember);
-        contactGroup = ContactGroup.init(encodedContactGroup);
+        contactGroup = encodedContactGroup == null? 
+                ContactGroup.init(encodedContactGroup) : ContactGroup.init();
         
         boolean contactGroupMemberChanged = false;
         for (FieldDelta delta : fieldDeltaList.getDeltaList()) {
@@ -695,16 +704,20 @@ public class ParsedContact {
 
         FieldTokenStream fields = new FieldTokenStream();
         for (Map.Entry<String, String> entry : getFields().entrySet()) {
-            // Ignore these fields as they can be too big.
-            if (Contact.isSMIMECertField(entry.getKey()) || ContactConstants.A_member.equals(entry.getKey())) {
+            String fieldName = entry.getKey();
+            
+            // Ignore these fields as they can either be too big or containing encoded data.
+            if (Contact.isSMIMECertField(fieldName) || 
+                    ContactConstants.A_member.equals(fieldName) ||
+                    ContactConstants.A_groupMember.equals(fieldName)) {
                 continue;
             }
 
-            if (!Contact.isEmailField(emailFields, entry.getKey())) { // skip email addrs, they're added to CONTENT below
-                if (!ContactConstants.A_fileAs.equalsIgnoreCase(entry.getKey()))
+            if (!Contact.isEmailField(emailFields, fieldName)) { // skip email addrs, they're added to CONTENT below
+                if (!ContactConstants.A_fileAs.equalsIgnoreCase(fieldName))
                     contentText.append(entry.getValue()).append(' ');
             }
-            fields.add(entry.getKey(), entry.getValue());
+            fields.add(fieldName, entry.getValue());
         }
 
         // fetch all the 'email' addresses for this contact into a single concatenated string

@@ -25,6 +25,7 @@ import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.service.util.SyncToken;
 
 import java.sql.PreparedStatement;
@@ -118,6 +119,9 @@ public final class MailboxUpgrade {
 
     public static void upgradeTo2_0(Mailbox mbox) throws ServiceException {
         migrateHighestIndexed(mbox);
+        
+        // bug 56772
+        migrateContactGroups(mbox);
     }
 
     private static void migrateHighestIndexed(Mailbox mbox) throws ServiceException {
@@ -170,6 +174,16 @@ public final class MailboxUpgrade {
             throw ServiceException.FAILURE("Failed to migrate highest_indexed", e);
         } finally {
             conn.closeQuietly();
+        }
+    }
+    
+    private static void migrateContactGroups(Mailbox mbox) throws ServiceException {
+        ContactGroup.MigrateContactGroup migrate = new ContactGroup.MigrateContactGroup(mbox);
+        try {
+            migrate.handle();
+            ZimbraLog.mailbox.info("contact group migration finished");
+        } catch (Exception e) {
+            ZimbraLog.mailbox.warn("contact group migration failed", e);
         }
     }
 

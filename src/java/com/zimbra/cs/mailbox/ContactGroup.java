@@ -1,17 +1,23 @@
 package com.zimbra.cs.mailbox;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.TreeMultimap;
 
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapHttpTransport;
@@ -24,10 +30,9 @@ import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
-import com.zimbra.cs.gal.GalSearchQueryCallback;
 import com.zimbra.cs.gal.GalSearchResultCallback;
 import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.service.util.ItemId;
 
 public class ContactGroup {
@@ -97,26 +102,27 @@ public class ContactGroup {
     // contains derefed members sorted by the Member.getKey() order
     private TreeMultimap<String, Member> derefedMembers = null;
     
-    public static ContactGroup init(Contact contact) throws ServiceException {
+    public static ContactGroup init(Contact contact, boolean createIfNotExist) throws ServiceException {
         ContactGroup contactGroup = null;
         if (contact != null) {
             String encoded = contact.get(ContactConstants.A_groupMember);
-            contactGroup = init(encoded);
-        } else {
-            contactGroup = new ContactGroup();
+            if (encoded != null) {
+                contactGroup = init(encoded);
+            }
+        }
+        
+        if (contactGroup == null && createIfNotExist) {
+            contactGroup = init();
         }
         return contactGroup;
     }
     
     public static ContactGroup init(String encoded) throws ServiceException {
-        ContactGroup contactGroup = null;
-        if (encoded != null) {
-            contactGroup = ContactGroup.decode(encoded);
-        } else {
-            contactGroup = new ContactGroup();
-        }
-        
-        return contactGroup;
+        return ContactGroup.decode(encoded);
+    }
+    
+    public static ContactGroup init() throws ServiceException {
+        return new ContactGroup();
     }
     
     private ContactGroup() {
@@ -129,6 +135,10 @@ public class ContactGroup {
     
     private MemberId getNextMemberId() {
         return new MemberId(++lastMemberId);
+    }
+    
+    private boolean isDerefed() {
+        return derefedMembers != null;
     }
 
     private void addMember(Member member) {
@@ -170,12 +180,13 @@ public class ContactGroup {
     /*
      * return members in the order they were inserted
      */
+    
     public List<Member> getMembers() {
         return Arrays.asList(members.values().toArray(new Member[members.size()]));
     }
     
     public List<Member> getMembers(boolean preferDerefed) {
-        if (preferDerefed && derefedMembers != null) {
+        if (preferDerefed && isDerefed()) {
             return getDerefedMembers();
         } else {
             return getMembers();
@@ -186,7 +197,7 @@ public class ContactGroup {
      * return derefed members in Member.getKey() order
      */
     public List<Member> getDerefedMembers() {
-        assert(derefedMembers != null);
+        assert(isDerefed());
         return Arrays.asList(derefedMembers.values().toArray(new Member[derefedMembers.size()]));
     }
     
@@ -214,8 +225,6 @@ public class ContactGroup {
             replaceMember(updatedMember);
         }
     }
-
-    
     
     /*
      * Note: deref each time when called, result is not cached
@@ -239,6 +248,19 @@ public class ContactGroup {
                 derefedMembers.put(member.getValue(), member);
             }
         }
+    }
+    
+    
+    public List<String> getAllEmailAddresses(boolean refresh, Mailbox mbox, OperationContext octxt) {
+        if (refresh || !isDerefed()) {
+            derefAllMembers(mbox, octxt);
+        }
+        
+        List<String> result = new ArrayList<String>();
+        for (Member member : members.values()) {
+            member.getEmailAddresses(result);
+        }
+        return result;
     }
     
     public String encode() {
@@ -290,7 +312,7 @@ public class ContactGroup {
      * Group Member classes
      *======================
      */
-    public static abstract class Member implements Comparable {
+    public static abstract class Member implements Comparable<Member> {
         
         // metadata keys for member data
         private enum MetadataKey {
@@ -360,13 +382,14 @@ public class ContactGroup {
         private MemberId id;  // unique id of the member within this group
         protected String value;
         private String derefedKey; // key for sorting in the expanded group
+        private List<String> derefedEmailAddrs; // derefed email addresses of the member
         private Object derefedObject;
         
         public abstract Type getType();
-        protected abstract String genDerefedKey(Object obj) throws ServiceException ;
-        protected abstract Object deref(Mailbox mbox, OperationContext octxt) 
-        throws ServiceException ;  // load the actual entry
 
+        
+        // load the actual entry
+        protected abstract void deref(Mailbox mbox, OperationContext octxt) throws ServiceException;  
         
         protected Member(MemberId id, String value) throws ServiceException {
             this.id = id;
@@ -381,12 +404,8 @@ public class ContactGroup {
          *       inserted into the TreeMultimap.
          */
         @Override
-        public int compareTo(Object other) {
-            if (!(other instanceof Member)) {
-                return 0;
-            }
-            Member otherMember = (Member) other;
-            return getId().toString().compareTo(otherMember.getId().toString());
+        public int compareTo(Member other) {
+            return getId().toString().compareTo(other.getId().toString());
         }
         
         public MemberId getId() {
@@ -402,6 +421,21 @@ public class ContactGroup {
             return derefedKey;
         }
         
+        // if result is not null, append email addresses of the member into result
+        // if result is null, create a new List filled with email addresses of the member
+        // return the List into which email addresses are added
+        private List<String> getEmailAddresses(List<String> result) {
+            assert(derefed());
+            if (result == null) {
+                result = new ArrayList<String>();
+            }
+            
+            if (derefedEmailAddrs != null) {
+                result.addAll(derefedEmailAddrs);
+            }
+            return result;
+        }
+        
         public Object getDerefedObj() {
             return derefedObject;
         }
@@ -413,8 +447,7 @@ public class ContactGroup {
         private void derefMember(Mailbox mbox, OperationContext octxt) {
             if (!derefed()) {
                 try {
-                    Object obj = deref(mbox, octxt);
-                    setDerefedObject(obj);
+                    deref(mbox, octxt);
                 } catch (ServiceException e) {
                     // log and continue
                     ZimbraLog.contact.warn("unable to deref contact group member: " + value, e);
@@ -436,9 +469,14 @@ public class ContactGroup {
             this.derefedKey = key;
         }
         
-        private void setDerefedObject(Object obj) throws ServiceException {
+        private void setDerefedEmailAddrs(List<String> emaiLAddrs) {
+            this.derefedEmailAddrs = emaiLAddrs;
+        }
+        
+        protected void setDerefedObject(Object obj, String key, List<String> emailAddrs) {
             if (obj != null) {
-                setDerefedKey(genDerefedKey(obj));
+                setDerefedKey(key);
+                setDerefedEmailAddrs(emailAddrs);
             }
             this.derefedObject = obj;
         }
@@ -479,50 +517,90 @@ public class ContactGroup {
         public Type getType() {
             return Type.CONTACT_REF;
         }
-
-        @Override 
-        protected String genDerefedKey(Object obj) throws ServiceException {
-            String key = null;
+        
+        private String genDerefedKey(Contact contact) throws ServiceException {
+            return contact.getFileAsString();
+        }
+        
+        private String genDerefedKey(Element eContact) throws ServiceException {
+            return eContact.getAttribute(MailConstants.A_FILE_AS_STR, null);
+        }
+        
+        private List<String> genDerefedEmailAddrs(Account ownerAcct, Contact contact) {
+            String emailFields[] = Contact.getEmailFields(ownerAcct);
+            Map<String, String> fieldMap = contact.getAllFields(); 
             
-            if (obj instanceof Contact) {
-                Contact contact = (Contact) obj;
-                key = contact.getFileAsString();
-            } else if (obj instanceof Element) {
-                // a proxied contact, must have a fileAs string
-                Element element = (Element) obj;
-                key = element.getAttribute(MailConstants.A_FILE_AS_STR, null);
-                // should we fallback to other fileds if key is null?
+            List<String> result = new ArrayList<String>();
+            for (String field : emailFields) {
+                String addr = fieldMap.get(field);
+                if (addr != null && !addr.trim().isEmpty()) {
+                    result.add(addr);
+                }
             }
-            return key;
+            return result;
+        }
+        
+        private List<String> genDerefedEmailAddrs(Account ownerAcct, Element eContact) {
+            String emailFields[] = Contact.getEmailFields(ownerAcct);
+            Set<String> emailFieldsSet = new HashSet<String>(Arrays.asList(emailFields));
+
+            List<String> result = new ArrayList<String>();
+            for (Element eAttr : eContact.listElements(MailConstants.E_ATTRIBUTE)) {
+                String field = eAttr.getAttribute(MailConstants.A_ATTRIBUTE_NAME, null);
+                if (field != null && emailFieldsSet.contains(field)) {
+                    String content = eAttr.getText();
+                    if (!Strings.isNullOrEmpty(content)) {
+                        result.add(content);
+                    }
+                }
+            }
+            
+            return result;
         }
 
         @Override
-        protected Object deref(Mailbox requestedMbox, OperationContext octxt) 
+        protected void deref(Mailbox requestedMbox, OperationContext octxt) 
         throws ServiceException {
             Object obj = null;
+            String key = null;
+            List<String> emailAddrs = null;
             
             ItemId itemId = new ItemId(value, requestedMbox.getAccountId());
+            String ownerAcctId = itemId.getAccountId();
+            Account ownerAcct = Provisioning.getInstance().get(AccountBy.id, ownerAcctId);
+            if (ownerAcct == null) {
+                ZimbraLog.contact.debug("no such account for contact group member: " + itemId.toString());
+                return;
+            }
+            
             if (itemId.isLocal()) {
                 Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(itemId.getAccountId(), false);
                 Contact contact = mbox.getContactById(octxt, itemId.getId());
-                obj = contact;
+                if (contact != null) {
+                    obj = contact;
+                    key = genDerefedKey(contact);
+                    emailAddrs = genDerefedEmailAddrs(ownerAcct, contact);
+                }
             } else {
-                obj = fetchRemoteContact(octxt.getAuthToken(), itemId);
+                Element eContact = fetchRemoteContact(octxt.getAuthToken(), ownerAcct, itemId);
+                if (eContact != null) {
+                    obj = eContact;
+                    key = genDerefedKey(eContact);
+                    emailAddrs = genDerefedEmailAddrs(ownerAcct, eContact);
+                }
             }
             
-            return obj;
+            setDerefedObject(obj, key, emailAddrs);
         }
         
-        private Element fetchRemoteContact(AuthToken authToken, ItemId contactId)
+        private Element fetchRemoteContact(AuthToken authToken, Account ownerAcct, ItemId contactId)
         throws ServiceException {
             Provisioning prov = Provisioning.getInstance();
             
-            String ownerAcctId = contactId.getAccountId();
-            Account ownerAcct = prov.get(AccountBy.id, ownerAcctId);
             String serverUrl = URLUtil.getAdminURL(prov.getServerByName(ownerAcct.getMailHost()));
             SoapHttpTransport transport = new SoapHttpTransport(serverUrl);
             transport.setAuthToken(authToken.toZAuthToken());
-            transport.setTargetAcctId(ownerAcctId);
+            transport.setTargetAcctId(ownerAcct.getId());
             
             Element request = Element.create(SoapProtocol.Soap12, MailConstants.GET_CONTACTS_REQUEST);
             Element eContact = request.addElement(MailConstants.E_CONTACT);
@@ -544,6 +622,14 @@ public class ContactGroup {
     }
     
     public static class GalRefMember extends Member {
+        private static final String PRIMARY_EMAIL_FIELD = "email";
+        private static final Set<String> GAL_EMAIL_FIELDS = new HashSet<String>(Arrays.asList(
+                new String[] {
+                        PRIMARY_EMAIL_FIELD, "email2", "email3", "email4", "email5", "email6", 
+                        "email7", "email8", "email9", "email10", "email11", "email12", "email13", 
+                        "email14", "email15", "email16"
+                }));
+        
         public GalRefMember(MemberId id, String value) throws ServiceException {
             super(id, value);
         }
@@ -552,35 +638,77 @@ public class ContactGroup {
         public Type getType() {
             return Type.GAL_REF;
         }
-
-        @Override
-        protected String genDerefedKey(Object obj) throws ServiceException {
-            String key = null;
-            if (obj instanceof Contact) {
-                Contact contact = (Contact) obj;
-                key = contact.getFileAsString();
-                // should we fallback to other fileds if key is null?
-            } else if (obj instanceof GalContact) {
-                GalContact galContact = (GalContact) obj;
-                key = galContact.getSingleAttr(ContactConstants.A_email);
-                if (key == null) {
-                    key = galContact.getSingleAttr(ContactConstants.A_fullName);
-                }
-                if (key == null) {
-                    key = galContact.getSingleAttr(ContactConstants.A_firstName) + " " +
-                        galContact.getSingleAttr(ContactConstants.A_lastName);
-                }
-            } else if (obj instanceof Element) {
-                // a proxied GAL sync account entry, must have a fileAs string
-                Element element = (Element) obj;
-                key = element.getAttribute(MailConstants.A_FILE_AS_STR, null);
-                // should we fallback to other fileds if key is null?
+        
+        private String genDerefedKey(Contact contact) throws ServiceException {
+            return contact.getFileAsString();
+        }
+        
+        private String genDerefedKey(GalContact galContact) throws ServiceException {
+            String key = galContact.getSingleAttr(ContactConstants.A_email);
+            if (key == null) {
+                key = galContact.getSingleAttr(ContactConstants.A_fullName);
+            }
+            if (key == null) {
+                key = galContact.getSingleAttr(ContactConstants.A_firstName) + " " +
+                    galContact.getSingleAttr(ContactConstants.A_lastName);
             }
             return key;
         }
+        
+        private String genDerefedKey(Element eContact) throws ServiceException {
+            // a proxied GAL sync account entry, must have a fileAs string
+            return eContact.getAttribute(MailConstants.A_FILE_AS_STR, null);
+        }
+        
+        private List<String> genDerefedEmailAddrs(Contact contact) {
+            Map<String, String> fieldMap = contact.getAllFields(); 
+            
+            List<String> result = new ArrayList<String>();
+            for (String field : GAL_EMAIL_FIELDS) {
+                String addr = fieldMap.get(field);
+                if (addr != null && !addr.trim().isEmpty()) {
+                    result.add(addr);
+                }
+            }
+            return result;
+        }
+        
+        private List<String> genDerefedEmailAddrs(GalContact galContact) {
+            Map<String, Object> fieldMap = galContact.getAttrs();
+            
+            List<String> result = new ArrayList<String>();
+            for (String field : GAL_EMAIL_FIELDS) {
+                Object value = fieldMap.get(field);
+                if (value instanceof String) {
+                    result.add((String) value);
+                } else if (value instanceof String[]) {
+                    String[] addrs = (String[]) value;
+                    for (String addr : addrs) {
+                        result.add(addr);
+                    }
+                }
+            }
+            return result;
+        }
+        
+        private List<String> genDerefedEmailAddrs(Element eContact) {
+
+            List<String> result = new ArrayList<String>();
+            for (Element eAttr : eContact.listElements(MailConstants.E_ATTRIBUTE)) {
+                String field = eAttr.getAttribute(MailConstants.A_ATTRIBUTE_NAME, null);
+                if (field != null && GAL_EMAIL_FIELDS.contains(field)) {
+                    String content = eAttr.getText();
+                    if (!Strings.isNullOrEmpty(content)) {
+                        result.add(content);
+                    }
+                }
+            }
+            
+            return result;
+        }
 
         @Override
-        protected Object deref(Mailbox mbox, OperationContext octxt) 
+        protected void deref(Mailbox mbox, OperationContext octxt) 
         throws ServiceException {
             // search GAL by DN
             GalSearchParams params = new GalSearchParams(mbox.getAccount(), null);
@@ -593,9 +721,29 @@ public class ContactGroup {
             params.setResultCallback(callback);
             
             GalSearchControl gal = new GalSearchControl(params);
-            gal.search();  
+            gal.search(); 
+            
             Object obj = callback.getResult(); 
-            return obj;
+            String key = null;
+            List<String> emailAddrs = null;
+            
+            if (obj != null) {
+                if (obj instanceof Contact) {
+                    Contact contact = (Contact) obj;
+                    key = genDerefedKey(contact);
+                    emailAddrs = genDerefedEmailAddrs(contact);
+                } else if (obj instanceof GalContact) {
+                    GalContact galContact = (GalContact) obj;
+                    key = genDerefedKey(galContact);
+                    emailAddrs = genDerefedEmailAddrs(galContact);
+                } else if (obj instanceof Element) {
+                    Element eContact = (Element) obj;
+                    key = genDerefedKey(eContact);
+                    emailAddrs = genDerefedEmailAddrs(eContact);
+                }
+            }
+            
+            setDerefedObject(obj, key, emailAddrs);
         }
 
         private static class ContactGroupResultCallback extends GalSearchResultCallback {
@@ -626,6 +774,7 @@ public class ContactGroup {
                 result = element; // will be attached directly to the outut element in ToXML.
             }
         }
+
     }
     
     public static class InlineMember extends Member {
@@ -639,13 +788,84 @@ public class ContactGroup {
         }
 
         @Override
-        protected String genDerefedKey(Object obj) throws ServiceException {
-            return value;
-        }
-
-        @Override
-        protected Object deref(Mailbox mbox, OperationContext octxt) {
-            return value;
+        protected void deref(Mailbox mbox, OperationContext octxt) {
+            // value is the derefed obj, the key, and the email
+            List<String> emailAddrs = new ArrayList<String>();
+            emailAddrs.add(value);
+            
+            setDerefedObject(value, value, emailAddrs);
         }
     }
+    
+    
+    /*
+     * =============================
+     * Migrate dlist to groupMember
+     * =============================
+     */
+    public static class MigrateContactGroup {
+        /*
+         * dlist is a String of comma-seperated email address with optional display part.
+         * There could be comma in the display part.
+         * e.g
+         * "Ballard, Martha" <martha34@aol.com>, "Davidson, Ross" <rossd@example.zimbra.com>, user1@test.com
+         * 
+         * This should be split to:
+         * "Ballard, Martha" <martha34@aol.com>
+         * "Davidson, Ross" <rossd@example.zimbra.com>
+         * user1@test.com
+         */
+        private static final Pattern PATTERN = Pattern.compile("(([\\s]*)(\"[^\"]*\")*[^,]*[,]*)");
+        
+        private Mailbox mbox;
+        private OperationContext octxt;
+        
+        public MigrateContactGroup(Mailbox mbox) throws ServiceException {
+            this.mbox = mbox;
+            octxt = new OperationContext(mbox);
+        }
+        
+        public void handle() throws ServiceException {
+            for (MailItem item : mbox.getItemList(octxt, MailItem.Type.CONTACT, -1)) {
+                Contact contact = (Contact) item;
+                migrate(contact);
+            }
+        }
+        
+        private void migrate(Contact contact) throws ServiceException {
+            if (!contact.isGroup()) {
+                return;
+            }
+            
+            String dlist = contact.get(ContactConstants.A_dlist);
+            if (Strings.isNullOrEmpty(dlist)) {
+                return;
+            }
+            
+            ContactGroup contactGroup = ContactGroup.init();
+            
+            // add each dlist member as an inlined member in groupMember
+            Matcher matcher = PATTERN.matcher(dlist);
+            while (matcher.find()) {
+                String token = matcher.group();
+                int len = token.length();
+                if (len > 0) {
+                    if (token.charAt(len-1) == ',') {
+                        token = token.substring(0, len-1);
+                    }
+                    String addr = token.trim();
+                    if (!addr.isEmpty()) {
+                        contactGroup.addMember(Member.Type.INLINE, addr);
+                    }
+                }
+            }
+            
+            ParsedContact pc = new ParsedContact(contact);
+            // do NOT delete dlist for backward compatibility, old ZCO/desktop/mobile
+            // clients are still out there.
+            pc.modifyField(ContactConstants.A_groupMember, contactGroup.encode());
+            mbox.modifyContact(octxt, contact.getId(), pc);
+        }
+    }
+    
 }
