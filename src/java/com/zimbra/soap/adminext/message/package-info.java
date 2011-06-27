@@ -12,13 +12,18 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
+@XmlSchema(
+    xmlns = {
+        @XmlNs(prefix="adminExt", namespaceURI = "urn:zimbraAdminExt")
+    },
+    namespace = "urn:zimbraAdminExt",
+    elementFormDefault = XmlNsForm.QUALIFIED
+)
+@XmlAccessorType(XmlAccessType.NONE)
+package com.zimbra.soap.adminext.message;
 
-package com.zimbra.soap.admin.message;
-
-import javax.xml.bind.annotation.XmlRootElement;
-
-import com.zimbra.common.soap.BackupConstants;
-
-@XmlRootElement(name=BackupConstants.E_EXPORTMAILBOX_RESPONSE)
-public class ExportMailboxResponse {
-}
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlNs;
+import javax.xml.bind.annotation.XmlNsForm;
+import javax.xml.bind.annotation.XmlSchema;

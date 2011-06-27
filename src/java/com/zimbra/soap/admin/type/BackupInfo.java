@@ -7,7 +7,7 @@
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -20,33 +20,33 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
-import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.BackupConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class SMIMEConfigInfo extends AdminAttrsImpl {
+public class BackupInfo {
 
-    @XmlAttribute(name=AdminConstants.A_NAME /* name */, required=true)
-    private final String name;
+    @XmlAttribute(name=BackupConstants.A_LABEL /* label */, required=false)
+    private String label;
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private SMIMEConfigInfo() {
-        this((String) null);
+    @XmlAttribute(name=BackupConstants.A_INCR_LABEL /* incr-label */,
+                    required=false)
+    private String incrementalLabel;
+
+    public BackupInfo() {
     }
 
-    public SMIMEConfigInfo(String name) {
-        this.name = name;
+    public void setLabel(String label) { this.label = label; }
+    public void setIncrementalLabel(String incrementalLabel) {
+        this.incrementalLabel = incrementalLabel;
     }
-
-    public String getName() { return name; }
+    public String getLabel() { return label; }
+    public String getIncrementalLabel() { return incrementalLabel; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
-        helper = super.addToStringInfo(helper);
         return helper
-            .add("name", name);
+            .add("label", label)
+            .add("incrementalLabel", incrementalLabel);
     }
 
     @Override

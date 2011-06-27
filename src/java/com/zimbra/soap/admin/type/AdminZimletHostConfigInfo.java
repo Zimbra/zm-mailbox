@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.message;
+package com.zimbra.soap.admin.type;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
@@ -24,43 +24,47 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.SMIMEConfigInfo;
+import com.zimbra.common.soap.ZimletConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AdminConstants.E_GET_SMIME_CONFIG_RESPONSE)
 @XmlType(propOrder = {})
-public class GetSMIMEConfigResponse {
+public class AdminZimletHostConfigInfo {
 
-    @XmlElement(name=AdminConstants.E_CONFIG /* config */, required=false)
-    private List<SMIMEConfigInfo> configs = Lists.newArrayList();
+    @XmlAttribute(name=ZimletConstants.ZIMLET_ATTR_NAME /* name */, required=false)
+    private String name;
 
-    public GetSMIMEConfigResponse() {
+    @XmlElement(name=ZimletConstants.ZIMLET_TAG_PROPERTY /* property */, required=false)
+    private List<AdminZimletProperty> properties = Lists.newArrayList();
+
+    public AdminZimletHostConfigInfo() {
     }
 
-    public void setConfigs(Iterable <SMIMEConfigInfo> configs) {
-        this.configs.clear();
-        if (configs != null) {
-            Iterables.addAll(this.configs,configs);
+    public void setName(String name) { this.name = name; }
+    public void setProperties(Iterable <AdminZimletProperty> properties) {
+        this.properties.clear();
+        if (properties != null) {
+            Iterables.addAll(this.properties,properties);
         }
     }
 
-    public void addConfig(SMIMEConfigInfo config) {
-        this.configs.add(config);
+    public void addProperty(AdminZimletProperty property) {
+        this.properties.add(property);
     }
 
-    public List<SMIMEConfigInfo> getConfigs() {
-        return Collections.unmodifiableList(configs);
+    public String getName() { return name; }
+    public List<AdminZimletProperty> getProperties() {
+        return Collections.unmodifiableList(properties);
     }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("configs", configs);
+            .add("name", name)
+            .add("properties", properties);
     }
 
     @Override

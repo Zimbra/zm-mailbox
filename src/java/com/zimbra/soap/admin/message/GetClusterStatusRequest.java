@@ -17,8 +17,8 @@ package com.zimbra.soap.admin.message;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.zimbra.common.soap.BackupConstants;
+import com.zimbra.common.soap.ClusterConstants;
 
-@XmlRootElement(name=BackupConstants.E_EXPORTMAILBOX_RESPONSE)
-public class ExportMailboxResponse {
+@XmlRootElement(name=ClusterConstants.E_GET_CLUSTER_STATUS_REQUEST)
+public class GetClusterStatusRequest {
 }

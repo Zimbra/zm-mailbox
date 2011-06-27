@@ -7,7 +7,7 @@
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -16,37 +16,48 @@
 package com.zimbra.soap.admin.type;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
+import java.util.Collections;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
 
-import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.ZimletConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class SMIMEConfigInfo extends AdminAttrsImpl {
+@XmlType(propOrder = {})
+public class AdminZimletGlobalConfigInfo {
 
-    @XmlAttribute(name=AdminConstants.A_NAME /* name */, required=true)
-    private final String name;
+    @XmlElement(name=ZimletConstants.ZIMLET_TAG_PROPERTY /* property */, required=false)
+    private List<AdminZimletProperty> properties = Lists.newArrayList();
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private SMIMEConfigInfo() {
-        this((String) null);
+    public AdminZimletGlobalConfigInfo() {
     }
 
-    public SMIMEConfigInfo(String name) {
-        this.name = name;
+    public void setProperties(Iterable <AdminZimletProperty> properties) {
+        this.properties.clear();
+        if (properties != null) {
+            Iterables.addAll(this.properties,properties);
+        }
     }
 
-    public String getName() { return name; }
+    public void addProperty(AdminZimletProperty property) {
+        this.properties.add(property);
+    }
+
+    public List<AdminZimletProperty> getProperties() {
+        return Collections.unmodifiableList(properties);
+    }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
-        helper = super.addToStringInfo(helper);
         return helper
-            .add("name", name);
+            .add("properties", properties);
     }
 
     @Override

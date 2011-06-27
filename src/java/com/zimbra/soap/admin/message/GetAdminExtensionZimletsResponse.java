@@ -25,42 +25,46 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.SMIMEConfigInfo;
+import com.zimbra.soap.admin.type.AdminZimletInfo;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AdminConstants.E_GET_SMIME_CONFIG_RESPONSE)
+@XmlRootElement(name=AdminConstants.E_GET_ADMIN_EXTENSION_ZIMLETS_RESPONSE)
 @XmlType(propOrder = {})
-public class GetSMIMEConfigResponse {
+public class GetAdminExtensionZimletsResponse {
 
-    @XmlElement(name=AdminConstants.E_CONFIG /* config */, required=false)
-    private List<SMIMEConfigInfo> configs = Lists.newArrayList();
+    @XmlElementWrapper(name=AccountConstants.E_ZIMLETS, required=true)
+    // TODO:Compare with Accounts version
+    @XmlElement(name=AccountConstants.E_ZIMLET /* zimlet */, required=false)
+    private List<AdminZimletInfo> zimlets = Lists.newArrayList();
 
-    public GetSMIMEConfigResponse() {
+    public GetAdminExtensionZimletsResponse() {
     }
 
-    public void setConfigs(Iterable <SMIMEConfigInfo> configs) {
-        this.configs.clear();
-        if (configs != null) {
-            Iterables.addAll(this.configs,configs);
+    public void setZimlets(Iterable <AdminZimletInfo> zimlets) {
+        this.zimlets.clear();
+        if (zimlets != null) {
+            Iterables.addAll(this.zimlets,zimlets);
         }
     }
 
-    public void addConfig(SMIMEConfigInfo config) {
-        this.configs.add(config);
+    public void addZimlet(AdminZimletInfo zimlet) {
+        this.zimlets.add(zimlet);
     }
 
-    public List<SMIMEConfigInfo> getConfigs() {
-        return Collections.unmodifiableList(configs);
+    public List<AdminZimletInfo> getZimlets() {
+        return Collections.unmodifiableList(zimlets);
     }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("configs", configs);
+            .add("zimlets", zimlets);
     }
 
     @Override

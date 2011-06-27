@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.message;
+package com.zimbra.soap.adminext.message;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
@@ -28,39 +28,39 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.SMIMEConfigInfo;
+import com.zimbra.common.soap.AdminExtConstants;
+import com.zimbra.soap.adminext.type.BulkIMAPImportTaskInfo;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AdminConstants.E_GET_SMIME_CONFIG_RESPONSE)
+@XmlRootElement(name=AdminExtConstants.E_GET_BULK_IMAP_IMPORT_TASKLIST_RESPONSE)
 @XmlType(propOrder = {})
-public class GetSMIMEConfigResponse {
+public class GetBulkIMAPImportTaskListResponse {
 
-    @XmlElement(name=AdminConstants.E_CONFIG /* config */, required=false)
-    private List<SMIMEConfigInfo> configs = Lists.newArrayList();
+    @XmlElement(name=AdminExtConstants.E_Task /* task */, required=false)
+    private List<BulkIMAPImportTaskInfo> tasks = Lists.newArrayList();
 
-    public GetSMIMEConfigResponse() {
+    public GetBulkIMAPImportTaskListResponse() {
     }
 
-    public void setConfigs(Iterable <SMIMEConfigInfo> configs) {
-        this.configs.clear();
-        if (configs != null) {
-            Iterables.addAll(this.configs,configs);
+    public void setTasks(Iterable <BulkIMAPImportTaskInfo> tasks) {
+        this.tasks.clear();
+        if (tasks != null) {
+            Iterables.addAll(this.tasks,tasks);
         }
     }
 
-    public void addConfig(SMIMEConfigInfo config) {
-        this.configs.add(config);
+    public void addTask(BulkIMAPImportTaskInfo task) {
+        this.tasks.add(task);
     }
 
-    public List<SMIMEConfigInfo> getConfigs() {
-        return Collections.unmodifiableList(configs);
+    public List<BulkIMAPImportTaskInfo> getTasks() {
+        return Collections.unmodifiableList(tasks);
     }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("configs", configs);
+            .add("tasks", tasks);
     }
 
     @Override

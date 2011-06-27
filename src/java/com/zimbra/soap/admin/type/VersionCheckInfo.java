@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.message;
+package com.zimbra.soap.admin.type;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
@@ -24,43 +24,49 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.SMIMEConfigInfo;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AdminConstants.E_GET_SMIME_CONFIG_RESPONSE)
 @XmlType(propOrder = {})
-public class GetSMIMEConfigResponse {
+public class VersionCheckInfo {
 
-    @XmlElement(name=AdminConstants.E_CONFIG /* config */, required=false)
-    private List<SMIMEConfigInfo> configs = Lists.newArrayList();
+    @XmlAttribute(name=AdminConstants.A_VERSION_CHECK_STATUS, required=false)
+    private Boolean status;
 
-    public GetSMIMEConfigResponse() {
+    @XmlElementWrapper(name=AdminConstants.E_UPDATES, required=false)
+    @XmlElement(name=AdminConstants.E_UPDATE, required=false)
+    private List<VersionCheckUpdateInfo> updates = Lists.newArrayList();
+
+    public VersionCheckInfo() {
     }
 
-    public void setConfigs(Iterable <SMIMEConfigInfo> configs) {
-        this.configs.clear();
-        if (configs != null) {
-            Iterables.addAll(this.configs,configs);
+    public void setStatus(Boolean status) { this.status = status; }
+    public void setUpdates(Iterable <VersionCheckUpdateInfo> updates) {
+        this.updates.clear();
+        if (updates != null) {
+            Iterables.addAll(this.updates,updates);
         }
     }
 
-    public void addConfig(SMIMEConfigInfo config) {
-        this.configs.add(config);
+    public void addUpdate(VersionCheckUpdateInfo update) {
+        this.updates.add(update);
     }
 
-    public List<SMIMEConfigInfo> getConfigs() {
-        return Collections.unmodifiableList(configs);
+    public Boolean getStatus() { return status; }
+    public List<VersionCheckUpdateInfo> getUpdates() {
+        return Collections.unmodifiableList(updates);
     }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("configs", configs);
+            .add("status", status)
+            .add("updates", updates);
     }
 
     @Override

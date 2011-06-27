@@ -7,46 +7,44 @@
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
+package com.zimbra.soap.admin.message;
 
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.admin.type.VersionCheckInfo;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class SMIMEConfigInfo extends AdminAttrsImpl {
+@XmlRootElement(name=AdminConstants.E_VC_RESPONSE)
+@XmlType(propOrder = {})
+public class VersionCheckResponse {
 
-    @XmlAttribute(name=AdminConstants.A_NAME /* name */, required=true)
-    private final String name;
+    @XmlElement(name=AdminConstants.E_VERSION_CHECK, required=false)
+    private VersionCheckInfo versionCheck;
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private SMIMEConfigInfo() {
-        this((String) null);
+    public VersionCheckResponse() {
     }
 
-    public SMIMEConfigInfo(String name) {
-        this.name = name;
+    public void setVersionCheck(VersionCheckInfo versionCheck) {
+        this.versionCheck = versionCheck;
     }
-
-    public String getName() { return name; }
+    public VersionCheckInfo getVersionCheck() { return versionCheck; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
-        helper = super.addToStringInfo(helper);
         return helper
-            .add("name", name);
+            .add("versionCheck", versionCheck);
     }
 
     @Override

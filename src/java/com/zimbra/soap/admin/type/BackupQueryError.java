@@ -7,7 +7,7 @@
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -19,34 +19,35 @@ import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlValue;
 
-import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.BackupConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class SMIMEConfigInfo extends AdminAttrsImpl {
+public class BackupQueryError {
 
-    @XmlAttribute(name=AdminConstants.A_NAME /* name */, required=true)
-    private final String name;
+    @XmlAttribute(name=BackupConstants.A_ERROR_MESSAGE /* errorMessage */,
+                        required=false)
+    private String errorMessage;
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private SMIMEConfigInfo() {
-        this((String) null);
+    @XmlValue
+    private String trace;
+
+    public BackupQueryError() {
     }
 
-    public SMIMEConfigInfo(String name) {
-        this.name = name;
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
     }
-
-    public String getName() { return name; }
+    public void setTrace(String trace) { this.trace = trace; }
+    public String getErrorMessage() { return errorMessage; }
+    public String getTrace() { return trace; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
-        helper = super.addToStringInfo(helper);
         return helper
-            .add("name", name);
+            .add("errorMessage", errorMessage)
+            .add("trace", trace);
     }
 
     @Override

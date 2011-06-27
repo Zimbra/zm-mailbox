@@ -16,46 +16,51 @@
 package com.zimbra.soap.admin.message;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
+import java.util.Collections;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
-import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.DomainSelector;
-import com.zimbra.soap.type.NamedElement;
+import com.zimbra.common.soap.BackupConstants;
+import com.zimbra.soap.admin.type.BackupAccountQueryInfo;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AdminConstants.E_GET_SMIME_CONFIG_REQUEST)
-public class GetSMIMEConfigRequest {
+@XmlRootElement(name=BackupConstants.E_BACKUP_ACCOUNT_QUERY_RESPONSE)
+@XmlType(propOrder = {})
+public class BackupAccountQueryResponse {
 
-    @XmlElement(name=AdminConstants.E_CONFIG /* config */, required=false)
-    private final NamedElement config;
+    @XmlElement(name=BackupConstants.E_ACCOUNT /* account */, required=false)
+    private List<BackupAccountQueryInfo> accounts = Lists.newArrayList();
 
-    @XmlElement(name=AdminConstants.E_DOMAIN /* domain */, required=false)
-    private final DomainSelector domain;
-
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private GetSMIMEConfigRequest() {
-        this((NamedElement) null, (DomainSelector) null);
+    public BackupAccountQueryResponse() {
     }
 
-    public GetSMIMEConfigRequest(NamedElement config, DomainSelector domain) {
-        this.config = config;
-        this.domain = domain;
+    public void setAccounts(Iterable <BackupAccountQueryInfo> accounts) {
+        this.accounts.clear();
+        if (accounts != null) {
+            Iterables.addAll(this.accounts,accounts);
+        }
     }
 
-    public NamedElement getConfig() { return config; }
-    public DomainSelector getDomain() { return domain; }
+    public void addAccount(BackupAccountQueryInfo account) {
+        this.accounts.add(account);
+    }
+
+    public List<BackupAccountQueryInfo> getAccounts() {
+        return Collections.unmodifiableList(accounts);
+    }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("config", config)
-            .add("domain", domain);
+            .add("accounts", accounts);
     }
 
     @Override

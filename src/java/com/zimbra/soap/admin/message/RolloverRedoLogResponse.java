@@ -19,6 +19,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.BackupConstants;
 
-@XmlRootElement(name=BackupConstants.E_EXPORTMAILBOX_RESPONSE)
-public class ExportMailboxResponse {
+@XmlRootElement(name=BackupConstants.E_ROLLOVER_REDOLOG_RESPONSE)
+public class RolloverRedoLogResponse {
 }

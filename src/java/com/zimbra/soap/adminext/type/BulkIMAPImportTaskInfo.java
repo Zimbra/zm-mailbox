@@ -13,12 +13,15 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.message;
+package com.zimbra.soap.adminext.type;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 
-import com.zimbra.common.soap.BackupConstants;
+@XmlAccessorType(XmlAccessType.FIELD)
+public class BulkIMAPImportTaskInfo extends AttrsImpl {
 
-@XmlRootElement(name=BackupConstants.E_EXPORTMAILBOX_RESPONSE)
-public class ExportMailboxResponse {
+    public BulkIMAPImportTaskInfo() {
+    }
+
 }

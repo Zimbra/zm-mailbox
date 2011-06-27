@@ -33,6 +33,7 @@ import org.dom4j.io.XMLWriter;
 import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.AdminExtConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.soap.JaxbUtil;
@@ -207,6 +208,7 @@ public class WsdlGenerator {
         readArguments(args);
         List<String> accountRequests = Lists.newArrayList();
         List<String> adminRequests = Lists.newArrayList();
+        List<String> adminExtRequests = Lists.newArrayList();
         List<String> mailRequests = Lists.newArrayList();
         for (Class<?> currClass : JaxbUtil.getJaxbRequestAndResponseClasses()) {
             String className = currClass.getName();
@@ -217,12 +219,15 @@ public class WsdlGenerator {
                 accountRequests.add(requestName);
             } else if (className.startsWith("com.zimbra.soap.admin.message")) {
                 adminRequests.add(requestName);
+            } else if (className.startsWith("com.zimbra.soap.adminext.message")) {
+                adminExtRequests.add(requestName);
             } else if (className.startsWith("com.zimbra.soap.mail.message")) {
                 mailRequests.add(requestName);
             }
         }
         Collections.sort(accountRequests);
         Collections.sort(adminRequests);
+        Collections.sort(adminExtRequests);
         Collections.sort(mailRequests);
         File accountWsdlFile = new File(outputDir, "AccountService.wsdl");
         createWsdlFile(accountWsdlFile,
@@ -232,6 +237,10 @@ public class WsdlGenerator {
         createWsdlFile(adminWsdlFile,
                 AdminConstants.NAMESPACE_STR, "AdminService",
                 "https://localhost:7071/service/admin/soap", adminRequests);
+        File adminExtWsdlFile = new File(outputDir, "AdminExtService.wsdl");
+        createWsdlFile(adminExtWsdlFile,
+                AdminExtConstants.NAMESPACE_STR, "AdminExtService",
+                "https://localhost:7071/service/admin/soap", adminExtRequests);
         File mailWsdlFile = new File(outputDir, "MailService.wsdl");
         createWsdlFile(mailWsdlFile,
                 MailConstants.NAMESPACE_STR, "MailService",

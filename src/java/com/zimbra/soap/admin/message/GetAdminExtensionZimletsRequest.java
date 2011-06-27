@@ -17,8 +17,8 @@ package com.zimbra.soap.admin.message;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.zimbra.common.soap.BackupConstants;
+import com.zimbra.common.soap.AdminConstants;
 
-@XmlRootElement(name=BackupConstants.E_EXPORTMAILBOX_RESPONSE)
-public class ExportMailboxResponse {
+@XmlRootElement(name=AdminConstants.E_GET_ADMIN_EXTENSION_ZIMLETS_REQUEST)
+public class GetAdminExtensionZimletsRequest {
 }

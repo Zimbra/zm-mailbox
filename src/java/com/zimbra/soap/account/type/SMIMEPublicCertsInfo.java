@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.message;
+package com.zimbra.soap.account.type;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
@@ -24,43 +24,47 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.SMIMEConfigInfo;
+import com.zimbra.common.soap.AccountConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AdminConstants.E_GET_SMIME_CONFIG_RESPONSE)
 @XmlType(propOrder = {})
-public class GetSMIMEConfigResponse {
+public class SMIMEPublicCertsInfo {
 
-    @XmlElement(name=AdminConstants.E_CONFIG /* config */, required=false)
-    private List<SMIMEConfigInfo> configs = Lists.newArrayList();
+    @XmlAttribute(name=AccountConstants.A_EMAIL /* email */, required=false)
+    private String email;
 
-    public GetSMIMEConfigResponse() {
+    @XmlElement(name=AccountConstants.E_CERT /* cert */, required=false)
+    private List<SMIMEPublicCertInfo> certs = Lists.newArrayList();
+
+    public SMIMEPublicCertsInfo() {
     }
 
-    public void setConfigs(Iterable <SMIMEConfigInfo> configs) {
-        this.configs.clear();
-        if (configs != null) {
-            Iterables.addAll(this.configs,configs);
+    public void setEmail(String email) { this.email = email; }
+    public void setCerts(Iterable <SMIMEPublicCertInfo> certs) {
+        this.certs.clear();
+        if (certs != null) {
+            Iterables.addAll(this.certs,certs);
         }
     }
 
-    public void addConfig(SMIMEConfigInfo config) {
-        this.configs.add(config);
+    public void addCert(SMIMEPublicCertInfo cert) {
+        this.certs.add(cert);
     }
 
-    public List<SMIMEConfigInfo> getConfigs() {
-        return Collections.unmodifiableList(configs);
+    public String getEmail() { return email; }
+    public List<SMIMEPublicCertInfo> getCerts() {
+        return Collections.unmodifiableList(certs);
     }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("configs", configs);
+            .add("email", email)
+            .add("certs", certs);
     }
 
     @Override

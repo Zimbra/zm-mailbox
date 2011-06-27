@@ -23,55 +23,49 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.zimbra.common.soap.BackupConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class ExportMailboxSelector {
+public class BackupQueryCounter {
 
-    // Account must exist and be provisioned on the local server
     @XmlAttribute(name=BackupConstants.A_NAME /* name */, required=true)
     private final String name;
 
-    // Must differ from the account's host server
-    @XmlAttribute(name=BackupConstants.A_TARGET /* dest */, required=true)
-    private final String target;
+    @XmlAttribute(name=BackupConstants.A_COUNTER_UNIT /* unit */, required=true)
+    private final String counterUnit;
 
-    @XmlAttribute(name=BackupConstants.A_PORT /* destPort */, required=false)
-    private Integer destPort;
+    @XmlAttribute(name=BackupConstants.A_COUNTER_SUM /* sum */, required=true)
+    private final Long counterSum;
 
-    @XmlAttribute(name=BackupConstants.A_TEMP_DIR /* tempDir */, required=false)
-    private String tempDir;
-
-    @XmlAttribute(name=BackupConstants.A_OVERWRITE /* overwrite */, required=false)
-    private Boolean overwrite;
+    @XmlAttribute(name=BackupConstants.A_COUNTER_NUM_SAMPLES /* numSamples */,
+                            required=true)
+    private final Long counterNumSamples;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private ExportMailboxSelector() {
-        this((String) null, (String) null);
+    private BackupQueryCounter() {
+        this((String) null, (String) null, (Long) null, (Long) null);
     }
 
-    public ExportMailboxSelector(String name, String target) {
+    public BackupQueryCounter(String name, String counterUnit,
+                            Long counterSum, Long counterNumSamples) {
         this.name = name;
-        this.target = target;
+        this.counterUnit = counterUnit;
+        this.counterSum = counterSum;
+        this.counterNumSamples = counterNumSamples;
     }
 
-    public void setDestPort(Integer destPort) { this.destPort = destPort; }
-    public void setTempDir(String tempDir) { this.tempDir = tempDir; }
-    public void setOverwrite(Boolean overwrite) { this.overwrite = overwrite; }
     public String getName() { return name; }
-    public String getTarget() { return target; }
-    public Integer getDestPort() { return destPort; }
-    public String getTempDir() { return tempDir; }
-    public Boolean getOverwrite() { return overwrite; }
+    public String getCounterUnit() { return counterUnit; }
+    public Long getCounterSum() { return counterSum; }
+    public Long getCounterNumSamples() { return counterNumSamples; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
             .add("name", name)
-            .add("target", target)
-            .add("destPort", destPort)
-            .add("tempDir", tempDir)
-            .add("overwrite", overwrite);
+            .add("counterUnit", counterUnit)
+            .add("counterSum", counterSum)
+            .add("counterNumSamples", counterNumSamples);
     }
 
     @Override

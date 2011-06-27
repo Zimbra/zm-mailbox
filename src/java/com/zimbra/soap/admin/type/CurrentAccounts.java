@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.message;
+package com.zimbra.soap.admin.type;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
@@ -24,43 +24,47 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.SMIMEConfigInfo;
+import com.zimbra.common.soap.BackupConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AdminConstants.E_GET_SMIME_CONFIG_RESPONSE)
 @XmlType(propOrder = {})
-public class GetSMIMEConfigResponse {
+public class CurrentAccounts {
 
-    @XmlElement(name=AdminConstants.E_CONFIG /* config */, required=false)
-    private List<SMIMEConfigInfo> configs = Lists.newArrayList();
+    @XmlAttribute(name=BackupConstants.A_TOTAL_COUNT /* total */, required=false)
+    private Integer totalCount;
 
-    public GetSMIMEConfigResponse() {
+    @XmlElement(name=BackupConstants.E_ACCOUNT /* account */, required=false)
+    private List<Name> accounts = Lists.newArrayList();
+
+    public CurrentAccounts() {
     }
 
-    public void setConfigs(Iterable <SMIMEConfigInfo> configs) {
-        this.configs.clear();
-        if (configs != null) {
-            Iterables.addAll(this.configs,configs);
+    public void setTotalCount(Integer totalCount) { this.totalCount = totalCount; }
+    public void setAccounts(Iterable <Name> accounts) {
+        this.accounts.clear();
+        if (accounts != null) {
+            Iterables.addAll(this.accounts,accounts);
         }
     }
 
-    public void addConfig(SMIMEConfigInfo config) {
-        this.configs.add(config);
+    public void addAccount(Name account) {
+        this.accounts.add(account);
     }
 
-    public List<SMIMEConfigInfo> getConfigs() {
-        return Collections.unmodifiableList(configs);
+    public Integer getTotalCount() { return totalCount; }
+    public List<Name> getAccounts() {
+        return Collections.unmodifiableList(accounts);
     }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("configs", configs);
+            .add("totalCount", totalCount)
+            .add("accounts", accounts);
     }
 
     @Override
