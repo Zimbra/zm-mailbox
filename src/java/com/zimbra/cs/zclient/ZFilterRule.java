@@ -246,7 +246,15 @@ public final class ZFilterRule implements ToZJSONObject {
                 if (i + 3 > args.length) {
                     throw ZClientException.CLIENT_ERROR("missing args", null);
                 }
-                conditions.add(new ZAddressBookCondition(AddressBookOp.fromString(args[i++]), args[i++], args[i++]));
+                String op = args[i++];
+                String header = args[i++];
+                String type = args[i++];
+                if (!"contacts".equals(type) && !"ranking".equals(type)) {
+                    // type was not specified, fall back to default
+                    type = "contacts";
+                    i--;
+                }
+                conditions.add(new ZAddressBookCondition(AddressBookOp.fromString(op), header, type));
             } else if (a.equals("attachment")) {
                 if (i + 1 > args.length) {
                     throw ZClientException.CLIENT_ERROR("missing exists arg", null);

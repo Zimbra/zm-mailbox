@@ -249,7 +249,7 @@ public class ZMailboxUtil implements DebugListener {
                 "    date before|not_before|after|not_after \"YYYYMMDD\"\n" +
                 "    size under|not_under|over|not_over \"1|1K|1M\"\n" +
                 "    body contains|not_contains [case_sensitive] \"text\"\n" +
-                "    addressbook in|not_in \"header-name\" \"contacts|ranking\"\n" +
+                "    addressbook in|not_in \"header-name\" [contacts|ranking]\n" +
                 "    attachment exists|not_exists\n" +
                 "    invite exists|not_exists\n" +
                 "    current_time before|not_before|after|not_after \"HHmm\"\n" +
