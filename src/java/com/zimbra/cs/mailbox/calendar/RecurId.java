@@ -18,6 +18,7 @@ package com.zimbra.cs.mailbox.calendar;
 import java.text.ParseException;
 import java.util.Date;
 
+import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.calendar.TimeZoneMap;
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
@@ -217,17 +218,20 @@ public class RecurId implements Cloneable
     }
     
     public static RecurId fromXml(Element e, TimeZoneMap tzMap) throws ServiceException {
+        assert(tzMap != null);
     	String recurrenceId = e.getAttribute(MailConstants.A_CAL_RECURRENCE_ID, null);
     	if (recurrenceId == null) return null;
+    	String tzId = e.getAttribute(MailConstants.A_CAL_TIMEZONE, null);
+    	ICalTimeZone tz = tzId != null ? tzMap.lookupAndAdd(tzId) : null;
     	String rangeType = e.getAttribute(MailConstants.A_CAL_RECURRENCE_RANGE_TYPE, null);
     	try {
-    		ParsedDateTime dt = ParsedDateTime.parse(recurrenceId, tzMap);
+            ParsedDateTime dt = ParsedDateTime.parse(recurrenceId, tzMap, tz, tzMap.getLocalTimeZone());
             if (rangeType != null)
-        		return new RecurId(dt, rangeType);
+                return new RecurId(dt, rangeType);
             else
                 return new RecurId(dt, RANGE_NONE);
     	} catch (ParseException x) {
-    		throw ServiceException.FAILURE("recurId=" + recurrenceId, x);
+    		throw ServiceException.FAILURE("recurId=" + recurrenceId + ", tz=" + tzId, x);
     	}
     }
     
