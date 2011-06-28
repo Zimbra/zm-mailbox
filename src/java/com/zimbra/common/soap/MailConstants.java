@@ -525,7 +525,7 @@ public final class MailConstants {
     // sharing
     public static final QName GET_SHARE_NOTIFICATIONS_REQUEST = QName.get(E_GET_SHARE_NOTIFICATIONS_REQUEST, NAMESPACE);
     public static final QName GET_SHARE_NOTIFICATIONS_RESPONSE = QName.get(E_GET_SHARE_NOTIFICATIONS_RESPONSE, NAMESPACE);
-    
+
     public static final String E_MAILBOX = "mbx";
     public static final String E_ITEM = "item";
     public static final String E_MSG = "m";
@@ -578,6 +578,7 @@ public final class MailConstants {
     public static final String E_ATTACHMENT_TEST = "attachmentTest";
     public static final String E_ADDRESS_BOOK_TEST = "addressBookTest";
     public static final String E_INVITE_TEST = "inviteTest";
+    public static final String E_CONVERSATION_TEST = "conversationTest";
     public static final String E_METHOD = "method";
 
     public static final String E_FILTER_ACTIONS = "filterActions";
@@ -604,6 +605,7 @@ public final class MailConstants {
     public static final String A_INDEX = "index";
     public static final String A_TIME = "time";
     public static final String A_MAX_BODY_SIZE = "maxBodySize";
+    public static final String A_WHERE = "where";
 
     // grants and shares
     public static final String E_ACL = "acl";
@@ -1107,7 +1109,7 @@ public final class MailConstants {
     public static final String A_PARENT_ID = "parentId";
     public static final String A_TEXT = "text";
     public static final String E_ARG = "arg";
-    
+
     public static final String E_GRANTOR = "grantor";
     public static final String E_GRANTEE = "grantee";
 }
