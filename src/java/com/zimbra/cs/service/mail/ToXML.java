@@ -2235,7 +2235,7 @@ public class ToXML {
             m.addAttribute(MailConstants.A_CHANGE_DATE, (doc.getChangeDate() / 1000));
             m.addAttribute(MailConstants.A_REVISION, doc.getSavedSequence());
         }
-        recordItemTags(m, doc, fields);
+        recordItemTags(m, doc, fields | Change.MODIFIED_FLAGS);
         if (needToOutput(fields, Change.MODIFIED_METADATA)) {
             encodeAllCustomMetadata(m, doc, fields);
             String description = doc.getDescription();
