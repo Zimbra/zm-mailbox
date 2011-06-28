@@ -56,6 +56,7 @@ import com.zimbra.cs.mailbox.ContactGroup;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Contact.Attachment;
+import com.zimbra.cs.mailbox.Contact.DerefGroupMembersOption;
 import com.zimbra.cs.object.ObjectHandlerException;
 import com.zimbra.cs.util.JMSession;
 
@@ -722,7 +723,7 @@ public class ParsedContact {
 
         // fetch all the 'email' addresses for this contact into a single concatenated string
         StringBuilder emails  = new StringBuilder();
-        for (String email : Contact.getEmailAddresses(emailFields, getFields())) {
+        for (String email : Contact.getEmailAddresses(emailFields, getFields(), DerefGroupMembersOption.INLINE_ONLY)) {
             emails.append(email).append(',');
         }
 

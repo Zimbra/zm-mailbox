@@ -249,7 +249,7 @@ public class TestContactGroup {
             // System.out.println(memberKey);
         }
         
-        List<String> emailAddrs = contactGroup.getAllEmailAddresses(false, mbox, octxt);
+        List<String> emailAddrs = contactGroup.getEmailAddresses(false, mbox, octxt, false);
         assertEquals(4, emailAddrs.size());
         assertTrue(emailAddrs.contains("test1@zimbra.com"));
         assertTrue(emailAddrs.contains("test2@zimbra.com"));
@@ -294,7 +294,7 @@ public class TestContactGroup {
             // System.out.println(memberKey);
         }
         
-        List<String> emailAddrs = contactGroup.getAllEmailAddresses(false, mbox, octxt);
+        List<String> emailAddrs = contactGroup.getEmailAddresses(false, mbox, octxt, false);
         assertEquals(3, emailAddrs.size());
         assertTrue(emailAddrs.contains(email));
         assertTrue(emailAddrs.contains("aaa@test.com"));

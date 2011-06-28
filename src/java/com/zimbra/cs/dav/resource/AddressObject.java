@@ -48,11 +48,13 @@ import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.ContactGroup;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.formatter.VCard;
+import com.zimbra.cs.service.util.ItemId;
 
 public class AddressObject extends MailItemResource {
 
@@ -122,12 +124,14 @@ public class AddressObject extends MailItemResource {
                 String uid = vcard.uid;
                 Account ownerAccount = Provisioning.getInstance().getAccountById(where.mOwnerId);
                 // expand apple address book groups
+                ContactGroup contactGroup = null;
                 if (ownerAccount != null && ownerAccount.isPrefContactsExpandAppleContactGroups()) {
                     Map<String,String> xprops = Contact.decodeXProps(vcard.fields.get(ContactConstants.A_vCardXProps));
                     String kind = xprops.get(XABSKIND);
                     String memberList = xprops.get(XABSMEMBER);
                     if (kind != null && kind.compareTo("group") == 0 && memberList != null) {
-                        ArrayList<String> memberEmails = new ArrayList<String>();
+                        contactGroup = ContactGroup.init();
+                        
                         try {
                             String[] members = Contact.parseMultiValueAttr(memberList);
                             for (String uidStr : members) {
@@ -135,15 +139,15 @@ public class AddressObject extends MailItemResource {
                                     uidStr = uidStr.substring(9);
                                 Contact c = getContactByUID(ctxt, uidStr, ownerAccount);
                                 if (c != null) {
-                                    memberEmails.addAll(c.getEmailAddresses());
-                                }
-
-                            }
+                                    // add to the group as a CONTACT_REF
+                                    ItemId itemId = new ItemId(c);
+                                    contactGroup.addMember(ContactGroup.Member.Type.CONTACT_REF, itemId.toString());
+                                }                            }
                         } catch (JSONException e) {
                             ZimbraLog.dav.debug("can't parse xprop %s", memberList, e);
                         }
                         vcard.fields.put(ContactConstants.A_type, ContactConstants.TYPE_GROUP);
-                        vcard.fields.put(ContactConstants.A_dlist, StringUtil.join(",", memberEmails));
+                        vcard.fields.put(ContactConstants.A_groupMember, contactGroup.encode());
                         vcard.fields.remove(ContactConstants.A_vCardXProps);
                     }
                 }

@@ -187,6 +187,12 @@ public class Contact extends MailItem {
             return new StringBuilder(mFieldName).append(" [").append(getContentType()).append(", ").append(mSize).append("B]").toString();
         }
     }
+    
+    public static enum DerefGroupMembersOption {
+        // ALL,      // deref all group members - not yet supported
+        NONE,        // do not deref any group members 
+        INLINE_ONLY; // deref only inline group members (see ContactGroup.Member.Type)
+    };
 
     /** Relates contact fields ({@code firstName}) to this contact's values ({@code John}). */
     private Map<String, String> fields;
@@ -543,12 +549,16 @@ public class Contact extends MailItem {
         //ContactConstants.A_EXPLICIT = 8
         attrs.put(ContactConstants.A_fileAs, new Integer(ContactConstants.FA_EXPLICIT).toString() + ':' + fileAs);
     }
-
+    
     /**
      * Returns a list of all email address fields for this contact.
      */
     public List<String> getEmailAddresses() {
-        return getEmailAddresses(emailFields, fields);
+        return getEmailAddresses(emailFields, fields, DerefGroupMembersOption.INLINE_ONLY);
+    }
+    
+    public List<String> getEmailAddresses(DerefGroupMembersOption derefGroupMemberOpt) {
+        return getEmailAddresses(emailFields, fields, derefGroupMemberOpt);
     }
 
     private Set<String> getNormalizedEmailAddrs() {
@@ -572,7 +582,8 @@ public class Contact extends MailItem {
         return false;
     }
 
-    public static final List<String> getEmailAddresses(String[] fieldNames, Map<String, String> fields) {
+    public static final List<String> getEmailAddresses(String[] fieldNames, 
+            Map<String, String> fields, DerefGroupMembersOption derefGroupMemberOpt) {
         List<String> result = new ArrayList<String>();
         for (String name : fieldNames) {
             String addr = fields.get(name);
@@ -580,14 +591,22 @@ public class Contact extends MailItem {
                 result.add(addr);
             }
         }
-
-        // if the dlist is set, return it as a single value
-        String dlist = fields.get(ContactConstants.A_dlist);
-        if (!Strings.isNullOrEmpty(dlist)) {
-            for (String addr : Splitter.on(',').omitEmptyStrings().trimResults().split(dlist)) {
-                result.add(addr);
+        
+        if (derefGroupMemberOpt != DerefGroupMembersOption.NONE) {
+            String encodedGroupMembers = fields.get(ContactConstants.A_groupMember);
+            if (encodedGroupMembers != null) {
+                try {
+                    ContactGroup contactGroup = ContactGroup.init(encodedGroupMembers);
+                    List<String> emailAddrs = contactGroup.getInlineEmailAddresses();
+                    for (String addr : emailAddrs) {
+                        result.add(addr);
+                    }
+                } catch (ServiceException e) {
+                    ZimbraLog.contact.warn("unable to decode contact group", e);
+                }
             }
         }
+        
         return result;
     }
 
@@ -898,9 +917,9 @@ public class Contact extends MailItem {
         return decodeXProps(fields.get(ContactConstants.A_vCardXProps));
     }
 
-    // could be a GAL group or a local group
+    // could be a GAL group (for GAL sync account) or a contact group
     // GAL group: members are stored in the member field, encoded as a json array.
-    // local group: members are stored in the groupMember field, encoded as Metadata
+    // contact group: members are stored in the groupMember field, encoded as Metadata
     public boolean isGroup() {
         return ContactConstants.TYPE_GROUP.equals(get(ContactConstants.A_type));
     }
@@ -909,7 +928,7 @@ public class Contact extends MailItem {
         return ContactConstants.TYPE_GROUP.equals(attrs.get(ContactConstants.A_type));
     }
 
-    public boolean isLocalGroup() {
+    public boolean isContactGroup() {
         return isGroup() && get(ContactConstants.A_groupMember) != null;
     }
     

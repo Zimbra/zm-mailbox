@@ -32,6 +32,7 @@ import org.json.JSONException;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.Contact.Attachment;
+import com.zimbra.cs.mailbox.Contact.DerefGroupMembersOption;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.common.mailbox.ContactConstants;
@@ -485,7 +486,7 @@ public class VCard {
     public static VCard formatContact(Contact con, Collection<String> vcattrs, boolean includeXProps) {
         Map<String, String> fields = con.getFields();
         List<Attachment> attachments = con.getAttachments();
-        List<String> emails = con.getEmailAddresses();
+        List<String> emails = con.getEmailAddresses(DerefGroupMembersOption.NONE);
 
         StringBuilder sb = new StringBuilder();
         sb.append("BEGIN:VCARD\r\n");

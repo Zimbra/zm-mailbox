@@ -3,7 +3,6 @@ package com.zimbra.cs.mailbox;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -102,7 +101,8 @@ public class ContactGroup {
     // contains derefed members sorted by the Member.getKey() order
     private TreeMultimap<String, Member> derefedMembers = null;
     
-    public static ContactGroup init(Contact contact, boolean createIfNotExist) throws ServiceException {
+    public static ContactGroup init(Contact contact, boolean createIfNotExist) 
+    throws ServiceException {
         ContactGroup contactGroup = null;
         if (contact != null) {
             String encoded = contact.get(ContactConstants.A_groupMember);
@@ -250,15 +250,28 @@ public class ContactGroup {
         }
     }
     
-    
-    public List<String> getAllEmailAddresses(boolean refresh, Mailbox mbox, OperationContext octxt) {
-        if (refresh || !isDerefed()) {
-            derefAllMembers(mbox, octxt);
-        }
-        
+    public List<String> getInlineEmailAddresses() {
+        return getEmailAddresses(false, null, null, true);
+    }
+
+    public List<String> getEmailAddresses(boolean refresh, Mailbox mbox, 
+            OperationContext octxt, boolean inlineMembersOnly) {
         List<String> result = new ArrayList<String>();
-        for (Member member : members.values()) {
-            member.getEmailAddresses(result);
+        
+        if (inlineMembersOnly) {
+            for (Member member : members.values()) {
+                if (Member.Type.INLINE == member.getType()) {
+                    result.add(member.getValue());
+                }
+            }
+        } else {
+            if (refresh || !isDerefed()) {
+                derefAllMembers(mbox, octxt);
+            }
+            
+            for (Member member : members.values()) {
+                member.getDerefedEmailAddresses(result);
+            }
         }
         return result;
     }
@@ -424,7 +437,7 @@ public class ContactGroup {
         // if result is not null, append email addresses of the member into result
         // if result is null, create a new List filled with email addresses of the member
         // return the List into which email addresses are added
-        private List<String> getEmailAddresses(List<String> result) {
+        private List<String> getDerefedEmailAddresses(List<String> result) {
             assert(derefed());
             if (result == null) {
                 result = new ArrayList<String>();
