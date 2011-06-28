@@ -50,18 +50,18 @@ public abstract class ZFilterCondition implements ToZJSONObject {
     public static final String C_CASE_SENSITIVE = "case_sensitive";
 
     public enum HeaderOp {
-
         IS, NOT_IS, CONTAINS, NOT_CONTAINS, MATCHES, NOT_MATCHES;
 
-        public static HeaderOp fromString(String s) throws ServiceException {
+        public static HeaderOp fromString(String src) throws ServiceException {
             try {
-                return HeaderOp.valueOf(s.toUpperCase());
+                return valueOf(src.toUpperCase());
             } catch (IllegalArgumentException e) {
-                throw ZClientException.CLIENT_ERROR("invalid op: "+s+", value values: "+Arrays.asList(HeaderOp.values()), null);
+                throw ZClientException.CLIENT_ERROR("invalid op: " + src +
+                        ", possible values: " + Arrays.asList(values()), null);
             }
         }
 
-        public static HeaderOp fromStringComparison(Sieve.StringComparison comparison, boolean isNegative) {
+        public static HeaderOp of(Sieve.StringComparison comparison, boolean isNegative) {
             if (comparison == Sieve.StringComparison.is) {
                 return (isNegative ? NOT_IS : IS);
             }
@@ -87,18 +87,18 @@ public abstract class ZFilterCondition implements ToZJSONObject {
     }
 
     public enum DateOp {
-
         BEFORE, NOT_BEFORE, AFTER, NOT_AFTER;
 
-        public static DateOp fromString(String s) throws ServiceException {
+        public static DateOp fromString(String src) throws ServiceException {
             try {
-                return DateOp.valueOf(s.toUpperCase());
+                return valueOf(src.toUpperCase());
             } catch (IllegalArgumentException e) {
-                throw ZClientException.CLIENT_ERROR("invalid op: "+s+", value values: "+Arrays.asList(DateOp.values()), null);
+                throw ZClientException.CLIENT_ERROR("invalid op: " + src +
+                        ", possible values: " + Arrays.asList(values()), null);
             }
         }
 
-        public static DateOp fromDateComparison(Sieve.DateComparison comparison, boolean isNegative) {
+        public static DateOp of(Sieve.DateComparison comparison, boolean isNegative) {
             if (comparison == Sieve.DateComparison.before) {
                 return (isNegative ? NOT_BEFORE : BEFORE);
             }
@@ -120,15 +120,16 @@ public abstract class ZFilterCondition implements ToZJSONObject {
     public enum SizeOp {
         UNDER, NOT_UNDER, OVER, NOT_OVER;
 
-        public static SizeOp fromString(String s) throws ServiceException {
+        public static SizeOp fromString(String src) throws ServiceException {
             try {
-                return SizeOp.valueOf(s.toUpperCase());
+                return valueOf(src.toUpperCase());
             } catch (IllegalArgumentException e) {
-                throw ZClientException.CLIENT_ERROR("invalid op: "+s+", value values: "+Arrays.asList(SizeOp.values()), null);
+                throw ZClientException.CLIENT_ERROR("invalid op: " + src +
+                        ", possible values: " + Arrays.asList(values()), null);
             }
         }
 
-        public static SizeOp fromNumberComparison(Sieve.NumberComparison comparison, boolean isNegative) {
+        public static SizeOp of(Sieve.NumberComparison comparison, boolean isNegative) {
             if (comparison == Sieve.NumberComparison.over) {
                 return (isNegative ? NOT_OVER : OVER);
             }
@@ -151,11 +152,12 @@ public abstract class ZFilterCondition implements ToZJSONObject {
     public enum BodyOp {
         CONTAINS, NOT_CONTAINS;
 
-        public static BodyOp fromString(String s) throws ServiceException {
+        public static BodyOp fromString(String src) throws ServiceException {
             try {
-                return BodyOp.valueOf(s.toUpperCase());
+                return valueOf(src.toUpperCase());
             } catch (IllegalArgumentException e) {
-                throw ZClientException.CLIENT_ERROR("invalid op: "+s+", value values: "+Arrays.asList(BodyOp.values()), null);
+                throw ZClientException.CLIENT_ERROR("invalid op: " + src +
+                        ", possible values: " + Arrays.asList(values()), null);
             }
         }
     }
@@ -163,12 +165,12 @@ public abstract class ZFilterCondition implements ToZJSONObject {
     public enum SimpleOp {
         IS, NOT_IS;
 
-        public static SimpleOp fromString(String s) throws ServiceException {
+        public static SimpleOp fromString(String src) throws ServiceException {
             try {
-                return SimpleOp.valueOf(s.toUpperCase());
+                return valueOf(src.toUpperCase());
             } catch (IllegalArgumentException e) {
-                throw ZClientException.CLIENT_ERROR(
-                        "invalid op: " + s + ", value values: " + Arrays.asList(SimpleOp.values()), null);
+                throw ZClientException.CLIENT_ERROR("invalid op: " + src +
+                        ", possible values: " + Arrays.asList(values()), null);
             }
         }
     }
@@ -176,11 +178,25 @@ public abstract class ZFilterCondition implements ToZJSONObject {
     public enum AddressBookOp {
         IN, NOT_IN;
 
-        public static AddressBookOp fromString(String s) throws ServiceException {
+        public static AddressBookOp fromString(String src) throws ServiceException {
             try {
-                return AddressBookOp.valueOf(s.toUpperCase());
+                return valueOf(src.toUpperCase());
             } catch (IllegalArgumentException e) {
-                throw ZClientException.CLIENT_ERROR("invalid op: "+s+", value values: "+Arrays.asList(AddressBookOp.values()), null);
+                throw ZClientException.CLIENT_ERROR("invalid op: " + src +
+                        ", possible values: " + Arrays.asList(values()), null);
+            }
+        }
+    }
+
+    public enum ConversationOp {
+        WHERE, NOT_WHERE;
+
+        public static ConversationOp fromString(String src) throws ServiceException {
+            try {
+                return valueOf(src.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw ZClientException.CLIENT_ERROR("invalid op: " + src +
+                        ", possible values: " + Arrays.asList(values()), null);
             }
         }
     }
@@ -195,16 +211,14 @@ public abstract class ZFilterCondition implements ToZJSONObject {
                     Sieve.StringComparison.fromString(condEl.getAttribute(MailConstants.A_STRING_COMPARISON).toLowerCase());
             boolean caseSensitive = condEl.getAttributeBool(MailConstants.A_CASE_SENSITIVE, false);
             String value = condEl.getAttribute(MailConstants.A_VALUE);
-            return new ZHeaderCondition(header, HeaderOp.fromStringComparison(comparison, isNegative),
-                                        caseSensitive, value);
+            return new ZHeaderCondition(header, HeaderOp.of(comparison, isNegative), caseSensitive, value);
         } else if (name.equals(MailConstants.E_MIME_HEADER_TEST)) {
             String header = condEl.getAttribute(MailConstants.A_HEADER);
             Sieve.StringComparison comparison =
                     Sieve.StringComparison.fromString(condEl.getAttribute(MailConstants.A_STRING_COMPARISON).toLowerCase());
             boolean caseSensitive = condEl.getAttributeBool(MailConstants.A_CASE_SENSITIVE, false);
             String value = condEl.getAttribute(MailConstants.A_VALUE);
-            return new ZMimeHeaderCondition(header, HeaderOp.fromStringComparison(comparison, isNegative),
-                                            caseSensitive, value);
+            return new ZMimeHeaderCondition(header, HeaderOp.of(comparison, isNegative), caseSensitive, value);
         } else if (name.equals(MailConstants.E_ADDRESS_TEST)) {
             String header = condEl.getAttribute(MailConstants.A_HEADER);
             Sieve.AddressPart part =
@@ -213,8 +227,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
                     Sieve.StringComparison.fromString(condEl.getAttribute(MailConstants.A_STRING_COMPARISON).toLowerCase());
             boolean caseSensitive = condEl.getAttributeBool(MailConstants.A_CASE_SENSITIVE, false);
             String value = condEl.getAttribute(MailConstants.A_VALUE);
-            return new ZAddressCondition(header, part, HeaderOp.fromStringComparison(comparison, isNegative),
-                                         caseSensitive, value);
+            return new ZAddressCondition(header, part, HeaderOp.of(comparison, isNegative), caseSensitive, value);
         } else if (name.equals(MailConstants.E_HEADER_EXISTS_TEST)) {
             String header = condEl.getAttribute(MailConstants.A_HEADER);
             return new ZHeaderExistsCondition(header, !isNegative);
@@ -222,18 +235,18 @@ public abstract class ZFilterCondition implements ToZJSONObject {
             Sieve.NumberComparison comparison =
                     Sieve.NumberComparison.fromString(condEl.getAttribute(MailConstants.A_NUMBER_COMPARISON).toLowerCase());
             String size = condEl.getAttribute(MailConstants.A_SIZE);
-            return new ZSizeCondition(SizeOp.fromNumberComparison(comparison, isNegative), size);
+            return new ZSizeCondition(SizeOp.of(comparison, isNegative), size);
         } else if (name.equals(MailConstants.E_DATE_TEST)) {
             String s = condEl.getAttribute(MailConstants.A_DATE_COMPARISON);
             s = s.toLowerCase();
             Sieve.DateComparison comparison = Sieve.DateComparison.fromString(s);
             Date date = new Date(condEl.getAttributeLong(MailConstants.A_DATE) * 1000);
-            return new ZDateCondition(DateOp.fromDateComparison(comparison, isNegative), date);
+            return new ZDateCondition(DateOp.of(comparison, isNegative), date);
         } else if (name.equals(MailConstants.E_CURRENT_TIME_TEST)) {
             Sieve.DateComparison comparison =
                     Sieve.DateComparison.fromString(condEl.getAttribute(MailConstants.A_DATE_COMPARISON).toLowerCase());
             String timeStr = condEl.getAttribute(MailConstants.A_TIME);
-            return new ZCurrentTimeCondition(DateOp.fromDateComparison(comparison, isNegative), timeStr);
+            return new ZCurrentTimeCondition(DateOp.of(comparison, isNegative), timeStr);
         } else if (name.equals(MailConstants.E_BODY_TEST)) {
             String value = condEl.getAttribute(MailConstants.A_VALUE);
             BodyOp op = (isNegative ? BodyOp.NOT_CONTAINS : BodyOp.CONTAINS);
@@ -260,6 +273,9 @@ public abstract class ZFilterCondition implements ToZJSONObject {
                 }
                 return new ZInviteCondition(!isNegative, methods);
             }
+        } else if (name.equals(MailConstants.E_CONVERSATION_TEST)) {
+            return new ZConversationCondition(isNegative ? ConversationOp.NOT_WHERE : ConversationOp.WHERE,
+                    condEl.getAttribute(MailConstants.A_WHERE));
         } else if (name.equals(MailConstants.E_TRUE_TEST)) {
             return new ZTrueCondition();
         } else {
@@ -294,8 +310,38 @@ public abstract class ZFilterCondition implements ToZJSONObject {
 
     public abstract String toConditionString();
 
+    public static final class ZConversationCondition extends ZFilterCondition {
+        private final ConversationOp op;
+        private final String where;
 
-    public static class ZAddressBookCondition extends ZFilterCondition {
+        public ZConversationCondition(ConversationOp op, String where) {
+            this.op = op;
+            this.where = where;
+        }
+
+        @Override
+        public String getName() {
+            return "conversation";
+        }
+
+        @Override
+        Element toElement(Element parent) {
+            Element test = parent.addElement(MailConstants.E_CONVERSATION_TEST);
+            test.addAttribute(MailConstants.A_WHERE, where);
+            if (op == ConversationOp.NOT_WHERE) {
+                test.addAttribute(MailConstants.A_NEGATIVE, true);
+            }
+            return test;
+        }
+
+        @Override
+        public String toConditionString() {
+            return "conversation " + (op == ConversationOp.WHERE ? "where " : "not_where ") +
+                ZFilterRule.quotedString(where);
+        }
+    }
+
+    public static final class ZAddressBookCondition extends ZFilterCondition {
         private final AddressBookOp addressBookOp;
         private final String header;
         private final String type;
@@ -329,7 +375,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         }
     }
 
-    public static class ZBodyCondition extends ZFilterCondition {
+    public static final class ZBodyCondition extends ZFilterCondition {
         private BodyOp bodyOp;
         private boolean caseSensitive;
         private String text;
@@ -375,7 +421,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
 
     }
 
-    public static class ZCurrentDayOfWeekCondition extends ZFilterCondition {
+    public static final class ZCurrentDayOfWeekCondition extends ZFilterCondition {
         private SimpleOp op;
         private String days;
 
@@ -408,7 +454,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         }
     }
 
-    public static class ZSizeCondition extends ZFilterCondition {
+    public static final class ZSizeCondition extends ZFilterCondition {
         private SizeOp mSizeOp;
         private String mSize;
 
@@ -462,7 +508,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         }
     }
 
-    public static class ZDateCondition extends ZFilterCondition {
+    public static final class ZDateCondition extends ZFilterCondition {
         private DateOp mDateOp;
         private Date mDate;
 
@@ -507,7 +553,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
 
     }
 
-    public static class ZCurrentTimeCondition extends ZFilterCondition {
+    public static final class ZCurrentTimeCondition extends ZFilterCondition {
         private DateOp dateOp;
         private String timeStr;
 
@@ -541,7 +587,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         }
     }
 
-    public static class ZTrueCondition extends ZFilterCondition {
+    public static final class ZTrueCondition extends ZFilterCondition {
 
         @Override
         Element toElement(Element parent) {
@@ -559,7 +605,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         }
     }
 
-    public static class ZHeaderCondition extends ZFilterCondition {
+    public static final class ZHeaderCondition extends ZFilterCondition {
         private HeaderOp headerOp;
         private boolean caseSensitive;
         private String headerName;
@@ -609,7 +655,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         }
     }
 
-    public static class ZMimeHeaderCondition extends ZFilterCondition {
+    public static final class ZMimeHeaderCondition extends ZFilterCondition {
         private HeaderOp headerOp;
         private boolean caseSensitive;
         private String headerName;
@@ -659,7 +705,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         }
     }
 
-    public static class ZAddressCondition extends ZFilterCondition {
+    public static final class ZAddressCondition extends ZFilterCondition {
         private String headerName;
         private Sieve.AddressPart part;
         private HeaderOp headerOp;
@@ -705,7 +751,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         }
     }
 
-    public static class ZHeaderExistsCondition extends ZFilterCondition {
+    public static final class ZHeaderExistsCondition extends ZFilterCondition {
         private boolean mExists;
         private String mHeaderName;
 
@@ -738,7 +784,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         }
     }
 
-    public static class ZAttachmentExistsCondition extends ZFilterCondition {
+    public static final class ZAttachmentExistsCondition extends ZFilterCondition {
         private boolean mExists;
 
         public ZAttachmentExistsCondition(boolean exists) {
@@ -767,7 +813,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         }
     }
 
-    public static class ZInviteCondition extends ZFilterCondition {
+    public static final class ZInviteCondition extends ZFilterCondition {
         public static final String METHOD_ANYREQUEST = "anyrequest";
         public static final String METHOD_ANYREPLY = "anyreply";
         public static final String METHOD_PUBLISH = "publish";

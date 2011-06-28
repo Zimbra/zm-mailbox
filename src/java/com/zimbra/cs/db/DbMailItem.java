@@ -2233,7 +2233,7 @@ public class DbMailItem {
             stmt.close(); stmt = null;
 
             if (type == MailItem.Type.CONVERSATION) {
-                completeConversations(mbox, result);
+                completeConversations(mbox, conn, result);
             }
             return result;
         } catch (SQLException e) {
@@ -2400,7 +2400,7 @@ public class DbMailItem {
                 throw MailItem.noSuchItem(id, type);
             }
             if (!fromDumpster && data.type == MailItem.Type.CONVERSATION.toByte()) {
-                completeConversation(mbox, data);
+                completeConversation(mbox, conn, data);
             }
             return data;
         } catch (SQLException e) {
@@ -2492,7 +2492,7 @@ public class DbMailItem {
         }
 
         if (!conversations.isEmpty())
-            completeConversations(mbox, conversations);
+            completeConversations(mbox, conn, conversations);
         return result;
     }
 
@@ -2525,7 +2525,7 @@ public class DbMailItem {
                 throw MailItem.noSuchItem(data.id, type);
             }
             if (resultType == MailItem.Type.CONVERSATION) {
-                completeConversation(mbox, data);
+                completeConversation(mbox, conn, data);
             }
             return data;
         } catch (SQLException e) {
@@ -2563,7 +2563,7 @@ public class DbMailItem {
             while (rs.next()) {
                 UnderlyingData data = constructItem(rs);
                 if (data.type == MailItem.Type.CONVERSATION.toByte()) {
-                    completeConversation(mbox, data);
+                    completeConversation(mbox, conn, data);
                 }
                 dlist.add(data);
             }
@@ -2617,11 +2617,13 @@ public class DbMailItem {
         }
     }
 
-    public static void completeConversation(Mailbox mbox, UnderlyingData data) throws ServiceException {
-        completeConversations(mbox, Arrays.asList(data));
+    public static void completeConversation(Mailbox mbox, DbConnection conn, UnderlyingData data)
+            throws ServiceException {
+        completeConversations(mbox, conn, Collections.singletonList(data));
     }
 
-    private static void completeConversations(Mailbox mbox, List<UnderlyingData> convData) throws ServiceException {
+    private static void completeConversations(Mailbox mbox, DbConnection conn, List<UnderlyingData> convData)
+            throws ServiceException {
         if (convData == null || convData.isEmpty()) {
             return;
         }
@@ -2633,7 +2635,6 @@ public class DbMailItem {
 
         Map<Integer, UnderlyingData> conversations = new HashMap<Integer, UnderlyingData>(Db.getINClauseBatchSize() * 3 / 2);
 
-        DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         for (int i = 0; i < convData.size(); i += Db.getINClauseBatchSize()) {
@@ -2641,7 +2642,7 @@ public class DbMailItem {
                 int count = Math.min(Db.getINClauseBatchSize(), convData.size() - i);
                 stmt = conn.prepareStatement("SELECT parent_id, unread, flags, tags" +
                         " FROM " + getMailItemTableName(mbox) +
-                        " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("parent_id", count));
+                        " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("parent_id", count) + " ORDER BY date, id");
                 int pos = 1;
                 pos = setMailboxId(stmt, mbox, pos);
                 for (int index = i; index < i + count; index++) {
@@ -2658,8 +2659,13 @@ public class DbMailItem {
                     UnderlyingData data = conversations.get(rs.getInt(1));
                     assert(data != null);
                     data.unreadCount += rs.getInt(2);
-                    data.setFlags(data.getFlags() | rs.getInt(3));
-                    data.tags        |= rs.getLong(4);
+                    int flags = rs.getInt(3);
+                    // if the first result (sorted by date, id) is sent from me, this conversation was started by me.
+                    if (rs.isFirst() && ((flags & Flag.BITMASK_FROM_ME) > 0)) {
+                        flags |= Flag.BITMASK_BY_ME;
+                    }
+                    data.setFlags(data.getFlags() | flags);
+                    data.tags |= rs.getLong(4);
                 }
             } catch (SQLException e) {
                 throw ServiceException.FAILURE("completing conversation data", e);

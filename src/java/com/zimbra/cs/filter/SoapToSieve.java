@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -28,35 +28,32 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
-public class SoapToSieve {
+public final class SoapToSieve {
 
-    private Element mRoot;
-    private StringBuilder mBuf;
+    private final Element root;
+    private StringBuilder buffer;
 
-    public SoapToSieve(Element filterRulesRoot)
-    throws ServiceException {
+    public SoapToSieve(Element filterRulesRoot) throws ServiceException {
         String name = filterRulesRoot.getName();
         if (!name.equals(MailConstants.E_FILTER_RULES)) {
             throw ServiceException.FAILURE("Invalid element: " + name, null);
         }
-        mRoot = filterRulesRoot;
+        root = filterRulesRoot;
     }
 
-    public String getSieveScript()
-    throws ServiceException {
-        if (mBuf == null) {
-            mBuf = new StringBuilder();
-            mBuf.append("require [\"fileinto\", \"reject\", \"tag\", \"flag\"];\n");
-            for (Element rule : mRoot.listElements(MailConstants.E_FILTER_RULE)) {
-                mBuf.append("\n");
+    public String getSieveScript() throws ServiceException {
+        if (buffer == null) {
+            buffer = new StringBuilder();
+            buffer.append("require [\"fileinto\", \"reject\", \"tag\", \"flag\"];\n");
+            for (Element rule : root.listElements(MailConstants.E_FILTER_RULE)) {
+                buffer.append("\n");
                 handleRule(rule);
             }
         }
-        return mBuf.toString();
+        return buffer.toString();
     }
 
-    private void handleRule(Element rule)
-    throws ServiceException {
+    private void handleRule(Element rule) throws ServiceException {
         String name = rule.getAttribute(MailConstants.A_NAME);
         boolean isActive = rule.getAttributeBool(MailConstants.A_ACTIVE, true);
 
@@ -66,13 +63,13 @@ public class SoapToSieve {
         Sieve.Condition condition = Sieve.Condition.fromString(s);
 
         // Rule name
-        mBuf.append("# ").append(name).append("\n");
+        buffer.append("# ").append(name).append("\n");
         if (isActive) {
-            mBuf.append("if ");
+            buffer.append("if ");
         } else {
-            mBuf.append("disabled_if ");
+            buffer.append("disabled_if ");
         }
-        mBuf.append(condition).append(" (");
+        buffer.append(condition).append(" (");
 
         // Handle tests
         List<Element> testElements = testsElement.listElements();
@@ -84,8 +81,8 @@ public class SoapToSieve {
                 FilterUtil.addToMap(tests, index, s);
             }
         }
-        mBuf.append(StringUtil.join(",\n  ", tests.values()));
-        mBuf.append(") {\n");
+        buffer.append(StringUtil.join(",\n  ", tests.values()));
+        buffer.append(") {\n");
 
         // Handle actions
         Element actionsElement = rule.getElement(MailConstants.E_FILTER_ACTIONS);
@@ -98,13 +95,12 @@ public class SoapToSieve {
             }
         }
         for (String action : actions.values()) {
-            mBuf.append("    ").append(action).append(";\n");
+            buffer.append("    ").append(action).append(";\n");
         }
-        mBuf.append("}\n");
+        buffer.append("}\n");
     }
 
-    private String handleTest(Element test)
-    throws ServiceException {
+    private String handleTest(Element test) throws ServiceException {
         String name = test.getName();
         String snippet = null;
 
@@ -187,6 +183,9 @@ public class SoapToSieve {
                                     new StringBuilder().append('[').
                                             append(StringUtil.join(",", daysOfWeek)).
                                             append(']').toString());
+        } else if (name.equals(MailConstants.E_CONVERSATION_TEST)) {
+            String where = test.getAttribute(MailConstants.A_WHERE, "started");
+            snippet = String.format("conversation :where \"%s\"", FilterUtil.escape(where));
         } else if (name.equals(MailConstants.E_TRUE_TEST)) {
             snippet = "true";
         } else {
@@ -266,8 +265,7 @@ public class SoapToSieve {
         return buf.toString();
     }
 
-    private static String handleAction(Element action)
-    throws ServiceException {
+    private static String handleAction(Element action) throws ServiceException {
         String name = action.getName();
         if (name.equals(MailConstants.E_ACTION_KEEP)) {
             return "keep";

@@ -4856,7 +4856,7 @@ public class Mailbox {
             }
         }
 
-        Threader threading = new Threader(this, pm);
+        Threader threading = pm.getThreader(this);
         String subject = pm.getNormalizedSubject();
 
         try {
@@ -5073,6 +5073,18 @@ public class Mailbox {
         }
 
         return msg;
+    }
+
+    public List<Conversation> lookupConversation(ParsedMessage pm) throws ServiceException {
+        boolean success = false;
+        beginTransaction("lookupConversation", null);
+        try {
+            List<Conversation> result = pm.getThreader(this).lookupConversation();
+            success = true;
+            return result;
+        } finally {
+            endTransaction(success);
+        }
     }
 
     public static String getHash(String subject) {

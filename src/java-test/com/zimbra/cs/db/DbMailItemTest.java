@@ -28,6 +28,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool.DbConnection;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -139,6 +140,62 @@ public class DbMailItemTest {
         Assert.assertEquals(5, DbMailItem.getConversationCount(conn, folder));
 
         DbPool.quietClose(conn);
+    }
+
+    @Test
+    public void completeConversation() throws Exception {
+        Account account = Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+        DbConnection conn = DbPool.getConnection(mbox);
+
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, 0, 0, 0, 0, 0, 0, 0)", mbox.getId(), 200, MailItem.Type.CONVERSATION.toByte());
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, 0, 0, 0, 0, 0, 0, 0)", mbox.getId(), 201, MailItem.Type.CONVERSATION.toByte());
+
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, folder_id, parent_id, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, ?, 0, 0, 0, ?, 0, 0, 0)", mbox.getId(), 100, MailItem.Type.MESSAGE.toByte(),
+                Mailbox.ID_FOLDER_INBOX, 200, 0);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, folder_id, parent_id, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, ?, 0, 0, 0, ?, 0, 0, 0)", mbox.getId(), 101, MailItem.Type.MESSAGE.toByte(),
+                Mailbox.ID_FOLDER_INBOX, 200, 0);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, folder_id, parent_id, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, ?, 0, 0, 0, ?, 0, 0, 0)", mbox.getId(), 102, MailItem.Type.MESSAGE.toByte(),
+                Mailbox.ID_FOLDER_INBOX, 200, Flag.BITMASK_FROM_ME);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, folder_id, parent_id, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, ?, 0, 0, 0, ?, 0, 0, 0)", mbox.getId(), 103, MailItem.Type.MESSAGE.toByte(),
+                Mailbox.ID_FOLDER_INBOX, 201, Flag.BITMASK_FROM_ME);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, folder_id, parent_id, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, ?, 0, 0, 0, ?, 0, 0, 0)", mbox.getId(), 104, MailItem.Type.MESSAGE.toByte(),
+                Mailbox.ID_FOLDER_INBOX, 201, 0);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, folder_id, parent_id, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, ?, 0, 0, 0, ?, 0, 0, 0)", mbox.getId(), 105, MailItem.Type.MESSAGE.toByte(),
+                Mailbox.ID_FOLDER_INBOX, 201, 0);
+
+        MailItem.UnderlyingData data = new MailItem.UnderlyingData();
+        data.id = 200;
+        data.type = MailItem.Type.CONVERSATION.toByte();
+        DbMailItem.completeConversation(mbox, conn, data);
+        Assert.assertTrue(data.isSet(Flag.FlagInfo.FROM_ME));
+        Assert.assertFalse(data.isSet(Flag.FlagInfo.BY_ME));
+
+        data = new MailItem.UnderlyingData();
+        data.id = 201;
+        data.type = MailItem.Type.CONVERSATION.toByte();
+        DbMailItem.completeConversation(mbox, conn, data);
+        Assert.assertTrue(data.isSet(Flag.FlagInfo.FROM_ME));
+        Assert.assertTrue(data.isSet(Flag.FlagInfo.BY_ME));
+
+        conn.closeQuietly();
     }
 
 }

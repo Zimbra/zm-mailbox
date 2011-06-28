@@ -444,7 +444,7 @@ public class Conversation extends MailItem {
         if (add) {
             tagChanged(tag, add);
         } else {
-            DbMailItem.completeConversation(mMailbox, mData);
+            DbMailItem.completeConversation(mMailbox, mMailbox.getOperationConnection(), mData);
         }
     }
 
@@ -674,7 +674,7 @@ public class Conversation extends MailItem {
                 int oldFlags = mData.getFlags();
                 long oldTags = mData.tags;
 
-                DbMailItem.completeConversation(mMailbox, mData);
+                DbMailItem.completeConversation(mMailbox, mMailbox.getOperationConnection(), mData);
 
                 if (mData.getFlags() != oldFlags) {
                     markItemModified(Change.MODIFIED_FLAGS);

@@ -1,27 +1,21 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.filter;
 
+import com.google.common.collect.ImmutableSet;
 import com.zimbra.common.filter.Sieve;
-import com.zimbra.common.filter.Sieve.AddressPart;
-import com.zimbra.common.filter.Sieve.Comparator;
-import com.zimbra.common.filter.Sieve.Condition;
-import com.zimbra.common.filter.Sieve.DateComparison;
-import com.zimbra.common.filter.Sieve.Flag;
-import com.zimbra.common.filter.Sieve.NumberComparison;
-import com.zimbra.common.filter.Sieve.StringComparison;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
@@ -34,7 +28,6 @@ import org.apache.jsieve.parser.generated.Node;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -46,113 +39,145 @@ import java.util.Set;
 public abstract class SieveVisitor {
 
     protected enum VisitPhase { begin, end }
-    
-    protected void visitNode(Node node, VisitPhase phase, RuleProperties props)
-    throws ServiceException { }
-    
-    protected void visitRule(Node node, VisitPhase phase, RuleProperties props)
-    throws ServiceException { }
-    
-    protected void visitTest(Node node, VisitPhase phase, RuleProperties props)
-    throws ServiceException { }
-    
-    protected void visitAction(Node node, VisitPhase phase, RuleProperties props)
-    throws ServiceException { }
-    
-    protected void visitHeaderTest(String testEltName, Node node, VisitPhase phase, RuleProperties props,
-                                   List<String> headers, Sieve.StringComparison comparison, boolean caseSensitive, String value)
-    throws ServiceException { }
 
-    protected void visitAddressTest(Node node, VisitPhase phase, RuleProperties props, List<String> headers,
-                                    Sieve.AddressPart part, Sieve.StringComparison comparison, boolean caseSensitive, String value)
-    throws ServiceException { }
-
-    protected void visitHeaderExistsTest(Node node, VisitPhase phase, RuleProperties props, String header)
-    throws ServiceException { }
-    
-    protected void visitSizeTest(Node node, VisitPhase phase, RuleProperties props,
-        Sieve.NumberComparison comparison, int size, String sizeString)
-    throws ServiceException { }
-    
-    protected void visitDateTest(Node node, VisitPhase phase, RuleProperties props,
-        Sieve.DateComparison comparison, Date date)
-    throws ServiceException { }
-    
-    protected void visitCurrentTimeTest(Node node, VisitPhase phase, RuleProperties props,
-        Sieve.DateComparison comparison, String timeStr)
-    throws ServiceException { }
-
-    protected void visitCurrentDayOfWeekTest(Node node, VisitPhase phase, RuleProperties props, List<String> days)
-    throws ServiceException { }
-
-    protected void visitTrueTest(Node node, VisitPhase phase, RuleProperties props)
-    throws ServiceException { }
-
-    protected void visitAddressBookTest(Node node, VisitPhase phase, RuleProperties props,
-        String header, String folderPath)
-    throws ServiceException { }
-    
-    protected void visitBodyTest(Node node, VisitPhase phase, RuleProperties props, boolean caseSensitive, String value)
-    throws ServiceException { }
-    
-    protected void visitAttachmentTest(Node node, VisitPhase phase, RuleProperties props)
-    throws ServiceException { }
-    
-    protected void visitInviteTest(Node node, VisitPhase phase, RuleProperties props, List<String> methods)
-    throws ServiceException { }
-    
-    protected void visitKeepAction(Node node, VisitPhase phase, RuleProperties props)
-    throws ServiceException { }
-    
-    protected void visitDiscardAction(Node node, VisitPhase phase, RuleProperties props)
-    throws ServiceException { }
-
-    protected void visitFileIntoAction(Node node, VisitPhase phase, RuleProperties props, String folderPath)
-    throws ServiceException { }
-    
-    protected void visitFlagAction(Node node, VisitPhase phase, RuleProperties props, Sieve.Flag flag)
-    throws ServiceException { }
-    
-    protected void visitTagAction(Node node, VisitPhase phase, RuleProperties props, String tagName)
-    throws ServiceException { }
-
-    protected void visitRedirectAction(Node node, VisitPhase phase, RuleProperties props, String address)
-    throws ServiceException { }
-    
-    protected void visitReplyAction(Node node, VisitPhase phase, RuleProperties props, String bodyTemplate)
-    throws ServiceException { }
-
-    protected void visitNotifyAction(Node node, VisitPhase phase, RuleProperties props,
-                                     String emailAddr, String subjectTemplate, String bodyTemplate, int maxBodyBytes)
-    throws ServiceException { }
-
-    protected void visitStopAction(Node node, VisitPhase phase, RuleProperties props)
-    throws ServiceException { }
-    
-    private static final Set<String> RULE_NODE_NAMES;
-    
-    static {
-        Set<String> names = new HashSet<String>();
-        names.add("if");
-        names.add("disabled_if");
-        RULE_NODE_NAMES = Collections.unmodifiableSet(names);
+    @SuppressWarnings("unused")
+    protected void visitNode(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
     }
-    
+
+    @SuppressWarnings("unused")
+    protected void visitRule(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitAction(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitHeaderTest(String testEltName, Node node, VisitPhase phase, RuleProperties props,
+            List<String> headers, Sieve.StringComparison comparison, boolean caseSensitive, String value)
+        throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitAddressTest(Node node, VisitPhase phase, RuleProperties props, List<String> headers,
+            Sieve.AddressPart part, Sieve.StringComparison comparison, boolean caseSensitive, String value)
+            throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitHeaderExistsTest(Node node, VisitPhase phase, RuleProperties props, String header)
+            throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitSizeTest(Node node, VisitPhase phase, RuleProperties props,
+            Sieve.NumberComparison comparison, int size, String sizeString) throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitDateTest(Node node, VisitPhase phase, RuleProperties props,
+            Sieve.DateComparison comparison, Date date) throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitCurrentTimeTest(Node node, VisitPhase phase, RuleProperties props,
+            Sieve.DateComparison comparison, String timeStr) throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitCurrentDayOfWeekTest(Node node, VisitPhase phase, RuleProperties props, List<String> days)
+            throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitConversationTest(Node node, VisitPhase phase, RuleProperties props, String where)
+            throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitTrueTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitAddressBookTest(Node node, VisitPhase phase, RuleProperties props,
+            String header, String folderPath) throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitBodyTest(Node node, VisitPhase phase, RuleProperties props,
+            boolean caseSensitive, String value) throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitAttachmentTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitInviteTest(Node node, VisitPhase phase, RuleProperties props,
+            List<String> methods) throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitKeepAction(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitDiscardAction(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitFileIntoAction(Node node, VisitPhase phase, RuleProperties props, String folderPath)
+        throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitFlagAction(Node node, VisitPhase phase, RuleProperties props, Sieve.Flag flag)
+            throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitTagAction(Node node, VisitPhase phase, RuleProperties props, String tagName)
+            throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitRedirectAction(Node node, VisitPhase phase, RuleProperties props, String address)
+            throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitReplyAction(Node node, VisitPhase phase, RuleProperties props, String bodyTemplate)
+            throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitNotifyAction(Node node, VisitPhase phase, RuleProperties props,
+            String emailAddr, String subjectTemplate, String bodyTemplate, int maxBodyBytes) throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitStopAction(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+    }
+
+    private static final Set<String> RULE_NODE_NAMES = ImmutableSet.of("if", "disabled_if");
+
     public class RuleProperties {
         boolean isEnabled = true;
         boolean isNegativeTest = false;
         Sieve.Condition condition = Sieve.Condition.allof;
     }
-    
-    public void accept(Node node)
-    throws ServiceException {
+
+    public void accept(Node node) throws ServiceException {
         accept(node, null);
     }
-    
-    private void accept(Node parent, RuleProperties props)
-    throws ServiceException {
+
+    private void accept(Node parent, RuleProperties props) throws ServiceException {
         visitNode(parent, VisitPhase.begin, props);
-        
+
         int numChildren = parent.jjtGetNumChildren();
         for (int i = 0; i < numChildren; i++) {
             Node node = parent.jjtGetChild(i);
@@ -172,15 +197,14 @@ public abstract class SieveVisitor {
                 accept(node, props);
             }
         }
-        
+
         visitNode(parent, VisitPhase.end, props);
     }
-    
-    private void acceptTest(Node node, RuleProperties props)
-    throws ServiceException {
+
+    private void acceptTest(Node node, RuleProperties props) throws ServiceException {
         visitTest(node, VisitPhase.begin, props);
         String nodeName = getNodeName(node);
-        
+
         if ("not".equalsIgnoreCase(nodeName)) {
             props.isNegativeTest = true;
             accept(node, props);
@@ -355,6 +379,11 @@ public abstract class SieveVisitor {
                 visitCurrentDayOfWeekTest(node, VisitPhase.begin, props, days);
                 accept(node, props);
                 visitCurrentDayOfWeekTest(node, VisitPhase.end, props, days);
+            } else if ("conversation".equalsIgnoreCase(nodeName)) {
+                String where = getValue(node, 0, 1, 0, 0);
+                visitConversationTest(node, VisitPhase.begin, props, where);
+                accept(node, props);
+                visitConversationTest(node, VisitPhase.end, props, where);
             } else if ("true".equalsIgnoreCase(nodeName)) {
                 visitTrueTest(node, VisitPhase.begin, props);
                 accept(node, props);
@@ -363,7 +392,7 @@ public abstract class SieveVisitor {
                 ZimbraLog.filter.debug("Ignoring unrecognized test type '%s'.", nodeName);
                 accept(node, props);
             }
-            
+
             // Done processing the current test.  Reset the negative test flag for
             // the next test (bug 46007).
             props.isNegativeTest = false;
@@ -371,9 +400,8 @@ public abstract class SieveVisitor {
 
         visitTest(node, VisitPhase.end, props);
     }
-    
-    private void acceptAction(Node node, RuleProperties props)
-    throws ServiceException {
+
+    private void acceptAction(Node node, RuleProperties props) throws ServiceException {
         visitAction(node, VisitPhase.begin, props);
         String nodeName = getNodeName(node);
 
@@ -393,7 +421,7 @@ public abstract class SieveVisitor {
         } else if ("flag".equalsIgnoreCase(nodeName)) {
             String s = getValue(node, 0, 0, 0, 0);
             Sieve.Flag flag = Sieve.Flag.fromString(s);
-            
+
             visitFlagAction(node, VisitPhase.begin, props, flag);
             accept(node, props);
             visitFlagAction(node, VisitPhase.end, props, flag);
@@ -428,10 +456,10 @@ public abstract class SieveVisitor {
         } else {
             accept(node, props);
         }
-        
+
         visitAction(node, VisitPhase.end, props);
     }
-    
+
     /**
      * Returns the given node's name in lower case.
      */
@@ -446,9 +474,7 @@ public abstract class SieveVisitor {
         return name;
     }
 
-    
-    protected Node getNode(Node parent, int ... indexes)
-    throws ServiceException {
+    protected Node getNode(Node parent, int ... indexes) throws ServiceException {
         Node node = parent;
         for (int index : indexes) {
             if (node.jjtGetNumChildren() == 0) {
@@ -465,9 +491,8 @@ public abstract class SieveVisitor {
         }
         return node;
     }
-    
-    private String getValue(Node parent, int ... indexes)
-    throws ServiceException {
+
+    private String getValue(Node parent, int ... indexes) throws ServiceException {
         Node child = getNode(parent, indexes);
         Object value = ((SieveNode) child).getValue();
         if (value == null) {
@@ -475,9 +500,8 @@ public abstract class SieveVisitor {
         }
         return value.toString();
     }
-    
-    private List<String> getMultiValue(Node parent, int ... indexes)
-    throws ServiceException {
+
+    private List<String> getMultiValue(Node parent, int ... indexes) throws ServiceException {
         Node child = getNode(parent, indexes);
         if (child.jjtGetNumChildren() == 0) {
             throw ServiceException.PARSE_ERROR("Subnode has no children", null);
@@ -489,15 +513,15 @@ public abstract class SieveVisitor {
         }
         return values;
     }
-    
-    
+
+
     private String stripLeadingColon(String s) {
         if (s == null || s.length() == 0 || s.charAt(0) != ':') {
             return s;
         }
         return s.substring(1, s.length());
     }
-    
+
     /**
      * Returns <tt>true</tt> if the given node is the root of a rule node
      * hierarchy.

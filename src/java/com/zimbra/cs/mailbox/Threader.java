@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -68,7 +68,7 @@ import com.zimbra.cs.mime.ParsedMessage;
  *  If their threading mode is {@link MailThreadingAlgorithm#subjrefs}, the
  *  same logic as {@link MailThreadingAlgorithm#references} applies with the
  *  caveat that modifications to the subject will break a thread in two. */
-public class Threader {
+public final class Threader {
     // references-based threading:
     //   - check OPEN_CONVERSATION for Message-Id, In-Reply-To, References
     //     - 0 matches: fall back to normal threading
@@ -82,8 +82,9 @@ public class Threader {
     private final ParsedMessage pm;
     private final String subjHash;
     private List<String> refHashes;
+    private List<Conversation> matchedConversations;
 
-    Threader(Mailbox mbox, ParsedMessage pm) throws ServiceException {
+    public Threader(Mailbox mbox, ParsedMessage pm) throws ServiceException {
         this.mbox = mbox;
         this.pm = pm;
         this.mode = getThreadingAlgorithm(mbox.getAccount());
@@ -94,7 +95,7 @@ public class Threader {
     /** Retrieves the current algorithm used for threading new messages.
      *  Threading can be disabled on a system-wide basis via the localconfig
      *  key {@code debug_disable_conversation}.  If threading has not been
-     *  disabled, the threading mode is retrieved from the {@link Account} 
+     *  disabled, the threading mode is retrieved from the {@link Account}
      *  attribute {@link Provisioning#A_zimbraMailThreadingAlgorithm}.
      *  If this attribute is unset, we default to {@link
      *  MailThreadingAlgorithm#references}.
@@ -247,28 +248,31 @@ public class Threader {
 
     /** Searches for an existing {@code Conversation} matching the message
      *  being threaded.  If the user's threading mode is {@code subject}, this
-     *  method always returns {@code null}.  If the user's threading mode is
+     *  method always returns an empty list.  If the user's threading mode is
      *  {@code subject}, only the normalized subject is used for threading and
      *  only one {@code Conversation} will ever be returned.  For all other
      *  threading modes, 0, 1 or multiple {@code Conversation}s may be returned;
      *  in the multi-{@code Conversation} case, the caller is responsible for
      *  choosing one or merging them all. */
     List<Conversation> lookupConversation() throws ServiceException {
-        if (mode.isNone())
-            return null;
-
+        if (matchedConversations != null) {
+            return matchedConversations;
+        }
+        if (mode.isNone()) {
+            return Collections.emptyList();
+        }
         ZimbraLog.mailbox.debug("  threading message \"%s\" (%s)", pm.getSubject(), pm.getMessageID());
 
-        List<Conversation> matches = null;
+        List<Conversation> matches = Collections.emptyList();
         if (!mode.isSubject()) {
             // check to see if there's a conversation matching this message's references
             matches = lookupByReference();
         }
-        if (matches == null && (mode.isSubject() || (!mode.isStrict() && isReplyWithoutReferences()))) {
+        if (matches.isEmpty() && (mode.isSubject() || (!mode.isStrict() && isReplyWithoutReferences()))) {
             // check for an existing open conversation with the same normalized subject
             matches = lookupBySubject();
         }
-        return matches;
+        return matchedConversations = matches;
     }
 
     /** Returns whether the message being threaded has a subject that looks
@@ -290,17 +294,17 @@ public class Threader {
      *  Resent-Message-ID}.  If the user's threading algorithm is not
      *  {@link MailThreadingAlgorithm#strict}, we also thread on {@code
      *  Thread-Index}.
-     * @return a list of matching {@code Conversation}s, or {@code null} if
-     *         none match. */
+     * @return a list of matching {@code Conversation}s
+     */
     private List<Conversation> lookupByReference() throws ServiceException {
-        if (refHashes == null || refHashes.isEmpty())
-            return null;
-
+        if (refHashes == null || refHashes.isEmpty()) {
+            return Collections.emptyList();
+        }
         ZimbraLog.mailbox.debug("  lookup by references (%s): %s", mode, refHashes);
         List<MailItem.UnderlyingData> dlist = DbMailItem.getByHashes(mbox, refHashes);
         if (dlist == null || dlist.isEmpty()) {
             ZimbraLog.mailbox.debug("  no reference matches found");
-            return null;
+            return Collections.emptyList();
         }
 
         List<Conversation> matches = new ArrayList<Conversation>(dlist.size());
@@ -327,10 +331,9 @@ public class Threader {
             }
             if (matches.isEmpty()) {
                 ZimbraLog.mailbox.debug("  no valid reference matches found");
-                return null;
             }
         }
-
+        assert(matches != null);
         return matches;
     }
 
@@ -352,9 +355,8 @@ public class Threader {
      *  Conversation}s matching this new message's normalized subject.
      *  A potential match may be discarded as stale if its latest message was
      *  added too long ago, or may be discarded if the new message is not a
-     *  reply and the match is already too large. 
-     * @return a list containing one matching {@code Conversation}s, or {@code
-     *         null} if none matched.
+     *  reply and the match is already too large.
+     * @return a list containing one matching {@code Conversation}s
      * @see #CONVERSATION_REPLY_WINDOW
      * @see #CONVERSATION_NONREPLY_WINDOW
      * @see #CONVERSATION_NONREPLY_SIZE_LIMIT */
@@ -366,7 +368,7 @@ public class Threader {
         Conversation conv = mbox.getConversationByHash(subjHash);
         if (conv == null) {
             ZimbraLog.mailbox.debug("  no subject matches found");
-            return null;
+            return Collections.emptyList();
         }
 
         ZimbraLog.mailbox.debug("  found conversation %d for subject hash: %s", conv.getId(), subjHash);
@@ -376,13 +378,13 @@ public class Threader {
         if (pm.getReceivedDate() > conv.getDate() + window) {
             // if the last message in the conv was more than 1 month ago, it's probably not related...
             ZimbraLog.mailbox.debug("  but rejected it because it's too old");
-            return null;
+            return Collections.emptyList();
         }
 
         if (!pm.isReply() && conv.getSize() > CONVERSATION_NONREPLY_SIZE_LIMIT) {
             // put a cap on the number of non-reply messages accumulating in a conversation
             ZimbraLog.mailbox.debug("  but rejected it because it's too big to add a non-reply");
-            return null;
+            return Collections.emptyList();
         }
 
         return Lists.newArrayList(conv);

@@ -15,6 +15,7 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,10 +23,10 @@ import java.util.UUID;
 
 import javax.mail.internet.MimeMessage;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.testng.Assert;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -34,11 +35,11 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.util.JMSession;
 
-public class ThreaderTest {
+public final class ThreaderTest {
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
-        
+
         Provisioning prov = Provisioning.getInstance();
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
@@ -93,7 +94,7 @@ public class ThreaderTest {
             getAccount().setMailThreadingAlgorithm(mode);
             Threader threader = new Threader(mbox, pm);
             List<Integer> matches = MailItem.toId(threader.lookupConversation());
-            Assert.assertEquals(matches, expectedMatches, msg + " (threading: " + mode + ")");
+            Assert.assertEquals(msg + " (threading: " + mode + ")", expectedMatches, matches);
         } finally {
             mbox.endTransaction(false);
         }
@@ -109,11 +110,11 @@ public class ThreaderTest {
         mm.setHeader("Subject", OTHER_SUBJECT);
         ParsedMessage pm = new ParsedMessage(mm, false);
 
-        threadMessage("unrelated", MailThreadingAlgorithm.none, pm, mbox, null);
-        threadMessage("unrelated", MailThreadingAlgorithm.subject, pm, mbox, null);
-        threadMessage("unrelated", MailThreadingAlgorithm.references, pm, mbox, null);
-        threadMessage("unrelated", MailThreadingAlgorithm.subjrefs, pm, mbox, null);
-        threadMessage("unrelated", MailThreadingAlgorithm.strict, pm, mbox, null);
+        threadMessage("unrelated", MailThreadingAlgorithm.none, pm, mbox, Collections.<Integer>emptyList());
+        threadMessage("unrelated", MailThreadingAlgorithm.subject, pm, mbox, Collections.<Integer>emptyList());
+        threadMessage("unrelated", MailThreadingAlgorithm.references, pm, mbox, Collections.<Integer>emptyList());
+        threadMessage("unrelated", MailThreadingAlgorithm.subjrefs, pm, mbox, Collections.<Integer>emptyList());
+        threadMessage("unrelated", MailThreadingAlgorithm.strict, pm, mbox, Collections.<Integer>emptyList());
 
         // unrelated, reply to some other message
         mm = getSecondMessage();
@@ -122,11 +123,11 @@ public class ThreaderTest {
         mm.setHeader("References", THIRD_MESSAGE_ID);
         pm = new ParsedMessage(mm, false);
 
-        threadMessage("unrelated reply", MailThreadingAlgorithm.none, pm, mbox, null);
-        threadMessage("unrelated reply", MailThreadingAlgorithm.subject, pm, mbox, null);
-        threadMessage("unrelated reply", MailThreadingAlgorithm.references, pm, mbox, null);
-        threadMessage("unrelated reply", MailThreadingAlgorithm.subjrefs, pm, mbox, null);
-        threadMessage("unrelated reply", MailThreadingAlgorithm.strict, pm, mbox, null);
+        threadMessage("unrelated reply", MailThreadingAlgorithm.none, pm, mbox, Collections.<Integer>emptyList());
+        threadMessage("unrelated reply", MailThreadingAlgorithm.subject, pm, mbox, Collections.<Integer>emptyList());
+        threadMessage("unrelated reply", MailThreadingAlgorithm.references, pm, mbox, Collections.<Integer>emptyList());
+        threadMessage("unrelated reply", MailThreadingAlgorithm.subjrefs, pm, mbox, Collections.<Integer>emptyList());
+        threadMessage("unrelated reply", MailThreadingAlgorithm.strict, pm, mbox, Collections.<Integer>emptyList());
     }
 
     @Test
@@ -142,7 +143,7 @@ public class ThreaderTest {
         mm.setHeader("References", ROOT_MESSAGE_ID);
         ParsedMessage pm = new ParsedMessage(mm, false);
 
-        threadMessage("followup", MailThreadingAlgorithm.none, pm, mbox, null);
+        threadMessage("followup", MailThreadingAlgorithm.none, pm, mbox, Collections.<Integer>emptyList());
         threadMessage("followup", MailThreadingAlgorithm.subject, pm, mbox, match);
         threadMessage("followup", MailThreadingAlgorithm.references, pm, mbox, match);
         threadMessage("followup", MailThreadingAlgorithm.subjrefs, pm, mbox, match);
@@ -154,7 +155,7 @@ public class ThreaderTest {
         mm.setHeader("In-Reply-To", ROOT_MESSAGE_ID);
         pm = new ParsedMessage(mm, false);
 
-        threadMessage("followup [irt]", MailThreadingAlgorithm.none, pm, mbox, null);
+        threadMessage("followup [irt]", MailThreadingAlgorithm.none, pm, mbox, Collections.<Integer>emptyList());
         threadMessage("followup [irt]", MailThreadingAlgorithm.subject, pm, mbox, match);
         threadMessage("followup [irt]", MailThreadingAlgorithm.references, pm, mbox, match);
         threadMessage("followup [irt]", MailThreadingAlgorithm.subjrefs, pm, mbox, match);
@@ -166,7 +167,7 @@ public class ThreaderTest {
         mm.setHeader("References", ROOT_MESSAGE_ID);
         pm = new ParsedMessage(mm, false);
 
-        threadMessage("followup [refs]", MailThreadingAlgorithm.none, pm, mbox, null);
+        threadMessage("followup [refs]", MailThreadingAlgorithm.none, pm, mbox, Collections.<Integer>emptyList());
         threadMessage("followup [refs]", MailThreadingAlgorithm.subject, pm, mbox, match);
         threadMessage("followup [refs]", MailThreadingAlgorithm.references, pm, mbox, match);
         threadMessage("followup [refs]", MailThreadingAlgorithm.subjrefs, pm, mbox, match);
@@ -184,11 +185,11 @@ public class ThreaderTest {
         mm.setHeader("Subject", "Re: " + ROOT_SUBJECT);
         ParsedMessage pm = new ParsedMessage(mm, false);
 
-        threadMessage("followup [nohdr]", MailThreadingAlgorithm.none, pm, mbox, null);
+        threadMessage("followup [nohdr]", MailThreadingAlgorithm.none, pm, mbox, Collections.<Integer>emptyList());
         threadMessage("followup [nohdr]", MailThreadingAlgorithm.subject, pm, mbox, match);
         threadMessage("followup [nohdr]", MailThreadingAlgorithm.references, pm, mbox, match);
         threadMessage("followup [nohdr]", MailThreadingAlgorithm.subjrefs, pm, mbox, match);
-        threadMessage("followup [nohdr]", MailThreadingAlgorithm.strict, pm, mbox, null);
+        threadMessage("followup [nohdr]", MailThreadingAlgorithm.strict, pm, mbox, Collections.<Integer>emptyList());
     }
 
     @Test
@@ -202,11 +203,11 @@ public class ThreaderTest {
         mm.setHeader("Subject", ROOT_SUBJECT);
         ParsedMessage pm = new ParsedMessage(mm, false);
 
-        threadMessage("matching subject", MailThreadingAlgorithm.none, pm, mbox, null);
+        threadMessage("matching subject", MailThreadingAlgorithm.none, pm, mbox, Collections.<Integer>emptyList());
         threadMessage("matching subject", MailThreadingAlgorithm.subject, pm, mbox, match);
-        threadMessage("matching subject", MailThreadingAlgorithm.references, pm, mbox, null);
-        threadMessage("matching subject", MailThreadingAlgorithm.subjrefs, pm, mbox, null);
-        threadMessage("matching subject", MailThreadingAlgorithm.strict, pm, mbox, null);
+        threadMessage("matching subject", MailThreadingAlgorithm.references, pm, mbox, Collections.<Integer>emptyList());
+        threadMessage("matching subject", MailThreadingAlgorithm.subjrefs, pm, mbox, Collections.<Integer>emptyList());
+        threadMessage("matching subject", MailThreadingAlgorithm.strict, pm, mbox, Collections.<Integer>emptyList());
     }
 
     @Test
@@ -222,10 +223,10 @@ public class ThreaderTest {
         mm.setHeader("References", ROOT_MESSAGE_ID);
         ParsedMessage pm = new ParsedMessage(mm, false);
 
-        threadMessage("changed subject", MailThreadingAlgorithm.none, pm, mbox, null);
-        threadMessage("changed subject", MailThreadingAlgorithm.subject, pm, mbox, null);
+        threadMessage("changed subject", MailThreadingAlgorithm.none, pm, mbox, Collections.<Integer>emptyList());
+        threadMessage("changed subject", MailThreadingAlgorithm.subject, pm, mbox, Collections.<Integer>emptyList());
         threadMessage("changed subject", MailThreadingAlgorithm.references, pm, mbox, match);
-        threadMessage("changed subject", MailThreadingAlgorithm.subjrefs, pm, mbox, null);
+        threadMessage("changed subject", MailThreadingAlgorithm.subjrefs, pm, mbox, Collections.<Integer>emptyList());
         threadMessage("changed subject", MailThreadingAlgorithm.strict, pm, mbox, match);
     }
 
@@ -242,11 +243,11 @@ public class ThreaderTest {
         mm.setHeader("References", THIRD_MESSAGE_ID);
         ParsedMessage pm = new ParsedMessage(mm, false);
 
-        threadMessage("crossed threads", MailThreadingAlgorithm.none, pm, mbox, null);
+        threadMessage("crossed threads", MailThreadingAlgorithm.none, pm, mbox, Collections.<Integer>emptyList());
         threadMessage("crossed threads", MailThreadingAlgorithm.subject, pm, mbox, match);
-        threadMessage("crossed threads", MailThreadingAlgorithm.references, pm, mbox, null);
-        threadMessage("crossed threads", MailThreadingAlgorithm.subjrefs, pm, mbox, null);
-        threadMessage("crossed threads", MailThreadingAlgorithm.strict, pm, mbox, null);
+        threadMessage("crossed threads", MailThreadingAlgorithm.references, pm, mbox, Collections.<Integer>emptyList());
+        threadMessage("crossed threads", MailThreadingAlgorithm.subjrefs, pm, mbox, Collections.<Integer>emptyList());
+        threadMessage("crossed threads", MailThreadingAlgorithm.strict, pm, mbox, Collections.<Integer>emptyList());
     }
 
     @Test
@@ -262,11 +263,11 @@ public class ThreaderTest {
         mm.setHeader("Thread-Index", Threader.ThreadIndex.addChild(Threader.ThreadIndex.parseHeader(ROOT_THREAD_INDEX)));
         ParsedMessage pm = new ParsedMessage(mm, false);
 
-        threadMessage("outlook", MailThreadingAlgorithm.none, pm, mbox, null);
+        threadMessage("outlook", MailThreadingAlgorithm.none, pm, mbox, Collections.<Integer>emptyList());
         threadMessage("outlook", MailThreadingAlgorithm.subject, pm, mbox, match);
         threadMessage("outlook", MailThreadingAlgorithm.references, pm, mbox, match);
         threadMessage("outlook", MailThreadingAlgorithm.subjrefs, pm, mbox, match);
-        threadMessage("outlook", MailThreadingAlgorithm.strict, pm, mbox, null);
+        threadMessage("outlook", MailThreadingAlgorithm.strict, pm, mbox, Collections.<Integer>emptyList());
     }
 
 }

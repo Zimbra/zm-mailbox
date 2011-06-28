@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -15,7 +15,6 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.common.filter.Sieve;
-import com.zimbra.common.filter.Sieve.AddressPart;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -33,6 +32,7 @@ import com.zimbra.cs.zclient.ZFilterAction.ZStopAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZTagAction;
 import com.zimbra.cs.zclient.ZFilterCondition.AddressBookOp;
 import com.zimbra.cs.zclient.ZFilterCondition.BodyOp;
+import com.zimbra.cs.zclient.ZFilterCondition.ConversationOp;
 import com.zimbra.cs.zclient.ZFilterCondition.DateOp;
 import com.zimbra.cs.zclient.ZFilterCondition.HeaderOp;
 import com.zimbra.cs.zclient.ZFilterCondition.SimpleOp;
@@ -41,6 +41,7 @@ import com.zimbra.cs.zclient.ZFilterCondition.ZAddressBookCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZAddressCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZAttachmentExistsCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZBodyCondition;
+import com.zimbra.cs.zclient.ZFilterCondition.ZConversationCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZCurrentDayOfWeekCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZCurrentTimeCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZDateCondition;
@@ -56,7 +57,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class ZFilterRule implements ToZJSONObject {
+public final class ZFilterRule implements ToZJSONObject {
 
     private String mName;
     private boolean mActive;
@@ -174,6 +175,7 @@ public class ZFilterRule implements ToZJSONObject {
         return r;
     }
 
+    @Override
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject jo = new ZJSONObject();
         jo.put("name", mName);
@@ -184,6 +186,7 @@ public class ZFilterRule implements ToZJSONObject {
         return jo;
     }
 
+    @Override
     public String toString() {
         return String.format("[ZFilterRule %s]", mName);
     }
@@ -240,37 +243,54 @@ public class ZFilterRule implements ToZJSONObject {
             } else if (a.equals("all")) {
                 all = true;
             } else if (a.equals("addressbook")) {
-                if (i + 3 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
-                conditions.add(new ZAddressBookCondition(
-                        args[i++].equals("in") ? AddressBookOp.IN : AddressBookOp.NOT_IN, args[i++], args[i++]));
+                if (i + 3 > args.length) {
+                    throw ZClientException.CLIENT_ERROR("missing args", null);
+                }
+                conditions.add(new ZAddressBookCondition(AddressBookOp.fromString(args[i++]), args[i++], args[i++]));
             } else if (a.equals("attachment")) {
-                if (i + 1 > args.length) throw ZClientException.CLIENT_ERROR("missing exists arg", null);
+                if (i + 1 > args.length) {
+                    throw ZClientException.CLIENT_ERROR("missing exists arg", null);
+                }
                 conditions.add(new ZAttachmentExistsCondition(args[i++].equals("exists")));
             } else if (a.equals("body")) {
-                if (i + 2 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
+                if (i + 2 > args.length) {
+                    throw ZClientException.CLIENT_ERROR("missing args", null);
+                }
                 String op = args[i++];
                 String nextArg = args[i++];
                 boolean caseSensitive = false;
                 if (ZFilterCondition.C_CASE_SENSITIVE.equals(nextArg)) {
                     caseSensitive = true;
-                    if (i + 1 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
+                    if (i + 1 > args.length) {
+                        throw ZClientException.CLIENT_ERROR("missing args", null);
+                    }
                     nextArg = args[i++];
                 }
                 conditions.add(new ZBodyCondition(BodyOp.fromString(op), caseSensitive, nextArg));
             } else if (a.equals("size")) {
-                if (i + 2 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
+                if (i + 2 > args.length) {
+                    throw ZClientException.CLIENT_ERROR("missing args", null);
+                }
                 conditions.add(new ZSizeCondition(SizeOp.fromString(args[i++]), args[i++]));
             } else if (a.equals("date")) {
-                if (i + 2 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
+                if (i + 2 > args.length) {
+                    throw ZClientException.CLIENT_ERROR("missing args", null);
+                }
                 conditions.add(new ZDateCondition(DateOp.fromString(args[i++]), args[i++]));
             } else if (a.equals("current_time")) {
-                if (i + 2 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
+                if (i + 2 > args.length) {
+                    throw ZClientException.CLIENT_ERROR("missing args", null);
+                }
                 conditions.add(new ZCurrentTimeCondition(DateOp.fromString(args[i++]), args[i++]));
             } else if (a.equals("current_day_of_week")) {
-                if (i + 2 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
+                if (i + 2 > args.length) {
+                    throw ZClientException.CLIENT_ERROR("missing args", null);
+                }
                 conditions.add(new ZCurrentDayOfWeekCondition(SimpleOp.fromString(args[i++]), args[i++]));
             } else if (a.equals("header")) {
-                if (i + 2 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
+                if (i + 2 > args.length) {
+                    throw ZClientException.CLIENT_ERROR("missing args", null);
+                }
                 String headerName = args[i++];
                 String op = args[i++];
                 if (op.equals("exists")) {
@@ -278,30 +298,40 @@ public class ZFilterRule implements ToZJSONObject {
                 } else if (op.equals("not_exists")) {
                     conditions.add(new ZHeaderExistsCondition(headerName, false));
                 } else {
-                    if (i + 1 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
+                    if (i + 1 > args.length) {
+                        throw ZClientException.CLIENT_ERROR("missing args", null);
+                    }
                     String nextArg = args[i++];
                     boolean caseSensitive = false;
                     if (ZFilterCondition.C_CASE_SENSITIVE.equals(nextArg)) {
                         caseSensitive = true;
-                        if (i + 1 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
+                        if (i + 1 > args.length) {
+                            throw ZClientException.CLIENT_ERROR("missing args", null);
+                        }
                         nextArg = args[i++];
                     }
                     conditions.add(new ZHeaderCondition(headerName, HeaderOp.fromString(op), caseSensitive, nextArg));
                 }
             } else if (a.equals("mime_header")) {
-                if (i + 3 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
+                if (i + 3 > args.length) {
+                    throw ZClientException.CLIENT_ERROR("missing args", null);
+                }
                 String headerName = args[i++];
                 String op = args[i++];
                 String nextArg = args[i++];
                 boolean caseSensitive = false;
                 if (ZFilterCondition.C_CASE_SENSITIVE.equals(nextArg)) {
                     caseSensitive = true;
-                    if (i + 1 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
+                    if (i + 1 > args.length) {
+                        throw ZClientException.CLIENT_ERROR("missing args", null);
+                    }
                     nextArg = args[i++];
                 }
                 conditions.add(new ZMimeHeaderCondition(headerName, HeaderOp.fromString(op), caseSensitive, nextArg));
             } else if (a.equals("address")) {
-                if (i + 4 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
+                if (i + 4 > args.length) {
+                    throw ZClientException.CLIENT_ERROR("missing args", null);
+                }
                 String headerName = args[i++];
                 String part = args[i++];
                 String op = args[i++];
@@ -309,40 +339,61 @@ public class ZFilterRule implements ToZJSONObject {
                 boolean caseSensitive = false;
                 if (ZFilterCondition.C_CASE_SENSITIVE.equals(nextArg)) {
                     caseSensitive = true;
-                    if (i + 1 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
+                    if (i + 1 > args.length) {
+                        throw ZClientException.CLIENT_ERROR("missing args", null);
+                    }
                     nextArg = args[i++];
                 }
                 conditions.add(new ZAddressCondition(headerName, Sieve.AddressPart.fromString(part),
-                                                     HeaderOp.fromString(op), caseSensitive, nextArg));
+                        HeaderOp.fromString(op), caseSensitive, nextArg));
             } else if (a.equals("invite")) {
-                if (i + 1 > args.length) throw ZClientException.CLIENT_ERROR("missing exists arg", null);
+                if (i + 1 > args.length) {
+                    throw ZClientException.CLIENT_ERROR("missing exists arg", null);
+                }
                 ZInviteCondition cond = new ZInviteCondition(args[i++].equals("exists"));
                 if (i + 1 < args.length && args[i].equalsIgnoreCase("method")) {
                     i++; // method
                     cond.setMethods(args[i++].split(","));
                 }
                 conditions.add(cond);
+            } else if (a.equals("conversation")) {
+                if (i + 2 > args.length) {
+                    throw ZClientException.CLIENT_ERROR("missing where arg", null);
+                }
+                conditions.add(new ZConversationCondition(ConversationOp.fromString(args[i++]), args[i++]));
             } else if (a.equals("keep")) {
                 actions.add(new ZKeepAction());
             } else if (a.equals("discard")) {
                 actions.add(new ZDiscardAction());
             } else if (a.equals("fileinto")) {
-                if (i + 1 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
+                if (i + 1 > args.length) {
+                    throw ZClientException.CLIENT_ERROR("missing args", null);
+                }
                 actions.add(new ZFileIntoAction(args[i++]));
             } else if (a.equals("tag")) {
-                if (i + 1 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
+                if (i + 1 > args.length) {
+                    throw ZClientException.CLIENT_ERROR("missing args", null);
+                }
                 actions.add(new ZTagAction(args[i++]));
             } else if (a.equals("mark")) {
-                if (i + 1 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
+                if (i + 1 > args.length) {
+                    throw ZClientException.CLIENT_ERROR("missing args", null);
+                }
                 actions.add(new ZMarkAction(MarkOp.fromString(args[i++])));
             } else if (a.equals("redirect")) {
-                if (i + 1 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
+                if (i + 1 > args.length) {
+                    throw ZClientException.CLIENT_ERROR("missing args", null);
+                }
                 actions.add(new ZRedirectAction(args[i++]));
             } else if (a.equals("reply")) {
-                if (i + 1 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
+                if (i + 1 > args.length) {
+                    throw ZClientException.CLIENT_ERROR("missing args", null);
+                }
                 actions.add(new ZReplyAction(args[i++]));
             } else if (a.equals("notify")) {
-                if (i + 3 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
+                if (i + 3 > args.length) {
+                    throw ZClientException.CLIENT_ERROR("missing args", null);
+                }
                 String emailAddr = args[i++];
                 String subjectTemplate = args[i++];
                 String bodyTemplate = args[i++];
@@ -362,13 +413,15 @@ public class ZFilterRule implements ToZJSONObject {
             }
         }
 
-        if (name == null || name.length() == 0)
+        if (name == null || name.length() == 0) {
             throw ZClientException.CLIENT_ERROR("missing filter name", null);
-        if (actions.isEmpty())
+        }
+        if (actions.isEmpty()) {
             throw ZClientException.CLIENT_ERROR("must have at least one action", null);
-        if (conditions.isEmpty())
+        }
+        if (conditions.isEmpty()) {
             throw ZClientException.CLIENT_ERROR("must have at least one condition", null);
-
+        }
         return new ZFilterRule(name, active, all, conditions, actions);
     }
 

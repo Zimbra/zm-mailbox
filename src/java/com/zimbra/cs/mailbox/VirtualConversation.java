@@ -73,7 +73,7 @@ public class VirtualConversation extends Conversation {
         return vconv;
     }
 
-    private static UnderlyingData wrapMessage(Message msg) throws ServiceException {
+    private static UnderlyingData wrapMessage(Message msg) {
         CustomMetadataList extended = MetadataCallback.duringConversationAdd(null, msg);
 
         UnderlyingData data = new UnderlyingData();
@@ -86,7 +86,11 @@ public class VirtualConversation extends Conversation {
         data.modContent = msg.getSavedSequence();
         data.size = 1;
         data.unreadCount = msg.getUnreadCount();
-        data.setFlags(msg.getInternalFlagBitmask());
+        int flags = msg.getInternalFlagBitmask();
+        if ((flags & Flag.BITMASK_FROM_ME) > 0) {
+            flags |= Flag.BITMASK_BY_ME;
+        }
+        data.setFlags(flags);
         data.tags = msg.getTagBitmask();
         data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, extended, new SenderList(msg));
         return data;

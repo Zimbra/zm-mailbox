@@ -76,6 +76,8 @@ import com.zimbra.cs.index.analysis.FieldTokenStream;
 import com.zimbra.cs.index.analysis.MimeTypeTokenStream;
 import com.zimbra.cs.index.analysis.RFC822AddressTokenStream;
 import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Threader;
 import com.zimbra.cs.object.ObjectHandlerException;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.BlobInputStream;
@@ -134,6 +136,7 @@ public final class ParsedMessage {
     private CalendarPartInfo calendarPartInfo;
     private boolean wasMutated;
     private InputStream sharedStream;
+    private Threader threader;
 
     public ParsedMessage(MimeMessage msg, boolean indexAttachments) throws ServiceException {
         this(msg, getZimbraDateHeader(msg), indexAttachments);
@@ -1300,6 +1303,13 @@ public final class ParsedMessage {
 
     public static boolean isReply(String subject) {
         return trimPrefixes(subject).getSecond();
+    }
+
+    public Threader getThreader(Mailbox mbox) throws ServiceException {
+        if (threader == null) {
+            threader = new Threader(mbox, this);
+        }
+        return threader;
     }
 
 }

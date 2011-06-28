@@ -206,65 +206,66 @@ public class ZMailboxUtil implements DebugListener {
         ACCOUNT("help on account-related commands"),
         APPOINTMENT("help on appoint-related commands",
                 " absolute date-specs:\n" +
-                        "\n" +
-                        "  mm/dd/yyyy (i.e., 12/25/1998)\n" +
-                        "  yyyy/dd/mm (i.e., 1989/12/25)\n" +
-                        "  \\d+       (num milliseconds, i.e., 1132276598000)\n" +
-                        "\n"+
-                        "  relative date-specs:\n"+
-                        "\n"+
-                        "  [mp+-]?([0-9]+)([mhdwy][a-z]*)?g\n"+
-                        " \n"+
-                        "   +/{not-specified}   current time plus an offset\n"+
-                        "   -                   current time minus an offset\n"+
-                        "  \n"+
-                        "   (0-9)+    value\n"+
-                        "\n"+
-                        "   ([mhdwy][a-z]*)  units, everything after the first character is ignored (except for \"mi\" case):\n"+
-                        "   m(onths)\n"+
-                        "   mi(nutes)\n"+
-                        "   d(ays)\n"+
-                        "   w(eeks)\n"+
-                        "   h(ours)\n"+
-                        "   y(ears)\n"+
-                        "   \n"+
-                        "  examples:\n"+
-                        "     1day     1 day from now\n"+
-                        "    +1day     1 day from now \n"+
-                        "    p1day     1 day from now\n"+
-                        "    +60mi     60 minutes from now\n"+
-                        "    +1week    1 week from now\n"+
-                        "    +6mon     6 months from now \n"+
-                        "    1year     1 year from now\n"+
-                        "\n"),
+                "\n" +
+                "  mm/dd/yyyy (i.e., 12/25/1998)\n" +
+                "  yyyy/dd/mm (i.e., 1989/12/25)\n" +
+                "  \\d+       (num milliseconds, i.e., 1132276598000)\n" +
+                "\n" +
+                "  relative date-specs:\n" +
+                "\n" +
+                "  [mp+-]?([0-9]+)([mhdwy][a-z]*)?g\n" +
+                " \n" +
+                "   +/{not-specified}   current time plus an offset\n" +
+                "   -                   current time minus an offset\n" +
+                "  \n"+
+                "   (0-9)+    value\n" +
+                "\n" +
+                "   ([mhdwy][a-z]*)  units, everything after the first character is ignored (except for \"mi\" case):\n" +
+                "   m(onths)\n" +
+                "   mi(nutes)\n" +
+                "   d(ays)\n" +
+                "   w(eeks)\n" +
+                "   h(ours)\n" +
+                "   y(ears)\n" +
+                "   \n" +
+                "  examples:\n" +
+                "     1day     1 day from now\n" +
+                "    +1day     1 day from now \n" +
+                "    p1day     1 day from now\n" +
+                "    +60mi     60 minutes from now\n" +
+                "    +1week    1 week from now\n"+
+                "    +6mon     6 months from now \n" +
+                "    1year     1 year from now\n" +
+                "\n"),
         COMMANDS("help on all commands"),
         CONTACT("help on contact-related commands"),
         CONVERSATION("help on conversation-related commands"),
         FILTER("help on filter-realted commnds",
-                        "  {conditions}:\n" +
-                        "    header \"comma-separated-names\" is|not_is|contains|not_contains|matches|not_matches [case_sensitive] \"value\"\n" +
-                        "    header \"comma-separated-names\" exists|not_exists\n" +
-                        "    mime_header \"name\" is|not_is|contains|not_contains|matches|not_matches [case_sensitive] \"value\"\n" +
-                        "    address \"comma-separated-header-names\" all|localpart|domain is|not_is|contains|not_contains|matches|not_matches [case_sensitive] \"value\"\n" +
-                        "    date before|not_before|after|not_after \"YYYYMMDD\"\n" +
-                        "    size under|not_under|over|not_over \"1|1K|1M\"\n" +
-                        "    body contains|not_contains [case_sensitive] \"text\"\n" +
-                        "    addressbook in|not_in \"header-name\" \"contacts|ranking\"\n" +
-                        "    attachment exists|not_exists\n" +
-                        "    invite exists|not_exists\n" +
-                        "    current_time before|not_before|after|not_after \"HHmm\"\n" +
-                        "    current_day_of_week is|not_is \"comma-separated-days(0=Sun,6=Sat)\"\n" +
-                        "\n" +
-                        "  {actions}:\n" +
-                        "    keep\n" +
-                        "    discard\n" +
-                        "    fileinto \"/path\"\n" +
-                        "    tag \"/tag\"\n" +
-                        "    mark read|flagged\n" +
-                        "    redirect \"address\"\n" +
-                        "    reply \"body-template\"\n" +
-                        "    notify \"address\" \"subject-template\" \"body-template\" [\"max-body-size(bytes)\"]\n" +
-                        "    stop\n"),
+                "  {conditions}:\n" +
+                "    header \"comma-separated-names\" is|not_is|contains|not_contains|matches|not_matches [case_sensitive] \"value\"\n" +
+                "    header \"comma-separated-names\" exists|not_exists\n" +
+                "    mime_header \"name\" is|not_is|contains|not_contains|matches|not_matches [case_sensitive] \"value\"\n" +
+                "    address \"comma-separated-header-names\" all|localpart|domain is|not_is|contains|not_contains|matches|not_matches [case_sensitive] \"value\"\n" +
+                "    date before|not_before|after|not_after \"YYYYMMDD\"\n" +
+                "    size under|not_under|over|not_over \"1|1K|1M\"\n" +
+                "    body contains|not_contains [case_sensitive] \"text\"\n" +
+                "    addressbook in|not_in \"header-name\" \"contacts|ranking\"\n" +
+                "    attachment exists|not_exists\n" +
+                "    invite exists|not_exists\n" +
+                "    current_time before|not_before|after|not_after \"HHmm\"\n" +
+                "    current_day_of_week is|not_is \"comma-separated-days(0=Sun,6=Sat)\"\n" +
+                "    conversation where|not_where started|participated\n" +
+                "\n" +
+                "  {actions}:\n" +
+                "    keep\n" +
+                "    discard\n" +
+                "    fileinto \"/path\"\n" +
+                "    tag \"/tag\"\n" +
+                "    mark read|flagged\n" +
+                "    redirect \"address\"\n" +
+                "    reply \"body-template\"\n" +
+                "    notify \"address\" \"subject-template\" \"body-template\" [\"max-body-size(bytes)\"]\n" +
+                "    stop\n"),
         FOLDER("help on folder-related commands"),
         ITEM("help on item-related commands"),
         MESSAGE("help on message-related commands"),
@@ -1007,16 +1008,16 @@ public class ZMailboxUtil implements DebugListener {
             doGetContacts(args);
             break;
         case GET_IDENTITIES:
-            doGetIdentities(args);
+            doGetIdentities();
             break;
             case GET_SIGNATURES:
-            doGetSignatures(args);
+            doGetSignatures();
             break;
         case GET_ALL_FOLDERS:
-            doGetAllFolders(args);
+            doGetAllFolders();
             break;
         case GET_ALL_TAGS:
-            doGetAllTags(args);
+            doGetAllTags();
             break;
         case GET_APPOINTMENT_SUMMARIES:
             doGetAppointmentSummaries(args);
@@ -1025,10 +1026,10 @@ public class ZMailboxUtil implements DebugListener {
             doGetConversation(args);
             break;
         case GET_INCOMING_FILTER_RULES:
-            doGetIncomingFilterRules(args);
+            doGetIncomingFilterRules();
             break;
         case GET_OUTGOING_FILTER_RULES:
-            doGetOutgoingFilterRules(args);
+            doGetOutgoingFilterRules();
             break;
         case GET_FOLDER:
             doGetFolder(args);
@@ -1361,7 +1362,7 @@ public class ZMailboxUtil implements DebugListener {
     private static void doModifyFilterRule(String[] args, ZFilterRules rules) throws ServiceException {
         ZFilterRule modifiedRule = ZFilterRule.parseFilterRule(args);
         List<ZFilterRule> list = rules.getRules();
-        for (int i=0; i < list.size(); i++) {
+        for (int i = 0; i < list.size(); i++) {
             if (list.get(i).getName().equalsIgnoreCase(modifiedRule.getName())) {
                 list.set(i, modifiedRule);
                 return;
@@ -1394,12 +1395,12 @@ public class ZMailboxUtil implements DebugListener {
         throw ZClientException.CLIENT_ERROR("can't find rule: " + args, null);
     }
 
-    private void doGetIncomingFilterRules(String[] args) throws ServiceException {
+    private void doGetIncomingFilterRules() throws ServiceException {
         ZFilterRules rules = mMbox.getIncomingFilterRules(true);
         printFilterRules(rules);
     }
 
-    private void doGetOutgoingFilterRules(String[] args) throws ServiceException {
+    private void doGetOutgoingFilterRules() throws ServiceException {
         ZFilterRules rules = mMbox.getOutgoingFilterRules(true);
         printFilterRules(rules);
     }
@@ -1898,10 +1899,19 @@ public class ZMailboxUtil implements DebugListener {
 
     private void doSearch(String[] args) throws ServiceException {
 
-        if (currrentOpt()) { doSearchRedisplay(args); return; }
-        else if (previousOpt()) { doSearchPrevious(args); return; }
-        else if (nextOpt()) { doSearchNext(args); return; }
-        else if (args.length == 0) { usage(); return; }
+        if (currrentOpt()) {
+            doSearchRedisplay();
+            return;
+        } else if (previousOpt()) {
+            doSearchPrevious();
+            return;
+        } else if (nextOpt()) {
+            doSearchNext();
+            return;
+        } else if (args.length == 0) {
+            usage();
+            return;
+        }
 
         mSearchParams = new ZSearchParams(args[0]);
 
@@ -1936,7 +1946,7 @@ public class ZMailboxUtil implements DebugListener {
         return limit;
     }
 
-    private void doSearchRedisplay(String[] args) throws ServiceException {
+    private void doSearchRedisplay() throws ServiceException {
         if (mSearchParams == null) return;
         ZSearchPagerResult pager = mMbox.search(mSearchParams, mSearchPage, true, false);
         mSearchPage = pager.getActualPage();
@@ -1944,7 +1954,7 @@ public class ZMailboxUtil implements DebugListener {
         dumpSearch(pager.getResult(), verboseOpt());
     }
 
-    private void doSearchNext(String[] args) throws ServiceException {
+    private void doSearchNext() throws ServiceException {
         if (mSearchParams == null) return;
         ZSearchPagerResult pager = mMbox.search(mSearchParams, ++mSearchPage, true, false);
         mSearchPage = pager.getActualPage();
@@ -1952,7 +1962,7 @@ public class ZMailboxUtil implements DebugListener {
         dumpSearch(pager.getResult(), verboseOpt());
     }
 
-    private void doSearchPrevious(String[] args) throws ServiceException {
+    private void doSearchPrevious() throws ServiceException {
         if (mSearchParams == null || mSearchPage == 0)
             return;
         ZSearchPagerResult pager = mMbox.search(mSearchParams, --mSearchPage, true, false);
@@ -1965,10 +1975,19 @@ public class ZMailboxUtil implements DebugListener {
 
     private void doSearchConv(String[] args) throws ServiceException {
 
-        if (currrentOpt()) { doSearchConvRedisplay(args); return; }
-        else if (previousOpt()) { doSearchConvPrevious(args); return; }
-        else if (nextOpt()) { doSearchConvNext(args); return; }
-        else if (args.length != 2) { usage(); return; }
+        if (currrentOpt()) {
+            doSearchConvRedisplay();
+            return;
+        } else if (previousOpt()) {
+            doSearchConvPrevious();
+            return;
+        } else if (nextOpt()) {
+            doSearchConvNext();
+            return;
+        } else if (args.length != 2) {
+            usage();
+            return;
+        }
 
         mConvSearchConvId = id(args[0]);
         mConvSearchParams = new ZSearchParams(args[1]);
@@ -1988,13 +2007,13 @@ public class ZMailboxUtil implements DebugListener {
         dumpConvSearch(mMbox.searchConversation(mConvSearchConvId, mConvSearchParams), verboseOpt());
     }
 
-    private void doSearchConvRedisplay(String[] args) {
+    private void doSearchConvRedisplay() {
         ZSearchResult sr = mConvSearchResult;
         if (sr == null) return;
         dumpConvSearch(mConvSearchResult, verboseOpt());
     }
 
-    private void doSearchConvNext(String[] args) throws ServiceException {
+    private void doSearchConvNext() throws ServiceException {
         ZSearchParams sp = mConvSearchParams;
         ZSearchResult sr = mConvSearchResult;
         if (sp == null || sr == null || !sr.hasMore())
@@ -2006,7 +2025,7 @@ public class ZMailboxUtil implements DebugListener {
         dumpConvSearch(mMbox.searchConversation(mConvSearchConvId, sp), verboseOpt());
     }
 
-    private void doSearchConvPrevious(String[] args) throws ServiceException {
+    private void doSearchConvPrevious() throws ServiceException {
         ZSearchParams sp = mConvSearchParams;
         ZSearchResult sr = mConvSearchResult;
         if (sp == null || sr == null || sp.getOffset() == 0)
@@ -2164,7 +2183,7 @@ public class ZMailboxUtil implements DebugListener {
         stdout.println();
     }
 
-    private void doGetAllTags(String[] args) throws ServiceException {
+    private void doGetAllTags() throws ServiceException {
         if (verboseOpt()) {
             StringBuilder sb = new StringBuilder();
             for (String tagName: mMbox.getAllTagNames()) {
@@ -2208,7 +2227,7 @@ public class ZMailboxUtil implements DebugListener {
         }
     }
 
-    private void doGetAllFolders(String[] args) throws ServiceException {
+    private void doGetAllFolders() throws ServiceException {
         if (verboseOpt()) {
             stdout.println(mMbox.getUserRoot().dump());
         } else {
@@ -2253,7 +2272,7 @@ public class ZMailboxUtil implements DebugListener {
         }
     }
 
-    private void doGetIdentities(String[] args) throws ServiceException {
+    private void doGetIdentities() throws ServiceException {
         dumpIdentities(mMbox.getIdentities());
     }
 
@@ -2274,7 +2293,7 @@ public class ZMailboxUtil implements DebugListener {
         }
     }
 
-    private void doGetSignatures(String[] args) throws ServiceException {
+    private void doGetSignatures() throws ServiceException {
         dumpSignatures(mMbox.getSignatures());
     }
 

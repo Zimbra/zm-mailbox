@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.filter;
 
+import com.google.common.base.Strings;
 import com.zimbra.common.filter.Sieve;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -29,20 +30,20 @@ import java.util.List;
  * Converts a Sieve node tree to the SOAP representation of
  * filter rules.
  */
-public class SieveToSoap extends SieveVisitor {
+public final class SieveToSoap extends SieveVisitor {
 
-    private Element mRoot;
-    private List<String> mRuleNames;
-    private Element mCurrentRule;
-    private int mCurrentRuleIndex = 0;
+    private final Element root;
+    private final List<String> ruleNames;
+    private Element currentRule;
+    private int currentRuleIndex = 0;
 
     public SieveToSoap(ElementFactory factory, List<String> ruleNames) {
-        mRoot = factory.createElement(MailConstants.E_FILTER_RULES);
-        mRuleNames = ruleNames;
+        this.root = factory.createElement(MailConstants.E_FILTER_RULES);
+        this.ruleNames = ruleNames;
     }
 
     public Element getRootElement() {
-        return mRoot;
+        return root;
     }
 
     @Override
@@ -52,26 +53,25 @@ public class SieveToSoap extends SieveVisitor {
         }
 
         // rule element
-        mCurrentRule = mRoot.addElement(MailConstants.E_FILTER_RULE);
+        currentRule = root.addElement(MailConstants.E_FILTER_RULE);
         String name = getCurrentRuleName();
         if (name != null) {
-            mCurrentRule.addAttribute(MailConstants.A_NAME, name);
+            currentRule.addAttribute(MailConstants.A_NAME, name);
         }
-        mCurrentRule.addAttribute(MailConstants.A_ACTIVE, props.isEnabled);
+        currentRule.addAttribute(MailConstants.A_ACTIVE, props.isEnabled);
 
         // filterTests element
-        Element filterTests = mCurrentRule.addElement(MailConstants.E_FILTER_TESTS);
+        Element filterTests = currentRule.addElement(MailConstants.E_FILTER_TESTS);
         filterTests.addAttribute(MailConstants.A_CONDITION, props.condition.toString());
 
         // filterActions element
-        mCurrentRule.addElement(MailConstants.E_FILTER_ACTIONS);
+        currentRule.addElement(MailConstants.E_FILTER_ACTIONS);
 
-        mCurrentRuleIndex++;
+        currentRuleIndex++;
     }
 
-    private Element addTest(String elementName, RuleProperties props)
-    throws ServiceException {
-        Element tests = mCurrentRule.getElement(MailConstants.E_FILTER_TESTS);
+    private Element addTest(String elementName, RuleProperties props) throws ServiceException {
+        Element tests = currentRule.getElement(MailConstants.E_FILTER_TESTS);
         int index = tests.listElements().size();
         Element test = tests.addElement(elementName);
         if (props.isNegativeTest) {
@@ -81,9 +81,8 @@ public class SieveToSoap extends SieveVisitor {
         return test;
     }
 
-    private Element addAction(String elementName)
-    throws ServiceException {
-        Element actions = mCurrentRule.getElement(MailConstants.E_FILTER_ACTIONS);
+    private Element addAction(String elementName) throws ServiceException {
+        Element actions = currentRule.getElement(MailConstants.E_FILTER_ACTIONS);
         int index = actions.listElements().size();
         Element action = actions.addElement(elementName);
         action.addAttribute(MailConstants.A_INDEX, Integer.toString(index));
@@ -91,8 +90,7 @@ public class SieveToSoap extends SieveVisitor {
     }
 
     @Override
-    protected void visitAttachmentTest(Node node, VisitPhase phase, RuleProperties props)
-    throws ServiceException {
+    protected void visitAttachmentTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
         if (phase == VisitPhase.begin) {
             addTest(MailConstants.E_ATTACHMENT_TEST, props);
         }
@@ -100,19 +98,19 @@ public class SieveToSoap extends SieveVisitor {
 
     @Override
     protected void visitBodyTest(Node node, VisitPhase phase, RuleProperties props, boolean caseSensitive, String value)
-    throws ServiceException {
+            throws ServiceException {
         if (phase == VisitPhase.begin) {
             Element test = addTest(MailConstants.E_BODY_TEST, props);
-            if (caseSensitive)
+            if (caseSensitive) {
                 test.addAttribute(MailConstants.A_CASE_SENSITIVE, caseSensitive);
+            }
             test.addAttribute(MailConstants.A_VALUE, value);
         }
     }
 
     @Override
     protected void visitDateTest(Node node, VisitPhase phase, RuleProperties props,
-                                 Sieve.DateComparison comparison, Date date)
-    throws ServiceException {
+            Sieve.DateComparison comparison, Date date) throws ServiceException {
         if (phase == VisitPhase.begin) {
             Element test = addTest(MailConstants.E_DATE_TEST, props);
             test.addAttribute(MailConstants.A_DATE_COMPARISON, comparison.toString());
@@ -122,8 +120,7 @@ public class SieveToSoap extends SieveVisitor {
 
     @Override
     protected void visitCurrentTimeTest(Node node, VisitPhase phase, RuleProperties props,
-                                        Sieve.DateComparison comparison, String timeStr)
-    throws ServiceException {
+            Sieve.DateComparison comparison, String timeStr) throws ServiceException {
         if (phase == VisitPhase.begin) {
             Element test = addTest(MailConstants.E_CURRENT_TIME_TEST, props);
             test.addAttribute(MailConstants.A_DATE_COMPARISON, comparison.toString());
@@ -133,7 +130,7 @@ public class SieveToSoap extends SieveVisitor {
 
     @Override
     protected void visitCurrentDayOfWeekTest(Node node, VisitPhase phase, RuleProperties props, List<String> days)
-    throws ServiceException {
+            throws ServiceException {
         if (phase == VisitPhase.begin) {
             Element test = addTest(MailConstants.E_CURRENT_DAY_OF_WEEK_TEST, props);
             test.addAttribute(MailConstants.A_VALUE, StringUtil.join(",", days));
@@ -141,17 +138,15 @@ public class SieveToSoap extends SieveVisitor {
     }
 
     @Override
-    protected void visitTrueTest(Node node, VisitPhase phase, RuleProperties props)
-    throws ServiceException {
+    protected void visitTrueTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
         if (phase == VisitPhase.begin) {
             addTest(MailConstants.E_TRUE_TEST, props);
         }
     }
 
     @Override
-    protected void visitHeaderExistsTest(Node node, VisitPhase phase, RuleProperties props,
-                                         String header)
-    throws ServiceException {
+    protected void visitHeaderExistsTest(Node node, VisitPhase phase, RuleProperties props, String header)
+            throws ServiceException {
         if (phase == VisitPhase.begin) {
             Element test = addTest(MailConstants.E_HEADER_EXISTS_TEST, props);
             test.addAttribute(MailConstants.A_HEADER, header);
@@ -160,37 +155,38 @@ public class SieveToSoap extends SieveVisitor {
 
     @Override
     protected void visitHeaderTest(String testEltName, Node node, VisitPhase phase, RuleProperties props,
-                                   List<String> headers, Sieve.StringComparison comparison, boolean caseSensitive, String value)
-    throws ServiceException {
+            List<String> headers, Sieve.StringComparison comparison, boolean caseSensitive, String value)
+            throws ServiceException {
         if (phase == VisitPhase.begin) {
             Element test = addTest(testEltName, props);
             test.addAttribute(MailConstants.A_HEADER, StringUtil.join(",", headers));
             test.addAttribute(MailConstants.A_STRING_COMPARISON, comparison.toString());
-            if (caseSensitive)
+            if (caseSensitive) {
                 test.addAttribute(MailConstants.A_CASE_SENSITIVE, caseSensitive);
+            }
             test.addAttribute(MailConstants.A_VALUE, value);
         }
     }
 
     @Override
     protected void visitAddressTest(Node node, VisitPhase phase, RuleProperties props, List<String> headers,
-                                    Sieve.AddressPart part, Sieve.StringComparison comparison, boolean caseSensitive, String value)
-    throws ServiceException {
+            Sieve.AddressPart part, Sieve.StringComparison comparison, boolean caseSensitive, String value)
+            throws ServiceException {
         if (phase == VisitPhase.begin) {
             Element test = addTest(MailConstants.E_ADDRESS_TEST, props);
             test.addAttribute(MailConstants.A_HEADER, StringUtil.join(",", headers));
             test.addAttribute(MailConstants.A_PART, part.toString());
             test.addAttribute(MailConstants.A_STRING_COMPARISON, comparison.toString());
-            if (caseSensitive)
+            if (caseSensitive) {
                 test.addAttribute(MailConstants.A_CASE_SENSITIVE, caseSensitive);
+            }
             test.addAttribute(MailConstants.A_VALUE, value);
         }
     }
 
     @Override
     protected void visitSizeTest(Node node, VisitPhase phase, RuleProperties props,
-                                 Sieve.NumberComparison comparison, int size, String sizeString)
-    throws ServiceException {
+            Sieve.NumberComparison comparison, int size, String sizeString) throws ServiceException {
         if (phase == VisitPhase.begin) {
             Element test = addTest(MailConstants.E_SIZE_TEST, props);
             test.addAttribute(MailConstants.A_NUMBER_COMPARISON, comparison.toString());
@@ -210,7 +206,7 @@ public class SieveToSoap extends SieveVisitor {
 
     @Override
     protected void visitInviteTest(Node node, VisitPhase phase, RuleProperties props, List<String> methods)
-    throws ServiceException {
+            throws ServiceException {
         if (phase == VisitPhase.begin) {
             Element test = addTest(MailConstants.E_INVITE_TEST, props);
             for (String method : methods) {
@@ -219,24 +215,32 @@ public class SieveToSoap extends SieveVisitor {
         }
     }
 
+    @Override
+    protected void visitConversationTest(Node node, VisitPhase phase, RuleProperties props, String where)
+            throws ServiceException {
+        if (phase == VisitPhase.begin) {
+            Element test = addTest(MailConstants.E_CONVERSATION_TEST, props);
+            test.addAttribute(MailConstants.A_WHERE, where);
+        }
+    }
+
     private String getCurrentRuleName() {
-        if (mRuleNames == null || mCurrentRuleIndex >= mRuleNames.size()) {
+        if (ruleNames == null || currentRuleIndex >= ruleNames.size()) {
             return null;
         }
-        return mRuleNames.get(mCurrentRuleIndex);
+        return ruleNames.get(currentRuleIndex);
     }
 
     @Override
-    protected void visitDiscardAction(Node node, VisitPhase phase, RuleProperties props)
-    throws ServiceException {
+    protected void visitDiscardAction(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
         if (phase == VisitPhase.begin) {
             addAction(MailConstants.E_ACTION_DISCARD);
         }
     }
 
     @Override
-    protected void visitFileIntoAction(Node node, VisitPhase phase, RuleProperties props,
-                                       String folderPath) throws ServiceException {
+    protected void visitFileIntoAction(Node node, VisitPhase phase, RuleProperties props, String folderPath)
+            throws ServiceException {
         if (phase == VisitPhase.begin) {
             addAction(MailConstants.E_ACTION_FILE_INTO).addAttribute(MailConstants.A_FOLDER_PATH, folderPath);
         }
@@ -244,23 +248,22 @@ public class SieveToSoap extends SieveVisitor {
 
     @Override
     protected void visitFlagAction(Node node, VisitPhase phase, RuleProperties props, Sieve.Flag flag)
-    throws ServiceException {
+            throws ServiceException {
         if (phase == VisitPhase.begin) {
             addAction(MailConstants.E_ACTION_FLAG).addAttribute(MailConstants.A_FLAG_NAME, flag.toString());
         }
     }
 
     @Override
-    protected void visitKeepAction(Node node, VisitPhase phase, RuleProperties props)
-    throws ServiceException {
+    protected void visitKeepAction(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
         if (phase == VisitPhase.begin) {
             addAction(MailConstants.E_ACTION_KEEP);
         }
     }
 
     @Override
-    protected void visitRedirectAction(Node node, VisitPhase phase, RuleProperties props,
-                                       String address) throws ServiceException {
+    protected void visitRedirectAction(Node node, VisitPhase phase, RuleProperties props, String address)
+            throws ServiceException {
         if (phase == VisitPhase.begin) {
             addAction(MailConstants.E_ACTION_REDIRECT).addAttribute(MailConstants.A_ADDRESS, address);
         }
@@ -275,24 +278,25 @@ public class SieveToSoap extends SieveVisitor {
     }
 
     @Override
-    protected void visitNotifyAction(Node node, VisitPhase phase, RuleProperties props,
-                                     String emailAddr, String subjectTemplate, String bodyTemplate, int maxBodyBytes)
-            throws ServiceException {
+    protected void visitNotifyAction(Node node, VisitPhase phase, RuleProperties props, String emailAddr,
+            String subjectTemplate, String bodyTemplate, int maxBodyBytes) throws ServiceException {
         if (phase == VisitPhase.begin) {
             Element action = addAction(MailConstants.E_ACTION_NOTIFY);
             action.addAttribute(MailConstants.A_ADDRESS, emailAddr);
-            if (!StringUtil.isNullOrEmpty(subjectTemplate))
+            if (!Strings.isNullOrEmpty(subjectTemplate)) {
                 action.addAttribute(MailConstants.A_SUBJECT, subjectTemplate);
-            if (!StringUtil.isNullOrEmpty(bodyTemplate))
+            }
+            if (!Strings.isNullOrEmpty(bodyTemplate)) {
                 action.addElement(MailConstants.E_CONTENT).addText(bodyTemplate);
-            if (maxBodyBytes != -1)
+            }
+            if (maxBodyBytes != -1) {
                 action.addAttribute(MailConstants.A_MAX_BODY_SIZE, maxBodyBytes);
+            }
         }
     }
 
      @Override
-    protected void visitStopAction(Node node, VisitPhase phase, RuleProperties props)
-    throws ServiceException {
+    protected void visitStopAction(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
         if (phase == VisitPhase.begin) {
             addAction(MailConstants.E_ACTION_STOP);
         }
@@ -300,7 +304,7 @@ public class SieveToSoap extends SieveVisitor {
 
     @Override
     protected void visitTagAction(Node node, VisitPhase phase, RuleProperties props, String tagName)
-    throws ServiceException {
+            throws ServiceException {
         if (phase == VisitPhase.begin) {
             addAction(MailConstants.E_ACTION_TAG).addAttribute(MailConstants.A_TAG_NAME, tagName);
         }
