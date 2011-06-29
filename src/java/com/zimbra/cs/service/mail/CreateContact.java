@@ -231,68 +231,21 @@ public class CreateContact extends MailDocumentHandler  {
                         " is only allowed for contact group", null);
             }
             
-            String opStr = elt.getAttribute(MailConstants.A_OPERATION, null);
+            String opStr = elt.getAttribute(MailConstants.A_OPERATION);
             ParsedContact.FieldDelta.Op op = FieldDelta.Op.fromString(opStr);
-            
-            String memberIdStr = elt.getAttribute(MailConstants.A_ID, null);
-            ContactGroup.MemberId memberId = null;
-            if (memberIdStr != null) {
-                memberId = ContactGroup.MemberId.fromString(memberIdStr);
-            }
             
             ContactGroup.Member.Type memberType = 
                 ContactGroup.Member.Type.fromSoap(elt.getAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_TYPE, null));
             String memberValue = elt.getAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_VALUE, null);
             
-            // validate
-            /*
-            (1) if op is not present (modify an existing member):
-                   {member-id} is required
-                   {member-type} is optional: 
-                       - if present, type is changed to the specified type
-                       - if not present: type is not changed
-                   {member-value} is required
-    
-            (2) if op is present (add or remove a member):
-                   +: {member-id} is not allowed
-                      {member-type} is required
-                      {member-value} is required
-                   -: {member-id} is required
-                      {member-type} is not allowed
-                      {member-value} is not allowed
-             */
-            if (op == null) {
-                if (memberId == null) {
-                    throw ServiceException.INVALID_REQUEST("missing member id", null);
-                }
-                if (StringUtil.isNullOrEmpty(memberValue)) {
-                    throw ServiceException.INVALID_REQUEST("missing member value", null);
-                }
-            } else if (op == ParsedContact.FieldDelta.Op.ADD) {
-                if (memberId != null) {
-                    throw ServiceException.INVALID_REQUEST("member id is not allowed for adding member", null);
-                }
-                if (memberType == null) {
-                    throw ServiceException.INVALID_REQUEST("missing member type", null);
-                }
-                if (StringUtil.isNullOrEmpty(memberValue)) {
-                    throw ServiceException.INVALID_REQUEST("missing member value", null);
-                }
-            } else if (op == ParsedContact.FieldDelta.Op.REMOVE) {
-                if (memberId == null) {
-                    throw ServiceException.INVALID_REQUEST("missing member id", null);
-                }
-                if (memberType != null) {
-                    throw ServiceException.INVALID_REQUEST("member type is not allowed for removing member", null);
-                }
-                if (!StringUtil.isNullOrEmpty(memberValue)) {
-                    throw ServiceException.INVALID_REQUEST("member value is not allowed for removing member", null);
-                }
-            } else {
-                throw ServiceException.INVALID_REQUEST("invalid op", null);
+            if (memberType == null) {
+                throw ServiceException.INVALID_REQUEST("missing member type", null);
+            }
+            if (StringUtil.isNullOrEmpty(memberValue)) {
+                throw ServiceException.INVALID_REQUEST("missing member value", null);
             }
             
-            deltaList.addGroupMemberDelta(memberId, memberType, memberValue, op);
+            deltaList.addGroupMemberDelta(memberType, memberValue, op);
         }
 
         return new Pair<ParsedContact.FieldDeltaList, List<Attachment>>(deltaList, attachments);

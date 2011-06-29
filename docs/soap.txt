@@ -2318,7 +2318,7 @@ Contacts:
     <a n="{attr-name}" aid="{upload-id}"/>*
     <a n="{attr-name}" id="{item-id}" [part="{subpart-name}"]/>*
     <a n="{attr-name}" part="{part-id}"/>*  <-- only valid when modifying an existing contact -->
-    <m [id="{member-id}"] type="{member-type}" value="{member-value}"/>*
+    <m type="{member-type}" value="{member-value}"/>*
   </cn>
 
   {contact-id} = unique contact id
@@ -2326,7 +2326,6 @@ Contacts:
   {modified-date}  = secs since epoch, date contact was modified
   {file-as} = current "file as" string for display/sorting purposes; *cannot* be used to *set* the file-as value
   {attr-name} = name of the attribute (firstName, etc)
-  {member-id} = unique member id within the contact group
 
   {folder-id} = id of folder to create contact in. Un-specified means use the default Contacts folder.
 
@@ -2393,7 +2392,7 @@ END:VCARD]
 <ModifyContactRequest [replace="{replace-mode}"] [verbose="0|1"]>
   <cn id="...">
     <a n="{name}" [op="{op}"]>{attr-value}</a>+
-    <m [op="{op}"] [id="{member-id}"] [type="{member-type}"] [value="{member-value}"]/>*
+    <m op="{op}" type="{member-type}" value="{member-value}"/>*
   </cn>
 </ModifyContactRequest>
 
@@ -2404,11 +2403,9 @@ END:VCARD]
   if replace-mode is 1, all attrs and group members in the specified contact are replaced with specified attrs
   and group members, otherwise the attrs and group members are merged with the existing contact.
 
-  if replace-mode is 1, {member-id} is not allowed on <m> elements.
-
- {op} = + | -
-        + : add the value
-        - : remove the value
+  {op} = + | -
+         + : add the value
+         - : remove the value
 
         {op} is not allowed if replace-mode is 1, if specified when replace=1, INVALID_REQUEST will be thrown
 
@@ -2422,27 +2419,13 @@ END:VCARD]
                    if {attr-value} is empty, throw INVALID_REQUEST
                    - otherwise, add/remove the specified value.
 
-        For <m> elements:
-            (1) if op is not present (modify an existing member):
-                   {member-id} is required
-                   {member-type} is optional:
-                       - if present, type is changed to the specified type
-                       - if not present: type is not changed
-                   {member-value} is required
-
-            (2) if op is present (add or remove a member):
-                   +: {member-id} is not allowed
-                      {member-type} is required
-                      {member-value} is required
-                   -: {member-id} is required
-                      {member-type} is not allowed
-                      {member-value} is not allowed
-
+        For <m> elements, op is required; also, {member-type} and {member-value} are required
+           
 
 <ModifyContactResponse>
    <cn ...>
      <a n="...">...</a>
-     <m [id="{member-id}"] type="{member-type}" value="{member-value}"/>*
+     <m type="{member-type}" value="{member-value}"/>*
    </cn>
 </ModifyContactResponse>
 

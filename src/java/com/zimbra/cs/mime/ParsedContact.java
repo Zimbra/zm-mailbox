@@ -332,20 +332,14 @@ public class ParsedContact {
     }
     
     private static class GroupMemberDelta extends FieldDelta {
-        private ContactGroup.MemberId memberId;
         private ContactGroup.Member.Type memberType;
         private String value;
         
-        private GroupMemberDelta(ContactGroup.MemberId memberId, ContactGroup.Member.Type memberType, String value, Op op) 
+        private GroupMemberDelta(ContactGroup.Member.Type memberType, String value, Op op) 
         throws ServiceException {
             super(op);
-            this.memberId = memberId;
             this.memberType = memberType;
             this.value = value;
-        }
-        
-        private ContactGroup.MemberId getMemberId() {
-            return memberId;
         }
         
         private ContactGroup.Member.Type getMemberType() {
@@ -373,9 +367,9 @@ public class ParsedContact {
             deltaList.add(new AttrDelta(name, value, op));
         }
         
-        public void addGroupMemberDelta(ContactGroup.MemberId memberId, ContactGroup.Member.Type memberType, 
+        public void addGroupMemberDelta(ContactGroup.Member.Type memberType, 
                 String value, FieldDelta.Op op) throws ServiceException {
-            deltaList.add(new GroupMemberDelta(memberId, memberType, value, op));
+            deltaList.add(new GroupMemberDelta(memberType, value, op));
         }
         
         private List<FieldDelta> getDeltaList() {
@@ -572,16 +566,13 @@ public class ParsedContact {
     throws ServiceException {
         
         FieldDelta.Op op = delta.getOp();
-        ContactGroup.MemberId memberId = delta.getMemberId();
         ContactGroup.Member.Type memberType =  delta.getMemberType();
         String value = delta.getValue();
             
-        if (op == null) {
-            contactGroup.modifyMember(memberId, memberType, value);
-        } else if (op == FieldDelta.Op.ADD) {
+        if (op == FieldDelta.Op.ADD) {
             contactGroup.addMember(memberType, value);
         } else if (op == FieldDelta.Op.REMOVE){
-            contactGroup.removeMember(memberId);
+            contactGroup.removeMember(memberType, value);
         }
     }
 

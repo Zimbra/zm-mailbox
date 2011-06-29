@@ -22,10 +22,13 @@ import java.util.Map;
 
 import javax.servlet.ServletException;
 
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.ContactGroup;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.UserServletContext;
@@ -38,9 +41,8 @@ public class ContactFolderFormatter extends Formatter {
     private static final byte FIELD_DELIMITER   = '\u001D';  // group separator
     private static final byte CONTACT_DELIMITER = '\u001E';  // record separator
     private static final String CONTENT_TYPE = "text/x-zimbra-delimitted-fields";
-
+    
     private enum Delimiter { Field, Contact };
-
 
 
     @Override
@@ -120,10 +122,14 @@ public class ContactFolderFormatter extends Formatter {
 
         Map<String,String> fields = ((Contact) item).getFields();
         for (String k : fields.keySet()) {
-            out.write(FIELD_DELIMITER);
-            out.write(k.getBytes("UTF-8"));
-            out.write(FIELD_DELIMITER);
-            out.write(fields.get(k).getBytes("UTF-8"));
+            if (ContactConstants.A_groupMember.equals(k)) {
+                printContactGroup(fields.get(k), out);
+            } else {
+                out.write(FIELD_DELIMITER);
+                out.write(k.getBytes("UTF-8"));
+                out.write(FIELD_DELIMITER);
+                out.write(fields.get(k).getBytes("UTF-8"));
+            }
         }
         switch (d) {
         case Field:
@@ -134,7 +140,28 @@ public class ContactFolderFormatter extends Formatter {
             break;
         }
     }
-
+    
+    private void printContactGroup(String encodedContactGroup, OutputStream out) throws IOException {
+        ContactGroup contactGroup = null;
+        
+        try {
+            contactGroup = ContactGroup.init(encodedContactGroup);
+        } catch (ServiceException e) {
+            ZimbraLog.contact.warn("unable to init contact group", e);
+        }
+        
+        if (contactGroup == null) {
+            return;
+        }
+        
+        for (ContactGroup.Member member : contactGroup.getMembers()) {
+            ContactGroup.Member.Type type = member.getType();
+            out.write(FIELD_DELIMITER);
+            out.write(type.getDelimittedFieldsEncoded().getBytes("UTF-8"));
+            out.write(FIELD_DELIMITER);
+            out.write(member.getValue().getBytes("UTF-8"));
+        }
+    }
 
     @Override
     public FormatType getType() {

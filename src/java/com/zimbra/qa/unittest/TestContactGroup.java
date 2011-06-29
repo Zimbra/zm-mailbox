@@ -10,6 +10,8 @@ import static org.junit.Assert.*;
 
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mailbox.ContactConstants;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -23,9 +25,9 @@ import com.zimbra.cs.mailbox.ContactGroup.ContactRefMember;
 import com.zimbra.cs.mailbox.ContactGroup.GalRefMember;
 import com.zimbra.cs.mailbox.ContactGroup.InlineMember;
 import com.zimbra.cs.mailbox.ContactGroup.Member;
-import com.zimbra.cs.mailbox.ContactGroup.MemberId;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.zclient.ZMailbox;
 
 public class TestContactGroup {
     private static final String CONTACT_REF_VALUE = "contact ref";
@@ -67,19 +69,6 @@ public class TestContactGroup {
         ZimbraLog.index.setLevel(Log.Level.debug);
         ZimbraLog.search.setLevel(Log.Level.debug);
         */
-    }
-    
-    @Test
-    public void getMemberById() throws Exception {
-        ContactGroup contactGroup = createContactGroup(new MemberData[] {
-                new MemberData(Member.Type.CONTACT_REF, CONTACT_REF_VALUE)});
-        
-        Member member = contactGroup.getMembers().get(0);
-        MemberId memberId = member.getId();
-        
-        Member memberById = contactGroup.getMemberById(memberId);
-        assertEquals(Member.Type.CONTACT_REF, memberById.getType());
-        assertEquals(CONTACT_REF_VALUE, memberById.getValue());
     }
         
     @Test
@@ -129,11 +118,32 @@ public class TestContactGroup {
         List<Member> members = contactGroup.getMembers();
         assertEquals(4, members.size());
         
-        Member memberById = contactGroup.getMemberById(addedMember.getId());
-        assertEquals(memberToAdd.type, memberById.getType());
-        assertEquals(memberToAdd.value, memberById.getValue());
+        Member newMember = members.get(3);
+        assertEquals(memberToAdd.type, newMember.getType());
+        assertEquals(memberToAdd.value, newMember.getValue());
     }
     
+    @Test
+    public void addDupMember() throws Exception {
+        ContactGroup contactGroup = createContactGroup(new MemberData[] {
+                new MemberData(Member.Type.CONTACT_REF, CONTACT_REF_VALUE),
+                new MemberData(Member.Type.GAL_REF, GAL_REF_VALUE),
+                new MemberData(Member.Type.INLINE, INLINE_VALUE)});
+        
+        MemberData memberToAdd = new MemberData(Member.Type.GAL_REF, GAL_REF_VALUE);
+        
+        boolean caughtException = false;
+        try {
+            contactGroup.addMember(memberToAdd.type, memberToAdd.value);
+        } catch (ServiceException e) {
+            if (e.getMessage().startsWith("invalid request: member already exists:")) {
+                caughtException = true;
+            }
+        }
+        
+        assertTrue(caughtException);
+    }
+        
     @Test
     public void removeMember() throws Exception {
         ContactGroup contactGroup = createContactGroup(new MemberData[] {
@@ -142,43 +152,38 @@ public class TestContactGroup {
                 new MemberData(Member.Type.INLINE, INLINE_VALUE)});
         
         Member memberToRemove = contactGroup.getMembers().get(0);
-        MemberId memberId = memberToRemove.getId();
-        contactGroup.removeMember(memberId);
+        contactGroup.removeMember(memberToRemove.getType(), memberToRemove.getValue());
         
         contactGroup = reEncode(contactGroup);
-        Member memberById = contactGroup.getMemberById(memberId);
-        assertNull(memberById);
         
         List<Member> members = contactGroup.getMembers();
         assertEquals(2, members.size());
     }
     
     @Test
-    public void modifyMember() throws Exception {
+    public void removeNonExistingMember() throws Exception {
         ContactGroup contactGroup = createContactGroup(new MemberData[] {
-                new MemberData(Member.Type.CONTACT_REF, CONTACT_REF_VALUE)});
+                new MemberData(Member.Type.CONTACT_REF, CONTACT_REF_VALUE),
+                new MemberData(Member.Type.GAL_REF, GAL_REF_VALUE),
+                new MemberData(Member.Type.INLINE, INLINE_VALUE)});
         
-        Member member = contactGroup.getMembers().get(0);
-        MemberId memberId = member.getId();
+        boolean caughtException = false;
+        try {
+            contactGroup.removeMember(Member.Type.INLINE, "not there");
+        } catch (ServiceException e) {
+            if (e.getMessage().startsWith("invalid request: no such member:")) {
+                caughtException = true;
+            }
+        }
+        assertTrue(caughtException);
         
-        // type not change
-        MemberData modifiedMemberData = new MemberData(null, "111");
-        contactGroup.modifyMember(memberId, modifiedMemberData.type, modifiedMemberData.value);
+        // verify members are untouched
         contactGroup = reEncode(contactGroup);
         
-        Member modifiedMember = contactGroup.getMemberById(memberId);
-        assertEquals(member.getType(), modifiedMember.getType());
-        assertEquals(modifiedMemberData.value, modifiedMember.getValue());
-        
-        // change to a new type
-        modifiedMemberData = new MemberData(Member.Type.INLINE, "222");
-        contactGroup.modifyMember(memberId, modifiedMemberData.type, modifiedMemberData.value);
-        contactGroup = reEncode(contactGroup);
-        
-        modifiedMember = contactGroup.getMemberById(memberId);
-        assertEquals(modifiedMemberData.type, modifiedMember.getType());
-        assertEquals(modifiedMemberData.value, modifiedMember.getValue());
+        List<Member> members = contactGroup.getMembers();
+        assertEquals(3, members.size());
     }
+    
     
     @Test
     public void insertOrder() throws Exception {
@@ -196,20 +201,26 @@ public class TestContactGroup {
         List<Member> members = contactGroup.getMembers();
         
         Member firstMember = members.get(0);
-        MemberData memberData = new MemberData(Member.Type.CONTACT_REF, "" + 1);
-        contactGroup.modifyMember(firstMember.getId(), memberData.type, memberData.value);
+        
+        // delete
+        contactGroup.removeMember(firstMember.getType(), firstMember.getValue());
+        
+        // then re-add
+        contactGroup.addMember(firstMember.getType(), firstMember.getValue());
         
         contactGroup = reEncode(contactGroup);
-        
-        // verify order is not changed by the modify, which remove the member and readd while 
-        // MemberId is not changed
-        
         members = contactGroup.getMembers();
-        for (int i=1; i<=NUM_MEMBERS; i++) {
-            Member member = members.get(i-1);
-            assertEquals("" + i, member.getValue());
-            // System.out.println(member.getId().toString());
+        
+        // verify the member is now at the end and other member shifted up
+        for (int i=0; i<NUM_MEMBERS-1; i++) {
+            Member member = members.get(i);
+            assertEquals(Member.Type.INLINE, member.getType());
+            assertEquals("" + (i+2), member.getValue());
         }
+        
+        Member lastMember = members.get(NUM_MEMBERS-1);
+        assertEquals(firstMember.getType(), lastMember.getType());
+        assertEquals(firstMember.getValue(), lastMember.getValue());
     }
     
     @Test
@@ -301,6 +312,29 @@ public class TestContactGroup {
         assertTrue(emailAddrs.contains("zzz@test.com"));
         
         assertTrue(gotGalRefMember);
+    }
+    
+    @Test
+    public void zimbraDelimittedFields() throws Exception {
+        Account acct = Provisioning.getInstance().get(AccountBy.name, TestUtil.getAddress("user1"));
+       
+        String relativePath = "/Contacts?fmt=cf&t=2&all";
+        
+        ZMailbox mbox = TestUtil.getZMailbox(acct.getName());
+        byte[] bytes = ByteUtil.getContent(mbox.getRESTResource(relativePath), 1024);
+        String data = new String(bytes);
+        // System.out.println(data);
+        
+        // delimeters defined in ContactFolderFormatter
+        String[] contacts = data.split("\u001E");
+        for (String contact : contacts) {
+            // System.out.println(contact);
+            String[] fields = contact.split("\u001D");
+            for (int i = 0; i < fields.length-1; i+=2) {
+                System.out.println(fields[i] + " = " + fields[i+1]);
+            }
+            System.out.println();
+        }
     }
     
 }

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,6 +32,7 @@ import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.gal.GalSearchResultCallback;
 import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.mailbox.acl.EffectiveACLCacheKey;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.service.util.ItemId;
 
@@ -38,7 +40,6 @@ public class ContactGroup {
     
     // metadata keys for ContactGroup 
     private enum MetadataKey {
-        LASTID("lid"),
         MEMBERS("m");
         
         private String key;
@@ -50,52 +51,15 @@ public class ContactGroup {
             return key;
         }
     }
-    
-    public static class MemberId {
-        private int id;
-        
-        private MemberId(int id) {
-            this.id = id;
-        }
-        
-        public static MemberId fromString(String idStr) throws ServiceException {
-            try {
-                Integer id = Integer.valueOf(idStr);
-                return new MemberId(id.intValue());
-            } catch (NumberFormatException e) {
-                throw ServiceException.FAILURE("invalid member id: " + idStr, e);
-            }
-        }
-        
-        @Override
-        public boolean equals(Object obj) {
-            return ((obj instanceof MemberId) && (id == ((MemberId) obj).id));
-        }
-        
-        @Override
-        public int hashCode() { 
-            return id; 
-        }
-        
-        @Override
-        public String toString() {
-            return "" + id;
-        }
-        
-        private String getMetaDataEncoded() {
-            return toString();
-        }
-    }
-    
-    private int lastMemberId;
-    
-    // ordered map, order is the order in which keys were inserted into the map (insertion-order). 
+
+    // 
+    // ordered Set, order is the order in which keys were inserted into the map (insertion-order). 
     // Note that insertion order is not affected if a key is re-inserted into the map. 
     // We need to maintain the order members are added to the group (do we?), and
-    // need to be able to quickly get a member by a unique key
+    // need to be able to quickly get a member by a unique key.
     //
     // In members are persisted in MetadataList, which is ordered.
-    private Map<MemberId, Member> members = new LinkedHashMap<MemberId, Member>();  // ordered map
+    private Set<Member> members = new LinkedHashSet<Member>();  // ordered Set
     
     // never persisted
     // contains derefed members sorted by the Member.getKey() order
@@ -125,52 +89,8 @@ public class ContactGroup {
         return new ContactGroup();
     }
     
-    private ContactGroup() {
-        this(0);
-    }
-    
-    private ContactGroup(int lastMemberId) {
-        this.lastMemberId = lastMemberId;
-    }
-    
-    private MemberId getNextMemberId() {
-        return new MemberId(++lastMemberId);
-    }
-    
     private boolean isDerefed() {
         return derefedMembers != null;
-    }
-
-    private void addMember(Member member) {
-        members.put(member.getId(), member);
-    }
-    
-    private void replaceMember(Member member) {
-        members.put(member.getId(), member);
-    }
-    
-    private Member createMember(MemberId reuseId, Member.Type type, String value) throws ServiceException {
-        Member member = null;
-        MemberId memberId = (reuseId == null) ? getNextMemberId() : reuseId;
-        
-        switch (type) {
-            case CONTACT_REF:
-                member = new ContactRefMember(memberId, value);
-                break;
-            case GAL_REF:  
-                member = new GalRefMember(memberId, value);
-                break;
-            case INLINE: 
-                member = new ContactGroup.InlineMember(memberId, value);
-                break;
-            default:
-                throw ServiceException.INVALID_REQUEST("Unrecognized member type: " + type.name(), null);
-        }
-        return member;
-    }
-    
-    public Member getMemberById(MemberId id) {
-        return members.get(id);
     }
     
     public void deleteAllMembers() {
@@ -182,7 +102,7 @@ public class ContactGroup {
      */
     
     public List<Member> getMembers() {
-        return Arrays.asList(members.values().toArray(new Member[members.size()]));
+        return Arrays.asList(members.toArray(new Member[members.size()]));
     }
     
     public List<Member> getMembers(boolean preferDerefed) {
@@ -203,27 +123,30 @@ public class ContactGroup {
     
     // create and add member at the end of the list
     public Member addMember(Member.Type type, String value) throws ServiceException {
-        Member member = createMember(null, type, value);
+        Member member = Member.init(type, value);
+        if (members.contains(member)) {
+            throw ServiceException.INVALID_REQUEST("member already exists: " + "(" + 
+                    type.soapEncoded + ")" + " " + value, null);
+        } 
         addMember(member);
         return member;
     }
     
-    public void removeMember(MemberId memberId) {
-        members.remove(memberId);
+    public void removeMember(Member.Type type, String value) throws ServiceException {
+        Member member = Member.init(type, value);
+        if (!members.contains(member)) {
+            throw ServiceException.INVALID_REQUEST("no such member: " + "(" + 
+                    type.soapEncoded + ")" + " " + value, null);
+        }
+        members.remove(member);
     }
     
-    public void modifyMember(MemberId memberId, Member.Type type, String value) throws ServiceException {
-        Member member = members.get(memberId);
-        if (member == null) {
-            throw ServiceException.INVALID_REQUEST("no such member: " + memberId, null);
-        }
-        
-        if (type == null || member.getType() == type) {
-            member.setValue(value);
-        } else {
-            Member updatedMember = createMember(memberId, type, value);
-            replaceMember(updatedMember);
-        }
+    private void addMember(Member member) {
+        members.add(member);
+    }
+    
+    private void removeMember(Member member) {
+        members.remove(member);
     }
     
     /*
@@ -238,7 +161,7 @@ public class ContactGroup {
     public void derefAllMembers(Mailbox mbox, OperationContext octxt) {
         derefedMembers = TreeMultimap.create();
         
-        for (Member member : members.values()) {
+        for (Member member : members) {
             member.derefMember(mbox, octxt);
             if (member.derefed()) {
                 String key = member.getDerefedKey();
@@ -259,7 +182,7 @@ public class ContactGroup {
         List<String> result = new ArrayList<String>();
         
         if (inlineMembersOnly) {
-            for (Member member : members.values()) {
+            for (Member member : members) {
                 if (Member.Type.INLINE == member.getType()) {
                     result.add(member.getValue());
                 }
@@ -269,7 +192,7 @@ public class ContactGroup {
                 derefAllMembers(mbox, octxt);
             }
             
-            for (Member member : members.values()) {
+            for (Member member : members) {
                 member.getDerefedEmailAddresses(result);
             }
         }
@@ -280,11 +203,10 @@ public class ContactGroup {
         Metadata encoded = new Metadata();
         
         MetadataList encodedMembers = new MetadataList();
-        for (Member member : members.values()) {
+        for (Member member : members) {
             encodedMembers.add(member.encode());
         }
         
-        encoded.put(MetadataKey.LASTID.getKey(), lastMemberId);
         encoded.put(MetadataKey.MEMBERS.getKey(), encodedMembers);
         
         return encoded.toString();
@@ -293,12 +215,8 @@ public class ContactGroup {
     private static ContactGroup decode(String encodedStr) throws ServiceException {
         try {
             Metadata encoded = new Metadata(encodedStr);
-            int lastMemberId = encoded.getInt(MetadataKey.LASTID.getKey(), -1);
-            if (lastMemberId == -1) {
-                throw ServiceException.FAILURE("missing last member id in metadata", null);
-            }
-            
-            ContactGroup contactGroup = new ContactGroup(lastMemberId);
+
+            ContactGroup contactGroup = new ContactGroup();
             
             MetadataList members = encoded.getList(MetadataKey.MEMBERS.getKey());
             if (members == null) {
@@ -345,16 +263,18 @@ public class ContactGroup {
         
         // type encoded/stored in metadata - do not change the encoded value
         public static enum Type {
-            CONTACT_REF("C", ContactConstants.GROUP_MEMBER_TYPE_CONTACT_REF),  // ContactRefMember
-            GAL_REF("G", ContactConstants.GROUP_MEMBER_TYPE_GAL_REF),          // ContactRefMember
-            INLINE("I", ContactConstants.GROUP_MEMBER_TYPE_INLINE);            // InlineMember
+            CONTACT_REF("C", ContactConstants.GROUP_MEMBER_TYPE_CONTACT_REF, "memberC"),  // ContactRefMember
+            GAL_REF("G", ContactConstants.GROUP_MEMBER_TYPE_GAL_REF, "memberG"),          // ContactRefMember
+            INLINE("I", ContactConstants.GROUP_MEMBER_TYPE_INLINE, "memberI");            // InlineMember
             
             private String metadataEncoded;
             private String soapEncoded;
+            private String delimittedFieldsEncoded;
             
-            Type(String metadataEncoded, String soapEncoded) {
+            Type(String metadataEncoded, String soapEncoded, String delimittedFieldsEncoded) {
                 this.metadataEncoded = metadataEncoded;
                 this.soapEncoded = soapEncoded;
+                this.delimittedFieldsEncoded = delimittedFieldsEncoded;
             }
             
             private String getMetaDataEncoded() {
@@ -363,6 +283,10 @@ public class ContactGroup {
             
             public String getSoapEncoded() {
                 return soapEncoded;
+            }
+            
+            public String getDelimittedFieldsEncoded() {
+                return delimittedFieldsEncoded;
             }
             
             private static Type fromMetadata(String metadataEncoded) throws ServiceException {
@@ -392,7 +316,24 @@ public class ContactGroup {
             }
         }
         
-        private MemberId id;  // unique id of the member within this group
+        private static Member init(Member.Type type, String value) throws ServiceException {
+            Member member = null;
+            switch (type) {
+                case CONTACT_REF:
+                    member = new ContactRefMember(value);
+                    break;
+                case GAL_REF:  
+                    member = new GalRefMember(value);
+                    break;
+                case INLINE: 
+                    member = new ContactGroup.InlineMember(value);
+                    break;
+                default:
+                    throw ServiceException.INVALID_REQUEST("Unrecognized member type: " + type.name(), null);
+            }
+            return member;
+        }
+        
         protected String value;
         private String derefedKey; // key for sorting in the expanded group
         private List<String> derefedEmailAddrs; // derefed email addresses of the member
@@ -404,25 +345,42 @@ public class ContactGroup {
         // load the actual entry
         protected abstract void deref(Mailbox mbox, OperationContext octxt) throws ServiceException;  
         
-        protected Member(MemberId id, String value) throws ServiceException {
-            this.id = id;
+        protected Member(String value) throws ServiceException {
             setValue(value);
         }
         
+        private String getKey() {
+            return getType().getMetaDataEncoded() + value;
+        }
+        
+        /*
+         * Needed for determining equality in our members Set.
+         */
+        @Override
+        public int hashCode() { 
+            return getKey().hashCode(); 
+        }
+        
+        @Override
+        public boolean equals(Object other) {
+            if (other instanceof Member) {
+                return hashCode() == other.hashCode();
+            } else {
+                return false;
+            }
+        }
+        
+        
         /*
          * called from TreeMultimap (ContactGroup.derefAllMembers) when two 
-         * derefed keys are the same.  return id order in this case.
+         * derefed keys are the same.  return key order in this case.
          * 
          * Note: must not return 0 here, if we do, the member will not be 
          *       inserted into the TreeMultimap.
          */
         @Override
         public int compareTo(Member other) {
-            return getId().toString().compareTo(other.getId().toString());
-        }
-        
-        public MemberId getId() {
-            return id;
+            return getKey().compareTo(other.getKey());
         }
         
         public String getValue() {
@@ -496,34 +454,23 @@ public class ContactGroup {
         
         private Metadata encode() {
             Metadata encoded = new Metadata();
-            encoded.put(MetadataKey.ID.getKey(), id.getMetaDataEncoded());
             encoded.put(MetadataKey.TYPE.getKey(), getType().getMetaDataEncoded());
             encoded.put(MetadataKey.VALUE.getKey(), value);
             return encoded;
         }
         
         private static Member decode(Metadata encoded) throws ServiceException {
-            String idStr = encoded.get(MetadataKey.ID.getKey());
             String encodedType = encoded.get(MetadataKey.TYPE.getKey());
             String value = encoded.get(MetadataKey.VALUE.getKey());
             
-            MemberId id = MemberId.fromString(idStr);
             Type type = Type.fromMetadata(encodedType);
-            switch (type) {
-                case CONTACT_REF:
-                    return new ContactRefMember(id, value);
-                case GAL_REF:  
-                    return new GalRefMember(id, value);
-                case INLINE: 
-                    return new InlineMember(id, value);
-            }
-            throw ServiceException.FAILURE("Unrecognized member type: " + encodedType, null);
+            return Member.init(type, value);
         }
     }
     
     public static class ContactRefMember extends Member {
-        public ContactRefMember(MemberId id, String value) throws ServiceException {
-            super(id, value);
+        public ContactRefMember(String value) throws ServiceException {
+            super(value);
         }
 
         @Override
@@ -643,8 +590,8 @@ public class ContactGroup {
                         "email14", "email15", "email16"
                 }));
         
-        public GalRefMember(MemberId id, String value) throws ServiceException {
-            super(id, value);
+        public GalRefMember(String value) throws ServiceException {
+            super(value);
         }
 
         @Override
@@ -791,8 +738,8 @@ public class ContactGroup {
     }
     
     public static class InlineMember extends Member {
-        public InlineMember(MemberId id, String value) throws ServiceException {
-            super(id, value);
+        public InlineMember(String value) throws ServiceException {
+            super(value);
         }
 
         @Override

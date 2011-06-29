@@ -611,7 +611,6 @@ public class ToXML {
     }
     
     private static void encodeContactGroupMemberBasic(Element eMember, ContactGroup.Member member) {
-        eMember.addAttribute(MailConstants.A_ID, member.getId().toString());
         eMember.addAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_TYPE, member.getType().getSoapEncoded());
         eMember.addAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_VALUE, member.getValue());
     }
