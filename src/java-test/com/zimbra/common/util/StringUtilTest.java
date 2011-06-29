@@ -138,4 +138,16 @@ public class StringUtilTest {
     public void testLfToCrlf() {
         Assert.assertEquals("abc\r\ndef\r\nhij\r\n", StringUtil.lfToCrlf("abc\r\ndef\nhij\n"));
     }
+
+    @Test
+    public void testEqual() {
+        Assert.assertEquals(true, StringUtil.equal(null, null));
+        Assert.assertEquals(false, StringUtil.equal(null, ""));
+        Assert.assertEquals(false, StringUtil.equal("", null));
+        Assert.assertEquals(false, StringUtil.equal(null, "  "));
+        Assert.assertEquals(false, StringUtil.equal("  ", null));
+        Assert.assertEquals(false, StringUtil.equal("abc", " abc "));
+        Assert.assertEquals(false, StringUtil.equal(null, "abc"));
+        Assert.assertEquals(false, StringUtil.equal("a bc", "abc"));
+    }
 }
