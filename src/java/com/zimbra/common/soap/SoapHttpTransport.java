@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
- *
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- *
+ * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -21,7 +21,6 @@ package com.zimbra.common.soap;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,9 +40,7 @@ import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.params.HttpMethodParams;
-import org.dom4j.DocumentException;
 import org.dom4j.ElementHandler;
-import org.dom4j.io.SAXReader;
 
 import com.zimbra.common.httpclient.HttpProxyConfig;
 import com.zimbra.common.localconfig.LC;
@@ -71,13 +68,13 @@ public class SoapHttpTransport extends SoapTransport {
         public void receiveSoapMessage(PostMethod postMethod, Element envelope);
     }
 
-    @Override public String toString() {
+    @Override public String toString() { 
         return "SoapHTTPTransport(uri=" + mUri + ")";
     }
 
     /**
      * Create a new SoapHttpTransport object for the specified URI
-     *
+     * 
      * @param uri the origin server URL
      */
     public SoapHttpTransport(String uri) {
@@ -112,7 +109,7 @@ public class SoapHttpTransport extends SoapTransport {
     }
 
     /**
-     * Whether to use HTTP keep-alive connections
+     * Whether to use HTTP keep-alive connections 
      *
      * <p> Default value is <code>true</code>.
      */
@@ -122,7 +119,7 @@ public class SoapHttpTransport extends SoapTransport {
 
 
     /**
-     * The number of times the invoke method retries
+     * The number of times the invoke method retries 
      *
      * <p> Default value is <code>1</code>.
      */
@@ -138,15 +135,15 @@ public class SoapHttpTransport extends SoapTransport {
     }
 
     /**
-     * Sets the number of milliseconds to wait when reading data
-     * during a invoke call.
+     * Sets the number of milliseconds to wait when reading data 
+     * during a invoke call. 
      */
     @Override public void setTimeout(int newTimeout) {
         mTimeout = newTimeout < 0 ? defaultTimeout : newTimeout;
     }
 
     /**
-     * Get the mTimeout value in milliseconds.  The default is specified by
+     * Get the mTimeout value in milliseconds.  The default is specified by 
      * the <tt>httpclient_soaphttptransport_so_timeout</tt> localconfig variable.
      */
     public int getTimeout() {
@@ -162,14 +159,15 @@ public class SoapHttpTransport extends SoapTransport {
 
     @Override
     public Element invoke(Element document, boolean raw, boolean noSession,
-            String requestedAccountId, String changeToken, String tokenType)
+            String requestedAccountId, String changeToken, String tokenType) 
     throws IOException, HttpException, ServiceException {
         return invoke(document, raw, noSession, requestedAccountId, changeToken, tokenType, null);
     }
 
-    public Element invoke(Element document, boolean raw, boolean noSession, String requestedAccountId,
-            String changeToken, String tokenType, ResponseHandler respHandler)
-            throws IOException, HttpException, ServiceException {
+    public Element invoke(Element document, boolean raw, boolean noSession,
+            String requestedAccountId, String changeToken, String tokenType,
+            Map<String, ElementHandler> saxHandlers)
+    throws IOException, HttpException, ServiceException {
         Map<String, String> cookieMap = getAuthToken() == null ? null : getAuthToken().cookieMap(false);
         HttpState state = null;
         PostMethod method = null;
@@ -198,7 +196,7 @@ public class SoapHttpTransport extends SoapTransport {
                 if (agentVersion != null)
                     agentName += " " + agentVersion;
                 method.setRequestHeader(new Header("User-Agent", agentName));
-            }
+            }            
 
             // the content-type charset will determine encoding used
             // when we set the request body
@@ -241,7 +239,7 @@ public class SoapHttpTransport extends SoapTransport {
                 if (state == null)
                     state = new HttpState();
                 state.setProxyCredentials(new AuthScope(null, -1), new UsernamePasswordCredentials(mHostConfig.getUsername(), mHostConfig.getPassword()));
-            }
+            } 
             int responseCode = mClient.executeMethod(mHostConfig, method, state);
             // SOAP allows for "200" on success and "500" on failure;
             //   real server issues will probably be "503" or "404"
@@ -249,13 +247,13 @@ public class SoapHttpTransport extends SoapTransport {
                 throw ServiceException.PROXY_ERROR(method.getStatusLine().toString(), uri);
 
             // Read the response body.  Use the stream API instead of the byte[]
-            // version to avoid HTTPClient whining about a large response.
+            // version to avoid HTTPClient whining about a large response.        
             InputStreamReader reader = new InputStreamReader(method.getResponseBodyAsStream(), SoapProtocol.getCharset());
             String responseStr = "";
 
             try {
-                if (respHandler != null) {
-                    respHandler.process(reader);
+                if (saxHandlers != null) {
+                    parseLargeSoapResponse(reader, saxHandlers);
                     return null;
                 } else {
                     responseStr = ByteUtil.getContent(reader, (int) method.getResponseContentLength(), false);
@@ -274,14 +272,14 @@ public class SoapHttpTransport extends SoapTransport {
         } finally {
             // Release the connection to the connection manager
             if (method != null)
-                method.releaseConnection();
+                method.releaseConnection();  
 
-            // really not necessary if running in the server because the reaper thread
-            // of our connection manager will take care it.
+            // really not necessary if running in the server because the reaper thread 
+            // of our connection manager will take care it.  
             // if called from CLI, all connections will be closed when the CLI
             // exits.  Leave it here anyway.
             if (!mKeepAlive)
-                mClient.getHttpConnectionManager().closeIdleConnections(0);
+                mClient.getHttpConnectionManager().closeIdleConnections(0); 
         }
     }
 
@@ -297,7 +295,7 @@ public class SoapHttpTransport extends SoapTransport {
         if (name.equals("Envelope")) {
             Element body = document.getOptionalElement("Body");
             if (body != null) {
-                List<Element> children = body.listElements();
+                List<Element> children = body.listElements(); 
                 if (children.size() > 0) {
                     name = children.get(0).getName();
                 }
@@ -305,35 +303,5 @@ public class SoapHttpTransport extends SoapTransport {
         }
         return name;
     }
-
-    public static interface ResponseHandler {
-        void process(Reader src) throws ServiceException;
-    }
-
-    /**
-     * Use SAXReader to parse large soap response. caller must provide list of handlers, which are <path, handler>
-     * pairs. To reduce memory usage, a handler may call Element.detach() in ElementHandler.onEnd() to prune off
-     * processed elements.
-     */
-    public static final class SAXResponseHandler implements ResponseHandler {
-        private final Map<String, ElementHandler> handlers;
-
-        public SAXResponseHandler(Map<String, ElementHandler> handlers) {
-            this.handlers = handlers;
-        }
-
-        @Override
-        public void process(Reader src) throws ServiceException {
-            SAXReader reader = com.zimbra.common.soap.Element.getSAXReader();
-            for(Map.Entry<String, ElementHandler> entry : handlers.entrySet()) {
-                reader.addHandler(entry.getKey(), entry.getValue());
-            }
-
-            try {
-                reader.read(src);
-            } catch (DocumentException e) {
-                throw ServiceException.SAX_READER_ERROR(e.getMessage(), e.getCause());
-            }
-        }
-    }
 }
+

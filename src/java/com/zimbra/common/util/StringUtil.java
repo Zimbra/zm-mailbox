@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- *
+ * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- *
+ * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -659,6 +659,26 @@ public class StringUtil {
     }
 
     /**
+     * Returns the simple class name (the name after the last dot)
+     * from a fully-qualified class name.  Behavior is the same as
+     * {@link FileUtil#getExtension}.
+     */
+    public static String getSimpleClassName(String className) {
+        return FileUtil.getExtension(className);
+    }
+
+    /**
+     * Returns the simple class name (the name after the last dot)
+     * for the specified object.
+     */
+    public static String getSimpleClassName(Object o) {
+        if (o == null) {
+            return null;
+        }
+        return FileUtil.getExtension(o.getClass().getName());
+    }
+
+    /**
      * Returns <code>true</code> if the secified string is <code>null</code> or its
      * length is <code>0</code>.
      */
@@ -830,36 +850,29 @@ public class StringUtil {
     public static String enclose(String strToEnclose, char encloseWith) {
         return new StringBuilder().append(encloseWith).append(strToEnclose).append(encloseWith).toString();
     }
-
+    
     private static Map<String, Pattern> patternCache = MapUtil.newLruMap(1000);
-
+    
     /**
      * Returns a new {@code Matcher} object for the given regular expression and
      * string.  The underlying {@link Pattern} is cached, so that regular expressions
      * aren't recompiled.
      */
     public static Matcher newMatcher(String regex, CharSequence s) {
-        return getCachedPattern(regex).matcher(s);
-    }
-
-    /**
-     * Returns a precompiled {@link Pattern} for the given regular expression.
-     */
-    public static Pattern getCachedPattern(String regex) {
         Pattern pattern = null;
         synchronized (patternCache) {
             pattern = patternCache.get(regex);
         }
-
+        
         if (pattern == null) {
             pattern = Pattern.compile(regex);
             synchronized (patternCache) {
                 patternCache.put(regex, pattern);
             }
         }
-        return pattern;
+        return pattern.matcher(s);
     }
-
+    
     /**
      * Does the same thing as {@link String#replaceAll(String, String)}, but uses
      * the pattern cache to avoid recompiling.

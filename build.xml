@@ -1,10 +1,25 @@
 <project name="ZimbraCommon" default="jar">
 
-  <import file="../ant-global.xml"/>    
-
   <!-- Properties -->
 
+  <property name="javac.target" value="1.6"/>
   <property name="jar.file" value="zimbracommon.jar" />
+  <property name="src.java.dir" location="src/java" />
+  <property name="build.dir" location="build" />
+  <property name="build.classes.dir" location="${build.dir}/classes" />
+  <property name="test.dir" location="${build.dir}/test"/>
+  <property name="test.src.dir" location="src/java-test"/>
+  <property name="test.classes.dir" location="${build.dir}/test-classes"/>
+  <property name="zimbra.home.dir" location="/opt/zimbra" />
+
+  <condition property="is-windows">
+    <os family="windows" />
+  </condition>
+  <condition property="is-unix">
+    <not>
+      <os family="windows" />
+    </not>
+  </condition>
 
   <path id="all.java.path">
     <pathelement location="${src.java.dir}" />
@@ -29,11 +44,9 @@
   </target>
 
   <target name="jar" depends="compile" description="Creates the jar file">
-      <antcall target="zimbra-jar">
-          <param name="implementation.title" value="Zimbra Common"/>
-      </antcall>
+    <jar destfile="${build.dir}/${jar.file}" basedir="${build.classes.dir}" />
   </target>
-      
+
   <target name="clean" description="Removes build files and undeploys extension">
     <delete dir="${build.dir}" />
   </target>
@@ -45,26 +58,24 @@
   </target>
 
   <target name="test" depends="test-compile" description="Run unit tests">
-    <delete dir="${test.dir}" quiet="true"/>
-    <mkdir dir="${test.dir}/output"/>
-    <mkdir dir="${test.dir}/report"/>
-    <junit printsummary="on" failureproperty="junit.failure" tempdir="${test.dir}">
-      <classpath refid="class.path"/>
-      <classpath path="${test.classes.dir}"/>
-      <assertions><enable/></assertions>
-      <formatter type="xml"/>
-      <batchtest todir="${test.dir}/output">
-        <fileset dir="${test.src.dir}">
-          <include name="**/*Test.java"/>
-        </fileset>
-      </batchtest>
-    </junit>
-    <junitreport todir="${test.dir}/report">
-      <fileset dir="${test.dir}/output"/>
-      <report todir="${test.dir}/report"/>
-    </junitreport>
-    <echo>Test Report: ${test.dir}/report/index.html</echo>
-    <fail if="junit.failure" message="Unit test failed"/>
+      <delete dir="${test.dir}" quiet="true"/>
+      <mkdir dir="${test.dir}/output"/>
+      <mkdir dir="${test.dir}/report"/>
+      <junit printsummary="on" haltonfailure="on" tempdir="${test.dir}">
+          <classpath refid="class.path"/>
+          <classpath path="${test.classes.dir}"/>
+          <formatter type="xml"/>
+          <batchtest todir="${test.dir}/output">
+              <fileset dir="${test.src.dir}">
+                  <include name="**/*Test.java"/>
+              </fileset>
+          </batchtest>
+      </junit>
+      <junitreport todir="${test.dir}/report">
+          <fileset dir="${test.dir}/output"/>
+          <report todir="${test.dir}/report"/>
+      </junitreport>
+      <echo>Test Report: ${test.dir}/report/index.html</echo>
   </target>
 
 </project>
