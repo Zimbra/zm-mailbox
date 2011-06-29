@@ -28,7 +28,8 @@ import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavContext.RequestProp;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
-import com.zimbra.cs.dav.caldav.TimeRange;
+import com.zimbra.cs.dav.caldav.Range.ExpandRange;
+import com.zimbra.cs.dav.caldav.Range.TimeRange;
 import com.zimbra.cs.dav.caldav.Filter.CompFilter;
 import com.zimbra.cs.dav.resource.CalendarCollection;
 import com.zimbra.cs.dav.resource.CalendarObject;
@@ -77,6 +78,8 @@ public class CalendarQuery extends Report {
 			if (!calobj.match(ctxt.componentFilter))
 				return;
 			DavResponse resp = ctxt.davCtxt.getDavResponse();
+			if (ctxt.expandRange != null)
+			    calobj.expand(ctxt.expandRange);
 			resp.addResource(ctxt.davCtxt, calItem, ctxt.props, false);
 		} catch (DavException de) {
 			ZimbraLog.dav.error("can't get calendar item data", de);
@@ -85,6 +88,7 @@ public class CalendarQuery extends Report {
 	
 	private static class QueryContext {
 		RequestedComponent requestedComponent;
+		ExpandRange        expandRange;
 		CompFilter         componentFilter;
 		DavContext         davCtxt;
 		RequestProp        props;
@@ -120,7 +124,6 @@ public class CalendarQuery extends Report {
 		 */
 		private void parseCalendarData(Element cd) {
 			// TODO
-			// expand
 			// limit-recurrence-set
 			// limit-freebusy-set
 			
@@ -128,6 +131,9 @@ public class CalendarQuery extends Report {
 			Element comp = cd.element(DavElements.E_COMP);
 			if (comp != null)
 				requestedComponent = new RequestedComponent(comp);
+			Element expand = cd.element(DavElements.E_EXPAND);
+			if (expand != null)
+			    expandRange = new ExpandRange(expand);
 		}
 		
 		private void parseFilter(Element filter) {

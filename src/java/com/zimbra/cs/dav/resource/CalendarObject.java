@@ -24,6 +24,7 @@ import java.util.Iterator;
 import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.calendar.ICalTimeZone;
+import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.calendar.TimeZoneMap;
 import com.zimbra.common.calendar.ZCalendar;
 import com.zimbra.common.calendar.ZCalendar.ZComponent;
@@ -36,7 +37,8 @@ import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.caldav.Filter;
-import com.zimbra.cs.dav.caldav.TimeRange;
+import com.zimbra.cs.dav.caldav.Range.ExpandRange;
+import com.zimbra.cs.dav.caldav.Range.TimeRange;
 import com.zimbra.cs.dav.property.CalDavProperty;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Flag;
@@ -48,6 +50,8 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.calendar.InviteInfo;
+import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 
 /**
@@ -64,6 +68,7 @@ public interface CalendarObject {
     public String getUid();
     public boolean match(Filter filter);
     public String getVcalendar(DavContext ctxt, Filter filter) throws IOException, DavException;
+    public void expand(ExpandRange range);
 
     public static abstract class LocalCalendarObjectBase extends MailItemResource {
         public LocalCalendarObjectBase(DavContext ctxt, String path, MailItem item) throws ServiceException {
@@ -194,6 +199,9 @@ public interface CalendarObject {
             }
         }
         private Invite mInvite;
+        @Override
+        public void expand(ExpandRange range) {        
+        }
     }
     public static class LightWeightCalendarObject extends DavResource implements CalendarObject {
         private int mMailboxId;
@@ -256,6 +264,9 @@ public interface CalendarObject {
         @Override public boolean hasContent(DavContext ctxt) {
             return true;
         }
+        @Override
+        public void expand(ExpandRange range) { 
+        }
     }
     public static class LocalCalendarObject extends LocalCalendarObjectBase implements CalendarObject {
 
@@ -270,6 +281,7 @@ public interface CalendarObject {
 
         public LocalCalendarObject(DavContext ctxt, String path, CalendarItem calItem) throws ServiceException {
             super(ctxt, path, calItem);
+            item = calItem;
             mUid = calItem.getUid();
             mInvites = calItem.getInvites();
             mTzmap = calItem.getTimeZoneMap();
@@ -297,6 +309,7 @@ public interface CalendarObject {
             mEnd = calItem.getEndTime();
         }
 
+        private CalendarItem item;
         private String mUid;
         private Invite[] mInvites;
         private TimeZoneMap mTzmap;
@@ -402,6 +415,39 @@ public interface CalendarObject {
         @Override
         public boolean hasContent(DavContext ctxt) {
             return true;
+        }
+
+        @Override
+        public void expand(ExpandRange range) {
+            if (item.isRecurring() == false)
+                return;
+            Invite defInvite = item.getDefaultInviteOrNull();
+            if (defInvite == null)
+                return;
+            ArrayList<Invite> inviteList = new ArrayList<Invite>();
+            try {
+                for (CalendarItem.Instance instance : item.expandInstances(range.getStart(), range.getEnd(), false)) {
+                    InviteInfo info = instance.getInviteInfo();
+                    Invite inv = item.getInvite(info.getMsgId(), info.getComponentId());
+                    if (instance.isException() == false) {
+                        // set recurrence-id and adjust start/end dates
+                        ParsedDateTime datetime = RecurId.createFromInstance(instance).getDt();
+                        if (defInvite.isAllDayEvent())
+                            datetime.forceDateOnly();
+                        else {
+                            ParsedDateTime defStart = defInvite.getStartTime();
+                            if (defStart != null && defStart.getTimeZone() != null)
+                                datetime.toTimeZone(defInvite.getStartTime().getTimeZone());
+                        }
+                        inv = inv.makeInstanceInvite(datetime);
+                    }
+                    inviteList.add(inv);
+                }
+                mInvites = inviteList.toArray(new Invite[0]);
+            } catch (ServiceException se) {
+                ZimbraLog.dav.warn("error getting calendar item " + mUid + " from mailbox " + mMailboxId, se);
+            }
+            
         }
     }
 }

@@ -291,6 +291,7 @@ public class DavElements {
 	public static final QName E_EMAIL_ADDRESS_SET = QName.get(P_EMAIL_ADDRESS_SET, CS_NS);
 	public static final QName E_ERROR = QName.get(P_ERROR, WEBDAV_NS);
 	public static final QName E_EXCLUSIVE = QName.get(P_EXCLUSIVE, WEBDAV_NS);
+	public static final QName E_EXPAND = QName.get(P_EXPAND, CALDAV_NS);
 	public static final QName E_EXPAND_PROPERTY = QName.get(P_EXPAND_PROPERTY, WEBDAV_NS);
 	
 	public static final QName E_FILTER = QName.get(P_FILTER, CALDAV_NS);
