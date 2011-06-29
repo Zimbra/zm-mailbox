@@ -39,6 +39,11 @@ public abstract class AbstractRetry<T> {
         int tries = 0;
         SQLException sqle = null;
         while (tries < RETRY_LIMIT) {
+            if (Thread.interrupted()) {
+                //necessary for SQLite since native code in driver does not respond to interrupts
+                //this keeps us from starting to invoke a new command after thread has been interrupted
+                throw new SQLException("Interrupted during I/O, likely due to connection down");
+            }
             try {
                 return execute();
             } catch (SQLException e) {
