@@ -59,6 +59,8 @@ public class ZOrganizer extends CalendarUser {
         return ICalTok.ORGANIZER;
     }
 
+    // Note: CalOrganizer represents an organizer in the "urn:zimbraMail"
+    //       namespace.
     public CalOrganizer toJaxb() {
         CalOrganizer org = new CalOrganizer();
         String str = getAddress();
@@ -77,9 +79,29 @@ public class ZOrganizer extends CalendarUser {
     }
 
     public Element toXml(Element parent) {
-        return JaxbUtil.addChildElementFromJaxb(parent,
-                MailConstants.E_CAL_ORGANIZER, MailConstants.NAMESPACE_STR,
-                toJaxb());
+        // TODO:  See Bug 61429.  This can be called for SOAP headers in
+        // namespace "urn:Zimbra" as well as for namespace "urn:ZimbraMail",
+        // so, we cannot just use one JAXB object to represent an organizer.
+        // return JaxbUtil.addChildElementFromJaxb(parent,
+        //         MailConstants.E_CAL_ORGANIZER, MailConstants.NAMESPACE_STR,
+        //          toJaxb());
+        // Perhaps could use parent.getQName() to determine the namespace?
+        Element orgElt = parent.addUniqueElement(MailConstants.E_CAL_ORGANIZER);
+        String str = getAddress();
+        orgElt.addAttribute(MailConstants.A_ADDRESS, IDNUtil.toUnicode(str));
+        orgElt.addAttribute(MailConstants.A_URL, str);  // for backward compatibility
+        if (hasCn())
+            orgElt.addAttribute(MailConstants.A_DISPLAY, getCn());
+        if (hasSentBy())
+            orgElt.addAttribute(MailConstants.A_CAL_SENTBY, getSentBy());
+        if (hasDir())
+            orgElt.addAttribute(MailConstants.A_CAL_DIR, getDir());
+        if (hasLanguage())
+            orgElt.addAttribute(MailConstants.A_CAL_LANGUAGE, getLanguage());
+
+        CalendarUtil.encodeXParams(orgElt, xparamsIterator());
+
+        return orgElt;
     }
 
     public static ZOrganizer parse(Element element) throws ServiceException {
