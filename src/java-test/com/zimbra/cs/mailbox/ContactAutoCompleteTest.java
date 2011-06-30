@@ -69,13 +69,13 @@ public final class ContactAutoCompleteTest {
         result.rankings = new ContactRankings(MockProvisioning.DEFAULT_ACCOUNT_ID);
         ContactAutoComplete.ContactEntry group = new ContactAutoComplete.ContactEntry();
         group.mDisplayName = "G1";
-        group.mDlist = "DL1";
+        group.mIsContactGroup = true;
         result.addEntry(group);
         Assert.assertEquals(result.entries.size(), 1);
 
         group = new ContactAutoComplete.ContactEntry();
         group.mDisplayName = "G2";
-        group.mDlist = "DL2";
+        group.mIsContactGroup = true;
         result.addEntry(group);
         Assert.assertEquals(result.entries.size(), 2);
     }
