@@ -29,14 +29,19 @@ import org.apache.jsieve.tests.AbstractTest;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 import com.zimbra.cs.filter.ZimbraSieveException;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mime.ParsedMessage;
 
 /**
  * SIEVE test whether the conversation which the message is about to belong to is what the user started or has
- * participated in. Conversations the user started are ones where the first message sorted by (date, id) has FROM_ME
- * flag. Conversations the user has participated are ones where there is at least one message with FROM_ME flag. These
- * are all based on what you currently have in your mailbox. Deleted messages are irrelevant.
+ * participated in. Conversations the user started are for which the oldest remaining message sorted by (date, id) has
+ * FROM_ME flag AND it's not a reply. Conversations the user has participated are for which there is at least one
+ * message with FROM_ME flag. These are all based on what the user currently has in its mailbox. Deleted messages are
+ * irrelevant.
  *
  * @author ysasaki
  */
@@ -92,9 +97,10 @@ public final class ConversationTest extends AbstractTest {
             return false;
         }
         ZimbraMailAdapter adapter = (ZimbraMailAdapter) mail;
+        Mailbox mbox = adapter.getMailbox();
         List<Conversation> convs;
         try {
-            convs = adapter.getMailbox().lookupConversation(adapter.getParsedMessage());
+            convs = mbox.lookupConversation(adapter.getParsedMessage());
         } catch (ServiceException e) {
             throw new ZimbraSieveException(e);
         }
@@ -104,8 +110,22 @@ public final class ConversationTest extends AbstractTest {
         switch (where) {
             case STARTED:
                 for (Conversation conv : convs) {
-                    if ((conv.getFlagBitmask() & Flag.BITMASK_BY_ME) > 0) {
-                        return true;
+                    if ((conv.getFlagBitmask() & Flag.BITMASK_FROM_ME) > 0) {
+                        try {
+                            List<Message> msgs = mbox.getMessagesByConversation(null, conv.getId(), SortBy.DATE_ASC, 1);
+                            if (!msgs.isEmpty()) {
+                                Message msg = msgs.get(0);
+                                // the oldest message in the conversation is FROM_ME, but conversation can't be started
+                                // by REPLY, which is likely that the user has deleted messages older than the remaining
+                                // oldest.
+                                if ((msg.getFlagBitmask() & Flag.BITMASK_FROM_ME) > 0 &&
+                                        !ParsedMessage.isReply(msgs.get(0).getSubject())) {
+                                    return true;
+                                }
+                            }
+                        } catch (ServiceException e) {
+                            throw new ZimbraSieveException(e);
+                        }
                     }
                 }
                 break;

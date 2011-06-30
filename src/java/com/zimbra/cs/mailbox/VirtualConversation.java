@@ -14,7 +14,7 @@
  */
 package com.zimbra.cs.mailbox;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
@@ -60,12 +60,10 @@ public class VirtualConversation extends Conversation {
         return mMailbox.getMessageById(getMessageId());
     }
 
-    @Override List<Message> getMessages(SortBy sort) throws ServiceException {
-        List<Message> msgs = new ArrayList<Message>(1);
-        msgs.add(getMessage());
-        return msgs;
+    @Override
+    public List<Message> getMessages(SortBy sort, int limit) throws ServiceException {
+        return Collections.singletonList(getMessage());
     }
-
 
     static VirtualConversation create(Mailbox mbox, Message msg) throws ServiceException {
         VirtualConversation vconv = new VirtualConversation(mbox, msg);
@@ -86,11 +84,7 @@ public class VirtualConversation extends Conversation {
         data.modContent = msg.getSavedSequence();
         data.size = 1;
         data.unreadCount = msg.getUnreadCount();
-        int flags = msg.getInternalFlagBitmask();
-        if ((flags & Flag.BITMASK_FROM_ME) > 0) {
-            flags |= Flag.BITMASK_BY_ME;
-        }
-        data.setFlags(flags);
+        data.setFlags(msg.getInternalFlagBitmask());
         data.tags = msg.getTagBitmask();
         data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, extended, new SenderList(msg));
         return data;

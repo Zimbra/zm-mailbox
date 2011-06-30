@@ -207,12 +207,12 @@ public class ToXML {
                 // that is either RSS or a remote calendar object
                 elem.addAttribute(MailConstants.A_URL, HttpUtil.sanitizeURL(url));
             }
-                
+
         }
 
         Mailbox mbox = folder.getMailbox();
         boolean remote = octxt != null && octxt.isDelegatedRequest(mbox);
-        
+
         boolean canAdminister = !remote;
         if (remote) {
             // return effective permissions only for remote folders
@@ -393,9 +393,9 @@ public class ToXML {
     }
 
     public static Element encodeMountpoint(Element parent, ItemIdFormatter ifmt, OperationContext octx, Mountpoint mpt, int fields) {
-        
+
         Element elem = parent.addElement(MailConstants.E_MOUNT);
-        // check to see if this is a delegate request (like bes) 
+        // check to see if this is a delegate request (like bes)
         boolean remote = octx != null && octx.isDelegatedRequest(mpt.getMailbox());
 
         try {
@@ -412,7 +412,7 @@ public class ToXML {
          catch (ServiceException e) {
             ZimbraLog.soap.warn("unable to create rest url for remote mountpoint", e);
         }
-         
+
 
         encodeFolderCommon(elem, ifmt, mpt, fields);
         if (needToOutput(fields, Change.MODIFIED_CONTENT)) {
@@ -481,17 +481,17 @@ public class ToXML {
         return serialized;
     }
 
-    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact, 
+    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact,
             boolean summary, Collection<String> attrFilter) {
         return encodeContact(parent, ifmt, contact, summary, attrFilter, NOTIFY_FIELDS);
     }
-    
-    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact, 
+
+    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact,
             boolean summary, Collection<String> attrFilter, int fields) {
         return encodeContact(parent, ifmt, contact, null, summary, attrFilter,  fields);
     }
 
-    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact, 
+    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact,
             ContactGroup contactGroup, boolean summary, Collection<String> attrFilter, int fields) {
         Element elem = parent.addElement(MailConstants.E_CONTACT);
         elem.addAttribute(MailConstants.A_ID, ifmt.formatItemId(contact));
@@ -540,11 +540,11 @@ public class ToXML {
         } catch (ServiceException e) { }
 
         List<Attachment> attachments = contact.getAttachments();
-        
-        // encode contact group members (not derefed) if we don't have a 
+
+        // encode contact group members (not derefed) if we don't have a
         // already derefed contactGroup
         boolean encodeContactGroupMembersBasic = (contactGroup == null);
-        
+
         if (attrFilter != null) {
             for (String name : attrFilter) {
                 // XXX: How to distinguish between a non-existent attribute and
@@ -582,7 +582,7 @@ public class ToXML {
         return elem;
     }
 
-    private static void encodeContactAttr(Element elem, String name, String value, 
+    private static void encodeContactAttr(Element elem, String name, String value,
             Contact contact, boolean encodeContactGroupMembers) {
         if (Contact.isMultiValueAttr(value)) {
             try {
@@ -591,7 +591,7 @@ public class ToXML {
                 }
                 return;
             } catch (JSONException e) {}
-        } else if (ContactConstants.A_groupMember.equals(name)) {  
+        } else if (ContactConstants.A_groupMember.equals(name)) {
             if (encodeContactGroupMembers) {
                 try {
                     ContactGroup contactGroup = ContactGroup.init(contact, false);
@@ -609,24 +609,24 @@ public class ToXML {
             elem.addKeyValuePair(name, value);
         }
     }
-    
+
     private static void encodeContactGroupMemberBasic(Element eMember, ContactGroup.Member member) {
         eMember.addAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_TYPE, member.getType().getSoapEncoded());
         eMember.addAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_VALUE, member.getValue());
     }
-    
-    private static void encodeContactGroup(Element elem, ContactGroup contactGroup, 
+
+    private static void encodeContactGroup(Element elem, ContactGroup contactGroup,
         ItemIdFormatter ifmt, boolean summary, Collection<String> attrFilter, int fields) {
-        
+
         for (ContactGroup.Member member : contactGroup.getMembers(true)) {
             Element eMember = elem.addElement(MailConstants.E_CONTACT_GROUP_MEMBER);
             encodeContactGroupMemberBasic(eMember, member);
             Object derefedMember = member.getDerefedObj();
             if (derefedMember != null) {
                 if (derefedMember instanceof String) {
-                    // inline member, do nothing    
+                    // inline member, do nothing
                 } else if (derefedMember instanceof Contact) {
-                    // only expand one level for now. 
+                    // only expand one level for now.
                     // If this member is a group, do not create/apss down a ContactGroup object from the member.
                     encodeContact(eMember, ifmt, (Contact) derefedMember, summary, attrFilter, fields);
                 } else if (derefedMember instanceof GalContact) {
@@ -721,7 +721,7 @@ public class ToXML {
 
     public static Element encodeConversation(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Conversation conv, SearchParams params) throws ServiceException {
         Mailbox mbox = conv.getMailbox();
-        List<Message> msgs = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_ASC);
+        List<Message> msgs = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_ASC, -1);
         return encodeConversation(parent, ifmt, octxt, conv, msgs, params);
     }
 
@@ -788,7 +788,7 @@ public class ToXML {
             isDelegatedNonAccessible = !AccessManager.getInstance().canAccessAccount(octxt.getAuthenticatedUser(), conv.getAccount(), octxt.isUsingAdminPrivileges());
         }
         if (isDelegatedNonAccessible || conv.isTagged(Flag.ID_DELETED)) {
-            msgs = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_ASC);
+            msgs = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_ASC, -1);
         }
         boolean noneVisible = msgs != null && msgs.isEmpty();
         Element c = noneVisible && !alwaysSerialize ? null : encodeConversationCommon(parent, ifmt, conv, msgs, fields);
@@ -2607,7 +2607,7 @@ public class ToXML {
             }
         }
     }
-    
+
     public static Element encodeComment(Element response, ItemIdFormatter ifmt, Comment comment) {
         return encodeComment(response, ifmt, comment, NOTIFY_FIELDS);
     }
@@ -2640,7 +2640,7 @@ public class ToXML {
             encodeAllCustomMetadata(c, comment, fields);
         return c;
     }
-    
+
     public static Element encodeLink(Element response, ItemIdFormatter ifmt, Link link, int fields) {
         Element l = response.addElement(MailConstants.E_LINK);
         l.addAttribute(MailConstants.A_ID, ifmt.formatItemId(link));
@@ -2658,7 +2658,7 @@ public class ToXML {
         }
         return l;
     }
-    
+
     public interface ToXMLExtension {
         public Element encodeDocumentAdditionalAttribute(Element elem, ItemIdFormatter ifmt, OperationContext octxt, Document doc, int fields);
     }

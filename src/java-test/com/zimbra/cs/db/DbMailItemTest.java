@@ -167,7 +167,7 @@ public class DbMailItemTest {
         DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
                 "(mailbox_id, id, type, folder_id, parent_id, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
                 "VALUES(?, ?, ?, ?, ?, 0, 0, 0, ?, 0, 0, 0)", mbox.getId(), 102, MailItem.Type.MESSAGE.toByte(),
-                Mailbox.ID_FOLDER_INBOX, 200, Flag.BITMASK_FROM_ME);
+                Mailbox.ID_FOLDER_INBOX, 200, 0);
         DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
                 "(mailbox_id, id, type, folder_id, parent_id, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
                 "VALUES(?, ?, ?, ?, ?, 0, 0, 0, ?, 0, 0, 0)", mbox.getId(), 103, MailItem.Type.MESSAGE.toByte(),
@@ -185,15 +185,13 @@ public class DbMailItemTest {
         data.id = 200;
         data.type = MailItem.Type.CONVERSATION.toByte();
         DbMailItem.completeConversation(mbox, conn, data);
-        Assert.assertTrue(data.isSet(Flag.FlagInfo.FROM_ME));
-        Assert.assertFalse(data.isSet(Flag.FlagInfo.BY_ME));
+        Assert.assertFalse(data.isSet(Flag.FlagInfo.FROM_ME));
 
         data = new MailItem.UnderlyingData();
         data.id = 201;
         data.type = MailItem.Type.CONVERSATION.toByte();
         DbMailItem.completeConversation(mbox, conn, data);
         Assert.assertTrue(data.isSet(Flag.FlagInfo.FROM_ME));
-        Assert.assertTrue(data.isSet(Flag.FlagInfo.BY_ME));
 
         conn.closeQuietly();
     }

@@ -3014,7 +3014,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
     List<Comment> getComments(SortBy sortBy, int offset, int length) throws ServiceException {
-        List<UnderlyingData> listData = DbMailItem.getByParent(this, sortBy, inDumpster());
+        List<UnderlyingData> listData = DbMailItem.getByParent(this, sortBy, -1, inDumpster());
         ArrayList<Comment> comments = new ArrayList<Comment>();
         for (UnderlyingData data : listData) {
             MailItem item = mMailbox.getItem(data);

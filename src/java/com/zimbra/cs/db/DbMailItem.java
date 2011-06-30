@@ -2245,27 +2245,37 @@ public class DbMailItem {
     }
 
     public static List<UnderlyingData> getByParent(MailItem parent) throws ServiceException {
-        return getByParent(parent, SortBy.DATE_DESC, false);
+        return getByParent(parent, SortBy.DATE_DESC, -1, false);
     }
 
-    public static List<UnderlyingData> getByParent(MailItem parent, SortBy sort, boolean fromDumpster) throws ServiceException {
+    public static List<UnderlyingData> getByParent(MailItem parent, SortBy sort, int limit, boolean fromDumpster)
+            throws ServiceException {
         Mailbox mbox = parent.getMailbox();
 
-        ArrayList<UnderlyingData> result = new ArrayList<UnderlyingData>();
+        List<UnderlyingData> result = new ArrayList<UnderlyingData>();
+
+        StringBuilder sql = new StringBuilder("SELECT ").append(DB_FIELDS).append(" FROM ")
+                .append(getMailItemTableName(parent.getMailbox(), " mi", fromDumpster))
+                .append(" WHERE ").append(IN_THIS_MAILBOX_AND).append("parent_id = ? ")
+                .append(DbSearch.orderBy(sort, false));
+        if (limit > 0) {
+            sql.append(" LIMIT ?");
+        }
 
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
-                    " FROM " + getMailItemTableName(parent.getMailbox(), " mi", fromDumpster) +
-                    " WHERE " + IN_THIS_MAILBOX_AND + "parent_id = ? " + DbSearch.orderBy(sort, false));
+            stmt = conn.prepareStatement(sql.toString());
             if (parent.getSize() > RESULTS_STREAMING_MIN_ROWS) {
                 Db.getInstance().enableStreaming(stmt);
             }
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, parent.getId());
+            if (limit > 0) {
+                stmt.setInt(pos++, limit);
+            }
             rs = stmt.executeQuery();
 
             while (rs.next()) {
@@ -2642,7 +2652,7 @@ public class DbMailItem {
                 int count = Math.min(Db.getINClauseBatchSize(), convData.size() - i);
                 stmt = conn.prepareStatement("SELECT parent_id, unread, flags, tags" +
                         " FROM " + getMailItemTableName(mbox) +
-                        " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("parent_id", count) + " ORDER BY date, id");
+                        " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("parent_id", count));
                 int pos = 1;
                 pos = setMailboxId(stmt, mbox, pos);
                 for (int index = i; index < i + count; index++) {
@@ -2659,12 +2669,7 @@ public class DbMailItem {
                     UnderlyingData data = conversations.get(rs.getInt(1));
                     assert(data != null);
                     data.unreadCount += rs.getInt(2);
-                    int flags = rs.getInt(3);
-                    // if the first result (sorted by date, id) is sent from me, this conversation was started by me.
-                    if (rs.isFirst() && ((flags & Flag.BITMASK_FROM_ME) > 0)) {
-                        flags |= Flag.BITMASK_BY_ME;
-                    }
-                    data.setFlags(data.getFlags() | flags);
+                    data.setFlags(data.getFlags() | rs.getInt(3));
                     data.tags |= rs.getLong(4);
                 }
             } catch (SQLException e) {

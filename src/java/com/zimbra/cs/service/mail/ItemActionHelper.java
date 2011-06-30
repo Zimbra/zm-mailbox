@@ -485,7 +485,7 @@ public class ItemActionHelper {
             }
             List<Message> msgs = null;
             if (item instanceof Conversation) {
-                msgs = mMailbox.getMessagesByConversation(mOpCtxt, item.getId(), SortBy.DATE_ASC);
+                msgs = mMailbox.getMessagesByConversation(mOpCtxt, item.getId(), SortBy.DATE_ASC, -1);
             }
             if (deleteOriginal) {
                 if (msgs != null) {

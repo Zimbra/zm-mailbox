@@ -95,7 +95,7 @@ public class SearchConv extends Search {
                 SortBy sort = results.getSortBy();
                 response.addAttribute(MailConstants.A_SORTBY, sort.toString());
 
-                List<Message> msgs = mbox.getMessagesByConversation(octxt, cid.getId(), sort);
+                List<Message> msgs = mbox.getMessagesByConversation(octxt, cid.getId(), sort, -1);
                 if (msgs.isEmpty() && zsc.isDelegatedRequest()) {
                     throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
                 }

@@ -60,7 +60,6 @@ public final class Flag extends Tag {
         INDEXING_DEFERRED(-14, "\\IdxDeferred", HIDDEN),
         POPPED(-15, "\\Popped", 'p'),
         NOTE(-16, "\\Note", 't'),
-        BY_ME(-17, "\\Started", HIDDEN), // conversation started by me
         SUBSCRIBED(-20, "\\Subscribed", '*'),
         EXCLUDE_FREEBUSY(-21, "\\ExcludeFB", 'b'),
         CHECKED(-22, "\\Checked", '#'),
@@ -128,7 +127,6 @@ public final class Flag extends Tag {
     public static final int ID_INDEXING_DEFERRED = FlagInfo.INDEXING_DEFERRED.id;
     public static final int ID_POPPED = FlagInfo.POPPED.id;
     public static final int ID_NOTE = FlagInfo.NOTE.id;
-    public static final int ID_BY_ME = FlagInfo.BY_ME.id;
     public static final int ID_SUBSCRIBED = FlagInfo.SUBSCRIBED.id;
     public static final int ID_EXCLUDE_FREEBUSY = FlagInfo.EXCLUDE_FREEBUSY.id;
     public static final int ID_CHECKED = FlagInfo.CHECKED.id;
@@ -160,7 +158,6 @@ public final class Flag extends Tag {
     public static final int BITMASK_INDEXING_DEFERRED = FlagInfo.INDEXING_DEFERRED.bitmask;
     public static final int BITMASK_POPPED = FlagInfo.POPPED.bitmask;
     public static final int BITMASK_NOTE = FlagInfo.NOTE.bitmask;
-    public static final int BITMASK_BY_ME = FlagInfo.BY_ME.bitmask;
     public static final int BITMASK_SUBSCRIBED = FlagInfo.SUBSCRIBED.bitmask;
     public static final int BITMASK_EXCLUDE_FREEBUSY = FlagInfo.EXCLUDE_FREEBUSY.bitmask;
     public static final int BITMASK_CHECKED = FlagInfo.CHECKED.bitmask;
@@ -180,13 +177,13 @@ public final class Flag extends Tag {
     public static final int FLAGS_SYSTEM =
         BITMASK_FROM_ME | BITMASK_ATTACHED | BITMASK_COPIED | BITMASK_DRAFT | BITMASK_HIGH_PRIORITY |
         BITMASK_LOW_PRIORITY | BITMASK_VERSIONED | BITMASK_INDEXING_DEFERRED | BITMASK_INVITE | BITMASK_ARCHIVED |
-        BITMASK_GLOBAL | BITMASK_IN_DUMPSTER | BITMASK_UNCACHED | BITMASK_NOTE | BITMASK_BY_ME;
+        BITMASK_GLOBAL | BITMASK_IN_DUMPSTER | BITMASK_UNCACHED | BITMASK_NOTE;
     public static final int FLAGS_FOLDER  =
         BITMASK_SUBSCRIBED | BITMASK_EXCLUDE_FREEBUSY | BITMASK_CHECKED | BITMASK_NO_INHERIT | BITMASK_SYNCFOLDER |
         BITMASK_SYNC | BITMASK_NO_INFERIORS | BITMASK_GLOBAL;
     public static final int FLAGS_MESSAGE =
         BITMASK_FROM_ME | BITMASK_REPLIED | BITMASK_FORWARDED | BITMASK_DRAFT | BITMASK_NOTIFIED | BITMASK_UNREAD |
-        BITMASK_HIGH_PRIORITY | BITMASK_LOW_PRIORITY | BITMASK_POPPED | BITMASK_INVITE | BITMASK_BY_ME;
+        BITMASK_HIGH_PRIORITY | BITMASK_LOW_PRIORITY | BITMASK_POPPED | BITMASK_INVITE;
     public static final int FLAGS_CALITEM =
         BITMASK_DRAFT | BITMASK_HIGH_PRIORITY | BITMASK_LOW_PRIORITY;
     public static final int FLAGS_GENERIC =

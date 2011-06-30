@@ -174,18 +174,19 @@ public class Conversation extends MailItem {
      *  they're fetched from the database.  The returned messages are not
      *  guaranteed to be sorted in any way. */
     List<Message> getMessages() throws ServiceException {
-        return getMessages(SortBy.NONE);
+        return getMessages(SortBy.NONE, -1);
     }
 
     /** Returns all the {@link Message}s in this conversation.  The messages
      *  are fetched from the {@link Mailbox}'s cache, if possible; if not,
      *  they're fetched from the database.
      *
-     * @param sort  The sort order for the messages, specified by one of the
-     *              <code>SORT_XXX</code> constants from {@link DbMailItem}. */
-    List<Message> getMessages(SortBy sort) throws ServiceException {
+     * @param sort the sort order for the messages
+     * @param limit max number of messages to retrieve, or unlimited if -1
+     */
+    public List<Message> getMessages(SortBy sort, int limit) throws ServiceException {
         List<Message> msgs = new ArrayList<Message>(getMessageCount());
-        List<UnderlyingData> listData = DbMailItem.getByParent(this, sort, false);
+        List<UnderlyingData> listData = DbMailItem.getByParent(this, sort, limit, false);
         for (UnderlyingData data : listData) {
             msgs.add(mMailbox.getMessage(data));
         }

@@ -3333,15 +3333,15 @@ public class Mailbox {
     }
 
     public List<Message> getMessagesByConversation(OperationContext octxt, int convId) throws ServiceException {
-        return getMessagesByConversation(octxt, convId, SortBy.DATE_ASC);
+        return getMessagesByConversation(octxt, convId, SortBy.DATE_ASC, -1);
     }
 
-    public List<Message> getMessagesByConversation(OperationContext octxt, int convId, SortBy sort)
+    public List<Message> getMessagesByConversation(OperationContext octxt, int convId, SortBy sort, int limit)
             throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("getMessagesByConversation", octxt);
-            List<Message> msgs = getConversationById(convId).getMessages(sort);
+            List<Message> msgs = getConversationById(convId).getMessages(sort, limit);
             if (!hasFullAccess()) {
                 List<Message> visible = new ArrayList<Message>(msgs.size());
                 for (Message msg : msgs) {
@@ -5577,7 +5577,7 @@ public class Mailbox {
                     }
                     copy = item.copy(folder, newId, parent);
                     if (fromDumpster) {
-                        for (MailItem.UnderlyingData data : DbMailItem.getByParent(item, SortBy.DATE_DESC, true)) {
+                        for (MailItem.UnderlyingData data : DbMailItem.getByParent(item, SortBy.DATE_DESC, -1, true)) {
                             MailItem child = getItem(data);
                             Folder destination = (child.getType() == Type.COMMENT) ? getFolderById(ID_FOLDER_COMMENTS) : folder;
                             child.copy(destination, getNextItemId(ID_AUTO_INCREMENT), copy);

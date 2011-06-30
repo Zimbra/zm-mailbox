@@ -68,7 +68,7 @@ public class GetConv extends MailDocumentHandler  {
         if (conv == null) {
             throw MailServiceException.NO_SUCH_CONV(iid.getId());
         }
-        List<Message> msgs = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_ASC);
+        List<Message> msgs = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_ASC, -1);
         if (msgs.isEmpty() && zsc.isDelegatedRequest()) {
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
         }
