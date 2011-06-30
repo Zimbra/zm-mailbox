@@ -580,6 +580,7 @@ public final class MailConstants {
     public static final String E_INVITE_TEST = "inviteTest";
     public static final String E_CONVERSATION_TEST = "conversationTest";
     public static final String E_LIST_TEST = "listTest";
+    public static final String E_BULK_TEST = "bulkTest";
     public static final String E_METHOD = "method";
 
     public static final String E_FILTER_ACTIONS = "filterActions";
