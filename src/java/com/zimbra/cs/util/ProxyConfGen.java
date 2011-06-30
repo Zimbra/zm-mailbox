@@ -104,8 +104,8 @@ class ProxyConfVar
     public ProxyConfOverride        mOverride;
     public String                   mDescription;
 
-    private static Log              mLog = LogFactory.getLog (ProxyConfGen.class);
-    private static Provisioning     mProv = Provisioning.getInstance();
+    protected static Log              mLog = LogFactory.getLog (ProxyConfGen.class);
+    protected static Provisioning     mProv = Provisioning.getInstance();
     public static Entry             configSource = null;
     public static Entry             serverSource = null;
 
@@ -439,6 +439,10 @@ class ProxyConfVar
                 }
                 return capa;
             }
+            else if ("ssl.clientcertca.default".equalsIgnoreCase(mKeyword))
+            {
+                return formatString(o);
+            }
             else
             {
                 throw new ProxyConfException ("Unhandled keyword: " + mKeyword);
@@ -563,6 +567,123 @@ class ProxyConfVar
     }
 }
 
+class ZMLookupHandlerVar extends ProxyConfVar{
+	public ZMLookupHandlerVar() {
+		super("zmlookup.:handlers",
+			  "zimbraReverseProxyLookupTarget",
+              new ArrayList<String>(),
+              ProxyConfValueType.CUSTOM,
+              ProxyConfOverride.CUSTOM,
+              "List of nginx lookup handlers (i.e. servers for which" +
+              " zimbraReverseProxyLookupTarget is true)");
+	}
+	
+	@Override
+	public void update() throws ServiceException {
+		ArrayList<String> servers = new ArrayList<String>();
+
+        List<Server> allServers = mProv.getAllServers();
+        int REVERSE_PROXY_PORT = 7072;
+        for (Server s : allServers)
+        {
+            String sn = s.getAttr(Provisioning.A_zimbraServiceHostname,"");
+            boolean isTarget = s.getBooleanAttr(Provisioning.A_zimbraReverseProxyLookupTarget, false);
+            if (isTarget) {
+                Formatter f = new Formatter();
+                f.format("%s:%d", sn, REVERSE_PROXY_PORT);
+                servers.add(f.toString());
+                mLog.debug("Route Lookup: Added server " + sn);
+            }
+        }
+
+        mValue = servers;
+	}
+	
+	@Override
+	public String format(Object o) throws ProxyConfException {
+		String REVERSE_PROXY_PATH = ExtensionDispatcherServlet.EXTENSION_PATH + "/nginx-lookup";
+        @SuppressWarnings("unchecked")
+		ArrayList<String> servers = (ArrayList<String>) o;
+        if (servers.size() == 0) {
+        	return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (String s: servers) {
+        	sb.append(s + REVERSE_PROXY_PATH);
+        	sb.append(' ');
+        }
+        sb.setLength(sb.length() - 1); //trim the last space
+        return sb.toString();
+	}
+}
+
+class ZMSSOEnablerVar extends ProxyConfVar {
+	public ZMSSOEnablerVar() {
+		super("web.sso.enabled",
+			  null,
+              null,
+              ProxyConfValueType.ENABLER,
+              ProxyConfOverride.CUSTOM,
+              "whether to turn on sso");
+	}
+	
+	@Override
+	public void update() throws ServiceException {
+		String certMode = 
+			serverSource.getAttr(Provisioning.A_zimbraReverseProxyClientCertMode, "off");
+       if (certMode.equals("on") ||certMode.equals("optional")) {
+    	   mValue = true;
+       } else {
+    	   // ... we may add more condition if more sso auth method is introduced
+    	   mValue = false;
+       }
+	}
+}
+
+class ClientCertAuthDefaultCAVar extends ProxyConfVar {
+	public ClientCertAuthDefaultCAVar() {
+		super("ssl.clientcertca.default",
+		      "zimbraReverseProxyClientCertCA", 
+		      ProxyConfGen.getDefaultClientCertCaPath(), 
+		      ProxyConfValueType.CUSTOM, 
+		      ProxyConfOverride.CUSTOM, 
+		      "CA certificate for authenticating client certificates in nginx proxy (https only)");
+	}
+	
+	@Override
+	public void update() throws ServiceException {
+		//"ssl.clientcertca.default" indicates the local client ca cert path other than file content
+        String defaultClientCertCaContent = serverSource.getAttr(mAttribute, "");
+        if (!ProxyConfUtil.isEmptyString(defaultClientCertCaContent)) {
+            String defaultClientCertCaPath = (String)mDefault;
+            ProxyConfUtil.writeContentToFile(defaultClientCertCaContent, defaultClientCertCaPath);
+        }
+        mValue = mDefault; 
+	}
+}
+
+class SSORedirectEnablerVar extends ProxyConfVar {
+	public SSORedirectEnablerVar() {
+		super("web.sso.redirect.enabled.default",
+		      "zimbraWebClientLoginURL", 
+		      false, 
+		      ProxyConfValueType.ENABLER, 
+		      ProxyConfOverride.CUSTOM, 
+		      "whether to redirect from common http & https to https sso");
+	}
+	
+	@Override
+	public void update() throws ServiceException {
+        String webClientLoginURL = serverSource.getAttr(mAttribute, true);
+        if (webClientLoginURL == null ||
+            ProxyConfUtil.isEmptyString(webClientLoginURL)) {
+        	mValue = false;
+        } else {
+        	mValue = true;
+        }
+	}
+}
+
 /**
  * A simple class of Triple<VirtualHostName, VirtualIPAddress, DomainName>. Uses
  * this only for convenient and HashMap can't guarantee order
@@ -572,10 +693,22 @@ class DnVhnVIPItem {
     public String domainName;
     public String virtualHostname;
     public String virtualIPAddress;
-    public DnVhnVIPItem(String dn, String vhn, String vip) {
+    public String sslCertificate;
+    public String sslPrivateKey;
+    public Boolean useDomainServerCert;
+    public Boolean useDomainClientCert;
+    public String clientCertMode;
+    public String clientCertCa;
+
+    public DnVhnVIPItem(String dn, String vhn, String vip, String scrt, String spk, 
+    		String ccm, String cca) {
         this.domainName = dn;
         this.virtualHostname = vhn;
         this.virtualIPAddress = vip;
+        this.sslCertificate = scrt;
+        this.sslPrivateKey = spk;
+        this.clientCertMode = ccm;
+        this.clientCertCa = cca;
     }
 }
 
@@ -591,8 +724,10 @@ public class ProxyConfGen
     private static String mDomainSSLDir = mConfDir + File.separator + "domaincerts";
     private static String mSSLCrtExt = ".crt";
     private static String mSSLKeyExt = ".key";
+    private static String mSSLClientCertCaExt = ".client.ca.crt";
     private static String mDefaultSSLCrt = mConfDir + File.separator + "nginx.crt";
     private static String mDefaultSSLKey = mConfDir + File.separator + "nginx.key";
+    private static String mDefaultSSLClientCertCa = mConfDir + File.separator + "nginx.client.ca.crt";
     private static String mConfIncludesDir = mConfDir + File.separator + mIncDir;
     private static String mConfPrefix = "nginx.conf";
     private static String mTemplatePrefix = mConfPrefix;
@@ -697,6 +832,8 @@ public class ProxyConfGen
         attrsNeeded.add(Provisioning.A_zimbraVirtualHostname);
         attrsNeeded.add(Provisioning.A_zimbraSSLCertificate);
         attrsNeeded.add(Provisioning.A_zimbraSSLPrivateKey);
+        attrsNeeded.add(Provisioning.A_zimbraReverseProxyClientCertMode);
+        attrsNeeded.add(Provisioning.A_zimbraReverseProxyClientCertCA);
 
         final List<DnVhnVIPItem> result = new ArrayList<DnVhnVIPItem>();
 
@@ -711,8 +848,16 @@ public class ProxyConfGen
                     .getAttr(Provisioning.A_zimbraSSLCertificate);
                 String privateKey = entry
                     .getAttr(Provisioning.A_zimbraSSLPrivateKey);
-                if (virtualHostnames.length == 0 ||certificate == null ||
-                                privateKey == null) {
+                String clientCertMode = entry
+                    .getAttr(Provisioning.A_zimbraReverseProxyClientCertMode);
+                String clientCertCA = entry
+                    .getAttr(Provisioning.A_zimbraReverseProxyClientCertCA);
+
+                // no need to check whether clientCertMode or clientCertCA == null,
+
+                if (virtualHostnames.length == 0 || ( certificate == null &&
+                                privateKey == null && clientCertMode == null && clientCertCA == null ) ) {
+
                     return; // ignore the items that don't have virtual host
                             // name, cert or key. Those domains will use the
                             // config
@@ -722,11 +867,20 @@ public class ProxyConfGen
                 //same in number
                 int i = 0;
                 try {
-                    for(; i < virtualHostnames.length; i++) {
+
+                    for( ; i < virtualHostnames.length; i++) {
                         String vip = InetAddress.getByName(virtualHostnames[i])
                                                     .getHostAddress();
+                        if (!ProxyConfUtil.isEmptyString(clientCertCA)){
+
+                            createDomainSSLDirIfNotExists();
+                            String clientCertCaPath = getClientCertCaPathByDomain(domainName);
+                            ProxyConfUtil.writeContentToFile(clientCertCA, clientCertCaPath);
+                        }
                         result.add(new DnVhnVIPItem(domainName,
-                            virtualHostnames[i], vip));
+                                virtualHostnames[i], vip, certificate, privateKey, 
+                                clientCertMode, clientCertCA));
+
                     }
                 } catch (UnknownHostException e) {
                     throw ServiceException.
@@ -738,6 +892,13 @@ public class ProxyConfGen
         mProv.getAllDomains(visitor,
             attrsNeeded.toArray(new String[attrsNeeded.size()]));
         return result;
+    }
+
+    public static void createDomainSSLDirIfNotExists( ){
+        File domainSSLDir = new File( mDomainSSLDir );
+        if( !domainSSLDir.exists() ){
+          domainSSLDir.mkdirs();
+        }
     }
 
     /* Guess how to find a server object -- taken from ProvUtil::guessServerBy */
@@ -796,6 +957,15 @@ public class ProxyConfGen
         return mTemplatePrefix + ".web.https.mode-" + mode + mTemplateSuffix;
     }
 
+    public static String getClientCertCaPathByDomain(String domainName ){
+
+    	return mDomainSSLDir + File.separator + domainName + mSSLClientCertCaExt;
+    }
+    
+    public static String getDefaultClientCertCaPath() {
+    	return mDefaultSSLClientCertCa;
+    }
+
     public static void expandTemplate (File tFile, File wFile)
         throws ProxyConfException
     {
@@ -828,9 +998,12 @@ public class ProxyConfGen
                 String[] cmd_arg = cmdMatcher.group(2).split("[ \t]+", 2);
                 //command selection can be extracted if more commands are introduced
                 if(cmd_arg.length == 2 && 
-                        cmd_arg[0].compareTo("explode") == 0 && 
-                        cmd_arg[1].compareTo("vhn_vip_ssl") == 0) {
-                    expandTemplateExplodeSSLConfigsForAllVhnsAndVIPs(r, w);
+                   cmd_arg[0].compareTo("explode") == 0) {
+                	if (cmd_arg[1].compareTo("vhn_vip_ssl") == 0) {
+                		expandTemplateExplodeSSLConfigsForAllVhnsAndVIPs(r, w);
+                    } else {
+                    	throw new ProxyConfException("Illegal custom header command: " + cmdMatcher.group(2));
+                    } 
                 } else {
                     throw new ProxyConfException("Illegal custom header command: " + cmdMatcher.group(2));
                 }
@@ -868,88 +1041,94 @@ public class ProxyConfGen
     private static void expandTemplateExplodeSSLConfigsForAllVhnsAndVIPs(
         BufferedReader temp, BufferedWriter conf) throws IOException, ProxyConfException {
         int size = mQualifiedVhnsAndVIPs.size();
-        InetAddress addr = null;
         List<String> cache = null;
-        
         if (size > 0) {
             Iterator<DnVhnVIPItem> it = mQualifiedVhnsAndVIPs.iterator();
             DnVhnVIPItem item = it.next();
-            mVars.put("vhn", item.virtualHostname);
-            addr = InetAddress.getByName(item.virtualIPAddress);
-            if (getZimbraIPMode() != IPMode.BOTH) {
-            	if (getZimbraIPMode() == IPMode.IPV4_ONLY &&
-            			addr.getClass().equals(Inet6Address.class)) {
-            		String msg = item.virtualIPAddress + 
-    				" is an IPv6 address but zimbraIPMode is 'ipv4'";
-            		mLog.error(msg);
-            		throw new ProxyConfException(msg);
-            	}
-            	
-            	if (getZimbraIPMode() == IPMode.IPV6_ONLY &&
-            			addr.getClass().equals(Inet4Address.class)) {
-            		String msg = item.virtualIPAddress + 
-    				" is an IPv4 address but zimbraIPMode is 'ipv6'";
-            		mLog.error(msg);
-            		throw new ProxyConfException(msg);
-            	}
-            }
-            
-            if (addr.getClass().equals(Inet6Address.class) &&
-            		!item.virtualIPAddress.startsWith("[")) {
-            	//ipv6 address has to be enclosed with [ ]
-            	mVars.put("vip", "[" + item.virtualIPAddress + "]");
-            	
-            } else {
-            	mVars.put("vip", item.virtualIPAddress);
-            }
-            mVars.put("ssl.crt", mDomainSSLDir + File.separator +
-                item.domainName + mSSLCrtExt);
-            mVars.put("ssl.key", mDomainSSLDir + File.separator +
-                item.domainName + mSSLKeyExt);
+            fillVhnAndVIPVars(item);
+
             cache = expandTemplateAndCache(temp, conf);
             conf.newLine();
             
             while (it.hasNext()) {
                 item = it.next();
-                mVars.put("vhn", item.virtualHostname);
-                
-                addr = InetAddress.getByName(item.virtualIPAddress);
-                if (getZimbraIPMode() != IPMode.BOTH) {
-                	if (getZimbraIPMode() == IPMode.IPV4_ONLY &&
-                			addr.getClass().equals(Inet6Address.class)) {
-                		String msg = item.virtualIPAddress + 
-        				" is an IPv6 address but zimbraIPMode is 'ipv4'";
-                		mLog.error(msg);
-                		throw new ProxyConfException(msg);
-                	}
-                	
-                	if (getZimbraIPMode() == IPMode.IPV6_ONLY &&
-                			addr.getClass().equals(Inet4Address.class)) {
-                		String msg = item.virtualIPAddress + 
-        				" is an IPv4 address but zimbraIPMode is 'ipv6'";
-                		mLog.error(msg);
-                		throw new ProxyConfException(msg);
-                	}
-                }
-                
-                if (addr.getClass().equals(Inet6Address.class) &&
-                		!item.virtualIPAddress.startsWith("[")) {
-                	//ipv6 address has to be enclosed with [ ]
-                	mVars.put("vip", "[" + item.virtualIPAddress + "]");
-                	
-                } else {
-                	mVars.put("vip", item.virtualIPAddress);
-                }
-                
-                mVars.put("ssl.crt", mDomainSSLDir + File.separator +
-                    item.domainName + mSSLCrtExt);
-                mVars.put("ssl.key", mDomainSSLDir + File.separator +
-                    item.domainName + mSSLKeyExt);
+                fillVhnAndVIPVars(item);
                 expandTempateFromCache(cache, conf);
                 conf.newLine();
             }
         }
     }
+	private static void fillVhnAndVIPVars(DnVhnVIPItem item)
+			throws UnknownHostException, ProxyConfException {
+		InetAddress addr = null;
+		String defaultVal = null;;
+		mVars.put("vhn", item.virtualHostname);
+		addr = InetAddress.getByName(item.virtualIPAddress);
+		if (getZimbraIPMode() != IPMode.BOTH) {
+		    if (getZimbraIPMode() == IPMode.IPV4_ONLY &&
+		                addr.getClass().equals(Inet6Address.class)) {
+		        String msg = item.virtualIPAddress +
+		                " is an IPv6 address but zimbraIPMode is 'ipv4'";
+		        mLog.error(msg);
+		        throw new ProxyConfException(msg);
+		    }
+
+		    if (getZimbraIPMode() == IPMode.IPV6_ONLY &&
+		                addr.getClass().equals(Inet4Address.class)) {
+		        String msg = item.virtualIPAddress +
+		                " is an IPv4 address but zimbraIPMode is 'ipv6'";
+		        mLog.error(msg);
+		        throw new ProxyConfException(msg);
+		    }
+		}
+		if (addr.getClass().equals(Inet6Address.class) &&
+		            !item.virtualIPAddress.startsWith("[")) {
+		    //ipv6 address has to be enclosed with [ ]
+		    mVars.put("vip", "[" + item.virtualIPAddress + "]");
+
+		} else {
+		    mVars.put("vip", item.virtualIPAddress);
+		}
+
+
+		if ( item.sslCertificate != null ){
+		    mVars.put("ssl.crt", mDomainSSLDir + File.separator +
+		    item.domainName + mSSLCrtExt);
+		}
+		else{
+		    defaultVal = mVars.get("ssl.crt.default");
+		    mVars.put("ssl.crt", defaultVal);
+		}
+
+		if ( item.sslPrivateKey != null ){
+		    mVars.put("ssl.key", mDomainSSLDir + File.separator +
+		            item.domainName + mSSLKeyExt);
+		}
+		else{
+		    defaultVal = mVars.get("ssl.key.default");
+		    mVars.put("ssl.key", defaultVal);
+		}
+
+		if ( item.clientCertMode != null ){
+		    mVars.put("ssl.clientcertmode", item.clientCertMode );
+		}
+		else {
+		    defaultVal = mVars.get("ssl.clientcertmode.default");
+		    mVars.put("ssl.clientcertmode", defaultVal );
+		}
+
+		if ( item.clientCertCa != null ){
+		    String clientCertCaPath = getClientCertCaPathByDomain(item.domainName);
+		    mVars.put("ssl.clientcertca", clientCertCaPath);
+		    //DnVhnVIPItem.clientCertCa stores the CA cert's content, other than path
+		    //if it is not null or "", loadReverseProxyVhnAndVIP() will save its content .
+		    //into clientCertCaPath before coming here
+		}
+		else{
+		    defaultVal = mVars.get("ssl.clientcertca.default");
+		    mVars.put("ssl.clientcertca", defaultVal);
+		}
+	}
     
     /**
      * Read from template file and translate the contents to conf.
@@ -1038,6 +1217,8 @@ public class ProxyConfGen
         mConfVars.put("core.ipboth.enabled", new ProxyConfVar("core.ipboth.enabled", null, true, ProxyConfValueType.ENABLER, ProxyConfOverride.CUSTOM, "Both IPv4 and IPv6"));
         mConfVars.put("ssl.crt.default", new ProxyConfVar("ssl.crt.default", null, mDefaultSSLCrt, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "default nginx certificate file path"));
         mConfVars.put("ssl.key.default", new ProxyConfVar("ssl.key.default", null, mDefaultSSLKey, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "default nginx private key file path"));
+        mConfVars.put("ssl.clientcertca.default", new ClientCertAuthDefaultCAVar());
+        mConfVars.put("ssl.clientcertdepth.default", new ProxyConfVar("ssl.clientcertdepth.default", "zimbraReverseProxyClientCertDepth", new Integer(10), ProxyConfValueType.INTEGER, ProxyConfOverride.NONE,"indicate how depth the verification will load the ca chain. This is useful when client crt is signed by multiple intermediate ca"));
         mConfVars.put("main.user", new ProxyConfVar("main.user", null, "zimbra", ProxyConfValueType.STRING, ProxyConfOverride.NONE, "The user as which the worker processes will run"));
         mConfVars.put("main.group", new ProxyConfVar("main.group", null, "zimbra", ProxyConfValueType.STRING, ProxyConfOverride.NONE, "The group as which the worker processes will run"));
         mConfVars.put("main.workers", new ProxyConfVar("main.workers", "zimbraReverseProxyWorkerProcesses", new Integer(4), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER, "Number of worker processes"));
@@ -1105,6 +1286,12 @@ public class ProxyConfGen
         mConfVars.put("web.enabled", new ProxyConfVar("web.enabled", "zimbraReverseProxyHttpEnabled", false, ProxyConfValueType.ENABLER, ProxyConfOverride.SERVER, "Indicates whether HTTP proxying is enabled"));
         mConfVars.put("web.http.enabled", new ProxyConfVar("web.http.enabled", null, true, ProxyConfValueType.ENABLER, ProxyConfOverride.CUSTOM,"Indicates whether HTTP Proxy will accept connections on HTTP (true unless zimbraReverseProxyMailMode is 'https')"));
         mConfVars.put("web.https.enabled", new ProxyConfVar("web.https.enabled", null, true, ProxyConfValueType.ENABLER, ProxyConfOverride.CUSTOM,"Indicates whether HTTP Proxy will accept connections on HTTPS (true unless zimbraReverseProxyMailMode is 'http')"));
+        mConfVars.put("zmlookup.:handlers", new ZMLookupHandlerVar());
+        mConfVars.put("zmlookup.timeout", new ProxyConfVar("zmlookup.timeout", "zimbraReverseProxyRouteLookupTimeout", new Long(15000), ProxyConfValueType.TIME, ProxyConfOverride.SERVER, "Time interval (ms) given to lookup handler to respond to route lookup request (after this time elapses, Proxy fails over to next handler, or fails the request if there are no more lookup handlers)"));
+        mConfVars.put("zmlookup.retryinterval", new ProxyConfVar("zmlookup.retryinterval", "zimbraReverseProxyRouteLookupTimeoutCache", new Long(60000), ProxyConfValueType.TIME, ProxyConfOverride.SERVER,"Time interval (ms) given to lookup handler to cache a failed response to route a previous lookup request (after this time elapses, Proxy retries this host)"));
+        mConfVars.put("zmlookup.dpasswd", new ProxyConfVar("zmlookup.dpasswd", "ldap_nginx_password", "zmnginx", ProxyConfValueType.STRING, ProxyConfOverride.LOCALCONFIG, "Password for master credentials used by NGINX to log in to upstream for GSSAPI authentication"));
+        mConfVars.put("web.sso.certauth.port", new ProxyConfVar("web.sso.certauth.port", Provisioning.A_zimbraMailSSLProxyClientCertPort, new Integer(0), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER,"reverse proxy client cert auth port"));
+        mConfVars.put("web.sso.enabled", new ZMSSOEnablerVar());
     }
 
     /* update the default variable map from the active configuration */
@@ -1296,7 +1483,8 @@ public class ProxyConfGen
             
             expandTemplate(new File(mTemplateDir, getCoreConfTemplate()), new File(mConfDir,getCoreConf())); /* Only core nginx conf goes to mConfDir, rest to mConfIncludesDir */
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("main")), new File(mConfIncludesDir, getConfFileName("main")));
-            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("memcache")), new File(mConfIncludesDir,getConfFileName("memcache")));
+            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("memcache")), new File(mConfIncludesDir, getConfFileName("memcache")));
+            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("zmlookup")), new File(mConfIncludesDir, getConfFileName("zmlookup")));
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("mail")), new File(mConfIncludesDir, getConfFileName("mail")));
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("mail.imap")), new File(mConfIncludesDir, getConfFileName("mail.imap")));
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("mail.imap.default")), new File(mConfIncludesDir, getConfFileName("mail.imap.default")));
@@ -1311,6 +1499,8 @@ public class ProxyConfGen
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("web.http.default")), new File(mConfIncludesDir, getConfFileName("web.http.default")));
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("web.https")), new File(mConfIncludesDir, getConfFileName("web.https")));
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("web.https.default")), new File(mConfIncludesDir, getConfFileName("web.https.default")));
+            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("web.sso")), new File(mConfIncludesDir, getConfFileName("web.sso")));
+            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("web.sso.default")), new File(mConfIncludesDir, getConfFileName("web.sso.default")));
             expandTemplate(new File(mTemplateDir, getWebHttpModeConfTemplate("http")), new File(mConfIncludesDir, getWebHttpModeConf("http")));
             expandTemplate(new File(mTemplateDir, getWebHttpModeConfTemplate("https")), new File(mConfIncludesDir, getWebHttpModeConf("https")));
             expandTemplate(new File(mTemplateDir, getWebHttpModeConfTemplate("both")), new File(mConfIncludesDir, getWebHttpModeConf("both")));
@@ -1342,4 +1532,28 @@ public class ProxyConfGen
         int exitCode = createConf(args);
         System.exit(exitCode);
     }
+}
+
+
+class ProxyConfUtil{
+
+    public static void writeContentToFile( String content, String filePath )
+        throws ServiceException {
+
+        try{
+            BufferedWriter bw = new BufferedWriter(new FileWriter(filePath));
+
+            bw.write(content);
+            bw.flush();
+            bw.close();
+
+        }catch( IOException e ){
+            throw ServiceException.FAILURE("Cannot write the content (" + content + ") to " + filePath, e);
+        }
+    }
+
+    public static boolean isEmptyString( String target ){
+        return (target == null) || (target.trim().equalsIgnoreCase(""));
+    }
+
 }
