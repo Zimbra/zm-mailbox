@@ -201,10 +201,6 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         }
     }
 
-    public enum ListOp {
-        IS, IS_NOT;
-    }
-
     public static ZFilterCondition getCondition(Element condEl) throws ServiceException {
         String name = condEl.getName();
         boolean isNegative = condEl.getAttributeBool(MailConstants.A_NEGATIVE, false);
@@ -281,7 +277,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
             return new ZConversationCondition(isNegative ? ConversationOp.NOT_WHERE : ConversationOp.WHERE,
                     condEl.getAttribute(MailConstants.A_WHERE));
         } else if (name.equals(MailConstants.E_LIST_TEST)) {
-            return new ZListCondition(isNegative ? ListOp.IS_NOT : ListOp.IS);
+            return new ZListCondition(isNegative ? SimpleOp.NOT_IS : SimpleOp.IS);
         } else if (name.equals(MailConstants.E_TRUE_TEST)) {
             return new ZTrueCondition();
         } else {
@@ -316,10 +312,37 @@ public abstract class ZFilterCondition implements ToZJSONObject {
 
     public abstract String toConditionString();
 
-    public static final class ZListCondition extends ZFilterCondition {
-        private final ListOp op;
+    public static final class ZBulkCondition extends ZFilterCondition {
+        private final SimpleOp op;
 
-        public ZListCondition(ListOp op) {
+        public ZBulkCondition(SimpleOp op) {
+            this.op = op;
+        }
+
+        @Override
+        public String getName() {
+            return "list";
+        }
+
+        @Override
+        Element toElement(Element parent) {
+            Element test = parent.addElement(MailConstants.E_BULK_TEST);
+            if (op == SimpleOp.NOT_IS) {
+                test.addAttribute(MailConstants.A_NEGATIVE, true);
+            }
+            return test;
+        }
+
+        @Override
+        public String toConditionString() {
+            return "bulk" + (op == SimpleOp.IS ? "" : " not");
+        }
+    }
+
+    public static final class ZListCondition extends ZFilterCondition {
+        private final SimpleOp op;
+
+        public ZListCondition(SimpleOp op) {
             this.op = op;
         }
 
@@ -331,7 +354,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         @Override
         Element toElement(Element parent) {
             Element test = parent.addElement(MailConstants.E_LIST_TEST);
-            if (op == ListOp.IS_NOT) {
+            if (op == SimpleOp.NOT_IS) {
                 test.addAttribute(MailConstants.A_NEGATIVE, true);
             }
             return test;
@@ -339,7 +362,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
 
         @Override
         public String toConditionString() {
-            return "list" + (op == ListOp.IS ? "" : " not");
+            return "list" + (op == SimpleOp.IS ? "" : " not");
         }
     }
 

@@ -369,14 +369,23 @@ public final class ZFilterRule implements ToZJSONObject {
                 conditions.add(new ZFilterCondition.ZConversationCondition(
                         ZFilterCondition.ConversationOp.fromString(args[i++]), args[i++]));
             } else if (a.equals("list")) {
-                ZFilterCondition.ListOp op;
+                ZFilterCondition.SimpleOp op;
                 if (i + 1 < args.length && args[i].equalsIgnoreCase("not")) {
                     i++; // not
-                    op = ZFilterCondition.ListOp.IS_NOT;
+                    op = ZFilterCondition.SimpleOp.NOT_IS;
                 } else {
-                    op = ZFilterCondition.ListOp.IS;
+                    op = ZFilterCondition.SimpleOp.IS;
                 }
                 conditions.add(new ZFilterCondition.ZListCondition(op));
+            } else if (a.equals("bulk")) {
+                ZFilterCondition.SimpleOp op;
+                if (i + 1 < args.length && args[i].equalsIgnoreCase("not")) {
+                    i++; // not
+                    op = ZFilterCondition.SimpleOp.NOT_IS;
+                } else {
+                    op = ZFilterCondition.SimpleOp.IS;
+                }
+                conditions.add(new ZFilterCondition.ZBulkCondition(op));
             } else if (a.equals("keep")) {
                 actions.add(new ZKeepAction());
             } else if (a.equals("discard")) {

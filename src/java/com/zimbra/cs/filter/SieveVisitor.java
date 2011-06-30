@@ -103,6 +103,10 @@ public abstract class SieveVisitor {
     }
 
     @SuppressWarnings("unused")
+    protected void visitBulkTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
     protected void visitTrueTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
     }
 

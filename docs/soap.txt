@@ -2841,6 +2841,7 @@ Tests:
   <currentDayOfWeekTest value="comma-separated-day-of-week-indices" />
   <conversationTest [where="{started|participated}"]/>
   <listTest/>
+  <bulkTest/>
 
 Each test has the following optional attributes:
     * "negative": specifies a "not" condition for that test

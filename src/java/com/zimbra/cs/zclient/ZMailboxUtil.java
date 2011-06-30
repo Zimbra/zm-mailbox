@@ -256,6 +256,7 @@ public class ZMailboxUtil implements DebugListener {
                 "    current_day_of_week is|not_is \"comma-separated-days(0=Sun,6=Sat)\"\n" +
                 "    conversation where|not_where started|participated\n" +
                 "    list [not]\n" +
+                "    bulk [not]\n" +
                 "\n" +
                 "  {actions}:\n" +
                 "    keep\n" +

@@ -188,6 +188,8 @@ public final class SoapToSieve {
             snippet = String.format("conversation :where \"%s\"", FilterUtil.escape(where));
         } else if (name.equals(MailConstants.E_LIST_TEST)) {
             snippet = "list";
+        } else if (name.equals(MailConstants.E_BULK_TEST)) {
+            snippet = "bulk";
         } else if (name.equals(MailConstants.E_TRUE_TEST)) {
             snippet = "true";
         } else {
