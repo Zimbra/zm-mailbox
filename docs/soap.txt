@@ -2420,7 +2420,7 @@ END:VCARD]
                    - otherwise, add/remove the specified value.
 
         For <m> elements, op is required; also, {member-type} and {member-value} are required
-           
+
 
 <ModifyContactResponse>
    <cn ...>
@@ -2838,6 +2838,7 @@ Tests:
   <currentTimeTest dateComparison="{before|after}" d="time-in-HHmm-format}" />
   <currentDayOfWeekTest value="comma-separated-day-of-week-indices" />
   <conversationTest [where="{started|participated}"]/>
+  <listTest/>
 
 Each test has the following optional attributes:
     * "negative": specifies a "not" condition for that test

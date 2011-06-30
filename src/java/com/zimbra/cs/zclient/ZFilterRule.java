@@ -32,7 +32,6 @@ import com.zimbra.cs.zclient.ZFilterAction.ZStopAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZTagAction;
 import com.zimbra.cs.zclient.ZFilterCondition.AddressBookOp;
 import com.zimbra.cs.zclient.ZFilterCondition.BodyOp;
-import com.zimbra.cs.zclient.ZFilterCondition.ConversationOp;
 import com.zimbra.cs.zclient.ZFilterCondition.DateOp;
 import com.zimbra.cs.zclient.ZFilterCondition.HeaderOp;
 import com.zimbra.cs.zclient.ZFilterCondition.SimpleOp;
@@ -41,7 +40,6 @@ import com.zimbra.cs.zclient.ZFilterCondition.ZAddressBookCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZAddressCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZAttachmentExistsCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZBodyCondition;
-import com.zimbra.cs.zclient.ZFilterCondition.ZConversationCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZCurrentDayOfWeekCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZCurrentTimeCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZDateCondition;
@@ -368,7 +366,17 @@ public final class ZFilterRule implements ToZJSONObject {
                 if (i + 2 > args.length) {
                     throw ZClientException.CLIENT_ERROR("missing where arg", null);
                 }
-                conditions.add(new ZConversationCondition(ConversationOp.fromString(args[i++]), args[i++]));
+                conditions.add(new ZFilterCondition.ZConversationCondition(
+                        ZFilterCondition.ConversationOp.fromString(args[i++]), args[i++]));
+            } else if (a.equals("list")) {
+                ZFilterCondition.ListOp op;
+                if (i + 1 < args.length && args[i].equalsIgnoreCase("not")) {
+                    i++; // not
+                    op = ZFilterCondition.ListOp.IS_NOT;
+                } else {
+                    op = ZFilterCondition.ListOp.IS;
+                }
+                conditions.add(new ZFilterCondition.ZListCondition(op));
             } else if (a.equals("keep")) {
                 actions.add(new ZKeepAction());
             } else if (a.equals("discard")) {

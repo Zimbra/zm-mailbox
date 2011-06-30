@@ -96,6 +96,7 @@ public final class RuleManager {
         testMap.put("current_time", com.zimbra.cs.filter.jsieve.CurrentTimeTest.class.getName());
         testMap.put("current_day_of_week", com.zimbra.cs.filter.jsieve.CurrentDayOfWeekTest.class.getName());
         testMap.put("conversation", com.zimbra.cs.filter.jsieve.ConversationTest.class.getName());
+        testMap.put("list", com.zimbra.cs.filter.jsieve.ListTest.class.getName());
         return mgr.build();
     }
 

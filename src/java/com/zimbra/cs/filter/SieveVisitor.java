@@ -99,6 +99,10 @@ public abstract class SieveVisitor {
     }
 
     @SuppressWarnings("unused")
+    protected void visitListTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
     protected void visitTrueTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
     }
 
@@ -384,6 +388,10 @@ public abstract class SieveVisitor {
                 visitConversationTest(node, VisitPhase.begin, props, where);
                 accept(node, props);
                 visitConversationTest(node, VisitPhase.end, props, where);
+            } else if ("list".equalsIgnoreCase(nodeName)) {
+                visitListTest(node, VisitPhase.begin, props);
+                accept(node, props);
+                visitListTest(node, VisitPhase.end, props);
             } else if ("true".equalsIgnoreCase(nodeName)) {
                 visitTrueTest(node, VisitPhase.begin, props);
                 accept(node, props);

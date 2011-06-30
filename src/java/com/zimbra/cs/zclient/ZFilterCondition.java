@@ -201,6 +201,10 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         }
     }
 
+    public enum ListOp {
+        IS, IS_NOT;
+    }
+
     public static ZFilterCondition getCondition(Element condEl) throws ServiceException {
         String name = condEl.getName();
         boolean isNegative = condEl.getAttributeBool(MailConstants.A_NEGATIVE, false);
@@ -276,6 +280,8 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         } else if (name.equals(MailConstants.E_CONVERSATION_TEST)) {
             return new ZConversationCondition(isNegative ? ConversationOp.NOT_WHERE : ConversationOp.WHERE,
                     condEl.getAttribute(MailConstants.A_WHERE));
+        } else if (name.equals(MailConstants.E_LIST_TEST)) {
+            return new ZListCondition(isNegative ? ListOp.IS_NOT : ListOp.IS);
         } else if (name.equals(MailConstants.E_TRUE_TEST)) {
             return new ZTrueCondition();
         } else {
@@ -309,6 +315,33 @@ public abstract class ZFilterCondition implements ToZJSONObject {
     }
 
     public abstract String toConditionString();
+
+    public static final class ZListCondition extends ZFilterCondition {
+        private final ListOp op;
+
+        public ZListCondition(ListOp op) {
+            this.op = op;
+        }
+
+        @Override
+        public String getName() {
+            return "list";
+        }
+
+        @Override
+        Element toElement(Element parent) {
+            Element test = parent.addElement(MailConstants.E_LIST_TEST);
+            if (op == ListOp.IS_NOT) {
+                test.addAttribute(MailConstants.A_NEGATIVE, true);
+            }
+            return test;
+        }
+
+        @Override
+        public String toConditionString() {
+            return "list" + (op == ListOp.IS ? "" : " not");
+        }
+    }
 
     public static final class ZConversationCondition extends ZFilterCondition {
         private final ConversationOp op;
