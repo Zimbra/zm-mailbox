@@ -697,6 +697,7 @@ public final class MailConstants {
 
     // contact group
     public static final String E_CONTACT_GROUP_MEMBER = "m";
+    public static final String E_CONTACT_GROUP_MEMBER_ATTRIBUTE = "ma";
     public static final String A_CONTACT_GROUP_MEMBER_TYPE = "type";
     public static final String A_CONTACT_GROUP_MEMBER_VALUE = "value";
     public static final String A_DEREF_CONATC_GROUP_MEMBER = "derefGroupMember";
