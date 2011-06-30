@@ -89,21 +89,31 @@ public class AutoComplete extends MailDocumentHandler {
         response.addAttribute(MailConstants.A_CANBECACHED, result.canBeCached);
         for (ContactEntry entry : result.entries) {
             Element cn = response.addElement(MailConstants.E_MATCH);
-            cn.addAttribute(MailConstants.A_EMAIL, entry.getEmail());
+            
+            // for contact group, emails of members will be expanded 
+            // separately on user request
+            if (!entry.isContactGroup()) {
+                cn.addAttribute(MailConstants.A_EMAIL, entry.getEmail());
+            }
             cn.addAttribute(MailConstants.A_MATCH_TYPE, getType(entry));
             cn.addAttribute(MailConstants.A_RANKING, Integer.toString(entry.getRanking()));
             cn.addAttribute(MailConstants.A_IS_GROUP, entry.isGroup());
-            if (entry.isGroup() && entry.canExpandGroupMembers())
+            if (entry.isGroup() && entry.canExpandGroupMembers()) {
                 cn.addAttribute(MailConstants.A_EXP, true);
-
+            }
+            
             ItemId id = entry.getId();
-            if (id != null)
+            if (id != null) {
                 cn.addAttribute(MailConstants.A_ID, id.toString(authAccountId));
+            }
+            
             int folderId = entry.getFolderId();
-            if (folderId > 0)
+            if (folderId > 0) {
                 cn.addAttribute(MailConstants.A_FOLDER, Integer.toString(folderId));
-            if (entry.isDlist())
+            }
+            if (entry.isContactGroup()) {
                 cn.addAttribute(MailConstants.A_DISPLAYNAME, entry.getDisplayName());
+            }
         }
     }
 

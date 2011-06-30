@@ -2438,12 +2438,14 @@ NOTE: should we return modified attrs in response?
 
 <GetContactsRequest [sortBy="nameAsc|nameDesc"] [sync="1"] [l="{folder-id}"] [derefGroupMember="1"]>
   <a n="..."/>*
+  <ma n="..."/>*
   <cn id="{contact-id}[,{contact-id}...]"/>*
 </GetContactsRequest>
 
   if sync="1" present, return modified date (md) on contacts.
   if l="{folder-id}" is present, return only contacts in the specified folder.
   if <a n="..."/> present, return only the specified attribute(s).
+  if <ma n="..."/> present, return only the specified attribute(s) for derefed members, applicable only when derefGroupMember=1.
   if <cn id="..."/> present, only get the specified contact(s).
 
   {derefGroupMember} : Contact members can be:
@@ -2479,8 +2481,8 @@ For example:
     <a n="nickname">group one</a>
     <a n="type">group</a>
     <a n="fileAs">8:group1</a>
-    <m id="1" value="user@zimbra.com" type="I"/>
-    <m id="3" value="282" type="C">
+    <m value="user@zimbra.com" type="I"/>
+    <m value="282" type="C">
       <cn id="282" fileAsStr="Smith, John" d="1308547353000" rev="27" l="7">
         <a n="lastName">Smith</a>
         <a n="email">jsmith@example.zimbra.com</a>
@@ -2492,7 +2494,7 @@ For example:
         <a n="firstName">Mark</a>
       </cn>
     </m>
-    <m id="4" value="uid=user1,ou=people,dc=phoebe,dc=mbp" type="G">
+    <m value="uid=user1,ou=people,dc=phoebe,dc=mbp" type="G">
       <cn id="2a692f57-1a5b-4542-9f8e-28dfdd0e3f43:260" fileAsStr="Demo User One" d="1308626790000" rev="22" l="257">
         <a n="createTimeStamp">20110620052132Z</a>
         <a n="lastName">user1</a>

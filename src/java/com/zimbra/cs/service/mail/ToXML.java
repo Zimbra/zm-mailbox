@@ -488,11 +488,12 @@ public class ToXML {
 
     public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact,
             boolean summary, Collection<String> attrFilter, int fields) {
-        return encodeContact(parent, ifmt, contact, null, summary, attrFilter,  fields);
+        return encodeContact(parent, ifmt, contact, null, null, summary, attrFilter,  fields);
     }
 
     public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact,
-            ContactGroup contactGroup, boolean summary, Collection<String> attrFilter, int fields) {
+            ContactGroup contactGroup, Collection<String> memberAttrFilter, boolean summary, 
+            Collection<String> attrFilter, int fields) {
         Element elem = parent.addElement(MailConstants.E_CONTACT);
         elem.addAttribute(MailConstants.A_ID, ifmt.formatItemId(contact));
         if (needToOutput(fields, Change.MODIFIED_FOLDER))
@@ -560,7 +561,7 @@ public class ToXML {
                 }
             }
             if (contactGroup != null) {
-                encodeContactGroup(elem, contactGroup, ifmt, summary, attrFilter, fields);
+                encodeContactGroup(elem, contactGroup, memberAttrFilter, ifmt, summary, fields);
             }
         } else {
             for (Map.Entry<String, String> me : contact.getFields().entrySet()) {
@@ -575,7 +576,7 @@ public class ToXML {
                     encodeContactAttachment(elem, attach);
             }
             if (contactGroup != null) {
-                encodeContactGroup(elem, contactGroup, ifmt, summary, attrFilter, fields);
+                encodeContactGroup(elem, contactGroup, memberAttrFilter, ifmt, summary, fields);
             }
         }
 
@@ -616,7 +617,7 @@ public class ToXML {
     }
 
     private static void encodeContactGroup(Element elem, ContactGroup contactGroup,
-        ItemIdFormatter ifmt, boolean summary, Collection<String> attrFilter, int fields) {
+            Collection<String> memberAttrFilter, ItemIdFormatter ifmt, boolean summary, int fields) {
 
         for (ContactGroup.Member member : contactGroup.getMembers(true)) {
             Element eMember = elem.addElement(MailConstants.E_CONTACT_GROUP_MEMBER);
@@ -628,12 +629,21 @@ public class ToXML {
                 } else if (derefedMember instanceof Contact) {
                     // only expand one level for now.
                     // If this member is a group, do not create/apss down a ContactGroup object from the member.
-                    encodeContact(eMember, ifmt, (Contact) derefedMember, summary, attrFilter, fields);
+                    encodeContact(eMember, ifmt, (Contact) derefedMember, summary, memberAttrFilter, fields);
                 } else if (derefedMember instanceof GalContact) {
-                    encodeGalContact(eMember, (GalContact) derefedMember);
+                    encodeGalContact(eMember, (GalContact) derefedMember, memberAttrFilter);
                 }  else if (derefedMember instanceof Element) {
                     // proxied GAL or Contact entry
-                    eMember.addElement((Element) derefedMember);
+                    Element eContact = (Element) derefedMember;
+                    if (memberAttrFilter != null) {
+                        for (Element eAttr : eContact.listElements()) {
+                            String name = eAttr.getAttribute(MailConstants.A_ATTRIBUTE_NAME, null);
+                            if (!memberAttrFilter.contains(name)) {
+                                eAttr.detach();
+                            }
+                        }
+                    }
+                    eMember.addElement(eContact);
                 }
             }
         }
@@ -2559,17 +2569,24 @@ public class ToXML {
     }
 
     public static Element encodeGalContact(Element response, GalContact contact) {
+        return encodeGalContact(response, contact, null);
+    }
+    
+    public static Element encodeGalContact(Element response, GalContact contact, Collection<String> returnAttrs) {
         Element cn = response.addElement(MailConstants.E_CONTACT);
         cn.addAttribute(MailConstants.A_ID, contact.getId());
         Map<String, Object> attrs = contact.getAttrs();
         for (Map.Entry<String, Object> entry : attrs.entrySet()) {
-            Object value = entry.getValue();
-            if (value instanceof String[]) {
-                String sa[] = (String[]) value;
-                for (int i = 0; i < sa.length; i++)
-                    cn.addKeyValuePair(entry.getKey(), sa[i], MailConstants.E_ATTRIBUTE, MailConstants.A_ATTRIBUTE_NAME);
-            } else {
-                cn.addKeyValuePair(entry.getKey(), (String) value, MailConstants.E_ATTRIBUTE, MailConstants.A_ATTRIBUTE_NAME);
+            String key = entry.getKey();
+            if (returnAttrs == null || returnAttrs.contains(key)) {
+                Object value = entry.getValue();
+                if (value instanceof String[]) {
+                    String sa[] = (String[]) value;
+                    for (int i = 0; i < sa.length; i++)
+                        cn.addKeyValuePair(key, sa[i], MailConstants.E_ATTRIBUTE, MailConstants.A_ATTRIBUTE_NAME);
+                } else {
+                    cn.addKeyValuePair(key, (String) value, MailConstants.E_ATTRIBUTE, MailConstants.A_ATTRIBUTE_NAME);
+                }
             }
         }
         return cn;

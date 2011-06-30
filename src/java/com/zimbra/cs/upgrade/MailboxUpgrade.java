@@ -177,7 +177,7 @@ public final class MailboxUpgrade {
         }
     }
     
-    private static void migrateContactGroups(Mailbox mbox) throws ServiceException {
+    public static void migrateContactGroups(Mailbox mbox) throws ServiceException {
         ContactGroup.MigrateContactGroup migrate = new ContactGroup.MigrateContactGroup(mbox);
         try {
             migrate.handle();

@@ -1,6 +1,7 @@
 package com.zimbra.qa.unittest;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -30,9 +31,9 @@ import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zclient.ZMailbox;
 
 public class TestContactGroup {
-    private static final String CONTACT_REF_VALUE = "contact ref";
-    private static final String GAL_REF_VALUE = "gal ref";
-    private static final String INLINE_VALUE = "inline";
+    private static final String CONTACT_REF_VALUE = "736ae588-ae90-4427-a3de-6451e47e0857:257";
+    private static final String GAL_REF_VALUE = "uid=user1,ou=people,dc=zimbra,dc=com";
+    private static final String INLINE_VALUE = "user@test.com";
     
     private static class MemberData {
         private Member.Type type;
@@ -221,6 +222,47 @@ public class TestContactGroup {
         Member lastMember = members.get(NUM_MEMBERS-1);
         assertEquals(firstMember.getType(), lastMember.getType());
         assertEquals(firstMember.getValue(), lastMember.getValue());
+    }
+    
+    @Test
+    public void unmodifiableList() throws Exception {
+        ContactGroup contactGroup = createContactGroup(new MemberData[] {
+                new MemberData(Member.Type.CONTACT_REF, CONTACT_REF_VALUE),
+                new MemberData(Member.Type.GAL_REF, GAL_REF_VALUE),
+                new MemberData(Member.Type.INLINE, INLINE_VALUE)});
+        
+        boolean caughtException = false;
+        try {
+            List<Member> members = contactGroup.getMembers();
+            for (Member member : members) {
+                members.remove(member);  // not allowed
+            }
+        } catch (UnsupportedOperationException e) {
+            caughtException = true;
+        }
+        assertTrue(caughtException);
+    }
+    
+    @Test
+    public void membersIterator() throws Exception {
+        ContactGroup contactGroup = createContactGroup(new MemberData[] {
+                new MemberData(Member.Type.CONTACT_REF, CONTACT_REF_VALUE),
+                new MemberData(Member.Type.GAL_REF, GAL_REF_VALUE),
+                new MemberData(Member.Type.INLINE, INLINE_VALUE)});
+        
+        boolean caughtException = false;
+        try {
+            for (Iterator<Member> iter = contactGroup.getMembers().iterator(); iter.hasNext();) {
+                Member member = iter.next();
+                
+                if (member.getType() == Member.Type.GAL_REF || member.getType() == Member.Type.INLINE) {
+                    iter.remove();  // not allowed
+                }
+            }
+        } catch (UnsupportedOperationException e) {
+            caughtException = true;
+        }
+        assertTrue(caughtException);
     }
     
     @Test

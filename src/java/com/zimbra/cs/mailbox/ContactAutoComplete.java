@@ -98,8 +98,8 @@ public class ContactAutoComplete {
         String mEmail;
         String mDisplayName;
         String mLastName;
-        String mDlist;
-        boolean mIsGroup;
+        boolean mIsContactGroup;  // is contact group
+        boolean mIsGroup;        // is GAL group or contact group
         boolean mCanExpandGroupMembers;
         ItemId mId;
         int mFolderId;
@@ -107,12 +107,12 @@ public class ContactAutoComplete {
         long mLastAccessed;
 
         private String getKey() {
-            return (mDlist != null ? mDlist : mEmail).toLowerCase();
+            return (mIsContactGroup ? mDisplayName : mEmail).toLowerCase();
         }
 
         public String getEmail() {
-            if (mDlist != null) {
-                return mDlist;
+            if (isContactGroup()) {
+                return null;
             }
             StringBuilder buf = new StringBuilder();
             if (mDisplayName != null && mDisplayName.length() > 0) {
@@ -136,8 +136,8 @@ public class ContactAutoComplete {
             return mRanking;
         }
 
-        public boolean isDlist() {
-            return mDlist != null;
+        public boolean isContactGroup() {
+            return mIsContactGroup;
         }
 
         public boolean isGroup() {
@@ -167,6 +167,13 @@ public class ContactAutoComplete {
             mIsGroup = true;
             mCanExpandGroupMembers = canExpand;
         }
+        
+        void setIsContactGroup() {
+            mIsGroup = true;
+            mIsContactGroup = true;
+            mCanExpandGroupMembers = true;
+        }
+        
 
         void setName(String name) {
             if (name == null) {
@@ -223,8 +230,8 @@ public class ContactAutoComplete {
 
         public void toString(StringBuilder buf) {
             buf.append(mRanking).append(" ");
-            if (isDlist()) {
-                buf.append(getDisplayName()).append(" (dlist)");
+            if (isContactGroup()) {
+                buf.append(getDisplayName()).append(" (contact group)");
             } else {
                 buf.append(getEmail());
             }
@@ -477,7 +484,11 @@ public class ContactAutoComplete {
                     ((middleName == null) ? "" : middleName + " ") +
                     ((lastName == null) ? "" : lastName);
         }
-        if (attrs.get(ContactConstants.A_dlist) == null) {
+        if (attrs.get(ContactConstants.A_groupMember) == null) {
+            //
+            // This is NOT a contact group.
+            //
+            
             boolean nameMatches =
                 matches(query, firstName) ||
                 matches(query, phoneticFirstName) ||
@@ -523,7 +534,7 @@ public class ContactAutoComplete {
             }
         } else {
             //
-            // is a local contact group
+            // IS a local contact group
             //
 
             if (mRequestedAcct.isPrefContactsDisableAutocompleteOnContactGroupMembers() &&
@@ -533,12 +544,11 @@ public class ContactAutoComplete {
             // distribution list
             ContactEntry entry = new ContactEntry();
             entry.mDisplayName = nickname;
-            entry.mDlist = (String) attrs.get(ContactConstants.A_dlist);
             entry.mId = id;
             entry.mFolderId = folderId;
-            entry.mIsGroup = Contact.isGroup(attrs);
+            entry.setIsContactGroup();
             result.addEntry(entry);
-            ZimbraLog.gal.debug("adding " + entry.getEmail());
+            ZimbraLog.gal.debug("adding " + entry.getKey());
         }
     }
 

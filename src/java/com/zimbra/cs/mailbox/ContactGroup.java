@@ -3,7 +3,9 @@ package com.zimbra.cs.mailbox;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -100,9 +102,8 @@ public class ContactGroup {
     /*
      * return members in the order they were inserted
      */
-    
     public List<Member> getMembers() {
-        return Arrays.asList(members.toArray(new Member[members.size()]));
+        return Collections.unmodifiableList(Arrays.asList(members.toArray(new Member[members.size()])));
     }
     
     public List<Member> getMembers(boolean preferDerefed) {
@@ -118,7 +119,7 @@ public class ContactGroup {
      */
     public List<Member> getDerefedMembers() {
         assert(isDerefed());
-        return Arrays.asList(derefedMembers.values().toArray(new Member[derefedMembers.size()]));
+        return Collections.unmodifiableList(Arrays.asList(derefedMembers.values().toArray(new Member[derefedMembers.size()])));
     }
     
     // create and add member at the end of the list
@@ -600,7 +601,11 @@ public class ContactGroup {
         }
         
         private String genDerefedKey(Contact contact) throws ServiceException {
-            return contact.getFileAsString();
+            String key = contact.get(ContactConstants.A_email);
+            if (key == null) {
+                key = contact.getFileAsString();
+            }
+            return key;
         }
         
         private String genDerefedKey(GalContact galContact) throws ServiceException {

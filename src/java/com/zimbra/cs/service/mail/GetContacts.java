@@ -72,6 +72,7 @@ public final class GetContacts extends MailDocumentHandler  {
             sort = SortBy.NONE;
         }
         ArrayList<String> attrs = null;
+        ArrayList<String> memberAttrs = null;
         ArrayList<ItemId> ids = null;
 
         for (Element e : request.listElements()) {
@@ -80,6 +81,11 @@ public final class GetContacts extends MailDocumentHandler  {
                 if (attrs == null)
                     attrs = new ArrayList<String>();
                 attrs.add(name);
+            } else if (e.getName().equals(MailConstants.E_CONTACT_GROUP_MEMBER_ATTRIBUTE)) {
+                String name = e.getAttribute(MailConstants.A_ATTRIBUTE_NAME);
+                if (memberAttrs == null)
+                    memberAttrs = new ArrayList<String>();
+                memberAttrs.add(name);
             } else if (e.getName().equals(MailConstants.E_CONTACT)) {
                 String idStr = e.getAttribute(MailConstants.A_ID);
                 String targets[] = idStr.split(",");
@@ -136,7 +142,7 @@ public final class GetContacts extends MailDocumentHandler  {
                                     contactGroup.derefAllMembers(con.getMailbox(), octxt);
                                 }
                             }
-                            ToXML.encodeContact(response, ifmt, con, contactGroup, false, attrs, fields);
+                            ToXML.encodeContact(response, ifmt, con, contactGroup, memberAttrs, false, attrs, fields);
                         }
                     }
                 } finally {
