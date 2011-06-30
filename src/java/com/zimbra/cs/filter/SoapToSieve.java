@@ -186,6 +186,8 @@ public final class SoapToSieve {
         } else if (name.equals(MailConstants.E_CONVERSATION_TEST)) {
             String where = test.getAttribute(MailConstants.A_WHERE, "started");
             snippet = String.format("conversation :where \"%s\"", FilterUtil.escape(where));
+        } else if (name.equals(MailConstants.E_SOCIALCAST_TEST)) {
+            snippet = "socialcast";
         } else if (name.equals(MailConstants.E_LIST_TEST)) {
             snippet = "list";
         } else if (name.equals(MailConstants.E_BULK_TEST)) {

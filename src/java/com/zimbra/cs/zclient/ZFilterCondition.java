@@ -276,8 +276,12 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         } else if (name.equals(MailConstants.E_CONVERSATION_TEST)) {
             return new ZConversationCondition(isNegative ? ConversationOp.NOT_WHERE : ConversationOp.WHERE,
                     condEl.getAttribute(MailConstants.A_WHERE));
+        } else if (name.equals(MailConstants.E_SOCIALCAST_TEST)) {
+            return new ZSocialcastCondition(isNegative ? SimpleOp.NOT_IS : SimpleOp.IS);
         } else if (name.equals(MailConstants.E_LIST_TEST)) {
             return new ZListCondition(isNegative ? SimpleOp.NOT_IS : SimpleOp.IS);
+        } else if (name.equals(MailConstants.E_BULK_TEST)) {
+            return new ZBulkCondition(isNegative ? SimpleOp.NOT_IS : SimpleOp.IS);
         } else if (name.equals(MailConstants.E_TRUE_TEST)) {
             return new ZTrueCondition();
         } else {
@@ -311,6 +315,33 @@ public abstract class ZFilterCondition implements ToZJSONObject {
     }
 
     public abstract String toConditionString();
+
+    public static final class ZSocialcastCondition extends ZFilterCondition {
+        private final SimpleOp op;
+
+        public ZSocialcastCondition(SimpleOp op) {
+            this.op = op;
+        }
+
+        @Override
+        public String getName() {
+            return "socialcast";
+        }
+
+        @Override
+        Element toElement(Element parent) {
+            Element test = parent.addElement(MailConstants.E_SOCIALCAST_TEST);
+            if (op == SimpleOp.NOT_IS) {
+                test.addAttribute(MailConstants.A_NEGATIVE, true);
+            }
+            return test;
+        }
+
+        @Override
+        public String toConditionString() {
+            return "socialcast" + (op == SimpleOp.IS ? "" : " not");
+        }
+    }
 
     public static final class ZBulkCondition extends ZFilterCondition {
         private final SimpleOp op;

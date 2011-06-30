@@ -2840,6 +2840,7 @@ Tests:
   <currentTimeTest dateComparison="{before|after}" d="time-in-HHmm-format}" />
   <currentDayOfWeekTest value="comma-separated-day-of-week-indices" />
   <conversationTest [where="{started|participated}"]/>
+  <socialcastTest/>
   <listTest/>
   <bulkTest/>
 
