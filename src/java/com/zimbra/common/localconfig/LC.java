@@ -480,7 +480,7 @@ public final class LC {
     public static final KnownKey mysql_errlogfile = KnownKey.newKey("${zimbra_home}/log/mysql_error.log");
 
     @Supported
-    public static final KnownKey mysql_bind_address = KnownKey.newKey("localhost");
+    public static final KnownKey mysql_bind_address = KnownKey.newKey("127.0.0.1");
 
     @Supported
     public static final KnownKey mysql_port = KnownKey.newKey(7306);
@@ -518,7 +518,7 @@ public final class LC {
     @Supported
     public static final KnownKey logger_mysql_mycnf = KnownKey.newKey("${zimbra_home}/conf/my.logger.cnf");
     public static final KnownKey logger_mysql_errlogfile = KnownKey.newKey("${zimbra_home}/log/logger_mysql_error.log");
-    public static final KnownKey logger_mysql_bind_address = KnownKey.newKey("localhost");
+    public static final KnownKey logger_mysql_bind_address = KnownKey.newKey("127.0.0.1");
     public static final KnownKey logger_mysql_port = KnownKey.newKey(7307);
     public static final KnownKey zimbra_logger_mysql_password = KnownKey.newKey("zimbra").protect();
 
