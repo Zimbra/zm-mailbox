@@ -619,10 +619,10 @@ public class ImapSession extends Session {
                     }
                 }
 
-                if (mOriginalSessionData.mDirtyMessages.size() > 0) {
-                    mDirtyChanges = new int[mOriginalSessionData.mDirtyMessages.size() * 2];
+                if (!mOriginalSessionData.dirtyMessages.isEmpty()) {
+                    mDirtyChanges = new int[mOriginalSessionData.dirtyMessages.size() * 2];
                     int pos = 0;
-                    for (Map.Entry<Integer, DirtyMessage> dentry : mOriginalSessionData.mDirtyMessages.entrySet()) {
+                    for (Map.Entry<Integer, DirtyMessage> dentry : mOriginalSessionData.dirtyMessages.entrySet()) {
                         mDirtyChanges[pos++] = dentry.getKey();
                         mDirtyChanges[pos++] = dentry.getValue().modseq;
                     }
@@ -642,7 +642,7 @@ public class ImapSession extends Session {
 
                 // kill references to ImapMessage objects, since they'll change after the restore
                 mOriginalSessionData.mSavedSearchResults = null;
-                mOriginalSessionData.mDirtyMessages = null;
+                mOriginalSessionData.dirtyMessages.clear();
             }
 
             ImapFolder.SessionData asFolderData(ImapFolder i4folder) {
@@ -655,12 +655,13 @@ public class ImapSession extends Session {
                         mOriginalSessionData.mSavedSearchResults.remove(null);
                     }
 
-                    mOriginalSessionData.mDirtyMessages = new TreeMap<Integer, DirtyMessage>();
+                    mOriginalSessionData.dirtyMessages.clear();
                     if (mDirtyChanges != null) {
                         for (int i = 0; i < mDirtyChanges.length; i += 2) {
                             ImapMessage i4msg = i4folder.getByImapId(mDirtyChanges[i]);
                             if (i4msg != null) {
-                                mOriginalSessionData.mDirtyMessages.put(mDirtyChanges[i], new DirtyMessage(i4msg, mDirtyChanges[i + 1]));
+                                mOriginalSessionData.dirtyMessages.put(mDirtyChanges[i],
+                                        new DirtyMessage(i4msg, mDirtyChanges[i + 1]));
                             }
                         }
                     }

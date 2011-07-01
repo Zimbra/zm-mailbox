@@ -25,8 +25,9 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 
+import com.google.common.collect.Iterators;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.Pair;
@@ -83,14 +84,14 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
         boolean mTagsAreDirty;
         boolean mNotificationsSuspended;
         ImapMessageSet mSavedSearchResults;
-        Map<Integer, DirtyMessage> mDirtyMessages = new TreeMap<Integer, DirtyMessage>();
+        final Map<Integer, DirtyMessage> dirtyMessages = new ConcurrentSkipListMap<Integer, DirtyMessage>();
 
         SessionData(ImapPath path, byte params, ImapHandler handler) throws ServiceException {
             mCredentials = handler.getCredentials();
             mWritable = (params & SELECT_READONLY) == 0 && path.isWritable();
         }
         boolean hasNotifications() {
-            return mTagsAreDirty || !mDirtyMessages.isEmpty() || mExpungedCount > 0;
+            return mTagsAreDirty || !dirtyMessages.isEmpty() || mExpungedCount > 0;
         }
     }
     private transient SessionData mSessionData;
@@ -129,13 +130,14 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
     }
 
 
-    @Override public void doEncodeState(Element imap) {
+    @Override
+    public void doEncodeState(Element imap) {
         SessionData sdata = mSessionData;
         if (sdata != null) {
             ImapCredentials.EnabledHack[] hacks = sdata.mCredentials.getEnabledHacks();
             imap.addAttribute("hack", hacks == null ? null : Arrays.toString(hacks));
             imap.addAttribute("writable", isWritable());
-            imap.addAttribute("dirty", sdata.mDirtyMessages.size()).addAttribute("expunged", sdata.mExpungedCount);
+            imap.addAttribute("dirty", sdata.dirtyMessages.size()).addAttribute("expunged", sdata.mExpungedCount);
         }
 
         if (mSequence != null)
@@ -414,19 +416,20 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
      *  structures other than {@link #mSequence}.  The <tt>mSequence</tt>
      *  cleanup must be done separately. */
     private void uncache(ImapMessage i4msg) {
-        if (mMessageIds != null)
+        if (mMessageIds != null) {
             mMessageIds.remove(new Integer(i4msg.msgId));
-
+        }
         SessionData sdata = mSessionData;
         if (sdata != null) {
-            sdata.mDirtyMessages.remove(new Integer(i4msg.imapUid));
-            if ((i4msg.sflags & ImapMessage.FLAG_RECENT) != 0)
+            sdata.dirtyMessages.remove(new Integer(i4msg.imapUid));
+            if ((i4msg.sflags & ImapMessage.FLAG_RECENT) != 0) {
                 sdata.mRecentCount--;
-            if ((i4msg.sflags & ImapMessage.FLAG_EXPUNGED) != 0)
+            }
+            if ((i4msg.sflags & ImapMessage.FLAG_EXPUNGED) != 0) {
                 sdata.mExpungedCount--;
+            }
         }
     }
-
 
     boolean areTagsDirty() {
         SessionData sdata = mSessionData;
@@ -503,47 +506,49 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
 
     boolean isMessageDirty(ImapMessage i4msg) {
         SessionData sdata = mSessionData;
-        return sdata == null ? false : sdata.mDirtyMessages.containsKey(i4msg.imapUid);
+        return sdata == null ? false : sdata.dirtyMessages.containsKey(i4msg.imapUid);
     }
 
     void dirtyMessage(ImapMessage i4msg, int modseq) {
         SessionData sdata = mSessionData;
-        if (sdata == null)
+        if (sdata == null) {
             return;
-
-        if (sdata.mNotificationsSuspended || i4msg != getBySequence(i4msg.sequence))
+        }
+        if (sdata.mNotificationsSuspended || i4msg != getBySequence(i4msg.sequence)) {
             return;
-
-        DirtyMessage dirty = sdata.mDirtyMessages.get(i4msg.imapUid);
-        if (dirty == null)
-            sdata.mDirtyMessages.put(i4msg.imapUid, new DirtyMessage(i4msg, modseq));
-        else if (modseq > dirty.modseq)
+        }
+        DirtyMessage dirty = sdata.dirtyMessages.get(i4msg.imapUid);
+        if (dirty == null) {
+            sdata.dirtyMessages.put(i4msg.imapUid, new DirtyMessage(i4msg, modseq));
+        } else if (modseq > dirty.modseq) {
             dirty.modseq = modseq;
+        }
     }
 
     DirtyMessage undirtyMessage(ImapMessage i4msg) {
         SessionData sdata = mSessionData;
-        if (sdata == null)
+        if (sdata == null) {
             return null;
-
-        DirtyMessage dirty = sdata.mDirtyMessages.remove(i4msg.imapUid);
-        if (dirty != null)
+        }
+        DirtyMessage dirty = sdata.dirtyMessages.remove(i4msg.imapUid);
+        if (dirty != null) {
             dirty.i4msg.setAdded(false);
+        }
         return dirty;
     }
 
     Iterator<DirtyMessage> dirtyIterator() {
         SessionData sdata = mSessionData;
-        return (sdata == null ? new ArrayList<DirtyMessage>(0) : sdata.mDirtyMessages.values()).iterator();
+        return sdata == null ? Iterators.<DirtyMessage>emptyIterator() : sdata.dirtyMessages.values().iterator();
     }
 
     /** Empties the folder's list of modified/created messages. */
     void clearDirty()  {
         SessionData sdata = mSessionData;
-        if (sdata != null)
-            sdata.mDirtyMessages.clear();
+        if (sdata != null) {
+            sdata.dirtyMessages.clear();
+        }
     }
-
 
     boolean checkpointSize() {
         SessionData sdata = mSessionData;
