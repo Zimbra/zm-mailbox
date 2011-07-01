@@ -92,7 +92,7 @@ public class GetShareInfo  extends AccountDocumentHandler {
             
             // to defend against harvest attacks return "no shares" instead of error 
             // when an invalid user name/id is used.
-            if (owner == null)
+            if ((owner == null) || (owner.isAccountExternal()))
                 return;
         }
         
