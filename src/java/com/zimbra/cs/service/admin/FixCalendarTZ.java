@@ -52,7 +52,7 @@ public class FixCalendarTZ extends AdminDocumentHandler {
         boolean sync = request.getAttributeBool(AdminConstants.A_TZFIXUP_SYNC, false);
         long after = request.getAttributeLong(AdminConstants.A_TZFIXUP_AFTER, DEFAULT_FIXUP_AFTER);
         List<Element> acctElems = request.listElements(AdminConstants.E_ACCOUNT);
-        Element tzfixupElem = request.getElement(XmlFixupRules.E_TZFIXUP);
+        Element tzfixupElem = request.getElement(AdminConstants.E_TZFIXUP);
         TimeZoneFixupRules tzfixupRules = new TimeZoneFixupRules(tzfixupElem);
         List<String> acctNames = parseAccountNames(acctElems);
         if (acctNames.isEmpty())

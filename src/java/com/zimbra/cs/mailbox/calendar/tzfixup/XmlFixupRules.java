@@ -22,6 +22,7 @@ import java.util.List;
 import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.WellKnownTimeZones;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.mailbox.calendar.tzfixup.TimeZoneFixupRules.Matcher;
@@ -86,67 +87,44 @@ that refer to the existing TZID.  Only the definition of the timezone is replace
  */
 public class XmlFixupRules {
 
-    public static final String E_TZFIXUP = "tzfixup";
-    private static final String E_FIXUP_RULE = "fixupRule";
-    private static final String E_MATCH = "match";
-    private static final String E_ANY = "any";
-    private static final String E_TZID = "tzid";
-    private static final String E_NON_DST = "nonDst";
-    private static final String E_RULES = "rules";
-    private static final String E_DATES = "dates";
-    private static final String E_STANDARD = "standard";
-    private static final String E_DAYLIGHT = "daylight";
-    private static final String E_REPLACE = "replace";
-    private static final String E_TOUCH = "touch";
-    private static final String E_WELL_KNOWN_TZ = "wellKnownTz";
-
-    private static final String A_ID = "id";
-    private static final String A_OFFSET = "offset";
-    private static final String A_STDOFF = "stdoff";
-    private static final String A_DAYOFF = "dayoff";
-    private static final String A_MON = "mon";
-    private static final String A_WEEK = "week";
-    private static final String A_WKDAY = "wkday";
-    private static final String A_MDAY = "mday";
-
     private static void parseMatchers(Element matchElem, ICalTimeZone replacementTZ,
                                       List<Matcher> matchers)
     throws ServiceException {
         for (Iterator<Element> elemIter = matchElem.elementIterator(); elemIter.hasNext(); ) {
             Element elem = elemIter.next();
             String elemName = elem.getName();
-            if (elemName.equals(E_ANY)) {
+            if (elemName.equals(AdminConstants.E_ANY)) {
                 matchers.add(new Matcher(replacementTZ));
-            } else if (elemName.equals(E_TZID)) {
-                String tzid = elem.getAttribute(A_ID);
+            } else if (elemName.equals(AdminConstants.E_TZID)) {
+                String tzid = elem.getAttribute(AdminConstants.A_ID);
                 matchers.add(new Matcher(tzid, replacementTZ));
-            } else if (elemName.equals(E_NON_DST)) {
-                long offset = elem.getAttributeLong(A_OFFSET);
+            } else if (elemName.equals(AdminConstants.E_NON_DST)) {
+                long offset = elem.getAttributeLong(AdminConstants.A_OFFSET);
                 matchers.add(new Matcher(offset, replacementTZ));
-            } else if (elemName.equals(E_RULES)) {
-                long stdOffset = elem.getAttributeLong(A_STDOFF);
-                long dstOffset = elem.getAttributeLong(A_DAYOFF);
-                Element stdElem = elem.getElement(E_STANDARD);
-                int stdMon = (int) stdElem.getAttributeLong(A_MON);
-                int stdWeek = (int) stdElem.getAttributeLong(A_WEEK);
-                int stdWkday = (int) stdElem.getAttributeLong(A_WKDAY);
-                Element dstElem = elem.getElement(E_DAYLIGHT);
-                int dstMon = (int) dstElem.getAttributeLong(A_MON);
-                int dstWeek = (int) dstElem.getAttributeLong(A_WEEK);
-                int dstWkday = (int) dstElem.getAttributeLong(A_WKDAY);
+            } else if (elemName.equals(AdminConstants.E_RULES)) {
+                long stdOffset = elem.getAttributeLong(AdminConstants.A_STDOFF);
+                long dstOffset = elem.getAttributeLong(AdminConstants.A_DAYOFF);
+                Element stdElem = elem.getElement(AdminConstants.E_STANDARD);
+                int stdMon = (int) stdElem.getAttributeLong(AdminConstants.A_MON);
+                int stdWeek = (int) stdElem.getAttributeLong(AdminConstants.A_WEEK);
+                int stdWkday = (int) stdElem.getAttributeLong(AdminConstants.A_WKDAY);
+                Element dstElem = elem.getElement(AdminConstants.E_DAYLIGHT);
+                int dstMon = (int) dstElem.getAttributeLong(AdminConstants.A_MON);
+                int dstWeek = (int) dstElem.getAttributeLong(AdminConstants.A_WEEK);
+                int dstWkday = (int) dstElem.getAttributeLong(AdminConstants.A_WKDAY);
                 Matcher m = new Matcher(stdOffset, stdMon, stdWeek, stdWkday,
                                         dstOffset, dstMon, dstWeek, dstWkday,
                                         replacementTZ);
                 matchers.add(m);
-            } else if (elemName.equals(E_DATES)) {
-                long stdOffset = elem.getAttributeLong(A_STDOFF);
-                long dstOffset = elem.getAttributeLong(A_DAYOFF);
-                Element stdElem = elem.getElement(E_STANDARD);
-                int stdMon = (int) stdElem.getAttributeLong(A_MON);
-                int stdMday = (int) stdElem.getAttributeLong(A_MDAY);
-                Element dstElem = elem.getElement(E_DAYLIGHT);
-                int dstMon = (int) dstElem.getAttributeLong(A_MON);
-                int dstMday = (int) dstElem.getAttributeLong(A_MDAY);
+            } else if (elemName.equals(AdminConstants.E_DATES)) {
+                long stdOffset = elem.getAttributeLong(AdminConstants.A_STDOFF);
+                long dstOffset = elem.getAttributeLong(AdminConstants.A_DAYOFF);
+                Element stdElem = elem.getElement(AdminConstants.E_STANDARD);
+                int stdMon = (int) stdElem.getAttributeLong(AdminConstants.A_MON);
+                int stdMday = (int) stdElem.getAttributeLong(AdminConstants.A_MDAY);
+                Element dstElem = elem.getElement(AdminConstants.E_DAYLIGHT);
+                int dstMon = (int) dstElem.getAttributeLong(AdminConstants.A_MON);
+                int dstMday = (int) dstElem.getAttributeLong(AdminConstants.A_MDAY);
                 Matcher m = new Matcher(stdOffset, stdMon, stdMday,
                                         dstOffset, dstMon, dstMday,
                                         replacementTZ);
@@ -157,9 +135,9 @@ public class XmlFixupRules {
 
     private static void parseFixupRule(Element fixupRuleElem, List<Matcher> matchers)
     throws ServiceException {
-        Element matchElem = fixupRuleElem.getElement(E_MATCH);
-        Element touchElem = fixupRuleElem.getOptionalElement(E_TOUCH);
-        Element replaceElem = fixupRuleElem.getOptionalElement(E_REPLACE);
+        Element matchElem = fixupRuleElem.getElement(AdminConstants.E_MATCH);
+        Element touchElem = fixupRuleElem.getOptionalElement(AdminConstants.E_TOUCH);
+        Element replaceElem = fixupRuleElem.getOptionalElement(AdminConstants.E_REPLACE);
         if (touchElem == null && replaceElem == null)
             throw ServiceException.FAILURE("Neither <touch> nor <replace> found in <fixupRule>", null);
         else if (touchElem != null && replaceElem != null)
@@ -169,9 +147,9 @@ public class XmlFixupRules {
         if (touchElem != null) {
             replacementTZ = null;  // null replacement means touch-only
         } else {
-            Element wellKnownTzElem = replaceElem.getOptionalElement(E_WELL_KNOWN_TZ);
+            Element wellKnownTzElem = replaceElem.getOptionalElement(AdminConstants.E_WELL_KNOWN_TZ);
             if (wellKnownTzElem != null) {
-                String tzid = wellKnownTzElem.getAttribute(A_ID);
+                String tzid = wellKnownTzElem.getAttribute(AdminConstants.A_ID);
                 replacementTZ = WellKnownTimeZones.getTimeZoneById(tzid);
                 if (replacementTZ == null)
                     throw ServiceException.FAILURE("Unknown TZID \"" + tzid + "\"", null);
@@ -188,7 +166,7 @@ public class XmlFixupRules {
     public static List<Matcher> parseTzFixup(Element tzFixupElem)
     throws ServiceException {
         List<Matcher> matchers = new ArrayList<Matcher>();
-        for (Iterator<Element> elemIter = tzFixupElem.elementIterator(E_FIXUP_RULE); elemIter.hasNext(); ) {
+        for (Iterator<Element> elemIter = tzFixupElem.elementIterator(AdminConstants.E_FIXUP_RULE); elemIter.hasNext(); ) {
             Element fixupRuleElem = elemIter.next();
             parseFixupRule(fixupRuleElem, matchers);
         }
