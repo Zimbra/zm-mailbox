@@ -71,7 +71,7 @@ public class SearchGal extends GalDocumentHandler {
         // otherwise require a query
         String name = null;
         if (ref == null) {
-            request.getAttribute(AccountConstants.E_NAME);
+            name = request.getAttribute(AccountConstants.E_NAME);
         }
         
         EntrySearchFilter filter = GalExtraSearchFilter.parseSearchFilter(request);
