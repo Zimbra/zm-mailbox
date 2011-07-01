@@ -33,7 +33,6 @@ import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -49,6 +48,7 @@ import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.ContactGroup;
+import com.zimbra.cs.mailbox.ContactGroup.Member;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -95,15 +95,111 @@ public class AddressObject extends MailItemResource {
         }
         return null;
     }
+        
+    private static void constructContactGroupFromAppleXProps(DavContext ctxt, Account ownerAccount, VCard vcard, boolean isCreate) {
+        Map<String, String> xprops = Contact.decodeXProps(vcard.fields.get(ContactConstants.A_vCardXProps));
+        String kind = xprops.get(XABSKIND);
+        String memberList = xprops.get(XABSMEMBER);
+        if (kind != null && kind.compareTo("group") == 0) {
+            ContactGroup contactGroup;
+            try {
+                if (isCreate)
+                    contactGroup = ContactGroup.init();
+                else {
+                    Contact contact = getContactByUID(ctxt, vcard.uid, ownerAccount);
+                    contactGroup = ContactGroup.init(contact, true);
+                    // remove all the contacts of type CONTACT_REF that belong to the collection same as the group
+                    ArrayList<Member> membersToRemove = new ArrayList<Member>();
+                    for (Member member : contactGroup.getMembers()) {                        
+                        if (Member.Type.CONTACT_REF.equals(member.getType())) {
+                            ItemId itemId = new ItemId(member.getValue(), contact.getAccount().getId());
+                            if (itemId.belongsTo(contact.getAccount())) {
+                                Contact c = getContactByUID(ctxt, itemId.toString(), contact.getAccount());
+                                // check that group and member belong to the same collection 
+                                if ((c != null) && (contact.getFolderId() == c.getFolderId()))
+                                    membersToRemove.add(member);                                    
+                            }
+                        }                            
+                    }
+                    for (Member member : membersToRemove)
+                        contactGroup.removeMember(member.getType(), member.getValue());
+                }
+                if (memberList != null) {
+                    try {
+                        String[] members = Contact.parseMultiValueAttr(memberList);
+                        for (String uidStr : members) {
+                            if (uidStr.startsWith("urn:uuid:"))
+                                uidStr = uidStr.substring(9);                            
+                            Contact c = getContactByUID(ctxt, uidStr, ownerAccount);
+                            if (c != null) {
+                                // add to the group as a CONTACT_REF
+                                ItemId itemId = new ItemId(c);
+                                contactGroup.addMember(Member.Type.CONTACT_REF, itemId.toString());
+                            }
+                        }
+                    } catch (JSONException e) {
+                        ZimbraLog.dav.debug("can't parse xprop %s", memberList, e);
+                    }
+                }
+
+                vcard.fields.put(ContactConstants.A_type, ContactConstants.TYPE_GROUP);
+                vcard.fields.put(ContactConstants.A_groupMember, contactGroup.encode());
+                // remove the Apple x-props and preserve the rest.
+                xprops.remove(XABSKIND);
+                xprops.remove(XABSMEMBER);
+                vcard.fields.put(ContactConstants.A_vCardXProps, Contact.encodeXProps(xprops));
+            } catch (ServiceException e) {
+                ZimbraLog.dav.debug("can't parse xprop %s", memberList, e);
+            }
+        }
+    }
+    
+    private static void populateContactGroupAppleXProps(DavContext ctxt, Contact contact) {
+        if (contact.isContactGroup() == false)
+            return;
+        ContactGroup contactGroup = null;
+        try {
+            contactGroup = ContactGroup.init(contact.get(ContactConstants.A_groupMember));
+        } catch (ServiceException e) {
+            ZimbraLog.dav.warn("can't get group members for Contact %d", contact.getId(), e);
+        }
+        // get the x-props first.
+        Map<String, String> xprops = contact.getXProps();
+        xprops.put(XABSKIND, "group");
+        if (contactGroup != null) {            
+            ArrayList<String> memberList = new ArrayList<String>(contactGroup.getMembers().size());
+            try {
+                for (Member member : contactGroup.getMembers()) {
+                    if (member.getType().equals(Member.Type.CONTACT_REF)) {
+                        ItemId itemId = new ItemId(member.getValue(), contact.getAccount().getId());
+                        if (itemId.belongsTo(contact.getAccount())) {
+                            Contact c = getContactByUID(ctxt, itemId.toString(), contact.getAccount());
+                            // check that group and member belong to the same collection 
+                            if ((c != null) && (contact.getFolderId() == c.getFolderId()))
+                                memberList.add("urn:uuid:" + c.get(ContactConstants.A_vCardUID));
+                        }
+                    }
+                }            
+                xprops.put(XABSMEMBER, Contact.encodeMultiValueAttr(memberList.toArray(new String[0])));
+            } catch (JSONException e) {
+                ZimbraLog.dav.warn("can't create group members xprops for Contact %d", contact.getId(), e);
+            } catch (ServiceException e) {
+                ZimbraLog.dav.warn("can't create group members xprops for Contact %d", contact.getId(), e);
+            }
+        }
+        contact.setXProps(xprops);
+    }
 
     public String toVCard(DavContext ctxt) throws ServiceException, DavException {
         Contact contact = (Contact)getMailItem(ctxt);
+        populateContactGroupAppleXProps(ctxt, contact);
         return VCard.formatContact(contact, null, true).formatted;
     }
     public String toVCard(DavContext ctxt, java.util.Collection<String> attrs) throws ServiceException, DavException {
         if (attrs == null || attrs.isEmpty())
             return toVCard(ctxt);
         Contact contact = (Contact)getMailItem(ctxt);
+        populateContactGroupAppleXProps(ctxt, contact);
         return VCard.formatContact(contact, attrs, true).formatted;
     }
 
@@ -123,34 +219,6 @@ public class AddressObject extends MailItemResource {
                 vcard.fields.put(ContactConstants.A_vCardURL, url);
                 String uid = vcard.uid;
                 Account ownerAccount = Provisioning.getInstance().getAccountById(where.mOwnerId);
-                // expand apple address book groups
-                ContactGroup contactGroup = null;
-                if (ownerAccount != null && ownerAccount.isPrefContactsExpandAppleContactGroups()) {
-                    Map<String,String> xprops = Contact.decodeXProps(vcard.fields.get(ContactConstants.A_vCardXProps));
-                    String kind = xprops.get(XABSKIND);
-                    String memberList = xprops.get(XABSMEMBER);
-                    if (kind != null && kind.compareTo("group") == 0 && memberList != null) {
-                        contactGroup = ContactGroup.init();
-                        
-                        try {
-                            String[] members = Contact.parseMultiValueAttr(memberList);
-                            for (String uidStr : members) {
-                                if (uidStr.startsWith("urn:uuid:"))
-                                    uidStr = uidStr.substring(9);
-                                Contact c = getContactByUID(ctxt, uidStr, ownerAccount);
-                                if (c != null) {
-                                    // add to the group as a CONTACT_REF
-                                    ItemId itemId = new ItemId(c);
-                                    contactGroup.addMember(ContactGroup.Member.Type.CONTACT_REF, itemId.toString());
-                                }                            }
-                        } catch (JSONException e) {
-                            ZimbraLog.dav.debug("can't parse xprop %s", memberList, e);
-                        }
-                        vcard.fields.put(ContactConstants.A_type, ContactConstants.TYPE_GROUP);
-                        vcard.fields.put(ContactConstants.A_groupMember, contactGroup.encode());
-                        vcard.fields.remove(ContactConstants.A_vCardXProps);
-                    }
-                }
                 Contact c = null;
                 // check for existing contact
                 if (uid != null) {
@@ -161,6 +229,8 @@ public class AddressObject extends MailItemResource {
                     String ifnonematch = ctxt.getRequest().getHeader(DavProtocol.HEADER_IF_NONE_MATCH);
                     if (ifnonematch == null)
                         throw new DavException("item does not exists", HttpServletResponse.SC_CONFLICT);
+                    // Convert Apple contact group to Zimbra contact group.
+                    constructContactGroupFromAppleXProps(ctxt, ownerAccount, vcard, true);
                     c = mbox.createContact(ctxt.getOperationContext(), vcard.asParsedContact(), where.mId, null);
                     res = new AddressObject(ctxt, c);
                     res.mNewlyCreated = true;
@@ -169,6 +239,7 @@ public class AddressObject extends MailItemResource {
                     String itemEtag = res.getEtag();
                     if (etag != null && !etag.equals(itemEtag))
                         throw new DavException("item etag does not match", HttpServletResponse.SC_CONFLICT);
+                    constructContactGroupFromAppleXProps(ctxt, ownerAccount, vcard, false);
                     mbox.modifyContact(ctxt.getOperationContext(), ((MailItemResource)res).getId(), vcard.asParsedContact());
                     res = UrlNamespace.getResourceAt(ctxt, ctxt.getUser(), ctxt.getPath());
                 }

@@ -916,6 +916,10 @@ public class Contact extends MailItem {
     public Map<String,String> getXProps() {
         return decodeXProps(fields.get(ContactConstants.A_vCardXProps));
     }
+    
+    public void setXProps(Map<String,String> xprops) {
+        fields.put(ContactConstants.A_vCardXProps, encodeXProps(xprops));
+    }
 
     // could be a GAL group (for GAL sync account) or a contact group
     // GAL group: members are stored in the member field, encoded as a json array.
