@@ -259,30 +259,36 @@ public class ImapSession extends Session {
         }
     }
 
-    synchronized ImapFolder reload() {
-        // if the data's already paged in, we can short-circuit
-        if (mFolder instanceof PagedFolderData) {
-            PagedFolderData paged = (PagedFolderData) mFolder;
-            ImapFolder i4folder = MANAGER.deserialize(paged.getCacheKey());
-            if (i4folder == null) {
-                return null;
-            }
-            try {
-                paged.restore(i4folder);
-            } catch (ServiceException e) {
-                ZimbraLog.imap.warn("Failed to restore folder %s", paged.getCacheKey(), e);
-                return null;
-            }
-            // need to switch target before replay (yes, this is inelegant)
-            mFolder = i4folder;
-            // replay all queued events into the restored folder
-            paged.replay();
-            // if it's a disconnected session, no need to track expunges
-            if (!isInteractive()) {
-                i4folder.collapseExpunged(false);
+    ImapFolder reload() {
+        // Mailbox.endTransaction() -> ImapSession.notifyPendingChanges() locks in the order of Mailbox -> ImapSession.
+        // Need to lock in the same order here, otherwise can result in deadlock.
+        synchronized (mMailbox) { // PagedFolderData.replay() locks Mailbox deep inside of it.
+            synchronized (this) {
+                // if the data's already paged in, we can short-circuit
+                if (mFolder instanceof PagedFolderData) {
+                    PagedFolderData paged = (PagedFolderData) mFolder;
+                    ImapFolder i4folder = MANAGER.deserialize(paged.getCacheKey());
+                    if (i4folder == null) {
+                        return null;
+                    }
+                    try {
+                        paged.restore(i4folder);
+                    } catch (ServiceException e) {
+                        ZimbraLog.imap.warn("Failed to restore folder %s", paged.getCacheKey(), e);
+                        return null;
+                    }
+                    // need to switch target before replay (yes, this is inelegant)
+                    mFolder = i4folder;
+                    // replay all queued events into the restored folder
+                    paged.replay();
+                    // if it's a disconnected session, no need to track expunges
+                    if (!isInteractive()) {
+                        i4folder.collapseExpunged(false);
+                    }
+                }
+                return (ImapFolder) mFolder;
             }
         }
-        return (ImapFolder) mFolder;
     }
 
     static class AddedItems {
