@@ -1,0 +1,18 @@
+
+REST interface to user profile data:
+
+http://<server>/profile/<email-addr>
+
+profile image - http://<server>/profile/<email-addr>/image
+
+
+----------
+
+urn:zimbraAccount
+
+<UpdateProfileRequest>
+  <profile [image="{upload-id}"]/>
+</UpdateProfileRequest>
+
+<UpdateProfileResponse/>
+

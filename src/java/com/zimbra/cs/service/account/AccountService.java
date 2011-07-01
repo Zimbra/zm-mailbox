@@ -90,6 +90,9 @@ public class AccountService implements DocumentService {
         
         // misc
         dispatcher.registerHandler(AccountConstants.GET_VERSION_INFO_REQUEST, new GetVersionInfo());
+
+        // profile
+        dispatcher.registerHandler(AccountConstants.UPDATE_PROFILE_REQUEST, new UpdateProfile());
     }
 
     /**

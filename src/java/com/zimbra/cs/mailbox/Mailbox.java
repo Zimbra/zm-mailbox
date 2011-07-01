@@ -245,8 +245,9 @@ public class Mailbox {
     public static final int ID_FOLDER_TASKS     = 15;
     public static final int ID_FOLDER_BRIEFCASE = 16;
     public static final int ID_FOLDER_COMMENTS  = 17;
+    public static final int ID_FOLDER_PROFILE   = 18;
 
-    public static final int HIGHEST_SYSTEM_ID = 16;
+    public static final int HIGHEST_SYSTEM_ID = 18;
     public static final int FIRST_USER_ID     = 256;
 
     static final String MD_CONFIG_VERSION = "ver";
@@ -1546,6 +1547,7 @@ public class Mailbox {
      *       +--Tags
      *       +--Conversations
      *       +--Comments
+     *       +--Profile
      *       +--&lt;other hidden system folders>
      *       +--USER_ROOT
      *            +--INBOX
@@ -1570,6 +1572,8 @@ public class Mailbox {
             Folder.create(ID_FOLDER_CONVERSATIONS, this, root, "Conversations", hidden, MailItem.Type.CONVERSATION, 0,
                     MailItem.DEFAULT_COLOR_RGB, null, null);
             Folder.create(ID_FOLDER_COMMENTS, this, root, "Comments", hidden, MailItem.Type.COMMENT, 0,
+                    MailItem.DEFAULT_COLOR_RGB, null, null);
+            Folder.create(ID_FOLDER_PROFILE, this, root, "Profile", hidden, MailItem.Type.DOCUMENT, 0,
                     MailItem.DEFAULT_COLOR_RGB, null, null);
 
             byte system = Folder.FOLDER_IS_IMMUTABLE;
