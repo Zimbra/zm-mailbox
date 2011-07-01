@@ -280,6 +280,8 @@ public abstract class ZFilterCondition implements ToZJSONObject {
             return new ZFacebookCondition(isNegative ? SimpleOp.NOT_IS : SimpleOp.IS);
         } else if (name.equals(MailConstants.E_SOCIALCAST_TEST)) {
             return new ZSocialcastCondition(isNegative ? SimpleOp.NOT_IS : SimpleOp.IS);
+        } else if (name.equals(MailConstants.E_TWITTER_TEST)) {
+            return new ZTwitterCondition(isNegative ? SimpleOp.NOT_IS : SimpleOp.IS);
         } else if (name.equals(MailConstants.E_LIST_TEST)) {
             return new ZListCondition(isNegative ? SimpleOp.NOT_IS : SimpleOp.IS);
         } else if (name.equals(MailConstants.E_BULK_TEST)) {
@@ -369,6 +371,33 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         @Override
         public String toConditionString() {
             return "socialcast" + (op == SimpleOp.IS ? "" : " not");
+        }
+    }
+
+    public static final class ZTwitterCondition extends ZFilterCondition {
+        private final SimpleOp op;
+
+        public ZTwitterCondition(SimpleOp op) {
+            this.op = op;
+        }
+
+        @Override
+        public String getName() {
+            return "twitter";
+        }
+
+        @Override
+        Element toElement(Element parent) {
+            Element test = parent.addElement(MailConstants.E_TWITTER_TEST);
+            if (op == SimpleOp.NOT_IS) {
+                test.addAttribute(MailConstants.A_NEGATIVE, true);
+            }
+            return test;
+        }
+
+        @Override
+        public String toConditionString() {
+            return "twitter" + (op == SimpleOp.IS ? "" : " not");
         }
     }
 

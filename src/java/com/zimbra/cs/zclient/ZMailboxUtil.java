@@ -257,6 +257,7 @@ public class ZMailboxUtil implements DebugListener {
                 "    conversation where|not_where started|participated\n" +
                 "    facebook [not]\n" +
                 "    socialcast [not]\n" +
+                "    twitter [not]\n" +
                 "    list [not]\n" +
                 "    bulk [not]\n" +
                 "\n" +

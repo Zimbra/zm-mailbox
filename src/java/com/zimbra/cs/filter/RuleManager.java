@@ -98,6 +98,7 @@ public final class RuleManager {
         testMap.put("conversation", com.zimbra.cs.filter.jsieve.ConversationTest.class.getName());
         testMap.put("facebook", com.zimbra.cs.filter.jsieve.FacebookTest.class.getName());
         testMap.put("socialcast", com.zimbra.cs.filter.jsieve.SocialcastTest.class.getName());
+        testMap.put("twitter", com.zimbra.cs.filter.jsieve.TwitterTest.class.getName());
         testMap.put("list", com.zimbra.cs.filter.jsieve.ListTest.class.getName());
         testMap.put("bulk", com.zimbra.cs.filter.jsieve.BulkTest.class.getName());
         return mgr.build();

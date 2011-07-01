@@ -190,6 +190,8 @@ public final class SoapToSieve {
             snippet = "facebook";
         } else if (name.equals(MailConstants.E_SOCIALCAST_TEST)) {
             snippet = "socialcast";
+        } else if (name.equals(MailConstants.E_TWITTER_TEST)) {
+            snippet = "twitter";
         } else if (name.equals(MailConstants.E_LIST_TEST)) {
             snippet = "list";
         } else if (name.equals(MailConstants.E_BULK_TEST)) {
