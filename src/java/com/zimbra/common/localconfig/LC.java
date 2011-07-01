@@ -1107,6 +1107,7 @@ public final class LC {
 
     //octopus
     public static final KnownKey documents_disable_instant_parsing = KnownKey.newKey(false);
+    public static final KnownKey default_profile_image = KnownKey.newKey("${zimbra_home}/jetty/webapps/zimbra/img/no-photo.png");
     
     static {
         // Automatically set the key name with the variable name.
