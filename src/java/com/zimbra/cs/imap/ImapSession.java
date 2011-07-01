@@ -254,29 +254,31 @@ public class ImapSession extends Session {
         return (PagedFolderData) mFolder;
     }
 
-    synchronized ImapFolder reload() throws IOException {
-        // if the data's already paged in, we can short-circuit
-        PagedFolderData paged = mFolder instanceof PagedFolderData ? (PagedFolderData) mFolder : null;
-        if (paged != null) {
-            ImapFolder i4folder = ImapSessionManager.deserialize(paged.getCacheKey());
-            try {
-                paged.restore(i4folder);
-            } catch (ServiceException e) {
-                // IOException(String, Throwable) exists only since 1.6
-                IOException ioe = new IOException("unable to deserialize folder state");
-                ioe.initCause(e);
-                throw ioe;
-            }
-            // need to switch target before replay (yes, this is inelegant)
-            mFolder = i4folder;
-            // replay all queued events into the restored folder
-            paged.replay();
-            // if it's a disconnected session, no need to track expunges
-            if (!isInteractive()) {
-                i4folder.collapseExpunged(false);
+    ImapFolder reload() throws IOException {
+        // Mailbox.endTransaction() -> ImapSession.notifyPendingChanges() locks in the order of Mailbox -> ImapSession.
+        // Need to lock in the same order here, otherwise can result in deadlock.
+        synchronized (mMailbox) { // PagedFolderData.replay() locks Mailbox deep inside of it.
+            synchronized (this) {
+                PagedFolderData paged = mFolder instanceof PagedFolderData ? (PagedFolderData) mFolder : null;
+                if (paged != null) { // if the data's already paged in, we can short-circuit
+                    ImapFolder i4folder = ImapSessionManager.deserialize(paged.getCacheKey());
+                    try {
+                        paged.restore(i4folder);
+                    } catch (ServiceException e) {
+                        throw new IOException("unable to deserialize folder state", e);
+                    }
+                    // need to switch target before replay (yes, this is inelegant)
+                    mFolder = i4folder;
+                    // replay all queued events into the restored folder
+                    paged.replay();
+                    // if it's a disconnected session, no need to track expunges
+                    if (!isInteractive()) {
+                        i4folder.collapseExpunged(false);
+                    }
+                }
+                return (ImapFolder) mFolder;
             }
         }
-        return (ImapFolder) mFolder;
     }
 
     static class AddedItems {
