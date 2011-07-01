@@ -113,13 +113,14 @@ public class FreeBusyQuery {
     private void prepareRequests(ArrayList<FreeBusy> local, RemoteFreeBusyProvider remote, ArrayList<String> external) {
     	for (String id : mTargets.keySet()) {
     		Account acct = mTargets.get(id);
-    		if (acct == null || 
-    			acct.getBooleanAttr(Provisioning.A_zimbraFreebusyLocalMailboxNotActive, false)) {
-    			external.add(id);
-    			continue;
-    		}
-    		int folder = mTargetFolder.get(id);
     		try {
+    		    if (acct == null || acct.isAccountExternal() ||
+    		        acct.getBooleanAttr(Provisioning.A_zimbraFreebusyLocalMailboxNotActive, false)) {
+    		        external.add(id);
+    		        continue;
+    		    }
+    		    int folder = mTargetFolder.get(id);
+    		
         		if (Provisioning.onLocalServer(acct)) {
         		    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
         		    OperationContext octxt = null;
