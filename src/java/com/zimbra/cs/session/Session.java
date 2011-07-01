@@ -43,7 +43,7 @@ public abstract class Session {
     private   final Type   mSessionType;
 
     private   String    mSessionId;
-    protected Mailbox   mMailbox;
+    protected volatile Mailbox mailbox;
     private   IMPersona mPersona;
     private   long      mLastAccessed;
     private   long      mCreationTime;
@@ -135,7 +135,7 @@ public abstract class Session {
         }
 
         if (isMailboxListener()) {
-            Mailbox mbox = mMailbox = MailboxManager.getInstance().getMailboxByAccountId(mTargetAccountId);
+            Mailbox mbox = mailbox = MailboxManager.getInstance().getMailboxByAccountId(mTargetAccountId);
 
             // once addListener is called, you may NOT lock the mailbox (b/c of deadlock possibilities)
             if (mbox != null) {
@@ -161,7 +161,7 @@ public abstract class Session {
      * @see #isRegisteredInCache() */
     public Session unregister() {
         // locking order is always Mailbox then Session
-        Mailbox mbox = mMailbox;
+        Mailbox mbox = mailbox;
         assert(mbox == null || mbox.lock.isLocked() || !Thread.holdsLock(this));
 
         // Must do this in two steps (first, w/ the Session lock, and then
@@ -177,7 +177,7 @@ public abstract class Session {
 
         if (mbox != null && isMailboxListener()) {
             mbox.removeListener(this);
-            mMailbox = null;
+            mailbox = null;
         }
 
         removeFromSessionCache();
@@ -260,7 +260,7 @@ public abstract class Session {
 
     /** Returns the {@link Mailbox} (if any) this Session is listening on. */
     public Mailbox getMailbox() {
-        return mMailbox;
+        return mailbox;
     }
 
     /** Handles the set of changes from a single Mailbox transaction.
@@ -295,7 +295,7 @@ public abstract class Session {
         } finally {
             mCleanedUp = true;
         }
-        mMailbox = null;
+        mailbox = null;
     }
 
     abstract protected void cleanup();

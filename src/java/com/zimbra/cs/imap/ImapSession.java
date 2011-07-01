@@ -168,7 +168,7 @@ public class ImapSession extends Session {
      *  messages as \Recent. */
     private void snapshotRECENT() {
         try {
-            Mailbox mbox = mMailbox;
+            Mailbox mbox = mailbox;
             if (mbox != null && isWritable()) {
                 mbox.recordImapSession(mFolderId);
             }
@@ -260,9 +260,14 @@ public class ImapSession extends Session {
     }
 
     ImapFolder reload() {
+        Mailbox mbox = mailbox;
+        if (mbox == null) {
+            return null;
+        }
         // Mailbox.endTransaction() -> ImapSession.notifyPendingChanges() locks in the order of Mailbox -> ImapSession.
         // Need to lock in the same order here, otherwise can result in deadlock.
-        synchronized (mMailbox) { // PagedFolderData.replay() locks Mailbox deep inside of it.
+        mbox.lock.lock(); // PagedFolderData.replay() locks Mailbox deep inside of it.
+        try {
             synchronized (this) {
                 // if the data's already paged in, we can short-circuit
                 if (mFolder instanceof PagedFolderData) {
@@ -288,6 +293,8 @@ public class ImapSession extends Session {
                 }
                 return (ImapFolder) mFolder;
             }
+        } finally {
+            mbox.lock.release();
         }
     }
 

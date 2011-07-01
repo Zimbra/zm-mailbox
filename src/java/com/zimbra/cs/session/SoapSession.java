@@ -153,7 +153,7 @@ public class SoapSession extends Session {
         private boolean calculateVisibleFolders(boolean force) throws ServiceException {
             long now = System.currentTimeMillis();
 
-            Mailbox mbox = mMailbox;
+            Mailbox mbox = mailbox;
             cacheAccountAccess(mAuthenticatedAccountId, mTargetAccountId);
             if (mbox == null) {
                 mVisibleFolderIds = Collections.emptySet();
@@ -454,7 +454,7 @@ public class SoapSession extends Session {
     public SoapSession register() throws ServiceException {
         super.register();
 
-        Mailbox mbox = mMailbox;
+        Mailbox mbox = mailbox;
         if (mbox != null) {
             recentMessages = mbox.getRecentMessageCount();
             previousAccess = mbox.getLastSoapAccessTime();
@@ -467,7 +467,7 @@ public class SoapSession extends Session {
     @Override
     public SoapSession unregister() {
         // when the session goes away, record the timestamp of the last write op to the database
-        Mailbox mbox = mMailbox;
+        Mailbox mbox = mailbox;
         if (lastWrite != -1 && mbox != null) {
             try {
                 mbox.recordLastSoapAccessTime(lastWrite);
@@ -579,7 +579,7 @@ public class SoapSession extends Session {
 
 
     public synchronized String getRemoteSessionId(Server server) {
-        if (mMailbox == null || remoteSessions == null || server == null) {
+        if (mailbox == null || remoteSessions == null || server == null) {
             return null;
         }
         for (RemoteSessionInfo rsi : remoteSessions) {
@@ -591,7 +591,7 @@ public class SoapSession extends Session {
     }
 
     protected boolean registerRemoteSessionId(Server server, String sessionId) {
-        if (mMailbox == null || server == null || sessionId == null) {
+        if (mailbox == null || server == null || sessionId == null) {
             return true;
         }
         String serverId = server.getId().toLowerCase();
@@ -754,7 +754,7 @@ public class SoapSession extends Session {
             pushChannel = null;
         }
 
-        if (mMailbox == null) {
+        if (mailbox == null) {
             sc.closePushChannel();
             return RegisterNotificationResult.NO_NOTIFY;
         }
@@ -824,7 +824,7 @@ public class SoapSession extends Session {
      * @param source    The (optional) Session which initiated these changes. */
     @Override
     public void notifyPendingChanges(PendingModifications pms, int changeId, Session source) {
-        Mailbox mbox = mMailbox;
+        Mailbox mbox = mailbox;
         if (pms == null || mbox == null || !pms.hasNotifications()) {
             return;
         }
@@ -986,7 +986,7 @@ public class SoapSession extends Session {
      * @param ctxt  An existing SOAP header <context> element
      * @param zsc   The SOAP request's encapsulated context */
     public void putRefresh(Element ctxt, ZimbraSoapContext zsc) throws ServiceException {
-        Mailbox mbox = mMailbox;
+        Mailbox mbox = mailbox;
         if (mbox == null) {
             return;
         }
@@ -1303,7 +1303,7 @@ public class SoapSession extends Session {
      *         received (0 means none)
      * @return The passed-in <tt>&lt;context></tt> element */
     public Element putNotifications(Element ctxt, ZimbraSoapContext zsc, int lastSequence) {
-        Mailbox mbox = mMailbox;
+        Mailbox mbox = mailbox;
         if (ctxt == null || mbox == null) {
             return null;
         }
