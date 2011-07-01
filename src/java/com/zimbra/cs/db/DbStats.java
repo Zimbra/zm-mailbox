@@ -44,7 +44,7 @@ class DbStats implements RealtimeStatsCallback {
             data.put(ZimbraPerf.RTS_DB_POOL_SIZE, DbPool.getSize());
             
             // Parse innodb status output
-            DbResults results = DbUtil.executeQuery("SHOW INNODB STATUS");
+            DbResults results = DbUtil.executeQuery("SHOW ENGINE INNODB STATUS");
             Integer hitRate = parseBufferPoolHitRate(results.getString("Status"));
             if (hitRate != null) {
                 data.put(ZimbraPerf.RTS_INNODB_BP_HIT_RATE, hitRate);
