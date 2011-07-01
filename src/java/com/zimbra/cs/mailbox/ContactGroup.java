@@ -95,8 +95,9 @@ public class ContactGroup {
         return derefedMembers != null;
     }
     
-    public void deleteAllMembers() {
+    public void removeAllMembers() {
         members.clear();
+        derefedMembers = null;
     }
     
     /*
@@ -140,6 +141,35 @@ public class ContactGroup {
                     type.soapEncoded + ")" + " " + value, null);
         }
         members.remove(member);
+    }
+    
+    // for legacy clients
+    // TODO: need to hook up from callsistes when legacy clients can come in
+    public void replaceAllMembers(String dlist) throws ServiceException {
+        removeAllMembers();
+        MigrateContactGroup.migrate(this, dlist);
+    }
+    
+    // for legacy clients
+    // TODO: need to hook up from callsistes when legacy clients can come in
+    public String getAllMembersAddrsAsString(Mailbox mbox, OperationContext octxt) 
+    throws ServiceException {
+        List<String> addrs = getEmailAddresses(false, mbox, octxt, false);
+        if (addrs.isEmpty()) {
+            return null;
+        } else {
+            StringBuilder sb = new StringBuilder();
+            boolean first = true;
+            for (String addr : addrs) {
+                if (first) {
+                    first = false;
+                } else {
+                    sb.append(", ");
+                }
+                sb.append(addr);
+            }
+            return sb.toString();
+        }
     }
     
     private void addMember(Member member) {
@@ -808,8 +838,22 @@ public class ContactGroup {
             }
             
             ContactGroup contactGroup = ContactGroup.init();
+            migrate(contactGroup, dlist);
             
-            // add each dlist member as an inlined member in groupMember
+            ParsedContact pc = new ParsedContact(contact);
+            
+            pc.modifyField(ContactConstants.A_groupMember, contactGroup.encode());
+            
+            // remove dlist.  
+            // TODO: should we do this? or should we keep dlist and hide it
+            // using zimbraContactHiddenAttributes? 
+            pc.modifyField(ContactConstants.A_dlist, null); 
+            
+            mbox.modifyContact(octxt, contact.getId(), pc);
+        }
+        
+        // add each dlist member as an inlined member in groupMember
+        static void migrate(ContactGroup contactGroup, String dlist) throws ServiceException {
             Matcher matcher = PATTERN.matcher(dlist);
             while (matcher.find()) {
                 String token = matcher.group();
@@ -824,13 +868,8 @@ public class ContactGroup {
                     }
                 }
             }
-            
-            ParsedContact pc = new ParsedContact(contact);
-            // do NOT delete dlist for backward compatibility, old ZCO/desktop/mobile
-            // clients are still out there.
-            pc.modifyField(ContactConstants.A_groupMember, contactGroup.encode());
-            mbox.modifyContact(octxt, contact.getId(), pc);
         }
+        
     }
     
 }

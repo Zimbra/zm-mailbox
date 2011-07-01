@@ -166,7 +166,7 @@ public class CreateContact extends MailDocumentHandler  {
             if (contactGroup == null) {
                 contactGroup = ContactGroup.init(existing, true);
                 if (existing != null) {
-                    contactGroup.deleteAllMembers();
+                    contactGroup.removeAllMembers();
                 }
             }
             String memberType = elt.getAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_TYPE);

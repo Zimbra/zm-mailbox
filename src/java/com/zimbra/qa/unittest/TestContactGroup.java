@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -79,7 +80,7 @@ public class TestContactGroup {
                 new MemberData(Member.Type.GAL_REF, GAL_REF_VALUE),
                 new MemberData(Member.Type.INLINE, INLINE_VALUE)});
         
-        contactGroup.deleteAllMembers();
+        contactGroup.removeAllMembers();
         
         contactGroup = reEncode(contactGroup);
         
@@ -354,6 +355,69 @@ public class TestContactGroup {
         assertTrue(emailAddrs.contains("zzz@test.com"));
         
         assertTrue(gotGalRefMember);
+    }
+    
+    @Test
+    public void replaceMembersWithDlist() throws Exception {
+        ContactGroup contactGroup = createContactGroup(new MemberData[] {
+                new MemberData(Member.Type.CONTACT_REF, CONTACT_REF_VALUE),
+                new MemberData(Member.Type.GAL_REF, GAL_REF_VALUE)});
+        
+        String dlist = "\"Ballard, Martha\" <martha34@aol.com>, \"Davidson, Ross\" <rossd@example.zimbra.com>, user1@test.com";
+        contactGroup.replaceAllMembers(dlist);
+        
+        contactGroup = reEncode(contactGroup);
+        
+        List<Member> members = contactGroup.getMembers();
+        assertEquals(3, members.size());
+        
+        Member member = members.get(0);
+        assertEquals(Member.Type.INLINE, member.getType());
+        assertEquals("\"Ballard, Martha\" <martha34@aol.com>", member.getValue());
+        
+        member = members.get(1);
+        assertEquals(Member.Type.INLINE, member.getType());
+        assertEquals("\"Davidson, Ross\" <rossd@example.zimbra.com>", member.getValue());
+        
+        member = members.get(2);
+        assertEquals(Member.Type.INLINE, member.getType());
+        assertEquals("user1@test.com", member.getValue());
+    }
+    
+    @Test 
+    public void returnMembersAsDlist() throws Exception {
+        Account account = Provisioning.getInstance().get(AccountBy.name, TestUtil.getAddress("user1"));
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        OperationContext octxt = null;  //TODO
+        
+        Map<String, Object> fields = new HashMap<String, Object>();
+        fields.put(ContactConstants.A_fileAs, ContactConstants.FA_FIRST_LAST);
+        fields.put(ContactConstants.A_firstName, "test");
+        fields.put(ContactConstants.A_email, "test1@zimbra.com");
+        fields.put(ContactConstants.A_workEmail1, "test2@zimbra.com");
+        Contact contact = mbox.createContact(octxt, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
+        
+        Account galMember = Provisioning.getInstance().get(AccountBy.name, TestUtil.getAddress("user2"));
+        LdapAccount ldapAccount = (LdapAccount) galMember;
+        String dn = ldapAccount.getDN();
+        String galEntryEmail = galMember.getName();
+        
+        ContactGroup contactGroup = createContactGroup(new MemberData[] {
+                new MemberData(Member.Type.CONTACT_REF, "" + contact.getId()),
+                new MemberData(Member.Type.GAL_REF, dn),
+                new MemberData(Member.Type.INLINE, "aaa@test.com"), 
+                new MemberData(Member.Type.INLINE, "zzz@test.com")});
+        
+        contactGroup.derefAllMembers(mbox, octxt);
+        for (Member member : contactGroup.getDerefedMembers()) {
+            String memberKey = member.getDerefedKey();
+            System.out.println(memberKey);
+        }
+        
+        String dlist = contactGroup.getAllMembersAddrsAsString(mbox, octxt);
+        
+        // should be in member order
+        assertEquals("test1@zimbra.com, test2@zimbra.com, " + galEntryEmail + ", aaa@test.com, zzz@test.com", dlist);
     }
     
     @Test
