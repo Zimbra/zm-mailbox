@@ -276,6 +276,8 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         } else if (name.equals(MailConstants.E_CONVERSATION_TEST)) {
             return new ZConversationCondition(isNegative ? ConversationOp.NOT_WHERE : ConversationOp.WHERE,
                     condEl.getAttribute(MailConstants.A_WHERE));
+        } else if (name.equals(MailConstants.E_FACEBOOK_TEST)) {
+            return new ZFacebookCondition(isNegative ? SimpleOp.NOT_IS : SimpleOp.IS);
         } else if (name.equals(MailConstants.E_SOCIALCAST_TEST)) {
             return new ZSocialcastCondition(isNegative ? SimpleOp.NOT_IS : SimpleOp.IS);
         } else if (name.equals(MailConstants.E_LIST_TEST)) {
@@ -315,6 +317,33 @@ public abstract class ZFilterCondition implements ToZJSONObject {
     }
 
     public abstract String toConditionString();
+
+    public static final class ZFacebookCondition extends ZFilterCondition {
+        private final SimpleOp op;
+
+        public ZFacebookCondition(SimpleOp op) {
+            this.op = op;
+        }
+
+        @Override
+        public String getName() {
+            return "facebook";
+        }
+
+        @Override
+        Element toElement(Element parent) {
+            Element test = parent.addElement(MailConstants.E_FACEBOOK_TEST);
+            if (op == SimpleOp.NOT_IS) {
+                test.addAttribute(MailConstants.A_NEGATIVE, true);
+            }
+            return test;
+        }
+
+        @Override
+        public String toConditionString() {
+            return "facebook" + (op == SimpleOp.IS ? "" : " not");
+        }
+    }
 
     public static final class ZSocialcastCondition extends ZFilterCondition {
         private final SimpleOp op;

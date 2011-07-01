@@ -225,6 +225,13 @@ public final class SieveToSoap extends SieveVisitor {
     }
 
     @Override
+    protected void visitFacebookTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+        if (phase == VisitPhase.begin) {
+            addTest(MailConstants.E_FACEBOOK_TEST, props);
+        }
+    }
+
+    @Override
     protected void visitSocialcastTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
         if (phase == VisitPhase.begin) {
             addTest(MailConstants.E_SOCIALCAST_TEST, props);
