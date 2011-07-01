@@ -270,7 +270,14 @@ public class AccountUtil {
                         if (domain != null) {
                             Domain internalDomain = Provisioning.getInstance().getDomain(Key.DomainBy.name, domain, true);
                             if (internalDomain != null) {
-                                Account allowFromAccount = Provisioning.getInstance().get(AccountBy.name, allowedFromAddrs[j]);
+                                Account allowFromAccount;
+                                if (Provisioning.getInstance().isDistributionList(allowedFromAddrs[j])) {
+                                    // Avoid ldap lookup of DL address as an account.
+                                    allowFromAccount = null;
+                                } else {
+                                    allowFromAccount = Provisioning.getInstance().get(AccountBy.name, allowedFromAddrs[j]);
+                                }
+                                allowFromAccount = Provisioning.getInstance().get(AccountBy.name, allowedFromAddrs[j]);
                                 if (allowFromAccount != null && !account.getId().equalsIgnoreCase(allowFromAccount.getId())) {
                                     // The allow-from address refers to another account, and therefore it is not a match
                                     // for this account.
