@@ -13,50 +13,39 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.mail.type;
+package com.zimbra.soap.admin.type;
 
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
-import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class EmailWithGroupInfo extends EmailInfo {
+public class Offset {
 
-    @XmlAttribute(name=MailConstants.A_IS_GROUP /* isGroup */, required=false)
-    private Boolean group;
-
-    @XmlAttribute(name=MailConstants.A_EXP /* exp */, required=false)
-    private Boolean canExpandGroupMembers;
+    @XmlAttribute(name=AdminConstants.A_OFFSET /* offset */, required=true)
+    private final long offset;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private EmailWithGroupInfo() {
-        this((String) null, (String) null, (String) null, (String) null);
+    private Offset() {
+        this(-1L);
     }
 
-    public EmailWithGroupInfo(String address, String display, String personal,
-            String addressType) {
-        super(address, display, personal, addressType);
+    public Offset(long offset) {
+        this.offset = offset;
     }
 
-    public void setGroup(Boolean group) { this.group = group; }
-    public void setCanExpandGroupMembers(Boolean canExpandGroupMembers) {
-        this.canExpandGroupMembers = canExpandGroupMembers;
-    }
-    public Boolean getGroup() { return group; }
-    public Boolean getCanExpandGroupMembers() { return canExpandGroupMembers; }
+    public long getOffset() { return offset; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
-        helper = super.addToStringInfo(helper);
         return helper
-            .add("group", group)
-            .add("canExpandGroupMembers", canExpandGroupMembers);
+            .add("offset", offset);
     }
 
     @Override

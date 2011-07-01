@@ -33,7 +33,7 @@ import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(propOrder = {})
-abstract public class AdminAttrsImpl implements AdminAttrs {
+public class AdminAttrsImpl implements AdminAttrs {
 
     @XmlElement(name=AdminConstants.E_A /* a */, required=false)
     private List<Attr> attrs = Lists.newArrayList();

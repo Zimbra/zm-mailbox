@@ -35,6 +35,8 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.AdminExtConstants;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.ReplicationConstants;
+import com.zimbra.common.soap.SyncConstants;
 import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.soap.JaxbUtil;
 
@@ -210,6 +212,8 @@ public class WsdlGenerator {
         List<String> adminRequests = Lists.newArrayList();
         List<String> adminExtRequests = Lists.newArrayList();
         List<String> mailRequests = Lists.newArrayList();
+        List<String> syncRequests = Lists.newArrayList();
+        List<String> replicationRequests = Lists.newArrayList();
         for (Class<?> currClass : JaxbUtil.getJaxbRequestAndResponseClasses()) {
             String className = currClass.getName();
             String requestName = currClass.getSimpleName();
@@ -223,12 +227,17 @@ public class WsdlGenerator {
                 adminExtRequests.add(requestName);
             } else if (className.startsWith("com.zimbra.soap.mail.message")) {
                 mailRequests.add(requestName);
+            } else if (className.startsWith("com.zimbra.soap.replication.message")) {
+                replicationRequests.add(requestName);
+            } else if (className.startsWith("com.zimbra.soap.sync.message")) {
+                syncRequests.add(requestName);
             }
         }
         Collections.sort(accountRequests);
         Collections.sort(adminRequests);
         Collections.sort(adminExtRequests);
         Collections.sort(mailRequests);
+        Collections.sort(syncRequests);
         File accountWsdlFile = new File(outputDir, "AccountService.wsdl");
         createWsdlFile(accountWsdlFile,
                 AccountConstants.NAMESPACE_STR, "AccountService",
@@ -245,5 +254,13 @@ public class WsdlGenerator {
         createWsdlFile(mailWsdlFile,
                 MailConstants.NAMESPACE_STR, "MailService",
                 "http://localhost:7070/service/soap", mailRequests);
+        File replicationWsdlFile = new File(outputDir, "ReplicationService.wsdl");
+        createWsdlFile(replicationWsdlFile,
+                ReplicationConstants.NAMESPACE_STR, "ReplicationService",
+                "http://localhost:7070/service/soap", replicationRequests);
+        File syncWsdlFile = new File(outputDir, "SyncService.wsdl");
+        createWsdlFile(syncWsdlFile,
+                SyncConstants.NAMESPACE_STR, "SyncService",
+                "http://localhost:7070/service/soap", syncRequests);
     }
 } // end WsdlGenerator class

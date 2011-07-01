@@ -46,6 +46,10 @@ import com.zimbra.soap.account.type.ZimletInfo;
 
 
 /**
+ * TODO: Note that LicenseAdminService and LicenseService both register a handler which
+ *       extends com.zimbra.cs.service.account.GetInfo.  Need to support the
+ *       additional elements added by those.
+ *
 <GetInfoResponse>
    <version>{version}</version>
    <id>{account-id}</id>

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -35,28 +35,28 @@ import com.zimbra.common.soap.MailConstants;
                         "mimeParts", "attachments"})
 public class InvitationInfo extends InviteComponent {
 
-    @XmlAttribute(name=MailConstants.A_ID, required=false)
+    @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private String id;
 
-    @XmlAttribute(name=MailConstants.A_CONTENT_TYPE, required=false)
+    @XmlAttribute(name=MailConstants.A_CONTENT_TYPE /* ct */, required=false)
     private String contentType;
 
-    @XmlAttribute(name=MailConstants.A_CONTENT_ID, required=false)
+    @XmlAttribute(name=MailConstants.A_CONTENT_ID /* ci */, required=false)
     private String contentId;
 
-    @XmlElement(name=MailConstants.E_CONTENT, required=false)
+    @XmlElement(name=MailConstants.E_CONTENT /* content */, required=false)
     private RawInvite content;
 
-    @XmlElement(name=MailConstants.E_INVITE_COMPONENT, required=false)
+    @XmlElement(name=MailConstants.E_INVITE_COMPONENT /* comp */, required=false)
     private InviteComponent inviteComponent;
 
-    @XmlElement(name=MailConstants.E_CAL_TZ, required=false)
+    @XmlElement(name=MailConstants.E_CAL_TZ /* tz */, required=false)
     private List<CalTZInfo> timezones = Lists.newArrayList();
 
-    @XmlElement(name=MailConstants.E_MIMEPART, required=false)
+    @XmlElement(name=MailConstants.E_MIMEPART /* mp */, required=false)
     private List<MimePartInfo> mimeParts = Lists.newArrayList();
 
-    @XmlElement(name=MailConstants.E_ATTACH, required=false)
+    @XmlElement(name=MailConstants.E_ATTACH /* attach */, required=false)
     private AttachmentsInfo attachments;
 
     public InvitationInfo() {
@@ -85,9 +85,8 @@ public class InvitationInfo extends InviteComponent {
         }
     }
 
-    public InvitationInfo addTimezone(CalTZInfo timezone) {
+    public void addTimezone(CalTZInfo timezone) {
         this.timezones.add(timezone);
-        return this;
     }
 
     public void setMimeParts(Iterable <MimePartInfo> mimeParts) {
@@ -97,9 +96,8 @@ public class InvitationInfo extends InviteComponent {
         }
     }
 
-    public InvitationInfo addMimePart(MimePartInfo mimePart) {
+    public void addMimePart(MimePartInfo mimePart) {
         this.mimeParts.add(mimePart);
-        return this;
     }
 
     public void setAttachments(AttachmentsInfo attachments) {

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -38,17 +38,17 @@ import com.zimbra.soap.type.Id;
 @XmlType(propOrder = {"defaultId", "exceptions"})
 public class SetAppointmentResponse {
 
-    @XmlAttribute(name=MailConstants.A_CAL_ID, required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_ID /* calItemId */, required=false)
     private String calItemId;
 
     // For backwards compat
-    @XmlAttribute(name=MailConstants.A_APPT_ID_DEPRECATE_ME, required=false)
+    @XmlAttribute(name=MailConstants.A_APPT_ID_DEPRECATE_ME /* apptId */, required=false)
     private String deprecatedApptId;
 
-    @XmlElement(name=MailConstants.A_DEFAULT, required=false)
+    @XmlElement(name=MailConstants.A_DEFAULT /* default */, required=false)
     private Id defaultId;
 
-    @XmlElement(name=MailConstants.E_CAL_EXCEPT, required=false)
+    @XmlElement(name=MailConstants.E_CAL_EXCEPT /* except */, required=false)
     private List<ExceptIdInfo> exceptions = Lists.newArrayList();
 
     public SetAppointmentResponse() {
@@ -66,9 +66,8 @@ public class SetAppointmentResponse {
         }
     }
 
-    public SetAppointmentResponse addException(ExceptIdInfo exception) {
+    public void addException(ExceptIdInfo exception) {
         this.exceptions.add(exception);
-        return this;
     }
 
     public String getCalItemId() { return calItemId; }

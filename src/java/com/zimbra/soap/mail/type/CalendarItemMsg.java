@@ -2,7 +2,7 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
@@ -36,51 +36,51 @@ import com.zimbra.common.soap.MailConstants;
            "emailAddresses", "timezones", "fragment", "extraElements"})
 public class CalendarItemMsg {
 
-    @XmlAttribute(name=MailConstants.A_ATTACHMENT_ID, required=false)
+    @XmlAttribute(name=MailConstants.A_ATTACHMENT_ID /* aid */, required=false)
     private String attachmentId;
 
-    @XmlAttribute(name=MailConstants.A_ORIG_ID, required=false)
+    @XmlAttribute(name=MailConstants.A_ORIG_ID /* origid */, required=false)
     private String origId;
 
-    @XmlAttribute(name=MailConstants.A_REPLY_TYPE, required=false)
+    @XmlAttribute(name=MailConstants.A_REPLY_TYPE /* rt */, required=false)
     private String replyType;
 
-    @XmlAttribute(name=MailConstants.A_IDENTITY_ID, required=false)
+    @XmlAttribute(name=MailConstants.A_IDENTITY_ID /* idnt */, required=false)
     private String identityId;
 
-    @XmlAttribute(name=MailConstants.E_SUBJECT, required=false)
+    @XmlAttribute(name=MailConstants.E_SUBJECT /* su */, required=false)
     private String subject;
 
-    @XmlAttribute(name=MailConstants.E_IN_REPLY_TO, required=false)
+    @XmlAttribute(name=MailConstants.E_IN_REPLY_TO /* irt */, required=false)
     private String inReplyTo;
 
-    @XmlAttribute(name=MailConstants.A_FOLDER, required=false)
+    @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
     private String folderId;
 
-    @XmlAttribute(name=MailConstants.A_FLAGS, required=false)
+    @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
     private String flags;
 
-    @XmlElement(name=MailConstants.E_CONTENT, required=false)
+    @XmlElement(name=MailConstants.E_CONTENT /* content */, required=false)
     private String content;
 
-    @XmlElement(name=MailConstants.E_MIMEPART, required=false)
+    @XmlElement(name=MailConstants.E_MIMEPART /* mp */, required=false)
     private MimePartInfo mimePart;
 
-    @XmlElement(name=MailConstants.E_ATTACH, required=false)
+    @XmlElement(name=MailConstants.E_ATTACH /* attach */, required=false)
     private AttachmentsInfo attachments;
 
-    @XmlElement(name=MailConstants.E_INVITE, required=false)
+    @XmlElement(name=MailConstants.E_INVITE /* inv */, required=false)
     private InvitationInfo invite;
 
-    @XmlElement(name=MailConstants.E_EMAIL, required=false)
+    @XmlElement(name=MailConstants.E_EMAIL /* e */, required=false)
     private List<EmailAddrInfo> emailAddresses = Lists.newArrayList();
 
     // ParseMimeMessage.parseMimeMsgSoap looks for E_CAL_TZ but does no further processing.  CalendarUtils.parseInviteElementCommon looks for timezones in parent element
-    @XmlElement(name=MailConstants.E_CAL_TZ, required=false)
+    @XmlElement(name=MailConstants.E_CAL_TZ /* tz */, required=false)
     private List<CalTZInfo> timezones = Lists.newArrayList();
 
     // ParseMimeMessage.parseMimeMsgSoap looks for E_FRAG but does nothing with it.
-    @XmlElement(name=MailConstants.E_FRAG, required=false)
+    @XmlElement(name=MailConstants.E_FRAG /* fr */, required=false)
     private String fragment;
 
     // ParseMimeMessage.parseMimeMsgSoap loops over all children.
@@ -115,9 +115,8 @@ public class CalendarItemMsg {
         }
     }
 
-    public CalendarItemMsg addEmailAddresse(EmailAddrInfo emailAddresse) {
+    public void addEmailAddresse(EmailAddrInfo emailAddresse) {
         this.emailAddresses.add(emailAddresse);
-        return this;
     }
 
     public void setTimezones(Iterable <CalTZInfo> timezones) {
@@ -127,9 +126,8 @@ public class CalendarItemMsg {
         }
     }
 
-    public CalendarItemMsg addTimezone(CalTZInfo timezone) {
+    public void addTimezone(CalTZInfo timezone) {
         this.timezones.add(timezone);
-        return this;
     }
 
     public void setFragment(String fragment) { this.fragment = fragment; }
@@ -140,9 +138,8 @@ public class CalendarItemMsg {
         }
     }
 
-    public CalendarItemMsg addExtraElement(org.w3c.dom.Element extraElement) {
+    public void addExtraElement(org.w3c.dom.Element extraElement) {
         this.extraElements.add(extraElement);
-        return this;
     }
 
     public String getAttachmentId() { return attachmentId; }

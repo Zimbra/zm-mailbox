@@ -37,6 +37,12 @@ public class EmailInfo {
     @XmlAttribute(name=MailConstants.A_ADDRESS_TYPE /* t */, required=true)
     private final String addressType;
 
+    @XmlAttribute(name=MailConstants.A_IS_GROUP /* isGroup */, required=false)
+    private Boolean group;
+
+    @XmlAttribute(name=MailConstants.A_EXP /* exp */, required=false)
+    private Boolean canExpandGroupMembers;
+
     /**
      * no-argument constructor wanted by JAXB
      */
@@ -53,10 +59,14 @@ public class EmailInfo {
         this.addressType = addressType;
     }
 
+    public void setGroup(Boolean group) { this.group = group; }
+    public void setCanExpandGroupMembers(Boolean canExpandGroupMembers) { this.canExpandGroupMembers = canExpandGroupMembers; }
     public String getAddress() { return address; }
     public String getDisplay() { return display; }
     public String getPersonal() { return personal; }
     public String getAddressType() { return addressType; }
+    public Boolean getGroup() { return group; }
+    public Boolean getCanExpandGroupMembers() { return canExpandGroupMembers; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
@@ -64,7 +74,9 @@ public class EmailInfo {
             .add("address", address)
             .add("display", display)
             .add("personal", personal)
-            .add("addressType", addressType);
+            .add("addressType", addressType)
+            .add("group", group)
+            .add("canExpandGroupMembers", canExpandGroupMembers);
     }
 
     @Override

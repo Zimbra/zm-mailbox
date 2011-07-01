@@ -98,6 +98,8 @@
       <schema namespace="urn:zimbraAdmin" file="zimbraAdmin.xsd" />
       <schema namespace="urn:zimbraAdminExt" file="zimbraAdminExt.xsd" />
       <schema namespace="urn:zimbraMail" file="zimbraMail.xsd" />
+      <schema namespace="urn:zimbraSync" file="zimbraSync.xsd" />
+      <schema namespace="urn:zimbraRepl" file="zimbraRepl.xsd" />
     </schemagen>
   </target>
 
@@ -144,8 +146,16 @@
       <service-client-support svcname="MailService" pathelem="mail"/>
   </target>
 
+  <target name="sync-service-client-support" depends="jar">
+      <service-client-support svcname="SyncService" pathelem="sync"/>
+  </target>
+
+  <target name="repl-service-client-support" depends="jar">
+      <service-client-support svcname="ReplicationService" pathelem="sync"/>
+  </target>
+
   <target name="wsdl-client-support"
-      depends="account-service-client-support,admin-service-client-support,admin-ext-service-client-support,mail-service-client-support">
+      depends="account-service-client-support,admin-service-client-support,admin-ext-service-client-support,mail-service-client-support,repl-service-client-support,sync-service-client-support">
   </target>
 
   <target name="wsdl-test-compile" depends="compile,wsdl-client-support">

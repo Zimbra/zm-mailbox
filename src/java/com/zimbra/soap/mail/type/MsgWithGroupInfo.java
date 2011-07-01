@@ -72,7 +72,7 @@ public class MsgWithGroupInfo extends MessageCommon {
     private String fragment;
 
     @XmlElement(name=MailConstants.E_EMAIL /* e */, required=false)
-    private List<EmailWithGroupInfo> emails = Lists.newArrayList();
+    private List<EmailInfo> emails = Lists.newArrayList();
 
     @XmlElement(name=MailConstants.E_SUBJECT /* su */, required=false)
     private String subject;
@@ -124,14 +124,14 @@ public class MsgWithGroupInfo extends MessageCommon {
     public void setResentDate(Long resentDate) { this.resentDate = resentDate; }
     public void setPart(String part) { this.part = part; }
     public void setFragment(String fragment) { this.fragment = fragment; }
-    public void setEmails(Iterable <EmailWithGroupInfo> emails) {
+    public void setEmails(Iterable <EmailInfo> emails) {
         this.emails.clear();
         if (emails != null) {
             Iterables.addAll(this.emails,emails);
         }
     }
 
-    public void addEmail(EmailWithGroupInfo email) {
+    public void addEmail(EmailInfo email) {
         this.emails.add(email);
     }
 
@@ -175,7 +175,7 @@ public class MsgWithGroupInfo extends MessageCommon {
     public Long getResentDate() { return resentDate; }
     public String getPart() { return part; }
     public String getFragment() { return fragment; }
-    public List<EmailWithGroupInfo> getEmails() {
+    public List<EmailInfo> getEmails() {
         return Collections.unmodifiableList(emails);
     }
     public String getSubject() { return subject; }
