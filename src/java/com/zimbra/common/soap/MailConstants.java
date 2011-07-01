@@ -579,6 +579,7 @@ public final class MailConstants {
     public static final String E_ADDRESS_BOOK_TEST = "addressBookTest";
     public static final String E_INVITE_TEST = "inviteTest";
     public static final String E_CONVERSATION_TEST = "conversationTest";
+    public static final String E_FACEBOOK_TEST = "facebookTest";
     public static final String E_SOCIALCAST_TEST = "socialcastTest";
     public static final String E_LIST_TEST = "listTest";
     public static final String E_BULK_TEST = "bulkTest";
@@ -1116,6 +1117,6 @@ public final class MailConstants {
 
     public static final String E_GRANTOR = "grantor";
     public static final String E_GRANTEE = "grantee";
-    
+
     public static final String A_ACCOUNT_ID = "accountId";
 }
