@@ -434,6 +434,14 @@ public final class AdminConstants {
     public static final String E_VC_REQUEST = "VersionCheckRequest";
     public static final String E_VC_RESPONSE = "VersionCheckResponse";
 
+    // LicenseAdminService
+    public static final String E_INSTALL_LICENSE_REQUEST = "InstallLicenseRequest";
+    public static final String E_INSTALL_LICENSE_RESPONSE = "InstallLicenseResponse";
+    public static final String E_ACTIVATE_LICENSE_REQUEST = "ActivateLicenseRequest";
+    public static final String E_ACTIVATE_LICENSE_RESPONSE = "ActivateLicenseResponse";
+    public static final String E_GET_LICENSE_REQUEST = "GetLicenseRequest";
+    public static final String E_GET_LICENSE_RESPONSE = "GetLicenseResponse";
+
     public static final QName PING_REQUEST = QName.get(E_PING_REQUEST, NAMESPACE);
     public static final QName PING_RESPONSE = QName.get(E_PING_RESPONSE, NAMESPACE);
     public static final QName CHECK_HEALTH_REQUEST = QName.get(E_CHECK_HEALTH_REQUEST, NAMESPACE);
@@ -843,6 +851,14 @@ public final class AdminConstants {
     public static final QName VC_REQUEST = QName.get(E_VC_REQUEST, NAMESPACE);
     public static final QName VC_RESPONSE = QName.get(E_VC_RESPONSE, NAMESPACE);
 
+    // LicenseAdminService
+    public static final QName INSTALL_LICENSE_REQUEST = QName.get(E_INSTALL_LICENSE_REQUEST, NAMESPACE);
+    public static final QName INSTALL_LICENSE_RESPONSE = QName.get(E_INSTALL_LICENSE_RESPONSE, NAMESPACE);
+    public static final QName ACTIVATE_LICENSE_REQUEST = QName.get(E_ACTIVATE_LICENSE_REQUEST, NAMESPACE);
+    public static final QName ACTIVATE_LICENSE_RESPONSE = QName.get(E_ACTIVATE_LICENSE_RESPONSE, NAMESPACE);
+    public static final QName GET_LICENSE_REQUEST = QName.get(E_GET_LICENSE_REQUEST, NAMESPACE);
+    public static final QName GET_LICENSE_RESPONSE = QName.get(E_GET_LICENSE_RESPONSE, NAMESPACE);
+
     // DumpSessions
     public static final String E_SESSION = "session";
     public static final String A_ZIMBRA_ID = "zid";
@@ -1174,6 +1190,27 @@ public final class AdminConstants {
     public static final String OP_MODIFY = "modify";
     public static final String OP_REMOVE = "remove";
 
+    // XmlFixupRules (FixCalenderTZ)
+    public static final String E_TZFIXUP = "tzfixup";
+    public static final String E_FIXUP_RULE = "fixupRule";
+    public static final String E_ANY = "any";
+    public static final String E_TZID = "tzid";
+    public static final String E_NON_DST = "nonDst";
+    public static final String E_RULES = "rules";
+    public static final String E_DATES = "dates";
+    public static final String E_STANDARD = "standard";
+    public static final String E_DAYLIGHT = "daylight";
+    public static final String E_REPLACE = "replace";
+    public static final String E_TOUCH = "touch";
+    public static final String E_WELL_KNOWN_TZ = "wellKnownTz";
+
+    public static final String A_STDOFF = "stdoff";
+    public static final String A_DAYOFF = "dayoff";
+    public static final String A_MON = "mon";
+    public static final String A_WEEK = "week";
+    public static final String A_WKDAY = "wkday";
+    public static final String A_MDAY = "mday";
+
     // Version Check
     public static final String VERSION_CHECK_STATUS = "status";
     public static final String VERSION_CHECK_CHECK = "check";
@@ -1189,4 +1226,16 @@ public final class AdminConstants {
     public static final String A_RELEASE = "release";
     public static final String A_PLATFORM = "platform";
     public static final String A_BUILDTYPE = "buildtype";
+
+    // ZimbraLicenseExtenstion LicenseService and LicenseAdminService
+    public static final String E_CONTENT = "content";
+    public static final String A_ATTACHMENT_ID = "aid";
+    public static final String E_LICENSE = "license";
+    public static final String E_ACTIVATION = "activation";
+    public static final String E_INFO = "info";
+    public static final String A_VALID_FROM = "validFrom";
+    public static final String A_VALID_UNTIL = "validUntil";
+    public static final String A_SERVER_TIME = "serverTime";
+    public static final String A_FEATURE = "feature";
+
 }

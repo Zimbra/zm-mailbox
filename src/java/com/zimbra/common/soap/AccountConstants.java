@@ -91,13 +91,17 @@ public class AccountConstants {
 
     public static final String E_GET_VERSION_INFO_REQUEST = "GetVersionInfoRequest";
     public static final String E_GET_VERSION_INFO_RESPONSE = "GetVersionInfoResponse";
-    
+
     public static final String E_GET_SMIME_PUBLIC_CERTS_REQUEST = "GetSMIMEPublicCertsRequest";
     public static final String E_GET_SMIME_PUBLIC_CERTS_RESPONSE = "GetSMIMEPublicCertsResponse";
 
     public static final String E_UPDATE_PROFILE_REQUEST = "UpdateProfileRequest";
     public static final String E_UPDATE_PROFILE_RESPONSE = "UpdateProfileResponse";
     
+    // ZimbraLicenseExtension - LicenseService
+    public static final String E_CHECK_LICENSE_REQUEST = "CheckLicenseRequest";
+    public static final String E_CHECK_LICENSE_RESPONSE = "CheckLicenseResponse";
+
     // auth
     public static final QName AUTH_REQUEST = QName.get(E_AUTH_REQUEST, NAMESPACE);
     public static final QName AUTH_RESPONSE = QName.get(E_AUTH_RESPONSE, NAMESPACE);
@@ -176,6 +180,10 @@ public class AccountConstants {
     public static final QName UPDATE_PROFILE_REQUEST = QName.get(E_UPDATE_PROFILE_REQUEST, NAMESPACE);
     public static final QName UPDATE_PROFILE_RESPONSE = QName.get(E_UPDATE_PROFILE_RESPONSE, NAMESPACE);
     
+    // ZimbraLicenseExtension - LicenseService
+    public static final QName CHECK_LICENSE_REQUEST = QName.get(E_CHECK_LICENSE_REQUEST, NAMESPACE);
+    public static final QName CHECK_LICENSE_RESPONSE = QName.get(E_CHECK_LICENSE_RESPONSE, NAMESPACE);
+
     public static final String E_ACTION = "action";
     public static final String E_ADMIN_DELEGATED = "adminDelegated";
     public static final String E_AUTH_TOKEN = "authToken";
