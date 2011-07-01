@@ -255,9 +255,13 @@ public class ImapSession extends Session {
     }
 
     ImapFolder reload() throws IOException {
+        Mailbox mbox = mMailbox;
+        if (mbox == null) {
+            return null;
+        }
         // Mailbox.endTransaction() -> ImapSession.notifyPendingChanges() locks in the order of Mailbox -> ImapSession.
         // Need to lock in the same order here, otherwise can result in deadlock.
-        synchronized (mMailbox) { // PagedFolderData.replay() locks Mailbox deep inside of it.
+        synchronized (mbox) { // PagedFolderData.replay() locks Mailbox deep inside of it.
             synchronized (this) {
                 PagedFolderData paged = mFolder instanceof PagedFolderData ? (PagedFolderData) mFolder : null;
                 if (paged != null) { // if the data's already paged in, we can short-circuit
