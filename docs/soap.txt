@@ -2841,6 +2841,7 @@ Tests:
   <currentDayOfWeekTest value="comma-separated-day-of-week-indices" />
   <conversationTest [where="{started|participated}"]/>
   <facebookTest/>
+  <linkedinTest/>
   <socialcastTest/>
   <twitterTest/>
   <listTest/>

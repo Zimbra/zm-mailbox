@@ -377,6 +377,15 @@ public final class ZFilterRule implements ToZJSONObject {
                     op = ZFilterCondition.SimpleOp.IS;
                 }
                 conditions.add(new ZFilterCondition.ZFacebookCondition(op));
+            } else if (a.equals("linkedin")) {
+                ZFilterCondition.SimpleOp op;
+                if (i + 1 < args.length && args[i].equalsIgnoreCase("not")) {
+                    i++; // not
+                    op = ZFilterCondition.SimpleOp.NOT_IS;
+                } else {
+                    op = ZFilterCondition.SimpleOp.IS;
+                }
+                conditions.add(new ZFilterCondition.ZLinkedInCondition(op));
             } else if (a.equals("socialcast")) {
                 ZFilterCondition.SimpleOp op;
                 if (i + 1 < args.length && args[i].equalsIgnoreCase("not")) {

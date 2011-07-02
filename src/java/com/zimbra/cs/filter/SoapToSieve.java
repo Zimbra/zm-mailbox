@@ -188,6 +188,8 @@ public final class SoapToSieve {
             snippet = String.format("conversation :where \"%s\"", FilterUtil.escape(where));
         } else if (name.equals(MailConstants.E_FACEBOOK_TEST)) {
             snippet = "facebook";
+        } else if (name.equals(MailConstants.E_LINKEDIN_TEST)) {
+            snippet = "linkedin";
         } else if (name.equals(MailConstants.E_SOCIALCAST_TEST)) {
             snippet = "socialcast";
         } else if (name.equals(MailConstants.E_TWITTER_TEST)) {

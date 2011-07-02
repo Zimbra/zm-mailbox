@@ -103,6 +103,10 @@ public abstract class SieveVisitor {
     }
 
     @SuppressWarnings("unused")
+    protected void visitLinkedInTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
     protected void visitSocialcastTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
     }
 
@@ -408,6 +412,10 @@ public abstract class SieveVisitor {
                 visitFacebookTest(node, VisitPhase.begin, props);
                 accept(node, props);
                 visitFacebookTest(node, VisitPhase.end, props);
+            } else if ("linkedin".equalsIgnoreCase(nodeName)) {
+                visitLinkedInTest(node, VisitPhase.begin, props);
+                accept(node, props);
+                visitLinkedInTest(node, VisitPhase.end, props);
             } else if ("socialcast".equalsIgnoreCase(nodeName)) {
                 visitSocialcastTest(node, VisitPhase.begin, props);
                 accept(node, props);
