@@ -52,7 +52,6 @@ import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mailbox.calendar.Alarm;
 import com.zimbra.cs.mailbox.calendar.Alarm.Action;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
-import com.zimbra.cs.mailbox.calendar.CalendarUser;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteChanges;
@@ -74,7 +73,7 @@ import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
@@ -2606,17 +2605,21 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
          * @return true if decide to store <code>inv</code>
          */
         boolean maybeStoreNewReply(Invite inv, ZAttendee at) throws ServiceException {
+            // Look up internal account for the attendee.  For internal users we want to match
+            // on all email addresses of the account.
+            AccountAddressMatcher acctMatcher = null;
+            String address = at.getAddress();
+            if (address != null) {
+                Account acct = Provisioning.getInstance().get(AccountBy.name, address);
+                if (acct != null) {
+                    acctMatcher = new AccountAddressMatcher(acct);
+                }
+            }
+            
             for (Iterator<ReplyInfo> iter = mReplies.iterator(); iter.hasNext();) {
                 ReplyInfo cur = iter.next();
-
-                // Look up internal account for the attendee.  For internal users we want to match
-                // on all email addresses of the account.
-                Account acct = null;
-                String address = at.getAddress();
-                if (address != null)
-                    acct = Provisioning.getInstance().get(AccountBy.name, address);
                 if (at.addressesMatch(cur.mAttendee) ||
-                    (acct != null && accountMatchesCalendarUser(acct, cur.mAttendee))) {
+                    (acctMatcher != null && acctMatcher.matches(cur.mAttendee.getAddress()))) {
                     if (recurMatches(inv.getRecurId(), cur.mRecurId)) {
                         if (inv.getSeqNo() < cur.getSeq())
                             return false; // previously received reply has later sequence than new reply
@@ -2639,14 +2642,11 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
 
         void modifyPartStat(Account acctOrNull, RecurId recurId, String cnStr, String addressStr, String cutypeStr, String roleStr,
                 String partStatStr, Boolean needsReply, int seqNo, long dtStamp)  throws ServiceException {
+            AccountAddressMatcher acctMatcher = acctOrNull != null ? new AccountAddressMatcher(acctOrNull) : null;
             for (ReplyInfo cur : mReplies) {
-                if ( (cur.mRecurId == null && recurId == null) ||
-                        (cur.mRecurId != null && cur.mRecurId.withinRange(recurId))) {
-                    if (
-                            (acctOrNull != null && (AccountUtil.addressMatchesAccount(acctOrNull, cur.mAttendee.getAddress()))) ||
-                            (acctOrNull == null && cur.mAttendee.addressMatches(addressStr))
-                            )
-                    {
+                if ((cur.mRecurId == null && recurId == null) || (cur.mRecurId != null && cur.mRecurId.withinRange(recurId))) {
+                    if ((acctMatcher != null && (acctMatcher.matches(cur.mAttendee.getAddress()))) ||
+                        (acctMatcher == null && cur.mAttendee.addressMatches(addressStr))) {
                         if (cur.mAttendee.hasCn()) {
                             cnStr = cur.mAttendee.getCn();
                         }
@@ -2709,8 +2709,9 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             boolean isSimple = inv.getRecurrence() == null && !inv.hasRecurId();
             ZAttendee defaultAt = null;
 
+            AccountAddressMatcher acctMatcher = new AccountAddressMatcher(acct);
             for (ReplyInfo cur : mReplies) {
-                if (AccountUtil.addressMatchesAccount(acct, cur.mAttendee.getAddress())) {
+                if (acctMatcher.matches(cur.mAttendee.getAddress())) {
                     // We have a match if reply isn't for a specific instance and either we're asking about
                     // the default instance of a recurring appointment or we're not dealing with a recurring
                     // appointment.
@@ -3741,12 +3742,6 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             }
         }
         return result;
-    }
-
-    public static boolean accountMatchesCalendarUser(Account acct, CalendarUser calUser)
-    throws ServiceException {
-        String address = calUser.getAddress();
-        return AccountUtil.addressMatchesAccount(acct, address);
     }
 
     @Override

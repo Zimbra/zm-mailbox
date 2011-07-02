@@ -69,7 +69,7 @@ import com.zimbra.cs.mailbox.calendar.Util;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZRecur;
-import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 
 public class CalendarUtils {
     /**
@@ -452,8 +452,9 @@ public class CalendarUtils {
                 Account oldAcct = prov.get(AccountBy.name, oldAddr);
                 if (oldAcct != null) {
                     // local user - consider aliases
+                    AccountAddressMatcher acctMatcher = new AccountAddressMatcher(oldAcct);
                     for (ZAttendee newAt : newAttendees) {
-                        if (AccountUtil.addressMatchesAccount(oldAcct, newAt.getAddress())) {
+                        if (acctMatcher.matches(newAt.getAddress())) {
                             matches = true;
                             break;
                         }

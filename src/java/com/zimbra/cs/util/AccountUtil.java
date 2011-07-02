@@ -27,6 +27,7 @@ import javax.mail.internet.MimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.util.EmailUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.localconfig.LC;
@@ -128,19 +129,16 @@ public class AccountUtil {
     }
     
     public static boolean isDirectRecipient(Account acct, String[] otherAccountAddrs, MimeMessage mm, int maxToCheck) throws ServiceException, MessagingException {
-        String canonicalAddress = getCanonicalAddress(acct);
-        String[] accountAliases = acct.getMailAlias();
-        String[] allowedFromAddrs = acct.getMultiAttr(Provisioning.A_zimbraAllowFromAddress);
         Address[] recipients = mm.getAllRecipients();
-        
         if (recipients == null) {
             return false;
         }
 
+        AccountAddressMatcher acctMatcher = new AccountAddressMatcher(acct);
         int numRecipientsToCheck = (maxToCheck <= 0 ? recipients.length : Math.min(recipients.length, maxToCheck));
         for (int i = 0; i < numRecipientsToCheck; i++) {
             String msgAddress = ((InternetAddress) recipients[i]).getAddress();
-            if (addressMatchesAccount(acct, canonicalAddress, accountAliases, allowedFromAddrs, false, msgAddress)) 
+            if (acctMatcher.matches(msgAddress))
                 return true;
             
             if (otherAccountAddrs != null) {
@@ -197,12 +195,7 @@ public class AccountUtil {
      * another account that this account may send as.
      */
     public static boolean addressMatchesAccountOrSendAs(Account acct, String givenAddress) throws ServiceException {
-        if (givenAddress == null)
-            return false;
-        String canonicalAddress = getCanonicalAddress(acct);
-        String[] accountAliases = acct.getMailAlias();
-        String[] allowedFromAddrs = acct.getMultiAttr(Provisioning.A_zimbraAllowFromAddress);
-        return addressMatchesAccount(acct, canonicalAddress, accountAliases, allowedFromAddrs, true, givenAddress);
+        return (new AccountAddressMatcher(acct, true)).matches(givenAddress);
     }
 
     /**
@@ -211,12 +204,7 @@ public class AccountUtil {
      * from this account.
      */
     public static boolean addressMatchesAccount(Account acct, String givenAddress) throws ServiceException {
-        if (givenAddress == null)
-            return false;
-        String canonicalAddress = getCanonicalAddress(acct);
-        String[] accountAliases = acct.getMailAlias();
-        String[] allowedFromAddrs = acct.getMultiAttr(Provisioning.A_zimbraAllowFromAddress);
-        return addressMatchesAccount(acct, canonicalAddress, accountAliases, allowedFromAddrs, false, givenAddress);
+        return (new AccountAddressMatcher(acct)).matches(givenAddress);
     }
     
     /**
@@ -242,67 +230,90 @@ public class AccountUtil {
         return addrs;
     }
 
-    private static boolean addressMatchesAccount(
-            Account account, String canonicalAddress, String[] accountAliases,
-            String[] allowedFromAddrs, boolean includeSendAsAddresses,
-            String givenAddress) {
-        if (givenAddress == null)
-            return false;
+    public static class AccountAddressMatcher {
+        private Set<String> addresses;
 
-        String accountAddress = account.getName();
-        if (givenAddress.equalsIgnoreCase(accountAddress))
-            return true;
-        if (givenAddress.equalsIgnoreCase(canonicalAddress))
-            return true;
-
-        if (accountAliases != null) {
-            for (int j = 0; j < accountAliases.length; j++) {
-                if (givenAddress.equalsIgnoreCase(accountAliases[j]))
-                    return true;
-            }
+        public AccountAddressMatcher(Account account) throws ServiceException {
+            this(account, false);
         }
-        if (allowedFromAddrs != null) {
-            for (int j = 0; j < allowedFromAddrs.length; j++) {
-                if (!includeSendAsAddresses) {
-                    try {
-                        // Don't lookup account if email domain is not internal.  This will avoid unnecessary ldap searches.
-                        String domain = EmailUtil.getValidDomainPart(allowedFromAddrs[j]);
-                        if (domain != null) {
-                            Domain internalDomain = Provisioning.getInstance().getDomain(Key.DomainBy.name, domain, true);
-                            if (internalDomain != null) {
-                                Account allowFromAccount;
-                                if (Provisioning.getInstance().isDistributionList(allowedFromAddrs[j])) {
-                                    // Avoid ldap lookup of DL address as an account.
-                                    allowFromAccount = null;
-                                } else {
-                                    allowFromAccount = Provisioning.getInstance().get(AccountBy.name, allowedFromAddrs[j]);
-                                }
-                                allowFromAccount = Provisioning.getInstance().get(AccountBy.name, allowedFromAddrs[j]);
-                                if (allowFromAccount != null && !account.getId().equalsIgnoreCase(allowFromAccount.getId())) {
-                                    // The allow-from address refers to another account, and therefore it is not a match
-                                    // for this account.
-                                    continue;
+
+        public AccountAddressMatcher(Account account, boolean matchSendAs) throws ServiceException {
+            addresses = new HashSet<String>();
+            String canonAddr = getCanonicalAddress(account);
+            if (!StringUtil.isNullOrEmpty(canonAddr)) {
+                addresses.add(canonAddr.toLowerCase());
+            }
+            String[] aliases = account.getMailAlias();
+            if (aliases != null) {
+                for (String alias : aliases) {
+                    if (!StringUtil.isNullOrEmpty(alias)) {
+                        addresses.add(alias.toLowerCase());
+                    }
+                }
+            }
+            String[] addrs = account.getMultiAttr(Provisioning.A_zimbraAllowFromAddress);
+            if (addrs != null) {
+                for (String addr : addrs) {
+                    if (StringUtil.isNullOrEmpty(addr)) {
+                        continue;
+                    }
+                    if (!matchSendAs) {
+                        // Find addresses that point to a different account.  We want to distinguish between sending
+                        // as another user and sending as an external address controlled/owned by this user.
+                        // This check can be removed when we stop adding sendAs addresses in zimbraAllowFromAddress.
+                        try {
+                            // Don't lookup account if email domain is not internal.  This will avoid unnecessary ldap searches
+                            // that will have returned no match anyway.
+                            String domain = EmailUtil.getValidDomainPart(addr);
+                            if (domain != null) {
+                                Domain internalDomain = Provisioning.getInstance().getDomain(DomainBy.name, domain, true);
+                                if (internalDomain != null) {
+                                    Account allowFromAccount;
+                                    if (Provisioning.getInstance().isDistributionList(addr)) {
+                                        // Avoid ldap search of DL address as an account.  This will have returned no match anyway.
+                                        allowFromAccount = null;
+                                    } else {
+                                        allowFromAccount = Provisioning.getInstance().get(AccountBy.name, addr);
+                                    }
+                                    allowFromAccount = Provisioning.getInstance().get(AccountBy.name, addr);
+                                    if (allowFromAccount != null && !account.getId().equalsIgnoreCase(allowFromAccount.getId())) {
+                                        // The allow-from address refers to another account, and therefore it is not a match
+                                        // for this account.
+                                        continue;
+                                    }
                                 }
                             }
-                        }
-                    } catch (ServiceException e) {}                
+                        } catch (ServiceException e) {}                
+                    }
+                    addresses.add(addr.toLowerCase());
                 }
-                if (givenAddress.equalsIgnoreCase(allowedFromAddrs[j]))
-                    return true;
             }
         }
 
-        try {
-            String addrByDomainAlias = Provisioning.getInstance().getEmailAddrByDomainAlias(givenAddress);
-            if (addrByDomainAlias != null && addrByDomainAlias.equals(accountAddress))
-                return true;
-        } catch (ServiceException e) {
-            ZimbraLog.account.warn("unable to get addr by alias domain" + e);
+        public boolean matches(String address) throws ServiceException {
+            return matches(address, true);
         }
-        
-        return false;
-    }
 
+        private boolean matches(String address, boolean checkDomainAlias) throws ServiceException {
+            if (StringUtil.isNullOrEmpty(address)) {
+                return false;
+            }
+            if (addresses.contains(address.toLowerCase())) {
+                return true;
+            }
+            if (checkDomainAlias) {
+                try {
+                    String addrByDomainAlias = Provisioning.getInstance().getEmailAddrByDomainAlias(address);
+                    if (addrByDomainAlias != null) {
+                        return matches(addrByDomainAlias, false);  // Assume domain aliases are never chained.
+                    }
+                } catch (ServiceException e) {
+                    ZimbraLog.account.warn("unable to get addr by alias domain" + e);
+                }
+            }
+            return false;
+        }
+    }
 
     public static String getSoapUri(Account account) {
         String base = getBaseUri(account);

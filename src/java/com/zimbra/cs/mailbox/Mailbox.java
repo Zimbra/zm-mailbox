@@ -187,6 +187,7 @@ import com.zimbra.cs.upgrade.MailboxUpgrade;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMailbox.Options;
 
@@ -4571,6 +4572,7 @@ public class Mailbox {
 
     private void processICalReplies(OperationContext octxt, ZVCalendar cal)
     throws ServiceException {
+        AccountAddressMatcher acctMatcher = new AccountAddressMatcher(getAccount());
         List<Invite> components = Invite.createFromCalendar(getAccount(), null, cal, false);
         for (Invite inv : components) {
             String orgAddress;
@@ -4581,7 +4583,7 @@ public class Mailbox {
                 ZimbraLog.calendar.warn("No ORGANIZER found in REPLY.  Assuming current mailbox.");
                 orgAddress = getAccount().getName();
             }
-            if (AccountUtil.addressMatchesAccount(getAccount(), orgAddress)) {
+            if (acctMatcher.matches(orgAddress)) {
                 processICalReply(octxt, inv);
             } else {
                 Account orgAccount = inv.getOrganizerAccount();
