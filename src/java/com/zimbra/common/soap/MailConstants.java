@@ -580,6 +580,7 @@ public final class MailConstants {
     public static final String E_INVITE_TEST = "inviteTest";
     public static final String E_CONVERSATION_TEST = "conversationTest";
     public static final String E_FACEBOOK_TEST = "facebookTest";
+    public static final String E_LINKEDIN_TEST = "linkedinTest";
     public static final String E_SOCIALCAST_TEST = "socialcastTest";
     public static final String E_TWITTER_TEST = "twitterTest";
     public static final String E_LIST_TEST = "listTest";
