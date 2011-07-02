@@ -59,7 +59,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
-import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.mime.MimeConstants;
@@ -666,7 +666,8 @@ public class Invite {
             if (org != null) {
                 String orgAddr = org.getAddress();
                 Account account = MailboxManager.getInstance().getMailboxById(mailboxId).getAccount();
-                isOrganizer = AccountUtil.addressMatchesAccount(account, orgAddr);
+                AccountAddressMatcher acctMatcher = new AccountAddressMatcher(account);
+                isOrganizer = acctMatcher.matches(orgAddr);
             } else {
                 // If there are other attendees, it's an Outlook POP/IMAP bug.  If not,
                 // it's a properly formatted single-user event.  See isOrganizer()
@@ -1408,8 +1409,9 @@ public class Invite {
      */
     private boolean thisAcctIsOrganizer(Account acct) throws ServiceException {
         if (hasOrganizer()) {
+            AccountAddressMatcher acctMatcher = new AccountAddressMatcher(acct);
             String addr = getOrganizer().getAddress();
-            boolean isOrg = AccountUtil.addressMatchesAccount(acct, addr);
+            boolean isOrg = acctMatcher.matches(addr);
             if (!isOrg && acct != null) {
                 // bug 41638: Let's also check if address matches zimbraPrefFromAddress.
                 String prefFromAddr = acct.getPrefFromAddress();
@@ -1451,12 +1453,13 @@ public class Invite {
         String identityEmail = identity.getAttr(Provisioning.A_zimbraPrefFromAddress);
         ZAttendee acctMatch = null;
         List<ZAttendee> attendees = getAttendees();
+        AccountAddressMatcher acctMatcher = new AccountAddressMatcher(acct);
         for (ZAttendee at : attendees) {
             String thisAtEmail = at.getAddress();
             // Does this attendee match our identity?
             if (identityEmail != null && identityEmail.equalsIgnoreCase(thisAtEmail))
                 return at;
-            if (acctMatch == null && AccountUtil.addressMatchesAccount(acct, thisAtEmail)) {
+            if (acctMatch == null && acctMatcher.matches(thisAtEmail)) {
                 acctMatch = at;
                 // If we didn't have identity email for some reason, we have our best match.
                 if (identityEmail == null)
@@ -1499,13 +1502,16 @@ public class Invite {
     public ZAttendee getMatchingAttendee(ZAttendee matchAttendee) throws ServiceException {
         // Look up internal account for the attendee.  For internal users we want to match
         // on all email addresses of the account.
-        Account matchAcct = null;
+        AccountAddressMatcher acctMatcher = null;
         String matchAddress = matchAttendee.getAddress();
-        if (matchAddress != null)
-            matchAcct = Provisioning.getInstance().get(AccountBy.name, matchAddress);
+        if (matchAddress != null) {
+            Account matchAcct = Provisioning.getInstance().get(AccountBy.name, matchAddress);
+            if (matchAcct != null) {
+                acctMatcher = new AccountAddressMatcher(matchAcct);
+            }
+        }
         for (ZAttendee at : getAttendees()) {
-            if (matchAttendee.addressesMatch(at) ||
-                (matchAcct != null && CalendarItem.accountMatchesCalendarUser(matchAcct, at))) {
+            if (matchAttendee.addressesMatch(at) || (acctMatcher != null && acctMatcher.matches(at.getAddress()))) {
                 return at;
             }
         }
@@ -1530,7 +1536,7 @@ public class Invite {
         
         boolean modified = false;
         
-        for (ZAttendee replyAt : reply.getAttendees()) {
+        for (ZAttendee replyAt : reply.getAttendees()) {  // should almost always have only one element
             ZAttendee at = getMatchingAttendee(replyAt);
             if (at != null) {
                 // BUG:4911  When an invitee responds they include an ATTENDEE record, but

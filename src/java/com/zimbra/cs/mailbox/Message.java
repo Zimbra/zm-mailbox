@@ -75,6 +75,7 @@ import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 
 public class Message extends MailItem {
 
@@ -555,6 +556,7 @@ public class Message extends MailItem {
             throw ServiceException.INVALID_REQUEST("null ParsedMessage while processing invite in message " + mId, null);
 
         Account acct = getAccount();
+        AccountAddressMatcher acctMatcher = new AccountAddressMatcher(acct);
         OperationContext octxt = getMailbox().getOperationContext();
 
         // Is this invite intended for me?  If not, we don't want to auto-apply it.
@@ -566,7 +568,7 @@ public class Message extends MailItem {
             if (headerVal != null && headerVal.length() > 0) {
                 isForwardedInvite = true;
                 intendedForAddress = headerVal;
-                intendedForMe = AccountUtil.addressMatchesAccount(acct, headerVal);
+                intendedForMe = acctMatcher.matches(headerVal);
                 if (!intendedForMe)
                     mCalendarIntendedFor = headerVal;
             }
@@ -746,7 +748,7 @@ public class Message extends MailItem {
                             cur.clearAttendees();
                             dangerousSender = true;
                         }
-                    } else if (AccountUtil.addressMatchesAccount(acct, fromEmail)) {
+                    } else if (acctMatcher.matches(fromEmail)) {
                         ZimbraLog.calendar.info(
                                 "Got malformed invite without organizer.  Clearing attendees to prevent inadvertent cancels.");
                         cur.clearAttendees();
@@ -875,7 +877,7 @@ public class Message extends MailItem {
                             if (defInv != null && defInv.isOrganizer()) {
                                 ZOrganizer org = cur.getOrganizer();
                                 String orgAddress = org != null ? org.getAddress() : null;
-                                if (AccountUtil.addressMatchesAccount(acct, orgAddress))
+                                if (acctMatcher.matches(orgAddress))
                                     ignore = !acct.getBooleanAttr(
                                             Provisioning.A_zimbraPrefCalendarAllowCancelEmailToSelf, false);
                             }
@@ -1012,7 +1014,7 @@ public class Message extends MailItem {
                             continue;
                         }
                         // Prevent forwarding to self.
-                        if (AccountUtil.addressMatchesAccount(acct, fwd))
+                        if (acctMatcher.matches(fwd))
                             continue;
                         // Don't forward back to the sender.  It's redundant and confusing.
                         Account rcptAcct = Provisioning.getInstance().get(AccountBy.name, fwd);

@@ -61,6 +61,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 
 public class ScheduleOutbox extends Collection {
 	public ScheduleOutbox(DavContext ctxt, Folder f) throws DavException, ServiceException {
@@ -120,16 +121,16 @@ public class ScheduleOutbox extends Collection {
 
         // Keep originator address consistent with the address used in ORGANIZER/ATTENDEE.
         // Apple iCal is very inconsistent about the user's identity when the account has aliases.
-        if (isVEventOrVTodo && originator != null) {
+        if (isVEventOrVTodo && originator != null && ctxt.getAuthAccount() != null) {
+            AccountAddressMatcher acctMatcher = new AccountAddressMatcher(ctxt.getAuthAccount());
             String originatorEmail = stripMailto(originator);
-            Account authAcct = ctxt.getAuthAccount();
-            if (AccountUtil.addressMatchesAccount(authAcct, originatorEmail)) {
+            if (acctMatcher.matches(originatorEmail)) {
                 boolean changed = false;
                 if (isOrganizerMethod) {
                     if (organizer != null) {
                         String organizerEmail = stripMailto(organizer);
                         if (!organizerEmail.equalsIgnoreCase(originatorEmail) &&
-                            AccountUtil.addressMatchesAccount(authAcct, organizerEmail)) {
+                            acctMatcher.matches(organizerEmail)) {
                             originator = organizer;
                             changed = true;
                         }
@@ -139,7 +140,7 @@ public class ScheduleOutbox extends Collection {
                         String atEmail = stripMailto(at);
                         if (originatorEmail.equalsIgnoreCase(atEmail)) {
                             break;
-                        } else if (AccountUtil.addressMatchesAccount(authAcct, atEmail)) {
+                        } else if (acctMatcher.matches(atEmail)) {
                             originator = at;
                             changed = true;
                             break;

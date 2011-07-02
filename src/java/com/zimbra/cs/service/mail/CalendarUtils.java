@@ -55,7 +55,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZRecur;
-import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
 
@@ -460,8 +460,9 @@ public class CalendarUtils {
                 Account oldAcct = prov.get(AccountBy.name, oldAddr);
                 if (oldAcct != null) {
                     // local user - consider aliases
+                    AccountAddressMatcher acctMatcher = new AccountAddressMatcher(oldAcct);
                     for (ZAttendee newAt : newAttendees) {
-                        if (AccountUtil.addressMatchesAccount(oldAcct, newAt.getAddress())) {
+                        if (acctMatcher.matches(newAt.getAddress())) {
                             matches = true;
                             break;
                         }

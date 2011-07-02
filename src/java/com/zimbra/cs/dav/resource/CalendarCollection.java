@@ -67,7 +67,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mailbox.calendar.cache.CtagInfo;
-import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.mime.MimeConstants;
@@ -394,10 +394,11 @@ public class CalendarCollection extends Collection {
                 if (!i.isOrganizer()) {
                     ZAttendee at = i.getMatchingAttendee(account);
                     if (at != null) {
+                        AccountAddressMatcher acctMatcher = new AccountAddressMatcher(account);
                         ReplyInfo newReply = null;
                         for (Iterator<ReplyInfo> replyIter = replies.iterator(); replyIter.hasNext(); ) {
                             ReplyInfo reply = replyIter.next();
-                            if (AccountUtil.addressMatchesAccount(account, reply.getAttendee().getAddress())) {
+                            if (acctMatcher.matches(reply.getAttendee().getAddress())) {
                                 RecurId ridR = reply.getRecurId(), ridI = i.getRecurId();
                                 if ((ridR == null && ridI == null) || (ridR != null && ridR.equals(ridI))) {  // matching RECURRENCE-ID
                                     // No need to compare SEQUENCE and DTSTAMP of existing reply and new invite.
