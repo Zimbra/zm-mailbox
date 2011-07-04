@@ -148,14 +148,12 @@
         <Call name="addRewriteRule"><Arg>/Microsoft-Server-ActiveSync/*</Arg><Arg>/service/extension/zimbrasync</Arg></Call>
         <Call name="addRewriteRule"><Arg>/principals/*</Arg><Arg>/service/dav/principals</Arg></Call>
         <Call name="addRewriteRule"><Arg>/dav/*</Arg><Arg>/service/dav/home</Arg></Call>
-        <Call name="addRewriteRule"><Arg>/.well-known/*</Arg><Arg>/service/.well-known</Arg></Call>
         <Call name="addRewriteRule"><Arg>/home/*</Arg><Arg>/service/home/</Arg></Call>
         <Call name="addRewriteRule"><Arg>/user/*</Arg><Arg>/service/user/</Arg></Call>
         <Call name="addRewriteRule"><Arg>/certauth/*</Arg><Arg>/service/certauth</Arg></Call> 
         <Call name="addRewriteRule"><Arg>/spnegoauth/*</Arg><Arg>/service/spnego</Arg></Call> 
         <Call name="addRewriteRule"><Arg>%%zimbraMailURL%%/home/*</Arg><Arg>/service/home</Arg></Call>
         <Call name="addRewriteRule"><Arg>%%zimbraMailURL%%/user/*</Arg><Arg>/service/user</Arg></Call>
-        <Call name="addRewriteRule"><Arg>/profile/*</Arg><Arg>/service/profile</Arg></Call>
         <!-- stop if we've hit the proper webapps -->
         <Call name="addRewriteRule"><Arg>/service/*</Arg><Arg></Arg></Call>
         <Call name="addRewriteRule"><Arg>/spnego/*</Arg><Arg></Arg></Call>
