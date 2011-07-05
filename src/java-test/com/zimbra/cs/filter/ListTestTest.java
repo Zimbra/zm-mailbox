@@ -68,14 +68,6 @@ public final class ListTestTest {
         Assert.assertEquals(1, ids.size());
         Message msg = mbox.getMessageById(null, ids.get(0).getId());
         Assert.assertEquals("list", msg.getTagList().get(0).getName());
-
-        // To/CC does not contain me
-        ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
-                new ParsedMessage("From: sender@zimbra.com\nTo:list@zimbra.com\nSubject: test".getBytes(), false),
-                0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
-        Assert.assertEquals(1, ids.size());
-        msg = mbox.getMessageById(null, ids.get(0).getId());
-        Assert.assertEquals("list", msg.getTagList().get(0).getName());
     }
 
 }
