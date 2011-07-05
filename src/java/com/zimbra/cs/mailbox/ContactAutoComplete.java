@@ -254,19 +254,21 @@ public class ContactAutoComplete {
     private ZimbraSoapContext mZsc;
     private Account mAuthedAcct;
     private Account mRequestedAcct;
-
+    private OperationContext octxt;
+    
 
     private static final String[] DEFAULT_EMAIL_KEYS = {
         ContactConstants.A_email, ContactConstants.A_email2, ContactConstants.A_email3
     };
 
 
-    public ContactAutoComplete(Account acct) {
-        this (acct, null);
+    public ContactAutoComplete(Account acct, OperationContext octxt) {
+        this (acct, null, octxt);
     }
 
-    public ContactAutoComplete(Account acct, ZimbraSoapContext zsc) {
+    public ContactAutoComplete(Account acct, ZimbraSoapContext zsc, OperationContext octxt) {
         mZsc = zsc;
+        this.octxt = octxt;
         try {
             mRequestedAcct = acct;
             mIncludeSharedFolders = mRequestedAcct.getBooleanAttr(Provisioning.A_zimbraPrefSharedAddrBookAutoCompleteEnabled, false);
@@ -557,9 +559,6 @@ public class ContactAutoComplete {
         ZimbraQueryResults qres = null;
         try {
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(getRequestedAcctId());
-            OperationContext octxt = (mZsc == null) ?
-                    new OperationContext(mbox) :
-                    new OperationContext(mZsc.getAuthtokenAccountId());
             List<Folder> folders = new ArrayList<Folder>();
             Map<ItemId, Mountpoint> mountpoints = new HashMap<ItemId, Mountpoint>();
             if (folderIDs == null) {
