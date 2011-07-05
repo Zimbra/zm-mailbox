@@ -402,6 +402,7 @@ public class DavElements {
 
 	// errors
 	public static final QName E_CANNOT_MODIFY_PROTECTED_PROPERTY = QName.get("cannot-modify-protected-property", WEBDAV_NS);
+	public static final QName E_PROPFIND_FINITE_DEPTH = QName.get("propfind-finite-depth", WEBDAV_NS);
 	
 	public static class CardDav {
         public static final QName E_ADDRESS_DATA = QName.get(P_ADDRESS_DATA, CARDDAV_NS);
