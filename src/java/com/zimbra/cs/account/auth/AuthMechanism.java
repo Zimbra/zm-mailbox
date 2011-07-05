@@ -43,7 +43,7 @@ public abstract class AuthMechanism {
         mAuthMech = authMech;
     }
     
-    public static AuthMechanism makeInstance(Account acct) throws ServiceException {
+    public static AuthMechanism newInstance(Account acct) throws ServiceException {
         String authMech = Provisioning.AM_ZIMBRA;
         
         Provisioning prov = Provisioning.getInstance();

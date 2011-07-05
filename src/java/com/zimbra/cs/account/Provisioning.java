@@ -116,19 +116,18 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * use the {principal-name} instead of {user-part}@{kerberos5-realm-of-the-domain}
      */
     public static final String FP_PREFIX_KERBEROS5 = "kerberos5:";
-
+    
     /**
      * Used to store Active Directory account name for the user for free/busy
      * replication from Zimbra to Exchange.
      */
     public static final String FP_PREFIX_AD = "ad:";
-    
+
     /**
      * Foreign principal format for two-way SSL authentication
      */
     public static final String FP_PREFIX_CERT = "cert %s:%s";
     
-
     /**
      * the account is active, and allows logins, etc.
      */
@@ -385,6 +384,11 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public Domain getDomain(Alias alias) throws ServiceException {
         String dname = alias.getDomainName();
         return dname == null ? null : getDomain(Key.DomainBy.name, dname, false);
+    }
+    
+    public Domain getDefaultDomain() throws ServiceException {
+        String dname = getConfig().getDefaultDomainName();
+        return dname == null ? null : getDomain(Key.DomainBy.name, dname, true);
     }
 
 
@@ -660,6 +664,66 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @throws ServiceException if the key is malformed
      */
     public abstract Account get(AccountBy keyType, String key) throws ServiceException;
+    
+    /**
+     * Auto provisioning account in LAZY mode.
+     * 
+     * Auto create account on login if account auto provision are enabled on the domain,
+     * and if the principal can be or had been authenticated.
+     * 
+     * returns instance of the auto-provisioned account if the account is successfully created.
+     * returns null otherwise.
+     * 
+     * 
+     * @param loginName the login name (the name presented to the autoenticator) identifying the user
+     * @param loginPassword password if provided
+     * @param authMech auth mechanism via which the principal was successfully authenticated to zimbra
+     *                 null if the principal had not been authenticated
+     * @param domain
+     * @return an account instance if the account is successfully created
+     * @throws ServiceException
+     */
+    public Account autoProvAccount(Domain domain, String loginName, String loginPassword, 
+            AutoProvAuthMech authMech) throws ServiceException {
+        throw new UnsupportedOperationException();
+    }
+    
+    public static enum AutoProvPrincipalBy {
+        dn,    // DN in external LDAP source
+        name;  // name to be applied to the auto provision search or bind DN template configured on the domain
+        
+        static public AutoProvPrincipalBy fromString(String str) throws ServiceException {
+            try {
+                return AutoProvPrincipalBy.valueOf(str);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.INVALID_REQUEST("Invalid AutoProvPrincipalBy: " + str, null);
+            }
+        }
+    };
+    
+    /**
+     * Auto provisioning account in MANUAL mode.
+     * 
+     * @param domain
+     * @param by
+     * @param principal
+     * @return an account instance if the account is successfully created
+     * @throws ServiceException
+     */
+    public Account autoProvAccount(Domain domain, AutoProvPrincipalBy by, String principal) 
+    throws ServiceException {
+        throw new UnsupportedOperationException();
+    }
+    
+    public static interface DirectoryEntryVisitor {
+        void visit(String dn, Map<String, Object> attrs);
+    };
+    
+    public void searchAutoProvDirectory(Domain domain, String filter, String name, 
+            String[] returnAttrs, int maxResults, DirectoryEntryVisitor visitor) 
+    throws ServiceException {
+        throw new UnsupportedOperationException();
+    }
 
     public Account getAccountByName(String name) throws ServiceException { return get(AccountBy.name, name); }
     public Account getAccountById(String id) throws ServiceException { return get(AccountBy.id, id); }
@@ -850,9 +914,18 @@ public abstract class Provisioning extends ZAttrProvisioning {
             preAuthAccount(acct, accountName, accountBy, timestamp, expires, preAuth, authCtxt);
     }
 
-    public abstract void preAuthAccount(Account acct, String accountName, String accountBy, long timestamp, long expires, String preAuth, Map<String, Object> authCtxt) throws ServiceException;
+    public abstract void preAuthAccount(Account acct, String accountName, String accountBy, 
+            long timestamp, long expires, String preAuth, Map<String, Object> authCtxt) 
+    throws ServiceException;
+    
+    public void preAuthAccount(Domain domain, String accountName, String accountBy, 
+            long timestamp, long expires, String preAuth, Map<String, Object> authCtxt) 
+    throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
 
-    public abstract void ssoAuthAccount(Account acct, AuthContext.Protocol proto, Map<String, Object> authCtxt) throws ServiceException;
+    public abstract void ssoAuthAccount(Account acct, AuthContext.Protocol proto, Map<String, Object> authCtxt) 
+    throws ServiceException;
     
     public abstract void changePassword(Account acct, String currentPassword, String newPassword) throws ServiceException;
 

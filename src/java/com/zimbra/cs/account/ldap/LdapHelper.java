@@ -145,7 +145,7 @@ public abstract class LdapHelper {
         if (initZlc == null) {
             throw ServiceException.FAILURE("internal error", null);
         }
-        return getAttributes(dn, null, null);
+        return getAttributes(dn, initZlc, null);
     }
     
     public ZAttributes getAttributes(String dn) 

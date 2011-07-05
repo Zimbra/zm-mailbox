@@ -69,7 +69,7 @@ class UBIDLdapException {
         ResultCode rc = e.getResultCode();
         
         // the LdapException instance to return
-        LdapException ldapException = LdapException.LDAP_ERROR(message, e);
+        LdapException ldapException = mapToLdapException(message, e);
         
         if (cause instanceof IOException) {
             // Unboundid hides the original IOException and throws a 

@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpMethod;
@@ -31,12 +30,10 @@ import com.zimbra.cs.account.PreAuthKey;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.ldap.LdapConstants;
 
 import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
 public class TestPreAuthServlet extends TestCase {
 
@@ -50,7 +47,7 @@ public class TestPreAuthServlet extends TestCase {
         return preAuthKey;
     }
     
-    String genPreAuthUrl(String preAuthKey, String user, boolean admin, boolean shouldFail) throws Exception {
+    static String genPreAuthUrl(String preAuthKey, String user, boolean admin, boolean shouldFail) throws Exception {
         
         HashMap<String,String> params = new HashMap<String,String>();
         String acctName = TestUtil.getAddress(user);

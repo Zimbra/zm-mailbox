@@ -3771,7 +3771,7 @@ public class LegacyLdapProvisioning extends LdapProv {
     private void authAccount(Account acct, String password, boolean checkPasswordPolicy, Map<String, Object> authCtxt) throws ServiceException {
         checkAccountStatus(acct, authCtxt);
 
-        AuthMechanism authMech = AuthMechanism.makeInstance(acct);
+        AuthMechanism authMech = AuthMechanism.newInstance(acct);
         verifyPassword(acct, password, authMech, authCtxt);
 
         // true:  authenticating
@@ -4019,10 +4019,25 @@ public class LegacyLdapProvisioning extends LdapProv {
             return Check.toResult(e, "");
         }
     }
-
+    
     @Override
     public void externalLdapAuth(Domain d, String authMech, Account acct, String password, 
             Map<String, Object> authCtxt) throws ServiceException {
+        externalLdapAuth(d, authMech, acct, null, password, authCtxt);
+    }
+    
+    @Override
+    public void externalLdapAuth(Domain d, String authMech, String principal, String password, 
+            Map<String, Object> authCtxt) throws ServiceException {
+        externalLdapAuth(d, authMech, null, principal, password, authCtxt);
+    }
+    
+    void externalLdapAuth(Domain d, String authMech, Account acct, String principal, 
+            String password, Map<String, Object> authCtxt) throws ServiceException {
+        // exactly one of acct or principal is not null
+        // when acct is null, we are from the auto provisioning path
+        assert((acct == null) != (principal == null));
+        
         String url[] = d.getMultiAttr(Provisioning.A_zimbraAuthLdapURL);
 
         if (url == null || url.length == 0) {
@@ -4035,21 +4050,27 @@ public class LegacyLdapProvisioning extends LdapProv {
 
         try {
             // try explicit externalDn first
-            String externalDn = acct.getAttr(Provisioning.A_zimbraAuthLdapExternalDn);
-
-            if (externalDn != null) {
-                if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with explicit dn of "+externalDn);
-                ldapAuthenticate(url, requireStartTLS, externalDn, password);
-                return;
+            if (acct != null) {
+                String externalDn = acct.getAttr(Provisioning.A_zimbraAuthLdapExternalDn);
+                if (externalDn != null) {
+                    if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with explicit dn of "+externalDn);
+                    ldapAuthenticate(url, requireStartTLS, externalDn, password);
+                    return;
+                }
+                
+                // principal must be null, user account's name for principal
+                principal = acct.getName();
             }
-
+            
+            // principal must not be null by now
+            
             String searchFilter = d.getAttr(Provisioning.A_zimbraAuthLdapSearchFilter);
             if (searchFilter != null && !AM_AD.equals(authMech)) {
                 String searchPassword = d.getAttr(Provisioning.A_zimbraAuthLdapSearchBindPassword);
                 String searchDn = d.getAttr(Provisioning.A_zimbraAuthLdapSearchBindDn);
                 String searchBase = d.getAttr(Provisioning.A_zimbraAuthLdapSearchBase);
                 if (searchBase == null) searchBase = "";
-                searchFilter = LdapUtilCommon.computeAuthDn(acct.getName(), searchFilter);
+                searchFilter = LdapUtilCommon.computeAuthDn(principal, searchFilter);
                 if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with search filter of "+searchFilter);
                 ldapAuthenticate(url, requireStartTLS, password, searchBase, searchFilter, searchDn, searchPassword);
                 return;
@@ -4057,16 +4078,16 @@ public class LegacyLdapProvisioning extends LdapProv {
 
             String bindDn = d.getAttr(Provisioning.A_zimbraAuthLdapBindDn);
             if (bindDn != null) {
-                String dn = LdapUtilCommon.computeAuthDn(acct.getName(), bindDn);
+                String dn = LdapUtilCommon.computeAuthDn(principal, bindDn);
                 if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with bind dn template of "+dn);
                 ldapAuthenticate(url, requireStartTLS, dn, password);
                 return;
             }
 
         } catch (AuthenticationException e) {
-            throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), AuthMechanism.namePassedIn(authCtxt), "external LDAP auth failed, "+e.getMessage(), e);
+            throw AuthFailedServiceException.AUTH_FAILED(principal, AuthMechanism.namePassedIn(authCtxt), "external LDAP auth failed, "+e.getMessage(), e);
         } catch (AuthenticationNotSupportedException e) {
-            throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), AuthMechanism.namePassedIn(authCtxt), "external LDAP auth failed, "+e.getMessage(), e);
+            throw AuthFailedServiceException.AUTH_FAILED(principal, AuthMechanism.namePassedIn(authCtxt), "external LDAP auth failed, "+e.getMessage(), e);
         } catch (NamingException e) {
             throw ServiceException.FAILURE(e.getMessage(), e);
         } catch (IOException e) {

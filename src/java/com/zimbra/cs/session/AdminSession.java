@@ -79,14 +79,11 @@ public class AdminSession extends Session {
         return mSearchParams.mResult;
     }
 
-    public List searchCalendarResources(
-            Domain d, EntrySearchFilter filter, String[] attrs, String sortBy,
-            boolean sortAscending, int offset, NamedEntry.CheckRight rightChecker)
+    public List searchCalendarResources(Domain d, EntrySearchFilter filter, String[] attrs, 
+            String sortBy, boolean sortAscending, int offset, NamedEntry.CheckRight rightChecker)
     throws ServiceException {
         String query = LdapEntrySearchFilter.toLdapCalendarResourcesFilter(filter);
-        return searchAccounts(
-                d, query, attrs, sortBy, sortAscending,
-                Provisioning.SA_CALENDAR_RESOURCE_FLAG,
-                offset, 0, rightChecker);
+        return searchAccounts(d, query, attrs, sortBy, sortAscending,
+                Provisioning.SA_CALENDAR_RESOURCE_FLAG, offset, 0, rightChecker);
     }
 }

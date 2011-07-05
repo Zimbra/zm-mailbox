@@ -5774,4 +5774,96 @@ TODO: delete them permerntly from here
   <desc>Interval between successive executions of the task that publishes shared item updates to LDAP</desc>
 </attr>
 
+<attr id="1221" name="zimbraAutoProvAuthMech" type="enum" value="LDAP,PREAUTH" cardinality="multi" optionalIn="domain" since="8.0.0">
+  <desc>
+    Auth mechanisms enabled for auto provisioning.  When users authenticate via one of the external auth mechanisms 
+    enabled for auto provisioningconfigured in this attribute, and when the user account does not exist in Zimbra directory, 
+    a Zimbra directory entry and mailbox will be auto created 
+  </desc>
+</attr>
+
+<attr id="1222" name="zimbraAutoProvMode" type="enum" value="EAGER,LAZY,MANUAL" cardinality="multi" optionalIn="domain" since="8.0.0">
+  <desc>
+    Auto provisoninging modes enabled.
+    EAGER: TODO
+    LAZY: auto create the Zimbra account when user first login via one of the external auth mechanisms enabled for 
+          auto provisioning configured in zimbraAutoProvAuthMech
+    MANUAL: TODO
+  </desc>
+</attr>
+
+<attr id="1223" name="zimbraAutoProvUseLdapAuthSettings" type="boolean" cardinality="single" optionalIn="domain" since="8.0.0">
+  <desc>
+    Whether to use external LDAP auth setting for auto provisioning.  Honored only when user authenticated to Zimbra 
+    by external LDAP auth.  If honored, all zimbraAutoProv*** setting are ignored, and setting for external LDAP 
+    auth will be used for retrieving attributes from the external LDAP server.
+  </desc>
+</attr>
+
+<attr id="1224" name="zimbraAutoProvLdapURL" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
+  <desc>LDAP URL of the external LDAP server for account auto provisioning</desc>
+</attr>
+
+<attr id="1225" name="zimbraAutoProvLdapStartTlsEnabled" type="boolean" cardinality="single" optionalIn="domain" since="8.0.0">
+  <desc>whether to use startTLS when accessing the external LDAP server for account auto provisioning</desc>
+</attr>
+
+<attr id="1226" name="zimbraAutoProvLdapAdminBindDn" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
+  <desc>LDAP search bind dn for account auto provisioning</desc>
+</attr>
+
+<attr id="1227" name="zimbraAutoProvLdapAdminBindPassword" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
+  <desc>LDAP search bind password for account auto provisioning</desc>
+</attr>
+
+<attr id="1228" name="zimbraAutoProvLdapSearchBase" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
+  <desc>
+    LDAP search base for account auto provisioning.  
+    Either zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn 
+    has to be set.  If both are set, zimbraAutoProvLdapSearchFilter will take precedence.
+  </desc>
+</attr>
+
+<attr id="1229" name="zimbraAutoProvLdapSearchFilter" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
+  <desc>
+    LDAP search filter template for account auto provisioning.
+    Either zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn 
+    has to be set.  If both are set, zimbraAutoProvLdapSearchFilter will take precedence.
+  </desc>
+</attr>
+
+<attr id="1230" name="zimbraAutoProvLdapBindDn" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
+  <desc>
+    LDAP external DN template for account auto provisioning.
+    Either zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn 
+    has to be set.  If both are set, zimbraAutoProvLdapSearchFilter will take precedence.
+  </desc>
+</attr>
+
+<attr id="1231" name="zimbraAutoProvAccountNameMap" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
+  <desc>
+    Attribute name in the external directory that contains localpart of the account name.
+    If not specified, localpart of teh account name is the principal user used to authenticated to Zimbra.
+  </desc>
+</attr>
+
+<attr id="1232" name="zimbraAutoProvAttrMap" type="string" max="256" cardinality="multi" optionalIn="domain" since="8.0.0">
+  <desc>
+    Attribute map for account auto provisioning.  Values are in the format of {external attribute}={zimbra attribute}.
+    Invalid mapping configuration will cause the account creation to fail.
+    Examples of bad mapping:
+        - invalid external attribute name.
+        - invalid Zimbra attribute name.
+        - external attribute has multiple values but the zimbra attribute is single-valued.
+        - syntax violation.  e.g. Value on the external attribute is a String but the Zimbra attribute is declared an integer.
+  </desc>
+</attr>
+
+<attr id="1233" name="zimbraAutoProvNotificationFromAddress" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
+  <desc>
+    Email address to put in from header for the auto provision email.
+    If not set, Postmaster &lt;postmaster@{RECIPIENT_DOMAIN}&gt; will be used.
+  </desc>
+</attr>
+
 </attrs>

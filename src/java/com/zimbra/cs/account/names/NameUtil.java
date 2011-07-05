@@ -17,6 +17,7 @@ package com.zimbra.cs.account.names;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
+import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
@@ -92,4 +93,40 @@ public class NameUtil {
                     Provisioning.A_zimbraAllowNonLDHCharsInDomain + " is false", null);
     }
     
+    
+    /*
+     * A simple email address parser that splits the address into localpart and domain name
+     */
+    public static class EmailAddress {
+        
+        private String localPart;
+        private String domain;
+        
+        public EmailAddress(String addr) throws ServiceException {
+            this(addr, true);
+        }
+        
+        public EmailAddress(String addr, boolean strict) throws ServiceException {
+            int index = addr.indexOf('@');
+            if (index == -1) {
+                localPart = addr;
+                domain = null;
+            } else {
+                localPart = addr.substring(0, index);
+                domain = addr.substring(index+1);
+            }
+            
+            if (strict && Strings.isNullOrEmpty(domain)) {
+                throw ServiceException.INVALID_REQUEST("must be valid email address: " + addr, null);
+            }
+        }
+        
+        public String getLocalPart() {
+            return localPart;
+        }
+        
+        public String getDomain() {
+            return domain;
+        }
+    }
 }

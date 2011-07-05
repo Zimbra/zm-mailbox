@@ -20,16 +20,21 @@
 package com.zimbra.cs.service;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.ZAttrProvisioning.AutoProvAuthMech;
 import com.zimbra.cs.account.auth.AuthContext;
+import com.zimbra.cs.account.names.NameUtil.EmailAddress;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.soap.SoapEngine;
@@ -135,14 +140,44 @@ public class PreAuthServlet extends ZimbraServlet {
                 String preAuth = getRequiredParam(req, resp, PARAM_PREAUTH);            
                 String account = getRequiredParam(req, resp, PARAM_ACCOUNT);
                 String accountBy = getOptionalParam(req, PARAM_BY, AccountBy.name.name());
+                AccountBy by = AccountBy.fromString(accountBy);
 
                 boolean admin = getOptionalParam(req, PARAM_ADMIN, "0").equals("1") && isAdminRequest(req);
                 long timestamp = Long.parseLong(getRequiredParam(req, resp, PARAM_TIMESTAMP));
                 long expires = Long.parseLong(getRequiredParam(req, resp, PARAM_EXPIRES));
             
                 Account acct = null;
-                acct = prov.get(AccountBy.fromString(accountBy), account, authToken);                            
-            
+                acct = prov.get(by, account, authToken);  
+                
+                Map<String, Object> authCtxt = new HashMap<String, Object>();
+                authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, ZimbraServlet.getOrigIp(req));
+                authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, account);
+                authCtxt.put(AuthContext.AC_USER_AGENT, req.getHeader("User-Agent"));
+                
+                boolean acctAutoProvisioned = false;
+                if (acct == null) {
+                    //
+                    // try auto provision the account
+                    //
+                    if (by == AccountBy.name && !admin) {
+                        try {
+                            EmailAddress email = new EmailAddress(account, false);
+                            String domainName = email.getDomain();
+                            Domain domain = domainName == null ? null : prov.get(Key.DomainBy.name, domainName);
+                            prov.preAuthAccount(domain, account, accountBy, timestamp, expires, preAuth, authCtxt);
+                            acct = prov.autoProvAccount(domain, account, null, AutoProvAuthMech.PREAUTH);
+                            
+                            if (acct != null) {
+                                acctAutoProvisioned = true;
+                            }
+                        } catch (AuthFailedServiceException e) {
+                            ZimbraLog.account.debug("auth failed, unable to auto provisioing acct " + account, e);
+                        } catch (ServiceException e) {
+                            ZimbraLog.account.info("unable to auto provisioing acct " + account, e);
+                        }
+                    }
+                }
+                
                 if (acct == null)
                     throw AuthFailedServiceException.AUTH_FAILED(account, account, "account not found");
 
@@ -159,12 +194,10 @@ public class PreAuthServlet extends ZimbraServlet {
                 
                 if (admin || !needReferral(acct, referMode, isRedirect)) {
                     // do preauth locally
-                    Map<String, Object> authCtxt = new HashMap<String, Object>();
-                    authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, ZimbraServlet.getOrigIp(req));
-                    authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, account);
-                    authCtxt.put(AuthContext.AC_USER_AGENT, req.getHeader("User-Agent"));
-                    prov.preAuthAccount(acct, account, accountBy, timestamp, expires, preAuth, admin, authCtxt);
-                
+                    if (!acctAutoProvisioned) {
+                        prov.preAuthAccount(acct, account, accountBy, timestamp, expires, preAuth, admin, authCtxt);
+                    }
+                    
                     AuthToken at;
     
                     if (admin)

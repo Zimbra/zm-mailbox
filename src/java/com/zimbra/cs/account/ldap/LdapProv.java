@@ -104,6 +104,11 @@ public abstract class LdapProv extends Provisioning {
             String password, Map<String, Object> authCtxt) 
     throws ServiceException;
     
+    
+    public abstract void externalLdapAuth(Domain d, String authMech, String principal, 
+            String password, Map<String, Object> authCtxt) 
+    throws ServiceException;
+    
     /**
      * Authenticate to Zimbra LDAP server with bind DN and password.
      * Used when stored password is not SSHA.

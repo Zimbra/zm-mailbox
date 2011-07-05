@@ -160,7 +160,7 @@ public class LdapException extends ServiceException {
     
     public static class LdapInvalidSearchFilterException extends LdapException {
         private LdapInvalidSearchFilterException(String message, Throwable cause) {
-            super(format("invalid search filter", message), INVALID_NAME, cause);
+            super(format("invalid search filter", message), INVALID_SEARCH_FILTER, cause);
         }
     }
     
@@ -173,7 +173,7 @@ public class LdapException extends ServiceException {
     
     public static class LdapSizeLimitExceededException extends LdapException {
         private LdapSizeLimitExceededException(String message, Throwable cause) {
-            super(format("size limit exceeded", message), INVALID_NAME, cause);
+            super(format("size limit exceeded", message), SIZE_LIMIT_EXCEEDED, cause);
         }
     }
 }

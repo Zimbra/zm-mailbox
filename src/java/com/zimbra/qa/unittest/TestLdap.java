@@ -372,6 +372,7 @@ public class TestLdap {
         junit.run(TestLdapHelper.class);
         junit.run(TestLdapProvAccount.class);
         junit.run(TestLdapProvAlias.class);
+        junit.run(TestLdapProvAutoProvision.class);
         junit.run(TestLdapProvCos.class);
         junit.run(TestLdapProvDataSource.class);
         junit.run(TestLdapProvDistributionList.class);
@@ -443,8 +444,9 @@ public class TestLdap {
     // invoked once per JVM
     private static void initTest(TestConfig testConfig) throws Exception {
         CliUtil.toolSetup();
+        ZimbraLog.account.setLevel(Log.Level.debug);
         // ZimbraLog.ldap.setLevel(Log.Level.debug);
-        ZimbraLog.soap.setLevel(Log.Level.trace);
+        // ZimbraLog.soap.setLevel(Log.Level.trace);
         
         RightManager.getInstance(true);
         TestConfig.useConfig(testConfig);

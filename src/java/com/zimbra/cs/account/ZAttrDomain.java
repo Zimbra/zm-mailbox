@@ -41,7 +41,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20110701-1758 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110705-1132 */
 
     /**
      * RFC2256: descriptive information
@@ -1565,6 +1565,1331 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetAuthMech(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAuthMech, "");
+        return attrs;
+    }
+
+    /**
+     * Attribute name in the external directory that contains localpart of
+     * the account name. If not specified, localpart of teh account name is
+     * the principal user used to authenticated to Zimbra.
+     *
+     * @return zimbraAutoProvAccountNameMap, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1231)
+    public String getAutoProvAccountNameMap() {
+        return getAttr(Provisioning.A_zimbraAutoProvAccountNameMap, null);
+    }
+
+    /**
+     * Attribute name in the external directory that contains localpart of
+     * the account name. If not specified, localpart of teh account name is
+     * the principal user used to authenticated to Zimbra.
+     *
+     * @param zimbraAutoProvAccountNameMap new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1231)
+    public void setAutoProvAccountNameMap(String zimbraAutoProvAccountNameMap) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvAccountNameMap, zimbraAutoProvAccountNameMap);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Attribute name in the external directory that contains localpart of
+     * the account name. If not specified, localpart of teh account name is
+     * the principal user used to authenticated to Zimbra.
+     *
+     * @param zimbraAutoProvAccountNameMap new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1231)
+    public Map<String,Object> setAutoProvAccountNameMap(String zimbraAutoProvAccountNameMap, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvAccountNameMap, zimbraAutoProvAccountNameMap);
+        return attrs;
+    }
+
+    /**
+     * Attribute name in the external directory that contains localpart of
+     * the account name. If not specified, localpart of teh account name is
+     * the principal user used to authenticated to Zimbra.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1231)
+    public void unsetAutoProvAccountNameMap() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvAccountNameMap, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Attribute name in the external directory that contains localpart of
+     * the account name. If not specified, localpart of teh account name is
+     * the principal user used to authenticated to Zimbra.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1231)
+    public Map<String,Object> unsetAutoProvAccountNameMap(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvAccountNameMap, "");
+        return attrs;
+    }
+
+    /**
+     * Attribute map for account auto provisioning. Values are in the format
+     * of {external attribute}={zimbra attribute}. Invalid mapping
+     * configuration will cause the account creation to fail. Examples of bad
+     * mapping: - invalid external attribute name. - invalid Zimbra attribute
+     * name. - external attribute has multiple values but the zimbra
+     * attribute is single-valued. - syntax violation. e.g. Value on the
+     * external attribute is a String but the Zimbra attribute is declared an
+     * integer.
+     *
+     * @return zimbraAutoProvAttrMap, or empty array if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1232)
+    public String[] getAutoProvAttrMap() {
+        return getMultiAttr(Provisioning.A_zimbraAutoProvAttrMap);
+    }
+
+    /**
+     * Attribute map for account auto provisioning. Values are in the format
+     * of {external attribute}={zimbra attribute}. Invalid mapping
+     * configuration will cause the account creation to fail. Examples of bad
+     * mapping: - invalid external attribute name. - invalid Zimbra attribute
+     * name. - external attribute has multiple values but the zimbra
+     * attribute is single-valued. - syntax violation. e.g. Value on the
+     * external attribute is a String but the Zimbra attribute is declared an
+     * integer.
+     *
+     * @param zimbraAutoProvAttrMap new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1232)
+    public void setAutoProvAttrMap(String[] zimbraAutoProvAttrMap) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvAttrMap, zimbraAutoProvAttrMap);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Attribute map for account auto provisioning. Values are in the format
+     * of {external attribute}={zimbra attribute}. Invalid mapping
+     * configuration will cause the account creation to fail. Examples of bad
+     * mapping: - invalid external attribute name. - invalid Zimbra attribute
+     * name. - external attribute has multiple values but the zimbra
+     * attribute is single-valued. - syntax violation. e.g. Value on the
+     * external attribute is a String but the Zimbra attribute is declared an
+     * integer.
+     *
+     * @param zimbraAutoProvAttrMap new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1232)
+    public Map<String,Object> setAutoProvAttrMap(String[] zimbraAutoProvAttrMap, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvAttrMap, zimbraAutoProvAttrMap);
+        return attrs;
+    }
+
+    /**
+     * Attribute map for account auto provisioning. Values are in the format
+     * of {external attribute}={zimbra attribute}. Invalid mapping
+     * configuration will cause the account creation to fail. Examples of bad
+     * mapping: - invalid external attribute name. - invalid Zimbra attribute
+     * name. - external attribute has multiple values but the zimbra
+     * attribute is single-valued. - syntax violation. e.g. Value on the
+     * external attribute is a String but the Zimbra attribute is declared an
+     * integer.
+     *
+     * @param zimbraAutoProvAttrMap new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1232)
+    public void addAutoProvAttrMap(String zimbraAutoProvAttrMap) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraAutoProvAttrMap, zimbraAutoProvAttrMap);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Attribute map for account auto provisioning. Values are in the format
+     * of {external attribute}={zimbra attribute}. Invalid mapping
+     * configuration will cause the account creation to fail. Examples of bad
+     * mapping: - invalid external attribute name. - invalid Zimbra attribute
+     * name. - external attribute has multiple values but the zimbra
+     * attribute is single-valued. - syntax violation. e.g. Value on the
+     * external attribute is a String but the Zimbra attribute is declared an
+     * integer.
+     *
+     * @param zimbraAutoProvAttrMap new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1232)
+    public Map<String,Object> addAutoProvAttrMap(String zimbraAutoProvAttrMap, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraAutoProvAttrMap, zimbraAutoProvAttrMap);
+        return attrs;
+    }
+
+    /**
+     * Attribute map for account auto provisioning. Values are in the format
+     * of {external attribute}={zimbra attribute}. Invalid mapping
+     * configuration will cause the account creation to fail. Examples of bad
+     * mapping: - invalid external attribute name. - invalid Zimbra attribute
+     * name. - external attribute has multiple values but the zimbra
+     * attribute is single-valued. - syntax violation. e.g. Value on the
+     * external attribute is a String but the Zimbra attribute is declared an
+     * integer.
+     *
+     * @param zimbraAutoProvAttrMap existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1232)
+    public void removeAutoProvAttrMap(String zimbraAutoProvAttrMap) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraAutoProvAttrMap, zimbraAutoProvAttrMap);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Attribute map for account auto provisioning. Values are in the format
+     * of {external attribute}={zimbra attribute}. Invalid mapping
+     * configuration will cause the account creation to fail. Examples of bad
+     * mapping: - invalid external attribute name. - invalid Zimbra attribute
+     * name. - external attribute has multiple values but the zimbra
+     * attribute is single-valued. - syntax violation. e.g. Value on the
+     * external attribute is a String but the Zimbra attribute is declared an
+     * integer.
+     *
+     * @param zimbraAutoProvAttrMap existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1232)
+    public Map<String,Object> removeAutoProvAttrMap(String zimbraAutoProvAttrMap, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraAutoProvAttrMap, zimbraAutoProvAttrMap);
+        return attrs;
+    }
+
+    /**
+     * Attribute map for account auto provisioning. Values are in the format
+     * of {external attribute}={zimbra attribute}. Invalid mapping
+     * configuration will cause the account creation to fail. Examples of bad
+     * mapping: - invalid external attribute name. - invalid Zimbra attribute
+     * name. - external attribute has multiple values but the zimbra
+     * attribute is single-valued. - syntax violation. e.g. Value on the
+     * external attribute is a String but the Zimbra attribute is declared an
+     * integer.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1232)
+    public void unsetAutoProvAttrMap() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvAttrMap, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Attribute map for account auto provisioning. Values are in the format
+     * of {external attribute}={zimbra attribute}. Invalid mapping
+     * configuration will cause the account creation to fail. Examples of bad
+     * mapping: - invalid external attribute name. - invalid Zimbra attribute
+     * name. - external attribute has multiple values but the zimbra
+     * attribute is single-valued. - syntax violation. e.g. Value on the
+     * external attribute is a String but the Zimbra attribute is declared an
+     * integer.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1232)
+    public Map<String,Object> unsetAutoProvAttrMap(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvAttrMap, "");
+        return attrs;
+    }
+
+    /**
+     * Auth mechanisms enabled for auto provisioning. When users authenticate
+     * via one of the external auth mechanisms enabled for auto
+     * provisioningconfigured in this attribute, and when the user account
+     * does not exist in Zimbra directory, a Zimbra directory entry and
+     * mailbox will be auto created
+     *
+     * <p>Valid values: [LDAP, PREAUTH]
+     *
+     * @return zimbraAutoProvAuthMech, or null if unset and/or has invalid value
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1221)
+    public ZAttrProvisioning.AutoProvAuthMech getAutoProvAuthMech() {
+        try { String v = getAttr(Provisioning.A_zimbraAutoProvAuthMech); return v == null ? null : ZAttrProvisioning.AutoProvAuthMech.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * Auth mechanisms enabled for auto provisioning. When users authenticate
+     * via one of the external auth mechanisms enabled for auto
+     * provisioningconfigured in this attribute, and when the user account
+     * does not exist in Zimbra directory, a Zimbra directory entry and
+     * mailbox will be auto created
+     *
+     * <p>Valid values: [LDAP, PREAUTH]
+     *
+     * @return zimbraAutoProvAuthMech, or empty array if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1221)
+    public String[] getAutoProvAuthMechAsString() {
+        return getMultiAttr(Provisioning.A_zimbraAutoProvAuthMech);
+    }
+
+    /**
+     * Auth mechanisms enabled for auto provisioning. When users authenticate
+     * via one of the external auth mechanisms enabled for auto
+     * provisioningconfigured in this attribute, and when the user account
+     * does not exist in Zimbra directory, a Zimbra directory entry and
+     * mailbox will be auto created
+     *
+     * <p>Valid values: [LDAP, PREAUTH]
+     *
+     * @param zimbraAutoProvAuthMech new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1221)
+    public void setAutoProvAuthMech(ZAttrProvisioning.AutoProvAuthMech zimbraAutoProvAuthMech) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvAuthMech, zimbraAutoProvAuthMech.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Auth mechanisms enabled for auto provisioning. When users authenticate
+     * via one of the external auth mechanisms enabled for auto
+     * provisioningconfigured in this attribute, and when the user account
+     * does not exist in Zimbra directory, a Zimbra directory entry and
+     * mailbox will be auto created
+     *
+     * <p>Valid values: [LDAP, PREAUTH]
+     *
+     * @param zimbraAutoProvAuthMech new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1221)
+    public Map<String,Object> setAutoProvAuthMech(ZAttrProvisioning.AutoProvAuthMech zimbraAutoProvAuthMech, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvAuthMech, zimbraAutoProvAuthMech.toString());
+        return attrs;
+    }
+
+    /**
+     * Auth mechanisms enabled for auto provisioning. When users authenticate
+     * via one of the external auth mechanisms enabled for auto
+     * provisioningconfigured in this attribute, and when the user account
+     * does not exist in Zimbra directory, a Zimbra directory entry and
+     * mailbox will be auto created
+     *
+     * <p>Valid values: [LDAP, PREAUTH]
+     *
+     * @param zimbraAutoProvAuthMech new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1221)
+    public void setAutoProvAuthMechAsString(String[] zimbraAutoProvAuthMech) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvAuthMech, zimbraAutoProvAuthMech);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Auth mechanisms enabled for auto provisioning. When users authenticate
+     * via one of the external auth mechanisms enabled for auto
+     * provisioningconfigured in this attribute, and when the user account
+     * does not exist in Zimbra directory, a Zimbra directory entry and
+     * mailbox will be auto created
+     *
+     * <p>Valid values: [LDAP, PREAUTH]
+     *
+     * @param zimbraAutoProvAuthMech new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1221)
+    public Map<String,Object> setAutoProvAuthMechAsString(String[] zimbraAutoProvAuthMech, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvAuthMech, zimbraAutoProvAuthMech);
+        return attrs;
+    }
+
+    /**
+     * Auth mechanisms enabled for auto provisioning. When users authenticate
+     * via one of the external auth mechanisms enabled for auto
+     * provisioningconfigured in this attribute, and when the user account
+     * does not exist in Zimbra directory, a Zimbra directory entry and
+     * mailbox will be auto created
+     *
+     * <p>Valid values: [LDAP, PREAUTH]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1221)
+    public void unsetAutoProvAuthMech() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvAuthMech, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Auth mechanisms enabled for auto provisioning. When users authenticate
+     * via one of the external auth mechanisms enabled for auto
+     * provisioningconfigured in this attribute, and when the user account
+     * does not exist in Zimbra directory, a Zimbra directory entry and
+     * mailbox will be auto created
+     *
+     * <p>Valid values: [LDAP, PREAUTH]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1221)
+    public Map<String,Object> unsetAutoProvAuthMech(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvAuthMech, "");
+        return attrs;
+    }
+
+    /**
+     * LDAP search bind dn for account auto provisioning
+     *
+     * @return zimbraAutoProvLdapAdminBindDn, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1226)
+    public String getAutoProvLdapAdminBindDn() {
+        return getAttr(Provisioning.A_zimbraAutoProvLdapAdminBindDn, null);
+    }
+
+    /**
+     * LDAP search bind dn for account auto provisioning
+     *
+     * @param zimbraAutoProvLdapAdminBindDn new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1226)
+    public void setAutoProvLdapAdminBindDn(String zimbraAutoProvLdapAdminBindDn) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvLdapAdminBindDn, zimbraAutoProvLdapAdminBindDn);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * LDAP search bind dn for account auto provisioning
+     *
+     * @param zimbraAutoProvLdapAdminBindDn new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1226)
+    public Map<String,Object> setAutoProvLdapAdminBindDn(String zimbraAutoProvLdapAdminBindDn, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvLdapAdminBindDn, zimbraAutoProvLdapAdminBindDn);
+        return attrs;
+    }
+
+    /**
+     * LDAP search bind dn for account auto provisioning
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1226)
+    public void unsetAutoProvLdapAdminBindDn() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvLdapAdminBindDn, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * LDAP search bind dn for account auto provisioning
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1226)
+    public Map<String,Object> unsetAutoProvLdapAdminBindDn(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvLdapAdminBindDn, "");
+        return attrs;
+    }
+
+    /**
+     * LDAP search bind password for account auto provisioning
+     *
+     * @return zimbraAutoProvLdapAdminBindPassword, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1227)
+    public String getAutoProvLdapAdminBindPassword() {
+        return getAttr(Provisioning.A_zimbraAutoProvLdapAdminBindPassword, null);
+    }
+
+    /**
+     * LDAP search bind password for account auto provisioning
+     *
+     * @param zimbraAutoProvLdapAdminBindPassword new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1227)
+    public void setAutoProvLdapAdminBindPassword(String zimbraAutoProvLdapAdminBindPassword) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvLdapAdminBindPassword, zimbraAutoProvLdapAdminBindPassword);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * LDAP search bind password for account auto provisioning
+     *
+     * @param zimbraAutoProvLdapAdminBindPassword new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1227)
+    public Map<String,Object> setAutoProvLdapAdminBindPassword(String zimbraAutoProvLdapAdminBindPassword, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvLdapAdminBindPassword, zimbraAutoProvLdapAdminBindPassword);
+        return attrs;
+    }
+
+    /**
+     * LDAP search bind password for account auto provisioning
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1227)
+    public void unsetAutoProvLdapAdminBindPassword() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvLdapAdminBindPassword, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * LDAP search bind password for account auto provisioning
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1227)
+    public Map<String,Object> unsetAutoProvLdapAdminBindPassword(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvLdapAdminBindPassword, "");
+        return attrs;
+    }
+
+    /**
+     * LDAP external DN template for account auto provisioning. Either
+     * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
+     * set. If both are set, zimbraAutoProvLdapSearchFilter will take
+     * precedence.
+     *
+     * @return zimbraAutoProvLdapBindDn, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1230)
+    public String getAutoProvLdapBindDn() {
+        return getAttr(Provisioning.A_zimbraAutoProvLdapBindDn, null);
+    }
+
+    /**
+     * LDAP external DN template for account auto provisioning. Either
+     * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
+     * set. If both are set, zimbraAutoProvLdapSearchFilter will take
+     * precedence.
+     *
+     * @param zimbraAutoProvLdapBindDn new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1230)
+    public void setAutoProvLdapBindDn(String zimbraAutoProvLdapBindDn) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvLdapBindDn, zimbraAutoProvLdapBindDn);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * LDAP external DN template for account auto provisioning. Either
+     * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
+     * set. If both are set, zimbraAutoProvLdapSearchFilter will take
+     * precedence.
+     *
+     * @param zimbraAutoProvLdapBindDn new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1230)
+    public Map<String,Object> setAutoProvLdapBindDn(String zimbraAutoProvLdapBindDn, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvLdapBindDn, zimbraAutoProvLdapBindDn);
+        return attrs;
+    }
+
+    /**
+     * LDAP external DN template for account auto provisioning. Either
+     * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
+     * set. If both are set, zimbraAutoProvLdapSearchFilter will take
+     * precedence.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1230)
+    public void unsetAutoProvLdapBindDn() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvLdapBindDn, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * LDAP external DN template for account auto provisioning. Either
+     * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
+     * set. If both are set, zimbraAutoProvLdapSearchFilter will take
+     * precedence.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1230)
+    public Map<String,Object> unsetAutoProvLdapBindDn(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvLdapBindDn, "");
+        return attrs;
+    }
+
+    /**
+     * LDAP search base for account auto provisioning. Either
+     * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
+     * set. If both are set, zimbraAutoProvLdapSearchFilter will take
+     * precedence.
+     *
+     * @return zimbraAutoProvLdapSearchBase, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1228)
+    public String getAutoProvLdapSearchBase() {
+        return getAttr(Provisioning.A_zimbraAutoProvLdapSearchBase, null);
+    }
+
+    /**
+     * LDAP search base for account auto provisioning. Either
+     * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
+     * set. If both are set, zimbraAutoProvLdapSearchFilter will take
+     * precedence.
+     *
+     * @param zimbraAutoProvLdapSearchBase new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1228)
+    public void setAutoProvLdapSearchBase(String zimbraAutoProvLdapSearchBase) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvLdapSearchBase, zimbraAutoProvLdapSearchBase);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * LDAP search base for account auto provisioning. Either
+     * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
+     * set. If both are set, zimbraAutoProvLdapSearchFilter will take
+     * precedence.
+     *
+     * @param zimbraAutoProvLdapSearchBase new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1228)
+    public Map<String,Object> setAutoProvLdapSearchBase(String zimbraAutoProvLdapSearchBase, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvLdapSearchBase, zimbraAutoProvLdapSearchBase);
+        return attrs;
+    }
+
+    /**
+     * LDAP search base for account auto provisioning. Either
+     * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
+     * set. If both are set, zimbraAutoProvLdapSearchFilter will take
+     * precedence.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1228)
+    public void unsetAutoProvLdapSearchBase() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvLdapSearchBase, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * LDAP search base for account auto provisioning. Either
+     * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
+     * set. If both are set, zimbraAutoProvLdapSearchFilter will take
+     * precedence.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1228)
+    public Map<String,Object> unsetAutoProvLdapSearchBase(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvLdapSearchBase, "");
+        return attrs;
+    }
+
+    /**
+     * LDAP search filter template for account auto provisioning. Either
+     * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
+     * set. If both are set, zimbraAutoProvLdapSearchFilter will take
+     * precedence.
+     *
+     * @return zimbraAutoProvLdapSearchFilter, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1229)
+    public String getAutoProvLdapSearchFilter() {
+        return getAttr(Provisioning.A_zimbraAutoProvLdapSearchFilter, null);
+    }
+
+    /**
+     * LDAP search filter template for account auto provisioning. Either
+     * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
+     * set. If both are set, zimbraAutoProvLdapSearchFilter will take
+     * precedence.
+     *
+     * @param zimbraAutoProvLdapSearchFilter new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1229)
+    public void setAutoProvLdapSearchFilter(String zimbraAutoProvLdapSearchFilter) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvLdapSearchFilter, zimbraAutoProvLdapSearchFilter);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * LDAP search filter template for account auto provisioning. Either
+     * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
+     * set. If both are set, zimbraAutoProvLdapSearchFilter will take
+     * precedence.
+     *
+     * @param zimbraAutoProvLdapSearchFilter new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1229)
+    public Map<String,Object> setAutoProvLdapSearchFilter(String zimbraAutoProvLdapSearchFilter, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvLdapSearchFilter, zimbraAutoProvLdapSearchFilter);
+        return attrs;
+    }
+
+    /**
+     * LDAP search filter template for account auto provisioning. Either
+     * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
+     * set. If both are set, zimbraAutoProvLdapSearchFilter will take
+     * precedence.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1229)
+    public void unsetAutoProvLdapSearchFilter() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvLdapSearchFilter, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * LDAP search filter template for account auto provisioning. Either
+     * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
+     * set. If both are set, zimbraAutoProvLdapSearchFilter will take
+     * precedence.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1229)
+    public Map<String,Object> unsetAutoProvLdapSearchFilter(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvLdapSearchFilter, "");
+        return attrs;
+    }
+
+    /**
+     * whether to use startTLS when accessing the external LDAP server for
+     * account auto provisioning
+     *
+     * @return zimbraAutoProvLdapStartTlsEnabled, or false if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1225)
+    public boolean isAutoProvLdapStartTlsEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraAutoProvLdapStartTlsEnabled, false);
+    }
+
+    /**
+     * whether to use startTLS when accessing the external LDAP server for
+     * account auto provisioning
+     *
+     * @param zimbraAutoProvLdapStartTlsEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1225)
+    public void setAutoProvLdapStartTlsEnabled(boolean zimbraAutoProvLdapStartTlsEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvLdapStartTlsEnabled, zimbraAutoProvLdapStartTlsEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to use startTLS when accessing the external LDAP server for
+     * account auto provisioning
+     *
+     * @param zimbraAutoProvLdapStartTlsEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1225)
+    public Map<String,Object> setAutoProvLdapStartTlsEnabled(boolean zimbraAutoProvLdapStartTlsEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvLdapStartTlsEnabled, zimbraAutoProvLdapStartTlsEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether to use startTLS when accessing the external LDAP server for
+     * account auto provisioning
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1225)
+    public void unsetAutoProvLdapStartTlsEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvLdapStartTlsEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to use startTLS when accessing the external LDAP server for
+     * account auto provisioning
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1225)
+    public Map<String,Object> unsetAutoProvLdapStartTlsEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvLdapStartTlsEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * LDAP URL of the external LDAP server for account auto provisioning
+     *
+     * @return zimbraAutoProvLdapURL, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1224)
+    public String getAutoProvLdapURL() {
+        return getAttr(Provisioning.A_zimbraAutoProvLdapURL, null);
+    }
+
+    /**
+     * LDAP URL of the external LDAP server for account auto provisioning
+     *
+     * @param zimbraAutoProvLdapURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1224)
+    public void setAutoProvLdapURL(String zimbraAutoProvLdapURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvLdapURL, zimbraAutoProvLdapURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * LDAP URL of the external LDAP server for account auto provisioning
+     *
+     * @param zimbraAutoProvLdapURL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1224)
+    public Map<String,Object> setAutoProvLdapURL(String zimbraAutoProvLdapURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvLdapURL, zimbraAutoProvLdapURL);
+        return attrs;
+    }
+
+    /**
+     * LDAP URL of the external LDAP server for account auto provisioning
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1224)
+    public void unsetAutoProvLdapURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvLdapURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * LDAP URL of the external LDAP server for account auto provisioning
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1224)
+    public Map<String,Object> unsetAutoProvLdapURL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvLdapURL, "");
+        return attrs;
+    }
+
+    /**
+     * Auto provisoninging modes enabled. EAGER: TODO LAZY: auto create the
+     * Zimbra account when user first login via one of the external auth
+     * mechanisms enabled for auto provisioning configured in
+     * zimbraAutoProvAuthMech MANUAL: TODO
+     *
+     * <p>Valid values: [MANUAL, LAZY, EAGER]
+     *
+     * @return zimbraAutoProvMode, or null if unset and/or has invalid value
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1222)
+    public ZAttrProvisioning.AutoProvMode getAutoProvMode() {
+        try { String v = getAttr(Provisioning.A_zimbraAutoProvMode); return v == null ? null : ZAttrProvisioning.AutoProvMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * Auto provisoninging modes enabled. EAGER: TODO LAZY: auto create the
+     * Zimbra account when user first login via one of the external auth
+     * mechanisms enabled for auto provisioning configured in
+     * zimbraAutoProvAuthMech MANUAL: TODO
+     *
+     * <p>Valid values: [MANUAL, LAZY, EAGER]
+     *
+     * @return zimbraAutoProvMode, or empty array if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1222)
+    public String[] getAutoProvModeAsString() {
+        return getMultiAttr(Provisioning.A_zimbraAutoProvMode);
+    }
+
+    /**
+     * Auto provisoninging modes enabled. EAGER: TODO LAZY: auto create the
+     * Zimbra account when user first login via one of the external auth
+     * mechanisms enabled for auto provisioning configured in
+     * zimbraAutoProvAuthMech MANUAL: TODO
+     *
+     * <p>Valid values: [MANUAL, LAZY, EAGER]
+     *
+     * @param zimbraAutoProvMode new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1222)
+    public void setAutoProvMode(ZAttrProvisioning.AutoProvMode zimbraAutoProvMode) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvMode, zimbraAutoProvMode.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Auto provisoninging modes enabled. EAGER: TODO LAZY: auto create the
+     * Zimbra account when user first login via one of the external auth
+     * mechanisms enabled for auto provisioning configured in
+     * zimbraAutoProvAuthMech MANUAL: TODO
+     *
+     * <p>Valid values: [MANUAL, LAZY, EAGER]
+     *
+     * @param zimbraAutoProvMode new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1222)
+    public Map<String,Object> setAutoProvMode(ZAttrProvisioning.AutoProvMode zimbraAutoProvMode, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvMode, zimbraAutoProvMode.toString());
+        return attrs;
+    }
+
+    /**
+     * Auto provisoninging modes enabled. EAGER: TODO LAZY: auto create the
+     * Zimbra account when user first login via one of the external auth
+     * mechanisms enabled for auto provisioning configured in
+     * zimbraAutoProvAuthMech MANUAL: TODO
+     *
+     * <p>Valid values: [MANUAL, LAZY, EAGER]
+     *
+     * @param zimbraAutoProvMode new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1222)
+    public void setAutoProvModeAsString(String[] zimbraAutoProvMode) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvMode, zimbraAutoProvMode);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Auto provisoninging modes enabled. EAGER: TODO LAZY: auto create the
+     * Zimbra account when user first login via one of the external auth
+     * mechanisms enabled for auto provisioning configured in
+     * zimbraAutoProvAuthMech MANUAL: TODO
+     *
+     * <p>Valid values: [MANUAL, LAZY, EAGER]
+     *
+     * @param zimbraAutoProvMode new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1222)
+    public Map<String,Object> setAutoProvModeAsString(String[] zimbraAutoProvMode, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvMode, zimbraAutoProvMode);
+        return attrs;
+    }
+
+    /**
+     * Auto provisoninging modes enabled. EAGER: TODO LAZY: auto create the
+     * Zimbra account when user first login via one of the external auth
+     * mechanisms enabled for auto provisioning configured in
+     * zimbraAutoProvAuthMech MANUAL: TODO
+     *
+     * <p>Valid values: [MANUAL, LAZY, EAGER]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1222)
+    public void unsetAutoProvMode() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvMode, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Auto provisoninging modes enabled. EAGER: TODO LAZY: auto create the
+     * Zimbra account when user first login via one of the external auth
+     * mechanisms enabled for auto provisioning configured in
+     * zimbraAutoProvAuthMech MANUAL: TODO
+     *
+     * <p>Valid values: [MANUAL, LAZY, EAGER]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1222)
+    public Map<String,Object> unsetAutoProvMode(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvMode, "");
+        return attrs;
+    }
+
+    /**
+     * Email address to put in from header for the auto provision email. If
+     * not set, Postmaster &lt;postmaster@{RECIPIENT_DOMAIN}&gt; will be
+     * used.
+     *
+     * @return zimbraAutoProvNotificationFromAddress, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1233)
+    public String getAutoProvNotificationFromAddress() {
+        return getAttr(Provisioning.A_zimbraAutoProvNotificationFromAddress, null);
+    }
+
+    /**
+     * Email address to put in from header for the auto provision email. If
+     * not set, Postmaster &lt;postmaster@{RECIPIENT_DOMAIN}&gt; will be
+     * used.
+     *
+     * @param zimbraAutoProvNotificationFromAddress new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1233)
+    public void setAutoProvNotificationFromAddress(String zimbraAutoProvNotificationFromAddress) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvNotificationFromAddress, zimbraAutoProvNotificationFromAddress);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Email address to put in from header for the auto provision email. If
+     * not set, Postmaster &lt;postmaster@{RECIPIENT_DOMAIN}&gt; will be
+     * used.
+     *
+     * @param zimbraAutoProvNotificationFromAddress new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1233)
+    public Map<String,Object> setAutoProvNotificationFromAddress(String zimbraAutoProvNotificationFromAddress, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvNotificationFromAddress, zimbraAutoProvNotificationFromAddress);
+        return attrs;
+    }
+
+    /**
+     * Email address to put in from header for the auto provision email. If
+     * not set, Postmaster &lt;postmaster@{RECIPIENT_DOMAIN}&gt; will be
+     * used.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1233)
+    public void unsetAutoProvNotificationFromAddress() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvNotificationFromAddress, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Email address to put in from header for the auto provision email. If
+     * not set, Postmaster &lt;postmaster@{RECIPIENT_DOMAIN}&gt; will be
+     * used.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1233)
+    public Map<String,Object> unsetAutoProvNotificationFromAddress(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvNotificationFromAddress, "");
+        return attrs;
+    }
+
+    /**
+     * Whether to use external LDAP auth setting for auto provisioning.
+     * Honored only when user authenticated to Zimbra by external LDAP auth.
+     * If honored, all zimbraAutoProv*** setting are ignored, and setting for
+     * external LDAP auth will be used for retrieving attributes from the
+     * external LDAP server.
+     *
+     * @return zimbraAutoProvUseLdapAuthSettings, or false if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1223)
+    public boolean isAutoProvUseLdapAuthSettings() {
+        return getBooleanAttr(Provisioning.A_zimbraAutoProvUseLdapAuthSettings, false);
+    }
+
+    /**
+     * Whether to use external LDAP auth setting for auto provisioning.
+     * Honored only when user authenticated to Zimbra by external LDAP auth.
+     * If honored, all zimbraAutoProv*** setting are ignored, and setting for
+     * external LDAP auth will be used for retrieving attributes from the
+     * external LDAP server.
+     *
+     * @param zimbraAutoProvUseLdapAuthSettings new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1223)
+    public void setAutoProvUseLdapAuthSettings(boolean zimbraAutoProvUseLdapAuthSettings) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvUseLdapAuthSettings, zimbraAutoProvUseLdapAuthSettings ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to use external LDAP auth setting for auto provisioning.
+     * Honored only when user authenticated to Zimbra by external LDAP auth.
+     * If honored, all zimbraAutoProv*** setting are ignored, and setting for
+     * external LDAP auth will be used for retrieving attributes from the
+     * external LDAP server.
+     *
+     * @param zimbraAutoProvUseLdapAuthSettings new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1223)
+    public Map<String,Object> setAutoProvUseLdapAuthSettings(boolean zimbraAutoProvUseLdapAuthSettings, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvUseLdapAuthSettings, zimbraAutoProvUseLdapAuthSettings ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to use external LDAP auth setting for auto provisioning.
+     * Honored only when user authenticated to Zimbra by external LDAP auth.
+     * If honored, all zimbraAutoProv*** setting are ignored, and setting for
+     * external LDAP auth will be used for retrieving attributes from the
+     * external LDAP server.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1223)
+    public void unsetAutoProvUseLdapAuthSettings() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvUseLdapAuthSettings, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to use external LDAP auth setting for auto provisioning.
+     * Honored only when user authenticated to Zimbra by external LDAP auth.
+     * If honored, all zimbraAutoProv*** setting are ignored, and setting for
+     * external LDAP auth will be used for retrieving attributes from the
+     * external LDAP server.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1223)
+    public Map<String,Object> unsetAutoProvUseLdapAuthSettings(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvUseLdapAuthSettings, "");
         return attrs;
     }
 

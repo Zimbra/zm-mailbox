@@ -24,16 +24,19 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeFlag;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.names.NameUtil.EmailAddress;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.ZAttrProvisioning.AutoProvAuthMech;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.session.Session;
@@ -77,6 +80,10 @@ public class Auth extends AccountDocumentHandler {
                 throw ServiceException.AUTH_REQUIRED();
             }
         } else {
+            if (!checkPasswordSecurity(context)) {
+                throw ServiceException.INVALID_REQUEST("clear text password is not allowed", null);
+            }
+            
             Element acctEl = request.getElement(AccountConstants.E_ACCOUNT);
             String valuePassedIn = acctEl.getText();
             String value = valuePassedIn;
@@ -97,35 +104,66 @@ public class Auth extends AccountDocumentHandler {
             }
 
             Account acct = prov.get(by, value);
-            if (acct == null)
-                throw AuthFailedServiceException.AUTH_FAILED(value, valuePassedIn, "account not found");
-
-            AccountUtil.addAccountToLogContext(prov, acct.getId(), ZimbraLog.C_NAME, ZimbraLog.C_ID, null);
-            
-            // this could've been done in the very beginning of the method,
-            // we do it here instead - after the account is added to log context 
-            // so the account will show in log context
-            if (!checkPasswordSecurity(context))
-                throw ServiceException.INVALID_REQUEST("clear text password is not allowed", null);
             
             long expires = 0;
-
+            
             Map<String, Object> authCtxt = new HashMap<String, Object>();
             authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, context.get(SoapEngine.ORIG_REQUEST_IP));
             authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, valuePassedIn);
             authCtxt.put(AuthContext.AC_USER_AGENT, zsc.getUserAgent());
             
-            if (password != null) {
-                prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
-            } else if (preAuthEl != null) {
-                long timestamp = preAuthEl.getAttributeLong(AccountConstants.A_TIMESTAMP);
-                expires = preAuthEl.getAttributeLong(AccountConstants.A_EXPIRES, 0);
-                String preAuth = preAuthEl.getTextTrim();
-                prov.preAuthAccount(acct, value, byStr, timestamp, expires, preAuth, authCtxt);
-            } else {
-                throw ServiceException.INVALID_REQUEST("must specify "+AccountConstants.E_PASSWORD, null);
+            boolean acctAutoProvisioned = false;
+            if (acct == null) {
+                //
+                // try auto provision the account
+                //
+                if (by == AccountBy.name) {
+                    try {
+                        EmailAddress email = new EmailAddress(value, false);
+                        String domainName = email.getDomain();
+                        Domain domain = domainName == null ? null : prov.get(Key.DomainBy.name, domainName);
+                        if (password != null) {
+                            acct = prov.autoProvAccount(domain, valuePassedIn, password, null);
+                        } else if (preAuthEl != null) {
+                            long timestamp = preAuthEl.getAttributeLong(AccountConstants.A_TIMESTAMP);
+                            expires = preAuthEl.getAttributeLong(AccountConstants.A_EXPIRES, 0);
+                            String preAuth = preAuthEl.getTextTrim();
+                            prov.preAuthAccount(domain, value, byStr, timestamp, expires, preAuth, authCtxt);
+                            
+                            acct = prov.autoProvAccount(domain, valuePassedIn, null, AutoProvAuthMech.PREAUTH);
+                        }
+                        
+                        if (acct != null) {
+                            acctAutoProvisioned = true;
+                        }
+                    } catch (AuthFailedServiceException e) {
+                        ZimbraLog.account.debug("auth failed, unable to auto provisioing acct " + value, e);
+                    } catch (ServiceException e) {
+                        ZimbraLog.account.info("unable to auto provisioing acct " + value, e);
+                    }
+                }
             }
+            
+            if (acct == null) {
+                throw AuthFailedServiceException.AUTH_FAILED(value, valuePassedIn, "account not found");
+            }
+            
+            AccountUtil.addAccountToLogContext(prov, acct.getId(), ZimbraLog.C_NAME, ZimbraLog.C_ID, null);
 
+            // if account was auto provisioned, we had already authenticated the principal 
+            if (!acctAutoProvisioned) {
+                if (password != null) {
+                    prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
+                } else if (preAuthEl != null) {
+                    long timestamp = preAuthEl.getAttributeLong(AccountConstants.A_TIMESTAMP);
+                    expires = preAuthEl.getAttributeLong(AccountConstants.A_EXPIRES, 0);
+                    String preAuth = preAuthEl.getTextTrim();
+                    prov.preAuthAccount(acct, value, byStr, timestamp, expires, preAuth, authCtxt);
+                } else {
+                    throw ServiceException.INVALID_REQUEST("must specify "+AccountConstants.E_PASSWORD, null);
+                }
+            }
+            
             AuthToken at = expires ==  0 ? AuthProvider.getAuthToken(acct) : AuthProvider.getAuthToken(acct, expires);
             return doResponse(request, at, zsc, context, acct);
         }

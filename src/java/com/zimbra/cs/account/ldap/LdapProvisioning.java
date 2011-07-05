@@ -55,6 +55,8 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.DomainCache.GetFromDomainCacheOption;
 import com.zimbra.cs.account.NamedEntry.Visitor;
+import com.zimbra.cs.account.Provisioning.AutoProvPrincipalBy;
+import com.zimbra.cs.account.Provisioning.DirectoryEntryVisitor;
 import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
@@ -793,6 +795,29 @@ public class LdapProvisioning extends LdapProv {
             throw AccountServiceException.NO_SUCH_COS(key);
         else
             return c;
+    }
+    
+    @Override
+    public Account autoProvAccount(Domain domain, String loginName, 
+            String loginPassword, AutoProvAuthMech authMech) 
+    throws ServiceException {
+        AutoProvision autoPorv = new AutoProvisionLazy(this, domain, loginName, loginPassword, authMech);
+        return autoPorv.handle();
+    }
+    
+    @Override
+    public Account autoProvAccount(Domain domain, AutoProvPrincipalBy by, String principal) 
+    throws ServiceException {
+        AutoProvision autoProv = new AutoProvisionManual(this, domain, by, principal);
+        return autoProv.handle();
+    }
+    
+    @Override
+    public void searchAutoProvDirectory(Domain domain, String filter, String name, 
+            String[] returnAttrs, int maxResults, DirectoryEntryVisitor visitor) 
+    throws ServiceException {
+        AutoProvision.searchAutoProvDirectory(this, domain, filter, name, 
+                returnAttrs, maxResults, visitor);
     }
 
     @Override
@@ -3523,18 +3548,37 @@ public class LdapProvisioning extends LdapProv {
             throw e;
         }
     }
-
+    
+    @Override
+    public void preAuthAccount(Domain domain, String acctValue, String acctBy, 
+            long timestamp, long expires, String preAuth, Map<String, Object> authCtxt) 
+    throws ServiceException {
+        verifyPreAuth(domain, null, acctValue, acctBy, timestamp, expires, preAuth, false, authCtxt);
+        ZimbraLog.security.info(ZimbraLog.encodeAttrs(
+                new String[] {"cmd", "PreAuth","account", acctValue}));
+    }
 
     private void verifyPreAuth(Account acct, String acctValue, String acctBy, long timestamp, long expires,
             String preAuth, boolean admin, Map<String, Object> authCtxt) throws ServiceException {
-
         checkAccountStatus(acct, authCtxt);
-        if (preAuth == null || preAuth.length() == 0)
+        verifyPreAuth(Provisioning.getInstance().getDomain(acct), acct.getName(), 
+                acctValue, acctBy, timestamp, expires, preAuth, admin,authCtxt);
+    }
+
+    void verifyPreAuth(Domain domain, String acctNameForLogging, 
+            String acctValue, String acctBy, long timestamp, long expires,
+            String preAuth, boolean admin, Map<String, Object> authCtxt) 
+    throws ServiceException {
+
+         if (preAuth == null || preAuth.length() == 0)
             throw ServiceException.INVALID_REQUEST("preAuth must not be empty", null);
+         
+         if (acctNameForLogging == null) {
+             acctNameForLogging = acctValue;
+         }
 
         // see if domain is configured for preauth
-        Provisioning prov = Provisioning.getInstance();
-        String domainPreAuthKey = prov.getDomain(acct).getAttr(Provisioning.A_zimbraPreAuthKey, null);
+        String domainPreAuthKey = domain.getAttr(Provisioning.A_zimbraPreAuthKey, null);
         if (domainPreAuthKey == null)
             throw ServiceException.INVALID_REQUEST("domain is not configured for preauth", null);
 
@@ -3544,7 +3588,7 @@ public class LdapProvisioning extends LdapProv {
         if (diff > TIMESTAMP_WINDOW) {
             Date nowDate = new Date(now);
             Date preauthDate = new Date(timestamp);
-            throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), AuthMechanism.namePassedIn(authCtxt),
+            throw AuthFailedServiceException.AUTH_FAILED(acctNameForLogging, AuthMechanism.namePassedIn(authCtxt),
                 "preauth timestamp is too old, server time: " + nowDate.toString() + ", preauth timestamp: " + preauthDate.toString());
         }
 
@@ -3557,7 +3601,7 @@ public class LdapProvisioning extends LdapProv {
         params.put("expires", expires+"");
         String computedPreAuth = PreAuthKey.computePreAuth(params, domainPreAuthKey);
         if (!computedPreAuth.equalsIgnoreCase(preAuth))
-            throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), AuthMechanism.namePassedIn(authCtxt), "preauth mismatch");
+            throw AuthFailedServiceException.AUTH_FAILED(acctNameForLogging, AuthMechanism.namePassedIn(authCtxt), "preauth mismatch");
 
     }
 
@@ -3617,7 +3661,7 @@ public class LdapProvisioning extends LdapProv {
     private void authAccount(Account acct, String password, boolean checkPasswordPolicy, Map<String, Object> authCtxt) throws ServiceException {
         checkAccountStatus(acct, authCtxt);
 
-        AuthMechanism authMech = AuthMechanism.makeInstance(acct);
+        AuthMechanism authMech = AuthMechanism.newInstance(acct);
         verifyPassword(acct, password, authMech, authCtxt);
 
         // true:  authenticating
@@ -3874,9 +3918,23 @@ public class LdapProvisioning extends LdapProv {
     }
 
     @Override
-    @TODOEXCEPTIONMAPPING
     public void externalLdapAuth(Domain d, String authMech, Account acct, String password, 
             Map<String, Object> authCtxt) throws ServiceException {
+        externalLdapAuth(d, authMech, acct, null, password, authCtxt);
+    }
+    
+    @Override
+    public void externalLdapAuth(Domain d, String authMech, String principal, String password, 
+            Map<String, Object> authCtxt) throws ServiceException {
+        externalLdapAuth(d, authMech, null, principal, password, authCtxt);
+    }
+    
+    void externalLdapAuth(Domain d, String authMech, Account acct, String principal, 
+            String password, Map<String, Object> authCtxt) throws ServiceException {
+        // exactly one of acct or principal is not null
+        // when acct is null, we are from the auto provisioning path
+        assert((acct == null) != (principal == null));
+        
         String url[] = d.getMultiAttr(Provisioning.A_zimbraAuthLdapURL);
 
         if (url == null || url.length == 0) {
@@ -3889,30 +3947,38 @@ public class LdapProvisioning extends LdapProv {
 
         try {
             // try explicit externalDn first
-            String externalDn = acct.getAttr(Provisioning.A_zimbraAuthLdapExternalDn);
-
-            if (externalDn != null) {
-                if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with explicit dn of "+externalDn);
-                ldapAuthenticate(url, requireStartTLS, externalDn, password);
-                return;
+            if (acct != null) {
+                String externalDn = acct.getAttr(Provisioning.A_zimbraAuthLdapExternalDn);
+                if (externalDn != null) {
+                    ZimbraLog.account.debug("auth with explicit dn of "+externalDn);
+                    ldapAuthenticate(url, requireStartTLS, externalDn, password);
+                    return;
+                }
+                
+                // principal must be null, user account's name for principal
+                principal = acct.getName();
             }
-
+            
+            // principal must not be null by now
+                        
             String searchFilter = d.getAttr(Provisioning.A_zimbraAuthLdapSearchFilter);
             if (searchFilter != null && !AM_AD.equals(authMech)) {
                 String searchPassword = d.getAttr(Provisioning.A_zimbraAuthLdapSearchBindPassword);
                 String searchDn = d.getAttr(Provisioning.A_zimbraAuthLdapSearchBindDn);
                 String searchBase = d.getAttr(Provisioning.A_zimbraAuthLdapSearchBase);
-                if (searchBase == null) searchBase = "";
-                searchFilter = LdapUtilCommon.computeAuthDn(acct.getName(), searchFilter);
-                if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with search filter of "+searchFilter);
+                if (searchBase == null) {
+                    searchBase = "";
+                }
+                searchFilter = LdapUtilCommon.computeAuthDn(principal, searchFilter);
+                ZimbraLog.account.debug("auth with search filter of "+searchFilter);
                 ldapAuthenticate(url, requireStartTLS, password, searchBase, searchFilter, searchDn, searchPassword);
                 return;
             }
 
             String bindDn = d.getAttr(Provisioning.A_zimbraAuthLdapBindDn);
             if (bindDn != null) {
-                String dn = LdapUtilCommon.computeAuthDn(acct.getName(), bindDn);
-                if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with bind dn template of "+dn);
+                String dn = LdapUtilCommon.computeAuthDn(principal, bindDn);
+                ZimbraLog.account.debug("auth with bind dn template of "+dn);
                 ldapAuthenticate(url, requireStartTLS, dn, password);
                 return;
             }

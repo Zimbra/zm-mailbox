@@ -1,0 +1,20 @@
+TODO 
+
+
+1. Domain level LDAP attributes
+
+2. Name Mapping
+
+3. Attribute Mapping
+
+4. Auto Provisioning Modes
+   - EAGER
+   - LAZY
+   - MANUAL
+   
+
+5. Notification Emails
+
+6. Use cases
+
+7. Configuration Examples

@@ -36,6 +36,7 @@ public class AccountServiceException extends ServiceException {
     public static final String INVALID_PASSWORD   = "account.INVALID_PASSWORD";
     public static final String INVALID_ATTR_NAME  = "account.INVALID_ATTR_NAME";
     public static final String INVALID_ATTR_VALUE = "account.INVALID_ATTR_VALUE";
+    public static final String INVALID_CONFIG     = "account.INVALID_CONFIG";
     public static final String MULTIPLE_ACCOUNTS_MATCHED  = "account.MULTIPLE_ACCOUNTS_MATCHED";
     public static final String MULTIPLE_DOMAINS_MATCHED  = "account.MULTIPLE_DOMAINS_MATCHED";
     public static final String MULTIPLE_ENTRIES_MATCHED  = "account.MULTIPLE_ENTRIES_MATCHED";
@@ -186,6 +187,10 @@ public class AccountServiceException extends ServiceException {
         return new AccountServiceException(msg, INVALID_ATTR_VALUE, SENDERS_FAULT, t);
     }
 
+    public static AccountServiceException INVALID_CONFIG(String msg, Throwable t) {
+        return new AccountServiceException(msg, INVALID_CONFIG, SENDERS_FAULT, t);
+    }
+    
     public static AccountServiceException NO_SMIME_CONFIG(String desc) {
         return new AccountServiceException("no SMIME config: "+ desc, NO_SMIME_CONFIG, SENDERS_FAULT, null);
     }

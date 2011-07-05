@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20110701-1758 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110705-1132 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -84,6 +84,40 @@ public class ZAttrProvisioning {
         }
         public boolean isAcl() { return this == acl;}
         public boolean isGlobal() { return this == global;}
+    }
+
+    public static enum AutoProvAuthMech {
+        LDAP("LDAP"),
+        PREAUTH("PREAUTH");
+        private String mValue;
+        private AutoProvAuthMech(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static AutoProvAuthMech fromString(String s) throws ServiceException {
+            for (AutoProvAuthMech value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isLDAP() { return this == LDAP;}
+        public boolean isPREAUTH() { return this == PREAUTH;}
+    }
+
+    public static enum AutoProvMode {
+        EAGER("EAGER"),
+        LAZY("LAZY"),
+        MANUAL("MANUAL");
+        private String mValue;
+        private AutoProvMode(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static AutoProvMode fromString(String s) throws ServiceException {
+            for (AutoProvMode value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isEAGER() { return this == EAGER;}
+        public boolean isLAZY() { return this == LAZY;}
+        public boolean isMANUAL() { return this == MANUAL;}
     }
 
     public static enum BackupMode {
@@ -1828,6 +1862,142 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1094)
     public static final String A_zimbraAuthTokenValidityValueEnabled = "zimbraAuthTokenValidityValueEnabled";
+
+    /**
+     * Attribute name in the external directory that contains localpart of
+     * the account name. If not specified, localpart of teh account name is
+     * the principal user used to authenticated to Zimbra.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1231)
+    public static final String A_zimbraAutoProvAccountNameMap = "zimbraAutoProvAccountNameMap";
+
+    /**
+     * Attribute map for account auto provisioning. Values are in the format
+     * of {external attribute}={zimbra attribute}. Invalid mapping
+     * configuration will cause the account creation to fail. Examples of bad
+     * mapping: - invalid external attribute name. - invalid Zimbra attribute
+     * name. - external attribute has multiple values but the zimbra
+     * attribute is single-valued. - syntax violation. e.g. Value on the
+     * external attribute is a String but the Zimbra attribute is declared an
+     * integer.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1232)
+    public static final String A_zimbraAutoProvAttrMap = "zimbraAutoProvAttrMap";
+
+    /**
+     * Auth mechanisms enabled for auto provisioning. When users authenticate
+     * via one of the external auth mechanisms enabled for auto
+     * provisioningconfigured in this attribute, and when the user account
+     * does not exist in Zimbra directory, a Zimbra directory entry and
+     * mailbox will be auto created
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1221)
+    public static final String A_zimbraAutoProvAuthMech = "zimbraAutoProvAuthMech";
+
+    /**
+     * LDAP search bind dn for account auto provisioning
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1226)
+    public static final String A_zimbraAutoProvLdapAdminBindDn = "zimbraAutoProvLdapAdminBindDn";
+
+    /**
+     * LDAP search bind password for account auto provisioning
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1227)
+    public static final String A_zimbraAutoProvLdapAdminBindPassword = "zimbraAutoProvLdapAdminBindPassword";
+
+    /**
+     * LDAP external DN template for account auto provisioning. Either
+     * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
+     * set. If both are set, zimbraAutoProvLdapSearchFilter will take
+     * precedence.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1230)
+    public static final String A_zimbraAutoProvLdapBindDn = "zimbraAutoProvLdapBindDn";
+
+    /**
+     * LDAP search base for account auto provisioning. Either
+     * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
+     * set. If both are set, zimbraAutoProvLdapSearchFilter will take
+     * precedence.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1228)
+    public static final String A_zimbraAutoProvLdapSearchBase = "zimbraAutoProvLdapSearchBase";
+
+    /**
+     * LDAP search filter template for account auto provisioning. Either
+     * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
+     * set. If both are set, zimbraAutoProvLdapSearchFilter will take
+     * precedence.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1229)
+    public static final String A_zimbraAutoProvLdapSearchFilter = "zimbraAutoProvLdapSearchFilter";
+
+    /**
+     * whether to use startTLS when accessing the external LDAP server for
+     * account auto provisioning
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1225)
+    public static final String A_zimbraAutoProvLdapStartTlsEnabled = "zimbraAutoProvLdapStartTlsEnabled";
+
+    /**
+     * LDAP URL of the external LDAP server for account auto provisioning
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1224)
+    public static final String A_zimbraAutoProvLdapURL = "zimbraAutoProvLdapURL";
+
+    /**
+     * Auto provisoninging modes enabled. EAGER: TODO LAZY: auto create the
+     * Zimbra account when user first login via one of the external auth
+     * mechanisms enabled for auto provisioning configured in
+     * zimbraAutoProvAuthMech MANUAL: TODO
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1222)
+    public static final String A_zimbraAutoProvMode = "zimbraAutoProvMode";
+
+    /**
+     * Email address to put in from header for the auto provision email. If
+     * not set, Postmaster &lt;postmaster@{RECIPIENT_DOMAIN}&gt; will be
+     * used.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1233)
+    public static final String A_zimbraAutoProvNotificationFromAddress = "zimbraAutoProvNotificationFromAddress";
+
+    /**
+     * Whether to use external LDAP auth setting for auto provisioning.
+     * Honored only when user authenticated to Zimbra by external LDAP auth.
+     * If honored, all zimbraAutoProv*** setting are ignored, and setting for
+     * external LDAP auth will be used for retrieving attributes from the
+     * external LDAP server.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1223)
+    public static final String A_zimbraAutoProvUseLdapAuthSettings = "zimbraAutoProvUseLdapAuthSettings";
 
     /**
      * Use null return path for envelope MAIL FROM when sending out of office
@@ -9129,6 +9299,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
+
+    /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
+
+    /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled

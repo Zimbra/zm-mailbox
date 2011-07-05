@@ -118,6 +118,9 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.REMOVE_DISTRIBUTION_LIST_ALIAS_REQUEST, new RemoveDistributionListAlias());
         dispatcher.registerHandler(AdminConstants.RENAME_DISTRIBUTION_LIST_REQUEST, new RenameDistributionList());
         dispatcher.registerHandler(AdminConstants.GET_DISTRIBUTION_LIST_MEMBERSHIP_REQUEST, new GetDistributionListMembership());
+        
+        dispatcher.registerHandler(AdminConstants.AUTO_PROV_ACCOUNT_REQUEST, new AutoProvAccount());
+        dispatcher.registerHandler(AdminConstants.SEARCH_AUTO_PROV_DIRECTORY_REQUEST, new SearchAutoProvDirectory());
 
         dispatcher.registerHandler(AdminConstants.GET_VERSION_INFO_REQUEST, new GetVersionInfo());
         dispatcher.registerHandler(AdminConstants.GET_LICENSE_INFO_REQUEST, new GetLicenseInfo());

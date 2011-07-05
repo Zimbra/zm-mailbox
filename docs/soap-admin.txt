@@ -2527,3 +2527,55 @@ If neither is specified, all attributes will be returned.
 </GetAttributeInfoResponse>
 
 ----------------------------
+<AutoProvAccountRequest>
+    <domain by="name|id">...</domain>  
+    <principal by="dn|name">...</principal>
+</AutoProvAccountRequest>
+
+
+<AutoProvAccountResponse>
+  <account name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </account>
+</AutoProvAccountResponse>
+
+----------------------------
+
+<SearchAutoProvDirectoryRequest [limit="..."] [offset="..."] [maxResults="..."] 
+    [attrs="a1,a2,a3"] keyAttr="{key-attr}">
+  <domain by="name|id">...</domain>  
+  [<name>...</name>]  
+  [<query>...</query>]
+</SearchDirectoryRequest>
+
+<SearchAutoProvDirectoryResponse more="{more-flag}" [searchTotal="{search-total}"]>
+  <entry dn="...">
+    <key>...</key>+
+    <a n="...">...</a>+
+  </entry>*
+</SearchAutoProvDirectoryResponse>
+
+Notes:
+  <name>  - name to fill the auto provisioning search template configured on the domain 
+  <query> - query string should be an LDAP-style filter string (RFC 2254)
+  Exactly one of <name> or <query> should be provided.
+  
+  maxResults = maximum results that the backend will attempt to fetch from the directory before
+  returning a account.TOO_MANY_SEARCH_RESULTS error.
+
+  limit    - the number of accounts to return per page (0 is default and means all)
+  offset   - the starting offset (0, 25, etc)
+  domain   - the domain name to limit the search to (do not use if searching for domains)
+  keyAttr  - name of attribute for the key.  Value of the key attribute will appear in the 
+             <key> element in the response.  It is recommended to pick a key attribute that 
+             is single-valued and can unique identify an entry in the external auto provision 
+             directory.  If the key attribute contains multiple values then multiple <key> 
+             elements will appear in the response. 
+             Entries are returned in ascending key order.
+  attrs    - comma-seperated list of attrs to return
+  
+  more-flag = true if more entries left to return
+  search-total = total number of accounts that matched search (not affected by limit/offset)
+
+
+-----------------------------
