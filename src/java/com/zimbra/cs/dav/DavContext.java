@@ -434,7 +434,7 @@ public class DavContext {
 	public Collection<DavResource> getAllRequestedResources() throws DavException, ServiceException {
     	ArrayList<DavResource> rss = new ArrayList<DavResource>();
         if (mRequestType == RequestType.RESOURCE)
-        	return UrlNamespace.getResources(this, mUser, mPath, getDepth() == Depth.one);
+        	rss = (ArrayList<DavResource>) UrlNamespace.getResources(this, mUser, mPath, getDepth() == Depth.one);
         else {
             DavResource rs = UrlNamespace.getPrincipalAtUrl(this, mUri);
 			if (rs != null) {
@@ -444,6 +444,8 @@ public class DavContext {
 					rss.addAll(rs.getChildren(this));
 			}
         }
+        if (rss.isEmpty())
+            throw new DavException("no DAV resource at "+mUri, HttpServletResponse.SC_NOT_FOUND, null);
         return rss;
 	}
 	
