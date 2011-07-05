@@ -48,9 +48,11 @@ public final class FacebookTest extends AbstractTest {
         ZimbraMailAdapter adapter = (ZimbraMailAdapter) mail;
 
         ParsedAddress sender = adapter.getParsedMessage().getParsedSender();
-        if (!Strings.isNullOrEmpty(sender.emailPart) &&
-                sender.emailPart.endsWith("@facebookmail.com") && sender.emailPart.startsWith("notification+")) {
-            return true;
+        if (!Strings.isNullOrEmpty(sender.emailPart)) {
+            String email = sender.emailPart.toLowerCase();
+            if (email.endsWith("@facebookmail.com") && email.startsWith("notification+")) {
+                return true;
+            }
         }
         return false;
     }

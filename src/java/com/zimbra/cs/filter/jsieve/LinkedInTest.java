@@ -49,7 +49,7 @@ public final class LinkedInTest extends AbstractTest {
         ZimbraMailAdapter adapter = (ZimbraMailAdapter) mail;
 
         ParsedAddress sender = adapter.getParsedMessage().getParsedSender();
-        if (!Strings.isNullOrEmpty(sender.emailPart) && ADDRESSES.contains(sender.emailPart)) {
+        if (!Strings.isNullOrEmpty(sender.emailPart) && ADDRESSES.contains(sender.emailPart.toLowerCase())) {
             return true;
         }
         return false;
