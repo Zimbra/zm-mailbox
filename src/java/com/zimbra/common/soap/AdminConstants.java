@@ -441,6 +441,12 @@ public final class AdminConstants {
     public static final String E_ACTIVATE_LICENSE_RESPONSE = "ActivateLicenseResponse";
     public static final String E_GET_LICENSE_REQUEST = "GetLicenseRequest";
     public static final String E_GET_LICENSE_RESPONSE = "GetLicenseResponse";
+    
+    // Auto Provision
+    public static final String E_AUTO_PROV_ACCOUNT_REQUEST = "AutoProvAccountRequest";
+    public static final String E_AUTO_PROV_ACCOUNT_RESPONSE = "AutoProvAccountResponse";
+    public static final String E_SEARCH_AUTO_PROV_DIRECTORY_REQUEST = "SearchAutoProvDirectoryRequest";
+    public static final String E_SEARCH_AUTO_PROV_DIRECTORY_RESPONSE = "SearchAutoProvDirectoryResponse";
 
     public static final QName PING_REQUEST = QName.get(E_PING_REQUEST, NAMESPACE);
     public static final QName PING_RESPONSE = QName.get(E_PING_RESPONSE, NAMESPACE);
@@ -858,6 +864,12 @@ public final class AdminConstants {
     public static final QName ACTIVATE_LICENSE_RESPONSE = QName.get(E_ACTIVATE_LICENSE_RESPONSE, NAMESPACE);
     public static final QName GET_LICENSE_REQUEST = QName.get(E_GET_LICENSE_REQUEST, NAMESPACE);
     public static final QName GET_LICENSE_RESPONSE = QName.get(E_GET_LICENSE_RESPONSE, NAMESPACE);
+    
+    // Auto provision
+    public static final QName AUTO_PROV_ACCOUNT_REQUEST = QName.get(E_AUTO_PROV_ACCOUNT_REQUEST, NAMESPACE);
+    public static final QName AUTO_PROV_ACCOUNT__RESPONSE = QName.get(E_AUTO_PROV_ACCOUNT_RESPONSE, NAMESPACE);
+    public static final QName SEARCH_AUTO_PROV_DIRECTORY_REQUEST = QName.get(E_SEARCH_AUTO_PROV_DIRECTORY_REQUEST, NAMESPACE);
+    public static final QName SEARCH_AUTO_PROV_DIRECTORY_RESPONSE = QName.get(E_SEARCH_AUTO_PROV_DIRECTORY_RESPONSE, NAMESPACE);
 
     // DumpSessions
     public static final String E_SESSION = "session";
@@ -896,7 +908,6 @@ public final class AdminConstants {
     public static final String E_DOMAIN = "domain";
     public static final String E_DL = "dl";
     public static final String E_DLM = "dlm";
-    public static final String E_ENTRY = "entry";
     public static final String E_HOSTNAME = "hostname";
     public static final String E_LIFETIME = "lifetime";
     public static final String E_MESSAGE = "message";
@@ -938,7 +949,10 @@ public final class AdminConstants {
     public static final String E_OWNER = "owner";
     public static final String E_SHARE = "share";
     public static final String E_DATASOURCE = "datasource";
-
+    public static final String E_ENTRY = "entry";
+    public static final String E_KEY = "key";
+    public static final String E_PRINCIPAL = "principal";
+    
     public static final String A_ACCOUNT = "account";
     public static final String A_CALENDAR_RESOURCE = "calresource";
     public static final String A_COS = "cos";
@@ -973,7 +987,7 @@ public final class AdminConstants {
     public static final String A_EXCLUDE = "exclude";
     public static final String A_REFRESH = "refresh";
     public static final String A_TARGETNAME = "targetName";
-    public static final String A_FOLDER = "l";  // to be consistant with MailConstants.A_FOLDER
+    public static final String A_FOLDER = "l";  // to be consistent with MailConstants.A_FOLDER
     public static final String A_PATH = "path";
     public static final String A_PATH_OR_ID = "pathOrId";
     public static final String A_CREATE = "create";
@@ -985,6 +999,8 @@ public final class AdminConstants {
     public static final String A_REVISION = "rev";
     public static final String A_ENTRY_TYPES = "entryTypes";
     public static final String A_DESC = "desc";
+    public static final String A_DN = "dn";
+    public static final String A_KEYATTR = "keyAttr";
 
     public static final String BY_ID = "id";
     public static final String BY_QUERY = "query";
