@@ -907,7 +907,7 @@ public class MailSender {
             return Collections.emptyList();
 
         HashMap<String,InternetAddress> newContacts = new HashMap<String,InternetAddress>();
-        Collection<String> emailKeys = new ContactAutoComplete(authuser).getEmailKeys();
+        Collection<String> emailKeys = new ContactAutoComplete(authuser, octxt).getEmailKeys();
         StringBuilder buf = new StringBuilder();
         boolean first = true;
         for (Address addr : contacts) {

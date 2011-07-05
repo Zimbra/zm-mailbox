@@ -23,6 +23,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ContactAutoComplete;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.ContactAutoComplete.AutoCompleteResult;
 import com.zimbra.cs.mailbox.ContactAutoComplete.ContactEntry;
 import com.zimbra.cs.service.util.ItemId;
@@ -34,6 +35,7 @@ public class AutoComplete extends MailDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account account = getRequestedAccount(getZimbraSoapContext(context));
+        OperationContext octxt = getOperationContext(zsc, context);
 
         String name = request.getAttribute(MailConstants.A_NAME);
 
@@ -44,7 +46,7 @@ public class AutoComplete extends MailDocumentHandler {
         int limit = account.getContactAutoCompleteMaxResults();
         boolean needCanExpand = request.getAttributeBool(MailConstants.A_NEED_EXP, false);
 
-        AutoCompleteResult result = query(request, zsc, account, false, name, limit, type, needCanExpand);
+        AutoCompleteResult result = query(request, zsc, account, false, name, limit, type, needCanExpand, octxt);
         Element response = zsc.createElement(MailConstants.AUTO_COMPLETE_RESPONSE);
         toXML(response, result, zsc.getAuthtokenAccountId());
 
@@ -67,17 +69,17 @@ public class AutoComplete extends MailDocumentHandler {
     }
 
     protected AutoCompleteResult query(Element request, ZimbraSoapContext zsc, Account account,
-            boolean excludeGal, String name, int limit, Provisioning.GalSearchType type) throws ServiceException {
-        return query(request, zsc, account, excludeGal, name, limit, type, false);
+            boolean excludeGal, String name, int limit, Provisioning.GalSearchType type, OperationContext octxt) throws ServiceException {
+        return query(request, zsc, account, excludeGal, name, limit, type, false, octxt);
     }
 
     protected AutoCompleteResult query(Element request, ZimbraSoapContext zsc, Account account,
-            boolean excludeGal, String name, int limit, Provisioning.GalSearchType type, boolean needCanExpand) throws ServiceException {
+            boolean excludeGal, String name, int limit, Provisioning.GalSearchType type, boolean needCanExpand, OperationContext octxt) throws ServiceException {
        if (!canAccessAccount(zsc, account))
             throw ServiceException.PERM_DENIED("can not access account");
 
        ArrayList<Integer> folders = csvToArray(request.getAttribute(MailConstants.A_FOLDERS, null));
-       ContactAutoComplete autoComplete = new ContactAutoComplete(account, zsc);
+       ContactAutoComplete autoComplete = new ContactAutoComplete(account, zsc, octxt);
        autoComplete.setNeedCanExpand(needCanExpand);
        autoComplete.setSearchType(type);
        boolean includeGal = !excludeGal && request.getAttributeBool(MailConstants.A_INCLUDE_GAL, autoComplete.includeGal());
