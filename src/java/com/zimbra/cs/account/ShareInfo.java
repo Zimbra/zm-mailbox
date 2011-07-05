@@ -14,20 +14,35 @@
  */
 package com.zimbra.cs.account;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
+import com.sun.mail.smtp.SMTPMessage;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
+import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
+import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.L10nUtil.MsgKey;
+import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning.AclGroups;
+import com.zimbra.cs.account.Provisioning.PublishedShareInfoVisitor;
+import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.ACL.Grant;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.FolderNode;
+import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.mailbox.MetadataList;
+import com.zimbra.cs.mailbox.Mountpoint;
+import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.acl.AclPushSerializer;
+import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.JMSession;
+import org.apache.commons.lang.StringEscapeUtils;
 
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
@@ -38,39 +53,21 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMultipart;
-
-import org.apache.commons.lang.StringEscapeUtils;
-
-import com.sun.mail.smtp.SMTPMessage;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.L10nUtil;
-import com.zimbra.common.util.Pair;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.util.L10nUtil.MsgKey;
-import com.zimbra.common.mime.MimeConstants;
-import com.zimbra.common.mime.shim.JavaMailInternetAddress;
-import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
-import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.CosBy;
-import com.zimbra.common.account.Key.DistributionListBy;
-import com.zimbra.common.account.Key.DomainBy;
-import com.zimbra.cs.account.Provisioning.AclGroups;
-import com.zimbra.cs.account.Provisioning.PublishedShareInfoVisitor;
-import com.zimbra.cs.mailbox.ACL;
-import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Mailbox.FolderNode;
-import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.Metadata;
-import com.zimbra.cs.mailbox.MetadataList;
-import com.zimbra.cs.mailbox.Mountpoint;
-import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.ACL.Grant;
-import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.cs.util.JMSession;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 
 public class ShareInfo {
@@ -304,7 +301,7 @@ public class ShareInfo {
          *     value: {local-folder-id}
          *
          * @param octxt
-         * @param mbox
+         * @param acct
          * @return
          * @throws ServiceException
          */
@@ -347,7 +344,7 @@ public class ShareInfo {
 
             // short-circuit if we know that this won't be in the output
             List<Folder> subfolders = folder.getSubfolders(null);
-            if (!isVisible && subfolders.isEmpty())
+            if (subfolders.isEmpty())
                 return;
 
             if (folder instanceof Mountpoint) {
@@ -357,7 +354,7 @@ public class ShareInfo {
             }
 
             // if this was the last visible folder overall, no need to look at children
-            if (isVisible && visible != null && visible.isEmpty())
+            if (visible != null && visible.isEmpty())
                 return;
 
             // write the subfolders' data to the response
@@ -563,7 +560,6 @@ public class ShareInfo {
          *
          * @param prov
          * @param publishingOnEntry
-         * @param shareInfo
          * @throws ServiceException
          */
         public void persist(Provisioning prov, NamedEntry publishingOnEntry)
@@ -673,9 +669,6 @@ public class ShareInfo {
             deserialize(encodedShareInfo);
         }
 
-        private Published() {
-        }
-
         private Published(String ownerAcctId, String ownerAcctEmail, String ownerAcctDisplayName,
                 int folderId, String folderPath, MailItem.Type folderDefaultView,
                 short rights, byte granteeType, String granteeId, String granteeName, String granteeDisplayName) {
@@ -707,49 +700,47 @@ public class ShareInfo {
         }
 
         /**
-         *
+         * @param prov
          * @param acct
          * @param granteeType  if not null, return only shares granted to the granteeType
-         * @param owner        if not null, return only shares granted to the owner
+         * @param owner        if not null, return only shares granted by the owner
          * @param visitor
          * @throws ServiceException
          */
-        public static void get(Provisioning prov, Account acct, byte granteeType, Account owner, PublishedShareInfoVisitor visitor)
+        public static void get(
+                Provisioning prov, Account acct, byte granteeType, Account owner, PublishedShareInfoVisitor visitor)
             throws ServiceException {
 
-            Set<String> visited = new HashSet<String>();
-
+            List<String> granteeIds = new LinkedList<String>();
+            boolean includePublic = false;
             if (granteeType == 0) {
                 // no grantee type specified, return all published shares
-
-                // only group shares can be published for now, so just
-                // retrieve the group shares
+                granteeIds.add(acct.getId());
                 AclGroups aclGroups = prov.getAclGroups(acct, false);
-                getSharesPublishedOnGroups(prov, visitor, aclGroups, owner, visited);
-
-                /*
-                 * if we support publishing cos and domain shares, include them here
-                 */
-                // cos
-                // getSharesPublishedOnCos(...);
-
-                // domain
-                // getSharesPublishedOnDomain(...);
+                granteeIds.addAll(aclGroups.groupIds());
+                includePublic = true;
 
             } else if (granteeType == ACL.GRANTEE_USER) {
-                // cannot publish on account, be tolerant just return instead of throw
+                granteeIds.add(acct.getId());
 
             } else if (granteeType == ACL.GRANTEE_GROUP) {
                 AclGroups aclGroups = prov.getAclGroups(acct, false);
-                getSharesPublishedOnGroups(prov, visitor, aclGroups, owner, visited);
+                granteeIds.addAll(aclGroups.groupIds());
+
+            } else if (granteeType == ACL.GRANTEE_PUBLIC) {
+                includePublic = true;
 
             } else {
-                throw ServiceException.INVALID_REQUEST("unsupported grantee type", null);
+                throw ServiceException.INVALID_REQUEST(
+                        "unsupported grantee type: " + ACL.typeToString(granteeType), null);
             }
+
+            getSharesPublished(prov, visitor, owner, granteeIds, includePublic);
         }
 
         // for admin only, like the above, also called for sending emails
-        public static void getPublished(Provisioning prov, DistributionList dl, boolean directOnly, Account owner, PublishedShareInfoVisitor visitor)
+        public static void getPublished(Provisioning prov, DistributionList dl, boolean directOnly, Account owner,
+                                        PublishedShareInfoVisitor visitor)
             throws ServiceException {
 
             Set<String> visited = new HashSet<String>();
@@ -780,7 +771,7 @@ public class ShareInfo {
          * published share info.
          *
          * @param prov
-         * @param unpublishingOnEntry
+         * @param dl
          * @param ownerAcctId
          * @param ownerAcctEmail
          * @param allOwners
@@ -891,9 +882,55 @@ public class ShareInfo {
                 AclGroups aclGroups, Account owner, Set<String> visited)
             throws ServiceException {
 
-            for (String groupId : aclGroups.groupIds()) {
-                DistributionList group = prov.getGroup(Key.DistributionListBy.id, groupId);
-                getPublishedShares(visitor, group, owner, visited);
+            List<String> groupIds = aclGroups.groupIds();
+            getSharesPublished(prov, visitor, owner, groupIds, false);
+        }
+
+        private static void getSharesPublished(Provisioning prov, PublishedShareInfoVisitor visitor, Account owner,
+                                               List<String> granteeIds, boolean includePublic)
+                throws ServiceException {
+
+            if (granteeIds.isEmpty() && !includePublic) {
+                return;
+            }
+
+            // construct search query
+            StringBuilder searchQuery = new StringBuilder().append("(&(objectclass=zimbraAccount)(|");
+            for (String id : granteeIds) {
+                searchQuery.append("(zimbraSharedItem=granteeId:").append(id).append("*)");
+            }
+            if (includePublic) {
+                searchQuery.append("(zimbraSharedItem=*granteeType:pub*)");
+            }
+            searchQuery.append("))");
+
+            List<NamedEntry> accounts =
+                    prov.searchAccounts(searchQuery.toString(),
+                                        new String[] {
+                                                Provisioning.A_zimbraId,
+                                                Provisioning.A_zimbraSharedItem,
+                                                Provisioning.A_displayName },
+                                        null, false, Provisioning.SA_ACCOUNT_FLAG);
+
+            //TODO - check for dups
+            for (NamedEntry ne : accounts) {
+                Account account = (Account) ne;
+                if (owner != null) {
+                    if (!owner.getId().equals(account.getId())) {
+                        continue;
+                    }
+                }
+                String[] sharedItems = account.getSharedItem();
+                for (String sharedItem : sharedItems) {
+                    ShareInfoData shareData = AclPushSerializer.deserialize(sharedItem);
+                    if (granteeIds.contains(shareData.getGranteeId()) ||
+                            (includePublic && shareData.getGranteeTypeCode() == ACL.GRANTEE_PUBLIC)) {
+                        shareData.setOwnerAcctId(account.getId());
+                        shareData.setOwnerAcctEmail(account.getName());
+                        shareData.setOwnerAcctDisplayName(account.getDisplayName());
+                        visitor.visit(shareData);
+                    }
+                }
             }
         }
 
@@ -1020,7 +1057,7 @@ public class ShareInfo {
 
             if (notes != null) {
                 sb.append("*~*~*~*~*~*~*~*~*~*\n");
-                sb.append(notes +  "\n");
+                sb.append(notes + "\n");
             }
 
             return sb.toString();
@@ -1051,10 +1088,10 @@ public class ShareInfo {
                 sb.append("<p>\n");
                 sb.append("<table border=\"0\">\n");
                 sb.append("<tr valign=\"top\"><th align=\"left\">" +
-                        L10nUtil.getMessage(MsgKey.shareNotifBodyNotes) + ":" + "</th><td>" +
-                        "URL: " + sid.getUrl() + "<br>" +
-                        "Username: " + sid.getGranteeName() + "<br>" +
-                        "Password: " + sid.getGuestPassword() + "<br><br>");
+                                  L10nUtil.getMessage(MsgKey.shareNotifBodyNotes) + ":" + "</th><td>" +
+                                  "URL: " + sid.getUrl() + "<br>" +
+                                  "Username: " + sid.getGranteeName() + "<br>" +
+                                  "Password: " + sid.getGuestPassword() + "<br><br>");
                 if (senderNotes != null)
                     sb.append(senderNotes);
                 sb.append("</td></tr></table>\n");
@@ -1208,7 +1245,7 @@ public class ShareInfo {
                         genTextPart(sid, null, null, locale, sb);
                     }
                 } else
-                    genTextPart(mShares.get(idx.intValue()), null, null, locale, sb);
+                    genTextPart(mShares.get(idx), null, null, locale, sb);
 
                 sb.append("\n\n");
                 return sb.toString();
@@ -1229,7 +1266,7 @@ public class ShareInfo {
                         genHtmlPart(sid, null, null, locale, sb);
                     }
                 } else
-                    genHtmlPart(mShares.get(idx.intValue()), null, null, locale, sb);
+                    genHtmlPart(mShares.get(idx), null, null, locale, sb);
 
                 return sb.toString();
             }
@@ -1242,7 +1279,7 @@ public class ShareInfo {
                         genXmlPart(sid, null, sb);
                     }
                 } else {
-                    genXmlPart(mShares.get(idx.intValue()), null, sb);
+                    genXmlPart(mShares.get(idx), null, sb);
                 }
                 return sb.toString();
             }
@@ -1336,7 +1373,7 @@ public class ShareInfo {
                     if (replyTo != null)
                         replyToAddr = new JavaMailInternetAddress(replyTo);
                     return new Pair<Address, Address>(addr, replyToAddr);
-                } catch (AddressException e) {
+                } catch (AddressException ignored) {
                 }
             }
 
@@ -1380,7 +1417,7 @@ public class ShareInfo {
         private static void buildContentAndSend(SMTPMessage out, DistributionList dl, MailSenderVisitor visitor, Locale locale, Integer idx)
             throws MessagingException {
 
-            MimeMultipart mmp = buildMailContent(dl, visitor, locale, Integer.valueOf(idx));
+            MimeMultipart mmp = buildMailContent(dl, visitor, locale, idx);
             out.setContent(mmp);
             Transport.send(out);
 
@@ -1424,7 +1461,7 @@ public class ShareInfo {
                     // each message will have text/html/xml parts
                     int numShareInfo = visitor.getNumShareInfo();
                     for (int idx = 0; idx < numShareInfo; idx++) {
-                        buildContentAndSend(out, dl, visitor, locale, Integer.valueOf(idx));
+                        buildContentAndSend(out, dl, visitor, locale, idx);
                     }
                 } else {
                     // send only one message that includes all shares
@@ -1459,8 +1496,7 @@ public class ShareInfo {
                         mBuf = buf.toByteArray();
                     }
                 }
-                ByteArrayInputStream in = new ByteArrayInputStream(mBuf);
-                return in;
+                return new ByteArrayInputStream(mBuf);
             }
 
             @Override
@@ -1564,7 +1600,7 @@ public class ShareInfo {
                     shareInfoData.getGranteeName(),
                     shareInfoData.getGranteeDisplayName());
         }
-    };
+    }
 }
 
 

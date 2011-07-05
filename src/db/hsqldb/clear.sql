@@ -37,5 +37,6 @@ DELETE FROM ZIMBRA.table_maintenance;
 DELETE FROM ZIMBRA.service_status;
 DELETE FROM ZIMBRA.scheduled_task;
 DELETE FROM ZIMBRA.mobile_devices;
+DELETE FROM ZIMBRA.pending_acl_push;
 
 INSERT INTO current_volumes (message_volume_id, index_volume_id, next_mailbox_id) VALUES (1, 2, 1);

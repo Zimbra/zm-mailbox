@@ -100,7 +100,8 @@ public class ZimbraSuite extends TestSuite
         sClasses.add(TestSaveDraft.class);
         sClasses.add(TestServerStats.class);
         sClasses.add(TestJaxbProvisioning.class);
-    };
+        sClasses.add(TestAclPush.class);
+    }
 
     /**
      * Used by extensions to add additional tests to the main test suite.
@@ -131,7 +132,7 @@ public class ZimbraSuite extends TestSuite
                         testName, ZimbraSuite.class.getName());
                 }
             } else {
-                Class<? extends TestCase> testClass = null;
+                Class<? extends TestCase> testClass;
                 try {
                     testClass = Class.forName(testName).asSubclass(TestCase.class);
                 } catch (ClassNotFoundException e) {

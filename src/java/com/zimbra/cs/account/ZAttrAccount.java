@@ -35,7 +35,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110625-1605 */
+    /* build: 8.0.0_BETA1_1111 administrator 20110701-1758 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -27475,8 +27475,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Expand the contact groups in Apple Address Book format to Zimbra
-     * format over CardDAV.
+     * Deprecated since: 8.0.0. deprecated now that Zimbra supports keeping
+     * member references in a contact group. Orig desc: Expand the contact
+     * groups in Apple Address Book format to Zimbra format over CardDAV.
      *
      * @return zimbraPrefContactsExpandAppleContactGroups, or false if unset
      *
@@ -27488,8 +27489,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Expand the contact groups in Apple Address Book format to Zimbra
-     * format over CardDAV.
+     * Deprecated since: 8.0.0. deprecated now that Zimbra supports keeping
+     * member references in a contact group. Orig desc: Expand the contact
+     * groups in Apple Address Book format to Zimbra format over CardDAV.
      *
      * @param zimbraPrefContactsExpandAppleContactGroups new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -27504,8 +27506,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Expand the contact groups in Apple Address Book format to Zimbra
-     * format over CardDAV.
+     * Deprecated since: 8.0.0. deprecated now that Zimbra supports keeping
+     * member references in a contact group. Orig desc: Expand the contact
+     * groups in Apple Address Book format to Zimbra format over CardDAV.
      *
      * @param zimbraPrefContactsExpandAppleContactGroups new value
      * @param attrs existing map to populate, or null to create a new map
@@ -27521,8 +27524,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Expand the contact groups in Apple Address Book format to Zimbra
-     * format over CardDAV.
+     * Deprecated since: 8.0.0. deprecated now that Zimbra supports keeping
+     * member references in a contact group. Orig desc: Expand the contact
+     * groups in Apple Address Book format to Zimbra format over CardDAV.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -27536,8 +27540,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Expand the contact groups in Apple Address Book format to Zimbra
-     * format over CardDAV.
+     * Deprecated since: 8.0.0. deprecated now that Zimbra supports keeping
+     * member references in a contact group. Orig desc: Expand the contact
+     * groups in Apple Address Book format to Zimbra format over CardDAV.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -39415,7 +39420,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * items an account or group has shared
+     * Deprecated since: 8.0.0. Manual publishing of shares by admin is no
+     * longer required since now automated publishing of sharing info updates
+     * to LDAP is supported. Orig desc: items an account or group has shared
      *
      * @return zimbraShareInfo, or empty array if unset
      */
@@ -39425,7 +39432,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * items an account or group has shared
+     * Deprecated since: 8.0.0. Manual publishing of shares by admin is no
+     * longer required since now automated publishing of sharing info updates
+     * to LDAP is supported. Orig desc: items an account or group has shared
      *
      * @param zimbraShareInfo new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -39438,7 +39447,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * items an account or group has shared
+     * Deprecated since: 8.0.0. Manual publishing of shares by admin is no
+     * longer required since now automated publishing of sharing info updates
+     * to LDAP is supported. Orig desc: items an account or group has shared
      *
      * @param zimbraShareInfo new value
      * @param attrs existing map to populate, or null to create a new map
@@ -39452,7 +39463,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * items an account or group has shared
+     * Deprecated since: 8.0.0. Manual publishing of shares by admin is no
+     * longer required since now automated publishing of sharing info updates
+     * to LDAP is supported. Orig desc: items an account or group has shared
      *
      * @param zimbraShareInfo new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -39465,7 +39478,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * items an account or group has shared
+     * Deprecated since: 8.0.0. Manual publishing of shares by admin is no
+     * longer required since now automated publishing of sharing info updates
+     * to LDAP is supported. Orig desc: items an account or group has shared
      *
      * @param zimbraShareInfo new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -39479,7 +39494,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * items an account or group has shared
+     * Deprecated since: 8.0.0. Manual publishing of shares by admin is no
+     * longer required since now automated publishing of sharing info updates
+     * to LDAP is supported. Orig desc: items an account or group has shared
      *
      * @param zimbraShareInfo existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -39492,7 +39509,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * items an account or group has shared
+     * Deprecated since: 8.0.0. Manual publishing of shares by admin is no
+     * longer required since now automated publishing of sharing info updates
+     * to LDAP is supported. Orig desc: items an account or group has shared
      *
      * @param zimbraShareInfo existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -39506,7 +39525,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * items an account or group has shared
+     * Deprecated since: 8.0.0. Manual publishing of shares by admin is no
+     * longer required since now automated publishing of sharing info updates
+     * to LDAP is supported. Orig desc: items an account or group has shared
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -39518,7 +39539,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * items an account or group has shared
+     * Deprecated since: 8.0.0. Manual publishing of shares by admin is no
+     * longer required since now automated publishing of sharing info updates
+     * to LDAP is supported. Orig desc: items an account or group has shared
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -39527,6 +39550,140 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetShareInfo(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraShareInfo, "");
+        return attrs;
+    }
+
+    /**
+     * All items an account has shared
+     *
+     * @return zimbraSharedItem, or empty array if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1219)
+    public String[] getSharedItem() {
+        return getMultiAttr(Provisioning.A_zimbraSharedItem);
+    }
+
+    /**
+     * All items an account has shared
+     *
+     * @param zimbraSharedItem new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1219)
+    public void setSharedItem(String[] zimbraSharedItem) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSharedItem, zimbraSharedItem);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * All items an account has shared
+     *
+     * @param zimbraSharedItem new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1219)
+    public Map<String,Object> setSharedItem(String[] zimbraSharedItem, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSharedItem, zimbraSharedItem);
+        return attrs;
+    }
+
+    /**
+     * All items an account has shared
+     *
+     * @param zimbraSharedItem new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1219)
+    public void addSharedItem(String zimbraSharedItem) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraSharedItem, zimbraSharedItem);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * All items an account has shared
+     *
+     * @param zimbraSharedItem new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1219)
+    public Map<String,Object> addSharedItem(String zimbraSharedItem, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraSharedItem, zimbraSharedItem);
+        return attrs;
+    }
+
+    /**
+     * All items an account has shared
+     *
+     * @param zimbraSharedItem existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1219)
+    public void removeSharedItem(String zimbraSharedItem) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraSharedItem, zimbraSharedItem);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * All items an account has shared
+     *
+     * @param zimbraSharedItem existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1219)
+    public Map<String,Object> removeSharedItem(String zimbraSharedItem, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraSharedItem, zimbraSharedItem);
+        return attrs;
+    }
+
+    /**
+     * All items an account has shared
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1219)
+    public void unsetSharedItem() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSharedItem, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * All items an account has shared
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1219)
+    public Map<String,Object> unsetSharedItem(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSharedItem, "");
         return attrs;
     }
 
@@ -40175,174 +40332,6 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetTextAnalyzer(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraTextAnalyzer, "");
-        return attrs;
-    }
-
-    /**
-     * binary data
-     *
-     * @return zimbraUnittestBinary, or null if unset
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public byte[] getUnittestBinary() {
-        return getBinaryAttr(Provisioning.A_zimbraUnittestBinary);
-    }
-
-    /**
-     * binary data
-     *
-     * @return zimbraUnittestBinary, or null if unset
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public String getUnittestBinaryAsString() {
-        return getAttr(Provisioning.A_zimbraUnittestBinary, null);
-    }
-
-    /**
-     * binary data
-     *
-     * @param zimbraUnittestBinary new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public void setUnittestBinary(byte[] zimbraUnittestBinary) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUnittestBinary, zimbraUnittestBinary==null ? "" : ByteUtil.encodeLDAPBase64(zimbraUnittestBinary));
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * binary data
-     *
-     * @param zimbraUnittestBinary new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public Map<String,Object> setUnittestBinary(byte[] zimbraUnittestBinary, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUnittestBinary, zimbraUnittestBinary==null ? "" : ByteUtil.encodeLDAPBase64(zimbraUnittestBinary));
-        return attrs;
-    }
-
-    /**
-     * binary data
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public void unsetUnittestBinary() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUnittestBinary, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * binary data
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public Map<String,Object> unsetUnittestBinary(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUnittestBinary, "");
-        return attrs;
-    }
-
-    /**
-     * binary data
-     *
-     * @return zimbraUnittestCertificate, or null if unset
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public byte[] getUnittestCertificate() {
-        return getBinaryAttr(Provisioning.A_zimbraUnittestCertificate);
-    }
-
-    /**
-     * binary data
-     *
-     * @return zimbraUnittestCertificate, or null if unset
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public String getUnittestCertificateAsString() {
-        return getAttr(Provisioning.A_zimbraUnittestCertificate, null);
-    }
-
-    /**
-     * binary data
-     *
-     * @param zimbraUnittestCertificate new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public void setUnittestCertificate(byte[] zimbraUnittestCertificate) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUnittestCertificate, zimbraUnittestCertificate==null ? "" : ByteUtil.encodeLDAPBase64(zimbraUnittestCertificate));
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * binary data
-     *
-     * @param zimbraUnittestCertificate new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public Map<String,Object> setUnittestCertificate(byte[] zimbraUnittestCertificate, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUnittestCertificate, zimbraUnittestCertificate==null ? "" : ByteUtil.encodeLDAPBase64(zimbraUnittestCertificate));
-        return attrs;
-    }
-
-    /**
-     * binary data
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public void unsetUnittestCertificate() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUnittestCertificate, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * binary data
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public Map<String,Object> unsetUnittestCertificate(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUnittestCertificate, "");
         return attrs;
     }
 

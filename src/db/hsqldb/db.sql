@@ -158,3 +158,12 @@ CREATE TABLE mobile_devices (
    CONSTRAINT pk_mobile_devices PRIMARY KEY (mailbox_id, device_id),
    CONSTRAINT fk_mobile_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES mailbox(id) ON DELETE CASCADE,
 );
+
+CREATE TABLE pending_acl_push (
+   mailbox_id  INTEGER NOT NULL,
+   item_id     INTEGER NOT NULL,
+   date        BIGINT NOT NULL,
+
+   PRIMARY KEY (mailbox_id, item_id, date),
+   CONSTRAINT fk_pending_acl_push_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES mailbox(id) ON DELETE CASCADE
+);

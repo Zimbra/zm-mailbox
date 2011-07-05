@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110625-1605 */
+    /* build: 8.0.0_BETA1_1111 administrator 20110701-1758 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -6693,8 +6693,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefContactsDisableAutocompleteOnContactGroupMembers = "zimbraPrefContactsDisableAutocompleteOnContactGroupMembers";
 
     /**
-     * Expand the contact groups in Apple Address Book format to Zimbra
-     * format over CardDAV.
+     * Deprecated since: 8.0.0. deprecated now that Zimbra supports keeping
+     * member references in a contact group. Orig desc: Expand the contact
+     * groups in Apple Address Book format to Zimbra format over CardDAV.
      *
      * @since ZCS 7.0.0
      */
@@ -8469,10 +8470,32 @@ public class ZAttrProvisioning {
     public static final String A_zimbraServiceInstalled = "zimbraServiceInstalled";
 
     /**
-     * items an account or group has shared
+     * All items an account has shared
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1219)
+    public static final String A_zimbraSharedItem = "zimbraSharedItem";
+
+    /**
+     * Deprecated since: 8.0.0. Manual publishing of shares by admin is no
+     * longer required since now automated publishing of sharing info updates
+     * to LDAP is supported. Orig desc: items an account or group has shared
      */
     @ZAttr(id=357)
     public static final String A_zimbraShareInfo = "zimbraShareInfo";
+
+    /**
+     * Interval between successive executions of the task that publishes
+     * shared item updates to LDAP. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1220)
+    public static final String A_zimbraSharingUpdatePublishInterval = "zimbraSharingUpdatePublishInterval";
 
     /**
      * Unique ID for an signature
@@ -9106,22 +9129,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled

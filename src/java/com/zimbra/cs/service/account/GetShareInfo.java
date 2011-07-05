@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2009, 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -116,9 +116,7 @@ public class GetShareInfo  extends AccountDocumentHandler {
         ShareInfoVisitor visitor = new ShareInfoVisitor(prov, response, mountedFolders, resultFilter);
         
         if (owner == null) {
-            // retrieve from published share info, 
-            if (granteeType != 0 && granteeType != ACL.GRANTEE_GROUP)
-                throw ServiceException.INVALID_REQUEST("invalid grantee type for retrieving published share info", null);
+            // retrieve from published share info
             ShareInfo.Published.get(prov, targetAcct, granteeType, owner, visitor);
         } else {
             // iterate all folders of the owner, this should be proxied to the owner account's

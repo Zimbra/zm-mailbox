@@ -35,6 +35,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.db.DbPendingAclPush;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.imap.ImapSession;
@@ -393,7 +394,14 @@ public class Folder extends MailItem {
             mRights = new ACL();
         ACL.Grant grant = mRights.grantAccess(zimbraId, type, rights, args);
         saveMetadata();
+
+        queueForAclPush();
+
         return grant;
+    }
+
+    private void queueForAclPush() throws ServiceException {
+        DbPendingAclPush.queue(mMailbox, mId);
     }
 
     /** Removes the set of rights granted to the specified (id, type) pair
@@ -423,6 +431,8 @@ public class Folder extends MailItem {
         if (mRights.isEmpty())
             mRights = null;
         saveMetadata();
+
+        queueForAclPush();
     }
 
     /** Replaces the folder's {@link ACL} with the supplied one and updates the database accordingly.
@@ -1084,6 +1094,10 @@ public class Folder extends MailItem {
             return;
 
         super.rename(name, target);
+
+        if (mRights != null) {
+            queueForAclPush();
+        }
     }
 
     /** Moves this folder so that it is a subfolder of <tt>target</tt>.
@@ -1129,6 +1143,10 @@ public class Folder extends MailItem {
         mData.parentId = target.getId();
         mData.metadataChanged(mMailbox);
         DbMailItem.setFolder(this, target);
+
+        if (mRights != null) {
+            queueForAclPush();
+        }
 
         return true;
     }
@@ -1234,6 +1252,10 @@ public class Folder extends MailItem {
         }
         ZimbraLog.mailbox.info("deleting folder id=%d,path=%s", getId(), getPath());
         super.delete(scope, writeTombstones);
+
+        if (mRights != null) {
+            queueForAclPush();
+        }
     }
 
     /** Determines the set of items to be deleted.  Assembles a new

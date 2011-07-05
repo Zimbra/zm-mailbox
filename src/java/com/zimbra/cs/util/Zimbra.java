@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Timer;
 
+import com.zimbra.cs.mailbox.acl.AclPushTask;
 import org.apache.mina.core.buffer.IoBuffer;
 
 import com.zimbra.common.calendar.WellKnownTimeZones;
@@ -224,9 +225,9 @@ public final class Zimbra {
         if (sIsMailboxd) {
             SessionCache.startup();
 
-            if (!redoLog.isSlave()) {
-                Server server = Provisioning.getInstance().getLocalServer();
+            Server server = Provisioning.getInstance().getLocalServer();
 
+            if (!redoLog.isSlave()) {
                 boolean useDirectBuffers = server.isMailUseDirectBuffers();
                 IoBuffer.setUseDirectBuffer(useDirectBuffers);
                 ZimbraLog.misc.info("MINA setUseDirectBuffers(" + useDirectBuffers + ")");
@@ -259,6 +260,11 @@ public final class Zimbra {
                 int lmtpPort = Provisioning.getInstance().getLocalServer().getLmtpBindPort();
                 SmtpToLmtp smtpServer = SmtpToLmtp.startup(smtpPort, "localhost", lmtpPort);
                 smtpServer.setRecipientValidator(new SmtpRecipientValidator());
+            }
+
+            if (app.supports(AclPushTask.class)) {
+                long pushInterval = server.getSharingUpdatePublishInterval();
+                sTimer.schedule(new AclPushTask(), pushInterval, pushInterval);
             }
 
             // should be last, so that other subsystems can add dynamic stats counters
@@ -339,7 +345,7 @@ public final class Zimbra {
 
         try {
             DbPool.shutdown();
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
     }
 

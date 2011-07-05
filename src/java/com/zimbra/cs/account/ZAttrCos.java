@@ -40,7 +40,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110625-1605 */
+    /* build: 8.0.0_BETA1_1111 administrator 20110701-1758 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -19640,8 +19640,9 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Expand the contact groups in Apple Address Book format to Zimbra
-     * format over CardDAV.
+     * Deprecated since: 8.0.0. deprecated now that Zimbra supports keeping
+     * member references in a contact group. Orig desc: Expand the contact
+     * groups in Apple Address Book format to Zimbra format over CardDAV.
      *
      * @return zimbraPrefContactsExpandAppleContactGroups, or false if unset
      *
@@ -19653,8 +19654,9 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Expand the contact groups in Apple Address Book format to Zimbra
-     * format over CardDAV.
+     * Deprecated since: 8.0.0. deprecated now that Zimbra supports keeping
+     * member references in a contact group. Orig desc: Expand the contact
+     * groups in Apple Address Book format to Zimbra format over CardDAV.
      *
      * @param zimbraPrefContactsExpandAppleContactGroups new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -19669,8 +19671,9 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Expand the contact groups in Apple Address Book format to Zimbra
-     * format over CardDAV.
+     * Deprecated since: 8.0.0. deprecated now that Zimbra supports keeping
+     * member references in a contact group. Orig desc: Expand the contact
+     * groups in Apple Address Book format to Zimbra format over CardDAV.
      *
      * @param zimbraPrefContactsExpandAppleContactGroups new value
      * @param attrs existing map to populate, or null to create a new map
@@ -19686,8 +19689,9 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Expand the contact groups in Apple Address Book format to Zimbra
-     * format over CardDAV.
+     * Deprecated since: 8.0.0. deprecated now that Zimbra supports keeping
+     * member references in a contact group. Orig desc: Expand the contact
+     * groups in Apple Address Book format to Zimbra format over CardDAV.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -19701,8 +19705,9 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Expand the contact groups in Apple Address Book format to Zimbra
-     * format over CardDAV.
+     * Deprecated since: 8.0.0. deprecated now that Zimbra supports keeping
+     * member references in a contact group. Orig desc: Expand the contact
+     * groups in Apple Address Book format to Zimbra format over CardDAV.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

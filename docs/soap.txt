@@ -3460,12 +3460,7 @@ Note:
                  (It might be useful to see the shares I've shared to a DL that I belong to so
                  that I know I'm sharing it correctly.)
 
-{grantee_type} = if <owner> is not specified: grp
-                 if <owner> is specified: usr | grp | pub | all | cos | dom | guest | key
-
-                 Filters the result by the specified grantee type, only shares granted to
-                 the grantee type will be returned.  If omitted, server will return shares
-                 granted to all grantee types.
+{grantee_type} = if specified, filters the result by the specified grantee type.
 
 {grantee-id}   = if specified, filters the result by the specified grantee id.
 
@@ -3482,11 +3477,8 @@ Notes on {grantee_type}, {grantee-id}, {grantee-name}:
                  return "no shares" instead of error when an invalid user name/id is used.
 
 Notes:
-- if <owner> is *not* specified, server will retrieve previously published (can only be done
-  by admins) share info from entries the authed account can inherit shares from.
-  e.g. all direct and indirect distribution lists the account belongs.  Currently share info
-  can only be published on distribution lists.   Publishing of cos/domain/all/pub shares
-  are not supported.  Therefore those shares cannot be discovered if we go this route.
+- if <owner> is *not* specified server will search the LDAP for published shares (zimbraSharedItem
+  account attribute) accessible to the authed user.
 
 - if <owner> *is* specified, server will iterate through the owner's mailbox to discover all
   shares applicable to the authed user, instead of looking at any of the published share info.
@@ -3526,8 +3518,9 @@ Notes:
                     <owner by="name">user1@example.com</owner>
                 </GetShareInfoRequest>
 
-    3. Show me all folders shared directly with me by any one.
-           Not yet supported.
+    3. Show me all folders shared directly with me and with any entry I can inherit shares from:
+                <GetShareInfoRequest>
+                </GetShareInfoRequest>
 
 
 <GetShareInfoResponse>

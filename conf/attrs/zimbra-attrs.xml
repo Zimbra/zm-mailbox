@@ -1855,8 +1855,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <deprecateDesc>Deprecated per bug 50465</deprecateDesc>
 </attr>
 
-<attr id="357" name="zimbraShareInfo" type="string" max="1024" cardinality="multi" optionalIn="account,distributionList">
+<attr id="357" name="zimbraShareInfo" type="string" max="1024" cardinality="multi" optionalIn="account,distributionList" deprecatedSince="8.0.0">
   <desc>items an account or group has shared</desc>
+  <deprecateDesc>Manual publishing of shares by admin is no longer required since now automated publishing of sharing info updates to LDAP is supported</deprecateDesc>
 </attr>
 
 <attr id="358" name="zimbraGalInternalSearchBase"  type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited">
@@ -5764,5 +5765,13 @@ TODO: delete them permerntly from here
   <desc>list of disabled fields in calendar location web UI</desc>
 </attr>
 
+<attr id="1219" name="zimbraSharedItem" type="string" max="1024" cardinality="multi" optionalIn="account" since="8.0.0">
+  <desc>All items an account has shared</desc>
+</attr>
+
+<attr id="1220" name="zimbraSharingUpdatePublishInterval" type="duration" cardinality="single" optionalIn="server,globalConfig" flags="serverInherited" since="8.0.0">
+  <globalConfigValue>15m</globalConfigValue>
+  <desc>Interval between successive executions of the task that publishes shared item updates to LDAP</desc>
+</attr>
 
 </attrs>

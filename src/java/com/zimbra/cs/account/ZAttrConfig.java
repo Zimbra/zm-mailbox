@@ -41,7 +41,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110625-1605 */
+    /* build: 8.0.0_BETA1_1111 administrator 20110701-1758 */
 
     /**
      * RFC2256: descriptive information
@@ -31372,6 +31372,118 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetServerInheritedAttr(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraServerInheritedAttr, "");
+        return attrs;
+    }
+
+    /**
+     * Interval between successive executions of the task that publishes
+     * shared item updates to LDAP. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * <p>Use getSharingUpdatePublishIntervalAsString to access value as a string.
+     *
+     * @see #getSharingUpdatePublishIntervalAsString()
+     *
+     * @return zimbraSharingUpdatePublishInterval in millseconds, or 900000 (15m)  if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1220)
+    public long getSharingUpdatePublishInterval() {
+        return getTimeInterval(Provisioning.A_zimbraSharingUpdatePublishInterval, 900000L);
+    }
+
+    /**
+     * Interval between successive executions of the task that publishes
+     * shared item updates to LDAP. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @return zimbraSharingUpdatePublishInterval, or "15m" if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1220)
+    public String getSharingUpdatePublishIntervalAsString() {
+        return getAttr(Provisioning.A_zimbraSharingUpdatePublishInterval, "15m");
+    }
+
+    /**
+     * Interval between successive executions of the task that publishes
+     * shared item updates to LDAP. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraSharingUpdatePublishInterval new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1220)
+    public void setSharingUpdatePublishInterval(String zimbraSharingUpdatePublishInterval) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSharingUpdatePublishInterval, zimbraSharingUpdatePublishInterval);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Interval between successive executions of the task that publishes
+     * shared item updates to LDAP. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraSharingUpdatePublishInterval new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1220)
+    public Map<String,Object> setSharingUpdatePublishInterval(String zimbraSharingUpdatePublishInterval, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSharingUpdatePublishInterval, zimbraSharingUpdatePublishInterval);
+        return attrs;
+    }
+
+    /**
+     * Interval between successive executions of the task that publishes
+     * shared item updates to LDAP. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1220)
+    public void unsetSharingUpdatePublishInterval() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSharingUpdatePublishInterval, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Interval between successive executions of the task that publishes
+     * shared item updates to LDAP. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1220)
+    public Map<String,Object> unsetSharingUpdatePublishInterval(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSharingUpdatePublishInterval, "");
         return attrs;
     }
 

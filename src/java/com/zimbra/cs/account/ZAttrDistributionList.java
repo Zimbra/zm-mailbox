@@ -35,7 +35,7 @@ public abstract class ZAttrDistributionList extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110625-1605 */
+    /* build: 8.0.0_BETA1_1111 administrator 20110701-1758 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -1273,7 +1273,9 @@ public abstract class ZAttrDistributionList extends MailTarget {
     }
 
     /**
-     * items an account or group has shared
+     * Deprecated since: 8.0.0. Manual publishing of shares by admin is no
+     * longer required since now automated publishing of sharing info updates
+     * to LDAP is supported. Orig desc: items an account or group has shared
      *
      * @return zimbraShareInfo, or empty array if unset
      */
@@ -1283,7 +1285,9 @@ public abstract class ZAttrDistributionList extends MailTarget {
     }
 
     /**
-     * items an account or group has shared
+     * Deprecated since: 8.0.0. Manual publishing of shares by admin is no
+     * longer required since now automated publishing of sharing info updates
+     * to LDAP is supported. Orig desc: items an account or group has shared
      *
      * @param zimbraShareInfo new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -1296,7 +1300,9 @@ public abstract class ZAttrDistributionList extends MailTarget {
     }
 
     /**
-     * items an account or group has shared
+     * Deprecated since: 8.0.0. Manual publishing of shares by admin is no
+     * longer required since now automated publishing of sharing info updates
+     * to LDAP is supported. Orig desc: items an account or group has shared
      *
      * @param zimbraShareInfo new value
      * @param attrs existing map to populate, or null to create a new map
@@ -1310,7 +1316,9 @@ public abstract class ZAttrDistributionList extends MailTarget {
     }
 
     /**
-     * items an account or group has shared
+     * Deprecated since: 8.0.0. Manual publishing of shares by admin is no
+     * longer required since now automated publishing of sharing info updates
+     * to LDAP is supported. Orig desc: items an account or group has shared
      *
      * @param zimbraShareInfo new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -1323,7 +1331,9 @@ public abstract class ZAttrDistributionList extends MailTarget {
     }
 
     /**
-     * items an account or group has shared
+     * Deprecated since: 8.0.0. Manual publishing of shares by admin is no
+     * longer required since now automated publishing of sharing info updates
+     * to LDAP is supported. Orig desc: items an account or group has shared
      *
      * @param zimbraShareInfo new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -1337,7 +1347,9 @@ public abstract class ZAttrDistributionList extends MailTarget {
     }
 
     /**
-     * items an account or group has shared
+     * Deprecated since: 8.0.0. Manual publishing of shares by admin is no
+     * longer required since now automated publishing of sharing info updates
+     * to LDAP is supported. Orig desc: items an account or group has shared
      *
      * @param zimbraShareInfo existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -1350,7 +1362,9 @@ public abstract class ZAttrDistributionList extends MailTarget {
     }
 
     /**
-     * items an account or group has shared
+     * Deprecated since: 8.0.0. Manual publishing of shares by admin is no
+     * longer required since now automated publishing of sharing info updates
+     * to LDAP is supported. Orig desc: items an account or group has shared
      *
      * @param zimbraShareInfo existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -1364,7 +1378,9 @@ public abstract class ZAttrDistributionList extends MailTarget {
     }
 
     /**
-     * items an account or group has shared
+     * Deprecated since: 8.0.0. Manual publishing of shares by admin is no
+     * longer required since now automated publishing of sharing info updates
+     * to LDAP is supported. Orig desc: items an account or group has shared
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -1376,7 +1392,9 @@ public abstract class ZAttrDistributionList extends MailTarget {
     }
 
     /**
-     * items an account or group has shared
+     * Deprecated since: 8.0.0. Manual publishing of shares by admin is no
+     * longer required since now automated publishing of sharing info updates
+     * to LDAP is supported. Orig desc: items an account or group has shared
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
