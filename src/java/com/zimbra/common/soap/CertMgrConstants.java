@@ -34,6 +34,8 @@ public final class CertMgrConstants {
     public static final String E_VERIFY_CERTKEY_RESPONSE = "VerifyCertKeyResponse";
     public static final String E_UPLOAD_DOMCERT_REQUEST = "UploadDomCertRequest";
     public static final String E_UPLOAD_DOMCERT_RESPONSE = "UploadDomCertResponse";
+    public static final String E_UPLOAD_PROXYCA_REQUEST = "UploadProxyCARequest";
+    public static final String E_UPLOAD_PROXYCA_RESPONSE = "UploadProxyCAResponse";
 
     public static final QName INSTALL_CERT_REQUEST = QName.get(E_INSTALL_CERT_REQUEST, NAMESPACE);
     public static final QName INSTALL_CERT_RESPONSE = QName.get(E_INSTALL_CERT_RESPONSE, NAMESPACE);
@@ -47,6 +49,8 @@ public final class CertMgrConstants {
     public static final QName VERIFY_CERTKEY_RESPONSE = QName.get(E_VERIFY_CERTKEY_RESPONSE, NAMESPACE);
     public static final QName UPLOAD_DOMCERT_REQUEST = QName.get(E_UPLOAD_DOMCERT_REQUEST, NAMESPACE);
     public static final QName UPLOAD_DOMCERT_RESPONSE = QName.get(E_UPLOAD_DOMCERT_RESPONSE, NAMESPACE);
+    public static final QName UPLOAD_PROXYCA_REQUEST = QName.get(E_UPLOAD_PROXYCA_REQUEST, NAMESPACE);
+    public static final QName UPLOAD_PROXYCA_RESPONSE = QName.get(E_UPLOAD_PROXYCA_RESPONSE, NAMESPACE);
 
     // InstallCert
     public static final String A_FILENAME = "filename" ;
