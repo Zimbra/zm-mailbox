@@ -540,7 +540,7 @@ public class ToXML {
 
         // encode contact group members (not derefed) if we don't have a
         // already derefed contactGroup, and we don't have a migrated dlist
-        boolean encodeContactGroupMembersBasic = (contactGroup == null) && (migratedDlist != null);
+        boolean encodeContactGroupMembersBasic = (contactGroup == null) && (migratedDlist == null);
 
         if (attrFilter != null) {
             for (String name : attrFilter) {
