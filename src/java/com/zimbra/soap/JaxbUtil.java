@@ -114,6 +114,8 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.ModifySignatureResponse.class,
             com.zimbra.soap.account.message.ModifyWhiteBlackListRequest.class,
             com.zimbra.soap.account.message.ModifyWhiteBlackListResponse.class,
+            com.zimbra.soap.account.message.UpdateProfileRequest.class,
+            com.zimbra.soap.account.message.UpdateProfileResponse.class,
 
             // zimbraMail
             com.zimbra.soap.mail.message.AddAppointmentInviteRequest.class,
@@ -140,6 +142,8 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.CancelAppointmentResponse.class,
             com.zimbra.soap.mail.message.CancelTaskRequest.class,
             com.zimbra.soap.mail.message.CancelTaskResponse.class,
+            com.zimbra.soap.mail.message.CheckDeviceStatusRequest.class,
+            com.zimbra.soap.mail.message.CheckDeviceStatusResponse.class,
             com.zimbra.soap.mail.message.CheckPermissionRequest.class,
             com.zimbra.soap.mail.message.CheckPermissionResponse.class,
             com.zimbra.soap.mail.message.CheckRecurConflictsRequest.class,
@@ -204,6 +208,10 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.ForwardAppointmentResponse.class,
             com.zimbra.soap.mail.message.GenerateUUIDRequest.class,
             com.zimbra.soap.mail.message.GenerateUUIDResponse.class,
+            com.zimbra.soap.mail.message.GetActivityStreamRequest.class,
+            com.zimbra.soap.mail.message.GetActivityStreamResponse.class,
+            com.zimbra.soap.mail.message.GetAllDevicesRequest.class,
+            com.zimbra.soap.mail.message.GetAllDevicesResponse.class,
             com.zimbra.soap.mail.message.GetAppointmentRequest.class,
             com.zimbra.soap.mail.message.GetAppointmentResponse.class,
             com.zimbra.soap.mail.message.GetApptSummariesRequest.class,
@@ -312,6 +320,8 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.PurgeRevisionResponse.class,
             com.zimbra.soap.mail.message.RankingActionRequest.class,
             com.zimbra.soap.mail.message.RankingActionResponse.class,
+            com.zimbra.soap.mail.message.RegisterDeviceRequest.class,
+            com.zimbra.soap.mail.message.RegisterDeviceResponse.class,
             com.zimbra.soap.mail.message.RemoveAttachmentsRequest.class,
             com.zimbra.soap.mail.message.RemoveAttachmentsResponse.class,
             com.zimbra.soap.mail.message.RevokePermissionRequest.class,
@@ -352,6 +362,8 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.TagActionResponse.class,
             com.zimbra.soap.mail.message.TestDataSourceRequest.class,
             com.zimbra.soap.mail.message.TestDataSourceResponse.class,
+            com.zimbra.soap.mail.message.UpdateDeviceStatusRequest.class,
+            com.zimbra.soap.mail.message.UpdateDeviceStatusResponse.class,
             com.zimbra.soap.mail.message.VerifyCodeRequest.class,
             com.zimbra.soap.mail.message.VerifyCodeResponse.class,
             com.zimbra.soap.mail.message.WaitSetRequest.class,
@@ -552,6 +564,12 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.GetDataSourcesResponse.class,
             com.zimbra.soap.admin.message.GetDelegatedAdminConstraintsRequest.class,
             com.zimbra.soap.admin.message.GetDelegatedAdminConstraintsResponse.class,
+            com.zimbra.soap.admin.message.GetDevicesCountRequest.class,
+            com.zimbra.soap.admin.message.GetDevicesCountResponse.class,
+            com.zimbra.soap.admin.message.GetDevicesCountSinceLastUsedRequest.class,
+            com.zimbra.soap.admin.message.GetDevicesCountSinceLastUsedResponse.class,
+            com.zimbra.soap.admin.message.GetDevicesCountUsedTodayRequest.class,
+            com.zimbra.soap.admin.message.GetDevicesCountUsedTodayResponse.class,
             com.zimbra.soap.admin.message.GetDistributionListMembershipRequest.class,
             com.zimbra.soap.admin.message.GetDistributionListMembershipResponse.class,
             com.zimbra.soap.admin.message.GetDistributionListRequest.class,
@@ -790,7 +808,8 @@ public final class JaxbUtil {
      * @return
      * @throws ServiceException
      */
-    public static Element jaxbToElement(Object o, Element.ElementFactory factory) throws ServiceException {
+    public static Element jaxbToElement(Object o, Element.ElementFactory factory)
+    throws ServiceException {
         try {
             Marshaller marshaller = getContext().createMarshaller();
             // marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
@@ -800,7 +819,8 @@ public final class JaxbUtil {
             org.dom4j.Element rootElem = theDoc.getRootElement();
             return Element.convertDOM(rootElem, factory);
         } catch (Exception e) {
-            throw ServiceException.FAILURE("Unable to convert " + o.getClass().getName() + " to Element", e);
+            throw ServiceException.FAILURE("Unable to convert " +
+                    o.getClass().getName() + " to Element", e);
         }
     }
 
@@ -809,23 +829,27 @@ public final class JaxbUtil {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public static Element jaxbToNamedElement(String name, String namespace, Object o, Element.ElementFactory factory)
-            throws ServiceException {
+    public static Element jaxbToNamedElement(String name, String namespace,
+            Object o, Element.ElementFactory factory)
+    throws ServiceException {
         try {
             JAXBContext jaxb = JAXBContext.newInstance(o.getClass());
             Marshaller marshaller = jaxb.createMarshaller();
             // marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
             DocumentResult dr = new DocumentResult();
-            marshaller.marshal(new JAXBElement(new QName(namespace, name), o.getClass(), o) , dr);
+            marshaller.marshal(new JAXBElement(new QName(namespace, name),
+                    o.getClass(), o) , dr);
             Document theDoc = dr.getDocument();
             org.dom4j.Element rootElem = theDoc.getRootElement();
             return Element.convertDOM(rootElem, factory);
         } catch (Exception e) {
-            throw ServiceException.FAILURE("Unable to convert " + o.getClass().getName() + " to Element", e);
+            throw ServiceException.FAILURE("Unable to convert " +
+                    o.getClass().getName() + " to Element", e);
         }
     }
 
-    public static Element addChildElementFromJaxb(Element parent, String name, String namespace, Object o) {
+    public static Element addChildElementFromJaxb(Element parent,
+                String name, String namespace, Object o) {
         Element.ElementFactory factory;
         if (parent instanceof XMLElement) {
             factory = XMLElement.mFactory;
@@ -850,13 +874,16 @@ public final class JaxbUtil {
      */
     @Deprecated
     @SuppressWarnings("unchecked")
-    public static <T> T elementToJaxbUsingByteArray(Element e) throws ServiceException {
+    public static <T> T elementToJaxbUsingByteArray(Element e)
+    throws ServiceException {
         try {
             Unmarshaller unmarshaller = getContext().createUnmarshaller();
             org.dom4j.Element rootElem = e.toXML();
-            return (T) unmarshaller.unmarshal(new ByteArrayInputStream(rootElem.asXML().getBytes(Charsets.UTF_8)));
+            return (T) unmarshaller.unmarshal(new ByteArrayInputStream(
+                    rootElem.asXML().getBytes(Charsets.UTF_8)));
         } catch (JAXBException ex) {
-            throw ServiceException.FAILURE("Unable to unmarshal response for " + e.getName(), ex);
+            throw ServiceException.FAILURE(
+                    "Unable to unmarshal response for " + e.getName(), ex);
         }
     }
 
@@ -872,14 +899,16 @@ public final class JaxbUtil {
      */
     @Deprecated
     @SuppressWarnings("unchecked")
-    public static <T> T elementToJaxbUsingDom4j(Element e) throws ServiceException {
+    public static <T> T elementToJaxbUsingDom4j(Element e)
+    throws ServiceException {
         try {
             Unmarshaller unmarshaller = getContext().createUnmarshaller();
             org.dom4j.Element rootElem = e.toXML();
             DocumentSource docSrc = new DocumentSource(rootElem);
             return (T) unmarshaller.unmarshal(docSrc);
         } catch (JAXBException ex) {
-            throw ServiceException.FAILURE("Unable to unmarshal response for " + e.getName(), ex);
+            throw ServiceException.FAILURE(
+                    "Unable to unmarshal response for " + e.getName(), ex);
         }
     }
 
@@ -887,9 +916,10 @@ public final class JaxbUtil {
      * Manipulates a structure under {@link elem} which obeys Zimbra's
      * SOAP XML structure rules to comply with more stringent JAXB rules.
      * e.g. Zimbra allows attributes to be specified as elements.
-     * @param klass is the JAXB class for {@link elem}
+     * @param klass is the JAXB class for {@link elem} which must be under
+     * the "com.zimbra.soap" package hierarchy.
      */
-    public static void fixupStructureForJaxb(org.w3c.dom.Element elem, Class<?> klass) {
+    private static void fixupStructureForJaxb(org.w3c.dom.Element elem, Class<?> klass) {
         if (elem == null) {
             return;
         }
@@ -955,40 +985,32 @@ public final class JaxbUtil {
         }
     }
 
-    /**
-     * Manipulates a structure under {@link elem} which obeys Zimbra's
-     * SOAP XML structure rules to comply with more stringent JAXB rules.
-     * e.g. Zimbra allows attributes to be specified as elements.
-     * The JAXB class associated with this element MUST be discoverable
-     * from {@link elem} based on it's namespace and localname.
-     */
-    public static void fixupStructureForJaxb(org.w3c.dom.Element elem) {
+    private static Class<?> classForTopLevelElem(Element elem) {
         String className = null;
         try {
-            String ns = elem.getNamespaceURI();
+            String ns = elem.getQName().getNamespaceURI();
             if (AdminConstants.NAMESPACE_STR.equals(ns)) {
-                className = ADMIN_JAXB_PACKAGE  + "." + elem.getLocalName();
+                className = ADMIN_JAXB_PACKAGE  + "." + elem.getName();
             } else if (AccountConstants.NAMESPACE_STR.equals(ns)) {
-                className = ACCOUNT_JAXB_PACKAGE  + "." + elem.getLocalName();
+                className = ACCOUNT_JAXB_PACKAGE  + "." + elem.getName();
             } else if (MailConstants.NAMESPACE_STR.equals(ns)) {
-                className = MAIL_JAXB_PACKAGE  + "." + elem.getLocalName();
+                className = MAIL_JAXB_PACKAGE  + "." + elem.getName();
             } else {
                 LOG.info("Unexpected namespace[" + ns + "]");
-                return;
+                return null;
             }
             Class<?> klass = Class.forName(className);
             if (klass == null) {
-                LOG.info("Failed to find CLASS for name=[" + className + "]");
-                return;
+                LOG.info("Failed to find CLASS for classname=[" + className + "]");
+                return null;
             }
-            fixupStructureForJaxb(elem, klass);
-            // JaxbInfo.clearCache();
+            return klass;
         } catch (NullPointerException npe) {
             LOG.info("Problem finding JAXB package", npe);
-            return;
+            return null;
         } catch (ClassNotFoundException cnfe) {
             LOG.info("Problem finding JAXB class", cnfe);
-            return;
+            return null;
         }
     }
 
@@ -1000,25 +1022,42 @@ public final class JaxbUtil {
      * @return a JAXB object
      */
     @SuppressWarnings("unchecked")
-    public static <T> T w3cDomDocToJaxb(org.w3c.dom.Document doc) throws ServiceException {
-        fixupStructureForJaxb(doc.getDocumentElement());
-        return (T) rawW3cDomDocToJaxb(doc);
+    private static <T> T w3cDomDocToJaxb(org.w3c.dom.Document doc,
+            Class<?> klass, boolean jaxbClassInContext)
+    throws ServiceException {
+        fixupStructureForJaxb(doc.getDocumentElement(), klass);
+        return (T) rawW3cDomDocToJaxb(doc, klass, jaxbClassInContext);
     }
 
     /**
      * Return a JAXB object.  This implementation uses a org.w3c.dom.Document
      * as an intermediate representation.  This appears to be more reliable
      * than using a DocumentSource based on org.dom4j.Element
+     * @param klass is the JAXB class for {@link doc}
+     * @param jaxbClassInContext is true if {@link klass} is the JAXB class
+     * for a request or response object that is in {@link JaxbUtil.MESSAGE_CLASSES}
      */
     @SuppressWarnings("unchecked")
-    private static <T> T rawW3cDomDocToJaxb(org.w3c.dom.Document doc) throws ServiceException {
+    private static <T> T rawW3cDomDocToJaxb(org.w3c.dom.Document doc,
+            Class<?> klass, boolean jaxbClassInContext)
+    throws ServiceException {
         if ((doc == null || doc.getDocumentElement() == null)) {
             return null;
         }
         try {
-            Unmarshaller unmarshaller = getContext().createUnmarshaller();
             // LOG.warn("Dom to Xml:\n" + domToString(doc));
-            return (T) unmarshaller.unmarshal(doc);
+            Unmarshaller unmarshaller;
+            if (jaxbClassInContext) {
+                unmarshaller = getContext().createUnmarshaller();
+                return (T) unmarshaller.unmarshal(doc);
+            } else {
+                org.w3c.dom.Element docElem = doc.getDocumentElement();
+                JAXBContext jaxb = JAXBContext.newInstance(klass);
+                unmarshaller = jaxb.createUnmarshaller();
+                JAXBElement<T> ret =
+                    (JAXBElement<T>) unmarshaller.unmarshal(docElem, klass);
+                return (T)ret.getValue();
+            }
         } catch (JAXBException ex) {
             throw ServiceException.FAILURE("Unable to unmarshal response for " +
                     doc.getDocumentElement().getNodeName(), ex);
@@ -1029,10 +1068,29 @@ public final class JaxbUtil {
      * Return a JAXB object.  This implementation uses a org.w3c.dom.Document
      * as an intermediate representation.  This appears to be more reliable
      * than using a DocumentSource based on org.dom4j.Element
+     * @param klass is the JAXB class for {@link elem}
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T elementToJaxb(Element elem, Class<?> klass)
+    throws ServiceException {
+        return (T) w3cDomDocToJaxb(elem.toW3cDom(), klass, false);
+    }
+
+    /**
+     * Return a JAXB object corresponding to {@link e} which is the Xml for
+     * a Request or Response.
+     * @param e MUST be a top level Request or Response element whose
+     * corresponding JAXB object is in {@link JaxbUtil.MESSAGE_CLASSES}
      */
     @SuppressWarnings("unchecked")
     public static <T> T elementToJaxb(Element e) throws ServiceException {
-        return (T) w3cDomDocToJaxb(e.toW3cDom());
+        Class<?> klass = classForTopLevelElem(e);
+        if (klass == null) {
+            LOG.info("Failed to find CLASS for name=[" + e.getName() +
+                    "]  Is it a Request or Response node?");
+            return null;
+        }
+        return (T) w3cDomDocToJaxb(e.toW3cDom(), klass, true);
     }
 
     public static String domToString(org.w3c.dom.Document document) {
