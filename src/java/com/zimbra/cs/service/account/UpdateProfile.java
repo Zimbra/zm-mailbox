@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Document;
@@ -31,15 +30,20 @@ import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.ProfileServlet;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.account.message.UpdateProfileRequest;
+import com.zimbra.soap.account.message.UpdateProfileResponse;
+import com.zimbra.soap.account.type.ProfileInfo;
 
 public class UpdateProfile extends AccountDocumentHandler {
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Element profile = request.getElement(AccountConstants.E_PROFILE);
-        String imageId = profile.getAttribute(AccountConstants.A_IMAGE, null);
+        UpdateProfileRequest req = JaxbUtil.elementToJaxb(request);
+        ProfileInfo profile = req.getProfile();
+        String imageId = profile.getImageId();
         if (imageId != null) {
             Upload up = null;
             try {
@@ -68,8 +72,7 @@ public class UpdateProfile extends AccountDocumentHandler {
                 }
             }
         }
-        Element response = zsc.createElement(AccountConstants.E_UPDATE_PROFILE_RESPONSE);
-        return response;
+        return zsc.jaxbToElement(new UpdateProfileResponse());
     }
 
 }
