@@ -537,6 +537,9 @@ public class DavServlet extends ZimbraServlet {
 			prefix = prefix.substring(0, prefix.indexOf(extraPath));
 		prefix = HttpUtil.urlEscape(DAV_PATH + "/" + ctxt.getUser() + prefix);
 		
+		if (!prefix.endsWith("/"))
+			prefix += "/";
+		
 		// make sure the target account exists.
 		Account acct = prov.getAccountById(target.getAccountId());
 		if (acct == null)
@@ -580,8 +583,15 @@ public class DavServlet extends ZimbraServlet {
         HttpMethod method = m.toHttpMethod(ctxt, url);
         for (String h : PROXY_REQUEST_HEADERS) {
             String hval = ctxt.getRequest().getHeader(h);
-            if (hval != null)
+            if (hval != null) {
+            	if (h.equalsIgnoreCase(DavProtocol.HEADER_DESTINATION)) {
+            		// decode and encode to make sure string matching is happening on the same encoding
+            		String dest = HttpUtil.urlEscape(HttpUtil.urlUnescape(hval));
+            		if (dest.contains(prefix))            	
+            			hval = dest.replace(prefix, newPrefix+"/");
+            	}	
             	method.addRequestHeader(h, hval);
+            }	
         }
         int statusCode = HttpClientUtil.executeMethod(client, method);
         for (String h : PROXY_RESPONSE_HEADERS) {
