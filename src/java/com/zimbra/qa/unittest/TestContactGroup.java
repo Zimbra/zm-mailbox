@@ -13,6 +13,10 @@ import static org.junit.Assert.*;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.Account;
@@ -364,7 +368,7 @@ public class TestContactGroup {
                 new MemberData(Member.Type.GAL_REF, GAL_REF_VALUE)});
         
         String dlist = "\"Ballard, Martha\" <martha34@aol.com>, \"Davidson, Ross\" <rossd@example.zimbra.com>, user1@test.com";
-        contactGroup.replaceAllMembers(dlist);
+        contactGroup.migrateFromDlist(dlist);
         
         contactGroup = reEncode(contactGroup);
         
@@ -414,7 +418,7 @@ public class TestContactGroup {
             System.out.println(memberKey);
         }
         
-        String dlist = contactGroup.getAllMembersAddrsAsString(mbox, octxt);
+        String dlist = contactGroup.migrateToDlist(mbox, octxt);
         
         // should be in member order
         assertEquals("test1@zimbra.com, test2@zimbra.com, " + galEntryEmail + ", aaa@test.com, zzz@test.com", dlist);
@@ -443,4 +447,38 @@ public class TestContactGroup {
         }
     }
     
+    /*
+    private SoapHttpTransport auth(String acctName, String password) throws Exception {
+        SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
+        
+        Element request = Element.create(transport.getRequestProtocol(), AccountConstants.AUTH_REQUEST);
+        request.addElement(AccountConstants.E_ACCOUNT).addAttribute(AccountConstants.A_BY, AccountBy.name.name()).setText(acctName);
+        request.addElement(AccountConstants.E_PASSWORD).setText(password);
+        
+        Element response = transport.invoke(request);
+        
+        String authToken = response.getElement(AccountConstants.E_AUTH_TOKEN).getText();
+        transport.setAuthToken(authToken);
+        
+        return transport;
+    }
+    
+    @Test
+    public void migrateFromDlist() throws Exception {
+        String acctName = TestUtil.getAddress("user1");
+        String password = "test123";
+        
+        SoapHttpTransport transport = auth(acctName, password);
+        
+        Element request = Element.create(transport.getRequestProtocol(), MailConstants.CREATE_CONTACT_REQUEST);
+        Element eContact = request.addElement(MailConstants.E_CONTACT);
+        eContact.addElement(MailConstants.E_ATTRIBUTE).addAttribute(MailConstants.A_ATTRIBUTE_NAME, "nickname").setText("group1");
+        eContact.addElement(MailConstants.E_ATTRIBUTE).addAttribute(MailConstants.A_ATTRIBUTE_NAME, "fileAs").setText("8:group1");
+        eContact.addElement(MailConstants.E_ATTRIBUTE).addAttribute(MailConstants.A_ATTRIBUTE_NAME, "type").setText("group");
+        eContact.addElement(MailConstants.E_ATTRIBUTE).addAttribute(MailConstants.A_ATTRIBUTE_NAME, "dlist").
+            setText("user1@test.com, user2@test.com, user3@test.com");
+
+        Element response = transport.invoke(request);
+    }
+    */
 }

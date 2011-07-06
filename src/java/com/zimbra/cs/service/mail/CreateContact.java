@@ -36,6 +36,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.Version;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.ContactGroup;
@@ -60,6 +61,7 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.formatter.VCard;
+import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -99,6 +101,12 @@ public class CreateContact extends MailDocumentHandler  {
             pclist.add(new ParsedContact(cdata.getFirst(), cdata.getSecond()));
         }
 
+        if (needToMigrateDlist(zsc)) {
+            for (ParsedContact pc : pclist) {
+                migrateFromDlist(pc);
+            }
+        }
+        
         List<Contact> contacts = createContacts(octxt, mbox, iidFolder, pclist, tagsStr);
         Contact con = null;
         if (contacts.size() > 0)
@@ -413,5 +421,40 @@ public class CreateContact extends MailDocumentHandler  {
             throw ServiceException.FAILURE("error fetching message part: iid=" + iid + ", part=" + part, e);
         }
         return text;
+    }
+    
+    static boolean needToMigrateDlist(ZimbraSoapContext zsc) throws ServiceException {
+        Version zcoZcbVersion = DocumentHandler.zimbraConnectorClientVersion(zsc);
+        if (zcoZcbVersion != null) {
+            // ZCO/ZCB version in that the new contact group API is supported
+            // TODO: change 9.0.0 to the real ZCO/ZCB version when bug 61593 is 
+            // implemented/fixed.
+            Version newContactGroupAPISupported = new Version("9.0.0"); 
+            if (zcoZcbVersion.compareTo(newContactGroupAPISupported) < 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    static void migrateFromDlist(ParsedContact pc) throws ServiceException {
+        /*
+         * replace groupMember with dlist data
+         * 
+         * Note: if the user had also used new clients to manipulate group members 
+         *       all ref members will be lost, since all dlist members will be 
+         *       migrated as INLINE members.
+         *       if dlist is an empty string, the group will become an empty group.
+         *       
+         *       This is the expected behavior.
+         */
+        Map<String, String> fields = pc.getFields();
+        String dlist = fields.get(ContactConstants.A_dlist);
+        if (dlist != null) {
+            ContactGroup contactGroup = ContactGroup.init();
+            contactGroup.migrateFromDlist(dlist);
+            fields.put(ContactConstants.A_groupMember, contactGroup.encode());
+            fields.remove(ContactConstants.A_dlist);
+        }
     }
 }

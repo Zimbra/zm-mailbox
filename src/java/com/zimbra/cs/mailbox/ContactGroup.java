@@ -144,15 +144,15 @@ public class ContactGroup {
     }
     
     // for legacy clients
-    // TODO: need to hook up from callsistes when legacy clients can come in
-    public void replaceAllMembers(String dlist) throws ServiceException {
+    // migrate from a dlist value to the new group format
+    // if dlist is an empty string, it meas to remove all members.
+    public void migrateFromDlist(String dlist) throws ServiceException {
         removeAllMembers();
         MigrateContactGroup.migrate(this, dlist);
     }
     
     // for legacy clients
-    // TODO: need to hook up from callsistes when legacy clients can come in
-    public String getAllMembersAddrsAsString(Mailbox mbox, OperationContext octxt) 
+    public String migrateToDlist(Mailbox mbox, OperationContext octxt) 
     throws ServiceException {
         List<String> addrs = getEmailAddresses(false, mbox, octxt, false);
         if (addrs.isEmpty()) {

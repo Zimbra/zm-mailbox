@@ -68,6 +68,10 @@ public class ModifyContact extends MailDocumentHandler  {
             pc = new ParsedContact(contact).modify(cdata.getFirst(), cdata.getSecond());
         }
         
+        if (CreateContact.needToMigrateDlist(zsc)) {
+            CreateContact.migrateFromDlist(pc);
+        }
+        
         mbox.modifyContact(octxt, iid.getId(), pc);
         
         Contact con = mbox.getContactById(octxt, iid.getId());

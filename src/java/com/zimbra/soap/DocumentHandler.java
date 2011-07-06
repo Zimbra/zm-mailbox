@@ -19,6 +19,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.Version;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -29,7 +30,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -568,5 +568,32 @@ public abstract class DocumentHandler {
             (delegatingAcctId==null?"" : ", delegating account="+delegatingAcctName) +
             ", authenticated account=" + authedAcctName +
             ", target account=" + targetAcctName);
+    }
+    
+    protected static Version zimbraConnectorClientVersion(ZimbraSoapContext zsc) {
+        final String UA_ZCO = "ZimbraConnectorForOutlook";
+        final String UA_ZCB = "ZimbraConnectorForBES";
+
+        String ua = zsc.getUserAgent();
+                
+        // user agent is in the format of: name + "/" + version;
+        // ZCO: ZimbraConnectorForOutlook/7.0.0.0
+        // ZCB: ZimbraConnectorForBES/7.0.0.0
+        if (ua != null) {
+            String[] parts = ua.split("/");
+            if (parts.length == 2) {
+                String app = parts[0];
+                String version = parts[1];
+                        
+                if (UA_ZCO.equalsIgnoreCase(app) || UA_ZCB.equalsIgnoreCase(app)) {
+                    try {
+                        return new Version(version);
+                    } catch (ServiceException e) {
+                        ZimbraLog.soap.debug("unable to parse zimbra connector client version", e);
+                    }
+                }
+            }
+        }
+        return null;
     }
 }

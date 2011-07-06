@@ -488,12 +488,12 @@ public class ToXML {
 
     public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact,
             boolean summary, Collection<String> attrFilter, int fields) {
-        return encodeContact(parent, ifmt, contact, null, null, summary, attrFilter,  fields);
+        return encodeContact(parent, ifmt, contact, null, null, summary, attrFilter, fields, null);
     }
 
     public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact,
             ContactGroup contactGroup, Collection<String> memberAttrFilter, boolean summary, 
-            Collection<String> attrFilter, int fields) {
+            Collection<String> attrFilter, int fields, String migratedDlist) {
         Element elem = parent.addElement(MailConstants.E_CONTACT);
         elem.addAttribute(MailConstants.A_ID, ifmt.formatItemId(contact));
         if (needToOutput(fields, Change.MODIFIED_FOLDER))
@@ -522,11 +522,7 @@ public class ToXML {
                 elem.addAttribute(ContactConstants.A_email3, contact.get(ContactConstants.A_email3));
 
                 String type = contact.get(ContactConstants.A_type);
-                String dlist = contact.get(ContactConstants.A_dlist);
-
                 elem.addAttribute(ContactConstants.A_type, type);
-                if (dlist != null)
-                    elem.addAttribute(ContactConstants.A_dlist, dlist);
 
                 // send back date with summary via search results
                 elem.addAttribute(MailConstants.A_CHANGE_DATE, contact.getChangeDate() / 1000);
@@ -543,8 +539,8 @@ public class ToXML {
         List<Attachment> attachments = contact.getAttachments();
 
         // encode contact group members (not derefed) if we don't have a
-        // already derefed contactGroup
-        boolean encodeContactGroupMembersBasic = (contactGroup == null);
+        // already derefed contactGroup, and we don't have a migrated dlist
+        boolean encodeContactGroupMembersBasic = (contactGroup == null) && (migratedDlist != null);
 
         if (attrFilter != null) {
             for (String name : attrFilter) {
@@ -560,9 +556,6 @@ public class ToXML {
                     }
                 }
             }
-            if (contactGroup != null) {
-                encodeContactGroup(elem, contactGroup, memberAttrFilter, ifmt, summary, fields);
-            }
         } else {
             for (Map.Entry<String, String> me : contact.getFields().entrySet()) {
                 String name = me.getKey();
@@ -575,9 +568,12 @@ public class ToXML {
                 for (Attachment attach : attachments)
                     encodeContactAttachment(elem, attach);
             }
-            if (contactGroup != null) {
-                encodeContactGroup(elem, contactGroup, memberAttrFilter, ifmt, summary, fields);
-            }
+        }
+       
+        if (migratedDlist != null) {
+            encodeContactAttr(elem, ContactConstants.A_dlist, migratedDlist, contact, false);
+        } else if (contactGroup != null) {
+            encodeContactGroup(elem, contactGroup, memberAttrFilter, ifmt, summary, fields);
         }
 
         return elem;

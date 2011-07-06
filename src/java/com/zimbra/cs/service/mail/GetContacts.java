@@ -133,16 +133,25 @@ public final class GetContacts extends MailDocumentHandler  {
             if (local.size() > 0) {
                 mbox.lock.lock();
                 try {
+                    boolean migrateDlist = CreateContact.needToMigrateDlist(zsc);
                     for (int id : local) {
                         Contact con = mbox.getContactById(octxt, id);
                         if (con != null && (folderId == ALL_FOLDERS || folderId == con.getFolderId())) {
-                            ContactGroup contactGroup = ContactGroup.init(con, false);
-                            if (contactGroup != null) {
-                                if (derefContactGroupMember) {
+                            ContactGroup contactGroup = null;
+                            String migratedDlist = null;
+                            if (migrateDlist) {
+                                ContactGroup cg = ContactGroup.init(con, false);
+                                if (cg != null) {
+                                    migratedDlist = cg.migrateToDlist(con.getMailbox(), octxt);
+                                }
+                            } else if (derefContactGroupMember) {
+                                contactGroup = ContactGroup.init(con, false);
+                                if (contactGroup != null) {
                                     contactGroup.derefAllMembers(con.getMailbox(), octxt);
                                 }
                             }
-                            ToXML.encodeContact(response, ifmt, con, contactGroup, memberAttrs, false, attrs, fields);
+                            ToXML.encodeContact(response, ifmt, con, contactGroup, 
+                                    memberAttrs, false, attrs, fields, migratedDlist);
                         }
                     }
                 } finally {
