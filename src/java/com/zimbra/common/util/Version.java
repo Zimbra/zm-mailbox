@@ -96,6 +96,13 @@ public final class Version implements Comparable<Version> {
                 mMajor = Integer.parseInt(parts[0]);
                 mMinor = Integer.parseInt(parts[1]);
                 mPatch = Integer.parseInt(parts[2]);
+            } else if (parts.length == 4) {
+                // so we can parse version number in ZCO/ZCB UA, 
+                // where version number is 4 segments, like 7.0.0.0
+                // NOTE: the last segment is ignored.
+                mMajor = Integer.parseInt(parts[0]);
+                mMinor = Integer.parseInt(parts[1]);
+                mPatch = Integer.parseInt(parts[2]);
             } else
                 throw ServiceException.FAILURE("invalid version format:" + version, null);
         } catch (NumberFormatException e) {
