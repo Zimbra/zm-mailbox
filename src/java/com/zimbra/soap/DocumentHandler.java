@@ -587,7 +587,7 @@ public abstract class DocumentHandler {
                         
                 if (UA_ZCO.equalsIgnoreCase(app) || UA_ZCB.equalsIgnoreCase(app)) {
                     try {
-                        return new Version(version);
+                        return new Version(version, false);
                     } catch (ServiceException e) {
                         ZimbraLog.soap.debug("unable to parse zimbra connector client version", e);
                     }
