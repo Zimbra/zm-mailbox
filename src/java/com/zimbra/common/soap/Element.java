@@ -478,7 +478,7 @@ public abstract class Element implements Cloneable {
     private org.w3c.dom.Node toW3cDom(org.w3c.dom.Document doc,
             org.w3c.dom.Element parent) {
         String uri = getNamespaceURI(mPrefix);
-        if (uri.equals("urn:zimbraSoap"))
+        if ((uri != null) && uri.equals("urn:zimbraSoap"))
             uri = null;
         org.w3c.dom.Element elem;
         elem = doc.createElementNS(uri, getQualifiedName());
