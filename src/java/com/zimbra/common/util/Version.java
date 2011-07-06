@@ -61,6 +61,10 @@ public final class Version implements Comparable<Version> {
     private String mVersion;
 
     public Version(String version) throws ServiceException {
+        this(version, true);
+    }
+    
+    public Version(String version, boolean strict) throws ServiceException {
         mVersion = version;
         if (FUTURE.equalsIgnoreCase(version)) {
             mFuture = true;
@@ -96,15 +100,16 @@ public final class Version implements Comparable<Version> {
                 mMajor = Integer.parseInt(parts[0]);
                 mMinor = Integer.parseInt(parts[1]);
                 mPatch = Integer.parseInt(parts[2]);
-            } else if (parts.length == 4) {
+            } else if (parts.length == 4 && !strict) {
                 // so we can parse version number in ZCO/ZCB UA, 
                 // where version number is 4 segments, like 7.0.0.0
                 // NOTE: the last segment is ignored.
                 mMajor = Integer.parseInt(parts[0]);
                 mMinor = Integer.parseInt(parts[1]);
                 mPatch = Integer.parseInt(parts[2]);
-            } else
+            } else {
                 throw ServiceException.FAILURE("invalid version format:" + version, null);
+            }
         } catch (NumberFormatException e) {
             throw ServiceException.FAILURE("invalid version format:" + version, e);
         }
