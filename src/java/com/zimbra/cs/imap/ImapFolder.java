@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -130,7 +130,6 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
         if (sdata != null)
             sdata.mLastSize = mSequence.size();
     }
-
 
     @Override
     public void doEncodeState(Element imap) {
@@ -863,17 +862,17 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
     }
 
 
-    ImapFolder restore(ImapSession session, SessionData sdata) throws ServiceException {
-        mSession = session;
+    void restore(ImapSession session, SessionData sdata) throws ServiceException {
         mMailbox = session.getMailbox();
+        if (mMailbox == null) { // stale session
+            return;
+        }
+        mSession = session;
         mPath = session.getPath();
         mFlags = ImapFlagCache.getSystemFlags(mMailbox);
         // FIXME: NOT RESTORING mSequence.msg.sflags PROPERLY -- need to serialize it!!!
         mSessionData = sdata;
-
-        return this;
     }
-
 
     @Override public void handleTagDelete(int changeId, int tagId) {
         mTags.uncache(1L << Tag.getIndex(tagId));
