@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.google.common.base.Function;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ArrayUtil;
@@ -611,14 +612,20 @@ public class ImapSession extends Session {
                     }
                 }
 
-                short defaultFlags = (short) (getFolderId() != Mailbox.ID_FOLDER_SPAM ? 0 : ImapMessage.FLAG_SPAM | ImapMessage.FLAG_JUNKRECORDED);
-                List<Integer> sflags = new ArrayList<Integer>();
-                for (ImapMessage i4msg : i4folder) {
-                    if ((i4msg.sflags & ~ImapMessage.FLAG_IS_CONTACT) != defaultFlags) {
-                        sflags.add(i4msg.imapUid);
-                        sflags.add((int) i4msg.sflags);
+                final short defaultFlags = (short) (getFolderId() != Mailbox.ID_FOLDER_SPAM ? 0 :
+                    ImapMessage.FLAG_SPAM | ImapMessage.FLAG_JUNKRECORDED);
+                final List<Integer> sflags = new ArrayList<Integer>();
+                i4folder.traverse(new Function<ImapMessage, Void>() {
+                    @Override
+                    public Void apply(ImapMessage i4msg) {
+                        if ((i4msg.sflags & ~ImapMessage.FLAG_IS_CONTACT) != defaultFlags) {
+                            sflags.add(i4msg.imapUid);
+                            sflags.add((int) i4msg.sflags);
+                        }
+                        return null;
                     }
-                }
+                });
+
                 if (!sflags.isEmpty()) {
                     mSessionFlags = ArrayUtil.toIntArray(sflags);
                 }

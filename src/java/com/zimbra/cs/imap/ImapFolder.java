@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -11,10 +11,6 @@
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/*
- * Created on Apr 30, 2005
  */
 package com.zimbra.cs.imap;
 
@@ -30,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListMap;
 
+import com.google.common.base.Function;
 import com.google.common.collect.Iterators;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -51,7 +48,10 @@ import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.zclient.ZFolder;
 
-public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolderData, java.io.Serializable {
+/**
+ * @since Apr 30, 2005
+ */
+public class ImapFolder implements ImapSession.ImapFolderData, java.io.Serializable {
     private static final long serialVersionUID = -7279453727601658427L;
 
     static final byte SELECT_READONLY  = 0x01;
@@ -67,7 +67,7 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
     private String mQuery;
     private byte[] mTypeConstraint = ImapHandler.ITEM_TYPES;
 
-    private List<ImapMessage>                   mSequence;
+    private final List<ImapMessage> mSequence = new ArrayList<ImapMessage>(); // guarded by ImapFolder.this
     private transient Map<Integer, ImapMessage> mMessageIds;
 
     private transient ImapFlagCache mFlags;
@@ -121,8 +121,6 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
         Mailbox mbox = mMailbox = folder.getMailbox();
         mFlags = ImapFlagCache.getSystemFlags(mbox);
         mTags = new ImapFlagCache(mbox, null);
-
-        mSequence = new ArrayList<ImapMessage>();
     }
 
     void setInitialSize() {
@@ -140,9 +138,7 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
             imap.addAttribute("writable", isWritable());
             imap.addAttribute("dirty", sdata.dirtyMessages.size()).addAttribute("expunged", sdata.mExpungedCount);
         }
-
-        if (mSequence != null)
-            imap.addAttribute("size", getSize());
+        imap.addAttribute("size", getSize());
         imap.addAttribute("folder", mPath.asImapPath()).addAttribute("query", mQuery);
     }
 
@@ -179,8 +175,9 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
     /** Returns the number of messages in the folder.  Messages that have been
      *  received or deleted since the client was last notified are still
      *  included in this count. */
-    @Override public int getSize() {
-        return mSequence == null ? 0 : mSequence.size();
+    @Override
+    public int getSize() {
+        return mSequence.size();
     }
 
     /** Returns the number of messages in the folder that are considered
@@ -253,11 +250,11 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
         return sdata == null ? false : sdata.mWritable;
     }
 
-
-    @Override public Iterator<ImapMessage> iterator() {
-        return mSequence.iterator();
+    public synchronized void traverse(Function<ImapMessage, Void> func) {
+        for (ImapMessage i4msg : mSequence) {
+            func.apply(i4msg);
+        }
     }
-
 
     ImapPath getPath() {
         return mPath;
@@ -314,7 +311,7 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
 
     /** Returns the ImapMessage with the given Zimbra item ID from the
      *  folder's {@link #mSequence} message list. */
-    ImapMessage getById(int id) {
+    synchronized ImapMessage getById(int id) {
         if (id <= 0 || getSize() == 0)
             return null;
 
@@ -372,13 +369,12 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
         return (i4msg == null || i4msg.isExpunged() ? null : i4msg);
     }
 
-
     /** Adds the message to the folder.  Messages <b>must</b> be added in
      *  increasing IMAP UID order.  Added messages are appended to the end of
      *  the folder's {@link #mSequence} message list and inserted into the
      *  {@link #mMessageIds} hash (if the latter hash has been instantiated).
      * @return the passed-in ImapMessage. */
-    ImapMessage cache(ImapMessage i4msg, boolean recent) {
+    synchronized ImapMessage cache(ImapMessage i4msg, boolean recent) {
         if (mSequence == null)
             return null;
         // provide the information missing from the DB search
@@ -450,7 +446,7 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
         dirtyTag(id, modseq, false);
     }
 
-    void dirtyTag(int id, int modseq, boolean removeTag) {
+    synchronized void dirtyTag(int id, int modseq, boolean removeTag) {
         SessionData sdata = mSessionData;
         if (sdata != null)
             sdata.mTagsAreDirty = true;
@@ -598,8 +594,7 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
         }
     }
 
-
-    ImapMessageSet getAllMessages() {
+    synchronized ImapMessageSet getAllMessages() {
         ImapMessageSet result = new ImapMessageSet();
         if (getSize() > 0) {
             for (ImapMessage i4msg : mSequence) {
@@ -610,7 +605,7 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
         return result;
     }
 
-    ImapMessageSet getFlaggedMessages(ImapFlag i4flag) {
+    synchronized ImapMessageSet getFlaggedMessages(ImapFlag i4flag) {
         ImapMessageSet result = new ImapMessageSet();
         if (i4flag != null && getSize() > 0) {
             for (ImapMessage i4msg : mSequence) {
@@ -620,7 +615,6 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
         }
         return result;
     }
-
 
     private static int parseId(String id) {
         // valid values will always be positive ints, so force it there...
@@ -825,8 +819,7 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
         return sb.toString();
     }
 
-
-    List<Integer> collapseExpunged(boolean byUID) {
+    synchronized List<Integer> collapseExpunged(boolean byUID) {
         if (getSize() == 0)
             return Collections.emptyList();
 
@@ -834,7 +827,6 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
             ZimbraLog.imap.debug("  ** iterating (collapseExpunged)");
         }
 
-        // FIXME: need synchronization
         boolean trimmed = false;
         int seq = 1;
         List<Integer> removed = new ArrayList<Integer>();
@@ -860,7 +852,6 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
         }
         return removed;
     }
-
 
     void restore(ImapSession session, SessionData sdata) throws ServiceException {
         mMailbox = session.getMailbox();
