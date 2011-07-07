@@ -2,3 +2,4 @@
 60:application/vnd.ms-project:*.mpp
 60:application/vnd.sealed.mht:*.mht
 60:application/vnd.android.package-archive:*.apk
+60:application/vnd.ms-excel.sheet.macroEnabled:*.xlsm
