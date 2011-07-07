@@ -59,8 +59,7 @@ ${DOMAIN_ATTRS}
   good enough for now
   =========================================================
 -->
-
-    <right name="domainAdminAccountRights" type="combo">
+    <right type="combo" name="domainAdminAccountRights">
       <desc>domain admin account right</desc>
       <rights>
         <r n="addAccountAlias"/>
