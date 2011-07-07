@@ -5761,7 +5761,7 @@ TODO: delete them permerntly from here
   <desc>whether web UI should always request read receipts for outgoing messages</desc>
 </attr>
 
-<attr id="1218" name="zimbraCalendarLocationDisabledFields" type="string" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.0.0">
+<attr id="1218" name="zimbraCalendarLocationDisabledFields" type="string" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,accountCosDomainInherited" since="8.0.0">
   <desc>list of disabled fields in calendar location web UI</desc>
 </attr>
 
