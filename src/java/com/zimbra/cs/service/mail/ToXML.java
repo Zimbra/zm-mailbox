@@ -2627,7 +2627,7 @@ public class ToXML {
     public static Element encodeComment(Element response, ItemIdFormatter ifmt, Comment comment, int fields) {
         Element c = response.addElement(MailConstants.E_COMMENT);
         if (needToOutput(fields, Change.MODIFIED_PARENT)) {
-            c.addAttribute(MailConstants.A_PARENT_ID, comment.getParentId());
+            c.addAttribute(MailConstants.A_PARENT_ID, ifmt.formatItemId(comment.getParentId()));
         }
         if (needToOutput(fields, Change.MODIFIED_SUBJECT))
             c.setText(comment.getText());
