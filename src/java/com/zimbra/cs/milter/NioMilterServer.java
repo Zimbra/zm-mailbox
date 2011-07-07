@@ -49,7 +49,7 @@ public final class NioMilterServer extends NioServer implements MilterServer {
 
     @Override
     public NioHandler createHandler(NioConnection conn) {
-        return new NioMilterHandler(this, conn);
+        return new MilterHandler(conn);
     }
 
     @Override
@@ -111,7 +111,7 @@ public final class NioMilterServer extends NioServer implements MilterServer {
 
             // register the signal handler
             ClearCacheSignalHandler.register();
-            
+
             MilterShutdownHook shutdownHook = new MilterShutdownHook(milterServer);
             Runtime.getRuntime().addShutdownHook(shutdownHook);
 
@@ -121,9 +121,9 @@ public final class NioMilterServer extends NioServer implements MilterServer {
             ZimbraLog.milter.error("Unable to start milter server: " + e.getMessage());
         }
     }
-    
+
     /**
-     * The signal handler for SIGCONT that triggers the 
+     * The signal handler for SIGCONT that triggers the
      * invalidation of the Permission cache
      * @author jpowers
      *
@@ -140,26 +140,26 @@ public final class NioMilterServer extends NioServer implements MilterServer {
             PermissionCache.invalidateAllCache();
             ZimbraLog.milter.info("ACL cache successfully cleared");
         }
-        
-        
+
+
         /**
          * Creates the signal handler and registers it with the vm
          */
         public static void register() {
             try{
-                Signal hup = new Signal("CONT"); 
+                Signal hup = new Signal("CONT");
                 ClearCacheSignalHandler handler = new ClearCacheSignalHandler();
                 // register it
                 Signal.handle(hup, handler);
                 ZimbraLog.milter.info("Registered handler:" + hup.getName() + ":" + hup.getNumber());
             }
             catch(Throwable t){
-                // in case we're running on an os that doesn't have a HUP. Need to make sure 
+                // in case we're running on an os that doesn't have a HUP. Need to make sure
                 // milter will still start
                 ZimbraLog.milter.error("Exception while registering signal handler CONT/19 and script refresh will not work", t);
             }
-            
+
         }
-        
+
     }
 }
