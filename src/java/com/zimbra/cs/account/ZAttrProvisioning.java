@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110625-1519 */
+    /* build: 7.0.0_BETA1_1111 administrator 20110706-1056 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -4580,6 +4580,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=3)
     public static final String A_zimbraMailAddress = "zimbraMailAddress";
+
+    /**
+     * optional regex used by web client to validate email address
+     *
+     * @since ZCS 7.1.2
+     */
+    @ZAttr(id=1234)
+    public static final String A_zimbraMailAddressValidationRegex = "zimbraMailAddressValidationRegex";
 
     /**
      * RFC822 email address of this recipient for accepting mail
