@@ -24,7 +24,7 @@ import org.apache.mina.filter.ssl.SslFilter;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 
-public class NioConnection {
+public final class NioConnection {
     private final NioServer server;
     private final IoSession session;
     private final OutputStream out;
@@ -35,6 +35,13 @@ public class NioConnection {
         this.session = session;
         remoteAddress = (InetSocketAddress) session.getRemoteAddress();
         out = new NioOutputStream(session, server.getConfig().getWriteChunkSize());
+    }
+
+    /**
+     * Returns the connection ID.
+     */
+    public long getId() {
+        return session.getId();
     }
 
     public OutputStream getOutputStream() {
