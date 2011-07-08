@@ -1,9 +1,13 @@
 package com.zimbra.qa.unittest;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -19,6 +23,8 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.entry.LdapAccount;
@@ -68,7 +74,7 @@ public class TestContactGroup {
     public static void init() throws Exception {
         Zimbra.startupCLI();
         CliUtil.toolSetup();
-        
+        ZimbraLog.contact.setLevel(Log.Level.debug);
         /*
         ZimbraLog.contact.setLevel(Log.Level.debug);
         ZimbraLog.gal.setLevel(Log.Level.debug);
@@ -425,6 +431,7 @@ public class TestContactGroup {
     }
     
     @Test
+    @Ignore
     public void zimbraDelimittedFields() throws Exception {
         Account acct = Provisioning.getInstance().get(AccountBy.name, TestUtil.getAddress("user1"));
        
@@ -446,6 +453,76 @@ public class TestContactGroup {
             System.out.println();
         }
     }
+    
+    @Test
+    public void csvOldZCOClient() throws Exception {
+        Account acct = Provisioning.getInstance().get(AccountBy.name, TestUtil.getAddress("user1"));
+        
+        // String relativePath = "/?fmt=zip&meta=0&zlv=4&list=259";
+        
+        String relativePath = "/?fmt=zip&meta=1&zlv=4&list=257";
+        
+        final int BUFFER = 2048;
+        
+        ZMailbox mbox = TestUtil.getZMailbox(acct.getName());
+        ZipInputStream zin = new ZipInputStream(mbox.getRESTResource(relativePath));
+        ZipEntry ze = null;
+        while ((ze = zin.getNextEntry()) != null) {
+            System.out.println("Unzipping " + ze.getName());
+            int count;
+            byte data[] = new byte[BUFFER];
+            ByteArrayOutputStream os = new ByteArrayOutputStream();
+            while ((count = zin.read(data, 0, BUFFER)) 
+              != -1) {
+               os.write(data, 0, count);
+            }
+            os.flush();
+            
+            ByteArrayInputStream is = new ByteArrayInputStream(os.toByteArray());
+            byte[] bytes = ByteUtil.getContent(is, 1024);
+            String dd = new String(bytes, "UTF-8");
+            System.out.println(dd);
+            is.close();
+            
+            os.close();
+        }
+        zin.close();
+    }
+    
+    /*
+    public class UnZip {
+        final int BUFFER = 2048;
+        public static void main (String argv[]) {
+           try {
+              BufferedOutputStream dest = null;
+              FileInputStream fis = new 
+            FileInputStream(argv[0]);
+              ZipInputStream zis = new 
+            ZipInputStream(new BufferedInputStream(fis));
+              ZipEntry entry;
+              while((entry = zis.getNextEntry()) != null) {
+                 System.out.println("Extracting: " +entry);
+                 int count;
+                 byte data[] = new byte[BUFFER];
+                 // write the files to the disk
+                 FileOutputStream fos = new 
+               FileOutputStream(entry.getName());
+                 dest = new 
+                   BufferedOutputStream(fos, BUFFER);
+                 while ((count = zis.read(data, 0, BUFFER)) 
+                   != -1) {
+                    dest.write(data, 0, count);
+                 }
+                 dest.flush();
+                 dest.close();
+              }
+              zis.close();
+           } catch(Exception e) {
+              e.printStackTrace();
+           }
+        }
+     }
+    */
     
     /*
     private SoapHttpTransport auth(String acctName, String password) throws Exception {
