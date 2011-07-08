@@ -25,24 +25,28 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-
 import javax.mail.Address;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.service.ServiceException.Argument;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.MailUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.CalendarItem;
+import com.zimbra.cs.mailbox.DeliveryOptions;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Mailbox.AddInviteData;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
@@ -357,10 +361,34 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                 if (updateOwnAppointment)
                     aid = mbox.addInvite(octxt, csd.mInvite, apptFolderId, pm);
                 // Next, notify any attendees.
-                if (!csd.mDontNotifyAttendees)
+                if (!csd.mDontNotifyAttendees) {
                     // All calendar-related emails are sent in sendpartial mode.
-                    msgId = CalendarMailSender.sendPartial(octxt, mbox, csd.mMm, csd.newContacts, csd.uploads,
-                            csd.mOrigId, csd.mReplyType, csd.mIdentityId, false);
+                	try {
+                		msgId = mbox.getMailSender().setSendPartial(true).sendMimeMessage(
+                            octxt, mbox, csd.mMm, csd.newContacts, csd.uploads, csd.mOrigId, csd.mReplyType, csd.mIdentityId, false);
+                	} catch (MailServiceException e) {
+                        if (e.getCode().equals(MailServiceException.SEND_PARTIAL_ADDRESS_FAILURE)) {
+                            ZimbraLog.calendar.info("Unable to send to some addresses: " + e);
+                            // place delivery failure in inbox
+                            String subject = "<No Subject>";
+                            try {
+                                subject = csd.mMm.getSubject();
+                            } catch (MessagingException e1) {
+                                // ignore
+                            }
+                            Mailbox mb;
+                            if (onBehalfOf) {
+                                Account authAccount = octxt.getAuthenticatedUser();
+                                mb = MailboxManager.getInstance().getMailboxByAccountId(authAccount.getId());
+                            } else {
+                                mb = mbox;
+                            }	
+                            insertDeliveryFailureMessage(octxt, mb, subject, e.getArgs());
+                        } else {
+                            throw e;
+                        }
+                	}
+                }   
             } else {
                 // But if we're sending a cancel request, send emails first THEN update the local mailbox.
                 // This makes a difference if MTA is not running.  We'll avoid canceling organizer's copy
@@ -404,6 +432,22 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         return response;
     }
 
+    private static void insertDeliveryFailureMessage(OperationContext octxt, Mailbox mbox, String subject, Argument[] addressArgs) {
+    	try {
+    		MimeMessage failedDeliverymm = new Mime.FixedMimeMessage(JMSession.getSession());
+    		MailUtil.populateFailureDeliveryMessageFields(failedDeliverymm, subject, mbox.getAccount().getName(), addressArgs);
+        
+    		Mime.recursiveRepairTransferEncoding(failedDeliverymm);
+    		failedDeliverymm.saveChanges();
+        
+    		ParsedMessage pm = new ParsedMessage(failedDeliverymm, true);
+    		DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX).setNoICal(true).setFlags(Flag.BITMASK_UNREAD);
+    		mbox.addMessage(octxt, pm, dopt);
+        } catch (Exception e) {
+            ZimbraLog.sync.warn("Can't add the partial send failure notice to the user's INBOX " + e);
+        }
+    }
+    
     protected static Element echoAddedInvite(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Mailbox mbox,
                                              AddInviteData aid, int maxSize, boolean wantHtml, boolean neuter)
     throws ServiceException {
