@@ -78,6 +78,7 @@ public class RuleManager {
             commandMap.put("flag", com.zimbra.cs.filter.jsieve.Flag.class.getName());
             commandMap.put("reply", com.zimbra.cs.filter.jsieve.Reply.class.getName());
             commandMap.put("notify", com.zimbra.cs.filter.jsieve.Notify.class.getName());
+            commandMap.put("discard", com.zimbra.cs.filter.jsieve.Discard.class.getName());
 
             Map<String, String> testMap = configurationManager.getTestMap();
             testMap.put("date", com.zimbra.cs.filter.jsieve.DateTest.class.getName());

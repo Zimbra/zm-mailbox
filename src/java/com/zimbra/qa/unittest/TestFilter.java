@@ -698,6 +698,31 @@ extends TestCase {
         assertTrue(content.contains(TestUtil.getAddress(REMOTE_USER_NAME)) && content.contains(body));
     }
 
+    public void testNotifyWithDiscard()
+    throws Exception {
+        List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
+        List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
+        List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
+        conditions.add(new ZFilterCondition.ZTrueCondition());
+        // add an action to notify
+        actions.add(new ZFilterAction.ZNotifyAction(
+                TestUtil.getAddress(REMOTE_USER_NAME), "${SUBJECT}", "From: ${FROM}, Message: ${BODY}"));
+        // add discard action
+        actions.add(new ZDiscardAction());
+        rules.add(new ZFilterRule("testNotifyWithDiscard", true, false, conditions, actions));
+        saveIncomingRules(mMbox, new ZFilterRules(rules));
+
+        String subject = NAME_PREFIX + " testNotifyWithDiscard";
+        String body = "Hi, How r u?";
+        String msg = new MessageBuilder().withFrom(REMOTE_USER_NAME).withSubject(subject).withBody(body).create();
+        // send msg to user1
+        TestUtil.addMessageLmtp(new String[] { USER_NAME }, REMOTE_USER_NAME, msg);
+
+        // check msg not filed into user1's mailbox
+        List<ZMessage> msgs = TestUtil.search(mMbox, "in:inbox subject:\"" + subject + "\"");
+        assertTrue("original message should not have been filed", msgs.isEmpty());
+    }
+
     /**
      * Tests fix for bug 57890 (https://issues.apache.org/jira/browse/JSIEVE-75).
      */
