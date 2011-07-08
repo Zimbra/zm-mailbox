@@ -42,7 +42,9 @@ final class MemcachedImapCache implements ImapSessionManager.Cache {
     @Override
     public void put(String key, ImapFolder value) {
         try {
-            map.put(new ImapMemcachedKey(key), value);
+            synchronized (value) {
+                map.put(new ImapMemcachedKey(key), value);
+            }
         } catch (ServiceException e) {
             ZimbraLog.imap.warn("Failed to store into cache", e);
         }

@@ -90,7 +90,9 @@ final class DiskImapCache implements ImapSessionManager.Cache {
         ObjectOutputStream oos = null;
         try {
             oos = new ObjectOutputStream(fos = new FileOutputStream(pagefile));
-            oos.writeObject(folder);
+            synchronized (folder) {
+                oos.writeObject(folder);
+            }
         } catch (IOException e) {
             ByteUtil.closeStream(oos);
             ByteUtil.closeStream(fos);
