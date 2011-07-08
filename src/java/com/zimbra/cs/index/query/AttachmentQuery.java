@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -14,9 +14,9 @@
  */
 package com.zimbra.cs.index.query;
 
-import java.util.HashMap;
 import java.util.Map;
 
+import com.google.common.collect.ImmutableMap;
 import com.zimbra.cs.index.LuceneFields;
 
 /**
@@ -25,32 +25,38 @@ import com.zimbra.cs.index.LuceneFields;
  * @author tim
  * @author ysasaki
  */
-public class AttachmentQuery extends LuceneQuery {
-    private static final Map<String, String> mMap;
-
-    static {
-        mMap = new HashMap<String, String>();
-
-        addMapping(mMap, new String[] {"any"}, "any");
-        addMapping(mMap, new String[] {"application", "application/*"}, "application");
-        addMapping(mMap, new String[] {"bmp", "image/bmp"}, "image/bmp");
-        addMapping(mMap, new String[] {"gif", "image/gif"}, "image/gif");
-        addMapping(mMap, new String[] {"image", "image/*"}, "image");
-        addMapping(mMap, new String[] {"jpeg", "image/jpeg"}, "image/jpeg");
-        addMapping(mMap, new String[] {"excel", "application/vnd.ms-excel", "xls"}, "application/vnd.ms-excel");
-        addMapping(mMap, new String[] {"ppt", "application/vnd.ms-powerpoint"}, "application/vnd.ms-powerpoint");
-        addMapping(mMap, new String[] {"ms-tnef", "application/ms-tnef"}, "application/ms-tnef");
-        addMapping(mMap, new String[] {"word", "application/msword", "msword"}, "application/msword");
-        addMapping(mMap, new String[] {"none"}, "none");
-        addMapping(mMap, new String[] {"pdf", "application/pdf"}, "application/pdf");
-        addMapping(mMap, new String[] {"text", "text/*"}, "text");
-    }
+public final class AttachmentQuery extends LuceneQuery {
+    static final Map<String, String> MAP = ImmutableMap.<String, String>builder()
+        .put("any", "any")
+        .put("application", "application")
+        .put("application/*", "application")
+        .put("bmp", "image/bmp")
+        .put("image/bmp", "image/bmp")
+        .put("gif", "image/gif")
+        .put("image/gif", "image/gif")
+        .put("image", "image")
+        .put("image/*", "image")
+        .put("jpeg", "image/jpeg")
+        .put("image/jpeg", "image/jpeg")
+        .put("excel", "application/vnd.ms-excel")
+        .put("application/vnd.ms-excel", "application/vnd.ms-excel")
+        .put("xls", "application/vnd.ms-excel")
+        .put("ppt", "application/vnd.ms-powerpoint")
+        .put("application/vnd.ms-powerpoint", "application/vnd.ms-powerpoint")
+        .put("ms-tnef", "application/ms-tnef")
+        .put("application/ms-tnef", "application/ms-tnef")
+        .put("word", "application/msword")
+        .put("application/msword", "application/msword")
+        .put("msword", "application/msword")
+        .put("none", "none")
+        .put("pdf", "application/pdf")
+        .put("application/pdf", "application/pdf")
+        .put("text", "text")
+        .put("text/*", "text")
+        .build();
 
     public AttachmentQuery(String what) {
-        super("type:", LuceneFields.L_ATTACHMENTS, lookup(mMap, what));
+        super("attachment:", LuceneFields.L_ATTACHMENTS, lookup(MAP, what));
     }
 
-    AttachmentQuery(String luceneField, String what) {
-        super("type:", luceneField, lookup(mMap, what));
-    }
 }

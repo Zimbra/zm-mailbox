@@ -136,7 +136,7 @@ public final class ZimbraQueryTest {
         Assert.assertEquals("ZQ: Q(l.content:test)", query.toString());
         // The order of HashSet iteration may be different on different platforms.
         Assert.assertTrue(query.toQueryString().matches(
-                "\\(\\( content:test\\) AND -ID:/(Junk|Trash) -ID:/(Junk|Trash) \\)"));
+                "\\(\\(content:test\\) AND -ID:/(Junk|Trash) -ID:/(Junk|Trash) \\)"));
     }
 
     @Test

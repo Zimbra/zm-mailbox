@@ -101,7 +101,12 @@ public final class LuceneQueryOperation extends QueryOperation {
             return;
         }
 
-        queryString = queryString + " " + (bool ? "" : "-") + queryStr;
+        if (queryString.isEmpty()) {
+            queryString = (bool ? "" : "-") + queryStr;
+        } else {
+            queryString = queryString + " " + (bool ? "" : "-") + queryStr;
+        }
+
         if (bool) {
             if (luceneQuery == null) {
                 luceneQuery = query;
@@ -204,7 +209,7 @@ public final class LuceneQueryOperation extends QueryOperation {
     }
 
     @Override
-    String toQueryString() {
+    public String toQueryString() {
         StringBuilder ret = new StringBuilder("(");
         ret.append(queryString);
         return ret.append(")").toString();
