@@ -33,12 +33,6 @@ abstract class LuceneQuery extends Query {
     private final String queryField;
     private final String term;
 
-    static void addMapping(Map<String, String> map, String[] array, String value) {
-        for (int i = array.length - 1; i >= 0; i--) {
-            map.put(array[i], value);
-        }
-    }
-
     static String lookup(Map<String, String> map, String key) {
         String toRet = map.get(key);
         if (toRet == null) {

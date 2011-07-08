@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -22,10 +22,10 @@ import com.zimbra.cs.index.LuceneFields;
  * @author tim
  * @author ysasaki
  */
-public final class TypeQuery extends AttachmentQuery {
+public final class TypeQuery extends LuceneQuery {
 
     public TypeQuery(String what) {
-        super(LuceneFields.L_MIMETYPE, what);
+        super("type:", LuceneFields.L_MIMETYPE, lookup(AttachmentQuery.MAP, what));
     }
 
 }

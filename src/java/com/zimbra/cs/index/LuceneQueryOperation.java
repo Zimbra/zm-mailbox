@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -92,8 +92,12 @@ public final class LuceneQueryOperation extends QueryOperation {
      * @param truth allows for negated query terms
      */
     public void addClause(String queryStr, Query query, boolean truth) {
-        mQueryString = mQueryString + " " + (truth ? "" : "-") + queryStr;
         assert(!mHaveRunSearch);
+        if (mQueryString.isEmpty()) {
+            mQueryString = (truth ? "" : "-") + queryStr;
+        } else {
+            mQueryString = mQueryString + " " + (truth ? "" : "-") + queryStr;
+        }
 
         if (truth) {
             mQuery.add(new BooleanClause(query, BooleanClause.Occur.MUST));
