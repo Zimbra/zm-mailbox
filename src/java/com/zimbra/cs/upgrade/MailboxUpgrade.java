@@ -181,7 +181,7 @@ public final class MailboxUpgrade {
         ContactGroup.MigrateContactGroup migrate = new ContactGroup.MigrateContactGroup(mbox);
         try {
             migrate.handle();
-            ZimbraLog.mailbox.info("contact group migration finished");
+            ZimbraLog.mailbox.info("contact group migration finished for mailbox " + mbox.getId());
         } catch (Exception e) {
             ZimbraLog.mailbox.warn("contact group migration failed", e);
         }

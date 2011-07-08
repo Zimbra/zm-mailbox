@@ -145,10 +145,14 @@ public class ContactGroup {
     
     // for legacy clients
     // migrate from a dlist value to the new group format
-    // if dlist is an empty string, it meas to remove all members.
+    // if dlist is an empty string, it means to remove all members.
     public void migrateFromDlist(String dlist) throws ServiceException {
+        String before = dump();
         removeAllMembers();
         MigrateContactGroup.migrate(this, dlist);
+        
+        ZimbraLog.contact.info("in-place migrated contact group from dlist: dlist=[%s], groupMember before migrate=[%s], groupMember after migrate=[%s]", 
+                dlist, before, dump());
     }
     
     // for legacy clients
@@ -168,8 +172,16 @@ public class ContactGroup {
                 }
                 sb.append(addr);
             }
+            
+            if (ZimbraLog.contact.isDebugEnabled()) {
+                ZimbraLog.contact.debug("returned contact group as dlist: dlist=[%s], groupMember=[%s]", 
+                        sb.toString(), dump());
+            }
+            
             return sb.toString();
         }
+        
+        
     }
     
     private void addMember(Member member) {
@@ -268,6 +280,19 @@ public class ContactGroup {
         
     }
     
+    private String dump() {
+        StringBuilder sb = new StringBuilder();
+        boolean first = true;
+        for (Member member : members) {
+            if (!first) {
+                sb.append(", ");
+            } else {
+                first = false;
+            }
+            sb.append(member.getType().getMetaDataEncoded() + ":" + member.getValue());
+        }
+        return sb.toString();
+    }
     
     /*
      *======================
@@ -850,6 +875,9 @@ public class ContactGroup {
             pc.modifyField(ContactConstants.A_dlist, null); 
             
             mbox.modifyContact(octxt, contact.getId(), pc);
+            
+            ZimbraLog.contact.info("migrated contact group %s: dlist=[%s], groupMember=[%s]", 
+                contact.getId(), dlist, contactGroup.dump());
         }
         
         // add each dlist member as an inlined member in groupMember
