@@ -5774,7 +5774,11 @@ TODO: delete them permerntly from here
   <desc>Interval between successive executions of the task that publishes shared item updates to LDAP</desc>
 </attr>
 
-<attr id="1221" name="zimbraAutoProvAuthMech" type="enum" value="LDAP,PREAUTH" cardinality="multi" optionalIn="domain" since="8.0.0">
+<attr id="1221" name="zimbraMailAddressValidationRegex" type="string" max="512" cardinality="multi" optionalIn="domain,globalConfig" flags="domainInherited,domainInfo" since="7.1.2">
+  <desc>optional regex used by web client to validate email address</desc>
+</attr>
+
+<attr id="1222" name="zimbraAutoProvAuthMech" type="enum" value="LDAP,PREAUTH" cardinality="multi" optionalIn="domain" since="8.0.0">
   <desc>
     Auth mechanisms enabled for auto provisioning.  When users authenticate via one of the external auth mechanisms 
     enabled for auto provisioningconfigured in this attribute, and when the user account does not exist in Zimbra directory, 
@@ -5782,17 +5786,22 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
-<attr id="1222" name="zimbraAutoProvMode" type="enum" value="EAGER,LAZY,MANUAL" cardinality="multi" optionalIn="domain" since="8.0.0">
+<attr id="1223" name="zimbraAutoProvMode" type="enum" value="EAGER,LAZY,MANUAL" cardinality="multi" optionalIn="domain" since="8.0.0">
   <desc>
     Auto provisoninging modes enabled.
-    EAGER: TODO
+    EAGER: automatically poll the configured External LDAP directory for auto provision at a configured interval and
+           create the Zimbra account.  The interval is configured by zimbraAutoProvPollingInterval.
     LAZY: auto create the Zimbra account when user first login via one of the external auth mechanisms enabled for 
           auto provisioning configured in zimbraAutoProvAuthMech
-    MANUAL: TODO
+    MANUAL: admin to select a user from the configured External LDAP directory for auto provision and 
+            create the Zimbra account.
+            
+    In all cases, the Zimbra account is populated with attributes mapped from  the external LDAP user   
+    entry based on the zimbraAutoProvAttrMap.      
   </desc>
 </attr>
 
-<attr id="1223" name="zimbraAutoProvUseLdapAuthSettings" type="boolean" cardinality="single" optionalIn="domain" since="8.0.0">
+<attr id="1224" name="zimbraAutoProvUseLdapAuthSettings" type="boolean" cardinality="single" optionalIn="domain" since="8.0.0">
   <desc>
     Whether to use external LDAP auth setting for auto provisioning.  Honored only when user authenticated to Zimbra 
     by external LDAP auth.  If honored, all zimbraAutoProv*** setting are ignored, and setting for external LDAP 
@@ -5800,23 +5809,23 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
-<attr id="1224" name="zimbraAutoProvLdapURL" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
+<attr id="1225" name="zimbraAutoProvLdapURL" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
   <desc>LDAP URL of the external LDAP server for account auto provisioning</desc>
 </attr>
 
-<attr id="1225" name="zimbraAutoProvLdapStartTlsEnabled" type="boolean" cardinality="single" optionalIn="domain" since="8.0.0">
+<attr id="1226" name="zimbraAutoProvLdapStartTlsEnabled" type="boolean" cardinality="single" optionalIn="domain" since="8.0.0">
   <desc>whether to use startTLS when accessing the external LDAP server for account auto provisioning</desc>
 </attr>
 
-<attr id="1226" name="zimbraAutoProvLdapAdminBindDn" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
+<attr id="1227" name="zimbraAutoProvLdapAdminBindDn" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
   <desc>LDAP search bind dn for account auto provisioning</desc>
 </attr>
 
-<attr id="1227" name="zimbraAutoProvLdapAdminBindPassword" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
+<attr id="1228" name="zimbraAutoProvLdapAdminBindPassword" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
   <desc>LDAP search bind password for account auto provisioning</desc>
 </attr>
 
-<attr id="1228" name="zimbraAutoProvLdapSearchBase" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
+<attr id="1229" name="zimbraAutoProvLdapSearchBase" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
   <desc>
     LDAP search base for account auto provisioning.  
     Either zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn 
@@ -5824,7 +5833,7 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
-<attr id="1229" name="zimbraAutoProvLdapSearchFilter" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
+<attr id="1230" name="zimbraAutoProvLdapSearchFilter" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
   <desc>
     LDAP search filter template for account auto provisioning.
     Either zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn 
@@ -5832,7 +5841,7 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
-<attr id="1230" name="zimbraAutoProvLdapBindDn" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
+<attr id="1231" name="zimbraAutoProvLdapBindDn" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
   <desc>
     LDAP external DN template for account auto provisioning.
     Either zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn 
@@ -5840,14 +5849,14 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
-<attr id="1231" name="zimbraAutoProvAccountNameMap" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
+<attr id="1232" name="zimbraAutoProvAccountNameMap" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
   <desc>
     Attribute name in the external directory that contains localpart of the account name.
     If not specified, localpart of teh account name is the principal user used to authenticated to Zimbra.
   </desc>
 </attr>
 
-<attr id="1232" name="zimbraAutoProvAttrMap" type="string" max="256" cardinality="multi" optionalIn="domain" since="8.0.0">
+<attr id="1233" name="zimbraAutoProvAttrMap" type="string" max="256" cardinality="multi" optionalIn="domain" since="8.0.0">
   <desc>
     Attribute map for account auto provisioning.  Values are in the format of {external attribute}={zimbra attribute}.
     Invalid mapping configuration will cause the account creation to fail.
@@ -5859,15 +5868,59 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
-<attr id="1233" name="zimbraAutoProvNotificationFromAddress" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
+<attr id="1234" name="zimbraAutoProvNotificationFromAddress" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
   <desc>
     Email address to put in from header for the auto provision email.
     If not set, Postmaster &lt;postmaster@{RECIPIENT_DOMAIN}&gt; will be used.
   </desc>
 </attr>
 
-<attr id="1234" name="zimbraMailAddressValidationRegex" type="string" max="512" cardinality="multi" optionalIn="domain,globalConfig" flags="domainInherited,domainInfo" since="7.1.2">
-  <desc>optional regex used by web client to validate email address</desc>
+<attr id="1235" name="zimbraAutoProvLastPolledTimestamp" type="gentime" immutable="1" cardinality="single" optionalIn="domain" since="8.0.0">
+  <desc>
+    For EAGER auto provision.  
+    Timestampt when the external domain is last polled for EAGER auto provision.
+  </desc>
 </attr>
+
+<attr id="1236" name="zimbraAutoProvBatchSize" type="integer" cardinality="single" optionalIn="domain,globalConfig" flags="domainInherited" since="8.0.0">
+  <globalConfigValue>20</globalConfigValue>
+  <desc>
+    For EAGER auto provision.  
+    Max number of accounts to process in each interval.
+  </desc>
+</attr>
+
+<attr id="1237" name="zimbraAutoProvLock" type="string" immutable="1" cardinality="single" optionalIn="domain" since="8.0.0">
+  <desc>
+    For EAGER auto provision.  
+    Lock the domain from EAGER auto provision.  This attribute is for internal use only: only one server can perform 
+    EAGER auto provisioning for a domain at one time.  This lock is to shchronize EAGER auto provision attempts between servers.
+  </desc>
+</attr>
+
+<attr id="1238" name="zimbraAutoProvScheduledDomains" type="string" cardinality="multi" optionalIn="server" since="8.0.0">
+  <desc>
+    For EAGER auto provision.  
+    Domain scheduled for eager auto provision on this server.  Scheduled domains must have EAGER mode enabled in zimbraAutoProvMode.
+    Multiple domains can be scheduled on a server for EAGER auto provision.  Also, a domain can be scheduled on multiple servers 
+    for EAGER auto provision.
+  </desc>
+</attr>
+
+<attr id="1239" name="zimbraAutoProvPollingInterval" type="duration" cardinality="single" optionalIn="server,globalConfig" flags="serverInherited" since="8.0.0">
+  <globalConfigValue>15m</globalConfigValue>
+  <desc>
+    For EAGER auto provision.  
+    Interval between successive polling and provisioning accounts.  
+    The actual interval may be longer since it can be affected by two other factors: zimbraAutoProvBatchSize and 
+    number of domains configured in zimbraAutoProvScheduledDomains.  At each interval, the auto provision thread iterates through 
+    all domains in zimbraAutoProvScheduledDomains and auto creates up to domain.zimbraAutoProvBatchSize accounts.  If that 
+    process takes longer than zimbraAutoProvPollingInterval then the next iteration will start immediately instead of waiting for 
+    zimbraAutoProvPollingInterval amount of time.
+  </desc>
+</attr>
+
+
+
 
 </attrs>

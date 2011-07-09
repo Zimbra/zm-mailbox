@@ -18,6 +18,7 @@ import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
 
+// TODO deprecate after all legacy stuff is remvoed
 public interface IAttributes {
     
     /**

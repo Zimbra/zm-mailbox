@@ -223,6 +223,10 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
         return new JNDILdapFilter(LegacyLdapFilter.domainLabel());
     }
 
+    @Override
+    public ZLdapFilter domainLockedForEagerAutoProvision() {
+        return new JNDILdapFilter(LegacyLdapFilter.domainLockedForEagerAutoProvision());
+    }
     
     /*
      * global config

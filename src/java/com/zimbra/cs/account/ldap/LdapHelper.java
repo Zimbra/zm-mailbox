@@ -85,6 +85,22 @@ public abstract class LdapHelper {
             Entry entry, LdapUsage ldapUsage) 
     throws ServiceException;
     
+    /**
+     * Modify the entry only if the assertion specified in testFilter is true.
+     * @param zlc
+     * @param dn
+     * @param testFilter
+     * @param attrs
+     * @param entry
+     * @param ldapUsage
+     * @returns true if the filter matches the target entry and the entry is 
+     *          successfully modified.
+     *          false if the filter does not match the target entry
+     * @throws ServiceException
+     */
+    public abstract boolean tesAndModifyEntry(ZLdapContext zlc, String dn, ZLdapFilter testFilter,
+            Map<String, ? extends Object> attrs,  Entry entry, LdapUsage ldapUsage)
+    throws ServiceException;
     
     /**
      * Search for an entry by search base and query.

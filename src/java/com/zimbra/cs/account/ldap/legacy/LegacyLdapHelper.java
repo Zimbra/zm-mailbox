@@ -99,6 +99,14 @@ public class LegacyLdapHelper extends LdapHelper {
             LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
+    
+
+    @Override
+    public boolean tesAndModifyEntry(ZLdapContext zlc, String dn,
+            ZLdapFilter testFilter, Map<String, ? extends Object> attrs,
+            Entry entry, LdapUsage ldapUsage) throws ServiceException {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public ZSearchResultEntry searchForEntry(String base, ZLdapFilter filter,
@@ -119,6 +127,7 @@ public class LegacyLdapHelper extends LdapHelper {
     throws ServiceException {
         throw new UnsupportedOperationException();
     }
+
 
 
 }

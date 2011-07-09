@@ -143,7 +143,7 @@ public abstract class AutoProvision {
             for (String rule : rules) {
                 String[] parts = rule.split(DELIMITER);
                 if (parts.length != 2) {
-                    throw AccountServiceException.INVALID_CONFIG("invalid value in " + 
+                    throw ServiceException.FAILURE("invalid value in " + 
                             Provisioning.A_zimbraAutoProvAttrMap + ": " + rule, null);
                 }
                 
@@ -151,7 +151,7 @@ public abstract class AutoProvision {
                 String zimbraAttr = parts[1];
                 
                 if (!validAccountAttrs.contains(zimbraAttr)) {
-                    throw AccountServiceException.INVALID_CONFIG("invalid value in " + 
+                    throw ServiceException.FAILURE("invalid value in " + 
                             Provisioning.A_zimbraAutoProvAttrMap + ": " + rule + 
                             ", not a valid zimbra attribute ", null);
                 }
@@ -491,12 +491,48 @@ public abstract class AutoProvision {
         }
     }
     
-    static void searchAutoProvDirectory(LdapProv prov, Domain domain, String filter, String name, 
-            String[] returnAttrs, int maxResults, final DirectoryEntryVisitor visitor)
+    /*
+     * entries are returned in DirectoryEntryVisitor interface.
+     */
+    static void searchAutoProvDirectory(LdapProv prov, Domain domain, 
+            String filter, String name, String createTimestampLaterThan,
+            String[] returnAttrs, int maxResults, final DirectoryEntryVisitor visitor) 
+    throws ServiceException {
+
+        SearchLdapVisitor ldapVisitor = new SearchLdapVisitor() {
+            @Override
+            public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs)
+            throws StopIteratingException {
+                visitor.visit(dn, attrs);
+            }
+        };
+        
+        searchAutoProvDirectory(prov, domain, filter,  name,  createTimestampLaterThan,
+                returnAttrs,  maxResults,  ldapVisitor);
+    }
+    
+    /**
+     * Search the external auto provision LDAP source
+     * 
+     * Only one of filter or name can be provided.  
+     * 
+     * - if name is provided, the search filter will be zimbraAutoProvLdapSearchFilter or 
+     *   zimbraAuthLdapSearchFilter with place holders filled with the name.
+     * 
+     * - if filter is provided, the provided filter will be the search filter.
+     * 
+     * - if neither is provided, the search filter will be zimbraAutoProvLdapSearchFilter or 
+     *   zimbraAuthLdapSearchFilter with place holders filled with "*".   If createTimestampLaterThan 
+     *   is provided, the search filter will be ANDed with (createTimestamp >= {timestamp}) 
+     *
+     */
+    static void searchAutoProvDirectory(LdapProv prov, Domain domain, 
+            String filter, String name, String createTimestampLaterThan,
+            String[] returnAttrs, int maxResults, SearchLdapVisitor ldapVisitor)
     throws ServiceException {
         // use either filter or name, make sure only one is provided
-        if ((filter == null) == (name==null)) {
-            throw ServiceException.INVALID_REQUEST("exact one of filter or name must be set", null);
+        if ((filter != null) && (name != null)) {
+            throw ServiceException.INVALID_REQUEST("only one of filter or name can be provided", null);
         }
         
         boolean useLdapAuthSettings = useLdapAuthSettings(domain);
@@ -538,28 +574,23 @@ public abstract class AutoProvision {
             String searchFilter = null;
             
             if (name != null) {
-                /*
-                 * search by name with search filter configured on domain
-                 */
                 if (searchFilterTemplate == null) {
                     throw ServiceException.INVALID_REQUEST(
-                            "search filter template is not set on doamin " + domain.getName(), null);
+                            "search filter template is not set on domain " + domain.getName(), null);
                 }
                 searchFilter = LdapUtilCommon.computeAuthDn(name, searchFilterTemplate);
-            } else {
-                /*
-                 * search by the provided filter
-                 */
+            } else if (filter != null) {
                 searchFilter = filter;
-            }
-            
-            SearchLdapVisitor ldapVisitor = new SearchLdapVisitor() {
-                @Override
-                public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs)
-                throws StopIteratingException {
-                    visitor.visit(dn, attrs);
+            } else {
+                if (searchFilterTemplate == null) {
+                    throw ServiceException.INVALID_REQUEST(
+                            "search filter template is not set on domain " + domain.getName(), null);
                 }
-            };
+                searchFilter = LdapUtilCommon.computeAuthDn("*", searchFilterTemplate);
+                if (createTimestampLaterThan != null) {
+                    searchFilter = "(&" + searchFilter + "(createTimestamp>=" + createTimestampLaterThan + "))";
+                }
+            }
             
             SearchLdapOptions searchOptions = new SearchLdapOptions(searchBase, searchFilter, 
                     returnAttrs, maxResults, null, ZSearchScope.SEARCH_SCOPE_SUBTREE, ldapVisitor);

@@ -28,10 +28,6 @@ public class AutoProvisionManual extends AutoProvision {
             return null;
         }
         
-        if (!autoProvisionEnabled()) {
-            return null;
-        }
-        
         String acctZimbraName;
         ZAttributes externalAttrs;
         if (by == AutoProvPrincipalBy.dn) {

@@ -107,6 +107,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter domainByVirtualHostame(String virtualHostname);
     public abstract ZLdapFilter domainByForeignName(String foreignName);
     public abstract ZLdapFilter domainLabel();
+    public abstract ZLdapFilter domainLockedForEagerAutoProvision();
 
     /*
      * global config

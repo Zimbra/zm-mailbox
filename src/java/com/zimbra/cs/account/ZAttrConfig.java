@@ -41,7 +41,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20110705-1510 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110707-0908 */
 
     /**
      * RFC2256: descriptive information
@@ -2365,6 +2365,243 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetAuthTokenValidityValueEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAuthTokenValidityValueEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * For EAGER auto provision. Max number of accounts to process in each
+     * interval.
+     *
+     * @return zimbraAutoProvBatchSize, or 20 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1236)
+    public int getAutoProvBatchSize() {
+        return getIntAttr(Provisioning.A_zimbraAutoProvBatchSize, 20);
+    }
+
+    /**
+     * For EAGER auto provision. Max number of accounts to process in each
+     * interval.
+     *
+     * @param zimbraAutoProvBatchSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1236)
+    public void setAutoProvBatchSize(int zimbraAutoProvBatchSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvBatchSize, Integer.toString(zimbraAutoProvBatchSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * For EAGER auto provision. Max number of accounts to process in each
+     * interval.
+     *
+     * @param zimbraAutoProvBatchSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1236)
+    public Map<String,Object> setAutoProvBatchSize(int zimbraAutoProvBatchSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvBatchSize, Integer.toString(zimbraAutoProvBatchSize));
+        return attrs;
+    }
+
+    /**
+     * For EAGER auto provision. Max number of accounts to process in each
+     * interval.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1236)
+    public void unsetAutoProvBatchSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvBatchSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * For EAGER auto provision. Max number of accounts to process in each
+     * interval.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1236)
+    public Map<String,Object> unsetAutoProvBatchSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvBatchSize, "");
+        return attrs;
+    }
+
+    /**
+     * For EAGER auto provision. Interval between successive polling and
+     * provisioning accounts. The actual interval may be longer since it can
+     * be affected by two other factors: zimbraAutoProvBatchSize and number
+     * of domains configured in zimbraAutoProvScheduledDomains. At each
+     * interval, the auto provision thread iterates through all domains in
+     * zimbraAutoProvScheduledDomains and auto creates up to
+     * domain.zimbraAutoProvBatchSize accounts. If that process takes longer
+     * than zimbraAutoProvPollingInterval then the next iteration will start
+     * immediately instead of waiting for zimbraAutoProvPollingInterval
+     * amount of time. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * <p>Use getAutoProvPollingIntervalAsString to access value as a string.
+     *
+     * @see #getAutoProvPollingIntervalAsString()
+     *
+     * @return zimbraAutoProvPollingInterval in millseconds, or 900000 (15m)  if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1239)
+    public long getAutoProvPollingInterval() {
+        return getTimeInterval(Provisioning.A_zimbraAutoProvPollingInterval, 900000L);
+    }
+
+    /**
+     * For EAGER auto provision. Interval between successive polling and
+     * provisioning accounts. The actual interval may be longer since it can
+     * be affected by two other factors: zimbraAutoProvBatchSize and number
+     * of domains configured in zimbraAutoProvScheduledDomains. At each
+     * interval, the auto provision thread iterates through all domains in
+     * zimbraAutoProvScheduledDomains and auto creates up to
+     * domain.zimbraAutoProvBatchSize accounts. If that process takes longer
+     * than zimbraAutoProvPollingInterval then the next iteration will start
+     * immediately instead of waiting for zimbraAutoProvPollingInterval
+     * amount of time. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @return zimbraAutoProvPollingInterval, or "15m" if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1239)
+    public String getAutoProvPollingIntervalAsString() {
+        return getAttr(Provisioning.A_zimbraAutoProvPollingInterval, "15m");
+    }
+
+    /**
+     * For EAGER auto provision. Interval between successive polling and
+     * provisioning accounts. The actual interval may be longer since it can
+     * be affected by two other factors: zimbraAutoProvBatchSize and number
+     * of domains configured in zimbraAutoProvScheduledDomains. At each
+     * interval, the auto provision thread iterates through all domains in
+     * zimbraAutoProvScheduledDomains and auto creates up to
+     * domain.zimbraAutoProvBatchSize accounts. If that process takes longer
+     * than zimbraAutoProvPollingInterval then the next iteration will start
+     * immediately instead of waiting for zimbraAutoProvPollingInterval
+     * amount of time. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraAutoProvPollingInterval new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1239)
+    public void setAutoProvPollingInterval(String zimbraAutoProvPollingInterval) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvPollingInterval, zimbraAutoProvPollingInterval);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * For EAGER auto provision. Interval between successive polling and
+     * provisioning accounts. The actual interval may be longer since it can
+     * be affected by two other factors: zimbraAutoProvBatchSize and number
+     * of domains configured in zimbraAutoProvScheduledDomains. At each
+     * interval, the auto provision thread iterates through all domains in
+     * zimbraAutoProvScheduledDomains and auto creates up to
+     * domain.zimbraAutoProvBatchSize accounts. If that process takes longer
+     * than zimbraAutoProvPollingInterval then the next iteration will start
+     * immediately instead of waiting for zimbraAutoProvPollingInterval
+     * amount of time. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraAutoProvPollingInterval new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1239)
+    public Map<String,Object> setAutoProvPollingInterval(String zimbraAutoProvPollingInterval, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvPollingInterval, zimbraAutoProvPollingInterval);
+        return attrs;
+    }
+
+    /**
+     * For EAGER auto provision. Interval between successive polling and
+     * provisioning accounts. The actual interval may be longer since it can
+     * be affected by two other factors: zimbraAutoProvBatchSize and number
+     * of domains configured in zimbraAutoProvScheduledDomains. At each
+     * interval, the auto provision thread iterates through all domains in
+     * zimbraAutoProvScheduledDomains and auto creates up to
+     * domain.zimbraAutoProvBatchSize accounts. If that process takes longer
+     * than zimbraAutoProvPollingInterval then the next iteration will start
+     * immediately instead of waiting for zimbraAutoProvPollingInterval
+     * amount of time. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1239)
+    public void unsetAutoProvPollingInterval() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvPollingInterval, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * For EAGER auto provision. Interval between successive polling and
+     * provisioning accounts. The actual interval may be longer since it can
+     * be affected by two other factors: zimbraAutoProvBatchSize and number
+     * of domains configured in zimbraAutoProvScheduledDomains. At each
+     * interval, the auto provision thread iterates through all domains in
+     * zimbraAutoProvScheduledDomains and auto creates up to
+     * domain.zimbraAutoProvBatchSize accounts. If that process takes longer
+     * than zimbraAutoProvPollingInterval then the next iteration will start
+     * immediately instead of waiting for zimbraAutoProvPollingInterval
+     * amount of time. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1239)
+    public Map<String,Object> unsetAutoProvPollingInterval(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvPollingInterval, "");
         return attrs;
     }
 
@@ -13629,7 +13866,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1234)
+    @ZAttr(id=1221)
     public String[] getMailAddressValidationRegex() {
         return getMultiAttr(Provisioning.A_zimbraMailAddressValidationRegex);
     }
@@ -13642,7 +13879,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1234)
+    @ZAttr(id=1221)
     public void setMailAddressValidationRegex(String[] zimbraMailAddressValidationRegex) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailAddressValidationRegex, zimbraMailAddressValidationRegex);
@@ -13658,7 +13895,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1234)
+    @ZAttr(id=1221)
     public Map<String,Object> setMailAddressValidationRegex(String[] zimbraMailAddressValidationRegex, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailAddressValidationRegex, zimbraMailAddressValidationRegex);
@@ -13673,7 +13910,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1234)
+    @ZAttr(id=1221)
     public void addMailAddressValidationRegex(String zimbraMailAddressValidationRegex) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMailAddressValidationRegex, zimbraMailAddressValidationRegex);
@@ -13689,7 +13926,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1234)
+    @ZAttr(id=1221)
     public Map<String,Object> addMailAddressValidationRegex(String zimbraMailAddressValidationRegex, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMailAddressValidationRegex, zimbraMailAddressValidationRegex);
@@ -13704,7 +13941,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1234)
+    @ZAttr(id=1221)
     public void removeMailAddressValidationRegex(String zimbraMailAddressValidationRegex) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMailAddressValidationRegex, zimbraMailAddressValidationRegex);
@@ -13720,7 +13957,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1234)
+    @ZAttr(id=1221)
     public Map<String,Object> removeMailAddressValidationRegex(String zimbraMailAddressValidationRegex, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMailAddressValidationRegex, zimbraMailAddressValidationRegex);
@@ -13734,7 +13971,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1234)
+    @ZAttr(id=1221)
     public void unsetMailAddressValidationRegex() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailAddressValidationRegex, "");
@@ -13749,7 +13986,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1234)
+    @ZAttr(id=1221)
     public Map<String,Object> unsetMailAddressValidationRegex(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailAddressValidationRegex, "");

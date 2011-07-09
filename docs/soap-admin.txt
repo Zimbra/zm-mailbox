@@ -2558,8 +2558,9 @@ If neither is specified, all attributes will be returned.
 Notes:
   <name>  - name to fill the auto provisioning search template configured on the domain 
   <query> - query string should be an LDAP-style filter string (RFC 2254)
-  Exactly one of <name> or <query> should be provided.
-  
+  only one of <name> or <query> can be provided.  If neither is provided, the configured 
+  search filter for auto provision will be used.
+    
   maxResults = maximum results that the backend will attempt to fetch from the directory before
   returning a account.TOO_MANY_SEARCH_RESULTS error.
 

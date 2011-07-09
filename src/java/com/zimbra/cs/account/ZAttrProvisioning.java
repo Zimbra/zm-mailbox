@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20110705-1510 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110707-0908 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -1870,7 +1870,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1231)
+    @ZAttr(id=1232)
     public static final String A_zimbraAutoProvAccountNameMap = "zimbraAutoProvAccountNameMap";
 
     /**
@@ -1885,7 +1885,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1232)
+    @ZAttr(id=1233)
     public static final String A_zimbraAutoProvAttrMap = "zimbraAutoProvAttrMap";
 
     /**
@@ -1897,15 +1897,33 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1221)
+    @ZAttr(id=1222)
     public static final String A_zimbraAutoProvAuthMech = "zimbraAutoProvAuthMech";
+
+    /**
+     * For EAGER auto provision. Max number of accounts to process in each
+     * interval.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1236)
+    public static final String A_zimbraAutoProvBatchSize = "zimbraAutoProvBatchSize";
+
+    /**
+     * For EAGER auto provision. Timestampt when the external domain is last
+     * polled for EAGER auto provision.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1235)
+    public static final String A_zimbraAutoProvLastPolledTimestamp = "zimbraAutoProvLastPolledTimestamp";
 
     /**
      * LDAP search bind dn for account auto provisioning
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1226)
+    @ZAttr(id=1227)
     public static final String A_zimbraAutoProvLdapAdminBindDn = "zimbraAutoProvLdapAdminBindDn";
 
     /**
@@ -1913,7 +1931,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1227)
+    @ZAttr(id=1228)
     public static final String A_zimbraAutoProvLdapAdminBindPassword = "zimbraAutoProvLdapAdminBindPassword";
 
     /**
@@ -1924,7 +1942,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1230)
+    @ZAttr(id=1231)
     public static final String A_zimbraAutoProvLdapBindDn = "zimbraAutoProvLdapBindDn";
 
     /**
@@ -1935,7 +1953,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1228)
+    @ZAttr(id=1229)
     public static final String A_zimbraAutoProvLdapSearchBase = "zimbraAutoProvLdapSearchBase";
 
     /**
@@ -1946,7 +1964,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1229)
+    @ZAttr(id=1230)
     public static final String A_zimbraAutoProvLdapSearchFilter = "zimbraAutoProvLdapSearchFilter";
 
     /**
@@ -1955,7 +1973,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1225)
+    @ZAttr(id=1226)
     public static final String A_zimbraAutoProvLdapStartTlsEnabled = "zimbraAutoProvLdapStartTlsEnabled";
 
     /**
@@ -1963,18 +1981,35 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1224)
+    @ZAttr(id=1225)
     public static final String A_zimbraAutoProvLdapURL = "zimbraAutoProvLdapURL";
 
     /**
-     * Auto provisoninging modes enabled. EAGER: TODO LAZY: auto create the
-     * Zimbra account when user first login via one of the external auth
-     * mechanisms enabled for auto provisioning configured in
-     * zimbraAutoProvAuthMech MANUAL: TODO
+     * For EAGER auto provision. Lock the domain from EAGER auto provision.
+     * This attribute is for internal use only: only one server can perform
+     * EAGER auto provisioning for a domain at one time. This lock is to
+     * shchronize EAGER auto provision attempts between servers.
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1222)
+    @ZAttr(id=1237)
+    public static final String A_zimbraAutoProvLock = "zimbraAutoProvLock";
+
+    /**
+     * Auto provisoninging modes enabled. EAGER: automatically poll the
+     * configured External LDAP directory for auto provision at a configured
+     * interval and create the Zimbra account. The interval is configured by
+     * zimbraAutoProvPollingInterval. LAZY: auto create the Zimbra account
+     * when user first login via one of the external auth mechanisms enabled
+     * for auto provisioning configured in zimbraAutoProvAuthMech MANUAL:
+     * admin to select a user from the configured External LDAP directory for
+     * auto provision and create the Zimbra account. In all cases, the Zimbra
+     * account is populated with attributes mapped from the external LDAP
+     * user entry based on the zimbraAutoProvAttrMap.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1223)
     public static final String A_zimbraAutoProvMode = "zimbraAutoProvMode";
 
     /**
@@ -1984,8 +2019,40 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1233)
+    @ZAttr(id=1234)
     public static final String A_zimbraAutoProvNotificationFromAddress = "zimbraAutoProvNotificationFromAddress";
+
+    /**
+     * For EAGER auto provision. Interval between successive polling and
+     * provisioning accounts. The actual interval may be longer since it can
+     * be affected by two other factors: zimbraAutoProvBatchSize and number
+     * of domains configured in zimbraAutoProvScheduledDomains. At each
+     * interval, the auto provision thread iterates through all domains in
+     * zimbraAutoProvScheduledDomains and auto creates up to
+     * domain.zimbraAutoProvBatchSize accounts. If that process takes longer
+     * than zimbraAutoProvPollingInterval then the next iteration will start
+     * immediately instead of waiting for zimbraAutoProvPollingInterval
+     * amount of time. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1239)
+    public static final String A_zimbraAutoProvPollingInterval = "zimbraAutoProvPollingInterval";
+
+    /**
+     * For EAGER auto provision. Domain scheduled for eager auto provision on
+     * this server. Scheduled domains must have EAGER mode enabled in
+     * zimbraAutoProvMode. Multiple domains can be scheduled on a server for
+     * EAGER auto provision. Also, a domain can be scheduled on multiple
+     * servers for EAGER auto provision.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1238)
+    public static final String A_zimbraAutoProvScheduledDomains = "zimbraAutoProvScheduledDomains";
 
     /**
      * Whether to use external LDAP auth setting for auto provisioning.
@@ -1996,7 +2063,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1223)
+    @ZAttr(id=1224)
     public static final String A_zimbraAutoProvUseLdapAuthSettings = "zimbraAutoProvUseLdapAuthSettings";
 
     /**
@@ -4848,7 +4915,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1234)
+    @ZAttr(id=1221)
     public static final String A_zimbraMailAddressValidationRegex = "zimbraMailAddressValidationRegex";
 
     /**
@@ -9307,6 +9374,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
+
+    /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
+
+    /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled

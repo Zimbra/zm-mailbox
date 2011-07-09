@@ -33,11 +33,13 @@ import com.unboundid.ldap.sdk.LDAPConnection;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
 import com.unboundid.ldap.sdk.LDAPException;
 import com.unboundid.ldap.sdk.LDAPResult;
+import com.unboundid.ldap.sdk.ModifyRequest;
 import com.unboundid.ldap.sdk.ResultCode;
 import com.unboundid.ldap.sdk.SearchScope;
 import com.unboundid.ldap.sdk.SearchRequest;
 import com.unboundid.ldap.sdk.SearchResult;
 import com.unboundid.ldap.sdk.SearchResultEntry;
+import com.unboundid.ldap.sdk.controls.AssertionRequestControl;
 import com.unboundid.ldap.sdk.controls.SimplePagedResultsControl;
 import com.unboundid.ldap.sdk.extensions.StartTLSExtendedRequest;
 import com.unboundid.ldap.sdk.schema.Schema;
@@ -347,6 +349,29 @@ public class UBIDLdapContext extends ZLdapContext {
             throw mapToLdapException("unable to modify attributes", e);
         }
     }
+
+    @Override
+    public boolean testAndModifyAttributes(String dn,
+            ZModificationList modList, ZLdapFilter testFilter) throws LdapException {
+        try {
+            ModifyRequest modReq = new ModifyRequest(dn, ((UBIDModificationList)modList).getModList());
+            modReq.addControl(new AssertionRequestControl(((UBIDLdapFilter) testFilter).getNative()));
+            
+            Timer timer = UBIDLogger.beforeTimedOp();
+            LDAPResult result = conn.modify(modReq);
+            UBIDLogger.afterTimedOp(LdapOp.MODIFY_ATTRS, timer, usage, conn, dn, modList);
+            return true;
+        } catch (LDAPException e) {
+            if (e.getResultCode() == ResultCode.ASSERTION_FAILED) {
+                // The modification failed because the the filter does not match the target entry
+                return false;
+            }
+            else {
+                // The modification failed for some other reason.
+                throw mapToLdapException("unable to test and modify attributes", e);
+            }
+        }
+    }
     
     @Override
     public void moveChildren(String oldDn, String newDn) throws ServiceException {
@@ -620,4 +645,5 @@ public class UBIDLdapContext extends ZLdapContext {
     throws ServiceException {
         ldapAuthenticate(replicaConfig, bindDN, password, LdapUsage.LDAP_AUTH_ZIMBRA); 
     }
+
 }

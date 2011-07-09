@@ -45,12 +45,13 @@ public abstract class ZLdapContext extends ZLdapElement implements ILdapContext 
     
     public abstract void modifyAttributes(String dn, ZModificationList modList) 
     throws LdapException;
+
+    public abstract boolean testAndModifyAttributes(String dn, ZModificationList modList, 
+            ZLdapFilter testFilter) throws LdapException;
     
-    public abstract void moveChildren(String oldDn, String newDn) throws 
-    ServiceException;
+    public abstract void moveChildren(String oldDn, String newDn) throws ServiceException;
     
-    public abstract void renameEntry(String oldDn, String newDn) throws 
-    LdapException;
+    public abstract void renameEntry(String oldDn, String newDn) throws LdapException;
     
     public abstract void replaceAttributes(String dn, ZAttributes attrs) 
     throws LdapException;

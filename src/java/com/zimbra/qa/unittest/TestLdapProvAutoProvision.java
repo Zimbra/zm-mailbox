@@ -16,7 +16,10 @@ package com.zimbra.qa.unittest;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
@@ -38,11 +41,18 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.PreAuthKey;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AutoProvPrincipalBy;
+import com.zimbra.cs.account.Provisioning.DirectoryEntryVisitor;
 import com.zimbra.cs.account.ZAttrProvisioning.AutoProvAuthMech;
 import com.zimbra.cs.account.ZAttrProvisioning.AutoProvMode;
+import com.zimbra.cs.account.ldap.AutoProvisionEager;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.ldap.entry.LdapDomain;
+import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapConstants;
+import com.zimbra.cs.ldap.LdapServerType;
+import com.zimbra.cs.ldap.LdapUsage;
+import com.zimbra.cs.ldap.ZLdapContext;
 
 public class TestLdapProvAutoProvision extends TestLdap {
 
@@ -105,6 +115,8 @@ public class TestLdapProvAutoProvision extends TestLdap {
         
         StringUtil.addToMultiMap(zimbraDomainAttrs, Provisioning.A_zimbraAutoProvAuthMech, AutoProvAuthMech.LDAP.name());
         StringUtil.addToMultiMap(zimbraDomainAttrs, Provisioning.A_zimbraAutoProvMode, AutoProvMode.LAZY.name());
+        StringUtil.addToMultiMap(zimbraDomainAttrs, Provisioning.A_zimbraAutoProvMode, AutoProvMode.MANUAL.name());
+        StringUtil.addToMultiMap(zimbraDomainAttrs, Provisioning.A_zimbraAutoProvMode, AutoProvMode.EAGER.name());
         
         zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvLdapURL, "ldap://localhost:389");
         zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvLdapAdminBindDn, "cn=config");
@@ -131,6 +143,15 @@ public class TestLdapProvAutoProvision extends TestLdap {
         assertEquals("last name", acct.getAttr(Provisioning.A_displayName));
         assertEquals("display name", acct.getAttr(Provisioning.A_sn));
     }
+    
+    private String externalEntryDN(String externalEntryLocalPart) {
+        return String.format("uid=%s,ou=people,%s", externalEntryLocalPart, extDomainDn);
+    }
+    
+    /* ================
+     * LAZY mode tests
+     * ================
+     */
     
     @Test
     public void getExternalEntryByDNTemplate() throws Exception {
@@ -292,6 +313,217 @@ public class TestLdapProvAutoProvision extends TestLdap {
         Account acct = prov.autoProvAccount(zimbraDomain, loginName, externalPassword, null);
         verifyAcctAutoProvisioned(acct);
     }
+    
+    
+    
+    /* ==================
+     * MANUAL mode tests
+     * ==================
+     */
+    
+    @Test
+    public void manualModeByName() throws Exception {
+        String testName = getTestName();
+        
+        String externalPassword = "test456";
+        String extAcctLocalPart = testName;
+        String extAcctName = createExternalAcctEntry(extAcctLocalPart, externalPassword, null);
+        
+        Map<String, Object> zimbraDomainAttrs = commonZimbraDomainAttrs();
+        // setup auto prov
+        zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchBase, extDomainDn);
+        zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchFilter, "(uid=%u)");
+        Domain zimbraDomain = createZimbraDomain(testName, zimbraDomainAttrs);
+                
+        // try auto provisioning with bad password
+        String principal = extAcctLocalPart;
+        Account acct = prov.autoProvAccount(zimbraDomain, AutoProvPrincipalBy.name, principal);
+        verifyAcctAutoProvisioned(acct);
+    }
+    
+    @Test
+    public void manualModeByDN() throws Exception {
+        String testName = getTestName();
+        
+        String extAcctLocalPart = testName;
+        String zimbraAcctLocalpart = "myzimbraname";
+        Map<String, Object> acctAttrs = new HashMap<String, Object>();
+        acctAttrs.put(Provisioning.A_description, zimbraAcctLocalpart);  // going to be the local part of the zimrba account name
+        String extAcctName = createExternalAcctEntry(extAcctLocalPart, acctAttrs);
+        
+        Map<String, Object> zimbraDomainAttrs = commonZimbraDomainAttrs();
+        // setup auto prov
+        zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchBase, extDomainDn);
+        zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchFilter, "(uid=%u)");
+        zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvAccountNameMap, Provisioning.A_description);
+        Domain zimbraDomain = createZimbraDomain(testName, zimbraDomainAttrs);
+                
+        // try auto provisioning with bad password
+        String principal = externalEntryDN(extAcctLocalPart);
+        Account acct = prov.autoProvAccount(zimbraDomain, AutoProvPrincipalBy.dn, principal);
+        verifyAcctAutoProvisioned(acct, zimbraAcctLocalpart + "@" + zimbraDomain.getName());
+    }
+    
+    @Test 
+    public void searchAutoProvDirectoryByName() throws Exception {
+        String testName = getTestName();
+        
+        String externalPassword = "test456";
+        String extAcctLocalPart1 = testName + "_1";
+        String extAcctLocalPart2 = testName + "_2";
+        String extAcctLocalPart3 = testName + "_3";
+        createExternalAcctEntry(extAcctLocalPart1, externalPassword, null);
+        createExternalAcctEntry(extAcctLocalPart2, externalPassword, null);
+        createExternalAcctEntry(extAcctLocalPart3, externalPassword, null);
+        
+        Map<String, Object> zimbraDomainAttrs = commonZimbraDomainAttrs();
+        // setup auto prov
+        zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchBase, extDomainDn);
+        zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchFilter, "(uid=%u)");
+        Domain zimbraDomain = createZimbraDomain(testName, zimbraDomainAttrs);
+        
+        final Set<String> entriesFound = new HashSet<String>();
+        DirectoryEntryVisitor visitor = new DirectoryEntryVisitor() {
+            @Override
+            public void visit(String dn, Map<String, Object> attrs) {
+                entriesFound.add(dn);
+            }
+        };
+        
+        prov.searchAutoProvDirectory(zimbraDomain, null, extAcctLocalPart2, 
+                null, 0, visitor);
+        
+        assertEquals(1, entriesFound.size());
+        assertTrue(entriesFound.contains(externalEntryDN(extAcctLocalPart2).toLowerCase()));
+    }
+    
+    @Test 
+    public void searchAutoProvDirectoryByProvidedFilter() throws Exception {
+        String testName = getTestName();
+        
+        String externalPassword = "test456";
+        String extAcctLocalPart1 = testName + "_1";
+        String extAcctLocalPart2 = testName + "_2";
+        String extAcctLocalPart3 = testName + "_3";
+        createExternalAcctEntry(extAcctLocalPart1, externalPassword, null);
+        createExternalAcctEntry(extAcctLocalPart2, externalPassword, null);
+        createExternalAcctEntry(extAcctLocalPart3, externalPassword, null);
+        
+        Map<String, Object> zimbraDomainAttrs = commonZimbraDomainAttrs();
+        // setup auto prov - no need
+        // zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchBase, extDomainDn);
+        // zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchFilter, "(uid=%u)");
+        Domain zimbraDomain = createZimbraDomain(testName, zimbraDomainAttrs);
+        
+        final Set<String> entriesFound = new HashSet<String>();
+        DirectoryEntryVisitor visitor = new DirectoryEntryVisitor() {
+            @Override
+            public void visit(String dn, Map<String, Object> attrs) {
+                entriesFound.add(dn);
+            }
+        };
+        
+        prov.searchAutoProvDirectory(zimbraDomain, 
+                String.format("(mail=%s*)", testName),
+                null, null, 0, visitor);
+        
+        assertEquals(3, entriesFound.size());
+        assertTrue(entriesFound.contains(externalEntryDN(extAcctLocalPart1).toLowerCase()));
+        assertTrue(entriesFound.contains(externalEntryDN(extAcctLocalPart2).toLowerCase()));
+        assertTrue(entriesFound.contains(externalEntryDN(extAcctLocalPart3).toLowerCase()));
+    }
+    
+    @Test 
+    public void searchAutoProvDirectoryByConfiguredSearchFilter() throws Exception {
+        String testName = getTestName();
+        
+        String externalPassword = "test456";
+        String extAcctLocalPart1 = testName + "_1";
+        String extAcctLocalPart2 = testName + "_2";
+        String extAcctLocalPart3 = testName + "_3";
+        createExternalAcctEntry(extAcctLocalPart1, externalPassword, null);
+        createExternalAcctEntry(extAcctLocalPart2, externalPassword, null);
+        createExternalAcctEntry(extAcctLocalPart3, externalPassword, null);
+        
+        Map<String, Object> zimbraDomainAttrs = commonZimbraDomainAttrs();
+        // setup auto prov
+        zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchBase, extDomainDn);
+        zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchFilter, "(&(uid=%u)(mail=searchAutoProvDirectoryByConfiguredSearchFilter*))");
+        Domain zimbraDomain = createZimbraDomain(testName, zimbraDomainAttrs);
+        
+        final Set<String> entriesFound = new HashSet<String>();
+        DirectoryEntryVisitor visitor = new DirectoryEntryVisitor() {
+            @Override
+            public void visit(String dn, Map<String, Object> attrs) {
+                entriesFound.add(dn);
+            }
+        };
+        
+        prov.searchAutoProvDirectory(zimbraDomain, null, null, 
+                null, 0, visitor);
+        
+        assertEquals(3, entriesFound.size());
+        assertTrue(entriesFound.contains(externalEntryDN(extAcctLocalPart1).toLowerCase()));
+        assertTrue(entriesFound.contains(externalEntryDN(extAcctLocalPart2).toLowerCase()));
+        assertTrue(entriesFound.contains(externalEntryDN(extAcctLocalPart3).toLowerCase()));
+    }
+    
+    
+    /* =================
+     * EAGER mode tests
+     * =================
+     */
+    @Test
+    public void eagerMode() throws Exception {
+        String testName = getTestName();
+        
+        String externalPassword = "test456";
+        String extAcctLocalPart1 = testName + "_1";
+        String extAcctLocalPart2 = testName + "_2";
+        String extAcctLocalPart3 = testName + "_3";
+        createExternalAcctEntry(extAcctLocalPart1, externalPassword, null);
+        createExternalAcctEntry(extAcctLocalPart2, externalPassword, null);
+        createExternalAcctEntry(extAcctLocalPart3, externalPassword, null);
+        
+        Map<String, Object> zimbraDomainAttrs = commonZimbraDomainAttrs();
+        // setup auto prov
+        zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchBase, extDomainDn);
+        zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchFilter, "(&(uid=%u)(mail=eagerMode*))");
+        zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvAccountNameMap, Provisioning.A_uid);
+        Domain zimbraDomain = createZimbraDomain(testName, zimbraDomainAttrs);
+        
+        AutoProvisionEager autoProv = new AutoProvisionEager(prov, zimbraDomain);
+        
+        ZLdapContext zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.UNITTEST);
+        try {
+            autoProv.handleBatch(zlc);
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
+
+        List<Account> zimbraAccts = prov.getAllAccounts(zimbraDomain);
+        assertEquals(3, zimbraAccts.size());
+        Set<String> acctNames = new HashSet<String>();
+        for (Account acct : zimbraAccts) {
+            acctNames.add(acct.getName());
+            System.out.println(acct.getName());
+        }
+        
+        System.out.println();
+        System.out.println(TestUtil.getAddress(extAcctLocalPart1, zimbraDomain.getName()).toLowerCase());
+        System.out.println(TestUtil.getAddress(extAcctLocalPart2, zimbraDomain.getName()).toLowerCase());
+        System.out.println(TestUtil.getAddress(extAcctLocalPart3, zimbraDomain.getName()).toLowerCase());
+        
+        assertTrue(acctNames.contains(TestUtil.getAddress(extAcctLocalPart1, zimbraDomain.getName()).toLowerCase()));
+        assertTrue(acctNames.contains(TestUtil.getAddress(extAcctLocalPart2, zimbraDomain.getName()).toLowerCase()));
+        assertTrue(acctNames.contains(TestUtil.getAddress(extAcctLocalPart3, zimbraDomain.getName()).toLowerCase()));
+    }
+    
+    
+    /* ========================
+     * SOAP and servlets tests
+     * ========================
+     */
     
     /*
      * Note: need to restart server each time before re-run.  Otherwise server would still 

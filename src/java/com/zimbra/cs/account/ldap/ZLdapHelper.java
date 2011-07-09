@@ -70,21 +70,9 @@ public class ZLdapHelper extends LdapHelper {
             LdapClient.closeContext(zlc);
         }
     }
-    
 
-    /**
-     * Modifies the specified entry.  <code>attrs</code> is a <code>Map</code> consisting of
-     * keys that are <code>String</code>s, and values that are either
-     * <ul>
-     *   <li><code>null</code>, in which case the attr is removed</li>
-     *   <li>a single <code>Object</code>, in which case the attr is modified
-     *     based on the object's <code>toString()</code> value</li>
-     *   <li>an <code>Object</code> array or <code>Collection</code>,
-     *     in which case a multi-valued attr is updated</li>
-     * </ul>
-     */
-    public void modifyAttrs(ZLdapContext zlc, String dn, Map<String, ? extends Object> attrs, Entry entry) 
-    throws ServiceException {
+    private ZModificationList getModList(ZLdapContext zlc, String dn, 
+            Map<String, ? extends Object> attrs, Entry entry) throws ServiceException {
         ZModificationList modList = zlc.createModiftcationList();
         
         AttributeManager attrMgr = AttributeManager.getInst();
@@ -153,11 +141,28 @@ public class ZLdapHelper extends LdapHelper {
             }
         }
         
+        return modList;
+    }
+    
+    /**
+     * Modifies the specified entry.  <code>attrs</code> is a <code>Map</code> consisting of
+     * keys that are <code>String</code>s, and values that are either
+     * <ul>
+     *   <li><code>null</code>, in which case the attr is removed</li>
+     *   <li>a single <code>Object</code>, in which case the attr is modified
+     *     based on the object's <code>toString()</code> value</li>
+     *   <li>an <code>Object</code> array or <code>Collection</code>,
+     *     in which case a multi-valued attr is updated</li>
+     * </ul>
+     */
+    public void modifyAttrs(ZLdapContext zlc, String dn, Map<String, ? extends Object> attrs, Entry entry) 
+    throws ServiceException {
+        ZModificationList modList = getModList(zlc, dn, attrs, entry);
+        
         if (!modList.isEmpty()) {
             zlc.modifyAttributes(dn, modList);
         }
     }
-    
 
     @Override
     public void modifyEntry(String dn, Map<String, ? extends Object> attrs, 
@@ -170,6 +175,14 @@ public class ZLdapHelper extends LdapHelper {
         } finally {
             LdapClient.closeContext(zlc);
         }
+    }
+    
+    @Override
+    public boolean tesAndModifyEntry(ZLdapContext zlc, String dn,
+            ZLdapFilter testFilter, Map<String, ? extends Object> attrs,
+            Entry entry, LdapUsage ldapUsage) throws ServiceException {
+        ZModificationList modList = getModList(zlc, dn, attrs, entry);
+        return zlc.testAndModifyAttributes(dn, modList, testFilter);
     }
     
 
@@ -258,7 +271,6 @@ public class ZLdapHelper extends LdapHelper {
             }
         }
     }
-
 
 
 }

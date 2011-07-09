@@ -190,6 +190,9 @@ public class LegacyLdapFilter {
         return "(objectclass=dcObject)";
     }
     
+    public static String domainLockedForEagerAutoProvision() {
+        return "(!(zimbraAutoProvLock=*))";
+    }
     
     /*
      * global config

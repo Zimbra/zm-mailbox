@@ -179,6 +179,11 @@ public class JNDILdapContext extends ZLdapContext {
         }
     }
     
+    @Override
+    public boolean testAndModifyAttributes(String dn,
+            ZModificationList modList, ZLdapFilter testFilter) throws LdapException {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public void moveChildren(String oldDn, String newDn)
@@ -305,4 +310,6 @@ public class JNDILdapContext extends ZLdapContext {
             throw JNDILdapException.mapToLdapException(e); // TODO
         }
     }
+
+
 }

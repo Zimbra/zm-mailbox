@@ -816,7 +816,7 @@ public class LdapProvisioning extends LdapProv {
     public void searchAutoProvDirectory(Domain domain, String filter, String name, 
             String[] returnAttrs, int maxResults, DirectoryEntryVisitor visitor) 
     throws ServiceException {
-        AutoProvision.searchAutoProvDirectory(this, domain, filter, name, 
+        AutoProvision.searchAutoProvDirectory(this, domain, filter, name, null,
                 returnAttrs, maxResults, visitor);
     }
 

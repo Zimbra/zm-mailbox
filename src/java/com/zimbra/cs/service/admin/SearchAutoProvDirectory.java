@@ -34,8 +34,8 @@ public class SearchAutoProvDirectory  extends AdminDocumentHandler {
         String query = request.getAttribute(AdminConstants.E_QUERY, null);
         String name = request.getAttribute(AdminConstants.E_NAME, null);
         
-        if ((query == null) == (name==null)) {
-            throw ServiceException.INVALID_REQUEST("exact one of query or name must be set", null);
+        if ((query != null) && (name != null)) {
+            throw ServiceException.INVALID_REQUEST("only one of filter or name can be provided", null);
         }
 
         int maxResults = (int) request.getAttributeLong(AdminConstants.A_MAX_RESULTS, SearchDirectory.MAX_SEARCH_RESULTS);

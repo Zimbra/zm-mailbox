@@ -415,6 +415,11 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter domainLabel() {
         return FILTER_DOMAIN_LABEL;
     }
+    
+    @Override
+    public ZLdapFilter domainLockedForEagerAutoProvision() {
+        return new UBIDLdapFilter(Filter.createNOTFilter(Filter.createPresenceFilter("zimbraAutoProvLock")));
+    }
 
     
     /*
