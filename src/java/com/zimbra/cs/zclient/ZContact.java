@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.httpclient.methods.GetMethod;
 import org.json.JSONException;
 
 import com.zimbra.common.service.ServiceException;
@@ -50,6 +49,33 @@ public class ZContact implements ZItem, ToZJSONObject {
     public static final String FA_COMPANY_FIRST_LAST = "7";
     /** "File as" setting: <i>[explicitly specified "file as" string]</i> */
     public static final String FA_EXPLICIT = "8";
+    
+    public static class ZContactAttachmentInfo {
+        private String mContentType;
+        private String mFileName;
+        private String mPart;
+        private long mLength;
+        
+        public ZContactAttachmentInfo(String part, String fileName, String contentType, long length) {
+            mPart = part;
+            mFileName = fileName;
+            mContentType = contentType;
+            mLength = length;
+        }
+        
+        public String getContentType() {
+            return mContentType;
+        }
+        public String getFileName() {
+            return mFileName;
+        }
+        public String getPart() {
+            return mPart;
+        }
+        public long getLength() {
+            return mLength;
+        }
+    }
 
     private String mId;
     private String mFlags;
@@ -59,7 +85,7 @@ public class ZContact implements ZItem, ToZJSONObject {
     private long mDate;
     private long mMetaDataChangedDate;
     private Map<String, String> mAttrs;
-    private Map<String, String> mAttachments;
+    private Map<String, ZContactAttachmentInfo> mAttachments;
     private boolean mGalContact;
     private ZMailbox mMailbox;
 
@@ -109,13 +135,16 @@ public class ZContact implements ZItem, ToZJSONObject {
         mMetaDataChangedDate = e.getAttributeLong(MailConstants.A_MODIFIED_DATE, 0) * 1000;
         
         HashMap<String, String> attrs = new HashMap<String, String>();
-        HashMap<String, String> attachments = new HashMap<String, String>();
+        HashMap<String, ZContactAttachmentInfo> attachments = new HashMap<String, ZContactAttachmentInfo>();
 
         for (Element attrEl : e.listElements(MailConstants.E_ATTRIBUTE)) {
             String name = attrEl.getAttribute(MailConstants.A_ATTRIBUTE_NAME);
             String part = attrEl.getAttribute(MailConstants.A_PART, null);
             if (part != null) {
-                attachments.put(name, part);
+                String fileName = attrEl.getAttribute(MailConstants.A_CONTENT_FILENAME, null);
+                String contentType = attrEl.getAttribute(MailConstants.A_CONTENT_TYPE, null);
+                long size = attrEl.getAttributeLong(MailConstants.A_SIZE, 0);
+                attachments.put(name, new ZContactAttachmentInfo(part, fileName, contentType, size));
             } else {
                 attrs.put(name, attrEl.getText());
             }
@@ -195,17 +224,21 @@ public class ZContact implements ZItem, ToZJSONObject {
     }
     
     public String getAttachmentPartName(String name) {
-        return mAttachments.get(name);
+        return mAttachments.get(name).getPart();
     }
     
     public InputStream getAttachmentData(String name)
     throws ServiceException {
-        String part = mAttachments.get(name);
+        String part = mAttachments.get(name).getPart();
         if (part == null) {
             throw ZClientException.CLIENT_ERROR("Invalid attachment name: " + name, null);
         }
         String url = String.format("?id=%s&part=%s", getId(), part);
         return mMailbox.getRESTResource(url);
+    }
+    
+    public ZContactAttachmentInfo getAttachmentPartInfo(String name) {
+        return mAttachments.get(name);
     }
     
     public long getDate() {
