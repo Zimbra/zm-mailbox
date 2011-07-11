@@ -369,6 +369,10 @@
   <desc>create account in the domain</desc>
 </right>
 
+<right name="autoProvisionAccount" type="preset" targetType="domain">
+  <desc>auto provision account in the domain in MANUAL mode</desc>
+</right>
+
 <right name="createCalendarResource" type="preset" targetType="domain">
   <desc>create calendar resource in the domain</desc>
 </right>
