@@ -46,7 +46,6 @@
           <Set name="lowResourcesMaxIdleTime">1000</Set>
           <Set name="Acceptors">2</Set>
           <Set name="confidentialPort">7443</Set>
-	  <Set name="Forwarded">true</Set>
         </New>
       </Arg>
     </Call>
