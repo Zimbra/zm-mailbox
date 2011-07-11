@@ -167,6 +167,10 @@ public class ZGetInfoResult implements ToZJSONObject {
         return data.getAccountName();
     }
 
+    public Boolean getAdminDelegated() {
+        return data.getAdminDelegated();
+    }
+
     public Map<String, List<String>> getPrefAttrs() {
         return MapUtil.multimapToMapOfLists(data.getPrefsMultimap());
     }
