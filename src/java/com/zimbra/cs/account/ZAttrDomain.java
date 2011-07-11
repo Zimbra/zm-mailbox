@@ -41,7 +41,7 @@ public class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 administrator 20110706-1056 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110625-1519 */
 
     /**
      * RFC2256: descriptive information
@@ -8888,140 +8888,6 @@ public class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetLocale(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraLocale, "");
-        return attrs;
-    }
-
-    /**
-     * optional regex used by web client to validate email address
-     *
-     * @return zimbraMailAddressValidationRegex, or empty array if unset
-     *
-     * @since ZCS 7.1.2
-     */
-    @ZAttr(id=1234)
-    public String[] getMailAddressValidationRegex() {
-        return getMultiAttr(Provisioning.A_zimbraMailAddressValidationRegex);
-    }
-
-    /**
-     * optional regex used by web client to validate email address
-     *
-     * @param zimbraMailAddressValidationRegex new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 7.1.2
-     */
-    @ZAttr(id=1234)
-    public void setMailAddressValidationRegex(String[] zimbraMailAddressValidationRegex) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailAddressValidationRegex, zimbraMailAddressValidationRegex);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * optional regex used by web client to validate email address
-     *
-     * @param zimbraMailAddressValidationRegex new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 7.1.2
-     */
-    @ZAttr(id=1234)
-    public Map<String,Object> setMailAddressValidationRegex(String[] zimbraMailAddressValidationRegex, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailAddressValidationRegex, zimbraMailAddressValidationRegex);
-        return attrs;
-    }
-
-    /**
-     * optional regex used by web client to validate email address
-     *
-     * @param zimbraMailAddressValidationRegex new to add to existing values
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 7.1.2
-     */
-    @ZAttr(id=1234)
-    public void addMailAddressValidationRegex(String zimbraMailAddressValidationRegex) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMailAddressValidationRegex, zimbraMailAddressValidationRegex);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * optional regex used by web client to validate email address
-     *
-     * @param zimbraMailAddressValidationRegex new to add to existing values
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 7.1.2
-     */
-    @ZAttr(id=1234)
-    public Map<String,Object> addMailAddressValidationRegex(String zimbraMailAddressValidationRegex, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMailAddressValidationRegex, zimbraMailAddressValidationRegex);
-        return attrs;
-    }
-
-    /**
-     * optional regex used by web client to validate email address
-     *
-     * @param zimbraMailAddressValidationRegex existing value to remove
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 7.1.2
-     */
-    @ZAttr(id=1234)
-    public void removeMailAddressValidationRegex(String zimbraMailAddressValidationRegex) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMailAddressValidationRegex, zimbraMailAddressValidationRegex);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * optional regex used by web client to validate email address
-     *
-     * @param zimbraMailAddressValidationRegex existing value to remove
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 7.1.2
-     */
-    @ZAttr(id=1234)
-    public Map<String,Object> removeMailAddressValidationRegex(String zimbraMailAddressValidationRegex, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMailAddressValidationRegex, zimbraMailAddressValidationRegex);
-        return attrs;
-    }
-
-    /**
-     * optional regex used by web client to validate email address
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 7.1.2
-     */
-    @ZAttr(id=1234)
-    public void unsetMailAddressValidationRegex() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailAddressValidationRegex, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * optional regex used by web client to validate email address
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 7.1.2
-     */
-    @ZAttr(id=1234)
-    public Map<String,Object> unsetMailAddressValidationRegex(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailAddressValidationRegex, "");
         return attrs;
     }
 
