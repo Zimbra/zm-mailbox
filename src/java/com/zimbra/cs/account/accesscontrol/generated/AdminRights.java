@@ -30,7 +30,7 @@ public class AdminRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110622-1636 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110707-0908 */
 
 
     public static AdminRight R_accessGAL;
@@ -127,6 +127,7 @@ public class AdminRights {
     public static AdminRight R_adminLoginCalendarResourceAs;
     public static AdminRight R_applianceAll;
     public static AdminRight R_assignCos;
+    public static AdminRight R_autoProvisionAccount;
     public static AdminRight R_backupAccount;
     public static AdminRight R_checkCalendarResourcePasswordStrength;
     public static AdminRight R_checkDirectoryOnFileSystem;
@@ -530,6 +531,7 @@ public class AdminRights {
         R_adminLoginCalendarResourceAs         = rm.getAdminRight(Right.RT_adminLoginCalendarResourceAs);
         R_applianceAll                         = rm.getAdminRight(Right.RT_applianceAll);
         R_assignCos                            = rm.getAdminRight(Right.RT_assignCos);
+        R_autoProvisionAccount                 = rm.getAdminRight(Right.RT_autoProvisionAccount);
         R_backupAccount                        = rm.getAdminRight(Right.RT_backupAccount);
         R_checkCalendarResourcePasswordStrength = rm.getAdminRight(Right.RT_checkCalendarResourcePasswordStrength);
         R_checkDirectoryOnFileSystem           = rm.getAdminRight(Right.RT_checkDirectoryOnFileSystem);

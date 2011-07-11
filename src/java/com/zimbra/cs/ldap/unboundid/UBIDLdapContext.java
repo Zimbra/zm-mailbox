@@ -282,7 +282,7 @@ public class UBIDLdapContext extends ZLdapContext {
     public void deleteChildren(String dn) throws ServiceException {
         
         try {
-            Filter filter = Filter.createPresenceFilter(LdapConstants.ATTR_OBJECTCLASS);  // (objectclass=*)
+            Filter filter = Filter.createPresenceFilter(LdapConstants.ATTR_OBJECTCLASS);
             SearchRequest searchRequest = new SearchRequest(dn, 
                     SearchScope.ONE,
                     derefAliasPolicy,

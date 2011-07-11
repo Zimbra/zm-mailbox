@@ -98,7 +98,7 @@ public abstract class LdapHelper {
      *          false if the filter does not match the target entry
      * @throws ServiceException
      */
-    public abstract boolean tesAndModifyEntry(ZLdapContext zlc, String dn, ZLdapFilter testFilter,
+    public abstract boolean testAndModifyEntry(ZLdapContext zlc, String dn, ZLdapFilter testFilter,
             Map<String, ? extends Object> attrs,  Entry entry, LdapUsage ldapUsage)
     throws ServiceException;
     
@@ -127,10 +127,17 @@ public abstract class LdapHelper {
      * @throws ServiceException                     all other errors
      */
     public abstract ZSearchResultEntry searchForEntry(String base, ZLdapFilter filter, 
-            ZLdapContext initZlc, boolean useMaster) 
+            ZLdapContext initZlc, boolean useMaster, String[] returnAttrs) 
     throws LdapMultipleEntriesMatchedException, ServiceException;
     
-    public ZSearchResultEntry searchForEntry(String base, ZLdapFilter filter, ZLdapContext initZlc) 
+    public ZSearchResultEntry searchForEntry(String base, ZLdapFilter filter, 
+            ZLdapContext initZlc, boolean useMaster) 
+    throws LdapMultipleEntriesMatchedException, ServiceException {
+        return searchForEntry(base, filter, initZlc, useMaster, null);
+    }
+    
+    public ZSearchResultEntry searchForEntry(String base, ZLdapFilter filter, 
+            ZLdapContext initZlc, String[] returnAttrs) 
     throws LdapMultipleEntriesMatchedException, ServiceException {
         if (initZlc == null) {
             throw ServiceException.FAILURE("internal error", null);
@@ -143,7 +150,8 @@ public abstract class LdapHelper {
      * 
      * @param dn
      * @param initZlc
-     * @param useMaster
+     * @param ldapServerType
+     * @param attrs
      * 
      * @return a ZAttributes objects
      *         Note: this API never returns null.  If an entry is not found at the specified 
@@ -153,20 +161,34 @@ public abstract class LdapHelper {
      * @throws ServiceException            all other errors
      */
     public abstract ZAttributes getAttributes(String dn, ZLdapContext initZlc, 
-            LdapServerType ldapServerType) 
+            LdapServerType ldapServerType, String[] returnAttrs) 
     throws LdapEntryNotFoundException, ServiceException;
+    
+    public ZAttributes getAttributes(String dn, ZLdapContext initZlc, 
+            LdapServerType ldapServerType) 
+    throws LdapEntryNotFoundException, ServiceException {
+        return getAttributes(dn, initZlc, ldapServerType, null);
+    }
     
     public ZAttributes getAttributes(String dn, ZLdapContext initZlc) 
     throws LdapEntryNotFoundException, ServiceException {
         if (initZlc == null) {
             throw ServiceException.FAILURE("internal error", null);
         }
-        return getAttributes(dn, initZlc, null);
+        return getAttributes(dn, initZlc, null, null);
+    }
+    
+    public ZAttributes getAttributes(String dn, ZLdapContext initZlc, String[] returnAttrs) 
+    throws LdapEntryNotFoundException, ServiceException {
+        if (initZlc == null) {
+            throw ServiceException.FAILURE("internal error", null);
+        }
+        return getAttributes(dn, initZlc, null, returnAttrs);
     }
     
     public ZAttributes getAttributes(String dn) 
     throws LdapEntryNotFoundException, ServiceException {
-        return getAttributes(dn, null, LdapServerType.REPLICA);
+        return getAttributes(dn, null, LdapServerType.REPLICA, null);
     }
     
     /**

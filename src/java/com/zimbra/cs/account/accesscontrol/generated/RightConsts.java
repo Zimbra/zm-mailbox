@@ -24,7 +24,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110622-1636 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110707-0908 */
 
 
     /*
@@ -545,6 +545,11 @@ public class RightConsts {
      * assign the cos (to domains or accounts)
      */
     public static final String RT_assignCos = "assignCos";
+
+    /**
+     * auto provision account in the domain in MANUAL mode
+     */
+    public static final String RT_autoProvisionAccount = "autoProvisionAccount";
 
     /**
      * backup accounts on a server

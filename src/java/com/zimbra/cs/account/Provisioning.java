@@ -664,6 +664,23 @@ public abstract class Provisioning extends ZAttrProvisioning {
      */
     public abstract Account get(AccountBy keyType, String key) throws ServiceException;
     
+    
+    public static interface EagerAutoProvisionScheduler {
+        // returns whether a shutdown has been request to the scheduler
+        public boolean isShutDownRequested();
+    }
+    /**
+     * Auto provisioning account in EAGER mode.
+     * 
+     * @param domain
+     * @return
+     * @throws ServiceException
+     */
+    public void autoProvAccountEager(EagerAutoProvisionScheduler scheduler) 
+    throws ServiceException {
+        throw new UnsupportedOperationException();
+    }
+    
     /**
      * Auto provisioning account in LAZY mode.
      * 
@@ -682,7 +699,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @return an account instance if the account is successfully created
      * @throws ServiceException
      */
-    public Account autoProvAccount(Domain domain, String loginName, String loginPassword, 
+    public Account autoProvAccountLazy(Domain domain, String loginName, String loginPassword, 
             AutoProvAuthMech authMech) throws ServiceException {
         throw new UnsupportedOperationException();
     }
@@ -709,7 +726,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @return an account instance if the account is successfully created
      * @throws ServiceException
      */
-    public Account autoProvAccount(Domain domain, AutoProvPrincipalBy by, String principal) 
+    public Account autoProvAccountManual(Domain domain, AutoProvPrincipalBy by, String principal) 
     throws ServiceException {
         throw new UnsupportedOperationException();
     }
@@ -723,6 +740,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
     throws ServiceException {
         throw new UnsupportedOperationException();
     }
+
+    
 
     public Account getAccountByName(String name) throws ServiceException { return get(AccountBy.name, name); }
     public Account getAccountById(String id) throws ServiceException { return get(AccountBy.id, id); }

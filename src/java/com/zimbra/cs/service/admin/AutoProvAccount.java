@@ -1,5 +1,6 @@
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.account.Key.DomainBy;
@@ -11,6 +12,8 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AutoProvPrincipalBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class AutoProvAccount extends AdminDocumentHandler {
@@ -27,11 +30,13 @@ public class AutoProvAccount extends AdminDocumentHandler {
             throw AccountServiceException.NO_SUCH_DOMAIN(domainValue);
         }
         
+        checkRight(zsc, context, domain, Admin.R_autoProvisionAccount);
+        
         Element ePrincipal = request.getElement(AdminConstants.E_PRINCIPAL);
         AutoProvPrincipalBy by = AutoProvPrincipalBy.fromString(ePrincipal.getAttribute(AdminConstants.A_BY));
         String principal = ePrincipal.getText();
         
-        Account acct = prov.autoProvAccount(domain, by, principal);
+        Account acct = prov.autoProvAccountManual(domain, by, principal);
         if (acct == null) {
             throw ServiceException.FAILURE("unable to auto provision account: " + principal, null);
         }
@@ -39,5 +44,10 @@ public class AutoProvAccount extends AdminDocumentHandler {
         Element response = zsc.createElement(AdminConstants.SEARCH_AUTO_PROV_DIRECTORY_RESPONSE);
         ToXML.encodeAccount(response, acct);
         return response;
+    }
+    
+    @Override
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
+        relatedRights.add(Admin.R_autoProvisionAccount);
     }
 }

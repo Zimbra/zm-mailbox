@@ -35,7 +35,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20110709-1116 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110711-1137 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -16037,7 +16037,8 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * Indicates the account is an account used by the system such as spam
-     * accounts or Notebook accounts.
+     * accounts or Notebook accounts. System accounts cannot be deleted in
+     * admin console.
      *
      * @return zimbraIsSystemAccount, or false if unset
      *
@@ -16050,7 +16051,8 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * Indicates the account is an account used by the system such as spam
-     * accounts or Notebook accounts.
+     * accounts or Notebook accounts. System accounts cannot be deleted in
+     * admin console.
      *
      * @param zimbraIsSystemAccount new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -16066,7 +16068,8 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * Indicates the account is an account used by the system such as spam
-     * accounts or Notebook accounts.
+     * accounts or Notebook accounts. System accounts cannot be deleted in
+     * admin console.
      *
      * @param zimbraIsSystemAccount new value
      * @param attrs existing map to populate, or null to create a new map
@@ -16083,7 +16086,8 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * Indicates the account is an account used by the system such as spam
-     * accounts or Notebook accounts.
+     * accounts or Notebook accounts. System accounts cannot be deleted in
+     * admin console.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -16098,7 +16102,8 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * Indicates the account is an account used by the system such as spam
-     * accounts or Notebook accounts.
+     * accounts or Notebook accounts. System accounts cannot be deleted in
+     * admin console.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -40332,6 +40337,174 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetTextAnalyzer(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraTextAnalyzer, "");
+        return attrs;
+    }
+
+    /**
+     * binary data
+     *
+     * @return zimbraUnittestBinary, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public byte[] getUnittestBinary() {
+        return getBinaryAttr(Provisioning.A_zimbraUnittestBinary);
+    }
+
+    /**
+     * binary data
+     *
+     * @return zimbraUnittestBinary, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public String getUnittestBinaryAsString() {
+        return getAttr(Provisioning.A_zimbraUnittestBinary, null);
+    }
+
+    /**
+     * binary data
+     *
+     * @param zimbraUnittestBinary new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public void setUnittestBinary(byte[] zimbraUnittestBinary) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUnittestBinary, zimbraUnittestBinary==null ? "" : ByteUtil.encodeLDAPBase64(zimbraUnittestBinary));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * binary data
+     *
+     * @param zimbraUnittestBinary new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public Map<String,Object> setUnittestBinary(byte[] zimbraUnittestBinary, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUnittestBinary, zimbraUnittestBinary==null ? "" : ByteUtil.encodeLDAPBase64(zimbraUnittestBinary));
+        return attrs;
+    }
+
+    /**
+     * binary data
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public void unsetUnittestBinary() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUnittestBinary, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * binary data
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public Map<String,Object> unsetUnittestBinary(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUnittestBinary, "");
+        return attrs;
+    }
+
+    /**
+     * binary data
+     *
+     * @return zimbraUnittestCertificate, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public byte[] getUnittestCertificate() {
+        return getBinaryAttr(Provisioning.A_zimbraUnittestCertificate);
+    }
+
+    /**
+     * binary data
+     *
+     * @return zimbraUnittestCertificate, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public String getUnittestCertificateAsString() {
+        return getAttr(Provisioning.A_zimbraUnittestCertificate, null);
+    }
+
+    /**
+     * binary data
+     *
+     * @param zimbraUnittestCertificate new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public void setUnittestCertificate(byte[] zimbraUnittestCertificate) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUnittestCertificate, zimbraUnittestCertificate==null ? "" : ByteUtil.encodeLDAPBase64(zimbraUnittestCertificate));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * binary data
+     *
+     * @param zimbraUnittestCertificate new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public Map<String,Object> setUnittestCertificate(byte[] zimbraUnittestCertificate, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUnittestCertificate, zimbraUnittestCertificate==null ? "" : ByteUtil.encodeLDAPBase64(zimbraUnittestCertificate));
+        return attrs;
+    }
+
+    /**
+     * binary data
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public void unsetUnittestCertificate() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUnittestCertificate, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * binary data
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public Map<String,Object> unsetUnittestCertificate(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUnittestCertificate, "");
         return attrs;
     }
 

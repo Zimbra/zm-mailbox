@@ -22,6 +22,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -56,6 +57,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DirectoryEntryVisitor;
 import com.zimbra.cs.account.ZAttrProvisioning.AutoProvAuthMech;
 import com.zimbra.cs.account.names.NameUtil.EmailAddress;
+import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapConstants;
@@ -86,11 +88,11 @@ public abstract class AutoProvision {
     
     abstract Account handle() throws ServiceException;
     
-    protected Account createAccount(String acctZimbraName, ZAttributes externalAttrs) 
+    protected Account createAccount(String acctZimbraName, ExternalEntry externalEntry) 
     throws ServiceException {
-        Map<String, Object> zimbraAttrs = mapAttrs(externalAttrs);
+        ZAttributes externalAttrs = externalEntry.getAttrs();
         
-        ZimbraLog.account.info("auto provision account: " + acctZimbraName);
+        Map<String, Object> zimbraAttrs = mapAttrs(externalAttrs);
         
         /*
         // TODO: should we do this?
@@ -98,13 +100,42 @@ public abstract class AutoProvision {
         zimbraAttrs.put(Provisioning.A_zimbraPasswordMustChange, Provisioning.TRUE);
         */
         String zimbraPassword = null;
-        Account acct = prov.createAccount(acctZimbraName, zimbraPassword, zimbraAttrs);
+        Account acct = null;
+        
+        try {
+            acct = prov.createAccount(acctZimbraName, zimbraPassword, zimbraAttrs);
+        } catch (ServiceException e) {
+            if (AccountServiceException.ACCOUNT_EXISTS.equals(e.getCode())) {
+                // the account already exists, that's fine, just return null
+                return null;
+            } else {
+                throw e;
+            }
+        }
+        
+        ZimbraLog.autoprov.info("auto provisioned account: " + acctZimbraName);
         
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "auto provision Account", "name", acct.getName(), "id", acct.getId()}, zimbraAttrs));  
         
         // send notification email
-        sendNotifMessage(acct, zimbraPassword);
+        try {
+            sendNotifMessage(acct, zimbraPassword);
+        } catch (ServiceException e) {
+            // exception during sending notif email should not fail this method
+            ZimbraLog.autoprov.warn("unable to send auto provision notification email", e);
+        }
+        
+        // invoke post create listener if configured
+        try {
+            AutoProvisionListener listener = AutoProvisionCachedInfo.getInfo(domain).getListener();
+            if (listener != null) {
+                listener.postCreate(domain, acct, externalEntry.getDN());
+            }
+        } catch (ServiceException e) {
+            // exception during the post create listener should not fail this method
+            ZimbraLog.autoprov.warn("encountered error in post auto provision listener", e);
+        }
         
         return acct;
     }
@@ -115,15 +146,15 @@ public abstract class AutoProvision {
             (Provisioning.AM_LDAP.equals(authMech)  || Provisioning.AM_AD.equals(authMech));
     }
     
-    private static class AutoProvisionAttrMap {
+    private static class AutoProvisionCachedInfo {
         
-        private static AutoProvisionAttrMap getAttrMap(Domain domain) throws ServiceException {
-            AutoProvisionAttrMap attrMap = 
-                (AutoProvisionAttrMap) domain.getCachedData(EntryCacheDataKey.DOMAIN_AUTO_PROVISION_ATTR_MAP);
+        private static AutoProvisionCachedInfo getInfo(Domain domain) throws ServiceException {
+            AutoProvisionCachedInfo attrMap = 
+                (AutoProvisionCachedInfo) domain.getCachedData(EntryCacheDataKey.DOMAIN_AUTO_PROVISION_DATA);
             
             if (attrMap == null) {
-                attrMap = new AutoProvisionAttrMap(domain);
-                domain.setCachedData(EntryCacheDataKey.DOMAIN_AUTO_PROVISION_ATTR_MAP, attrMap);
+                attrMap = new AutoProvisionCachedInfo(domain);
+                domain.setCachedData(EntryCacheDataKey.DOMAIN_AUTO_PROVISION_DATA, attrMap);
             }
             
             return attrMap;
@@ -131,8 +162,10 @@ public abstract class AutoProvision {
         
         private static final String DELIMITER = "=";
         private Map<String, String> attrMap = new HashMap<String, String>();
+        private String[] attrsToFetch;
+        private AutoProvisionListener listener;
         
-        private AutoProvisionAttrMap(Domain domain) throws ServiceException {
+        private AutoProvisionCachedInfo(Domain domain) throws ServiceException {
             AttributeManager attrMgr = AttributeManager.getInstance();
             
             // include attrs in schema extension
@@ -158,13 +191,49 @@ public abstract class AutoProvision {
                 
                 attrMap.put(externalAttr, zimbraAttr);
             }
+            
+            Set<String> attrs = new HashSet<String>();
+            attrs.addAll(attrMap.keySet());
+            attrs.add(LdapConstants.ATTR_CREATE_TIMESTAMP);
+            String nameMapAttr = domain.getAutoProvAccountNameMap();
+            if (nameMapAttr != null) {
+                attrs.add(nameMapAttr);
+            }
+            attrsToFetch = attrs.toArray(new String[0]);
+            
+            // load listener class and instantiate the handler
+            String className = domain.getAutoProvListenerClass();
+            if (className != null) {
+                try {
+                    if (className != null) {
+                        listener = ExtensionUtil.findClass(className).asSubclass(AutoProvisionListener.class).newInstance();
+                    }
+                } catch (ClassNotFoundException e) {
+                    ZimbraLog.autoprov.warn("unable to find auto provision listener class " + className, e);
+                } catch (InstantiationException e) {
+                    ZimbraLog.autoprov.warn("unable to instantiate auto provision listener object of class " + className, e);
+                } catch (IllegalAccessException e) {
+                    ZimbraLog.autoprov.warn("unable to instantiate auto provision listener object of class " + className, e);
+                }
+            }
         }
         
         private String getZimbraAttrName(String externalAttrName) {
             return attrMap.get(externalAttrName);
         }
+        
+        private String[] getAttrsToFetch() {
+            return attrsToFetch;
+        }
+        
+        private AutoProvisionListener getListener() {
+            return listener;
+        }
     }
     
+    protected String[] getAttrsToFetch() throws ServiceException {
+        return AutoProvisionCachedInfo.getInfo(domain).getAttrsToFetch();
+    }
     
     /**
      * map external name to zimbra name for the account to be created in Zimbra.
@@ -196,7 +265,7 @@ public abstract class AutoProvision {
     }
     
     protected Map<String, Object> mapAttrs(ZAttributes externalAttrs) throws ServiceException {
-        AutoProvisionAttrMap attrMap = AutoProvisionAttrMap.getAttrMap(domain);
+        AutoProvisionCachedInfo attrMap = AutoProvisionCachedInfo.getInfo(domain);
         
         Map<String, Object> extAttrs = externalAttrs.getAttrs();
         Map<String, Object> zimbraAttrs = new HashMap<String, Object>();
@@ -247,13 +316,31 @@ public abstract class AutoProvision {
         
         try {
             zlc = LdapClient.getExternalContext(config, LdapUsage.AUTO_PROVISION);
-            return prov.getHelper().getAttributes(dn, zlc);
+            return prov.getHelper().getAttributes(dn, zlc, getAttrsToFetch());
         } finally {
             LdapClient.closeContext(zlc);
         }
     }
     
-    protected ZAttributes getExternalAttrsByName(AutoProvAuthMech authedByMech, 
+    protected static class ExternalEntry {
+        private String dn;
+        private ZAttributes attrs;
+        
+        ExternalEntry(String dn, ZAttributes attrs) {
+            this.dn = dn;
+            this.attrs = attrs;
+        }
+        
+        String getDN() {
+            return dn;
+        }
+        
+        ZAttributes getAttrs() {
+            return attrs;
+        }
+    }
+    
+    protected ExternalEntry getExternalAttrsByName(AutoProvAuthMech authedByMech, 
             String loginName, String loginPassword) throws ServiceException {
         if ((authedByMech == null || AutoProvAuthMech.LDAP == authedByMech) && useLdapAuthSettings(domain)) {
             return getExternalAttrsViaLdapAuthSettings(loginName, loginPassword);
@@ -262,11 +349,12 @@ public abstract class AutoProvision {
         }
     }
 
-    private ZAttributes getExternalAttrsViaAutoProvSettings(String loginName) throws ServiceException {
+    private ExternalEntry getExternalAttrsViaAutoProvSettings(String loginName) throws ServiceException {
         String url = domain.getAutoProvLdapURL();
         boolean wantStartTLS = domain.isAutoProvLdapStartTlsEnabled();
         String adminDN = domain.getAutoProvLdapAdminBindDn();
         String adminPassword = domain.getAutoProvLdapAdminBindPassword();
+        String[] attrs = getAttrsToFetch();
         
         // always use the admin bind DN/password, not the user's bind DN/password
         ExternalLdapConfig config = new ExternalLdapConfig(url, wantStartTLS, 
@@ -285,18 +373,19 @@ public abstract class AutoProvision {
                     searchBase = LdapConstants.DN_ROOT_DSE;
                 }
                 String searchFilter = LdapUtilCommon.computeAuthDn(loginName, searchFilterTemplate);
-                ZimbraLog.account.debug("AutoProvision: computed search filter" + searchFilter);
+                ZimbraLog.autoprov.debug("AutoProvision: computed search filter" + searchFilter);
                 ZSearchResultEntry entry = prov.getHelper().searchForEntry(
-                        searchBase, ZLdapFilterFactory.getInstance().fromFilterString(searchFilter), zlc);
-                return entry.getAttributes();
+                        searchBase, ZLdapFilterFactory.getInstance().fromFilterString(searchFilter), 
+                        zlc, attrs);
+                return new ExternalEntry(entry.getDN(), entry.getAttributes());
             }
             
             String bindDNTemplate = domain.getAutoProvLdapBindDn();
             if (bindDNTemplate != null) {
                 // get attrs by external DN template
                 String dn = LdapUtilCommon.computeAuthDn(loginName, bindDNTemplate);
-                ZimbraLog.account.debug("AutoProvision: computed external DN" + dn);
-                return prov.getHelper().getAttributes(dn, zlc);
+                ZimbraLog.autoprov.debug("AutoProvision: computed external DN" + dn);
+                return new ExternalEntry(dn, prov.getHelper().getAttributes(dn, zlc, attrs));
             }
             
         } finally {
@@ -307,10 +396,11 @@ public abstract class AutoProvision {
                 " or " + Provisioning.A_zimbraAutoProvLdapSearchFilter + " must be set", null);
     }
 
-    private ZAttributes getExternalAttrsViaLdapAuthSettings(String loginName, String loginPassword) 
+    private ExternalEntry getExternalAttrsViaLdapAuthSettings(String loginName, String loginPassword) 
     throws ServiceException {
         String url[] = domain.getAuthLdapURL();
         boolean wantStartTLS = domain.isAuthLdapStartTlsEnabled();
+        String[] attrs = getAttrsToFetch();
         
         ZLdapContext zlc = null;
         
@@ -324,16 +414,17 @@ public abstract class AutoProvision {
                     searchBase = "";
                 }
                 searchFilter = LdapUtilCommon.computeAuthDn(loginName, searchFilter);
-                ZimbraLog.account.debug("AutoProvision: computed search filter" + searchFilter);
+                ZimbraLog.autoprov.debug("AutoProvision: computed search filter" + searchFilter);
                 
                 ExternalLdapConfig config = new ExternalLdapConfig(url, wantStartTLS, 
                         null, searchDn, searchPassword, null, "auto provision account");
                 zlc = LdapClient.getExternalContext(config, LdapUsage.AUTO_PROVISION);
                 
                 ZSearchResultEntry entry = prov.getHelper().searchForEntry(
-                        searchBase, ZLdapFilterFactory.getInstance().fromFilterString(searchFilter), zlc);
+                        searchBase, ZLdapFilterFactory.getInstance().fromFilterString(searchFilter), 
+                        zlc, attrs);
                 
-                return entry.getAttributes();
+                return new ExternalEntry(entry.getDN(), entry.getAttributes());
             }
             
             String bindDNTemplate = domain.getAuthLdapBindDn();
@@ -344,13 +435,13 @@ public abstract class AutoProvision {
                 }
                 
                 String dn = LdapUtilCommon.computeAuthDn(loginName, bindDNTemplate);
-                ZimbraLog.account.debug("AutoProvision: computed external DN" + dn);
+                ZimbraLog.autoprov.debug("AutoProvision: computed external DN" + dn);
                 
                 ExternalLdapConfig config = new ExternalLdapConfig(url, wantStartTLS, 
                         null, dn, loginPassword, null, "auto provision account");
                 zlc = LdapClient.getExternalContext(config, LdapUsage.AUTO_PROVISION);
                                 
-                return prov.getHelper().getAttributes(dn, zlc);
+                return new ExternalEntry(dn, prov.getHelper().getAttributes(dn, zlc, attrs));
             }
         
         } finally {
@@ -363,22 +454,26 @@ public abstract class AutoProvision {
 
     
     protected void sendNotifMessage(Account acct, String password) throws ServiceException {
+        String from = domain.getAutoProvNotificationFromAddress();
+        if (from == null) {
+            // if From address is configured, notification is not sent.
+            // TODO: should we use a seperate boolean control?
+            return;
+        }
+        
         String toAddr = acct.getName();
         
         try {
             SMTPMessage out = new SMTPMessage(JMSession.getSmtpSession());
 
-            String from = domain.getAutoProvNotificationFromAddress();
-            if (from == null) {
-                from = String.format("Postmaster <postmaster@%s>", domain.getName());
-            }
+            
             
             InternetAddress addr = null;
             try {
                 addr = new JavaMailInternetAddress(from);
             } catch (AddressException e) {
                 // log and try the next one
-                ZimbraLog.account.warn("invalid address in " +
+                ZimbraLog.autoprov.warn("invalid address in " +
                         Provisioning.A_zimbraAutoProvNotificationFromAddress, e);
             }
             
@@ -432,10 +527,10 @@ public abstract class AutoProvision {
             StringBuilder rcptAddr = new StringBuilder();
             for (Address a : rcpts)
                 rcptAddr.append(a.toString());
-            ZimbraLog.account.info("auto provision notification sent rcpt='" + rcptAddr + "' Message-ID=" + out.getMessageID());
+            ZimbraLog.autoprov.info("auto provision notification sent rcpt='" + rcptAddr + "' Message-ID=" + out.getMessageID());
 
         } catch (MessagingException e) {
-            ZimbraLog.account.warn("send auto provision notification failed rcpt='" + toAddr +"'", e);
+            ZimbraLog.autoprov.warn("send auto provision notification failed rcpt='" + toAddr +"'", e);
         }
     }
 

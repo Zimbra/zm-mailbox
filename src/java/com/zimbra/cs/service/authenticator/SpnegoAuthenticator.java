@@ -30,8 +30,11 @@ import org.mortbay.jetty.security.SpnegoUserRealm.SpnegoUser;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.account.ZAttrProvisioning.AutoProvAuthMech;
+import com.zimbra.cs.account.krb5.Krb5Principal;
 import com.zimbra.common.account.Key.AccountBy;
 
 public class SpnegoAuthenticator extends SSOAuthenticator {
@@ -87,6 +90,13 @@ public class SpnegoAuthenticator extends SSOAuthenticator {
         
         Provisioning prov = Provisioning.getInstance();
         Account acct = prov.get(AccountBy.krb5Principal, krb5Name);
+        
+        if (acct == null) {
+            Domain domain = Krb5Principal.getDomainByKrb5Principal(krb5Name);
+            if (domain != null) {
+                acct = prov.autoProvAccountLazy(domain, krb5Name, null, AutoProvAuthMech.SPNEGO);
+            }
+        }
         return acct;
     }
     

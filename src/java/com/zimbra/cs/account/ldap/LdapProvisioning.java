@@ -57,6 +57,7 @@ import com.zimbra.cs.account.DomainCache.GetFromDomainCacheOption;
 import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.account.Provisioning.AutoProvPrincipalBy;
 import com.zimbra.cs.account.Provisioning.DirectoryEntryVisitor;
+import com.zimbra.cs.account.Provisioning.EagerAutoProvisionScheduler;
 import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
@@ -798,17 +799,23 @@ public class LdapProvisioning extends LdapProv {
     }
     
     @Override
-    public Account autoProvAccount(Domain domain, String loginName, 
+    public void autoProvAccountEager(EagerAutoProvisionScheduler scheduler) 
+    throws ServiceException {
+        AutoProvisionEager.handleScheduledDomains(this, scheduler);
+    }
+    
+    @Override
+    public Account autoProvAccountLazy(Domain domain, String loginName, 
             String loginPassword, AutoProvAuthMech authMech) 
     throws ServiceException {
-        AutoProvision autoPorv = new AutoProvisionLazy(this, domain, loginName, loginPassword, authMech);
+        AutoProvisionLazy autoPorv = new AutoProvisionLazy(this, domain, loginName, loginPassword, authMech);
         return autoPorv.handle();
     }
     
     @Override
-    public Account autoProvAccount(Domain domain, AutoProvPrincipalBy by, String principal) 
+    public Account autoProvAccountManual(Domain domain, AutoProvPrincipalBy by, String principal) 
     throws ServiceException {
-        AutoProvision autoProv = new AutoProvisionManual(this, domain, by, principal);
+        AutoProvisionManual autoProv = new AutoProvisionManual(this, domain, by, principal);
         return autoProv.handle();
     }
     

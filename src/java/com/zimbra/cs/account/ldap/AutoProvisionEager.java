@@ -1,3 +1,17 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2011 Zimbra, Inc.
+ *
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.cs.account.ldap;
 
 import java.util.ArrayList;
@@ -13,10 +27,12 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.Provisioning.EagerAutoProvisionScheduler;
 import com.zimbra.cs.account.ZAttrProvisioning.AutoProvMode;
 import com.zimbra.cs.account.ldap.entry.LdapEntry;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.LdapClient;
+import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.LdapUtilCommon;
@@ -26,52 +42,78 @@ import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
 import com.zimbra.cs.ldap.SearchLdapOptions.StopIteratingException;
+import com.zimbra.cs.util.Zimbra;
 
 public class AutoProvisionEager extends AutoProvision {
+    private EagerAutoProvisionScheduler scheduler;
     
-    // public for unittest
-    public AutoProvisionEager(LdapProv prov, Domain domain) {
+    private AutoProvisionEager(LdapProv prov, Domain domain, EagerAutoProvisionScheduler scheduler) {
         super(prov, domain);
+        this.scheduler = scheduler;
     }
     
-    // public for unittest
-    public void handleBatch(ZLdapContext zlc) throws ServiceException {
-        if (!autoProvisionEnabled()) {
-            throw ServiceException.FAILURE("EAGER auto provisioning is not enabled on domain " + domain.getName(), null);
-        }
+    static void handleScheduledDomains(LdapProv prov, EagerAutoProvisionScheduler scheduler) {
+        ZLdapContext zlc = null;
         
+        try {
+            String[] domainNames = getScheduledDomains(prov);
+            
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.AUTO_PROVISION);
+            
+            for (String domainName : domainNames) {
+                if (scheduler.isShutDownRequested()) {
+                    ZimbraLog.autoprov.info("eager auto provision aborted");
+                    return;
+                }
+                
+                // provision accounts for the domains
+                try {
+                    Domain domain = prov.get(DomainBy.name, domainName);
+                    if (domain == null) {
+                        ZimbraLog.autoprov.info("No such domain", domainName);
+                        continue;
+                    }
+                    
+                    ZimbraLog.autoprov.info("Auto provisioning accounts on domain %s", domainName);
+                    AutoProvisionEager autoProv = new AutoProvisionEager(prov, domain, scheduler);
+                    autoProv.handleBatch(zlc);
+                } catch (Throwable t) {
+                    if (t instanceof OutOfMemoryError) {
+                        Zimbra.halt("Ran out of memory while auto provision accounts", t);
+                    } else {
+                        ZimbraLog.autoprov.warn("Unable to auto provision accounts for domain %s", domainName, t);
+                    }
+                }
+            }
+        } catch (ServiceException e) {
+            // unable to get ldap context
+            ZimbraLog.autoprov.warn("Unable to auto provision accounts", e);
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
+    }
+    
+    private static String[] getScheduledDomains(LdapProv prov) throws ServiceException {
+        return prov.getLocalServer().getAutoProvScheduledDomains();
+    }
+    
+    private void handleBatch(ZLdapContext zlc) throws ServiceException {
+        if (!autoProvisionEnabled()) {
+            throw ServiceException.FAILURE("EAGER auto provision is not enabled on domain " 
+                    + domain.getName(), null);
+        }
+
         if (!lockDomain(zlc)) {
-            ZimbraLog.account.info("EAGER auto provision: skip domain " + domain.getName() +
+            ZimbraLog.autoprov.info("EAGER auto provision: skip domain " + domain.getName() +
                     " on server " + prov.getLocalServer().getName());
             return;
         }
-        
-        List<ExternalEntry> entries = searchAccounts();
-        
-        String latestCreateTimestamp = null;
+
         try {
-            for (ExternalEntry entry : entries) {
-                ZAttributes externalAttrs = entry.attrs;
-                
-                String acctZimbraName = mapName(externalAttrs, null);
-                createAccount(acctZimbraName, externalAttrs);
-                
-                // keep track of the last createTimeStamp in the external directory.
-                // Out next batch will fetch entries with createTimeStamp later than 
-                // the last create timestamp in this batch.
-                String cts = (String) externalAttrs.getAttrString("createTimeStamp");
-                latestCreateTimestamp = LdapUtilCommon.getLaterTimestamp(latestCreateTimestamp, cts);
-            }
-        } catch (ServiceException e) {
-            // rethrow
-            throw e;
+            createAccountBatch();
         } finally {
-            // update the last create timestamp
-            if (latestCreateTimestamp != null) {
-                domain.setAutoProvLastPolledTimestampAsString(latestCreateTimestamp);
-            }
+            unlockDomain(zlc);
         }
-        
     }
 
     @Override
@@ -84,6 +126,44 @@ public class AutoProvisionEager extends AutoProvision {
         return modesEnabled.contains(AutoProvMode.EAGER.name());
     }
     
+    private void createAccountBatch() throws ServiceException {
+        
+        List<ExternalEntry> entries = searchAccounts();
+        
+        String latestCreateTimestamp = null;
+        for (ExternalEntry entry : entries) {
+            if (scheduler.isShutDownRequested()) {
+                ZimbraLog.autoprov.info("eager auto provision aborted");
+                return;
+            }
+            
+            try {
+                ZAttributes externalAttrs = entry.getAttrs();
+                String acctZimbraName = mapName(externalAttrs, null);
+                
+                ZimbraLog.autoprov.info("auto creating account in EAGER mode: " + acctZimbraName);
+                Account acct = createAccount(acctZimbraName, entry);
+                
+                // keep track of the last createTimeStamp in the external directory.
+                // Out next batch will fetch entries with createTimeStamp later than 
+                // the last create timestamp in this batch.
+                // Take into accounts the entry's create timestamp only if the account 
+                // is successfully created by us
+                if (acct != null) {
+                    String cts = (String) externalAttrs.getAttrString(LdapConstants.ATTR_CREATE_TIMESTAMP);
+                    latestCreateTimestamp = LdapUtilCommon.getLaterTimestamp(latestCreateTimestamp, cts);
+                }
+            } catch (ServiceException e) {
+                // log and continue with next entry
+                ZimbraLog.autoprov.warn("unable to auto create account " + entry.getDN(), e);
+            }
+        }
+        
+        if (latestCreateTimestamp != null) {
+            domain.setAutoProvLastPolledTimestampAsString(latestCreateTimestamp);
+        }
+    }
+    
     private boolean lockDomain(ZLdapContext zlc) throws ServiceException {
         Server localServer = prov.getLocalServer();
         
@@ -91,24 +171,22 @@ public class AutoProvisionEager extends AutoProvision {
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLock, localServer.getId());
         
-        return prov.getHelper().tesAndModifyEntry(zlc, ((LdapEntry)domain).getDN(), filter, attrs, 
+        return prov.getHelper().testAndModifyEntry(zlc, ((LdapEntry)domain).getDN(), filter, attrs, 
                 domain, LdapUsage.AUTO_PROVISION);
     }
     
-    private static class ExternalEntry {
-        private String dn;
-        private ZAttributes attrs;
+    private void unlockDomain(ZLdapContext zlc) throws ServiceException {
+        // clear the server id in the lock
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvLock, "");
         
-        private ExternalEntry(String dn, ZAttributes attrs) {
-            this.dn = dn;
-            this.attrs = attrs;
-        }
+        prov.getHelper().modifyAttrs(zlc, ((LdapEntry)domain).getDN(), attrs, domain);
     }
     
     private List<ExternalEntry> searchAccounts() throws ServiceException {
         int maxResults = domain.getAutoProvBatchSize();
         String lastPolledAt = domain.getAutoProvLastPolledTimestampAsString();
-        String[] returnAttrs = null; // TODO: only fetches attrs in the map
+        String[] returnAttrs = getAttrsToFetch();
         
         final List<ExternalEntry> entries = new ArrayList<ExternalEntry>();
         
@@ -124,20 +202,6 @@ public class AutoProvisionEager extends AutoProvision {
                 lastPolledAt, returnAttrs, maxResults, visitor);
         
         return entries;
-    }
-    
-    public static void main(String[] args) throws Exception {
-        Provisioning prov = Provisioning.getInstance();
-        Domain domain = prov.get(DomainBy.name, "phoebe.mbp");
-        AutoProvisionEager autoProv = new AutoProvisionEager((LdapProv) prov, domain);
-        
-        ZLdapContext zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.UNITTEST);
-        try {
-        autoProv.handleBatch(zlc);
-        autoProv.handleBatch(zlc);
-        } finally {
-            LdapClient.closeContext(zlc);
-        }
     }
 
 }

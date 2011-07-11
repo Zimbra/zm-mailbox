@@ -40,7 +40,7 @@ public abstract class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20110709-1116 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110711-1137 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -731,19 +731,24 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * For EAGER auto provision. Interval between successive polling and
-     * provisioning accounts. The actual interval may be longer since it can
-     * be affected by two other factors: zimbraAutoProvBatchSize and number
-     * of domains configured in zimbraAutoProvScheduledDomains. At each
-     * interval, the auto provision thread iterates through all domains in
-     * zimbraAutoProvScheduledDomains and auto creates up to
-     * domain.zimbraAutoProvBatchSize accounts. If that process takes longer
-     * than zimbraAutoProvPollingInterval then the next iteration will start
-     * immediately instead of waiting for zimbraAutoProvPollingInterval
-     * amount of time. . Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
+     * EAGER mode: required LAZY mode: N/A MANUAL mode: N/A Interval between
+     * successive polling and provisioning accounts. The actual interval may
+     * be longer since it can be affected by two other factors:
+     * zimbraAutoProvBatchSize and number of domains configured in
+     * zimbraAutoProvScheduledDomains. At each interval, the auto provision
+     * thread iterates through all domains in zimbraAutoProvScheduledDomains
+     * and auto creates up to domain.zimbraAutoProvBatchSize accounts. If
+     * that process takes longer than zimbraAutoProvPollingInterval then the
+     * next iteration will start immediately instead of waiting for
+     * zimbraAutoProvPollingInterval amount of time. If set to 0 when server
+     * starts up, the auto provision thread will not start. If changed from a
+     * non-0 value to 0 while server is running, the auto provision thread
+     * will be shutdown. If changed from 0 to a non-0 value while server is
+     * running, the auto provision thread will be started. . Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * <p>Use getAutoProvPollingIntervalAsString to access value as a string.
      *
@@ -753,56 +758,66 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1238)
+    @ZAttr(id=1239)
     public long getAutoProvPollingInterval() {
         return getTimeInterval(Provisioning.A_zimbraAutoProvPollingInterval, 900000L);
     }
 
     /**
-     * For EAGER auto provision. Interval between successive polling and
-     * provisioning accounts. The actual interval may be longer since it can
-     * be affected by two other factors: zimbraAutoProvBatchSize and number
-     * of domains configured in zimbraAutoProvScheduledDomains. At each
-     * interval, the auto provision thread iterates through all domains in
-     * zimbraAutoProvScheduledDomains and auto creates up to
-     * domain.zimbraAutoProvBatchSize accounts. If that process takes longer
-     * than zimbraAutoProvPollingInterval then the next iteration will start
-     * immediately instead of waiting for zimbraAutoProvPollingInterval
-     * amount of time. . Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
+     * EAGER mode: required LAZY mode: N/A MANUAL mode: N/A Interval between
+     * successive polling and provisioning accounts. The actual interval may
+     * be longer since it can be affected by two other factors:
+     * zimbraAutoProvBatchSize and number of domains configured in
+     * zimbraAutoProvScheduledDomains. At each interval, the auto provision
+     * thread iterates through all domains in zimbraAutoProvScheduledDomains
+     * and auto creates up to domain.zimbraAutoProvBatchSize accounts. If
+     * that process takes longer than zimbraAutoProvPollingInterval then the
+     * next iteration will start immediately instead of waiting for
+     * zimbraAutoProvPollingInterval amount of time. If set to 0 when server
+     * starts up, the auto provision thread will not start. If changed from a
+     * non-0 value to 0 while server is running, the auto provision thread
+     * will be shutdown. If changed from 0 to a non-0 value while server is
+     * running, the auto provision thread will be started. . Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @return zimbraAutoProvPollingInterval, or "15m" if unset
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1238)
+    @ZAttr(id=1239)
     public String getAutoProvPollingIntervalAsString() {
         return getAttr(Provisioning.A_zimbraAutoProvPollingInterval, "15m");
     }
 
     /**
-     * For EAGER auto provision. Interval between successive polling and
-     * provisioning accounts. The actual interval may be longer since it can
-     * be affected by two other factors: zimbraAutoProvBatchSize and number
-     * of domains configured in zimbraAutoProvScheduledDomains. At each
-     * interval, the auto provision thread iterates through all domains in
-     * zimbraAutoProvScheduledDomains and auto creates up to
-     * domain.zimbraAutoProvBatchSize accounts. If that process takes longer
-     * than zimbraAutoProvPollingInterval then the next iteration will start
-     * immediately instead of waiting for zimbraAutoProvPollingInterval
-     * amount of time. . Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
+     * EAGER mode: required LAZY mode: N/A MANUAL mode: N/A Interval between
+     * successive polling and provisioning accounts. The actual interval may
+     * be longer since it can be affected by two other factors:
+     * zimbraAutoProvBatchSize and number of domains configured in
+     * zimbraAutoProvScheduledDomains. At each interval, the auto provision
+     * thread iterates through all domains in zimbraAutoProvScheduledDomains
+     * and auto creates up to domain.zimbraAutoProvBatchSize accounts. If
+     * that process takes longer than zimbraAutoProvPollingInterval then the
+     * next iteration will start immediately instead of waiting for
+     * zimbraAutoProvPollingInterval amount of time. If set to 0 when server
+     * starts up, the auto provision thread will not start. If changed from a
+     * non-0 value to 0 while server is running, the auto provision thread
+     * will be shutdown. If changed from 0 to a non-0 value while server is
+     * running, the auto provision thread will be started. . Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraAutoProvPollingInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1238)
+    @ZAttr(id=1239)
     public void setAutoProvPollingInterval(String zimbraAutoProvPollingInterval) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvPollingInterval, zimbraAutoProvPollingInterval);
@@ -810,19 +825,24 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * For EAGER auto provision. Interval between successive polling and
-     * provisioning accounts. The actual interval may be longer since it can
-     * be affected by two other factors: zimbraAutoProvBatchSize and number
-     * of domains configured in zimbraAutoProvScheduledDomains. At each
-     * interval, the auto provision thread iterates through all domains in
-     * zimbraAutoProvScheduledDomains and auto creates up to
-     * domain.zimbraAutoProvBatchSize accounts. If that process takes longer
-     * than zimbraAutoProvPollingInterval then the next iteration will start
-     * immediately instead of waiting for zimbraAutoProvPollingInterval
-     * amount of time. . Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
+     * EAGER mode: required LAZY mode: N/A MANUAL mode: N/A Interval between
+     * successive polling and provisioning accounts. The actual interval may
+     * be longer since it can be affected by two other factors:
+     * zimbraAutoProvBatchSize and number of domains configured in
+     * zimbraAutoProvScheduledDomains. At each interval, the auto provision
+     * thread iterates through all domains in zimbraAutoProvScheduledDomains
+     * and auto creates up to domain.zimbraAutoProvBatchSize accounts. If
+     * that process takes longer than zimbraAutoProvPollingInterval then the
+     * next iteration will start immediately instead of waiting for
+     * zimbraAutoProvPollingInterval amount of time. If set to 0 when server
+     * starts up, the auto provision thread will not start. If changed from a
+     * non-0 value to 0 while server is running, the auto provision thread
+     * will be shutdown. If changed from 0 to a non-0 value while server is
+     * running, the auto provision thread will be started. . Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraAutoProvPollingInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -830,7 +850,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1238)
+    @ZAttr(id=1239)
     public Map<String,Object> setAutoProvPollingInterval(String zimbraAutoProvPollingInterval, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvPollingInterval, zimbraAutoProvPollingInterval);
@@ -838,25 +858,30 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * For EAGER auto provision. Interval between successive polling and
-     * provisioning accounts. The actual interval may be longer since it can
-     * be affected by two other factors: zimbraAutoProvBatchSize and number
-     * of domains configured in zimbraAutoProvScheduledDomains. At each
-     * interval, the auto provision thread iterates through all domains in
-     * zimbraAutoProvScheduledDomains and auto creates up to
-     * domain.zimbraAutoProvBatchSize accounts. If that process takes longer
-     * than zimbraAutoProvPollingInterval then the next iteration will start
-     * immediately instead of waiting for zimbraAutoProvPollingInterval
-     * amount of time. . Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
+     * EAGER mode: required LAZY mode: N/A MANUAL mode: N/A Interval between
+     * successive polling and provisioning accounts. The actual interval may
+     * be longer since it can be affected by two other factors:
+     * zimbraAutoProvBatchSize and number of domains configured in
+     * zimbraAutoProvScheduledDomains. At each interval, the auto provision
+     * thread iterates through all domains in zimbraAutoProvScheduledDomains
+     * and auto creates up to domain.zimbraAutoProvBatchSize accounts. If
+     * that process takes longer than zimbraAutoProvPollingInterval then the
+     * next iteration will start immediately instead of waiting for
+     * zimbraAutoProvPollingInterval amount of time. If set to 0 when server
+     * starts up, the auto provision thread will not start. If changed from a
+     * non-0 value to 0 while server is running, the auto provision thread
+     * will be shutdown. If changed from 0 to a non-0 value while server is
+     * running, the auto provision thread will be started. . Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1238)
+    @ZAttr(id=1239)
     public void unsetAutoProvPollingInterval() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvPollingInterval, "");
@@ -864,26 +889,31 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * For EAGER auto provision. Interval between successive polling and
-     * provisioning accounts. The actual interval may be longer since it can
-     * be affected by two other factors: zimbraAutoProvBatchSize and number
-     * of domains configured in zimbraAutoProvScheduledDomains. At each
-     * interval, the auto provision thread iterates through all domains in
-     * zimbraAutoProvScheduledDomains and auto creates up to
-     * domain.zimbraAutoProvBatchSize accounts. If that process takes longer
-     * than zimbraAutoProvPollingInterval then the next iteration will start
-     * immediately instead of waiting for zimbraAutoProvPollingInterval
-     * amount of time. . Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
+     * EAGER mode: required LAZY mode: N/A MANUAL mode: N/A Interval between
+     * successive polling and provisioning accounts. The actual interval may
+     * be longer since it can be affected by two other factors:
+     * zimbraAutoProvBatchSize and number of domains configured in
+     * zimbraAutoProvScheduledDomains. At each interval, the auto provision
+     * thread iterates through all domains in zimbraAutoProvScheduledDomains
+     * and auto creates up to domain.zimbraAutoProvBatchSize accounts. If
+     * that process takes longer than zimbraAutoProvPollingInterval then the
+     * next iteration will start immediately instead of waiting for
+     * zimbraAutoProvPollingInterval amount of time. If set to 0 when server
+     * starts up, the auto provision thread will not start. If changed from a
+     * non-0 value to 0 while server is running, the auto provision thread
+     * will be shutdown. If changed from 0 to a non-0 value while server is
+     * running, the auto provision thread will be started. . Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1238)
+    @ZAttr(id=1239)
     public Map<String,Object> unsetAutoProvPollingInterval(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvPollingInterval, "");
@@ -891,34 +921,34 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * For EAGER auto provision. Domain scheduled for eager auto provision on
-     * this server. Scheduled domains must have EAGER mode enabled in
-     * zimbraAutoProvMode. Multiple domains can be scheduled on a server for
-     * EAGER auto provision. Also, a domain can be scheduled on multiple
-     * servers for EAGER auto provision.
+     * EAGER mode: required LAZY mode: N/A MANUAL mode: N/A Domain scheduled
+     * for eager auto provision on this server. Scheduled domains must have
+     * EAGER mode enabled in zimbraAutoProvMode. Multiple domains can be
+     * scheduled on a server for EAGER auto provision. Also, a domain can be
+     * scheduled on multiple servers for EAGER auto provision.
      *
      * @return zimbraAutoProvScheduledDomains, or empty array if unset
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1237)
+    @ZAttr(id=1238)
     public String[] getAutoProvScheduledDomains() {
         return getMultiAttr(Provisioning.A_zimbraAutoProvScheduledDomains);
     }
 
     /**
-     * For EAGER auto provision. Domain scheduled for eager auto provision on
-     * this server. Scheduled domains must have EAGER mode enabled in
-     * zimbraAutoProvMode. Multiple domains can be scheduled on a server for
-     * EAGER auto provision. Also, a domain can be scheduled on multiple
-     * servers for EAGER auto provision.
+     * EAGER mode: required LAZY mode: N/A MANUAL mode: N/A Domain scheduled
+     * for eager auto provision on this server. Scheduled domains must have
+     * EAGER mode enabled in zimbraAutoProvMode. Multiple domains can be
+     * scheduled on a server for EAGER auto provision. Also, a domain can be
+     * scheduled on multiple servers for EAGER auto provision.
      *
      * @param zimbraAutoProvScheduledDomains new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1237)
+    @ZAttr(id=1238)
     public void setAutoProvScheduledDomains(String[] zimbraAutoProvScheduledDomains) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvScheduledDomains, zimbraAutoProvScheduledDomains);
@@ -926,11 +956,11 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * For EAGER auto provision. Domain scheduled for eager auto provision on
-     * this server. Scheduled domains must have EAGER mode enabled in
-     * zimbraAutoProvMode. Multiple domains can be scheduled on a server for
-     * EAGER auto provision. Also, a domain can be scheduled on multiple
-     * servers for EAGER auto provision.
+     * EAGER mode: required LAZY mode: N/A MANUAL mode: N/A Domain scheduled
+     * for eager auto provision on this server. Scheduled domains must have
+     * EAGER mode enabled in zimbraAutoProvMode. Multiple domains can be
+     * scheduled on a server for EAGER auto provision. Also, a domain can be
+     * scheduled on multiple servers for EAGER auto provision.
      *
      * @param zimbraAutoProvScheduledDomains new value
      * @param attrs existing map to populate, or null to create a new map
@@ -938,7 +968,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1237)
+    @ZAttr(id=1238)
     public Map<String,Object> setAutoProvScheduledDomains(String[] zimbraAutoProvScheduledDomains, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvScheduledDomains, zimbraAutoProvScheduledDomains);
@@ -946,18 +976,18 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * For EAGER auto provision. Domain scheduled for eager auto provision on
-     * this server. Scheduled domains must have EAGER mode enabled in
-     * zimbraAutoProvMode. Multiple domains can be scheduled on a server for
-     * EAGER auto provision. Also, a domain can be scheduled on multiple
-     * servers for EAGER auto provision.
+     * EAGER mode: required LAZY mode: N/A MANUAL mode: N/A Domain scheduled
+     * for eager auto provision on this server. Scheduled domains must have
+     * EAGER mode enabled in zimbraAutoProvMode. Multiple domains can be
+     * scheduled on a server for EAGER auto provision. Also, a domain can be
+     * scheduled on multiple servers for EAGER auto provision.
      *
      * @param zimbraAutoProvScheduledDomains new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1237)
+    @ZAttr(id=1238)
     public void addAutoProvScheduledDomains(String zimbraAutoProvScheduledDomains) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraAutoProvScheduledDomains, zimbraAutoProvScheduledDomains);
@@ -965,11 +995,11 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * For EAGER auto provision. Domain scheduled for eager auto provision on
-     * this server. Scheduled domains must have EAGER mode enabled in
-     * zimbraAutoProvMode. Multiple domains can be scheduled on a server for
-     * EAGER auto provision. Also, a domain can be scheduled on multiple
-     * servers for EAGER auto provision.
+     * EAGER mode: required LAZY mode: N/A MANUAL mode: N/A Domain scheduled
+     * for eager auto provision on this server. Scheduled domains must have
+     * EAGER mode enabled in zimbraAutoProvMode. Multiple domains can be
+     * scheduled on a server for EAGER auto provision. Also, a domain can be
+     * scheduled on multiple servers for EAGER auto provision.
      *
      * @param zimbraAutoProvScheduledDomains new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -977,7 +1007,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1237)
+    @ZAttr(id=1238)
     public Map<String,Object> addAutoProvScheduledDomains(String zimbraAutoProvScheduledDomains, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraAutoProvScheduledDomains, zimbraAutoProvScheduledDomains);
@@ -985,18 +1015,18 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * For EAGER auto provision. Domain scheduled for eager auto provision on
-     * this server. Scheduled domains must have EAGER mode enabled in
-     * zimbraAutoProvMode. Multiple domains can be scheduled on a server for
-     * EAGER auto provision. Also, a domain can be scheduled on multiple
-     * servers for EAGER auto provision.
+     * EAGER mode: required LAZY mode: N/A MANUAL mode: N/A Domain scheduled
+     * for eager auto provision on this server. Scheduled domains must have
+     * EAGER mode enabled in zimbraAutoProvMode. Multiple domains can be
+     * scheduled on a server for EAGER auto provision. Also, a domain can be
+     * scheduled on multiple servers for EAGER auto provision.
      *
      * @param zimbraAutoProvScheduledDomains existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1237)
+    @ZAttr(id=1238)
     public void removeAutoProvScheduledDomains(String zimbraAutoProvScheduledDomains) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraAutoProvScheduledDomains, zimbraAutoProvScheduledDomains);
@@ -1004,11 +1034,11 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * For EAGER auto provision. Domain scheduled for eager auto provision on
-     * this server. Scheduled domains must have EAGER mode enabled in
-     * zimbraAutoProvMode. Multiple domains can be scheduled on a server for
-     * EAGER auto provision. Also, a domain can be scheduled on multiple
-     * servers for EAGER auto provision.
+     * EAGER mode: required LAZY mode: N/A MANUAL mode: N/A Domain scheduled
+     * for eager auto provision on this server. Scheduled domains must have
+     * EAGER mode enabled in zimbraAutoProvMode. Multiple domains can be
+     * scheduled on a server for EAGER auto provision. Also, a domain can be
+     * scheduled on multiple servers for EAGER auto provision.
      *
      * @param zimbraAutoProvScheduledDomains existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -1016,7 +1046,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1237)
+    @ZAttr(id=1238)
     public Map<String,Object> removeAutoProvScheduledDomains(String zimbraAutoProvScheduledDomains, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraAutoProvScheduledDomains, zimbraAutoProvScheduledDomains);
@@ -1024,17 +1054,17 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * For EAGER auto provision. Domain scheduled for eager auto provision on
-     * this server. Scheduled domains must have EAGER mode enabled in
-     * zimbraAutoProvMode. Multiple domains can be scheduled on a server for
-     * EAGER auto provision. Also, a domain can be scheduled on multiple
-     * servers for EAGER auto provision.
+     * EAGER mode: required LAZY mode: N/A MANUAL mode: N/A Domain scheduled
+     * for eager auto provision on this server. Scheduled domains must have
+     * EAGER mode enabled in zimbraAutoProvMode. Multiple domains can be
+     * scheduled on a server for EAGER auto provision. Also, a domain can be
+     * scheduled on multiple servers for EAGER auto provision.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1237)
+    @ZAttr(id=1238)
     public void unsetAutoProvScheduledDomains() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvScheduledDomains, "");
@@ -1042,18 +1072,18 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * For EAGER auto provision. Domain scheduled for eager auto provision on
-     * this server. Scheduled domains must have EAGER mode enabled in
-     * zimbraAutoProvMode. Multiple domains can be scheduled on a server for
-     * EAGER auto provision. Also, a domain can be scheduled on multiple
-     * servers for EAGER auto provision.
+     * EAGER mode: required LAZY mode: N/A MANUAL mode: N/A Domain scheduled
+     * for eager auto provision on this server. Scheduled domains must have
+     * EAGER mode enabled in zimbraAutoProvMode. Multiple domains can be
+     * scheduled on a server for EAGER auto provision. Also, a domain can be
+     * scheduled on multiple servers for EAGER auto provision.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1237)
+    @ZAttr(id=1238)
     public Map<String,Object> unsetAutoProvScheduledDomains(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvScheduledDomains, "");

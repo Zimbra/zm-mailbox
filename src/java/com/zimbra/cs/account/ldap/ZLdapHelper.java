@@ -38,6 +38,7 @@ import com.zimbra.cs.ldap.ZModificationList;
 import com.zimbra.cs.ldap.ZSearchControls;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
 import com.zimbra.cs.ldap.ZSearchResultEnumeration;
+import com.zimbra.cs.ldap.ZSearchScope;
 
 /**
  * An SDK-neutral LdapHelper.  
@@ -178,7 +179,7 @@ public class ZLdapHelper extends LdapHelper {
     }
     
     @Override
-    public boolean tesAndModifyEntry(ZLdapContext zlc, String dn,
+    public boolean testAndModifyEntry(ZLdapContext zlc, String dn,
             ZLdapFilter testFilter, Map<String, ? extends Object> attrs,
             Entry entry, LdapUsage ldapUsage) throws ServiceException {
         ZModificationList modList = getModList(zlc, dn, attrs, entry);
@@ -189,14 +190,19 @@ public class ZLdapHelper extends LdapHelper {
     @Override
     @TODOEXCEPTIONMAPPING
     public ZSearchResultEntry searchForEntry(String base, ZLdapFilter filter, ZLdapContext initZlc, 
-            boolean useMaster) 
+            boolean useMaster, String[] returnAttrs) 
     throws LdapMultipleEntriesMatchedException, ServiceException {
         ZLdapContext zlc = initZlc;
         try {
-            if (zlc == null)
+            if (zlc == null) {
                 zlc = LdapClient.getContext(LdapServerType.get(useMaster), LdapUsage.SEARCH);
+            }
             
-            ZSearchResultEnumeration ne = zlc.searchDir(base, filter, ZSearchControls.SEARCH_CTLS_SUBTREE());
+            ZSearchControls sc = (returnAttrs == null) ? ZSearchControls.SEARCH_CTLS_SUBTREE() :
+                ZSearchControls.createSearchControls(ZSearchScope.SEARCH_SCOPE_SUBTREE,
+                        ZSearchControls.SIZE_UNLIMITED, returnAttrs);
+            
+            ZSearchResultEnumeration ne = zlc.searchDir(base, filter, sc);
             if (ne.hasMore()) {
                 ZSearchResultEntry sr = ne.next();
                 if (ne.hasMore()) {
@@ -224,14 +230,15 @@ public class ZLdapHelper extends LdapHelper {
     }
 
     @Override
-    public ZAttributes getAttributes(String dn, ZLdapContext initZlc, LdapServerType ldapServerType) 
+    public ZAttributes getAttributes(String dn, ZLdapContext initZlc, 
+            LdapServerType ldapServerType, String[] returnAttrs) 
     throws LdapEntryNotFoundException, ServiceException {
         ZLdapContext zlc = initZlc;
         try {
             if (zlc == null) {
                 zlc = LdapClient.getContext(ldapServerType, LdapUsage.GET_ENTRY);
             }
-            return zlc.getAttributes(dn, null);
+            return zlc.getAttributes(dn, returnAttrs);
         /*  all callsites with the following @TODOEXCEPTIONMAPPING pattern can have ease of mind now and remove the 
          * TODOEXCEPTIONMAPPING annotation
          *     

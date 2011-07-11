@@ -26,7 +26,8 @@ import com.zimbra.common.account.Key.DomainBy;
 
 public class Krb5Principal {
     
-     public static Account getAccountFromKrb5Principal(String principal, boolean loadFromMaster) throws ServiceException {
+     public static Account getAccountFromKrb5Principal(String principal, boolean loadFromMaster) 
+     throws ServiceException {
          Provisioning prov = Provisioning.getInstance();
          Account acct = null;
          
@@ -62,6 +63,17 @@ public class Krb5Principal {
          }
          
          return acct;
+     }
+     
+     public static Domain getDomainByKrb5Principal(String principal) throws ServiceException {
+         Provisioning prov = Provisioning.getInstance();
+         int idx = principal.indexOf('@');
+         if (idx != -1) {
+             String realm = principal.substring(idx+1);
+             return prov.get(Key.DomainBy.krb5Realm, realm);
+ 
+         }
+         return null;
      }
      
      public static String getKrb5Principal(Account acct) throws ServiceException {

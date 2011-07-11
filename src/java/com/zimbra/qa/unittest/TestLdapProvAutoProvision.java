@@ -41,11 +41,14 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.PreAuthKey;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AutoProvPrincipalBy;
 import com.zimbra.cs.account.Provisioning.DirectoryEntryVisitor;
+import com.zimbra.cs.account.Provisioning.EagerAutoProvisionScheduler;
 import com.zimbra.cs.account.ZAttrProvisioning.AutoProvAuthMech;
 import com.zimbra.cs.account.ZAttrProvisioning.AutoProvMode;
 import com.zimbra.cs.account.ldap.AutoProvisionEager;
+import com.zimbra.cs.account.ldap.AutoProvisionListener;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.ldap.entry.LdapDomain;
 import com.zimbra.cs.ldap.LdapClient;
@@ -124,6 +127,7 @@ public class TestLdapProvAutoProvision extends TestLdap {
 
         StringUtil.addToMultiMap(zimbraDomainAttrs, Provisioning.A_zimbraAutoProvAttrMap, "sn=displayName");
         StringUtil.addToMultiMap(zimbraDomainAttrs, Provisioning.A_zimbraAutoProvAttrMap, "displayName=sn");
+                
         return zimbraDomainAttrs;
     }
     
@@ -154,7 +158,7 @@ public class TestLdapProvAutoProvision extends TestLdap {
      */
     
     @Test
-    public void getExternalEntryByDNTemplate() throws Exception {
+    public void lazyModeGetExternalEntryByDNTemplate() throws Exception {
         String testName = getTestName();
         
         String extAcctLocalPart = testName;
@@ -166,12 +170,12 @@ public class TestLdapProvAutoProvision extends TestLdap {
         Domain zimbraDomain = createZimbraDomain(testName, zimbraDomainAttrs);
                
         String loginName = extAcctLocalPart;
-        Account acct = prov.autoProvAccount(zimbraDomain, loginName, null, AutoProvAuthMech.LDAP);
+        Account acct = prov.autoProvAccountLazy(zimbraDomain, loginName, null, AutoProvAuthMech.LDAP);
         verifyAcctAutoProvisioned(acct);
     }
     
     @Test
-    public void getExternalEntryBySearch() throws Exception {
+    public void lazyModeGetExternalEntryBySearch() throws Exception {
         String testName = getTestName();
         
         String extAcctLocalPart = testName;
@@ -183,12 +187,63 @@ public class TestLdapProvAutoProvision extends TestLdap {
         Domain zimbraDomain = createZimbraDomain(testName, zimbraDomainAttrs);
                 
         String loginName = extAcctLocalPart;
-        Account acct = prov.autoProvAccount(zimbraDomain, loginName, null, AutoProvAuthMech.LDAP);
+        Account acct = prov.autoProvAccountLazy(zimbraDomain, loginName, null, AutoProvAuthMech.LDAP);
         verifyAcctAutoProvisioned(acct);
     }
     
+    
+    public static class TestListener implements AutoProvisionListener {
+        private static TestListener instance;
+        
+        private Account acct;
+        private String externalDN;
+        
+        public TestListener() {
+            assertNull(instance);
+            instance = this;  // remember the instance created from auto provision engine
+        }
+        
+        @Override
+        public void postCreate(Domain domain, Account acct, String externalDN) {
+            // rememebr teh act and external DN for verification
+            this.acct = acct;
+            this.externalDN = externalDN;
+            
+        }
+        
+        private static TestListener getInstance() {
+            return instance;
+        }
+        
+    }
+    
     @Test
-    public void accountLocalpartMap() throws Exception {
+    public void lazyModeListener() throws Exception {
+        String testName = getTestName();
+        
+        String extAcctLocalPart = testName;
+        String extAcctName = createExternalAcctEntry(extAcctLocalPart);
+        
+        Map<String, Object> zimbraDomainAttrs = commonZimbraDomainAttrs();
+        zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchBase, extDomainDn);
+        zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchFilter, "(uid=%u)");
+        
+        zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvListenerClass, "com.zimbra.qa.unittest.TestLdapProvAutoProvision$TestListener");
+        Domain zimbraDomain = createZimbraDomain(testName, zimbraDomainAttrs);
+                
+        String loginName = extAcctLocalPart;
+        Account acct = prov.autoProvAccountLazy(zimbraDomain, loginName, null, AutoProvAuthMech.LDAP);
+        verifyAcctAutoProvisioned(acct);
+        
+        TestListener listener = TestListener.getInstance();
+        assertNotNull(listener);
+        assertEquals(acct.getId(), listener.acct.getId());
+        assertEquals(externalEntryDN(extAcctLocalPart).toLowerCase(), listener.externalDN);
+    }
+    
+    
+    @Test
+    public void lazyModeAccountLocalpartMap() throws Exception {
         String testName = getTestName();
         
         String extAcctLocalPart = testName;
@@ -204,12 +259,12 @@ public class TestLdapProvAutoProvision extends TestLdap {
         Domain zimbraDomain = createZimbraDomain(testName, zimbraDomainAttrs);
                 
         String loginName = extAcctLocalPart;
-        Account acct = prov.autoProvAccount(zimbraDomain, loginName, null, AutoProvAuthMech.LDAP);
+        Account acct = prov.autoProvAccountLazy(zimbraDomain, loginName, null, AutoProvAuthMech.LDAP);
         verifyAcctAutoProvisioned(acct, zimbraAcctLocalpart + "@" + zimbraDomain.getName());
     }
     
     @Test
-    public void autoProvNotEnabledByAuthMech() throws Exception {
+    public void lazyModeAutoProvNotEnabledByAuthMech() throws Exception {
         String testName = getTestName();
         
         String extAcctLocalPart = testName;
@@ -220,13 +275,13 @@ public class TestLdapProvAutoProvision extends TestLdap {
         Domain zimbraDomain = createZimbraDomain(testName, zimbraDomainAttrs);
                
         String loginName = extAcctLocalPart;
-        Account acct = prov.autoProvAccount(zimbraDomain, loginName, null, AutoProvAuthMech.PREAUTH);
+        Account acct = prov.autoProvAccountLazy(zimbraDomain, loginName, null, AutoProvAuthMech.PREAUTH);
         assertNull(acct);
     }
     
     
     @Test
-    public void externalLdapAuth() throws Exception {
+    public void lazyModeExternalLdapAuth() throws Exception {
         String testName = getTestName();
         
         String externalPassword = "test456";
@@ -245,16 +300,16 @@ public class TestLdapProvAutoProvision extends TestLdap {
                 
         // try auto provisioning with bad password
         String loginName = extAcctLocalPart;
-        Account acct = prov.autoProvAccount(zimbraDomain, loginName, externalPassword+"bad", null);
+        Account acct = prov.autoProvAccountLazy(zimbraDomain, loginName, externalPassword+"bad", null);
         assertNull(acct);
         
         // try again with correct password
-        acct = prov.autoProvAccount(zimbraDomain, loginName, externalPassword, null);
+        acct = prov.autoProvAccountLazy(zimbraDomain, loginName, externalPassword, null);
         verifyAcctAutoProvisioned(acct);
     }
     
     @Test
-    public void useExternalLdapAuthSettingsDNTemplate() throws Exception {
+    public void lazyModeUseExternalLdapAuthSettingsDNTemplate() throws Exception {
         String testName = getTestName();
         
         String externalPassword = "test456";
@@ -278,12 +333,12 @@ public class TestLdapProvAutoProvision extends TestLdap {
         Domain zimbraDomain = createZimbraDomain(testName, zimbraDomainAttrs);
  
         String loginName = extAcctLocalPart;
-        Account acct = prov.autoProvAccount(zimbraDomain, loginName, externalPassword, null);
+        Account acct = prov.autoProvAccountLazy(zimbraDomain, loginName, externalPassword, null);
         verifyAcctAutoProvisioned(acct);
     }
     
     @Test
-    public void useExternalLdapAuthSettingsSearch() throws Exception {
+    public void lazyModeUseExternalLdapAuthSettingsSearch() throws Exception {
         String testName = getTestName();
         
         String externalPassword = "test456";
@@ -310,7 +365,7 @@ public class TestLdapProvAutoProvision extends TestLdap {
         Domain zimbraDomain = createZimbraDomain(testName, zimbraDomainAttrs);
  
         String loginName = extAcctLocalPart;
-        Account acct = prov.autoProvAccount(zimbraDomain, loginName, externalPassword, null);
+        Account acct = prov.autoProvAccountLazy(zimbraDomain, loginName, externalPassword, null);
         verifyAcctAutoProvisioned(acct);
     }
     
@@ -337,7 +392,7 @@ public class TestLdapProvAutoProvision extends TestLdap {
                 
         // try auto provisioning with bad password
         String principal = extAcctLocalPart;
-        Account acct = prov.autoProvAccount(zimbraDomain, AutoProvPrincipalBy.name, principal);
+        Account acct = prov.autoProvAccountManual(zimbraDomain, AutoProvPrincipalBy.name, principal);
         verifyAcctAutoProvisioned(acct);
     }
     
@@ -360,7 +415,7 @@ public class TestLdapProvAutoProvision extends TestLdap {
                 
         // try auto provisioning with bad password
         String principal = externalEntryDN(extAcctLocalPart);
-        Account acct = prov.autoProvAccount(zimbraDomain, AutoProvPrincipalBy.dn, principal);
+        Account acct = prov.autoProvAccountManual(zimbraDomain, AutoProvPrincipalBy.dn, principal);
         verifyAcctAutoProvisioned(acct, zimbraAcctLocalpart + "@" + zimbraDomain.getName());
     }
     
@@ -492,31 +547,31 @@ public class TestLdapProvAutoProvision extends TestLdap {
         zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvAccountNameMap, Provisioning.A_uid);
         Domain zimbraDomain = createZimbraDomain(testName, zimbraDomainAttrs);
         
-        AutoProvisionEager autoProv = new AutoProvisionEager(prov, zimbraDomain);
+        // schedule the domain on local server
+        prov.getLocalServer().addAutoProvScheduledDomains(zimbraDomain.getName());
         
-        ZLdapContext zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.UNITTEST);
-        try {
-            autoProv.handleBatch(zlc);
-        } finally {
-            LdapClient.closeContext(zlc);
-        }
+        EagerAutoProvisionScheduler scheduler = new EagerAutoProvisionScheduler() {
+            @Override
+            public boolean isShutDownRequested() {
+                return false;
+            }
+        };
+        
+        prov.autoProvAccountEager(scheduler);
 
         List<Account> zimbraAccts = prov.getAllAccounts(zimbraDomain);
         assertEquals(3, zimbraAccts.size());
         Set<String> acctNames = new HashSet<String>();
         for (Account acct : zimbraAccts) {
             acctNames.add(acct.getName());
-            System.out.println(acct.getName());
         }
-        
-        System.out.println();
-        System.out.println(TestUtil.getAddress(extAcctLocalPart1, zimbraDomain.getName()).toLowerCase());
-        System.out.println(TestUtil.getAddress(extAcctLocalPart2, zimbraDomain.getName()).toLowerCase());
-        System.out.println(TestUtil.getAddress(extAcctLocalPart3, zimbraDomain.getName()).toLowerCase());
         
         assertTrue(acctNames.contains(TestUtil.getAddress(extAcctLocalPart1, zimbraDomain.getName()).toLowerCase()));
         assertTrue(acctNames.contains(TestUtil.getAddress(extAcctLocalPart2, zimbraDomain.getName()).toLowerCase()));
         assertTrue(acctNames.contains(TestUtil.getAddress(extAcctLocalPart3, zimbraDomain.getName()).toLowerCase()));
+        
+        // clear scheduled doamins on the lcoal server
+        prov.getLocalServer().unsetAutoProvScheduledDomains();
     }
     
     
@@ -619,6 +674,51 @@ public class TestLdapProvAutoProvision extends TestLdap {
         Element ePreAuth = request.addElement(AccountConstants.E_PREAUTH).setText(preAuth);
         ePreAuth.addAttribute(AccountConstants.A_TIMESTAMP, timestamp);
         ePreAuth.addAttribute(AccountConstants.A_EXPIRES, expires);
+        
+        Element response = transport.invoke(request);
+        
+        String encodedAuthToken = response.getElement(AccountConstants.E_AUTH_TOKEN).getText();
+        assertNotNull(encodedAuthToken);
+        AuthToken authToken = AuthToken.getAuthToken(encodedAuthToken);
+        String acctId = authToken.getAccountId();
+        Account acct = prov.get(AccountBy.id, acctId);
+        verifyAcctAutoProvisioned(acct, loginName.toLowerCase());
+    }
+    
+    /*
+     * Note: need to restart server each time before re-run.  Otherwise server would still 
+     * have the account created in previous run cached.
+     */
+    @Test
+    @Ignore // need to setup KDC
+    public void authRequestByKrb5() throws Exception {
+        String testName = getTestName();
+        
+        String externalPassword = "test456";
+        String extAcctLocalPart = testName;
+        String extAcctName = createExternalAcctEntry(extAcctLocalPart, externalPassword, null);
+        
+        String krb5Realm = "MYREALM";
+        
+        Map<String, Object> zimbraDomainAttrs = commonZimbraDomainAttrs();
+        // setup auto prov
+        StringUtil.addToMultiMap(zimbraDomainAttrs, Provisioning.A_zimbraAutoProvAuthMech, AutoProvAuthMech.KRB5.name());
+        zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchBase, extDomainDn);
+        zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchFilter, "(uid=%u)");
+        // setup auth mech and krb5 realm on domain
+        zimbraDomainAttrs.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_KERBEROS5);
+        zimbraDomainAttrs.put(Provisioning.A_zimbraAuthKerberos5Realm, krb5Realm);
+        zimbraDomainAttrs.put(Provisioning.A_zimbraAuthKerberos5Realm, krb5Realm);
+        Domain zimbraDomain = createZimbraDomain(testName, zimbraDomainAttrs);
+        
+        String loginName = extAcctLocalPart + "@" + krb5Realm;
+        
+        // make the soap request
+        SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
+        
+        Element request = Element.create(transport.getRequestProtocol(), AccountConstants.AUTH_REQUEST);
+        request.addElement(AccountConstants.E_ACCOUNT).addAttribute(AccountConstants.A_BY, AccountBy.krb5Principal.name()).setText(loginName);
+        request.addElement(AccountConstants.E_PASSWORD).setText(externalPassword);
         
         Element response = transport.invoke(request);
         

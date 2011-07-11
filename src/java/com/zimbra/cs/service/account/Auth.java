@@ -31,6 +31,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.krb5.Krb5Principal;
 import com.zimbra.cs.account.names.NameUtil.EmailAddress;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
@@ -117,20 +118,29 @@ public class Auth extends AccountDocumentHandler {
                 //
                 // try auto provision the account
                 //
-                if (by == AccountBy.name) {
+                if (by == AccountBy.name || by == AccountBy.krb5Principal) {
                     try {
-                        EmailAddress email = new EmailAddress(value, false);
-                        String domainName = email.getDomain();
-                        Domain domain = domainName == null ? null : prov.get(Key.DomainBy.name, domainName);
-                        if (password != null) {
-                            acct = prov.autoProvAccount(domain, valuePassedIn, password, null);
-                        } else if (preAuthEl != null) {
-                            long timestamp = preAuthEl.getAttributeLong(AccountConstants.A_TIMESTAMP);
-                            expires = preAuthEl.getAttributeLong(AccountConstants.A_EXPIRES, 0);
-                            String preAuth = preAuthEl.getTextTrim();
-                            prov.preAuthAccount(domain, value, byStr, timestamp, expires, preAuth, authCtxt);
-                            
-                            acct = prov.autoProvAccount(domain, valuePassedIn, null, AutoProvAuthMech.PREAUTH);
+                        if (by == AccountBy.name) {
+                            EmailAddress email = new EmailAddress(value, false);
+                            String domainName = email.getDomain();
+                            Domain domain = domainName == null ? null : prov.get(Key.DomainBy.name, domainName);
+                            if (password != null) {
+                                acct = prov.autoProvAccountLazy(domain, valuePassedIn, password, null);
+                            } else if (preAuthEl != null) {
+                                long timestamp = preAuthEl.getAttributeLong(AccountConstants.A_TIMESTAMP);
+                                expires = preAuthEl.getAttributeLong(AccountConstants.A_EXPIRES, 0);
+                                String preAuth = preAuthEl.getTextTrim();
+                                prov.preAuthAccount(domain, value, byStr, timestamp, expires, preAuth, authCtxt);
+                                
+                                acct = prov.autoProvAccountLazy(domain, valuePassedIn, null, AutoProvAuthMech.PREAUTH);
+                            }
+                        } else if (by == AccountBy.krb5Principal) {
+                            if (password != null) {
+                                Domain domain = Krb5Principal.getDomainByKrb5Principal(valuePassedIn);
+                                if (domain != null) {
+                                    acct = prov.autoProvAccountLazy(domain, valuePassedIn, password, null);
+                                }
+                            }
                         }
                         
                         if (acct != null) {

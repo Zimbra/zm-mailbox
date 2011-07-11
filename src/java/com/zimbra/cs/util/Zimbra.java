@@ -30,6 +30,7 @@ import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeManager;
+import com.zimbra.cs.account.AutoProvisionThread;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.RightManager;
@@ -254,6 +255,10 @@ public final class Zimbra {
             if (app.supports(PurgeThread.class.getName())) {
                 PurgeThread.startup();
             }
+            
+            if (app.supports(AutoProvisionThread.class.getName())) {
+                AutoProvisionThread.startup();
+            }
 
             if (LC.smtp_to_lmtp_enabled.booleanValue()) {
                 int smtpPort = LC.smtp_to_lmtp_port.intValue();
@@ -286,6 +291,7 @@ public final class Zimbra {
 
         if (sIsMailboxd) {
             PurgeThread.shutdown();
+            AutoProvisionThread.shutdown();
         }
 
         ZimbraApplication app = ZimbraApplication.getInstance();

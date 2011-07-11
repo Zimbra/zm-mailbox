@@ -165,7 +165,7 @@ public class PreAuthServlet extends ZimbraServlet {
                             String domainName = email.getDomain();
                             Domain domain = domainName == null ? null : prov.get(Key.DomainBy.name, domainName);
                             prov.preAuthAccount(domain, account, accountBy, timestamp, expires, preAuth, authCtxt);
-                            acct = prov.autoProvAccount(domain, account, null, AutoProvAuthMech.PREAUTH);
+                            acct = prov.autoProvAccountLazy(domain, account, null, AutoProvAuthMech.PREAUTH);
                             
                             if (acct != null) {
                                 acctAutoProvisioned = true;

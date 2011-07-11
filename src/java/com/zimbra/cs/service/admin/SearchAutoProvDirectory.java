@@ -20,6 +20,8 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DirectoryEntryVisitor;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.mailbox.ContactGroup.Member;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
@@ -66,6 +68,8 @@ public class SearchAutoProvDirectory  extends AdminDocumentHandler {
         if (domain == null) {
             throw AccountServiceException.NO_SUCH_DOMAIN(domainValue);
         }
+        
+        checkRight(zsc, context, domain, Admin.R_autoProvisionAccount);
         
         AdminSession session = (AdminSession) getSession(zsc, Session.Type.ADMIN);
         
@@ -319,5 +323,10 @@ public class SearchAutoProvDirectory  extends AdminDocumentHandler {
         List<Entry> entryList = Lists.newArrayListWithExpectedSize(result.size());
         entryList.addAll(result.getEntries());
         return entryList;
+    }
+    
+    @Override
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
+        relatedRights.add(Admin.R_autoProvisionAccount);
     }
 }
