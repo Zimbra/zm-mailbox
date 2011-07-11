@@ -90,7 +90,6 @@ public final class HSQLDB extends Db {
             case MULTITABLE_UPDATE:
                 return false;
             case REPLACE_INTO:
-            case LIMIT_CLAUSE:
             case BITWISE_OPERATIONS:
                 return false;
             default:
@@ -166,5 +165,10 @@ public final class HSQLDB extends Db {
     @Override
     public String lpad(String field, int padSize, String padString) {
         return "LPAD(" + field + ", " + padSize + ", '" + padString + "')";
+    }
+
+    @Override
+    public String limit(int offset, int limit) {
+        return "LIMIT " + limit + " OFFSET " + offset;
     }
 }

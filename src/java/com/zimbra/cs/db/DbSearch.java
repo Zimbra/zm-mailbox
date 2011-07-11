@@ -498,7 +498,7 @@ public final class DbSearch {
                 sql.append(orderBy(sort, true));
                 // LIMIT ?, ?
                 if (hasValidLIMIT && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
-                    sql.append(" LIMIT ").append(offset).append(',').append(limit);
+                    sql.append(' ').append(Db.getInstance().limit(offset, limit));
                 }
             }
         }
@@ -516,7 +516,7 @@ public final class DbSearch {
                 sql.append(orderBy(sort, true));
                 // LIMIT ?, ?
                 if (hasValidLIMIT && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
-                    sql.append(" LIMIT ").append(offset).append(',').append(limit);
+                    sql.append(' ').append(Db.getInstance().limit(offset, limit));
                 }
                 if (requiresUnion) {
                     sql.append(")");
@@ -529,7 +529,7 @@ public final class DbSearch {
 
         // LIMIT ?, ?
         if (hasValidLIMIT && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
-            sql.append(" LIMIT ").append(offset).append(',').append(limit);
+            sql.append(' ').append(Db.getInstance().limit(offset, limit));
         }
 
         PreparedStatement stmt = null;

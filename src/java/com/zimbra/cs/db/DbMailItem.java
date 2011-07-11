@@ -2760,7 +2760,7 @@ public class DbMailItem {
             }
             String orderByLimit = "";
             if (maxItems != null && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
-                orderByLimit = " ORDER BY " + dateColumn + " LIMIT " + maxItems;
+                orderByLimit = " ORDER BY " + dateColumn + " " + Db.getInstance().limit(maxItems);
             }
 
             stmt = conn.prepareStatement("SELECT " + LEAF_NODE_FIELDS +
@@ -3664,7 +3664,7 @@ public class DbMailItem {
                 buf.append(" AND ").append("mod_metadata < ?");
             }
             if (rowLimit != null && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
-                buf.append(" LIMIT ").append(rowLimit);
+                buf.append(' ').append(Db.getInstance().limit(rowLimit));
             }
             stmt = conn.prepareStatement(buf.toString());
 

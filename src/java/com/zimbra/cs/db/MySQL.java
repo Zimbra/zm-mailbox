@@ -292,4 +292,9 @@ public class MySQL extends Db {
     public String lpad(String field, int padSize, String padString) {
         return "LPAD(" + field + ", " + padSize + ", '" + padString + "')";
     }
+
+    @Override
+    public String limit(int offset, int limit) {
+        return "LIMIT " + offset + "," + limit;
+    }
 }

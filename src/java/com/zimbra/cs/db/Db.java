@@ -288,4 +288,29 @@ public abstract class Db {
      * Pads to the left end of the field.
      */
     public abstract String lpad(String field, int padSize, String padString);
+    
+    /**
+     * Returns a {@code LIMIT} clause that is appended to a {@code SELECT} statement
+     * to limit the number of rows in the result set.  If the database does not support
+     * this feature, returns an empty string.
+     * 
+     * @param limit number of rows to return
+     * @return
+     */
+    public String limit(int limit) {
+        return limit(0, limit);
+    }
+    
+    /**
+     * Returns a {@code LIMIT} clause that is appended to a {@code SELECT} statement
+     * to limit the number of rows in the result set.  If the database does not support
+     * this feature, returns an empty string.
+     * 
+     * @param offset number of rows at the beginning of the result set that will be skipped
+     * @param limit number of rows to return
+     * @return
+     */
+    public String limit(int offset, int limit) {
+        return "";
+    }
 }

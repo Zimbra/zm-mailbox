@@ -548,4 +548,9 @@ public final class SQLite extends Db {
     public String lpad(String field, int padSize, String padString) {
         return "SUBSTR('" + Strings.repeat(padString, padSize) + "' || " + field + ", -" + padSize + ", " + padSize + ")";
     }
+
+    @Override
+    public String limit(int offset, int limit) {
+        return "LIMIT " + offset + "," + limit;
+    }
 }

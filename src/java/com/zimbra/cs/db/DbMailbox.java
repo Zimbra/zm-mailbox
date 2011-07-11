@@ -185,7 +185,7 @@ public final class DbMailbox {
                                                                  String comment, int lastBackupAt)
     throws ServiceException {
 
-        String limitClause = Db.supports(Db.Capability.LIMIT_CLAUSE) ? " ORDER BY index_volume_id LIMIT 1" : "";
+        String limitClause = Db.supports(Db.Capability.LIMIT_CLAUSE) ? " ORDER BY index_volume_id " + Db.getInstance().limit(1) : "";
 
         // Get mailbox id.
         MailboxIdentifier newMboxId = getNextMailboxId(conn, requestedMailboxId);
