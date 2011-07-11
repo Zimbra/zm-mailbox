@@ -732,7 +732,7 @@ public final class LC {
     @Supported
     public static final KnownKey zimbra_mtareport_max_hosts = KnownKey.newKey(50);
 
-    public static final KnownKey zmconfigd_enable_config_restarts = KnownKey.newKey("TRUE");
+    public static final KnownKey zmconfigd_enable_config_restarts = KnownKey.newKey("true");
     public static final KnownKey zmconfigd_interval = KnownKey.newKey(60);
     public static final KnownKey zmconfigd_log_level = KnownKey.newKey(3);
     public static final KnownKey zmconfigd_listen_port = KnownKey.newKey(7171);
