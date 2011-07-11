@@ -317,10 +317,6 @@ public final class AdminConstants {
 
     public static final String E_GET_SHARE_INFO_REQUEST = "GetShareInfoRequest";
     public static final String E_GET_SHARE_INFO_RESPONSE = "GetShareInfoResponse";
-    public static final String E_GET_PUBLISHED_SHARE_INFO_REQUEST = "GetPublishedShareInfoRequest";
-    public static final String E_GET_PUBLISHED_SHARE_INFO_RESPONSE = "GetPublishedShareInfoResponse";
-    public static final String E_PUBLISH_SHARE_INFO_REQUEST = "PublishShareInfoRequest";
-    public static final String E_PUBLISH_SHARE_INFO_RESPONSE = "PublishShareInfoResponse";
 
     // Account loggers
     public static final String E_ADD_ACCOUNT_LOGGER_REQUEST = "AddAccountLoggerRequest";
@@ -741,10 +737,6 @@ public final class AdminConstants {
 
     public static final QName GET_SHARE_INFO_REQUEST = QName.get(E_GET_SHARE_INFO_REQUEST, NAMESPACE);
     public static final QName GET_SHARE_INFO_RESPONSE = QName.get(E_GET_SHARE_INFO_RESPONSE, NAMESPACE);
-    public static final QName GET_PUBLISHED_SHARE_INFO_REQUEST = QName.get(E_GET_PUBLISHED_SHARE_INFO_REQUEST, NAMESPACE);
-    public static final QName GET_PUBLISHED_SHARE_INFO_RESPONSE = QName.get(E_GET_PUBLISHED_SHARE_INFO_RESPONSE, NAMESPACE);
-    public static final QName PUBLISH_SHARE_INFO_REQUEST = QName.get(E_PUBLISH_SHARE_INFO_REQUEST, NAMESPACE);
-    public static final QName PUBLISH_SHARE_INFO_RESPONSE = QName.get(E_PUBLISH_SHARE_INFO_RESPONSE, NAMESPACE);
 
     // Account loggers
     public static final QName ADD_ACCOUNT_LOGGER_REQUEST = QName.get(E_ADD_ACCOUNT_LOGGER_REQUEST, NAMESPACE);
