@@ -48,7 +48,8 @@ import com.zimbra.soap.account.type.Signature;
    <version>{version}</version>
    <id>{account-id}</id>
    <name>{account-name}</name>
-   <lifetime>...</lifetime>   
+   <lifetime>...</lifetime>
+   [<adminDelegated>{admin-delegated}</adminDelegated>]
    [<rest>{account-base-REST-url}</rest>
     <used>{used}</used>
     <prevSession>{previous-SOAP-session}</prevSession>
@@ -120,6 +121,7 @@ public class GetInfoResponse {
     @XmlElement(required=true) private String version;
     @XmlElement(required=true, name="id") private String accountId;
     @XmlElement(required=true, name="name") private String accountName;
+    @XmlElement(required=false, name="adminDelegated") private Boolean adminDelegated;
     @XmlElement private String crumb;
     @XmlElement(required=true) private long lifetime;
     @XmlElement(name=AccountConstants.E_REST) private String restUrl;
@@ -170,6 +172,7 @@ public class GetInfoResponse {
     public String getVersion() { return version; }
     public String getAccountId() { return accountId; }
     public String getAccountName() { return accountName; }
+    public Boolean getAdminDelegated() { return (adminDelegated != null ? adminDelegated : Boolean.FALSE); }
     public String getCrumb() { return crumb; }
     public long getLifetime() { return lifetime; }
     public String getRestUrl() { return restUrl; }
