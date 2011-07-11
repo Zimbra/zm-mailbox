@@ -189,7 +189,10 @@ public final class MockProvisioning extends Provisioning {
 
     @Override
     public void deleteAccount(String zimbraId) {
-        throw new UnsupportedOperationException();
+        Account account = id2account.remove(zimbraId);
+        if (account != null) {
+            name2account.remove(account.getName());
+        }
     }
 
     @Override
@@ -235,8 +238,7 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public void ssoAuthAccount(Account acct, AuthContext.Protocol proto, Map<String, Object> authCtxt)
-    throws ServiceException {
+    public void ssoAuthAccount(Account acct, AuthContext.Protocol proto, Map<String, Object> authCtxt) {
         throw new UnsupportedOperationException();
     }
 
@@ -489,7 +491,7 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public Identity getDefaultIdentity(Account account) throws ServiceException {
+    public Identity getDefaultIdentity(Account account) {
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(A_zimbraPrefIdentityName, DEFAULT_IDENTITY_NAME);
         attrs.put(A_zimbraPrefIdentityId, account.getId());

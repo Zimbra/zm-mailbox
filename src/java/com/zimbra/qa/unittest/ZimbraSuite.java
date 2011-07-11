@@ -73,7 +73,6 @@ public class ZimbraSuite extends TestSuite
         sClasses.add(TestSmtpClient.class);
         sClasses.add(TestScheduledTaskManager.class);
         sClasses.add(TestDataSource.class);
-        sClasses.add(TestPurge.class);
         sClasses.add(TestImapImport.class);
         sClasses.add(TestImapOneWayImport.class);
         sClasses.add(TestNotification.class);

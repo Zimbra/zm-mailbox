@@ -228,8 +228,28 @@ public class ToXML {
                     encodeACL(octxt, elem, folder.getEffectiveACL(), exposeAclAccessKey);
                 }
             }
+            if (needToOutput(fields, Change.MODIFIED_RETENTION_POLICY)) {
+                if (fields != NOTIFY_FIELDS || !folder.getKeepPolicy().isEmpty() || !folder.getPurgePolicy().isEmpty()) {
+                    // Only output retention policy if it's being modified, or if it exists. 
+                    Element retPol = elem.addElement(MailConstants.E_RETENTION_POLICY);
+                    Element keep = retPol.addElement(MailConstants.E_KEEP);
+                    encodeRetentionPolicy(keep, folder.getKeepPolicy());
+                    Element purge = retPol.addElement(MailConstants.E_PURGE);
+                    encodeRetentionPolicy(purge, folder.getPurgePolicy());
+                }
+            }
         }
         return elem;
+    }
+    
+    private static void encodeRetentionPolicy(Element parent, Iterable<RetentionPolicy> policy) {
+        for (RetentionPolicy p : policy) {
+            Element elem = parent.addElement(MailConstants.E_POLICY);
+            elem.addAttribute(MailConstants.A_ID, p.getId());
+            elem.addAttribute(MailConstants.A_LIFETIME, p.getLifetimeString());
+            // TODO: Support system policy
+            elem.addAttribute(MailConstants.A_RETENTION_POLICY_TYPE, "user");
+        }
     }
 
     public static String encodeEffectivePermissions(Folder folder, OperationContext octxt) {

@@ -100,7 +100,8 @@ public enum MailboxOperation {
     Preview(82),     // ditto
     SnoozeCalendarItemAlarm(83),
     CreateComment(84),
-    CreateLink(85);
+    CreateLink(85),
+    SetRetentionPolicy(86);
     
     private MailboxOperation(int c) {
         code = c;

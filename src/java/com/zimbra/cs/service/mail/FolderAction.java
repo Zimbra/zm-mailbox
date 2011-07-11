@@ -19,12 +19,17 @@
 package com.zimbra.cs.service.mail;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -32,11 +37,6 @@ import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.CosBy;
-import com.zimbra.common.account.Key.DistributionListBy;
-import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.Provisioning.SearchOptions;
 import com.zimbra.cs.fb.FreeBusyProvider;
 import com.zimbra.cs.mailbox.ACL;
@@ -44,11 +44,11 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Mailbox.FolderNode;
+import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.RetentionPolicy;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
-import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class FolderAction extends ItemAction {
@@ -82,9 +82,11 @@ public class FolderAction extends ItemAction {
     public static final String OP_UNTAG    = '!' + OP_TAG;
     public static final String OP_SYNCON   = "syncon";
     public static final String OP_SYNCOFF  = '!' + OP_SYNCON;
+    public static final String OP_RETENTIONPOLICY = "retentionpolicy";
 
     private static final Set<String> FOLDER_OPS = new HashSet<String>(Arrays.asList(new String[] {
-        OP_EMPTY, OP_REFRESH, OP_SET_URL, OP_IMPORT, OP_FREEBUSY, OP_CHECK, OP_UNCHECK, OP_GRANT, OP_REVOKE, OP_REVOKEORPHANGRANTS, OP_UPDATE, OP_SYNCON, OP_SYNCOFF
+        OP_EMPTY, OP_REFRESH, OP_SET_URL, OP_IMPORT, OP_FREEBUSY, OP_CHECK, OP_UNCHECK, OP_GRANT,
+        OP_REVOKE, OP_REVOKEORPHANGRANTS, OP_UPDATE, OP_SYNCON, OP_SYNCOFF, OP_RETENTIONPOLICY
     }));
 
     @Override public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -240,13 +242,20 @@ public class FolderAction extends ItemAction {
             }
         } else if (operation.equals(OP_SYNCON) || operation.equals(OP_SYNCOFF)) {
             mbox.alterTag(octxt, iid.getId(), MailItem.Type.FOLDER, Flag.ID_SYNC, operation.equals(OP_SYNCON));
+        } else if (operation.equals(OP_RETENTIONPOLICY)) {
+            Element erp = action.getElement(MailConstants.E_RETENTION_POLICY);
+            List<RetentionPolicy> keepPolicy =
+                parseRetentionPolicy(erp.getOptionalElement(MailConstants.E_KEEP));
+            List<RetentionPolicy> purgePolicy =
+                parseRetentionPolicy(erp.getOptionalElement(MailConstants.E_PURGE));
+            mbox.setRetentionPolicy(octxt, iid.getId(), MailItem.Type.FOLDER, keepPolicy, purgePolicy);
         } else {
             throw ServiceException.INVALID_REQUEST("unknown operation: " + operation, null);
         }
 
         return ifmt.formatItemId(iid);
     }
-
+    
     static ACL parseACL(Element eAcl) throws ServiceException {
         if (eAcl == null)
             return null;
@@ -398,5 +407,22 @@ public class FolderAction extends ItemAction {
 
         for (FolderNode subNode : node.mSubfolders)
             revokeOrphanGrants(octxt, mbox, subNode, granteeId, gtype);
+    }
+    
+    public static List<RetentionPolicy> parseRetentionPolicy(Element parent)
+    throws ServiceException {
+        if (parent == null) {
+            return Collections.emptyList();
+        }
+        List<RetentionPolicy> result = Lists.newArrayList();
+        for (Element p : parent.listElements(MailConstants.E_POLICY)) {
+            String id = p.getAttribute(MailConstants.A_ID, null);
+            if (id != null) {
+                result.add(RetentionPolicy.newSystemPolicy(id));
+            } else {
+                result.add(RetentionPolicy.newUserPolicy(p.getAttribute(MailConstants.A_LIFETIME)));
+            }
+        }
+        return result;
     }
 }

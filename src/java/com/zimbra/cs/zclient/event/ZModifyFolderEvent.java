@@ -24,6 +24,8 @@ import com.zimbra.cs.zclient.ZFolder.Color;
 import com.zimbra.cs.zclient.ZFolder.View;
 import com.zimbra.cs.zclient.ZGrant;
 import com.zimbra.cs.zclient.ZJSONObject;
+import com.zimbra.soap.mail.type.RetentionPolicy;
+
 import org.json.JSONException;
 
 import java.util.ArrayList;
@@ -207,6 +209,18 @@ public class ZModifyFolderEvent implements ZModifyItemEvent, ToZJSONObject {
             return grants;
         }
         return defaultValue;
+    }
+
+    /**
+     * Returns the modified retention policy, or {@code defaultValue} if it hasn't
+     * been modified.
+     */
+    public RetentionPolicy getRetentionPolicy(RetentionPolicy defaultValue) throws ServiceException {
+        Element rpEl = mFolderEl.getOptionalElement(MailConstants.E_RETENTION_POLICY);
+        if (rpEl == null) {
+            return defaultValue;
+        }
+        return new RetentionPolicy(rpEl);
     }
 
     public ZJSONObject toZJSONObject() throws JSONException {

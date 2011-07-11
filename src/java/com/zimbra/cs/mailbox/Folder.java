@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
@@ -90,6 +92,8 @@ public class Folder extends MailItem {
     private int       mDeletedCount;
     private int       mDeletedUnreadCount;
     private long conversationCount = -1;
+    private List<RetentionPolicy> keepPolicy;
+    private List<RetentionPolicy> purgePolicy;
 
     Folder(Mailbox mbox, UnderlyingData ud) throws ServiceException {
         super(mbox, ud);
@@ -101,6 +105,18 @@ public class Folder extends MailItem {
                 break;
             default:
                 throw new IllegalArgumentException();
+        }
+        
+        // Initialize member lists if they weren't initialized by decodeMetadata().
+        initMembers();
+    }
+    
+    private void initMembers() {
+        if (keepPolicy == null) {
+            keepPolicy = Lists.newArrayList();
+        }
+        if (purgePolicy == null) {
+            purgePolicy = Lists.newArrayList();
         }
     }
 
@@ -476,6 +492,30 @@ public class Folder extends MailItem {
         return mParent.getEffectiveACL();
     }
 
+    public void setRetentionPolicy(Iterable<RetentionPolicy> keepPolicy, Iterable<RetentionPolicy> deletePolicy)
+    throws ServiceException {
+        if (!canAccess(ACL.RIGHT_ADMIN)) {
+            throw ServiceException.PERM_DENIED("you do not have admin rights to folder " + getPath());
+        }
+        markItemModified(Change.MODIFIED_RETENTION_POLICY);
+        this.keepPolicy.clear();
+        this.purgePolicy.clear();
+        if (keepPolicy != null) {
+            Iterables.addAll(this.keepPolicy, keepPolicy);
+        }
+        if (deletePolicy != null) {
+            Iterables.addAll(this.purgePolicy, deletePolicy);
+        }
+        saveMetadata();
+    }
+    
+    public List<RetentionPolicy> getKeepPolicy() {
+        return Collections.unmodifiableList(this.keepPolicy);
+    }
+    
+    public List<RetentionPolicy> getPurgePolicy() {
+        return Collections.unmodifiableList(this.purgePolicy); 
+    }
 
     /** Returns this folder's parent folder.  The root folder's parent is
      *  itself.
@@ -1403,13 +1443,32 @@ public class Folder extends MailItem {
                 alterTag(mMailbox.getFlagById(Flag.ID_NO_INHERIT), true);
             }
         }
+        MetadataList keepList = meta.getList(Metadata.FN_KEEP_POLICY, true);
+        
+        // When this method is called from the MailItem constructor, Folder's member
+        // variables haven't been initialized yet.
+        initMembers();
+        if (keepList != null) {
+            keepPolicy.addAll(RetentionPolicyManager.decode(keepList));
+        }
+        MetadataList purgeList = meta.getList(Metadata.FN_PURGE_POLICY, true);
+        if (purgeList != null) {
+            purgePolicy.addAll(RetentionPolicyManager.decode(purgeList));
+        }
     }
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, mAttributes, defaultView, mRights, mSyncData,
+        Metadata m = encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, mAttributes, defaultView, mRights, mSyncData,
                 mImapUIDNEXT, mTotalSize, mImapMODSEQ, mImapRECENT, mImapRECENTCutoff, mDeletedCount,
                 mDeletedUnreadCount);
+        if (!keepPolicy.isEmpty()) {
+            m.put(Metadata.FN_KEEP_POLICY, RetentionPolicyManager.encode(keepPolicy));
+        }
+        if (!purgePolicy.isEmpty()) {
+            m.put(Metadata.FN_PURGE_POLICY, RetentionPolicyManager.encode(purgePolicy));
+        }
+        return m;
     }
 
     private static String encodeMetadata(Color color, int version, CustomMetadata custom, byte attributes, Type view,

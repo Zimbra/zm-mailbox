@@ -73,6 +73,8 @@ public final class Metadata {
     public static final String FN_REMOTE_ID        = "id";
     public static final String FN_IDENTITY_ID      = "idnt";
     public static final String FN_INV              = "inv";
+    public static final String FN_KEEP_POLICY      = "keep";
+    public static final String FN_PURGE_POLICY     = "purge";
     public static final String FN_BOUNDS           = "l";
     public static final String FN_LAST_DATE        = "ld";
     public static final String FN_LOCK_OWNER       = "lo";

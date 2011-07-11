@@ -103,69 +103,7 @@ import com.zimbra.cs.mime.ParsedMessage.CalendarPartInfo;
 import com.zimbra.cs.mime.ParsedMessageDataSource;
 import com.zimbra.cs.mime.ParsedMessageOptions;
 import com.zimbra.cs.pop3.Pop3Message;
-import com.zimbra.cs.redolog.op.AddDocumentRevision;
-import com.zimbra.cs.redolog.op.AlterItemTag;
-import com.zimbra.cs.redolog.op.ColorItem;
-import com.zimbra.cs.redolog.op.CopyItem;
-import com.zimbra.cs.redolog.op.CreateCalendarItemPlayer;
-import com.zimbra.cs.redolog.op.CreateCalendarItemRecorder;
-import com.zimbra.cs.redolog.op.CreateChat;
-import com.zimbra.cs.redolog.op.CreateComment;
-import com.zimbra.cs.redolog.op.CreateContact;
-import com.zimbra.cs.redolog.op.CreateFolder;
-import com.zimbra.cs.redolog.op.CreateFolderPath;
-import com.zimbra.cs.redolog.op.CreateInvite;
-import com.zimbra.cs.redolog.op.CreateLink;
-import com.zimbra.cs.redolog.op.CreateMessage;
-import com.zimbra.cs.redolog.op.CreateMountpoint;
-import com.zimbra.cs.redolog.op.CreateNote;
-import com.zimbra.cs.redolog.op.CreateSavedSearch;
-import com.zimbra.cs.redolog.op.CreateTag;
-import com.zimbra.cs.redolog.op.DateItem;
-import com.zimbra.cs.redolog.op.DeleteItem;
-import com.zimbra.cs.redolog.op.DeleteItemFromDumpster;
-import com.zimbra.cs.redolog.op.DeleteMailbox;
-import com.zimbra.cs.redolog.op.DismissCalendarItemAlarm;
-import com.zimbra.cs.redolog.op.EditNote;
-import com.zimbra.cs.redolog.op.EnableSharedReminder;
-import com.zimbra.cs.redolog.op.FixCalendarItemEndTime;
-import com.zimbra.cs.redolog.op.FixCalendarItemPriority;
-import com.zimbra.cs.redolog.op.FixCalendarItemTZ;
-import com.zimbra.cs.redolog.op.GrantAccess;
-import com.zimbra.cs.redolog.op.ICalReply;
-import com.zimbra.cs.redolog.op.ImapCopyItem;
-import com.zimbra.cs.redolog.op.LockItem;
-import com.zimbra.cs.redolog.op.ModifyContact;
-import com.zimbra.cs.redolog.op.ModifyInvitePartStat;
-import com.zimbra.cs.redolog.op.ModifySavedSearch;
-import com.zimbra.cs.redolog.op.MoveItem;
-import com.zimbra.cs.redolog.op.PurgeImapDeleted;
-import com.zimbra.cs.redolog.op.PurgeOldMessages;
-import com.zimbra.cs.redolog.op.PurgeRevision;
-import com.zimbra.cs.redolog.op.RecoverItem;
-import com.zimbra.cs.redolog.op.RedoableOp;
-import com.zimbra.cs.redolog.op.RenameItem;
-import com.zimbra.cs.redolog.op.RenameItemPath;
-import com.zimbra.cs.redolog.op.RenameMailbox;
-import com.zimbra.cs.redolog.op.RepositionNote;
-import com.zimbra.cs.redolog.op.RevokeAccess;
-import com.zimbra.cs.redolog.op.SaveChat;
-import com.zimbra.cs.redolog.op.SaveDocument;
-import com.zimbra.cs.redolog.op.SaveDraft;
-import com.zimbra.cs.redolog.op.SetCalendarItem;
-import com.zimbra.cs.redolog.op.SetConfig;
-import com.zimbra.cs.redolog.op.SetCustomData;
-import com.zimbra.cs.redolog.op.SetFolderDefaultView;
-import com.zimbra.cs.redolog.op.SetFolderUrl;
-import com.zimbra.cs.redolog.op.SetImapUid;
-import com.zimbra.cs.redolog.op.SetItemTags;
-import com.zimbra.cs.redolog.op.SetPermissions;
-import com.zimbra.cs.redolog.op.SetSubscriptionData;
-import com.zimbra.cs.redolog.op.SnoozeCalendarItemAlarm;
-import com.zimbra.cs.redolog.op.StoreIncomingBlob;
-import com.zimbra.cs.redolog.op.TrackImap;
-import com.zimbra.cs.redolog.op.TrackSync;
-import com.zimbra.cs.redolog.op.UnlockItem;
+import com.zimbra.cs.redolog.op.*;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FeedManager;
 import com.zimbra.cs.service.util.ItemId;
@@ -6588,6 +6526,31 @@ public class Mailbox {
             endTransaction(success);
         }
     }
+    
+    public void setRetentionPolicy(OperationContext octxt, int itemId, MailItem.Type type,
+                                   Iterable<RetentionPolicy> keepPolicy, Iterable<RetentionPolicy> purgePolicy)
+    throws ServiceException {
+        if (type != MailItem.Type.FOLDER && type != MailItem.Type.TAG) {
+            throw ServiceException.FAILURE("Cannot set retention policy for " + type, null);
+        }
+        SetRetentionPolicy redoPlayer = new SetRetentionPolicy(mId, itemId, keepPolicy, purgePolicy);
+
+        boolean success = false;
+        try {
+            beginTransaction("setRetentionPolicy", octxt, redoPlayer);
+
+            if (type == MailItem.Type.FOLDER) {
+                Folder folder = getFolderById(itemId);
+                checkItemChangeID(folder);
+                folder.setRetentionPolicy(keepPolicy, purgePolicy);
+            } else {
+                // TODO: implement for tags
+            }
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
 
     public void setFolderDefaultView(OperationContext octxt, int folderId, MailItem.Type view) throws ServiceException {
         SetFolderDefaultView redoRecorder = new SetFolderDefaultView(mId, folderId, view);
@@ -7123,6 +7086,16 @@ public class Mailbox {
                 ZimbraLog.purge.debug("Purged %d messages from Dumpster", numPurged);
                 purgedAll = updatePurgedAll(purgedAll, numPurged, maxItemsPerFolder);
             }
+            
+            // Process any folders that have retention policy set.
+            for (Folder folder : getFolderList(octxt, SortBy.NONE)) {
+                for (RetentionPolicy policy : folder.getPurgePolicy()) {
+                    int folderTimeout = getOperationTimestamp() - (int) (policy.getLifetime() / 1000);
+                    int numPurged = Folder.purgeMessages(this, folder, folderTimeout, null, false, true, maxItemsPerFolder);
+                    purgedAll = updatePurgedAll(purgedAll, numPurged, maxItemsPerFolder);
+                }
+            }
+            
             // deletes have already been collected, so fetch the tombstones and write once
             TypedIdList tombstones = collectPendingTombstones();
             if (tombstones != null && !tombstones.isEmpty()) {

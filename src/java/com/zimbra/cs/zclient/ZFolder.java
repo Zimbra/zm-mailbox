@@ -33,6 +33,7 @@ import com.zimbra.cs.zclient.event.ZModifyFolderEvent;
 import com.zimbra.soap.mail.type.Folder;
 import com.zimbra.soap.mail.type.Grant;
 import com.zimbra.soap.mail.type.Mountpoint;
+import com.zimbra.soap.mail.type.RetentionPolicy;
 import com.zimbra.soap.mail.type.SearchFolder;
 
 public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
@@ -80,6 +81,7 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
     private ZFolder mParent;
     private boolean mIsPlaceholder;
     private ZMailbox mMailbox;
+    private RetentionPolicy mRetentionPolicy;
 
     @Override
     public int compareTo(Object obj) {
@@ -232,6 +234,11 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
                 mGrants.add(new ZGrant(grant));
             }
         }
+        
+        Element rpEl = e.getOptionalElement(MailConstants.E_RETENTION_POLICY);
+        if (rpEl != null) {
+            mRetentionPolicy = new RetentionPolicy(rpEl);
+        }
 
         // sub folders
         for (Element child : e.listElements(MailConstants.E_FOLDER))
@@ -285,6 +292,9 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         for (Grant g : f.getGrants()) {
             mGrants.add(new ZGrant(g));
         }
+        
+        mRetentionPolicy = f.getRetentionPolicy();
+        
         for (Folder folder : f.getSubfolders()) {
             if (folder instanceof SearchFolder) {
                 mSubFolders.add(new ZSearchFolder((SearchFolder) folder, this, mMailbox));
@@ -344,6 +354,7 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
             mEffectivePerms = fevent.getEffectivePerm(mEffectivePerms);
             mGrants = fevent.getGrants(mGrants);
             mSize = fevent.getSize(mSize);
+            mRetentionPolicy = fevent.getRetentionPolicy(mRetentionPolicy);
         }
     }
 
@@ -646,6 +657,10 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         } catch (NumberFormatException e) {
             return false;
         }
+    }
+    
+    public RetentionPolicy getRetentionPolicy() {
+        return mRetentionPolicy;
     }
 
     @Override
