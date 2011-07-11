@@ -106,6 +106,7 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
             checkDomainRightByEmail(zsc, acctValue, Admin.R_createAccount);
             Map<String,Object> accountAttrs = new HashMap<String,Object>();
             StringUtil.addToMultiMap(accountAttrs, Provisioning.A_zimbraIsSystemResource, LdapConstants.LDAP_TRUE);
+            StringUtil.addToMultiMap(accountAttrs, Provisioning.A_zimbraIsSystemAccount, LdapConstants.LDAP_TRUE);
             StringUtil.addToMultiMap(accountAttrs, Provisioning.A_zimbraHideInGal, LdapConstants.LDAP_TRUE);
             StringUtil.addToMultiMap(accountAttrs, Provisioning.A_zimbraContactMaxNumEntries, "0");
             checkSetAttrsOnCreate(zsc, TargetType.account, acctValue, accountAttrs);

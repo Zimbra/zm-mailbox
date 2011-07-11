@@ -492,6 +492,7 @@ public abstract class WikiUtil {
             Map<String,Object> attrs = new HashMap<String, Object>();
             attrs.put(Provisioning.A_zimbraHideInGal, Provisioning.TRUE);
             attrs.put(Provisioning.A_zimbraIsSystemResource, Provisioning.TRUE);
+            attrs.put(Provisioning.A_zimbraIsSystemAccount, Provisioning.TRUE);
             mProv.modifyAttrs(acct, attrs, true);
         }
         try {

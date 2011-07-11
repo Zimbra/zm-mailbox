@@ -44,4 +44,9 @@ class LdapUpgradePrinter {
     void printStackTrace(Throwable e) {
         e.printStackTrace(getPrintWriter());
     }
+    
+    void printStackTrace(String str, Throwable e) {
+        println(str);
+        e.printStackTrace(getPrintWriter());
+    }
 }
