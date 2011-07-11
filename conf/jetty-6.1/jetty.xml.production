@@ -44,6 +44,7 @@
           <Set name="Acceptors">2</Set> 
           <Set name="confidentialPort">%%zimbraMailSSLPort%%</Set>
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
+	  <Set name="Forwarded">true</Set>
         </New>
       </Arg>
     </Call>
@@ -66,8 +67,8 @@
             <Array type="java.lang.String">
               %%zimbraSSLExcludeCipherSuitesXML%%
             </Array>
-	  <Set name="Forwarded">true</Set>
           </Set>
+	  <Set name="Forwarded">true</Set>
         </New>
       </Arg>
     </Call>
@@ -92,8 +93,8 @@
             <Array type="java.lang.String">
               %%zimbraSSLExcludeCipherSuitesXML%%
             </Array>
+         </Set>
 	  <Set name="Forwarded">true</Set>
-          </Set>
         </New>
       </Arg>
     </Call>
@@ -117,8 +118,8 @@
             <Array type="java.lang.String">
               %%zimbraSSLExcludeCipherSuitesXML%%
             </Array>
-	  <Set name="Forwarded">true</Set>
           </Set>
+	  <Set name="Forwarded">true</Set>
         </New>
       </Arg>
     </Call>
@@ -134,6 +135,7 @@
           <Set name="maxIdleTime">30000</Set>
           <Set name="lowResourcesMaxIdleTime">10000</Set>
           <Set name="Acceptors">2</Set>
+	  <Set name="Forwarded">true</Set>
         </New>
       </Arg>
     </Call>
