@@ -244,7 +244,7 @@ public final class MailConstants {
     public static final String E_GET_COMMENTS_RESPONSE = "GetCommentsResponse";
     public static final String E_GET_SHARE_NOTIFICATIONS_REQUEST = "GetShareNotificationsRequest";
     public static final String E_GET_SHARE_NOTIFICATIONS_RESPONSE = "GetShareNotificationsResponse";
-
+    
     // noop
     public static final QName NO_OP_REQUEST = QName.get(E_NO_OP_REQUEST, NAMESPACE);
     public static final QName NO_OP_RESPONSE = QName.get(E_NO_OP_RESPONSE, NAMESPACE);
@@ -1121,4 +1121,12 @@ public final class MailConstants {
     public static final String E_GRANTEE = "grantee";
 
     public static final String A_ACCOUNT_ID = "accountId";
+    
+    // Retention policy
+    public static final String E_RETENTION_POLICY = "retentionPolicy";
+    public static final String E_KEEP = "keep";
+    public static final String E_PURGE = "purge";
+    public static final String E_POLICY = "policy";
+    public static final String A_LIFETIME = "lifetime";
+    public static final String A_RETENTION_POLICY_TYPE = "type";
 }
