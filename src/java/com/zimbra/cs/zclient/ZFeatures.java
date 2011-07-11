@@ -52,6 +52,8 @@ public class ZFeatures {
 
     public boolean getMail() { return getBool(Provisioning.A_zimbraFeatureMailEnabled); }
 
+    public boolean getAdminMail() {return getBool(Provisioning.A_zimbraFeatureAdminMailEnabled); }
+
     public boolean getVoice() { return getBool(Provisioning.A_zimbraFeatureVoiceEnabled); }
 
     public boolean getCalendar() { return getBool(Provisioning.A_zimbraFeatureCalendarEnabled); }
