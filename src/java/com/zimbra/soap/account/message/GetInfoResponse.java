@@ -54,7 +54,8 @@ import com.zimbra.soap.account.type.ZimletInfo;
    <version>{version}</version>
    <id>{account-id}</id>
    <name>{account-name}</name>
-   <lifetime>...</lifetime>   
+   <lifetime>...</lifetime>
+   [<adminDelegated>{admin-delegated}</adminDelegated>]
    [<rest>{account-base-REST-url}</rest>
     <used>{used}</used>
     <prevSession>{previous-SOAP-session}</prevSession>
