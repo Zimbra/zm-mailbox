@@ -44,7 +44,6 @@
           <Set name="Acceptors">2</Set> 
           <Set name="confidentialPort">%%zimbraMailSSLPort%%</Set>
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
-	  <Set name="Forwarded">true</Set>
         </New>
       </Arg>
     </Call>
