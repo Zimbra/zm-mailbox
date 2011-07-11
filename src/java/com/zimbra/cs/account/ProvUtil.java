@@ -73,23 +73,11 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.CacheEntryBy;
-import com.zimbra.common.account.Key.CalendarResourceBy;
-import com.zimbra.common.account.Key.CosBy;
-import com.zimbra.common.account.Key.DataSourceBy;
-import com.zimbra.common.account.Key.DistributionListBy;
-import com.zimbra.common.account.Key.DomainBy;
-import com.zimbra.common.account.Key.GranteeBy;
-import com.zimbra.common.account.Key.ServerBy;
-import com.zimbra.common.account.Key.SignatureBy;
-import com.zimbra.common.account.Key.TargetBy;
-import com.zimbra.common.account.Key.XMPPComponentBy;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Provisioning.CountObjectsType;
 import com.zimbra.cs.account.Provisioning.CountAccountResult;
 import com.zimbra.cs.account.Provisioning.MailMode;
-import com.zimbra.cs.account.Provisioning.PublishShareInfoAction;
 import com.zimbra.cs.account.Provisioning.PublishedShareInfoVisitor;
 import com.zimbra.cs.account.Provisioning.RightsDoc;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
@@ -536,7 +524,6 @@ public class ProvUtil implements HttpDebugListener {
         GET_FREEBUSY_QUEUE_INFO("getFreebusyQueueInfo", "gfbqi", "[{provider-name}]", Category.FREEBUSY, 0, 1),
         GET_GRANTS("getGrants", "gg", "[-t {target-type} [{target-id|target-name}]] [-g {grantee-type} {grantee-id|grantee-name} [{0|1 (whether to include grants granted to groups the grantee belongs)}]]", Category.RIGHT, 2, 7, null, new RightCommandHelp()),
         GET_MAILBOX_INFO("getMailboxInfo", "gmi", "{account}", Category.MAILBOX, 1, 1),
-        GET_PUBLISHED_DISTRIBUTION_LIST_SHARE_INFO("getPublishedDistributionListShareInfo", "gpdlsi", "{dl-name|dl-id} [{owner-name|owner-id}]", Category.SHARE, 1, 2),
         GET_QUOTA_USAGE("getQuotaUsage", "gqu", "{server}", Category.MAILBOX, 1, 1),
         GET_RIGHT("getRight", "gr", "{right} [-e]", Category.RIGHT, 1, 2),
         GET_RIGHTS_DOC("getRightsDoc", "grd", "[java packages]", Category.RIGHT, 0, Integer.MAX_VALUE),
@@ -563,7 +550,6 @@ public class ProvUtil implements HttpDebugListener {
         MODIFY_SIGNATURE("modifySignature", "msig", "{name@domain|id} {signature-name|signature-id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),
         MODIFY_SERVER("modifyServer", "ms", "{name|id} [attr1 value1 [attr2 value2...]]", Category.SERVER, 3, Integer.MAX_VALUE),
         MODIFY_XMPP_COMPONENT("modifyXMPPComponent", "mxc", "{name@domain} [attr1 value1 [attr value2...]]", Category.CONFIG, 3, Integer.MAX_VALUE),
-        PUBLISH_DISTRIBUTION_LIST_SHARE_INFO("publishDistributionListShareInfo", "pdlsi", "{+|-} {dl-name@domain|id} {owner-name|owner-id} [{folder-path|folder-id}]", Category.SHARE, 3, 4),
         PUSH_FREEBUSY("pushFreebusy", "pfb", "[account-id ...]", Category.FREEBUSY, 1, Integer.MAX_VALUE),
         PUSH_FREEBUSY_DOMAIN("pushFreebusyDomain", "pfbd", "{domain}", Category.FREEBUSY, 1, 1),
         PURGE_ACCOUNT_CALENDAR_CACHE("purgeAccountCalendarCache", "pacc", "{name@domain|id} [...]", Category.CALENDAR, 1, Integer.MAX_VALUE),
@@ -1175,12 +1161,6 @@ public class ProvUtil implements HttpDebugListener {
             case SEARCH_CALENDAR_RESOURCES:
                 doSearchCalendarResources(args);
                 break;
-            case PUBLISH_DISTRIBUTION_LIST_SHARE_INFO:
-                doPublishDistributionListShareInfo(args);
-                break;
-            case GET_PUBLISHED_DISTRIBUTION_LIST_SHARE_INFO:
-                doGetPublishedDistributionListShareInfo(args);
-                break;
             case GET_SHARE_INFO:
                 doGetShareInfo(args);
                 break;
@@ -1578,84 +1558,6 @@ public class ProvUtil implements HttpDebugListener {
                 else console.println(dl.getName());
             }
         }
-    }
-
-    /**
-     * + => true
-     * - => false
-     */
-    private boolean parsePlusMinus(String s) throws ServiceException {
-        if (s.equals("-")) {
-            return false;
-        } else if (s.equals("+")) {
-            return true;
-        } else {
-            throw ServiceException.INVALID_REQUEST("invalid arg for the add/remove", null);
-        }
-    }
-
-    private void doPublishDistributionListShareInfo(String[] args) throws ServiceException {
-        if (!(prov instanceof SoapProvisioning)) {
-            throwSoapOnly();
-        }
-        boolean isAdd = parsePlusMinus(args[1]);
-        String key = args[2];
-        DistributionList dl = lookupDistributionList(key);
-
-        ShareInfoArgs siArgs = parsePublishShareInfo(isAdd, args);
-        prov.publishShareInfo(dl, siArgs.mAction, siArgs.mOwnerAcct, siArgs.mFolderPathOrId);
-    }
-
-    private void doGetPublishedDistributionListShareInfo(String[] args) throws ServiceException {
-        if (!(prov instanceof SoapProvisioning)) {
-            throwSoapOnly();
-        }
-        String key = args[1];
-        DistributionList dl = lookupDistributionList(key);
-
-        Account owner = null;
-        if (args.length == 3) {
-            owner = lookupAccount(args[2]);
-        }
-        ShareInfoVisitor.printHeadings();
-        prov.getPublishedShareInfo(dl, owner, new ShareInfoVisitor());
-    }
-
-    private static class ShareInfoArgs {
-
-        PublishShareInfoAction mAction;
-        Account mOwnerAcct;
-        String mFolderPathOrId;
-
-        ShareInfoArgs(PublishShareInfoAction action,
-                Account ownerAcct, String folderPathOrId) {
-            mAction = action;
-            mOwnerAcct = ownerAcct;
-            mFolderPathOrId = folderPathOrId;
-        }
-    }
-
-    private ShareInfoArgs parsePublishShareInfo(boolean isAdd, String[] args) throws ServiceException {
-        int idx = 3;
-        String owner = args[idx++];
-        Account ownerAcct = lookupAccount(owner);
-
-        String folderPathOrId = null;
-        if (args.length == 5)
-            folderPathOrId = args[idx++];
-
-        PublishShareInfoAction action;
-        // String desc;  not supported for now
-
-        if (isAdd) {
-            action = PublishShareInfoAction.add;
-            // desc = args[idx++];
-        } else {
-            action = PublishShareInfoAction.remove;
-            // desc = null;
-        }
-
-        return new ShareInfoArgs(action, ownerAcct, folderPathOrId);
     }
 
     private static class ShareInfoVisitor implements PublishedShareInfoVisitor {

@@ -91,7 +91,6 @@ public class LdapSuite {
      * TestGalGroupMembers
      * TestPreAuthServlet
      * TestSearchDirectory
-     * TestShareInfo
      */
     
     public static void main(String... args) throws Exception {

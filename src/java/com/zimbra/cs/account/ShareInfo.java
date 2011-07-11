@@ -29,13 +29,11 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning.AclGroups;
 import com.zimbra.cs.account.Provisioning.PublishedShareInfoVisitor;
 import com.zimbra.cs.mailbox.ACL;
-import com.zimbra.cs.mailbox.ACL.Grant;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.FolderNode;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -73,24 +71,6 @@ import java.util.Set;
 public class ShareInfo {
 
     private static String S_DELIMITER = ";";
-
-    // these two keys are set on our owne Metadata object
-    private static final String MD_OWNER_EMAIL = "e";
-    private static final String MD_OWNER_DISPLAY_NAME = "d";
-    private static final String MD_FOLDER_PATH  = "f";
-    private static final String MD_FOLDER_DEFAULT_VIEW  = "v";
-
-    /*
-     * note: these two keys are set on the same Metadata object as the
-     *       one set by ACL.  make sure name is not clashed.
-     */
-    // for usr/group/guest grantees, this would be the email,
-    // for other grantees e.g. cos, domain, this would be name of the cos/domain
-    // currently, we can only publish on DL(group), so MD_GRANTEE_NAME will
-    // contain the email address of the DL, and MD_GRANTEE_DISPLAY_NAME will
-    // contain the displayName of the DL if set, otherwise empty.
-    private static final String MD_GRANTEE_NAME = "gn";
-    private static final String MD_GRANTEE_DISPLAY_NAME = "gd";
 
     protected ShareInfoData mData;
 
@@ -419,285 +399,10 @@ public class ShareInfo {
 
     /*
      * ===========================
-     *          Publishing
-     * ===========================
-     */
-    public static class Publishing extends ShareInfo {
-
-        public static void publish(Provisioning prov, OperationContext octxt,
-                NamedEntry publishingOnEntry,
-                Account ownerAcct, Folder folder) throws ServiceException {
-
-            if (folder == null) {
-                // no folder descriptor, do the entire folder tree
-
-                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(ownerAcct, false);
-                if (mbox == null)
-                    throw ServiceException.FAILURE("mailbox not found for account " + ownerAcct.getId(), null);
-
-                Set<Folder> folders = getVisibleFolders(octxt, mbox);
-                for (Folder f : folders)
-                    doPublish(prov, publishingOnEntry,  ownerAcct, f);
-            } else {
-                doPublish(prov, publishingOnEntry, ownerAcct, folder);
-            }
-        }
-
-        private static void doPublish(Provisioning prov,
-                NamedEntry publishingOnEntry,
-                Account ownerAcct, Folder folder) throws ServiceException {
-
-            ShareInfo.Publishing si = new ShareInfo.Publishing(ownerAcct, folder);
-            si.discoverGrants(folder, publishingOnEntry);
-            if (si.hasGrant())
-                si.persist(prov, publishingOnEntry);
-        }
-
-        private Publishing(Account ownerAcct, Folder folder) {
-            mData.setOwnerAcctId(ownerAcct.getId());
-            mData.setOwnerAcctEmail(ownerAcct.getName());
-            mData.setOwnerAcctDisplayName(ownerAcct.getDisplayName());
-            mData.setFolderId(folder.getId());
-        }
-
-        /**
-         * discover all grants on the folder that matches the publishingOnEntry.
-         * for each matched grant, add it to the MetadataList
-         *
-         * @param folder
-         * @param publishingOnEntry
-         * @throws ServiceException
-         */
-        private void discoverGrants(Folder folder, NamedEntry publishingOnEntry) throws ServiceException {
-            Provisioning prov = Provisioning.getInstance();
-
-            ACL acl = folder.getEffectiveACL();
-
-            if (acl == null)
-                return;
-
-            for (ACL.Grant grant : acl.getGrants()) {
-                if (matches(grant, publishingOnEntry)) {
-                    if (mGrants == null) {
-                        mGrants = new MetadataList();
-
-                        /*
-                         * we have:
-                         *     owner's zimbraId
-                         *     folder id
-                         *
-                         * when reporting the share info, we will need:
-                         *     owner email
-                         *     owner displayName
-                         *     folder path
-                         *
-                         * we put owner email/displayName and folder path in the first item of our metadata list,
-                         * because it is not convenient (too much LDAP hits if there are lots of published shares
-                         * on the entry, and owner accounts are no in cache; for folder name, will need a GetFoler
-                         * if the owner mailbox is on differernt server) to get owner name/display from owner id
-                         * and get folder path from folder id when we need them.
-                         *
-                         * cons: if the owner email/display or folder path is renamed, we will have
-                         *       stale metadata, but taht be be fixed by letting the admin know and re-publish
-                         *       for the owner.
-                         *
-                         * pros: we save excessive LDAP searches for finding the owner
-                         *       name from owner id if the owner is not in cache; and saves
-                         *       proxying to other host just to find the folder from folder id.
-                         */
-                        Metadata md = new Metadata();
-                        md.put(MD_OWNER_EMAIL, mData.getOwnerAcctEmail());
-                        md.put(MD_OWNER_DISPLAY_NAME, mData.getOwnerAcctDisplayName());
-
-                        // We record the folder path of the folder we are discovering shars for.
-                        // It would be nice if we can know the folder id/path on the folder of
-                        // the grant (matters when the folder arg came to this method is a sub folder
-                        // of the folder of the grant), but there is no convenient way to get it.
-                        md.put(MD_FOLDER_PATH, folder.getPath());
-
-                        // for the same reason, we encode the default view for the folder in our metadata
-                        md.put(MD_FOLDER_DEFAULT_VIEW, folder.getDefaultView().toByte());
-
-                        mGrants.add(md);
-                    }
-
-                    Metadata metadata = grant.encode();
-
-                    // ouch, ACL.Grant does not set the grantee name
-                    // we do our own here
-                    metadata.put(MD_GRANTEE_NAME, granteeName(prov, grant));
-                    metadata.put(MD_GRANTEE_DISPLAY_NAME, granteeDisplay(prov, grant));
-
-                    mGrants.add(metadata);
-                }
-            }
-        }
-
-
-        private boolean matches(ACL.Grant grant, NamedEntry publishingOnEntry) throws ServiceException {
-            String granteeId = grant.getGranteeId();  // note: granteeId can be null if this is a pub or all grant!
-            byte granteeType = grant.getGranteeType();
-
-            if (publishingOnEntry instanceof DistributionList) {
-                if (granteeType != ACL.GRANTEE_GROUP || granteeId == null)
-                    return false;
-
-                return (granteeId.equals(publishingOnEntry.getId()) ||
-                        Provisioning.getInstance().inDistributionList((DistributionList)publishingOnEntry, granteeId));
-            } else
-                throw ServiceException.FAILURE("internal", null); // can only publish on group for now
-
-            /*
-             * else if (publishingOnEntry instanceof Cos)
-             *     return grant.getGranteeId().equals(cos.getId());
-             * else if (publishingOnEntry instanceof domain)
-             *     return grant.getGranteeId().equals(domain.getId());
-             */
-        }
-
-        /**
-         * persists shareInfo in LDAP on the publishingOnEntry entry
-         *
-         * @param prov
-         * @param publishingOnEntry
-         * @throws ServiceException
-         */
-        public void persist(Provisioning prov, NamedEntry publishingOnEntry)
-            throws ServiceException {
-
-            Set<String> curShareInfo = publishingOnEntry.getMultiAttrSet(Provisioning.A_zimbraShareInfo);
-            String addKey    = "+" + Provisioning.A_zimbraShareInfo;
-            String removeKey = "-" + Provisioning.A_zimbraShareInfo;
-
-            Map<String, Object> attrs = new HashMap<String, Object>();
-            String value = serialize();
-            attrs.put(addKey, value);
-
-            /*
-             * replace existing share info for the same owner:folder
-             * we remove any value that starts with the same owner:folder
-             * (there should only be one, but we go through all in case
-             *  the data got in via some unexpected way)
-             *
-             * one caveat: if we are adding an existing owner:folder and the share info have not
-             * changed since last published, we do not want to put a - in the mod map, because
-             * that will remove the value put in above.
-             */
-            Set<String> toRemove = new HashSet<String>();
-            String ownerAndFoler = serializeOwnerAndFolder();
-            for (String curSi : curShareInfo) {
-                if (curSi.startsWith(ownerAndFoler) && !curSi.equals(value))
-                    toRemove.add(curSi);
-            }
-            if (!toRemove.isEmpty())
-                attrs.put(removeKey, toRemove);
-
-            prov.modifyAttrs(publishingOnEntry, attrs);
-        }
-    }
-
-
-    /*
-     * ===========================
      *          Published
      * ===========================
      */
     public static class Published extends ShareInfo {
-
-
-        private String mDigest; // for deduping
-
-        /*
-         * returns a list of Published from an encoded string
-         *
-         * each zimbraShareInfo value can expand to *multiple* Published share info, because
-         * for each owner:folder, there could be multiple matched grantees
-         * e.g.
-         *    - group dl2 is a member of group dl1
-         *    - owner shares /inbox to dl2 for rw rights
-         *    - owner shares /inbox to dl1 for aid rights
-         */
-        private static List<Published> decodeMetadata(String encoded) throws ServiceException {
-            List<Published> siList = new ArrayList<Published>();
-
-            // deserialize encoded to a dummy Published first
-            Published si = new Published(encoded);
-
-            //
-            // split the dummy to multiple, see comments on
-            // "It is a list(MetadataList) instead of a single object(Metadata) because ..."
-            //
-
-            // data not btencoded in metadata
-            String ownerAcctId = si.mData.getOwnerAcctId();
-            int folderId = si.mData.getFolderId();
-
-            // data btencoded in metadata by us (ShareInfo.Publishing)
-            Metadata metadata = si.mGrants.getMap(0);
-            String ownerAcctEmail = metadata.get(MD_OWNER_EMAIL);
-            String ownerAcctDisplayName = metadata.get(MD_OWNER_DISPLAY_NAME, null);
-            String folderPath = metadata.get(MD_FOLDER_PATH);
-            MailItem.Type folderDefaultView = MailItem.Type.of((byte) metadata.getLong(MD_FOLDER_DEFAULT_VIEW));
-
-            // data encoded by ACL.grant
-            for (int i = 1; i < si.mGrants.size(); i++) {
-                metadata = si.mGrants.getMap(i);
-
-                Grant grant = new Grant(metadata);
-
-                short rights = grant.getGrantedRights();
-                byte granteeType = grant.getGranteeType();
-                String granteeId = grant.getGranteeId();
-
-                // Mailbox.ACL never sets it, get it from our key in the metadata
-                String granteeName = metadata.get(MD_GRANTEE_NAME);
-
-                // get display name from our metadata too
-                String granteeDisplayName = metadata.get(MD_GRANTEE_DISPLAY_NAME, null);
-
-                Published p = new Published(ownerAcctId, ownerAcctEmail, ownerAcctDisplayName,
-                                            folderId, folderPath, folderDefaultView,
-                                            rights, granteeType, granteeId, granteeName, granteeDisplayName);
-                siList.add(p);
-            }
-
-            return siList;
-        }
-
-        // only used for the constructing the dummy for spliting
-        private Published(String encodedShareInfo) throws ServiceException {
-            deserialize(encodedShareInfo);
-        }
-
-        private Published(String ownerAcctId, String ownerAcctEmail, String ownerAcctDisplayName,
-                int folderId, String folderPath, MailItem.Type folderDefaultView,
-                short rights, byte granteeType, String granteeId, String granteeName, String granteeDisplayName) {
-
-            mData.setOwnerAcctId(ownerAcctId);
-            mData.setOwnerAcctEmail(ownerAcctEmail);
-            mData.setOwnerAcctDisplayName(ownerAcctDisplayName);
-            mData.setFolderId(folderId);
-            mData.setFolderPath(folderPath);
-            mData.setFolderDefaultView(folderDefaultView);
-            mData.setRights(rights);
-            mData.setGranteeType(granteeType);
-            mData.setGranteeId(granteeId);
-            mData.setGranteeName(granteeName);
-            mData.setGranteeDisplayName(granteeDisplayName);
-
-            mDigest = mData.getOwnerAcctEmail() +
-                      mData.getFolderPath() +
-                      mData.getRightsCode() +
-                      mData.getGranteeType() +
-                      mData.getGranteeId() +
-                      mData.getGranteeName();
-        }
-
-
-
-        private String getDigest() {
-            return mDigest;
-        }
 
         /**
          * @param prov
@@ -738,17 +443,15 @@ public class ShareInfo {
             getSharesPublished(prov, visitor, owner, granteeIds, includePublic);
         }
 
-        // for admin only, like the above, also called for sending emails
         public static void getPublished(Provisioning prov, DistributionList dl, boolean directOnly, Account owner,
                                         PublishedShareInfoVisitor visitor)
             throws ServiceException {
 
-            Set<String> visited = new HashSet<String>();
-
-            // get shares published on the dl
-            getPublishedShares(visitor, dl, owner, visited);
-
-            if (!directOnly) {
+            List<String> granteeIds = new LinkedList<String>();
+            if (directOnly) {
+                // get shares published on the dl
+                granteeIds.add(dl.getId());
+            } else {
                 // call prov.getAclGroups instead of prov.getDistributionLists
                 // because getAclGroups returns cached data, while getDistributionLists
                 // does LDAP searches each time
@@ -757,133 +460,9 @@ public class ShareInfo {
                 if (!dl.isAclGroup()) {
                     dl = prov.getAclGroup(Key.DistributionListBy.id, dl.getId());
                 }
-                AclGroups aclGroups = prov.getAclGroups(dl, false);
-                getSharesPublishedOnGroups(prov, visitor, aclGroups, owner, visited);
+                granteeIds.addAll(prov.getAclGroups(dl, false).groupIds());
             }
-        }
-
-        /**
-         * We should allow removing (un-publishing) share info even when the owner
-         * account/mailbox/folder does not exist.  They could've been deleted.
-         *
-         * We match the request with published as much as we can.
-         * For perf reason, owner email and folder name is also persisted in the
-         * published share info.
-         *
-         * @param prov
-         * @param dl
-         * @param ownerAcctId
-         * @param ownerAcctEmail
-         * @param allOwners
-         * @param folderId
-         * @param folderPath
-         * @param allFolders
-         * @throws ServiceException
-         */
-        public static void unpublish(Provisioning prov,
-                DistributionList dl,
-                String ownerAcctId, String ownerAcctEmail, boolean allOwners,
-                String folderId, String folderPath, boolean allFolders) throws ServiceException {
-
-            Matcher matcher = new Matcher(ownerAcctId, ownerAcctEmail, allOwners,
-                     folderId,  folderPath,  allFolders);
-
-            Set<String> publishedShareInfo = dl.getMultiAttrSet(Provisioning.A_zimbraShareInfo);
-            String removeKey = "-" + Provisioning.A_zimbraShareInfo;
-
-            Set<String> toRemove = new HashSet<String>();
-
-            for (String psi : publishedShareInfo) {
-
-                try {
-                    // each zimbraShareInfo value can expand to *multiple* Published share info,
-                    // see comments for decodeMetadata
-                    List<Published> siList = decodeMetadata(psi);
-
-                    for (Published si : siList) {
-                        if (matcher.matches(si.mData)) {
-                            toRemove.add(psi);
-                            break;
-                        }
-                    }
-
-                } catch (ServiceException e) {
-                    // probably encountered malformed share info, log and ignore
-                    // should remove the value from LDAP?
-                    ZimbraLog.account.warn("unable to process share info", e);
-                }
-            }
-
-            Map<String, Object> attrs = new HashMap<String, Object>();
-            attrs.put(removeKey, toRemove);
-            prov.modifyAttrs(dl, attrs);
-        }
-
-        /*
-         * matcher for unpublishing
-         */
-        private static class Matcher {
-
-            private String mOwnerAcctId;
-            private String mOwnerAcctEmail;
-            private boolean mAllOwners;
-            private String mFolderId;
-            private String mFolderPath;
-            private boolean mAllFolders;
-
-            private Matcher(String ownerAcctId, String ownerAcctEmail, boolean allOwners,
-                    String folderId, String folderPath, boolean allFolders) {
-                mOwnerAcctId = ownerAcctId;
-                mOwnerAcctEmail = ownerAcctEmail;
-                mAllOwners = allOwners;
-                mFolderId = folderId;
-                mFolderPath = folderPath;
-                mAllFolders = allFolders;
-            }
-
-            private boolean matches(ShareInfoData sid) {
-                return matchOwner(sid) && matchFolder(sid);
-            }
-
-            private boolean matchOwner(ShareInfoData sid) {
-                if (mAllOwners)
-                    return true;
-
-                // match id if provided
-                if (mOwnerAcctId != null)
-                    return mOwnerAcctId.equals(sid.getOwnerAcctId());
-
-                // match email if provided
-                if (mOwnerAcctEmail != null)
-                    return mOwnerAcctEmail.equals(sid.getOwnerAcctEmail());
-
-                // not matched
-                return false;
-            }
-
-            private boolean matchFolder(ShareInfoData sid) {
-                if (mAllFolders)
-                    return true;
-
-                // match folder id if provided
-                if (mFolderId != null)
-                    return mFolderId.equals(String.valueOf(sid.getFolderId()));
-
-                // match folder path if provided
-                if (mFolderPath != null)
-                    return mFolderPath.equals(sid.getFolderPath());
-
-                // not matched
-                return false;
-            }
-        }
-
-        private static void getSharesPublishedOnGroups(Provisioning prov, PublishedShareInfoVisitor visitor,
-                AclGroups aclGroups, Account owner, Set<String> visited)
-            throws ServiceException {
-
-            List<String> groupIds = aclGroups.groupIds();
-            getSharesPublished(prov, visitor, owner, groupIds, false);
+            getSharesPublished(prov, visitor, owner, granteeIds, false);
         }
 
         private static void getSharesPublished(Provisioning prov, PublishedShareInfoVisitor visitor, Account owner,
@@ -934,51 +513,6 @@ public class ShareInfo {
             }
         }
 
-        /**
-         * get shares published on the entry
-         *
-         * @param visitor
-         * @param entry
-         * @param owner if not null, include only shares owned by the owner
-         *              if null, include all shares published on the entry
-         */
-        private static void getPublishedShares(PublishedShareInfoVisitor visitor, NamedEntry entry, Account owner, Set<String> visited) {
-            Set<String> publishedShareInfo = entry.getMultiAttrSet(Provisioning.A_zimbraShareInfo);
-
-            for (String psi : publishedShareInfo) {
-
-                try {
-                    // each zimbraShareInfo value can expand to *multiple* Published share info,
-                    // see comments for decodeMetadata
-                    List<Published> siList = decodeMetadata(psi);
-
-                    for (Published si : siList) {
-                        if (owner != null) {
-                            if (!owner.getId().equals(si.mData.getOwnerAcctId()))
-                                continue;
-                        }
-
-                        /*
-                         * dedup
-                         *
-                         * It is possible that the same share is published on a group, and
-                         * again on a sub group.  We return only  one instance of all the
-                         * identical shares.
-                         */
-                        if (visited.contains(si.getDigest()))
-                            continue;
-
-                        visitor.visit(si.mData);
-                        visited.add(si.getDigest());
-                    }
-
-                } catch (ServiceException e) {
-                    // probably encountered malformed share info, log and ignore
-                    // should remove the value from LDAP?
-                    ZimbraLog.account.warn("unable to process share info", e);
-                }
-            }
-        }
     }
 
     /*

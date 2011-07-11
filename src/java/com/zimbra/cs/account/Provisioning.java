@@ -46,7 +46,6 @@ import com.zimbra.soap.admin.type.CmdRightsInfo;
 import com.zimbra.soap.admin.type.DistributionListSelector;
 import com.zimbra.soap.admin.type.DomainSelector;
 import com.zimbra.soap.admin.type.ServerSelector;
-import com.zimbra.soap.admin.type.ShareInfoSelector;
 import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.NamedElement;
 
@@ -1975,46 +1974,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
         // do nothing by default
     }
 
-    ///
-    //
-    // ShareInfo
-    //
-    //
-    public static enum PublishShareInfoAction {
-        add,
-        remove;
-
-        public static PublishShareInfoAction fromString(String action)
-        throws ServiceException {
-            try {
-                return PublishShareInfoAction.valueOf(action);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST(
-                        "unknown ShareInfo action: " + action, e);
-            }
-        }
-
-        /* Convert to equivalent JAXB object */
-        public static ShareInfoSelector.PubShareInfoAction toJaxb(
-                PublishShareInfoAction provAction)
-        throws ServiceException {
-            return ShareInfoSelector.PubShareInfoAction.fromString(
-                    provAction.toString());
-        }
-    }
-
     public static interface PublishedShareInfoVisitor {
         public void visit(ShareInfoData shareInfoData) throws ServiceException;
-    }
-
-    public void publishShareInfo(DistributionList dl, PublishShareInfoAction action,
-            Account ownerAcct, String folderIdOrPath) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
-    }
-
-    public void getPublishedShareInfo(DistributionList dl, Account ownerAcct,
-            PublishedShareInfoVisitor visitor) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
     }
 
     public void getShareInfo(Account ownerAcct, PublishedShareInfoVisitor visitor) throws ServiceException {

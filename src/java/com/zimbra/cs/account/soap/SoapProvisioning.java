@@ -2240,30 +2240,6 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
-    public void publishShareInfo(DistributionList dl,
-            PublishShareInfoAction action, Account ownerAcct,
-            String folderIdOrPath)
-    throws ServiceException {
-        ShareInfoSelector shareSel = new ShareInfoSelector(
-                PublishShareInfoAction.toJaxb(action),
-                PublishFolderInfo.fromPathOrId(folderIdOrPath),
-                getSelector(ownerAcct));
-        invokeJaxb(new PublishShareInfoRequest(getSelector(dl), shareSel));
-    }
-
-    @Override
-    public void getPublishedShareInfo(DistributionList dl, Account ownerAcct,
-            PublishedShareInfoVisitor visitor) throws ServiceException {
-        GetPublishedShareInfoResponse rsp = invokeJaxb(
-                new GetPublishedShareInfoRequest(
-                        getSelector(dl), getSelector(ownerAcct)));
-        for (com.zimbra.soap.type.ShareInfo sInfo : rsp.getShareInfos()) {
-            ShareInfoData sid = ShareInfoData.fromJaxbShareInfo(sInfo);
-            visitor.visit(sid);
-        }
-    }
-
-    @Override
     public void getShareInfo(Account ownerAcct,
             PublishedShareInfoVisitor visitor)
     throws ServiceException {
