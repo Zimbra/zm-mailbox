@@ -47,7 +47,7 @@ import com.zimbra.soap.type.CustomMetadata;
 // Root element name needed to differentiate between types of folder
 // MailConstants.E_FOLDER == "folder"
 @XmlRootElement(name=MailConstants.E_FOLDER)
-@XmlType(propOrder = {"metadatas", "grants", "subfolders"})
+@XmlType(propOrder = {"metadatas", "grants", "retentionPolicy", "subfolders"})
 public class Folder {
 
     @XmlEnum
@@ -184,6 +184,9 @@ public class Folder {
         @XmlElement(name="search", type=SearchFolder.class)
     })
     private List<Folder> subfolders = new ArrayList<Folder>();
+    
+    @XmlElement(name=MailConstants.E_RETENTION_POLICY, required=false)
+    private RetentionPolicy retentionPolicy;
 
     public Folder() {
     }
@@ -275,6 +278,10 @@ public class Folder {
 
     public Integer getImapModifiedSequence() {
         return imapModifiedSequence;
+    }
+    
+    public RetentionPolicy getRetentionPolicy() {
+        return retentionPolicy;
     }
 
     public void setId(String id) {

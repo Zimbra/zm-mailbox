@@ -55,6 +55,9 @@ public class FolderActionSelector extends ActionSelector {
     @XmlElement(name=MailConstants.E_GRANT, required=false)
     protected List<ActionGrantSelector> grants = Lists.newArrayList();
 
+    @XmlElement(name=MailConstants.E_RETENTION_POLICY, required=false)
+    protected RetentionPolicy retentionPolicy;
+    
     public FolderActionSelector() {
         this((String) null, (String) null);
     }
@@ -78,6 +81,7 @@ public class FolderActionSelector extends ActionSelector {
             Iterables.addAll(this.grants,grants);
         }
     }
+    public void setRetentionPolicy(RetentionPolicy rp) { this.retentionPolicy = rp; }
 
     public FolderActionSelector addGrant(ActionGrantSelector grant) {
         if (grants == null)
@@ -95,6 +99,7 @@ public class FolderActionSelector extends ActionSelector {
     public List<ActionGrantSelector> getGrants() {
         return Collections.unmodifiableList(grants);
     }
+    public RetentionPolicy getRetentionPolicy() { return retentionPolicy; }
 
     @Override
     public String toString() {
