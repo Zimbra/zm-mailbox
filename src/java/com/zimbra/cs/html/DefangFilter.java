@@ -89,6 +89,7 @@ public class DefangFilter extends DefaultFilter {
     
     // regex for URLs href. TODO: beef this up
 	private static final Pattern VALID_URL = Pattern.compile("^(https?://[\\w-].*|mailto:.*|cid:.*|notes:.*|smb:.*|ftp:.*|gopher:.*|news:.*|tel:.*|callto:.*|webcal:.*|feed:.*:|file:.*|#.+)", Pattern.CASE_INSENSITIVE);
+	private static final Pattern VALID_IMG = Pattern.compile("(.*?)\\.(jpg|jpeg|png|gif)$");
 
     //
     // Data
@@ -306,7 +307,6 @@ public class DefangFilter extends DefaultFilter {
         String attrs[] = attributes.toLowerCase().split(",");
         if (attrs != null && attrs.length > 0) {
             for (int i=0; i < attrs.length; i++) {
-                //System.out.println(element+"["+attrs[i]+"]");
                 //deal with consecutive commas
                 if (attrs[i].length() > 0)
                     set.add(attrs[i]);
@@ -632,9 +632,20 @@ public class DefangFilter extends DefaultFilter {
      */
     private boolean removeAttrValue(String eName, String aName, XMLAttributes attributes, int i) {
         String value = attributes.getValue(i);
-        if (aName.equalsIgnoreCase("href") || aName.equalsIgnoreCase("src") || aName.equalsIgnoreCase("longdesc") || aName.equalsIgnoreCase("usemap")){
+        if (aName.equalsIgnoreCase("href") || aName.equalsIgnoreCase("longdesc") || aName.equalsIgnoreCase("usemap")){
             if (!VALID_URL.matcher(value).find()) {
                 return true;
+            }
+        }
+        // We'll treat the SRC a little different since deleting it
+        // may annoy the front end. Here, we'll check for 
+        // a valid url as well as just a valid filename in the
+        // case that its an inline image
+        if(aName.equals("src")) {
+            if (!VALID_URL.matcher(value).find() &&
+                !VALID_IMG.matcher(value).find()) {
+                attributes.setValue(i, "#");
+                return false;
             }
         }
         return false;
