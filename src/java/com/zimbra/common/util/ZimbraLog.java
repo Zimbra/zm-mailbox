@@ -205,6 +205,11 @@ public final class ZimbraLog {
     public static final Log account = LogFactory.getLog("zimbra.account");
 
     /**
+     * the "zimbra.autoprov" logger. For account auto provision related events.
+     */
+    public static final Log autoprov = LogFactory.getLog("zimbra.autoprov");
+    
+    /**
      * the "zimbra.gal" logger. For gal-related events.
      */
     public static final Log gal = LogFactory.getLog("zimbra.gal");
@@ -456,6 +461,7 @@ public final class ZimbraLog {
         descriptions.put(calendar.getCategory(), "Calendar operations");
         descriptions.put(im.getCategory(), "Instant messaging operations");
         descriptions.put(account.getCategory(), "Account operations");
+        descriptions.put(autoprov.getCategory(), "Auto provision operations");
         descriptions.put(gal.getCategory(), "GAL operations");
         descriptions.put(ldap.getCategory(), "LDAP operations");
         descriptions.put(acl.getCategory(), "ACL operations");
