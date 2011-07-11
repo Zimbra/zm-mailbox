@@ -75,8 +75,8 @@
               <Item>SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA</Item>
               <Item>SSL_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA</Item>
             </Array>
-	  <Set name="Forwarded">true</Set>
           </Set>
+	  <Set name="Forwarded">true</Set>
         </New>
       </Arg>
     </Call>
@@ -107,8 +107,8 @@
               <Item>SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA</Item>
               <Item>SSL_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA</Item>
             </Array>
-	  <Set name="Forwarded">true</Set>
-          </Set>
+         </Set>
+	 <Set name="Forwarded">true</Set>
         </New>
       </Arg>
     </Call>
@@ -134,8 +134,9 @@
               <Item>SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA</Item>
               <Item>SSL_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA</Item>
             </Array>
-	  <Set name="Forwarded">true</Set>
-          </Set>
+         </Set>
+	 <Set name="Forwarded">true</Set>
+
         </New>
       </Arg>
     </Call>
