@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110707-0908 */
+    /* build: 8.0.0_BETA1_1111 administrator 20110709-1116 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -1870,7 +1870,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1232)
+    @ZAttr(id=1231)
     public static final String A_zimbraAutoProvAccountNameMap = "zimbraAutoProvAccountNameMap";
 
     /**
@@ -1885,7 +1885,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1233)
+    @ZAttr(id=1232)
     public static final String A_zimbraAutoProvAttrMap = "zimbraAutoProvAttrMap";
 
     /**
@@ -1897,7 +1897,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1222)
+    @ZAttr(id=1221)
     public static final String A_zimbraAutoProvAuthMech = "zimbraAutoProvAuthMech";
 
     /**
@@ -1906,7 +1906,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1236)
+    @ZAttr(id=1235)
     public static final String A_zimbraAutoProvBatchSize = "zimbraAutoProvBatchSize";
 
     /**
@@ -1915,7 +1915,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1235)
+    @ZAttr(id=1234)
     public static final String A_zimbraAutoProvLastPolledTimestamp = "zimbraAutoProvLastPolledTimestamp";
 
     /**
@@ -1923,7 +1923,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1227)
+    @ZAttr(id=1226)
     public static final String A_zimbraAutoProvLdapAdminBindDn = "zimbraAutoProvLdapAdminBindDn";
 
     /**
@@ -1931,7 +1931,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1228)
+    @ZAttr(id=1227)
     public static final String A_zimbraAutoProvLdapAdminBindPassword = "zimbraAutoProvLdapAdminBindPassword";
 
     /**
@@ -1942,7 +1942,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1231)
+    @ZAttr(id=1230)
     public static final String A_zimbraAutoProvLdapBindDn = "zimbraAutoProvLdapBindDn";
 
     /**
@@ -1953,7 +1953,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1229)
+    @ZAttr(id=1228)
     public static final String A_zimbraAutoProvLdapSearchBase = "zimbraAutoProvLdapSearchBase";
 
     /**
@@ -1964,7 +1964,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1230)
+    @ZAttr(id=1229)
     public static final String A_zimbraAutoProvLdapSearchFilter = "zimbraAutoProvLdapSearchFilter";
 
     /**
@@ -1973,7 +1973,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1226)
+    @ZAttr(id=1225)
     public static final String A_zimbraAutoProvLdapStartTlsEnabled = "zimbraAutoProvLdapStartTlsEnabled";
 
     /**
@@ -1981,7 +1981,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1225)
+    @ZAttr(id=1224)
     public static final String A_zimbraAutoProvLdapURL = "zimbraAutoProvLdapURL";
 
     /**
@@ -1992,7 +1992,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1237)
+    @ZAttr(id=1236)
     public static final String A_zimbraAutoProvLock = "zimbraAutoProvLock";
 
     /**
@@ -2009,7 +2009,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1223)
+    @ZAttr(id=1222)
     public static final String A_zimbraAutoProvMode = "zimbraAutoProvMode";
 
     /**
@@ -2019,7 +2019,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1234)
+    @ZAttr(id=1233)
     public static final String A_zimbraAutoProvNotificationFromAddress = "zimbraAutoProvNotificationFromAddress";
 
     /**
@@ -2039,7 +2039,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1239)
+    @ZAttr(id=1238)
     public static final String A_zimbraAutoProvPollingInterval = "zimbraAutoProvPollingInterval";
 
     /**
@@ -2051,7 +2051,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1238)
+    @ZAttr(id=1237)
     public static final String A_zimbraAutoProvScheduledDomains = "zimbraAutoProvScheduledDomains";
 
     /**
@@ -2063,7 +2063,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1224)
+    @ZAttr(id=1223)
     public static final String A_zimbraAutoProvUseLdapAuthSettings = "zimbraAutoProvUseLdapAuthSettings";
 
     /**
@@ -4909,14 +4909,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=3)
     public static final String A_zimbraMailAddress = "zimbraMailAddress";
-
-    /**
-     * optional regex used by web client to validate email address
-     *
-     * @since ZCS 7.1.2
-     */
-    @ZAttr(id=1221)
-    public static final String A_zimbraMailAddressValidationRegex = "zimbraMailAddressValidationRegex";
 
     /**
      * RFC822 email address of this recipient for accepting mail
@@ -9374,22 +9366,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
