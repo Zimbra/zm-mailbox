@@ -63,8 +63,8 @@
             <Array type="java.lang.String">
               %%zimbraSSLExcludeCipherSuitesXML%%
             </Array>
-	  <Set name="Forwarded">true</Set>
           </Set>
+          <Set name="Forwarded">true</Set>
         </New>
       </Arg>
     </Call>
@@ -88,8 +88,8 @@
             <Array type="java.lang.String">
               %%zimbraSSLExcludeCipherSuitesXML%%
             </Array>
-	  <Set name="Forwarded">true</Set>
           </Set>
+          <Set name="Forwarded">true</Set>
         </New>
       </Arg>
     </Call>
