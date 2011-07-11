@@ -14,15 +14,14 @@
  */
 package com.zimbra.cs.datasource.imap;
 
-import com.zimbra.cs.mailclient.imap.ImapConnection;
-import com.zimbra.cs.mailclient.imap.ListData;
-
-import java.util.List;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
-import java.io.IOException;
+import java.util.List;
+
+import com.zimbra.cs.mailclient.imap.ImapConnection;
+import com.zimbra.cs.mailclient.imap.ListData;
 
 public final class ImapUtil {
     private static final String INBOX = "INBOX";
@@ -48,21 +47,20 @@ public final class ImapUtil {
     public static List<ListData> sortFolders(List<ListData> folders) {
         // Keep INBOX and inferiors separate so we can return them first
         ListData inbox = null;
+        ListData defaultInbox = null;
         List<ListData> inboxInferiors = new ArrayList<ListData>();
         List<ListData> otherFolders = new ArrayList<ListData>();
         for (ListData ld : folders) {
-            String name = ld.getMailbox();
-            if (name.equalsIgnoreCase(INBOX)) {
-                inbox = ld;
-                // Ignore duplicate INBOX (fixes bug 26483)
-                break;
-            }
-        }
-        for (ListData ld : folders) {
-            if (ld == inbox) {
-                // do nothing
-            } else if (isInboxInferior(ld, inbox)) {
+            if (INBOX.equalsIgnoreCase(ld.getMailbox())) { //rfc3501(5.1), INBOX is case-insensitive
+                if (inbox == null) {
+                 // Ignore duplicate INBOX (fixes bug 26483)
+                    inbox = ld;
+                }
+            } else if (isInboxInferior(ld)) {
                 inboxInferiors.add(ld);
+                if (defaultInbox == null) {
+                    defaultInbox = new ListData(INBOX, ld.getDelimiter());
+                }
             } else {
                 otherFolders.add(ld);
             }
@@ -71,7 +69,7 @@ public final class ImapUtil {
         if (inbox == null) {
             // If INBOX missing from LIST response, then see if we can
             // determine a reasonable default (bug 30844).
-            inbox = getDefaultInbox(sorted);
+            inbox = defaultInbox;
         }
         if (inbox != null) {
             sorted.add(inbox);
@@ -83,45 +81,15 @@ public final class ImapUtil {
         return sorted;
     }
 
-    private static void removeDuplicates(List<ListData> sorted) {
-        Iterator<ListData> it = sorted.iterator();
-        if (it.hasNext()) {
-            ListData ld = it.next();
-            while (it.hasNext()) {
-                ListData next = it.next();
-                if (ld.getMailbox().equalsIgnoreCase(next.getMailbox())) {
-                    it.remove();
-                } else {
-                    ld = next;
-                }
-            }
-        }
-    }
-    
-    private static ListData getDefaultInbox(List<ListData> sorted) {
-        for (ListData ld : sorted) {
-            if (isInboxInferior(ld, null)) {
-                return new ListData(INBOX, ld.getDelimiter());
-            }
-        }
-        return null;
-    }
-    
     /*
      * Returns true if specified ListData refers to am inferior of INBOX
      * (i.e. "INBOX/Foo").
      */
-    private static boolean isInboxInferior(ListData ld, ListData inbox) {
+    private static boolean isInboxInferior(ListData ld) {
         String name = ld.getMailbox();
-        if (inbox == null) {
-            return name.length() > INBOX_LEN &&
-                   name.substring(0, INBOX_LEN).equalsIgnoreCase(INBOX) &&
-                   name.charAt(INBOX_LEN) == ld.getDelimiter();
-        } else {
-            return name.length() > INBOX_LEN &&
-                   name.substring(0, INBOX_LEN).equals(inbox.getMailbox()) &&
-                   name.charAt(INBOX_LEN) == ld.getDelimiter();
-        }
+        return name.length() > INBOX_LEN &&
+            INBOX.equalsIgnoreCase(name.substring(0, INBOX_LEN)) &&
+            name.charAt(INBOX_LEN) == ld.getDelimiter();
     }
 
     public static boolean isYahoo(ImapConnection ic) {
