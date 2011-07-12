@@ -17,6 +17,7 @@ package com.zimbra.cs.mailbox.acl;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.ShareInfoData;
 import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 
 /**
@@ -37,11 +38,11 @@ public class AclPushSerializer {
                 shareInfoData.getRightsCode());
     }
 
-    public static String serialize(int folderId, String folderPath, MailItem.Type folderDefaultView, ACL.Grant grant) {
+    public static String serialize(Folder folder, ACL.Grant grant) {
         return serialize(
-                folderId,
-                folderPath,
-                folderDefaultView,
+                folder.getId(),
+                folder.getPath(),
+                folder.getDefaultView(),
                 grant.getGranteeId(),
                 grant.getGranteeName(),
                 grant.getGranteeType(),

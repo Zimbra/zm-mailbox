@@ -16,7 +16,6 @@
 package com.zimbra.cs.upgrade;
 
 import com.google.common.base.Strings;
-import com.zimbra.cs.db.Db;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
@@ -26,11 +25,14 @@ import com.zimbra.cs.index.SortBy;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.acl.AclPushSerializer;
 import com.zimbra.cs.service.util.SyncToken;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -122,12 +124,32 @@ public final class MailboxUpgrade {
         
         // bug 56772
         migrateContactGroups(mbox);
+
+        // bug 47673
+        pushExistingFolderAclsToLdap(mbox);
+    }
+
+    private static void pushExistingFolderAclsToLdap(Mailbox mbox) throws ServiceException {
+        List<Folder> folders = mbox.getFolderList(null, SortBy.NONE);
+        List<String> sharedItems = new ArrayList<String>();
+        for (Folder folder : folders) {
+            ACL acl = folder.getACL();
+            if (acl == null) {
+                continue;
+            }
+            for (ACL.Grant grant : acl.getGrants()) {
+                sharedItems.add(AclPushSerializer.serialize(folder, grant));
+            }
+        }
+        if (!sharedItems.isEmpty()) {
+            mbox.getAccount().setSharedItem(sharedItems.toArray(new String[sharedItems.size()]));
+        }
     }
 
     private static void migrateHighestIndexed(Mailbox mbox) throws ServiceException {
         DbConnection conn = DbPool.getConnection(mbox);
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
+        PreparedStatement stmt;
+        ResultSet rs;
         try {
             // fetch highest_indexed
             String highestIndexed = null;

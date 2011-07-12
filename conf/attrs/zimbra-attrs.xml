@@ -5772,7 +5772,7 @@ TODO: delete them permerntly from here
   <desc>All items an account has shared</desc>
 </attr>
 
-<attr id="1220" name="zimbraSharingUpdatePublishInterval" type="duration" cardinality="single" optionalIn="server,globalConfig" flags="serverInherited" since="8.0.0">
+<attr id="1220" name="zimbraSharingUpdatePublishInterval" type="duration" cardinality="single" optionalIn="server,globalConfig" flags="serverInherited" requiresRestart="mailbox" since="8.0.0">
   <globalConfigValue>15m</globalConfigValue>
   <desc>Interval between successive executions of the task that publishes shared item updates to LDAP</desc>
 </attr>

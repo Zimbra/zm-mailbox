@@ -475,6 +475,8 @@ public class Folder extends MailItem {
         }
         mRights = acl;
         saveMetadata();
+
+        queueForAclPush();
     }
 
     /** Returns a copy of the ACL directly set on the folder, or <tt>null</tt>

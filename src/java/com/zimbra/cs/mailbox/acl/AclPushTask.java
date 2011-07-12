@@ -45,7 +45,7 @@ public class AclPushTask extends TimerTask {
     }
 
     public static void doWork() {
-        ZimbraLog.acl.debug("Starting pending ACL push");
+        ZimbraLog.acl.info("Starting pending ACL push");
         Date now = new Date();
         try {
             Multimap<Integer, Integer> mboxIdToItemIds = DbPendingAclPush.getEntries(now);
@@ -91,13 +91,8 @@ public class AclPushTask extends TimerTask {
                         if (acl == null) {
                             continue;
                         }
-                        int folderId = folder.getId();
-                        String folderPath = folder.getPath();
-                        MailItem.Type folderDefaultView = folder.getDefaultView();
-                        List<ACL.Grant> grants = acl.getGrants();
-                        for (ACL.Grant grant : grants) {
-                            updatedSharedItems.add(
-                                    AclPushSerializer.serialize(folderId, folderPath, folderDefaultView, grant));
+                        for (ACL.Grant grant : acl.getGrants()) {
+                            updatedSharedItems.add(AclPushSerializer.serialize(folder, grant));
                         }
                     }
                 }
@@ -109,6 +104,6 @@ public class AclPushTask extends TimerTask {
         } catch (ServiceException e) {
             ZimbraLog.acl.warn("Error during ACL push task", e);
         }
-        ZimbraLog.acl.debug("Finished pending ACL push");
+        ZimbraLog.acl.info("Finished pending ACL push");
     }
 }
