@@ -69,7 +69,7 @@ public class OctopusJaxbTest {
         if (itemName != null && itemName.length() > 0)
             activity.setItemName(itemName);
         if (account != null)
-            activity.setAccountId(account);
+            activity.setEmail(account);
         activity.setArgs(args);
         return activity;
     }
@@ -81,7 +81,7 @@ public class OctopusJaxbTest {
         args.put("key2", "value2");
         ActivityInfo ai = toActivityInfo("account", "op", 333L, 22, 44,
                 "itemName", args);
-        Assert.assertEquals("account id", "account", ai.getAccountId());
+        Assert.assertEquals("email", "account", ai.getEmail());
         Assert.assertEquals("operation", "op", ai.getOperation());
         Assert.assertEquals("operation", 333L, ai.getTimeStamp());
         Assert.assertEquals("item id", 22, ai.getItemId());
@@ -101,7 +101,7 @@ public class OctopusJaxbTest {
         Element activityElem = JaxbUtil.addChildElementFromJaxb(notify, MailConstants.E_A,
                 MailConstants.NAMESPACE_STR, ai);
         ai = JaxbUtil.elementToJaxb(activityElem, ActivityInfo.class);
-        Assert.assertEquals("round tripped account id", "account", ai.getAccountId());
+        Assert.assertEquals("round tripped account id", "account", ai.getEmail());
         Assert.assertEquals("round tripped operation", "op", ai.getOperation());
         Assert.assertEquals("round tripped operation", 333L, ai.getTimeStamp());
         Assert.assertEquals("round tripped item id", 22, ai.getItemId());

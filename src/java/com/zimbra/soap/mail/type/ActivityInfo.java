@@ -51,8 +51,8 @@ public class ActivityInfo {
     @XmlAttribute(name=MailConstants.A_ITEM_NAME /* itemName */, required=false)
     private String itemName;
 
-    @XmlAttribute(name=MailConstants.A_ACCOUNT_ID /* accountId */, required=false)
-    private String accountId;
+    @XmlAttribute(name=MailConstants.A_EMAIL /* email */, required=false)
+    private String email;
 
     @XmlElement(name=MailConstants.E_ARG /* arg */, required=false)
     private List<NamedValue> args = Lists.newArrayList();
@@ -78,7 +78,7 @@ public class ActivityInfo {
 
     public void setVersion(Integer version) { this.version = version; }
     public void setItemName(String itemName) { this.itemName = itemName; }
-    public void setAccountId(String accountId) { this.accountId = accountId; }
+    public void setEmail(String email) { this.email = email; }
     public void setArgs(Iterable <NamedValue> args) {
         this.args.clear();
         if (args != null) {
@@ -103,7 +103,7 @@ public class ActivityInfo {
     public int getItemId() { return itemId; }
     public Integer getVersion() { return version; }
     public String getItemName() { return itemName; }
-    public String getAccountId() { return accountId; }
+    public String getEmail() { return email; }
     public List<NamedValue> getArgs() {
         return Collections.unmodifiableList(args);
     }
@@ -116,7 +116,7 @@ public class ActivityInfo {
             .add("itemId", itemId)
             .add("version", version)
             .add("itemName", itemName)
-            .add("accountId", accountId)
+            .add("email", email)
             .add("args", args);
     }
 
