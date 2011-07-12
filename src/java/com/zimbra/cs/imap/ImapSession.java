@@ -205,7 +205,7 @@ public class ImapSession extends Session {
         return detach();
     }
 
-    Session detach() {
+    synchronized Session detach() {
         ImapSessionManager.getInstance().uncacheSession(this);
         return isRegistered() ? super.unregister() : this;
     }
@@ -248,9 +248,8 @@ public class ImapSession extends Session {
 
     synchronized PagedFolderData unload() throws IOException, ServiceException {
         // if the data's already paged out, we can short-circuit
-        ImapFolder i4folder = mFolder instanceof ImapFolder ? (ImapFolder) mFolder : null;
-        if (i4folder != null) {
-            mFolder = new PagedFolderData(serialize(), i4folder);
+        if (mMailbox != null && mFolder instanceof ImapFolder) {
+            mFolder = new PagedFolderData(serialize(), (ImapFolder) mFolder);
         }
         return (PagedFolderData) mFolder;
     }
