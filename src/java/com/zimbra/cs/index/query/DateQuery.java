@@ -242,6 +242,7 @@ public final class DateQuery extends Query {
             case BEFORE:
             case AFTER:
             case DATE:
+            case MDATE:
             case DAY:
                 field = Calendar.DATE;
                 break;

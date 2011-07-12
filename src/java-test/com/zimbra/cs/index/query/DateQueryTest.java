@@ -69,6 +69,32 @@ public final class DateQueryTest {
     }
 
     @Test
+    public void parseAbsoluteMDate() throws Exception {
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+        DateQuery query = new DateQuery(DateQuery.Type.MDATE);
+        TimeZone tz = TimeZone.getTimeZone("UTC");
+        String expected = "Q(DATE:MDATE,201001230000-201001240000)";
+
+        query.parseDate("1/23/2010", tz, Locale.ENGLISH);
+        Assert.assertEquals(expected, query.toString());
+
+        query.parseDate("23/1/2010", tz, Locale.FRENCH);
+        Assert.assertEquals(expected, query.toString());
+
+        query.parseDate("23.1.2010", tz, Locale.GERMAN);
+        Assert.assertEquals(expected, query.toString());
+
+        query.parseDate("23/1/2010", tz, Locale.ITALIAN);
+        Assert.assertEquals(expected, query.toString());
+
+        query.parseDate("2010/1/23", tz, Locale.JAPANESE);
+        Assert.assertEquals(expected, query.toString());
+
+        query.parseDate("2010. 1. 23", tz, Locale.KOREAN);
+        Assert.assertEquals(expected, query.toString());
+    }
+
+    @Test
     public void parseRelativeDate() throws Exception {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         DateQuery query = new DateQuery(DateQuery.Type.DATE);
