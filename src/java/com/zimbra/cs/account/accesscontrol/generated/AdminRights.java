@@ -30,7 +30,7 @@ public class AdminRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110707-0908 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110711-1235 */
 
 
     public static AdminRight R_accessGAL;
@@ -205,17 +205,14 @@ public class AdminRights {
     public static AdminRight R_getAccount;
     public static AdminRight R_getAccountInfo;
     public static AdminRight R_getAccountMembership;
-    public static AdminRight R_getAccountShareInfo;
     public static AdminRight R_getAllFreeBusyProviders;
     public static AdminRight R_getCSR;
     public static AdminRight R_getCalendarResource;
     public static AdminRight R_getCalendarResourceInfo;
-    public static AdminRight R_getCalendarResourceShareInfo;
     public static AdminRight R_getCertificateInfo;
     public static AdminRight R_getCos;
     public static AdminRight R_getDistributionList;
     public static AdminRight R_getDistributionListMembership;
-    public static AdminRight R_getDistributionListShareInfo;
     public static AdminRight R_getDomain;
     public static AdminRight R_getDomainAdminAccountAttrs;
     public static AdminRight R_getDomainAdminCalendarResourceAttrs;
@@ -261,7 +258,6 @@ public class AdminRights {
     public static AdminRight R_moveCalendarResourceMailbox;
     public static AdminRight R_moveMailboxFromServer;
     public static AdminRight R_moveMailboxToServer;
-    public static AdminRight R_publishDistributionListShareInfo;
     public static AdminRight R_purgeMessages;
     public static AdminRight R_reindexCalendarResourceMailbox;
     public static AdminRight R_reindexMailbox;
@@ -609,17 +605,14 @@ public class AdminRights {
         R_getAccount                           = rm.getAdminRight(Right.RT_getAccount);
         R_getAccountInfo                       = rm.getAdminRight(Right.RT_getAccountInfo);
         R_getAccountMembership                 = rm.getAdminRight(Right.RT_getAccountMembership);
-        R_getAccountShareInfo                  = rm.getAdminRight(Right.RT_getAccountShareInfo);
         R_getAllFreeBusyProviders              = rm.getAdminRight(Right.RT_getAllFreeBusyProviders);
         R_getCSR                               = rm.getAdminRight(Right.RT_getCSR);
         R_getCalendarResource                  = rm.getAdminRight(Right.RT_getCalendarResource);
         R_getCalendarResourceInfo              = rm.getAdminRight(Right.RT_getCalendarResourceInfo);
-        R_getCalendarResourceShareInfo         = rm.getAdminRight(Right.RT_getCalendarResourceShareInfo);
         R_getCertificateInfo                   = rm.getAdminRight(Right.RT_getCertificateInfo);
         R_getCos                               = rm.getAdminRight(Right.RT_getCos);
         R_getDistributionList                  = rm.getAdminRight(Right.RT_getDistributionList);
         R_getDistributionListMembership        = rm.getAdminRight(Right.RT_getDistributionListMembership);
-        R_getDistributionListShareInfo         = rm.getAdminRight(Right.RT_getDistributionListShareInfo);
         R_getDomain                            = rm.getAdminRight(Right.RT_getDomain);
         R_getDomainAdminAccountAttrs           = rm.getAdminRight(Right.RT_getDomainAdminAccountAttrs);
         R_getDomainAdminCalendarResourceAttrs  = rm.getAdminRight(Right.RT_getDomainAdminCalendarResourceAttrs);
@@ -665,7 +658,6 @@ public class AdminRights {
         R_moveCalendarResourceMailbox          = rm.getAdminRight(Right.RT_moveCalendarResourceMailbox);
         R_moveMailboxFromServer                = rm.getAdminRight(Right.RT_moveMailboxFromServer);
         R_moveMailboxToServer                  = rm.getAdminRight(Right.RT_moveMailboxToServer);
-        R_publishDistributionListShareInfo     = rm.getAdminRight(Right.RT_publishDistributionListShareInfo);
         R_purgeMessages                        = rm.getAdminRight(Right.RT_purgeMessages);
         R_reindexCalendarResourceMailbox       = rm.getAdminRight(Right.RT_reindexCalendarResourceMailbox);
         R_reindexMailbox                       = rm.getAdminRight(Right.RT_reindexMailbox);

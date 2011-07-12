@@ -24,7 +24,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110707-0908 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110711-1235 */
 
 
     /*
@@ -937,11 +937,6 @@ public class RightConsts {
     public static final String RT_getAccountMembership = "getAccountMembership";
 
     /**
-     * get share info on account
-     */
-    public static final String RT_getAccountShareInfo = "getAccountShareInfo";
-
-    /**
      * Retrieve a list of Free/Busy providers via
      * GetAllFreeBusyProvidersRequest SOAP request
      */
@@ -963,11 +958,6 @@ public class RightConsts {
     public static final String RT_getCalendarResourceInfo = "getCalendarResourceInfo";
 
     /**
-     * get share info on calendar resource
-     */
-    public static final String RT_getCalendarResourceShareInfo = "getCalendarResourceShareInfo";
-
-    /**
      * view SSL certificates installed on the target server
      */
     public static final String RT_getCertificateInfo = "getCertificateInfo";
@@ -986,11 +976,6 @@ public class RightConsts {
      * get all groups the distribution list is a member of
      */
     public static final String RT_getDistributionListMembership = "getDistributionListMembership";
-
-    /**
-     * get share info on distribution list
-     */
-    public static final String RT_getDistributionListShareInfo = "getDistributionListShareInfo";
 
     /**
      * get all domain attributes
@@ -1217,11 +1202,6 @@ public class RightConsts {
      * move mailboxes to a server
      */
     public static final String RT_moveMailboxToServer = "moveMailboxToServer";
-
-    /**
-     * publish share info on distribution list
-     */
-    public static final String RT_publishDistributionListShareInfo = "publishDistributionListShareInfo";
 
     /**
      * purge messages of an account
