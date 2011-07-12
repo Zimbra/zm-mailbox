@@ -1217,6 +1217,7 @@ public class ProxyConfGen
         mConfVars.put("core.ipboth.enabled", new ProxyConfVar("core.ipboth.enabled", null, true, ProxyConfValueType.ENABLER, ProxyConfOverride.CUSTOM, "Both IPv4 and IPv6"));
         mConfVars.put("ssl.crt.default", new ProxyConfVar("ssl.crt.default", null, mDefaultSSLCrt, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "default nginx certificate file path"));
         mConfVars.put("ssl.key.default", new ProxyConfVar("ssl.key.default", null, mDefaultSSLKey, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "default nginx private key file path"));
+        mConfVars.put("ssl.clientcertmode.default", new ProxyConfVar("ssl.clientcertmode.default", "zimbraReverseProxyClientCertMode", "off", ProxyConfValueType.STRING, ProxyConfOverride.SERVER,"enable authentication via X.509 Client Certificate in nginx proxy (https only)"));
         mConfVars.put("ssl.clientcertca.default", new ClientCertAuthDefaultCAVar());
         mConfVars.put("ssl.clientcertdepth.default", new ProxyConfVar("ssl.clientcertdepth.default", "zimbraReverseProxyClientCertDepth", new Integer(10), ProxyConfValueType.INTEGER, ProxyConfOverride.NONE,"indicate how depth the verification will load the ca chain. This is useful when client crt is signed by multiple intermediate ca"));
         mConfVars.put("main.user", new ProxyConfVar("main.user", null, "zimbra", ProxyConfValueType.STRING, ProxyConfOverride.NONE, "The user as which the worker processes will run"));
