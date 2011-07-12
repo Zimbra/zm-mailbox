@@ -203,12 +203,13 @@ public class ImapSession extends Session {
         return detach();
     }
 
-    Session detach() {
+    synchronized Session detach() {
         MANAGER.uncacheSession(this);
         return isRegistered() ? super.unregister() : this;
     }
 
-    @Override protected void cleanup() {
+    @Override
+    protected void cleanup() {
         // XXX: is there a synchronization issue here?
         ImapHandler handler = mHandler;
         if (handler != null) {
@@ -251,12 +252,9 @@ public class ImapSession extends Session {
      * @param mem true to use memcached if available, otherwise false
      */
     synchronized void unload(boolean mem) throws ServiceException {
-        if (isRegistered()) {
-            // if the data's already paged out, we can short-circuit
-            ImapFolder i4folder = mFolder instanceof ImapFolder ? (ImapFolder) mFolder : null;
-            if (i4folder != null) {
-                mFolder = new PagedFolderData(serialize(mem), i4folder);
-            }
+        // if the data's already paged out, we can short-circuit
+        if (mailbox != null && mFolder instanceof ImapFolder) {
+            mFolder = new PagedFolderData(serialize(mem), (ImapFolder) mFolder);
         }
     }
 
