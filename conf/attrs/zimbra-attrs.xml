@@ -5615,5 +5615,9 @@ TODO: delete them permerntly from here
   <desc>whether to enable LDAP-filter in zimbraMailSSLClientCertPrincipalMap</desc>
 </attr>
 
+<attr id="1240" name="zimbraCalendarKeepExceptionsOnSeriesTimeChange" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="7.1.2">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>whether to retain exception instances when the recurrence series is changed to new time; set to FALSE for Exchange compatibility</desc>
+</attr>
 
 </attrs>

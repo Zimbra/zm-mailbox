@@ -136,7 +136,7 @@ public class InviteChanges {
         if (recur1 == null || recur2 == null) {
             recurChanged = recur1 != recur2;
         } else {
-            recurChanged = !StringUtil.equal(recur1.toString(), recur2.toString());
+            recurChanged = !Recurrence.sameSeriesRules(recur1, recur2);
         }
         if (recurChanged)
             mChanges |= RECURRENCE;

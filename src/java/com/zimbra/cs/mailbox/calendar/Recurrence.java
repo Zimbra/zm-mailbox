@@ -20,6 +20,7 @@ import java.util.*;
 import java.text.ParseException;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.soap.MailConstants;
@@ -369,7 +370,8 @@ public class Recurrence
             }
             toRet.append(", defaultDuration=").append(mDefaultDuration.toString());
             if (mInvId != null)
-                toRet.append(", InvId=").append(mInvId.toString()).append("]");
+                toRet.append(", InvId=").append(mInvId.toString());
+            toRet.append("]");
             
             return toRet.toString();
         }
@@ -1565,6 +1567,31 @@ public class Recurrence
             }
         }
         return tzids;
+    }
+
+    // Returns true if two recurrences have the same series rules, ignoring any exception instances.
+    // Assume there aren't multiple RRULEs per VEVENT/VTODO.
+    public static boolean sameSeriesRules(IRecurrence r1, IRecurrence r2) {
+        SimpleRepeatingRule rule1 = null, rule2 = null;
+        for (Iterator iter1 = r1.addRulesIterator(); iter1.hasNext(); ) {
+            Object obj = iter1.next();
+            if (obj instanceof SimpleRepeatingRule && rule1 == null) {
+                rule1 = (SimpleRepeatingRule) obj;
+                break;
+            }
+        }
+        for (Iterator iter2 = r2.addRulesIterator(); iter2.hasNext(); ) {
+            Object obj = iter2.next();
+            if (obj instanceof SimpleRepeatingRule && rule2 == null) {
+                rule2 = (SimpleRepeatingRule) obj;
+                break;
+            }
+        }
+        if (rule1 != null && rule2 != null) {
+            return StringUtil.equal(rule1.toString(), rule2.toString());
+        } else {
+            return rule1 == rule2;
+        }
     }
 
     public static void main(String[] args) throws Exception {

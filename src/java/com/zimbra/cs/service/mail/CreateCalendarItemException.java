@@ -60,9 +60,10 @@ public class CreateCalendarItemException extends CalendarRequest {
             // Send cancellations to any attendees who have been removed.
             List<ZAttendee> removedAttendees = CalendarUtils.getRemovedAttendees(
                     mDefaultInvite.getAttendees(), toRet.mInvite.getAttendees(), true, account);
-            if (removedAttendees.size() > 0)
-                updateRemovedInvitees(zsc, octxt, account,
-                                      mDefaultInvite.getCalendarItem().getMailbox(), mDefaultInvite.getCalendarItem(), toRet.mInvite, removedAttendees);
+            if (removedAttendees.size() > 0) {
+                notifyRemovedAttendees(zsc, octxt, account,
+                        mDefaultInvite.getCalendarItem().getMailbox(), mDefaultInvite.getCalendarItem(), toRet.mInvite, removedAttendees);
+            }
 
             return toRet;
         }

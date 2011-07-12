@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110625-1519 */
+    /* build: 7.0.0_BETA1_1111 jhahm 20110711-1959 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -1984,6 +1984,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=243)
     public static final String A_zimbraCalendarCompatibilityMode = "zimbraCalendarCompatibilityMode";
+
+    /**
+     * whether to retain exception instances when the recurrence series is
+     * changed to new time; set to FALSE for Exchange compatibility
+     *
+     * @since ZCS 7.1.2
+     */
+    @ZAttr(id=1240)
+    public static final String A_zimbraCalendarKeepExceptionsOnSeriesTimeChange = "zimbraCalendarKeepExceptionsOnSeriesTimeChange";
 
     /**
      * maximum number of revisions to keep for calendar items (appointments
