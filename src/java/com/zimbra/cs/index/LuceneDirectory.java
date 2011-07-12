@@ -116,6 +116,7 @@ public final class LuceneDirectory extends Directory {
     }
 
     @Override
+    @Deprecated
     public void touchFile(String name) throws IOException {
         directory.touchFile(name);
     }
