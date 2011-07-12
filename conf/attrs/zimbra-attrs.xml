@@ -6026,4 +6026,8 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
+<attr id="1240" name="zimbraMailAddressValidationRegex" type="string" max="512" cardinality="multi" optionalIn="domain,globalConfig" flags="domainInherited,domainInfo" since="7.1.2">
+  <desc>optional regex used by web client to validate email address</desc>
+</attr>
+
 </attrs>

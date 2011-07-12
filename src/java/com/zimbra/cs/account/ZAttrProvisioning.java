@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110711-1137 */
+    /* build: 8.0.0_BETA1_1111 administrator 20110712-1042 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -4971,6 +4971,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailAddress = "zimbraMailAddress";
 
     /**
+     * optional regex used by web client to validate email address
+     *
+     * @since ZCS 7.1.2
+     */
+    @ZAttr(id=1240)
+    public static final String A_zimbraMailAddressValidationRegex = "zimbraMailAddressValidationRegex";
+
+    /**
      * RFC822 email address of this recipient for accepting mail
      */
     @ZAttr(id=20)
@@ -9426,22 +9434,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
