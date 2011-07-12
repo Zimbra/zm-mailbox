@@ -471,7 +471,7 @@
   good enough for now
   =========================================================
 -->
-    <right type="combo" name="domainAdminAccountRights">
+    <right name="domainAdminAccountRights" type="combo">
       <desc>domain admin account right</desc>
       <rights>
         <r n="addAccountAlias"/>
@@ -529,9 +529,7 @@
         <r n="deleteDistributionList"/>
         <r n="getDistributionList"/>
         <r n="getDistributionListMembership"/>
-        <r n="getDistributionListShareInfo"/>
         <r n="listDistributionList"/>
-        <r n="publishDistributionListShareInfo"/>
         <r n="removeDistributionListAlias"/>
         <r n="removeDistributionListMember"/>
         <r n="renameDistributionList"/>

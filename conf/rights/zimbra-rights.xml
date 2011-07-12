@@ -72,10 +72,6 @@
   <desc>reindex mailbox</desc>
 </right> 
 
-<right name="getAccountShareInfo" type="preset" targetType="account">
-  <desc>get share info on account</desc>
-</right>  
-
 <right name="moveAccountMailbox" type="preset" targetType="account">
   <desc>move account mailbox</desc>
 </right>        
@@ -199,10 +195,6 @@
   <desc>reindex mailbox</desc>
 </right> 
 
-<right name="getCalendarResourceShareInfo" type="preset" targetType="calresource">
-  <desc>get share info on calendar resource</desc>
-</right>
-
 <right name="moveCalendarResourceMailbox" type="preset" targetType="calresource">
   <desc>move calendar resource mailbox</desc>
 </right>   
@@ -317,14 +309,6 @@
 
 <right name="removeDistributionListMember" type="preset" targetType="dl">
   <desc>remove member from distribution list</desc>
-</right>
-
-<right name="publishDistributionListShareInfo" type="preset" targetType="dl">
-  <desc>publish share info on distribution list</desc>
-</right>
-
-<right name="getDistributionListShareInfo" type="preset" targetType="dl">
-  <desc>get share info on distribution list</desc>
 </right>
 
 <!-- 
