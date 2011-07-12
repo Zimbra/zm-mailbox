@@ -54,7 +54,7 @@ public class PurgeTest {
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
     }
     
-    @Test
+    // @Test
     public void folderPurgePolicy() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         
