@@ -17,14 +17,13 @@ package com.zimbra.cs.redolog.op;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Folder;
@@ -32,7 +31,8 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
-import com.zimbra.cs.mailbox.RetentionPolicy;
+import com.zimbra.soap.mail.type.Policy;
+import com.zimbra.soap.mail.type.RetentionPolicy;
 
 public class SetRetentionPolicyTest {
 
@@ -57,15 +57,14 @@ public class SetRetentionPolicyTest {
         
         // Create folder.
         Folder folder = mbox.createFolder(null, "/redo", (byte) 0, MailItem.Type.MESSAGE);
-        assertEquals(0, folder.getKeepPolicy().size());
-        assertEquals(0, folder.getPurgePolicy().size());
+        assertEquals(0, folder.getRetentionPolicy().getKeepPolicy().size());
+        assertEquals(0, folder.getRetentionPolicy().getPurgePolicy().size());
         
         // Create RedoableOp.
-        List<RetentionPolicy> keepPolicy = Lists.newArrayList();
-        keepPolicy.add(RetentionPolicy.newSystemPolicy("123"));
-        List<RetentionPolicy> purgePolicy = Lists.newArrayList();
-        purgePolicy.add(RetentionPolicy.newUserPolicy("45m"));
-        SetRetentionPolicy redoPlayer = new SetRetentionPolicy(mbox.getId(), folder.getId(), keepPolicy, purgePolicy);
+        RetentionPolicy rp = new RetentionPolicy(
+            Arrays.asList(Policy.newSystemPolicy("123")),
+            Arrays.asList(Policy.newUserPolicy("45m")));
+        SetRetentionPolicy redoPlayer = new SetRetentionPolicy(mbox.getId(), folder.getId(), rp);
         
         // Serialize, deserialize, and redo.
         byte[] data = redoPlayer.testSerialize();
@@ -74,9 +73,9 @@ public class SetRetentionPolicyTest {
         redoPlayer.testDeserialize(data);
         redoPlayer.redo();
         folder = mbox.getFolderById(null, folder.getId());
-        assertEquals(1, folder.getKeepPolicy().size());
-        assertEquals(1, folder.getPurgePolicy().size());
-        assertEquals("45m", folder.getPurgePolicy().get(0).getLifetimeString());
-        assertEquals("123", folder.getKeepPolicy().get(0).getId());
+        assertEquals(1, folder.getRetentionPolicy().getKeepPolicy().size());
+        assertEquals(1, folder.getRetentionPolicy().getPurgePolicy().size());
+        assertEquals("45m", folder.getRetentionPolicy().getPurgePolicy().get(0).getLifetime());
+        assertEquals("123", folder.getRetentionPolicy().getKeepPolicy().get(0).getId());
     }
 }

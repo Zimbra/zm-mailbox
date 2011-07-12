@@ -20,6 +20,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -27,7 +28,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
@@ -36,6 +36,8 @@ import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.qa.unittest.TestUtil;
+import com.zimbra.soap.mail.type.Policy;
+import com.zimbra.soap.mail.type.RetentionPolicy;
 
 public class PurgeTest {
 
@@ -67,16 +69,16 @@ public class PurgeTest {
         assertEquals(2, folder.getSize());
         
         // Add retention policy.
-        List<RetentionPolicy> purgePolicy = Lists.newArrayList();
-        purgePolicy.add(RetentionPolicy.newUserPolicy("45m"));
-        mbox.setRetentionPolicy(null, folder.getId(), MailItem.Type.FOLDER, null, purgePolicy);
+        Policy p = Policy.newUserPolicy("45m");
+        RetentionPolicy purgePolicy = new RetentionPolicy(null, Arrays.asList(p));
+        mbox.setRetentionPolicy(null, folder.getId(), MailItem.Type.FOLDER, purgePolicy);
         
         // Purge the folder cache and make sure that purge policy is reloaded from metadata.
         mbox.purge(MailItem.Type.FOLDER);
         folder = mbox.getFolderById(null, folder.getId());
-        List<RetentionPolicy> policy = folder.getPurgePolicy();
-        assertEquals(1, policy.size());
-        assertEquals("45m", policy.get(0).getLifetimeString());
+        List<Policy> purgeList = folder.getRetentionPolicy().getPurgePolicy();
+        assertEquals(1, purgeList.size());
+        assertEquals("45m", purgeList.get(0).getLifetime());
         
         // Run purge and make sure one of the messages was deleted.
         mbox.purgeMessages(null);
@@ -90,11 +92,11 @@ public class PurgeTest {
         }
         
         // Remove purge policy and verify that the folder state was properly updated.
-        mbox.setRetentionPolicy(null, folder.getId(), MailItem.Type.FOLDER, null, null);
+        mbox.setRetentionPolicy(null, folder.getId(), MailItem.Type.FOLDER, null);
         mbox.purge(MailItem.Type.FOLDER);
         folder = mbox.getFolderById(null, folder.getId());
-        assertEquals(0, folder.getKeepPolicy().size());
-        assertEquals(0, folder.getPurgePolicy().size());
+        assertEquals(0, folder.getRetentionPolicy().getKeepPolicy().size());
+        assertEquals(0, folder.getRetentionPolicy().getPurgePolicy().size());
     }
 
     /**
@@ -402,6 +404,7 @@ public class PurgeTest {
     /**
      * Confirms that empty folders in trash are purged (bug 16885).
      */
+    @Test
     public void testFolderInTrash()
     throws Exception {
         // Create a subfolder of trash with a message in it.
@@ -409,15 +412,13 @@ public class PurgeTest {
         String folderPath = "/Trash/testFolderInTrash";
         Folder f = mbox.createFolder(null, folderPath, (byte) 0, Folder.Type.MESSAGE);
         String subject = "testFolderInTrash";
-        Message msg = TestUtil.addMessage(mbox, f.getId(), subject, System.currentTimeMillis());
+        Message msg = TestUtil.addMessage(mbox, f.getId(), subject, System.currentTimeMillis() - Constants.MILLIS_PER_DAY);
 
         // Set retention policy.
         Account account = getAccount();
-        account.setPrefTrashLifetime("1s");
+        account.setPrefTrashLifetime("1ms");
         account.setMailPurgeUseChangeDateForTrash(false);
 
-        // Sleep longer than the trash lifetime and purge.
-        Thread.sleep(2000);
         mbox.purgeMessages(null);
 
         // Make sure both the message and folder were deleted.
@@ -434,6 +435,42 @@ public class PurgeTest {
         }
     }
 
+    @Test
+    public void invalidFolderMessageLifetime() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Folder folder = mbox.createFolder(null, "/invalidFolderMessageLifetime", (byte) 0, MailItem.Type.MESSAGE);
+        Policy p = Policy.newUserPolicy("45x");
+        RetentionPolicy purgePolicy = new RetentionPolicy(null, Arrays.asList(p));
+        try {
+            mbox.setRetentionPolicy(null, folder.getId(), MailItem.Type.FOLDER, purgePolicy);
+            fail("Invalid time interval should not have been accepted.");
+        } catch (ServiceException e) {
+        }
+    }
+
+    @Test
+    public void multipleUserPolicy() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Folder folder = mbox.createFolder(null, "/multipleUserPolicy", (byte) 0, MailItem.Type.MESSAGE);
+        
+        List<Policy> list = Arrays.asList(
+            Policy.newUserPolicy("45d"),
+            Policy.newUserPolicy("60d"));
+        RetentionPolicy purgePolicy = new RetentionPolicy(null, list);
+        try {
+            mbox.setRetentionPolicy(null, folder.getId(), MailItem.Type.FOLDER, purgePolicy);
+            fail("Multiple purge policies.");
+        } catch (ServiceException e) {
+        }
+        
+        purgePolicy = new RetentionPolicy(list, null);
+        try {
+            mbox.setRetentionPolicy(null, folder.getId(), MailItem.Type.FOLDER, purgePolicy);
+            fail("Multiple keep policies.");
+        } catch (ServiceException e) {
+        }
+    }
+    
     private Message alterUnread(Message msg, boolean unread) throws Exception {
         Mailbox mbox = getMailbox();
         mbox.alterTag(null, msg.getId(), msg.getType(), Flag.ID_UNREAD, unread);

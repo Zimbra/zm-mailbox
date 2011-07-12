@@ -108,6 +108,8 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.soap.mail.type.AlarmDataInfo;
+import com.zimbra.soap.mail.type.Policy;
+import com.zimbra.soap.mail.type.RetentionPolicy;
 import com.zimbra.soap.mail.type.XParam;
 import com.zimbra.soap.mail.type.XProp;
 
@@ -229,26 +231,37 @@ public class ToXML {
                 }
             }
             if (needToOutput(fields, Change.MODIFIED_RETENTION_POLICY)) {
-                if (fields != NOTIFY_FIELDS || !folder.getKeepPolicy().isEmpty() || !folder.getPurgePolicy().isEmpty()) {
-                    // Only output retention policy if it's being modified, or if it exists. 
-                    Element retPol = elem.addElement(MailConstants.E_RETENTION_POLICY);
-                    Element keep = retPol.addElement(MailConstants.E_KEEP);
-                    encodeRetentionPolicy(keep, folder.getKeepPolicy());
-                    Element purge = retPol.addElement(MailConstants.E_PURGE);
-                    encodeRetentionPolicy(purge, folder.getPurgePolicy());
+                RetentionPolicy rp = folder.getRetentionPolicy();
+                if (fields != NOTIFY_FIELDS || rp.isSet()) {
+                    // Only output retention policy if it's being modified, or if we're returning all
+                    // folder data and policy is set.
+                    encodeRetentionPolicy(elem, rp);
                 }
             }
         }
         return elem;
     }
     
-    private static void encodeRetentionPolicy(Element parent, Iterable<RetentionPolicy> policy) {
-        for (RetentionPolicy p : policy) {
-            Element elem = parent.addElement(MailConstants.E_POLICY);
-            elem.addAttribute(MailConstants.A_ID, p.getId());
-            elem.addAttribute(MailConstants.A_LIFETIME, p.getLifetimeString());
-            // TODO: Support system policy
-            elem.addAttribute(MailConstants.A_RETENTION_POLICY_TYPE, "user");
+    private static Element encodeRetentionPolicy(Element parent, RetentionPolicy policy) {
+        Element retPol = parent.addElement(MailConstants.E_RETENTION_POLICY);
+        if (policy.isSet()) {
+            Element keepEl = retPol.addElement(MailConstants.E_KEEP);
+            encodePolicyList(keepEl, policy.getKeepPolicy());
+            Element purgeEl = retPol.addElement(MailConstants.E_PURGE);
+            encodePolicyList(purgeEl, policy.getPurgePolicy());
+        }
+        return retPol;
+    }
+    
+    private static void encodePolicyList(Element parent, List<Policy> list) {
+        if (list != null) {
+            for (Policy p : list) {
+                Element elem = parent.addElement(MailConstants.E_POLICY);
+                elem.addAttribute(MailConstants.A_ID, p.getId());
+                elem.addAttribute(MailConstants.A_LIFETIME, p.getLifetime());
+                // TODO: Support system policy
+                elem.addAttribute(MailConstants.A_RETENTION_POLICY_TYPE, "user");
+            }
         }
     }
 

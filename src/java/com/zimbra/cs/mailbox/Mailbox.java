@@ -19,6 +19,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.TimeZoneMap;
 import com.zimbra.common.calendar.ZCalendar;
@@ -38,6 +39,7 @@ import com.zimbra.common.util.BufferStream;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.CopyInputStream;
+import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.MapUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.SetUtil;
@@ -128,6 +130,8 @@ import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMailbox.Options;
+import com.zimbra.soap.mail.type.Policy;
+import com.zimbra.soap.mail.type.RetentionPolicy;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -6527,13 +6531,15 @@ public class Mailbox {
         }
     }
     
-    public void setRetentionPolicy(OperationContext octxt, int itemId, MailItem.Type type,
-                                   Iterable<RetentionPolicy> keepPolicy, Iterable<RetentionPolicy> purgePolicy)
+    public void setRetentionPolicy(OperationContext octxt, int itemId, MailItem.Type type, RetentionPolicy rp)
     throws ServiceException {
         if (type != MailItem.Type.FOLDER && type != MailItem.Type.TAG) {
             throw ServiceException.FAILURE("Cannot set retention policy for " + type, null);
         }
-        SetRetentionPolicy redoPlayer = new SetRetentionPolicy(mId, itemId, keepPolicy, purgePolicy);
+        validateRetentionPolicy(rp.getKeepPolicy());
+        validateRetentionPolicy(rp.getPurgePolicy());
+        
+        SetRetentionPolicy redoPlayer = new SetRetentionPolicy(mId, itemId, rp);
 
         boolean success = false;
         try {
@@ -6542,7 +6548,7 @@ public class Mailbox {
             if (type == MailItem.Type.FOLDER) {
                 Folder folder = getFolderById(itemId);
                 checkItemChangeID(folder);
-                folder.setRetentionPolicy(keepPolicy, purgePolicy);
+                folder.setRetentionPolicy(rp);
             } else {
                 // TODO: implement for tags
             }
@@ -6551,7 +6557,26 @@ public class Mailbox {
             endTransaction(success);
         }
     }
-
+    
+    private void validateRetentionPolicy(List<Policy> list) throws ServiceException {
+        int numUser = 0;
+        
+        for (Policy p : list) {
+            String lifetime = p.getLifetime();
+            if (!StringUtil.isNullOrEmpty(lifetime)) {
+                // Validate lifetime string.
+                DateUtil.getTimeInterval(lifetime);
+            }
+            if (p.getType() == Policy.Type.USER) {
+                numUser++;
+            }
+        }
+        
+        if (numUser > 1) {
+            throw ServiceException.INVALID_REQUEST("Cannot set more than one user retention policy per folder.", null);
+        }
+    }
+    
     public void setFolderDefaultView(OperationContext octxt, int folderId, MailItem.Type view) throws ServiceException {
         SetFolderDefaultView redoRecorder = new SetFolderDefaultView(mId, folderId, view);
 
@@ -7006,19 +7031,19 @@ public class Mailbox {
                 acct.getPrefTrashLifetimeAsString());
         }
 
-        int globalTimeout = (int) (acct.getMailMessageLifetime() / 1000);
-        int systemTrashTimeout = (int) (acct.getMailTrashLifetime() / 1000);
-        int systemJunkTimeout = (int) (acct.getMailSpamLifetime() / 1000);
+        long globalTimeout = acct.getMailMessageLifetime();
+        long systemTrashTimeout = acct.getMailTrashLifetime();
+        long systemJunkTimeout = acct.getMailSpamLifetime();
         long systemDumpsterTimeoutMillis = acct.getMailDumpsterLifetime();
 
-        int userInboxReadTimeout = (int) (acct.getPrefInboxReadLifetime() / 1000);
-        int userInboxUnreadTimeout = (int) (acct.getPrefInboxUnreadLifetime() / 1000);
-        int userTrashTimeout = (int) (acct.getPrefTrashLifetime() / 1000);
-        int userJunkTimeout = (int) (acct.getPrefJunkLifetime() / 1000);
-        int userSentTimeout = (int) (acct.getPrefSentLifetime() / 1000);
+        long userInboxReadTimeout = acct.getPrefInboxReadLifetime();
+        long userInboxUnreadTimeout = acct.getPrefInboxUnreadLifetime();
+        long userTrashTimeout = acct.getPrefTrashLifetime();
+        long userJunkTimeout = acct.getPrefJunkLifetime();
+        long userSentTimeout = acct.getPrefSentLifetime();
 
-        int trashTimeout = pickTimeout(systemTrashTimeout, userTrashTimeout);
-        int spamTimeout = pickTimeout(systemJunkTimeout, userJunkTimeout);
+        long trashTimeout = pickTimeout(systemTrashTimeout, userTrashTimeout);
+        long spamTimeout = pickTimeout(systemJunkTimeout, userJunkTimeout);
 
         if (globalTimeout <= 0 && trashTimeout <= 0 && spamTimeout <= 0 &&
             userInboxReadTimeout <= 0 && userInboxReadTimeout <= 0 &&
@@ -7030,10 +7055,10 @@ public class Mailbox {
         ZimbraLog.purge.info("Purging messages.");
 
         // sanity-check the really dangerous value...
-        if (globalTimeout > 0 && globalTimeout < Constants.SECONDS_PER_MONTH) {
+        if (globalTimeout > 0 && globalTimeout < Constants.MILLIS_PER_MONTH) {
             // this min is also used by POP3 EXPIRE command. update Pop3Handler.MIN_EPXIRE_DAYS if it changes.
             ZimbraLog.purge.warn("global message timeout < 1 month; defaulting to 31 days");
-            globalTimeout = Constants.SECONDS_PER_MONTH;
+            globalTimeout = Constants.MILLIS_PER_MONTH;
         }
 
         PurgeOldMessages redoRecorder = new PurgeOldMessages(mId);
@@ -7051,33 +7076,33 @@ public class Mailbox {
             boolean purgedAll = true;
 
             if (globalTimeout > 0) {
-                int numPurged = Folder.purgeMessages(this, null, getOperationTimestamp() - globalTimeout, null, false, false, maxItemsPerFolder);
+                int numPurged = Folder.purgeMessages(this, null, getOperationTimestampMillis() - globalTimeout, null, false, false, maxItemsPerFolder);
                 purgedAll = updatePurgedAll(purgedAll, numPurged, maxItemsPerFolder);
             }
             if (trashTimeout > 0) {
                 boolean useChangeDate = acct.getBooleanAttr(Provisioning.A_zimbraMailPurgeUseChangeDateForTrash, true);
-                int numPurged = Folder.purgeMessages(this, trash, getOperationTimestamp() - trashTimeout, null, useChangeDate, true, maxItemsPerFolder);
+                int numPurged = Folder.purgeMessages(this, trash, getOperationTimestampMillis() - trashTimeout, null, useChangeDate, true, maxItemsPerFolder);
                 ZimbraLog.purge.debug("Purged %d messages from Trash", numPurged);
                 purgedAll = updatePurgedAll(purgedAll, numPurged, maxItemsPerFolder);
             }
             if (spamTimeout > 0) {
                 boolean useChangeDate = acct.isMailPurgeUseChangeDateForSpam();
-                int numPurged = Folder.purgeMessages(this, spam, getOperationTimestamp() - spamTimeout, null, useChangeDate, false, maxItemsPerFolder);
+                int numPurged = Folder.purgeMessages(this, spam, getOperationTimestampMillis() - spamTimeout, null, useChangeDate, false, maxItemsPerFolder);
                 purgedAll = updatePurgedAll(purgedAll, numPurged, maxItemsPerFolder);
                 ZimbraLog.purge.debug("Purged %d messages from Spam", numPurged);
             }
             if (userInboxReadTimeout > 0) {
-                int numPurged = Folder.purgeMessages(this, inbox, getOperationTimestamp() - userInboxReadTimeout, false, false, false, maxItemsPerFolder);
+                int numPurged = Folder.purgeMessages(this, inbox, getOperationTimestampMillis() - userInboxReadTimeout, false, false, false, maxItemsPerFolder);
                 purgedAll = updatePurgedAll(purgedAll, numPurged, maxItemsPerFolder);
                 ZimbraLog.purge.debug("Purged %d read messages from Inbox", numPurged);
             }
             if (userInboxUnreadTimeout > 0) {
-                int numPurged = Folder.purgeMessages(this, inbox, getOperationTimestamp() - userInboxUnreadTimeout, true, false, false, maxItemsPerFolder);
+                int numPurged = Folder.purgeMessages(this, inbox, getOperationTimestampMillis() - userInboxUnreadTimeout, true, false, false, maxItemsPerFolder);
                 purgedAll = updatePurgedAll(purgedAll, numPurged, maxItemsPerFolder);
                 ZimbraLog.purge.debug("Purged %d unread messages from Inbox", numPurged);
             }
             if (userSentTimeout > 0) {
-                int numPurged = Folder.purgeMessages(this, sent, getOperationTimestamp() - userSentTimeout, null, false, false, maxItemsPerFolder);
+                int numPurged = Folder.purgeMessages(this, sent, getOperationTimestampMillis() - userSentTimeout, null, false, false, maxItemsPerFolder);
                 purgedAll = updatePurgedAll(purgedAll, numPurged, maxItemsPerFolder);
                 ZimbraLog.purge.debug("Purged %d messages from Sent", numPurged);
             }
@@ -7089,8 +7114,17 @@ public class Mailbox {
             
             // Process any folders that have retention policy set.
             for (Folder folder : getFolderList(octxt, SortBy.NONE)) {
-                for (RetentionPolicy policy : folder.getPurgePolicy()) {
-                    int folderTimeout = getOperationTimestamp() - (int) (policy.getLifetime() / 1000);
+                for (Policy policy : folder.getRetentionPolicy().getPurgePolicy()) {
+                    long folderLifetime;
+                    
+                    try {
+                        folderLifetime = DateUtil.getTimeInterval(policy.getLifetime());
+                    } catch (ServiceException e) {
+                        ZimbraLog.purge.error("Invalid purge lifetime set for folder %s.", folder.getPath(), e);
+                        continue;
+                    }
+                    
+                    long folderTimeout = getOperationTimestampMillis() - folderLifetime;
                     int numPurged = Folder.purgeMessages(this, folder, folderTimeout, null, false, true, maxItemsPerFolder);
                     purgedAll = updatePurgedAll(purgedAll, numPurged, maxItemsPerFolder);
                 }
@@ -7103,13 +7137,13 @@ public class Mailbox {
             }
 
             if (Threader.isHashPurgeAllowed(acct)) {
-                int convTimeout = (int) (LC.conversation_max_age_ms.longValue() / Constants.MILLIS_PER_SECOND);
-                DbMailItem.closeOldConversations(this, getOperationTimestamp() - convTimeout);
+                int convTimeoutSecs = (int) (LC.conversation_max_age_ms.longValue() / Constants.MILLIS_PER_SECOND);
+                DbMailItem.closeOldConversations(this, getOperationTimestamp() - convTimeoutSecs);
             }
 
             if (isTrackingSync()) {
-                int tombstoneTimeout = (int) (LC.tombstone_max_age_ms.longValue() / Constants.MILLIS_PER_SECOND);
-                int largestTrimmed = DbMailItem.purgeTombstones(this, getOperationTimestamp() - tombstoneTimeout);
+                int tombstoneTimeoutSecs = (int) (LC.tombstone_max_age_ms.longValue() / Constants.MILLIS_PER_SECOND);
+                int largestTrimmed = DbMailItem.purgeTombstones(this, getOperationTimestamp() - tombstoneTimeoutSecs);
                 if (largestTrimmed > getSyncCutoff()) {
                     mCurrentChange.sync = largestTrimmed;
                     DbMailbox.setSyncCutoff(this, mCurrentChange.sync);
@@ -7135,7 +7169,7 @@ public class Mailbox {
 
     /** Returns the smaller non-zero value, or <tt>0</tt> if both
      *  <tt>t1</tt> and <tt>t2</tt> are <tt>0</tt>. */
-    private int pickTimeout(int t1, int t2) {
+    private long pickTimeout(long t1, long t2) {
         if (t1 == 0)
             return t2;
         if (t2 == 0)

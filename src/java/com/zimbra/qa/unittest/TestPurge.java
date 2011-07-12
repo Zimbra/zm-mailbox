@@ -16,6 +16,8 @@ package com.zimbra.qa.unittest;
 
 import java.util.Arrays;
 
+import junit.framework.TestCase;
+
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.soap.mail.message.FolderActionRequest;
@@ -23,8 +25,6 @@ import com.zimbra.soap.mail.message.FolderActionResponse;
 import com.zimbra.soap.mail.type.FolderActionSelector;
 import com.zimbra.soap.mail.type.Policy;
 import com.zimbra.soap.mail.type.RetentionPolicy;
-
-import junit.framework.TestCase;
 
 public class TestPurge extends TestCase {
 
@@ -46,8 +46,7 @@ public class TestPurge extends TestCase {
         
         // Set user keep policy for folder. 
         FolderActionSelector action = new FolderActionSelector(folder.getId(), "retentionpolicy");
-        RetentionPolicy rp = new RetentionPolicy();
-        rp.setKeepPolicy(Arrays.asList(Policy.newUserPolicy("30d")));
+        RetentionPolicy rp = new RetentionPolicy(Arrays.asList(Policy.newUserPolicy("30d")), null);
         action.setRetentionPolicy(rp);
         FolderActionRequest req = new FolderActionRequest(action);
         
@@ -66,8 +65,7 @@ public class TestPurge extends TestCase {
         
         // Turn off keep policy and set purge policy.
         action = new FolderActionSelector(folder.getId(), "retentionpolicy");
-        rp = new RetentionPolicy();
-        rp.setPurgePolicy(Arrays.asList(Policy.newUserPolicy("45d")));
+        rp = new RetentionPolicy(null, Arrays.asList(Policy.newUserPolicy("45d")));
         action.setRetentionPolicy(rp);
         req = new FolderActionRequest(action);
         

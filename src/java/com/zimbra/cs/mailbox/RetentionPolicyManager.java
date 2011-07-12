@@ -15,49 +15,84 @@
 
 package com.zimbra.cs.mailbox;
 
+import java.util.Collections;
 import java.util.List;
-
 
 import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.soap.mail.type.Policy;
+import com.zimbra.soap.mail.type.RetentionPolicy;
 
 public class RetentionPolicyManager {
     
+    public static String FN_KEEP = "keep";
+    public static String FN_PURGE = "purge";
     public static String FN_ID = "id";
-    public static String FN_INTERVAL = "int";
+    public static String FN_LIFETIME = "lifetime";
     
-    public static Metadata encode(RetentionPolicy p) {
+    public static Metadata toMetadata(RetentionPolicy rp) {
+        MetadataList keep = new MetadataList();
+        MetadataList purge = new MetadataList();
+        
+        for (Policy p : rp.getKeepPolicy()) {
+            keep.add(toMetadata(p));
+        }
+        for (Policy p : rp.getPurgePolicy()) {
+            purge.add(toMetadata(p));
+        }
+        
+        Metadata m = new Metadata();
+        m.put(FN_KEEP, keep);
+        m.put(FN_PURGE, purge);
+        return m;
+    }
+    
+    public static Metadata toMetadata(Policy p) {
         Metadata m = new Metadata();
         m.put(FN_ID, p.getId());
-        m.put(FN_INTERVAL, p.getLifetimeString());
+        m.put(FN_LIFETIME, p.getLifetime());
         return m;
     }
 
-    public static MetadataList encode(Iterable<RetentionPolicy> policy) {
-        MetadataList list = new MetadataList();
-        for (RetentionPolicy p : policy) {
-            list.add(encode(p));
+    public static RetentionPolicy retentionPolicyFromMetadata(Metadata m)
+    throws ServiceException {
+        if (m == null) {
+            return new RetentionPolicy();
         }
-        return list;
+        
+        List<Policy> keep = Collections.emptyList();
+        List<Policy> purge = Collections.emptyList();
+
+        MetadataList keepMeta = m.getList(FN_KEEP, true);
+        if (keepMeta != null) {
+            keep = policyListFromMetadata(keepMeta); 
+        }
+        MetadataList purgeMeta = m.getList(FN_PURGE, true);
+        if (purgeMeta != null) {
+            purge = policyListFromMetadata(purgeMeta);
+        }
+
+        return new RetentionPolicy(keep, purge);
     }
     
-    public static RetentionPolicy decode(Metadata m)
+    private static List<Policy> policyListFromMetadata(MetadataList ml)
+    throws ServiceException {
+        List<Policy> policyList = Lists.newArrayList();
+        if (ml != null) {
+            for (int i = 0; i < ml.size(); i++) {
+                policyList.add(policyFromMetadata(ml.getMap(i)));
+            }
+        }
+        return policyList;
+    }
+    
+    private static Policy policyFromMetadata(Metadata m)
     throws ServiceException {
         String id = m.get(FN_ID, null);
-        String interval = m.get(FN_INTERVAL, null);
         if (id != null) {
-            return RetentionPolicy.newSystemPolicy(id);
+            return Policy.newSystemPolicy(id);
         } else {
-            return RetentionPolicy.newUserPolicy(interval);
+            return Policy.newUserPolicy(m.get(FN_LIFETIME));
         }
-    }
-    
-    public static List<RetentionPolicy> decode(MetadataList metaList)
-    throws ServiceException {
-        List<RetentionPolicy> list = Lists.newArrayList();
-        for (int i = 0; i < metaList.size(); i++) {
-            list.add(decode(metaList.getMap(i)));
-        }
-        return list;
     }
 }

@@ -46,10 +46,10 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.FolderNode;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.RetentionPolicy;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.mail.type.RetentionPolicy;
 
 public class FolderAction extends ItemAction {
 
@@ -243,12 +243,9 @@ public class FolderAction extends ItemAction {
         } else if (operation.equals(OP_SYNCON) || operation.equals(OP_SYNCOFF)) {
             mbox.alterTag(octxt, iid.getId(), MailItem.Type.FOLDER, Flag.ID_SYNC, operation.equals(OP_SYNCON));
         } else if (operation.equals(OP_RETENTIONPOLICY)) {
+            mbox.setRetentionPolicy(octxt, iid.getId(), MailItem.Type.FOLDER,
+                new RetentionPolicy(action.getElement(MailConstants.E_RETENTION_POLICY)));
             Element erp = action.getElement(MailConstants.E_RETENTION_POLICY);
-            List<RetentionPolicy> keepPolicy =
-                parseRetentionPolicy(erp.getOptionalElement(MailConstants.E_KEEP));
-            List<RetentionPolicy> purgePolicy =
-                parseRetentionPolicy(erp.getOptionalElement(MailConstants.E_PURGE));
-            mbox.setRetentionPolicy(octxt, iid.getId(), MailItem.Type.FOLDER, keepPolicy, purgePolicy);
         } else {
             throw ServiceException.INVALID_REQUEST("unknown operation: " + operation, null);
         }
@@ -409,20 +406,4 @@ public class FolderAction extends ItemAction {
             revokeOrphanGrants(octxt, mbox, subNode, granteeId, gtype);
     }
     
-    public static List<RetentionPolicy> parseRetentionPolicy(Element parent)
-    throws ServiceException {
-        if (parent == null) {
-            return Collections.emptyList();
-        }
-        List<RetentionPolicy> result = Lists.newArrayList();
-        for (Element p : parent.listElements(MailConstants.E_POLICY)) {
-            String id = p.getAttribute(MailConstants.A_ID, null);
-            if (id != null) {
-                result.add(RetentionPolicy.newSystemPolicy(id));
-            } else {
-                result.add(RetentionPolicy.newUserPolicy(p.getAttribute(MailConstants.A_LIFETIME)));
-            }
-        }
-        return result;
-    }
 }

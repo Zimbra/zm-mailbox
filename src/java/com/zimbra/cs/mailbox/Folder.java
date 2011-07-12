@@ -25,8 +25,6 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
@@ -42,8 +40,9 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.imap.ImapSession;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
-import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.session.Session;
+import com.zimbra.soap.mail.type.RetentionPolicy;
 
 /**
  * @since Aug 18, 2004
@@ -92,8 +91,7 @@ public class Folder extends MailItem {
     private int       mDeletedCount;
     private int       mDeletedUnreadCount;
     private long conversationCount = -1;
-    private List<RetentionPolicy> keepPolicy;
-    private List<RetentionPolicy> purgePolicy;
+    private RetentionPolicy retentionPolicy;
 
     Folder(Mailbox mbox, UnderlyingData ud) throws ServiceException {
         super(mbox, ud);
@@ -106,20 +104,10 @@ public class Folder extends MailItem {
             default:
                 throw new IllegalArgumentException();
         }
-        
-        // Initialize member lists if they weren't initialized by decodeMetadata().
-        initMembers();
+
+        assert(retentionPolicy != null);
     }
     
-    private void initMembers() {
-        if (keepPolicy == null) {
-            keepPolicy = Lists.newArrayList();
-        }
-        if (purgePolicy == null) {
-            purgePolicy = Lists.newArrayList();
-        }
-    }
-
     @Override public String getSender() {
         return "";
     }
@@ -494,31 +482,25 @@ public class Folder extends MailItem {
         return mParent.getEffectiveACL();
     }
 
-    public void setRetentionPolicy(Iterable<RetentionPolicy> keepPolicy, Iterable<RetentionPolicy> deletePolicy)
+    public void setRetentionPolicy(RetentionPolicy rp)
     throws ServiceException {
         if (!canAccess(ACL.RIGHT_ADMIN)) {
             throw ServiceException.PERM_DENIED("you do not have admin rights to folder " + getPath());
         }
         markItemModified(Change.MODIFIED_RETENTION_POLICY);
-        this.keepPolicy.clear();
-        this.purgePolicy.clear();
-        if (keepPolicy != null) {
-            Iterables.addAll(this.keepPolicy, keepPolicy);
-        }
-        if (deletePolicy != null) {
-            Iterables.addAll(this.purgePolicy, deletePolicy);
+        if (rp == null) {
+            retentionPolicy = new RetentionPolicy();
+        } else {
+            retentionPolicy = rp;
         }
         saveMetadata();
     }
-    
-    public List<RetentionPolicy> getKeepPolicy() {
-        return Collections.unmodifiableList(this.keepPolicy);
-    }
-    
-    public List<RetentionPolicy> getPurgePolicy() {
-        return Collections.unmodifiableList(this.purgePolicy); 
-    }
 
+    /** Returns the retention policy for this folder.  Does not return {@code null}. */
+    public RetentionPolicy getRetentionPolicy() {
+        return retentionPolicy;
+    }
+    
     /** Returns this folder's parent folder.  The root folder's parent is
      *  itself.
      * @see Mailbox#ID_FOLDER_ROOT */
@@ -1352,23 +1334,23 @@ public class Folder extends MailItem {
     }
 
     /** @return the number of messages that were purged */
-    static int purgeMessages(Mailbox mbox, Folder folder, int beforeDate, Boolean unread,
+    static int purgeMessages(Mailbox mbox, Folder folder, long beforeDate, Boolean unread,
                              boolean useChangeDate, boolean deleteEmptySubfolders, Integer maxItems)
     throws ServiceException {
-        if (beforeDate <= 0 || beforeDate >= mbox.getOperationTimestamp())
+        if (beforeDate <= 0 || beforeDate >= mbox.getOperationTimestampMillis())
             return 0;
 
         // get the full list of things that are being removed
         boolean allFolders = (folder == null);
         List<Folder> folders = (allFolders ? null : folder.getSubfolderHierarchy());
-        PendingDelete info = DbMailItem.getLeafNodes(mbox, folders, beforeDate, allFolders, unread, useChangeDate, maxItems);
+        PendingDelete info = DbMailItem.getLeafNodes(mbox, folders, (int) (beforeDate / 1000), allFolders, unread, useChangeDate, maxItems);
         delete(mbox, info, null, MailItem.DeleteScope.ENTIRE_ITEM, false);
 
         if (deleteEmptySubfolders) {
             // Iterate folder list in order of decreasing depth.
             for (int i = folders.size() - 1; i >= 1; i--) {
                 Folder f = folders.get(i);
-                long date = (useChangeDate ? f.getChangeDate() : f.getDate()) / 1000;
+                long date = useChangeDate ? f.getChangeDate() : f.getDate();
                 if (f.getItemCount() <= 0 && date < beforeDate) {
                     f.delete(DeleteScope.ENTIRE_ITEM, false);
                 }
@@ -1445,17 +1427,12 @@ public class Folder extends MailItem {
                 alterTag(mMailbox.getFlagById(Flag.ID_NO_INHERIT), true);
             }
         }
-        MetadataList keepList = meta.getList(Metadata.FN_KEEP_POLICY, true);
         
-        // When this method is called from the MailItem constructor, Folder's member
-        // variables haven't been initialized yet.
-        initMembers();
-        if (keepList != null) {
-            keepPolicy.addAll(RetentionPolicyManager.decode(keepList));
-        }
-        MetadataList purgeList = meta.getList(Metadata.FN_PURGE_POLICY, true);
-        if (purgeList != null) {
-            purgePolicy.addAll(RetentionPolicyManager.decode(purgeList));
+        Metadata rp = meta.getMap(Metadata.FN_RETENTION_POLICY, true);
+        if (rp != null) {
+            retentionPolicy = RetentionPolicyManager.retentionPolicyFromMetadata(rp);
+        } else {
+            retentionPolicy = new RetentionPolicy();
         }
     }
 
@@ -1464,11 +1441,8 @@ public class Folder extends MailItem {
         Metadata m = encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, mAttributes, defaultView, mRights, mSyncData,
                 mImapUIDNEXT, mTotalSize, mImapMODSEQ, mImapRECENT, mImapRECENTCutoff, mDeletedCount,
                 mDeletedUnreadCount);
-        if (!keepPolicy.isEmpty()) {
-            m.put(Metadata.FN_KEEP_POLICY, RetentionPolicyManager.encode(keepPolicy));
-        }
-        if (!purgePolicy.isEmpty()) {
-            m.put(Metadata.FN_PURGE_POLICY, RetentionPolicyManager.encode(purgePolicy));
+        if (retentionPolicy.isSet()) {
+            m.put(Metadata.FN_RETENTION_POLICY, RetentionPolicyManager.toMetadata(retentionPolicy));
         }
         return m;
     }
