@@ -5620,4 +5620,8 @@ TODO: delete them permerntly from here
   <desc>whether to retain exception instances when the recurrence series is changed to new time; set to FALSE for Exchange compatibility</desc>
 </attr>
 
+<attr id="1241" name="zimbraMailAddressValidationRegex" type="string" max="512" cardinality="multi" optionalIn="domain,globalConfig" flags="domainInherited,domainInfo" since="7.1.2">
+  <desc>optional regex used by web client to validate email address</desc>
+</attr>
+
 </attrs>
