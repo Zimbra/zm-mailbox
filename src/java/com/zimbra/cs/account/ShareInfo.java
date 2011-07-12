@@ -322,11 +322,6 @@ public class ShareInfo {
             if (!isVisible)
                 return;
 
-            // short-circuit if we know that this won't be in the output
-            List<Folder> subfolders = folder.getSubfolders(null);
-            if (subfolders.isEmpty())
-                return;
-
             if (folder instanceof Mountpoint) {
                 Mountpoint mpt = (Mountpoint)folder;
                 String mid =  getKey(mpt.getOwnerId(), mpt.getRemoteId());
@@ -338,7 +333,7 @@ public class ShareInfo {
                 return;
 
             // write the subfolders' data to the response
-            for (Folder subfolder : subfolders) {
+            for (Folder subfolder : folder.getSubfolders(null)) {
                 getLocalMountpoints(subfolder, visible, mountpoints);
             }
         }
