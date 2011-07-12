@@ -590,7 +590,7 @@ public class StringUtil {
             String key = matcher.group(2);
             Object value = vars.get(key);
             if (value == null) {
-                ZimbraLog.misc.info("fillTemplate(): could not find key '" + key + "'");
+                ZimbraLog.misc.error("fillTemplate(): could not find key '" + key + "'");
                 value = "";
             }
             line = matcher.group(1) + value + matcher.group(3);
