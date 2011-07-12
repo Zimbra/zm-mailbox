@@ -111,12 +111,13 @@ public final class LuceneIndex implements IndexStore {
             }
         }
 
+        long start = System.currentTimeMillis();
         try {
             luceneDirectory = LuceneDirectory.open(root, new SingleInstanceLockFactory());
         } catch (IOException e) {
             throw ServiceException.FAILURE("Failed to create LuceneDirectory: " + root, e);
         }
-        ZimbraLog.index.info("Lucene index opened dir=%s", root);
+        ZimbraLog.index.info("OpenLuceneIndex dir=%s,elapsed=%d", root, System.currentTimeMillis() - start);
     }
 
     @Override
@@ -259,23 +260,25 @@ public final class LuceneIndex implements IndexStore {
      * allowing it to go out of scope (otherwise a RuntimeException will occur).
      *
      * @return A {@link IndexReaderRef} for this index.
-     * @throws IOException
      */
     private synchronized IndexReaderRef getIndexReaderRef() throws IOException {
         IndexReaderRef ref = readersCache.get(this);
         if (ref != null) {
+            ZimbraLog.search.debug("CacheHitLuceneIndexReader %s", ref.get());
             if (ref.isStale()) {
                 IndexReader oldReader = ref.get();
                 IndexReader newReader;
+                long start = System.currentTimeMillis();
                 try {
                     newReader = oldReader.reopen();
                     if (oldReader != newReader) { // reader changed, must close old one
-                        ZimbraLog.search.debug("Reopened IndexReader");
                         readersCache.remove(this); // ref--
                         ref.dec();
                         READER_THROTTLE.acquireUninterruptibly();
                         ref = new IndexReaderRef(this, newReader); // ref = 1
                         readersCache.put(this, ref); // ref++
+                        ZimbraLog.search.debug("ReopenLuceneIndexReader %s,elapsed=%d",
+                                ref.get(), System.currentTimeMillis() - start);
                     }
                 } catch (IOException e) {
                     ZimbraLog.search.debug("Failed to reopen IndexReader", e);
@@ -288,6 +291,7 @@ public final class LuceneIndex implements IndexStore {
         }
 
         READER_THROTTLE.acquireUninterruptibly();
+        long start = System.currentTimeMillis();
         IndexReader reader = null;
         try {
             reader = openIndexReader(true);
@@ -308,6 +312,7 @@ public final class LuceneIndex implements IndexStore {
                 READER_THROTTLE.release();
             }
         }
+        ZimbraLog.search.debug("OpenLuceneIndexReader %s,elapsed=%d", reader, System.currentTimeMillis() - start);
 
         ref = new IndexReaderRef(this, reader); // ref = 1
         readersCache.put(this, ref); // ref++

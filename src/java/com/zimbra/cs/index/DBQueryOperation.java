@@ -639,8 +639,10 @@ public class DBQueryOperation extends QueryOperation {
     }
 
     private void dbSearch(List<DbSearch.Result> results, SortBy sort, int offset, int size) throws ServiceException {
+        long start = System.currentTimeMillis();
         results.addAll(context.getMailbox().index.search(constraints, fetch, sort, offset, size,
                 context.getParams().inDumpster()));
+        ZimbraLog.search.debug("DBSearch elapsed=%d", System.currentTimeMillis() - start);
     }
 
     private boolean shouldExecuteDbFirst() throws ServiceException {
@@ -671,9 +673,6 @@ public class DBQueryOperation extends QueryOperation {
     }
 
     private void dbFirstGetNextChunk(SortBy sort) throws ServiceException {
-        long begin = System.currentTimeMillis();
-        ZimbraLog.search.debug("Fetching a DB-FIRST chunk");
-
         // we want only indexed items from db
         DbSearchConstraints.Leaf sc = getTopLeafConstraint();
         sc.hasIndexId = Boolean.TRUE;
@@ -740,29 +739,19 @@ public class DBQueryOperation extends QueryOperation {
             }
 
         } while (dbHits.size() ==0 && !endOfHits);
-
-        ZimbraLog.search.debug("Done fetching DB-FIRST chunk (took %d ms)", System.currentTimeMillis() - begin);
     }
 
     private void luceneFirstGetNextChunk(SortBy sort) throws ServiceException {
-        long begin = System.currentTimeMillis();
-        ZimbraLog.search.debug("Fetching a LUCENE-FIRST chunk");
-
         // do the Lucene op first, pass results to DB op
         do {
             // DON'T set an sql LIMIT if we're asking for lucene hits!!!  If we did, then we wouldn't be
             // sure that we'd "consumed" all the Lucene-ID's, and therefore we could miss hits!
-
-            long luceneStart = System.currentTimeMillis();
 
             // limit in clause based on Db capabilities - bug 15511
             luceneChunk = luceneOp.getNextResultsChunk(Math.min(Db.getINClauseBatchSize(), hitsPerChunk));
 
             DbSearchConstraints.Leaf sc = getTopLeafConstraint();
             sc.indexIds = luceneChunk.getIndexIds();
-
-            ZimbraLog.search.debug("Fetched Lucene Chunk of %d hits in %d ms",
-                    sc.indexIds.size(), System.currentTimeMillis() - luceneStart);
 
             // exponentially expand the chunk size in case we have to go back to the DB
             hitsPerChunk *= 2;
@@ -775,16 +764,10 @@ public class DBQueryOperation extends QueryOperation {
                 // LIMIT clause, we can be assured that this query will get all the remaining results.
                 endOfHits = true;
             } else {
-                long dbStart = System.currentTimeMillis();
-
                 // must not ask for offset,limit here b/c of indexId constraints!,
                 dbSearch(dbHits, sort, -1, -1);
-
-                ZimbraLog.search.debug("Fetched DB-second chunk in %d ms", System.currentTimeMillis() - dbStart);
             }
         } while (dbHits.size() == 0 && !endOfHits);
-
-        ZimbraLog.search.debug("Done fetching LUCENE-FIRST chunk (took %d ms)", System.currentTimeMillis() - begin);
     }
 
     /**

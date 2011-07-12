@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -60,6 +60,7 @@ import java.util.Map;
  * The soap engine.
  */
 public final class SoapEngine {
+    private static final Log LOG = LogFactory.getLog(SoapEngine.class);
 
     // attribute used to correlate requests and responses
     public static final String A_REQUEST_CORRELATOR = "requestId";
@@ -86,17 +87,13 @@ public final class SoapEngine {
     /** context name of IP of the origin client */
     public static final String ORIG_REQUEST_IP = "orig.request.ip";
 
-    private static Log mLog = LogFactory.getLog(SoapEngine.class);
-
-    private DocumentDispatcher mDispatcher;
+    private final DocumentDispatcher dispatcher = new DocumentDispatcher();
 
     SoapEngine() {
-        mDispatcher = new DocumentDispatcher();
-        SoapTransport.setDefaultUserAgent(
-                SoapTransport.DEFAULT_USER_AGENT_NAME, BuildInfo.VERSION);
+        SoapTransport.setDefaultUserAgent(SoapTransport.DEFAULT_USER_AGENT_NAME, BuildInfo.VERSION);
     }
 
-    /*
+    /**
      * wraps an exception in a soap fault and returns a SOAP envelope with the soap fault in the body
      * (without throwing the exception)
      */
@@ -105,9 +102,8 @@ public final class SoapEngine {
         return soapProto.soapEnvelope(soapProto.soapFault(e));
     }
 
-    /*
-     * wrap an exception in a soap fault and returns the soap fault
-     * (without throwing the exception)
+    /**
+     * wrap an exception in a soap fault and returns the soap fault (without throwing the exception)
      */
     private Element soapFault(SoapProtocol soapProto, String msg, ServiceException e) {
         logFault(msg, e);
@@ -115,15 +111,14 @@ public final class SoapEngine {
     }
 
     private void logFault(String msg, ServiceException e) {
-        if (e.getCode().equals(ServiceException.AUTH_EXPIRED) ||
-            e.getCode().equals(ServiceException.AUTH_REQUIRED)) {
+        if (e.getCode().equals(ServiceException.AUTH_EXPIRED) || e.getCode().equals(ServiceException.AUTH_REQUIRED)) {
             StackTraceElement[] s = Thread.currentThread().getStackTrace();
             StackTraceElement callSite = s[4]; // third frame from top is the caller
             e.setIdLabel(callSite);
-            mLog.warn(e.getMessage() + (msg == null ? "" : ": "+msg));     // do not log stack
-            mLog.debug(msg, e); // log stack
+            LOG.warn("%s%s", e.getMessage(), (msg == null ? "" : ": " + msg)); // do not log stack
+            LOG.debug(msg, e); // log stack
         } else
-            mLog.warn(msg, e);
+            LOG.warn(msg, e);
     }
 
     private void logRequest(Map<String, Object> context, Element envelope) {
@@ -137,16 +132,18 @@ public final class SoapEngine {
     public Element dispatch(String path, byte[] soapMessage, Map<String, Object> context) {
         if (soapMessage == null || soapMessage.length == 0) {
             SoapProtocol soapProto = SoapProtocol.Soap12;
-            return soapFaultEnv(soapProto, "SOAP exception", ServiceException.PARSE_ERROR("empty request payload", null));
+            return soapFaultEnv(soapProto, "SOAP exception",
+                    ServiceException.PARSE_ERROR("empty request payload", null));
         }
 
         InputStream in = new ByteArrayInputStream(soapMessage);
         Element document = null;
         try {
-            if (soapMessage[0] == '<')
+            if (soapMessage[0] == '<') {
                 document = Element.parseXML(in);
-            else
+            } else {
                 document = Element.parseJSON(in);
+            }
         } catch (DocumentException de) {
             // FIXME: have to pick 1.1 or 1.2 since we can't parse any
             SoapProtocol soapProto = SoapProtocol.Soap12;
@@ -185,16 +182,13 @@ public final class SoapEngine {
      *
      */
     private Element dispatch(String path, Element envelope, Map<String, Object> context) {
-        // if (mLog.isDebugEnabled()) mLog.debug("dispatch(path, envelope, context: " + envelope.getQualifiedName());
-
         SoapProtocol soapProto = SoapProtocol.determineProtocol(envelope);
         if (soapProto == null) {
             // FIXME: have to pick 1.1 or 1.2 since we can't parse any
             soapProto = SoapProtocol.Soap12;
-            return soapFaultEnv(soapProto, "SOAP exception", ServiceException.INVALID_REQUEST("unable to determine SOAP version", null));
+            return soapFaultEnv(soapProto, "SOAP exception",
+                    ServiceException.INVALID_REQUEST("unable to determine SOAP version", null));
         }
-
-        // if (mLog.isDebugEnabled()) mLog.debug("dispatch: soapProto = " + soapProto.getVersion());
 
         ZimbraSoapContext zsc = null;
         Element ectxt = soapProto.getHeader(envelope, HeaderConstants.CONTEXT);
@@ -211,17 +205,18 @@ public final class SoapEngine {
             Provisioning prov = Provisioning.getInstance();
             AccountUtil.addAccountToLogContext(prov, rid, ZimbraLog.C_NAME, ZimbraLog.C_ID, zsc.getAuthToken());
             String aid = zsc.getAuthtokenAccountId();
-            if (aid != null && !rid.equals(aid))
+            if (aid != null && !rid.equals(aid)) {
                 AccountUtil.addAccountToLogContext(prov, aid, ZimbraLog.C_ANAME, ZimbraLog.C_AID, zsc.getAuthToken());
-            else if (zsc.getAuthToken() != null && zsc.getAuthToken().getAdminAccountId() != null)
-                AccountUtil.addAccountToLogContext(prov, zsc.getAuthToken().getAdminAccountId(), ZimbraLog.C_ANAME, ZimbraLog.C_AID, zsc.getAuthToken());
-
+            } else if (zsc.getAuthToken() != null && zsc.getAuthToken().getAdminAccountId() != null) {
+                AccountUtil.addAccountToLogContext(prov, zsc.getAuthToken().getAdminAccountId(), ZimbraLog.C_ANAME,
+                        ZimbraLog.C_AID, zsc.getAuthToken());
+            }
             try {
                 Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(rid, false);
-                if (mbox != null)
+                if (mbox != null) {
                     ZimbraLog.addMboxToContext(mbox.getId());
-            } catch (ServiceException e) {
-                // mLog.warn("cannot get mailbox for account " + rid, null);
+                }
+            } catch (ServiceException ignore) {
             }
 
             try {
@@ -231,13 +226,13 @@ public final class SoapEngine {
                     at.setProxyAuthToken(proxyAuthToken);
                 }
             } catch (ServiceException e) {
-                mLog.warn("failed to set proxy auth token: " + e.getMessage());
+                LOG.warn("failed to set proxy auth token: %s", e.getMessage());
             }
         }
 
-        if (zsc.getUserAgent() != null)
+        if (zsc.getUserAgent() != null) {
             ZimbraLog.addUserAgentToContext(zsc.getUserAgent());
-
+        }
         if (zsc.getVia() != null) {
             ZimbraLog.addViaToContext(zsc.getVia());
         }
@@ -250,8 +245,6 @@ public final class SoapEngine {
         Element doc = soapProto.getBodyElement(envelope);
 
         boolean isResumed = context.containsKey(SoapServlet.IS_RESUMED_REQUEST);
-        if (mLog.isDebugEnabled())
-            mLog.debug("dispatch: doc " + doc.getQualifiedName() + (isResumed ? " (resumed)" : ""));
 
         Element responseBody = null;
         if (!zsc.isProxyRequest()) {
@@ -261,32 +254,37 @@ public final class SoapEngine {
             if (doc.getQName().equals(ZimbraNamespace.E_BATCH_REQUEST)) {
                 boolean contOnError = doc.getAttribute(ZimbraNamespace.A_ONERROR, ZimbraNamespace.DEF_ONERROR).equals("continue");
                 responseBody = zsc.createElement(ZimbraNamespace.E_BATCH_RESPONSE);
-                if (!isResumed)
+                if (!isResumed) {
                     ZimbraLog.soap.info(doc.getName());
+                }
                 for (Element req : doc.listElements()) {
-                    // if (mLog.isDebugEnabled())
-                    //     mLog.debug("dispatch: multi " + req.getQualifiedName());
-
                     String id = req.getAttribute(A_REQUEST_CORRELATOR, null);
-                    if (!isResumed)
-                        ZimbraLog.soap.info("(batch) " + req.getName());
+                    long start = System.currentTimeMillis();
                     Element br = dispatchRequest(req, context, zsc);
-                    if (id != null)
+                    if (!isResumed) {
+                        ZimbraLog.soap.info("(batch) %s elapsed=%d", req.getName(), System.currentTimeMillis() - start);
+                    }
+                    if (id != null) {
                         br.addAttribute(A_REQUEST_CORRELATOR, id);
+                    }
                     responseBody.addElement(br);
-                    if (!contOnError && responseProto.isFault(br))
+                    if (!contOnError && responseProto.isFault(br)) {
                         break;
+                    }
                     if (proxyAuthToken != null) {
                         zsc.getAuthToken().setProxyAuthToken(proxyAuthToken); //requests will invalidate it when proxying locally; make sure it's set for each sub-request in batch
                     }
                 }
             } else {
                 String id = doc.getAttribute(A_REQUEST_CORRELATOR, null);
-                if (!isResumed)
-                    ZimbraLog.soap.info(doc.getName());
+                long start = System.currentTimeMillis();
                 responseBody = dispatchRequest(doc, context, zsc);
-                if (id != null)
+                if (!isResumed) {
+                    ZimbraLog.soap.info("%s elapsed=%d", doc.getName(), System.currentTimeMillis() - start);
+                }
+                if (id != null) {
                     responseBody.addAttribute(A_REQUEST_CORRELATOR, id);
+                }
             }
         } else {
             // Proxy the request to target server.  Proxy dispatcher
@@ -300,20 +298,23 @@ public final class SoapEngine {
                 // if we don't detach it first.
                 doc.detach();
                 ZimbraSoapContext zscTarget = new ZimbraSoapContext(zsc, zsc.getRequestedAccountId()).disableNotifications();
-                ZimbraLog.soap.info(doc.getName() + " (Proxying to " + zsc.getProxyTarget().toString() +")");
+                long start = System.currentTimeMillis();
                 responseBody = zsc.getProxyTarget().dispatch(doc, zscTarget);
+                ZimbraLog.soap.info("%s proxy=%s,elapsed=%d", doc.getName(), zsc.getProxyTarget(),
+                        System.currentTimeMillis() - start);
                 responseBody.detach();
             } catch (SoapFaultException e) {
                 responseBody = e.getFault() != null ? e.getFault().detach() : responseProto.soapFault(e);
-                mLog.debug("proxy handler exception", e);
+                LOG.debug("proxy handler exception", e);
             } catch (ServiceException e) {
                 responseBody = responseProto.soapFault(e);
-                mLog.info("proxy handler exception", e);
+                LOG.info("proxy handler exception", e);
             } catch (Throwable e) {
                 responseBody = responseProto.soapFault(ServiceException.FAILURE(e.toString(), e));
-                if (e instanceof OutOfMemoryError)
+                if (e instanceof OutOfMemoryError) {
                     Zimbra.halt("proxy handler exception", e);
-                mLog.warn("proxy handler exception", e);
+                }
+                LOG.warn("proxy handler exception", e);
             }
         }
 
@@ -326,41 +327,41 @@ public final class SoapEngine {
 
     /**
      * Handles individual requests, either direct or from a batch
-     * @param request
-     * @param context
-     * @param zsc
-     * @return
      */
     Element dispatchRequest(Element request, Map<String, Object> context, ZimbraSoapContext zsc) {
         long startTime = System.currentTimeMillis();
         SoapProtocol soapProto = zsc.getResponseProtocol();
 
-        if (request == null)
-            return soapFault(soapProto, "cannot dispatch request", ServiceException.INVALID_REQUEST("no document specified", null));
-
-        DocumentHandler handler = mDispatcher.getHandler(request);
-        if (handler == null)
-            return soapFault(soapProto, "cannot dispatch request", ServiceException.UNKNOWN_DOCUMENT(request.getQualifiedName(), null));
-
-        if (RedoLogProvider.getInstance().isSlave() && !handler.isReadOnly())
+        if (request == null) {
+            return soapFault(soapProto, "cannot dispatch request",
+                    ServiceException.INVALID_REQUEST("no document specified", null));
+        }
+        DocumentHandler handler = dispatcher.getHandler(request);
+        if (handler == null) {
+            return soapFault(soapProto, "cannot dispatch request",
+                    ServiceException.UNKNOWN_DOCUMENT(request.getQualifiedName(), null));
+        }
+        if (RedoLogProvider.getInstance().isSlave() && !handler.isReadOnly()) {
             return soapFault(soapProto, "cannot dispatch request", ServiceException.NON_READONLY_OPERATION_DENIED());
-
-        if (!Config.userServicesEnabled() && !(handler instanceof AdminDocumentHandler))
+        }
+        if (!Config.userServicesEnabled() && !(handler instanceof AdminDocumentHandler)) {
             return soapFault(soapProto, "cannot dispatch request", ServiceException.TEMPORARILY_UNAVAILABLE());
-
+        }
         AuthToken at = zsc.getAuthToken();
         boolean needsAuth = handler.needsAuth(context);
         boolean needsAdminAuth = handler.needsAdminAuth(context);
-        if ((needsAuth || needsAdminAuth) && at == null)
+        if ((needsAuth || needsAdminAuth) && at == null) {
             return soapFault(soapProto, "cannot dispatch request", ServiceException.AUTH_REQUIRED());
-
+        }
         Element response = null;
         SoapTransport.setVia(zsc.getNextVia());
         try {
             if (needsAdminAuth) {
                 AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(at);
-                if (!aac.isSufficientAdminForSoap(context, handler))
-                    return soapFault(soapProto, "cannot dispatch request", ServiceException.PERM_DENIED("need adequate admin token"));
+                if (!aac.isSufficientAdminForSoap(context, handler)) {
+                    return soapFault(soapProto, "cannot dispatch request",
+                            ServiceException.PERM_DENIED("need adequate admin token"));
+                }
             }
 
             String acctId = null;
@@ -381,17 +382,22 @@ public final class SoapEngine {
                     } catch (ServiceException e) {
                         return soapFault(soapProto, null, e);
                     }
-                   
+
                     // also, make sure that the target account (if any) is active
                     if (zsc.isDelegatedRequest() && !handler.isAdminCommand()) {
                         Account target = DocumentHandler.getRequestedAccount(zsc);
 
                         // treat the account as inactive if (a) it doesn't exist, (b) it's in maintenance mode, or (c) we're non-admins and it's not "active"
-                        boolean inactive = target == null || target.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE);
-                        if (!inactive && (!at.isAdmin() || !AccessManager.getInstance().canAccessAccount(at, target)))
+                        boolean inactive = target == null || Provisioning.ACCOUNT_STATUS_MAINTENANCE.equals(
+                                target.getAccountStatus(prov));
+                        if (!inactive && (!at.isAdmin() || !AccessManager.getInstance().canAccessAccount(at, target))) {
                             inactive = !target.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_ACTIVE);
-                        if (inactive)
-                            return soapFault(soapProto, "target account is not active", AccountServiceException.ACCOUNT_INACTIVE(target == null ? zsc.getRequestedAccountId() : target.getName()));
+                        }
+                        if (inactive) {
+                            return soapFault(soapProto, "target account is not active",
+                                    AccountServiceException.ACCOUNT_INACTIVE(target == null ?
+                                            zsc.getRequestedAccountId() : target.getName()));
+                        }
                     }
                 }
 
@@ -420,25 +426,28 @@ public final class SoapEngine {
             }
         } catch (SoapFaultException e) {
             response = e.getFault() != null ? e.getFault().detach() : soapProto.soapFault(ServiceException.FAILURE(e.toString(), e));
-            if (!e.isSourceLocal())
-                mLog.debug("handler exception", e);
+            if (!e.isSourceLocal()) {
+                LOG.debug("handler exception", e);
+            }
         } catch (AuthFailedServiceException e) {
             response = soapProto.soapFault(e);
             // Don't log stack trace for auth failures, since they commonly happen
-            mLog.info("handler exception: %s%s", e.getMessage(), e.getReason(", %s"));
+            LOG.info("handler exception: %s%s", e.getMessage(), e.getReason(", %s"));
         } catch (ServiceException e) {
             response = soapProto.soapFault(e);
-            mLog.info("handler exception", e);
+            LOG.info("handler exception", e);
             // XXX: if the session was new, do we want to delete it?
         } catch (Throwable e) {
             // don't interfere with Jetty Continuations -- pass the exception on up
-            if (e.getClass().getName().equals("org.mortbay.jetty.RetryRequest"))
-                throw ((RuntimeException)e);
+            if (e.getClass().getName().equals("org.mortbay.jetty.RetryRequest")) {
+                throw (RuntimeException) e;
+            }
             // TODO: better exception stack traces during develope?
             response = soapProto.soapFault(ServiceException.FAILURE(e.toString(), e));
-            if (e instanceof OutOfMemoryError)
+            if (e instanceof OutOfMemoryError) {
                 Zimbra.halt("handler exception", e);
-            mLog.warn("handler exception", e);
+            }
+            LOG.warn("handler exception", e);
             // XXX: if the session was new, do we want to delete it?
         } finally {
             SoapTransport.clearVia();
@@ -469,7 +478,7 @@ public final class SoapEngine {
     }
 
     public DocumentDispatcher getDocumentDispatcher() {
-        return mDispatcher;
+        return dispatcher;
     }
 
     private void acknowledgeNotifications(ZimbraSoapContext zsc) {
@@ -477,8 +486,9 @@ public final class SoapEngine {
         if (sinfo != null) {
             Session session = SessionCache.lookup(sinfo.sessionId, zsc.getAuthtokenAccountId());
             // acknowledge ntfn sets up to sinfo.sequence; unset value means acknowledge all sent ntfns
-            if (session instanceof SoapSession)
+            if (session instanceof SoapSession) {
                 ((SoapSession) session).acknowledgeNotifications(sinfo.sequence);
+            }
         }
     }
 
@@ -507,13 +517,13 @@ public final class SoapEngine {
 
                 if (session instanceof SoapSession) {
                     SoapSession soap = (SoapSession) session;
-                    if (session.getTargetAccountId().equals(requestedAccountId))
+                    if (session.getTargetAccountId().equals(requestedAccountId)) {
                         requiresChangeHeader = false;
-
+                    }
                     // put <refresh> blocks back for any newly-created SoapSession objects
                     if (sinfo.created || soap.requiresRefresh(sinfo.sequence)) {
-                        if (ZimbraLog.session.isDebugEnabled())
-                            ZimbraLog.session.debug("returning refresh block; reason=" + (sinfo.created ? "new session" : "sequence-based"));
+                        ZimbraLog.session.debug("returning refresh block; reason=%s",
+                                sinfo.created ? "new session" : "sequence-based");
                         soap.putRefresh(ctxt, zsc);
                     }
                     // put <notify> blocks back for any SoapSession objects
@@ -532,16 +542,15 @@ public final class SoapEngine {
                     // send the <change> block
                     // <change token="555" [acct="4f778920-1a84-11da-b804-6b188d2a20c4"]/>
                     Mailbox mbox = DocumentHandler.getRequestedMailbox(zsc);
-                    if (mbox != null)
+                    if (mbox != null) {
                         ctxt.addUniqueElement(HeaderConstants.E_CHANGE)
                             .addAttribute(HeaderConstants.A_CHANGE_ID, mbox.getLastChangeID())
                             .addAttribute(HeaderConstants.A_ACCOUNT_ID, explicitAcct);
+                    }
                 } catch (ServiceException e) {
                     // eat error for right now
                 }
             }
-//          if (ctxt != null && mAuthToken != null)
-//              ctxt.addAttribute(E_AUTH_TOKEN, mAuthToken.toString(), Element.DISP_CONTENT);
             return ctxt;
         } catch (ServiceException e) {
             ZimbraLog.session.info("ServiceException while putting soap session refresh data", e);
