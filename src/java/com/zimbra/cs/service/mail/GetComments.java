@@ -14,11 +14,13 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.util.HashSet;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Comment;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -45,8 +47,17 @@ public class GetComments extends MailDocumentHandler {
         ItemId iid = new ItemId(itemId, zsc);
 
         Element response = zsc.createElement(MailConstants.GET_COMMENTS_RESPONSE);
+        HashSet<Account> accounts = new HashSet<Account>();
         for (Comment comment : mbox.getComments(octxt, iid.getId(), 0, -1)) {
+            accounts.add(comment.getCreatorAccount());
             ToXML.encodeComment(response, ifmt, comment);
+        }
+        
+        for (Account a : accounts) {
+            Element user = response.addElement(MailConstants.A_USER);
+            user.addAttribute(MailConstants.A_ID, a.getId());
+            user.addAttribute(MailConstants.A_EMAIL, a.getName());
+            user.addAttribute(MailConstants.A_NAME, a.getDisplayName());
         }
         return response;
     }

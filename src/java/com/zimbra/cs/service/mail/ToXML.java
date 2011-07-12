@@ -2665,19 +2665,12 @@ public class ToXML {
         if (needToOutput(fields, Change.MODIFIED_SUBJECT))
             c.setText(comment.getText());
         c.addAttribute(MailConstants.A_ID, ifmt.formatItemId(comment));
-        String creator = comment.getCreatorAccountId();
         try {
-            Account a = Provisioning.getInstance().getAccountById(creator);
-            String name = null;
+            Account a = comment.getCreatorAccount();
             if (a != null)
-                name = a.getDisplayName();
-            if (name == null)
-                name = a.getName();
-            if (name != null)
-                creator = name;
+                c.addAttribute(MailConstants.A_EMAIL, a.getName());
         } catch (ServiceException e) {
         }
-        c.addAttribute(MailConstants.A_CREATOR, creator);
         recordItemTags(c, comment, fields);
         encodeColor(c, comment, fields);
         if (needToOutput(fields, Change.MODIFIED_DATE))
