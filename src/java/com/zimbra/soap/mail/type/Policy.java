@@ -24,6 +24,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlEnumValue;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -123,5 +124,13 @@ public class Policy {
     
     public String getLifetime() {
         return lifetime;
+    }
+    
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this)
+            .add("type", type)
+            .add("id", id)
+            .add("lifetimeString", lifetime).toString();
     }
 }

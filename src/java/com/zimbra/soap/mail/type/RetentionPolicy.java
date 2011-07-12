@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
@@ -59,6 +60,17 @@ public class RetentionPolicy {
         }
     }
     
+    public RetentionPolicy(Iterable<Policy> keep, Iterable<Policy> purge) {
+        this.keep.clear();
+        this.purge.clear();
+        if (keep != null) {
+            Iterables.addAll(this.keep, keep);
+        }
+        if (purge != null) {
+            Iterables.addAll(this.purge, purge);
+        }
+    }
+    
     public List<Policy> getKeepPolicy() {
         return Collections.unmodifiableList(keep);
     }
@@ -67,17 +79,14 @@ public class RetentionPolicy {
         return Collections.unmodifiableList(purge);
     }
     
-    public void setKeepPolicy(Iterable<Policy> keep) {
-        this.keep.clear();
-        if (keep != null) {
-            Iterables.addAll(this.keep, keep);
-        }
+    public boolean isSet() {
+        return !(keep.isEmpty() && purge.isEmpty());
     }
     
-    public void setPurgePolicy(Iterable<Policy> purge) {
-        this.purge.clear();
-        if (purge != null) {
-            Iterables.addAll(this.purge, purge);
-        }
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this)
+            .add("keep", keep)
+            .add("purge", purge).toString();
     }
 }
