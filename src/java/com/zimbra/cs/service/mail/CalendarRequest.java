@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+
 import javax.mail.Address;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
@@ -67,6 +68,7 @@ import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.calendar.ZCalendar.ZComponent;
+import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -534,13 +536,24 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         return invTime >= time;
     }
 
-    protected static void updateAddedInvitees(ZimbraSoapContext zsc, OperationContext octxt, Account acct,
-            Mailbox mbox, CalendarItem calItem, Invite seriesInv, List<ZAttendee> toAdd)
+    // Notify attendees following an update to the series of a recurring appointment.  Only the
+    // added attendees are notified if notifyAllAttendees is false.  If it is true all attendees
+    // for each invite are notified.  (Some invites may have more attendees than others.)
+    protected static void notifyCalendarItem(
+            ZimbraSoapContext zsc, OperationContext octxt, Account acct, Mailbox mbox, CalendarItem calItem,
+            boolean notifyAllAttendees, List<ZAttendee> addedAttendees, boolean ignorePastExceptions)
     throws ServiceException {
-        if (!seriesInv.isOrganizer()) {
-            // we ONLY should update the removed attendees if we are the organizer!
-            return;
-        }
+        boolean onBehalfOf = isOnBehalfOfRequest(zsc);
+        Account authAcct = getAuthenticatedAccount(zsc);
+        boolean hidePrivate =
+            !calItem.isPublic() && !calItem.allowPrivateAccess(authAcct, zsc.isUsingAdminPrivileges());
+        Address from = AccountUtil.getFriendlyEmailAddress(acct);
+        Address sender = null;
+        if (onBehalfOf)
+            sender = AccountUtil.getFriendlyEmailAddress(authAcct);
+        List<Address> addedRcpts = CalendarMailSender.toListFromAttendees(addedAttendees);
+
+        long now = octxt != null ? octxt.getTimestamp() : System.currentTimeMillis();
 
         mbox.lock.lock();
         try {
@@ -548,87 +561,65 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             // earlier in the current request.
             calItem = mbox.getCalendarItemById(octxt, calItem.getId());
 
-            boolean onBehalfOf = isOnBehalfOfRequest(zsc);
-            Account authAcct = getAuthenticatedAccount(zsc);
-            boolean hidePrivate =
-                !calItem.isPublic() && !calItem.allowPrivateAccess(authAcct, zsc.isUsingAdminPrivileges());
-            Address from = AccountUtil.getFriendlyEmailAddress(acct);
-            Address sender = null;
-            if (onBehalfOf)
-                sender = AccountUtil.getFriendlyEmailAddress(authAcct);
-            List<Address> rcpts = CalendarMailSender.toListFromAttendees(toAdd);
-
-            long now = octxt != null ? octxt.getTimestamp() : System.currentTimeMillis();
-
             Invite[] invites = calItem.getInvites();
 
-            // Update invites to add the new attendees.
-            boolean first = true;
+            // Get exception instances.  These will be included in the series update email.
+            List<Invite> exceptions = new ArrayList<Invite>();
             for (Invite inv : invites) {
-                // Ignore exceptions in the past.
-                if (inv.hasRecurId() && !inviteIsAfterTime(inv, now))
-                    continue;
-
-                // Make a copy of the invite and add the new attendees if necessary.
-                boolean addedAttendees = false;
-                Invite modify = inv.newCopy();
-                modify.setMailItemId(inv.getMailItemId());
-                for (ZAttendee at : toAdd) {
-                    ZAttendee existing = modify.getMatchingAttendee(at.getAddress());
-                    if (existing == null) {
-                        modify.addAttendee(at);
-                        addedAttendees = true;
-                    }
-                }
-
-                // Save the modified invite.
-                if (addedAttendees) {  // No need to re-save the series that was already updated in this request.
-                    // If invite had no attendee before, its method is set to PUBLISH.  It must be changed to
-                    // REQUEST so that the recipient can handle it properly.
-                    if (!modify.isCancel())
-                        modify.setMethod(ICalTok.REQUEST.toString());
-                    // DTSTAMP - Rev it.
-                    modify.setDtStamp(now);
-                    // Save the modified invite, using the existing MimeMessage.
-                    MimeMessage mmInv = calItem.getSubpartMessage(modify.getMailItemId());
-                    ParsedMessage pm = mmInv != null ? new ParsedMessage(mmInv, false) : null;
-                    mbox.addInvite(octxt, modify, calItem.getFolderId(), pm, true, false, first);
-                    first = false;
-                    // Refresh calItem to see the latest data saved.
-                    calItem = mbox.getCalendarItemById(octxt, calItem.getId());
+                if (inv.hasRecurId() && (!ignorePastExceptions || inviteIsAfterTime(inv, now))) {
+                    exceptions.add(inv);
                 }
             }
 
-            // Refresh invite list to see the latest data saved in previous pass.
-            invites = calItem.getInvites();
-
-            // Get canceled instances in the future.  These will be included in the series update email.
-            List<Invite> cancels = new ArrayList<Invite>();
+            // Send the update invites.
+            boolean didExceptions = false;
             for (Invite inv : invites) {
-                if (inv.isCancel() && inv.hasRecurId() && inviteIsAfterTime(inv, now))
-                    cancels.add(inv);
-            }
-
-            boolean didCancels = false;
-            for (Invite inv : invites) {
-                // Ignore exceptions in the past.
-                if (inv.hasRecurId() && !inviteIsAfterTime(inv, now))
+                if (ignorePastExceptions && inv.hasRecurId() && !inviteIsAfterTime(inv, now)) {
                     continue;
+                }
 
                 if (!inv.isCancel()) {
                     // Make the new iCalendar part to send.
                     ZVCalendar cal = inv.newToICalendar(!hidePrivate);
-                    // For series invite, append the canceled instances.
-                    if (inv.isRecurrence() && !didCancels) {
-                        didCancels = true;
-                        for (Invite cancel : cancels) {
-                            ZComponent cancelComp = cancel.newToVComponent(true, !hidePrivate);
-                            cal.addComponent(cancelComp);
+                    // For series invite, append the exception instances.
+                    if (inv.isRecurrence() && !didExceptions) {
+                        // Find the VEVENT/VTODO for the series.
+                        ZComponent seriesComp = null;
+                        for (Iterator<ZComponent> compIter = cal.getComponentIterator(); compIter.hasNext(); ) {
+                            ZComponent comp = compIter.next();
+                            ICalTok compName = comp.getTok();
+                            if (ICalTok.VEVENT.equals(compName) || ICalTok.VTODO.equals(compName)) {
+                                if (comp.getProperty(ICalTok.RRULE) != null) {
+                                    seriesComp = comp;
+                                    break;
+                                }
+                            }
                         }
+                        for (Invite except : exceptions) {
+                            if (except.isCancel() && seriesComp != null) {
+                                // Cancels are added as EXDATEs in the series VEVENT/VTODO.
+                                RecurId rid = except.getRecurId();
+                                if (rid != null && rid.getDt() != null) {
+                                    ZProperty exdate = rid.getDt().toProperty(ICalTok.EXDATE, false);
+                                    seriesComp.addProperty(exdate);
+                                }
+                            } else {
+                                // Exception instances are added as additional VEVENTs/VTODOs.
+                                ZComponent exceptComp = except.newToVComponent(true, !hidePrivate);
+                                cal.addComponent(exceptComp);
+                            }
+                        }
+                        didExceptions = true;
                     }
 
                     // Compose email using the existing MimeMessage as template and send it.
                     MimeMessage mmInv = calItem.getSubpartMessage(inv.getMailItemId());
+                    List<Address> rcpts;
+                    if (notifyAllAttendees) {
+                        rcpts = CalendarMailSender.toListFromAttendees(inv.getAttendees());
+                    } else {
+                        rcpts = addedRcpts;
+                    }
                     MimeMessage mmModify = CalendarMailSender.createCalendarMessage(from, sender, rcpts, mmInv, inv, cal, true);
                     CalendarMailSender.sendPartial(octxt, mbox, mmModify, null,
                             new ItemId(mbox, inv.getMailItemId()), null, null, false);
@@ -639,107 +630,122 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         }
     }
 
-    protected static void updateRemovedInvitees(ZimbraSoapContext zsc, OperationContext octxt, Account acct,
-            Mailbox mbox, CalendarItem calItem, Invite invToCancel, List<ZAttendee> toCancel)
+    protected static void addRemoveAttendeesInExceptions(
+            OperationContext octxt, Mailbox mbox, CalendarItem calItem,
+            List<ZAttendee> toAdd, List<ZAttendee> toRemove,
+            boolean ignorePastExceptions)
     throws ServiceException {
-        if (!invToCancel.isOrganizer()) {
-            // we ONLY should update the removed attendees if we are the organizer!
-            return;
-        }
-
         mbox.lock.lock();
         try {
             // Refresh the cal item so we see the latest blob, whose path may have been changed
             // earlier in the current request.
             calItem = mbox.getCalendarItemById(octxt, calItem.getId());
 
-            // If removing attendees from the series, also remove those attendees from all exceptions.
-            if (invToCancel.isRecurrence()) {
-                long now = octxt != null ? octxt.getTimestamp() : System.currentTimeMillis();
-                boolean first = true;
-                Invite invites[] = calItem.getInvites();
-                for (Invite inv : invites) {
-                    // Ignore exceptions in the past.
-                    if (inv.hasRecurId() && !inviteIsAfterTime(inv, now))
-                        continue;
+            long now = octxt != null ? octxt.getTimestamp() : System.currentTimeMillis();
+            boolean first = true;
+            Invite invites[] = calItem.getInvites();
+            for (Invite inv : invites) {
+                // Ignore exceptions in the past.
+                if (ignorePastExceptions && inv.hasRecurId() && !inviteIsAfterTime(inv, now)) {
+                    continue;
+                }
 
-                    // Make a copy of the invite and remove canceled attendees.
-                    boolean removedAttendees = false;
-                    Invite modify = inv.newCopy();
-                    modify.setMailItemId(inv.getMailItemId());
-                    List<ZAttendee> existingAts = modify.getAttendees();
-                    for (Iterator<ZAttendee> iter = existingAts.iterator(); iter.hasNext(); ) {
-                        ZAttendee existingAt = iter.next();
-                        String existingAtEmail = existingAt.getAddress();
-                        if (existingAtEmail != null) {
-                            boolean match = false;
-                            for (ZAttendee at : toCancel) {
-                                if (existingAtEmail.equalsIgnoreCase(at.getAddress())) {
-                                    match = true;
-                                    break;
-                                }
+                // Make a copy of the invite and add/remove attendees.
+                boolean modified = false;
+                Invite modify = inv.newCopy();
+                modify.setMailItemId(inv.getMailItemId());
+                List<ZAttendee> existingAts = modify.getAttendees();
+                List<ZAttendee> addList = new ArrayList<ZAttendee>(toAdd);  // Survivors are added.
+                for (Iterator<ZAttendee> iter = existingAts.iterator(); iter.hasNext(); ) {
+                    ZAttendee existingAt = iter.next();
+                    String existingAtEmail = existingAt.getAddress();
+                    if (existingAtEmail != null) {
+                        // Check if the attendee being added is already in the invite.
+                        for (Iterator<ZAttendee> iterAdd = addList.iterator(); iterAdd.hasNext(); ) {
+                            ZAttendee at = iterAdd.next();
+                            if (existingAtEmail.equalsIgnoreCase(at.getAddress())) {
+                                iterAdd.remove();
                             }
-                            if (match) {
+                        }
+                        // Check if existing attendee matches an attendee being removed.
+                        for (ZAttendee at : toRemove) {
+                            if (existingAtEmail.equalsIgnoreCase(at.getAddress())) {
                                 iter.remove();
-                                removedAttendees = true;
+                                modified = true;
+                                break;
                             }
                         }
                     }
-
-                    // Save the modified invite.
-                    if (removedAttendees) {  // No need to re-save the series that was already updated in this request.
-                        // DTSTAMP - Rev it.
-                        modify.setDtStamp(now);
-                        // Save the modified invite, using the existing MimeMessage for the exception.
-                        MimeMessage mmInv = calItem.getSubpartMessage(modify.getMailItemId());
-                        ParsedMessage pm = mmInv != null ? new ParsedMessage(mmInv, false) : null;
-                        mbox.addInvite(octxt, modify, calItem.getFolderId(), pm, true, false, first);
-                        first = false;
-
-                        // Refresh calItem after update in mbox.addInvite.
-                        calItem = mbox.getCalendarItemById(octxt, calItem.getId());
-                    }
                 }
-            }
+                // Duplicates have been eliminated from addList.  Add survivors to the invite.
+                if (!addList.isEmpty()) {
+                    for (ZAttendee at : addList) {
+                        modify.addAttendee(at);
+                    }
+                    modified = true;
+                }
 
-            boolean onBehalfOf = isOnBehalfOfRequest(zsc);
-            Account authAcct = getAuthenticatedAccount(zsc);
-            Locale locale = !onBehalfOf ? acct.getLocale() : authAcct.getLocale();
+                // Save the modified invite.
+                if (modified) {  // No need to re-save the series that was already updated in this request.
+                    // If invite had no attendee before, its method is set to PUBLISH.  It must be changed to
+                    // REQUEST so that the recipient can handle it properly.
+                    if (!modify.isCancel())
+                        modify.setMethod(ICalTok.REQUEST.toString());
+                    // DTSTAMP - Rev it.
+                    modify.setDtStamp(now);
+                    // Save the modified invite, using the existing MimeMessage for the exception.
+                    MimeMessage mmInv = calItem.getSubpartMessage(modify.getMailItemId());
+                    ParsedMessage pm = mmInv != null ? new ParsedMessage(mmInv, false) : null;
+                    mbox.addInvite(octxt, modify, calItem.getFolderId(), pm, true, false, first);
+                    first = false;
 
-            CalSendData dat = new CalSendData();
-            dat.mOrigId = new ItemId(mbox, invToCancel.getMailItemId());
-            dat.mReplyType = MailSender.MSGTYPE_REPLY;
-
-            String text = L10nUtil.getMessage(MsgKey.calendarCancelRemovedFromAttendeeList, locale);
-
-            if (ZimbraLog.calendar.isDebugEnabled()) {
-                StringBuilder sb = new StringBuilder("Sending cancellation message for \"");
-                sb.append(invToCancel.getName()).append("\" to ");
-                sb.append(getAttendeesAddressList(toCancel));
-                ZimbraLog.calendar.debug(sb.toString());
-            }
-
-            List<Address> rcpts = CalendarMailSender.toListFromAttendees(toCancel);
-            try {
-                dat.mInvite = CalendarUtils.buildCancelInviteCalendar(
-                        acct, authAcct, zsc.isUsingAdminPrivileges(), onBehalfOf, calItem, invToCancel, text, toCancel);
-                ZVCalendar cal = dat.mInvite.newToICalendar(true);
-                dat.mMm = CalendarMailSender.createCancelMessage(
-                        acct, authAcct, zsc.isUsingAdminPrivileges(), onBehalfOf, rcpts, calItem, invToCancel, text, cal);
-
-                // If we are sending this cancellation to other people, then we MUST be the organizer!
-                if (!dat.mInvite.isOrganizer() && rcpts != null && !rcpts.isEmpty())
-                    throw MailServiceException.MUST_BE_ORGANIZER("updateRemovedInvitees");
-
-                sendCalendarCancelMessage(zsc, octxt, calItem.getFolderId(), acct, mbox, dat, false);
-            } catch (ServiceException ex) {
-                String to = getAttendeesAddressList(toCancel);
-                ZimbraLog.calendar.debug(
-                        "Could not inform attendees (" + to + ") that they were removed from meeting " +
-                        invToCancel.toString() + " b/c of exception: " + ex.toString());
+                    // Refresh calItem after update in mbox.addInvite.
+                    calItem = mbox.getCalendarItemById(octxt, calItem.getId());
+                }
             }
         } finally {
             mbox.lock.release();
+        }
+    }
+
+    protected static void notifyRemovedAttendees(ZimbraSoapContext zsc, OperationContext octxt, Account acct,
+            Mailbox mbox, CalendarItem calItem, Invite invToCancel, List<ZAttendee> removedAttendees)
+    throws ServiceException {
+        boolean onBehalfOf = isOnBehalfOfRequest(zsc);
+        Account authAcct = getAuthenticatedAccount(zsc);
+        Locale locale = !onBehalfOf ? acct.getLocale() : authAcct.getLocale();
+
+        CalSendData dat = new CalSendData();
+        dat.mOrigId = new ItemId(mbox, invToCancel.getMailItemId());
+        dat.mReplyType = MailSender.MSGTYPE_REPLY;
+
+        String text = L10nUtil.getMessage(MsgKey.calendarCancelRemovedFromAttendeeList, locale);
+
+        if (ZimbraLog.calendar.isDebugEnabled()) {
+            StringBuilder sb = new StringBuilder("Sending cancellation message for \"");
+            sb.append(invToCancel.getName()).append("\" to ");
+            sb.append(getAttendeesAddressList(removedAttendees));
+            ZimbraLog.calendar.debug(sb.toString());
+        }
+
+        List<Address> rcpts = CalendarMailSender.toListFromAttendees(removedAttendees);
+        try {
+            dat.mInvite = CalendarUtils.buildCancelInviteCalendar(
+                    acct, authAcct, zsc.isUsingAdminPrivileges(), onBehalfOf, calItem, invToCancel, text, removedAttendees);
+            ZVCalendar cal = dat.mInvite.newToICalendar(true);
+            dat.mMm = CalendarMailSender.createCancelMessage(
+                    acct, authAcct, zsc.isUsingAdminPrivileges(), onBehalfOf, rcpts, calItem, invToCancel, text, cal);
+
+            // If we are sending this cancellation to other people, then we MUST be the organizer!
+            if (!dat.mInvite.isOrganizer() && rcpts != null && !rcpts.isEmpty())
+                throw MailServiceException.MUST_BE_ORGANIZER("updateRemovedInvitees");
+
+            sendCalendarCancelMessage(zsc, octxt, calItem.getFolderId(), acct, mbox, dat, false);
+        } catch (ServiceException ex) {
+            String to = getAttendeesAddressList(removedAttendees);
+            ZimbraLog.calendar.debug(
+                    "Could not inform attendees (" + to + ") that they were removed from meeting " +
+                    invToCancel.toString() + " b/c of exception: " + ex.toString());
         }
     }
 

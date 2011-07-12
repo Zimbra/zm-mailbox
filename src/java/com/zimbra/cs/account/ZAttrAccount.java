@@ -35,7 +35,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20110712-1042 */
+    /* build: 8.0.0_BETA1_1111 jhahm 20110707-1045 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -4896,6 +4896,83 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetCalendarCalDavSyncStart(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalendarCalDavSyncStart, "");
+        return attrs;
+    }
+
+    /**
+     * whether to retain exception instances when the recurrence series is
+     * changed to new time; set to FALSE for Exchange compatibility
+     *
+     * @return zimbraCalendarKeepExceptionsOnSeriesTimeChange, or false if unset
+     *
+     * @since ZCS 7.1.2
+     */
+    @ZAttr(id=1240)
+    public boolean isCalendarKeepExceptionsOnSeriesTimeChange() {
+        return getBooleanAttr(Provisioning.A_zimbraCalendarKeepExceptionsOnSeriesTimeChange, false);
+    }
+
+    /**
+     * whether to retain exception instances when the recurrence series is
+     * changed to new time; set to FALSE for Exchange compatibility
+     *
+     * @param zimbraCalendarKeepExceptionsOnSeriesTimeChange new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.2
+     */
+    @ZAttr(id=1240)
+    public void setCalendarKeepExceptionsOnSeriesTimeChange(boolean zimbraCalendarKeepExceptionsOnSeriesTimeChange) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarKeepExceptionsOnSeriesTimeChange, zimbraCalendarKeepExceptionsOnSeriesTimeChange ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to retain exception instances when the recurrence series is
+     * changed to new time; set to FALSE for Exchange compatibility
+     *
+     * @param zimbraCalendarKeepExceptionsOnSeriesTimeChange new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.2
+     */
+    @ZAttr(id=1240)
+    public Map<String,Object> setCalendarKeepExceptionsOnSeriesTimeChange(boolean zimbraCalendarKeepExceptionsOnSeriesTimeChange, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarKeepExceptionsOnSeriesTimeChange, zimbraCalendarKeepExceptionsOnSeriesTimeChange ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether to retain exception instances when the recurrence series is
+     * changed to new time; set to FALSE for Exchange compatibility
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.2
+     */
+    @ZAttr(id=1240)
+    public void unsetCalendarKeepExceptionsOnSeriesTimeChange() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarKeepExceptionsOnSeriesTimeChange, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to retain exception instances when the recurrence series is
+     * changed to new time; set to FALSE for Exchange compatibility
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.2
+     */
+    @ZAttr(id=1240)
+    public Map<String,Object> unsetCalendarKeepExceptionsOnSeriesTimeChange(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarKeepExceptionsOnSeriesTimeChange, "");
         return attrs;
     }
 

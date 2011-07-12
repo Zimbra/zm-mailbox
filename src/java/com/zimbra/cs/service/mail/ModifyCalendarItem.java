@@ -16,13 +16,16 @@
 package com.zimbra.cs.service.mail;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.mail.Address;
 import javax.mail.MessagingException;
 import javax.mail.Message.RecipientType;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.CalendarItem;
@@ -212,69 +215,108 @@ public class ModifyCalendarItem extends CalendarRequest {
             }
         }
 
-        // If updating recurrence series, remove newly added attendees from the email
-        // sent to existing attendees.  The new attendees are notified in a separate email.
-        List<ZAttendee> atsAdded = parser.getAttendeesAdded();
-        if (!atsAdded.isEmpty() && inv.isRecurrence() && inv.isOrganizer()) {
-            try {
-                RecipientType rcptTypes[] = { RecipientType.TO, RecipientType.CC, RecipientType.BCC };
-                for (RecipientType rcptType : rcptTypes) {
-                    Address[] rcpts = dat.mMm.getRecipients(rcptType);
-                    List<Address> filtered = new ArrayList<Address>();
-                    boolean foundDuplicate = false;
-                    if (rcpts != null && rcpts.length > 0) {
-                        for (Address rcpt : rcpts) {
-                            if (rcpt instanceof InternetAddress) {
-                                String email = ((InternetAddress) rcpt).getAddress();
-                                if (email != null) {
-                                    boolean keep = true;
-                                    for (ZAttendee at : atsAdded) {
-                                        if (email.equalsIgnoreCase(at.getAddress())) {
-                                            keep = false;
-                                            foundDuplicate = true;
-                                            break;
-                                        }
-                                    }
-                                    if (keep)
-                                        filtered.add(rcpt);
-                                }
-                            }
-                        }
-                    }
-                    if (foundDuplicate) {
-                        Address[] newRcpts = filtered.toArray(new Address[0]);
-                        dat.mMm.setRecipients(rcptType, newRcpts);
-                    }
-                }
-            } catch (MessagingException e) {
-                throw ServiceException.FAILURE("Checking recipients of outgoing msg ", e);
-            }
-        }
-
-        // Apply the change and notify existing attendees.
-        sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response, true);
         boolean echo = request.getAttributeBool(MailConstants.A_CAL_ECHO, false);
-        if (echo && dat.mAddInvData != null) {
-            ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
-            int maxSize = (int) request.getAttributeLong(MailConstants.A_MAX_INLINED_LENGTH, 0);
-            boolean wantHTML = request.getAttributeBool(MailConstants.A_WANT_HTML, false);
-            boolean neuter = request.getAttributeBool(MailConstants.A_NEUTER, true);
-            echoAddedInvite(response, ifmt, octxt, mbox, dat.mAddInvData, maxSize, wantHTML, neuter);
-        }
-
-        if (!inv.isNeverSent()) {
-            // Notify removed attendees.
+        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
+        int maxSize = (int) request.getAttributeLong(MailConstants.A_MAX_INLINED_LENGTH, 0);
+        boolean wantHTML = request.getAttributeBool(MailConstants.A_WANT_HTML, false);
+        boolean neuter = request.getAttributeBool(MailConstants.A_NEUTER, true);
+ 
+        if (inv.isOrganizer()) {
+            // Notify removed attendees before making any changes to the appointment.
             List<ZAttendee> atsCanceled = parser.getAttendeesCanceled();
-            if (!atsCanceled.isEmpty() && inv.isOrganizer()) {
-                updateRemovedInvitees(zsc, octxt, acct, mbox, inv.getCalendarItem(), inv, atsCanceled);
+            if (!inv.isNeverSent()) {  // No need to notify for a draft appointment.
+                if (!atsCanceled.isEmpty()) {
+                    notifyRemovedAttendees(zsc, octxt, acct, mbox, inv.getCalendarItem(), inv, atsCanceled);
+                }
             }
-        }
 
-        // Notify attendees added to recurrence series.
-        if (!atsAdded.isEmpty() && inv.isRecurrence() && inv.isOrganizer()) {
-            updateAddedInvitees(zsc, octxt, acct, mbox, inv.getCalendarItem(), inv, atsAdded);
+            List<ZAttendee> atsAdded = parser.getAttendeesAdded();
+            boolean notifyAllAttendees = true;
+            if (inv.isRecurrence()) {
+                // Figure out if we're notifying all attendees.  Must do this before clearing recipients from dat.mMm.
+                notifyAllAttendees = isNotifyingAll(dat.mMm, atsAdded);    
+                // Clear to/cc/bcc from the MimeMessage, so that the sendCalendarMessage call only updates the organizer's
+                // own appointment without notifying any attendees.  Notifications will be sent later,
+                removeAllRecipients(dat.mMm);
+                // Save the change to the series as specified by the client.
+                sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response, true);
+
+                // Echo the updated inv in the response.
+                if (echo && dat.mAddInvData != null) {
+                    echoAddedInvite(response, ifmt, octxt, mbox, dat.mAddInvData, maxSize, wantHTML, neuter);
+                }
+
+                boolean ignorePastExceptions = false;
+
+                // Reflect added/removed attendees in the exception instances.
+                if (!atsAdded.isEmpty() || !atsCanceled.isEmpty()) {
+                    addRemoveAttendeesInExceptions(octxt, mbox, inv.getCalendarItem(), atsAdded, atsCanceled, ignorePastExceptions);
+                }
+
+                // Send notifications.
+                if (hasRecipients) {
+                    notifyCalendarItem(zsc, octxt, acct, mbox, inv.getCalendarItem(), notifyAllAttendees, atsAdded, ignorePastExceptions);
+                }
+            } else {
+                // Modifying a one-off appointment or an exception instance.  There are no
+                // complications like in the series update case.  Just update the invite with the
+                // data supplied by the client, and let the built-in notification take place.
+                sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response, true);
+
+                // Echo the updated inv in the response.
+                if (echo && dat.mAddInvData != null) {
+                    echoAddedInvite(response, ifmt, octxt, mbox, dat.mAddInvData, maxSize, wantHTML, neuter);
+                }
+            }
+        } else {  // not organizer
+            // Apply the change.
+            sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response, true);
+
+            // Echo the updated inv in the response.
+            if (echo && dat.mAddInvData != null) {
+                echoAddedInvite(response, ifmt, octxt, mbox, dat.mAddInvData, maxSize, wantHTML, neuter);
+            }
         }
 
         return response;
+    }
+
+    // Find out if we're notifying all attendees or only those who were added.  Let's assume we're notifying
+    // all attendees if the to/cc/bcc list contains anyone other than those being added.
+    private static boolean isNotifyingAll(MimeMessage mm, List<ZAttendee> atsAdded) throws ServiceException {
+        Set<String> rcptsSet = new HashSet<String>();
+        try {
+            Address[] rcpts = mm.getAllRecipients();
+            if (rcpts != null) {
+                for (Address rcpt : rcpts) {
+                    if (rcpt instanceof InternetAddress) {
+                        String email = ((InternetAddress) rcpt).getAddress();
+                        if (email != null) {
+                            rcptsSet.add(email.toLowerCase());
+                        }
+                    }
+                }
+            }
+        } catch (MessagingException e) {
+            throw ServiceException.FAILURE("Checking recipients of outgoing msg ", e);
+        }
+        // Subtract the added attendees from the set.
+        for (ZAttendee at : atsAdded) {
+            if (at != null && at.getAddress() != null) {
+                rcptsSet.remove(at.getAddress().toLowerCase());
+            }
+        }
+        return !rcptsSet.isEmpty();
+    }
+
+    private static void removeAllRecipients(MimeMessage mm) throws ServiceException {
+        try {
+            RecipientType rcptTypes[] = { RecipientType.TO, RecipientType.CC, RecipientType.BCC };
+            for (RecipientType rcptType : rcptTypes) {
+                mm.setRecipients(rcptType, (Address[]) null);
+            }
+        } catch (MessagingException e) {
+            throw ServiceException.FAILURE("Checking recipients of outgoing msg ", e);
+        }
     }
 }

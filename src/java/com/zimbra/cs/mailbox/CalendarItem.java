@@ -1481,7 +1481,8 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         ParsedDateTime oldDtStart = null;
         ParsedDuration dtStartMovedBy = null;
         ArrayList<Invite> toUpdate = new ArrayList<Invite>();
-        if (!discardExistingInvites && !isCancel && newInvite.isRecurrence()) {
+        if (!discardExistingInvites && !isCancel && newInvite.isRecurrence() &&
+            getAccount().isCalendarKeepExceptionsOnSeriesTimeChange()) {
             Invite defInv = getDefaultInviteOrNull();
             // Be careful.  If invites got delivered out of order, we may have defInv that's not
             // a series.  Imagine 1st invite received was an exception and 2nd was the series.
@@ -2584,16 +2585,12 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             for (Iterator<ReplyInfo> iter = mReplies.iterator(); iter.hasNext();) {
                 ReplyInfo cur = iter.next();
                 if (recurMatches(cur.mRecurId, recurId)) {
-                    if (cur.mSeqNo < seqNo) {
+                    if (cur.mSeqNo < seqNo || (cur.mSeqNo == seqNo && cur.mDtStamp < dtStamp)) {
                         // Upgrade the reply to the new sequence and dtstamp by removing the old and adding a new one.
                         iter.remove();
                         ReplyInfo reply = new ReplyInfo(cur.getAttendee(), seqNo, dtStamp, recurId);
                         upgraded.add(reply);
                     }
-                } else if (recurId == null) {
-                    // We're updating the series and the current reply is for an instance.
-                    // Toss the instance reply because the series update can impact the exceptions.
-                    iter.remove();
                 }
             }
             mReplies.addAll(upgraded);
