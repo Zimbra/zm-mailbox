@@ -465,8 +465,6 @@ public abstract class AutoProvision {
         
         try {
             SMTPMessage out = new SMTPMessage(JMSession.getSmtpSession());
-
-            
             
             InternetAddress addr = null;
             try {

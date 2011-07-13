@@ -15,6 +15,7 @@
 package com.zimbra.cs.account.ldap;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +23,7 @@ import java.util.Set;
 
 import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
@@ -128,9 +130,10 @@ public class AutoProvisionEager extends AutoProvision {
     
     private void createAccountBatch() throws ServiceException {
         
+        long polledAt = System.currentTimeMillis();
+        
         List<ExternalEntry> entries = searchAccounts();
         
-        String latestCreateTimestamp = null;
         for (ExternalEntry entry : entries) {
             if (scheduler.isShutDownRequested()) {
                 ZimbraLog.autoprov.info("eager auto provision aborted");
@@ -143,25 +146,17 @@ public class AutoProvisionEager extends AutoProvision {
                 
                 ZimbraLog.autoprov.info("auto creating account in EAGER mode: " + acctZimbraName);
                 Account acct = createAccount(acctZimbraName, entry);
-                
-                // keep track of the last createTimeStamp in the external directory.
-                // Out next batch will fetch entries with createTimeStamp later than 
-                // the last create timestamp in this batch.
-                // Take into accounts the entry's create timestamp only if the account 
-                // is successfully created by us
-                if (acct != null) {
-                    String cts = (String) externalAttrs.getAttrString(LdapConstants.ATTR_CREATE_TIMESTAMP);
-                    latestCreateTimestamp = LdapUtilCommon.getLaterTimestamp(latestCreateTimestamp, cts);
-                }
             } catch (ServiceException e) {
                 // log and continue with next entry
                 ZimbraLog.autoprov.warn("unable to auto create account " + entry.getDN(), e);
             }
         }
         
-        if (latestCreateTimestamp != null) {
-            domain.setAutoProvLastPolledTimestampAsString(latestCreateTimestamp);
-        }
+        // keep track of the last polled timestamp.
+        // The next batch will fetch entries with createTimeStamp later than the last polled 
+        // timestamp in this batch.
+        String lastPolledAt = DateUtil.toGeneralizedTime(new Date(polledAt));
+        domain.setAutoProvLastPolledTimestampAsString(lastPolledAt);
     }
     
     private boolean lockDomain(ZLdapContext zlc) throws ServiceException {
