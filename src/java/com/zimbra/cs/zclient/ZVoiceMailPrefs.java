@@ -127,6 +127,23 @@ public class ZVoiceMailPrefs extends ZCallFeature {
     public void setVoiceItemsPerPage(int value) {
         mMap.put(VoiceConstants.A_zimbraPrefVoiceItemsPerPage, Integer.toString(value));
     }
+
+    public boolean getEmailNotifTrans() {
+        return this.getBoolean(VoiceConstants.A_vmPrefEmailNotifTrans);
+    }
+    
+    public void setEmailNotifTrans(boolean value) {
+        mMap.put(VoiceConstants.A_vmPrefEmailNotifTrans, value ? "true":"false");
+    }
+
+    public boolean getEmailNotifAttach() {
+        return this.getBoolean(VoiceConstants.A_vmPrefEmailNotifAttach);
+    }
+    
+    public void setEmailNotifAttach(boolean value) {
+        mMap.put(VoiceConstants.A_vmPrefEmailNotifAttach, value ? "true":"false");
+    }
+
     
 
     public String get(String key) {
