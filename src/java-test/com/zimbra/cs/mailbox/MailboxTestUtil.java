@@ -95,6 +95,7 @@ public final class MailboxTestUtil {
     public static void clearData() throws Exception {
         HSQLDB.clearDatabase();
         MailboxManager.getInstance().clearCache();
+        MailboxIndex.shutdown();
         File index = new File("build/test/index");
         if (index.isDirectory()) {
             Files.deleteDirectoryContents(index);
