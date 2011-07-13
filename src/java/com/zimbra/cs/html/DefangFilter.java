@@ -88,7 +88,8 @@ public class DefangFilter extends DefaultFilter {
     private static final Pattern AV_SCRIPT_TAG = Pattern.compile("</?script/?>", Pattern.CASE_INSENSITIVE);
     
     // regex for URLs href. TODO: beef this up
-	private static final Pattern VALID_URL = Pattern.compile("^(https?://[\\w-].*|mailto:.*|cid:.*|notes:.*|smb:.*|ftp:.*|gopher:.*|news:.*|tel:.*|callto:.*|webcal:.*|feed:.*)", Pattern.CASE_INSENSITIVE);
+	private static final Pattern VALID_URL = Pattern.compile("^(https?://[\\w-].*|mailto:.*|cid:.*|notes:.*|smb:.*|ftp:.*|gopher:.*|news:.*|tel:.*|callto:.*|webcal:.*|feed:.*:|file:.*|#.+)", Pattern.CASE_INSENSITIVE);
+	private static final Pattern VALID_IMG = Pattern.compile("(.*?)\\.(jpg|jpeg|png|gif)$");
 
     //
     // Data
@@ -306,7 +307,6 @@ public class DefangFilter extends DefaultFilter {
         String attrs[] = attributes.toLowerCase().split(",");
         if (attrs != null && attrs.length > 0) {
             for (int i=0; i < attrs.length; i++) {
-                //System.out.println(element+"["+attrs[i]+"]");
                 //deal with consecutive commas
                 if (attrs[i].length() > 0)
                     set.add(attrs[i]);
@@ -337,7 +337,7 @@ public class DefangFilter extends DefaultFilter {
     // since Xerces-J 2.2.0
 
     /** Start document. */
-    @Override public void startDocument(XMLLocator locator, String encoding, 
+    public void startDocument(XMLLocator locator, String encoding, 
                               NamespaceContext nscontext, Augmentations augs) 
     throws XNIException {
         mRemovalElementCount = 0;
@@ -347,13 +347,13 @@ public class DefangFilter extends DefaultFilter {
     // old methods
 
     /** Start document. */
-    @Override public void startDocument(XMLLocator locator, String encoding, Augmentations augs)
+    public void startDocument(XMLLocator locator, String encoding, Augmentations augs)
     throws XNIException {
         startDocument(locator, encoding, null, augs);
     } // startDocument(XMLLocator,String,Augmentations)
 
     /** Start prefix mapping. */
-    @Override public void startPrefixMapping(String prefix, String uri, Augmentations augs)
+    public void startPrefixMapping(String prefix, String uri, Augmentations augs)
     throws XNIException {
         if (mRemovalElementName == null) {
             super.startPrefixMapping(prefix, uri, augs);
@@ -361,7 +361,7 @@ public class DefangFilter extends DefaultFilter {
     } // startPrefixMapping(String,String,Augmentations)
 
     /** Start element. */
-    @Override public void startElement(QName element, XMLAttributes attributes, Augmentations augs)
+    public void startElement(QName element, XMLAttributes attributes, Augmentations augs)
     throws XNIException {
         String name = element.localpart;
         if (mRemovalElementName == null) {
@@ -376,7 +376,7 @@ public class DefangFilter extends DefaultFilter {
     } // startElement(QName,XMLAttributes,Augmentations)
 
     /** Empty element. */
-    @Override public void emptyElement(QName element, XMLAttributes attributes, Augmentations augs)
+    public void emptyElement(QName element, XMLAttributes attributes, Augmentations augs)
     throws XNIException {
         if (mRemovalElementName == null && handleOpenTag(element, attributes)) {
             super.emptyElement(element, attributes, augs);
@@ -384,7 +384,7 @@ public class DefangFilter extends DefaultFilter {
     } // emptyElement(QName,XMLAttributes,Augmentations)
 
     /** Comment. */
-    @Override public void comment(XMLString text, Augmentations augs)
+    public void comment(XMLString text, Augmentations augs)
     throws XNIException {
         if (mRemovalElementName == null) {
             super.comment(text, augs);
@@ -392,7 +392,7 @@ public class DefangFilter extends DefaultFilter {
     } // comment(XMLString,Augmentations)
 
     /** Processing instruction. */
-    @Override public void processingInstruction(String target, XMLString data, Augmentations augs)
+    public void processingInstruction(String target, XMLString data, Augmentations augs)
     throws XNIException {
         if (mRemovalElementName == null) {
             super.processingInstruction(target, data, augs);
@@ -400,7 +400,7 @@ public class DefangFilter extends DefaultFilter {
     } // processingInstruction(String,XMLString,Augmentations)
 
     /** Characters. */
-    @Override public void characters(XMLString text, Augmentations augs) 
+    public void characters(XMLString text, Augmentations augs) 
     throws XNIException {
         if (mRemovalElementName == null) {
             if (mStyleDepth > 0) {
@@ -414,7 +414,7 @@ public class DefangFilter extends DefaultFilter {
     } // characters(XMLString,Augmentations)
 
     /** Ignorable whitespace. */
-    @Override public void ignorableWhitespace(XMLString text, Augmentations augs) 
+    public void ignorableWhitespace(XMLString text, Augmentations augs) 
     throws XNIException {
         if (mRemovalElementName == null) {
             super.ignorableWhitespace(text, augs);
@@ -422,7 +422,7 @@ public class DefangFilter extends DefaultFilter {
     } // ignorableWhitespace(XMLString,Augmentations)
 
     /** Start general entity. */
-    @Override public void startGeneralEntity(String name, XMLResourceIdentifier id, String encoding, Augmentations augs)
+    public void startGeneralEntity(String name, XMLResourceIdentifier id, String encoding, Augmentations augs)
     throws XNIException {
         if (mRemovalElementName == null) {
             super.startGeneralEntity(name, id, encoding, augs);
@@ -430,7 +430,7 @@ public class DefangFilter extends DefaultFilter {
     } // startGeneralEntity(String,XMLResourceIdentifier,String,Augmentations)
 
     /** Text declaration. */
-    @Override public void textDecl(String version, String encoding, Augmentations augs)
+    public void textDecl(String version, String encoding, Augmentations augs)
     throws XNIException {
         if (mRemovalElementName == null) {
             super.textDecl(version, encoding, augs);
@@ -438,7 +438,7 @@ public class DefangFilter extends DefaultFilter {
     } // textDecl(String,String,Augmentations)
 
     /** End general entity. */
-    @Override public void endGeneralEntity(String name, Augmentations augs)
+    public void endGeneralEntity(String name, Augmentations augs)
     throws XNIException {
         if (mRemovalElementName == null) {
             super.endGeneralEntity(name, augs);
@@ -446,21 +446,21 @@ public class DefangFilter extends DefaultFilter {
     } // endGeneralEntity(String,Augmentations)
 
     /** Start CDATA section. */
-    @Override public void startCDATA(Augmentations augs) throws XNIException {
+    public void startCDATA(Augmentations augs) throws XNIException {
         if (mRemovalElementName == null) {
             super.startCDATA(augs);
         }
     } // startCDATA(Augmentations)
 
     /** End CDATA section. */
-    @Override public void endCDATA(Augmentations augs) throws XNIException {
+    public void endCDATA(Augmentations augs) throws XNIException {
         if (mRemovalElementName == null) {
             super.endCDATA(augs);
         }
     } // endCDATA(Augmentations)
 
     /** End element. */
-    @Override public void endElement(QName element, Augmentations augs)
+    public void endElement(QName element, Augmentations augs)
     throws XNIException {
         String name = element.localpart;
         if (mRemovalElementName == null) {
@@ -475,7 +475,7 @@ public class DefangFilter extends DefaultFilter {
     } // endElement(QName,Augmentations)
 
     /** End prefix mapping. */
-    @Override public void endPrefixMapping(String prefix, Augmentations augs)
+    public void endPrefixMapping(String prefix, Augmentations augs)
     throws XNIException {
         if (mRemovalElementName == null) {
             super.endPrefixMapping(prefix, augs);
@@ -522,7 +522,7 @@ public class DefangFilter extends DefaultFilter {
                 int attributeCount = attributes.getLength();
                 for (int i = 0; i < attributeCount; i++) {
                     String aName = attributes.getQName(i).toLowerCase();
-                    if (!anames.contains(aName)) {
+                    if (!anames.contains(aName) || removeAttrValue(eName, aName, attributes, i)) {
                         attributes.removeAttributeAt(i--);
                         attributeCount--;
                     } else {
@@ -621,6 +621,35 @@ public class DefangFilter extends DefaultFilter {
     }
 
     /**
+
+     * Checks to see if an attr value should just be removed
+     * @param eName The element name
+     * @param aName The attribute name
+     * @param attributes The set of the attribtues
+     * @param i The index of the attribute
+     * @return true if the attr should be removed, false if not
+     */
+    private boolean removeAttrValue(String eName, String aName, XMLAttributes attributes, int i) {
+        String value = attributes.getValue(i);
+        if (aName.equalsIgnoreCase("href") || aName.equalsIgnoreCase("longdesc") || aName.equalsIgnoreCase("usemap")){
+            if (!VALID_URL.matcher(value).find()) {
+                return true;
+            }
+        }
+        // We'll treat the SRC a little different since deleting it
+        // may annoy the front end. Here, we'll check for 
+        // a valid url as well as just a valid filename in the
+        // case that its an inline image
+        if(aName.equals("src")) {
+            if (!VALID_URL.matcher(value).find() &&
+                !VALID_IMG.matcher(value).find()) {
+                attributes.setValue(i, "#");
+                return false;
+            }
+        }
+        return false;
+    }
+    /**
      * sanitize an attr value. For now, this means stirpping out Java Script entity tags &{...},
      * and <script> tags.
      * 
@@ -628,16 +657,9 @@ public class DefangFilter extends DefaultFilter {
      */
     private void sanatizeAttrValue(String eName, String aName, XMLAttributes attributes, int i) {
         String value = attributes.getValue(i);
-        //System.out.println("==== "+eName+" "+aName+" ("+value+")");
         String result = AV_JS_ENTITY.matcher(value).replaceAll("JS-ENTITY-BLOCKED");
         result = AV_SCRIPT_TAG.matcher(result).replaceAll("SCRIPT-TAG-BLOCKED");
-        // TODO: change to set?
-        if (aName.equalsIgnoreCase("href") || aName.equalsIgnoreCase("src") || aName.equalsIgnoreCase("longdesc") || aName.equalsIgnoreCase("usemap")){
-            if (!VALID_URL.matcher(result).find()) {
-                // TODO: just leave blank?
-                result = "about:blank";
-            }
-        }
+       
         if (aName.equalsIgnoreCase("style")) {
             result = value.replaceAll("/\\*.*\\*/","");
             result = result.replaceAll("[uU][Rr][Ll]\\s*\\(.*\\)","none");
