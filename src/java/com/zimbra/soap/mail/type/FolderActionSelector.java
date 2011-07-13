@@ -111,6 +111,7 @@ public class FolderActionSelector extends ActionSelector {
             .add("grantType", grantType)
             .add("grant", grant)
             .add("grants", grants)
+            .add("retentionPolicy", retentionPolicy)
             .toString();
     }
 }

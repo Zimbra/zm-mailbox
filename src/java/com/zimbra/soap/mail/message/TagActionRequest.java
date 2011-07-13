@@ -22,28 +22,28 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.mail.type.ActionSelector;
+import com.zimbra.soap.mail.type.TagActionSelector;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=MailConstants.E_TAG_ACTION_REQUEST)
 public class TagActionRequest {
 
     @XmlElement(name=MailConstants.E_ACTION, required=true)
-    private final ActionSelector action;
+    private final TagActionSelector action;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
     private TagActionRequest() {
-        this((ActionSelector) null);
+        this((TagActionSelector) null);
     }
 
-    public TagActionRequest(ActionSelector action) {
+    public TagActionRequest(TagActionSelector action) {
         this.action = action;
     }
 
-    public ActionSelector getAction() { return action; }
+    public TagActionSelector getAction() { return action; }
 
     @Override
     public String toString() {
