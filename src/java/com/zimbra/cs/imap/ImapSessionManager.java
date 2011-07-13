@@ -332,10 +332,12 @@ final class ImapSessionManager {
                 //   FIXME: may want to prefer loaded folders over paged-out folders
                 synchronized (i4listener) {
                     try {
+                        ImapFolder i4selected = i4listener.getImapFolder();
+                        if (i4selected == null) {
+                            continue; // skip stale session
+                        }
                         // found a matching session, so just copy its contents!
                         ZimbraLog.imap.debug("copying message data from existing session: %s", i4listener.getPath());
-
-                        ImapFolder i4selected = i4listener.getImapFolder();
                         final List<ImapMessage> i4list = new ArrayList<ImapMessage>(i4selected.getSize());
                         i4selected.traverse(new Function<ImapMessage, Void>() {
                             @Override
@@ -354,8 +356,9 @@ final class ImapSessionManager {
                         }
 
                         return i4list;
-                    } catch (IOException ioe) {
-                        ZimbraLog.imap.warn("skipping error while trying to page in for copy (" + i4listener.getPath() + ")", ioe);
+                    } catch (IOException e) {
+                        ZimbraLog.imap.warn("skipping error while trying to page in for copy (%s)",
+                                i4listener.getPath(), e);
                     }
                 }
             }
