@@ -334,7 +334,7 @@ final class ImapSessionManager {
                     try {
                         ImapFolder i4selected = i4listener.getImapFolder();
                         if (i4selected == null) {
-                            continue; // skip stale session
+                            return null;
                         }
                         // found a matching session, so just copy its contents!
                         ZimbraLog.imap.debug("copying message data from existing session: %s", i4listener.getPath());
