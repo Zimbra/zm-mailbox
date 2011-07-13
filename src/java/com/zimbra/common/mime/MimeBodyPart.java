@@ -248,16 +248,21 @@ public class MimeBodyPart extends MimePart {
     }
 
     ContentTransferEncoding pickEncoding() throws IOException {
-        int encodeable = 0, toolong = 0, length = 0, column = 0;
+        boolean sevenbit = true;
+        int qpencodeable = 0, toolong = 0, length = 0, column = 0;
 
         InputStream is = getRawContentStream();
         if (is != null) {
             try {
                 is = is instanceof ByteArrayInputStream || is instanceof BufferedInputStream ? is : new BufferedInputStream(is);
                 for (int octet = is.read(); octet != -1; octet = is.read()) {
-                    // FIXME: bytes under 0x20 (except NUL) are actually OK to transmit via "7bit"
                     if (octet >= 0x7F || (octet < 0x20 && octet != '\t' && octet != '\r' && octet != '\n')) {
-                        encodeable++;
+                        // this octet must be encoded if we choose quoted-printable (RFC2045 6.7)
+                        qpencodeable++;
+                        // all of these octets except for non-NUL control chars rule out "7bit" (RFC2045 2.7)
+                        if (sevenbit && (octet == 0x00 || octet >= 0x7F)) {
+                            sevenbit = false;
+                        }
                     }
                     if (octet == '\n') {
                         if (column > MAX_LINE_OCTETS) {
@@ -277,9 +282,9 @@ public class MimeBodyPart extends MimePart {
             toolong++;
         }
 
-        if (encodeable == 0 && toolong == 0) {
+        if (sevenbit && toolong == 0) {
             return ContentTransferEncoding.SEVEN_BIT;
-        } else if (encodeable < length / 4) {
+        } else if (qpencodeable < length / 4) {
             return ContentTransferEncoding.QUOTED_PRINTABLE;
         } else {
             return ContentTransferEncoding.BASE64;

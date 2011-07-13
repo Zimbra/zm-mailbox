@@ -34,6 +34,8 @@ public class MimeBodyPartTest {
 
         testEncodingSelection("single non-ASCII", "cyb\u00c8le illus.", ContentTransferEncoding.QUOTED_PRINTABLE);
         testEncodingSelection("all non-ASCII", "\u00c8", ContentTransferEncoding.BASE64);
+        testEncodingSelection("single NUL", "cyb\u0000le illus.", ContentTransferEncoding.QUOTED_PRINTABLE);
+        testEncodingSelection("single control char", "ESCAPE ME \u001B", ContentTransferEncoding.SEVEN_BIT);
 
         StringBuilder sb = new StringBuilder(1000);
         for (int i = 0; i < 1000; i++) {
