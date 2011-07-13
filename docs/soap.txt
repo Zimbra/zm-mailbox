@@ -1281,7 +1281,9 @@ Mountpoints:
 
 Tags:
 
-  <tag id="{tag-id}" name="{tag-name}" [color="{color}"] u="{unread}" [i4u="{imap-unread}"]/>
+  <tag id="{tag-id}" name="{tag-name}" [color="{color}"] u="{unread}" [i4u="{imap-unread}"]>
+    [<retentionPolicy> ... </retentionPolicy>]
+  </tag>
 
   {tag-name}    = name of tag; max length 128; whitespace is trimmed by server;
                   cannot contain ':', '"', '/', or any character below 0x20;
@@ -2057,13 +2059,15 @@ note that "delete", "empty", "rename", "move", "color", "update" can be used on 
 ---------
 
 <TagActionRequest>
-  <action op="read|rename|color|delete|update" id="..." [name="..."] [color="..."]/>
+  <action op="read|rename|color|delete|update|retentionpolicy" id="..." [name="..."] [color="..."]>
+    [<retentionPolicy> ... </retentionPolicy>]
+  </action>
 </TagActionRequest>
 
   - if op="update", the caller can specify "name" and/or "color"
 
 <TagActionResponse>
-  <action op="read|rename|color|delete|update" id="..."/> <!-- iff op was successful -->
+  <action op="read|rename|color|delete|update|retentionpolicy" id="..."/> <!-- iff op was successful -->
 </TagActionResponse>
 
 --------------

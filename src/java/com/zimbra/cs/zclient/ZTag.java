@@ -14,21 +14,23 @@
  */
 package com.zimbra.cs.zclient;
 
-import com.zimbra.common.mailbox.Color;
+import org.json.JSONException;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.event.ZModifyTagEvent;
-import org.json.JSONException;
+import com.zimbra.soap.mail.type.RetentionPolicy;
 
-public class ZTag implements Comparable, ZItem, ToZJSONObject {
+public class ZTag implements Comparable<ZTag>, ZItem, ToZJSONObject {
 
     private Color mColor;
     private String mId;
     private String mName;
     private int mUnreadCount;
     private ZMailbox mMailbox;
+    private RetentionPolicy mRetentionPolicy = new RetentionPolicy();
         
     public enum Color {
         
@@ -47,7 +49,7 @@ public class ZTag implements Comparable, ZItem, ToZJSONObject {
 
         public int getValue() { return mValue; }
 
-        public static Color fromString(String s) throws ServiceException {
+        public static Color fromString(String s) {
             return Color.values()[com.zimbra.common.mailbox.Color.getMappedColor(s)];
         }
 
@@ -68,14 +70,20 @@ public class ZTag implements Comparable, ZItem, ToZJSONObject {
         mId = e.getAttribute(MailConstants.A_ID);
         mName = e.getAttribute(MailConstants.A_NAME);
         mUnreadCount = (int) e.getAttributeLong(MailConstants.A_UNREAD, 0);
+        
+        Element rpEl = e.getOptionalElement(MailConstants.E_RETENTION_POLICY);
+        if (rpEl != null) {
+            mRetentionPolicy = new RetentionPolicy(rpEl);
+        }
     }
 
     public void modifyNotification(ZModifyEvent event) throws ServiceException {
     	if (event instanceof ZModifyTagEvent) {
-    		ZModifyTagEvent tevent = (ZModifyTagEvent) event;
-    		mColor = tevent.getColor(mColor);
-    		mName = tevent.getName(mName);
-    		mUnreadCount = tevent.getUnreadCount(mUnreadCount);
+    	    ZModifyTagEvent tevent = (ZModifyTagEvent) event;
+    	    mColor = tevent.getColor(mColor);
+    	    mName = tevent.getName(mName);
+    	    mUnreadCount = tevent.getUnreadCount(mUnreadCount);
+    	    mRetentionPolicy = tevent.getRetentionPolicy(mRetentionPolicy);
     	}
     }
 
@@ -125,9 +133,8 @@ public class ZTag implements Comparable, ZItem, ToZJSONObject {
         return ZJSONObject.toString(this);
     }
 
-    public int compareTo(Object o) {
-        if (!(o instanceof ZTag)) return 0;
-        ZTag other = (ZTag) o;
+    @Override
+    public int compareTo(ZTag other) {
         return getName().compareToIgnoreCase(other.getName());
     }
 
@@ -141,4 +148,11 @@ public class ZTag implements Comparable, ZItem, ToZJSONObject {
 
     public void rename(String newName) throws ServiceException { mMailbox.renameTag(mId, newName); }
 
+    public RetentionPolicy getRetentionPolicy() {
+        return mRetentionPolicy;
+    }
+    
+    public void setRetentionPolicy(RetentionPolicy rp) {
+        mRetentionPolicy = rp;
+    }
 }

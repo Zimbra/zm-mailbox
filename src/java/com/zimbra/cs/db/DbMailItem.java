@@ -66,6 +66,8 @@ import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailItem.PendingDelete;
+import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
@@ -74,8 +76,6 @@ import com.zimbra.cs.mailbox.Note;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.VirtualConversation;
-import com.zimbra.cs.mailbox.MailItem.PendingDelete;
-import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.pop3.Pop3Message;
 import com.zimbra.cs.store.MailboxBlob;
@@ -2738,7 +2738,7 @@ public class DbMailItem {
         }
     }
 
-    public static PendingDelete getLeafNodes(Mailbox mbox, List<Folder> folders, int before, boolean globalMessages,
+    public static PendingDelete getLeafNodes(Mailbox mbox, List<Folder> folders, Tag tag, int before, boolean globalMessages,
                                              Boolean unread, boolean useChangeDate, Integer maxItems)
     throws ServiceException {
         PendingDelete info = new PendingDelete();
@@ -2746,17 +2746,31 @@ public class DbMailItem {
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
+        if (folders == null) {
+            folders = Collections.emptyList();
+        }
+        
         try {
-            String constraint;
+            StringBuilder constraint = new StringBuilder();
             String dateColumn = (useChangeDate ? "change_date" : "date");
+            Set<Long> tagsets = Collections.emptySet();
+            
             if (globalMessages) {
-                constraint = dateColumn + " < ? AND " + typeIn(MailItem.Type.MESSAGE);
+                constraint.append(dateColumn).append(" < ? AND ").append(typeIn(MailItem.Type.MESSAGE));
             } else {
-                constraint = dateColumn + " < ? AND type NOT IN " + NON_SEARCHABLE_TYPES +
-                             " AND " + DbUtil.whereIn("folder_id", folders.size());
+                constraint.append(dateColumn).append(" < ? AND type NOT IN ").append(NON_SEARCHABLE_TYPES);
+                if (!folders.isEmpty()) {
+                    constraint.append(" AND ").append(DbUtil.whereIn("folder_id", folders.size()));
+                }
+                if (tag != null) {
+                    tagsets = getTagsetCache(conn, mbox).getMatchingTagsets(tag.getBitmask(), tag.getBitmask());
+                    if (!tagsets.isEmpty()) {
+                        constraint.append(" AND ").append(DbUtil.whereIn("tags", tagsets.size()));
+                    }
+                }
             }
             if (unread != null) {
-                constraint += " AND unread = ?";
+                constraint.append(" AND unread = ?");
             }
             String orderByLimit = "";
             if (maxItems != null && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
@@ -2772,8 +2786,12 @@ public class DbMailItem {
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, before);
             if (!globalMessages) {
-                for (Folder folder : folders)
+                for (Folder folder : folders) {
                     stmt.setInt(pos++, folder.getId());
+                }
+                for (long tagset : tagsets) {
+                    stmt.setLong(pos++, tagset);
+                }
             }
             if (unread != null)
                 stmt.setBoolean(pos++, unread);
@@ -3571,30 +3589,30 @@ public class DbMailItem {
     }
 
     public static class QueryParams {
-        private SortedSet<Integer> mFolderIds = new TreeSet<Integer>();
-        private Long mChangeDateBefore;
-        private Integer mModifiedSequenceBefore;
-        private Integer mRowLimit;
+        private SortedSet<Integer> folderIds = new TreeSet<Integer>();
+        private Integer changeDateBefore;
+        private Integer modifiedSequenceBefore;
+        private Integer rowLimit;
         private Set<MailItem.Type> includedTypes = EnumSet.noneOf(MailItem.Type.class);
         private Set<MailItem.Type> excludedTypes = EnumSet.noneOf(MailItem.Type.class);
 
         public SortedSet<Integer> getFolderIds() {
-            return Collections.unmodifiableSortedSet(mFolderIds);
+            return Collections.unmodifiableSortedSet(folderIds);
         }
 
         public QueryParams setFolderIds(Collection<Integer> ids) {
-            mFolderIds.clear();
+            folderIds.clear();
             if (ids != null) {
-                mFolderIds.addAll(ids);
+                folderIds.addAll(ids);
             }
             return this;
         }
-
+        
         public Set<MailItem.Type> getIncludedTypes() {
             return Collections.unmodifiableSet(includedTypes);
         }
 
-        public QueryParams setIncludedTypes(Set<MailItem.Type> types) {
+        public QueryParams setIncludedTypes(Collection<MailItem.Type> types) {
             includedTypes.clear();
             includedTypes.addAll(types);
             return this;
@@ -3604,7 +3622,7 @@ public class DbMailItem {
             return Collections.unmodifiableSet(excludedTypes);
         }
 
-        public QueryParams setExcludedTypes(Set<MailItem.Type> types) {
+        public QueryParams setExcludedTypes(Collection<MailItem.Type> types) {
             excludedTypes.clear();
             excludedTypes.addAll(types);
             return this;
@@ -3613,17 +3631,17 @@ public class DbMailItem {
         /**
          * @return the timestamp, in seconds
          */
-        public Long getChangeDateBefore() { return mChangeDateBefore; }
+        public Integer getChangeDateBefore() { return changeDateBefore; }
         /**
          * Return items modified earlier than the given timestamp.
          * @param timestamp the timestamp, in seconds
          */
-        public QueryParams setChangeDateBefore(Long timestamp) { mChangeDateBefore = timestamp; return this; }
-        public Integer getModifiedSequenceBefore() { return mModifiedSequenceBefore; }
-        public QueryParams setModifiedSequenceBefore(Integer changeId) { mModifiedSequenceBefore = changeId; return this; }
+        public QueryParams setChangeDateBefore(Integer timestamp) { changeDateBefore = timestamp; return this; }
+        public Integer getModifiedSequenceBefore() { return modifiedSequenceBefore; }
+        public QueryParams setModifiedSequenceBefore(Integer changeId) { modifiedSequenceBefore = changeId; return this; }
 
-        public Integer getRowLimit() { return mRowLimit; }
-        public QueryParams setRowLimit(Integer rowLimit) { mRowLimit = rowLimit; return this; }
+        public Integer getRowLimit() { return rowLimit; }
+        public QueryParams setRowLimit(Integer rowLimit) { this.rowLimit = rowLimit; return this; }
     }
 
     /**
@@ -3644,7 +3662,7 @@ public class DbMailItem {
             Set<MailItem.Type> includedTypes = params.getIncludedTypes();
             Set<MailItem.Type> excludedTypes = params.getExcludedTypes();
             Set<Integer> folderIds = params.getFolderIds();
-            Long changeDateBefore = params.getChangeDateBefore();
+            Integer changeDateBefore = params.getChangeDateBefore();
             Integer modifiedSequenceBefore = params.getModifiedSequenceBefore();
             Integer rowLimit = params.getRowLimit();
 

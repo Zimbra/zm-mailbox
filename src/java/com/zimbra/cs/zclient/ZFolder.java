@@ -81,7 +81,7 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
     private ZFolder mParent;
     private boolean mIsPlaceholder;
     private ZMailbox mMailbox;
-    private RetentionPolicy mRetentionPolicy;
+    private RetentionPolicy mRetentionPolicy = new RetentionPolicy();
 
     @Override
     public int compareTo(Object obj) {

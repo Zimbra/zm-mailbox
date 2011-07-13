@@ -1011,7 +1011,7 @@ public class SoapSession extends Session {
             Element eTags = eRefresh.addUniqueElement(ZimbraNamespace.E_TAGS);
             for (Tag tag : tags) {
                 if (tag != null && !(tag instanceof Flag)) {
-                    ToXML.encodeTag(eTags, ifmt, tag);
+                    ToXML.encodeTag(eTags, ifmt, octxt, tag);
                 }
             }
         }

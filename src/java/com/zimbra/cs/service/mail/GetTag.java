@@ -56,7 +56,7 @@ public class GetTag extends MailDocumentHandler  {
             for (Tag tag : tags) {
                 if (tag == null || tag instanceof Flag)
                     continue;
-                ToXML.encodeTag(response, ifmt, tag);
+                ToXML.encodeTag(response, ifmt, octxt, tag);
             }
         }
         return response;

@@ -19,9 +19,14 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.mail.type.RetentionPolicy;
 
 /**
  * @since May 26, 2004
@@ -31,10 +36,11 @@ public class TagAction extends ItemAction  {
 
     public static final String OP_UNFLAG = '!' + OP_FLAG;
     public static final String OP_UNTAG  = '!' + OP_TAG;
+    public static final String OP_RETENTION_POLICY = "retentionpolicy";
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
         Element action = request.getElement(MailConstants.E_ACTION);
         String operation = action.getAttribute(MailConstants.A_OPERATION).toLowerCase();
@@ -45,9 +51,21 @@ public class TagAction extends ItemAction  {
         if (operation.endsWith(OP_MOVE) || operation.endsWith(OP_COPY) || operation.endsWith(OP_SPAM) || operation.endsWith(OP_TRASH)) {
             throw ServiceException.INVALID_REQUEST("invalid operation on tag: " + operation, null);
         }
-        String successes = handleCommon(context, request, operation, MailItem.Type.TAG);
+        
+        String successes;
+        if (operation.equals(OP_RETENTION_POLICY)) {
+            Mailbox mbox = getRequestedMailbox(zsc);
+            OperationContext octxt = getOperationContext(zsc, context);
+            ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
+            ItemId iid = new ItemId(action.getAttribute(MailConstants.A_ID), zsc);
+            mbox.setRetentionPolicy(octxt, iid.getId(), MailItem.Type.TAG,
+                new RetentionPolicy(action.getElement(MailConstants.E_RETENTION_POLICY)));
+            successes = ifmt.formatItemId(iid);
+        } else {
+            successes = handleCommon(context, request, operation, MailItem.Type.TAG);
+        }
 
-        Element response = lc.createElement(MailConstants.TAG_ACTION_RESPONSE);
+        Element response = zsc.createElement(MailConstants.TAG_ACTION_RESPONSE);
         Element result = response.addUniqueElement(MailConstants.E_ACTION);
         result.addAttribute(MailConstants.A_ID, successes);
         result.addAttribute(MailConstants.A_OPERATION, operation);

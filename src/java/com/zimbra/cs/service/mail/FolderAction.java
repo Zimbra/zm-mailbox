@@ -19,13 +19,11 @@
 package com.zimbra.cs.service.mail;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Lists;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
@@ -245,7 +243,6 @@ public class FolderAction extends ItemAction {
         } else if (operation.equals(OP_RETENTIONPOLICY)) {
             mbox.setRetentionPolicy(octxt, iid.getId(), MailItem.Type.FOLDER,
                 new RetentionPolicy(action.getElement(MailConstants.E_RETENTION_POLICY)));
-            Element erp = action.getElement(MailConstants.E_RETENTION_POLICY);
         } else {
             throw ServiceException.INVALID_REQUEST("unknown operation: " + operation, null);
         }

@@ -185,7 +185,7 @@ public class Sync extends MailDocumentHandler {
     private static void initialTagSync(Element f, OperationContext octxt, ItemIdFormatter ifmt, Mailbox mbox) throws ServiceException {
         for (Tag tag : mbox.getTagList(octxt)) {
             if (tag != null && !(tag instanceof Flag)) {
-                ToXML.encodeTag(f, ifmt, tag, Change.ALL_FIELDS);
+                ToXML.encodeTag(f, ifmt, octxt, tag, Change.ALL_FIELDS);
             }
         }
     }
@@ -263,7 +263,7 @@ public class Sync extends MailDocumentHandler {
 
         // next, handle created/modified tags
         for (Tag tag : mbox.getModifiedTags(octxt, begin)) {
-            ToXML.encodeTag(response, ifmt, tag, Change.ALL_FIELDS);
+            ToXML.encodeTag(response, ifmt, octxt, tag, Change.ALL_FIELDS);
         }
 
         // finally, handle created/modified "other items"

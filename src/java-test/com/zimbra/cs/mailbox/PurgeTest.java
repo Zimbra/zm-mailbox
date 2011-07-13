@@ -31,9 +31,13 @@ import org.junit.Test;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.Log.Level;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.soap.mail.type.Policy;
@@ -54,7 +58,7 @@ public class PurgeTest {
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
     }
     
-    // @Test
+    @Test
     public void folderPurgePolicy() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         
@@ -97,6 +101,55 @@ public class PurgeTest {
         folder = mbox.getFolderById(null, folder.getId());
         assertEquals(0, folder.getRetentionPolicy().getKeepPolicy().size());
         assertEquals(0, folder.getRetentionPolicy().getPurgePolicy().size());
+    }
+    
+    @Test
+    public void tagPurgePolicy() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        
+        // Create folder and test messages.
+        Tag tag = mbox.createTag(null, "tag", (byte) 0);
+        Folder inbox = mbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX);
+        Message older = TestUtil.addMessage(mbox, inbox.getId(), "test1", System.currentTimeMillis() - (60 * Constants.MILLIS_PER_MINUTE));
+        Message newer = TestUtil.addMessage(mbox, inbox.getId(), "test2", System.currentTimeMillis() - (30 * Constants.MILLIS_PER_MINUTE));
+        Message notTagged = TestUtil.addMessage(mbox, inbox.getId(), "test3", System.currentTimeMillis() - (90 * Constants.MILLIS_PER_MINUTE));
+        mbox.setTags(null, older.getId(), older.getType(), 0, tag.getBitmask());
+        mbox.setTags(null, newer.getId(), newer.getType(), 0, tag.getBitmask());
+        
+        // Run purge with default settings and make sure nothing was deleted.
+        mbox.purgeMessages(null);
+        assertEquals(3, inbox.getSize());
+        
+        // Add retention policy.
+        Policy p = Policy.newUserPolicy("45m");
+        RetentionPolicy purgePolicy = new RetentionPolicy(null, Arrays.asList(p));
+        mbox.setRetentionPolicy(null, tag.getId(), MailItem.Type.TAG, purgePolicy);
+        
+        // Purge the tag cache and make sure that purge policy is reloaded from metadata.
+        mbox.purge(MailItem.Type.TAG);
+        tag = mbox.getTagById(null, tag.getId());
+        List<Policy> purgeList = tag.getRetentionPolicy().getPurgePolicy();
+        assertEquals(1, purgeList.size());
+        assertEquals("45m", purgeList.get(0).getLifetime());
+        
+        // Run purge and make sure one of the messages was deleted.
+        mbox.purgeMessages(null);
+        inbox = mbox.getFolderById(null, inbox.getId());
+        assertEquals(2, inbox.getSize());
+        mbox.getMessageById(null, newer.getId());
+        mbox.getMessageById(null, notTagged.getId());
+        try {
+            mbox.getMessageById(null, older.getId());
+            fail("Older message was not purged.");
+        } catch (NoSuchItemException e) {
+        }
+        
+        // Remove purge policy and verify that the folder state was properly updated.
+        mbox.setRetentionPolicy(null, tag.getId(), MailItem.Type.TAG, null);
+        mbox.purge(MailItem.Type.TAG);
+        tag = mbox.getTagById(null, tag.getId());
+        assertEquals(0, tag.getRetentionPolicy().getKeepPolicy().size());
+        assertEquals(0, tag.getRetentionPolicy().getPurgePolicy().size());
     }
 
     /**

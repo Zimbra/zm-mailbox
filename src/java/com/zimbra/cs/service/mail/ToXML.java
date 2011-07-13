@@ -134,7 +134,7 @@ public class ToXML {
         if (item instanceof Folder) {
             return encodeFolder(parent, ifmt, octxt, (Folder) item, fields);
         } else if (item instanceof Tag) {
-            return encodeTag(parent, ifmt, (Tag) item, fields);
+            return encodeTag(parent, ifmt, octxt, (Tag) item, fields);
         } else if (item instanceof Note) {
             return encodeNote(parent, ifmt, (Note) item, fields);
         } else if (item instanceof Contact) {
@@ -712,11 +712,11 @@ public class ToXML {
         return elem;
     }
 
-    public static Element encodeTag(Element parent, ItemIdFormatter ifmt, Tag tag) {
-        return encodeTag(parent, ifmt, tag, NOTIFY_FIELDS);
+    public static Element encodeTag(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Tag tag) {
+        return encodeTag(parent, ifmt, octxt, tag, NOTIFY_FIELDS);
     }
 
-    public static Element encodeTag(Element parent, ItemIdFormatter ifmt, Tag tag, int fields) {
+    public static Element encodeTag(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Tag tag, int fields) {
         Element elem = parent.addElement(MailConstants.E_TAG);
         elem.addAttribute(MailConstants.A_ID, ifmt.formatItemId(tag));
         if (needToOutput(fields, Change.MODIFIED_NAME))
@@ -739,6 +739,20 @@ public class ToXML {
         }
         if (needToOutput(fields, Change.MODIFIED_METADATA))
             encodeAllCustomMetadata(elem, tag, fields);
+        
+        boolean remote = octxt != null && octxt.isDelegatedRequest(tag.getMailbox());
+        boolean canAdminister = !remote;
+        if (canAdminister) {
+            if (needToOutput(fields, Change.MODIFIED_RETENTION_POLICY)) {
+                RetentionPolicy rp = tag.getRetentionPolicy();
+                if (fields != NOTIFY_FIELDS || rp.isSet()) {
+                    // Only output retention policy if it's being modified, or if we're returning all
+                    // folder data and policy is set.
+                    encodeRetentionPolicy(elem, rp);
+                }
+            }
+        }
+        
         return elem;
     }
 

@@ -21,13 +21,15 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.ToZJSONObject;
 import com.zimbra.cs.zclient.ZJSONObject;
 import com.zimbra.cs.zclient.ZTag.Color;
+import com.zimbra.soap.mail.type.RetentionPolicy;
+
 import org.json.JSONException;
 
 public class ZModifyTagEvent implements ZModifyItemEvent, ToZJSONObject {
 
     protected Element mTagEl;
 
-    public ZModifyTagEvent(Element e) throws ServiceException {
+    public ZModifyTagEvent(Element e) {
         mTagEl = e;
     }
 
@@ -54,11 +56,7 @@ public class ZModifyTagEvent implements ZModifyItemEvent, ToZJSONObject {
     public Color getColor(Color defaultValue) {
         String newColor = mTagEl.getAttribute(MailConstants.A_RGB, null);
         if (newColor != null) {
-            try {
-                return Color.fromString(newColor);
-            } catch (ServiceException se) {
-                return defaultValue;
-            }
+            return Color.fromString(newColor);
         } else {
             String s = mTagEl.getAttribute(MailConstants.A_COLOR, null);
             if (s != null) {
@@ -70,6 +68,18 @@ public class ZModifyTagEvent implements ZModifyItemEvent, ToZJSONObject {
             }
         }
         return defaultValue;
+    }
+
+    /**
+     * Returns the modified retention policy, or {@code defaultValue} if it hasn't
+     * been modified.
+     */
+    public RetentionPolicy getRetentionPolicy(RetentionPolicy defaultValue) throws ServiceException {
+        Element rpEl = mTagEl.getOptionalElement(MailConstants.E_RETENTION_POLICY);
+        if (rpEl == null) {
+            return defaultValue;
+        }
+        return new RetentionPolicy(rpEl);
     }
 
     /**

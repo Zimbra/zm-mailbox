@@ -182,7 +182,7 @@ public class Mountpoint extends Folder {
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, mAttributes, defaultView, mOwnerId, mRemoteId, mReminderEnabled);
+        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, attributes, defaultView, mOwnerId, mRemoteId, mReminderEnabled);
     }
 
     private static String encodeMetadata(Color color, int version, CustomMetadata custom, Type view, String owner,
@@ -205,7 +205,7 @@ public class Mountpoint extends Folder {
         Objects.ToStringHelper helper = Objects.toStringHelper(this);
         helper.add(CN_NAME, getName());
         appendCommonMembers(helper);
-        helper.add(CN_ATTRIBUTES, mAttributes);
+        helper.add(CN_ATTRIBUTES, attributes);
         helper.add("reminder", mReminderEnabled);
         return helper.toString();
     }

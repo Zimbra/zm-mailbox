@@ -31,6 +31,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
+import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.soap.mail.type.Policy;
 import com.zimbra.soap.mail.type.RetentionPolicy;
 
@@ -49,10 +50,10 @@ public class SetRetentionPolicyTest {
     }
     
     /**
-     * Verifies serializing, deserializing, and replaying.
+     * Verifies serializing, deserializing, and replaying for folder.
      */
     @Test
-    public void redo() throws Exception {
+    public void redoFolder() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         
         // Create folder.
@@ -64,7 +65,7 @@ public class SetRetentionPolicyTest {
         RetentionPolicy rp = new RetentionPolicy(
             Arrays.asList(Policy.newSystemPolicy("123")),
             Arrays.asList(Policy.newUserPolicy("45m")));
-        SetRetentionPolicy redoPlayer = new SetRetentionPolicy(mbox.getId(), folder.getId(), rp);
+        SetRetentionPolicy redoPlayer = new SetRetentionPolicy(mbox.getId(), MailItem.Type.FOLDER, folder.getId(), rp);
         
         // Serialize, deserialize, and redo.
         byte[] data = redoPlayer.testSerialize();
@@ -77,5 +78,37 @@ public class SetRetentionPolicyTest {
         assertEquals(1, folder.getRetentionPolicy().getPurgePolicy().size());
         assertEquals("45m", folder.getRetentionPolicy().getPurgePolicy().get(0).getLifetime());
         assertEquals("123", folder.getRetentionPolicy().getKeepPolicy().get(0).getId());
+    }
+
+    /**
+     * Verifies serializing, deserializing, and replaying for tag.
+     */
+    @Test
+    public void redoTag() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        
+        // Create folder.
+        Tag tag = mbox.createTag(null, "tag", (byte) 0);
+        assertEquals(0, tag.getRetentionPolicy().getKeepPolicy().size());
+        assertEquals(0, tag.getRetentionPolicy().getPurgePolicy().size());
+        
+        // Create RedoableOp.
+        RetentionPolicy rp = new RetentionPolicy(
+            Arrays.asList(Policy.newSystemPolicy("123")),
+            Arrays.asList(Policy.newUserPolicy("45m")));
+        SetRetentionPolicy redoPlayer = new SetRetentionPolicy(mbox.getId(), MailItem.Type.TAG, tag.getId(), rp);
+        
+        // Serialize, deserialize, and redo.
+        byte[] data = redoPlayer.testSerialize();
+        redoPlayer = new SetRetentionPolicy();
+        redoPlayer.setMailboxId(mbox.getId());
+        redoPlayer.testDeserialize(data);
+        redoPlayer.redo();
+        
+        tag = mbox.getTagById(null, tag.getId());
+        assertEquals(1, tag.getRetentionPolicy().getKeepPolicy().size());
+        assertEquals(1, tag.getRetentionPolicy().getPurgePolicy().size());
+        assertEquals("45m", tag.getRetentionPolicy().getPurgePolicy().get(0).getLifetime());
+        assertEquals("123", tag.getRetentionPolicy().getKeepPolicy().get(0).getId());
     }
 }

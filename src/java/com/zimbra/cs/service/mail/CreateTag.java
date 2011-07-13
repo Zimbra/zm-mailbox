@@ -58,7 +58,7 @@ public class CreateTag extends MailDocumentHandler  {
         
         Element response = zsc.createElement(MailConstants.CREATE_TAG_RESPONSE);
         if (tag != null)
-        	ToXML.encodeTag(response, ifmt, tag);
+        	ToXML.encodeTag(response, ifmt, octxt, tag);
         return response;
 	}
 }

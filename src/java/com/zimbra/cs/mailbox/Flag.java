@@ -357,5 +357,4 @@ public final class Flag extends Tag {
     int toBitmask() {
         return info.bitmask;
     }
-
 }

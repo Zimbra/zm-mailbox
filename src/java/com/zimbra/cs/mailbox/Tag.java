@@ -19,24 +19,30 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.base.Objects;
-import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.filter.RuleManager;
-import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.soap.mail.type.RetentionPolicy;
 
 /**
  * @since Jul 12, 2004
  */
 public class Tag extends MailItem {
 
-    private int mDeletedUnreadCount;
+    private int deletedUnreadCount;
+    private RetentionPolicy retentionPolicy;
 
     Tag(Mailbox mbox, UnderlyingData ud) throws ServiceException {
         super(mbox, ud);
         if (mData.type != Type.TAG.toByte() && mData.type != Type.FLAG.toByte()) {
             throw new IllegalArgumentException();
+        }
+        if (retentionPolicy == null) {
+            // Retention policy is initialized in Tag's encodeMetadata(), but
+            // not in Flag's.
+            retentionPolicy = new RetentionPolicy();
         }
     }
 
@@ -67,12 +73,12 @@ public class Tag extends MailItem {
     }
 
     public int getDeletedUnreadCount() {
-        return mDeletedUnreadCount;
+        return deletedUnreadCount;
     }
 
     void setSize(int deletedUnread) {
         // we don't track number of tagged items, total size of tagged items, or number of \Deleted items
-        mDeletedUnreadCount = deletedUnread;
+        deletedUnreadCount = deletedUnread;
     }
 
     @Override
@@ -81,7 +87,7 @@ public class Tag extends MailItem {
 
         if (deletedDelta != 0 && trackUnread()) {
             markItemModified(Change.MODIFIED_UNREAD);
-            mDeletedUnreadCount = Math.min(Math.max(0, mDeletedUnreadCount + deletedDelta), mData.unreadCount);
+            deletedUnreadCount = Math.min(Math.max(0, deletedUnreadCount + deletedDelta), mData.unreadCount);
         }
     }
 
@@ -163,6 +169,10 @@ public class Tag extends MailItem {
 
     boolean canTag(MailItem item) {
         return item.isTaggable();
+    }
+    
+    public RetentionPolicy getRetentionPolicy() {
+        return retentionPolicy;
     }
 
     static Tag create(Mailbox mbox, int id, String name, Color color) throws ServiceException {
@@ -285,17 +295,28 @@ public class Tag extends MailItem {
     /** Persists the tag's current unread count to the database. */
     protected void saveTagCounts() throws ServiceException {
         DbMailItem.persistCounts(this, encodeMetadata());
-        ZimbraLog.mailbox.debug("\"%s\": updating tag counts (u%d/du%d)", getName(), mData.unreadCount, mDeletedUnreadCount);
+        ZimbraLog.mailbox.debug("\"%s\": updating tag counts (u%d/du%d)", getName(), mData.unreadCount, deletedUnreadCount);
     }
 
 
     @Override void decodeMetadata(Metadata meta) throws ServiceException {
-        mDeletedUnreadCount = (int) meta.getLong(Metadata.FN_DELETED_UNREAD, 0);
+        deletedUnreadCount = (int) meta.getLong(Metadata.FN_DELETED_UNREAD, 0);
         super.decodeMetadata(meta);
+
+        Metadata rp = meta.getMap(Metadata.FN_RETENTION_POLICY, true);
+        if (rp != null) {
+            retentionPolicy = RetentionPolicyManager.retentionPolicyFromMetadata(rp);
+        } else {
+            retentionPolicy = new RetentionPolicy();
+        }
     }
 
     @Override Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mVersion, mDeletedUnreadCount);
+        Metadata m = encodeMetadata(meta, mRGBColor, mVersion, deletedUnreadCount);
+        if (retentionPolicy.isSet()) {
+            m.put(Metadata.FN_RETENTION_POLICY, RetentionPolicyManager.toMetadata(retentionPolicy));
+        }
+        return m;
     }
 
     private static String encodeMetadata(Color color, int version, int deletedUnread) {
@@ -310,11 +331,25 @@ public class Tag extends MailItem {
 
     private static final String CN_DELETED_UNREAD = "del_unread";
 
+    public void setRetentionPolicy(RetentionPolicy rp)
+    throws ServiceException {
+        if (!canAccess(ACL.RIGHT_ADMIN)) {
+            throw ServiceException.PERM_DENIED("you do not have admin rights to folder " + getPath());
+        }
+        markItemModified(Change.MODIFIED_RETENTION_POLICY);
+        if (rp == null) {
+            retentionPolicy = new RetentionPolicy();
+        } else {
+            retentionPolicy = rp;
+        }
+        saveMetadata();
+    }
+
     @Override
     public String toString() {
         Objects.ToStringHelper helper = Objects.toStringHelper(this);
         appendCommonMembers(helper);
-        helper.add(CN_DELETED_UNREAD, mDeletedUnreadCount);
+        helper.add(CN_DELETED_UNREAD, deletedUnreadCount);
         return helper.toString();
     }
 }

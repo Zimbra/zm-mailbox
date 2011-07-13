@@ -14,12 +14,39 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
+import java.io.Writer;
+import java.lang.ref.SoftReference;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.TimeZoneMap;
 import com.zimbra.common.calendar.ZCalendar;
@@ -52,7 +79,6 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.db.DbMailAddress;
 import com.zimbra.cs.db.DbMailItem;
@@ -80,6 +106,7 @@ import com.zimbra.cs.mailbox.CalendarItem.Callback;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
 import com.zimbra.cs.mailbox.FoldersTagsCache.FoldersTags;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
+import com.zimbra.cs.mailbox.MailItem.DeleteScope;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.MailItem.Type;
@@ -125,39 +152,13 @@ import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.upgrade.MailboxUpgrade;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMailbox.Options;
 import com.zimbra.soap.mail.type.Policy;
 import com.zimbra.soap.mail.type.RetentionPolicy;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
-import java.io.Writer;
-import java.lang.ref.SoftReference;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * @since Jun 13, 2004
@@ -6014,7 +6015,7 @@ public class Mailbox {
         ZimbraLog.mailbox.info("Emptying dumpster with batchSize=" + batchSize);
         QueryParams params = new QueryParams();
         // +1 to catch items put into dumpster in the same second
-        params.setChangeDateBefore(System.currentTimeMillis() / 1000 + 1).setRowLimit(batchSize);
+        params.setChangeDateBefore((int) (System.currentTimeMillis() / 1000 + 1)).setRowLimit(batchSize);
         while (true) {
             lock.lock();
             try {
@@ -6039,7 +6040,7 @@ public class Mailbox {
 
     private int purgeDumpster(long olderThanMillis, int maxItems) throws ServiceException {
         QueryParams params = new QueryParams();
-        params.setChangeDateBefore(olderThanMillis / 1000).setRowLimit(maxItems);
+        params.setChangeDateBefore((int) (olderThanMillis / 1000)).setRowLimit(maxItems);
         lock.lock();
         try {
             Set<Integer> itemIds = null;
@@ -6536,10 +6537,14 @@ public class Mailbox {
         if (type != MailItem.Type.FOLDER && type != MailItem.Type.TAG) {
             throw ServiceException.FAILURE("Cannot set retention policy for " + type, null);
         }
-        validateRetentionPolicy(rp.getKeepPolicy());
-        validateRetentionPolicy(rp.getPurgePolicy());
+        if (rp == null) {
+            rp = new RetentionPolicy();
+        } else {
+            validateRetentionPolicy(rp.getKeepPolicy());
+            validateRetentionPolicy(rp.getPurgePolicy());
+        }
         
-        SetRetentionPolicy redoPlayer = new SetRetentionPolicy(mId, itemId, rp);
+        SetRetentionPolicy redoPlayer = new SetRetentionPolicy(mId, type, itemId, rp);
 
         boolean success = false;
         try {
@@ -6550,7 +6555,9 @@ public class Mailbox {
                 checkItemChangeID(folder);
                 folder.setRetentionPolicy(rp);
             } else {
-                // TODO: implement for tags
+                Tag tag = getTagById(itemId);
+                checkItemChangeID(tag);
+                tag.setRetentionPolicy(rp);
             }
             success = true;
         } finally {
@@ -7126,6 +7133,27 @@ public class Mailbox {
                     
                     long folderTimeout = getOperationTimestampMillis() - folderLifetime;
                     int numPurged = Folder.purgeMessages(this, folder, folderTimeout, null, false, true, maxItemsPerFolder);
+                    purgedAll = updatePurgedAll(purgedAll, numPurged, maxItemsPerFolder);
+                }
+            }
+            
+            // Process any tags that have retention policy set.
+            for (Tag tag : getTagList(octxt)) {
+                for (Policy policy : tag.getRetentionPolicy().getPurgePolicy()) {
+                    long tagLifetime;
+                    
+                    try {
+                        tagLifetime = DateUtil.getTimeInterval(policy.getLifetime());
+                    } catch (ServiceException e) {
+                        ZimbraLog.purge.error("Invalid purge lifetime set for tag %s.", tag.getName(), e);
+                        continue;
+                    }
+
+                    long tagTimeout = getOperationTimestampMillis() - tagLifetime;
+                    PendingDelete info = DbMailItem.getLeafNodes(this, null, tag, (int) (tagTimeout / 1000), false, null, false, maxItemsPerFolder);
+                    MailItem.delete(this, info, null, MailItem.DeleteScope.ENTIRE_ITEM, false);
+                    List<Integer> ids = info.itemIds.getIds(Type.MESSAGE);
+                    int numPurged = (ids == null ? 0 : ids.size());
                     purgedAll = updatePurgedAll(purgedAll, numPurged, maxItemsPerFolder);
                 }
             }

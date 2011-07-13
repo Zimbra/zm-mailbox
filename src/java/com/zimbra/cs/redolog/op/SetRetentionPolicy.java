@@ -32,15 +32,17 @@ import com.zimbra.soap.mail.type.RetentionPolicy;
 public class SetRetentionPolicy extends RedoableOp {
 
     private int itemId = -1;
-    private RetentionPolicy retentionPolicy; 
+    private RetentionPolicy retentionPolicy;
+    private MailItem.Type type;
 
     public SetRetentionPolicy() {
         super(MailboxOperation.SetRetentionPolicy);
     }
 
-    public SetRetentionPolicy(int mailboxId, int itemId, RetentionPolicy rp) {
+    public SetRetentionPolicy(int mailboxId, MailItem.Type type, int itemId, RetentionPolicy rp) {
         this();
         setMailboxId(mailboxId);
+        this.type = type;
         this.itemId = itemId;
         retentionPolicy = rp;
     }
@@ -52,7 +54,8 @@ public class SetRetentionPolicy extends RedoableOp {
     @Override protected void serializeData(RedoLogOutput out) throws IOException {
         List<Policy> keepPolicy = retentionPolicy.getKeepPolicy();
         List<Policy> purgePolicy = retentionPolicy.getPurgePolicy();
-        
+
+        out.writeByte(type.toByte());
         out.writeInt(itemId);
         out.writeInt(keepPolicy.size());
         for (Policy policy : keepPolicy) {
@@ -67,6 +70,10 @@ public class SetRetentionPolicy extends RedoableOp {
     }
 
     @Override protected void deserializeData(RedoLogInput in) throws IOException {
+        type = MailItem.Type.of(in.readByte());
+        if (type != MailItem.Type.FOLDER && type != MailItem.Type.TAG) {
+            throw new IOException("Unexpected item type: " + type);
+        }
         itemId = in.readInt();
         int size = in.readInt();
         List<Policy> keep = readPolicyList(in, size);
@@ -98,8 +105,11 @@ public class SetRetentionPolicy extends RedoableOp {
     
     @Override public void redo() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
-        // TODO: Support tags
-        mbox.setRetentionPolicy(getOperationContext(), itemId, MailItem.Type.FOLDER, retentionPolicy);
+        if (type == MailItem.Type.FOLDER) { 
+            mbox.setRetentionPolicy(getOperationContext(), itemId, MailItem.Type.FOLDER, retentionPolicy);
+        } else {
+            mbox.setRetentionPolicy(getOperationContext(), itemId, MailItem.Type.TAG, retentionPolicy);
+        }
     }
 
     //////////////// Unit test methods /////////////////

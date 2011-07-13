@@ -77,19 +77,19 @@ public class Folder extends MailItem {
     public static final byte FOLDER_IS_IMMUTABLE      = 0x01;
     public static final byte FOLDER_DONT_TRACK_COUNTS = 0x02;
 
-    protected byte    mAttributes;
+    protected byte    attributes;
     protected MailItem.Type defaultView;
     private List<Folder> subfolders;
-    private long      mTotalSize;
-    private Folder    mParent;
-    private ACL       mRights;
-    private SyncData  mSyncData;
-    private int       mImapUIDNEXT;
-    private int       mImapMODSEQ;
-    private int       mImapRECENT;
-    private int       mImapRECENTCutoff;
-    private int       mDeletedCount;
-    private int       mDeletedUnreadCount;
+    private long      totalSize;
+    private Folder    parent;
+    private ACL       rights;
+    private SyncData  syncData;
+    private int       imapUIDNEXT;
+    private int       imapMODSEQ;
+    private int       imapRECENT;
+    private int       imapRECENTCutoff;
+    private int       deletedCount;
+    private int       deletedUnreadCount;
     private long conversationCount = -1;
     private RetentionPolicy retentionPolicy;
 
@@ -105,7 +105,7 @@ public class Folder extends MailItem {
                 throw new IllegalArgumentException();
         }
 
-        assert(retentionPolicy != null);
+        assert(retentionPolicy != null); // Should have been set in decodeMetadata().
     }
     
     @Override public String getSender() {
@@ -119,7 +119,7 @@ public class Folder extends MailItem {
     @Override public String getPath() {
         if (mId == Mailbox.ID_FOLDER_ROOT || mId == Mailbox.ID_FOLDER_USER_ROOT)
             return "/";
-        String parentPath = mParent.getPath();
+        String parentPath = parent.getPath();
         return parentPath + (parentPath.equals("/") ? "" : "/") + getName();
     }
 
@@ -136,7 +136,7 @@ public class Folder extends MailItem {
      * @see #FOLDER_IS_IMMUTABLE
      * @see #FOLDER_DONT_TRACK_COUNTS */
     public byte getAttributes() {
-        return mAttributes;
+        return attributes;
     }
 
     /** Returns the number of non-subfolder items in the folder.  (For
@@ -148,11 +148,11 @@ public class Folder extends MailItem {
     }
 
     public int getDeletedCount() {
-        return mDeletedCount;
+        return deletedCount;
     }
 
     public int getDeletedUnreadCount() {
-        return mDeletedUnreadCount;
+        return deletedUnreadCount;
     }
 
     /**
@@ -176,27 +176,27 @@ public class Folder extends MailItem {
      *  folder's subfolders.)</i> */
     @Override
     public long getTotalSize() {
-        return mTotalSize;
+        return totalSize;
     }
 
     /** Returns the URL the folder syncs to, or <tt>""</tt> if there is no
      *  such association.
      * @see #setUrl(String) */
     public String getUrl() {
-        return (mSyncData == null || mSyncData.url == null ? "" : mSyncData.url);
+        return (syncData == null || syncData.url == null ? "" : syncData.url);
     }
 
     /** Returns the URL the folder syncs to, or <tt>""</tt> if there is no
      *  such association.
      * @see #setUrl(String) */
     public SyncData getSyncData() {
-        return mSyncData == null ? null : new SyncData(mSyncData);
+        return syncData == null ? null : new SyncData(syncData);
     }
 
     /** Returns the date the folder was last sync'ed from an external
      *  data source. */
     public long getLastSyncDate() {
-        return mSyncData == null ? 0 : mSyncData.lastDate;
+        return syncData == null ? 0 : syncData.lastDate;
     }
 
     /** Returns the last assigned item ID in the enclosing Mailbox the last
@@ -210,7 +210,7 @@ public class Folder extends MailItem {
             if (i4session.getFolderId() == mId && i4session.isWritable())
                 return mMailbox.getLastItemId();
         }
-        return mImapRECENTCutoff;
+        return imapRECENTCutoff;
     }
 
     /** Returns the number of messages in the folder that would be considered
@@ -234,20 +234,20 @@ public class Folder extends MailItem {
         }
 
         // if no active sessions, use a cached value if possible
-        if (mImapRECENT >= 0)
-            return mImapRECENT;
+        if (imapRECENT >= 0)
+            return imapRECENT;
 
         // final option is to calculate the number of \Recent messages
         markItemModified(Change.MODIFIED_SIZE);
-        mImapRECENT = DbMailItem.countImapRecent(this, getImapRECENTCutoff());
-        return mImapRECENT;
+        imapRECENT = DbMailItem.countImapRecent(this, getImapRECENTCutoff());
+        return imapRECENT;
     }
 
     /** Returns one higher than the IMAP ID of the last item added to the
      *  folder.  This is used as the UIDNEXT value when returning the folder
      *  via IMAP. */
     public int getImapUIDNEXT() {
-        return mImapUIDNEXT;
+        return imapUIDNEXT;
     }
 
     /** Returns the change number of the last time (a) an item was inserted
@@ -255,14 +255,14 @@ public class Folder extends MailItem {
      *  changed.  This data is used to enable IMAP client synchronization
      *  via the CONDSTORE extension. */
     public int getImapMODSEQ() {
-        return mImapMODSEQ;
+        return imapMODSEQ;
     }
 
     @Override
     public MailItem snapshotItem() throws ServiceException {
         Folder retVal = (Folder) super.snapshotItem();
-        if (mParent != null) {
-            retVal.mParent = (Folder) mParent.snapshotItem();
+        if (parent != null) {
+            retVal.parent = (Folder) parent.snapshotItem();
         }
         return retVal;
     }
@@ -272,7 +272,7 @@ public class Folder extends MailItem {
     @Override public boolean inTrash() {
         if (mId <= Mailbox.HIGHEST_SYSTEM_ID)
             return (mId == Mailbox.ID_FOLDER_TRASH);
-        return mParent.inTrash();
+        return parent.inTrash();
     }
 
     /** Returns whether the folder is the Junk folder. */
@@ -293,7 +293,7 @@ public class Folder extends MailItem {
             case Mailbox.ID_FOLDER_ROOT:
                 return true;
             default:
-                return mParent.isHidden();
+                return parent.isHidden();
         }
     }
 
@@ -364,13 +364,13 @@ public class Folder extends MailItem {
 
     private short checkACL(short rightsNeeded, Account authuser, boolean asAdmin) throws ServiceException {
         // check the ACLs to see if access has been explicitly granted
-        Short granted = mRights != null ? mRights.getGrantedRights(authuser) : null;
+        Short granted = rights != null ? rights.getGrantedRights(authuser) : null;
         if (granted != null)
             return (short) (granted.shortValue() & rightsNeeded);
         // no ACLs apply; can we check parent folder for inherited rights?
         if (mId == Mailbox.ID_FOLDER_ROOT || isTagged(Flag.ID_NO_INHERIT))
             return 0;
-        return mParent.checkACL(rightsNeeded, authuser, asAdmin);
+        return parent.checkACL(rightsNeeded, authuser, asAdmin);
     }
 
     /** Grants the specified set of rights to the target and persists them
@@ -394,9 +394,9 @@ public class Folder extends MailItem {
         alterTag(mMailbox.getFlagById(Flag.ID_NO_INHERIT), true);
 
         markItemModified(Change.MODIFIED_ACL);
-        if (mRights == null)
-            mRights = new ACL();
-        ACL.Grant grant = mRights.grantAccess(zimbraId, type, rights, args);
+        if (this.rights == null)
+            this.rights = new ACL();
+        ACL.Grant grant = this.rights.grantAccess(zimbraId, type, rights, args);
         saveMetadata();
 
         queueForAclPush();
@@ -431,9 +431,9 @@ public class Folder extends MailItem {
         alterTag(mMailbox.getFlagById(Flag.ID_NO_INHERIT), true);
 
         markItemModified(Change.MODIFIED_ACL);
-        mRights.revokeAccess(zimbraId);
-        if (mRights.isEmpty())
-            mRights = null;
+        rights.revokeAccess(zimbraId);
+        if (rights.isEmpty())
+            rights = null;
         saveMetadata();
 
         queueForAclPush();
@@ -458,10 +458,10 @@ public class Folder extends MailItem {
         if (acl != null && acl.isEmpty()) {
             acl = null;
         }
-        if (acl == null && mRights == null) {
+        if (acl == null && rights == null) {
             return;
         }
-        mRights = acl;
+        rights = acl;
         saveMetadata();
 
         queueForAclPush();
@@ -470,16 +470,16 @@ public class Folder extends MailItem {
     /** Returns a copy of the ACL directly set on the folder, or <tt>null</tt>
      *  if one is not set. */
     public ACL getACL() {
-        return mRights == null ? null : mRights.duplicate();
+        return rights == null ? null : rights.duplicate();
     }
 
     /** Returns a copy of the ACL that applies to the folder (possibly
      *  inherited from a parent), or <tt>null</tt> if one is not set. */
     public ACL getEffectiveACL() {
-        if (mId == Mailbox.ID_FOLDER_ROOT || isTagged(Flag.ID_NO_INHERIT) || mParent == null) {
+        if (mId == Mailbox.ID_FOLDER_ROOT || isTagged(Flag.ID_NO_INHERIT) || parent == null) {
             return getACL();
         }
-        return mParent.getEffectiveACL();
+        return parent.getEffectiveACL();
     }
 
     public void setRetentionPolicy(RetentionPolicy rp)
@@ -505,11 +505,11 @@ public class Folder extends MailItem {
      *  itself.
      * @see Mailbox#ID_FOLDER_ROOT */
     @Override public MailItem getParent() throws ServiceException {
-        return mParent != null ? mParent : super.getFolder();
+        return parent != null ? parent : super.getFolder();
     }
 
     @Override Folder getFolder() throws ServiceException {
-        return mParent != null ? mParent : super.getFolder();
+        return parent != null ? parent : super.getFolder();
     }
 
     /** Returns whether the folder contains any subfolders. */
@@ -617,12 +617,12 @@ public class Folder extends MailItem {
         }
         // reset the RECENT count unless it's just a change of \Deleted flags
         if (countDelta != 0 || sizeDelta != 0 || deletedDelta == 0) {
-            mImapRECENT = -1;
+            imapRECENT = -1;
         }
         // if we go negative, that's OK!  just pretend we're at 0.
         mData.size = Math.max(0, mData.size + countDelta);
-        mTotalSize = Math.max(0, mTotalSize + sizeDelta);
-        mDeletedCount = (int) Math.min(Math.max(0, mDeletedCount + deletedDelta), mData.size);
+        totalSize = Math.max(0, totalSize + sizeDelta);
+        deletedCount = (int) Math.min(Math.max(0, deletedCount + deletedDelta), mData.size);
     }
 
     /** Sets the number of items in the folder and their total size.
@@ -640,14 +640,14 @@ public class Folder extends MailItem {
         }
         if (count != mData.size) {
             updateHighestMODSEQ();
-            mImapRECENT = -1;
+            imapRECENT = -1;
             conversationCount = -1; // invalidate the cache
         }
 
         mData.size = count;
-        mTotalSize = totalSize;
-        mDeletedCount = deletedCount;
-        mDeletedUnreadCount = deletedUnread;
+        this.totalSize = totalSize;
+        this.deletedCount = deletedCount;
+        this.deletedUnreadCount = deletedUnread;
     }
 
     @Override protected void updateUnread(int delta, int deletedDelta) throws ServiceException {
@@ -658,7 +658,7 @@ public class Folder extends MailItem {
 
         if (deletedDelta != 0) {
             markItemModified(Change.MODIFIED_UNREAD);
-            mDeletedUnreadCount = Math.min(Math.max(0, mDeletedUnreadCount + deletedDelta), mData.unreadCount);
+            deletedUnreadCount = Math.min(Math.max(0, deletedUnreadCount + deletedDelta), mData.unreadCount);
         }
 
         if (delta != 0)
@@ -669,9 +669,9 @@ public class Folder extends MailItem {
      *  the Mailbox's last assigned item ID. */
     void updateUIDNEXT() {
         int uidnext = mMailbox.getLastItemId() + 1;
-        if (trackImapStats() && mImapUIDNEXT < uidnext) {
+        if (trackImapStats() && imapUIDNEXT < uidnext) {
             markItemModified(Change.MODIFIED_SIZE);
-            mImapUIDNEXT = uidnext;
+            imapUIDNEXT = uidnext;
         }
     }
 
@@ -679,21 +679,21 @@ public class Folder extends MailItem {
      *  current change ID. */
     void updateHighestMODSEQ() throws ServiceException {
         int modseq = mMailbox.getOperationChangeID();
-        if (trackImapStats() && mImapMODSEQ < modseq) {
+        if (trackImapStats() && imapMODSEQ < modseq) {
             markItemModified(Change.MODIFIED_SIZE);
-            mImapMODSEQ = modseq;
+            imapMODSEQ = modseq;
         }
     }
 
     /** Sets the folder's RECENT item ID highwater mark to the Mailbox's
      *  last assigned item ID. */
     void checkpointRECENT() throws ServiceException {
-        if (mImapRECENTCutoff == mMailbox.getLastItemId())
+        if (imapRECENTCutoff == mMailbox.getLastItemId())
             return;
 
         markItemModified(Change.INTERNAL_ONLY);
-        mImapRECENT = 0;
-        mImapRECENTCutoff = mMailbox.getLastItemId();
+        imapRECENT = 0;
+        imapRECENTCutoff = mMailbox.getLastItemId();
         saveFolderCounts(false);
     }
 
@@ -704,12 +704,12 @@ public class Folder extends MailItem {
      *                 UIDNEXT and HIGHESTMODSEQ values. */
     protected void saveFolderCounts(boolean initial) throws ServiceException {
         if (initial) {
-            mImapUIDNEXT = mMailbox.getLastItemId() + 1;
-            mImapMODSEQ  = mMailbox.getLastChangeID();
+            imapUIDNEXT = mMailbox.getLastItemId() + 1;
+            imapMODSEQ  = mMailbox.getLastChangeID();
         }
         DbMailItem.persistCounts(this, encodeMetadata());
         ZimbraLog.mailbox.debug("\"%s\": updating folder counts (c%d/d%d/u%d/du%d/s%d)", getName(),
-                                mData.size, mDeletedCount, mData.unreadCount, mDeletedUnreadCount, mTotalSize);
+                                mData.size, deletedCount, mData.unreadCount, deletedUnreadCount, totalSize);
     }
 
     @Override
@@ -724,11 +724,11 @@ public class Folder extends MailItem {
 
     @Override
     boolean isMovable() {
-        return ((mAttributes & FOLDER_IS_IMMUTABLE) == 0);
+        return ((attributes & FOLDER_IS_IMMUTABLE) == 0);
     }
     @Override
     boolean isMutable() {
-        return ((mAttributes & FOLDER_IS_IMMUTABLE) == 0);
+        return ((attributes & FOLDER_IS_IMMUTABLE) == 0);
     }
 
     @Override
@@ -738,7 +738,7 @@ public class Folder extends MailItem {
 
     @Override
     public boolean isDeletable() {
-        return ((mAttributes & FOLDER_IS_IMMUTABLE) == 0);
+        return ((attributes & FOLDER_IS_IMMUTABLE) == 0);
     }
 
     @Override
@@ -748,15 +748,15 @@ public class Folder extends MailItem {
 
     @Override
     boolean trackUnread() {
-        return ((mAttributes & FOLDER_DONT_TRACK_COUNTS) == 0);
+        return ((attributes & FOLDER_DONT_TRACK_COUNTS) == 0);
     }
 
     boolean trackSize() {
-        return ((mAttributes & FOLDER_DONT_TRACK_COUNTS) == 0);
+        return ((attributes & FOLDER_DONT_TRACK_COUNTS) == 0);
     }
 
     boolean trackImapStats() {
-        return ((mAttributes & FOLDER_DONT_TRACK_COUNTS) == 0);
+        return ((attributes & FOLDER_DONT_TRACK_COUNTS) == 0);
     }
 
     @Override
@@ -775,7 +775,7 @@ public class Folder extends MailItem {
             return false;
         } else if (child instanceof Folder) {
             // may not contain our parents or grandparents (c.f. Back to the Future)
-            for (Folder folder = this; folder.getId() != Mailbox.ID_FOLDER_ROOT; folder = folder.mParent)
+            for (Folder folder = this; folder.getId() != Mailbox.ID_FOLDER_ROOT; folder = folder.parent)
                 if (folder.getId() == child.getId())
                     return false;
         }
@@ -856,6 +856,7 @@ public class Folder extends MailItem {
      * @see #canContain(byte)
      * @see #FOLDER_IS_IMMUTABLE
      * @see #FOLDER_DONT_TRACK_COUNTS */
+    @SuppressWarnings("deprecation")
     public static Folder create(int id, Mailbox mbox, Folder parent, String name, byte attributes, Type view, int flags,
             Color color, String url, CustomMetadata custom) throws ServiceException {
         if (id != Mailbox.ID_FOLDER_ROOT) {
@@ -945,7 +946,7 @@ public class Folder extends MailItem {
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
 
         markItemModified(Change.MODIFIED_URL);
-        mSyncData = new SyncData(url);
+        syncData = new SyncData(url);
         saveMetadata();
     }
 
@@ -971,7 +972,7 @@ public class Folder extends MailItem {
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
 
         markItemModified(Change.MODIFIED_URL);
-        mSyncData = new SyncData(getUrl(), guid, date);
+        syncData = new SyncData(getUrl(), guid, date);
         saveMetadata();
     }
 
@@ -980,10 +981,10 @@ public class Folder extends MailItem {
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
 
         markItemModified(Change.MODIFIED_URL);
-        if (mSyncData == null)
-            mSyncData = new SyncData(null, null, date);
+        if (syncData == null)
+            syncData = new SyncData(null, null, date);
         else
-            mSyncData.lastDate = date;
+            syncData.lastDate = date;
         saveMetadata();
     }
 
@@ -1090,14 +1091,14 @@ public class Folder extends MailItem {
 
         if (isNoInheritFlag) {
             markItemModified(Change.MODIFIED_ACL);
-            if (!newValue && mRights != null) {
+            if (!newValue && rights != null) {
                 // clearing the "no inherit" flag sets inherit ON and thus must clear the folder's ACL
-                mRights = null;
+                rights = null;
                 saveMetadata();
             } else if (newValue) {
                 // setting the "no inherit" flag turns inherit OFF and thus must make a copy of the folder's effective ACL
                 //   note: can't just call Folder.setPermissions() because at this point inherit is OFF and mRights is NULL, so delegated admin would fail
-                mRights = effectiveACL;
+                rights = effectiveACL;
                 saveMetadata();
             }
         }
@@ -1114,12 +1115,12 @@ public class Folder extends MailItem {
     @Override void rename(String name, Folder target) throws ServiceException {
         name = validateItemName(name);
         boolean renamed = !name.equals(mData.name);
-        if (!renamed && target == mParent)
+        if (!renamed && target == parent)
             return;
 
         super.rename(name, target);
 
-        if (mRights != null) {
+        if (rights != null) {
             queueForAclPush();
         }
     }
@@ -1157,7 +1158,7 @@ public class Folder extends MailItem {
         }
 
         // tell the folder's old and new parents
-        mParent.removeChild(this);
+        parent.removeChild(this);
         target.addChild(this);
 
         ZimbraLog.mailop.info("moving %s to %s", getMailopContext(this), getMailopContext(target));
@@ -1168,7 +1169,7 @@ public class Folder extends MailItem {
         mData.metadataChanged(mMailbox);
         DbMailItem.setFolder(this, target);
 
-        if (mRights != null) {
+        if (rights != null) {
             queueForAclPush();
         }
 
@@ -1232,7 +1233,7 @@ public class Folder extends MailItem {
                 }
             }
             subfolders.add(subfolder);
-            subfolder.mParent = this;
+            subfolder.parent = this;
         }
     }
 
@@ -1253,7 +1254,7 @@ public class Folder extends MailItem {
                 throw MailServiceException.IS_NOT_CHILD();
             }
             subfolders.remove(index);
-            subfolder.mParent = null;
+            subfolder.parent = null;
         }
     }
 
@@ -1277,7 +1278,7 @@ public class Folder extends MailItem {
         ZimbraLog.mailbox.info("deleting folder id=%d,path=%s", getId(), getPath());
         super.delete(scope, writeTombstones);
 
-        if (mRights != null) {
+        if (rights != null) {
             queueForAclPush();
         }
     }
@@ -1343,7 +1344,7 @@ public class Folder extends MailItem {
         // get the full list of things that are being removed
         boolean allFolders = (folder == null);
         List<Folder> folders = (allFolders ? null : folder.getSubfolderHierarchy());
-        PendingDelete info = DbMailItem.getLeafNodes(mbox, folders, (int) (beforeDate / 1000), allFolders, unread, useChangeDate, maxItems);
+        PendingDelete info = DbMailItem.getLeafNodes(mbox, folders, null, (int) (beforeDate / 1000), allFolders, unread, useChangeDate, maxItems);
         delete(mbox, info, null, MailItem.DeleteScope.ENTIRE_ITEM, false);
 
         if (deleteEmptySubfolders) {
@@ -1406,23 +1407,23 @@ public class Folder extends MailItem {
         }
         byte bview = (byte) meta.getLong(Metadata.FN_VIEW, -1);
         defaultView = bview >= 0 ? Type.of(bview) : view;
-        mAttributes  = (byte) meta.getLong(Metadata.FN_ATTRS, 0);
-        mTotalSize   = meta.getLong(Metadata.FN_TOTAL_SIZE, 0L);
-        mImapUIDNEXT = (int) meta.getLong(Metadata.FN_UIDNEXT, 0);
-        mImapMODSEQ  = (int) meta.getLong(Metadata.FN_MODSEQ, 0);
-        mImapRECENT  = (int) meta.getLong(Metadata.FN_RECENT, -1);
-        mImapRECENTCutoff = (int) meta.getLong(Metadata.FN_RECENT_CUTOFF, 0);
-        mDeletedCount       = (int) meta.getLong(Metadata.FN_DELETED, 0);
-        mDeletedUnreadCount = (int) meta.getLong(Metadata.FN_DELETED_UNREAD, 0);
+        attributes  = (byte) meta.getLong(Metadata.FN_ATTRS, 0);
+        totalSize   = meta.getLong(Metadata.FN_TOTAL_SIZE, 0L);
+        imapUIDNEXT = (int) meta.getLong(Metadata.FN_UIDNEXT, 0);
+        imapMODSEQ  = (int) meta.getLong(Metadata.FN_MODSEQ, 0);
+        imapRECENT  = (int) meta.getLong(Metadata.FN_RECENT, -1);
+        imapRECENTCutoff = (int) meta.getLong(Metadata.FN_RECENT_CUTOFF, 0);
+        deletedCount       = (int) meta.getLong(Metadata.FN_DELETED, 0);
+        deletedUnreadCount = (int) meta.getLong(Metadata.FN_DELETED_UNREAD, 0);
 
         if (meta.containsKey(Metadata.FN_URL) || meta.containsKey(Metadata.FN_SYNC_DATE)) {
-            mSyncData = new SyncData(meta.get(Metadata.FN_URL, null), meta.get(Metadata.FN_SYNC_GUID, null),
+            syncData = new SyncData(meta.get(Metadata.FN_URL, null), meta.get(Metadata.FN_SYNC_GUID, null),
                     meta.getLong(Metadata.FN_SYNC_DATE, 0));
         }
         MetadataList mlistACL = meta.getList(Metadata.FN_RIGHTS, true);
         if (mlistACL != null) {
             ACL acl = new ACL(mlistACL);
-            mRights = acl.isEmpty() ? null : acl;
+            rights = acl.isEmpty() ? null : acl;
             if (!isTagged(Flag.ID_NO_INHERIT)) {
                 alterTag(mMailbox.getFlagById(Flag.ID_NO_INHERIT), true);
             }
@@ -1438,9 +1439,9 @@ public class Folder extends MailItem {
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        Metadata m = encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, mAttributes, defaultView, mRights, mSyncData,
-                mImapUIDNEXT, mTotalSize, mImapMODSEQ, mImapRECENT, mImapRECENTCutoff, mDeletedCount,
-                mDeletedUnreadCount);
+        Metadata m = encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, attributes, defaultView, rights, syncData,
+                imapUIDNEXT, totalSize, imapMODSEQ, imapRECENT, imapRECENTCutoff, deletedCount,
+                deletedUnreadCount);
         if (retentionPolicy.isSet()) {
             m.put(Metadata.FN_RETENTION_POLICY, RetentionPolicyManager.toMetadata(retentionPolicy));
         }
@@ -1498,9 +1499,9 @@ public class Folder extends MailItem {
         Objects.ToStringHelper helper = Objects.toStringHelper(this);
         helper.add(CN_NAME, getName());
         appendCommonMembers(helper);
-        helper.add(CN_DELETED, mDeletedCount);
-        helper.add(CN_DELETED_UNREAD, mDeletedUnreadCount);
-        helper.add(CN_ATTRIBUTES, mAttributes);
+        helper.add(CN_DELETED, deletedCount);
+        helper.add(CN_DELETED_UNREAD, deletedUnreadCount);
+        helper.add(CN_ATTRIBUTES, attributes);
         return helper.toString();
     }
 }
