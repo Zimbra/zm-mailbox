@@ -19,9 +19,11 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.google.common.base.Joiner;
 
 /**
  * A simple in-memory interface to a JDBC <code>ResultSet</code>.  This
@@ -48,9 +50,9 @@ import java.util.Map;
  */
 public class DbResults {
 
-    private List<Object[]> mData = new ArrayList<Object[]>();
-    private Map<String, Integer> mColumnIndexes = new HashMap<String, Integer>();
-    private int mRowNum = 0;
+    private List<Object[]> data = new ArrayList<Object[]>();
+    private Map<String, Integer> columnIndexes = new LinkedHashMap<String, Integer>();
+    private int rowNum = 0;
     
     /**
      * Constructs a <code>DbResults</code> object from the specified JDBC
@@ -73,7 +75,7 @@ public class DbResults {
                 ResultSetMetaData md = resultSet.getMetaData();
                 numCols = md.getColumnCount();
                 for (int i = 1; i <= numCols; i++) {
-                    mColumnIndexes.put(md.getColumnName(i), new Integer(i));
+                    columnIndexes.put(md.getColumnName(i), new Integer(i));
                 }
                 isFirst = false;
             }
@@ -82,7 +84,7 @@ public class DbResults {
             for (int i = 0; i < numCols; i++) {
                 row[i] = resultSet.getObject(i+1);
             }
-            mData.add(row);
+            data.add(row);
         }
         
         resultSet.close();
@@ -94,7 +96,7 @@ public class DbResults {
      * @return the number of rows
      */
     public int size() {
-        return mData.size();
+        return data.size();
     }
     
     /**
@@ -103,10 +105,10 @@ public class DbResults {
      * @return <code>true</code> if another row is available.
      */
     public boolean next() {
-        if (mRowNum == mData.size()) {
+        if (rowNum == data.size()) {
             return false;
         }
-        mRowNum++;
+        rowNum++;
         return true;
     }
     
@@ -114,7 +116,7 @@ public class DbResults {
      * Returns the row of data at the specified index.
      */
     public Object[] getRow(int row) {
-        return mData.get(row - 1);
+        return data.get(row - 1);
     }
     
     ////////// Null checks //////////
@@ -304,7 +306,7 @@ public class DbResults {
     ////////// Private methods  //////////
 
     private int getIndex(String colName) {
-        Integer i = (Integer)mColumnIndexes.get(colName);
+        Integer i = columnIndexes.get(colName);
         if (i == null) {
             throw new IllegalArgumentException("Column '" + colName + "' does not exist");
         }
@@ -312,9 +314,21 @@ public class DbResults {
     }
 
     private int getRowNum() {
-        if (mRowNum < 1) {
-            mRowNum = 1;
+        if (rowNum < 1) {
+            rowNum = 1;
         }
-        return mRowNum;
+        return rowNum;
+    }
+    
+    private static final Joiner COMMA_JOINER = Joiner.on(",").useForNull("<NULL>");
+    
+    @Override
+    public String toString() {
+        StringBuilder buf = new StringBuilder();
+        buf.append(COMMA_JOINER.join(columnIndexes.keySet()));
+        for (Object[] row : data) {
+            buf.append('\n').append(COMMA_JOINER.join(row));
+        }
+        return buf.toString();
     }
 }
