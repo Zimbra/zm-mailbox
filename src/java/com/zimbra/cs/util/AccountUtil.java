@@ -239,6 +239,10 @@ public class AccountUtil {
 
         public AccountAddressMatcher(Account account, boolean matchSendAs) throws ServiceException {
             addresses = new HashSet<String>();
+            String mainAddr = account.getName();
+            if (!StringUtil.isNullOrEmpty(mainAddr)) {
+                addresses.add(mainAddr.toLowerCase());
+            }
             String canonAddr = getCanonicalAddress(account);
             if (!StringUtil.isNullOrEmpty(canonAddr)) {
                 addresses.add(canonAddr.toLowerCase());
