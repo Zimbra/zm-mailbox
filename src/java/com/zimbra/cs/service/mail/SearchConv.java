@@ -20,13 +20,13 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Strings;
 import com.google.common.io.Closeables;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key.AccountBy;
@@ -49,28 +49,20 @@ import com.zimbra.soap.ZimbraSoapContext;
 /**
  * @since Nov 30, 2004
  */
-public class SearchConv extends Search {
-    private static Log sLog = LogFactory.getLog(Search.class);
+public final class SearchConv extends Search {
 
     private static final int CONVERSATION_FIELD_MASK =
         Change.MODIFIED_SIZE | Change.MODIFIED_TAGS | Change.MODIFIED_FLAGS;
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        if (sLog.isDebugEnabled()) {
-            sLog.debug("**Start SearchConv");
-        }
-
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
-
         boolean nest = request.getAttributeBool(MailConstants.A_NEST_MESSAGES, false);
-
         Account acct = getRequestedAccount(zsc);
-        SearchParams params = SearchParams.parse(request, zsc,
-                acct.getAttr(Provisioning.A_zimbraPrefMailInitialSearch));
+        SearchParams params = SearchParams.parse(request, zsc, acct.getPrefMailInitialSearch());
 
         // append (conv:(convid)) onto the beginning of the queryStr
         ItemId cid = new ItemId(request.getAttribute(MailConstants.A_CONV_ID), zsc);
@@ -86,8 +78,7 @@ public class SearchConv extends Search {
 
         Element response = null;
         if (cid.belongsTo(mbox)) { // local
-            ZimbraQueryResults results = this.doSearch(zsc, octxt, mbox, params);
-
+            ZimbraQueryResults results =  mbox.index.search(zsc.getResponseProtocol(), octxt, params);
             try {
                 response = zsc.createElement(MailConstants.SEARCH_CONV_RESPONSE);
                 response.addAttribute(MailConstants.A_QUERY_OFFSET, Integer.toString(params.getOffset()));
@@ -173,16 +164,11 @@ public class SearchConv extends Search {
      *  the specified limit
      * @throws ServiceException
      */
-    private boolean putHits(OperationContext octxt, ItemIdFormatter ifmt,
-            SearchResponse resp, List<Message> msgs, ZimbraQueryResults results,
-            SearchParams params) throws ServiceException {
+    private boolean putHits(OperationContext octxt, ItemIdFormatter ifmt, SearchResponse resp, List<Message> msgs,
+            ZimbraQueryResults results, SearchParams params) throws ServiceException {
 
         int offset = params.getOffset();
         int limit  = params.getLimit();
-
-        if (sLog.isDebugEnabled()) {
-            sLog.debug("SearchConv beginning with offset " + offset);
-        }
 
         int iterLen = limit;
 
@@ -229,9 +215,8 @@ public class SearchConv extends Search {
         return offset + iterLen < msgs.size();
     }
 
-    private Element addMessageMiss(Message msg, Element response,
-            OperationContext octxt, ItemIdFormatter ifmt, boolean inline,
-            SearchParams params) throws ServiceException {
+    private Element addMessageMiss(Message msg, Element response, OperationContext octxt, ItemIdFormatter ifmt,
+            boolean inline, SearchParams params) throws ServiceException {
 
         // for bug 7568, mark-as-read must happen before the response is encoded.
         if (inline && msg.isUnread() && params.getMarkRead()) {
@@ -239,23 +224,19 @@ public class SearchConv extends Search {
             try {
                 msg.getMailbox().alterTag(octxt, msg.getId(), msg.getType(), Flag.ID_UNREAD, false);
             } catch (ServiceException e) {
-                mLog.warn("problem marking message as read (ignored): " +
-                        msg.getId(), e);
+                ZimbraLog.search.warn("problem marking message as read (ignored): %d", msg.getId(), e);
             }
         }
 
         Element el;
         if (inline) {
-            el = ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, null,
-                    params.getMaxInlinedLength(), params.getWantHtml(),
-                    params.getNeuterImages(), null, true);
-            if (!msg.getFragment().equals("")) {
-                el.addAttribute(MailConstants.E_FRAG, msg.getFragment(),
-                        Element.Disposition.CONTENT);
+            el = ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, null, params.getMaxInlinedLength(),
+                    params.getWantHtml(), params.getNeuterImages(), null, true);
+            if (!Strings.isNullOrEmpty(msg.getFragment())) {
+                el.addAttribute(MailConstants.E_FRAG, msg.getFragment(), Element.Disposition.CONTENT);
             }
         } else {
-            el = ToXML.encodeMessageSummary(response, ifmt, octxt, msg,
-                    params.getWantRecipients());
+            el = ToXML.encodeMessageSummary(response, ifmt, octxt, msg, params.getWantRecipients());
         }
         return el;
     }

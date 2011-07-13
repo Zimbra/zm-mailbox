@@ -23,8 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.jivesoftware.wildfire.XMPPServer;
-
 import com.google.common.collect.Iterables;
 import com.google.common.io.Closeables;
 import com.zimbra.common.auth.ZAuthToken;
@@ -32,15 +30,12 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.im.provider.ZimbraRoutingTableImpl;
 import com.zimbra.cs.index.QueryInfo;
 import com.zimbra.cs.index.ResultsPager;
 import com.zimbra.cs.index.SearchParams;
@@ -69,7 +64,6 @@ import com.zimbra.soap.ZimbraSoapContext;
  * @since May 26, 2004
  */
 public class Search extends MailDocumentHandler  {
-    protected static Log mLog = LogFactory.getLog(Search.class);
 
     public static final Set<MailItem.Type> DEFAULT_SEARCH_TYPES = EnumSet.of(MailItem.Type.CONVERSATION);
 
@@ -77,27 +71,21 @@ public class Search extends MailDocumentHandler  {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
-        Account acct = getRequestedAccount(zsc);
+        Account account = getRequestedAccount(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
-        {
-            String query = request.getAttribute(MailConstants.E_QUERY, "");
-            if (query.startsWith("$dump_routes")) {
-                ZimbraLog.im.info("Routing Table: "+((ZimbraRoutingTableImpl)(XMPPServer.getInstance().getRoutingTable())).dumpRoutingTable());
-                // create the XML response Element
-                Element response = zsc.createElement(MailConstants.SEARCH_RESPONSE);
-                return response;
-            }
+
+        if (request.getAttributeBool(MailConstants.A_WARMUP, false)) {
+            mbox.index.getIndexStore().warmup();
+            return zsc.createElement(MailConstants.SEARCH_RESPONSE);
         }
-        SearchParams params = SearchParams.parse(request, zsc, acct.getAttr(Provisioning.A_zimbraPrefMailInitialSearch));
+
+        SearchParams params = SearchParams.parse(request, zsc, account.getPrefMailInitialSearch());
         if (params.inDumpster()) {
             if (params.getTypes().contains(MailItem.Type.CONVERSATION)) {
                 throw ServiceException.INVALID_REQUEST("cannot search for conversations in dumpster", null);
             }
         }
 
-        String query = params.getQueryStr();
-
-        params.setQueryStr(query);
         if (LC.calendar_cache_enabled.booleanValue()) {
             List<String> apptFolderIds = getFolderIdListIfSimpleAppointmentsQuery(params, zsc);
             if (apptFolderIds != null) {
@@ -108,7 +96,7 @@ public class Search extends MailDocumentHandler  {
             }
         }
 
-        ZimbraQueryResults results = doSearch(zsc, octxt, mbox, params);
+        ZimbraQueryResults results = mbox.index.search(zsc.getResponseProtocol(), octxt, params);
         try {
             // create the XML response Element
             Element response = zsc.createElement(MailConstants.SEARCH_RESPONSE);
@@ -124,10 +112,6 @@ public class Search extends MailDocumentHandler  {
         } finally {
             Closeables.closeQuietly(results);
         }
-    }
-
-    protected ZimbraQueryResults doSearch(ZimbraSoapContext zsc, OperationContext octxt, Mailbox mbox, SearchParams params) throws ServiceException {
-        return mbox.index.search(zsc.getResponseProtocol(), octxt, params);
     }
 
     protected static void putInfo(Element response, ZimbraQueryResults results) {
@@ -175,9 +159,15 @@ public class Search extends MailDocumentHandler  {
 
     // Calendar summary cache stuff
 
-    // Returns list of folder id string if the query is a simple appointments query.
-    // Otherwise returns null.
-    protected List<String> getFolderIdListIfSimpleAppointmentsQuery(SearchParams params, ZimbraSoapContext zsc) throws ServiceException {
+    /**
+     * Returns list of folder id string if the query is a simple appointments query. Otherwise returns null.
+     *
+     * @param params search parameters
+     * @param zsc not used, may be used in subclass
+     * @throws ServiceException subclass may throw
+     */
+    protected List<String> getFolderIdListIfSimpleAppointmentsQuery(SearchParams params, ZimbraSoapContext zsc)
+            throws ServiceException {
         // types = "appointment"
         Set<MailItem.Type> types = params.getTypes();
         if (types.size() != 1) {

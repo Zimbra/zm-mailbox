@@ -1211,7 +1211,7 @@ Folders:
        [url="{remote-url}"] [perm="{effective-perms}"] [rest="{rest-url}"]>
     [<acl> <grant perm="{rights}" gt="{grantee-type}" zid="{zimbra-id}" d="{grantee-name}" [pw="{password-for-guest}"] [key=="{access-key}"]/>* </acl>]
     [<retentionPolicy> ... </retentionPolicy>]
-    
+
   </folder>
 
   {folder-name}  = name of folder; max length 128; whitespace is trimmed by server;
@@ -1294,14 +1294,11 @@ Tags:
 
 ----------
 
-<SearchRequest [limit="..."] [offset="..."] [sortBy="{sort-by}"] [groupBy="{group-by}"]
-               [types="{types}"] [recip="*0|1"] [fetch="1|all|{item-id}"] [read="*0|1"]
-               [max="{max-inlined-length}"] [html="*0|1"] [neuter="0|*1"] [field={default_field}]
-               [calExpandInstStart=TIME_IN_MSEC] [calExpandInstEnd=TIME_IN_MSEC]
-               [allowableTaskStatus="need,inprogress,completed,canceled"]
-               [resultMode="{result-mode}"]
-               [inDumpster="*0|1"]
-               >
+<SearchRequest [limit="..."] [offset="..."] [sortBy="{sort-by}"] [groupBy="{group-by}"] [types="{types}"] [recip="*0|1"]
+    [fetch="1|all|{item-id}"] [read="*0|1"] [max="{max-inlined-length}"] [html="*0|1"] [neuter="0|*1"]
+    [field={default_field}] [calExpandInstStart=TIME_IN_MSEC] [calExpandInstEnd=TIME_IN_MSEC] [warmup="*0|1"]
+    [allowableTaskStatus="need,inprogress,completed,canceled"] [resultMode="{result-mode}"] [inDumpster="*0|1"]>
+
   *(<header n="{header-name}/>)
   [<cursor id="prevId" [sortVal="prevSortValue"] [endSortVal="endSortValue"] [includeOffset="true|false"]/>]
   [   // OPTIONAL: client timezone identification (necessary to time-correct a user-specified date/time query)
@@ -1428,6 +1425,14 @@ if recip="1" is specified
                       NORMAL|IDS
                   NORMAL : everything
                   IDS    : only IDs
+
+  warmup: When this option is specified, all other options are simply ignored, so you can't include this option in
+   regular search requests. This options gives a hint to the index system to open the index data and primes it for
+   search. The client should send this warm-up request as soon as the user puts the cursor on the search bar. This will
+   not only prime the index but also opens a persistent HTTP connection (HTTP 1.1 Keep-Alive) to the server, hence
+   smaller latencies in subseqent search requests. Sending this warm-up request too early (e.g. login time) will be in
+   vain in most cases because the index data is evicted from the cache due to inactivity timeout by the time you
+   actually send a search request.
 
   <cursor> (optional):
   - id, sortVal: These correspond to the last hit on the current page (assuming you're going forward, if you're backing

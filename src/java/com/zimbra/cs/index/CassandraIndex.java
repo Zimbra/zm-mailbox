@@ -167,6 +167,10 @@ public final class CassandraIndex implements IndexStore {
     }
 
     @Override
+    public void warmup() {
+    }
+
+    @Override
     public boolean verify(PrintStream out) {
         return true;
     }

@@ -40,6 +40,11 @@ public interface IndexStore {
     IndexSearcher openSearcher() throws IOException;
 
     /**
+     * Prime the index.
+     */
+    void warmup();
+
+    /**
      * Removes from cache.
      */
     void evict();

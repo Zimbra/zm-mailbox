@@ -36,6 +36,9 @@ import org.apache.lucene.index.SerialMergeScheduler;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.store.NoSuchDirectoryException;
 import org.apache.lucene.store.SingleInstanceLockFactory;
 import org.apache.lucene.util.Version;
@@ -163,6 +166,29 @@ public final class LuceneIndex implements IndexStore {
     }
 
     /**
+     * Runs a common search query + common sort order (and throw away the result) to warm up the Lucene cache and OS
+     * file system cache.
+     */
+    @Override
+    public synchronized void warmup() {
+        if (SEARCHER_CACHE.containsKey(mailbox.getId())) {
+            return; // already warmed up
+        }
+        long start = System.currentTimeMillis();
+        IndexSearcher searcher = null;
+        try {
+            searcher = openSearcher();
+            searcher.search(new TermQuery(new Term(LuceneFields.L_CONTENT, "zimbra")), 1,
+                    new Sort(new SortField(LuceneFields.L_SORT_DATE, SortField.STRING, true)));
+        } catch (IOException e) {
+            ZimbraLog.search.warn("Failed to warm up", e);
+        } finally {
+            Closeables.closeQuietly(searcher);
+        }
+        ZimbraLog.search.debug("WarmUpLuceneSearcher elapsed=%d", System.currentTimeMillis() - start);
+    }
+
+    /**
      * Removes from cache.
      */
     @Override
@@ -252,7 +278,7 @@ public final class LuceneIndex implements IndexStore {
      * @throws IOException if opening an {@link IndexReader} failed
      */
     @Override
-    public IndexSearcher openSearcher() throws IOException {
+    public synchronized IndexSearcher openSearcher() throws IOException {
         IndexSearcherImpl searcher = SEARCHER_CACHE.get(mailbox.getId());
         if (searcher != null) {
             ZimbraLog.search.debug("CacheHitLuceneSearcher %s", searcher);
