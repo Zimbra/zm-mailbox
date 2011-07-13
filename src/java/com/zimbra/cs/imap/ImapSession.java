@@ -246,12 +246,11 @@ public class ImapSession extends Session {
         return cachekey;
     }
 
-    synchronized PagedFolderData unload() throws IOException, ServiceException {
+    synchronized void unload() throws IOException, ServiceException {
         // if the data's already paged out, we can short-circuit
         if (mMailbox != null && mFolder instanceof ImapFolder) {
             mFolder = new PagedFolderData(serialize(), (ImapFolder) mFolder);
         }
-        return (PagedFolderData) mFolder;
     }
 
     ImapFolder reload() throws IOException {
