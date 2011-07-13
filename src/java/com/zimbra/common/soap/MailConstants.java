@@ -244,7 +244,7 @@ public final class MailConstants {
     public static final String E_GET_COMMENTS_RESPONSE = "GetCommentsResponse";
     public static final String E_GET_SHARE_NOTIFICATIONS_REQUEST = "GetShareNotificationsRequest";
     public static final String E_GET_SHARE_NOTIFICATIONS_RESPONSE = "GetShareNotificationsResponse";
-    
+
     // noop
     public static final QName NO_OP_REQUEST = QName.get(E_NO_OP_REQUEST, NAMESPACE);
     public static final QName NO_OP_RESPONSE = QName.get(E_NO_OP_RESPONSE, NAMESPACE);
@@ -777,6 +777,7 @@ public final class MailConstants {
     public static final String A_INCLUDE_TAG_DELETED = "includeTagDeleted"; //
     public static final String A_ALLOWABLE_TASK_STATUS = "allowableTaskStatus";
     public static final String A_IN_DUMPSTER = "inDumpster";
+    public static final String A_WARMUP = "warmup";
 
     // search-result paging
     public static final String E_CURSOR = "cursor";
@@ -1121,7 +1122,7 @@ public final class MailConstants {
     public static final String E_GRANTEE = "grantee";
 
     public static final String A_ACCOUNT_ID = "accountId";
-    
+
     // Retention policy
     public static final String E_RETENTION_POLICY = "retentionPolicy";
     public static final String E_KEEP = "keep";
