@@ -556,7 +556,10 @@ public final class ZimbraQuery {
             // Now, for all the LOCAL PARTS of the query, add the trash/spam exclusion part
             boolean includeTrash = false;
             boolean includeSpam = false;
-            if (authAcct != null) {
+            if (params.inDumpster()) {
+                // Dumpster search should never exclude trash/spam because most dumpster data comes from trash folder.
+                includeTrash = includeSpam = true;
+            } else if (authAcct != null) {
                 includeTrash = authAcct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeTrashInSearch, false);
                 includeSpam = authAcct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeSpamInSearch, false);
             }
