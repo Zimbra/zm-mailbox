@@ -38,6 +38,7 @@ import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -212,11 +213,14 @@ public class GetInfo extends AccountDocumentHandler  {
         Set<String> attrList = attrMgr.getAttrsWithFlag(AttributeFlag.accountInfo);
         
         Set<String> acctAttrs = attrMgr.getAllAttrsInClass(AttributeClass.account);
+        Set<String> domainAttrs = attrMgr.getAllAttrsInClass(AttributeClass.domain);
         Set<String> serverAttrs = attrMgr.getAllAttrsInClass(AttributeClass.server);
         Set<String> configAttrs = attrMgr.getAllAttrsInClass(AttributeClass.globalConfig);
         
+        Provisioning prov = Provisioning.getInstance();
+        Domain domain = prov.getDomain(acct);
         Server server = acct.getServer();
-        Config config = Provisioning.getInstance().getConfig();
+        Config config = prov.getConfig();
         
         for (String key : attrList) {
             Object value = null;
@@ -230,11 +234,13 @@ public class GetInfo extends AccountDocumentHandler  {
                 
                 if (value == null) { // no value on account/cos
                     if (!acctAttrs.contains(key)) { // not an account attr
-                        // see if it is on server or globalconfig
-                        if (serverAttrs.contains(key)) {
-                            value = server.getAttr(key); // value on server/global config (serverInherited)
+                        // see if it is on domain, server, or globalconfig
+                        if (domainAttrs.contains(key)) {
+                            value = domain.getMultiAttr(key); // value on domain/global config (domainInherited)
+                        } else if (serverAttrs.contains(key)) {
+                            value = server.getMultiAttr(key); // value on server/global config (serverInherited)
                         } else if (configAttrs.contains(key)) {
-                            value = config.getAttr(key); // value on global config
+                            value = config.getMultiAttr(key); // value on global config
                         }
                     }
                 }
