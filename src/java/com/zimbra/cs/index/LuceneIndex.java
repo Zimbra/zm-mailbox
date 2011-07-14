@@ -616,7 +616,7 @@ public final class LuceneIndex implements IndexStore {
 
     public static ZimbraQueryResults search(ZimbraQuery zq) throws ServiceException {
         SearchParams params = zq.getParams();
-        ZimbraLog.search.debug("query: %s", params.getQueryStr());
+        ZimbraLog.search.debug("query: %s", params.getQueryString());
 
         // handle special-case Task-only sorts: convert them to a "normal sort"
         //     and then re-sort them at the end

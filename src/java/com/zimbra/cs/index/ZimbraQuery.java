@@ -358,7 +358,7 @@ public final class ZimbraQuery {
             parser.setTypes(params.getTypes());
             parser.setTimeZone(params.getTimeZone());
             parser.setLocale(params.getLocale());
-            clauses = parser.parse(params.getQueryStr());
+            clauses = parser.parse(params.getQueryString());
 
             if (parser.getSortBy() != null) {
                 SortBy sort = SortBy.of(parser.getSortBy());

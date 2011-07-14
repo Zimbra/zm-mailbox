@@ -123,7 +123,7 @@ public class SearchWrapper extends PhantomResource {
             Account account = prov.get(AccountBy.name, user);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
             SearchParams params = new SearchParams();
-            params.setQueryStr(mQuery.toString());
+            params.setQueryString(mQuery.toString());
             params.setTypes(SEARCH_TYPES);
             params.setSortBy(SortBy.NAME_ASC);
             params.setMode(SearchResultMode.NORMAL);

@@ -63,7 +63,7 @@ public final class LuceneQueryOperationTest {
         MailboxTestUtil.index(mbox);
 
         SearchParams params = new SearchParams();
-        params.setQueryStr("-from:test1@zimbra.com");
+        params.setQueryString("-from:test1@zimbra.com");
         params.setTypes(EnumSet.of(MailItem.Type.MESSAGE));
         params.setSortBy(SortBy.NONE);
         ZimbraQuery query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
@@ -86,7 +86,7 @@ public final class LuceneQueryOperationTest {
         MailboxTestUtil.index(mbox);
 
         SearchParams params = new SearchParams();
-        params.setQueryStr("-from:(test1 zimbra.com)");
+        params.setQueryString("-from:(test1 zimbra.com)");
         params.setTypes(EnumSet.of(MailItem.Type.MESSAGE));
         params.setSortBy(SortBy.NONE);
         ZimbraQuery query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
@@ -108,7 +108,7 @@ public final class LuceneQueryOperationTest {
 
         // phrase query
         SearchParams params = new SearchParams();
-        params.setQueryStr("subject:\"one two three\"");
+        params.setQueryString("subject:\"one two three\"");
         params.setTypes(EnumSet.of(MailItem.Type.MESSAGE));
         params.setSortBy(SortBy.NONE);
         ZimbraQuery query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
@@ -119,7 +119,7 @@ public final class LuceneQueryOperationTest {
 
         // verify subject is not repeated during index
         params = new SearchParams();
-        params.setQueryStr("subject:\"three one\"");
+        params.setQueryString("subject:\"three one\"");
         params.setTypes(EnumSet.of(MailItem.Type.MESSAGE));
         params.setSortBy(SortBy.NONE);
         query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);

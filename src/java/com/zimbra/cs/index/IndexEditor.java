@@ -127,7 +127,7 @@ public class IndexEditor {
                 throws IOException, MailServiceException, ServiceException {
             Mailbox mbox = MailboxManager.getInstance().getMailboxById(mMailboxId);
             SearchParams params = new SearchParams();
-            params.setQueryStr(qstr);
+            params.setQueryString(qstr);
             params.setTypes(types);
             params.setSortBy(sortBy);
             params.setOffset(0);

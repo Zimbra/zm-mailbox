@@ -66,12 +66,7 @@ public final class SearchConv extends Search {
 
         // append (conv:(convid)) onto the beginning of the queryStr
         ItemId cid = new ItemId(request.getAttribute(MailConstants.A_CONV_ID), zsc);
-        StringBuilder queryBuffer = new StringBuilder("conv:\"");
-        queryBuffer.append(cid.toString(ifmt));
-        queryBuffer.append("\" (");
-        queryBuffer.append(params.getQueryStr());
-        queryBuffer.append(")");
-        params.setQueryStr(queryBuffer.toString());
+        params.setQueryString("conv:\"" + cid.toString(ifmt) + "\" (" + params.getQueryString() + ')');
 
         // force to group-by-message
         params.setTypes(EnumSet.of(MailItem.Type.MESSAGE));

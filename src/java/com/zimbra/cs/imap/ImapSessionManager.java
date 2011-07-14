@@ -305,7 +305,7 @@ final class ImapSessionManager {
         }
 
         SearchParams params = new SearchParams();
-        params.setQueryStr(search.getQuery());
+        params.setQueryString(search.getQuery());
         params.setIncludeTagDeleted(true);
         params.setTypes(types);
         params.setSortBy(SortBy.DATE_ASC);

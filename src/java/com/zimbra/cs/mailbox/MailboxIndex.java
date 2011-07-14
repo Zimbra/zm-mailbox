@@ -192,7 +192,7 @@ public final class MailboxIndex {
     public ZimbraQueryResults search(OperationContext octxt, String queryString, Set<MailItem.Type> types,
             SortBy sortBy, int chunkSize, boolean inDumpster) throws ServiceException {
         SearchParams params = new SearchParams();
-        params.setQueryStr(queryString);
+        params.setQueryString(queryString);
         params.setTimeZone(null);
         params.setLocale(null);
         params.setTypes(types);
@@ -211,7 +211,7 @@ public final class MailboxIndex {
 
     private ZimbraQueryResults search(ZimbraQuery zq) throws ServiceException {
         SearchParams params = zq.getParams();
-        ZimbraLog.search.debug("query: %s", params.getQueryStr());
+        ZimbraLog.search.debug("query: %s", params.getQueryString());
 
         // handle special-case Task-only sorts: convert them to a "normal sort" and then re-sort them at the end
         // TODO: this hack (converting the sort) should be able to go away w/ the new SortBy implementation, if the

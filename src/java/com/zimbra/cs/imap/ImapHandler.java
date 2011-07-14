@@ -32,7 +32,6 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.imap.ImapCredentials.EnabledHack;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
@@ -947,7 +946,7 @@ abstract class ImapHandler {
             AuthenticatorUser authUser = new ImapAuthenticatorUser(this, null);
             for (String mechanism : Authenticator.listMechanisms()) {
                 if (mechanismEnabled(mechanism) && Authenticator.getAuthenticator(mechanism, authUser) != null
-                		&& !mechanism.equalsIgnoreCase("X-ZIMBRA")) //bug 57205, hide X-ZIMBRA auth mech
+                        && !mechanism.equalsIgnoreCase("X-ZIMBRA")) //bug 57205, hide X-ZIMBRA auth mech
                     capability.append(" AUTH=").append(mechanism);
             }
         }
@@ -3039,7 +3038,7 @@ abstract class ImapHandler {
 
         SearchParams params = new SearchParams();
         params.setIncludeTagDeleted(true);
-        params.setQueryStr(search);
+        params.setQueryString(search);
         params.setTypes(i4folder.getTypeConstraint());
         params.setSortBy(sort);
         params.setChunkSize(2000);

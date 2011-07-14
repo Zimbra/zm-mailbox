@@ -107,7 +107,7 @@ public class GalSearchParams {
     public String getQuery() {
         return mQuery;
     }
-    
+
     public String getSearchEntryByDn() {
         return mSearchEntryByDn;
     }
@@ -231,10 +231,10 @@ public class GalSearchParams {
     public void setQuery(String query) {
         mQuery = query;
     }
-    
+
     public void setSearchEntryByDn(String dn) {
         mSearchEntryByDn = dn;
-    }    
+    }
 
     public void setToken(String token) {
         mSyncToken = new GalSyncToken(token);
@@ -248,7 +248,7 @@ public class GalSearchParams {
         mSearchParams = new SearchParams();
         mSearchParams.setLimit(mLimit + 1);
         mSearchParams.setSortBy(SortBy.NAME_ASC);
-        mSearchParams.setQueryStr(searchQuery);
+        mSearchParams.setQueryString(searchQuery);
         mSearchParams.setTypes(EnumSet.of(MailItem.Type.CONTACT));
     }
 

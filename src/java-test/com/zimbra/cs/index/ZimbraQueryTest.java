@@ -63,7 +63,7 @@ public final class ZimbraQueryTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 
         SearchParams params = new SearchParams();
-        params.setQueryStr("in:inbox content:test");
+        params.setQueryString("in:inbox content:test");
 
         params.setSortBy(SortBy.RCPT_ASC);
         try {
@@ -108,7 +108,7 @@ public final class ZimbraQueryTest {
         MailboxTestUtil.index(mbox);
 
         SearchParams params = new SearchParams();
-        params.setQueryStr("contact:test");
+        params.setQueryString("contact:test");
         params.setSortBy(SortBy.NONE);
         params.setTypes(EnumSet.of(MailItem.Type.CONTACT));
         params.setMode(Mailbox.SearchResultMode.IDS);
@@ -124,7 +124,7 @@ public final class ZimbraQueryTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 
         SearchParams params = new SearchParams();
-        params.setQueryStr("test");
+        params.setQueryString("test");
         params.setSortBy(SortBy.NONE);
         params.setTypes(EnumSet.of(MailItem.Type.APPOINTMENT));
         params.setMode(Mailbox.SearchResultMode.IDS);
@@ -168,7 +168,7 @@ public final class ZimbraQueryTest {
         conn.closeQuietly();
 
         SearchParams params = new SearchParams();
-        params.setQueryStr("mdate:>3000000");
+        params.setQueryString("mdate:>3000000");
         params.setSortBy(SortBy.DATE_ASC);
         params.setTypes(EnumSet.of(MailItem.Type.MESSAGE));
         params.setMode(Mailbox.SearchResultMode.IDS);

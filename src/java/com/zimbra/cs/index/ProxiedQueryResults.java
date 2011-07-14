@@ -127,7 +127,7 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
 
     private void setSearchParams(SearchParams params, String queryString) {
         setSearchParams(params);
-        searchParams.setQueryStr(queryString);
+        searchParams.setQueryString(queryString);
     }
 
     public void setTimeout(long timeout) {

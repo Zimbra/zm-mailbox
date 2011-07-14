@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Closeables;
 import com.zimbra.common.auth.ZAuthToken;
@@ -178,37 +179,40 @@ public class Search extends MailDocumentHandler  {
             return null;
         }
         // has time range
-        if (params.getCalItemExpandStart() == -1 || params.getCalItemExpandEnd() == -1)
+        if (params.getCalItemExpandStart() == -1 || params.getCalItemExpandEnd() == -1) {
             return null;
+        }
         // offset = 0
-        if (params.getOffset() != 0)
+        if (params.getOffset() != 0) {
             return null;
+        }
         // sortBy = "none"
         SortBy sortBy = params.getSortBy();
-        if (sortBy != null && !sortBy.equals(SortBy.NONE))
+        if (sortBy != null && !sortBy.equals(SortBy.NONE)) {
             return null;
-
+        }
         // query string is "inid:<folder> [OR inid:<folder>]*"
-        String queryStr = params.getQueryStr();
-        if (queryStr == null)
-            queryStr = "";
-        queryStr = queryStr.toLowerCase();
-        queryStr = removeOuterParens(queryStr);
+        String queryString = Strings.nullToEmpty(params.getQueryString());
+        queryString = queryString.toLowerCase();
+        queryString = removeOuterParens(queryString);
         // simple appointment query can't have any ANDed terms
-        if (queryStr.contains("and"))
+        if (queryString.contains("and")) {
             return null;
-        String[] terms = queryStr.split("\\s+or\\s+");
+        }
+        String[] terms = queryString.split("\\s+or\\s+");
         List<String> folderIdStrs = new ArrayList<String>();
         for (String term : terms) {
             term = term.trim();
             // remove outermost parentheses (light client does this, e.g. "(inid:10)")
             term = removeOuterParens(term);
-            if (!term.startsWith("inid:"))
+            if (!term.startsWith("inid:")) {
                 return null;
+            }
             String folderId = term.substring(5);  // everything after "inid:"
             folderId = unquote(folderId);  // e.g. if query is: inid:"account-id:num", we want just account-id:num
-            if (folderId.length() > 0)
+            if (folderId.length() > 0) {
                 folderIdStrs.add(folderId);
+            }
         }
         return folderIdStrs;
     }

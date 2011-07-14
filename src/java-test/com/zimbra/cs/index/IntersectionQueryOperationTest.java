@@ -62,7 +62,7 @@ public final class IntersectionQueryOperationTest {
         MailboxTestUtil.index(mbox);
 
         SearchParams params = new SearchParams();
-        params.setQueryStr("in:Inbox from:none*");
+        params.setQueryString("in:Inbox from:none*");
         params.setTypes(EnumSet.of(MailItem.Type.MESSAGE));
         params.setSortBy(SortBy.NONE);
         ZimbraQuery query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);

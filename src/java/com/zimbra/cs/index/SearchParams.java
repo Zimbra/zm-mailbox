@@ -23,6 +23,8 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.WellKnownTimeZones;
@@ -51,104 +53,66 @@ public final class SearchParams implements Cloneable {
 
     private static final int MAX_OFFSET = 10000000; // 10M
     private static final int MAX_LIMIT = 10000000; // 10M
+    private final static Pattern LOCALE_PATTERN = Pattern.compile("([a-zA-Z]{2})(?:[-_]([a-zA-Z]{2})([-_](.+))?)?");
 
-    public static final class ExpandResults {
-        /**
-         * Don't expand any hits.
-         */
-        public static ExpandResults NONE = new ExpandResults("none");
+    private ZimbraSoapContext requestContext;
 
-        /**
-         * Expand the first hit.
-         */
-        public static ExpandResults FIRST = new ExpandResults("first");
+    /**
+     * this parameter is intentionally NOT encoded into XML, it is encoded manually by the ProxiedQueryResults proxying
+     * code.
+     */
+    private int hopCount = 0;
+    private String defaultField = "content:";
+    private String queryString;
+    private int offset;
+    private int limit;
+    private ExpandResults inlineRule;
+    private boolean markRead = false;
+    private int maxInlinedLength;
+    private boolean wantHtml = false;
+    private boolean neuterImages = false;
+    private Set<String> inlinedHeaders;
+    private boolean recipients = false;
+    private long calItemExpandStart = -1;
+    private long calItemExpandEnd = -1;
+    private boolean inDumpster = false;  // search live data or dumpster data
 
-        /**
-         * For searchConv, expand the members of the conversation that match
-         * the search.
-         */
-        public static ExpandResults HITS = new ExpandResults("hits");
+    /**
+     * if FALSE, then items with the /Deleted tag set are not returned.
+     */
+    private boolean includeTagDeleted = false;
+    private Set<TaskHit.Status> allowableTaskStatuses; // if NULL, allow all
 
-        /**
-         * Expand ALL hits.
-         */
-        public static ExpandResults ALL = new ExpandResults("all");
+    /**
+     * timezone that the query should be parsed in (for date/time queries).
+     */
+    private TimeZone timezone;
+    private Locale locale;
+    private SortBy sortBy;
+    private Set<MailItem.Type> types = EnumSet.noneOf(MailItem.Type.class); // types to seach for
+    private Cursor cursor;
+    private boolean prefetch = true;
+    private Mailbox.SearchResultMode mode = Mailbox.SearchResultMode.NORMAL;
 
-        private final String mRep;
-        private ItemId mItemId;
-
-        private ExpandResults(String rep) {
-            mRep = rep;
-        }
-
-        private ExpandResults setId(ItemId iid) {
-            mItemId = iid;
-            return this;
-        }
-
-        public boolean matches(MailItem item) {
-            return mItemId != null && item != null && matches(new ItemId(item));
-        }
-
-        public boolean matches(ItemId iid) {
-            return iid != null && iid.equals(mItemId);
-        }
-
-        public static ExpandResults valueOf(String value, ZimbraSoapContext zsc)
-            throws ServiceException {
-
-            if (value == null) {
-                return NONE;
-            }
-
-            value = value.trim().toLowerCase();
-            if (value.equals("none") || value.equals("0") || value.equals("false")) {
-                return NONE;
-            } else if (value.equals("first") || value.equals("1")) {
-                return FIRST;
-            } else if (value.equals("hits")) {
-                return HITS;
-            } else if (value.equals("all")) {
-                return ALL;
-            }
-
-            ItemId iid = null;
-            try {
-                iid = new ItemId(value, zsc);
-            } catch (Exception e) {
-            }
-            if (iid != null) {
-                return new ExpandResults(value).setId(iid);
-            } else {
-                throw ServiceException.INVALID_REQUEST(
-                        "invalid 'fetch' value: " + value, null);
-            }
-        }
-
-        @Override
-        public String toString() {
-            return mRep;
-        }
-    }
 
     public ZimbraSoapContext getRequestContext() {
-        return mRequestContext;
+        return requestContext;
     }
 
     public int getHopCount() {
-        return mHopCount;
+        return hopCount;
     }
 
     public long getCalItemExpandStart() {
-        return mCalItemExpandStart;
+        return calItemExpandStart;
     }
 
     public long getCalItemExpandEnd() {
-        return mCalItemExpandEnd;
+        return calItemExpandEnd;
     }
 
-    public String getQueryStr() {
-        return mQueryStr;
+    public String getQueryString() {
+        return queryString;
     }
 
     public Set<MailItem.Type> getTypes() {
@@ -160,35 +124,35 @@ public final class SearchParams implements Cloneable {
     }
 
     public ExpandResults getInlineRule() {
-        return mInlineRule;
+        return inlineRule;
     }
 
     public boolean getMarkRead() {
-        return mMarkRead;
+        return markRead;
     }
 
     public int getMaxInlinedLength() {
-        return mMaxInlinedLength;
+        return maxInlinedLength;
     }
 
     public boolean getWantHtml() {
-        return mWantHtml;
+        return wantHtml;
     }
 
     public boolean getNeuterImages() {
-        return mNeuterImages;
+        return neuterImages;
     }
 
     public Set<String> getInlinedHeaders() {
-        return mInlinedHeaders;
+        return inlinedHeaders;
     }
 
     public OutputParticipants getWantRecipients() {
-        return mRecipients ? OutputParticipants.PUT_RECIPIENTS : OutputParticipants.PUT_SENDERS;
+        return recipients ? OutputParticipants.PUT_RECIPIENTS : OutputParticipants.PUT_SENDERS;
     }
 
     public TimeZone getTimeZone() {
-        return mTimeZone;
+        return timezone;
     }
 
     public Locale getLocale() {
@@ -196,23 +160,23 @@ public final class SearchParams implements Cloneable {
     }
 
     public boolean getPrefetch() {
-        return mPrefetch;
+        return prefetch;
     }
 
     public Mailbox.SearchResultMode getMode() {
-        return mMode;
+        return mode;
     }
 
     public String getDefaultField() {
-        return mDefaultField;
+        return defaultField;
     }
 
     public final boolean getIncludeTagDeleted() {
-        return mIncludeTagDeleted;
+        return includeTagDeleted;
     }
 
     public Set<TaskHit.Status> getAllowableTaskStatuses() {
-        return mAllowableTaskStatuses;
+        return allowableTaskStatuses;
     }
 
     public int getLimit() {
@@ -224,19 +188,19 @@ public final class SearchParams implements Cloneable {
     }
 
     public boolean inDumpster() {
-        return mInDumpster;
+        return inDumpster;
     }
 
-    public void setInDumpster(boolean inDumpster) {
-        mInDumpster = inDumpster;
+    public void setInDumpster(boolean value) {
+        inDumpster = value;
     }
 
-    public void setHopCount(int hopCount) {
-        mHopCount = hopCount;
+    public void setHopCount(int value) {
+        hopCount = value;
     }
 
-    public void setQueryStr(String queryStr) {
-        mQueryStr = queryStr;
+    public void setQueryString(String value) {
+        queryString = value;
     }
 
     public void setOffset(int value) {
@@ -247,40 +211,33 @@ public final class SearchParams implements Cloneable {
         limit = Math.min(value, MAX_LIMIT);
     }
 
-    public void setDefaultField(String field) {
-        // yes, it MUST end with the ':'
-        if (field.charAt(field.length()-1) != ':') {
-            field = field + ':';
+    public void setDefaultField(String value) {
+        if (!value.endsWith(":")) {
+            value = value + ':'; // MUST end with the ':'
         }
-        mDefaultField = field;
+        defaultField = value;
     }
 
-    public final void setIncludeTagDeleted(boolean includeTagDeleted) {
-        mIncludeTagDeleted = includeTagDeleted;
+    public final void setIncludeTagDeleted(boolean value) {
+        includeTagDeleted = value;
     }
 
-    public void setAllowableTaskStatuses(Set<TaskHit.Status> statuses) {
-        mAllowableTaskStatuses = statuses;
-    }
-
-    /**
-     * Set the range of dates over which we want to expand out the instances of
-     * any returned CalendarItem objects.
-     *
-     * @param calItemExpandStart
-     */
-    public void setCalItemExpandStart(long calItemExpandStart) {
-        mCalItemExpandStart = calItemExpandStart;
+    public void setAllowableTaskStatuses(Set<TaskHit.Status> value) {
+        allowableTaskStatuses = value;
     }
 
     /**
-     * Set the range of dates over which we want to expand out the instances of
-     * any returned CalendarItem objects.
-     *
-     * @param calItemExpandStart
+     * Set the range of dates over which we want to expand out the instances of any returned CalendarItem objects.
      */
-    public void setCalItemExpandEnd(long calItemExpandEnd) {
-        mCalItemExpandEnd = calItemExpandEnd;
+    public void setCalItemExpandStart(long value) {
+        calItemExpandStart = value;
+    }
+
+    /**
+     * Set the range of dates over which we want to expand out the instances of any returned CalendarItem objects.
+     */
+    public void setCalItemExpandEnd(long value) {
+        calItemExpandEnd = value;
     }
 
     /**
@@ -347,39 +304,39 @@ public final class SearchParams implements Cloneable {
         setSortBy(sort);
     }
 
-    public void setInlineRule(ExpandResults fetch) {
-        mInlineRule = fetch;
+    public void setInlineRule(ExpandResults value) {
+        inlineRule = value;
     }
 
-    public void setMarkRead(boolean read) {
-        mMarkRead = read;
+    public void setMarkRead(boolean value) {
+        markRead = value;
     }
 
-    public void setMaxInlinedLength(int maxSize) {
-        mMaxInlinedLength = maxSize;
+    public void setMaxInlinedLength(int value) {
+        maxInlinedLength = value;
     }
 
-    public void setWantHtml(boolean html) {
-        mWantHtml = html;
+    public void setWantHtml(boolean value) {
+        wantHtml = value;
     }
 
-    public void setNeuterImages(boolean neuter) {
-        mNeuterImages = neuter;
+    public void setNeuterImages(boolean value) {
+        neuterImages = value;
     }
 
-    public void addInlinedHeader(String name) {
-        if (mInlinedHeaders == null) {
-            mInlinedHeaders = new HashSet<String>();
+    public void addInlinedHeader(String value) {
+        if (inlinedHeaders == null) {
+            inlinedHeaders = new HashSet<String>();
         }
-        mInlinedHeaders.add(name);
+        inlinedHeaders.add(value);
     }
 
-    public void setWantRecipients(boolean recips) {
-        mRecipients = recips;
+    public void setWantRecipients(boolean value) {
+        recipients = value;
     }
 
-    public void setTimeZone(TimeZone tz) {
-        mTimeZone = tz;
+    public void setTimeZone(TimeZone value) {
+        timezone = value;
     }
 
     public void setLocale(Locale value) {
@@ -398,79 +355,61 @@ public final class SearchParams implements Cloneable {
         cursor = value;
     }
 
-    public void setPrefetch(boolean truthiness) {
-        mPrefetch = truthiness;
+    public void setPrefetch(boolean value) {
+        prefetch = value;
     }
 
-    public void setMode(Mailbox.SearchResultMode mode) {
-        mMode = mode;
+    public void setMode(Mailbox.SearchResultMode value) {
+        mode = value;
     }
 
     /**
-     * Encode the necessary parameters into a <SearchRequest> (or similar
-     * element) in cases where we have to proxy a search request over to
-     * a remote server.
+     * Encode the necessary parameters into a {@code <SearchRequest>} (or similar element) in cases where we have to
+     * proxy a search request over to a remote server.
      * <p>
-     * Note that not all parameters are encoded here -- some params (like
-     * offset, limit, etc) are changed by the entity doing the search proxying,
-     * and so they are set at that level.
+     * Note that not all parameters are encoded here -- some params (like cursor, etc) are changed by the entity
+     * doing the search proxying, and so they are set at that level.
      *
-     * @param searchElt This object's parameters are added as attributes (or
-     *  sub-elements) of this parameter
+     * @param el This object's parameters are added as attributes (or sub-elements) of this parameter
      */
-    public void encodeParams(Element searchElt) {
-        if (mAllowableTaskStatuses != null) {
-            StringBuilder taskStatusStr = new StringBuilder();
-            for (TaskHit.Status s : mAllowableTaskStatuses) {
-                if (taskStatusStr.length() > 0) {
-                    taskStatusStr.append(",");
-                }
-                taskStatusStr.append(s.name());
-            }
-            searchElt.addAttribute(MailConstants.A_ALLOWABLE_TASK_STATUS,
-                    taskStatusStr.toString());
+    public void encodeParams(Element el) {
+        if (allowableTaskStatuses != null) {
+            el.addAttribute(MailConstants.A_ALLOWABLE_TASK_STATUS, Joiner.on(',').join(allowableTaskStatuses));
         }
-        searchElt.addAttribute(MailConstants.A_INCLUDE_TAG_DELETED,
-                getIncludeTagDeleted());
-        searchElt.addAttribute(MailConstants.A_CAL_EXPAND_INST_START,
-                getCalItemExpandStart());
-        searchElt.addAttribute(MailConstants.A_CAL_EXPAND_INST_END,
-                getCalItemExpandEnd());
-        searchElt.addAttribute(MailConstants.E_QUERY, getQueryStr(),
-                Element.Disposition.CONTENT);
-        searchElt.addAttribute(MailConstants.A_SEARCH_TYPES, MailItem.Type.toString(types));
+        el.addAttribute(MailConstants.A_INCLUDE_TAG_DELETED, getIncludeTagDeleted());
+        el.addAttribute(MailConstants.A_CAL_EXPAND_INST_START, getCalItemExpandStart());
+        el.addAttribute(MailConstants.A_CAL_EXPAND_INST_END, getCalItemExpandEnd());
+        el.addAttribute(MailConstants.E_QUERY, getQueryString(), Element.Disposition.CONTENT);
+        el.addAttribute(MailConstants.A_SEARCH_TYPES, MailItem.Type.toString(types));
         if (sortBy != null) {
-            searchElt.addAttribute(MailConstants.A_SORTBY, sortBy.toString());
+            el.addAttribute(MailConstants.A_SORTBY, sortBy.toString());
         }
-        if (getInlineRule() != null)
-            searchElt.addAttribute(MailConstants.A_FETCH,
-                    getInlineRule().toString());
-        searchElt.addAttribute(MailConstants.A_MARK_READ, getMarkRead());
-        searchElt.addAttribute(MailConstants.A_MAX_INLINED_LENGTH,
-                getMaxInlinedLength());
-        searchElt.addAttribute(MailConstants.A_WANT_HTML, getWantHtml());
-        searchElt.addAttribute(MailConstants.A_NEUTER, getNeuterImages());
+        if (getInlineRule() != null) {
+            el.addAttribute(MailConstants.A_FETCH, getInlineRule().toString());
+        }
+        el.addAttribute(MailConstants.A_MARK_READ, getMarkRead());
+        el.addAttribute(MailConstants.A_MAX_INLINED_LENGTH, getMaxInlinedLength());
+        el.addAttribute(MailConstants.A_WANT_HTML, getWantHtml());
+        el.addAttribute(MailConstants.A_NEUTER, getNeuterImages());
         if (getInlinedHeaders() != null) {
-            for (String name : getInlinedHeaders())
-                searchElt.addElement(MailConstants.A_HEADER).addAttribute(
-                        MailConstants.A_ATTRIBUTE_NAME, name);
+            for (String name : getInlinedHeaders()) {
+                el.addElement(MailConstants.A_HEADER).addAttribute(MailConstants.A_ATTRIBUTE_NAME, name);
+            }
         }
-        searchElt.addAttribute(MailConstants.A_RECIPIENTS, mRecipients);
+        el.addAttribute(MailConstants.A_RECIPIENTS, recipients);
 
         if (getLocale() != null) {
-            searchElt.addElement(MailConstants.E_LOCALE).setText(getLocale().toString());
+            el.addElement(MailConstants.E_LOCALE).setText(getLocale().toString());
         }
-        searchElt.addAttribute(MailConstants.A_PREFETCH, getPrefetch());
-        searchElt.addAttribute(MailConstants.A_RESULT_MODE, getMode().name());
-        searchElt.addAttribute(MailConstants.A_FIELD, getDefaultField());
+        el.addAttribute(MailConstants.A_PREFETCH, getPrefetch());
+        el.addAttribute(MailConstants.A_RESULT_MODE, getMode().name());
+        el.addAttribute(MailConstants.A_FIELD, getDefaultField());
 
-        searchElt.addAttribute(MailConstants.A_QUERY_LIMIT, limit);
-        searchElt.addAttribute(MailConstants.A_QUERY_OFFSET, offset);
+        el.addAttribute(MailConstants.A_QUERY_LIMIT, limit);
+        el.addAttribute(MailConstants.A_QUERY_OFFSET, offset);
 
-        searchElt.addAttribute(MailConstants.A_IN_DUMPSTER, mInDumpster);
+        el.addAttribute(MailConstants.A_IN_DUMPSTER, inDumpster);
 
-        // skip limit
-        // skip offset
         // skip cursor data
     }
 
@@ -485,21 +424,18 @@ public final class SearchParams implements Cloneable {
             throws ServiceException {
         SearchParams params = new SearchParams();
 
-        params.mRequestContext = zsc;
+        params.requestContext = zsc;
         params.setHopCount(zsc.getHopCount());
         params.setIncludeTagDeleted(request.getAttributeBool(MailConstants.A_INCLUDE_TAG_DELETED, false));
         String allowableTasks = request.getAttribute(MailConstants.A_ALLOWABLE_TASK_STATUS, null);
         if (allowableTasks != null) {
-            params.mAllowableTaskStatuses = new HashSet<TaskHit.Status>();
-            String[] split = allowableTasks.split(",");
-            if (split != null) {
-                for (String s : split) {
-                    try {
-                        TaskHit.Status status = TaskHit.Status.valueOf(s.toUpperCase());
-                        params.mAllowableTaskStatuses.add(status);
-                    } catch (IllegalArgumentException e) {
-                        ZimbraLog.index.debug("Skipping unknown task completion status: " + s);
-                    }
+            params.allowableTaskStatuses = new HashSet<TaskHit.Status>();
+            for (String task : Splitter.on(',').split(allowableTasks)) {
+                try {
+                    TaskHit.Status status = TaskHit.Status.valueOf(task.toUpperCase());
+                    params.allowableTaskStatuses.add(status);
+                } catch (IllegalArgumentException e) {
+                    ZimbraLog.index.debug("Skipping unknown task completion status: %s", task);
                 }
             }
         }
@@ -510,7 +446,7 @@ public final class SearchParams implements Cloneable {
             throw ServiceException.INVALID_REQUEST("no query submitted and no default query found", null);
         }
         params.setInDumpster(request.getAttributeBool(MailConstants.A_IN_DUMPSTER, false));
-        params.setQueryStr(query);
+        params.setQueryString(query);
         String types = request.getAttribute(MailConstants.A_SEARCH_TYPES,
                 request.getAttribute(MailConstants.A_GROUPBY, null));
         if (Strings.isNullOrEmpty(types)) {
@@ -578,7 +514,7 @@ public final class SearchParams implements Cloneable {
         cursor.includeOffset = el.getAttributeBool(MailConstants.A_INCLUDE_OFFSET, false); // optional
     }
 
-    private static java.util.TimeZone parseTimeZonePart(Element tzElt) throws ServiceException {
+    private static TimeZone parseTimeZonePart(Element tzElt) throws ServiceException {
         String id = tzElt.getAttribute(MailConstants.A_ID);
 
         // is it a well-known timezone?  if so then we're done here
@@ -597,8 +533,6 @@ public final class SearchParams implements Cloneable {
 
         return CalendarUtils.parseTzElement(tzElt);
     }
-
-    private final static Pattern LOCALE_PATTERN = Pattern.compile("([a-zA-Z]{2})(?:[-_]([a-zA-Z]{2})([-_](.+))?)?");
 
     static Locale parseLocale(String src) {
         if (Strings.isNullOrEmpty(src)) {
@@ -650,79 +584,107 @@ public final class SearchParams implements Cloneable {
     @Override
     public Object clone() {
         SearchParams result = new SearchParams();
-        result.mRequestContext = mRequestContext;
-        result.mHopCount = mHopCount;
-        result.mDefaultField = mDefaultField;
-        result.mQueryStr = mQueryStr;
+        result.requestContext = requestContext;
+        result.hopCount = hopCount;
+        result.defaultField = defaultField;
+        result.queryString = queryString;
         result.offset = offset;
         result.limit = limit;
-        result.mInlineRule = mInlineRule;
-        result.mMaxInlinedLength = mMaxInlinedLength;
-        result.mWantHtml = mWantHtml;
-        result.mNeuterImages = mNeuterImages;
-        result.mInlinedHeaders = mInlinedHeaders;
-        result.mRecipients = mRecipients;
-        result.mCalItemExpandStart = mCalItemExpandStart;
-        result.mCalItemExpandEnd = mCalItemExpandEnd;
-        result.mIncludeTagDeleted = mIncludeTagDeleted;
-        result.mTimeZone = mTimeZone;
+        result.inlineRule = inlineRule;
+        result.maxInlinedLength = maxInlinedLength;
+        result.wantHtml = wantHtml;
+        result.neuterImages = neuterImages;
+        result.inlinedHeaders = inlinedHeaders;
+        result.recipients = recipients;
+        result.calItemExpandStart = calItemExpandStart;
+        result.calItemExpandEnd = calItemExpandEnd;
+        result.includeTagDeleted = includeTagDeleted;
+        result.timezone = timezone;
         result.locale = locale;
         result.sortBy = sortBy;
         result.types = types;
-        result.mPrefetch = mPrefetch;
-        result.mMode = mMode;
-        if (mAllowableTaskStatuses != null) {
-            result.mAllowableTaskStatuses = new HashSet<TaskHit.Status>();
-            result.mAllowableTaskStatuses.addAll(mAllowableTaskStatuses);
+        result.prefetch = prefetch;
+        result.mode = mode;
+        if (allowableTaskStatuses != null) {
+            result.allowableTaskStatuses = new HashSet<TaskHit.Status>(allowableTaskStatuses);
         }
         if (cursor != null) {
             result.cursor = new Cursor(cursor);
         }
-        result.mInDumpster = mInDumpster;
+        result.inDumpster = inDumpster;
         return result;
     }
 
-    private ZimbraSoapContext mRequestContext;
+    public static final class ExpandResults {
+        /**
+         * Don't expand any hits.
+         */
+        public static final ExpandResults NONE = new ExpandResults("none");
 
-    /**
-     * this parameter is intentionally NOT encoded into XML, it is encoded
-     * manually by the ProxiedQueryResults proxying code
-     */
-    private int mHopCount = 0;
+        /**
+         * Expand the first hit.
+         */
+        public static final ExpandResults FIRST = new ExpandResults("first");
 
-    private String mDefaultField = "content:";
-    private String mQueryStr;
-    private int offset;
-    private int limit;
-    private ExpandResults mInlineRule = null;
-    private boolean mMarkRead = false;
-    private int mMaxInlinedLength;
-    private boolean mWantHtml = false;
-    private boolean mNeuterImages = false;
-    private Set<String> mInlinedHeaders = null;
-    private boolean mRecipients = false;
-    private long mCalItemExpandStart = -1;
-    private long mCalItemExpandEnd = -1;
-    private boolean mInDumpster = false;  // search live data or dumpster data
+        /**
+         * For searchConv, expand the members of the conversation that match the search.
+         */
+        public static final ExpandResults HITS = new ExpandResults("hits");
 
-    /**
-     * if FALSE, then items with the /Deleted tag set are not returned.
-     */
-    private boolean mIncludeTagDeleted = false;
-    private Set<TaskHit.Status> mAllowableTaskStatuses = null; // if NULL, allow all
+        /**
+         * Expand ALL hits.
+         */
+        public static final ExpandResults ALL = new ExpandResults("all");
 
-    /**
-     * timezone that the query should be parsed in (for date/time queries).
-     */
-    private TimeZone mTimeZone = null;
-    private Locale locale;
+        private final String name;
+        private ItemId itemId;
 
-    private SortBy sortBy;
-    private Set<MailItem.Type> types = EnumSet.noneOf(MailItem.Type.class); // types to seach for
-    private Cursor cursor;
+        private ExpandResults(String name) {
+            this.name = name;
+        }
 
-    private boolean mPrefetch = true;
-    private Mailbox.SearchResultMode mMode = Mailbox.SearchResultMode.NORMAL;
+        private ExpandResults(String name, ItemId id) {
+            this.name = name;
+            this.itemId = id;
+        }
+
+        public boolean matches(MailItem item) {
+            return itemId != null && item != null && matches(new ItemId(item));
+        }
+
+        public boolean matches(ItemId id) {
+            return id != null && id.equals(itemId);
+        }
+
+        public static ExpandResults valueOf(String value, ZimbraSoapContext zsc) throws ServiceException {
+
+            if (value == null) {
+                return NONE;
+            }
+
+            value = value.trim().toLowerCase();
+            if (value.equals("none") || value.equals("0") || value.equals("false")) {
+                return NONE;
+            } else if (value.equals("first") || value.equals("1")) {
+                return FIRST;
+            } else if (value.equals("hits")) {
+                return HITS;
+            } else if (value.equals("all")) {
+                return ALL;
+            }
+
+            try {
+                return new ExpandResults(value, new ItemId(value, zsc));
+            } catch (Exception e) {
+                throw ServiceException.INVALID_REQUEST("invalid 'fetch' value: " + value, null);
+            }
+        }
+
+        @Override
+        public String toString() {
+            return name;
+        }
+    }
 
     /**
      * A cursor can be specified by itemId and sortValue. These should be enough for us to find out place in the
