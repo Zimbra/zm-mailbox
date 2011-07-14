@@ -364,9 +364,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>administrative notes</desc>
 </attr>
 
-<attr id="11" name="zimbraMemberOf" type="id" cardinality="multi" optionalIn="account,securityGroup" deprecatedSince="3.2.0">
-  <desc>for group membership, included with person object</desc>
-  <deprecateDesc>greatly simplify dl/group model</deprecateDesc>
+<attr id="11" name="zimbraMemberOf" type="id" cardinality="multi" optionalIn="account">
+  <desc>for dynamic group membership</desc>
 </attr>
 
 <attr id="12" name="zimbraMailForwardingAddress" type="email" max="256" cardinality="multi" optionalIn="mailRecipient" flags="accountInfo,domainAdminModifiable">
