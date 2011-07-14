@@ -67,4 +67,8 @@ public final class HsmConstants {
     public static final String A_MAX_BYTES = "maxBytes";
     public static final String A_NUM_BYTES_MOVED = "numBytesMoved";
     public static final String A_QUERY = "query";
+
+    // GetApplianceHSMFS
+    public static final String E_FS = "fs";
+    public static final String A_SIZE = "size";
 }
