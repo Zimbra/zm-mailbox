@@ -41,7 +41,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 jhahm 20110707-1045 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110714-1514 */
 
     /**
      * RFC2256: descriptive information
@@ -2370,7 +2370,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * EAGER mode: required LAZY mode: N/A MANUAL mode: N/A Max number of
-     * accounts to process in each interval.
+     * accounts to process in each interval for EAGER auto provision.
      *
      * @return zimbraAutoProvBatchSize, or 20 if unset
      *
@@ -2383,7 +2383,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * EAGER mode: required LAZY mode: N/A MANUAL mode: N/A Max number of
-     * accounts to process in each interval.
+     * accounts to process in each interval for EAGER auto provision.
      *
      * @param zimbraAutoProvBatchSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2399,7 +2399,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * EAGER mode: required LAZY mode: N/A MANUAL mode: N/A Max number of
-     * accounts to process in each interval.
+     * accounts to process in each interval for EAGER auto provision.
      *
      * @param zimbraAutoProvBatchSize new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2416,7 +2416,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * EAGER mode: required LAZY mode: N/A MANUAL mode: N/A Max number of
-     * accounts to process in each interval.
+     * accounts to process in each interval for EAGER auto provision.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -2431,7 +2431,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * EAGER mode: required LAZY mode: N/A MANUAL mode: N/A Max number of
-     * accounts to process in each interval.
+     * accounts to process in each interval for EAGER auto provision.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -2447,9 +2447,9 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * EAGER mode: required LAZY mode: N/A MANUAL mode: N/A Interval between
-     * successive polling and provisioning accounts. The actual interval may
-     * be longer since it can be affected by two other factors:
-     * zimbraAutoProvBatchSize and number of domains configured in
+     * successive polling and provisioning accounts in EAGER mode. The actual
+     * interval may take longer since it can be affected by two other
+     * factors: zimbraAutoProvBatchSize and number of domains configured in
      * zimbraAutoProvScheduledDomains. At each interval, the auto provision
      * thread iterates through all domains in zimbraAutoProvScheduledDomains
      * and auto creates up to domain.zimbraAutoProvBatchSize accounts. If
@@ -2480,9 +2480,9 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * EAGER mode: required LAZY mode: N/A MANUAL mode: N/A Interval between
-     * successive polling and provisioning accounts. The actual interval may
-     * be longer since it can be affected by two other factors:
-     * zimbraAutoProvBatchSize and number of domains configured in
+     * successive polling and provisioning accounts in EAGER mode. The actual
+     * interval may take longer since it can be affected by two other
+     * factors: zimbraAutoProvBatchSize and number of domains configured in
      * zimbraAutoProvScheduledDomains. At each interval, the auto provision
      * thread iterates through all domains in zimbraAutoProvScheduledDomains
      * and auto creates up to domain.zimbraAutoProvBatchSize accounts. If
@@ -2509,9 +2509,9 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * EAGER mode: required LAZY mode: N/A MANUAL mode: N/A Interval between
-     * successive polling and provisioning accounts. The actual interval may
-     * be longer since it can be affected by two other factors:
-     * zimbraAutoProvBatchSize and number of domains configured in
+     * successive polling and provisioning accounts in EAGER mode. The actual
+     * interval may take longer since it can be affected by two other
+     * factors: zimbraAutoProvBatchSize and number of domains configured in
      * zimbraAutoProvScheduledDomains. At each interval, the auto provision
      * thread iterates through all domains in zimbraAutoProvScheduledDomains
      * and auto creates up to domain.zimbraAutoProvBatchSize accounts. If
@@ -2541,9 +2541,9 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * EAGER mode: required LAZY mode: N/A MANUAL mode: N/A Interval between
-     * successive polling and provisioning accounts. The actual interval may
-     * be longer since it can be affected by two other factors:
-     * zimbraAutoProvBatchSize and number of domains configured in
+     * successive polling and provisioning accounts in EAGER mode. The actual
+     * interval may take longer since it can be affected by two other
+     * factors: zimbraAutoProvBatchSize and number of domains configured in
      * zimbraAutoProvScheduledDomains. At each interval, the auto provision
      * thread iterates through all domains in zimbraAutoProvScheduledDomains
      * and auto creates up to domain.zimbraAutoProvBatchSize accounts. If
@@ -2574,9 +2574,9 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * EAGER mode: required LAZY mode: N/A MANUAL mode: N/A Interval between
-     * successive polling and provisioning accounts. The actual interval may
-     * be longer since it can be affected by two other factors:
-     * zimbraAutoProvBatchSize and number of domains configured in
+     * successive polling and provisioning accounts in EAGER mode. The actual
+     * interval may take longer since it can be affected by two other
+     * factors: zimbraAutoProvBatchSize and number of domains configured in
      * zimbraAutoProvScheduledDomains. At each interval, the auto provision
      * thread iterates through all domains in zimbraAutoProvScheduledDomains
      * and auto creates up to domain.zimbraAutoProvBatchSize accounts. If
@@ -2605,9 +2605,9 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * EAGER mode: required LAZY mode: N/A MANUAL mode: N/A Interval between
-     * successive polling and provisioning accounts. The actual interval may
-     * be longer since it can be affected by two other factors:
-     * zimbraAutoProvBatchSize and number of domains configured in
+     * successive polling and provisioning accounts in EAGER mode. The actual
+     * interval may take longer since it can be affected by two other
+     * factors: zimbraAutoProvBatchSize and number of domains configured in
      * zimbraAutoProvScheduledDomains. At each interval, the auto provision
      * thread iterates through all domains in zimbraAutoProvScheduledDomains
      * and auto creates up to domain.zimbraAutoProvBatchSize accounts. If
@@ -15215,6 +15215,88 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetMailPurgeSleepInterval(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailPurgeSleepInterval, "");
+        return attrs;
+    }
+
+    /**
+     * System purge policy, encoded as metadata. Users can apply these policy
+     * elements to their folders and tags. If the system policy changes, user
+     * settings are automatically updated with the change.
+     *
+     * @return zimbraMailPurgeSystemPolicy, or null if unset
+     *
+     * @since ZCS 8.0
+     */
+    @ZAttr(id=1242)
+    public String getMailPurgeSystemPolicy() {
+        return getAttr(Provisioning.A_zimbraMailPurgeSystemPolicy, null);
+    }
+
+    /**
+     * System purge policy, encoded as metadata. Users can apply these policy
+     * elements to their folders and tags. If the system policy changes, user
+     * settings are automatically updated with the change.
+     *
+     * @param zimbraMailPurgeSystemPolicy new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0
+     */
+    @ZAttr(id=1242)
+    public void setMailPurgeSystemPolicy(String zimbraMailPurgeSystemPolicy) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailPurgeSystemPolicy, zimbraMailPurgeSystemPolicy);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * System purge policy, encoded as metadata. Users can apply these policy
+     * elements to their folders and tags. If the system policy changes, user
+     * settings are automatically updated with the change.
+     *
+     * @param zimbraMailPurgeSystemPolicy new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0
+     */
+    @ZAttr(id=1242)
+    public Map<String,Object> setMailPurgeSystemPolicy(String zimbraMailPurgeSystemPolicy, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailPurgeSystemPolicy, zimbraMailPurgeSystemPolicy);
+        return attrs;
+    }
+
+    /**
+     * System purge policy, encoded as metadata. Users can apply these policy
+     * elements to their folders and tags. If the system policy changes, user
+     * settings are automatically updated with the change.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0
+     */
+    @ZAttr(id=1242)
+    public void unsetMailPurgeSystemPolicy() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailPurgeSystemPolicy, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * System purge policy, encoded as metadata. Users can apply these policy
+     * elements to their folders and tags. If the system policy changes, user
+     * settings are automatically updated with the change.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0
+     */
+    @ZAttr(id=1242)
+    public Map<String,Object> unsetMailPurgeSystemPolicy(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailPurgeSystemPolicy, "");
         return attrs;
     }
 

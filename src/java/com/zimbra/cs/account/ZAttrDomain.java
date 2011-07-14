@@ -41,7 +41,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 jhahm 20110707-1045 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110714-1514 */
 
     /**
      * RFC2256: descriptive information
@@ -1571,7 +1571,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional
      * Attribute name in the external directory that contains localpart of
-     * the account name. If not specified, localpart of teh account name is
+     * the account name. If not specified, localpart of the account name is
      * the principal user used to authenticated to Zimbra.
      *
      * @return zimbraAutoProvAccountNameMap, or null if unset
@@ -1586,7 +1586,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional
      * Attribute name in the external directory that contains localpart of
-     * the account name. If not specified, localpart of teh account name is
+     * the account name. If not specified, localpart of the account name is
      * the principal user used to authenticated to Zimbra.
      *
      * @param zimbraAutoProvAccountNameMap new value
@@ -1604,7 +1604,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional
      * Attribute name in the external directory that contains localpart of
-     * the account name. If not specified, localpart of teh account name is
+     * the account name. If not specified, localpart of the account name is
      * the principal user used to authenticated to Zimbra.
      *
      * @param zimbraAutoProvAccountNameMap new value
@@ -1623,7 +1623,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional
      * Attribute name in the external directory that contains localpart of
-     * the account name. If not specified, localpart of teh account name is
+     * the account name. If not specified, localpart of the account name is
      * the principal user used to authenticated to Zimbra.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -1640,7 +1640,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional
      * Attribute name in the external directory that contains localpart of
-     * the account name. If not specified, localpart of teh account name is
+     * the account name. If not specified, localpart of the account name is
      * the principal user used to authenticated to Zimbra.
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -1657,10 +1657,11 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional
-     * Attribute map for account auto provisioning. Values are in the format
-     * of {external attribute}={zimbra attribute}. If not set, no attributes
-     * from the external directory will be populated in the Zimrba directory.
-     * Invalid mapping configuration will cause the account creation to fail.
+     * Attribute map for mapping attribute values from the external entry to
+     * Zimbra account attributes. Values are in the format of {external
+     * attribute}={zimbra attribute}. If not set, no attributes from the
+     * external directory will be populated in Zimrba directory. Invalid
+     * mapping configuration will cause the account creation to fail.
      * Examples of bad mapping: - invalid external attribute name. - invalid
      * Zimbra attribute name. - external attribute has multiple values but
      * the zimbra attribute is single-valued. - syntax violation. e.g. Value
@@ -1678,10 +1679,11 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional
-     * Attribute map for account auto provisioning. Values are in the format
-     * of {external attribute}={zimbra attribute}. If not set, no attributes
-     * from the external directory will be populated in the Zimrba directory.
-     * Invalid mapping configuration will cause the account creation to fail.
+     * Attribute map for mapping attribute values from the external entry to
+     * Zimbra account attributes. Values are in the format of {external
+     * attribute}={zimbra attribute}. If not set, no attributes from the
+     * external directory will be populated in Zimrba directory. Invalid
+     * mapping configuration will cause the account creation to fail.
      * Examples of bad mapping: - invalid external attribute name. - invalid
      * Zimbra attribute name. - external attribute has multiple values but
      * the zimbra attribute is single-valued. - syntax violation. e.g. Value
@@ -1702,10 +1704,11 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional
-     * Attribute map for account auto provisioning. Values are in the format
-     * of {external attribute}={zimbra attribute}. If not set, no attributes
-     * from the external directory will be populated in the Zimrba directory.
-     * Invalid mapping configuration will cause the account creation to fail.
+     * Attribute map for mapping attribute values from the external entry to
+     * Zimbra account attributes. Values are in the format of {external
+     * attribute}={zimbra attribute}. If not set, no attributes from the
+     * external directory will be populated in Zimrba directory. Invalid
+     * mapping configuration will cause the account creation to fail.
      * Examples of bad mapping: - invalid external attribute name. - invalid
      * Zimbra attribute name. - external attribute has multiple values but
      * the zimbra attribute is single-valued. - syntax violation. e.g. Value
@@ -1727,10 +1730,11 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional
-     * Attribute map for account auto provisioning. Values are in the format
-     * of {external attribute}={zimbra attribute}. If not set, no attributes
-     * from the external directory will be populated in the Zimrba directory.
-     * Invalid mapping configuration will cause the account creation to fail.
+     * Attribute map for mapping attribute values from the external entry to
+     * Zimbra account attributes. Values are in the format of {external
+     * attribute}={zimbra attribute}. If not set, no attributes from the
+     * external directory will be populated in Zimrba directory. Invalid
+     * mapping configuration will cause the account creation to fail.
      * Examples of bad mapping: - invalid external attribute name. - invalid
      * Zimbra attribute name. - external attribute has multiple values but
      * the zimbra attribute is single-valued. - syntax violation. e.g. Value
@@ -1751,10 +1755,11 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional
-     * Attribute map for account auto provisioning. Values are in the format
-     * of {external attribute}={zimbra attribute}. If not set, no attributes
-     * from the external directory will be populated in the Zimrba directory.
-     * Invalid mapping configuration will cause the account creation to fail.
+     * Attribute map for mapping attribute values from the external entry to
+     * Zimbra account attributes. Values are in the format of {external
+     * attribute}={zimbra attribute}. If not set, no attributes from the
+     * external directory will be populated in Zimrba directory. Invalid
+     * mapping configuration will cause the account creation to fail.
      * Examples of bad mapping: - invalid external attribute name. - invalid
      * Zimbra attribute name. - external attribute has multiple values but
      * the zimbra attribute is single-valued. - syntax violation. e.g. Value
@@ -1776,10 +1781,11 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional
-     * Attribute map for account auto provisioning. Values are in the format
-     * of {external attribute}={zimbra attribute}. If not set, no attributes
-     * from the external directory will be populated in the Zimrba directory.
-     * Invalid mapping configuration will cause the account creation to fail.
+     * Attribute map for mapping attribute values from the external entry to
+     * Zimbra account attributes. Values are in the format of {external
+     * attribute}={zimbra attribute}. If not set, no attributes from the
+     * external directory will be populated in Zimrba directory. Invalid
+     * mapping configuration will cause the account creation to fail.
      * Examples of bad mapping: - invalid external attribute name. - invalid
      * Zimbra attribute name. - external attribute has multiple values but
      * the zimbra attribute is single-valued. - syntax violation. e.g. Value
@@ -1800,10 +1806,11 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional
-     * Attribute map for account auto provisioning. Values are in the format
-     * of {external attribute}={zimbra attribute}. If not set, no attributes
-     * from the external directory will be populated in the Zimrba directory.
-     * Invalid mapping configuration will cause the account creation to fail.
+     * Attribute map for mapping attribute values from the external entry to
+     * Zimbra account attributes. Values are in the format of {external
+     * attribute}={zimbra attribute}. If not set, no attributes from the
+     * external directory will be populated in Zimrba directory. Invalid
+     * mapping configuration will cause the account creation to fail.
      * Examples of bad mapping: - invalid external attribute name. - invalid
      * Zimbra attribute name. - external attribute has multiple values but
      * the zimbra attribute is single-valued. - syntax violation. e.g. Value
@@ -1825,10 +1832,11 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional
-     * Attribute map for account auto provisioning. Values are in the format
-     * of {external attribute}={zimbra attribute}. If not set, no attributes
-     * from the external directory will be populated in the Zimrba directory.
-     * Invalid mapping configuration will cause the account creation to fail.
+     * Attribute map for mapping attribute values from the external entry to
+     * Zimbra account attributes. Values are in the format of {external
+     * attribute}={zimbra attribute}. If not set, no attributes from the
+     * external directory will be populated in Zimrba directory. Invalid
+     * mapping configuration will cause the account creation to fail.
      * Examples of bad mapping: - invalid external attribute name. - invalid
      * Zimbra attribute name. - external attribute has multiple values but
      * the zimbra attribute is single-valued. - syntax violation. e.g. Value
@@ -1848,10 +1856,11 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional
-     * Attribute map for account auto provisioning. Values are in the format
-     * of {external attribute}={zimbra attribute}. If not set, no attributes
-     * from the external directory will be populated in the Zimrba directory.
-     * Invalid mapping configuration will cause the account creation to fail.
+     * Attribute map for mapping attribute values from the external entry to
+     * Zimbra account attributes. Values are in the format of {external
+     * attribute}={zimbra attribute}. If not set, no attributes from the
+     * external directory will be populated in Zimrba directory. Invalid
+     * mapping configuration will cause the account creation to fail.
      * Examples of bad mapping: - invalid external attribute name. - invalid
      * Zimbra attribute name. - external attribute has multiple values but
      * the zimbra attribute is single-valued. - syntax violation. e.g. Value
@@ -1872,11 +1881,10 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: N/A LAZY mode: required MANUAL mode: N/A Auth mechanisms
-     * enabled for auto provisioning LAZY mode. When a user authenticates via
-     * one of the external auth mechanisms enabled for auto provisioning
-     * configured in this attribute, and when the user account does not exist
-     * in Zimbra directory, an account entry will be automatically created in
-     * Zimbra directory.
+     * enabled for auto provision in LAZY mode. When a user authenticates via
+     * one of the external auth mechanisms enabled in this attribute, and
+     * when the user account does not yet exist in Zimbra directory, an
+     * account entry will be automatically created in Zimbra directory.
      *
      * <p>Valid values: [KRB5, LDAP, PREAUTH, SPNEGO]
      *
@@ -1891,11 +1899,10 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: N/A LAZY mode: required MANUAL mode: N/A Auth mechanisms
-     * enabled for auto provisioning LAZY mode. When a user authenticates via
-     * one of the external auth mechanisms enabled for auto provisioning
-     * configured in this attribute, and when the user account does not exist
-     * in Zimbra directory, an account entry will be automatically created in
-     * Zimbra directory.
+     * enabled for auto provision in LAZY mode. When a user authenticates via
+     * one of the external auth mechanisms enabled in this attribute, and
+     * when the user account does not yet exist in Zimbra directory, an
+     * account entry will be automatically created in Zimbra directory.
      *
      * <p>Valid values: [KRB5, LDAP, PREAUTH, SPNEGO]
      *
@@ -1910,11 +1917,10 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: N/A LAZY mode: required MANUAL mode: N/A Auth mechanisms
-     * enabled for auto provisioning LAZY mode. When a user authenticates via
-     * one of the external auth mechanisms enabled for auto provisioning
-     * configured in this attribute, and when the user account does not exist
-     * in Zimbra directory, an account entry will be automatically created in
-     * Zimbra directory.
+     * enabled for auto provision in LAZY mode. When a user authenticates via
+     * one of the external auth mechanisms enabled in this attribute, and
+     * when the user account does not yet exist in Zimbra directory, an
+     * account entry will be automatically created in Zimbra directory.
      *
      * <p>Valid values: [KRB5, LDAP, PREAUTH, SPNEGO]
      *
@@ -1932,11 +1938,10 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: N/A LAZY mode: required MANUAL mode: N/A Auth mechanisms
-     * enabled for auto provisioning LAZY mode. When a user authenticates via
-     * one of the external auth mechanisms enabled for auto provisioning
-     * configured in this attribute, and when the user account does not exist
-     * in Zimbra directory, an account entry will be automatically created in
-     * Zimbra directory.
+     * enabled for auto provision in LAZY mode. When a user authenticates via
+     * one of the external auth mechanisms enabled in this attribute, and
+     * when the user account does not yet exist in Zimbra directory, an
+     * account entry will be automatically created in Zimbra directory.
      *
      * <p>Valid values: [KRB5, LDAP, PREAUTH, SPNEGO]
      *
@@ -1955,11 +1960,10 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: N/A LAZY mode: required MANUAL mode: N/A Auth mechanisms
-     * enabled for auto provisioning LAZY mode. When a user authenticates via
-     * one of the external auth mechanisms enabled for auto provisioning
-     * configured in this attribute, and when the user account does not exist
-     * in Zimbra directory, an account entry will be automatically created in
-     * Zimbra directory.
+     * enabled for auto provision in LAZY mode. When a user authenticates via
+     * one of the external auth mechanisms enabled in this attribute, and
+     * when the user account does not yet exist in Zimbra directory, an
+     * account entry will be automatically created in Zimbra directory.
      *
      * <p>Valid values: [KRB5, LDAP, PREAUTH, SPNEGO]
      *
@@ -1977,11 +1981,10 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: N/A LAZY mode: required MANUAL mode: N/A Auth mechanisms
-     * enabled for auto provisioning LAZY mode. When a user authenticates via
-     * one of the external auth mechanisms enabled for auto provisioning
-     * configured in this attribute, and when the user account does not exist
-     * in Zimbra directory, an account entry will be automatically created in
-     * Zimbra directory.
+     * enabled for auto provision in LAZY mode. When a user authenticates via
+     * one of the external auth mechanisms enabled in this attribute, and
+     * when the user account does not yet exist in Zimbra directory, an
+     * account entry will be automatically created in Zimbra directory.
      *
      * <p>Valid values: [KRB5, LDAP, PREAUTH, SPNEGO]
      *
@@ -2000,11 +2003,10 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: N/A LAZY mode: required MANUAL mode: N/A Auth mechanisms
-     * enabled for auto provisioning LAZY mode. When a user authenticates via
-     * one of the external auth mechanisms enabled for auto provisioning
-     * configured in this attribute, and when the user account does not exist
-     * in Zimbra directory, an account entry will be automatically created in
-     * Zimbra directory.
+     * enabled for auto provision in LAZY mode. When a user authenticates via
+     * one of the external auth mechanisms enabled in this attribute, and
+     * when the user account does not yet exist in Zimbra directory, an
+     * account entry will be automatically created in Zimbra directory.
      *
      * <p>Valid values: [KRB5, LDAP, PREAUTH, SPNEGO]
      *
@@ -2021,11 +2023,10 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: N/A LAZY mode: required MANUAL mode: N/A Auth mechanisms
-     * enabled for auto provisioning LAZY mode. When a user authenticates via
-     * one of the external auth mechanisms enabled for auto provisioning
-     * configured in this attribute, and when the user account does not exist
-     * in Zimbra directory, an account entry will be automatically created in
-     * Zimbra directory.
+     * enabled for auto provision in LAZY mode. When a user authenticates via
+     * one of the external auth mechanisms enabled in this attribute, and
+     * when the user account does not yet exist in Zimbra directory, an
+     * account entry will be automatically created in Zimbra directory.
      *
      * <p>Valid values: [KRB5, LDAP, PREAUTH, SPNEGO]
      *
@@ -2043,7 +2044,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: required LAZY mode: N/A MANUAL mode: N/A Max number of
-     * accounts to process in each interval.
+     * accounts to process in each interval for EAGER auto provision.
      *
      * @return zimbraAutoProvBatchSize, or 20 if unset
      *
@@ -2056,7 +2057,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: required LAZY mode: N/A MANUAL mode: N/A Max number of
-     * accounts to process in each interval.
+     * accounts to process in each interval for EAGER auto provision.
      *
      * @param zimbraAutoProvBatchSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2072,7 +2073,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: required LAZY mode: N/A MANUAL mode: N/A Max number of
-     * accounts to process in each interval.
+     * accounts to process in each interval for EAGER auto provision.
      *
      * @param zimbraAutoProvBatchSize new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2089,7 +2090,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: required LAZY mode: N/A MANUAL mode: N/A Max number of
-     * accounts to process in each interval.
+     * accounts to process in each interval for EAGER auto provision.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -2104,7 +2105,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: required LAZY mode: N/A MANUAL mode: N/A Max number of
-     * accounts to process in each interval.
+     * accounts to process in each interval for EAGER auto provision.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -2121,12 +2122,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * EAGER mode: for Zimbra internal use only - do not change it. LAZY
      * mode: N/A MANUAL mode: N/A Timestampt when the external domain is last
-     * polled for EAGER auto provision. It is the latest create timestamp of
-     * the external LDAP entries for which a Zimbra account is auto
-     * provisioned in a EAGER auto provision iteration. The poll (LDAP
-     * search) for the next iteration will fetch external entries with a
-     * create timestamp later the timestamp recorded from the previous
-     * iteration.
+     * polled for EAGER auto provision. The poll (LDAP search) for the next
+     * iteration will fetch external entries with create timestamp later than
+     * the timestamp recorded from the previous iteration.
      *
      * <p>Use getAutoProvLastPolledTimestampAsString to access value as a string.
      *
@@ -2144,12 +2142,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * EAGER mode: for Zimbra internal use only - do not change it. LAZY
      * mode: N/A MANUAL mode: N/A Timestampt when the external domain is last
-     * polled for EAGER auto provision. It is the latest create timestamp of
-     * the external LDAP entries for which a Zimbra account is auto
-     * provisioned in a EAGER auto provision iteration. The poll (LDAP
-     * search) for the next iteration will fetch external entries with a
-     * create timestamp later the timestamp recorded from the previous
-     * iteration.
+     * polled for EAGER auto provision. The poll (LDAP search) for the next
+     * iteration will fetch external entries with create timestamp later than
+     * the timestamp recorded from the previous iteration.
      *
      * @return zimbraAutoProvLastPolledTimestamp, or null if unset
      *
@@ -2163,12 +2158,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * EAGER mode: for Zimbra internal use only - do not change it. LAZY
      * mode: N/A MANUAL mode: N/A Timestampt when the external domain is last
-     * polled for EAGER auto provision. It is the latest create timestamp of
-     * the external LDAP entries for which a Zimbra account is auto
-     * provisioned in a EAGER auto provision iteration. The poll (LDAP
-     * search) for the next iteration will fetch external entries with a
-     * create timestamp later the timestamp recorded from the previous
-     * iteration.
+     * polled for EAGER auto provision. The poll (LDAP search) for the next
+     * iteration will fetch external entries with create timestamp later than
+     * the timestamp recorded from the previous iteration.
      *
      * @param zimbraAutoProvLastPolledTimestamp new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2185,12 +2177,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * EAGER mode: for Zimbra internal use only - do not change it. LAZY
      * mode: N/A MANUAL mode: N/A Timestampt when the external domain is last
-     * polled for EAGER auto provision. It is the latest create timestamp of
-     * the external LDAP entries for which a Zimbra account is auto
-     * provisioned in a EAGER auto provision iteration. The poll (LDAP
-     * search) for the next iteration will fetch external entries with a
-     * create timestamp later the timestamp recorded from the previous
-     * iteration.
+     * polled for EAGER auto provision. The poll (LDAP search) for the next
+     * iteration will fetch external entries with create timestamp later than
+     * the timestamp recorded from the previous iteration.
      *
      * @param zimbraAutoProvLastPolledTimestamp new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2208,12 +2197,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * EAGER mode: for Zimbra internal use only - do not change it. LAZY
      * mode: N/A MANUAL mode: N/A Timestampt when the external domain is last
-     * polled for EAGER auto provision. It is the latest create timestamp of
-     * the external LDAP entries for which a Zimbra account is auto
-     * provisioned in a EAGER auto provision iteration. The poll (LDAP
-     * search) for the next iteration will fetch external entries with a
-     * create timestamp later the timestamp recorded from the previous
-     * iteration.
+     * polled for EAGER auto provision. The poll (LDAP search) for the next
+     * iteration will fetch external entries with create timestamp later than
+     * the timestamp recorded from the previous iteration.
      *
      * @param zimbraAutoProvLastPolledTimestamp new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2230,12 +2216,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * EAGER mode: for Zimbra internal use only - do not change it. LAZY
      * mode: N/A MANUAL mode: N/A Timestampt when the external domain is last
-     * polled for EAGER auto provision. It is the latest create timestamp of
-     * the external LDAP entries for which a Zimbra account is auto
-     * provisioned in a EAGER auto provision iteration. The poll (LDAP
-     * search) for the next iteration will fetch external entries with a
-     * create timestamp later the timestamp recorded from the previous
-     * iteration.
+     * polled for EAGER auto provision. The poll (LDAP search) for the next
+     * iteration will fetch external entries with create timestamp later than
+     * the timestamp recorded from the previous iteration.
      *
      * @param zimbraAutoProvLastPolledTimestamp new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2253,12 +2236,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * EAGER mode: for Zimbra internal use only - do not change it. LAZY
      * mode: N/A MANUAL mode: N/A Timestampt when the external domain is last
-     * polled for EAGER auto provision. It is the latest create timestamp of
-     * the external LDAP entries for which a Zimbra account is auto
-     * provisioned in a EAGER auto provision iteration. The poll (LDAP
-     * search) for the next iteration will fetch external entries with a
-     * create timestamp later the timestamp recorded from the previous
-     * iteration.
+     * polled for EAGER auto provision. The poll (LDAP search) for the next
+     * iteration will fetch external entries with create timestamp later than
+     * the timestamp recorded from the previous iteration.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -2274,12 +2254,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * EAGER mode: for Zimbra internal use only - do not change it. LAZY
      * mode: N/A MANUAL mode: N/A Timestampt when the external domain is last
-     * polled for EAGER auto provision. It is the latest create timestamp of
-     * the external LDAP entries for which a Zimbra account is auto
-     * provisioned in a EAGER auto provision iteration. The poll (LDAP
-     * search) for the next iteration will fetch external entries with a
-     * create timestamp later the timestamp recorded from the previous
-     * iteration.
+     * polled for EAGER auto provision. The poll (LDAP search) for the next
+     * iteration will fetch external entries with create timestamp later than
+     * the timestamp recorded from the previous iteration.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -2295,10 +2272,9 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings and using
-     * zimbraAutoProvLdapSearchFilter), MANUAL mode: required (if not using
-     * LDAP/AD auth settings) LDAP search bind dn for account auto
-     * provisioning.
+     * required (if not using LDAP/AD auth settings and is using
+     * zimbraAutoProvLdapSearchFilter) MANUAL mode: required (if not using
+     * LDAP/AD auth settings) LDAP search bind DN for auto provision.
      *
      * @return zimbraAutoProvLdapAdminBindDn, or null if unset
      *
@@ -2311,10 +2287,9 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings and using
-     * zimbraAutoProvLdapSearchFilter), MANUAL mode: required (if not using
-     * LDAP/AD auth settings) LDAP search bind dn for account auto
-     * provisioning.
+     * required (if not using LDAP/AD auth settings and is using
+     * zimbraAutoProvLdapSearchFilter) MANUAL mode: required (if not using
+     * LDAP/AD auth settings) LDAP search bind DN for auto provision.
      *
      * @param zimbraAutoProvLdapAdminBindDn new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2330,10 +2305,9 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings and using
-     * zimbraAutoProvLdapSearchFilter), MANUAL mode: required (if not using
-     * LDAP/AD auth settings) LDAP search bind dn for account auto
-     * provisioning.
+     * required (if not using LDAP/AD auth settings and is using
+     * zimbraAutoProvLdapSearchFilter) MANUAL mode: required (if not using
+     * LDAP/AD auth settings) LDAP search bind DN for auto provision.
      *
      * @param zimbraAutoProvLdapAdminBindDn new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2350,10 +2324,9 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings and using
-     * zimbraAutoProvLdapSearchFilter), MANUAL mode: required (if not using
-     * LDAP/AD auth settings) LDAP search bind dn for account auto
-     * provisioning.
+     * required (if not using LDAP/AD auth settings and is using
+     * zimbraAutoProvLdapSearchFilter) MANUAL mode: required (if not using
+     * LDAP/AD auth settings) LDAP search bind DN for auto provision.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -2368,10 +2341,9 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings and using
-     * zimbraAutoProvLdapSearchFilter), MANUAL mode: required (if not using
-     * LDAP/AD auth settings) LDAP search bind dn for account auto
-     * provisioning.
+     * required (if not using LDAP/AD auth settings and is using
+     * zimbraAutoProvLdapSearchFilter) MANUAL mode: required (if not using
+     * LDAP/AD auth settings) LDAP search bind DN for auto provision.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -2387,10 +2359,9 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings and using
+     * required (if not using LDAP/AD auth settings and is using
      * zimbraAutoProvLdapSearchFilter), MANUAL mode: required (if not using
-     * LDAP/AD auth settings) LDAP search bind password for account auto
-     * provisioning.
+     * LDAP/AD auth settings) LDAP search bind password for auto provision.
      *
      * @return zimbraAutoProvLdapAdminBindPassword, or null if unset
      *
@@ -2403,10 +2374,9 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings and using
+     * required (if not using LDAP/AD auth settings and is using
      * zimbraAutoProvLdapSearchFilter), MANUAL mode: required (if not using
-     * LDAP/AD auth settings) LDAP search bind password for account auto
-     * provisioning.
+     * LDAP/AD auth settings) LDAP search bind password for auto provision.
      *
      * @param zimbraAutoProvLdapAdminBindPassword new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2422,10 +2392,9 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings and using
+     * required (if not using LDAP/AD auth settings and is using
      * zimbraAutoProvLdapSearchFilter), MANUAL mode: required (if not using
-     * LDAP/AD auth settings) LDAP search bind password for account auto
-     * provisioning.
+     * LDAP/AD auth settings) LDAP search bind password for auto provision.
      *
      * @param zimbraAutoProvLdapAdminBindPassword new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2442,10 +2411,9 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings and using
+     * required (if not using LDAP/AD auth settings and is using
      * zimbraAutoProvLdapSearchFilter), MANUAL mode: required (if not using
-     * LDAP/AD auth settings) LDAP search bind password for account auto
-     * provisioning.
+     * LDAP/AD auth settings) LDAP search bind password for auto provision.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -2460,10 +2428,9 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings and using
+     * required (if not using LDAP/AD auth settings and is using
      * zimbraAutoProvLdapSearchFilter), MANUAL mode: required (if not using
-     * LDAP/AD auth settings) LDAP search bind password for account auto
-     * provisioning.
+     * LDAP/AD auth settings) LDAP search bind password for auto provision.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -2481,10 +2448,12 @@ public abstract class ZAttrDomain extends NamedEntry {
      * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
      * optional (if not using LDAP/AD auth settings) MANUAL mode: optional
      * (if not using LDAP/AD auth settings) LDAP external DN template for
-     * account auto provisioning. For LAZY nad MANUAL modes, either
+     * account auto provisioning. For LAZY and MANUAL modes, either
      * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
      * set. If both are set, zimbraAutoProvLdapSearchFilter will take
-     * precedence.
+     * precedence. Supported place holders: %n = username with @ (or without,
+     * if no @ was specified) %u = username with @ removed %d = domain as
+     * foo.com %D = domain as dc=foo,dc=com
      *
      * @return zimbraAutoProvLdapBindDn, or null if unset
      *
@@ -2499,10 +2468,12 @@ public abstract class ZAttrDomain extends NamedEntry {
      * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
      * optional (if not using LDAP/AD auth settings) MANUAL mode: optional
      * (if not using LDAP/AD auth settings) LDAP external DN template for
-     * account auto provisioning. For LAZY nad MANUAL modes, either
+     * account auto provisioning. For LAZY and MANUAL modes, either
      * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
      * set. If both are set, zimbraAutoProvLdapSearchFilter will take
-     * precedence.
+     * precedence. Supported place holders: %n = username with @ (or without,
+     * if no @ was specified) %u = username with @ removed %d = domain as
+     * foo.com %D = domain as dc=foo,dc=com
      *
      * @param zimbraAutoProvLdapBindDn new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2520,10 +2491,12 @@ public abstract class ZAttrDomain extends NamedEntry {
      * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
      * optional (if not using LDAP/AD auth settings) MANUAL mode: optional
      * (if not using LDAP/AD auth settings) LDAP external DN template for
-     * account auto provisioning. For LAZY nad MANUAL modes, either
+     * account auto provisioning. For LAZY and MANUAL modes, either
      * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
      * set. If both are set, zimbraAutoProvLdapSearchFilter will take
-     * precedence.
+     * precedence. Supported place holders: %n = username with @ (or without,
+     * if no @ was specified) %u = username with @ removed %d = domain as
+     * foo.com %D = domain as dc=foo,dc=com
      *
      * @param zimbraAutoProvLdapBindDn new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2542,10 +2515,12 @@ public abstract class ZAttrDomain extends NamedEntry {
      * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
      * optional (if not using LDAP/AD auth settings) MANUAL mode: optional
      * (if not using LDAP/AD auth settings) LDAP external DN template for
-     * account auto provisioning. For LAZY nad MANUAL modes, either
+     * account auto provisioning. For LAZY and MANUAL modes, either
      * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
      * set. If both are set, zimbraAutoProvLdapSearchFilter will take
-     * precedence.
+     * precedence. Supported place holders: %n = username with @ (or without,
+     * if no @ was specified) %u = username with @ removed %d = domain as
+     * foo.com %D = domain as dc=foo,dc=com
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -2562,10 +2537,12 @@ public abstract class ZAttrDomain extends NamedEntry {
      * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
      * optional (if not using LDAP/AD auth settings) MANUAL mode: optional
      * (if not using LDAP/AD auth settings) LDAP external DN template for
-     * account auto provisioning. For LAZY nad MANUAL modes, either
+     * account auto provisioning. For LAZY and MANUAL modes, either
      * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
      * set. If both are set, zimbraAutoProvLdapSearchFilter will take
-     * precedence.
+     * precedence. Supported place holders: %n = username with @ (or without,
+     * if no @ was specified) %u = username with @ removed %d = domain as
+     * foo.com %D = domain as dc=foo,dc=com
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -2581,11 +2558,11 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings and using
+     * required (if not using LDAP/AD auth settings and is using
      * zimbraAutoProvLdapSearchFilter), MANUAL mode: required (if not using
-     * LDAP/AD auth settings) LDAP search base for account auto provisioning,
-     * used in conjunction with zimbraAutoProvLdapSearchFilter. If not set,
-     * LDAP root DSE will be used.
+     * LDAP/AD auth settings) LDAP search base for auto provision, used in
+     * conjunction with zimbraAutoProvLdapSearchFilter. If not set, LDAP root
+     * DSE will be used.
      *
      * @return zimbraAutoProvLdapSearchBase, or null if unset
      *
@@ -2598,11 +2575,11 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings and using
+     * required (if not using LDAP/AD auth settings and is using
      * zimbraAutoProvLdapSearchFilter), MANUAL mode: required (if not using
-     * LDAP/AD auth settings) LDAP search base for account auto provisioning,
-     * used in conjunction with zimbraAutoProvLdapSearchFilter. If not set,
-     * LDAP root DSE will be used.
+     * LDAP/AD auth settings) LDAP search base for auto provision, used in
+     * conjunction with zimbraAutoProvLdapSearchFilter. If not set, LDAP root
+     * DSE will be used.
      *
      * @param zimbraAutoProvLdapSearchBase new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2618,11 +2595,11 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings and using
+     * required (if not using LDAP/AD auth settings and is using
      * zimbraAutoProvLdapSearchFilter), MANUAL mode: required (if not using
-     * LDAP/AD auth settings) LDAP search base for account auto provisioning,
-     * used in conjunction with zimbraAutoProvLdapSearchFilter. If not set,
-     * LDAP root DSE will be used.
+     * LDAP/AD auth settings) LDAP search base for auto provision, used in
+     * conjunction with zimbraAutoProvLdapSearchFilter. If not set, LDAP root
+     * DSE will be used.
      *
      * @param zimbraAutoProvLdapSearchBase new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2639,11 +2616,11 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings and using
+     * required (if not using LDAP/AD auth settings and is using
      * zimbraAutoProvLdapSearchFilter), MANUAL mode: required (if not using
-     * LDAP/AD auth settings) LDAP search base for account auto provisioning,
-     * used in conjunction with zimbraAutoProvLdapSearchFilter. If not set,
-     * LDAP root DSE will be used.
+     * LDAP/AD auth settings) LDAP search base for auto provision, used in
+     * conjunction with zimbraAutoProvLdapSearchFilter. If not set, LDAP root
+     * DSE will be used.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -2658,11 +2635,11 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings and using
+     * required (if not using LDAP/AD auth settings and is using
      * zimbraAutoProvLdapSearchFilter), MANUAL mode: required (if not using
-     * LDAP/AD auth settings) LDAP search base for account auto provisioning,
-     * used in conjunction with zimbraAutoProvLdapSearchFilter. If not set,
-     * LDAP root DSE will be used.
+     * LDAP/AD auth settings) LDAP search base for auto provision, used in
+     * conjunction with zimbraAutoProvLdapSearchFilter. If not set, LDAP root
+     * DSE will be used.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -2680,10 +2657,12 @@ public abstract class ZAttrDomain extends NamedEntry {
      * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
      * optional (if not using LDAP/AD auth settings) MANUAL mode: optional
      * (if not using LDAP/AD auth settings) LDAP search filter template for
-     * account auto provisioning. For LAZY nad MANUAL modes, either
+     * account auto provisioning. For LAZY and MANUAL modes, either
      * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
      * set. If both are set, zimbraAutoProvLdapSearchFilter will take
-     * precedence.
+     * precedence. Supported place holders: %n = username with @ (or without,
+     * if no @ was specified) %u = username with @ removed %d = domain as
+     * foo.com %D = domain as dc=foo,dc=com
      *
      * @return zimbraAutoProvLdapSearchFilter, or null if unset
      *
@@ -2698,10 +2677,12 @@ public abstract class ZAttrDomain extends NamedEntry {
      * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
      * optional (if not using LDAP/AD auth settings) MANUAL mode: optional
      * (if not using LDAP/AD auth settings) LDAP search filter template for
-     * account auto provisioning. For LAZY nad MANUAL modes, either
+     * account auto provisioning. For LAZY and MANUAL modes, either
      * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
      * set. If both are set, zimbraAutoProvLdapSearchFilter will take
-     * precedence.
+     * precedence. Supported place holders: %n = username with @ (or without,
+     * if no @ was specified) %u = username with @ removed %d = domain as
+     * foo.com %D = domain as dc=foo,dc=com
      *
      * @param zimbraAutoProvLdapSearchFilter new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2719,10 +2700,12 @@ public abstract class ZAttrDomain extends NamedEntry {
      * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
      * optional (if not using LDAP/AD auth settings) MANUAL mode: optional
      * (if not using LDAP/AD auth settings) LDAP search filter template for
-     * account auto provisioning. For LAZY nad MANUAL modes, either
+     * account auto provisioning. For LAZY and MANUAL modes, either
      * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
      * set. If both are set, zimbraAutoProvLdapSearchFilter will take
-     * precedence.
+     * precedence. Supported place holders: %n = username with @ (or without,
+     * if no @ was specified) %u = username with @ removed %d = domain as
+     * foo.com %D = domain as dc=foo,dc=com
      *
      * @param zimbraAutoProvLdapSearchFilter new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2741,10 +2724,12 @@ public abstract class ZAttrDomain extends NamedEntry {
      * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
      * optional (if not using LDAP/AD auth settings) MANUAL mode: optional
      * (if not using LDAP/AD auth settings) LDAP search filter template for
-     * account auto provisioning. For LAZY nad MANUAL modes, either
+     * account auto provisioning. For LAZY and MANUAL modes, either
      * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
      * set. If both are set, zimbraAutoProvLdapSearchFilter will take
-     * precedence.
+     * precedence. Supported place holders: %n = username with @ (or without,
+     * if no @ was specified) %u = username with @ removed %d = domain as
+     * foo.com %D = domain as dc=foo,dc=com
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -2761,10 +2746,12 @@ public abstract class ZAttrDomain extends NamedEntry {
      * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
      * optional (if not using LDAP/AD auth settings) MANUAL mode: optional
      * (if not using LDAP/AD auth settings) LDAP search filter template for
-     * account auto provisioning. For LAZY nad MANUAL modes, either
+     * account auto provisioning. For LAZY and MANUAL modes, either
      * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
      * set. If both are set, zimbraAutoProvLdapSearchFilter will take
-     * precedence.
+     * precedence. Supported place holders: %n = username with @ (or without,
+     * if no @ was specified) %u = username with @ removed %d = domain as
+     * foo.com %D = domain as dc=foo,dc=com
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -2781,7 +2768,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional Default
      * is FALSE. Whether to use startTLS when accessing the external LDAP
-     * server for account auto provisioning.
+     * server for auto provision.
      *
      * @return zimbraAutoProvLdapStartTlsEnabled, or false if unset
      *
@@ -2795,7 +2782,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional Default
      * is FALSE. Whether to use startTLS when accessing the external LDAP
-     * server for account auto provisioning.
+     * server for auto provision.
      *
      * @param zimbraAutoProvLdapStartTlsEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2812,7 +2799,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional Default
      * is FALSE. Whether to use startTLS when accessing the external LDAP
-     * server for account auto provisioning.
+     * server for auto provision.
      *
      * @param zimbraAutoProvLdapStartTlsEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2830,7 +2817,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional Default
      * is FALSE. Whether to use startTLS when accessing the external LDAP
-     * server for account auto provisioning.
+     * server for auto provision.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -2846,7 +2833,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional Default
      * is FALSE. Whether to use startTLS when accessing the external LDAP
-     * server for account auto provisioning.
+     * server for auto provision.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -2864,7 +2851,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
      * required (if not using LDAP/AD auth settings) MANUAL mode: required
      * (if not using LDAP/AD auth settings) LDAP URL of the external LDAP
-     * server for account auto provisioning.
+     * source for auto provision.
      *
      * @return zimbraAutoProvLdapURL, or null if unset
      *
@@ -2879,7 +2866,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
      * required (if not using LDAP/AD auth settings) MANUAL mode: required
      * (if not using LDAP/AD auth settings) LDAP URL of the external LDAP
-     * server for account auto provisioning.
+     * source for auto provision.
      *
      * @param zimbraAutoProvLdapURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2897,7 +2884,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
      * required (if not using LDAP/AD auth settings) MANUAL mode: required
      * (if not using LDAP/AD auth settings) LDAP URL of the external LDAP
-     * server for account auto provisioning.
+     * source for auto provision.
      *
      * @param zimbraAutoProvLdapURL new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2916,7 +2903,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
      * required (if not using LDAP/AD auth settings) MANUAL mode: required
      * (if not using LDAP/AD auth settings) LDAP URL of the external LDAP
-     * server for account auto provisioning.
+     * source for auto provision.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -2933,7 +2920,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
      * required (if not using LDAP/AD auth settings) MANUAL mode: required
      * (if not using LDAP/AD auth settings) LDAP URL of the external LDAP
-     * server for account auto provisioning.
+     * source for auto provision.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -2949,10 +2936,12 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional Class
-     * name of auto provision listener. The listener instance is invoked
-     * after each account is auto created in Zimbra. Listener can be plugged
-     * in as a server externsion to handle tasks like updating the account
-     * auto provision status in the external LDAP directory.
+     * name of auto provision listener. The class must implement the
+     * com.zimbra.cs.account.Account.AutoProvisionListener interface. The
+     * singleton listener instance is invoked after each account is auto
+     * created in Zimbra. Listener can be plugged in as a server externsion
+     * to handle tasks like updating the account auto provision status in the
+     * external LDAP directory.
      *
      * @return zimbraAutoProvListenerClass, or null if unset
      *
@@ -2965,10 +2954,12 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional Class
-     * name of auto provision listener. The listener instance is invoked
-     * after each account is auto created in Zimbra. Listener can be plugged
-     * in as a server externsion to handle tasks like updating the account
-     * auto provision status in the external LDAP directory.
+     * name of auto provision listener. The class must implement the
+     * com.zimbra.cs.account.Account.AutoProvisionListener interface. The
+     * singleton listener instance is invoked after each account is auto
+     * created in Zimbra. Listener can be plugged in as a server externsion
+     * to handle tasks like updating the account auto provision status in the
+     * external LDAP directory.
      *
      * @param zimbraAutoProvListenerClass new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2984,10 +2975,12 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional Class
-     * name of auto provision listener. The listener instance is invoked
-     * after each account is auto created in Zimbra. Listener can be plugged
-     * in as a server externsion to handle tasks like updating the account
-     * auto provision status in the external LDAP directory.
+     * name of auto provision listener. The class must implement the
+     * com.zimbra.cs.account.Account.AutoProvisionListener interface. The
+     * singleton listener instance is invoked after each account is auto
+     * created in Zimbra. Listener can be plugged in as a server externsion
+     * to handle tasks like updating the account auto provision status in the
+     * external LDAP directory.
      *
      * @param zimbraAutoProvListenerClass new value
      * @param attrs existing map to populate, or null to create a new map
@@ -3004,10 +2997,12 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional Class
-     * name of auto provision listener. The listener instance is invoked
-     * after each account is auto created in Zimbra. Listener can be plugged
-     * in as a server externsion to handle tasks like updating the account
-     * auto provision status in the external LDAP directory.
+     * name of auto provision listener. The class must implement the
+     * com.zimbra.cs.account.Account.AutoProvisionListener interface. The
+     * singleton listener instance is invoked after each account is auto
+     * created in Zimbra. Listener can be plugged in as a server externsion
+     * to handle tasks like updating the account auto provision status in the
+     * external LDAP directory.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -3022,10 +3017,12 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional Class
-     * name of auto provision listener. The listener instance is invoked
-     * after each account is auto created in Zimbra. Listener can be plugged
-     * in as a server externsion to handle tasks like updating the account
-     * auto provision status in the external LDAP directory.
+     * name of auto provision listener. The class must implement the
+     * com.zimbra.cs.account.Account.AutoProvisionListener interface. The
+     * singleton listener instance is invoked after each account is auto
+     * created in Zimbra. Listener can be plugged in as a server externsion
+     * to handle tasks like updating the account auto provision status in the
+     * external LDAP directory.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -3041,10 +3038,11 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: for Zimbra internal use only - do not change it. LAZY
-     * mode: N/A MANUAL mode: N/A Lock the domain for EAGER auto provision.
-     * This attribute is for internal use only: only one server can perform
-     * EAGER auto provisioning for a domain at one time. This lock is to
-     * shchronize EAGER auto provision attempts between servers.
+     * mode: N/A MANUAL mode: N/A For EAGER auto provision, a domain can be
+     * scheduled on multiple server. To avoid conflict, only one server can
+     * perform provisioning for a domain at one time. This attribute servers
+     * a lock for the test-and-set LDAP operation to shchronize EAGER auto
+     * provision attempts between servers.
      *
      * @return zimbraAutoProvLock, or null if unset
      *
@@ -3057,10 +3055,11 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: for Zimbra internal use only - do not change it. LAZY
-     * mode: N/A MANUAL mode: N/A Lock the domain for EAGER auto provision.
-     * This attribute is for internal use only: only one server can perform
-     * EAGER auto provisioning for a domain at one time. This lock is to
-     * shchronize EAGER auto provision attempts between servers.
+     * mode: N/A MANUAL mode: N/A For EAGER auto provision, a domain can be
+     * scheduled on multiple server. To avoid conflict, only one server can
+     * perform provisioning for a domain at one time. This attribute servers
+     * a lock for the test-and-set LDAP operation to shchronize EAGER auto
+     * provision attempts between servers.
      *
      * @param zimbraAutoProvLock new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -3076,10 +3075,11 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: for Zimbra internal use only - do not change it. LAZY
-     * mode: N/A MANUAL mode: N/A Lock the domain for EAGER auto provision.
-     * This attribute is for internal use only: only one server can perform
-     * EAGER auto provisioning for a domain at one time. This lock is to
-     * shchronize EAGER auto provision attempts between servers.
+     * mode: N/A MANUAL mode: N/A For EAGER auto provision, a domain can be
+     * scheduled on multiple server. To avoid conflict, only one server can
+     * perform provisioning for a domain at one time. This attribute servers
+     * a lock for the test-and-set LDAP operation to shchronize EAGER auto
+     * provision attempts between servers.
      *
      * @param zimbraAutoProvLock new value
      * @param attrs existing map to populate, or null to create a new map
@@ -3096,10 +3096,11 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: for Zimbra internal use only - do not change it. LAZY
-     * mode: N/A MANUAL mode: N/A Lock the domain for EAGER auto provision.
-     * This attribute is for internal use only: only one server can perform
-     * EAGER auto provisioning for a domain at one time. This lock is to
-     * shchronize EAGER auto provision attempts between servers.
+     * mode: N/A MANUAL mode: N/A For EAGER auto provision, a domain can be
+     * scheduled on multiple server. To avoid conflict, only one server can
+     * perform provisioning for a domain at one time. This attribute servers
+     * a lock for the test-and-set LDAP operation to shchronize EAGER auto
+     * provision attempts between servers.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -3114,10 +3115,11 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: for Zimbra internal use only - do not change it. LAZY
-     * mode: N/A MANUAL mode: N/A Lock the domain for EAGER auto provision.
-     * This attribute is for internal use only: only one server can perform
-     * EAGER auto provisioning for a domain at one time. This lock is to
-     * shchronize EAGER auto provision attempts between servers.
+     * mode: N/A MANUAL mode: N/A For EAGER auto provision, a domain can be
+     * scheduled on multiple server. To avoid conflict, only one server can
+     * perform provisioning for a domain at one time. This attribute servers
+     * a lock for the test-and-set LDAP operation to shchronize EAGER auto
+     * provision attempts between servers.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -3132,18 +3134,21 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Auto provisoninging modes enabled. Multiple modes can be enabled on a
+     * Auto provision modes enabled. Multiple modes can be enabled on a
      * domain. EAGER: A server maintenance thread automatically polls the
-     * configured External LDAP directory at a configured interval for
-     * external entries due to be auto provisioned in Zimbra and then auto
-     * creates the accounts in Zimbra directory. LAZY: auto creates the
+     * configured external auto provision LDAP source at a configured
+     * interval for entries due to be auto provisioned in Zimbra, and then
+     * auto creates the accounts in Zimbra directory. LAZY: auto creates the
      * Zimbra account when user first login via one of the external auth
      * mechanisms enabled for auto provisioning. Auth mechanisms enabled for
      * auto provisioning are configured in zimbraAutoProvAuthMech. MANUAL:
-     * admin to search and select a user from the configured External LDAP
-     * directory and create the Zimbra account. In all cases, the Zimbra
-     * account is populated with attributes mapped from the external LDAP
-     * user entry based on the zimbraAutoProvAttrMap setting.
+     * admin to search from the configured external auto provision LDAP
+     * source and select an entry from the search result to create the
+     * corresponding Zimbra account for the external entry. In all cases,
+     * localpart of the Zimbra account is mapped from an attribute on the
+     * external entry based on zimbraAutoProvAccountNameMap. The Zimbra
+     * account is populated with attributes mapped from the external entry
+     * based on zimbraAutoProvAttrMap.
      *
      * <p>Valid values: [MANUAL, LAZY, EAGER]
      *
@@ -3157,18 +3162,21 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Auto provisoninging modes enabled. Multiple modes can be enabled on a
+     * Auto provision modes enabled. Multiple modes can be enabled on a
      * domain. EAGER: A server maintenance thread automatically polls the
-     * configured External LDAP directory at a configured interval for
-     * external entries due to be auto provisioned in Zimbra and then auto
-     * creates the accounts in Zimbra directory. LAZY: auto creates the
+     * configured external auto provision LDAP source at a configured
+     * interval for entries due to be auto provisioned in Zimbra, and then
+     * auto creates the accounts in Zimbra directory. LAZY: auto creates the
      * Zimbra account when user first login via one of the external auth
      * mechanisms enabled for auto provisioning. Auth mechanisms enabled for
      * auto provisioning are configured in zimbraAutoProvAuthMech. MANUAL:
-     * admin to search and select a user from the configured External LDAP
-     * directory and create the Zimbra account. In all cases, the Zimbra
-     * account is populated with attributes mapped from the external LDAP
-     * user entry based on the zimbraAutoProvAttrMap setting.
+     * admin to search from the configured external auto provision LDAP
+     * source and select an entry from the search result to create the
+     * corresponding Zimbra account for the external entry. In all cases,
+     * localpart of the Zimbra account is mapped from an attribute on the
+     * external entry based on zimbraAutoProvAccountNameMap. The Zimbra
+     * account is populated with attributes mapped from the external entry
+     * based on zimbraAutoProvAttrMap.
      *
      * <p>Valid values: [MANUAL, LAZY, EAGER]
      *
@@ -3182,18 +3190,21 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Auto provisoninging modes enabled. Multiple modes can be enabled on a
+     * Auto provision modes enabled. Multiple modes can be enabled on a
      * domain. EAGER: A server maintenance thread automatically polls the
-     * configured External LDAP directory at a configured interval for
-     * external entries due to be auto provisioned in Zimbra and then auto
-     * creates the accounts in Zimbra directory. LAZY: auto creates the
+     * configured external auto provision LDAP source at a configured
+     * interval for entries due to be auto provisioned in Zimbra, and then
+     * auto creates the accounts in Zimbra directory. LAZY: auto creates the
      * Zimbra account when user first login via one of the external auth
      * mechanisms enabled for auto provisioning. Auth mechanisms enabled for
      * auto provisioning are configured in zimbraAutoProvAuthMech. MANUAL:
-     * admin to search and select a user from the configured External LDAP
-     * directory and create the Zimbra account. In all cases, the Zimbra
-     * account is populated with attributes mapped from the external LDAP
-     * user entry based on the zimbraAutoProvAttrMap setting.
+     * admin to search from the configured external auto provision LDAP
+     * source and select an entry from the search result to create the
+     * corresponding Zimbra account for the external entry. In all cases,
+     * localpart of the Zimbra account is mapped from an attribute on the
+     * external entry based on zimbraAutoProvAccountNameMap. The Zimbra
+     * account is populated with attributes mapped from the external entry
+     * based on zimbraAutoProvAttrMap.
      *
      * <p>Valid values: [MANUAL, LAZY, EAGER]
      *
@@ -3210,18 +3221,21 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Auto provisoninging modes enabled. Multiple modes can be enabled on a
+     * Auto provision modes enabled. Multiple modes can be enabled on a
      * domain. EAGER: A server maintenance thread automatically polls the
-     * configured External LDAP directory at a configured interval for
-     * external entries due to be auto provisioned in Zimbra and then auto
-     * creates the accounts in Zimbra directory. LAZY: auto creates the
+     * configured external auto provision LDAP source at a configured
+     * interval for entries due to be auto provisioned in Zimbra, and then
+     * auto creates the accounts in Zimbra directory. LAZY: auto creates the
      * Zimbra account when user first login via one of the external auth
      * mechanisms enabled for auto provisioning. Auth mechanisms enabled for
      * auto provisioning are configured in zimbraAutoProvAuthMech. MANUAL:
-     * admin to search and select a user from the configured External LDAP
-     * directory and create the Zimbra account. In all cases, the Zimbra
-     * account is populated with attributes mapped from the external LDAP
-     * user entry based on the zimbraAutoProvAttrMap setting.
+     * admin to search from the configured external auto provision LDAP
+     * source and select an entry from the search result to create the
+     * corresponding Zimbra account for the external entry. In all cases,
+     * localpart of the Zimbra account is mapped from an attribute on the
+     * external entry based on zimbraAutoProvAccountNameMap. The Zimbra
+     * account is populated with attributes mapped from the external entry
+     * based on zimbraAutoProvAttrMap.
      *
      * <p>Valid values: [MANUAL, LAZY, EAGER]
      *
@@ -3239,18 +3253,21 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Auto provisoninging modes enabled. Multiple modes can be enabled on a
+     * Auto provision modes enabled. Multiple modes can be enabled on a
      * domain. EAGER: A server maintenance thread automatically polls the
-     * configured External LDAP directory at a configured interval for
-     * external entries due to be auto provisioned in Zimbra and then auto
-     * creates the accounts in Zimbra directory. LAZY: auto creates the
+     * configured external auto provision LDAP source at a configured
+     * interval for entries due to be auto provisioned in Zimbra, and then
+     * auto creates the accounts in Zimbra directory. LAZY: auto creates the
      * Zimbra account when user first login via one of the external auth
      * mechanisms enabled for auto provisioning. Auth mechanisms enabled for
      * auto provisioning are configured in zimbraAutoProvAuthMech. MANUAL:
-     * admin to search and select a user from the configured External LDAP
-     * directory and create the Zimbra account. In all cases, the Zimbra
-     * account is populated with attributes mapped from the external LDAP
-     * user entry based on the zimbraAutoProvAttrMap setting.
+     * admin to search from the configured external auto provision LDAP
+     * source and select an entry from the search result to create the
+     * corresponding Zimbra account for the external entry. In all cases,
+     * localpart of the Zimbra account is mapped from an attribute on the
+     * external entry based on zimbraAutoProvAccountNameMap. The Zimbra
+     * account is populated with attributes mapped from the external entry
+     * based on zimbraAutoProvAttrMap.
      *
      * <p>Valid values: [MANUAL, LAZY, EAGER]
      *
@@ -3267,18 +3284,21 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Auto provisoninging modes enabled. Multiple modes can be enabled on a
+     * Auto provision modes enabled. Multiple modes can be enabled on a
      * domain. EAGER: A server maintenance thread automatically polls the
-     * configured External LDAP directory at a configured interval for
-     * external entries due to be auto provisioned in Zimbra and then auto
-     * creates the accounts in Zimbra directory. LAZY: auto creates the
+     * configured external auto provision LDAP source at a configured
+     * interval for entries due to be auto provisioned in Zimbra, and then
+     * auto creates the accounts in Zimbra directory. LAZY: auto creates the
      * Zimbra account when user first login via one of the external auth
      * mechanisms enabled for auto provisioning. Auth mechanisms enabled for
      * auto provisioning are configured in zimbraAutoProvAuthMech. MANUAL:
-     * admin to search and select a user from the configured External LDAP
-     * directory and create the Zimbra account. In all cases, the Zimbra
-     * account is populated with attributes mapped from the external LDAP
-     * user entry based on the zimbraAutoProvAttrMap setting.
+     * admin to search from the configured external auto provision LDAP
+     * source and select an entry from the search result to create the
+     * corresponding Zimbra account for the external entry. In all cases,
+     * localpart of the Zimbra account is mapped from an attribute on the
+     * external entry based on zimbraAutoProvAccountNameMap. The Zimbra
+     * account is populated with attributes mapped from the external entry
+     * based on zimbraAutoProvAttrMap.
      *
      * <p>Valid values: [MANUAL, LAZY, EAGER]
      *
@@ -3296,18 +3316,21 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Auto provisoninging modes enabled. Multiple modes can be enabled on a
+     * Auto provision modes enabled. Multiple modes can be enabled on a
      * domain. EAGER: A server maintenance thread automatically polls the
-     * configured External LDAP directory at a configured interval for
-     * external entries due to be auto provisioned in Zimbra and then auto
-     * creates the accounts in Zimbra directory. LAZY: auto creates the
+     * configured external auto provision LDAP source at a configured
+     * interval for entries due to be auto provisioned in Zimbra, and then
+     * auto creates the accounts in Zimbra directory. LAZY: auto creates the
      * Zimbra account when user first login via one of the external auth
      * mechanisms enabled for auto provisioning. Auth mechanisms enabled for
      * auto provisioning are configured in zimbraAutoProvAuthMech. MANUAL:
-     * admin to search and select a user from the configured External LDAP
-     * directory and create the Zimbra account. In all cases, the Zimbra
-     * account is populated with attributes mapped from the external LDAP
-     * user entry based on the zimbraAutoProvAttrMap setting.
+     * admin to search from the configured external auto provision LDAP
+     * source and select an entry from the search result to create the
+     * corresponding Zimbra account for the external entry. In all cases,
+     * localpart of the Zimbra account is mapped from an attribute on the
+     * external entry based on zimbraAutoProvAccountNameMap. The Zimbra
+     * account is populated with attributes mapped from the external entry
+     * based on zimbraAutoProvAttrMap.
      *
      * <p>Valid values: [MANUAL, LAZY, EAGER]
      *
@@ -3323,18 +3346,21 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Auto provisoninging modes enabled. Multiple modes can be enabled on a
+     * Auto provision modes enabled. Multiple modes can be enabled on a
      * domain. EAGER: A server maintenance thread automatically polls the
-     * configured External LDAP directory at a configured interval for
-     * external entries due to be auto provisioned in Zimbra and then auto
-     * creates the accounts in Zimbra directory. LAZY: auto creates the
+     * configured external auto provision LDAP source at a configured
+     * interval for entries due to be auto provisioned in Zimbra, and then
+     * auto creates the accounts in Zimbra directory. LAZY: auto creates the
      * Zimbra account when user first login via one of the external auth
      * mechanisms enabled for auto provisioning. Auth mechanisms enabled for
      * auto provisioning are configured in zimbraAutoProvAuthMech. MANUAL:
-     * admin to search and select a user from the configured External LDAP
-     * directory and create the Zimbra account. In all cases, the Zimbra
-     * account is populated with attributes mapped from the external LDAP
-     * user entry based on the zimbraAutoProvAttrMap setting.
+     * admin to search from the configured external auto provision LDAP
+     * source and select an entry from the search result to create the
+     * corresponding Zimbra account for the external entry. In all cases,
+     * localpart of the Zimbra account is mapped from an attribute on the
+     * external entry based on zimbraAutoProvAccountNameMap. The Zimbra
+     * account is populated with attributes mapped from the external entry
+     * based on zimbraAutoProvAttrMap.
      *
      * <p>Valid values: [MANUAL, LAZY, EAGER]
      *
@@ -3353,7 +3379,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional Email
      * address to put in the From header for the notification email to the
-     * newly created account.. If not set, no notification email will sent to
+     * newly created account. If not set, no notification email will sent to
      * the newly created account.
      *
      * @return zimbraAutoProvNotificationFromAddress, or null if unset
@@ -3368,7 +3394,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional Email
      * address to put in the From header for the notification email to the
-     * newly created account.. If not set, no notification email will sent to
+     * newly created account. If not set, no notification email will sent to
      * the newly created account.
      *
      * @param zimbraAutoProvNotificationFromAddress new value
@@ -3386,7 +3412,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional Email
      * address to put in the From header for the notification email to the
-     * newly created account.. If not set, no notification email will sent to
+     * newly created account. If not set, no notification email will sent to
      * the newly created account.
      *
      * @param zimbraAutoProvNotificationFromAddress new value
@@ -3405,7 +3431,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional Email
      * address to put in the From header for the notification email to the
-     * newly created account.. If not set, no notification email will sent to
+     * newly created account. If not set, no notification email will sent to
      * the newly created account.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -3422,7 +3448,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional Email
      * address to put in the From header for the notification email to the
-     * newly created account.. If not set, no notification email will sent to
+     * newly created account. If not set, no notification email will sent to
      * the newly created account.
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -3439,13 +3465,17 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional Default
-     * is FALSE. Whether to use external LDAP auth setting for auto
-     * provisioning. Honored when: - for EAGER mode: always. - for LAZY mode:
-     * only when user authenticated to Zimbra by external LDAP/AD auth. - for
-     * MANUAL mode: always. If honored, all zimbraAutoProvLdap*** values are
-     * ignored, and settings for external LDAP/AD auth will be used. If
-     * honored and external LDAP/AD auth is not configured or not configured
-     * properly, it will be a config error and we will not fallback to the
+     * is FALSE. Whether to use external LDAP/AD auth settings for auto
+     * provisioning. Purpose of this attribute is to simplify configuration
+     * for domains already configured with external LDAP/AD auth. By setting
+     * this attribute to TRUE, domains can use the external LDAP/AD auth
+     * settings for auto provision and do not have to duplicate them. Honored
+     * when: - for EAGER mode: always. - for LAZY mode: only when user
+     * authenticated to Zimbra by external LDAP/AD auth. - for MANUAL mode:
+     * always. If honored, all zimbraAutoProvLdap*** values are ignored, and
+     * settings for external LDAP/AD auth will be used. If honored and
+     * external LDAP/AD auth is not configured or not configured properly, it
+     * will be a config error and we will not fallback to the
      * zimbraAutoProvLdap*** values.
      *
      * @return zimbraAutoProvUseLdapAuthSettings, or false if unset
@@ -3459,13 +3489,17 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional Default
-     * is FALSE. Whether to use external LDAP auth setting for auto
-     * provisioning. Honored when: - for EAGER mode: always. - for LAZY mode:
-     * only when user authenticated to Zimbra by external LDAP/AD auth. - for
-     * MANUAL mode: always. If honored, all zimbraAutoProvLdap*** values are
-     * ignored, and settings for external LDAP/AD auth will be used. If
-     * honored and external LDAP/AD auth is not configured or not configured
-     * properly, it will be a config error and we will not fallback to the
+     * is FALSE. Whether to use external LDAP/AD auth settings for auto
+     * provisioning. Purpose of this attribute is to simplify configuration
+     * for domains already configured with external LDAP/AD auth. By setting
+     * this attribute to TRUE, domains can use the external LDAP/AD auth
+     * settings for auto provision and do not have to duplicate them. Honored
+     * when: - for EAGER mode: always. - for LAZY mode: only when user
+     * authenticated to Zimbra by external LDAP/AD auth. - for MANUAL mode:
+     * always. If honored, all zimbraAutoProvLdap*** values are ignored, and
+     * settings for external LDAP/AD auth will be used. If honored and
+     * external LDAP/AD auth is not configured or not configured properly, it
+     * will be a config error and we will not fallback to the
      * zimbraAutoProvLdap*** values.
      *
      * @param zimbraAutoProvUseLdapAuthSettings new value
@@ -3482,13 +3516,17 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional Default
-     * is FALSE. Whether to use external LDAP auth setting for auto
-     * provisioning. Honored when: - for EAGER mode: always. - for LAZY mode:
-     * only when user authenticated to Zimbra by external LDAP/AD auth. - for
-     * MANUAL mode: always. If honored, all zimbraAutoProvLdap*** values are
-     * ignored, and settings for external LDAP/AD auth will be used. If
-     * honored and external LDAP/AD auth is not configured or not configured
-     * properly, it will be a config error and we will not fallback to the
+     * is FALSE. Whether to use external LDAP/AD auth settings for auto
+     * provisioning. Purpose of this attribute is to simplify configuration
+     * for domains already configured with external LDAP/AD auth. By setting
+     * this attribute to TRUE, domains can use the external LDAP/AD auth
+     * settings for auto provision and do not have to duplicate them. Honored
+     * when: - for EAGER mode: always. - for LAZY mode: only when user
+     * authenticated to Zimbra by external LDAP/AD auth. - for MANUAL mode:
+     * always. If honored, all zimbraAutoProvLdap*** values are ignored, and
+     * settings for external LDAP/AD auth will be used. If honored and
+     * external LDAP/AD auth is not configured or not configured properly, it
+     * will be a config error and we will not fallback to the
      * zimbraAutoProvLdap*** values.
      *
      * @param zimbraAutoProvUseLdapAuthSettings new value
@@ -3506,13 +3544,17 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional Default
-     * is FALSE. Whether to use external LDAP auth setting for auto
-     * provisioning. Honored when: - for EAGER mode: always. - for LAZY mode:
-     * only when user authenticated to Zimbra by external LDAP/AD auth. - for
-     * MANUAL mode: always. If honored, all zimbraAutoProvLdap*** values are
-     * ignored, and settings for external LDAP/AD auth will be used. If
-     * honored and external LDAP/AD auth is not configured or not configured
-     * properly, it will be a config error and we will not fallback to the
+     * is FALSE. Whether to use external LDAP/AD auth settings for auto
+     * provisioning. Purpose of this attribute is to simplify configuration
+     * for domains already configured with external LDAP/AD auth. By setting
+     * this attribute to TRUE, domains can use the external LDAP/AD auth
+     * settings for auto provision and do not have to duplicate them. Honored
+     * when: - for EAGER mode: always. - for LAZY mode: only when user
+     * authenticated to Zimbra by external LDAP/AD auth. - for MANUAL mode:
+     * always. If honored, all zimbraAutoProvLdap*** values are ignored, and
+     * settings for external LDAP/AD auth will be used. If honored and
+     * external LDAP/AD auth is not configured or not configured properly, it
+     * will be a config error and we will not fallback to the
      * zimbraAutoProvLdap*** values.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -3528,13 +3570,17 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional Default
-     * is FALSE. Whether to use external LDAP auth setting for auto
-     * provisioning. Honored when: - for EAGER mode: always. - for LAZY mode:
-     * only when user authenticated to Zimbra by external LDAP/AD auth. - for
-     * MANUAL mode: always. If honored, all zimbraAutoProvLdap*** values are
-     * ignored, and settings for external LDAP/AD auth will be used. If
-     * honored and external LDAP/AD auth is not configured or not configured
-     * properly, it will be a config error and we will not fallback to the
+     * is FALSE. Whether to use external LDAP/AD auth settings for auto
+     * provisioning. Purpose of this attribute is to simplify configuration
+     * for domains already configured with external LDAP/AD auth. By setting
+     * this attribute to TRUE, domains can use the external LDAP/AD auth
+     * settings for auto provision and do not have to duplicate them. Honored
+     * when: - for EAGER mode: always. - for LAZY mode: only when user
+     * authenticated to Zimbra by external LDAP/AD auth. - for MANUAL mode:
+     * always. If honored, all zimbraAutoProvLdap*** values are ignored, and
+     * settings for external LDAP/AD auth will be used. If honored and
+     * external LDAP/AD auth is not configured or not configured properly, it
+     * will be a config error and we will not fallback to the
      * zimbraAutoProvLdap*** values.
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -11152,6 +11198,88 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetMailAddressValidationRegex(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailAddressValidationRegex, "");
+        return attrs;
+    }
+
+    /**
+     * System purge policy, encoded as metadata. Users can apply these policy
+     * elements to their folders and tags. If the system policy changes, user
+     * settings are automatically updated with the change.
+     *
+     * @return zimbraMailPurgeSystemPolicy, or null if unset
+     *
+     * @since ZCS 8.0
+     */
+    @ZAttr(id=1242)
+    public String getMailPurgeSystemPolicy() {
+        return getAttr(Provisioning.A_zimbraMailPurgeSystemPolicy, null);
+    }
+
+    /**
+     * System purge policy, encoded as metadata. Users can apply these policy
+     * elements to their folders and tags. If the system policy changes, user
+     * settings are automatically updated with the change.
+     *
+     * @param zimbraMailPurgeSystemPolicy new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0
+     */
+    @ZAttr(id=1242)
+    public void setMailPurgeSystemPolicy(String zimbraMailPurgeSystemPolicy) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailPurgeSystemPolicy, zimbraMailPurgeSystemPolicy);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * System purge policy, encoded as metadata. Users can apply these policy
+     * elements to their folders and tags. If the system policy changes, user
+     * settings are automatically updated with the change.
+     *
+     * @param zimbraMailPurgeSystemPolicy new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0
+     */
+    @ZAttr(id=1242)
+    public Map<String,Object> setMailPurgeSystemPolicy(String zimbraMailPurgeSystemPolicy, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailPurgeSystemPolicy, zimbraMailPurgeSystemPolicy);
+        return attrs;
+    }
+
+    /**
+     * System purge policy, encoded as metadata. Users can apply these policy
+     * elements to their folders and tags. If the system policy changes, user
+     * settings are automatically updated with the change.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0
+     */
+    @ZAttr(id=1242)
+    public void unsetMailPurgeSystemPolicy() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailPurgeSystemPolicy, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * System purge policy, encoded as metadata. Users can apply these policy
+     * elements to their folders and tags. If the system policy changes, user
+     * settings are automatically updated with the change.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0
+     */
+    @ZAttr(id=1242)
+    public Map<String,Object> unsetMailPurgeSystemPolicy(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailPurgeSystemPolicy, "");
         return attrs;
     }
 
