@@ -34,8 +34,8 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.MessageHitInfo;
 import com.zimbra.soap.mail.type.NestedSearchConversation;
+import com.zimbra.soap.mail.type.SpellingSuggestionsQueryInfo;
 import com.zimbra.soap.type.BaseQueryInfo;
-import com.zimbra.soap.type.SpellingSuggestionsQueryInfo;
 import com.zimbra.soap.type.WildcardExpansionQueryInfo;
 
 @XmlAccessorType(XmlAccessType.FIELD)

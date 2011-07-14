@@ -40,12 +40,12 @@ import com.zimbra.soap.mail.type.DocumentHitInfo;
 import com.zimbra.soap.mail.type.MessageHitInfo;
 import com.zimbra.soap.mail.type.MessagePartHitInfo;
 import com.zimbra.soap.mail.type.NoteHitInfo;
+import com.zimbra.soap.mail.type.SpellingSuggestionsQueryInfo;
 import com.zimbra.soap.mail.type.TaskHitInfo;
 import com.zimbra.soap.mail.type.WikiHitInfo;
 import com.zimbra.soap.type.BaseQueryInfo;
 import com.zimbra.soap.type.SearchHit;
 import com.zimbra.soap.type.SimpleSearchHit;
-import com.zimbra.soap.type.SpellingSuggestionsQueryInfo;
 import com.zimbra.soap.type.WildcardExpansionQueryInfo;
 
 @XmlAccessorType(XmlAccessType.FIELD)

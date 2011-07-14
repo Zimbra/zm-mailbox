@@ -29,9 +29,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.type.CustomMetadata;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = { "content", "metadatas" })
 public class NoteInfo {
 
@@ -73,7 +72,7 @@ public class NoteInfo {
     private String content;
 
     @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
-    private List<CustomMetadata> metadatas = Lists.newArrayList();
+    private List<MailCustomMetadata> metadatas = Lists.newArrayList();
 
     public NoteInfo() {
         this((String) null);
@@ -97,16 +96,15 @@ public class NoteInfo {
         this.modifiedSequence = modifiedSequence;
     }
     public void setContent(String content) { this.content = content; }
-    public void setMetadatas(Iterable <CustomMetadata> metadatas) {
+    public void setMetadatas(Iterable <MailCustomMetadata> metadatas) {
         this.metadatas.clear();
         if (metadatas != null) {
             Iterables.addAll(this.metadatas,metadatas);
         }
     }
 
-    public NoteInfo addMetadata(CustomMetadata metadata) {
+    public void addMetadata(MailCustomMetadata metadata) {
         this.metadatas.add(metadata);
-        return this;
     }
 
     public String getId() { return id; }
@@ -121,7 +119,7 @@ public class NoteInfo {
     public Long getChangeDate() { return changeDate; }
     public Integer getModifiedSequence() { return modifiedSequence; }
     public String getContent() { return content; }
-    public List<CustomMetadata> getMetadatas() {
+    public List<MailCustomMetadata> getMetadatas() {
         return Collections.unmodifiableList(metadatas);
     }
 

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -15,6 +15,7 @@
 
 package com.zimbra.soap.admin.type;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -28,46 +29,44 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ContactAttr;
-import com.zimbra.soap.type.CustomMetadata;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"metadatas", "attrs"})
 public class AutoCompleteGalContactInfo {
 
-    @XmlAttribute(name=MailConstants.A_SORT_FIELD, required=true)
+    @XmlAttribute(name=MailConstants.A_SORT_FIELD /* sf */, required=true)
     private final String sortField;
 
-    @XmlAttribute(name=AccountConstants.A_EXP, required=false)
+    @XmlAttribute(name=AccountConstants.A_EXP /* exp */, required=false)
     private Boolean canExpand;
 
-    @XmlAttribute(name=MailConstants.A_ID, required=true)
+    @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     private final String id;
 
-    @XmlAttribute(name=MailConstants.A_FOLDER, required=false)
+    @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
     private String folder;
 
-    @XmlAttribute(name=MailConstants.A_FLAGS, required=false)
+    @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
     private String flags;
 
-    @XmlAttribute(name=MailConstants.A_TAGS, required=false)
+    @XmlAttribute(name=MailConstants.A_TAGS /* t */, required=false)
     private String tags;
 
-    @XmlAttribute(name=MailConstants.A_CHANGE_DATE, required=false)
+    @XmlAttribute(name=MailConstants.A_CHANGE_DATE /* md */, required=false)
     private Long changeDate;
 
-    @XmlAttribute(name=MailConstants.A_MODIFIED_SEQUENCE, required=false)
+    @XmlAttribute(name=MailConstants.A_MODIFIED_SEQUENCE /* ms */, required=false)
     private Integer modifiedSequenceId;
 
-    @XmlAttribute(name=MailConstants.A_DATE, required=false)
+    @XmlAttribute(name=MailConstants.A_DATE /* d */, required=false)
     private Long date;
 
-    @XmlAttribute(name=MailConstants.A_REVISION, required=false)
+    @XmlAttribute(name=MailConstants.A_REVISION /* rev */, required=false)
     private Integer revisionId;
 
-    @XmlAttribute(name=MailConstants.A_FILE_AS_STR, required=false)
+    @XmlAttribute(name=MailConstants.A_FILE_AS_STR /* fileAsStr */, required=false)
     private String fileAs;
 
     @XmlAttribute(name="email", required=false)
@@ -85,10 +84,10 @@ public class AutoCompleteGalContactInfo {
     @XmlAttribute(name="dlist", required=false)
     private String dlist;
 
-    @XmlElement(name=MailConstants.E_METADATA, required=false)
-    private List<CustomMetadata> metadatas = Lists.newArrayList();
+    @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
+    private List<AdminCustomMetadata> metadatas = Lists.newArrayList();
 
-    @XmlElement(name=MailConstants.E_A, required=false)
+    @XmlElement(name=MailConstants.E_A /* a */, required=false)
     private List<ContactAttr> attrs = Lists.newArrayList();
 
     /**
@@ -118,16 +117,15 @@ public class AutoCompleteGalContactInfo {
     public void setEmail3(String email3) { this.email3 = email3; }
     public void setType(String type) { this.type = type; }
     public void setDlist(String dlist) { this.dlist = dlist; }
-    public void setMetadatas(Iterable <CustomMetadata> metadatas) {
+    public void setMetadatas(Iterable <AdminCustomMetadata> metadatas) {
         this.metadatas.clear();
         if (metadatas != null) {
             Iterables.addAll(this.metadatas,metadatas);
         }
     }
 
-    public AutoCompleteGalContactInfo addMetadata(CustomMetadata metadata) {
+    public void addMetadata(AdminCustomMetadata metadata) {
         this.metadatas.add(metadata);
-        return this;
     }
 
     public void setAttrs(Iterable <ContactAttr> attrs) {
@@ -137,9 +135,8 @@ public class AutoCompleteGalContactInfo {
         }
     }
 
-    public AutoCompleteGalContactInfo addAttr(ContactAttr attr) {
+    public void addAttr(ContactAttr attr) {
         this.attrs.add(attr);
-        return this;
     }
 
     public String getSortField() { return sortField; }
@@ -158,10 +155,39 @@ public class AutoCompleteGalContactInfo {
     public String getEmail3() { return email3; }
     public String getType() { return type; }
     public String getDlist() { return dlist; }
-    public List<CustomMetadata> getMetadatas() {
+    public List<AdminCustomMetadata> getMetadatas() {
         return Collections.unmodifiableList(metadatas);
     }
     public List<ContactAttr> getAttrs() {
         return Collections.unmodifiableList(attrs);
+    }
+
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        return helper
+            .add("sortField", sortField)
+            .add("canExpand", canExpand)
+            .add("id", id)
+            .add("folder", folder)
+            .add("flags", flags)
+            .add("tags", tags)
+            .add("changeDate", changeDate)
+            .add("modifiedSequenceId", modifiedSequenceId)
+            .add("date", date)
+            .add("revisionId", revisionId)
+            .add("fileAs", fileAs)
+            .add("email", email)
+            .add("email2", email2)
+            .add("email3", email3)
+            .add("type", type)
+            .add("dlist", dlist)
+            .add("metadatas", metadatas)
+            .add("attrs", attrs);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }

@@ -50,6 +50,7 @@ public class AdminAttrsImpl implements AdminAttrs {
         this.setAttrs(attrs);
     }
 
+    @Override
     public void setAttrs(Iterable<Attr> attrs) {
         this.attrs.clear();
         if (attrs != null) {
@@ -57,17 +58,30 @@ public class AdminAttrsImpl implements AdminAttrs {
         }
     }
 
+    @Override
     public void setAttrs(Map<String, ? extends Object> attrs)
     throws ServiceException {
         this.setAttrs(Attr.mapToList(attrs));
     }
 
+    @Override
     public void addAttr(Attr attr) {
         this.attrs.add(attr);
     }
 
+    @Override
+    public void addAttr(String n, String value) {
+        this.attrs.add(Attr.fromNameValue(n, value));
+    }
+
+    @Override
     public List<Attr> getAttrs() {
         return Collections.unmodifiableList(attrs);
+    }
+
+    public Map<String, Object> getAttrsAsOldMultimap()
+    throws ServiceException {
+        return Attr.collectionToMap(this.getAttrs());
     }
 
     public Objects.ToStringHelper addToStringInfo(

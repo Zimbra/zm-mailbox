@@ -29,9 +29,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.type.CustomMetadata;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = { "metadatas", "fragment" })
 public class CommonDocumentInfo {
 
@@ -89,7 +88,7 @@ public class CommonDocumentInfo {
     private Long createdDate;
 
     @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
-    private List<CustomMetadata> metadatas = Lists.newArrayList();
+    private List<MailCustomMetadata> metadatas = Lists.newArrayList();
 
     @XmlElement(name=MailConstants.E_FRAG /* fr */, required=false)
     private String fragment;
@@ -131,16 +130,15 @@ public class CommonDocumentInfo {
     public void setCreatedDate(Long createdDate) {
         this.createdDate = createdDate;
     }
-    public void setMetadatas(Iterable <CustomMetadata> metadatas) {
+    public void setMetadatas(Iterable <MailCustomMetadata> metadatas) {
         this.metadatas.clear();
         if (metadatas != null) {
             Iterables.addAll(this.metadatas,metadatas);
         }
     }
 
-    public CommonDocumentInfo addMetadata(CustomMetadata metadata) {
+    public void addMetadata(MailCustomMetadata metadata) {
         this.metadatas.add(metadata);
-        return this;
     }
 
     public void setFragment(String fragment) { this.fragment = fragment; }
@@ -161,7 +159,7 @@ public class CommonDocumentInfo {
     public String getLastEditedBy() { return lastEditedBy; }
     public String getCreator() { return creator; }
     public Long getCreatedDate() { return createdDate; }
-    public List<CustomMetadata> getMetadatas() {
+    public List<MailCustomMetadata> getMetadatas() {
         return Collections.unmodifiableList(metadatas);
     }
     public String getFragment() { return fragment; }

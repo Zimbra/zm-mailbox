@@ -29,9 +29,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.type.CustomMetadata;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"metadatas", "subject", "fragment", "emails"})
 public class ConversationSummary {
 
@@ -64,7 +63,7 @@ public class ConversationSummary {
     private Integer modifiedSequence;
 
     @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
-    private List<CustomMetadata> metadatas = Lists.newArrayList();
+    private List<MailCustomMetadata> metadatas = Lists.newArrayList();
 
     @XmlElement(name=MailConstants.E_SUBJECT /* su */, required=false)
     private String subject;
@@ -94,16 +93,15 @@ public class ConversationSummary {
     public void setModifiedSequence(Integer modifiedSequence) {
         this.modifiedSequence = modifiedSequence;
     }
-    public void setMetadatas(Iterable <CustomMetadata> metadatas) {
+    public void setMetadatas(Iterable <MailCustomMetadata> metadatas) {
         this.metadatas.clear();
         if (metadatas != null) {
             Iterables.addAll(this.metadatas,metadatas);
         }
     }
 
-    public ConversationSummary addMetadata(CustomMetadata metadata) {
+    public void addMetadata(MailCustomMetadata metadata) {
         this.metadatas.add(metadata);
-        return this;
     }
 
     public void setSubject(String subject) { this.subject = subject; }
@@ -115,9 +113,8 @@ public class ConversationSummary {
         }
     }
 
-    public ConversationSummary addEmail(EmailInfo email) {
+    public void addEmail(EmailInfo email) {
         this.emails.add(email);
-        return this;
     }
 
     public String getId() { return id; }
@@ -129,7 +126,7 @@ public class ConversationSummary {
     public Boolean getElided() { return elided; }
     public Long getChangeDate() { return changeDate; }
     public Integer getModifiedSequence() { return modifiedSequence; }
-    public List<CustomMetadata> getMetadatas() {
+    public List<MailCustomMetadata> getMetadatas() {
         return Collections.unmodifiableList(metadatas);
     }
     public String getSubject() { return subject; }

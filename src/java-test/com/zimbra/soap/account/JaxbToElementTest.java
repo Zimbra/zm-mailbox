@@ -35,8 +35,6 @@ import junit.framework.Assert;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 import org.apache.log4j.Level;
-import org.dom4j.QName;
-
 import org.junit.BeforeClass;
 import org.junit.Test;
 import com.zimbra.soap.JaxbUtil;
@@ -515,5 +513,4 @@ public class JaxbToElementTest {
             "CreateIdentityRequest{identity=Identity{a=[Attr{name=key2, value=value2 wonderful}, Attr{name=key1, value=value1}], name=hello, id=null}}",
             request.toString());
     }
-
 }

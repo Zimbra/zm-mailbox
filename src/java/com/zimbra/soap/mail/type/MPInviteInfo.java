@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -31,22 +31,22 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"timezones", "calendarReplies", "inviteComponents"})
 public class MPInviteInfo {
 
     // Valid values - "appt" and "task"
-    @XmlAttribute(name=MailConstants.A_CAL_ITEM_TYPE, required=true)
+    @XmlAttribute(name=MailConstants.A_CAL_ITEM_TYPE /* type */, required=true)
     private final String calItemType;
 
-    @XmlElement(name=MailConstants.E_CAL_TZ, required=false)
+    @XmlElement(name=MailConstants.E_CAL_TZ /* tz */, required=false)
     private List<CalTZInfo> timezones = Lists.newArrayList();
 
-    @XmlElementWrapper(name=MailConstants.E_CAL_REPLIES, required=false)
-    @XmlElement(name=MailConstants.E_CAL_REPLY, required=false)
+    @XmlElementWrapper(name=MailConstants.E_CAL_REPLIES /* replies */, required=false)
+    @XmlElement(name=MailConstants.E_CAL_REPLY /* reply */, required=false)
     private List<CalendarReply> calendarReplies = Lists.newArrayList();
 
-    @XmlElement(name=MailConstants.E_INVITE_COMPONENT, required=false)
+    @XmlElement(name=MailConstants.E_INVITE_COMPONENT /* comp */, required=false)
     private List<InviteComponent> inviteComponents = Lists.newArrayList();
 
     /**
@@ -68,9 +68,8 @@ public class MPInviteInfo {
         }
     }
 
-    public MPInviteInfo addTimezone(CalTZInfo timezone) {
+    public void addTimezone(CalTZInfo timezone) {
         this.timezones.add(timezone);
-        return this;
     }
 
     public void setCalendarReplies(Iterable <CalendarReply> calendarReplies) {
@@ -80,9 +79,8 @@ public class MPInviteInfo {
         }
     }
 
-    public MPInviteInfo addCalendarReply(CalendarReply calendarReply) {
+    public void addCalendarReply(CalendarReply calendarReply) {
         this.calendarReplies.add(calendarReply);
-        return this;
     }
 
     public void setInviteComponents(
@@ -93,9 +91,8 @@ public class MPInviteInfo {
         }
     }
 
-    public MPInviteInfo addInviteComponent(InviteComponent inviteComponent) {
+    public void addInviteComponent(InviteComponent inviteComponent) {
         this.inviteComponents.add(inviteComponent);
-        return this;
     }
 
     public String getCalItemType() { return calItemType; }

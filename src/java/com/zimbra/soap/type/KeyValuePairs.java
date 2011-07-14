@@ -35,4 +35,6 @@ public interface KeyValuePairs {
     public List<KeyValuePair> getKeyValuePairs();
     public Multimap<String, String> getKeyValuePairsMultimap();
     public Map<String, Object> getKeyValuePairsAsOldMultimap();
+    public String firstValueForKey(String key);
+    public List<String> valuesForKey(String key);
 }

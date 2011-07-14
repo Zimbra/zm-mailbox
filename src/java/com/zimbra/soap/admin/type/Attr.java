@@ -61,6 +61,10 @@ public class Attr {
         this.isCosAttr = isCosAttr;
     }
 
+    public static Attr fromNameValue(String n, String value) {
+        return new Attr(n, value);
+    }
+
     public void setN(String n) { this.n = n; }
     public void setIsCosAttr(Boolean isCosAttr) { this.isCosAttr = isCosAttr; }
     public void setValue(String value) { this.value = value; }

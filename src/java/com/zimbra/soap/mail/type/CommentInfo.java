@@ -31,17 +31,19 @@ import javax.xml.bind.annotation.XmlMixed;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.type.CustomMetadata;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {})
 public class CommentInfo {
+
+    @XmlAttribute(name=MailConstants.A_PARENT_ID /* parentId */, required=false)
+    private String parentId;
 
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private String id;
 
-    @XmlAttribute(name=MailConstants.A_CREATOR /* cr */, required=false)
-    private String creator;
+    @XmlAttribute(name=MailConstants.A_EMAIL /* email */, required=false)
+    private String creatorEmail;
 
     @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
     private String flags;
@@ -62,7 +64,7 @@ public class CommentInfo {
     // the Subject text) as well as sub-elements
     @XmlElementRefs({
         @XmlElementRef(name=MailConstants.E_METADATA /* meta */,
-            type=CustomMetadata.class)
+            type=MailCustomMetadata.class)
     })
     @XmlMixed
     private List<Object> elements = Lists.newArrayList();
@@ -70,8 +72,9 @@ public class CommentInfo {
     public CommentInfo() {
     }
 
+    public void setParentId(String parentId) { this.parentId = parentId; }
     public void setId(String id) { this.id = id; }
-    public void setCreator(String creator) { this.creator = creator; }
+    public void setCreatorEmail(String creatorEmail) { this.creatorEmail = creatorEmail; }
     public void setFlags(String flags) { this.flags = flags; }
     public void setTags(String tags) { this.tags = tags; }
     public void setColor(Byte color) { this.color = color; }
@@ -84,13 +87,13 @@ public class CommentInfo {
         }
     }
 
-    public CommentInfo addElement(Object element) {
+    public void addElement(Object element) {
         this.elements.add(element);
-        return this;
     }
 
+    public String getParentId() { return parentId; }
     public String getId() { return id; }
-    public String getCreator() { return creator; }
+    public String getCreatorEmail() { return creatorEmail; }
     public String getFlags() { return flags; }
     public String getTags() { return tags; }
     public Byte getColor() { return color; }
@@ -106,7 +109,7 @@ public class CommentInfo {
             elements = Lists.newArrayList();
         // note that remove in foreach would be unsafe.
         for (int ndx = elements.size()-1; ndx >= 0; ndx--) {
-            if (elements.get(ndx) instanceof CustomMetadata) {
+            if (elements.get(ndx) instanceof String) {
                 elements.remove(ndx);
             }
         }
@@ -126,12 +129,12 @@ public class CommentInfo {
     }
 
     // non-JAXB method
-    public void setMetadatas(Iterable <CustomMetadata> metadatas) {
+    public void setMetadatas(Iterable <MailCustomMetadata> metadatas) {
         if (elements == null)
             elements = Lists.newArrayList();
         // note that remove in foreach would be unsafe.
         for (int ndx = elements.size()-1; ndx >= 0; ndx--) {
-            if (elements.get(ndx) instanceof CustomMetadata) {
+            if (elements.get(ndx) instanceof MailCustomMetadata) {
                 elements.remove(ndx);
             }
         }
@@ -141,16 +144,16 @@ public class CommentInfo {
     }
 
     // non-JAXB method
-    public void addMetadata(CustomMetadata metadata) {
+    public void addMetadata(MailCustomMetadata metadata) {
         this.elements.add(metadata);
     }
 
     // non-JAXB method
-    public List<CustomMetadata> getMetadatas() {
-        List<CustomMetadata> metadatas = Lists.newArrayList();
+    public List<MailCustomMetadata> getMetadatas() {
+        List<MailCustomMetadata> metadatas = Lists.newArrayList();
         for (Object obj : elements) {
-            if (obj instanceof CustomMetadata)
-                metadatas.add((CustomMetadata) obj);
+            if (obj instanceof MailCustomMetadata)
+                metadatas.add((MailCustomMetadata) obj);
         }
         return Collections.unmodifiableList(metadatas);
     }
@@ -158,8 +161,9 @@ public class CommentInfo {
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
+            .add("parentId", parentId)
             .add("id", id)
-            .add("creator", creator)
+            .add("creatorEmail", creatorEmail)
             .add("flags", flags)
             .add("tags", tags)
             .add("color", color)

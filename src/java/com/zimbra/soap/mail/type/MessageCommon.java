@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -29,41 +29,40 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.type.CustomMetadata;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"metadatas"})
 public class MessageCommon {
 
-    @XmlAttribute(name=MailConstants.A_SIZE, required=false)
+    @XmlAttribute(name=MailConstants.A_SIZE /* s */, required=false)
     private Long size;
 
-    @XmlAttribute(name=MailConstants.A_DATE, required=false)
+    @XmlAttribute(name=MailConstants.A_DATE /* d */, required=false)
     private Long date;
 
-    @XmlAttribute(name=MailConstants.A_FOLDER, required=false)
+    @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
     private String folder;
 
-    @XmlAttribute(name=MailConstants.A_CONV_ID, required=false)
+    @XmlAttribute(name=MailConstants.A_CONV_ID /* cid */, required=false)
     private String conversationId;
 
-    @XmlAttribute(name=MailConstants.A_FLAGS, required=false)
+    @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
     private String flags;
 
-    @XmlAttribute(name=MailConstants.A_TAGS, required=false)
+    @XmlAttribute(name=MailConstants.A_TAGS /* t */, required=false)
     private String tags;
 
-    @XmlAttribute(name=MailConstants.A_REVISION, required=false)
+    @XmlAttribute(name=MailConstants.A_REVISION /* rev */, required=false)
     private Integer revision;
 
-    @XmlAttribute(name=MailConstants.A_CHANGE_DATE, required=false)
+    @XmlAttribute(name=MailConstants.A_CHANGE_DATE /* md */, required=false)
     private Long changeDate;
 
-    @XmlAttribute(name=MailConstants.A_MODIFIED_SEQUENCE, required=false)
+    @XmlAttribute(name=MailConstants.A_MODIFIED_SEQUENCE /* ms */, required=false)
     private Integer modifiedSequence;
 
-    @XmlElement(name=MailConstants.E_METADATA, required=false)
-    private List<CustomMetadata> metadatas = Lists.newArrayList();
+    @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
+    private List<MailCustomMetadata> metadatas = Lists.newArrayList();
 
     public MessageCommon() {
     }
@@ -81,16 +80,15 @@ public class MessageCommon {
     public void setModifiedSequence(Integer modifiedSequence) {
         this.modifiedSequence = modifiedSequence;
     }
-    public void setMetadatas(Iterable <CustomMetadata> metadatas) {
+    public void setMetadatas(Iterable <MailCustomMetadata> metadatas) {
         this.metadatas.clear();
         if (metadatas != null) {
             Iterables.addAll(this.metadatas,metadatas);
         }
     }
 
-    public MessageCommon addMetadata(CustomMetadata metadata) {
+    public void addMetadata(MailCustomMetadata metadata) {
         this.metadatas.add(metadata);
-        return this;
     }
 
     public Long getSize() { return size; }
@@ -102,7 +100,7 @@ public class MessageCommon {
     public Integer getRevision() { return revision; }
     public Long getChangeDate() { return changeDate; }
     public Integer getModifiedSequence() { return modifiedSequence; }
-    public List<CustomMetadata> getMetadatas() {
+    public List<MailCustomMetadata> getMetadatas() {
         return Collections.unmodifiableList(metadatas);
     }
 

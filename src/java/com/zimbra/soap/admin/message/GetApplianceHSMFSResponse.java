@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.type;
+package com.zimbra.soap.admin.message;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
@@ -24,57 +24,43 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import com.zimbra.soap.type.BaseQueryInfo;
+import com.zimbra.common.soap.HsmConstants;
+import com.zimbra.soap.admin.type.HsmFileSystemInfo;
 
 @XmlAccessorType(XmlAccessType.FIELD)
+@XmlRootElement(name=HsmConstants.E_GET_APPLIANCE_HSM_FS_RESPONSE)
 @XmlType(propOrder = {})
-public class SpellingSuggestionsQueryInfo implements BaseQueryInfo {
+public class GetApplianceHSMFSResponse {
 
-    @XmlAttribute(name="word", required=true)
-    private final String word;
+    @XmlElement(name=HsmConstants.E_FS /* fs */, required=false)
+    private List<HsmFileSystemInfo> fileSystems = Lists.newArrayList();
 
-    @XmlElement(name="sug", required=false)
-    private List<SpellingSuggestion> suggestions = Lists.newArrayList();
-
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private SpellingSuggestionsQueryInfo() {
-        this((String) null);
+    public GetApplianceHSMFSResponse() {
     }
 
-    public SpellingSuggestionsQueryInfo(String word) {
-        this.word = word;
-    }
-
-    public void setSuggestions(Iterable <SpellingSuggestion> suggestions) {
-        this.suggestions.clear();
-        if (suggestions != null) {
-            Iterables.addAll(this.suggestions,suggestions);
+    public void setFileSystems(Iterable <HsmFileSystemInfo> fileSystems) {
+        this.fileSystems.clear();
+        if (fileSystems != null) {
+            Iterables.addAll(this.fileSystems,fileSystems);
         }
     }
 
-    public SpellingSuggestionsQueryInfo addSuggestion(
-                            SpellingSuggestion suggestion) {
-        this.suggestions.add(suggestion);
-        return this;
+    public void addFileSystem(HsmFileSystemInfo fileSystem) {
+        this.fileSystems.add(fileSystem);
     }
 
-    public String getWord() { return word; }
-    public List<SpellingSuggestion> getSuggestions() {
-        return Collections.unmodifiableList(suggestions);
+    public List<HsmFileSystemInfo> getFileSystems() {
+        return Collections.unmodifiableList(fileSystems);
     }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("word", word)
-            .add("suggestions", suggestions);
+            .add("fileSystems", fileSystems);
     }
 
     @Override

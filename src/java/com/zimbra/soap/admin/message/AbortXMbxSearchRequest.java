@@ -13,50 +13,43 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.type;
+package com.zimbra.soap.admin.message;
 
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
+import com.zimbra.common.soap.XMbxSearchConstants;
+import com.zimbra.soap.admin.type.SearchID;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class SpellingSuggestion {
+@XmlRootElement(name=XMbxSearchConstants.E_ABORT_XMBX_SEARCH_REQUEST)
+public class AbortXMbxSearchRequest {
 
-    @XmlAttribute(name="dist", required=true)
-    private final int dist;
-
-    @XmlAttribute(name="numDocs", required=true)
-    private final int numDocs;
-
-    @XmlAttribute(name="value", required=true)
-    private final String value;
+    @XmlElement(name=XMbxSearchConstants.E_SrchTask
+                /* searchtask */, required=true)
+    private final SearchID searchTask;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private SpellingSuggestion() {
-        this(-1, -1, (String) null);
+    private AbortXMbxSearchRequest() {
+        this((SearchID) null);
     }
 
-    public SpellingSuggestion(int dist, int numDocs, String value) {
-        this.dist = dist;
-        this.numDocs = numDocs;
-        this.value = value;
+    public AbortXMbxSearchRequest(SearchID searchTask) {
+        this.searchTask = searchTask;
     }
 
-    public int getDist() { return dist; }
-    public int getNumDocs() { return numDocs; }
-    public String getValue() { return value; }
+    public SearchID getSearchTask() { return searchTask; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("dist", dist)
-            .add("numDocs", numDocs)
-            .add("value", value);
+            .add("searchTask", searchTask);
     }
 
     @Override

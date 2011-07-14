@@ -16,13 +16,11 @@
 package com.zimbra.soap.type;
 
 import java.util.List;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
@@ -30,32 +28,38 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.StringUtil;
 
-/*
+/**
+ * Helper class used to create JAXB classes representing similar data types
+ * in different XML namespaces.  Note that no fields or methods have
+ * annotations to represent elements or attributes.
+ * JAXB subclasses should include a method with signature:
+ *      @XmlElement(name=AdminConstants.E_A)
+ *      public void setKeyValuePairs(List<KeyValuePair> keyValuePairs);
+ *
  * Used for JAXB objects representing elements which have child node(s) of form:
  *     <a n="{key}">{value}</a>
  */
-@XmlAccessorType(XmlAccessType.FIELD)
-abstract public class KeyValuePairsImpl implements KeyValuePairs {
+@XmlAccessorType(XmlAccessType.NONE)
+abstract public class KeyValuePairsBase implements KeyValuePairs {
 
-    @XmlElement(name=AdminConstants.E_A)
     private List<KeyValuePair> keyValuePairs = Lists.newArrayList();
 
-    public KeyValuePairsImpl() {
+    public KeyValuePairsBase() {
         this.setKeyValuePairs((Iterable<KeyValuePair>) null);
     }
 
-    public KeyValuePairsImpl(Iterable<KeyValuePair> keyValuePairs) {
+    public KeyValuePairsBase(Iterable<KeyValuePair> keyValuePairs) {
         this.setKeyValuePairs(keyValuePairs);
     }
 
-    public KeyValuePairsImpl (Map<String, ? extends Object> keyValuePairs)
+    public KeyValuePairsBase (Map<String, ? extends Object> keyValuePairs)
     throws ServiceException {
         this.setKeyValuePairs(keyValuePairs);
     }
 
+    @Override
     public KeyValuePairs setKeyValuePairs(
                     Iterable<KeyValuePair> keyValuePairs) {
         this.keyValuePairs.clear();
@@ -65,6 +69,7 @@ abstract public class KeyValuePairsImpl implements KeyValuePairs {
         return this;
     }
 
+    @Override
     public KeyValuePairs setKeyValuePairs(
                     Map<String, ? extends Object> keyValuePairs)
     throws ServiceException {
@@ -72,27 +77,60 @@ abstract public class KeyValuePairsImpl implements KeyValuePairs {
         return this;
     }
 
+    @Override
     public KeyValuePairs addKeyValuePair(KeyValuePair keyValuePair) {
         keyValuePairs.add(keyValuePair);
         return this;
     }
 
+    @Override
     public List<KeyValuePair> getKeyValuePairs() {
         return Collections.unmodifiableList(keyValuePairs);
     }
 
+    @Override
     public Multimap<String, String> getKeyValuePairsMultimap() {
         return KeyValuePair.toMultimap(keyValuePairs);
     }
 
+    @Override
     public Map<String, Object> getKeyValuePairsAsOldMultimap() {
         return StringUtil.toOldMultimap(getKeyValuePairsMultimap());
     }
 
+    /**
+     * Returns the first value matching {@link key} or null if {@link key} not found.
+     */
+    @Override
+    public String firstValueForKey(String key) {
+        for (KeyValuePair kvp : keyValuePairs) {
+            if (key.equals(kvp.getKey())) {
+                return kvp.getValue();
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public List<String> valuesForKey(String key) {
+        List<String> values = Lists.newArrayList();
+        for (KeyValuePair kvp : keyValuePairs) {
+            if (key.equals(kvp.getKey())) {
+                values.add(kvp.getValue());
+            }
+        }
+        return Collections.unmodifiableList(values);
+    }
+
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        return helper
+            .add("keyValuePairs", keyValuePairs);
+    }
+
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
-            .add("keyValuePairs", keyValuePairs)
-            .toString();
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }

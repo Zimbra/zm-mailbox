@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -20,33 +20,35 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.Id;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
+@XmlType(propOrder = {})
 public class CreateCalendarItemResponse {
 
-    @XmlAttribute(name=MailConstants.A_CAL_ID, required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_ID /* calItemId */, required=false)
     private String calItemId;
 
     // For backwards compat
-    @XmlAttribute(name=MailConstants.A_APPT_ID_DEPRECATE_ME, required=false)
+    @XmlAttribute(name=MailConstants.A_APPT_ID_DEPRECATE_ME /* apptId */, required=false)
     private String deprecatedApptId;
 
-    @XmlAttribute(name=MailConstants.A_CAL_INV_ID, required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_INV_ID /* invId */, required=false)
     private String calInvId;
 
-    @XmlAttribute(name=MailConstants.A_MODIFIED_SEQUENCE, required=false)
+    @XmlAttribute(name=MailConstants.A_MODIFIED_SEQUENCE /* ms */, required=false)
     private Integer modifiedSequence;
 
-    @XmlAttribute(name=MailConstants.A_REVISION, required=false)
+    @XmlAttribute(name=MailConstants.A_REVISION /* rev */, required=false)
     private Integer revision;
 
-    @XmlElement(name=MailConstants.E_MSG, required=false)
+    @XmlElement(name=MailConstants.E_MSG /* m */, required=false)
     private Id msg;
 
-    @XmlElement(name=MailConstants.A_CAL_ECHO, required=false)
+    @XmlElement(name=MailConstants.A_CAL_ECHO /* echo */, required=false)
     private CalEcho echo;
 
     public CreateCalendarItemResponse() {

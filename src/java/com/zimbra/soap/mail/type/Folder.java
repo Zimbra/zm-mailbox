@@ -35,7 +35,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.type.CustomMetadata;
 /*
 <folder id="{folder-id}" name="{folder-name}" l="{parent-id}" [f="{flags}"] [color="{color}"]
                u="{unread}" [i4u="{imap-unread}"] n="{msg-count}" [i4n="{imap-count}"] s="{total-size}" [view="{default-type}"]
@@ -170,7 +169,7 @@ public class Folder {
     private String restUrl;
 
     @XmlElement(name=MailConstants.E_METADATA, required=false)
-    private List<CustomMetadata> metadatas = Lists.newArrayList();
+    private List<MailCustomMetadata> metadatas = Lists.newArrayList();
 
     // MailConstants.E_ACL == "acl"
     @XmlElementWrapper(name=MailConstants.E_ACL, required=false)
@@ -256,7 +255,7 @@ public class Folder {
         return restUrl;
     }
 
-    public List<CustomMetadata> getMetadatas() {
+    public List<MailCustomMetadata> getMetadatas() {
         return Collections.unmodifiableList(metadatas);
     }
 
@@ -353,14 +352,14 @@ public class Folder {
         }
     }
 
-    public void setMetadatas(Iterable <CustomMetadata> metadatas) {
+    public void setMetadatas(Iterable <MailCustomMetadata> metadatas) {
         this.metadatas.clear();
         if (metadatas != null) {
             Iterables.addAll(this.metadatas,metadatas);
         }
     }
 
-    public Folder addMetadata(CustomMetadata metadata) {
+    public Folder addMetadata(MailCustomMetadata metadata) {
         this.metadatas.add(metadata);
         return this;
     }

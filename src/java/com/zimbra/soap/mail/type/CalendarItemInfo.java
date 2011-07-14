@@ -30,9 +30,8 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.type.CustomMetadata;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"invites", "calendarReplies", "metadatas"})
 public class CalendarItemInfo {
 
@@ -77,7 +76,7 @@ public class CalendarItemInfo {
     private List<CalendarReply> calendarReplies = Lists.newArrayList();
 
     @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
-    private List<CustomMetadata> metadatas = Lists.newArrayList();
+    private List<MailCustomMetadata> metadatas = Lists.newArrayList();
 
     public CalendarItemInfo() {
     }
@@ -102,9 +101,8 @@ public class CalendarItemInfo {
         }
     }
 
-    public CalendarItemInfo addInvite(Invitation invite) {
+    public void addInvite(Invitation invite) {
         this.invites.add(invite);
-        return this;
     }
 
     public void setCalendarReplies(Iterable <CalendarReply> calendarReplies) {
@@ -114,21 +112,19 @@ public class CalendarItemInfo {
         }
     }
 
-    public CalendarItemInfo addCalendarReply(CalendarReply calendarReply) {
+    public void addCalendarReply(CalendarReply calendarReply) {
         this.calendarReplies.add(calendarReply);
-        return this;
     }
 
-    public void setMetadatas(Iterable <CustomMetadata> metadatas) {
+    public void setMetadatas(Iterable <MailCustomMetadata> metadatas) {
         this.metadatas.clear();
         if (metadatas != null) {
             Iterables.addAll(this.metadatas,metadatas);
         }
     }
 
-    public CalendarItemInfo addMetadata(CustomMetadata metadata) {
+    public void addMetadata(MailCustomMetadata metadata) {
         this.metadatas.add(metadata);
-        return this;
     }
 
     public String getFlags() { return flags; }
@@ -148,7 +144,7 @@ public class CalendarItemInfo {
     public List<CalendarReply> getCalendarReplies() {
         return Collections.unmodifiableList(calendarReplies);
     }
-    public List<CustomMetadata> getMetadatas() {
+    public List<MailCustomMetadata> getMetadatas() {
         return Collections.unmodifiableList(metadatas);
     }
 
