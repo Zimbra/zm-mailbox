@@ -1296,8 +1296,9 @@ Tags:
 
 <SearchRequest [limit="..."] [offset="..."] [sortBy="{sort-by}"] [groupBy="{group-by}"] [types="{types}"] [recip="*0|1"]
     [fetch="1|all|{item-id}"] [read="*0|1"] [max="{max-inlined-length}"] [html="*0|1"] [neuter="0|*1"]
-    [field={default_field}] [calExpandInstStart=TIME_IN_MSEC] [calExpandInstEnd=TIME_IN_MSEC] [warmup="*0|1"]
-    [allowableTaskStatus="need,inprogress,completed,canceled"] [resultMode="{result-mode}"] [inDumpster="*0|1"]>
+    [field={default_field}] [calExpandInstStart=TIME_IN_MSEC] [calExpandInstEnd=TIME_IN_MSEC]
+    [allowableTaskStatus="need,inprogress,completed,canceled"] [resultMode="{result-mode}"] [inDumpster="*0|1"]
+    [warmup="*0|1"] [quick="*0|1"]>
 
   *(<header n="{header-name}/>)
   [<cursor id="prevId" [sortVal="prevSortValue"] [endSortVal="endSortValue"] [includeOffset="true|false"]/>]
@@ -1427,12 +1428,18 @@ if recip="1" is specified
                   IDS    : only IDs
 
   warmup: When this option is specified, all other options are simply ignored, so you can't include this option in
-   regular search requests. This options gives a hint to the index system to open the index data and primes it for
+   regular search requests. This option gives a hint to the index system to open the index data and primes it for
    search. The client should send this warm-up request as soon as the user puts the cursor on the search bar. This will
    not only prime the index but also opens a persistent HTTP connection (HTTP 1.1 Keep-Alive) to the server, hence
    smaller latencies in subseqent search requests. Sending this warm-up request too early (e.g. login time) will be in
    vain in most cases because the index data is evicted from the cache due to inactivity timeout by the time you
    actually send a search request.
+
+  quick: For performance reasons, the index system accumulates messages with not-indexed-yet state until a certain
+   threshold and indexes them as a batch. To return up-to-date search results, the index system also indexes those
+   pending messages right before a search. To lower latencies, this option gives a hint to the index system not to
+   trigger this catch-up index prior to the search by giving up the freshness of the search results, i.e. recent
+   messages may not be included in the search results.
 
   <cursor> (optional):
   - id, sortVal: These correspond to the last hit on the current page (assuming you're going forward, if you're backing

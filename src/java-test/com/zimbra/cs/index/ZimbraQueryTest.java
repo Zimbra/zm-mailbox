@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.index;
 
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -179,6 +180,30 @@ public final class ZimbraQueryTest {
         Assert.assertEquals(104, results.getNext().getItemId());
         Assert.assertEquals(105, results.getNext().getItemId());
         Assert.assertEquals(null, results.getNext());
+    }
+
+    @Test
+    public void quick() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        Contact contact = mbox.createContact(null, new ParsedContact(Collections.singletonMap(
+                ContactConstants.A_email, "test1@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
+        MailboxTestUtil.index(mbox);
+
+        mbox.createContact(null, new ParsedContact(Collections.singletonMap(
+                ContactConstants.A_email, "test2@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
+
+        SearchParams params = new SearchParams();
+        params.setQueryString("contact:test");
+        params.setSortBy(SortBy.NONE);
+        params.setTypes(EnumSet.of(MailItem.Type.CONTACT));
+        params.setQuick(true);
+
+        ZimbraQuery query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
+        ZimbraQueryResults result = query.execute();
+        Assert.assertTrue(result.hasNext());
+        Assert.assertEquals(contact.getId(), result.getNext().getItemId());
+        Assert.assertFalse(result.hasNext());
     }
 
 }

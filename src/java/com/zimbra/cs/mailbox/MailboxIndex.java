@@ -178,7 +178,7 @@ public final class MailboxIndex {
         ZimbraQuery query = new ZimbraQuery(octx, proto, mailbox, params);
         Set<MailItem.Type> types = toIndexTypes(params.getTypes());
         // no need to index if the search doesn't involve Lucene
-        if (query.hasTextOperation() && getDeferredCount(types) > 0) {
+        if (!params.isQuick() && query.hasTextOperation() && getDeferredCount(types) > 0) {
             try {
                 // don't wait if an indexing is in progress by other thread
                 indexDeferredItems(types, new BatchStatus(), false);

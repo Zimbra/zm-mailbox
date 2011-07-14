@@ -93,7 +93,15 @@ public final class SearchParams implements Cloneable {
     private Cursor cursor;
     private boolean prefetch = true;
     private Mailbox.SearchResultMode mode = Mailbox.SearchResultMode.NORMAL;
+    private boolean quick = false; // whether or not to skip the catch-up index prior to search
 
+    public boolean isQuick() {
+        return quick;
+    }
+
+    public void setQuick(boolean value) {
+        quick = value;
+    }
 
     public ZimbraSoapContext getRequestContext() {
         return requestContext;
@@ -409,6 +417,9 @@ public final class SearchParams implements Cloneable {
         el.addAttribute(MailConstants.A_QUERY_OFFSET, offset);
 
         el.addAttribute(MailConstants.A_IN_DUMPSTER, inDumpster);
+        if (quick) {
+            el.addAttribute(MailConstants.A_QUICK, quick);
+        }
 
         // skip cursor data
     }
@@ -446,6 +457,7 @@ public final class SearchParams implements Cloneable {
             throw ServiceException.INVALID_REQUEST("no query submitted and no default query found", null);
         }
         params.setInDumpster(request.getAttributeBool(MailConstants.A_IN_DUMPSTER, false));
+        params.setQuick(request.getAttributeBool(MailConstants.A_QUICK, false));
         params.setQueryString(query);
         String types = request.getAttribute(MailConstants.A_SEARCH_TYPES,
                 request.getAttribute(MailConstants.A_GROUPBY, null));
@@ -468,22 +480,19 @@ public final class SearchParams implements Cloneable {
         }
         params.setWantRecipients(request.getAttributeBool(MailConstants.A_RECIPIENTS, false));
 
-        // <tz>
-        Element tzElt = request.getOptionalElement(MailConstants.E_CAL_TZ);
-        if (tzElt != null) {
-            params.setTimeZone(parseTimeZonePart(tzElt));
+        Element tz = request.getOptionalElement(MailConstants.E_CAL_TZ);
+        if (tz != null) {
+            params.setTimeZone(parseTimeZonePart(tz));
         }
 
-        // <loc>
-        Element locElt = request.getOptionalElement(MailConstants.E_LOCALE);
-        if (locElt != null) {
-            params.setLocale(parseLocale(locElt.getText()));
+        Element locale = request.getOptionalElement(MailConstants.E_LOCALE);
+        if (locale != null) {
+            params.setLocale(parseLocale(locale.getText()));
         }
 
         params.setPrefetch(request.getAttributeBool(MailConstants.A_PREFETCH, true));
         params.setMode(Mailbox.SearchResultMode.get(request.getAttribute(MailConstants.A_RESULT_MODE, null)));
 
-        // field
         String field = request.getAttribute(MailConstants.A_FIELD, null);
         if (field != null) {
             params.setDefaultField(field);
