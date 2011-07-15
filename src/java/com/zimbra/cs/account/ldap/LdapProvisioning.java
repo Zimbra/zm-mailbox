@@ -4004,7 +4004,8 @@ public class LdapProvisioning extends LdapProv {
                 return;
             }
         } catch (ServiceException e) {
-            throw ServiceException.FAILURE(e.getMessage(), e);
+            throw AuthFailedServiceException.AUTH_FAILED(principal, AuthMechanism.namePassedIn(authCtxt), "external LDAP auth failed, "+e.getMessage(), e);
+            // throw ServiceException.FAILURE(e.getMessage(), e);
         }
         
         String msg = "one of the following attrs must be set "+
