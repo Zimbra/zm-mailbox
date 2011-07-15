@@ -1951,6 +1951,11 @@ public class LdapProvisioning extends LdapProv {
                 zlc.createEntry(mDIT.domainDNToAccountBaseDN(dn),
                                  "organizationalRole",
                                  new String[] { A_ou, "people", A_cn, "people"});
+                
+                // create the base DN for dynamic groups
+                zlc.createEntry(mDIT.domainDNToDynamicGroupsBaseDN(dn),
+                        "organizationalRole",
+                        new String[] { A_ou, "groups", A_cn, "groups", A_description, "dynamic groups base"});
             }
 
             Domain domain = getDomainById(zimbraIdStr, zlc);
@@ -2530,6 +2535,7 @@ public class LdapProvisioning extends LdapProv {
         ZLdapContext zlc = null;
         LdapDomain d = null;
         String acctBaseDn = null;
+        String dynGroupsBaseDn = null;
         try {
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_DOMAIN);
 
@@ -2539,9 +2545,17 @@ public class LdapProvisioning extends LdapProv {
 
             String name = d.getName();
 
+            // delete account base DN
             acctBaseDn = mDIT.domainDNToAccountBaseDN(d.getDN());
-            if (!acctBaseDn.equals(d.getDN()))
+            if (!acctBaseDn.equals(d.getDN())) {
                 zlc.deleteEntry(acctBaseDn);
+            }
+            
+            // delete dynamic groups base DN
+            dynGroupsBaseDn = mDIT.domainDNToDynamicGroupsBaseDN(d.getDN());
+            if (!dynGroupsBaseDn.equals(d.getDN())) {
+                zlc.deleteEntry(dynGroupsBaseDn);
+            }
 
             try {
                 zlc.deleteEntry(d.getDN());

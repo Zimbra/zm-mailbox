@@ -82,6 +82,7 @@ public class LdapDIT {
     protected final String DEFAULT_BASE_RDN_ADMIN        = "cn=admins";
     protected final String DEFAULT_BASE_RDN_APPADMIN     = "cn=appaccts";
     protected final String DEFAULT_BASE_RDN_ACCOUNT      = "ou=people";
+    protected final String DEFAULT_BASE_RDN_DYNAMICGROUPS= "ou=groups";
     protected final String DEFAULT_BASE_RDN_COS          = "cn=cos";
     protected final String DEFAULT_BASE_RDN_MIME         = "cn=mime";
     protected final String DEFAULT_BASE_RDN_SERVER       = "cn=servers";
@@ -106,6 +107,7 @@ public class LdapDIT {
     protected String BASE_DN_MAIL_BRANCH;
 
     protected String BASE_RDN_ACCOUNT;
+    protected String BASE_RDN_DYNAMICGROUPS;
     
     protected String BASE_DN_ADMIN;
     protected String BASE_DN_APPADMIN;
@@ -141,7 +143,8 @@ public class LdapDIT {
         BASE_DN_CONFIG_BRANCH = DEFAULT_CONFIG_BASE_DN;
         BASE_DN_MAIL_BRANCH = ROOT_DN;
 
-        BASE_RDN_ACCOUNT  = DEFAULT_BASE_RDN_ACCOUNT;
+        BASE_RDN_ACCOUNT       = DEFAULT_BASE_RDN_ACCOUNT;
+        BASE_RDN_DYNAMICGROUPS = DEFAULT_BASE_RDN_DYNAMICGROUPS;
 
         NAMING_RDN_ATTR_USER          = DEFAULT_NAMING_RDN_ATTR_USER;
         NAMING_RDN_ATTR_COS           = DEFAULT_NAMING_RDN_ATTR_COS;
@@ -172,6 +175,7 @@ public class LdapDIT {
             BASE_DN_CONFIG_BRANCH == null ||
             BASE_DN_MAIL_BRANCH == null ||
             BASE_RDN_ACCOUNT == null ||
+            BASE_RDN_DYNAMICGROUPS == null ||
             NAMING_RDN_ATTR_USER == null ||
             NAMING_RDN_ATTR_COS == null ||
             NAMING_RDN_ATTR_GLOBALCONFIG == null ||
@@ -436,6 +440,14 @@ public class LdapDIT {
             return domainDN;
         else
             return BASE_RDN_ACCOUNT + "," + domainDN;
+    }
+    
+    // dynamic group base dn for create/delete domain
+    public String domainDNToDynamicGroupsBaseDN(String domainDN) throws ServiceException {
+        if (BASE_RDN_DYNAMICGROUPS.length()==0)
+            return domainDN;
+        else
+            return BASE_RDN_DYNAMICGROUPS + "," + domainDN;
     }
     
     /*

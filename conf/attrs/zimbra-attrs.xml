@@ -364,7 +364,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>administrative notes</desc>
 </attr>
 
-<attr id="11" name="zimbraMemberOf" type="id" cardinality="multi" optionalIn="account">
+<attr id="11" name="zimbraMemberOf" type="string" cardinality="multi" optionalIn="account">
   <desc>for dynamic group membership</desc>
 </attr>
 
