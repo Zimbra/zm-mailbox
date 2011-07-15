@@ -237,7 +237,9 @@ public class GetInfo extends AccountDocumentHandler  {
                     if (!acctAttrs.contains(key)) { // not an account attr
                         // see if it is on domain, server, or globalconfig
                         if (domainAttrs.contains(key)) {
-                            value = domain.getMultiAttr(key); // value on domain/global config (domainInherited)
+                            if (domain != null) {
+                                value = domain.getMultiAttr(key); // value on domain/global config (domainInherited)
+                            }
                         } else if (serverAttrs.contains(key)) {
                             value = server.getMultiAttr(key); // value on server/global config (serverInherited)
                         } else if (configAttrs.contains(key)) {
