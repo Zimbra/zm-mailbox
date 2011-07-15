@@ -455,22 +455,6 @@ public final class LuceneIndex implements IndexStore {
     }
 
     /**
-     * Called by {@link IndexReaderRef#dec()}. Can be called by the thread that opened the reader or the cache sweeper
-     * thread.
-     */
-    void closeReader(IndexReader reader) {
-        ZimbraLog.search.debug("Close IndexReader");
-
-        try {
-            reader.close();
-        } catch (IOException e) {
-            ZimbraLog.search.warn("Failed to close IndexReader", e);
-        } finally {
-            READER_THROTTLE.release();
-        }
-    }
-
-    /**
      * Run a sanity check for the index. Callers are responsible to make sure the index is not opened by any writer.
      *
      * @param out info stream where messages should go. If null, no messages are printed.
@@ -835,9 +819,14 @@ public final class LuceneIndex implements IndexStore {
 
         @Override
         public void close() throws IOException {
-            if (count.decrementAndGet() <= 0) {
-                super.close();
-                getIndexReader().close();
+            if (count.decrementAndGet() == 0) {
+                ZimbraLog.search.debug("Close IndexSearcher");
+                try {
+                    super.close();
+                } finally {
+                    Closeables.closeQuietly(getIndexReader());
+                    READER_THROTTLE.release();
+                }
             }
         }
     }
