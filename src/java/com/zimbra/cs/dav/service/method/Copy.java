@@ -37,14 +37,12 @@ public class Copy extends Move {
             throw new DavException("cannot copy", HttpServletResponse.SC_BAD_REQUEST, null);
         Collection col = getDestinationCollection(ctxt);
         MailItemResource mir = (MailItemResource) rs;
-        DavResource copy;
+        String newName = getNewName(ctxt, mir);
         if (ctxt.isOverwriteSet()) {
-            copy = mir.copyWithOverwrite(ctxt, col);
+            mir.moveORcopyWithOverwrite(ctxt, col, newName, false);
         } else {
-            copy = mir.copy(ctxt, col);
+            mir.copy(ctxt, col, newName);
         }
-
-        renameIfNecessary(ctxt, copy, col);
         ctxt.setStatus(HttpServletResponse.SC_NO_CONTENT);
     }
 }

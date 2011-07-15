@@ -33,10 +33,14 @@ import org.dom4j.io.XMLWriter;
 
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.service.ServiceException.Argument;
+import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
@@ -46,6 +50,7 @@ import com.zimbra.cs.dav.DavProtocol.Compliance;
 import com.zimbra.cs.dav.property.Acl;
 import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.dav.property.Acl.Ace;
+import com.zimbra.cs.dav.service.DavServlet;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Folder;
@@ -54,9 +59,12 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.formatter.VCard;
 import com.zimbra.cs.service.mail.ItemActionHelper;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.zclient.ZMailbox;
 
 /**
  * Abstraction of DavResource that maps to MailItem in the mailbox.
@@ -213,17 +221,37 @@ public abstract class MailItemResource extends DavResource {
             throw new DavException("cannot delete item", resCode, se);
         }
     }
-
+    
+    private static ZMailbox getZMailbox(DavContext ctxt, Collection col) throws ServiceException {
+        AuthToken authToken = AuthProvider.getAuthToken(ctxt.getAuthAccount());
+        Account acct = Provisioning.getInstance().getAccountById(col.getItemId().getAccountId());
+        ZMailbox.Options zoptions = new ZMailbox.Options(authToken.toZAuthToken(), AccountUtil.getSoapUri(acct));
+        zoptions.setNoSession(true);
+        zoptions.setTargetAccount(acct.getId());
+        zoptions.setTargetAccountBy(Key.AccountBy.id);
+        return ZMailbox.getMailbox(zoptions);       
+    }
+    private void deleteDestinationItem(DavContext ctxt, Collection dest, int id) throws ServiceException, DavException {
+        Mailbox mbox = getMailbox(ctxt);
+        if (dest.getItemId().belongsTo(mbox)) {
+            mbox.delete(ctxt.getOperationContext(), id, MailItem.Type.UNKNOWN, null);
+        } else {
+            ZMailbox zmbx = getZMailbox(ctxt, dest);
+            ItemId itemId = new ItemId(dest.getItemId().getAccountId(), id);
+            zmbx.deleteItem(itemId.toString(), null);
+        }
+    }
+    
     /* Moves this resource to another Collection. */
-    public void move(DavContext ctxt, Collection dest) throws DavException {
-        if (mFolderId == dest.getId() && mOwnerId.compareTo(dest.getOwner()) == 0)
-            return;
+    public void move(DavContext ctxt, Collection dest, String newName) throws DavException {
         try {
             Mailbox mbox = getMailbox(ctxt);
             ArrayList<Integer> ids = new ArrayList<Integer>();
             ids.add(mId);
-            ItemActionHelper.MOVE(ctxt.getOperationContext(), mbox, SoapProtocol.Soap12, ids, type, null, dest.getItemId());
-            //mbox.move(ctxt.getOperationContext(), mId, MailItem.TYPE_UNKNOWN, dest.getId());
+            if (newName != null)
+                ItemActionHelper.RENAME(ctxt.getOperationContext(), mbox, SoapProtocol.Soap12, ids, type, null, newName, dest.getItemId());
+            else     
+                ItemActionHelper.MOVE(ctxt.getOperationContext(), mbox, SoapProtocol.Soap12, ids, type, null, dest.getItemId());
         } catch (ServiceException se) {
             int resCode = se instanceof MailServiceException.NoSuchItemException ?
                     HttpServletResponse.SC_NOT_FOUND : HttpServletResponse.SC_FORBIDDEN;
@@ -233,29 +261,65 @@ public abstract class MailItemResource extends DavResource {
         }
     }
 
-    public void moveWithOverwrite(DavContext ctxt, Collection dest) throws DavException {
+    public void moveORcopyWithOverwrite(DavContext ctxt, Collection dest, String newName, boolean deleteOriginal) throws DavException {
         try {
-            move(ctxt, dest);
+            if (deleteOriginal)
+                move(ctxt, dest, newName);
+            else 
+                copy(ctxt, dest, newName);
         } catch (DavException e) {
             if (e.getStatus() == HttpServletResponse.SC_PRECONDITION_FAILED) {
                 // in case of name conflict, delete the existing mail item and
                 // attempt the move operation again.
-                String name = null;
-                for (ServiceException.Argument a : ((MailServiceException)e.getCause()).getArgs()) {
-                    if (a.mName.equals(MailServiceException.NAME))
-                        name = a.mValue;
-                }
-                if (name == null)
-                    throw e;
-                MailItem item = null;
+                // return if the error is not ALREADY_EXISTS
+                ServiceException se = (ServiceException) e.getCause();
+                int id = 0;
                 try {
-                    Mailbox mbox = getMailbox(ctxt);
-                    item = mbox.getItemByPath(ctxt.getOperationContext(), name, dest.mId);
-                    mbox.delete(ctxt.getOperationContext(), item, null);
-                } catch (ServiceException se) {
-                    throw new DavException("cannot move item", HttpServletResponse.SC_FORBIDDEN, se);
+                    if (se.getCode().equals(MailServiceException.ALREADY_EXISTS) == false)
+                        throw e;
+                    else { // get the conflicting item-id
+                        if (se instanceof SoapFaultException) { // destination belongs other mailbox.
+                            String itemIdStr = ((SoapFaultException) se).getArgumentValue("id");
+                            ItemId itemId = new ItemId(itemIdStr, dest.getItemId().getAccountId());
+                            id = itemId.getId();
+                        } else { // destination belongs to same mailbox.         
+                            String name = null;
+                            Argument[] args = se.getArgs();
+                            for (Argument arg: args) {
+                                if (arg.mName != null && arg.mValue != null && arg.mValue.length() > 0) {
+                                    if (arg.mName.equals("name"))
+                                        name = arg.mValue;
+                                    /* commented out since the exception is giving wrong itemId for copy.
+                                       If the the item is conflicting with an existing item we want the 
+                                       id of the existing item. But, the exception has the proposed id of
+                                       the new item which does not exist yet. 
+                                     else if (arg.mName.equals("itemId"))
+                                        id = Integer.parseInt(arg.mValue);
+                                     */   
+                                }
+                            }
+                            if (id <= 0) {                                
+                                if (name == null && !deleteOriginal) { 
+                                    // in case of copy get the id from source name since we don't support copy with rename.
+                                    name = ctxt.getItem();
+                                }
+                                if (name != null) {
+                                    Mailbox mbox = getMailbox(ctxt);
+                                    MailItem item = mbox.getItemByPath(ctxt.getOperationContext(), name, dest.getId());
+                                    id = item.getId();
+                                } else
+                                    throw e;
+                            }    
+                        }
+                    }
+                    deleteDestinationItem(ctxt, dest, id);
+                } catch (ServiceException se1) {
+                    throw new DavException("cannot move/copy item", HttpServletResponse.SC_FORBIDDEN, se1);
                 }
-                move(ctxt, dest);
+                if (deleteOriginal)
+                    move(ctxt, dest, newName);
+                else 
+                    copy(ctxt, dest, newName);
             } else {
                 throw e;
             }
@@ -263,74 +327,23 @@ public abstract class MailItemResource extends DavResource {
     }
 
     /* Copies this resource to another Collection. */
-    public DavResource copy(DavContext ctxt, Collection dest) throws DavException {
+    public void copy(DavContext ctxt, Collection dest, String newName) throws DavException {
         try {
             Mailbox mbox = getMailbox(ctxt);
-            MailItem item = mbox.copy(ctxt.getOperationContext(), mId, MailItem.Type.UNKNOWN, dest.getId());
-            return UrlNamespace.getResourceFromMailItem(ctxt, item);
+            ArrayList<Integer> ids = new ArrayList<Integer>();            
+            if (newName == null) {
+                ids.add(mId);
+                ItemActionHelper.COPY(ctxt.getOperationContext(), mbox, SoapProtocol.Soap12, ids, type, null, dest.getItemId());
+            } else { //copy with rename.
+                // TODO add COPY with RENAME (e.g> cp a.txt b.txt) functionality in ItemActionHelper
+                throw MailServiceException.CANNOT_COPY(mId);
+            }
         } catch (ServiceException se) {
             int resCode = se instanceof MailServiceException.NoSuchItemException ?
                     HttpServletResponse.SC_NOT_FOUND : HttpServletResponse.SC_FORBIDDEN;
             if (se.getCode().equals(MailServiceException.ALREADY_EXISTS))
                 resCode = HttpServletResponse.SC_PRECONDITION_FAILED;
             throw new DavException("cannot copy item", resCode, se);
-        }
-    }
-
-    public DavResource copyWithOverwrite(DavContext ctxt, Collection dest) throws DavException {
-        try {
-            return copy(ctxt, dest);
-        } catch (DavException e) {
-            if (e.getStatus() == HttpServletResponse.SC_PRECONDITION_FAILED) {
-                // in case of name conflict, first find out the name of the item
-                // being copied, then delete the named item in the destination folder,
-                // then attempt the copy operation again.
-                String id = null;
-                for (ServiceException.Argument a : ((MailServiceException)e.getCause()).getArgs()) {
-                    if (a.mName.equals(MailServiceException.ITEM_ID))
-                        id = a.mValue;
-                }
-                if (id == null)
-                    throw e;
-                MailItem item = null;
-                try {
-                    Mailbox mbox = getMailbox(ctxt);
-
-                    // using the itemId of the item being copied, first find
-                    // the name of the object causing the conflict.
-                    item = mbox.getItemById(ctxt.getOperationContext(), (int)Long.parseLong(id), MailItem.Type.UNKNOWN);
-                    String name = item.getName();
-
-                    // delete the object with that name at the destination folder.
-                    item = mbox.getItemByPath(ctxt.getOperationContext(), name, dest.mId);
-                    mbox.delete(ctxt.getOperationContext(), item, null);
-                } catch (ServiceException se) {
-                    throw new DavException("cannot move item", HttpServletResponse.SC_FORBIDDEN, se);
-                }
-                return copy(ctxt, dest);
-            } else {
-                throw e;
-            }
-        }
-    }
-
-    /* Renames this resource. */
-    @Override
-    public void rename(DavContext ctxt, String newName, DavResource destCollection) throws DavException {
-        if (!(destCollection instanceof MailItemResource))
-            return;
-        MailItemResource dest = (MailItemResource) destCollection;
-        try {
-            Mailbox mbox = getMailbox(ctxt);
-            if (isCollection()) {
-                mbox.rename(ctxt.getOperationContext(), mId, MailItem.Type.FOLDER, newName, dest.mId);
-            } else {
-                mbox.rename(ctxt.getOperationContext(), mId, type, newName, dest.mId);
-            }
-        } catch (ServiceException se) {
-            int resCode = se instanceof MailServiceException.NoSuchItemException ?
-                    HttpServletResponse.SC_NOT_FOUND : HttpServletResponse.SC_FORBIDDEN;
-            throw new DavException("cannot rename item", resCode, se);
         }
     }
 

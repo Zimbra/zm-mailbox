@@ -486,6 +486,7 @@ public class DavServlet extends ZimbraServlet {
 		DavProtocol.HEADER_CONTENT_TYPE,
 		DavProtocol.HEADER_ETAG,
 		DavProtocol.HEADER_IF_MATCH,
+		DavProtocol.HEADER_OVERWRITE,
         DavProtocol.HEADER_DESTINATION
 	};
 	
@@ -583,15 +584,8 @@ public class DavServlet extends ZimbraServlet {
         HttpMethod method = m.toHttpMethod(ctxt, url);
         for (String h : PROXY_REQUEST_HEADERS) {
             String hval = ctxt.getRequest().getHeader(h);
-            if (hval != null) {
-            	if (h.equalsIgnoreCase(DavProtocol.HEADER_DESTINATION)) {
-            		// decode and encode to make sure string matching is happening on the same encoding
-            		String dest = HttpUtil.urlEscape(HttpUtil.urlUnescape(hval));
-            		if (dest.contains(prefix))            	
-            			hval = dest.replace(prefix, newPrefix+"/");
-            	}	
-            	method.addRequestHeader(h, hval);
-            }	
+            if (hval != null)
+                method.addRequestHeader(h, hval);
         }
         int statusCode = HttpClientUtil.executeMethod(client, method);
         for (String h : PROXY_RESPONSE_HEADERS) {
