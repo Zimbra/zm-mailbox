@@ -37,9 +37,6 @@ public final class XMbxSearchConstants {
     public static final String E_DELETE_XMBX_SEARCH_REQUEST = "DeleteXMbxSearchRequest";
     public static final String E_DELETE_XMBX_SEARCH_RESPONSE = "DeleteXMbxSearchResponse";
 
-    public static final String E_PURGE_XMBX_SEARCHES_REQUEST = "PurgeXMbxSearchesRequest";
-    public static final String E_PURGE_XMBX_SEARCHES_RESPONSE = "PurgeXMbxSearchesResponse";
-
     public static final QName GET_XMBX_SEARCH_REQUEST = QName.get(E_GET_XMBX_SEARCH_REQUEST, NAMESPACE);
     public static final QName GET_XMBX_SEARCH_RESPONSE = QName.get(E_GET_XMBX_SEARCH_RESPONSE, NAMESPACE);
 
@@ -54,9 +51,6 @@ public final class XMbxSearchConstants {
 
     public static final QName DELETE_XMBX_SEARCH_REQUEST = QName.get(E_DELETE_XMBX_SEARCH_REQUEST, NAMESPACE);
     public static final QName DELETE_XMBX_SEARCH_RESPONSE = QName.get(E_DELETE_XMBX_SEARCH_RESPONSE, NAMESPACE);
-
-    public static final QName PURGE_XMBX_SEARCHES_REQUEST = QName.get(E_PURGE_XMBX_SEARCHES_REQUEST, NAMESPACE);
-    public static final QName PURGE_XMBX_SEARCHES_RESPONSE = QName.get(E_PURGE_XMBX_SEARCHES_RESPONSE, NAMESPACE);
 
     public static final String E_SrchTask = "searchtask";
     public static final String A_targetMbx = "targetMbx";
