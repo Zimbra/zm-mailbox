@@ -1474,31 +1474,37 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             mReplyList.mReplies.clear();
         }
 
-        // If modifying recurrence series (rather than an instance) and the
-        // start time (HH:MM:SS) is changing, we need to update the time
-        // component of RECURRENCE-ID in all exception instances.
+        // Handle change to the series that involves time and/or recurrence.  In Exchange compatibility mode,
+        // time/recurrence change blows away all exception instances.  In non-compat mode (old ZCS behavior),
+        // look for change in the start time and shift the time part of exceptions' RECURRENCE-ID by the same delta.
         boolean needRecurrenceIdUpdate = false;
         ParsedDateTime oldDtStart = null;
         ParsedDuration dtStartMovedBy = null;
         ArrayList<Invite> toUpdate = new ArrayList<Invite>();
-        if (!discardExistingInvites && !isCancel && newInvite.isRecurrence() &&
-            getAccount().isCalendarKeepExceptionsOnSeriesTimeChange()) {
+        if (!discardExistingInvites && !isCancel && newInvite.isRecurrence()) {
             Invite defInv = getDefaultInviteOrNull();
-            // Be careful.  If invites got delivered out of order, we may have defInv that's not
-            // a series.  Imagine 1st invite received was an exception and 2nd was the series.
-            // In that situation we simply skip the DTSTART shift calculation.
             if (defInv != null && defInv.isRecurrence()) {
-                oldDtStart = defInv.getStartTime();
-                ParsedDateTime newDtStart = newInvite.getStartTime();
-                //if (newDtStart != null && oldDtStart != null && !newDtStart.sameTime(oldDtStart)) {
-                if (newDtStart != null && oldDtStart != null && !newDtStart.equals(oldDtStart)) {
-                    // Do the RECURRENCE-ID adjustment only when DTSTART moved by 7 days or less.
-                    // If it moved by more, it gets too complicated to figure out what the old RECURRENCE-ID
-                    // is in the new series.  Just blow away all exceptions.
-                    ParsedDuration delta = newDtStart.difference(oldDtStart);
-                    if (delta.abs().compareTo(ParsedDuration.ONE_WEEK) < 0) {
-                        needRecurrenceIdUpdate = true;
-                        dtStartMovedBy = delta;
+                if (!getAccount().isCalendarKeepExceptionsOnSeriesTimeChange()) {  // Exchange compatibility mode
+                    InviteChanges ic = new InviteChanges(defInv, newInvite);
+                    if (ic.changedTime() || ic.changedRecurrence()) {
+                        discardExistingInvites = true;
+                    }
+                } else {  // old ZCS behavior
+                    // Be careful.  If invites got delivered out of order, we may have defInv that's not
+                    // a series.  Imagine 1st invite received was an exception and 2nd was the series.
+                    // In that situation we simply skip the DTSTART shift calculation.
+                    oldDtStart = defInv.getStartTime();
+                    ParsedDateTime newDtStart = newInvite.getStartTime();
+                    //if (newDtStart != null && oldDtStart != null && !newDtStart.sameTime(oldDtStart)) {
+                    if (newDtStart != null && oldDtStart != null && !newDtStart.equals(oldDtStart)) {
+                        // Do the RECURRENCE-ID adjustment only when DTSTART moved by 7 days or less.
+                        // If it moved by more, it gets too complicated to figure out what the old RECURRENCE-ID
+                        // is in the new series.  Just blow away all exceptions.
+                        ParsedDuration delta = newDtStart.difference(oldDtStart);
+                        if (delta.abs().compareTo(ParsedDuration.ONE_WEEK) < 0) {
+                            needRecurrenceIdUpdate = true;
+                            dtStartMovedBy = delta;
+                        }
                     }
                 }
             }
