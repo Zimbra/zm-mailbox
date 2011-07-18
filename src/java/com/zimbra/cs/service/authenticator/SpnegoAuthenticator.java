@@ -69,6 +69,10 @@ public class SpnegoAuthenticator extends SSOAuthenticator {
         
         try {
             principal = authenticate(spnegoUserRealm, request, resp);
+            
+            // comment out the above and uncomment the line below for quick testing 
+            // non-spenogo related issues, like redirect.
+            // principal = MockSpnegoUser.getMockPrincipal();  
         } catch (IOException e) {
             throw AuthFailedServiceException.AUTH_FAILED("spnego authenticate failed", e); 
         }
@@ -113,6 +117,7 @@ public class SpnegoAuthenticator extends SSOAuthenticator {
              * we have gotten a negotiate header to try and authenticate
              */
             
+            // skip over "Negotiate "
             String username = header.substring(10);
             
             user = realm.authenticate(username, null, request);
@@ -149,10 +154,14 @@ public class SpnegoAuthenticator extends SSOAuthenticator {
         response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
     }
     
-    /*
+
     private static class MockSpnegoUser implements Principal {
         String name;
         String token;
+        
+        private static MockSpnegoUser getMockPrincipal() throws IOException {
+            return new MockSpnegoUser("spnego@SPNEGO.LOCAL", "blah");
+        }
         
         MockSpnegoUser(String name, String token) {
             this.name = name;
@@ -169,5 +178,5 @@ public class SpnegoAuthenticator extends SSOAuthenticator {
         }
         
     }
-    */
+
 }
