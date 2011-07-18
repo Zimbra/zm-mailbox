@@ -33,6 +33,7 @@ import java.net.SocketException;
 class TcpImapHandler extends ImapHandler {
     private TcpServerInputStream mInputStream;
     private String mRemoteAddress;
+    private TcpImapRequest request;
 
     TcpImapHandler(ImapServer server) {
         super(server);
@@ -73,11 +74,15 @@ class TcpImapHandler extends ImapHandler {
     protected boolean processCommand() throws IOException {
         // FIXME: throw an exception instead?
         if (mInputStream == null) {
+            clearRequest();
             return STOP_PROCESSING;
         }
         setUpLogContext(mRemoteAddress);
 
-        TcpImapRequest request = new TcpImapRequest(mInputStream, this);
+        if (request == null) {
+            request = new TcpImapRequest(mInputStream, this);
+        }
+        boolean complete = true;
         try {
             request.continuation();
             if (request.isMaxRequestSizeExceeded()) {
@@ -106,18 +111,32 @@ class TcpImapHandler extends ImapHandler {
             return keepGoing;
         } catch (TcpImapRequest.ImapContinuationException ice) {
             request.rewind();
+            complete = false; // skip clearRequest()
             if (ice.sendContinuation) {
                 sendContinuation("send literal data");
             }
             return CONTINUE_PROCESSING;
         } catch (TcpImapRequest.ImapTerminatedException ite) {
             return STOP_PROCESSING;
-        } catch (ImapParseException ipe) {
-            handleParseException(ipe);
+        } catch (ImapParseException e) {
+            handleParseException(e);
             return mConsecutiveBAD >= MAXIMUM_CONSECUTIVE_BAD ? STOP_PROCESSING : CONTINUE_PROCESSING;
         } finally {
-            request.cleanup();
+            if (complete) {
+                clearRequest();
+            }
             ZimbraLog.clearContext();
+        }
+    }
+
+    /**
+     * Only an IMAP handler thread may call. Don't call by other threads including IMAP session sweeper thread,
+     * otherwise concurrency issues will arise.
+     */
+    private void clearRequest() {
+        if (request != null) {
+            request.cleanup();
+            request = null;
         }
     }
 
