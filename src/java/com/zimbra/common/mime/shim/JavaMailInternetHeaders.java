@@ -116,7 +116,13 @@ public class JavaMailInternetHeaders extends InternetHeaders implements JavaMail
         if (ZPARSER) {
             if (delimiter == null) {
                 String[] values = getHeader(name);
-                return values == null || values.length == 0 ? null : values[0];
+                if (values == null || values.length == 0) {
+                    return null;
+                } else {
+                    // since the underlying implementation parses using the *last* Content-Type
+                    //   header, need to return that in the null-delimiter case
+                    return "content-type".equalsIgnoreCase(name) ? values[values.length - 1] : values[0];
+                }
             } else {
                 // the superclass method calls our getHeader(String)
                 return super.getHeader(name, delimiter);
