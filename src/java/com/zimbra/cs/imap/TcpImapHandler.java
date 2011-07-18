@@ -14,12 +14,12 @@
  */
 package com.zimbra.cs.imap;
 
+import com.google.common.io.Closeables;
 import com.zimbra.common.io.TcpServerInputStream;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.NetUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.stats.ZimbraPerf;
-import com.zimbra.common.io.TcpServerInputStream;
 import com.zimbra.cs.util.Config;
 
 import javax.net.ssl.SSLSocket;
@@ -32,8 +32,7 @@ import java.net.SocketException;
 
 class TcpImapHandler extends ImapHandler {
     private TcpServerInputStream mInputStream;
-    private String         mRemoteAddress;
-    private TcpImapRequest mRequest;
+    private String mRemoteAddress;
 
     TcpImapHandler(ImapServer server) {
         super(server);
@@ -70,21 +69,20 @@ class TcpImapHandler extends ImapHandler {
             i4selected.updateAccessTime();
     }
 
-    @Override protected boolean processCommand() throws IOException {
+    @Override
+    protected boolean processCommand() throws IOException {
         // FIXME: throw an exception instead?
-        if (mInputStream == null)
+        if (mInputStream == null) {
             return STOP_PROCESSING;
-
+        }
         setUpLogContext(mRemoteAddress);
 
-        if (mRequest == null)
-            mRequest = new TcpImapRequest(mInputStream, this);
-
+        TcpImapRequest request = new TcpImapRequest(mInputStream, this);
         try {
-            mRequest.continuation();
-            if (mRequest.isMaxRequestSizeExceeded()) {
+            request.continuation();
+            if (request.isMaxRequestSizeExceeded()) {
                 setIdle(false);  // FIXME Why for only this error?
-                throw new ImapParseException(mRequest.getTag(), "maximum request size exceeded");
+                throw new ImapParseException(request.getTag(), "maximum request size exceeded");
             }
 
             long start = ZimbraPerf.STOPWATCH_IMAP.start();
@@ -93,38 +91,33 @@ class TcpImapHandler extends ImapHandler {
                 return STOP_PROCESSING;
             }
             boolean keepGoing;
-            if (mAuthenticator != null && !mAuthenticator.isComplete())
-                keepGoing = continueAuthentication(mRequest);
-            else
-                keepGoing = executeRequest(mRequest);
+            if (mAuthenticator != null && !mAuthenticator.isComplete()) {
+                keepGoing = continueAuthentication(request);
+            } else {
+                keepGoing = executeRequest(request);
+            }
             // FIXME Shouldn't we do these before executing the request??
             setIdle(false);
             ZimbraPerf.STOPWATCH_IMAP.stop(start);
-            if (mLastCommand != null)
+            if (mLastCommand != null) {
                 ZimbraPerf.IMAP_TRACKER.addStat(mLastCommand.toUpperCase(), start);
-            clearRequest();
+            }
             mConsecutiveBAD = 0;
             return keepGoing;
         } catch (TcpImapRequest.ImapContinuationException ice) {
-            mRequest.rewind();
-            if (ice.sendContinuation)
+            request.rewind();
+            if (ice.sendContinuation) {
                 sendContinuation("send literal data");
+            }
             return CONTINUE_PROCESSING;
         } catch (TcpImapRequest.ImapTerminatedException ite) {
             return STOP_PROCESSING;
         } catch (ImapParseException ipe) {
-            clearRequest();
             handleParseException(ipe);
             return mConsecutiveBAD >= MAXIMUM_CONSECUTIVE_BAD ? STOP_PROCESSING : CONTINUE_PROCESSING;
         } finally {
+            request.cleanup();
             ZimbraLog.clearContext();
-        }
-    }
-
-    private void clearRequest() {
-        if (mRequest != null) {
-            mRequest.cleanup();
-            mRequest = null;
         }
     }
 
@@ -150,40 +143,39 @@ class TcpImapHandler extends ImapHandler {
         return CONTINUE_PROCESSING;
     }
 
-    @Override protected void dropConnection(boolean sendBanner) {
-        clearRequest();
+    @Override
+    protected void dropConnection(boolean sendBanner) {
         try {
             unsetSelectedFolder(false);
-        } catch (Exception e) { }
+        } catch (Exception e) {
+        }
 
+        //TODO use thread pool
         // wait at most 10 seconds for the untagged BYE to be sent, then force the stream closed
         new Thread() {
-            @Override public void run() {
-                if (mOutputStream == null)
+            @Override
+            public void run() {
+                if (mOutputStream == null) {
                     return;
-
+                }
                 try {
                     sleep(10 * Constants.MILLIS_PER_SECOND);
-                } catch (InterruptedException ie) { }
-
-                OutputStream os = mOutputStream;
-                if (os != null) {
-                    try {
-                        os.close();
-                    } catch (IOException ioe) { }
+                } catch (InterruptedException e) {
                 }
+                Closeables.closeQuietly(mOutputStream);
             }
         }.start();
 
-        if (mCredentials != null && !mGoodbyeSent)
+        if (mCredentials != null && !mGoodbyeSent) {
             ZimbraLog.imap.info("dropping connection for user " + mCredentials.getUsername() + " (server-initiated)");
-
+        }
         ZimbraLog.addIpToContext(mRemoteAddress);
         try {
             OutputStream os = mOutputStream;
             if (os != null) {
-                if (sendBanner && !mGoodbyeSent)
+                if (sendBanner && !mGoodbyeSent) {
                     sendBYE();
+                }
                 os.close();
                 mOutputStream = null;
             }
