@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.imap;
 
+import com.google.common.io.Closeables;
 import com.zimbra.common.io.TcpServerInputStream;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.NetUtil;
@@ -84,12 +85,13 @@ class TcpImapHandler extends ProtocolHandler {
     protected boolean processCommand() throws IOException {
         // FIXME: throw an exception instead?
         if (input == null) {
+            clearRequest();
             return false;
         }
         if (request == null) {
             request = new TcpImapRequest(input, delegate);
         }
-
+        boolean complete = true;
         try {
             request.continuation();
             if (request.isMaxRequestSizeExceeded()) {
@@ -114,24 +116,31 @@ class TcpImapHandler extends ProtocolHandler {
             if (delegate.lastCommand != null) {
                 ZimbraPerf.IMAP_TRACKER.addStat(delegate.lastCommand.toUpperCase(), start);
             }
-            clearRequest();
             delegate.consecutiveBAD = 0;
             return keepGoing;
-        } catch (TcpImapRequest.ImapContinuationException ice) {
+        } catch (TcpImapRequest.ImapContinuationException e) {
             request.rewind();
-            if (ice.sendContinuation) {
+            complete = false; // skip clearRequest()
+            if (e.sendContinuation) {
                 delegate.sendContinuation("send literal data");
             }
             return true;
-        } catch (TcpImapRequest.ImapTerminatedException ite) {
+        } catch (TcpImapRequest.ImapTerminatedException e) {
             return false;
-        } catch (ImapParseException ipe) {
-            clearRequest();
-            delegate.handleParseException(ipe);
+        } catch (ImapParseException e) {
+            delegate.handleParseException(e);
             return delegate.consecutiveBAD < ImapHandler.MAXIMUM_CONSECUTIVE_BAD;
+        } finally {
+            if (complete) {
+                clearRequest();
+            }
         }
     }
 
+    /**
+     * Only an IMAP handler thread may call. Don't call by other threads including IMAP session sweeper thread,
+     * otherwise concurrency issues will arise.
+     */
     private void clearRequest() {
         if (request != null) {
             request.cleanup();
@@ -198,11 +207,12 @@ class TcpImapHandler extends ProtocolHandler {
 
         @Override
         protected void dropConnection(boolean sendBanner) {
-            clearRequest();
             try {
                 unsetSelectedFolder(false);
-            } catch (Exception e) { }
+            } catch (Exception e) {
+            }
 
+            //TODO use thread pool
             // wait at most 10 seconds for the untagged BYE to be sent, then force the stream closed
             new Thread() {
                 @Override
@@ -212,14 +222,9 @@ class TcpImapHandler extends ProtocolHandler {
                     }
                     try {
                         sleep(10 * Constants.MILLIS_PER_SECOND);
-                    } catch (InterruptedException ie) { }
-
-                    OutputStream os = output;
-                    if (os != null) {
-                        try {
-                            os.close();
-                        } catch (IOException ioe) { }
+                    } catch (InterruptedException e) {
                     }
+                    Closeables.closeQuietly(output);
                 }
             }.start();
 
