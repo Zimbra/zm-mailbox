@@ -27,6 +27,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.InternetHeaders;
 
 import com.google.common.collect.ImmutableSet;
+import com.zimbra.common.util.Pair;
 
 public class JavaMailInternetHeaders extends InternetHeaders implements JavaMailShim {
     private static final boolean ZPARSER = JavaMailMimeMessage.ZPARSER;
@@ -78,7 +79,8 @@ public class JavaMailInternetHeaders extends InternetHeaders implements JavaMail
         return zheaders;
     }
 
-    @Override public void load(InputStream is) throws MessagingException {
+    @Override
+    public void load(InputStream is) throws MessagingException {
         if (ZPARSER) {
             try {
                 zheaders.appendAll(new com.zimbra.common.mime.MimeHeaderBlock(is));
@@ -90,7 +92,8 @@ public class JavaMailInternetHeaders extends InternetHeaders implements JavaMail
         }
     }
 
-    @Override public String[] getHeader(String name) {
+    @Override
+    public String[] getHeader(String name) {
         if (ZPARSER) {
             List<com.zimbra.common.mime.MimeHeader> matches = zheaders.getAll(name);
             if (matches == null || matches.isEmpty()) {
@@ -108,7 +111,8 @@ public class JavaMailInternetHeaders extends InternetHeaders implements JavaMail
         }
     }
 
-    @Override public String getHeader(String name, String delimiter) {
+    @Override
+    public String getHeader(String name, String delimiter) {
         if (ZPARSER) {
             if (delimiter == null) {
                 String[] values = getHeader(name);
@@ -122,7 +126,8 @@ public class JavaMailInternetHeaders extends InternetHeaders implements JavaMail
         }
     }
 
-    @Override public void setHeader(String name, String value) {
+    @Override
+    public void setHeader(String name, String value) {
         if (ZPARSER) {
             zheaders.setHeader(name, value.getBytes());
         } else {
@@ -135,7 +140,8 @@ public class JavaMailInternetHeaders extends InternetHeaders implements JavaMail
     );
 
     @SuppressWarnings("unchecked")
-    @Override public void addHeader(String name, String value) {
+    @Override
+    public void addHeader(String name, String value) {
         if (ZPARSER) {
             zheaders.addHeader(name, value.getBytes());
         } else {
@@ -147,7 +153,8 @@ public class JavaMailInternetHeaders extends InternetHeaders implements JavaMail
         }
     }
 
-    @Override public void removeHeader(String name) {
+    @Override
+    public void removeHeader(String name) {
         if (ZPARSER) {
             zheaders.setHeader(name, (String) null);
         } else {
@@ -177,7 +184,8 @@ public class JavaMailInternetHeaders extends InternetHeaders implements JavaMail
     }
 
     @SuppressWarnings("unchecked")
-    @Override public Enumeration<Header> getAllHeaders() {
+    @Override
+    public Enumeration<Header> getAllHeaders() {
         if (ZPARSER) {
             return enumerateHeaders(false, NO_HEADERS);
         } else {
@@ -186,7 +194,8 @@ public class JavaMailInternetHeaders extends InternetHeaders implements JavaMail
     }
 
     @SuppressWarnings("unchecked")
-    @Override public Enumeration<Header> getMatchingHeaders(String[] names) {
+    @Override
+    public Enumeration<Header> getMatchingHeaders(String[] names) {
         if (ZPARSER) {
             return enumerateHeaders(true, names);
         } else {
@@ -195,7 +204,8 @@ public class JavaMailInternetHeaders extends InternetHeaders implements JavaMail
     }
 
     @SuppressWarnings("unchecked")
-    @Override public Enumeration<Header> getNonMatchingHeaders(String[] names) {
+    @Override
+    public Enumeration<Header> getNonMatchingHeaders(String[] names) {
         if (ZPARSER) {
             return enumerateHeaders(false, names);
         } else {
@@ -203,40 +213,52 @@ public class JavaMailInternetHeaders extends InternetHeaders implements JavaMail
         }
     }
 
-    @Override public void addHeaderLine(String line) {
+    static Pair<String, byte[]> parseHeaderLine(String line) {
+        if (line == null || line.isEmpty()) {
+            return null;
+        }
+
+        byte contents[] = line.getBytes(), b;
+        int colon, start, end, wsp;
+        for (colon = 0; colon < contents.length; colon++) {
+            if (contents[colon] == ':') {
+                break;
+            }
+        }
+        if (colon == contents.length || colon == 0) {
+            return null;
+        }
+        String name = new String(contents, 0, colon).trim();
+        if (name.isEmpty()) {
+            return null;
+        }
+        for (start = colon + 1, wsp = 0; start < contents.length; start++) {
+            if ((b = contents[start]) != '\n' && b != '\r' && ((b != ' ' && b != '\t') || ++wsp >= 2)) {
+                break;
+            }
+        }
+        for (end = contents.length - 1; end > start; end--) {
+            if ((b = contents[end]) != '\r' && b != '\n') {
+                break;
+            }
+        }
+        byte[] bvalue = new byte[end - start + 1];
+        System.arraycopy(contents, start, bvalue, 0, end - start + 1);
+        return new Pair<String, byte[]>(name, bvalue);
+    }
+
+    @Override
+    public void addHeaderLine(String line) {
         if (ZPARSER) {
             if (line == null || line.isEmpty()) {
                 return;
             } else if (line.charAt(0) == ' ' || line.charAt(0) == '\t') {
                 throw new UnsupportedOperationException("adding continuation lines not yet supported");
             } else {
-                byte contents[] = line.getBytes(), b;
-                int colon, start, end, wsp;
-                for (colon = 0; colon < contents.length; colon++) {
-                    if (contents[colon] == ':') {
-                        break;
-                    }
+                Pair<String, byte[]> parsed = parseHeaderLine(line);
+                if (parsed != null) {
+                    zheaders.appendHeader(parsed.getFirst(), parsed.getSecond());
                 }
-                if (colon == contents.length || colon == 0) {
-                    return;
-                }
-                String name = new String(contents, 0, colon).trim();
-                if (name.isEmpty()) {
-                    return;
-                }
-                for (start = colon + 1, wsp = 0; start < contents.length; start++) {
-                    if ((b = contents[start]) != '\n' && b != '\r' && ((b != ' ' && b != '\t') || ++wsp >= 2)) {
-                        break;
-                    }
-                }
-                for (end = contents.length - 1; end > start; end--) {
-                    if ((b = contents[end]) != '\r' && b != '\n') {
-                        break;
-                    }
-                }
-                byte[] bvalue = new byte[end - start + 1];
-                System.arraycopy(contents, start, bvalue, 0, end - start + 1);
-                zheaders.appendHeader(name, bvalue);
             }
         } else {
             super.addHeaderLine(line);
@@ -260,7 +282,8 @@ public class JavaMailInternetHeaders extends InternetHeaders implements JavaMail
     }
 
     @SuppressWarnings("unchecked")
-    @Override public Enumeration<String> getAllHeaderLines() {
+    @Override
+    public Enumeration<String> getAllHeaderLines() {
         if (ZPARSER) {
             return enumerateHeaderLines(false, NO_HEADERS);
         } else {
@@ -269,7 +292,8 @@ public class JavaMailInternetHeaders extends InternetHeaders implements JavaMail
     }
 
     @SuppressWarnings("unchecked")
-    @Override public Enumeration<String> getMatchingHeaderLines(String[] names) {
+    @Override
+    public Enumeration<String> getMatchingHeaderLines(String[] names) {
         if (ZPARSER) {
             return enumerateHeaderLines(true, names);
         } else {
@@ -278,7 +302,8 @@ public class JavaMailInternetHeaders extends InternetHeaders implements JavaMail
     }
 
     @SuppressWarnings("unchecked")
-    @Override public Enumeration<String> getNonMatchingHeaderLines(String[] names) {
+    @Override
+    public Enumeration<String> getNonMatchingHeaderLines(String[] names) {
         if (ZPARSER) {
             return enumerateHeaderLines(false, names);
         } else {

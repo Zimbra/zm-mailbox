@@ -42,6 +42,7 @@ import javax.mail.util.ByteArrayDataSource;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.Pair;
 
 public class JavaMailMimeMessage extends MimeMessage implements JavaMailShim {
     static final boolean ZPARSER = LC.javamail_zparser.booleanValue();
@@ -890,6 +891,18 @@ public class JavaMailMimeMessage extends MimeMessage implements JavaMailShim {
     @Override
     public void addHeaderLine(String line) throws MessagingException {
         if (ZPARSER) {
+            // need to handle the case where we're switching to or from multipart
+            Pair<String, byte[]> parsed = JavaMailInternetHeaders.parseHeaderLine(line);
+            if (parsed != null && "Content-Type".equalsIgnoreCase(parsed.getFirst())) {
+                com.zimbra.common.mime.ContentType ctype = new com.zimbra.common.mime.ContentType(new String(parsed.getSecond()));
+                if (ctype.getPrimaryType().equals("multipart")) {
+                    com.zimbra.common.mime.MimeMultipart mmp = new com.zimbra.common.mime.MimeMultipart(ctype.getSubType());
+                    zmessage.setBodyPart(mmp);
+                    mmp.setMimeHeader(parsed.getFirst(), ctype);
+                    return;
+                }
+            }
+
             bodyDelegate().addHeaderLine(line);
         } else {
             super.addHeaderLine(line);
