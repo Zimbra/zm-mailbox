@@ -400,8 +400,10 @@ public class UrlNamespace {
                 String uid = path.substring(index + 1, path.length() - CalendarObject.CAL_EXTENSION.length());
                 index = uid.indexOf(',');
                 if (index > 0) {
+                    String accountId = uid.substring(0, index);
                     try {
-                        id = Integer.parseInt(uid.substring(index+1));
+                        if (accountId.equals(account.getId()))
+                            id = Integer.parseInt(uid.substring(index+1));
                     } catch (NumberFormatException e) {
                     }
                 }
@@ -410,8 +412,10 @@ public class UrlNamespace {
                 } else {
                     item = mbox.getCalendarItemByUid(octxt, uid);
                 }
+                if ((item != null) && (f.getId() != item.getFolderId()))
+                    item = null;
             } else if (path.toLowerCase().endsWith(AddressObject.VCARD_EXTENSION)) {
-                rs = AddressObject.getAddressObjectByUID(ctxt, path.substring(index + 1), account);
+                rs = AddressObject.getAddressObjectByUID(ctxt, path.substring(index + 1), account, f);
                 if (rs != null)
                     return rs;
             } else if (f.getId() == Mailbox.ID_FOLDER_INBOX || f.getId() == Mailbox.ID_FOLDER_SENT) {

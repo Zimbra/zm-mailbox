@@ -49,6 +49,7 @@ import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.ContactGroup;
 import com.zimbra.cs.mailbox.ContactGroup.Member;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -106,7 +107,7 @@ public class AddressObject extends MailItemResource {
                 if (isCreate)
                     contactGroup = ContactGroup.init();
                 else {
-                    Contact contact = getContactByUID(ctxt, vcard.uid, ownerAccount);
+                    Contact contact = getContactByUID(ctxt, vcard.uid, ownerAccount, null);
                     contactGroup = ContactGroup.init(contact, true);
                     // remove all the contacts of type CONTACT_REF that belong to the collection same as the group
                     ArrayList<Member> membersToRemove = new ArrayList<Member>();
@@ -114,7 +115,7 @@ public class AddressObject extends MailItemResource {
                         if (Member.Type.CONTACT_REF.equals(member.getType())) {
                             ItemId itemId = new ItemId(member.getValue(), contact.getAccount().getId());
                             if (itemId.belongsTo(contact.getAccount())) {
-                                Contact c = getContactByUID(ctxt, itemId.toString(), contact.getAccount());
+                                Contact c = getContactByUID(ctxt, itemId.toString(), contact.getAccount(), null);
                                 // check that group and member belong to the same collection 
                                 if ((c != null) && (contact.getFolderId() == c.getFolderId()))
                                     membersToRemove.add(member);                                    
@@ -130,7 +131,7 @@ public class AddressObject extends MailItemResource {
                         for (String uidStr : members) {
                             if (uidStr.startsWith("urn:uuid:"))
                                 uidStr = uidStr.substring(9);                            
-                            Contact c = getContactByUID(ctxt, uidStr, ownerAccount);
+                            Contact c = getContactByUID(ctxt, uidStr, ownerAccount, null);
                             if (c != null) {
                                 // add to the group as a CONTACT_REF
                                 ItemId itemId = new ItemId(c);
@@ -173,7 +174,7 @@ public class AddressObject extends MailItemResource {
                     if (member.getType().equals(Member.Type.CONTACT_REF)) {
                         ItemId itemId = new ItemId(member.getValue(), contact.getAccount().getId());
                         if (itemId.belongsTo(contact.getAccount())) {
-                            Contact c = getContactByUID(ctxt, itemId.toString(), contact.getAccount());
+                            Contact c = getContactByUID(ctxt, itemId.toString(), contact.getAccount(), null);
                             // check that group and member belong to the same collection 
                             if ((c != null) && (contact.getFolderId() == c.getFolderId()))
                                 memberList.add("urn:uuid:" + c.get(ContactConstants.A_vCardUID));
@@ -245,19 +246,25 @@ public class AddressObject extends MailItemResource {
                 }
             }
         } catch (ServiceException e) {
-            throw new DavException("cannot parse vcard ", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
+            throw new DavException("cannot parse vcard ", HttpServletResponse.SC_BAD_REQUEST, e);
         }
+        if (res == null)
+            throw new DavException("cannot parse vcard ", HttpServletResponse.SC_BAD_REQUEST);
         return res;
     }
 
-    public static AddressObject getAddressObjectByUID(DavContext ctxt, String uid, Account account) throws ServiceException {
-        Contact c = getContactByUID(ctxt, uid, account);
+    public static AddressObject getAddressObjectByUID(DavContext ctxt, String uid, Account account, Folder f) throws ServiceException {
+        Contact c = getContactByUID(ctxt, uid, account, f);
         if (c == null)
             return null;
         return new AddressObject(ctxt, c);
     }
+    
+    public static AddressObject getAddressObjectByUID(DavContext ctxt, String uid, Account account) throws ServiceException {
+        return getAddressObjectByUID(ctxt, uid, account, null);
+    }
 
-    private static Contact getContactByUID(DavContext ctxt, String uid, Account account) throws ServiceException {
+    private static Contact getContactByUID(DavContext ctxt, String uid, Account account, Folder f) throws ServiceException {
         Contact item = null;
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         if (uid.endsWith(AddressObject.VCARD_EXTENSION))
@@ -269,24 +276,40 @@ public class AddressObject extends MailItemResource {
                 ZimbraLog.dav.warn("Can't decode UID %s", uid);
             }
         }
+        int id = 0;
         int index = uid.indexOf(':');
         if (index > 0) {
+            String accountId = uid.substring(0, index);
+            try {
+                if (accountId.equals(account.getId()))
+                    id = Integer.parseInt(uid.substring(index+1));
+            } catch (NumberFormatException e) {
+            }
+        }
+        if (id > 0) {
             item = mbox.getContactById(ctxt.getOperationContext(), Integer.parseInt(uid.substring(index+1)));
         } else {
             ZimbraQueryResults zqr = null;
             StringBuilder query = new StringBuilder();
             query.append("#").append(ContactConstants.A_vCardUID).append(":");
-            query.append(uid);
+            // escape the double quotes in uid and surround with double quotes
+            query.append("\"").append(uid.replace("\"", "\\\"")).append("\"");
             query.append(" OR ").append("#").append(ContactConstants.A_vCardURL).append(":");
-            query.append(uid);
+            query.append("\"").append(uid.replace("\"", "\\\"")).append("\"");
             ZimbraLog.dav.debug("query %s", query.toString());
             try {
                 zqr = mbox.index.search(ctxt.getOperationContext(), query.toString(),
                         EnumSet.of(MailItem.Type.CONTACT), SortBy.NAME_ASC, 10);
-                if (zqr.hasNext()) {
+                // There could be multiple contacts with the same UID from different collections.
+                while (zqr.hasNext()) {
                     ZimbraHit hit = zqr.getNext();
                     if (hit instanceof ContactHit) {
                         item = ((ContactHit)hit).getContact();
+                        if (f == null)
+                            break;
+                        if (item.getFolderId() == f.getId())
+                            break;
+                        item = null;
                     }
                 }
             } catch (Exception e) {
@@ -295,6 +318,10 @@ public class AddressObject extends MailItemResource {
                 Closeables.closeQuietly(zqr);
             }
         }
+        
+        if ((item != null) && (f != null) && (item.getFolderId() != f.getId()))
+            item = null;
+        
         return item;
     }
 }
