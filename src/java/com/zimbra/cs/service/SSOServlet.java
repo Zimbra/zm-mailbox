@@ -124,12 +124,14 @@ public abstract class SSOServlet extends ZimbraServlet {
         // always append the ignore loginURL query so we do not get into a redirect loop.
         redirectUrl = redirectUrl + IGNORE_LOGIN_URL;  // not yet supported for admin console
         
+        /*
         URL url = new URL(redirectUrl);
         boolean isRedirectProtocolSecure = isProtocolSecure(url.getProtocol());
         
         if (secureCookie && !isRedirectProtocolSecure) {
             throw ServiceException.INVALID_REQUEST("cannot redirect to non-secure protocol: " + redirectUrl, null);
         }
+        */
         
         ZimbraLog.account.debug("SSOServlet - redirecting (with auth token) to: " + redirectUrl);
         resp.sendRedirect(redirectUrl);
@@ -172,13 +174,15 @@ public abstract class SSOServlet extends ZimbraServlet {
         final String DEFAULT_MAIL_URL = "/zimbra";
     
         String serviceUrl = server.getAttr(Provisioning.A_zimbraMailURL, DEFAULT_MAIL_URL);
-        return URLUtil.getServiceURL(server, serviceUrl, true);
+        return serviceUrl;
+        // return URLUtil.getServiceURL(server, serviceUrl, true);
     }
     
     protected String getAdminUrl(Server server) throws ServiceException {
         final String DEFAULT_ADMIN_URL = "/zimbraAdmin";
         
         String serviceUrl = server.getAttr(Provisioning.A_zimbraAdminURL, DEFAULT_ADMIN_URL);
-        return URLUtil.getAdminURL(server, serviceUrl, true);
+        return serviceUrl;
+        // return URLUtil.getAdminURL(server, serviceUrl, true);
     }
 }
