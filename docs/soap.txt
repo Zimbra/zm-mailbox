@@ -2050,13 +2050,14 @@ Actions:
   <action op="[!]syncon" id="{list}"/>
     - set or unset the "sync" flag of the folder to sync a local folder with a remote source
 
-  <action op="update" id="{list}" [f="{new-flags}"] [name="{new-name}"] [l="{target-folder}"] [color="{new-color}"]>
+  <action op="update" id="{list}" [f="{new-flags}"] [name="{new-name}"] [l="{target-folder}"] [color="{new-color}"] [view="{new-view}"]>
     [<acl><grant .../>*</acl>]
   </action>
     - do several operations at once:
           name="{new-name}"        to change the folder's name
           l="{target-folder}"      to change the folder's location
           color="{new-color}"      to set the folder's color
+          view="{new-view}"        to change folder's default view (useful for migration)
           f="{new-flags}"          to change the folder's exclude free/(b)usy, checked (#), and IMAP subscribed (*) state
           <acl><grant ...>*</acl>  to replace the folder's existing ACL with a new ACL
 
