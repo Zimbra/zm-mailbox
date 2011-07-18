@@ -496,10 +496,41 @@ public class DateUtil {
      * @param defaultValue returned if the time interval is null or cannot be parsed
      */
     public static long getTimeInterval(String value, long defaultValue) {
-        try {
-            return getTimeInterval(value);
-        } catch (ServiceException e) {
+        if (value == null || value.length() == 0)
             return defaultValue;
+        else {
+            try {
+                char units = value.charAt(value.length()-1);
+                if (units >= '0' && units <= '9') {
+                    return Long.parseLong(value)*1000;
+                } else {
+                    if (value.endsWith("ms")) {
+                        return Long.parseLong(value.substring(0, value.length()-2));
+                    }
+                    
+                    long n = Long.parseLong(value.substring(0, value.length()-1));
+                    
+                    switch (units) {
+                    case 'd':
+                        n = n * Constants.MILLIS_PER_DAY;
+                        break;
+                    case 'h':
+                        n = n * Constants.MILLIS_PER_HOUR;
+                        break;
+                    case 'm':
+                        n = n * Constants.MILLIS_PER_MINUTE;
+                        break;
+                    case 's':
+                        n = n * Constants.MILLIS_PER_SECOND;
+                        break;
+                    default:
+                        return defaultValue;
+                    }
+                    return n;
+                }
+            } catch (NumberFormatException e) {
+                return defaultValue;
+            }
         }
     }
     
@@ -560,11 +591,48 @@ public class DateUtil {
      * @param defaultValue returned if the time interval is null or cannot be parsed
      */
     public static long getTimeIntervalSecs(String value, long defaultValue) {
-        try {
-            long millis = getTimeInterval(value);
-            return Math.round((float) millis / Constants.MILLIS_PER_SECOND);
-        } catch (ServiceException e) {
+        /*
+         * like getTimeInterval, but return interval in seconds, saving the overhead 
+         * for code that needs seconds but gets milliseconds from getTimeInterval and 
+         * has to convert it back seconds.
+         * 
+         * If the value is in ms, round to the nearest second.
+         */
+        if (value == null || value.length() == 0)
             return defaultValue;
+        else {
+            try {
+                char units = value.charAt(value.length()-1);
+                if (units >= '0' && units <= '9') {
+                    return Long.parseLong(value);
+                } else {
+                    if (value.endsWith("ms")) {
+                        // round up to the next second
+                        long ms = Long.parseLong(value.substring(0, value.length()-2));
+                        return Math.round((float)ms/Constants.MILLIS_PER_SECOND);
+                    }
+                    
+                    long n = Long.parseLong(value.substring(0, value.length()-1));
+                    switch (units) {
+                    case 'd':
+                        n = n * Constants.SECONDS_PER_DAY;
+                        break;
+                    case 'h':
+                        n = n * Constants.SECONDS_PER_HOUR;
+                        break;
+                    case 'm':
+                        n = n * Constants.SECONDS_PER_MINUTE;
+                        break;
+                    case 's':
+                        break;
+                    default:
+                        return defaultValue;
+                    }
+                    return n;
+                }
+            } catch (NumberFormatException e) {
+                return defaultValue;
+            }
         }
     }
 

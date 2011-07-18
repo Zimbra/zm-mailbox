@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010 Zimbra, Inc.
- *
+ * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- *
+ * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -61,10 +61,6 @@ public final class Version implements Comparable<Version> {
     private String mVersion;
 
     public Version(String version) throws ServiceException {
-        this(version, true);
-    }
-    
-    public Version(String version, boolean strict) throws ServiceException {
         mVersion = version;
         if (FUTURE.equalsIgnoreCase(version)) {
             mFuture = true;
@@ -100,16 +96,8 @@ public final class Version implements Comparable<Version> {
                 mMajor = Integer.parseInt(parts[0]);
                 mMinor = Integer.parseInt(parts[1]);
                 mPatch = Integer.parseInt(parts[2]);
-            } else if (parts.length == 4 && !strict) {
-                // so we can parse version number in ZCO/ZCB UA, 
-                // where version number is 4 segments, like 7.0.0.0
-                // NOTE: the last segment is ignored.
-                mMajor = Integer.parseInt(parts[0]);
-                mMinor = Integer.parseInt(parts[1]);
-                mPatch = Integer.parseInt(parts[2]);
-            } else {
+            } else
                 throw ServiceException.FAILURE("invalid version format:" + version, null);
-            }
         } catch (NumberFormatException e) {
             throw ServiceException.FAILURE("invalid version format:" + version, e);
         }

@@ -127,10 +127,7 @@ public class VoiceConstants {
     public static final String A_vmPrefGreetingType            = "vmPrefGreetingType";
     public static final String A_vmPrefEmailNotifStatus        = "vmPrefEmailNotifStatus";
     public static final String A_vmPrefPlayTutorial            = "vmPrefPlayTutorial";
-    public static final String A_zimbraPrefVoiceItemsPerPage   = "zimbraPrefVoiceItemsPerPage";	
-
-    public static final String A_vmPrefEmailNotifTrans         = "vmPrefEmailNotifTrans";
-    public static final String A_vmPrefEmailNotifAttach        = "vmPrefEmailNotifAttach";
+    public static final String A_zimbraPrefVoiceItemsPerPage   = "zimbraPrefVoiceItemsPerPage";
 
     public static final int FID_VOICEMAILINBOX = 1024;
     public static final int FID_MISSEDCALLS = 1025;
