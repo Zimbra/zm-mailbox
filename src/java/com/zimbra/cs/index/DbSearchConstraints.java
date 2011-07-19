@@ -737,7 +737,7 @@ public interface DbSearchConstraints extends Cloneable {
             if (min < 0 && max < 0) {
                 return;
             }
-            ranges.put(RangeType.CAL_END_DATE, new NumericRange(min, minInclusive, max, maxInclusive, bool));
+            ranges.put(RangeType.MODSEQ, new NumericRange(min, minInclusive, max, maxInclusive, bool));
         }
 
         public void addConvCountRange(long min, boolean minInclusive, long max, boolean maxInclusive, boolean bool) {
