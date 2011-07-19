@@ -444,6 +444,16 @@ public final class AdminConstants {
     public static final String E_SEARCH_AUTO_PROV_DIRECTORY_REQUEST = "SearchAutoProvDirectoryRequest";
     public static final String E_SEARCH_AUTO_PROV_DIRECTORY_RESPONSE = "SearchAutoProvDirectoryResponse";
 
+    // Retention policy
+    public static final String E_GET_SYSTEM_RETENTION_POLICY_REQUEST = "GetSystemRetentionPolicyRequest";
+    public static final String E_GET_SYSTEM_RETENTION_POLICY_RESPONSE = "GetSystemRetentionPolicyResponse";
+    public static final String E_CREATE_SYSTEM_RETENTION_POLICY_REQUEST = "CreateSystemRetentionPolicyRequest";
+    public static final String E_CREATE_SYSTEM_RETENTION_POLICY_RESPONSE = "CreateSystemRetentionPolicyResponse";
+    public static final String E_MODIFY_SYSTEM_RETENTION_POLICY_REQUEST = "ModifySystemRetentionPolicyRequest";
+    public static final String E_MODIFY_SYSTEM_RETENTION_POLICY_RESPONSE = "ModifySystemRetentionPolicyResponse";
+    public static final String E_DELETE_SYSTEM_RETENTION_POLICY_REQUEST = "DeleteSystemRetentionPolicyRequest";
+    public static final String E_DELETE_SYSTEM_RETENTION_POLICY_RESPONSE = "DeleteSystemRetentionPolicyResponse";
+    
     public static final QName PING_REQUEST = QName.get(E_PING_REQUEST, NAMESPACE);
     public static final QName PING_RESPONSE = QName.get(E_PING_RESPONSE, NAMESPACE);
     public static final QName CHECK_HEALTH_REQUEST = QName.get(E_CHECK_HEALTH_REQUEST, NAMESPACE);
@@ -863,6 +873,12 @@ public final class AdminConstants {
     public static final QName SEARCH_AUTO_PROV_DIRECTORY_REQUEST = QName.get(E_SEARCH_AUTO_PROV_DIRECTORY_REQUEST, NAMESPACE);
     public static final QName SEARCH_AUTO_PROV_DIRECTORY_RESPONSE = QName.get(E_SEARCH_AUTO_PROV_DIRECTORY_RESPONSE, NAMESPACE);
 
+    // Retention policy
+    public static final QName GET_SYSTEM_RETENTION_POLICY_REQUEST = QName.get(E_GET_SYSTEM_RETENTION_POLICY_REQUEST, NAMESPACE);
+    public static final QName CREATE_SYSTEM_RETENTION_POLICY_REQUEST = QName.get(E_CREATE_SYSTEM_RETENTION_POLICY_REQUEST, NAMESPACE);
+    public static final QName MODIFY_SYSTEM_RETENTION_POLICY_REQUEST = QName.get(E_MODIFY_SYSTEM_RETENTION_POLICY_REQUEST, NAMESPACE);
+    public static final QName DELETE_SYSTEM_RETENTION_POLICY_REQUEST = QName.get(E_DELETE_SYSTEM_RETENTION_POLICY_REQUEST, NAMESPACE);
+    
     // DumpSessions
     public static final String E_SESSION = "session";
     public static final String A_ZIMBRA_ID = "zid";
@@ -1247,4 +1263,9 @@ public final class AdminConstants {
     public static final String A_SERVER_TIME = "serverTime";
     public static final String A_FEATURE = "feature";
 
+    // Retention policy
+    public static final String E_RETENTION_POLICY = "retentionPolicy";
+    public static final String E_KEEP = "keep";
+    public static final String E_PURGE = "purge";
+    public static final String E_POLICY = "policy";
 }

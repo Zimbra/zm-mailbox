@@ -245,6 +245,9 @@ public final class MailConstants {
     public static final String E_GET_SHARE_NOTIFICATIONS_REQUEST = "GetShareNotificationsRequest";
     public static final String E_GET_SHARE_NOTIFICATIONS_RESPONSE = "GetShareNotificationsResponse";
 
+    public static final String E_GET_SYSTEM_RETENTION_POLICY_REQUEST = "GetSystemRetentionPolicyRequest";
+    public static final String E_GET_SYSTEM_RETENTION_POLICY_RESPONSE = "GetSystemRetentionPolicyResponse";
+    
     // noop
     public static final QName NO_OP_REQUEST = QName.get(E_NO_OP_REQUEST, NAMESPACE);
     public static final QName NO_OP_RESPONSE = QName.get(E_NO_OP_RESPONSE, NAMESPACE);
@@ -526,6 +529,9 @@ public final class MailConstants {
     public static final QName GET_SHARE_NOTIFICATIONS_REQUEST = QName.get(E_GET_SHARE_NOTIFICATIONS_REQUEST, NAMESPACE);
     public static final QName GET_SHARE_NOTIFICATIONS_RESPONSE = QName.get(E_GET_SHARE_NOTIFICATIONS_RESPONSE, NAMESPACE);
 
+    public static final QName GET_SYSTEM_RETENTION_POLICY_REQUEST = QName.get(E_GET_SYSTEM_RETENTION_POLICY_REQUEST, NAMESPACE);
+    public static final QName GET_SYSTEM_RETENTION_POLICY_RESPONSE = QName.get(E_GET_SYSTEM_RETENTION_POLICY_RESPONSE, NAMESPACE);
+    
     public static final String E_MAILBOX = "mbx";
     public static final String E_ITEM = "item";
     public static final String E_MSG = "m";
