@@ -234,7 +234,7 @@ public class FolderAction extends ItemAction {
                 mbox.setTags(octxt, iid.getId(), MailItem.Type.FOLDER, flags, null, null);
             }
             if (view != null) {
-                mbox.migrateFolderView(octxt, iid.getId(), MailItem.Type.of(view));
+                mbox.setFolderDefaultView(octxt, iid.getId(), MailItem.Type.of(view));
             }
             if (newName != null) {
                 mbox.rename(octxt, iid.getId(), MailItem.Type.FOLDER, newName, iidFolder.getId());

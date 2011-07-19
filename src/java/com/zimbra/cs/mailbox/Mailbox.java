@@ -7679,11 +7679,6 @@ public class Mailbox {
             endTransaction(success);
         }
     }
-    
-    public void migrateFolderView(OperationContext octxt, int folderId, MailItem.Type newView) throws ServiceException {
-        Folder f = getFolderById(folderId);
-        migrateFolderView(octxt, f, newView);
-    }
 
     protected boolean needRedo(OperationContext octxt) {
         // Don't generate redo data for changes made during mailbox version migrations.
