@@ -23,6 +23,7 @@ import com.google.common.collect.Lists;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -32,6 +33,8 @@ import com.zimbra.common.soap.AdminConstants;
 @XmlRootElement(name=AdminConstants.E_DL)
 public class DistributionListInfo extends AdminObjectInfo {
 
+    @XmlAttribute(name=AdminConstants.A_DYNAMIC, required=false)
+    Boolean dynamic;
     @XmlElement(name=AdminConstants.E_DLM, required=false)
     private final List<String> members;
 
@@ -59,5 +62,13 @@ public class DistributionListInfo extends AdminObjectInfo {
 
     public List<String> getMembers() {
         return Collections.unmodifiableList(members);
+    }
+    
+    public Boolean isDynamic() {
+        if (dynamic == null) {
+            return Boolean.FALSE;
+        } else {
+            return dynamic;
+        }
     }
 }

@@ -32,18 +32,21 @@ public class CreateDistributionListRequest extends AdminAttrsImpl {
 
     @XmlAttribute(name=AdminConstants.E_NAME, required=true)
     private String name;
+    @XmlAttribute(name=AdminConstants.A_DYNAMIC, required=false)
+    private Boolean dynamic;
 
     public CreateDistributionListRequest() {
         this((String)null);
     }
 
     public CreateDistributionListRequest(String name) {
-        this(name, (Collection<Attr>) null);
+        this(name, (Collection<Attr>) null, false);
     }
 
-    public CreateDistributionListRequest(String name, Collection<Attr> attrs) {
+    public CreateDistributionListRequest(String name, Collection<Attr> attrs, boolean dynamic) {
         super(attrs);
         this.name = name;
+        this.dynamic = dynamic;
     }
 
     public void setName(String name) { this.name = name; }
