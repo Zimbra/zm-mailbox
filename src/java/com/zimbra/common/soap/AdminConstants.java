@@ -993,6 +993,7 @@ public final class AdminConstants {
     public static final String A_DESC = "desc";
     public static final String A_DN = "dn";
     public static final String A_KEYATTR = "keyAttr";
+    public static final String A_DYNAMIC = "dynamic";
 
     public static final String BY_ID = "id";
     public static final String BY_QUERY = "query";

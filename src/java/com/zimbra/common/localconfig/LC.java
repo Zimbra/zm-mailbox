@@ -1076,6 +1076,8 @@ public final class LC {
     public static final KnownKey ldap_dit_naming_rdn_attr_globalconfig = KnownKey.newKey("");
     // LDAP Custom DIT RDN attr for globalgrant entry
     public static final KnownKey ldap_dit_naming_rdn_attr_globalgrant  = KnownKey.newKey("");
+    // LDAP Custom DIT RDN attr for group entries
+    public static final KnownKey ldap_dit_naming_rdn_attr_group = KnownKey.newKey("");
     // LDAP Custom DIT RDN attr for mime entries
     public static final KnownKey ldap_dit_naming_rdn_attr_mime         = KnownKey.newKey("");
     // LDAP Custom DIT RDN attr for server entries
