@@ -151,6 +151,8 @@ that the document is a note.
   </doc>]+
 </ListDocumentRevisionsResponse>
 
+Documents that have multiple revisions have the flag "/", which indicates that the document is versioned.
+
 //
 // DiffDocument
 //
