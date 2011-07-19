@@ -223,7 +223,7 @@ public class FolderAction extends ItemAction {
             String flags = action.getAttribute(MailConstants.A_FLAGS, null);
             byte color = (byte) action.getAttributeLong(MailConstants.A_COLOR, -1);
             ACL acl = parseACL(action.getOptionalElement(MailConstants.E_ACL));
-            String view = action.getAttribute(MailConstants.A_DEFAULT_VIEW);
+            String view = action.getAttribute(MailConstants.A_DEFAULT_VIEW, null);
             if (color >= 0) {
                 mbox.setColor(octxt, iid.getId(), MailItem.Type.FOLDER, color);
             }
@@ -234,7 +234,7 @@ public class FolderAction extends ItemAction {
                 mbox.setTags(octxt, iid.getId(), MailItem.Type.FOLDER, flags, null, null);
             }
             if (view != null) {
-                mbox.setFolderDefaultView(octxt, iidFolder.getId(), MailItem.Type.of(view));
+                mbox.migrateFolderView(octxt, iidFolder.getId(), MailItem.Type.of(view));
             }
             if (newName != null) {
                 mbox.rename(octxt, iid.getId(), MailItem.Type.FOLDER, newName, iidFolder.getId());
