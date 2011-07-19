@@ -187,10 +187,10 @@ public class Contact extends MailItem {
             return new StringBuilder(mFieldName).append(" [").append(getContentType()).append(", ").append(mSize).append("B]").toString();
         }
     }
-    
+
     public static enum DerefGroupMembersOption {
         // ALL,      // deref all group members - not yet supported
-        NONE,        // do not deref any group members 
+        NONE,        // do not deref any group members
         INLINE_ONLY; // deref only inline group members (see ContactGroup.Member.Type)
     };
 
@@ -549,14 +549,14 @@ public class Contact extends MailItem {
         //ContactConstants.A_EXPLICIT = 8
         attrs.put(ContactConstants.A_fileAs, new Integer(ContactConstants.FA_EXPLICIT).toString() + ':' + fileAs);
     }
-    
+
     /**
      * Returns a list of all email address fields for this contact.
      */
     public List<String> getEmailAddresses() {
         return getEmailAddresses(emailFields, fields, DerefGroupMembersOption.INLINE_ONLY);
     }
-    
+
     public List<String> getEmailAddresses(DerefGroupMembersOption derefGroupMemberOpt) {
         return getEmailAddresses(emailFields, fields, derefGroupMemberOpt);
     }
@@ -582,7 +582,7 @@ public class Contact extends MailItem {
         return false;
     }
 
-    public static final List<String> getEmailAddresses(String[] fieldNames, 
+    public static final List<String> getEmailAddresses(String[] fieldNames,
             Map<String, String> fields, DerefGroupMembersOption derefGroupMemberOpt) {
         List<String> result = new ArrayList<String>();
         for (String name : fieldNames) {
@@ -591,7 +591,7 @@ public class Contact extends MailItem {
                 result.add(addr);
             }
         }
-        
+
         if (derefGroupMemberOpt != DerefGroupMembersOption.NONE) {
             String encodedGroupMembers = fields.get(ContactConstants.A_groupMember);
             if (encodedGroupMembers != null) {
@@ -606,7 +606,7 @@ public class Contact extends MailItem {
                 }
             }
         }
-        
+
         return result;
     }
 
@@ -709,7 +709,12 @@ public class Contact extends MailItem {
         assert Collections.disjoint(add, del) : "add=" + add + ",del=" + del;
 
         for (String addr : add) {
-            addr = addr.trim().toLowerCase();
+            try {
+                addr = DbMailAddress.normalizeAddress(addr);
+            } catch (IllegalArgumentException e) {
+                ZimbraLog.contact.warn("%s addr=%s", e.getMessage(), addr);
+                continue;
+            }
             int id = DbMailAddress.getId(mMailbox.getOperationConnection(), mMailbox, addr);
             if (id < 0) {
                 new DbMailAddress(mMailbox).setId(mMailbox.getNextAddressId())
@@ -916,7 +921,7 @@ public class Contact extends MailItem {
     public Map<String,String> getXProps() {
         return decodeXProps(fields.get(ContactConstants.A_vCardXProps));
     }
-    
+
     public void setXProps(Map<String,String> xprops) {
         fields.put(ContactConstants.A_vCardXProps, encodeXProps(xprops));
     }
@@ -927,7 +932,7 @@ public class Contact extends MailItem {
     public boolean isGroup() {
         return ContactConstants.TYPE_GROUP.equals(get(ContactConstants.A_type));
     }
-    
+
     public static boolean isGroup(Map<String,? extends Object> attrs) {
         return ContactConstants.TYPE_GROUP.equals(attrs.get(ContactConstants.A_type));
     }
@@ -935,7 +940,7 @@ public class Contact extends MailItem {
     public boolean isContactGroup() {
         return isGroup() && get(ContactConstants.A_groupMember) != null;
     }
-    
+
     private static Set<String> SMIME_FIELDS = ImmutableSet.of(
             ContactConstants.A_userCertificate, ContactConstants.A_userSMIMECertificate);
 

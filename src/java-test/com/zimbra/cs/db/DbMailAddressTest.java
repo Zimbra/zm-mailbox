@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -23,6 +23,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.cs.account.Provisioning;
@@ -216,4 +217,25 @@ public final class DbMailAddressTest {
 
         conn.closeQuietly();
     }
+
+    @Test
+    public void normailzeAddress() {
+        Assert.assertEquals("test@zimbra.com", DbMailAddress.normalizeAddress(" TEST@ZIMBRA.COM "));
+        try {
+            DbMailAddress.normalizeAddress(null);
+            Assert.fail();
+        } catch (IllegalArgumentException expected) {
+        }
+        try {
+            DbMailAddress.normalizeAddress("");
+            Assert.fail();
+        } catch (IllegalArgumentException expected) {
+        }
+        try {
+            DbMailAddress.normalizeAddress(Strings.repeat("x", 128) + "@zimbra.com");
+            Assert.fail();
+        } catch (IllegalArgumentException expected) {
+        }
+    }
+
 }

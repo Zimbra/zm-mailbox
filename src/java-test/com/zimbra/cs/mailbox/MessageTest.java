@@ -22,6 +22,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.base.Strings;
 import com.google.common.io.ByteStreams;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
@@ -67,8 +68,8 @@ public final class MessageTest {
         Assert.assertEquals("\u65e5\u672c\u8a9e", pm.getFragment());
         List<IndexDocument> docs = message.generateIndexData();
         Assert.assertEquals(2, docs.size());
-        String subject = docs.get(0).toDocument().getField(LuceneFields.L_H_SUBJECT).stringValue();
-        String body = docs.get(0).toDocument().getField(LuceneFields.L_CONTENT).stringValue();
+        String subject = docs.get(0).toDocument().get(LuceneFields.L_H_SUBJECT);
+        String body = docs.get(0).toDocument().get(LuceneFields.L_CONTENT);
         Assert.assertEquals("\u65e5\u672c\u8a9e", subject);
         Assert.assertEquals("\u65e5\u672c\u8a9e", body.trim());
     }
@@ -98,6 +99,21 @@ public final class MessageTest {
         Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox, senderId1));
         Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox, senderId2));
         Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox, senderId3));
+        conn.closeQuietly();
+    }
+
+    @Test
+    public void tooLongSender() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        DeliveryOptions opt = new DeliveryOptions();
+        opt.setFolderId(Mailbox.ID_FOLDER_INBOX);
+        Message msg = mbox.addMessage(null, new ParsedMessage(
+                ("From: " + Strings.repeat("x", 129) + "@zimbra.com").getBytes(), false), opt, null);
+
+        DbConnection conn = DbPool.getConnection(mbox);
+        Assert.assertTrue(DbUtil.executeQuery(conn,
+                "SELECT sender_id FROM mboxgroup1.mail_item WHERE mailbox_id = ? AND id = ?",
+                mbox.getId(), msg.getId()).isNull(1));
         conn.closeQuietly();
     }
 

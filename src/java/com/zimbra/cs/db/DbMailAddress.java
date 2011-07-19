@@ -24,6 +24,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.MailItem;
@@ -36,6 +37,8 @@ import com.zimbra.cs.mailbox.Metadata;
  * @author ysasaki
  */
 public final class DbMailAddress {
+    private static final int MAX_ADDRESS_LEN = 128;
+
     private final Mailbox mailbox;
     private int id;
     private String address;
@@ -58,6 +61,17 @@ public final class DbMailAddress {
     public DbMailAddress setContactCount(int value) {
         contactCount = value;
         return this;
+    }
+
+    public static String normalizeAddress(String addr) {
+        if (Strings.isNullOrEmpty(addr)) {
+            throw new IllegalArgumentException("address empty");
+        }
+        String result = addr.trim().toLowerCase();
+        if (result.length() > MAX_ADDRESS_LEN) {
+            throw new IllegalArgumentException("address too long");
+        }
+        return result;
     }
 
     static String getTableName(Mailbox mbox) {
@@ -317,8 +331,10 @@ public final class DbMailAddress {
                 Set<String> emails = new HashSet<String>(); // merge duplicates
                 for (String name : emailFields) {
                     String addr = fields.get(name, null);
-                    if (!Strings.isNullOrEmpty(addr)) {
-                        emails.add(addr.trim().toLowerCase());
+                    try {
+                        emails.add(normalizeAddress(addr));
+                    } catch (IllegalArgumentException e) {
+                        ZimbraLog.index.warn("%s addr=%s", e.getMessage(), addr);
                     }
                 }
                 for (String addr : emails) {

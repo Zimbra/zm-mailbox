@@ -94,7 +94,7 @@ public class Message extends MailItem {
 
         private DraftInfo() {
         }
-        
+
         public DraftInfo(String rt, String id, String ident, String account, long autoSendTime) {
             replyType = rt;
             origId = id;
@@ -296,7 +296,7 @@ public class Message extends MailItem {
     public String getDraftOrigId() {
         return (draftInfo == null || draftInfo.origId == null ? "" : draftInfo.origId);
     }
-    
+
     void setDraftOrigId(String origId) {
         if (draftInfo == null) {
             draftInfo = new DraftInfo();
@@ -316,7 +316,7 @@ public class Message extends MailItem {
     public String getDraftReplyType() {
         return (draftInfo == null || draftInfo.replyType == null ? "" : draftInfo.replyType);
     }
-    
+
     void setDraftReplyType(String replyType) {
         if (draftInfo == null) {
             draftInfo = new DraftInfo();
@@ -334,7 +334,7 @@ public class Message extends MailItem {
     public String getDraftAccountId() {
         return (draftInfo == null || draftInfo.accountId == null ? "" : draftInfo.accountId);
     }
-    
+
     void setDraftAccountId(String accountId) {
         if (draftInfo == null) {
             draftInfo = new DraftInfo();
@@ -352,7 +352,7 @@ public class Message extends MailItem {
     public String getDraftIdentityId() {
         return (draftInfo == null || draftInfo.identityId == null ? "" : draftInfo.identityId);
     }
-    
+
     void setDraftIdentityId(String identityId) {
         if (draftInfo == null) {
             draftInfo = new DraftInfo();
@@ -378,7 +378,7 @@ public class Message extends MailItem {
             saveMetadata();
         }
     }
-    
+
     /** Returns whether the Message has a vCal attachment. */
     public boolean isInvite() {
         return mData.isSet(Flag.FlagInfo.INVITE);
@@ -593,16 +593,18 @@ public class Message extends MailItem {
     }
 
     private static int saveSender(Mailbox mbox, String sender) throws ServiceException {
-        if (Strings.isNullOrEmpty(sender)) { // skip
-            return -1;
-        } else {
-            String addr = sender.trim().toLowerCase();
-            int senderId = DbMailAddress.getId(mbox.getOperationConnection(), mbox, addr);
-            if (senderId < 0) {
-                senderId = new DbMailAddress(mbox).setId(mbox.getNextAddressId()).setAddress(addr).create();
-            }
-            return senderId;
+        String addr;
+        try {
+            addr = DbMailAddress.normalizeAddress(sender);
+        } catch (IllegalArgumentException e) {
+            ZimbraLog.mailbox.warn("%s sender=%s", e.getMessage(), sender);
+            return -1; // skip
         }
+        int senderId = DbMailAddress.getId(mbox.getOperationConnection(), mbox, addr);
+        if (senderId < 0) {
+            senderId = new DbMailAddress(mbox).setId(mbox.getNextAddressId()).setAddress(addr).create();
+        }
+        return senderId;
     }
 
     /**
