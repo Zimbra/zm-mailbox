@@ -100,7 +100,7 @@ final class NioImapDecoder extends CumulativeProtocolDecoder {
                     ctx.literal = -1;
                     if (ctx.overflow) {
                         ctx.overflow = false;
-                        throw new TooBigLiteralException();
+                        throw new TooBigLiteralException(ctx.request);
                     }
                 }
                 return true;
@@ -136,7 +136,7 @@ final class NioImapDecoder extends CumulativeProtocolDecoder {
                         if (li != null) {
                             if (li.count > maxLiteralSize) {
                                 if (li.isBlocking()) { // return a negative continuation response
-                                    throw new TooBigLiteralException();
+                                    throw new TooBigLiteralException(line);
                                 } else { // non-blocking, swallow the entire literal
                                     ctx.literal = li.count;
                                     ctx.overflow = true;
@@ -144,6 +144,7 @@ final class NioImapDecoder extends CumulativeProtocolDecoder {
                                 }
                             }
                             ctx.literal = li.count;
+                            ctx.request = line;
                         }
                         out.write(line);
                         // Decoded one line. CumulativeProtocolDecoder will call me again until I return false.
@@ -163,6 +164,7 @@ final class NioImapDecoder extends CumulativeProtocolDecoder {
     private static final class Context {
         boolean overflow = false;
         int literal = -1;
+        String request;
     }
 
     static final class TooLongLineException extends RecoverableProtocolDecoderException {
@@ -173,6 +175,16 @@ final class NioImapDecoder extends CumulativeProtocolDecoder {
     }
 
     static final class TooBigLiteralException extends RecoverableProtocolDecoderException {
+        private String request;
+
+        private TooBigLiteralException(String req) {
+            request = req;
+        }
+
+        public String getRequest() {
+            return request;
+        }
+
         @Override
         public String getMessage() {
             return "maximum literal size exceeded";

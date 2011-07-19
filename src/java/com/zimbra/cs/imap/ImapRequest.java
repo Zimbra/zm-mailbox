@@ -420,9 +420,24 @@ abstract class ImapRequest {
         }
     }
 
+    String readTag() throws ImapParseException {
+        return mTag = readContent(TAG_CHARS);
+    }
 
-    String readTag() throws ImapParseException   { return mTag = readContent(TAG_CHARS); }
-
+    static String parseTag(String src) throws ImapParseException {
+        int i;
+        for (i = 0; i < src.length(); i++) {
+            char c = src.charAt(i);
+            if (c > 0x7F || !TAG_CHARS[c]) {
+                break;
+            }
+        }
+        if (i > 0) {
+            return src.substring(0, i);
+        } else {
+            throw new ImapParseException();
+        }
+    }
 
     static final boolean NONZERO = false, ZERO_OK = true;
 

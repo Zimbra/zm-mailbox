@@ -142,6 +142,7 @@ public class NioImapDecoderTest {
             decoder.decode(session, IN, session.getDecoderOutput());
             Assert.fail();
         } catch (TooBigLiteralException expected) {
+            Assert.assertEquals("XXX {1025}", expected.getRequest());
         }
         Assert.assertEquals(0, session.getDecoderOutputQueue().size());
 
