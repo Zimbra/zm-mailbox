@@ -1590,6 +1590,7 @@ public class Invite {
     public ZVCalendar newToICalendar(boolean useOutlookCompatMode, boolean includePrivateData)
     throws ServiceException {
         ZVCalendar vcal = new ZVCalendar();
+        vcal.addVersionAndProdId();
 
         vcal.addProperty(new ZProperty(ICalTok.METHOD, mMethod.toString()));
 

@@ -48,6 +48,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.ICalTimeZone;
+import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.calendar.TimeZoneMap;
 import com.zimbra.common.calendar.ZCalendar;
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
@@ -4515,6 +4516,17 @@ public class Mailbox {
 
     private void processICalReplies(OperationContext octxt, ZVCalendar cal)
     throws ServiceException {
+        // Reply from Outlook will usually have PRODID set to the following:
+        //
+        // Outlook2007+ZCO: PRODID:-//Microsoft Corporation//Outlook 12.0 MIMEDIR//EN
+        // Outlook2010+ZCO: PRODID:-//Microsoft Corporation//Outlook 14.0 MIMEDIR//EN
+        // Outlook20xx+Exchange: PRODID:Microsoft Exchange Server 2007
+        //   (if Exchange is Exchange 2007; Exchange 2010 probably works similarly)
+        //
+        // Lowest common denominator is "Microsoft" substring.
+        String prodId = cal.getPropVal(ICalTok.PRODID, null);
+        boolean fromOutlook = prodId != null && prodId.toLowerCase().contains("microsoft");
+
         AccountAddressMatcher acctMatcher = new AccountAddressMatcher(getAccount());
         List<Invite> components = Invite.createFromCalendar(getAccount(), null, cal, false);
         for (Invite inv : components) {
@@ -4527,6 +4539,30 @@ public class Mailbox {
                 orgAddress = getAccount().getName();
             }
             if (acctMatcher.matches(orgAddress)) {
+                // bug 62042: Fixup bad RECURRENCE-ID sent by Outlook when replying to an orphan instance.
+                // Date is correct relative to the organizer's time zone, but time is set to 000000 and
+                // the time zone is set to the attendee's time zone.  Fix it up by taking the series DTSTART
+                // in the organizer's appointment and replacing the date part with the value from supplied
+                // RECURRENCE-ID.
+                if (fromOutlook && !inv.isAllDayEvent() && inv.hasRecurId()) {
+                    RecurId rid = inv.getRecurId();
+                    if (rid.getDt() != null && rid.getDt().hasZeroTime()) {
+                        CalendarItem calItem = getCalendarItemByUid(octxt, inv.getUid());
+                        if (calItem != null) {
+                            Invite seriesInv = calItem.getDefaultInviteOrNull();
+                            if (seriesInv != null) {
+                                ParsedDateTime seriesDtStart = seriesInv.getStartTime();
+                                if (seriesDtStart != null) {
+                                    ParsedDateTime fixedDt = seriesDtStart.cloneWithNewDate(rid.getDt());
+                                    RecurId fixedRid = new RecurId(fixedDt, rid.getRange());
+                                    ZimbraLog.calendar.debug("Fixed up invalid RECURRENCE-ID with zero time; before=[%s], after=[%s]",
+                                            rid, fixedRid);
+                                    inv.setRecurId(fixedRid);
+                                }
+                            }
+                        }
+                    }
+                }
                 processICalReply(octxt, inv);
             } else {
                 Account orgAccount = inv.getOrganizerAccount();
