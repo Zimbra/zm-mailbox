@@ -162,68 +162,6 @@ public abstract class ZAttrDynamicGroup extends Group {
     }
 
     /**
-     * RFC1274: user identifier
-     *
-     * @return uid, or null if unset
-     */
-    @ZAttr(id=-1)
-    public String getUid() {
-        return getAttr(Provisioning.A_uid, null);
-    }
-
-    /**
-     * RFC1274: user identifier
-     *
-     * @param uid new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     */
-    @ZAttr(id=-1)
-    public void setUid(String uid) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_uid, uid);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * RFC1274: user identifier
-     *
-     * @param uid new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     */
-    @ZAttr(id=-1)
-    public Map<String,Object> setUid(String uid, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_uid, uid);
-        return attrs;
-    }
-
-    /**
-     * RFC1274: user identifier
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     */
-    @ZAttr(id=-1)
-    public void unsetUid() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_uid, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * RFC1274: user identifier
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     */
-    @ZAttr(id=-1)
-    public Map<String,Object> unsetUid(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_uid, "");
-        return attrs;
-    }
-
-    /**
      * Zimbra access control list
      *
      * @return zimbraACE, or empty array if unset

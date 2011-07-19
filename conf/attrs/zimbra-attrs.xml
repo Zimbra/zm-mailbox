@@ -6057,7 +6057,7 @@ TODO: delete them permerntly from here
   <desc>optional regex used by web client to validate email address</desc>
 </attr>
 
-<attr id="1242" name="zimbraMailPurgeSystemPolicy" type="string" cardinality="single" optionalIn="globalConfig,server,domain" flags="serverInherited,domainInherited" callback="ServerConfig" since="8.0">
+<attr id="1242" name="zimbraMailPurgeSystemPolicy" type="string" cardinality="single" optionalIn="globalConfig" since="8.0">
   <desc>System purge policy, encoded as metadata.  Users can apply these policy elements to their folders and tags.  If the system policy changes, user settings are automatically updated with the change.</desc>
 </attr>
 
