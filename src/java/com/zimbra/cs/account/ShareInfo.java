@@ -484,7 +484,7 @@ public class ShareInfo {
                                                 Provisioning.A_zimbraId,
                                                 Provisioning.A_zimbraSharedItem,
                                                 Provisioning.A_displayName },
-                                        null, false, Provisioning.SA_ACCOUNT_FLAG);
+                                        null, false, Provisioning.SD_ACCOUNT_FLAG);
 
             //TODO - check for dups
             for (NamedEntry ne : accounts) {

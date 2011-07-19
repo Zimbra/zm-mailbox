@@ -153,7 +153,7 @@ public class TestLdapProvMisc extends TestLdap {
         
         SearchOptions searchOpts = new SearchOptions();
         searchOpts.setDomain(domain);
-        searchOpts.setFlags(Provisioning.SA_ACCOUNT_FLAG);
+        searchOpts.setFlags(Provisioning.SD_ACCOUNT_FLAG);
         searchOpts.setMaxResults(0);  // unlimited
         searchOpts.setQuery(filter);
         searchOpts.setReturnAttrs(returnAttrs);

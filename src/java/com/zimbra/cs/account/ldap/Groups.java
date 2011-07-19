@@ -22,6 +22,7 @@ import java.util.Set;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.ldap.IAttributes;
@@ -62,7 +63,7 @@ public class Groups {
             try {
                 GetAllDLsVisitor visitor = new GetAllDLsVisitor();
                 mProv.searchLdapOnReplica(mProv.getDIT().mailBranchBaseDN(), 
-                        ZLdapFilterFactory.getInstance().allDistributionLists(),
+                        ZLdapFilterFactory.getInstance().allGroups(),
                         new String[] {Provisioning.A_mail}, visitor);
                 
                 // all is well, swap in the result Set and cache it
@@ -74,11 +75,12 @@ public class Groups {
         return mAllDLs;
     }
     
-    public void addGroup(DistributionList dl) {
+    public void addGroup(Group dl) {
         try {
             Set<String> allGroups = getAllDLs();
-            for (String email : dl.getMultiAttrSet(Provisioning.A_mail))
+            for (String email : dl.getMultiAttrSet(Provisioning.A_mail)) {
                 allGroups.add(email.toLowerCase());
+            }
         } catch (ServiceException e) {
             // ignore
         }
@@ -87,8 +89,18 @@ public class Groups {
     public void removeGroup(Set<String> addrs) {
         try {
             Set<String> allGroups = getAllDLs();
-            for (String email : addrs)
-                allGroups.remove(email.toLowerCase());
+            for (String addr : addrs) {
+                allGroups.remove(addr.toLowerCase());
+            }
+        } catch (ServiceException e) {
+            // ignore
+        }
+    }
+    
+    public void removeGroup(String addr) {
+        try {
+            Set<String> allGroups = getAllDLs();
+            allGroups.remove(addr.toLowerCase());
         } catch (ServiceException e) {
             // ignore
         }

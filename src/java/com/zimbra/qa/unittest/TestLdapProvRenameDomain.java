@@ -728,7 +728,7 @@ public class TestLdapProvRenameDomain extends TestLdap {
      
         // get all the entries reside in the domain
         Provisioning.SearchOptions options = new Provisioning.SearchOptions();
-        int flags = Provisioning.SA_ACCOUNT_FLAG | Provisioning.SA_DISTRIBUTION_LIST_FLAG;
+        int flags = Provisioning.SD_ACCOUNT_FLAG | Provisioning.SD_DISTRIBUTION_LIST_FLAG;
         options.setFlags(flags);
         options.setDomain(domain);
         List<NamedEntry> list = mProv.searchDirectory(options);
@@ -773,7 +773,7 @@ public class TestLdapProvRenameDomain extends TestLdap {
         
         // get all the aliases reside in the domain
         Provisioning.SearchOptions options = new Provisioning.SearchOptions();
-        int flags = Provisioning.SA_ALIAS_FLAG;
+        int flags = Provisioning.SD_ALIAS_FLAG;
         options.setFlags(flags);
         options.setDomain(domain);
         List<NamedEntry> list = mProv.searchDirectory(options);

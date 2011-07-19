@@ -93,7 +93,7 @@ public class FixCalendarTZ extends AdminDocumentHandler {
         List<NamedEntry> accts = prov.searchAccounts(
                 "(zimbraMailHost=" + serverName + ")",
                 new String[] { Provisioning.A_zimbraId }, null, false,
-                Provisioning.SA_ACCOUNT_FLAG | Provisioning.SA_CALENDAR_RESOURCE_FLAG);
+                Provisioning.SD_ACCOUNT_FLAG | Provisioning.SD_CALENDAR_RESOURCE_FLAG);
         ZimbraLog.calendar.info("Found " + accts.size() + " accounts on server " + serverName);
         return accts;
     }

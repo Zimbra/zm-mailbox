@@ -1208,7 +1208,7 @@ public class LdapProvisioning extends LdapProv {
     @Override
     public List<Account> getAllAdminAccounts() throws ServiceException {
         return (List<Account>) searchAccountsInternal(filterFactory.adminAccountByAdminFlag().toFilterString(), 
-                null, null, true, Provisioning.SA_ACCOUNT_FLAG);
+                null, null, true, Provisioning.SD_ACCOUNT_FLAG);
     }
 
     @SuppressWarnings("unchecked")
@@ -1240,12 +1240,12 @@ public class LdapProvisioning extends LdapProv {
     }
 
     private static String getObjectClassQuery(int flags) {
-        boolean accounts = (flags & Provisioning.SA_ACCOUNT_FLAG) != 0;
-        boolean aliases = (flags & Provisioning.SA_ALIAS_FLAG) != 0;
-        boolean lists = (flags & Provisioning.SA_DISTRIBUTION_LIST_FLAG) != 0;
-        boolean groups = (flags & Provisioning.SD_GROUP_FLAG) != 0;
-        boolean calendarResources = (flags & Provisioning.SA_CALENDAR_RESOURCE_FLAG) != 0;
-        boolean domains = (flags & Provisioning.SA_DOMAIN_FLAG) != 0;
+        boolean accounts = (flags & Provisioning.SD_ACCOUNT_FLAG) != 0;
+        boolean aliases = (flags & Provisioning.SD_ALIAS_FLAG) != 0;
+        boolean lists = (flags & Provisioning.SD_DISTRIBUTION_LIST_FLAG) != 0;
+        boolean groups = (flags & Provisioning.SD_DYNAMIC_GROUP_FLAG) != 0;
+        boolean calendarResources = (flags & Provisioning.SD_CALENDAR_RESOURCE_FLAG) != 0;
+        boolean domains = (flags & Provisioning.SD_DOMAIN_FLAG) != 0;
         boolean coses = (flags & Provisioning.SD_COS_FLAG) != 0;
 
         int num = (accounts ? 1 : 0) +
@@ -1506,11 +1506,11 @@ public class LdapProvisioning extends LdapProv {
         boolean needID = true;
         boolean needCOSId = true;
         boolean needObjectClass = true;
-        boolean needAliasTargetId = (flags & Provisioning.SA_ALIAS_FLAG) != 0;
-        boolean needCalendarUserType = (flags & Provisioning.SA_CALENDAR_RESOURCE_FLAG) != 0;
+        boolean needAliasTargetId = (flags & Provisioning.SD_ALIAS_FLAG) != 0;
+        boolean needCalendarUserType = (flags & Provisioning.SD_CALENDAR_RESOURCE_FLAG) != 0;
         boolean needDomainName = true;
         boolean needZimbraACE = true;
-        boolean needCn = ((flags & Provisioning.SD_COS_FLAG) != 0) || ((flags & Provisioning.SD_GROUP_FLAG) != 0);
+        boolean needCn = ((flags & Provisioning.SD_COS_FLAG) != 0) || ((flags & Provisioning.SD_DYNAMIC_GROUP_FLAG) != 0);
 
 
         for (int i=0; i < returnAttrs.length; i++) {
@@ -1605,10 +1605,7 @@ public class LdapProvisioning extends LdapProv {
     @Override
     public void removeAlias(DistributionList dl, String alias) throws ServiceException {
         removeAliasInternal(dl, alias);
-        
-        Set<String> toRemove = new HashSet<String>();
-        toRemove.add(alias);
-        mAllDLs.removeGroup(toRemove);
+        mAllDLs.removeGroup(alias);
     }
 
     private boolean isEntryAlias(ZAttributes attrs) throws ServiceException {
@@ -2155,7 +2152,7 @@ public class LdapProvisioning extends LdapProv {
     @Override
     public void getAllDomains(NamedEntry.Visitor visitor, String[] retAttrs) throws ServiceException {
 
-        int flags = Provisioning.SA_DOMAIN_FLAG;
+        int flags = Provisioning.SD_DOMAIN_FLAG;
 
         // if asking for specific attrs only, make sure we have the minimum attrs required
         // for the search and to construct a LdapDomain object
@@ -4675,7 +4672,7 @@ public class LdapProvisioning extends LdapProv {
             String base) throws ServiceException {
         String query = LdapEntrySearchFilter.toLdapCalendarResourcesFilter(filter);
         return searchObjects(query, returnAttrs, sortAttr, sortAscending, base,
-                Provisioning.SA_CALENDAR_RESOURCE_FLAG, 0);
+                Provisioning.SD_CALENDAR_RESOURCE_FLAG, 0);
     }
 
     private Account makeAccount(String dn, ZAttributes attrs) throws ServiceException {
@@ -4834,7 +4831,7 @@ public class LdapProvisioning extends LdapProv {
             sb.append(")");
         String [] attrs = minimalData ? sMinimalDlAttrs : null;
 
-        return (List<DistributionList>) searchAccountsInternal(sb.toString(), attrs, null, true, Provisioning.SA_DISTRIBUTION_LIST_FLAG);
+        return (List<DistributionList>) searchAccountsInternal(sb.toString(), attrs, null, true, Provisioning.SD_DISTRIBUTION_LIST_FLAG);
 
     }
 
@@ -5091,13 +5088,13 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public List<?> getAllAccounts(Domain d) throws ServiceException {
-        return searchAccounts(d, mDIT.filterAccountsByDomain(d, false), null, null, true, Provisioning.SA_ACCOUNT_FLAG);
+        return searchAccounts(d, mDIT.filterAccountsByDomain(d, false), null, null, true, Provisioning.SD_ACCOUNT_FLAG);
     }
 
     @Override
     public void getAllAccounts(Domain d, NamedEntry.Visitor visitor) throws ServiceException {
         LdapDomain ld = (LdapDomain) d;
-        searchObjects(mDIT.filterAccountsByDomain(d, false), null, mDIT.domainDNToAccountSearchDN(ld.getDN()), Provisioning.SA_ACCOUNT_FLAG, visitor, 0);
+        searchObjects(mDIT.filterAccountsByDomain(d, false), null, mDIT.domainDNToAccountSearchDN(ld.getDN()), Provisioning.SD_ACCOUNT_FLAG, visitor, 0);
     }
 
     @Override
@@ -5121,7 +5118,7 @@ public class LdapProvisioning extends LdapProv {
                 filter = "(&" + serverFilter + filter + ")";
         }
 
-        int flags = Provisioning.SA_ACCOUNT_FLAG;
+        int flags = Provisioning.SD_ACCOUNT_FLAG;
         if (noDefaults)
             flags |= SO_NO_ACCOUNT_DEFAULTS;
         searchObjects(filter, null, mDIT.domainDNToAccountSearchDN(ld.getDN()), flags, visitor, 0);
@@ -5130,7 +5127,7 @@ public class LdapProvisioning extends LdapProv {
     @Override
     public List<?> getAllCalendarResources(Domain d) throws ServiceException {
         return searchDomainedObjects(d, mDIT.filterCalendarResourcesByDomain(d, false),
-                null, null, true, Provisioning.SA_CALENDAR_RESOURCE_FLAG);
+                null, null, true, Provisioning.SD_CALENDAR_RESOURCE_FLAG);
     }
 
     @Override
@@ -5139,7 +5136,7 @@ public class LdapProvisioning extends LdapProv {
         LdapDomain ld = (LdapDomain) d;
         searchObjects(mDIT.filterCalendarResourcesByDomain(d, false),
                       null, mDIT.domainDNToAccountSearchDN(ld.getDN()),
-                      Provisioning.SA_CALENDAR_RESOURCE_FLAG,
+                      Provisioning.SD_CALENDAR_RESOURCE_FLAG,
                       visitor, 0);
     }
 
@@ -5156,13 +5153,13 @@ public class LdapProvisioning extends LdapProv {
                 filter = "(&" + serverFilter + filter + ")";
         }
         searchObjects(filter, null, mDIT.domainDNToAccountSearchDN(ld.getDN()),
-                      Provisioning.SA_CALENDAR_RESOURCE_FLAG, visitor, 0);
+                      Provisioning.SD_CALENDAR_RESOURCE_FLAG, visitor, 0);
     }
 
     @Override
     public List<?> getAllDistributionLists(Domain d) throws ServiceException {
         return searchDomainedObjects(d, mDIT.filterDistributionListsByDomain(d, false),
-                null, null, true, Provisioning.SA_DISTRIBUTION_LIST_FLAG);
+                null, null, true, Provisioning.SD_DISTRIBUTION_LIST_FLAG);
     }
 
     @Override
@@ -7048,7 +7045,7 @@ public class LdapProvisioning extends LdapProv {
         searchObjects(mDIT.filterAccountsByDomain(domain, false),
                       new String[]{Provisioning.A_zimbraCOSId, Provisioning.A_zimbraIsSystemResource},
                       mDIT.domainDNToAccountSearchDN(((LdapDomain)domain).getDN()),
-                      Provisioning.SA_ACCOUNT_FLAG,
+                      Provisioning.SD_ACCOUNT_FLAG,
                       visitor,
                       0);
 
@@ -7072,7 +7069,7 @@ public class LdapProvisioning extends LdapProv {
                 String b = mDIT.domainDNToAccountSearchDN(((LdapDomain)domain).getDN());
                 bases = new String[]{b};
             } else
-                bases = mDIT.getSearchBases(Provisioning.SA_ACCOUNT_FLAG);
+                bases = mDIT.getSearchBases(Provisioning.SD_ACCOUNT_FLAG);
 
             filter = filterFactory.allNonSystemAccounts();
             attrs = new String[] {"zimbraId"};
@@ -7399,7 +7396,7 @@ public class LdapProvisioning extends LdapProv {
         LdapDomain ld = (LdapDomain) domain;
         List groups = searchObjects(mDIT.filterGroupsByDomain(domain, false), null, null, true,
                  mDIT.domainDNToGroupsBaseDN(ld.getDN()), 
-                 Provisioning.SD_GROUP_FLAG | Provisioning.SA_DISTRIBUTION_LIST_FLAG, 0);
+                 Provisioning.SD_DYNAMIC_GROUP_FLAG | Provisioning.SD_DISTRIBUTION_LIST_FLAG, 0);
         
         // yuck, need to remove groups in sub domains
         String domainName = domain.getName();
@@ -7432,13 +7429,15 @@ public class LdapProvisioning extends LdapProv {
     }
     
     @Override
-    public void addAlias(Group dl, String alias) throws ServiceException {
-        addAliasInternal(dl, alias);
+    public void addAlias(Group group, String alias) throws ServiceException {
+        addAliasInternal(group, alias);
+        mAllDLs.addGroup(group);
     }
 
     @Override
-    public void removeAlias(Group dl, String alias) throws ServiceException {
-        removeAliasInternal(dl, alias);
+    public void removeAlias(Group group, String alias) throws ServiceException {
+        removeAliasInternal(group, alias);
+        mAllDLs.removeGroup(alias);
     }
     
     private DynamicGroup createDynamicGroup(String groupAddress,
@@ -7516,7 +7515,7 @@ public class LdapProvisioning extends LdapProv {
             
             if (group != null) {
                 AttributeManager.getInstance().postModify(groupAttrs, group, attrManagerContext, true);
-                // mAllDLs.addGroup(dynGroup);  // TODO: handle me
+                mAllDLs.addGroup(group);
             } else {
                 throw ServiceException.FAILURE("unable to get distribution list after creating LDAP entry: "+
                         groupAddress, null);
@@ -7535,12 +7534,11 @@ public class LdapProvisioning extends LdapProv {
     private void deleteDynamicGroup(LdapDynamicGroup group) throws ServiceException {
         String zimbraId = group.getId(); 
 
-        /*   ============ handle me ??
-
         // make a copy of all addrs of this DL, after the delete all aliases on this dl
         // object will be gone, but we need to remove them from the allgroups cache after the DL is deleted
-        Set<String> addrs = new HashSet<String>(dl.getMultiAttrSet(Provisioning.A_mail));
+        Set<String> addrs = new HashSet<String>(group.getMultiAttrSet(Provisioning.A_mail));
         
+        /*   ============ handle me ??
         // remove the DL from all DLs
         removeAddressFromAllDistributionLists(dl.getName()); // this doesn't throw any exceptions
 
@@ -7570,7 +7568,7 @@ public class LdapProvisioning extends LdapProv {
         try {
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_GROUP);
             zlc.deleteEntry(group.getDN());
-            // mAllDLs.removeGroup(addrs); TODO: handle me!!!
+            mAllDLs.removeGroup(addrs);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to purge group: "+zimbraId, e);
         } finally {

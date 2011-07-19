@@ -65,7 +65,7 @@ public class SearchAccounts extends AdminDocumentHandler {
         String types = request.getAttribute(AdminConstants.A_TYPES, "accounts");
         boolean sortAscending = request.getAttributeBool(AdminConstants.A_SORT_ASCENDING, true);
 
-        int flags = Provisioning.searchAccountStringToMask(types);
+        int flags = Provisioning.searchDirectoryStringToMask(types);
 
         String[] attrs = attrsStr == null ? null : attrsStr.split(",");
 
@@ -73,7 +73,7 @@ public class SearchAccounts extends AdminDocumentHandler {
         //
         // Note: isDomainAdminOnly *always* returns false for pure ACL based AccessManager 
         if (isDomainAdminOnly(zsc)) {
-            if ((flags & Provisioning.SA_DOMAIN_FLAG) == Provisioning.SA_DOMAIN_FLAG)
+            if ((flags & Provisioning.SD_DOMAIN_FLAG) == Provisioning.SD_DOMAIN_FLAG)
                 throw ServiceException.PERM_DENIED("can not search for domains");
 
             if (domain == null) {

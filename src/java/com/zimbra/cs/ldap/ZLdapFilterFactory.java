@@ -106,8 +106,9 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     
     
     /*
-     * groups (distribution list or dynamic groups)
+     * groups (distribution list or dynamic group)
      */
+    public abstract ZLdapFilter allGroups();
     public abstract ZLdapFilter groupById(String id);
     public abstract ZLdapFilter groupByName(String name);
     

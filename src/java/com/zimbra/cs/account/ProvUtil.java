@@ -1826,10 +1826,14 @@ public class ProvUtil implements HttpDebugListener {
         String[] attrsToGet = null;
 
         String typesStr = (String) attrs.get("types");
-        int flags = Provisioning.SA_ACCOUNT_FLAG|Provisioning.SA_ALIAS_FLAG|Provisioning.SA_DISTRIBUTION_LIST_FLAG|Provisioning.SA_CALENDAR_RESOURCE_FLAG;
+        int flags = 
+                Provisioning.SD_ACCOUNT_FLAG |
+                Provisioning.SD_ALIAS_FLAG |
+                Provisioning.SD_DISTRIBUTION_LIST_FLAG |
+                Provisioning.SD_CALENDAR_RESOURCE_FLAG;
 
         if (typesStr != null) {
-            flags = Provisioning.searchAccountStringToMask(typesStr);
+            flags = Provisioning.searchDirectoryStringToMask(typesStr);
         }
         String domainStr = (String)attrs.get("domain");
         List<NamedEntry> accounts;

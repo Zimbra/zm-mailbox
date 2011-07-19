@@ -808,33 +808,33 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     /**
-     * return regular accounts from searchAccounts;
+     * return regular accounts from searchAccounts/searchDirectory;
      * calendar resource accounts are excluded
      */
-    public static final int SA_ACCOUNT_FLAG = 0x1;
+    public static final int SD_ACCOUNT_FLAG = 0x1;
 
-    /** return aliases from searchAccounts */
-    public static final int SA_ALIAS_FLAG = 0x2;
+    /** return aliases from searchAccounts/searchDirectory */
+    public static final int SD_ALIAS_FLAG = 0x2;
 
-    /** return distribution lists from searchAccounts */
-    public static final int SA_DISTRIBUTION_LIST_FLAG = 0x4;
+    /** return distribution lists from searchAccounts/searchDirectory */
+    public static final int SD_DISTRIBUTION_LIST_FLAG = 0x4;
 
-    /** return calendar resource accounts from searchAccounts */
-    public static final int SA_CALENDAR_RESOURCE_FLAG = 0x8;
+    /** return calendar resource accounts from searchAccounts/searchDirectory */
+    public static final int SD_CALENDAR_RESOURCE_FLAG = 0x8;
 
-    /** return domains from searchAccounts. only valid with Provisioning.searchAccounts. */
-    public static final int SA_DOMAIN_FLAG = 0x10;
+    /** return domains from searchAccounts/searchDirectory. only valid with Provisioning.searchAccounts. */
+    public static final int SD_DOMAIN_FLAG = 0x10;
 
     /** return coses from searchDirectory */
     public static final int SD_COS_FLAG = 0x20;
     
     /** return coses from searchDirectory */
-    public static final int SD_GROUP_FLAG = 0x40;
+    public static final int SD_DYNAMIC_GROUP_FLAG = 0x40;
 
-    /** do not fixup objectclass in query for searchObject, should only be used from LdapUpgrade */
+    /** do not fixup objectclass in query for searchObject, only used from LdapUpgrade */
     public static final int SO_NO_FIXUP_OBJECTCLASS = 0x80;
 
-    /** do not fixup return attrs for searchObject, should only be used from LdapUpgrade */
+    /** do not fixup return attrs for searchObject, onlt used from LdapUpgrade */
     public static final int SO_NO_FIXUP_RETURNATTRS = 0x100;
 
     /**
@@ -856,30 +856,36 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public static final int SO_NO_ACCOUNT_SECONDARY_DEFAULTS = 0x200;  // do not set secondary defaults in makeAccount
 
     /**
-     * Takes a string repsrenting the objects to search for and returns a bit mask of SA_* flags for the given string.
+     * Takes a string representation the objects to search for and returns a bit mask of SA_* flags 
+     * for the given string.
+     * 
      * The full set of objects is "accounts,aliases,distributionLists,resources,domains".
      * @param types
      * @return
      */
-    public static int searchAccountStringToMask(String types) {
+    public static int searchDirectoryStringToMask(String types) {
         int flags = 0;
 
-        if (types.indexOf("accounts") != -1) flags |= Provisioning.SA_ACCOUNT_FLAG;
-        if (types.indexOf("aliases") != -1) flags |= Provisioning.SA_ALIAS_FLAG;
-        if (types.indexOf("distributionlists") != -1) flags |= Provisioning.SA_DISTRIBUTION_LIST_FLAG;
-        if (types.indexOf("resources") != -1) flags |= Provisioning.SA_CALENDAR_RESOURCE_FLAG;
-        if (types.indexOf("domains") != -1) flags |= Provisioning.SA_DOMAIN_FLAG;
-
+        if (types.indexOf("accounts") != -1) flags |= Provisioning.SD_ACCOUNT_FLAG;
+        if (types.indexOf("aliases") != -1) flags |= Provisioning.SD_ALIAS_FLAG;
+        if (types.indexOf("distributionlists") != -1) flags |= Provisioning.SD_DISTRIBUTION_LIST_FLAG;
+        if (types.indexOf("dynamicgroups") != -1) flags |= Provisioning.SD_DYNAMIC_GROUP_FLAG;
+        if (types.indexOf("resources") != -1) flags |= Provisioning.SD_CALENDAR_RESOURCE_FLAG;
+        if (types.indexOf("domains") != -1) flags |= Provisioning.SD_DOMAIN_FLAG;
+        if (types.indexOf("coses") != -1) flags |= Provisioning.SD_COS_FLAG;
+        
         return flags;
     }
 
-    public static String searchAccountMaskToString(int mask) {
+    public static String searchDirectoryMaskToString(int mask) {
         StringBuilder sb = new StringBuilder();
-        if ( (mask & Provisioning.SA_ACCOUNT_FLAG) != 0) sb.append("accounts");
-        if ( (mask & Provisioning.SA_ALIAS_FLAG) != 0) { if (sb.length() >0) sb.append(','); sb.append("aliases"); }
-        if ( (mask & Provisioning.SA_DISTRIBUTION_LIST_FLAG) != 0) { if (sb.length() >0) sb.append(','); sb.append("distributionlists"); }
-        if ( (mask & Provisioning.SA_CALENDAR_RESOURCE_FLAG) != 0) { if (sb.length() >0) sb.append(','); sb.append("resources"); }
-        if ( (mask & Provisioning.SA_DOMAIN_FLAG) != 0) { if (sb.length() >0) sb.append(','); sb.append("domains"); }
+        if ( (mask & Provisioning.SD_ACCOUNT_FLAG) != 0) sb.append("accounts");
+        if ( (mask & Provisioning.SD_ALIAS_FLAG) != 0) { if (sb.length() >0) sb.append(','); sb.append("aliases"); }
+        if ( (mask & Provisioning.SD_DISTRIBUTION_LIST_FLAG) != 0) { if (sb.length() >0) sb.append(','); sb.append("distributionlists"); }
+        if ( (mask & Provisioning.SD_DYNAMIC_GROUP_FLAG) != 0) { if (sb.length() >0) sb.append(','); sb.append("dynamicgroups"); }
+        if ( (mask & Provisioning.SD_CALENDAR_RESOURCE_FLAG) != 0) { if (sb.length() >0) sb.append(','); sb.append("resources"); }
+        if ( (mask & Provisioning.SD_DOMAIN_FLAG) != 0) { if (sb.length() >0) sb.append(','); sb.append("domains"); }
+        if ( (mask & Provisioning.SD_COS_FLAG) != 0) { if (sb.length() >0) sb.append(','); sb.append("coses"); }
         return sb.toString();
     }
 
@@ -993,9 +999,9 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
         int flags = 0;
 
-        flags |= Provisioning.SA_ACCOUNT_FLAG;
-        flags |= Provisioning.SA_CALENDAR_RESOURCE_FLAG;
-        flags |= Provisioning.SA_DISTRIBUTION_LIST_FLAG;
+        flags |= Provisioning.SD_ACCOUNT_FLAG;
+        flags |= Provisioning.SD_CALENDAR_RESOURCE_FLAG;
+        flags |= Provisioning.SD_DISTRIBUTION_LIST_FLAG;
 
         String query = "(" + Provisioning.A_zimbraId + "=" + targetId + ")";
 

@@ -124,9 +124,7 @@ public class TestLdapProvCos extends TestLdap {
         
         Map<String, Object> defaultCosAttrs = defaultCos.getAttrs();
         Map<String, Object> copiedCosAttrs = copiedCos.getAttrs();
-        
-        assertEquals(defaultCosAttrs.size(), copiedCosAttrs.size());
-        
+
         for (Map.Entry<String, Object> attr : defaultCosAttrs.entrySet()) {
             String attrName = attr.getKey();
             Object valueInDefaultCos = attr.getValue();
@@ -155,6 +153,9 @@ public class TestLdapProvCos extends TestLdap {
                         ((String[]) valueInCopiedCos).length);
             }
         }
+        
+        // -1 because description is not copied over
+        assertEquals(defaultCosAttrs.size() - 1, copiedCosAttrs.size());
         
         deleteCos(copiedCos);
     }

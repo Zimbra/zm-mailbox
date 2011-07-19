@@ -85,7 +85,7 @@ public class DomainObjectClassAmavisAccount extends LegacyLdapUpgrade {
     void doUpgrade() throws ServiceException {
         
         String query = "(&(objectClass=zimbraDomain)(!(objectClass=amavisAccount)))";
-        String bases[] = mProv.getDIT().getSearchBases(Provisioning.SA_DOMAIN_FLAG);
+        String bases[] = mProv.getDIT().getSearchBases(Provisioning.SD_DOMAIN_FLAG);
         String attrs[] = new String[] {Provisioning.A_objectClass,
                                        Provisioning.A_zimbraId,
                                        Provisioning.A_zimbraDomainName};

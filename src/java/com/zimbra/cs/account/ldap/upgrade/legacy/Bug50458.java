@@ -34,7 +34,7 @@ public class Bug50458  extends LegacyLdapUpgrade {
     }
     
     private void doDomain(LegacyZimbraLdapContext modZlc) {
-        String bases[] = mProv.getDIT().getSearchBases(Provisioning.SA_DOMAIN_FLAG);
+        String bases[] = mProv.getDIT().getSearchBases(Provisioning.SD_DOMAIN_FLAG);
         String query = "(&" + LegacyLdapFilter.allDomains() + 
             "(" + Provisioning.A_zimbraPasswordChangeListener + "=" + VALUE_TO_REMOVE + ")"+ ")";
         

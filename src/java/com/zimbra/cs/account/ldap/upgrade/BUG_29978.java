@@ -228,7 +228,7 @@ public class BUG_29978 extends UpgradeOp {
         
         String query = genQuery(servers);
        
-        String bases[] = prov.getDIT().getSearchBases(Provisioning.SA_DOMAIN_FLAG);
+        String bases[] = prov.getDIT().getSearchBases(Provisioning.SD_DOMAIN_FLAG);
         String attrs[] = new String[] {Provisioning.A_objectClass,
                                        Provisioning.A_zimbraId,
                                        Provisioning.A_zimbraDomainName,

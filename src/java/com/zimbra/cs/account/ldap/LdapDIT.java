@@ -85,6 +85,7 @@ public class LdapDIT {
     protected final String DEFAULT_BASE_RDN_ACCOUNT        = "ou=people";
     protected final String DEFAULT_BASE_RDN_COS            = "cn=cos";
     protected final String DEFAULT_BASE_RDN_DYNAMICGROUP   = "cn=groups";
+    protected final String DEFAULT_BASE_RDN_GLOBAL_DYNAMICGROUP = "cn=groups";
     protected final String DEFAULT_BASE_RDN_MIME           = "cn=mime";
     protected final String DEFAULT_BASE_RDN_SERVER         = "cn=servers";
     protected final String DEFAULT_BASE_RDN_XMPPCOMPONENT  = "cn=xmppcomponents";
@@ -115,6 +116,7 @@ public class LdapDIT {
     protected String BASE_DN_APPADMIN;
     protected String BASE_DN_ACCOUNT;
     protected String BASE_DN_COS; 
+    protected String BASE_DN_GLOBAL_DYNAMICGROUP;
     protected String BASE_DN_MIME;
     protected String BASE_DN_SERVER;
     protected String BASE_DN_XMPPCOMPONENT;
@@ -164,6 +166,7 @@ public class LdapDIT {
         BASE_DN_ADMIN        = DEFAULT_BASE_RDN_ADMIN         + "," + BASE_DN_CONFIG_BRANCH;
         BASE_DN_APPADMIN     = DEFAULT_BASE_RDN_APPADMIN      + "," + BASE_DN_CONFIG_BRANCH;
         BASE_DN_COS          = DEFAULT_BASE_RDN_COS           + "," + BASE_DN_CONFIG_BRANCH; 
+        BASE_DN_GLOBAL_DYNAMICGROUP = DEFAULT_BASE_RDN_GLOBAL_DYNAMICGROUP           + "," + BASE_DN_CONFIG_BRANCH; 
         BASE_DN_MIME         = DEFAULT_BASE_RDN_MIME          + "," + DN_GLOBALCONFIG;
         BASE_DN_SERVER       = DEFAULT_BASE_RDN_SERVER        + "," + BASE_DN_CONFIG_BRANCH;
         BASE_DN_XMPPCOMPONENT= DEFAULT_BASE_RDN_XMPPCOMPONENT + "," + BASE_DN_CONFIG_BRANCH;
@@ -190,6 +193,7 @@ public class LdapDIT {
             BASE_DN_ADMIN == null ||
             BASE_DN_APPADMIN == null ||
             BASE_DN_COS == null ||
+            BASE_DN_GLOBAL_DYNAMICGROUP == null ||
             BASE_DN_MIME == null ||
             BASE_DN_SERVER == null ||
             BASE_DN_XMPPCOMPONENT == null ||
@@ -466,6 +470,10 @@ public class LdapDIT {
      *   dynamic group
      * ==============
      */
+    public String globalDynamicGroupBaseDN() {
+        return BASE_DN_GLOBAL_DYNAMICGROUP;
+    }
+    
     public String dynamicGroupNamingRdnAttr() {
         return NAMING_RDN_ATTR_DYNAMICGROUP;
     }
@@ -654,11 +662,11 @@ public class LdapDIT {
     public String[] getSearchBases(int flags) {
         Set<String> bases = new HashSet<String>();
 
-        boolean accounts = (flags & Provisioning.SA_ACCOUNT_FLAG) != 0;
-        boolean aliases = (flags & Provisioning.SA_ALIAS_FLAG) != 0;
-        boolean lists = (flags & Provisioning.SA_DISTRIBUTION_LIST_FLAG) != 0;
-        boolean calendarResources = (flags & Provisioning.SA_CALENDAR_RESOURCE_FLAG) != 0;
-        boolean domains = (flags & Provisioning.SA_DOMAIN_FLAG) != 0;
+        boolean accounts = (flags & Provisioning.SD_ACCOUNT_FLAG) != 0;
+        boolean aliases = (flags & Provisioning.SD_ALIAS_FLAG) != 0;
+        boolean lists = (flags & Provisioning.SD_DISTRIBUTION_LIST_FLAG) != 0;
+        boolean calendarResources = (flags & Provisioning.SD_CALENDAR_RESOURCE_FLAG) != 0;
+        boolean domains = (flags & Provisioning.SD_DOMAIN_FLAG) != 0;
         boolean coses = (flags & Provisioning.SD_COS_FLAG) != 0;
 
         if (accounts || aliases || lists || calendarResources)

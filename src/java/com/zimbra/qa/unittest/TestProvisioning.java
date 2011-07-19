@@ -145,8 +145,9 @@ public class TestProvisioning extends TestCase {
         // DOMAIN_NAME = "domain-" + TEST_ID + ".ldap-test-domain";
         // DOMAIN_NAME_SPECIAL_CHARS = "domain-" + SPECIAL_CHARS_ALLOWED_IN_DOMAIN + "-" + TEST_ID + ".ldap-test-domain";
         DOMAIN_NAME = TestProvisioningUtil.baseDomainName("domain", TEST_ID);
-        DOMAIN_NAME_SPECIAL_CHARS = TestProvisioningUtil.baseDomainName("domain-" + SPECIAL_CHARS_ALLOWED_IN_DOMAIN, TEST_ID);
-
+        
+        // DOMAIN_NAME_SPECIAL_CHARS = TestProvisioningUtil.baseDomainName("domain-" + SPECIAL_CHARS_ALLOWED_IN_DOMAIN, TEST_ID);
+        DOMAIN_NAME_SPECIAL_CHARS = TestProvisioningUtil.baseDomainName("domain-special", TEST_ID); // TODO: javamail now is more strict on domain names!!
 
         OTHER_DOMAIN_NAME = "other-" + DOMAIN_NAME;
         SERVER_NAME = "server-" + TEST_ID;
@@ -256,10 +257,10 @@ public class TestProvisioning extends TestCase {
 
             Provisioning.SearchOptions options = new Provisioning.SearchOptions();
             int flags = 0;
-            flags = (Provisioning.SA_ACCOUNT_FLAG |
+            flags = (Provisioning.SD_ACCOUNT_FLAG |
                      // Provisioning.SA_ALIAS_FLAG |
-                     Provisioning.SA_CALENDAR_RESOURCE_FLAG |
-                     Provisioning.SA_DISTRIBUTION_LIST_FLAG);
+                     Provisioning.SD_CALENDAR_RESOURCE_FLAG |
+                     Provisioning.SD_DISTRIBUTION_LIST_FLAG);
             options.setFlags(flags);
             if (isCustom())
                 options.setBase(ACCT_BASE_DN);
@@ -348,7 +349,7 @@ public class TestProvisioning extends TestCase {
         Provisioning.SearchOptions options = new Provisioning.SearchOptions();
 
         int flags = 0;
-        flags = Provisioning.SA_ACCOUNT_FLAG;
+        flags = Provisioning.SD_ACCOUNT_FLAG;
         options.setFlags(flags);
         options.setDomain(domain);
         return mProv.searchDirectory(options);
@@ -358,7 +359,7 @@ public class TestProvisioning extends TestCase {
         Provisioning.SearchOptions options = new Provisioning.SearchOptions();
 
         int flags = 0;
-        flags = Provisioning.SA_ALIAS_FLAG;
+        flags = Provisioning.SD_ALIAS_FLAG;
         options.setFlags(flags);
         options.setDomain(domain);
         return mProv.searchDirectory(options);
@@ -1467,7 +1468,7 @@ public class TestProvisioning extends TestCase {
                                             new String[]{Provisioning.A_zimbraMailDeliveryAddress},
                                             Provisioning.A_zimbraMailDeliveryAddress,
                                             true,
-                                            Provisioning.SA_ACCOUNT_FLAG);
+                                            Provisioning.SD_ACCOUNT_FLAG);
             TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{acct}, true);
 
             // testing get all accounts on local server, used by BackupManager
@@ -1475,7 +1476,7 @@ public class TestProvisioning extends TestCase {
             list = mProv.searchAccounts(
                         "(zimbraMailHost=" + serverName + ")",
                         new String[] { Provisioning.A_zimbraId }, null, false,
-                        Provisioning.SA_ACCOUNT_FLAG | Provisioning.SA_CALENDAR_RESOURCE_FLAG);
+                        Provisioning.SD_ACCOUNT_FLAG | Provisioning.SD_CALENDAR_RESOURCE_FLAG);
 
         }
 
@@ -1484,7 +1485,7 @@ public class TestProvisioning extends TestCase {
                                        new String[]{Provisioning.A_zimbraMailDeliveryAddress},
                                        Provisioning.A_zimbraMailDeliveryAddress,
                                        true,
-                                       Provisioning.SA_ACCOUNT_FLAG);
+                                       Provisioning.SD_ACCOUNT_FLAG);
             TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{acct}, true);
         }
 

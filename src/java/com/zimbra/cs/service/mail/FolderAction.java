@@ -343,13 +343,13 @@ public class FolderAction extends ItemAction {
         // check if the grantee still exists
         int flags = 0;
         if (gtype == ACL.GRANTEE_USER)
-            flags |= (Provisioning.SA_ACCOUNT_FLAG | Provisioning.SA_CALENDAR_RESOURCE_FLAG) ;
+            flags |= (Provisioning.SD_ACCOUNT_FLAG | Provisioning.SD_CALENDAR_RESOURCE_FLAG) ;
         else if (gtype == ACL.GRANTEE_GROUP)
-            flags |= Provisioning.SA_DISTRIBUTION_LIST_FLAG;
+            flags |= Provisioning.SD_DISTRIBUTION_LIST_FLAG;
         else if (gtype == ACL.GRANTEE_COS)
             flags |= Provisioning.SD_COS_FLAG;
         else if (gtype == ACL.GRANTEE_DOMAIN)
-            flags |= Provisioning.SA_DOMAIN_FLAG;
+            flags |= Provisioning.SD_DOMAIN_FLAG;
         else
             throw ServiceException.INVALID_REQUEST("invalid grantee type for revokeOrphanGrants", null);
 

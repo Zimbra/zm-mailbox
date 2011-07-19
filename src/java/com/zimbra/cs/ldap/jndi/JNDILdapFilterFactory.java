@@ -186,7 +186,7 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
 
     
     /*
-     * dynamic groups
+     * dynamic group
      */
     @Override
     public ZLdapFilter dynamicGroupById(String id) {
@@ -199,8 +199,13 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     }
     
     /*
-     * groups (distribution list or dynamic groups)
+     * groups (distribution list or dynamic group)
      */
+    @Override
+    public ZLdapFilter allGroups() {
+        return new JNDILdapFilter(LegacyLdapFilter.allGroups());
+    }
+    
     public ZLdapFilter groupById(String id) {
         return new JNDILdapFilter(LegacyLdapFilter.groupById(id));
     }

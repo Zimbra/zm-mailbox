@@ -129,6 +129,7 @@ public class TestLdapHelper extends TestLdap {
         expected.add(dit.appAdminBaseDN());
         expected.add(dit.zimletBaseDN());
         expected.add(dit.cosBaseDN());
+        expected.add(dit.globalDynamicGroupBaseDN());
         expected.add(dit.serverBaseDN());
         expected.add(dit.xmppcomponentBaseDN());
         expected.add(dit.globalGrantDN());

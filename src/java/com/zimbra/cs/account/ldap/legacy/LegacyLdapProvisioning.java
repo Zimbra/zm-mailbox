@@ -1285,7 +1285,7 @@ public class LegacyLdapProvisioning extends LdapProv {
     @SuppressWarnings("unchecked")
     @Override
     public List<Account> getAllAdminAccounts() throws ServiceException {
-        return (List<Account>) searchAccountsInternal(LegacyLdapFilter.adminAccountByAdminFlag(), null, null, true, Provisioning.SA_ACCOUNT_FLAG);
+        return (List<Account>) searchAccountsInternal(LegacyLdapFilter.adminAccountByAdminFlag(), null, null, true, Provisioning.SD_ACCOUNT_FLAG);
     }
 
     @SuppressWarnings("unchecked")
@@ -1315,11 +1315,11 @@ public class LegacyLdapProvisioning extends LdapProv {
     }
 
     private static String getObjectClassQuery(int flags) {
-        boolean accounts = (flags & Provisioning.SA_ACCOUNT_FLAG) != 0;
-        boolean aliases = (flags & Provisioning.SA_ALIAS_FLAG) != 0;
-        boolean lists = (flags & Provisioning.SA_DISTRIBUTION_LIST_FLAG) != 0;
-        boolean calendarResources = (flags & Provisioning.SA_CALENDAR_RESOURCE_FLAG) != 0;
-        boolean domains = (flags & Provisioning.SA_DOMAIN_FLAG) != 0;
+        boolean accounts = (flags & Provisioning.SD_ACCOUNT_FLAG) != 0;
+        boolean aliases = (flags & Provisioning.SD_ALIAS_FLAG) != 0;
+        boolean lists = (flags & Provisioning.SD_DISTRIBUTION_LIST_FLAG) != 0;
+        boolean calendarResources = (flags & Provisioning.SD_CALENDAR_RESOURCE_FLAG) != 0;
+        boolean domains = (flags & Provisioning.SD_DOMAIN_FLAG) != 0;
         boolean coses = (flags & Provisioning.SD_COS_FLAG) != 0;
 
         int num = (accounts ? 1 : 0) +
@@ -1551,8 +1551,8 @@ public class LegacyLdapProvisioning extends LdapProv {
         boolean needID = true;
         boolean needCOSId = true;
         boolean needObjectClass = true;
-        boolean needAliasTargetId = (flags & Provisioning.SA_ALIAS_FLAG) != 0;
-        boolean needCalendarUserType = (flags & Provisioning.SA_CALENDAR_RESOURCE_FLAG) != 0;
+        boolean needAliasTargetId = (flags & Provisioning.SD_ALIAS_FLAG) != 0;
+        boolean needCalendarUserType = (flags & Provisioning.SD_CALENDAR_RESOURCE_FLAG) != 0;
         boolean needDomainName = true;
         boolean needZimbraACE = true;
         boolean needCn = (flags & Provisioning.SD_COS_FLAG) != 0;
@@ -2194,7 +2194,7 @@ public class LegacyLdapProvisioning extends LdapProv {
     @Override
     public void getAllDomains(NamedEntry.Visitor visitor, String[] retAttrs) throws ServiceException {
 
-        int flags = Provisioning.SA_DOMAIN_FLAG;
+        int flags = Provisioning.SD_DOMAIN_FLAG;
 
         // if asking for specific attrs only, make sure we have the minimum attrs required
         // for the search and to construct a LdapDomain object
@@ -4740,7 +4740,7 @@ public class LegacyLdapProvisioning extends LdapProv {
             String base) throws ServiceException {
         String query = LdapEntrySearchFilter.toLdapCalendarResourcesFilter(filter);
         return searchObjects(query, returnAttrs, sortAttr, sortAscending, base,
-                Provisioning.SA_CALENDAR_RESOURCE_FLAG, 0);
+                Provisioning.SD_CALENDAR_RESOURCE_FLAG, 0);
     }
 
     private Account makeAccount(String dn, Attributes attrs) throws NamingException, ServiceException {
@@ -4892,7 +4892,7 @@ public class LegacyLdapProvisioning extends LdapProv {
             sb.append(")");
         String [] attrs = minimalData ? sMinimalDlAttrs : null;
 
-        return (List<DistributionList>) searchAccountsInternal(sb.toString(), attrs, null, true, Provisioning.SA_DISTRIBUTION_LIST_FLAG);
+        return (List<DistributionList>) searchAccountsInternal(sb.toString(), attrs, null, true, Provisioning.SD_DISTRIBUTION_LIST_FLAG);
 
     }
 
@@ -5151,13 +5151,13 @@ public class LegacyLdapProvisioning extends LdapProv {
 
     @Override
     public List<?> getAllAccounts(Domain d) throws ServiceException {
-        return searchAccounts(d, mDIT.filterAccountsByDomain(d, false), null, null, true, Provisioning.SA_ACCOUNT_FLAG);
+        return searchAccounts(d, mDIT.filterAccountsByDomain(d, false), null, null, true, Provisioning.SD_ACCOUNT_FLAG);
     }
 
     @Override
     public void getAllAccounts(Domain d, NamedEntry.Visitor visitor) throws ServiceException {
         LdapDomain ld = (LdapDomain) d;
-        searchObjects(mDIT.filterAccountsByDomain(d, false), null, mDIT.domainDNToAccountSearchDN(ld.getDN()), Provisioning.SA_ACCOUNT_FLAG, visitor, 0);
+        searchObjects(mDIT.filterAccountsByDomain(d, false), null, mDIT.domainDNToAccountSearchDN(ld.getDN()), Provisioning.SD_ACCOUNT_FLAG, visitor, 0);
     }
 
     @Override
@@ -5181,7 +5181,7 @@ public class LegacyLdapProvisioning extends LdapProv {
                 filter = "(&" + serverFilter + filter + ")";
         }
 
-        int flags = Provisioning.SA_ACCOUNT_FLAG;
+        int flags = Provisioning.SD_ACCOUNT_FLAG;
         if (noDefaults)
             flags |= SO_NO_ACCOUNT_DEFAULTS;
         searchObjects(filter, null, mDIT.domainDNToAccountSearchDN(ld.getDN()), flags, visitor, 0);
@@ -5190,7 +5190,7 @@ public class LegacyLdapProvisioning extends LdapProv {
     @Override
     public List<?> getAllCalendarResources(Domain d) throws ServiceException {
         return searchAccounts(d, mDIT.filterCalendarResourcesByDomain(d, false),
-                              null, null, true, Provisioning.SA_CALENDAR_RESOURCE_FLAG);
+                              null, null, true, Provisioning.SD_CALENDAR_RESOURCE_FLAG);
         /*
         return searchCalendarResources(d,
                 LdapEntrySearchFilter.sCalendarResourcesFilter,
@@ -5204,7 +5204,7 @@ public class LegacyLdapProvisioning extends LdapProv {
         LdapDomain ld = (LdapDomain) d;
         searchObjects(mDIT.filterCalendarResourcesByDomain(d, false),
                       null, mDIT.domainDNToAccountSearchDN(ld.getDN()),
-                      Provisioning.SA_CALENDAR_RESOURCE_FLAG,
+                      Provisioning.SD_CALENDAR_RESOURCE_FLAG,
                       visitor, 0);
     }
 
@@ -5221,13 +5221,13 @@ public class LegacyLdapProvisioning extends LdapProv {
                 filter = "(&" + serverFilter + filter + ")";
         }
         searchObjects(filter, null, mDIT.domainDNToAccountSearchDN(ld.getDN()),
-                      Provisioning.SA_CALENDAR_RESOURCE_FLAG, visitor, 0);
+                      Provisioning.SD_CALENDAR_RESOURCE_FLAG, visitor, 0);
     }
 
     @Override
     public List<?> getAllDistributionLists(Domain d) throws ServiceException {
         return searchAccounts(d, mDIT.filterDistributionListsByDomain(d, false),
-                              null, null, true, Provisioning.SA_DISTRIBUTION_LIST_FLAG);
+                              null, null, true, Provisioning.SD_DISTRIBUTION_LIST_FLAG);
     }
 
     @Override
@@ -7137,7 +7137,7 @@ public class LegacyLdapProvisioning extends LdapProv {
         searchObjects(mDIT.filterAccountsByDomain(domain, false),
                       new String[]{Provisioning.A_zimbraCOSId, Provisioning.A_zimbraIsSystemResource},
                       mDIT.domainDNToAccountSearchDN(((LdapDomain)domain).getDN()),
-                      Provisioning.SA_ACCOUNT_FLAG,
+                      Provisioning.SD_ACCOUNT_FLAG,
                       visitor,
                       0);
 
@@ -7161,7 +7161,7 @@ public class LegacyLdapProvisioning extends LdapProv {
                 String b = mDIT.domainDNToAccountSearchDN(((LdapDomain)domain).getDN());
                 bases = new String[]{b};
             } else
-                bases = mDIT.getSearchBases(Provisioning.SA_ACCOUNT_FLAG);
+                bases = mDIT.getSearchBases(Provisioning.SD_ACCOUNT_FLAG);
 
             query = LegacyLdapFilter.allNonSystemAccounts();
             attrs = new String[] {"zimbraId"};

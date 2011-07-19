@@ -221,7 +221,7 @@ public class DataSourceCallback extends AttributeCallback {
         String filter = ZLdapFilterFactory.getInstance().accountsOnServerOnCosHasSubordinates(prov.getLocalServer(), cosId).toFilterString();
 
         List accts = prov.searchAccounts(filter, null, null, false,
-                Provisioning.SA_ACCOUNT_FLAG | Provisioning.SA_CALENDAR_RESOURCE_FLAG | Provisioning.SO_NO_FIXUP_OBJECTCLASS);
+                Provisioning.SD_ACCOUNT_FLAG | Provisioning.SD_CALENDAR_RESOURCE_FLAG | Provisioning.SO_NO_FIXUP_OBJECTCLASS);
 
         return accts;
     }

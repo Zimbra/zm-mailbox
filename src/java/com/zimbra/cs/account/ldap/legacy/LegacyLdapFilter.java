@@ -175,8 +175,12 @@ public class LegacyLdapFilter {
     
     
     /*
-     * group
+     * groups (distribution list or dynamic group)
      */
+    public static String allGroups() {
+        return FILTER_GROUP_OBJECTCLASS;
+    }
+    
     public static String groupById(String id) {
         return "(&(zimbraId=" + id + ")" + FILTER_GROUP_OBJECTCLASS + ")";
     }

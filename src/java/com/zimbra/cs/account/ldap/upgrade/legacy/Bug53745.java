@@ -105,7 +105,7 @@ public class Bug53745 extends LegacyLdapUpgrade {
     }
     
     private void doAccount(LegacyZimbraLdapContext modZlc) {
-        String bases[] = mProv.getDIT().getSearchBases(Provisioning.SA_ACCOUNT_FLAG);
+        String bases[] = mProv.getDIT().getSearchBases(Provisioning.SD_ACCOUNT_FLAG);
         String query = "(&" + LegacyLdapFilter.allAccounts() + query() + ")";
         upgrade(modZlc, bases, query);
     }

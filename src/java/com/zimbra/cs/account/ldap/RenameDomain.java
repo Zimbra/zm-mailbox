@@ -122,7 +122,7 @@ public class RenameDomain {
             debug("Entering phase " + phase.toString());
             // don't need to setPhase for the first first, it was set or got from beginRenameDomain
             visitor = getVisitor(phase);
-            flags = Provisioning.SA_ACCOUNT_FLAG + Provisioning.SA_CALENDAR_RESOURCE_FLAG + Provisioning.SA_DISTRIBUTION_LIST_FLAG;
+            flags = Provisioning.SD_ACCOUNT_FLAG + Provisioning.SD_CALENDAR_RESOURCE_FLAG + Provisioning.SD_DISTRIBUTION_LIST_FLAG;
             mLdapHelper.searchObjects(null, null, searchBase, flags, visitor, 0);
         }
             
@@ -133,7 +133,7 @@ public class RenameDomain {
             renameInfo.setPhase(phase);
             renameInfo.write(mProv, mOldDomain);
             visitor = getVisitor(phase);
-            flags = Provisioning.SA_ALIAS_FLAG;
+            flags = Provisioning.SD_ALIAS_FLAG;
             mLdapHelper.searchObjects(null, null, searchBase, flags, visitor, 0);
         }
             
@@ -150,7 +150,7 @@ public class RenameDomain {
             
             String newDomainDN = mProv.getDIT().domainNameToDN(newDomain.getName());
             searchBase = mProv.getDIT().domainDNToAccountSearchDN(newDomainDN);
-            flags = Provisioning.SA_ACCOUNT_FLAG + Provisioning.SA_CALENDAR_RESOURCE_FLAG + Provisioning.SA_DISTRIBUTION_LIST_FLAG;
+            flags = Provisioning.SD_ACCOUNT_FLAG + Provisioning.SD_CALENDAR_RESOURCE_FLAG + Provisioning.SD_DISTRIBUTION_LIST_FLAG;
             mLdapHelper.searchObjects(null, null, searchBase, flags, visitor, 0);
         }
         

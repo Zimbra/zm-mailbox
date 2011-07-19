@@ -103,11 +103,11 @@ public class TestSearchDirectory extends TestCase {
     
     private List searchDirectory(String filter, String key, boolean expectTooMany) throws Exception {
         int flags = 0;
-        flags |= Provisioning.SA_ACCOUNT_FLAG;
-        flags |= Provisioning.SA_ALIAS_FLAG;
-        flags |= Provisioning.SA_DISTRIBUTION_LIST_FLAG;
-        flags |= Provisioning.SA_CALENDAR_RESOURCE_FLAG;
-        flags |= Provisioning.SA_DOMAIN_FLAG;
+        flags |= Provisioning.SD_ACCOUNT_FLAG;
+        flags |= Provisioning.SD_ALIAS_FLAG;
+        flags |= Provisioning.SD_DISTRIBUTION_LIST_FLAG;
+        flags |= Provisioning.SD_CALENDAR_RESOURCE_FLAG;
+        flags |= Provisioning.SD_DOMAIN_FLAG;
         
         String query = expandFilter(filter, key);
         
@@ -339,7 +339,7 @@ public class TestSearchDirectory extends TestCase {
             options.setBase(null);
             options.setConvertIDNToAscii(true);
             options.setDomain(null);
-            options.setFlags(Provisioning.SA_ACCOUNT_FLAG | Provisioning.SA_ALIAS_FLAG);
+            options.setFlags(Provisioning.SD_ACCOUNT_FLAG | Provisioning.SD_ALIAS_FLAG);
             options.setMaxResults(5000);
             options.setQuery("");
             options.setReturnAttrs(attrs);
@@ -468,7 +468,7 @@ public class TestSearchDirectory extends TestCase {
             options.setBase(null);
             options.setConvertIDNToAscii(true);
             options.setDomain(null);
-            options.setFlags(Provisioning.SA_DOMAIN_FLAG);
+            options.setFlags(Provisioning.SD_DOMAIN_FLAG);
             options.setMaxResults(5000);
             options.setQuery("");
             options.setReturnAttrs(attrs);

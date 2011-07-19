@@ -30,6 +30,7 @@ import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.DynamicGroup;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchOptions;
@@ -85,24 +86,18 @@ public class SearchDirectory extends AdminDocumentHandler {
         String types = request.getAttribute(AdminConstants.A_TYPES, "accounts");
         boolean sortAscending = request.getAttributeBool(AdminConstants.A_SORT_ASCENDING, true);
 
-        int flags = 0;
-        
-        if (types.indexOf("accounts") != -1) flags |= Provisioning.SA_ACCOUNT_FLAG;
-        if (types.indexOf("aliases") != -1) flags |= Provisioning.SA_ALIAS_FLAG;
-        if (types.indexOf("distributionlists") != -1) flags |= Provisioning.SA_DISTRIBUTION_LIST_FLAG;
-        if (types.indexOf("resources") != -1) flags |= Provisioning.SA_CALENDAR_RESOURCE_FLAG;
-        if (types.indexOf("domains") != -1) flags |= Provisioning.SA_DOMAIN_FLAG;
-        if (types.indexOf("coses") != -1) flags |= Provisioning.SD_COS_FLAG;
+        int flags = Provisioning.searchDirectoryStringToMask(types);
         
         // cannot specify a domain with the "coses" flag 
         if (((flags & Provisioning.SD_COS_FLAG) == Provisioning.SD_COS_FLAG) &&
-            (domain != null))
+            (domain != null)) {
             throw ServiceException.INVALID_REQUEST("cannot specify domain with coses flag", null);
-
+        }
+        
         // add zimbraMailTransport if account is requested
         // it is needed for figuring out if the account is an "external"(not yet migrated) account.
         String attrsStr = origAttrsStr;
-        if ((flags & Provisioning.SA_ACCOUNT_FLAG) == Provisioning.SA_ACCOUNT_FLAG &&
+        if ((flags & Provisioning.SD_ACCOUNT_FLAG) == Provisioning.SD_ACCOUNT_FLAG &&
                 attrsStr != null && !attrsStr.contains(Provisioning.A_zimbraMailTransport)) {
             attrsStr = attrsStr + "," + Provisioning.A_zimbraMailTransport;
         }
@@ -116,7 +111,7 @@ public class SearchDirectory extends AdminDocumentHandler {
         //
         // Note: isDomainAdminOnly *always* returns false for pure ACL based AccessManager 
         if (isDomainAdminOnly(zsc)) {
-            if ((flags & Provisioning.SA_DOMAIN_FLAG) == Provisioning.SA_DOMAIN_FLAG) {
+            if ((flags & Provisioning.SD_DOMAIN_FLAG) == Provisioning.SD_DOMAIN_FLAG) {
                 if(query != null && query.length()>0) {
                     throw ServiceException.PERM_DENIED("cannot search for domains");
                 } else {
@@ -231,6 +226,11 @@ public class SearchDirectory extends AdminDocumentHandler {
         } else if (entry instanceof DistributionList) {
             GetDistributionList.encodeDistributionList(parent, (DistributionList)entry, false, 
                     reqAttrs, aac.getAttrRightChecker((DistributionList)entry));
+        } else if (entry instanceof DynamicGroup) {
+            // TODO: can combine DistributionList and DynamicGroup after aac.getAttrRightChecker
+            // is fixed/implemented for DynamicGroup
+            GetDistributionList.encodeDistributionList(parent, (DynamicGroup)entry, false, 
+                    reqAttrs, null);  // TODO: FIXME (aac.getAttrRightChecker)!!!
         } else if (entry instanceof Alias) {
             encodeAlias(parent, prov, (Alias)entry, reqAttrs);
         } else if (entry instanceof Domain) {

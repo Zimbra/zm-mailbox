@@ -83,7 +83,7 @@ public class BUG_32557 extends UpgradeOp {
     void doUpgrade() throws ServiceException {
         
         String query = "(&(objectClass=zimbraDomain)(!(objectClass=amavisAccount)))";
-        String bases[] = prov.getDIT().getSearchBases(Provisioning.SA_DOMAIN_FLAG);
+        String bases[] = prov.getDIT().getSearchBases(Provisioning.SD_DOMAIN_FLAG);
         String attrs[] = new String[] {Provisioning.A_objectClass,
                                        Provisioning.A_zimbraId,
                                        Provisioning.A_zimbraDomainName};

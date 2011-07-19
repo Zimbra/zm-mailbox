@@ -393,8 +393,14 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     
     
     /*
-     * groups (distribution list or dynamic groups)
+     * group (distribution list or dynamic group)
      */
+    @Override
+    public ZLdapFilter allGroups() {
+        return FILTER_ALL_GROUPS;
+    }
+    
+    @Override
     public ZLdapFilter groupById(String id) {
         return new UBIDLdapFilter(
                 Filter.createANDFilter(
@@ -402,6 +408,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                         FILTER_ALL_GROUPS.getNative()));
     }
     
+    @Override
     public ZLdapFilter groupByName(String name) {
         return new UBIDLdapFilter(
                 Filter.createANDFilter(

@@ -84,6 +84,6 @@ public class AdminSession extends Session {
     throws ServiceException {
         String query = LdapEntrySearchFilter.toLdapCalendarResourcesFilter(filter);
         return searchAccounts(d, query, attrs, sortBy, sortAscending,
-                Provisioning.SA_CALENDAR_RESOURCE_FLAG, offset, 0, rightChecker);
+                Provisioning.SD_CALENDAR_RESOURCE_FLAG, offset, 0, rightChecker);
     }
 }

@@ -77,7 +77,7 @@ public class BUG_43147 extends UpgradeOp {
         Bug43147Visitor visitor = new Bug43147Visitor(this, galSyncAcctIds);
         
         String query = "(&(objectClass=zimbraDomain)(zimbraGalAccountId=*))";
-        String bases[] = prov.getDIT().getSearchBases(Provisioning.SA_DOMAIN_FLAG);
+        String bases[] = prov.getDIT().getSearchBases(Provisioning.SD_DOMAIN_FLAG);
         String attrs[] = new String[] {Provisioning.A_zimbraDomainName,
                                        Provisioning.A_zimbraGalAccountId};
         

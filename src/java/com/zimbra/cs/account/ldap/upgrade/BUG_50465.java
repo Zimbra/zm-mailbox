@@ -110,7 +110,7 @@ public class BUG_50465 extends UpgradeOp {
     }
     
     private void doAccount(ZLdapContext modZlc) {
-        String bases[] = prov.getDIT().getSearchBases(Provisioning.SA_ACCOUNT_FLAG);
+        String bases[] = prov.getDIT().getSearchBases(Provisioning.SD_ACCOUNT_FLAG);
         String query = "(&" + ZLdapFilterFactory.getInstance().allAccounts().toFilterString() + query() + ")";
         upgrade(modZlc, bases, query);
     }

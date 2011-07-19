@@ -129,7 +129,7 @@ public class TestProvAlias extends TestLdap {
         Provisioning.SearchOptions options = new Provisioning.SearchOptions();
         
         int flags = 0;
-        flags = Provisioning.SA_ALIAS_FLAG;
+        flags = Provisioning.SD_ALIAS_FLAG;
         options.setFlags(flags);
         options.setDomain(domain);
         return mProv.searchDirectory(options);

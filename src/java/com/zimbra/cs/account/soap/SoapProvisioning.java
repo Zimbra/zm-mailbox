@@ -1568,13 +1568,21 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
-    public List<NamedEntry> searchAccounts(Domain d, String query, String[] returnAttrs, String sortAttr, boolean sortAscending, int flags) throws ServiceException {
+    public List<NamedEntry> searchAccounts(Domain d, String query, String[] returnAttrs, 
+            String sortAttr, boolean sortAscending, int flags) 
+    throws ServiceException {
         List<NamedEntry> result = new ArrayList<NamedEntry>();
         XMLElement req = new XMLElement(AdminConstants.SEARCH_ACCOUNTS_REQUEST);
         req.addElement(AdminConstants.E_QUERY).setText(query);
-        if (d != null) req.addAttribute(AdminConstants.A_DOMAIN, d.getName());
-        if (sortAttr != null) req.addAttribute(AdminConstants.A_SORT_BY, sortAttr);
-        if (flags != 0) req.addAttribute(AdminConstants.A_TYPES, Provisioning.searchAccountMaskToString(flags));
+        if (d != null) {
+            req.addAttribute(AdminConstants.A_DOMAIN, d.getName());
+        }
+        if (sortAttr != null) {
+            req.addAttribute(AdminConstants.A_SORT_BY, sortAttr);
+        }
+        if (flags != 0) {
+            req.addAttribute(AdminConstants.A_TYPES, Provisioning.searchDirectoryMaskToString(flags));
+        }
         req.addAttribute(AdminConstants.A_SORT_ASCENDING, sortAscending ? "1" : "0");
         if (returnAttrs != null) {
             req.addAttribute(AdminConstants.A_ATTRS, StringUtil.join(",", returnAttrs));
@@ -1605,7 +1613,7 @@ public class SoapProvisioning extends Provisioning {
         if (options.getSortAttr() != null)
             req.setSortBy(options.getSortAttr());
         if (options.getFlags() != 0)
-            req.setTypes(Provisioning.searchAccountMaskToString(options.getFlags()));
+            req.setTypes(Provisioning.searchDirectoryMaskToString(options.getFlags()));
         req.setSortAscending(options.isSortAscending());
         if (options.getReturnAttrs() != null)
             req.addAttrs(options.getReturnAttrs());

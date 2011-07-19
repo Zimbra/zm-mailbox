@@ -179,7 +179,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
             String query = String.format("(zimbraMailHost=%s)", getLocalHost());
             
             Provisioning prov = Provisioning.getInstance();
-            int flags = Provisioning.SA_ACCOUNT_FLAG | Provisioning.SO_NO_ACCOUNT_SECONDARY_DEFAULTS;
+            int flags = Provisioning.SD_ACCOUNT_FLAG | Provisioning.SO_NO_ACCOUNT_SECONDARY_DEFAULTS;
             List<NamedEntry> accounts;
             Domain d = mDomainId.equals("") ? null : prov.get(Key.DomainBy.id, mDomainId);
             if (d != null) {

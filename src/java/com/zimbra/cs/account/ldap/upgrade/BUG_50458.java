@@ -42,7 +42,7 @@ public class BUG_50458 extends UpgradeOp {
     }
     
     private void doDomain(ZLdapContext modZlc) {
-        String bases[] = prov.getDIT().getSearchBases(Provisioning.SA_DOMAIN_FLAG);
+        String bases[] = prov.getDIT().getSearchBases(Provisioning.SD_DOMAIN_FLAG);
         String query = "(&" + ZLdapFilterFactory.getInstance().allDomains().toFilterString() + 
             "(" + Provisioning.A_zimbraPasswordChangeListener + "=" + VALUE_TO_REMOVE + ")"+ ")";
         
